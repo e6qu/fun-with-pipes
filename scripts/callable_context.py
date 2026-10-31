@@ -1,6 +1,8 @@
 """Separate preceding-call effects from constructor code using one executable."""
+import hashlib
 import json
 import os
+from pathlib import Path
 import shutil
 import statistics
 import subprocess
@@ -46,6 +48,56 @@ def summarize(samples):
         result[phase] = dict(medianNs=medians, copyRatios=copies, currentOverReference=medians["current"] / medians["reference"],
                              qualified=all(v <= 1.02 for v in copies.values()) and all(v >= 5_000_000 for v in medians.values()))
     return result
+
+
+def audit(folder, source, architecture):
+    manifest = json.loads((folder / "manifest.json").read_text())
+    assert set(manifest) == {str(p.relative_to(folder)) for p in folder.rglob("*")
+                             if p.is_file() and p != folder / "manifest.json"}
+    for name, digest in manifest.items():
+        path = Path(name)
+        assert not path.is_absolute() and ".." not in path.parts
+        assert hashlib.sha256((folder / path).read_bytes()).hexdigest() == digest
+    report = json.loads((folder / "report.json").read_text())
+    assert (report["source"], report["architecture"]) == (source, architecture)
+    binary = (folder / "program").read_bytes()
+    assert binary == (folder / "copy/program").read_bytes()
+    assert hashlib.sha256(binary).hexdigest() == report["binarySha256"]
+    assert binary[:6] == b"\x7fELF\x02\x01"
+    assert int.from_bytes(binary[18:20], "little") == {"aarch64": 183, "x86_64": 62}[architecture]
+    commands = [json.loads(line) for line in (folder / "commands.jsonl").read_text().splitlines()]
+    assert all(row["status"] == 0 and not row["stderr"] for row in commands)
+    assert all(not row["stdout"] for row in commands[:3])
+    original = Path(commands[0]["argv"][-1]).parent
+    for i, name in enumerate(("implementation", "observer")):
+        assert commands[i]["argv"][-4:] == ["-c", str(original / (name + ".c")), "-o", str(original / (name + ".o"))]
+    assert commands[2]["argv"][-2:] == ["-o", str(original / "program")]
+    assert commands[3]["argv"] == ["lscpu"] and commands[3]["stdout"] == report["cpu"]
+    assert [row["session"] for row in report["sessions"]] == [1, 2]
+    index = 4
+    for session in report["sessions"]:
+        assert [(row["kind"], row["passes"]) for row in session["cases"]] == [
+            (kind, passes) for kind in (0, 1) for passes in (0, 1, 16)]
+        for case in session["cases"]:
+            assert case["summary"] == summarize(case["samples"])
+            assert len(case["warmups"]) == 8
+            observations = [(number, order(i // 4)[i % 4], None)
+                            for i, number in enumerate(case["warmups"])]
+            observations += [(row["command"], row["label"], row["ns"]) for row in case["samples"]]
+            for number, label, expected in observations:
+                assert number == index
+                cmd = commands[index]
+                executable = original / ("copy/program" if label.endswith("-copy") else "program")
+                assert cmd["argv"] == list(map(str, [executable, case["kind"], 4096, 256,
+                                                      case["passes"], label.removesuffix("-copy")]))
+                times = durations(cmd["stdout"], case["kind"], case["passes"])
+                assert type(cmd["elapsedNs"]) is int and sum(times.values()) <= cmd["elapsedNs"]
+                times["process"] = cmd["elapsedNs"]
+                if expected is not None:
+                    assert expected == times
+                index += 1
+    assert index == len(commands)
+    return report
 
 
 def collect(args, root, out, original):
@@ -135,17 +187,6 @@ def collect(args, root, out, original):
                 row["summary"] = summarize(row["samples"])
                 print("CONTEXT", args.arch, session, kind, passes, json.dumps(row["summary"]), flush=True)
                 (out / "report.json").write_text(json.dumps(report, indent=2) + "\n")
-    # Recheck every retained sample against its invocation and original output.
-    for session in report["sessions"]:
-        for row in session["cases"]:
-            assert row["summary"] == summarize(row["samples"])
-            for sample in row["samples"]:
-                cmd = commands[sample["command"]]
-                label = sample["label"]
-                assert cmd["argv"] == list(map(str, [copy if label.endswith("-copy") else binary,
-                    row["kind"], 4096, 256, row["passes"], label.removesuffix("-copy")]))
-                ns = durations(cmd["stdout"], row["kind"], row["passes"])
-                ns["process"] = cmd["elapsedNs"]
-                assert sample["ns"] == ns
     manifest = {str(p.relative_to(out)): original.BINARY.digest(p) for p in out.rglob("*") if p.is_file()}
     (out / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
+    audit(out, args.source, args.arch)

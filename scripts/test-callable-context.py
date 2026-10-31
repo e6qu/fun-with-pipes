@@ -1,8 +1,13 @@
 """Check phase-context observations without relaxing the original experiment."""
 import copy
+import hashlib
+import json
+from pathlib import Path
+import tempfile
 import unittest
+import zipfile
 
-from callable_context import LABELS, ROUNDS, durations, order, summarize
+from callable_context import LABELS, ROUNDS, audit, durations, order, summarize
 
 
 class ContextRecords(unittest.TestCase):
@@ -57,6 +62,38 @@ class ContextRecords(unittest.TestCase):
             damaged[0]["ns"]["construction"] = value
             with self.subTest(value=value), self.assertRaises(AssertionError):
                 summarize(damaged)
+
+    def test_retained_arm_study_and_semantic_damage(self):
+        source = "dfb6ff8e8aac215009e9a9cf48a8bce492ef4eae"
+        path = Path(__file__).resolve().parent.parent / "docs/measurements/callable-context-arm64-2026-10-31.zip"
+        self.assertEqual(hashlib.sha256(path.read_bytes()).hexdigest(),
+                         "15bc07df76af81c35489ef04cff37a95b84da8632295b3772e62cf29c39c6c0e")
+        with zipfile.ZipFile(path) as archive, tempfile.TemporaryDirectory() as directory:
+            archive.extractall(directory)
+            folder = Path(directory) / "context"
+            report = audit(folder, source, "aarch64")
+            self.assertIn("Neoverse-N2", report["cpu"])
+            for session in report["sessions"]:
+                for case in session["cases"]:
+                    self.assertTrue(case["summary"]["construction"]["qualified"])
+                    self.assertLessEqual(abs(case["summary"]["construction"]["currentOverReference"] - 1), 0.006)
+                    self.assertEqual(case["summary"]["invocation"]["qualified"], case["passes"] != 0)
+            manifest = json.loads((folder / "manifest.json").read_text())
+            for damage in ("missing-warmup", "reused-command", "wrong-invocation"):
+                damaged = copy.deepcopy(report)
+                first = damaged["sessions"][0]["cases"][0]
+                if damage == "missing-warmup":
+                    first["warmups"].pop()
+                elif damage == "reused-command":
+                    first["warmups"][1] = first["warmups"][0]
+                else:
+                    first["samples"][0]["command"] += 1
+                (folder / "report.json").write_text(json.dumps(damaged))
+                # Keep the file digest valid to exercise semantic rejection too.
+                manifest["report.json"] = hashlib.sha256((folder / "report.json").read_bytes()).hexdigest()
+                (folder / "manifest.json").write_text(json.dumps(manifest))
+                with self.subTest(damage=damage), self.assertRaises(AssertionError):
+                    audit(folder, source, "aarch64")
 
 
 if __name__ == "__main__":

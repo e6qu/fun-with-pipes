@@ -58,11 +58,16 @@ retained in the repository; their new integrity/body-equality test awaits CI.
 Both complete phase archives are also retained (about 4.3 MiB compressed), with
 a read-only test auditing all four sessions against the summary. Measured source
 `dfb6ff8e` is retained by `roadmap/callable-phases-2026-10-31`.
-Shared-constructor study
-`41222337204`, source `17a6d13c`, is queued: AMD64 `124599348496` and ARM64
-`124599348603`. Its record controls remain pending. Superseded docs
-`41222339131` was cancelled while queued; docs `41223876762` / `124603867592`
-at `fd075c32` is queued. The next docs gate must verify the raw-archive audit too.
+Shared-constructor study `41222337204`, source `17a6d13c`: ARM64 `124599348603`
+passes, with the same Neoverse-N2 CPU model and construction differences within
+0.54% across all twelve cases. Seven phase and four context tests pass; its log
+has no compiler diagnostics. AMD64 `124599348496` remains queued. The complete
+ARM study is retained with a new independent audit and damaged-record controls,
+still awaiting CI. Superseded queued docs `41222339131` and `41223876762` were
+cancelled; docs `41224305307` / `124605134968` at `cac5fac2` is queued.
+The next docs gate must verify the context archive audit too. It now selects
+native Ubuntu ARM64 explicitly; all documentation/evidence controls remain.
+The production platform matrix and AMD64 measurement host remain required.
 Check actual CPU models before attributing observations to the original host.
 Main macOS ARM64 regular `124588033328`, Intel macOS ownership `124588033386`
 and Windows AMD64 `124588033538` and ARM64 `124588033441` pass. Their logs contain no unexpected compiler

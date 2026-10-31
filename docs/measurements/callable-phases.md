@@ -198,3 +198,25 @@ claims, unchanged timing retries or acceptance-limit changes are part of this
 study. If a construction difference persists only after invocation within this
 shared executable, preceding work affects its measured cost; that alone cannot
 distinguish cache, scheduling, frequency or other hardware effects.
+
+### Shared-constructor results
+
+ARM64 job `124599348603` in run `41222337204` passes at diagnostic source
+`17a6d13c`, using the archived runtime source `dfb6ff8e`. Its Neoverse-N2 CPU
+model matches the original experiment. Both sessions complete all twelve cases,
+with exact checksums and per-batch payload cleanup. Seven phase-record tests and
+four context-record tests pass before collection; no compiler diagnostics occur.
+The [complete archive](callable-context-arm64-2026-10-31.zip) retains the shared
+binary, source, commands, warmups and measured samples.
+
+| Calls per closure | Construction time, current/reference across both cases and sessions |
+|---|---:|
+| 0 | 0.9997–1.0025× |
+| 1 | 0.9959–1.0053× |
+| 16 | 0.9993–1.0034× |
+
+Every construction, release and process comparison qualifies. Only the four
+zero-call invocation phases are too short, as expected. The identical-work
+zero-call control differs by at most 0.25%; all construction differences stay
+within 0.54%. This does not reproduce the AMD64 construction regression on ARM64.
+AMD64 remains pending; no conclusion about its cause follows from this host.
