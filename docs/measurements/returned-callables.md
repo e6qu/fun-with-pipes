@@ -1,8 +1,8 @@
 # Returned functions compared with C and Rust
 
-This is preparation for B1's callable comparison, not an accepted result. Finish
-the State range delivery before opening another PR. Focused Clang checks pass;
-the complete three-host evidence collection is next.
+The first B1 callable baseline passes focused checks on all three declared hosts.
+It does not claim timing parity or complete production delivery. Finish the State
+range PR before opening the next PR with this comparison.
 
 Partial application supplies one argument and keeps a function waiting for the
 next. For example, `add 7` produces a function that maps `3` to `10`. The captured
@@ -119,3 +119,82 @@ shared fwp runtime and observer. The full listing and text-section output retain
 those other costs. Rust's frame-report pass is an explicit setting: LLVM 22 names
 it `prologepilog`; the current CI toolchain uses `prolog-epilog`. A missing or
 mismatched report fails; the script does not retry with a different compiler setting.
+
+## First baseline
+
+Run `41175225918` at `7d7cf98b` passes GCC ARM64/AMD64 and Clang ARM64. Every
+job log was audited: eight Python controls and eight ordinary/profiled programs
+per host. The independent checker recomputes all 170 commands per host, source
+and binary hashes, results, ownership phases and frame/code records. The
+[complete retained archive](returned-callables-baseline-2026-10-31.json.gz)
+includes the actual binaries, generated C, command outputs and job/artifact IDs.
+Its source is retained by `roadmap/returned-callables-baseline-2026-10-31`.
+`python3 scripts/test-returned-callable-evidence.py` rechecks the archive and
+rejects altered summaries, binaries, sources and command outcomes without running
+an old compiler or executable.
+
+Both operations have these costs at O1 and O2 on all three hosts:
+
+| Cost | fwp | C and Rust callable records |
+|---|---|---|
+| Returned value | 8-byte pointer | 16-byte inline value |
+| Captured payload | One 16-byte heap request | Capture is inside the value |
+| Each borrowed call | One retain, one release, two runtime application entries | Direct use of the inline capture and function pointer |
+| Destruction | One final release and one physical payload free | No heap payload to release |
+| First-use count table | 4,096 bytes, retained for allocator reuse | None |
+
+The fwp pointer plus payload is not the process's total memory cost: arena
+backing, stack and other runtime storage remain outside these payload counters.
+All normal and recovered operations restore payload storage. Omitting releases
+preserves every arithmetic result but leaves 128 payload bytes and fails the
+storage observer. C/Rust need no fabricated allocation-failure control.
+
+Ordinary O2 code and reported frames are:
+
+| Host / implementation | Worker bytes | Whole text section | Largest reported C frame |
+|---|---:|---:|---:|
+| Linux ARM64 / C | 320 | 1,508 | 320 |
+| Linux ARM64 / Rust | 320 | 1,540 | 320 |
+| Linux ARM64 / fwp | 1,284 | 24,316 | 704 |
+| Linux AMD64 / C | 320 | 1,529 | 336 |
+| Linux AMD64 / Rust | 288 | 1,545 | 336 |
+| Linux AMD64 / fwp | 1,307 | 25,090 | 720 |
+| macOS ARM64 / C | 312 | 1,364 | 144 |
+| macOS ARM64 / Rust | 312 | 1,404 | 144 |
+| macOS ARM64 / fwp | 1,156 | 13,352 | 592 |
+
+The C frame column includes the common observer. Rust's own largest reported
+frame is 16 bytes on ARM64 and 8 on AMD64. fwp keeps its ordinary runtime and
+additional recovery controls; Rust is a `core` callable library, not a whole
+Rust application. These text totals expose that difference rather than isolate
+only language overhead. A largest frame is not an aggregate stack bound.
+
+## Next candidate and limits, declared before implementation
+
+For an **exactly saturated borrowed call**, use the existing typed entry directly
+when its complete parameter metadata proves there are no owned arguments.
+Copy plain captures and supplied values before entering the callback. Keep the
+caller-owned closure intact, return the entry's owned result, and preserve
+failure/cancellation order. Underapplication, overapplication and owned captures
+keep their ownership handling. Add no syntax, metadata field or forwarding entry.
+
+The generator already emits no argument destructor only when the full arrow
+spine has no owned parameters. Audit handwritten metadata before using that fact;
+several test fixtures omit their argument-destructor field and need explicit,
+correct entries. Add controls for scalar bits resembling pointers, owned results,
+failure inside the callback, cancellation, partial/extra arguments and aliases.
+
+Against this frozen baseline, at O1/O2 on **all three hosts**:
+
+- Each observed scalar invocation must use zero effective retains/releases and
+  one runtime application entry. Construction, destruction, result and metadata
+  storage costs must not increase. The omitted-release control must still fail.
+- Worker bytes and whole text-section bytes must each stay at or below 105% of
+  the baseline. The largest reported C frame and the sum of reported borrowed-
+  application helper frames may each grow by at most 64 bytes. Keep dynamic
+  frame labels and do not describe these estimates as a total stack limit.
+- All existing ownership, resource, failure/cancellation and interpreter/native
+  controls must pass, followed by the complete final production matrix.
+
+These are count/code/stack limits, not a speed budget. Retain rejected results.
+This candidate cannot close D2/N1 timing acceptance or establish C/Rust parity.

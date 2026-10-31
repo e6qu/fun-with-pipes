@@ -77,17 +77,38 @@ O1/O2. Workflow lint passes (5.77s), fwp/Rust formatting passes (0.01s/0.25s),
 and collector imports/CLI pass (0.13s). No full local evidence collection ran.
 The roadmap audit passes (2.60s): 190 link sets, 106 immutable preparation pairs,
 eight steps and commit subjects. `git diff --check` passes.
-The first runner collection is pending; do not claim GCC verification or code/
-frame totals before reviewing it. There is no speed claim.
+Run `41175225918` at `7d7cf98bc62944d6c040293f4d17543c3bb51470` passes all three
+hosts, with complete logs audited and every retained command independently
+recomputed (170 per host, eight programs each). Jobs: Linux ARM `124461279399`,
+Linux AMD `124461279547`, macOS ARM `124461279553`. Artifacts:
+`13032995375`, `13032730842`, `13032589018`, respectively. Full downloads/audits
+are `/private/tmp/fwp-callables-*-7d7c*`; log auditor is
+`/private/tmp/fwp-audit-callable-jobs.py`. No unexpected diagnostic remains.
+
+The complete 8.1-MB compressed baseline is retained in
+`docs/measurements/returned-callables-baseline-2026-10-31.json.gz`; the immutable
+tag `roadmap/returned-callables-baseline-2026-10-31` preserves its source for fresh
+clones. Three archive tests pass (3.24s), recomputing all hosts and rejecting
+13 damaged records. The protocol records the full cost/code/frame table and
+declares the next candidate's limits **before its implementation**. There is no
+speed claim or full production acceptance of this preparation.
 
 ## Work remaining in this batch
 
-Publish this preparation and run the focused `returned-callables` workflow while
-#233 finishes. Audit all three reports and repair any failure together. Before
-opening the next PR, integrate verified #233, retain the accepted reports and
-complete the independent evidence checker. Do not invent zero-allocation or
-speed results. The shared-input service repairs must be integrated before full
-production tests run here.
+Publish the baseline and candidate limits, then remove unnecessary retain/release
+work for exactly saturated borrowed calls with no owned parameters. The existing
+generator's null argument destructor proves that property across the complete
+arrow spine. Audit and correct handwritten test metadata before relying on it:
+`borrowed_callbacks`, `owned_wide_counts`, `list_copy_probe` and other fixtures
+omit the fourth field. Preserve owned results, aliases, partial/extra arguments,
+inside-callback failure/cancellation and pointer-shaped scalar bits. No compiler
+or runtime implementation of this candidate has been made yet.
+
+Use the declared 105% worker/text limits, +64-byte frame limits and zero effective
+invocation counts on all three O1/O2 hosts. Keep constructor/destructor storage
+unchanged and the missing-release rejection intact. Before opening the next PR,
+integrate verified #233 and run the complete final gates. Its shared-input service
+repairs must be integrated before full production tests run here.
 
 ## Roadmap status
 
