@@ -53,6 +53,12 @@ Unknown-call controls must execute a runtime application; known callbacks must
 not add applications as input size grows. Existing alias, callback-failure and
 caller-cleanup tests run alongside this matrix.
 
+The next [borrowed-call change](measurements/returned-callables.md) removes one
+application-helper entry from each known State case, keeping two allocations
+and 152 requested bytes. The maintained expectations reflect that candidate;
+three-host and full production verification are still pending. Historical
+State-range measurements retain their original two-entry observations.
+
 These counters describe operations requested by generated C. One application can
 enter more than one runtime helper, and a C compiler can optimize a helper's
 implementation. They are **not machine-instruction counts or speed measurements**.
@@ -98,7 +104,8 @@ this test. Both sizes returned the correct result and restored live storage;
 the assertion failed because the allocation was gone. The repaired expectation
 requires exactly zero, rather than permitting a range. The original table and
 raw measurements above remain historical evidence. Full verification of the
-updated test is pending; these counters make no elapsed-time claim.
+updated test passes in [PR #232](roadmap-history.md#generated-array-elimination-pr-232);
+these counters make no elapsed-time claim.
 
 ### State over a temporary range
 

@@ -1,8 +1,8 @@
 # Remove range-list storage inside a known State consumer
 
-Focused checks pass; full production verification is pending for this delivery.
-The preceding [PR #232](../roadmap-history.md#generated-array-elimination-pr-232)
-has passed every production gate and merged.
+Focused checks and full production verification pass in
+[PR #233](../roadmap-history.md#state-range-elimination-pr-233). All nine production
+jobs and documentation passed at `fd19b9e4`; squash `73a6b20d` has the same tree.
 The starting compiler is `05d96484`; its compiler/runtime match `d92939b8`.
 
 ## Focused results
@@ -25,7 +25,7 @@ two runtime applications, one result box and no retains. Both code and stack
 budgets pass. G2 run `41160463103` passes Linux AMD64 and Intel macOS: the largest
 identical-copy differences are 0.42% and 1.32%, within 5%. Every original analysis
 count, absolute-time and ratio limit passes. This verifies the stated focused
-checks; it does not replace the final nine production jobs and documentation.
+checks. The delivery record separately verifies all nine production jobs and docs.
 
 `python3 scripts/test-state-range-evidence.py` recomputes both retained decisions
 and rejects changed outputs, missing observations, changed limits and falsely
@@ -158,5 +158,5 @@ The latter still allocates one 24-byte node per element, not a new scope owner.
 The repaired comparison [reuses each input list](list-iteration.md) for State
 updates and `length`, verifies the list-node slope, and keeps every scope limit.
 All seven comparisons pass a focused Clang O2 reproduction with the exact CI
-compiler; final native verification remains pending. Neither repair changes
+compiler; final native verification passes in #233. Neither repair changes
 compiler eligibility, historical measurements or timing acceptance rules.

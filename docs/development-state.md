@@ -1,133 +1,98 @@
 # Current work
 
-**Next:** watch the repaired [PR #233](https://github.com/e6qu/fun-with-pipes/pull/233)
-at its new exact head. Merge only after all nine production jobs and docs pass.
-Keep one active PR; the independent callable preparation is not another PR.
+**Next:** freeze the returned-callable timing protocol, including Swift and a
+same-source fwp reference with only the borrowed-call optimization disabled.
+Measure construction, repeated invocation and release before deciding delivery.
+The user prioritizes execution time and working memory over executable size.
+There is no pending user question about the size budget.
 
-## Active State range delivery
+Worktree: `/private/tmp/fwp-returned-callables`; branch `returned-callable-peers`;
+[draft PR #234](https://github.com/e6qu/fun-with-pipes/pull/234). The primary checkout
+has unrelated preserved work; do not reset it. PR #233 is verified, squash-merged
+and integrated. Its [delivery record](roadmap-history.md#state-range-elimination-pr-233)
+owns all ten audited gates, tree identity and cancellation of duplicate jobs.
 
-Worktree `/private/tmp/fwp-state-range-folds`, branch `state-range-folds`.
-The first head `a7f6246150d7f300b926afe3e101e46db8e5bd59` has known comparison failures;
-**do not merge that head**. Production run `41166997085`, docs `41166997076`.
-The batched repair changes tests, measurement checks, workflows and docs; compiler
-and runtime source remain the focused `ea0f300b` implementation.
+## Swift comparison completed
 
-The second head `87050f65` passes documentation run `41173692184` (job
-`124456750588`: 49 Python suites / 328 cases, complete log audited) and the
-benchmark job `124456750772` (two Rust / 14 Python cases, complete log audited).
-Production run `41173692181` cannot pass: both Linux WebAssembly lint steps
-selected native GCC after the workflow made `CC=gcc` explicit. Their retained
-diagnostics (`13032072786`, `13032082747`) show GCC rejecting Clang's target
-flags; native lint passes. No other failed step was reported before replacement.
-The correction sets `CC_wasm32_wasip1=clang` and
-`CXX_wasm32_wasip1=clang++` at job scope, also covering nested browser builds.
-It changes no compiler/runtime code. Workflow lint passes (0.24s); the completed
-docs/benchmark log audits pass (0.13s each). Supersede this known-failed run with
-the corrected head's full matrix; cancelled checks never count as acceptance.
+Measured source: `80a0504a97f7c96291e77be6e8f843d5cb8c7391`.
+Run `41214191081` passes all four native jobs:
 
-Use squash subject `Avoid temporary range lists in State folds`, with an empty
-body. Verify the merged tree equals the passing head and the commit has exactly
-one line, at most 80 characters, no trailers or attribution.
+| Architecture / session | Job |
+|---|---:|
+| AMD64 / 1 | 124575187490 |
+| AMD64 / 2 | 124575187736 |
+| ARM64 / 1 | 124575187763 |
+| ARM64 / 2 | 124575187723 |
 
-### First matrix: all ten jobs completely audited
+Each runs seven C/Rust/Swift/fwp programs, copy controls, separate peak-RAM samples,
+33 Swift arithmetic cases, scalar closure overflow checks and reference-capture
+release controls. All complete logs and compiler diagnostics are reviewed.
+The package manager notes an absent manual page; there is no compiler warning.
 
-| Gate | Job | Result at a7f62461 |
-|---|---|---|
-| Benchmarks | 124436595057 | Pass: 2 Rust / 14 Python cases |
-| macOS ARM regular | 124436595221 | Pass: 633 Rust / 22 Python |
-| macOS Intel regular | 124436595213 | Pass: 633 Rust / 22 Python |
-| macOS ARM ownership | 124436595281 | 366 passed / one service comparison failure |
-| macOS Intel ownership | 124436595251 | 366 passed / the same failure |
-| Linux ARM | 124436595302 | 1,002 passed / the same failure; 12 Python pass |
-| Windows ARM | 124436595447 | 827 passed / the same failure; 22 Python pass |
-| Windows AMD | 124436595325 | 827 passed / the same failure; 22 Python pass |
-| Linux AMD | 124436595442 | 1,002 passed / the same failure; 12 Python pass |
-| Documentation | 124436595008 | Sole capture-reference hash failure; 20 later steps skipped |
+Runner audit `41215212017`, job `124578208152`, rechecks all four artifacts and
+prints their timing/RAM observations without executing saved binaries. The
+[report](measurements/swift-peers.md) and [summary JSON](measurements/swift-peers-2026-10-31.json)
+retain actual CPUs, medians, all copy failures, RAM samples and artifact digests.
+Full raw observations, sources and binaries remain in the named GitHub artifacts,
+currently expiring 2027-01-29; the summary is not a replacement for those files.
 
-Both Windows audits distinguish their 16 intentional panic controls from the
-service failure. The ARM macOS compiler-report artifact contains only the
-compiler, no crash report. Linux target artifacts `13030914670` / `13032515528`
-and Windows TLS artifacts `13030059727` / `13031253656` were also audited as soon
-as their phases completed. No additional unexpected diagnostic was found.
+Five ARM64 cases pass both Neoverse-N2 sessions' controls. Map and pipeline fail.
+The AMD64 sessions use different CPUs (EPYC 9V45 and Xeon 8573C), so they do not
+establish repeatability; three rows per session also fail their copy controls.
+Preserve all ten inconclusive rows out of 28. Do not retry unchanged observations.
+Swift allocation/ARC-operation counts, callable phase timing, parser, weak-link
+and numerical peers remain explicit missing coverage. No C/Rust/Swift parity claim.
 
-Logs, metadata, archives and audits: `/private/tmp/fwp-233-*`.
-Auditors: `/private/tmp/fwp-audit-233-green.py`,
-`fwp-audit-233-service-failure.py`, `fwp-audit-233-linux-tests.py`,
-`fwp-audit-233-windows-tls.py` and `fwp-audit-233-docs-failure.py`.
-These are frozen to the first head; supply the actual new source in final audits.
+The new result reader only adds reporting to the audited observations. The
+latest prior docs gate, `41214509533` / `124576105817`, passes 344 Python cases
+across 53 suites; only intentional reporter/selector failures appear in its log.
+The final summary-preservation test and docs update still need the new head's gate.
 
-After repair, expected complete counts are Linux 1,003 Rust / 257 summaries;
-regular macOS 633/132; ownership macOS 367/127; Windows 828/206; benchmarks 2/2.
-Expected Python cases: Linux 12, regular macOS and Windows 22, benchmarks 14,
-docs 328 in 49 suites. Confirm actual results; expectations do not waive gates.
+## Borrowed-call candidate
 
-## Batched repairs
+For an initial, exactly saturated borrowed call, null argument-drop metadata proves
+all parameters are plain values. The runtime copies them into the existing typed
+entry, preserves the caller's closure and returns its owned result. Extra returned
+callables still get consumed; partial calls and owned captures keep their handling.
+Handwritten String/wide callback metadata and copied-list input cleanup are repaired.
 
-The capture-reference test froze the whole optimizer module. Making `substitute`
-visible to State fusion changed that hash, although capture behavior was intact.
-The repair freezes only the two original capture blocks and requires reversing
-the replacement to reproduce the complete current source. The original blocks
-still match preparation `8a495a72`; historical measurements and limits are intact.
-Six reference and eight derivative-budget tests pass under the guard.
+Baseline `7d7cf98b`, first candidate `1f929022`, revised candidate `dacaf253`, and
+their immutable tags/complete archives are owned by the
+[callable report](measurements/returned-callables.md). Revised run `41179056746`
+passes 49 Rust tests, 16 Python controls and 170 measurement commands on each
+GCC ARM64/AMD64 and Clang ARM64 host. The integrated compiler/runtime still match
+that candidate. Calls remove a retain/release pair and one helper entry. Captured
+payload and count-table storage remain; elapsed-time benefit is unmeasured.
 
-The service comparison mixed different input costs. Plain State eliminates its
-range list; the deadline callback captures a `Duration` record and keeps it.
-The exact packaged compiler reproduces two fixed requests for plain versus
-35/131 requests for deadline at 32/128 inputs. Reusing each list for State updates
-and `length` makes input construction comparable. All seven scope comparisons
-pass with their original limits and zero retained storage. The test additionally
-checks the input-node slope and prints rows before assertions. CI now preserves
-service sources/counters/binaries; the focused State workflow includes this caller.
-Linux explicitly selects GCC for those evidence records.
+Both candidates fail the original ARM O1 text budget: 24,540 → 28,892 bytes
+(+17.7%, limit 5%). The first candidate's byte-identical linker reproduction proves
+a Cortex-A53 erratum stub reserves 4 KiB. All other count/storage, code and frame
+limits pass. Keep the original failures and hardware protection; evaluate the
+tradeoff through measured performance and working memory. Scalar-fold approval
+keeps its timing goal open and is recorded separately.
 
-Caller review found an obsolete 347-contract/seven-unresolved assertion in the
-service collector. It now checks the frozen-baseline audit and complete,
-consistent rows, requiring no unresolved contracts. The current 373-contract
-report passes; twelve damaged reports fail, including empty and duplicate rows.
-List-iteration descriptions now explain that the current full-program comparison
-also includes range elimination. Historical numbers and timing policy are intact.
-Stale directions to implement already-merged array and typed-state work are removed.
+## Verification and repairs
 
-Focused local verification uses the guard only: the native service reproduction
-passes in 27.68s (13.78s CPU); retained-row/inventory controls in 0.13s each;
-Rust format in 1.71s; workflow lint in 0.26s/5.66s; the final roadmap audit in
-2.62s (189 link sets, 106 immutable preparation pairs, eight steps and commit
-subjects). Scripts/data: `/private/tmp/fwp-check-service-comparison.py`,
-`fwp-check-service-inventory.py`, `fwp-233-service-comparison/rows.json`.
-This Clang check does not establish GCC or Windows support; the new full matrix must.
+- `41212931691` stopped before timing: the Swift container lacked GCC's C++
+  frontend. Install `g++`, select `CXX=g++`, and retain build logs. Rustup explicitly
+  recognizes the root-container home layout; no HOME variable is changed.
+- `41213323565` builds all four compilers and passes Swift arithmetic controls,
+  then Git rejects mounted-checkout ownership. Trust only `$GITHUB_WORKSPACE`
+  inside the throwaway container and verify source identity before building.
+  Neither failed run contains timing samples. All four logs from each are reviewed.
+- Local Swift 6.2.1 ARM64 closure checks pass (2.92s): eight checksum/representation
+  rows, normal release and omitted-release exit 78. Three record tests pass
+  (0.13s); workflow lint and roadmap audit passed before the checkout repair.
+- The local guard subsequently refused a workflow recheck: free disk is below
+  64 GiB. Do not bypass it or download large artifacts locally. Remaining checks
+  and artifact audits run on GitHub. Small report files transcribe the runner audit;
+  no local timing or binary re-execution occurred. No unidentified files were deleted.
 
-## Existing evidence and next preparation
-
-[State range scope and evidence](measurements/state-range-folds.md) owns the
-frozen protocol, three-host focused results, both G2 results and retained rejected
-experiments. The maintained evidence checker recomputes both decisions without
-rerunning measurements. There is no elapsed-time acceptance claim.
-
-[PR #232](roadmap-history.md#generated-array-elimination-pr-232) is verified and
-merged as `c71ac217`, with the exact tested `05d96484` tree and required commit
-format. Both duplicate post-merge runs were cancelled after verification. Do not
-resume its old retry. The State branch includes that verified main through
-`203c501f`, preserving the prepared tree exactly.
-
-Independent B1 worktree `/private/tmp/fwp-returned-callables`, branch
-`returned-callable-peers`, is published through `df8f9ce8` (protocol `8c77d111`).
-C/Rust peers pass O1/O2 checksums and overflow controls (1.98s). An additional
-uncommitted fwp fixture passes raw/optimized checksums (0.48s); a temporary native
-probe passes separate-compilation repeated calls and pre-teardown cleanup at
-Clang O1/O2 (1.11s). Its handoff records remaining phase counters, failure/retry,
-omitted-release controls, GCC checks and complete evidence work. There is no
-complete comparison or speed result and no second PR. Integrate verified #233
-before publication. D2/N1's failed timing requirements remain open.
-
-## Local workspace
-
-No full local build, suite or benchmark ran. Preserve the dirty primary checkout
-and other worktrees. The primary handoff points here; its original content is
-preserved below that pointer and in
-`/private/tmp/fwp-primary-handoff-before-current-pointer-2026-10-31.md`.
-Five clean historical worktrees omit duplicate measurement files through sparse
-checkout; their Git objects and original downloaded archives remain intact.
-Keep the 64-GiB disk floor and all other guard limits; never bypass them.
+Raw logs: `/private/tmp/fwp-swift-*.log`. The result audit is
+`/private/tmp/fwp-swift-report-a8d5.log`. All new files are in the same PR.
+After the callable performance assessment, require all nine final-head production
+jobs and docs before squash merge. Keep the commit to one line, at most 80 characters,
+with an explicit empty body and no trailers or attribution. The PR remains a draft.
 
 ## Roadmap status
 
@@ -139,8 +104,7 @@ Keep the 64-GiB disk floor and all other guard limits; never bypass them.
 | 4 | Verified | Preserve decimal savings and the recorded loop gap |
 | 5 | In progress | Meet D2's remaining timing requirement |
 | 6 | In progress | Resolve N1 controls before N2 timing acceptance |
-| 7 | In progress | Deliver State reductions and finish B1/B2 comparisons |
+| 7 | In progress | Complete callable phase costs and remaining B1/B2 peers |
 | 8 | In progress | Complete numerical and integrated V1/V2 acceptance |
 
-[PLAN.md](../PLAN.md) retains the scopes, unchanged budgets and failed controls.
-Allocation reductions do not complete D2/N1 execution-timing acceptance.
+[PLAN.md](../PLAN.md) retains the unchanged numerical budgets and failed controls.

@@ -1,0 +1,28 @@
+# Native checks retain these entries as function values. The first two accept
+# only scalar parameters; returning a String still transfers an owned result.
+export scalar-add : I64 -> I64 -> I64
+scalar-add = add
+
+export scalar-show : I64 -> String
+scalar-show = show
+
+export scalar-checked : I64 -> I64 ! {Error[I64]}
+scalar-checked = if (lt 0) fail (add 1)
+
+Functions = {
+    add: I64 -> I64 -> I64,
+    show: I64 -> String,
+    checked: I64 -> I64 ! {Error[I64]},
+}
+export function-values : () -> Functions
+function-values = make {
+    add = const scalar-add,
+    show = const scalar-show,
+    checked = const scalar-checked,
+}
+
+main = [
+    3 | scalar-add 7 | echo,
+    7 | scalar-show | echo,
+    -1 | attempt scalar-checked | echo,
+] | ignore

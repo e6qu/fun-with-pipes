@@ -1,0 +1,23 @@
+# Both operations capture one integer. Native measurement constructs their real
+# partial applications and invokes them only after the factory has returned.
+export escaped-partial : I64 -> I64 -> I64
+escaped-partial = add
+
+export escaped-captured : I64 -> I64 -> I64
+escaped-captured = add | flip compose (mul 2)
+
+# Retain typed runtime entries for the function values used by the native caller.
+# The measurement does not construct this record inside an observed phase.
+Callables = { partial: I64 -> I64 -> I64, captured: I64 -> I64 -> I64 }
+export callable-values : () -> Callables
+callable-values =
+    make { partial = const escaped-partial, captured = const escaped-captured }
+
+# Checksum controls: n=0/1/16/4096 produce (0,0), (7,14), (232,464),
+# and (8415232,16830464). The C observer also checks each individual result.
+main =
+    [0, 1, 16, 4096]
+    | each (both
+            (range 0 | map (escaped-partial 7) | sum)
+            (range 0 | map (escaped-captured 7) | sum)
+        | echo)

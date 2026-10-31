@@ -30,15 +30,24 @@ static void copy_release(void *p) {
     }
 }
 static V copy_key(V *args) {
+    fwp_value_owner input = {args[0], copy_list->elem->drop};
+    fwp_cleanup cleanup; fwp_value_protect(&input, &cleanup);
     if (++copy_calls == copy_callback_failure) copy_interrupt();
-    return fwp_rc_fresh(fwp_str_new(STR(args[0])->d, STR(args[0])->len));
+    V result = fwp_rc_fresh(fwp_str_new(STR(args[0])->d, STR(args[0])->len));
+    copy_list->elem->drop(fwp_value_finish(&input, &cleanup));
+    return result;
 }
-/* This test entry borrows its arguments and has no captured values. */
+/* Match the generated consuming entry, including unwind of its input owner. */
 static void copy_arguments(V *args, uint32_t start, uint32_t n) {
-    (void)args; (void)start; (void)n;
+    if (start || n > 1) abort();
+    if (n) copy_list->elem->dup(args[0]);
+}
+static void copy_drop_arguments(V *args, uint32_t start, uint32_t n) {
+    if (start || n > 1) abort();
+    if (n) copy_list->elem->drop(args[0]);
 }
 static void copy_captures(V f, int duplicate) { (void)f; (void)duplicate; }
-static const fwp_owned_fninfo copy_owned = {copy_key, copy_captures, copy_arguments};
+static const fwp_owned_fninfo copy_owned = {copy_key, copy_captures, copy_arguments, copy_drop_arguments};
 static const fwp_fninfo copy_functions[] = {{1, copy_key, "owned String key", &copy_owned}};
 static fwp_clo copy_callback = {0, 0};
 static V copy_operation(int op) {

@@ -260,9 +260,9 @@ int main(int argc, char **argv) {{
                 ("borrowed", [0, 0, 0, 0, 0]),
                 ("captured", [0, 0, 0, 0, 0]),
                 ("result", [1, 24, 0, 1, 1]),
-                ("each-count", [2, 152, 2, 1, 0]),
+                ("each-count", [2, 152, 1, 1, 0]),
                 ("folded", [0, 0, 0, 0, 0]),
-                ("state-loop", [2, 152, 2, 1, 0]),
+                ("state-loop", [2, 152, 1, 1, 0]),
             ] {
                 assert_eq!(
                     observations[&(name.into(), "known".into(), n)],

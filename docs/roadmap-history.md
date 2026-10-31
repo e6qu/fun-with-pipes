@@ -1363,5 +1363,50 @@ Squash `c71ac217c5ea09d8bf1868f799fc0d8a574d2e2a`, merged 2026-10-31,
 has exactly the tested tree. Its subject is `Eliminate temporary arrays in numeric
 folds`, on one line with no body or trailers. Duplicate post-merge runs
 `41166703635` and `41166703619` were cancelled after tree/message verification.
-State range-list removal is the next allocation task; D2/N1 timing and the wider
+State range-list removal followed in #233 below. D2/N1 timing and the wider
 B1/B2/V1/V2 requirements remain open.
+
+
+## State range elimination (PR #233)
+
+Known, single-use I64 ranges consumed by State `each` now iterate over bounds
+without building a list. At inputs 32 and 128, the measured consumer uses two
+allocations / 152 bytes, two runtime application entries, one result box and no
+retains. Worker code shrinks 41.28% on ARM64 and 39.20% on AMD64; reported frames
+stay unchanged. The [report](measurements/state-range-folds.md) preserves the
+restricted proof, failures, both G2 hosts and complete focused observations.
+This is an allocation/code reduction, not an elapsed-time claim.
+
+The full matrix exposed an unfair service comparison: only the plain State
+callback qualified for range removal. The repaired comparison reuses the same
+list on both sides. Its assertions retain the 96-request slope, 24 bytes per
+node and zero final charged storage. The capture-reference checker now freezes
+its actual transformation blocks instead of unrelated optimizer visibility.
+Linux explicitly selects Clang for WASI Rust builds while keeping GCC for native
+code. These repairs and all completed diagnostics were audited together.
+
+All nine production jobs in `41174213818` and docs `41174213793` pass at
+`fd19b9e4d67c6c5f85ebbe6a12da14aaeedb0b1c`. Every complete log was audited.
+
+| Gate | Job | Rust passed / summaries | Python cases |
+|---|---|---:|---:|
+| Linux ARM64 | `124458289938` | 1,003 / 257 | 12 |
+| Linux AMD64 | `124458290045` | 1,003 / 257 | 12 |
+| macOS ARM64 regular | `124458289949` | 633 / 132 | 22 |
+| macOS AMD64 regular | `124458290009` | 633 / 132 | 22 |
+| macOS ARM64 ownership | `124458290043` | 367 / 127 | 0 |
+| macOS AMD64 ownership | `124458289859` | 367 / 127 | 0 |
+| Windows ARM64 | `124458290007` | 828 / 206 | 22 |
+| Windows AMD64 | `124458289996` | 828 / 206 | 22 |
+| C/Rust benchmarks | `124458289963` | 2 / 2 | 14 |
+| Documentation | `124458289609` | — | 328 in 49 suites |
+
+Each Windows job includes 16 intentional panic controls with passing parent
+tests. Platform-specific Python skips do not establish unsupported capabilities.
+No unexpected diagnostic remains. The merged commit is
+`73a6b20d4d10a4f2dff50d78dc0b32ee2c17b4b5`, dated 2026-10-31; tree
+`2a8c3c40755fc8b60b5f20861fd8b1051a23a400` equals the tested tree. Its 42-character
+message is exactly `Avoid temporary range lists in State folds`, with no body or
+trailers. Duplicate post-merge runs `41180750528` and `41180750575` were cancelled
+after verifying the tree and message. Callable comparisons and D2/N1 timing
+acceptance remain open.

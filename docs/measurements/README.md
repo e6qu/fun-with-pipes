@@ -9,7 +9,9 @@ identities. Do not edit observations to make an old experiment describe new code
 
 ## Ownership costs
 
-- [File errors and borrowed handles](file-boundary-portability.md): native Windows coverage, legal C recovery contexts and exact cleanup/error controls; focused results and remaining delivery gates.
+- [Swift, C, Rust and fwp](swift-peers.md): seven programs on four native sessions, elapsed time and resident RAM; repeated ARM64 results, failed noise controls and different AMD64 CPUs remain explicit.
+
+- [File errors and borrowed handles](file-boundary-portability.md): native Windows coverage, legal C recovery contexts and exact cleanup/error controls; complete delivery verified in #230.
 
 - [Direct string results](direct-string-results.md): two rejected experiments and a byte-search candidate with four qualified sessions, explicit C/Rust gaps, allocation savings and code/stack costs; complete delivery verified in #229.
 
@@ -21,11 +23,13 @@ identities. Do not edit observations to make an old experiment describe new code
 
 - [Remaining ARC operations after GC removal](arc-residual-costs.md): per-owner attribution and static-callback reduction.
 - [Unique local arrays without counts](unique-array-storage.md): verified storage, lifetime proof and native/WASI cleanup.
-- [Unique-buffer C/Rust comparison](unique-buffer-peers.md): peer programs in preparation; timing protocol and fwp cross-checks remain open.
+- [Unique-buffer C/Rust comparison](unique-buffer-peers.md): verified direct folds and array elimination; failed timing controls and remaining peer comparisons stay open.
 - [Scalar reads and sort callbacks](sort-key-ownership.md): remove temporary String and pair owners.
 - [Contiguous sort keys](inline-sort-keys.md): remove key boxes, with exact allocation budgets and separate sorting-time controls.
 
 ## Function calls and recursion
+
+- [Returned functions](returned-callables.md): C/Rust storage baseline, borrowed-call count reductions and the retained ARM code-size rejection; Swift ownership controls and phase timing are tracked separately.
 
 - [Call-cost matrix and mutual-loop decision](../functional-costs.md): verified scopes and budgets, measured comparisons and remaining costs.
 

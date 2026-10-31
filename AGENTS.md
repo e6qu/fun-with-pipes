@@ -93,7 +93,7 @@ Introduce concepts and notation before examples; explain what each computes and
 why its output follows. Use plain explanations, not jargon or acronym lists.
 Distinguish implemented behavior, tested support and design goals. Remove stale
 or irrelevant docs; update generated library docs through comments/generators.
-Benchmarks must identify both implementations, inputs, equivalent work, timing
+Compare Swift as well as C/Rust. Prioritize time and working memory over file size.
+Benchmarks must identify implementations, inputs, equivalent work, timing
 scope, ratios/extra cost and known differences. Record hardware, compiler, flags,
-allocations, live memory and elapsed time. Faster fwp versus older fwp is not proof
-of parity with C/Rust. Report code-size and stack costs alongside count savings.
+allocations, live memory and elapsed time. Faster fwp versus older fwp is not proof of parity with peers. Report code-size and stack costs alongside count savings.

@@ -15,7 +15,10 @@ static void wide_caps(V f, int duplicate) {
     if (duplicate) fwp_rc_dup(CLO(f)->a[0]);
     else { DROP_LEAF(CLO(f)->a[0]); fwp_rc_free_obj(f); }
 }
-static const fwp_owned_fninfo wide_owned = {wide_entry, wide_caps, wide_args};
+static void wide_drop_args(V *args, uint32_t start, uint32_t n) {
+    if (!start && n) DROP_LEAF(args[0]);
+}
+static const fwp_owned_fninfo wide_owned = {wide_entry, wide_caps, wide_args, wide_drop_args};
 static const fwp_fninfo wide_functions[] = {{1, wide_entry, "wide", &wide_owned}};
 int main(int argc, char **argv) {
 #ifdef _WIN32

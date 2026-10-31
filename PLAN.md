@@ -29,11 +29,14 @@ collector is not the same as removing these costs. The
 
 ## Work order
 
-1. Finish production verification of [State range-list removal](docs/measurements/state-range-folds.md),
-   the next B1 allocation task. Focused checks pass on GCC ARM64/AMD64 and Clang
-   ARM64; both G2 hosts pass. The known I64 consumer keeps its State handler and
-   uses two fixed allocations / 152 bytes. Code shrinks and frames stay unchanged.
-   Verify the full native matrix, rejected shapes and cleanup before delivery.
+1. Extend the [completed Swift comparison](docs/measurements/swift-peers.md) to
+   returned-callable construction, repeated invocation and release, with a
+   same-source fwp control disabling only the new borrowed-call path. Freeze the
+   timing/working-memory rules before collecting that comparison. Preserve the
+   original ARM O1 size rejection; prioritize execution time and working memory.
+   The seven-program runs qualify five repeated ARM64 cases; noisy map/pipeline
+   rows and different AMD64 CPUs remain explicit. Do not retry unchanged rows.
+   Finish the full production matrix before delivering the runtime change.
 2. Resolve D2/N1's failed measurements before claiming numerical speed acceptance.
    Fixed CPU affinity and equal executable names did not resolve the controls.
    Do not rerun unchanged experiments or increase sample counts again.
@@ -47,6 +50,10 @@ four array-removal sessions fail the unchanged copy-control limit. The
 25 failed controls out of 48; no workload qualifies in all four sessions.
 Do not retry unchanged measurements or turn allocation savings into speed claims. The
 [handoff](docs/development-state.md) owns current source IDs and check results.
+
+[State range-list removal](docs/roadmap-history.md#state-range-elimination-pr-233)
+is verified and merged in #233: two fixed allocations / 152 bytes, smaller code,
+unchanged reported frames and preserved handler/cleanup behavior. No speed claim.
 
 The original intermittent Intel macOS compiler abort remains an open defect.
 Preserve [its evidence](docs/measurements/compiler-abort.md); diagnose a recurrence
@@ -106,9 +113,9 @@ records eight paired fixtures, exact allocation expectations, lifetime rules,
 stack observations and the accepted restricted scalar mutual-loop transformation.
 
 Known calls avoid selected closure/dispatch costs; unknown calls retain required
-owners. The verified State `each` baseline allocates per element; the B1
-[range candidate](docs/measurements/state-range-folds.md) targets that list only,
-with final verification pending. Weak metadata and proved plain
+owners. The historical State `each` baseline allocates per element;
+[range-list removal](docs/measurements/state-range-folds.md), verified in #233,
+eliminates that list for the stated known I64 consumer. Weak metadata and proved plain
 captures may survive the loop transformation; strong resources, tasks and unknown
 captures retain their restrictions. Arbitrary recursion, resource frames and
 foreign calls are not promised constant stack space.
