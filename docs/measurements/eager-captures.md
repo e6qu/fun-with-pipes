@@ -85,8 +85,9 @@ For each case and form, require all of these without changing limits afterward:
 Audit all failed criteria after preserving every observation. A failed candidate
 must remain failed in the report; do not infer a speedup from fewer closures or
 rewrite the earlier rejected scalar-recording result. This experiment can close
-only its named D2 budget. Final delivery still requires all nine production jobs,
-documentation and both compiler-analysis hosts on the final commit.
+only its named D2 budget. Production delivery separately requires all nine jobs,
+documentation and both compiler-analysis hosts on the final commit; #227 passed
+those gates, as recorded in [delivery history](../roadmap-history.md#eager-captures-and-typed-numerical-loops-pr-227).
 
 ## Running the checks
 
@@ -181,7 +182,7 @@ retains four complete sessions: ARM 1/2 in `40912310643`, AMD 2 in `40912523280`
 and AMD 1 in `40912773534`. The first three pass. AMD 1's zero-update history case
 has candidate/reference ratio **1.022815765**, exceeding **1.02**. Other cases and
 all memory/code/stack requirements pass; all four full logs and artifacts are
-independently audited. The original accepted observations below remain intact,
+independently audited. The original accepted observations above remain intact,
 but they do not erase this failure. [Timing diagnosis](timing-variation.md)
 describes the next experiment; [host rejections](captures-recheck-rejections-2026-10-29.json)
 retain every unmatched attempt. No limit is relaxed and no sample is removed.
@@ -211,7 +212,7 @@ The documentation gate recomputes schedules, medians and all acceptance limits;
 negative controls reject omitted sessions, relabeled sources/runs, changed
 reference identities, altered samples and changed measured-source hashes.
 
-This satisfies the selected experimental D2 budget. Final delivery still needs
-all nine production jobs, documentation and both G2 hosts on the final commit.
-The earlier scalar-recording experiment remains rejected for speed; this result
-does not change its limits or erase its slower observations.
+These original sessions met the selected experimental budget. The later
+repaired-source failure above leaves timing acceptance open. Production delivery
+is verified in #227; it does not erase that failure or the earlier
+scalar-recording experiment's rejected speed result.

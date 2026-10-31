@@ -1,0 +1,1827 @@
+{
+  "source": "dfb6ff8e8aac215009e9a9cf48a8bce492ef4eae",
+  "run": 41219092543,
+  "scope": "Summary from both completed native job logs. Full samples, commands, source and binaries remain in the named GitHub artifacts; this is not their replacement.",
+  "artifacts": [
+    {
+      "digest": "sha256:e9339d54f15ca511738d4f740a788b983a724737a466cd5fe70c51496be82a49",
+      "expires_at": "2027-01-29T16:19:06Z",
+      "id": 13049915413,
+      "name": "callable-phases-x86_64-1",
+      "size_in_bytes": 2236820
+    },
+    {
+      "digest": "sha256:38df765e6b19e37b929ebf550678d1c5c5c1e0d33a4b721449ad919222adef85",
+      "expires_at": "2027-01-29T16:19:06Z",
+      "id": 13049297780,
+      "name": "callable-phases-aarch64-1",
+      "size_in_bytes": 2259102
+    }
+  ],
+  "sessions": [
+    {
+      "source": "dfb6ff8e8aac215009e9a9cf48a8bce492ef4eae",
+      "architecture": "aarch64",
+      "session": 1,
+      "cpu": "Architecture:                            aarch64\nCPU op-mode(s):                          32-bit, 64-bit\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               ARM\nModel name:                              Neoverse-N2\nModel:                                   0\nThread(s) per core:                      1\nCore(s) per cluster:                     4\nSocket(s):                               -\nCluster(s):                              1\nStepping:                                r0p0\nBogoMIPS:                                2000.00\nFlags:                                   fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nL1d cache:                               256 KiB (4 instances)\nL1i cache:                               256 KiB (4 instances)\nL2 cache:                                4 MiB (4 instances)\nL3 cache:                                128 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; CSV2, BHB\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+      "versions": {
+        "cc": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+        "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\n",
+        "swiftc": "Swift version 6.4.2 (swift-6.4.2-RELEASE)\nTarget: aarch64-unknown-linux-gnu\n",
+        "time": "time (GNU Time) UNKNOWN\nCopyright (C) 2018 Free Software Foundation, Inc.\nLicense GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>.\nThis is free software: you are free to change and redistribute it.\nThere is NO WARRANTY, to the extent permitted by law.\n\nWritten by David Keppel, David MacKenzie, and Assaf Gordon.\n",
+        "objdump": "Ubuntu LLVM version 18.1.3\n  Optimized build.\n\n\n  Registered Targets:\n    aarch64     - AArch64 (little endian)\n    aarch64_32  - AArch64 (little endian ILP32)\n    aarch64_be  - AArch64 (big endian)\n    amdgcn      - AMD GCN GPUs\n    arm         - ARM\n    arm64       - ARM64 (little endian)\n    arm64_32    - ARM64 (little endian ILP32)\n    armeb       - ARM (big endian)\n    avr         - Atmel AVR Microcontroller\n    bpf         - BPF (host endian)\n    bpfeb       - BPF (big endian)\n    bpfel       - BPF (little endian)\n    hexagon     - Hexagon\n    lanai       - Lanai\n    loongarch32 - 32-bit LoongArch\n    loongarch64 - 64-bit LoongArch\n    m68k        - Motorola 68000 family\n    mips        - MIPS (32-bit big endian)\n    mips64      - MIPS (64-bit big endian)\n    mips64el    - MIPS (64-bit little endian)\n    mipsel      - MIPS (32-bit little endian)\n    msp430      - MSP430 [experimental]\n    nvptx       - NVIDIA PTX 32-bit\n    nvptx64     - NVIDIA PTX 64-bit\n    ppc32       - PowerPC 32\n    ppc32le     - PowerPC 32 LE\n    ppc64       - PowerPC 64\n    ppc64le     - PowerPC 64 LE\n    r600        - AMD GPUs HD2XXX-HD6XXX\n    riscv32     - 32-bit RISC-V\n    riscv64     - 64-bit RISC-V\n    sparc       - Sparc\n    sparcel     - Sparc LE\n    sparcv9     - Sparc V9\n    systemz     - SystemZ\n    thumb       - Thumb\n    thumbeb     - Thumb (big endian)\n    ve          - VE\n    wasm32      - WebAssembly 32-bit\n    wasm64      - WebAssembly 64-bit\n    x86         - 32-bit X86: Pentium-Pro and above\n    x86-64      - 64-bit X86: EM64T and AMD64\n    xcore       - XCore\n    xtensa      - Xtensa 32\n"
+      },
+      "job": 124589718380,
+      "logSha256": "57f438c97bd0fbc2a2cb2351a08b82dd858510c63c1737cca217ab7f95465a0b",
+      "cases": [
+        {
+          "kind": 0,
+          "phases": {
+            "construction": {
+              "medianNs": {
+                "c": 977565.5,
+                "c-copy": 992503.5,
+                "rust": 994935.5,
+                "rust-copy": 981413.5,
+                "swift": 32432080.0,
+                "swift-copy": 32178624.0,
+                "reference": 8306863.0,
+                "reference-copy": 8327697.5,
+                "fwp": 8343194.5,
+                "fwp-copy": 8331171.5
+              },
+              "copyRatios": {
+                "c": 1.0152808175002084,
+                "rust": 1.013778086402928,
+                "swift": 1.0078765331917239,
+                "reference": 1.0025081068509256,
+                "fwp": 1.0014431343779204
+              },
+              "candidateQualified": true,
+              "fwpOverPeer": {
+                "c": 8.534665452084797,
+                "rust": 8.385663693777134,
+                "swift": 0.257251292547379,
+                "reference": 1.0043736727089396
+              },
+              "withinBudget": true,
+              "peerQualified": {
+                "c": false,
+                "rust": false,
+                "swift": true,
+                "reference": true
+              }
+            },
+            "invocation": {
+              "medianNs": {
+                "c": 29834989.5,
+                "c-copy": 29909845.5,
+                "rust": 29859566.0,
+                "rust-copy": 29872352.5,
+                "swift": 275988215.5,
+                "swift-copy": 274713164.5,
+                "reference": 392563016.0,
+                "reference-copy": 392817604.0,
+                "fwp": 169438186.5,
+                "fwp-copy": 169411424.5
+              },
+              "copyRatios": {
+                "c": 1.0025090003802415,
+                "rust": 1.0004282212273279,
+                "swift": 1.0046413902381441,
+                "reference": 1.0006485277258008,
+                "fwp": 1.0001579704561188
+              },
+              "candidateQualified": true,
+              "fwpOverPeer": {
+                "c": 5.679177011273961,
+                "rust": 5.674502653521488,
+                "swift": 0.6139326861947119,
+                "reference": 0.4316203503490507
+              },
+              "withinBudget": true,
+              "peerQualified": {
+                "c": true,
+                "rust": true,
+                "swift": true,
+                "reference": true
+              }
+            },
+            "release": {
+              "medianNs": {
+                "c": 14996.0,
+                "c-copy": 15832.5,
+                "rust": 15456.5,
+                "rust-copy": 15825.5,
+                "swift": 61962274.0,
+                "swift-copy": 61751741.0,
+                "reference": 16343197.5,
+                "reference-copy": 16346909.5,
+                "fwp": 16429557.5,
+                "fwp-copy": 16363345.5
+              },
+              "copyRatios": {
+                "c": 1.0557815417444651,
+                "rust": 1.0238734512988064,
+                "swift": 1.0034093451713368,
+                "reference": 1.0002271281369512,
+                "fwp": 1.0040463608129524
+              },
+              "candidateQualified": true,
+              "fwpOverPeer": {
+                "c": 1095.5959922646039,
+                "rust": 1062.9545822146022,
+                "swift": 0.26515420496026343,
+                "reference": 1.0052841556861807
+              },
+              "withinBudget": true,
+              "peerQualified": {
+                "c": false,
+                "rust": false,
+                "swift": true,
+                "reference": true
+              }
+            },
+            "process": {
+              "medianNs": {
+                "c": 31861363.0,
+                "c-copy": 32004649.5,
+                "rust": 31876642.0,
+                "rust-copy": 31906654.0,
+                "swift": 375583134.0,
+                "swift-copy": 372832074.5,
+                "reference": 420138586.0,
+                "reference-copy": 420313724.0,
+                "fwp": 195503763.5,
+                "fwp-copy": 197765384.5
+              },
+              "copyRatios": {
+                "c": 1.0044971867650483,
+                "rust": 1.0009415044407752,
+                "swift": 1.0073788165991067,
+                "reference": 1.0004168576889532,
+                "fwp": 1.011568171167201
+              },
+              "candidateQualified": true,
+              "fwpOverPeer": {
+                "c": 6.136076585926346,
+                "rust": 6.13313546326492,
+                "swift": 0.5205339265846799,
+                "reference": 0.4653316072711303
+              },
+              "withinBudget": true,
+              "peerQualified": {
+                "c": true,
+                "rust": true,
+                "swift": true,
+                "reference": true
+              }
+            }
+          },
+          "memory": {
+            "c": [
+              {
+                "command": 260,
+                "peakRssKiB": 1440
+              },
+              {
+                "command": 261,
+                "peakRssKiB": 1436
+              },
+              {
+                "command": 262,
+                "peakRssKiB": 1452
+              }
+            ],
+            "rust": [
+              {
+                "command": 263,
+                "peakRssKiB": 1516
+              },
+              {
+                "command": 264,
+                "peakRssKiB": 1436
+              },
+              {
+                "command": 265,
+                "peakRssKiB": 1516
+              }
+            ],
+            "swift": [
+              {
+                "command": 266,
+                "peakRssKiB": 8804
+              },
+              {
+                "command": 267,
+                "peakRssKiB": 8820
+              },
+              {
+                "command": 268,
+                "peakRssKiB": 8820
+              }
+            ],
+            "reference": [
+              {
+                "command": 269,
+                "peakRssKiB": 1784
+              },
+              {
+                "command": 270,
+                "peakRssKiB": 1800
+              },
+              {
+                "command": 271,
+                "peakRssKiB": 1784
+              }
+            ],
+            "fwp": [
+              {
+                "command": 272,
+                "peakRssKiB": 1932
+              },
+              {
+                "command": 273,
+                "peakRssKiB": 1932
+              },
+              {
+                "command": 274,
+                "peakRssKiB": 1920
+              }
+            ]
+          }
+        },
+        {
+          "kind": 1,
+          "phases": {
+            "construction": {
+              "medianNs": {
+                "c": 973300.5,
+                "c-copy": 976042.0,
+                "rust": 972557.5,
+                "rust-copy": 974080.0,
+                "swift": 31956222.0,
+                "swift-copy": 31954236.5,
+                "reference": 8252719.0,
+                "reference-copy": 8261207.5,
+                "fwp": 8385778.0,
+                "fwp-copy": 8360895.5
+              },
+              "copyRatios": {
+                "c": 1.0028167046045902,
+                "rust": 1.001565460139889,
+                "swift": 1.0000621357358985,
+                "reference": 1.0010285700991395,
+                "fwp": 1.0029760568111394
+              },
+              "candidateQualified": true,
+              "fwpOverPeer": {
+                "c": 8.61581597872394,
+                "rust": 8.622398161548288,
+                "swift": 0.2624145620217559,
+                "reference": 1.0161230498699882
+              },
+              "withinBudget": true,
+              "peerQualified": {
+                "c": false,
+                "rust": false,
+                "swift": true,
+                "reference": true
+              }
+            },
+            "invocation": {
+              "medianNs": {
+                "c": 29726440.5,
+                "c-copy": 29734606.0,
+                "rust": 29595063.5,
+                "rust-copy": 29530971.0,
+                "swift": 273413989.0,
+                "swift-copy": 268557264.0,
+                "reference": 386275918.5,
+                "reference-copy": 386040201.0,
+                "fwp": 169427810.0,
+                "fwp-copy": 169372411.5
+              },
+              "copyRatios": {
+                "c": 1.000274688118142,
+                "rust": 1.0021703485469544,
+                "swift": 1.018084504316368,
+                "reference": 1.0006106035055142,
+                "fwp": 1.000327081013427
+              },
+              "candidateQualified": true,
+              "fwpOverPeer": {
+                "c": 5.699566014302991,
+                "rust": 5.724867257000479,
+                "swift": 0.6196749867103545,
+                "reference": 0.43861861919305745
+              },
+              "withinBudget": true,
+              "peerQualified": {
+                "c": true,
+                "rust": true,
+                "swift": true,
+                "reference": true
+              }
+            },
+            "release": {
+              "medianNs": {
+                "c": 14684.5,
+                "c-copy": 15128.0,
+                "rust": 13888.0,
+                "rust-copy": 14636.0,
+                "swift": 59735395.5,
+                "swift-copy": 59541426.5,
+                "reference": 16284263.0,
+                "reference-copy": 16279254.0,
+                "fwp": 16337651.5,
+                "fwp-copy": 16335372.0
+              },
+              "copyRatios": {
+                "c": 1.0302019135823488,
+                "rust": 1.0538594470046083,
+                "swift": 1.0032577150297197,
+                "reference": 1.0003076922320888,
+                "fwp": 1.0001395438071443
+              },
+              "candidateQualified": true,
+              "fwpOverPeer": {
+                "c": 1112.5779903980388,
+                "rust": 1176.38619671659,
+                "swift": 0.27350034871703494,
+                "reference": 1.0032785333914098
+              },
+              "withinBudget": true,
+              "peerQualified": {
+                "c": false,
+                "rust": false,
+                "swift": true,
+                "reference": true
+              }
+            },
+            "process": {
+              "medianNs": {
+                "c": 31673627.0,
+                "c-copy": 31705979.5,
+                "rust": 31543002.5,
+                "rust-copy": 31479492.5,
+                "swift": 368695655.5,
+                "swift-copy": 364370167.0,
+                "reference": 412171019.0,
+                "reference-copy": 412079898.0,
+                "fwp": 195582562.5,
+                "fwp-copy": 195569187.0
+              },
+              "copyRatios": {
+                "c": 1.001021433383679,
+                "rust": 1.0020175039353,
+                "swift": 1.0118711379024616,
+                "reference": 1.0002211245936583,
+                "fwp": 1.000068392675785
+              },
+              "candidateQualified": true,
+              "fwpOverPeer": {
+                "c": 6.174934196831957,
+                "rust": 6.200505563793428,
+                "swift": 0.5304715680328921,
+                "reference": 0.4745179876414358
+              },
+              "withinBudget": true,
+              "peerQualified": {
+                "c": true,
+                "rust": true,
+                "swift": true,
+                "reference": true
+              }
+            }
+          },
+          "memory": {
+            "c": [
+              {
+                "command": 495,
+                "peakRssKiB": 1436
+              },
+              {
+                "command": 496,
+                "peakRssKiB": 1440
+              },
+              {
+                "command": 497,
+                "peakRssKiB": 1452
+              }
+            ],
+            "rust": [
+              {
+                "command": 498,
+                "peakRssKiB": 1516
+              },
+              {
+                "command": 499,
+                "peakRssKiB": 1516
+              },
+              {
+                "command": 500,
+                "peakRssKiB": 1516
+              }
+            ],
+            "swift": [
+              {
+                "command": 501,
+                "peakRssKiB": 8756
+              },
+              {
+                "command": 502,
+                "peakRssKiB": 8760
+              },
+              {
+                "command": 503,
+                "peakRssKiB": 8760
+              }
+            ],
+            "reference": [
+              {
+                "command": 504,
+                "peakRssKiB": 1792
+              },
+              {
+                "command": 505,
+                "peakRssKiB": 1800
+              },
+              {
+                "command": 506,
+                "peakRssKiB": 1800
+              }
+            ],
+            "fwp": [
+              {
+                "command": 507,
+                "peakRssKiB": 1932
+              },
+              {
+                "command": 508,
+                "peakRssKiB": 1932
+              },
+              {
+                "command": 509,
+                "peakRssKiB": 1920
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "source": "dfb6ff8e8aac215009e9a9cf48a8bce492ef4eae",
+      "architecture": "aarch64",
+      "session": 2,
+      "cpu": "Architecture:                            aarch64\nCPU op-mode(s):                          32-bit, 64-bit\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               ARM\nModel name:                              Neoverse-N2\nModel:                                   0\nThread(s) per core:                      1\nCore(s) per cluster:                     4\nSocket(s):                               -\nCluster(s):                              1\nStepping:                                r0p0\nBogoMIPS:                                2000.00\nFlags:                                   fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nL1d cache:                               256 KiB (4 instances)\nL1i cache:                               256 KiB (4 instances)\nL2 cache:                                4 MiB (4 instances)\nL3 cache:                                128 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; CSV2, BHB\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+      "versions": {
+        "cc": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+        "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\n",
+        "swiftc": "Swift version 6.4.2 (swift-6.4.2-RELEASE)\nTarget: aarch64-unknown-linux-gnu\n",
+        "time": "time (GNU Time) UNKNOWN\nCopyright (C) 2018 Free Software Foundation, Inc.\nLicense GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>.\nThis is free software: you are free to change and redistribute it.\nThere is NO WARRANTY, to the extent permitted by law.\n\nWritten by David Keppel, David MacKenzie, and Assaf Gordon.\n",
+        "objdump": "Ubuntu LLVM version 18.1.3\n  Optimized build.\n\n\n  Registered Targets:\n    aarch64     - AArch64 (little endian)\n    aarch64_32  - AArch64 (little endian ILP32)\n    aarch64_be  - AArch64 (big endian)\n    amdgcn      - AMD GCN GPUs\n    arm         - ARM\n    arm64       - ARM64 (little endian)\n    arm64_32    - ARM64 (little endian ILP32)\n    armeb       - ARM (big endian)\n    avr         - Atmel AVR Microcontroller\n    bpf         - BPF (host endian)\n    bpfeb       - BPF (big endian)\n    bpfel       - BPF (little endian)\n    hexagon     - Hexagon\n    lanai       - Lanai\n    loongarch32 - 32-bit LoongArch\n    loongarch64 - 64-bit LoongArch\n    m68k        - Motorola 68000 family\n    mips        - MIPS (32-bit big endian)\n    mips64      - MIPS (64-bit big endian)\n    mips64el    - MIPS (64-bit little endian)\n    mipsel      - MIPS (32-bit little endian)\n    msp430      - MSP430 [experimental]\n    nvptx       - NVIDIA PTX 32-bit\n    nvptx64     - NVIDIA PTX 64-bit\n    ppc32       - PowerPC 32\n    ppc32le     - PowerPC 32 LE\n    ppc64       - PowerPC 64\n    ppc64le     - PowerPC 64 LE\n    r600        - AMD GPUs HD2XXX-HD6XXX\n    riscv32     - 32-bit RISC-V\n    riscv64     - 64-bit RISC-V\n    sparc       - Sparc\n    sparcel     - Sparc LE\n    sparcv9     - Sparc V9\n    systemz     - SystemZ\n    thumb       - Thumb\n    thumbeb     - Thumb (big endian)\n    ve          - VE\n    wasm32      - WebAssembly 32-bit\n    wasm64      - WebAssembly 64-bit\n    x86         - 32-bit X86: Pentium-Pro and above\n    x86-64      - 64-bit X86: EM64T and AMD64\n    xcore       - XCore\n    xtensa      - Xtensa 32\n"
+      },
+      "job": 124589718380,
+      "logSha256": "57f438c97bd0fbc2a2cb2351a08b82dd858510c63c1737cca217ab7f95465a0b",
+      "cases": [
+        {
+          "kind": 0,
+          "phases": {
+            "construction": {
+              "medianNs": {
+                "c": 975039.5,
+                "c-copy": 968898.0,
+                "rust": 972783.0,
+                "rust-copy": 973060.0,
+                "swift": 32159035.0,
+                "swift-copy": 32149106.5,
+                "reference": 8300571.0,
+                "reference-copy": 8293419.0,
+                "fwp": 8289187.0,
+                "fwp-copy": 8291742.0
+              },
+              "copyRatios": {
+                "c": 1.0063386445219207,
+                "rust": 1.00028475004189,
+                "swift": 1.000308826623222,
+                "reference": 1.0008623705132949,
+                "fwp": 1.0003082328821873
+              },
+              "candidateQualified": true,
+              "fwpOverPeer": {
+                "c": 8.501385841291558,
+                "rust": 8.521105940379304,
+                "swift": 0.25775608627559876,
+                "reference": 0.998628528085598
+              },
+              "withinBudget": true,
+              "peerQualified": {
+                "c": false,
+                "rust": false,
+                "swift": true,
+                "reference": true
+              }
+            },
+            "invocation": {
+              "medianNs": {
+                "c": 26147809.5,
+                "c-copy": 16319111.0,
+                "rust": 29732625.0,
+                "rust-copy": 29733111.0,
+                "swift": 271562451.5,
+                "swift-copy": 270875258.0,
+                "reference": 386643335.5,
+                "reference-copy": 386553119.5,
+                "fwp": 166129724.0,
+                "fwp-copy": 166150056.5
+              },
+              "copyRatios": {
+                "c": 1.602281490701301,
+                "rust": 1.0000163456808808,
+                "swift": 1.0025369371314083,
+                "reference": 1.0002333857766215,
+                "fwp": 1.0001223892962106
+              },
+              "candidateQualified": true,
+              "fwpOverPeer": {
+                "c": 6.3534853273273235,
+                "rust": 5.587455665283506,
+                "swift": 0.6117551343433796,
+                "reference": 0.4296717639919077
+              },
+              "withinBudget": true,
+              "peerQualified": {
+                "c": false,
+                "rust": true,
+                "swift": true,
+                "reference": true
+              }
+            },
+            "release": {
+              "medianNs": {
+                "c": 14736.5,
+                "c-copy": 15417.5,
+                "rust": 14284.5,
+                "rust-copy": 14632.0,
+                "swift": 59761592.5,
+                "swift-copy": 61048055.0,
+                "reference": 16313457.0,
+                "reference-copy": 16311228.5,
+                "fwp": 16343579.5,
+                "fwp-copy": 16355176.0
+              },
+              "copyRatios": {
+                "c": 1.0462117870593424,
+                "rust": 1.024327067800763,
+                "swift": 1.0215265766219332,
+                "reference": 1.0001366236761382,
+                "fwp": 1.0007095446869518
+              },
+              "candidateQualified": true,
+              "fwpOverPeer": {
+                "c": 1109.0543548332373,
+                "rust": 1144.147817564493,
+                "swift": 0.2734796516675823,
+                "reference": 1.001846481711387
+              },
+              "withinBudget": true,
+              "peerQualified": {
+                "c": false,
+                "rust": false,
+                "swift": false,
+                "reference": true
+              }
+            },
+            "process": {
+              "medianNs": {
+                "c": 28059129.5,
+                "c-copy": 18264377.5,
+                "rust": 31698273.0,
+                "rust-copy": 31717421.5,
+                "swift": 368547121.5,
+                "swift-copy": 368107249.5,
+                "reference": 412661257.0,
+                "reference-copy": 412676955.0,
+                "fwp": 192231780.5,
+                "fwp-copy": 192248678.0
+              },
+              "copyRatios": {
+                "c": 1.5362762568831048,
+                "rust": 1.0006040865380899,
+                "swift": 1.0011949560911866,
+                "reference": 1.0000380408864018,
+                "fwp": 1.0000879016984394
+              },
+              "candidateQualified": true,
+              "fwpOverPeer": {
+                "c": 6.850953109575263,
+                "rust": 6.064424408862905,
+                "swift": 0.5215934931674673,
+                "reference": 0.46583433079592446
+              },
+              "withinBudget": true,
+              "peerQualified": {
+                "c": false,
+                "rust": true,
+                "swift": true,
+                "reference": true
+              }
+            }
+          },
+          "memory": {
+            "c": [
+              {
+                "command": 260,
+                "peakRssKiB": 1516
+              },
+              {
+                "command": 261,
+                "peakRssKiB": 1516
+              },
+              {
+                "command": 262,
+                "peakRssKiB": 1516
+              }
+            ],
+            "rust": [
+              {
+                "command": 263,
+                "peakRssKiB": 1516
+              },
+              {
+                "command": 264,
+                "peakRssKiB": 1516
+              },
+              {
+                "command": 265,
+                "peakRssKiB": 1516
+              }
+            ],
+            "swift": [
+              {
+                "command": 266,
+                "peakRssKiB": 8820
+              },
+              {
+                "command": 267,
+                "peakRssKiB": 8820
+              },
+              {
+                "command": 268,
+                "peakRssKiB": 8820
+              }
+            ],
+            "reference": [
+              {
+                "command": 269,
+                "peakRssKiB": 1788
+              },
+              {
+                "command": 270,
+                "peakRssKiB": 1792
+              },
+              {
+                "command": 271,
+                "peakRssKiB": 1800
+              }
+            ],
+            "fwp": [
+              {
+                "command": 272,
+                "peakRssKiB": 1932
+              },
+              {
+                "command": 273,
+                "peakRssKiB": 1932
+              },
+              {
+                "command": 274,
+                "peakRssKiB": 1932
+              }
+            ]
+          }
+        },
+        {
+          "kind": 1,
+          "phases": {
+            "construction": {
+              "medianNs": {
+                "c": 972174.0,
+                "c-copy": 975843.5,
+                "rust": 971478.5,
+                "rust-copy": 973284.5,
+                "swift": 31972713.0,
+                "swift-copy": 31969620.0,
+                "reference": 8253005.0,
+                "reference-copy": 8249484.0,
+                "fwp": 8356679.5,
+                "fwp-copy": 8355776.0
+              },
+              "copyRatios": {
+                "c": 1.0037745300738345,
+                "rust": 1.0018590220987906,
+                "swift": 1.0000967481002276,
+                "reference": 1.0004268145740993,
+                "fwp": 1.0001081287961764
+              },
+              "candidateQualified": true,
+              "fwpOverPeer": {
+                "c": 8.595868126487645,
+                "rust": 8.602022072542006,
+                "swift": 0.2613691087146718,
+                "reference": 1.0125620304361866
+              },
+              "withinBudget": true,
+              "peerQualified": {
+                "c": false,
+                "rust": false,
+                "swift": true,
+                "reference": true
+              }
+            },
+            "invocation": {
+              "medianNs": {
+                "c": 29720524.0,
+                "c-copy": 29708279.0,
+                "rust": 29630477.5,
+                "rust-copy": 29599679.5,
+                "swift": 269462065.5,
+                "swift-copy": 269971783.5,
+                "reference": 386173105.5,
+                "reference-copy": 386408592.5,
+                "fwp": 169414640.5,
+                "fwp-copy": 169379213.5
+              },
+              "copyRatios": {
+                "c": 1.0004121746668664,
+                "rust": 1.001040484239027,
+                "swift": 1.0018916132000035,
+                "reference": 1.0006097964789524,
+                "fwp": 1.0002091578964618
+              },
+              "candidateQualified": true,
+              "fwpOverPeer": {
+                "c": 5.700257522377465,
+                "rust": 5.717580504735369,
+                "swift": 0.6287142503181028,
+                "reference": 0.4387012924699905
+              },
+              "withinBudget": true,
+              "peerQualified": {
+                "c": true,
+                "rust": true,
+                "swift": true,
+                "reference": true
+              }
+            },
+            "release": {
+              "medianNs": {
+                "c": 14544.0,
+                "c-copy": 14777.5,
+                "rust": 14224.5,
+                "rust-copy": 15596.0,
+                "swift": 59442213.0,
+                "swift-copy": 61006678.5,
+                "reference": 16282127.0,
+                "reference-copy": 16272341.0,
+                "fwp": 16334913.5,
+                "fwp-copy": 16336945.0
+              },
+              "copyRatios": {
+                "c": 1.0160547304730474,
+                "rust": 1.0964181517803788,
+                "swift": 1.0263190991896618,
+                "reference": 1.0006013885770952,
+                "fwp": 1.0001243655192908
+              },
+              "candidateQualified": true,
+              "fwpOverPeer": {
+                "c": 1123.1376168866886,
+                "rust": 1148.3646876867376,
+                "swift": 0.27480325303501063,
+                "reference": 1.0032419904352792
+              },
+              "withinBudget": true,
+              "peerQualified": {
+                "c": false,
+                "rust": false,
+                "swift": false,
+                "reference": true
+              }
+            },
+            "process": {
+              "medianNs": {
+                "c": 31642442.0,
+                "c-copy": 31658681.0,
+                "rust": 31581249.0,
+                "rust-copy": 31512992.0,
+                "swift": 366859845.0,
+                "swift-copy": 367238947.5,
+                "reference": 412103573.5,
+                "reference-copy": 412344834.0,
+                "fwp": 195564420.0,
+                "fwp-copy": 195544213.0
+              },
+              "copyRatios": {
+                "c": 1.0005132031213015,
+                "rust": 1.0021659955360633,
+                "swift": 1.001033371477328,
+                "reference": 1.0005854365638012,
+                "fwp": 1.0001033372437362
+              },
+              "candidateQualified": true,
+              "fwpOverPeer": {
+                "c": 6.180446502833125,
+                "rust": 6.192421965325058,
+                "swift": 0.5330766576538242,
+                "reference": 0.47455162385288074
+              },
+              "withinBudget": true,
+              "peerQualified": {
+                "c": true,
+                "rust": true,
+                "swift": true,
+                "reference": true
+              }
+            }
+          },
+          "memory": {
+            "c": [
+              {
+                "command": 495,
+                "peakRssKiB": 1452
+              },
+              {
+                "command": 496,
+                "peakRssKiB": 1436
+              },
+              {
+                "command": 497,
+                "peakRssKiB": 1452
+              }
+            ],
+            "rust": [
+              {
+                "command": 498,
+                "peakRssKiB": 1452
+              },
+              {
+                "command": 499,
+                "peakRssKiB": 1516
+              },
+              {
+                "command": 500,
+                "peakRssKiB": 1516
+              }
+            ],
+            "swift": [
+              {
+                "command": 501,
+                "peakRssKiB": 8760
+              },
+              {
+                "command": 502,
+                "peakRssKiB": 8744
+              },
+              {
+                "command": 503,
+                "peakRssKiB": 8732
+              }
+            ],
+            "reference": [
+              {
+                "command": 504,
+                "peakRssKiB": 1792
+              },
+              {
+                "command": 505,
+                "peakRssKiB": 1796
+              },
+              {
+                "command": 506,
+                "peakRssKiB": 1800
+              }
+            ],
+            "fwp": [
+              {
+                "command": 507,
+                "peakRssKiB": 1932
+              },
+              {
+                "command": 508,
+                "peakRssKiB": 1932
+              },
+              {
+                "command": 509,
+                "peakRssKiB": 1924
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "source": "dfb6ff8e8aac215009e9a9cf48a8bce492ef4eae",
+      "architecture": "x86_64",
+      "session": 1,
+      "cpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           46 bits physical, 57 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               GenuineIntel\nModel name:                              Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz\nCPU family:                              6\nModel:                                   106\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                6\nCPU(s) scaling MHz:                      125%\nCPU max MHz:                             2800.0000\nCPU min MHz:                             800.0000\nBogoMIPS:                                5586.87\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq vmx ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch tpr_shadow ept vpid ept_ad fsgsbase tsc_adjust bmi1 hle avx2 smep bmi2 erms invpcid rtm avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves vnmi avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq la57 rdpid fsrm arch_capabilities\nVirtualization:                          VT-x\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               96 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                2.5 MiB (2 instances)\nL3 cache:                                48 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Mitigation; Aligned branch/return thunks\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Vulnerable: Clear CPU buffers attempted, no microcode; SMT Host state unknown\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Vulnerable\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Retpoline\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+      "versions": {
+        "cc": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+        "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\n",
+        "swiftc": "Swift version 6.4.2 (swift-6.4.2-RELEASE)\nTarget: x86_64-unknown-linux-gnu\n",
+        "time": "time (GNU Time) UNKNOWN\nCopyright (C) 2018 Free Software Foundation, Inc.\nLicense GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>.\nThis is free software: you are free to change and redistribute it.\nThere is NO WARRANTY, to the extent permitted by law.\n\nWritten by David Keppel, David MacKenzie, and Assaf Gordon.\n",
+        "objdump": "Ubuntu LLVM version 18.1.3\n  Optimized build.\n\n\n  Registered Targets:\n    aarch64     - AArch64 (little endian)\n    aarch64_32  - AArch64 (little endian ILP32)\n    aarch64_be  - AArch64 (big endian)\n    amdgcn      - AMD GCN GPUs\n    arm         - ARM\n    arm64       - ARM64 (little endian)\n    arm64_32    - ARM64 (little endian ILP32)\n    armeb       - ARM (big endian)\n    avr         - Atmel AVR Microcontroller\n    bpf         - BPF (host endian)\n    bpfeb       - BPF (big endian)\n    bpfel       - BPF (little endian)\n    hexagon     - Hexagon\n    lanai       - Lanai\n    loongarch32 - 32-bit LoongArch\n    loongarch64 - 64-bit LoongArch\n    m68k        - Motorola 68000 family\n    mips        - MIPS (32-bit big endian)\n    mips64      - MIPS (64-bit big endian)\n    mips64el    - MIPS (64-bit little endian)\n    mipsel      - MIPS (32-bit little endian)\n    msp430      - MSP430 [experimental]\n    nvptx       - NVIDIA PTX 32-bit\n    nvptx64     - NVIDIA PTX 64-bit\n    ppc32       - PowerPC 32\n    ppc32le     - PowerPC 32 LE\n    ppc64       - PowerPC 64\n    ppc64le     - PowerPC 64 LE\n    r600        - AMD GPUs HD2XXX-HD6XXX\n    riscv32     - 32-bit RISC-V\n    riscv64     - 64-bit RISC-V\n    sparc       - Sparc\n    sparcel     - Sparc LE\n    sparcv9     - Sparc V9\n    systemz     - SystemZ\n    thumb       - Thumb\n    thumbeb     - Thumb (big endian)\n    ve          - VE\n    wasm32      - WebAssembly 32-bit\n    wasm64      - WebAssembly 64-bit\n    x86         - 32-bit X86: Pentium-Pro and above\n    x86-64      - 64-bit X86: EM64T and AMD64\n    xcore       - XCore\n    xtensa      - Xtensa 32\n"
+      },
+      "job": 124589718541,
+      "logSha256": "17a1d07954cfb05cabab0b8bf521d92a169cc2d6c4a9e8c350d0f06ccede012c",
+      "cases": [
+        {
+          "kind": 0,
+          "phases": {
+            "construction": {
+              "medianNs": {
+                "c": 2704619.5,
+                "c-copy": 2696235.0,
+                "rust": 2673752.5,
+                "rust-copy": 2710008.0,
+                "swift": 59353852.5,
+                "swift-copy": 59287466.0,
+                "reference": 22083383.0,
+                "reference-copy": 22002998.0,
+                "fwp": 23185187.5,
+                "fwp-copy": 22635376.0
+              },
+              "copyRatios": {
+                "c": 1.0031097066835792,
+                "rust": 1.0135597816177826,
+                "swift": 1.001119739204236,
+                "reference": 1.0036533657822448,
+                "fwp": 1.0242899212277279
+              },
+              "candidateQualified": false,
+              "fwpOverPeer": {
+                "c": 8.572439672197882,
+                "rust": 8.671403766803397,
+                "swift": 0.3906264972437973,
+                "reference": 1.049892921750259
+              },
+              "withinBudget": null,
+              "peerQualified": {
+                "c": false,
+                "rust": false,
+                "swift": false,
+                "reference": false
+              }
+            },
+            "invocation": {
+              "medianNs": {
+                "c": 35303650.5,
+                "c-copy": 34668183.0,
+                "rust": 32474500.0,
+                "rust-copy": 34116746.5,
+                "swift": 396672727.0,
+                "swift-copy": 396889004.5,
+                "reference": 725926413.5,
+                "reference-copy": 740821236.5,
+                "fwp": 311292788.5,
+                "fwp-copy": 323433489.0
+              },
+              "copyRatios": {
+                "c": 1.0183299915083521,
+                "rust": 1.0505703398050779,
+                "swift": 1.0005452290648658,
+                "reference": 1.0205183648411218,
+                "fwp": 1.0390009050916384
+              },
+              "candidateQualified": false,
+              "fwpOverPeer": {
+                "c": 8.817580734320945,
+                "rust": 9.585760781536282,
+                "swift": 0.7847597460361826,
+                "reference": 0.4288214104224767
+              },
+              "withinBudget": null,
+              "peerQualified": {
+                "c": false,
+                "rust": false,
+                "swift": false,
+                "reference": false
+              }
+            },
+            "release": {
+              "medianNs": {
+                "c": 20919.5,
+                "c-copy": 21235.0,
+                "rust": 21063.5,
+                "rust-copy": 21220.0,
+                "swift": 91051620.5,
+                "swift-copy": 89911521.0,
+                "reference": 27152619.5,
+                "reference-copy": 27397784.0,
+                "fwp": 27143554.5,
+                "fwp-copy": 26997761.0
+              },
+              "copyRatios": {
+                "c": 1.0150816224097134,
+                "rust": 1.0074299143067391,
+                "swift": 1.0126802381643616,
+                "reference": 1.0090291288470346,
+                "fwp": 1.0054002070764312
+              },
+              "candidateQualified": true,
+              "fwpOverPeer": {
+                "c": 1297.5240565023064,
+                "rust": 1288.6535713437938,
+                "swift": 0.29811171235552036,
+                "reference": 0.9996661463915112
+              },
+              "withinBudget": true,
+              "peerQualified": {
+                "c": false,
+                "rust": false,
+                "swift": true,
+                "reference": true
+              }
+            },
+            "process": {
+              "medianNs": {
+                "c": 39364880.0,
+                "c-copy": 39373858.0,
+                "rust": 36519225.5,
+                "rust-copy": 37948304.0,
+                "swift": 551828346.0,
+                "swift-copy": 551673844.0,
+                "reference": 781402210.5,
+                "reference-copy": 797455870.5,
+                "fwp": 372696526.5,
+                "fwp-copy": 371538275.0
+              },
+              "copyRatios": {
+                "c": 1.0002280713163612,
+                "rust": 1.039132223655729,
+                "swift": 1.0002800604046764,
+                "reference": 1.0205446820910933,
+                "fwp": 1.0031174486666279
+              },
+              "candidateQualified": false,
+              "fwpOverPeer": {
+                "c": 9.467741969491588,
+                "rust": 10.205488243445908,
+                "swift": 0.675384889525048,
+                "reference": 0.4769586283375378
+              },
+              "withinBudget": null,
+              "peerQualified": {
+                "c": true,
+                "rust": false,
+                "swift": true,
+                "reference": false
+              }
+            }
+          },
+          "memory": {
+            "c": [
+              {
+                "command": 260,
+                "peakRssKiB": 1720
+              },
+              {
+                "command": 261,
+                "peakRssKiB": 1660
+              },
+              {
+                "command": 262,
+                "peakRssKiB": 1772
+              }
+            ],
+            "rust": [
+              {
+                "command": 263,
+                "peakRssKiB": 1740
+              },
+              {
+                "command": 264,
+                "peakRssKiB": 1660
+              },
+              {
+                "command": 265,
+                "peakRssKiB": 1740
+              }
+            ],
+            "swift": [
+              {
+                "command": 266,
+                "peakRssKiB": 9592
+              },
+              {
+                "command": 267,
+                "peakRssKiB": 9384
+              },
+              {
+                "command": 268,
+                "peakRssKiB": 9444
+              }
+            ],
+            "reference": [
+              {
+                "command": 269,
+                "peakRssKiB": 2188
+              },
+              {
+                "command": 270,
+                "peakRssKiB": 1952
+              },
+              {
+                "command": 271,
+                "peakRssKiB": 2096
+              }
+            ],
+            "fwp": [
+              {
+                "command": 272,
+                "peakRssKiB": 2136
+              },
+              {
+                "command": 273,
+                "peakRssKiB": 1952
+              },
+              {
+                "command": 274,
+                "peakRssKiB": 2096
+              }
+            ]
+          }
+        },
+        {
+          "kind": 1,
+          "phases": {
+            "construction": {
+              "medianNs": {
+                "c": 1268296.5,
+                "c-copy": 1270196.5,
+                "rust": 1257567.5,
+                "rust-copy": 1273312.5,
+                "swift": 31233501.5,
+                "swift-copy": 31194751.0,
+                "reference": 22821122.5,
+                "reference-copy": 22768893.0,
+                "fwp": 26504636.0,
+                "fwp-copy": 26269956.0
+              },
+              "copyRatios": {
+                "c": 1.001498072414455,
+                "rust": 1.0125202026928972,
+                "swift": 1.0012422121914035,
+                "reference": 1.0022938972044007,
+                "fwp": 1.0089333990509919
+              },
+              "candidateQualified": true,
+              "fwpOverPeer": {
+                "c": 20.897823182512923,
+                "rust": 21.076114005808833,
+                "swift": 0.8485963701508139,
+                "reference": 1.161408077100502
+              },
+              "withinBudget": false,
+              "peerQualified": {
+                "c": false,
+                "rust": false,
+                "swift": true,
+                "reference": true
+              }
+            },
+            "invocation": {
+              "medianNs": {
+                "c": 24417628.0,
+                "c-copy": 24444484.5,
+                "rust": 24425504.0,
+                "rust-copy": 24444249.5,
+                "swift": 313688483.5,
+                "swift-copy": 313565037.0,
+                "reference": 385097944.0,
+                "reference-copy": 385161747.0,
+                "fwp": 175283380.0,
+                "fwp-copy": 175213320.0
+              },
+              "copyRatios": {
+                "c": 1.001099881610122,
+                "rust": 1.0007674560164654,
+                "swift": 1.0003936870678602,
+                "reference": 1.0001656799289482,
+                "fwp": 1.0003998554447802
+              },
+              "candidateQualified": true,
+              "fwpOverPeer": {
+                "c": 7.178558867388757,
+                "rust": 7.176244142188427,
+                "swift": 0.5587816869917062,
+                "reference": 0.45516571233628816
+              },
+              "withinBudget": true,
+              "peerQualified": {
+                "c": true,
+                "rust": true,
+                "swift": true,
+                "reference": true
+              }
+            },
+            "release": {
+              "medianNs": {
+                "c": 11095.0,
+                "c-copy": 11037.5,
+                "rust": 10857.5,
+                "rust-copy": 11354.0,
+                "swift": 47478804.0,
+                "swift-copy": 47512747.5,
+                "reference": 15093584.0,
+                "reference-copy": 15039080.0,
+                "fwp": 14997870.0,
+                "fwp-copy": 15009378.0
+              },
+              "copyRatios": {
+                "c": 1.0052095130237826,
+                "rust": 1.0457287589224038,
+                "swift": 1.0007149190194429,
+                "reference": 1.0036241578607201,
+                "fwp": 1.000767308957872
+              },
+              "candidateQualified": true,
+              "fwpOverPeer": {
+                "c": 1351.7683641279855,
+                "rust": 1381.3373244301174,
+                "swift": 0.3158855897044079,
+                "reference": 0.9936586300510204
+              },
+              "withinBudget": true,
+              "peerQualified": {
+                "c": false,
+                "rust": false,
+                "swift": true,
+                "reference": true
+              }
+            },
+            "process": {
+              "medianNs": {
+                "c": 26599925.5,
+                "c-copy": 26619483.0,
+                "rust": 26628468.5,
+                "rust-copy": 26642190.5,
+                "swift": 395628236.0,
+                "swift-copy": 395591213.5,
+                "reference": 424113799.0,
+                "reference-copy": 423837724.5,
+                "fwp": 217839606.5,
+                "fwp-copy": 218079536.0
+              },
+              "copyRatios": {
+                "c": 1.000735246420145,
+                "rust": 1.0005153131506606,
+                "swift": 1.0000935877712562,
+                "reference": 1.0006513683988976,
+                "fwp": 1.0011014043949809
+              },
+              "candidateQualified": true,
+              "fwpOverPeer": {
+                "c": 8.189481827684066,
+                "rust": 8.180703539146458,
+                "swift": 0.5506169344798737,
+                "reference": 0.5136348004088402
+              },
+              "withinBudget": true,
+              "peerQualified": {
+                "c": true,
+                "rust": true,
+                "swift": true,
+                "reference": true
+              }
+            }
+          },
+          "memory": {
+            "c": [
+              {
+                "command": 495,
+                "peakRssKiB": 1712
+              },
+              {
+                "command": 496,
+                "peakRssKiB": 1692
+              },
+              {
+                "command": 497,
+                "peakRssKiB": 1692
+              }
+            ],
+            "rust": [
+              {
+                "command": 498,
+                "peakRssKiB": 1676
+              },
+              {
+                "command": 499,
+                "peakRssKiB": 1680
+              },
+              {
+                "command": 500,
+                "peakRssKiB": 1724
+              }
+            ],
+            "swift": [
+              {
+                "command": 501,
+                "peakRssKiB": 9484
+              },
+              {
+                "command": 502,
+                "peakRssKiB": 9592
+              },
+              {
+                "command": 503,
+                "peakRssKiB": 10140
+              }
+            ],
+            "reference": [
+              {
+                "command": 504,
+                "peakRssKiB": 1936
+              },
+              {
+                "command": 505,
+                "peakRssKiB": 1948
+              },
+              {
+                "command": 506,
+                "peakRssKiB": 1904
+              }
+            ],
+            "fwp": [
+              {
+                "command": 507,
+                "peakRssKiB": 2064
+              },
+              {
+                "command": 508,
+                "peakRssKiB": 1996
+              },
+              {
+                "command": 509,
+                "peakRssKiB": 2264
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "source": "dfb6ff8e8aac215009e9a9cf48a8bce492ef4eae",
+      "architecture": "x86_64",
+      "session": 2,
+      "cpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           46 bits physical, 57 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               GenuineIntel\nModel name:                              Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz\nCPU family:                              6\nModel:                                   106\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                6\nCPU(s) scaling MHz:                      125%\nCPU max MHz:                             2800.0000\nCPU min MHz:                             800.0000\nBogoMIPS:                                5586.87\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq vmx ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch tpr_shadow ept vpid ept_ad fsgsbase tsc_adjust bmi1 hle avx2 smep bmi2 erms invpcid rtm avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves vnmi avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq la57 rdpid fsrm arch_capabilities\nVirtualization:                          VT-x\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               96 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                2.5 MiB (2 instances)\nL3 cache:                                48 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Mitigation; Aligned branch/return thunks\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Vulnerable: Clear CPU buffers attempted, no microcode; SMT Host state unknown\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Vulnerable\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Retpoline\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+      "versions": {
+        "cc": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+        "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\n",
+        "swiftc": "Swift version 6.4.2 (swift-6.4.2-RELEASE)\nTarget: x86_64-unknown-linux-gnu\n",
+        "time": "time (GNU Time) UNKNOWN\nCopyright (C) 2018 Free Software Foundation, Inc.\nLicense GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>.\nThis is free software: you are free to change and redistribute it.\nThere is NO WARRANTY, to the extent permitted by law.\n\nWritten by David Keppel, David MacKenzie, and Assaf Gordon.\n",
+        "objdump": "Ubuntu LLVM version 18.1.3\n  Optimized build.\n\n\n  Registered Targets:\n    aarch64     - AArch64 (little endian)\n    aarch64_32  - AArch64 (little endian ILP32)\n    aarch64_be  - AArch64 (big endian)\n    amdgcn      - AMD GCN GPUs\n    arm         - ARM\n    arm64       - ARM64 (little endian)\n    arm64_32    - ARM64 (little endian ILP32)\n    armeb       - ARM (big endian)\n    avr         - Atmel AVR Microcontroller\n    bpf         - BPF (host endian)\n    bpfeb       - BPF (big endian)\n    bpfel       - BPF (little endian)\n    hexagon     - Hexagon\n    lanai       - Lanai\n    loongarch32 - 32-bit LoongArch\n    loongarch64 - 64-bit LoongArch\n    m68k        - Motorola 68000 family\n    mips        - MIPS (32-bit big endian)\n    mips64      - MIPS (64-bit big endian)\n    mips64el    - MIPS (64-bit little endian)\n    mipsel      - MIPS (32-bit little endian)\n    msp430      - MSP430 [experimental]\n    nvptx       - NVIDIA PTX 32-bit\n    nvptx64     - NVIDIA PTX 64-bit\n    ppc32       - PowerPC 32\n    ppc32le     - PowerPC 32 LE\n    ppc64       - PowerPC 64\n    ppc64le     - PowerPC 64 LE\n    r600        - AMD GPUs HD2XXX-HD6XXX\n    riscv32     - 32-bit RISC-V\n    riscv64     - 64-bit RISC-V\n    sparc       - Sparc\n    sparcel     - Sparc LE\n    sparcv9     - Sparc V9\n    systemz     - SystemZ\n    thumb       - Thumb\n    thumbeb     - Thumb (big endian)\n    ve          - VE\n    wasm32      - WebAssembly 32-bit\n    wasm64      - WebAssembly 64-bit\n    x86         - 32-bit X86: Pentium-Pro and above\n    x86-64      - 64-bit X86: EM64T and AMD64\n    xcore       - XCore\n    xtensa      - Xtensa 32\n"
+      },
+      "job": 124589718541,
+      "logSha256": "17a1d07954cfb05cabab0b8bf521d92a169cc2d6c4a9e8c350d0f06ccede012c",
+      "cases": [
+        {
+          "kind": 0,
+          "phases": {
+            "construction": {
+              "medianNs": {
+                "c": 1260265.0,
+                "c-copy": 1264213.0,
+                "rust": 1266314.0,
+                "rust-copy": 1267802.5,
+                "swift": 31160648.0,
+                "swift-copy": 31173007.5,
+                "reference": 24256696.0,
+                "reference-copy": 24091870.5,
+                "fwp": 26498449.5,
+                "fwp-copy": 26280791.5
+              },
+              "copyRatios": {
+                "c": 1.0031326744771933,
+                "rust": 1.001175458851438,
+                "swift": 1.0003966380930205,
+                "reference": 1.0068415401784598,
+                "fwp": 1.0082820184468189
+              },
+              "candidateQualified": true,
+              "fwpOverPeer": {
+                "c": 21.02609332164267,
+                "rust": 20.925654695438887,
+                "swift": 0.8503818502105605,
+                "reference": 1.0924179245186567
+              },
+              "withinBudget": false,
+              "peerQualified": {
+                "c": false,
+                "rust": false,
+                "swift": true,
+                "reference": true
+              }
+            },
+            "invocation": {
+              "medianNs": {
+                "c": 19558524.5,
+                "c-copy": 19572786.0,
+                "rust": 19596237.5,
+                "rust-copy": 19607675.0,
+                "swift": 313794672.0,
+                "swift-copy": 313780161.0,
+                "reference": 387081619.5,
+                "reference-copy": 388009768.5,
+                "fwp": 175224608.5,
+                "fwp-copy": 175152813.0
+              },
+              "copyRatios": {
+                "c": 1.000729170546582,
+                "rust": 1.0005836579598506,
+                "swift": 1.0000462457535675,
+                "reference": 1.0023978121234454,
+                "fwp": 1.0004099020664887
+              },
+              "candidateQualified": true,
+              "fwpOverPeer": {
+                "c": 8.958989135402316,
+                "rust": 8.941747542098323,
+                "swift": 0.558405301731828,
+                "reference": 0.4526812942612482
+              },
+              "withinBudget": true,
+              "peerQualified": {
+                "c": true,
+                "rust": true,
+                "swift": true,
+                "reference": true
+              }
+            },
+            "release": {
+              "medianNs": {
+                "c": 11111.5,
+                "c-copy": 10887.0,
+                "rust": 10993.0,
+                "rust-copy": 10769.0,
+                "swift": 49012621.5,
+                "swift-copy": 49002627.5,
+                "reference": 14856749.5,
+                "reference-copy": 14872832.5,
+                "fwp": 15063969.5,
+                "fwp-copy": 15067662.5
+              },
+              "copyRatios": {
+                "c": 1.0206209240378432,
+                "rust": 1.0208004457238369,
+                "swift": 1.000203948247469,
+                "reference": 1.0010825382766264,
+                "fwp": 1.0002451545059223
+              },
+              "candidateQualified": true,
+              "fwpOverPeer": {
+                "c": 1355.7098051568196,
+                "rust": 1370.323796961703,
+                "swift": 0.3073487815786389,
+                "reference": 1.0139478692832506
+              },
+              "withinBudget": true,
+              "peerQualified": {
+                "c": false,
+                "rust": false,
+                "swift": true,
+                "reference": true
+              }
+            },
+            "process": {
+              "medianNs": {
+                "c": 21689274.0,
+                "c-copy": 21720573.0,
+                "rust": 21735625.0,
+                "rust-copy": 21804856.5,
+                "swift": 397195014.0,
+                "swift-copy": 397297328.0,
+                "reference": 428278307.0,
+                "reference-copy": 427737756.0,
+                "fwp": 218246868.0,
+                "fwp-copy": 217836237.0
+              },
+              "copyRatios": {
+                "c": 1.0014430635160956,
+                "rust": 1.0031851626074704,
+                "swift": 1.0002575913503284,
+                "reference": 1.001263743946887,
+                "fwp": 1.0018850444978995
+              },
+              "candidateQualified": true,
+              "fwpOverPeer": {
+                "c": 10.062433071757034,
+                "rust": 10.04097503522443,
+                "swift": 0.5494703113267178,
+                "reference": 0.5095912270896317
+              },
+              "withinBudget": true,
+              "peerQualified": {
+                "c": true,
+                "rust": true,
+                "swift": true,
+                "reference": true
+              }
+            }
+          },
+          "memory": {
+            "c": [
+              {
+                "command": 260,
+                "peakRssKiB": 1688
+              },
+              {
+                "command": 261,
+                "peakRssKiB": 1692
+              },
+              {
+                "command": 262,
+                "peakRssKiB": 1708
+              }
+            ],
+            "rust": [
+              {
+                "command": 263,
+                "peakRssKiB": 1740
+              },
+              {
+                "command": 264,
+                "peakRssKiB": 1660
+              },
+              {
+                "command": 265,
+                "peakRssKiB": 1724
+              }
+            ],
+            "swift": [
+              {
+                "command": 266,
+                "peakRssKiB": 9380
+              },
+              {
+                "command": 267,
+                "peakRssKiB": 9560
+              },
+              {
+                "command": 268,
+                "peakRssKiB": 9632
+              }
+            ],
+            "reference": [
+              {
+                "command": 269,
+                "peakRssKiB": 1868
+              },
+              {
+                "command": 270,
+                "peakRssKiB": 1936
+              },
+              {
+                "command": 271,
+                "peakRssKiB": 2096
+              }
+            ],
+            "fwp": [
+              {
+                "command": 272,
+                "peakRssKiB": 1904
+              },
+              {
+                "command": 273,
+                "peakRssKiB": 1940
+              },
+              {
+                "command": 274,
+                "peakRssKiB": 2140
+              }
+            ]
+          }
+        },
+        {
+          "kind": 1,
+          "phases": {
+            "construction": {
+              "medianNs": {
+                "c": 1257457.0,
+                "c-copy": 1263560.5,
+                "rust": 1264268.5,
+                "rust-copy": 1264432.5,
+                "swift": 31222180.0,
+                "swift-copy": 31162260.0,
+                "reference": 25202229.0,
+                "reference-copy": 25169200.5,
+                "fwp": 27366248.5,
+                "fwp-copy": 27490465.5
+              },
+              "copyRatios": {
+                "c": 1.0048538439087777,
+                "rust": 1.0001297192803587,
+                "swift": 1.0019228387158057,
+                "reference": 1.0013122586074992,
+                "fwp": 1.0045390583952345
+              },
+              "candidateQualified": true,
+              "fwpOverPeer": {
+                "c": 21.763168442340373,
+                "rust": 21.645915009351256,
+                "swift": 0.876500247580406,
+                "reference": 1.085866194613183
+              },
+              "withinBudget": false,
+              "peerQualified": {
+                "c": false,
+                "rust": false,
+                "swift": true,
+                "reference": true
+              }
+            },
+            "invocation": {
+              "medianNs": {
+                "c": 24452017.0,
+                "c-copy": 24412392.5,
+                "rust": 24454662.5,
+                "rust-copy": 24417527.5,
+                "swift": 313915514.0,
+                "swift-copy": 313815271.5,
+                "reference": 384608510.5,
+                "reference-copy": 384389645.0,
+                "fwp": 175119458.5,
+                "fwp-copy": 175482679.5
+              },
+              "copyRatios": {
+                "c": 1.0016231305473235,
+                "rust": 1.0015208337535404,
+                "swift": 1.0003194315544965,
+                "reference": 1.00056938448485,
+                "fwp": 1.0020741327269465
+              },
+              "candidateQualified": true,
+              "fwpOverPeer": {
+                "c": 7.1617592323774355,
+                "rust": 7.160984474841965,
+                "swift": 0.5578553804766718,
+                "reference": 0.45531872987506344
+              },
+              "withinBudget": true,
+              "peerQualified": {
+                "c": true,
+                "rust": true,
+                "swift": true,
+                "reference": true
+              }
+            },
+            "release": {
+              "medianNs": {
+                "c": 11040.0,
+                "c-copy": 10960.0,
+                "rust": 10841.5,
+                "rust-copy": 10797.5,
+                "swift": 47528155.5,
+                "swift-copy": 47488019.0,
+                "reference": 15091840.5,
+                "reference-copy": 15045380.5,
+                "fwp": 15041852.0,
+                "fwp-copy": 15015239.0
+              },
+              "copyRatios": {
+                "c": 1.0072992700729928,
+                "rust": 1.0040750173651307,
+                "swift": 1.0008451921315142,
+                "reference": 1.0030879910282096,
+                "fwp": 1.0017723993604097
+              },
+              "candidateQualified": true,
+              "fwpOverPeer": {
+                "c": 1362.4865942028985,
+                "rust": 1387.4327353226029,
+                "swift": 0.3164829739710812,
+                "reference": 0.9966877134700701
+              },
+              "withinBudget": true,
+              "peerQualified": {
+                "c": false,
+                "rust": false,
+                "swift": true,
+                "reference": true
+              }
+            },
+            "process": {
+              "medianNs": {
+                "c": 26628569.0,
+                "c-copy": 26554243.5,
+                "rust": 26563370.0,
+                "rust-copy": 26561897.0,
+                "swift": 395888370.5,
+                "swift-copy": 395769659.0,
+                "reference": 426827236.0,
+                "reference-copy": 425773174.5,
+                "fwp": 218713576.5,
+                "fwp-copy": 219579761.0
+              },
+              "copyRatios": {
+                "c": 1.002799006494009,
+                "rust": 1.0000554553765493,
+                "swift": 1.0002999509874,
+                "reference": 1.0024756409354296,
+                "fwp": 1.0039603600007885
+              },
+              "candidateQualified": true,
+              "fwpOverPeer": {
+                "c": 8.213493428805732,
+                "rust": 8.233653203640953,
+                "swift": 0.5524627465660803,
+                "reference": 0.5124171047510192
+              },
+              "withinBudget": true,
+              "peerQualified": {
+                "c": true,
+                "rust": true,
+                "swift": true,
+                "reference": true
+              }
+            }
+          },
+          "memory": {
+            "c": [
+              {
+                "command": 495,
+                "peakRssKiB": 1708
+              },
+              {
+                "command": 496,
+                "peakRssKiB": 1720
+              },
+              {
+                "command": 497,
+                "peakRssKiB": 1780
+              }
+            ],
+            "rust": [
+              {
+                "command": 498,
+                "peakRssKiB": 1740
+              },
+              {
+                "command": 499,
+                "peakRssKiB": 1724
+              },
+              {
+                "command": 500,
+                "peakRssKiB": 1780
+              }
+            ],
+            "swift": [
+              {
+                "command": 501,
+                "peakRssKiB": 10076
+              },
+              {
+                "command": 502,
+                "peakRssKiB": 9352
+              },
+              {
+                "command": 503,
+                "peakRssKiB": 9572
+              }
+            ],
+            "reference": [
+              {
+                "command": 504,
+                "peakRssKiB": 2140
+              },
+              {
+                "command": 505,
+                "peakRssKiB": 2068
+              },
+              {
+                "command": 506,
+                "peakRssKiB": 2096
+              }
+            ],
+            "fwp": [
+              {
+                "command": 507,
+                "peakRssKiB": 1868
+              },
+              {
+                "command": 508,
+                "peakRssKiB": 2076
+              },
+              {
+                "command": 509,
+                "peakRssKiB": 2076
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

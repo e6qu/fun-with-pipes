@@ -10,7 +10,8 @@ permissions:
 
 jobs:
   roadmap_docs:
-    runs-on: ubuntu-latest
+    # Evidence checks read saved binaries; small compiled controls run natively.
+    runs-on: ubuntu-24.04-arm
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v7
@@ -54,6 +55,9 @@ jobs:
           python3 scripts/test-unique-buffer-baselines.py
           python3 scripts/test-buffer-program-records.py
           python3 scripts/test-swift-peer-records.py
+          python3 scripts/test-callable-phase-records.py
+          python3 scripts/test-callable-context.py
+          python3 scripts/test-callable-paired.py
           python3 scripts/test-returned-callables.py
           python3 scripts/test-returned-callable-evidence.py
           python3 scripts/test-returned-callable-budget.py

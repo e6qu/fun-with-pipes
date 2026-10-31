@@ -5,7 +5,7 @@ no single number for “fwp overhead.” A report must say whether it compares f
 with handwritten C/Rust, two versions of fwp, or one isolated runtime operation.
 A faster new fwp build does not establish parity with another language.
 
-## Latest merged-code snapshot: 31 October 2026
+## PR 233 whole-program baseline
 
 PR #233's [production benchmark job](https://github.com/e6qu/fun-with-pipes/actions/runs/41174213818/job/124458289963)
 measures `fd19b9e4`, whose tree matches merged `73a6b20d`. Host: Linux AMD64,
@@ -109,10 +109,11 @@ its binaries; supply the explicit evidence run and full measured source commit.
 
 Execution time and working memory take priority over executable size. Keep size
 and stack costs visible because they can affect caches and memory; a size increase
-alone does not establish a slowdown. For the current callable candidate, preserve
+alone does not establish a slowdown. For the merged borrowed-call change, preserve
 the original 17.7% ARM O1 text-budget rejection, but assess its performance and
 memory rather than treating the percentage alone as the delivery decision.
-Its count reduction is verified; its elapsed-time benefit is still unmeasured.
+The [phase measurements](measurements/callable-phases.md) show faster invocation,
+but three AMD64 construction regressions fail the combined acceptance rule.
 
 ## Choose the question first
 
@@ -156,7 +157,7 @@ work. The [ownership direction](gc-removal-design.md) explains the lifetime rule
 | Workload | Existing evidence | Remaining comparison work |
 |---|---|---|
 | Unique numeric buffer | [C/Rust peer comparison](measurements/unique-buffer-peers.md) covers lengths 0, 16, 4,096 and 262,144, output/cleanup, payload versus metadata, process memory, code and stack; [newer sessions](measurements/buffer-current.md) retain failed controls | Qualify the remaining timing comparisons without retrying unchanged failures. Separate construction/work/release timing from the existing whole-process totals. Preserve [array removal](measurements/generated-array-folds.md) and [State range](measurements/state-range-folds.md) cost checks without treating them as timing acceptance. |
-| Returned partial application | [Three-host C/Rust/fwp comparison](measurements/returned-callables.md) separates construction, repeated calls and destruction at O1/O2; fwp uses a 16-byte heap payload, while C/Rust captures are inline | Add Swift and measure invocation/whole-call costs before delivery; retain the recorded ARM O1 size rejection. Timing parity is not measured. |
+| Returned partial application | [Three-host C/Rust/fwp comparison](measurements/returned-callables.md) separates construction, repeated calls and destruction at O1/O2; fwp uses a 16-byte heap payload, while C/Rust captures are inline | The [phase experiment](measurements/callable-phases.md) adds Swift and measures invocation/whole-call costs; retain the original ARM O1 size rejection. The user merged #234 before timing acceptance. |
 | Subscription with weak back-link | [Weak-link semantics](gc-removal-design.md) and lifetime tests cover registration, expiration and cleanup | Add explicit C/Rust registrations with the same active-call and cancellation rules. Measure weak metadata allocation, live/expired acquisition, callback work and teardown separately. |
 | Recursive parser workspace | [A6](measurements/parser-workspace.md) already compares all three languages at 31/511/8,191 balanced nodes and 127 left-nested nodes, with phase timings and storage observations | Preserve those results. Complete the broader memory accounting (reserved/committed storage and peer transient peaks) and Rust stack observations before claiming every B1 field; current reported capacities are not process memory. |
 

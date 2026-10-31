@@ -8,6 +8,7 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parent.parent
 HELPERS = [
+    ('tests/fixtures/callable_phase_clock.c', 'callable_now'),
     ('tests/fixtures/numerical_bench_native.c', 'bench_clock'),
     ('tests/fixtures/numerical_bench.c', 'now_ns'),
     ('scripts/measure-map-phases.py', 'map_probe_now'),

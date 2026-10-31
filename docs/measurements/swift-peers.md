@@ -6,8 +6,9 @@ The [separate audit](https://github.com/e6qu/fun-with-pipes/actions/runs/4121521
 rechecks all four artifacts without executing their binaries. Full job logs have
 no unexpected compiler diagnostics. The container package manager notes an absent
 C++ manual page; compilation, arithmetic and ownership controls pass.
-This is the candidate branch in PR #234, not a new release or completed full
-production matrix. The [summary JSON](swift-peers-2026-10-31.json) retains every
+These measurements precede the user merge of PR #234. Its full production
+matrix is tracked in the [handoff](../development-state.md); these focused jobs
+do not replace that matrix. The [summary JSON](swift-peers-2026-10-31.json) retains every
 session's timings, all copy-control ratios, RSS samples and artifact identities.
 
 ## What the numbers mean
@@ -74,7 +75,7 @@ fwp's small scalar programs occupy roughly 1.3–1.7 MiB here, versus about 8 Mi
 for Swift. The sorted map still uses about 16.9 MiB in fwp versus 9.3 MiB in Rust.
 Lower resident memory alone does not prove fewer ARC operations: runtime and
 representation differences are included. Swift allocation/count instrumentation
-remains open; the [merged-code fwp profiles](../benchmarks.md#latest-merged-code-snapshot-31-october-2026)
+remains open; the [PR #233 fwp profiles](../benchmarks.md#pr-233-whole-program-baseline)
 are separate observations from #233, not profiles of these new executables.
 
 ## AMD64 observations are not a matched pair
@@ -107,9 +108,11 @@ value is 16 bytes, aligned to eight bytes; that is not its total captured storag
 A separate reference-capture control observes normal release and detects an
 intentionally retained closure. It does not count scalar-closure allocations.
 
-Next, measure callable construction/invocation/release and the fwp candidate
-against the same source with its count optimization disabled. Add Swift allocation
-and ARC-operation observations before attributing costs to ownership. Keep
+The [closure phase comparison](callable-phases.md) now measures construction,
+invocation and release against the same fwp source with its count optimization
+disabled. It retains three AMD64 construction regressions and failed noise
+controls. Add Swift allocation and ARC-operation observations before attributing
+costs to ownership. Keep
 parser, weak-subscription and numerical Swift comparisons as explicit missing
 coverage. The existing D2/N1 timing failures remain open. Prioritize measured
 execution time and working memory, retaining executable-size costs as context.
