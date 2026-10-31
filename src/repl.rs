@@ -226,6 +226,15 @@ impl Session {
             c,
             crate::mono::Roots {
                 entry: Some(entry.clone()),
+                values: declarations
+                    .iter()
+                    .filter_map(|decl| match decl {
+                        Decl::Bind(binding) if reserved(&binding.name) => {
+                            Some(format!("main::{}", binding.name))
+                        }
+                        _ => None,
+                    })
+                    .collect(),
                 ..Default::default()
             },
         )
@@ -254,14 +263,8 @@ impl Session {
             if let Some(seed) = self.rng {
                 interpreter.rng = seed;
             }
-            let result = if self.program.funcs[id].arity == 0 {
-                interpreter.call_root(id, vec![])
-            } else {
-                Ok(Value::Closure(Rc::new(Closure {
-                    func: id,
-                    args: Vec::new(),
-                })))
-            };
+            debug_assert_eq!(self.program.funcs[id].arity, 0);
+            let result = interpreter.call_root(id, vec![]);
             self.rng = Some(interpreter.rng);
             result
         };

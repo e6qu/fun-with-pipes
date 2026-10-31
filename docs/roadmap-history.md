@@ -782,8 +782,8 @@ constructor-allocation test and exact binary output handling.
 
 ## Checked native defaults and ARC metadata (PR #199)
 
-Native commands, modules and compiler APIs use checked ARC by default. Unproved
-ownership is rejected; explicit tracing remains. ARC omits tracing mark storage,
+Native commands, modules and compiler APIs switched to checked ARC by default.
+Unproved ownership was rejected; explicit tracing still existed at this revision. ARC omits tracing mark storage,
 age checks, collector stack discovery and late poisoned-storage diagnostics.
 [Page metadata](measurements/arc-metadata.md) falls from 4,648 to 4,128 bytes,
 with the 4,096 count bytes unchanged. This establishes layout, not a timing gain.
@@ -958,7 +958,7 @@ product expression to C optimization. The [report](measurements/checked-products
 records lower O2 counting-loop CPU time on EPYC 7763/N2, smaller instruction
 sections and removal of AMD64's normal entry frame. Matched C remains faster;
 AMD64 comparisons with Rust vary by CPU. O0/O1 emit an extra product. These
-limits remain part of the result, and tracing is still present.
+limits remain part of the result; those binaries still included tracing.
 
 [PR #183](https://github.com/e6qu/fun-with-pipes/pull/183) · [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39543123372) · [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39543123369)
 
@@ -968,7 +968,7 @@ Integer display lengths now count decimal digits in groups. Ordinary inline
 hints remove counting-helper calls in the measured loop. The [report](measurements/integer-counting.md)
 records roughly 48% less child CPU time on Xeon 8573C/N2, remaining matched
 C/Rust gaps, a larger instruction section and AMD64's fixed 40-byte entry frame.
-Managed counting-workload allocations remain zero; tracing remains in the binary.
+Managed counting-workload allocations were zero; those binaries still included tracing.
 
 [PR #182](https://github.com/e6qu/fun-with-pipes/pull/182) · [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/39533108586) · [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/39532459370)
 

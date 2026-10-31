@@ -69,16 +69,48 @@ boxes or retains relative to the maintained known-form limits. Each call must
 restore live storage and cleanup state. Source, generated C, executable and
 binary listing are retained with the existing artifact setting.
 
-Focused run `41246880525` at `bcb4a468` found two failed O0 requirements on
-Linux ARM64/AMD64 and macOS ARM64. The named array path still requests one array
-(`8(n + 1)` bytes). Named list folding requests `2n` allocations, `40n` bytes,
-`4n` applications and `n` boxes; the corresponding tacit path requests none.
-The other six named pairs meet their limits. O2 was not reached after the failed
-assertion. PR #236 repairs these compiler paths and now collects both levels;
-those repairs remain unverified until a fresh runner result passes.
+Focused run `41248126920` at `f5b31b07` passes all eight pairs at both O0 and O2
+on Linux ARM64/AMD64 (GCC) and macOS ARM64 (Clang). Pipe, partial, borrowed,
+captured and folded forms request no allocations, applications, boxes or retains.
+The result form uses one 24-byte allocation, one box and one retain. Each/State
+forms use two allocations, 152 bytes, one box and one application, with no retains.
+
+The preceding run `41246880525` at `bcb4a468` found a named array allocation
+(`8(n + 1)` bytes) and named folding costs of `2n` allocations, `40n` bytes,
+`4n` applications and `n` boxes. Producer reconnection and known returned-call
+specialization removed those costs. No timing improvement is claimed.
 
 This is a finite test scope, not a speedup or a claim that every local function
 is free. Inputs, phase boundaries and cost limits remain unchanged.
+
+### Local ownership and representation requirements
+
+Seven new cases extend the same probe, with empty-input controls at 0 as well
+as 32 and 128. They return integers, so every temporary owner must be released
+before the call finishes. These are predeclared requirements for roadmap steps
+4–5; observations are pending.
+
+| Case | Work and required cost |
+|---|---|
+| `local-tuple`, `local-record` | Build and destructure `(n, n + 1)` or its named record; return `2n + 1`; no allocation, application, box or retain |
+| `local-variant` | Immediately inspect a returned `Some` record and sum its fields; the same zero-cost requirement |
+| `local-text-record` | Format `n`, put its String and `n` in a record, destructure it and return decimal length plus `n`; only the String allocation may remain |
+| `local-alias` | Read one formatted String through two local names and a known function; only the String allocation may remain |
+| `local-owner-loop` | Read a loop-carried String `n` times; no retains |
+| `local-loop-alias` | Also keep and read the caller's String alias after the loop; at most one retain, regardless of trip count |
+
+A formatted String requests eight length bytes, its decimal bytes and one zero
+terminator. The fixture therefore permits one allocation of 10/11/12 bytes for
+inputs 0/32/128 in the two String scalar paths. Loop allocation/box costs are
+reported separately; the retain requirement does not claim allocation-free loops.
+The probe checks results, live-storage restoration and cleanup state at O0/O2.
+Existing ownership tests supply later-argument failure and cancellation controls.
+
+A separate `local-map-filter` case uses a named range, adds one, keeps even values
+and sums them. Inputs 0/32/128 give 0/272/4,160. It requires zero allocations,
+applications, boxes and retains. Reused inputs and callbacks with output or
+competing traps remain semantic controls; a zero-count pure fixture does not
+permit interleaving arbitrary eager stages.
 
 These counters describe operations requested by generated C. One application can
 enter more than one runtime helper, and a C compiler can optimize a helper's

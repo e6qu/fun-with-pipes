@@ -118,6 +118,27 @@ fn saved_lexical_closures_keep_their_code_and_captures() {
                 .as_deref(),
             Some("12")
         );
+        session
+            .submit(
+                "let amount = 2 | tap echo in make-closure amount",
+                &mut output,
+            )
+            .unwrap();
+        assert_eq!(output, b"2\n");
+        for (source, expected) in [("out6 5", "10"), ("out6 6", "12")] {
+            assert_eq!(
+                session
+                    .submit(source, &mut output)
+                    .unwrap()
+                    .value
+                    .as_deref(),
+                Some(expected)
+            );
+            assert_eq!(
+                output, b"2\n",
+                "captured computation must run only in cell 6"
+            );
+        }
     });
 }
 

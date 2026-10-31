@@ -94,6 +94,15 @@ retain/release it. Include one loop-carried owner, a retained caller alias and a
 failure between argument evaluations. Keep analysis bounded and measure compiler
 cost on the existing [analysis fixtures](docs/measurements/ownership-analysis.md).
 
+Selected new cases in `tests/fixtures/functional_costs.fwp` are `local-alias`,
+`local-owner-loop` and `local-loop-alias`, at inputs 0, 32 and 128. The first
+reads one dynamically created String through two names and a known reader; the
+loops carry that String, with/without a caller alias. Require zero retains for
+the first two and at most one for the retained-alias case, independent of trip
+count. Report all allocations, bytes, applications and boxes as well. Existing
+`compiler_call_liveness` controls cover failure between argument evaluations and
+cancellation. Freeze these requirements before collecting the new observations.
+
 Acceptance: state exact count reductions per fixture, preserve shared aliases,
 reject use-after-consume and forbidden resource duplication, and prove physical
 cleanup on normal, error and cancellation paths. Fewer counts alone is no speed claim.
@@ -104,6 +113,13 @@ Extend existing scalar replacement across local destructuring, known calls and
 immediately inspected Option/Result returns. Cover a numeric tuple, a nominal
 record, a record containing a String and a returned variant. Inspect emitted C
 and actual binaries; generic entry points may still require a boxed value.
+
+The same fixture selects `local-tuple`, `local-record`, `local-text-record` and
+`local-variant`, each called with 0, 32 and 128. Require no intermediate box,
+retain or dynamic application. Numeric cases must allocate nothing; the String
+case may allocate only its output from `show` (one request, nine header/terminator
+bytes plus the decimal length). All paths return scalars and restore live storage.
+Native probes use the actual generated entries at O0/O2; preserve C and binaries.
 
 Acceptance: no intermediate box on the selected direct paths, valid child owners,
 unchanged bit patterns and failure order. Record stack and code costs, prioritizing
@@ -116,6 +132,14 @@ Cover generated-array/fold, map/filter/consumer and stateful range iteration.
 Add controls for a reused collection, an unknown callback, early stopping and two
 stages that may fail differently. Do not interleave eager stages without a proof
 that observable behavior stays unchanged.
+
+`local-map-filter` in the same fixture adds one, keeps even values and sums them
+from a named range. At 0/32/128 require no allocations, boxes, retains or runtime
+applications. The existing named generated-array and State-range pairs cover the
+other two paths. `tests/local_bindings.rs` adds reused-list, eager callback-output
+and different-trap controls; numeric-array tests cover unknown callbacks, aliases
+and early failure. Reconnecting a named producer must retain the existing fusion
+proof, including the stricter rule for an early-stopping consumer.
 
 Acceptance: eliminated intermediate requests/bytes in the eligible fixtures;
 callback count/order, first failure, empty inputs, aliases and cleanup preserved.

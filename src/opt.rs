@@ -403,6 +403,21 @@ impl<'p> Opt<'p> {
         for (p, body) in arms {
             match p {
                 Pat::Construct(t, _) if t != tag => continue,
+                Pat::Construct(_, ps)
+                    if ps.len() == 1
+                        && args.len() == 1
+                        && matches!(&ps[0], Pat::Record(parts) if parts.iter().all(irrefutable)) =>
+                {
+                    // One immediately destructured payload; every field matches.
+                    // Reuse record elimination to preserve field evaluation and
+                    // typed owners. Refutable fields must keep later arms.
+                    let payload_ty = fields.as_ref().and_then(|fs| fs.first());
+                    return self.known_record(
+                        &args[0],
+                        &[(ps[0].clone(), body.clone())],
+                        payload_ty,
+                    );
+                }
                 Pat::Construct(_, ps) if ps.iter().all(irrefutable) && ps.len() == args.len() => {
                     let mut binds = Vec::new();
                     for (i, (sp, a)) in ps.iter().zip(args).enumerate() {
@@ -529,8 +544,11 @@ impl<'p> Opt<'p> {
             return f;
         }
         match f {
-            // ((g a) b) = (g a b)
-            Expr::Apply(g, mut a1) => {
+            // Only an unsaturated known entry can combine argument groups.
+            // An unknown first application may run or trap before the next
+            // argument is evaluated, even when its result is another function.
+            Expr::Apply(g, mut a1) if matches!(&*g, Expr::Func(id) if a1.len() < self.arity(*id)) =>
+            {
                 a1.extend(args);
                 self.apply(*g, a1, depth)
             }

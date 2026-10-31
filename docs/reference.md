@@ -160,6 +160,19 @@ A captured local value must satisfy the existing storage/lifetime rules; naming
 an input does not permit copying a resource or retaining a scoped borrow.
 
 Successive inputs remain explicit nested functions, `fn a -> fn b -> a + b`.
+Each application runs that stage's body before the next argument is evaluated:
+
+```fwp
+make-offset : I64 -> I64 -> I64
+make-offset = fn divisor ->
+    let offset = 10 / divisor
+    in fn value -> offset + value
+```
+
+`make-offset 2` computes `5` immediately and returns a function that adds it.
+`make-offset 0` fails immediately, even if its returned function would be unused.
+In `make-offset 0 (calculate ())`, the division fails before `calculate` runs.
+
 Tuples are never implicitly unpacked. Tacit functions and `curry`/`uncurry` retain
 their meaning. Field shorthand applies wherever ordinary record field expressions
 are accepted: `{ x }`, `Point { x }`, `with { x }`, and `update { x }` all expand

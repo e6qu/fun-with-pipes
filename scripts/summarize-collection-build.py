@@ -56,7 +56,7 @@ def audit_tests(log):
                 'collection_construction': 3, 'decoder_partial': 1,
                 'inline_caf_ownership': 7, 'map_set_ownership': 7,
                 'mapped_array_construction': 3, 'numeric_array_fusion': 3,
-                'protocol': 11, 'range_set': 3, 'repl': 9, 'static_constants': 1}
+                'protocol': 11, 'range_set': 3, 'repl': 11, 'static_constants': 1}
     # Cargo's target headers use stderr; harness summaries use stdout. GitHub
     # can place the next header before the preceding summary, so audit the two
     # ordered streams separately instead of splitting on headers.

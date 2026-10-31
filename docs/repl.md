@@ -68,7 +68,10 @@ make-adder = fn amount -> fn value -> amount + value
 
 `make-adder 3` returns a function that remembers `3`; `make-adder 3 4` returns `7`.
 Saving the returned function as an expression result preserves its captured value
-and checked code, even if you redefine `make-adder` later.
+and checked code, even if you redefine `make-adder` later. Computation that builds
+the returned function runs when you submit the expression. Reading its `outN`
+result later uses that same value; it does not repeat the construction or its
+effects.
 
 ## Multiline input and terminal editing
 

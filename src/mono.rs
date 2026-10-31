@@ -2,7 +2,7 @@
 //! concrete instantiation, resolving trait methods to impls statically.
 
 use crate::softfloat::{BFloat16, Binary128, Binary16, FloatFormat};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use crate::ast::{self, ExprKind, NodeId, PatKind};
 use crate::diag::{Diagnostic, Span};
@@ -26,6 +26,8 @@ pub struct Roots {
     pub std_tests: bool,
     /// Bindings to compile by canonical name (used for macros).
     pub names: Vec<String>,
+    /// Session bindings evaluated and cached as values, including function values.
+    pub values: Vec<String>,
     /// Serve the exported functions of this module (`fwp serve`, the
     /// service executables of a split build).
     pub service: Option<String>,
@@ -45,6 +47,7 @@ pub const DEFAULT_SERVICE_ADDR: &str = "127.0.0.1:50051";
 
 pub struct Mono<'a> {
     source_steps: bool,
+    value_bindings: HashSet<String>,
     debug_scopes: HashMap<NodeId, Vec<(NodeId, String)>>,
     env: &'a Env,
     typed: &'a Typed,
@@ -284,6 +287,7 @@ impl<'a> Mono<'a> {
         }
         Mono {
             source_steps: false,
+            value_bindings: HashSet::new(),
             debug_scopes: HashMap::new(),
             env,
             typed,
@@ -472,7 +476,47 @@ impl<'a> Mono<'a> {
             .zip(key.iter().cloned())
             .collect();
         let ty = self.mt(&scheme.ty, &s);
-        let arity = spine_arity(&self.env.table, &scheme.ty);
+        // A simple alias keeps the target's stage boundaries. Following names
+        // uses the checked identities, including imported aliases; recursive
+        // aliases terminate at the existing type-based rule below.
+        let mut body = &b.body;
+        let mut aliases = HashSet::new();
+        while let ExprKind::Var(_) = &body.kind {
+            let Some(inst) = self.typed.insts.get(&body.id) else {
+                break;
+            };
+            let GlobalKind::Binding(target) = &self.env.globals[&inst.target].kind else {
+                break;
+            };
+            if !aliases.insert(*target) {
+                break;
+            }
+            body = &self.env.bindings[*target].body;
+        }
+        let arity = if self.value_bindings.contains(&b.name) {
+            0
+        } else if matches!(body.kind, ExprKind::Lambda(..)) {
+            self.register_shapes(&ty);
+            // Consecutive fn bodies only construct another function. Group
+            // those inputs unless doing so extends an observable owner. Stop
+            // before any computation between stages, even checked arithmetic.
+            let mut stage = &ty;
+            let mut arity = 0;
+            while let ExprKind::Lambda(_, next) = &body.kind {
+                arity += 1;
+                let (input, output) = stage.as_fun().expect("checked fn type");
+                if crate::resource::may_hold_resource(&self.prog.shapes, input)
+                    || crate::resource::contains_channel(&self.prog.shapes, input)
+                {
+                    break;
+                }
+                body = next;
+                stage = output;
+            }
+            arity
+        } else {
+            spine_arity(&self.env.table, &scheme.ty)
+        };
         let id = self.new_func(
             display_name(&b.name),
             arity,
@@ -624,7 +668,9 @@ impl<'a> Mono<'a> {
                 let func = &self.prog.funcs[id];
                 let ar = func.arity as usize;
                 if ar == 0 {
-                    return Expr::Apply(Box::new(Expr::Func(id)), args);
+                    return args
+                        .into_iter()
+                        .fold(Expr::Func(id), |f, arg| Expr::Apply(Box::new(f), vec![arg]));
                 }
                 if args.len() == ar {
                     if let Body::Ctor(tag) = func.body {
@@ -647,10 +693,13 @@ impl<'a> Mono<'a> {
                         return self.mk_apply(Expr::Func(id), a1);
                     }
                 }
-                a1.extend(args);
-                Expr::Apply(g, a1)
+                args.into_iter().fold(Expr::Apply(g, a1), |f, arg| {
+                    Expr::Apply(Box::new(f), vec![arg])
+                })
             }
-            other => Expr::Apply(Box::new(other), args),
+            other => args
+                .into_iter()
+                .fold(other, |f, arg| Expr::Apply(Box::new(f), vec![arg])),
         }
     }
 
@@ -672,6 +721,7 @@ impl<'a> Mono<'a> {
 
     pub fn run(mut self, roots: Roots) -> MResult<Program> {
         let env = self.env;
+        self.value_bindings = roots.values.iter().cloned().collect();
         self.remote = roots.remote.clone();
         for (m, _) in &roots.remote {
             if !env.modules.contains_key(m) || m == "main" || m == "std" {

@@ -58,8 +58,16 @@ the original resource frames and computation order. Direct entries that already
 accept the required arguments need no additional specialization. A single-use
 local generated array can rejoin its immediate map/fold chain before fusion,
 provided every argument crossed has no effects or traps. The normal fusion proof
-still decides whether interleaving element work is valid. These PR #236 changes
-await the [named/tacit cost checks](functional-costs.md#local-names-candidate-coverage).
+still decides whether interleaving element work is valid. The eight
+[named/tacit cost pairs](functional-costs.md#local-names-candidate-coverage) pass
+on Linux ARM64/AMD64 and macOS ARM64; this is focused evidence, not final delivery.
+
+A named function's entry may group consecutive `fn` inputs only while no
+computation or observable owner release lies between them. A `let` calculation
+ends that group. Unknown applications remain successive calls; combining them
+could run a later argument before a first-stage failure. REPL results use cached
+value entries even when their type is a function, so their construction runs once
+and later redefinitions cannot replace their saved code or captures.
 
 ## Eager computations in partial applications
 

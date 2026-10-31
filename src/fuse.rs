@@ -417,16 +417,16 @@ impl Fuser<'_> {
     }
 
     fn expr(&mut self, e: Expr) -> Expr {
-        // Reconnect a named generator before recursively fusing its consumer.
+        // Reconnect a named producer before recursively fusing its consumer.
         // Otherwise map/fold becomes a loop over the still-materialized local
-        // and the original generator is no longer visible to that proof.
+        // and the original producer is no longer visible to that proof.
         if let Expr::Let(local, value, body) = &e {
             if matches!(&**value, Expr::Call(id, args)
-                if prim_sym(self.funcs, *id) == Some("array.generate") && args.len() == 2)
+                if matches!(prim_sym(self.funcs, *id), Some("array.generate" | "range")) && args.len() == 2)
                 && crate::opt::uses(body, *local) == 1
             {
                 let mut joined = (**body).clone();
-                if self.join_generated_input(first_evaluated(&mut joined), *local, value) {
+                if self.join_collection_input(first_evaluated(&mut joined), *local, value) {
                     return self.expr(joined);
                 }
             }
@@ -519,16 +519,25 @@ impl Fuser<'_> {
         }
     }
 
-    /// Move the sole generator use through an immediate array chain. Every
+    /// Move the sole producer use through an immediate collection chain. Every
     /// preceding argument must be total; arbitrary calls and resource frames
     /// stop the search. Fusion still proves callback/trap order independently.
-    fn join_generated_input(&mut self, e: &mut Expr, local: Local, value: &Expr) -> bool {
+    fn join_collection_input(&mut self, e: &mut Expr, local: Local, value: &Expr) -> bool {
         let Expr::Call(id, args) = e else {
             return false;
         };
         if !matches!(
             prim_sym(self.funcs, *id),
-            Some("array.map" | "array.fold" | "array.length")
+            Some(
+                "array.map"
+                    | "array.fold"
+                    | "array.length"
+                    | "map"
+                    | "filter"
+                    | "fold"
+                    | "length"
+                    | "find"
+            )
         ) || args.is_empty()
             || args[..args.len() - 1]
                 .iter()
@@ -541,7 +550,7 @@ impl Fuser<'_> {
             *input = value.clone();
             true
         } else {
-            self.join_generated_input(input, local, value)
+            self.join_collection_input(input, local, value)
         }
     }
 

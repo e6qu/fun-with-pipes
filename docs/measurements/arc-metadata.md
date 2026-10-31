@@ -1,4 +1,6 @@
-# ARC allocator metadata and late diagnostic options
+# Historical allocator metadata comparison (PR #199)
+
+This records the two-mode runtime before [GC removal in #217](../roadmap-history.md#tracing-gc-removal-pr-217). Current fwp has no tracing mode. Reproduce these observations with the recorded revision; current allocator tests preserve ownership and physical-release checks.
 
 Checked ARC programs do not trace the heap. They still need an allocator, which
 records each heap page's size class and reference counts. A *mark bitmap* is a
@@ -48,12 +50,12 @@ which checks that the test actually reaches the behavior being removed from ARC.
 The probe also checks small and large allocations, more than 254 shared owners
 (which require a wider count), unique reuse and ordinary reclamation.
 
-## Checks and current limits
+## Checks at the recorded revision
 
-`tests/native_allocator.rs` builds the real generated C in both modes, with both
+At that revision, `tests/native_allocator.rs` built the real generated C in both modes, with both
 dynamic storage and a fixed 1 MiB heap, at O0/O1/O2. Twelve binaries run five cases
 each. CI retains their C, executables, output and status in `allocator-metadata/`.
-`tests/arc_corpus.rs` also runs each accepted golden program twice from the same
+`tests/arc_corpus.rs` also ran each accepted golden program twice from the same
 compiled binary: with the ordinary environment and after the late option change.
 Both executions must match the interpreter, including output and exit status;
 successful returns must satisfy the existing memory ledger.
@@ -67,6 +69,6 @@ helper and collector stack discovery. Windows still legitimately queries stack
 bounds for its fiber contexts and static storage; the inspection checks collector
 startup rather than banning the OS import globally.
 
-See [ownership](../ownership.md#existing-implementation) for the mode contracts
-and [the project plan](../../PLAN.md) for the remaining removal of tracing and ARC
-costs. This cleanup is one measured reduction, not completion of either goal.
+See [ownership](../ownership.md#existing-implementation) for current memory
+contracts and [PLAN.md](../../PLAN.md) for further allocation and ARC reductions.
+The size comparison above establishes metadata savings, not application speed.
