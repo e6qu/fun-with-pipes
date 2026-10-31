@@ -33,12 +33,14 @@ collector is not the same as removing these costs. The
    [closure phase comparison](docs/measurements/callable-phases.md). ARM64 passes
    all candidate limits; AMD64 invocation improves but its combined rule fails.
    Factory/allocator optimized bodies match. A shared-constructor diagnostic is
-   stable on ARM64, but AMD64 used a different CPU and its zero-call modes differ
-   despite copy controls passing. Next compare both modes inside one process,
-   sharing the allocator and balancing batch order; retain zero-call controls.
+   stable on ARM64. Paired runs expose order effects, while all twelve AMD64
+   construction phases miss the 5 ms minimum on a different CPU. No source defect
+   is identified. Before another experiment, require an explicit CPU model and
+   freeze a work count from reference-only duration calibration. Preserve zero-call
+   and copy controls; a different host cannot settle the original Xeon result.
    Preserve original failures and noise controls; do not repeat unchanged runs.
    Prioritize execution time and working memory over executable size. Complete
-   #234's pending main matrix and the next PR's final-head production validation.
+   the next PR's final-head production validation. PR #234's main matrix passes.
 2. Resolve D2/N1's failed measurements before claiming numerical speed acceptance.
    Fixed CPU affinity and equal executable names did not resolve the controls.
    Do not rerun unchanged experiments or increase sample counts again.

@@ -1,12 +1,13 @@
 # Returned functions compared with C and Rust
 
 The first B1 callable baseline passes focused checks on all three declared hosts.
-It does not claim timing parity or complete production validation. The user
-merged the runtime change in #234; its main production matrix remains tracked
-in the [handoff](../development-state.md). It still exceeds the original ARM64
-O1 code-size limit. The user prioritizes runtime performance and working memory;
-[Swift comparisons](../benchmarks.md#swift-comparison) and missing callable timing
-now guide the next assessment. Preserve the original rejection.
+The runtime change merged in #234 now passes all nine production jobs and docs;
+[delivery history](../roadmap-history.md#borrowed-calls-and-swift-comparisons-pr-234)
+records that validation. It still exceeds the original ARM64 O1 code-size limit.
+The user prioritizes runtime performance and working memory. The
+[phase comparison with Swift](callable-phases.md) finds faster invocation but
+three AMD64 construction regressions; combined timing acceptance remains open.
+Preserve the original rejection.
 
 Partial application supplies one argument and keeps a function waiting for the
 next. For example, `add 7` produces a function that maps `3` to `10`. The captured

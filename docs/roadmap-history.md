@@ -1416,10 +1416,19 @@ acceptance remain open.
 
 The user merged #234 as `219e3a0130c18d60750fd55ec9c0a684c1dcefd4` on
 2026-10-31, tree `b4a70d124eb2674b3f9138ece4600f77cc427dab`. The one-line
-subject has no body or trailers. Full production validation was not complete;
-main run `41218527464` supplies that matrix. Its C/Rust benchmark job
-`124588033339` and docs `41218527417` / `124588033356` pass; other jobs remain
-tracked in the [handoff](development-state.md). This is not yet verified delivery.
+subject has no body or trailers. Validation completed after merge: main run
+`41218527464` passes all nine production jobs for the merged commit, and docs
+`41218527417` / `124588033356` passes. All completed logs are reviewed, with no
+unexpected compiler diagnostics. This verifies production delivery; the original
+size rejection and open timing acceptance are unchanged.
+
+| Production coverage | Passing job IDs |
+|---|---|
+| Linux ARM64 / AMD64 | `124588033135` / `124588033346` |
+| macOS ARM64, regular / ownership | `124588033328` / `124588033321` |
+| macOS AMD64, regular / ownership | `124588033403` / `124588033386` |
+| Windows ARM64 / AMD64 | `124588033441` / `124588033538` |
+| C/Rust benchmarks | `124588033339` |
 
 The [callable report](measurements/returned-callables.md) retains the reduced
 ownership operations and original ARM O1 size rejection. The

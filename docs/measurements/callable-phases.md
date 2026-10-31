@@ -82,10 +82,11 @@ overflow controls remain in the earlier Swift suite.
 
 ## Delivery status
 
-PR #234 was user-merged as `219e3a0130c18d60750fd55ec9c0a684c1dcefd4` before the
-full production matrix. Main run `41218527464` owns those pending checks. Do not
-mark them verified or cancel them as duplicates. The new PR will include these
-measurements, any repairs and final-head production validation.
+PR #234 was user-merged as `219e3a0130c18d60750fd55ec9c0a684c1dcefd4` before its
+full production matrix. Main run `41218527464` now passes all nine production
+jobs; docs `41218527417` also passes for that merged source. Completed logs are
+reviewed. This verifies production behavior, not the failed timing limits below.
+PR #235 adds these measurements and requires its own final-head validation.
 
 ## First results: invocation improves, construction still needs work
 
@@ -236,7 +237,7 @@ these identical-work modes. This study cannot attribute the original Xeon's
 construction difference to preceding calls. The original three failures remain
 open, with no runtime defect identified by the source review or these reports.
 
-The next diagnostic must compare both modes **inside one process**, sharing the
+The paired diagnostic below compares both modes **inside one process**, sharing the
 same allocator instance and balancing their batch order. Keep zero-call controls
 and distinguish this paired diagnostic from the original process comparison.
 Record the actual CPU before sampling; a different model cannot settle the
@@ -245,7 +246,7 @@ relax the 2% limit or promote the new timings to original acceptance.
 
 ### Paired diagnostic protocol
 
-Freeze this before collection. Keep the same shared-constructor implementation,
+This protocol was frozen before collection. Keep the same shared-constructor implementation,
 GCC O2 flags, separate caller and no LTO. Each process now runs both invocation
 modes: 256 batches of 4,096 closures **per mode**, with zero, one or sixteen calls
 per closure. Repeated groups use reference/current/current/reference (ABBA), or
@@ -273,3 +274,50 @@ acceptance rule. It neither changes the production runtime nor remeasures Swift
 or C/Rust. Run `callable-phase-paired` in the numerical evidence workflow with
 explicit source `dfb6ff8e8aac215009e9a9cf48a8bce492ef4eae` and evidence run
 `41219092543`.
+
+### Paired results
+
+Diagnostic source `73707460`, run `41225841156`, uses the same archived runtime
+source `dfb6ff8e`. ARM64 job `124609688723` passes collection, record checks,
+checksums, per-batch cleanup and its artifact audit. The CPU is Neoverse-N2,
+matching the original model. The [complete archive](callable-paired-arm64-2026-10-31.zip)
+retains both sessions. Nine phase, six context and four paired-record tests pass
+before collection; the completed log has no compiler diagnostics.
+
+Of 36 ARM64 phase comparisons, 32 qualify. Only the four zero-call invocation
+phases are too short. All eight qualified zero-call construction/release checks
+agree within 2%. Construction ratios range from 0.9899 to 1.0096 across all
+labels, cases and sessions. The ratio is consistently below one when reference
+mode runs first and above one when current mode runs first, including zero-call
+cases. This exposes a small order effect without attributing it to the call path.
+It does not identify the original Xeon's cause or replace its failed observations.
+AMD64 job `124609689465` also passes collection, all nineteen pre-collection
+record tests, exact checksums and cleanup, with no compiler diagnostics. Its
+[complete archive](callable-paired-amd64-2026-10-31.zip) records **AMD EPYC 9V45**,
+which differs from both the original Xeon and the separate-process EPYC 9V74.
+Of 36 phase comparisons, **19 qualify and 17 are inconclusive**:
+
+- All twelve construction comparisons have at least one mode/label median below
+  the frozen 5 ms minimum (4.53–4.98 ms). Two also fail copy agreement. None
+  qualifies, including the four zero-call construction controls.
+- The four zero-call invocation phases are too short. Every one-call and
+  sixteen-call invocation comparison qualifies; paired current/reference ratios
+  range from 0.4572 to 0.4652. These are diagnostic results, not replacements for
+  the original Swift/C/Rust comparisons.
+- Eleven release comparisons qualify. Session 2's zero-call composition fails
+  copy agreement (12.83%). The three qualified zero-call release controls agree
+  within 2%; the fourth remains inconclusive.
+
+AMD64 construction ratios also change direction with first-mode order, including
+zero-call cases. Their failed duration controls prohibit a construction-speed
+conclusion. Neither paired run identifies the original Xeon's cause. No runtime
+patch is justified by these observations; the original three regressions remain
+open. Repeating this fixed-size experiment would not repair its short phases.
+
+The next measurement change needs an explicit CPU model and a separately frozen
+work count that clears the duration floor on that CPU, chosen using reference-only
+calibration before observing candidate ratios. Keep the 2% and 5 ms controls,
+both batch orders and zero-call checks. Report the new experiment separately;
+only a matching Xeon host can investigate the original host-specific result.
+Until then, retain the verified count reduction and report timing acceptance as
+open. The next delivery step is the consolidated final-head production matrix.

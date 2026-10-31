@@ -1,10 +1,10 @@
 # Current work
 
-**Next:** collect the frozen inside-one-process diagnostic in this same PR, then
-audit its results and all retained archives before the nine final-head production
-jobs. Resolve failures before squash merge. Original AMD64 construction failures
-remain open; [the report](measurements/callable-phases.md) defines the new paired
-procedure and its zero-call controls without changing original acceptance.
+**Next:** publish the completed result/archive batch, mark PR #235 ready and audit
+its nine exact-head production jobs plus documentation before squash merge.
+Original AMD64 construction failures remain open; [the report](measurements/callable-phases.md)
+records both completed diagnostics and the requirements for a new measurement.
+Do not repeat unchanged timings or modify the runtime without a demonstrated cause.
 
 Worktree: `/private/tmp/fwp-returned-callables`; branch `callable-phase-costs`;
 [PR #235](https://github.com/e6qu/fun-with-pipes/pull/235) is the only active PR.
@@ -49,32 +49,40 @@ Xeon 8370C. It has 32 qualified and 16 inconclusive phase comparisons. Its
 zero-call composition takes 2.33% less construction time in current mode even
 though neither call path runs and copy controls pass. One qualified release
 comparison is 2.01% slower. Preserve these observations; they do not explain or
-repair the original Xeon regressions. Next compare modes inside one process,
-with one allocator, balanced batch order and zero-call controls. Do not retry
-unchanged runs or relax limits. The new paired collector, caller and four record
-tests are implemented but unverified. It preserves 256 batches per mode, uses
-ABBA/BAAB order, checks separate checksums and records actual/original CPU models
-before sampling. It reports median per-process ratios and requires zero-call
-mode agreement independently of copy controls.
+repair the original Xeon regressions.
+
+Inside-one-process run `41225841156`, diagnostic source `73707460`, passes both
+jobs: ARM64 `124609688723`, AMD64 `124609689465`. Both logs are reviewed; nine
+phase, six context and four paired tests pass, with no compiler diagnostics.
+Both complete archives are retained; new tests audit them and reject damaged
+observations. ARM64 has 32 qualified comparisons and four short zero-call phases;
+all eight qualified zero-call construction/release controls agree. AMD64 uses
+EPYC 9V45, not the original Xeon: 19 comparisons qualify, 17 do not. All twelve
+construction comparisons miss 5 ms; two also fail copy controls. One release
+comparison is noisy. Both hosts show construction order effects, including zero
+calls. Neither settles the original Xeon regression. Before another experiment,
+freeze CPU identity and work count through reference-only duration calibration;
+keep the original limits and report the new experiment separately.
 
 ## Delivery checks
 
 The user merged PR #234 as `219e3a0130c18d60750fd55ec9c0a684c1dcefd4`, tree
 `b4a70d124eb2674b3f9138ece4600f77cc427dab`, with a one-line subject and empty body.
 Its full production matrix had not completed before merge. Main CI `41218527464`
-now has eight passing jobs: Linux ARM64, all four macOS jobs, both Windows jobs
-and C/Rust benchmarks. Their logs are reviewed, including intentional Windows
-scheduler panics and TLS rejection controls. Linux AMD64 `124588033346` is still
-running with no failed step reported. Main docs `41218527417` / `124588033356`
-passes. Preserve the remaining gate; this is not yet fully verified delivery.
+now passes all nine jobs, including Linux AMD64 `124588033346`. All logs are
+reviewed, including intentional Windows scheduler panics and TLS rejection
+controls; no unexpected compiler diagnostics remain. Main docs `41218527417` /
+`124588033356` also passes for that merged source. Production delivery is now
+verified; the original timing/size failures remain separate and unchanged.
 
-PR #235 remains draft. Docs at `68665d42` pass, including the seven-test immutable
-summary check. Later archive and context-audit tests still await CI. Queued docs
-at superseded heads were cancelled; current docs `41224822992` / `124606679773`
-at `30090e24` is queued. The final update also adds the AMD archive test.
+PR #235 remains draft. Docs `41225842983` / `124609686778` at `73707460` passes,
+including nine phase, six context and four paired-record tests. Its full log is
+reviewed, with only intentional test-runner/selector failure controls.
+Queued documentation jobs at superseded heads were cancelled before execution.
 The docs gate now explicitly uses Ubuntu ARM64, preserving every check; it reads
 archived binaries and runs only its small native controls. The nine production
-jobs remain unchanged. Publish one completed batch before final validation.
+jobs remain unchanged. The completed batch adds two retained paired-archive tests; these still need CI
+verification before merge. Publish once before final validation.
 
 ## Existing evidence and local limits
 
@@ -86,10 +94,14 @@ retains baseline `7d7cf98b`, first candidate `1f929022`, revised `dacaf253`, imm
 archives and the original 17.7% ARM O1 text-budget failure. Count savings do not
 replace timing acceptance; keep hardware erratum protection enabled.
 
-Free disk remains below 64 GiB. The unchanged local guard refused checks before
-execution; no local passing result is claimed. Do not bypass its limits or build
-locally. Only small report/archive downloads and source edits were made here;
-no saved executable ran. Verification runs on GitHub.
+Byte-preserving APFS clones of duplicate tracked files recovered about 1.2 GiB;
+all ten older checkout statuses and the primary checkout remain unchanged.
+The unchanged guard then admitted
+`python3 scripts/local-guard.py python3 scripts/test-callable-phase-records.py`:
+nine tests pass, CPU 0.24 s / elapsed 0.85 s. The subsequent guarded
+`python3 scripts/test-callable-context.py` refused before execution as disk fell
+below 64 GiB again. CI independently passes all three test files. Do not bypass
+limits or build locally. No saved executable ran here; measurements run on GitHub.
 
 Require nine exact-head production jobs and docs before our squash merge. Use
 one subject of at most 80 characters, empty body and no attribution/trailers.

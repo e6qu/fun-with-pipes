@@ -1,9 +1,14 @@
 """Check paired observations and zero-work agreement independently of copies."""
 import copy
+import hashlib
+import json
+from pathlib import Path
+import tempfile
 import unittest
+import zipfile
 
 from callable_context import ROUNDS, order
-from callable_paired import parse, summarize
+from callable_paired import audit, parse, summarize
 
 
 class PairedRecords(unittest.TestCase):
@@ -55,6 +60,79 @@ class PairedRecords(unittest.TestCase):
             damaged[0]["ns"]["current"]["construction"] = value
             with self.subTest(value=value), self.assertRaises(AssertionError):
                 summarize(damaged, 16)
+
+    def test_retained_arm_pairs_preserve_zero_call_agreement_and_order_effects(self):
+        path = Path(__file__).resolve().parent.parent / "docs/measurements/callable-paired-arm64-2026-10-31.zip"
+        self.assertEqual(hashlib.sha256(path.read_bytes()).hexdigest(),
+                         "841f81dcf696dbc6caaba9c1bfdf2b56556b03d50d0a064960f8b962b37554f4")
+        with zipfile.ZipFile(path) as archive, tempfile.TemporaryDirectory() as directory:
+            archive.extractall(directory)
+            report = audit(Path(directory) / "paired", "dfb6ff8e8aac215009e9a9cf48a8bce492ef4eae", "aarch64")
+            self.assertTrue(report["matchesOriginalCpu"])
+            self.assertEqual(report["cpuModel"], "Neoverse-N2")
+            decisions = [phase["qualified"] for session in report["sessions"]
+                         for case in session["cases"] for phase in case["summary"].values()]
+            self.assertEqual(sum(decisions), 32)
+            self.assertEqual(len(decisions) - sum(decisions), 4)
+            for session in report["sessions"]:
+                for case in session["cases"]:
+                    if case["passes"] == 0:
+                        for phase in ("construction", "release"):
+                            self.assertTrue(case["summary"][phase]["identicalWorkWithinLimit"])
+                    ratios = case["summary"]["construction"]["pairedCurrentOverReference"]
+                    for label in ("reference", "reference-copy"):
+                        self.assertLess(ratios[label], 1)
+                    for label in ("current", "current-copy"):
+                        self.assertGreater(ratios[label], 1)
+
+
+    def test_retained_amd_pairs_preserve_short_phases_and_host_mismatch(self):
+        path = Path(__file__).resolve().parent.parent / "docs/measurements/callable-paired-amd64-2026-10-31.zip"
+        self.assertEqual(hashlib.sha256(path.read_bytes()).hexdigest(),
+                         "4a21351c257610abc8e59b999af1c1252b29c44adf3f9cfd64eeeab314137cd8")
+        source = "dfb6ff8e8aac215009e9a9cf48a8bce492ef4eae"
+        with zipfile.ZipFile(path) as archive, tempfile.TemporaryDirectory() as directory:
+            archive.extractall(directory)
+            folder = Path(directory) / "paired"
+            report = audit(folder, source, "x86_64")
+            self.assertFalse(report["matchesOriginalCpu"])
+            self.assertIn("AMD EPYC 9V45", report["cpuModel"])
+            self.assertIn("Intel(R) Xeon(R) Platinum 8370C", report["originalCpuModel"])
+            decisions = [phase["qualified"] for session in report["sessions"]
+                         for case in session["cases"] for phase in case["summary"].values()]
+            self.assertEqual(sum(decisions), 19)
+            self.assertEqual(len(decisions) - sum(decisions), 17)
+            for session in report["sessions"]:
+                for case in session["cases"]:
+                    construction = case["summary"]["construction"]
+                    self.assertFalse(construction["qualified"])
+                    self.assertLess(min(v for m in construction["medianNs"].values() for v in m.values()), 5_000_000)
+                    self.assertIsNone(construction["identicalWorkWithinLimit"])
+                    self.assertEqual(case["summary"]["invocation"]["qualified"], case["passes"] != 0)
+            release = report["sessions"][1]["cases"][3]["summary"]["release"]
+            self.assertFalse(release["qualified"])
+            self.assertIsNone(release["identicalWorkWithinLimit"])
+            self.assertGreater(max(v for m in release["copyRatios"].values() for v in m.values()), 1.02)
+            manifest = json.loads((folder / "manifest.json").read_text())
+            for damage in ("missing-warmup", "reused-command", "wrong-sample", "wrong-host", "promoted-result"):
+                damaged = copy.deepcopy(report)
+                case = damaged["sessions"][0]["cases"][0]
+                if damage == "missing-warmup":
+                    case["warmups"].pop()
+                elif damage == "reused-command":
+                    case["warmups"][1] = case["warmups"][0]
+                elif damage == "wrong-sample":
+                    case["samples"][0]["command"] += 1
+                elif damage == "wrong-host":
+                    damaged["matchesOriginalCpu"] = True
+                else:
+                    case["summary"]["construction"]["qualified"] = True
+                (folder / "report.json").write_text(json.dumps(damaged))
+                # Valid file hashes must not conceal invalid observations.
+                manifest["report.json"] = hashlib.sha256((folder / "report.json").read_bytes()).hexdigest()
+                (folder / "manifest.json").write_text(json.dumps(manifest))
+                with self.subTest(damage=damage), self.assertRaises(AssertionError):
+                    audit(folder, source, "x86_64")
 
 
 if __name__ == "__main__":
