@@ -63,6 +63,13 @@ decisions. Its three tests preserve the rejected code/timing results and reject
 15 kinds of missing or damaged evidence. Documentation CI runs these controls;
 no benchmark or full compiler suite is repeated for this audit addition.
 
+Independent B1 preparation is published at `8c77d111` on
+`returned-callable-peers` in `/private/tmp/fwp-returned-callables`. It defines
+equivalent escaped-callable work, permits inline C/Rust captures, and requires
+repeated-call/failure cleanup and separate code/storage observations before
+timing. No callable implementation or measurement has run and no PR is open.
+This does not replace D2/N1's unresolved timing work or the active delivery order.
+
 ## Local checks and recovery
 
 No full local build, suite or benchmark ran. All focused checks used the guard:
@@ -81,8 +88,11 @@ Raw logs/metadata/audits/archives use `/private/tmp/fwp-state-*`; suffixes `855f
 The primary detached checkout now has a current-worktree pointer; its old handoff
 is preserved byte-for-byte below it and in
 `/private/tmp/fwp-primary-handoff-before-current-pointer-2026-10-31.md`.
-Preserve its other edits. Three clean historical worktrees omit duplicate archived
-measurement files to restore the 64-GiB disk floor; no evidence was removed from Git.
+Preserve its other edits. Five clean historical worktrees omit duplicate archived
+measurement files to preserve the 64-GiB disk floor; no evidence was removed from Git.
+The latest two are `fwp-application-failures` and `fwp-numerical-controls`:
+unchanged heads and clean status verified, about 580 MiB recovered in 0.26s.
+Dirty historical worktrees and original downloaded archives remain untouched.
 
 ## Roadmap status
 
