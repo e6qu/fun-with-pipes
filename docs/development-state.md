@@ -1,107 +1,98 @@
 # Current work
 
-**Next:** run the frozen shared-constructor diagnostic at zero, one and sixteen
-calls per closure. Both object reproductions show identical factory/allocator
-optimized bodies; test effects of preceding invocation work before changing the
-runtime. Preserve [all original results](measurements/callable-phases.md).
-Prioritize execution time and working memory; preserve inconclusive measurements.
+**Next:** collect the frozen inside-one-process diagnostic in this same PR, then
+audit its results and all retained archives before the nine final-head production
+jobs. Resolve failures before squash merge. Original AMD64 construction failures
+remain open; [the report](measurements/callable-phases.md) defines the new paired
+procedure and its zero-call controls without changing original acceptance.
 
 Worktree: `/private/tmp/fwp-returned-callables`; branch `callable-phase-costs`;
 [PR #235](https://github.com/e6qu/fun-with-pipes/pull/235) is the only active PR.
 The primary checkout has unrelated preserved work; do not reset it.
-User-merged PR #234: `219e3a0130c18d60750fd55ec9c0a684c1dcefd4`, tree
-`b4a70d124eb2674b3f9138ece4600f77cc427dab`. The subject is one line with no body.
-Its full production matrix had not run before merge. Main CI `41218527464`
-remains running/queued; benchmark job `124588033339` and docs `41218527417` /
-`124588033356` pass and their logs are audited. Preserve the remaining gates.
 
-## This batch
+## Measured results
 
-- Time 4,096 independent scalar closures per batch, 256 batches, 16 calls each.
-  Compare C, Rust core with a C caller, native Swift, current fwp and the same
-  generated C with only the borrowed-call branch disabled. No runtime/API change.
-- Separate construction, invocation, release and complete-process clocks. Count
-  ownership in separate diagnostic executables; measure process RAM separately.
-- Twenty rounds balance positions/predecessors across ten labels, including one
-  identical copy of each executable. Two sessions run on each same native host,
-  avoiding the earlier AMD64 CPU mismatch. Noise and minimum-duration limits
-  remain explicit; no unchanged retry or size-based performance claim.
-- Test checksum rejection, missing/reordered/noninteger timings, insufficient
-  duration, noisy copies, schedule balance and exact reference transformation.
-  Add the actual new clock helper to failed-clock and omitted-check controls.
+Source `dfb6ff8e8aac215009e9a9cf48a8bce492ef4eae`, run `41219092543`:
+ARM64 `124589718380` and AMD64 `124589718541` pass collection and artifact checks.
+Each completes two sessions on the same host. All completed logs are reviewed.
+Six record tests, 56 clock controls and 33 Swift arithmetic cases pass per host,
+plus fwp count, omitted-release and failure/retry controls.
 
-## Phase results and current checks
+ARM64 meets all candidate timing/RAM limits: invocation takes 56–57% less time.
+AMD64 has three qualified construction regressions (8.6–16.1%) and one noisy
+addition case. Combined timing acceptance remains open. The immutable summary
+retains 26 passing, three failed and three inconclusive phase decisions. Peak RAM
+limits pass in all eight cases. Swift/C/Rust comparisons remain workload-specific;
+Swift allocation/count instrumentation is not implemented.
 
-Measured source `dfb6ff8e`, run `41219092543`: ARM64 `124589718380` and AMD64
-`124589718541` both pass two sessions and artifact audits. All compiler logs and
-completed controls are reviewed. Six record tests, 56 clock controls and 33 Swift
-arithmetic cases pass per host, plus fwp count/cleanup controls. ARM64 meets all
-candidate timing/RAM limits. AMD64 has three qualified construction regressions
-(8.6–16.1%) and one noisy addition case; combined timing acceptance remains open.
-The first-run summary retains all results; no unchanged measurement retry.
+Independent audit `41221077777` / `124595575639` passes. Complete phase archives
+are now in the repository (about 4.3 MiB compressed), with a read-only test
+recomputing all four sessions against the summary. Source tag:
+`roadmap/callable-phases-2026-10-31`. No unchanged timing retry occurred.
 
-The source head's docs `41219094215` / `124589718157` passes; its full log is
-reviewed, with only intentional runner/selector failures. Diagnostic run
-`41220300146` passes ARM64 `124593267740` and AMD64 `124593267611`. Both reproduce
-the measured objects byte for byte. Factory, allocator, slow/refill, count-slot
-forgetting and physical-free optimized bodies are identical within each host.
-No runtime patch has been selected from these findings. The small report
-artifacts (under 180 KB each) were read locally; no saved executable ran.
+## Constructor investigation
 
-Independent audit `41221077777` / `124595575639` on ARM64 passes; its complete
-log is reviewed with no unexpected diagnostics. The superseded AMD64 audit `41219859189` was cancelled while unstarted.
-The snapshot test freezes 26 passing, three failed and three inconclusive phases.
-The snapshot test passes in docs `41221082589` / `124595586076`; that log and
-earlier docs `41220304693` / `124593276704` are reviewed, with only intentional
-test-runner failure controls. The complete compiler-report archives are now
-retained in the repository; their new integrity/body-equality test awaits CI.
-Both complete phase archives are also retained (about 4.3 MiB compressed), with
-a read-only test auditing all four sessions against the summary. Measured source
-`dfb6ff8e` is retained by `roadmap/callable-phases-2026-10-31`.
-Shared-constructor study `41222337204`, source `17a6d13c`: ARM64 `124599348603`
-passes, with the same Neoverse-N2 CPU model and construction differences within
-0.54% across all twelve cases. Seven phase and four context tests pass; its log
-has no compiler diagnostics. AMD64 `124599348496` remains queued. The complete
-ARM study is retained with a new independent audit and damaged-record controls,
-still awaiting CI. Superseded queued docs `41222339131` and `41223876762` were
-cancelled; docs `41224305307` / `124605134968` at `cac5fac2` is queued.
-The next docs gate must verify the context archive audit too. It now selects
-native Ubuntu ARM64 explicitly; all documentation/evidence controls remain.
-The production platform matrix and AMD64 measurement host remain required.
-Check actual CPU models before attributing observations to the original host.
-Main macOS ARM64 regular `124588033328`, Intel macOS ownership `124588033386`
-and Windows AMD64 `124588033538` and ARM64 `124588033441` pass. Their logs contain no unexpected compiler
-diagnostics; Windows includes intentional scheduler panics and the rejected-CA
-TLS control. Other production jobs remain running/queued.
+Report run `41220300146`: ARM64 `124593267740` and AMD64 `124593267611` pass.
+All four original objects reproduce byte for byte. Factory, allocator, slow/refill,
+count-slot forgetting and physical-free optimized bodies match between variants.
+Complete report/object archives are retained with integrity/body-equality tests.
+No source-level safety defect or production runtime repair was identified.
 
-## Existing evidence
+Shared-constructor run `41222337204`, diagnostic source `17a6d13c`: ARM64
+`124599348603` and AMD64 `124599348496` pass collection, checksums and cleanup.
+Both logs are reviewed: seven phase tests, four context tests and no compiler
+diagnostics. Both complete diagnostic archives are retained.
 
-[Swift results](measurements/swift-peers.md) own source `80a0504a`, four passing
-native measurement jobs in `41214191081`, and independent audit `41215212017`.
-Five ARM64 cases qualify in both sessions. Map/pipeline fail copy controls;
-AMD64 CPU models differ. Keep all ten inconclusive case/session rows. Full raw
-artifacts expire 2027-01-29; repository JSON is a summary, not their replacement.
-Final PR #234 docs gate `41216482768` / `124581961872` passes, including four Swift
-record tests. Logs contain only intentional runner/selector failure controls.
+ARM64 uses the original Neoverse-N2 CPU model; construction differences stay
+within 0.54% across twelve cases. AMD64 uses EPYC 9V74 instead of the original
+Xeon 8370C. It has 32 qualified and 16 inconclusive phase comparisons. Its
+zero-call composition takes 2.33% less construction time in current mode even
+though neither call path runs and copy controls pass. One qualified release
+comparison is 2.01% slower. Preserve these observations; they do not explain or
+repair the original Xeon regressions. Next compare modes inside one process,
+with one allocator, balanced batch order and zero-call controls. Do not retry
+unchanged runs or relax limits. The new paired collector, caller and four record
+tests are implemented but unverified. It preserves 256 batches per mode, uses
+ABBA/BAAB order, checks separate checksums and records actual/original CPU models
+before sampling. It reports median per-process ratios and requires zero-call
+mode agreement independently of copy controls.
 
-[Callable evidence](measurements/returned-callables.md) owns baseline `7d7cf98b`,
-first candidate `1f929022`, revised candidate `dacaf253` and immutable archives.
-The merged change removes one retain/release pair and one helper per invocation;
-closure storage remains. Original ARM O1 text grows 24,540 → 28,892 bytes and
-fails the original 5% limit. Preserve that result and hardware erratum protection.
-Elapsed-time acceptance has not been established. Do not infer it from counts.
+## Delivery checks
 
-## Local checks
+The user merged PR #234 as `219e3a0130c18d60750fd55ec9c0a684c1dcefd4`, tree
+`b4a70d124eb2674b3f9138ece4600f77cc427dab`, with a one-line subject and empty body.
+Its full production matrix had not completed before merge. Main CI `41218527464`
+now has eight passing jobs: Linux ARM64, all four macOS jobs, both Windows jobs
+and C/Rust benchmarks. Their logs are reviewed, including intentional Windows
+scheduler panics and TLS rejection controls. Linux AMD64 `124588033346` is still
+running with no failed step reported. Main docs `41218527417` / `124588033356`
+passes. Preserve the remaining gate; this is not yet fully verified delivery.
 
-Free disk is about 63 GiB, below the required 64 GiB. The unchanged local guard
-refuses the new focused Python test. Its first sandbox attempt could not inspect
-`ps`; the escalated guard reached the disk check and refused before execution.
-Do not bypass limits, build locally or download large artifacts. Checks and
-measurements run on GitHub. The focused native jobs now verify the test/clock/workflow changes; no local
-passing result is claimed. New diagnostic code still needs its dispatched check.
+PR #235 remains draft. Docs at `68665d42` pass, including the seven-test immutable
+summary check. Later archive and context-audit tests still await CI. Queued docs
+at superseded heads were cancelled; current docs `41224822992` / `124606679773`
+at `30090e24` is queued. The final update also adds the AMD archive test.
+The docs gate now explicitly uses Ubuntu ARM64, preserving every check; it reads
+archived binaries and runs only its small native controls. The nine production
+jobs remain unchanged. Publish one completed batch before final validation.
 
-Require nine exact-head production jobs and docs before our next squash merge.
-Use one subject of at most 80 characters, empty body and no attribution/trailers.
+## Existing evidence and local limits
+
+[Swift results](measurements/swift-peers.md) retain source `80a0504a`, four native
+jobs in `41214191081`, audit `41215212017`, noisy rows and different AMD64 CPUs.
+Those earlier whole-program raw artifacts expire in January 2027; their summary
+is not a complete archive. [Callable evidence](measurements/returned-callables.md)
+retains baseline `7d7cf98b`, first candidate `1f929022`, revised `dacaf253`, immutable
+archives and the original 17.7% ARM O1 text-budget failure. Count savings do not
+replace timing acceptance; keep hardware erratum protection enabled.
+
+Free disk remains below 64 GiB. The unchanged local guard refused checks before
+execution; no local passing result is claimed. Do not bypass its limits or build
+locally. Only small report/archive downloads and source edits were made here;
+no saved executable ran. Verification runs on GitHub.
+
+Require nine exact-head production jobs and docs before our squash merge. Use
+one subject of at most 80 characters, empty body and no attribution/trailers.
 
 ## Roadmap status
 
@@ -113,7 +104,7 @@ Use one subject of at most 80 characters, empty body and no attribution/trailers
 | 4 | Verified | Preserve decimal savings and the recorded loop gap |
 | 5 | In progress | Meet D2's remaining timing requirement |
 | 6 | In progress | Resolve N1 controls before N2 timing acceptance |
-| 7 | In progress | Complete callable phase costs and remaining B1/B2 peers |
+| 7 | In progress | Resolve callable controls and remaining B1/B2 peers |
 | 8 | In progress | Complete numerical and integrated V1/V2 acceptance |
 
 [PLAN.md](../PLAN.md) retains the unchanged numerical budgets and failed controls.

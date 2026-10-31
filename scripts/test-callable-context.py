@@ -95,6 +95,33 @@ class ContextRecords(unittest.TestCase):
                 with self.subTest(damage=damage), self.assertRaises(AssertionError):
                     audit(folder, source, "aarch64")
 
+    def test_retained_amd_study_preserves_host_mismatch_and_failed_controls(self):
+        source = "dfb6ff8e8aac215009e9a9cf48a8bce492ef4eae"
+        path = Path(__file__).resolve().parent.parent / "docs/measurements/callable-context-amd64-2026-10-31.zip"
+        self.assertEqual(hashlib.sha256(path.read_bytes()).hexdigest(),
+                         "81e4d9e2d068bb51f59e4e26222c7aab90dfcebaa494a66a9e3f256690bbe080")
+        with zipfile.ZipFile(path) as archive, tempfile.TemporaryDirectory() as directory:
+            archive.extractall(directory)
+            report = audit(Path(directory) / "context", source, "x86_64")
+            self.assertIn("AMD EPYC 9V74", report["cpu"])
+            original = json.loads((path.parent / "callable-phases-2026-10-31.json").read_text())
+            for session in original["sessions"]:
+                if session["architecture"] == "x86_64":
+                    self.assertIn("Intel(R) Xeon(R) Platinum 8370C", session["cpu"])
+            decisions = [phase["qualified"] for session in report["sessions"]
+                         for case in session["cases"] for phase in case["summary"].values()]
+            self.assertEqual(sum(decisions), 32)
+            self.assertEqual(len(decisions) - sum(decisions), 16)
+            zero = report["sessions"][1]["cases"][3]
+            self.assertEqual((zero["kind"], zero["passes"]), (1, 0))
+            control = zero["summary"]["construction"]
+            self.assertTrue(control["qualified"])
+            # Copies pass but the two identical-work modes differ by over 2%.
+            self.assertGreater(1 / control["currentOverReference"], 1.02)
+            release = report["sessions"][1]["cases"][2]["summary"]["release"]
+            self.assertTrue(release["qualified"])
+            self.assertGreater(release["currentOverReference"], 1.02)
+
 
 if __name__ == "__main__":
     unittest.main()

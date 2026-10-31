@@ -32,8 +32,10 @@ collector is not the same as removing these costs. The
 1. Resolve the three AMD64 construction regressions in the
    [closure phase comparison](docs/measurements/callable-phases.md). ARM64 passes
    all candidate limits; AMD64 invocation improves but its combined rule fails.
-   Factory/allocator optimized bodies match, so the next diagnostic shares one
-   constructor across both invocation paths and tests zero, one and sixteen calls.
+   Factory/allocator optimized bodies match. A shared-constructor diagnostic is
+   stable on ARM64, but AMD64 used a different CPU and its zero-call modes differ
+   despite copy controls passing. Next compare both modes inside one process,
+   sharing the allocator and balancing batch order; retain zero-call controls.
    Preserve original failures and noise controls; do not repeat unchanged runs.
    Prioritize execution time and working memory over executable size. Complete
    #234's pending main matrix and the next PR's final-head production validation.

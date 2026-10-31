@@ -50,7 +50,7 @@ def summarize(samples):
     return result
 
 
-def audit(folder, source, architecture):
+def audit_files(folder, source, architecture):
     manifest = json.loads((folder / "manifest.json").read_text())
     assert set(manifest) == {str(p.relative_to(folder)) for p in folder.rglob("*")
                              if p.is_file() and p != folder / "manifest.json"}
@@ -73,6 +73,11 @@ def audit(folder, source, architecture):
         assert commands[i]["argv"][-4:] == ["-c", str(original / (name + ".c")), "-o", str(original / (name + ".o"))]
     assert commands[2]["argv"][-2:] == ["-o", str(original / "program")]
     assert commands[3]["argv"] == ["lscpu"] and commands[3]["stdout"] == report["cpu"]
+    return report, commands, original
+
+
+def audit(folder, source, architecture):
+    report, commands, original = audit_files(folder, source, architecture)
     assert [row["session"] for row in report["sessions"]] == [1, 2]
     index = 4
     for session in report["sessions"]:
@@ -100,7 +105,7 @@ def audit(folder, source, architecture):
     return report
 
 
-def collect(args, root, out, original):
+def prepare(args, root, out, original, observer):
     assert os.environ.get("GITHUB_ACTIONS") == "true"
     out.mkdir(parents=True, exist_ok=False)
     saved = json.loads((root / "report.json").read_text())
@@ -136,19 +141,6 @@ def collect(args, root, out, original):
     code += "\n" + reference + "\nV returned_apply_reference(V f, uint32_t n, V *a) { return returned_reference_span(f,n,a,0,0); }\n"
     implementation = out / "implementation.c"
     implementation.write_text(code)
-    observer = (root / "fixtures/returned_callable_time.c").read_text()
-    replacements = (
-        ('if (argc != 5 ||', 'if (argc != 6 ||'),
-        ('|| strcmp(argv[4], "16")) return 73;', '|| (strcmp(argv[4], "0") && strcmp(argv[4], "1") && strcmp(argv[4], "16"))) return 73;'),
-        ('const int64_t population = 4096, cycles = 256, passes = 16;',
-         'const int64_t population = 4096, cycles = 256, passes = strtoll(argv[4], NULL, 10);\n'
-         '    if (strcmp(argv[5], "reference") && strcmp(argv[5], "current")) return 73;\n'
-         '    uint64_t (*apply)(uint64_t, uint32_t, uint64_t *) = strcmp(argv[5], "reference") == 0 ? returned_apply_reference : fwp_apply_borrowed;'),
-        ('fwp_apply_borrowed(values[i], 1, &input)', 'apply(values[i], 1, &input)'),
-        ('#include "callable_phase_clock.h"', '#include "callable_phase_clock.h"\nuint64_t returned_apply_reference(uint64_t, uint32_t, uint64_t *);'),
-    )
-    for old, new in replacements:
-        observer = original.SOURCE.replace_once(observer, old, new)
     caller = out / "observer.c"
     caller.write_text(observer)
     flags = [args.cc, *saved["settings"]["cFlags"], "-DRETURNED_FWP=1"]
@@ -163,6 +155,24 @@ def collect(args, root, out, original):
     copy.parent.mkdir()
     shutil.copy2(binary, copy)
     assert original.BINARY.digest(copy) == original.BINARY.digest(binary)
+    return saved, commands, run, binary, copy
+
+
+def collect(args, root, out, original):
+    observer = (root / "fixtures/returned_callable_time.c").read_text()
+    replacements = (
+        ('if (argc != 5 ||', 'if (argc != 6 ||'),
+        ('|| strcmp(argv[4], "16")) return 73;', '|| (strcmp(argv[4], "0") && strcmp(argv[4], "1") && strcmp(argv[4], "16"))) return 73;'),
+        ('const int64_t population = 4096, cycles = 256, passes = 16;',
+         'const int64_t population = 4096, cycles = 256, passes = strtoll(argv[4], NULL, 10);\n'
+         '    if (strcmp(argv[5], "reference") && strcmp(argv[5], "current")) return 73;\n'
+         '    uint64_t (*apply)(uint64_t, uint32_t, uint64_t *) = strcmp(argv[5], "reference") == 0 ? returned_apply_reference : fwp_apply_borrowed;'),
+        ('fwp_apply_borrowed(values[i], 1, &input)', 'apply(values[i], 1, &input)'),
+        ('#include "callable_phase_clock.h"', '#include "callable_phase_clock.h"\nuint64_t returned_apply_reference(uint64_t, uint32_t, uint64_t *);'),
+    )
+    for old, new in replacements:
+        observer = original.SOURCE.replace_once(observer, old, new)
+    saved, commands, run, binary, copy = prepare(args, root, out, original, observer)
     report = dict(source=args.source, architecture=args.arch, compilerVersion=saved["versions"]["cc"],
                   binarySha256=original.BINARY.digest(binary), cpu=commands[run(["lscpu"])]["stdout"],
                   scope="One binary, two invocation entries, identical constructor/allocator. Diagnostic only; original acceptance remains unchanged.", sessions=[])

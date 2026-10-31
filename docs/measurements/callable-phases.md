@@ -219,4 +219,57 @@ Every construction, release and process comparison qualifies. Only the four
 zero-call invocation phases are too short, as expected. The identical-work
 zero-call control differs by at most 0.25%; all construction differences stay
 within 0.54%. This does not reproduce the AMD64 construction regression on ARM64.
-AMD64 remains pending; no conclusion about its cause follows from this host.
+
+AMD64 job `124599348496` also completes both sessions and its controls, but uses
+**AMD EPYC 9V74**, unlike the original **Intel Xeon Platinum 8370C**. The
+[complete AMD64 archive](callable-context-amd64-2026-10-31.zip) preserves that
+mismatch and every observation. Of 48 phase comparisons, 32 qualify and 16 do
+not: four zero-call invocation phases are too short; twelve other comparisons
+fail their copy controls. All four sixteen-call construction comparisons qualify
+and take 0.30–1.09% more time in current mode. One qualified release comparison
+takes 2.01% more time; the diagnostic does not hide it.
+
+Crucially, session 2's zero-call composition case takes **2.33% less construction
+time in current mode**, even though neither invocation entry runs. Its two copy
+controls pass. Thus copy agreement alone does not establish agreement between
+these identical-work modes. This study cannot attribute the original Xeon's
+construction difference to preceding calls. The original three failures remain
+open, with no runtime defect identified by the source review or these reports.
+
+The next diagnostic must compare both modes **inside one process**, sharing the
+same allocator instance and balancing their batch order. Keep zero-call controls
+and distinguish this paired diagnostic from the original process comparison.
+Record the actual CPU before sampling; a different model cannot settle the
+original Xeon's behavior. Do not retry these unchanged separate-process runs,
+relax the 2% limit or promote the new timings to original acceptance.
+
+### Paired diagnostic protocol
+
+Freeze this before collection. Keep the same shared-constructor implementation,
+GCC O2 flags, separate caller and no LTO. Each process now runs both invocation
+modes: 256 batches of 4,096 closures **per mode**, with zero, one or sixteen calls
+per closure. Repeated groups use reference/current/current/reference (ABBA), or
+the reverse (BAAB). This gives each mode equal work and equal mean batch position;
+both orders are measured. Choose the entry before the construction clock.
+
+Check each mode's checksum separately and payload cleanup after every batch.
+Retain three accumulated phase times per mode plus overall process time. The
+overall clock includes both modes and cannot stand in for either original
+process timing. For each measured process, divide current mode's phase time by
+reference mode's phase time; report the median of those paired ratios.
+
+Use both first-mode orders and a byte-identical executable copy: four labels,
+two warmup rounds, twenty measured rounds and balanced label positions and
+predecessors, for both operations and two sequential sessions per host. For each
+phase, require all eight mode/label medians to reach 5 ms and every mode/order's
+copy ratio to remain within 1.02. Qualified zero-call paired ratios must also
+stay in `[1 / 1.02, 1.02]` for every label; copy agreement alone is insufficient.
+Zero-call invocation should be too short to qualify. Keep all inconclusive rows.
+
+Record and print the actual CPU model and its agreement with the original host
+before sampling. A different host can test the paired procedure, but cannot
+settle the original Xeon's regression. This diagnostic does not reset any frozen
+acceptance rule. It neither changes the production runtime nor remeasures Swift
+or C/Rust. Run `callable-phase-paired` in the numerical evidence workflow with
+explicit source `dfb6ff8e8aac215009e9a9cf48a8bce492ef4eae` and evidence run
+`41219092543`.

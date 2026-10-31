@@ -14,6 +14,7 @@ import shutil
 import subprocess
 
 from callable_context import collect
+from callable_paired import collect as collect_paired
 
 SPEC = importlib.util.spec_from_file_location("phases", Path(__file__).with_name("measure-callable-phases.py"))
 PHASES = importlib.util.module_from_spec(SPEC)
@@ -27,7 +28,7 @@ def main():
     parser.add_argument("--source", required=True)
     parser.add_argument("--arch", choices=("aarch64", "x86_64"), required=True)
     parser.add_argument("--cc", required=True)
-    parser.add_argument("--study", choices=("reports", "context"), required=True)
+    parser.add_argument("--study", choices=("reports", "context", "paired"), required=True)
     args = parser.parse_args()
     assert os.environ.get("GITHUB_ACTIONS") == "true"
     resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
@@ -45,8 +46,8 @@ def main():
     out = args.output.resolve()
     out.mkdir(parents=True, exist_ok=False)
     commands = [json.loads(line) for line in (root / "commands.jsonl").read_text().splitlines()]
-    if args.study == "context":
-        collect(args, root, out / "context", PHASES)
+    if args.study in ("context", "paired"):
+        {"context": collect, "paired": collect_paired}[args.study](args, root, out / args.study, PHASES)
         return
     results = {}
     for peer in ("reference", "fwp"):
