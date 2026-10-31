@@ -5,6 +5,111 @@ no single number for “fwp overhead.” A report must say whether it compares f
 with handwritten C/Rust, two versions of fwp, or one isolated runtime operation.
 A faster new fwp build does not establish parity with another language.
 
+## Latest merged-code snapshot: 31 October 2026
+
+PR #233's [production benchmark job](https://github.com/e6qu/fun-with-pipes/actions/runs/41174213818/job/124458289963)
+measures `fd19b9e4`, whose tree matches merged `73a6b20d`. Host: Linux AMD64,
+AMD EPYC 7763, four available CPUs; GCC 15.2.0, Rust 1.99.1; C/fwp O2 and Rust
+optimized, no fwp LTO. One warmup and six rotated runs measure whole processes,
+including startup, construction, computation, output and cleanup. Compilation is
+excluded. These are a **single CI snapshot**, without identical-code controls or
+a second session. They are observations, not stable speed guarantees or an
+estimate of language-wide overhead. Detailed inputs are [below](#what-each-program-actually-does).
+
+| Program | C ms | Rust ms | fwp ms | fwp extra time vs C / Rust |
+|---|---:|---:|---:|---:|
+| Fibonacci, 35 | 48.979 | 44.537 | 15.658 | −68.0% / −64.8% |
+| Checked loop, 100 million steps | 126.882 | 107.275 | 158.734 | +25.1% / +48.0% |
+| Sorted map, 500,000 pairs / 2 million lookups | 411.124 | 338.409 | 363.642 | −11.5% / +7.5% |
+| Map/filter/sum, 20 × 1 million elements | 35.613 | 22.612 | 14.226 | −60.1% / −37.1% |
+| Ordered million-key set and hash | 15.183 | 15.400 | 17.563 | +15.7% / +14.0% |
+| Format strings then count characters | 146.610 | 156.296 | 6.487 | −95.6% / −95.8% |
+| Count characters directly | 3.806 | 7.110 | 5.171 | +35.8% / −27.3% |
+
+The pipeline peers materialize collections that fwp eliminates. In `strings`,
+fwp avoids formatting that C/Rust still perform; `text-length` supplies the more
+direct comparison. Sorting implementations also differ. These differences belong
+to the results; they must not be presented as isolated ARC or dispatch costs.
+
+Three separate GNU-time runs of the same executables measure peak **resident
+memory**, the RAM occupied by the process, including runtime and mapped libraries:
+
+| Program | C peak KiB | Rust peak KiB | fwp peak KiB |
+|---|---:|---:|---:|
+| Fibonacci | 1,544 | 2,040–2,212 | 2,060–2,064 |
+| Checked loop | 1,544 | 2,116–2,228 | 2,060–2,192 |
+| Sorted map | 16,880 | 9,908–9,980 | 17,688–17,816 |
+| Map/filter/sum | 13,316–13,320 | 9,956–9,968 | 2,064 |
+| Ordered set/hash | 9,348–9,352 | 9,820–9,976 | 9,868–10,000 |
+| Strings | 1,544 | 2,044–2,284 | 2,064–2,192 |
+| Direct character count | 1,544 | 2,120–2,244 | 1,680–2,064 |
+
+Separate fwp profiles report zero managed requests/retains for Fibonacci, loop,
+pipeline and both character-count programs. The map makes four requests totaling
+24,000,032 bytes, peaks at 16,000,008 charged bytes and performs one retain. The
+set makes one 8,000,008-byte request with no retains. All seven finish with zero
+managed charge; deliberate leaks are detected. These counters exclude raw runtime
+buffers, stacks and allocator metadata. **Allocated bytes over time, live payload,
+resident RAM and reserved virtual addresses are different measurements.** The
+[buffer report](measurements/unique-buffer-peers.md#process-memory-and-virtual-reservations)
+records about 65.1 GiB reserved virtually with only 1.5–1.9 MiB resident in its
+small diagnostic; the reservation is not that much occupied RAM.
+
+Large remaining gaps are visible in the older, explicitly dated
+[parser comparison](measurements/parser-workspace.md) (about 5–9× C/Rust time)
+and [automatic derivatives](measurements/eager-captures.md#results) (44–58× the
+handwritten C derivative in the largest current-result case). These are not
+fresh measurements of #233. Allocation reductions do not erase those gaps or
+establish that peak memory fell. The [Swift protocol](#swift-comparison) adds the
+closest ownership-model peer without discarding C and Rust.
+
+## Swift comparison
+
+Swift is a required comparison for new ownership/performance work alongside C
+and Rust. It uses ARC, but also value types and compiler elimination of ownership
+operations; ARC does not imply every operation allocates or changes a count.
+See Swift's [ARC guide](https://docs.swift.org/latest/documentation/the-swift-programming-language/automaticreferencecounting/)
+and [compiler description](https://www.swift.org/documentation/swift-compiler/).
+Use ordinary Swift `Array`, values and escaping closures, without artificial
+boxing to imitate fwp. Report differences in algorithms, copying and runtime startup.
+
+The first `swift-peers` suite compares all seven programs on native Linux ARM64
+and AMD64, in two independent sessions per architecture. It uses the official
+`swift:6.4.2-noble` container, Swift language mode 6, `-O` and whole-module
+optimization, checked arithmetic, and explicit native targets. Never use
+`-Ounchecked`. C and generated fwp C use GCC O2, disabled floating contraction,
+no fast math or LTO; Rust uses optimized builds without LTO. Retain actual CPU,
+compiler/target versions, dynamic libraries, sources, generated C and executables.
+Compare sessions only when host/toolchain identities match. Container runtime
+startup is outside the process timer; each program's runtime startup is inside.
+
+Before measurement, freeze this protocol: two warmup rounds, then 24 measured
+rounds of eight labels (each language and its byte-identical copy). Eight-round
+blocks balance positions and preceding programs. Every process must return the
+same result. Retain every duration/output/status. An identical-copy median ratio
+above 1.02 makes that case/session inconclusive; do not drop it, relax the limit
+or retry unchanged observations. These establish descriptive baselines, not a
+candidate speed budget. Keep three separate peak-RSS runs per ordinary executable.
+Swift/C/Rust allocation and ARC-operation counts are **not yet measured** here.
+Neither elapsed time nor RSS alone attributes overhead to ARC.
+
+The same suite compiles a Swift closure factory separately from its caller.
+It checks both scalar operations from the [callable comparison](measurements/returned-callables.md),
+counts 0/1/16/4,096, checked-overflow cases, actual native binaries and Swift's
+optimized intermediate code. A separate reference-capture control verifies normal
+release and deliberately retained ownership. It does not fabricate allocation
+counts for the scalar closure. Swift callable phase timing, allocation/count
+instrumentation, weak subscriptions and parser/numerical peers remain required
+before broader ownership or numerical parity claims. No Swift result exists until
+the new collection completes and its artifacts are audited.
+
+Execution time and working memory take priority over executable size. Keep size
+and stack costs visible because they can affect caches and memory; a size increase
+alone does not establish a slowdown. For the current callable candidate, preserve
+the original 17.7% ARM O1 text-budget rejection, but assess its performance and
+memory rather than treating the percentage alone as the delivery decision.
+Its count reduction is verified; its elapsed-time benefit is still unmeasured.
+
 ## Choose the question first
 
 | Question | Evidence | Interpretation |
@@ -47,7 +152,7 @@ work. The [ownership direction](gc-removal-design.md) explains the lifetime rule
 | Workload | Existing evidence | Remaining comparison work |
 |---|---|---|
 | Unique numeric buffer | [C/Rust peer comparison](measurements/unique-buffer-peers.md) covers lengths 0, 16, 4,096 and 262,144, output/cleanup, payload versus metadata, process memory, code and stack; [newer sessions](measurements/buffer-current.md) retain failed controls | Qualify the remaining timing comparisons without retrying unchanged failures. Separate construction/work/release timing from the existing whole-process totals. Preserve [array removal](measurements/generated-array-folds.md) and [State range](measurements/state-range-folds.md) cost checks without treating them as timing acceptance. |
-| Returned partial application | [Three-host C/Rust/fwp comparison](measurements/returned-callables.md) separates construction, repeated calls and destruction at O1/O2; fwp uses a 16-byte heap payload, while C/Rust captures are inline | Resolve the candidate’s recorded ARM O1 text-size rejection before delivery. Timing parity is not measured; a separate protocol is still required. |
+| Returned partial application | [Three-host C/Rust/fwp comparison](measurements/returned-callables.md) separates construction, repeated calls and destruction at O1/O2; fwp uses a 16-byte heap payload, while C/Rust captures are inline | Add Swift and measure invocation/whole-call costs before delivery; retain the recorded ARM O1 size rejection. Timing parity is not measured. |
 | Subscription with weak back-link | [Weak-link semantics](gc-removal-design.md) and lifetime tests cover registration, expiration and cleanup | Add explicit C/Rust registrations with the same active-call and cancellation rules. Measure weak metadata allocation, live/expired acquisition, callback work and teardown separately. |
 | Recursive parser workspace | [A6](measurements/parser-workspace.md) already compares all three languages at 31/511/8,191 balanced nodes and 127 left-nested nodes, with phase timings and storage observations | Preserve those results. Complete the broader memory accounting (reserved/committed storage and peer transient peaks) and Rust stack observations before claiming every B1 field; current reported capacities are not process memory. |
 

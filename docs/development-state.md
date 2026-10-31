@@ -1,9 +1,10 @@
 # Current work
 
-**Next:** resolve the pending callable code-size decision before publishing its
-runtime change. PR #233 is verified and squash-merged; its passing tree is
-integrated here. No new PR is open. Keep the original rejected budgets intact
-unless the user explicitly accepts the recorded exception.
+**Next:** finish and run the native Swift/C/Rust/fwp comparison, audit every
+result and publish the performance/memory assessment. The user prioritizes runtime
+performance over executable size and requires Swift as an ARC peer. The original
+callable size-budget rejection stays recorded; fewer counts are not a measured
+speedup. PR #233 is verified, merged and integrated. No next PR is open yet.
 
 This worktree is `/private/tmp/fwp-returned-callables`, branch
 `returned-callable-peers`. No PR is open for it. Revised candidate
@@ -13,10 +14,9 @@ All three completed and are fully audited: 49 Rust tests, 16 Python cases and
 170 measurement commands per host. The same ARM O1 text limit fails; every
 other decision passes. The second complete rejection archive and immutable tag
 `roadmap/returned-callables-copy-rejected-2026-10-31` retain the results.
-An asynchronous user decision is pending: accept this specific code-size cost
-with the count reductions, or withhold the runtime change. Do not silently alter
-the original budget. The scalar-fold decision accepts verified reductions with
-timing open; it does not authorize this separate callable code-size exception.
+The user has redirected acceptance toward performance and working memory, with
+Swift included. No further size-only decision is pending. Preserve the original
+failed budget and collect the missing performance evidence before delivery.
 
 First candidate `1f92902205c5da0269d1a0b20a2550736baff475`, run `41177534238`:
 Linux AMD job `124468086194`, Linux ARM `124468086417`, macOS ARM `124468086503`.
@@ -90,6 +90,21 @@ helper frames may grow by at most 64 bytes. Missing-release controls still fail.
 The checker recomputes raw records and writes every budget decision. These
 limits make no elapsed-time claim and cannot close D2/N1 timing acceptance.
 
+## Swift comparison preparation
+
+Seven Swift sources now match the maintained benchmark inputs. The `swift-peers`
+workflow runs two native sessions on each Linux architecture, with explicit Swift
+6.4.2 / language mode 6, optimized checked builds, 24 balanced rounds, copy controls
+and separate RSS samples. Historical C/Rust results remain unchanged. Native Swift
+closure factories use a separate module; reference-capture cleanup is a separate
+control. Scalar Swift allocation/count and phase-time measurements are still open.
+No Swift speed or memory result has been collected yet.
+
+Focused local Swift 6.2.1 ARM64 checks pass (2.92s): eight checksum/representation
+rows, normal release and omitted-release exit 78. Three timing-record tests pass
+(0.13s), including balanced ordering and incomplete/noisy records. Workflow lint
+passes (5.83s); the roadmap audit passes (3.11s). Full measurement stays on runners.
+
 ## Local verification
 
 All checks used `scripts/local-guard.py`. No full local build, suite or benchmark.
@@ -127,7 +142,7 @@ Require all nine final-head production jobs plus docs before squash merge.
 | 4 | Verified | Preserve decimal savings and the recorded loop gap |
 | 5 | In progress | Meet D2's remaining timing requirement |
 | 6 | In progress | Resolve N1 controls before N2 timing acceptance |
-| 7 | In progress | Resolve callable size acceptance and finish B1/B2 comparisons |
+| 7 | In progress | Add Swift and finish performance/memory B1/B2 comparisons |
 | 8 | In progress | Complete numerical and integrated V1/V2 acceptance |
 
 [PLAN.md](../PLAN.md) retains the unchanged budgets and failed timing controls.

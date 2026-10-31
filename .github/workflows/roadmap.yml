@@ -53,6 +53,7 @@ jobs:
         run: |
           python3 scripts/test-unique-buffer-baselines.py
           python3 scripts/test-buffer-program-records.py
+          python3 scripts/test-swift-peer-records.py
           python3 scripts/test-returned-callables.py
           python3 scripts/test-returned-callable-evidence.py
           python3 scripts/test-returned-callable-budget.py

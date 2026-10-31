@@ -29,12 +29,12 @@ collector is not the same as removing these costs. The
 
 ## Work order
 
-1. Resolve the [returned-callable candidate's size decision](docs/measurements/returned-callables.md#rejected-first-candidate-and-linker-diagnosis)
-   before publishing its runtime change. C/Rust/fwp baselines and ownership checks
-   pass on three native hosts. Calls lose their retain/release pair, but ARM O1
-   text grows 17.7%, exceeding the frozen 5% limit. A user decision on this
-   specific cost is pending; retain both rejected runs and the hardware protection.
-   If accepted, finish the complete production matrix and docs before merge.
+1. Complete the [Swift comparison](docs/benchmarks.md#swift-comparison) and report
+   current execution time and working memory alongside C/Rust. Prioritize those
+   over executable size. For the returned-callable candidate, preserve its original
+   ARM O1 size-budget failure; measure its timing benefit rather than infer it
+   from fewer counts. Keep the hardware protection. Finish the production matrix
+   before delivering any runtime change.
 2. Resolve D2/N1's failed measurements before claiming numerical speed acceptance.
    Fixed CPU affinity and equal executable names did not resolve the controls.
    Do not rerun unchanged experiments or increase sample counts again.
