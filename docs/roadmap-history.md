@@ -1410,3 +1410,30 @@ message is exactly `Avoid temporary range lists in State folds`, with no body or
 trailers. Duplicate post-merge runs `41180750528` and `41180750575` were cancelled
 after verifying the tree and message. Callable comparisons and D2/N1 timing
 acceptance remain open.
+
+
+## Borrowed calls and Swift comparisons (PR #234)
+
+The user merged #234 as `219e3a0130c18d60750fd55ec9c0a684c1dcefd4` on
+2026-10-31, tree `b4a70d124eb2674b3f9138ece4600f77cc427dab`. The one-line
+subject has no body or trailers. Validation completed after merge: main run
+`41218527464` passes all nine production jobs for the merged commit, and docs
+`41218527417` / `124588033356` passes. All completed logs are reviewed, with no
+unexpected compiler diagnostics. This verifies production delivery; the original
+size rejection and open timing acceptance are unchanged.
+
+| Production coverage | Passing job IDs |
+|---|---|
+| Linux ARM64 / AMD64 | `124588033135` / `124588033346` |
+| macOS ARM64, regular / ownership | `124588033328` / `124588033321` |
+| macOS AMD64, regular / ownership | `124588033403` / `124588033386` |
+| Windows ARM64 / AMD64 | `124588033441` / `124588033538` |
+| C/Rust benchmarks | `124588033339` |
+
+The [callable report](measurements/returned-callables.md) retains the reduced
+ownership operations and original ARM O1 size rejection. The
+[Swift report](measurements/swift-peers.md) retains four completed native sessions,
+all noisy rows, different AMD64 CPUs and the independent artifact audit.
+PR #235 adds [phase timing](measurements/callable-phases.md) and carries any
+required repairs. Invocation improves in the qualified phase comparisons, but
+three AMD64 construction regressions leave combined timing acceptance open.

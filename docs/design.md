@@ -209,8 +209,8 @@ caller's closure intact, and return the entry's owned result. This rule applies
 only to the initial borrowed callable. A function returned during overapplication
 is owned and must still be consumed. Owned captures, partial calls and extra
 arguments keep their existing ownership handling. The
-[callable comparison](measurements/returned-callables.md) records the pending
-native acceptance and fixed limits; implementation alone does not verify them.
+[callable comparison](measurements/returned-callables.md) records verified native correctness and the still-open timing/size limits;
+correctness alone does not establish performance acceptance.
 
 ### Proving a local array has one owner
 
