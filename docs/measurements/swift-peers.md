@@ -10,6 +10,13 @@ These measurements precede the merge of PR #234. Its full production acceptance
 is recorded in [delivery history](../roadmap-history.md); the focused measurement
 jobs did not replace that matrix. The [summary JSON](swift-peers-2026-10-31.json) retains every
 session's timings, all copy-control ratios, RSS samples and artifact identities.
+The [complete archive](swift-peers-2026-10-31.tar.xz) retains all four original
+manifests, sources, commands, samples and native binaries (7.3 MB compressed).
+[Retention audit 41251278856](https://github.com/e6qu/fun-with-pipes/actions/runs/41251278856)
+rechecked every file before packing it. `scripts/test-swift-peer-records.py`
+verifies the archive hash, reruns the read-only audit and matches the summary;
+it never executes retained binaries. CI artifact expiry no longer removes this
+evidence.
 
 ## What the numbers mean
 

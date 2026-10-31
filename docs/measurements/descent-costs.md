@@ -403,6 +403,10 @@ architecture. Full grouped platform checks subsequently pass in
 
 ## Attribution for the next derivative change
 
+The current candidate removes the temporary list between the adjoint array and
+its element conversion. [Array traversal](array-list-traversal.md) specifies its
+counts, controls and whole-solve measurement; no result is accepted yet.
+
 1. Compare AD-history and AD-current to quantify retaining old vectors. Compare
    explicit list/packed forms to expose representation costs, retaining their
    different arithmetic work in the explanation.

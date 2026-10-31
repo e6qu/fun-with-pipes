@@ -1,115 +1,107 @@
 # Current work
 
-**Next:** publish the batched repairs and documentation updates, then verify
-`lexical-bindings` on Linux ARM64/AMD64 and macOS ARM64. Run the read-only
-`swift-peer-report` retention job alongside it. All completed logs from focused
-run `41250023104` at `8842030c4b180a273c1cd86cb43b651985ca9829` are audited.
-The user authorized all ten steps in [PLAN.md](../PLAN.md). Steps 1–6 are in
-progress; steps 7–10 remain open. New syntax is not verified support yet.
+**Next:** publish the array-to-list traversal candidate and dispatch
+`array-list-measurements`; audit every completed job before further repairs.
+Continue Swift allocation attribution and the remaining documentation review
+while those numerical checks run. The user authorized all ten steps in
+[PLAN.md](../PLAN.md), in draft [PR #236](https://github.com/e6qu/fun-with-pipes/pull/236).
 
 Worktree: `/private/tmp/fwp-returned-callables`; branch `language-design-review`,
 based on main `781ebabb0463efc2f03f0d3aa44b7d2c4766959d`.
-Draft [PR #236](https://github.com/e6qu/fun-with-pipes/pull/236) is the only active
-PR. Preserve unrelated changes in the primary checkout.
+Preserve unrelated changes in the primary checkout. No final production matrix
+has run for this PR; draft production skips are not acceptance.
 
 ## Roadmap status
 
 | Step | Status | Remaining work |
 |---|---|---|
-| 1 | In progress | Verify REPL cached functions and strict curried-stage evaluation |
-| 2 | In progress | Validate tooling/tutorials and finish the documentation audit |
-| 3 | Implemented | Eight pairs pass focused O0/O2 checks; preserve them through integration |
-| 4 | In progress | Verify local aliases and loop-carried String count limits |
-| 5 | In progress | Verify four representation cases and immediate variant destructuring |
-| 6 | In progress | Verify named range/map/filter fusion and eager-stage controls |
-| 7 | Pending | Measure and remove remaining numerical loop costs |
-| 8 | Pending | Attribute and remove a demonstrated derivative cost |
-| 9 | Pending | Complete Swift attribution and qualified comparisons |
-| 10 | Pending | Integrated application and final-head delivery gates |
+| 1 | Implemented | Preserve scope, effects and strict stages through integration |
+| 2 | Implemented | Finish whole-repository documentation audit |
+| 3 | Implemented | Preserve eight named/tacit cost pairs through integration |
+| 4 | Implemented | Preserve alias, failure and zero/one-retain String loops |
+| 5 | Implemented | Preserve four direct-representation probes |
+| 6 | Implemented | Preserve named range/map/filter and eager-stage controls |
+| 7 | In progress | Verify direct numeric array traversal and allocation limits |
+| 8 | In progress | Measure gradient-list savings and full solve/phase costs |
+| 9 | In progress | Original Swift archive retained; allocation attribution remains |
+| 10 | Pending | Integrated applications and final-head production gates |
 
-## Current batch
+## Implemented language and ownership changes
 
-Implemented: strict immutable `let`, single-input `fn`, named match patterns,
-tuple/record destructuring, record shorthand, explicit captures and monomorphic
-local inference. Macros preserve lexical scope and quote stages. Formatter,
-editor navigation/rename, debugger inspection and notebook dependencies recognize
-local names. Tutorials and the reference introduce these concepts with examples.
-The remaining whole-repository documentation audit stays open. The unpublished
-pass removes obsolete A6/GC and sort-work directions, replaces the 500-line proof
-history with the current protocol plus linked evidence tables, and corrects old
-kernel/derivative/Swift status text. A runner step will archive all four original
-Swift sessions after re-auditing them, before their January expiry.
+Strict immutable `let`, single-input `fn`, named match patterns, tuple/record
+destructuring and record shorthand work with explicit captures and monomorphic
+local inference. Macros preserve scope and quote stages. Formatter, editor
+navigation/rename, debugger and notebook dependencies recognize local names.
+Tutorials and the reference introduce each concept before using it.
 
-The latest batch adds eight cases at 0/32/128 inputs, with count/allocation
-requirements in PLAN.md before observations: local aliases, two String owner
-loops, four aggregate representations and a range/map/filter/fold. It exposes an
-immediately destructured record payload to existing scalar replacement and rejoins
-single-use named ranges before fusion. Controls preserve aliases, eager output,
-first traps and refutable alternatives. These new improvements are not verified.
+Local bindings expose known calls, immediate record/variant destructuring and
+single-use ranges to existing optimizations. Flat loop fields remain visible to
+ownership analysis; final moves may wait through proved borrows. Named input
+annotations prevent the caller's IO from changing a pure callback parameter.
+Curried stages preserve initializer effects, failures and resource release.
 
-## Validation and repairs
+## Published verification
 
-Focused run `41250023104` (`8842030c`) finished on both Linux GCC hosts and
-macOS ARM64 Clang. Every completed target and diagnostic was audited. All hosts
-have the same three failures; the remaining targets pass, including all eleven
-REPL tests, tutorials/terminal sessions, Python integration and the raw corpus.
-The earlier REPL saved-closure failure in `41248126920` is repaired.
+Head `a61addc640793a54f4bef19d4e2110bbc3196a54` passes focused run
+`41251272638` on Linux ARM64/AMD64 GCC and macOS ARM64 Clang. All completed
+targets and compiler diagnostics are audited: no unexpected warnings or failures.
+This includes 54 RC unit tests, eleven REPL cases, all language/ownership targets,
+tutorial programs and source copies, Python tools and the raw interpreter corpus.
+The String loops meet zero/one-retain limits at 0/32/128; the other six new cost
+cases and eight original named/tacit pairs also pass. Counts are not timings.
+Logs: `/private/tmp/fwp-236-a61-{amd,arm,mac}.log`.
 
-| Failure | Cause and repair awaiting verification |
-|---|---|
-| Two String-loop count cases | Record destructuring hid fields from loop unpacking; argument preparation duplicated an owner before a later borrow. Expose irrefutable flat fields before counts and defer the final move through proved borrows. |
-| Unknown curried callback | Inference assigned the caller's IO to its otherwise pure parameter. Use declared named-function input types before inferring their bodies; retain negative effect checks. |
-| Resource-frame fixture | The added File case violated the existing affine partial-application rule. Use shareable UdpSocket inputs to test disposal between successive calls under the same descriptor limit. |
+Documentation `41251273915` passes. Its deliberate failing-runner controls are
+expected inside passing tests, not hidden failures; full log is
+`/private/tmp/fwp-236-a61-docs.log`. The three failures in `41250023104` are repaired:
+loop field/move visibility, pure callback input inference and an invalid affine
+File fixture (replaced by a shareable socket disposal test). Earlier saved-REPL
+closure, workflow-heading and evidence-reader failures are also repaired.
 
-The eight original named/tacit pairs pass O0/O2. Six new cases also meet their
-limits: tuple, record, variant, String record, local alias and range/map/filter.
-The failed loop measurements are exactly `2n+1` retains (owner only) and `2n+2`
-(with caller alias), at 0/32/128 on all three hosts. Keep the requirements at
-zero/one. Source C confirms the record and per-iteration retains; these are cost
-counts, not timings. Added duplicate-field and failed-borrow controls must preserve
-normal/error cleanup. RC unit tests now run in this focused workflow too.
+Swift retention `41251278856` passes all four original audits. Archive
+`docs/measurements/swift-peers-2026-10-31.tar.xz` retains sources, commands,
+reports and binaries from original measured source
+`80a0504a97f7c96291e77be6e8f843d5cb8c7391`, run `41214191081`.
+Its SHA-256 is `8ddb06a630969718322cacd10e3a3472f7e0da1c5da97106b8c0090806604118`.
+The local audit recomputes timings and memory samples without executing binaries.
 
-Strict-stage coverage also adds a top-level let returning a function and a match
-arm returning a function. Their initializers/arm computations must run before
-later arguments; they must not be delayed by type-based native arity selection.
-All these repairs are unpublished and unverified by the production compiler.
+## Numerical candidate awaiting runner verification
 
-Dispatch for `253da9e8` was rejected before jobs started: adding evidence upload
-accidentally removed the next workflow job heading. The heading is restored;
-this was a workflow editing error, not a runner failure.
+`src/fuse.rs` directly traverses numeric arrays beneath eligible list map/filter
+and fold stages, retaining actual floating conversions and arithmetic order.
+The [protocol](measurements/array-list-traversal.md) freezes inputs and limits
+before observations. New native probes use dynamic arrays, retained slices,
+packed/word storage and O1/O2. Semantics controls cover rounding/NaNs, aliases,
+eager effects, distinct traps and early stopping. Existing AD ownership and
+precision targets accompany whole-solve measurements on both Linux architectures.
+No count, timing or correctness claim is accepted for this new candidate yet.
 
-Docs run `41248112966` failed a stale evidence-reader count (nine REPL tests
-instead of eleven). The count, synthetic log and total are repaired; eight guarded
-reader tests pass. Other completed docs checks passed; later steps did not run.
-Docs `41250017533` at `8842030c` passes the complete audit, including the corrected
-reader and all later evidence checks. Its full log is retained at
-`/private/tmp/fwp-236-884-docs.log`; deliberately failing native-runner controls
-are expected and verified by the enclosing test. Draft production runs skip
-their jobs, which is not acceptance.
-No final-head production matrix has run for this PR.
+`array-list-measurements` compares the same compiler with numeric array fusion
+explicitly enabled/disabled. It measures six whole-solve cases and six runtime
+phases, including original copy/noise controls. The final gradient list lies
+outside those phase clocks; whole-solve allocation savings cannot be called a
+recording-time reduction. Original D2 and N1/N2 timing requirements remain open.
 
-Earlier failures are repaired: `41245768888` (probe borrow lifetime, OpenSSL
-selection and preemption transcript) and `41242796910` (macro field move).
-Superseded queued runs `41243195909`, `41243748366`, `41244787126` were cancelled.
+## Local checks
 
-Local checks through the unchanged guard:
+All checks use the unchanged resource guard. No full compiler build ran locally.
+Full builds, suites and benchmarks stay on runners; never raise local limits.
 
 | Check | Result |
 |---|---|
-| `cargo fmt --all` and `git diff --check` | Pass before publication; about one CPU second for formatting |
+| `cargo fmt --all`, `git diff --check` | Pass |
+| Workflow actionlint | Pass |
 | `scripts/test-native-test-runner.py` | 21 pass, including target coverage |
 | Frozen primitive inventory | 394 declarations, 384 symbols, no review symbols |
 | `scripts/check-roadmap.py` | 192 doc link sets, 106 preparation pairs, ten steps pass |
-| Standalone production parser/formatter modules | 17 pass, including continuation, record patterns, tutorial programs and round trips |
-| Standalone `tests/examples.rs` source/output-copy test | All tutorial copies pass; no fwp execution |
-| Standalone `tests/stdlib_doc.rs` generator | Pass; library reference regenerated |
-| `scripts/test-collection-evidence.py` | Eight pass after REPL count correction |
+| Standalone production parser/formatter | 17 tests and tutorial/new fixture round trips pass |
+| Tutorial source copies and library reference generator | Pass |
+| `scripts/test-collection-evidence.py` | Eight pass; new numeric test count included |
+| `scripts/test-descent-budgets.py` | Nine pass, including exact new savings/timing limits |
+| `scripts/test-swift-peer-records.py` | Five pass, including retained archive recomputation |
 
-Standalone harnesses are `/private/tmp/fwp-236-parser-check.rs`,
-`/private/tmp/fwp-236-tutorial-docs` and `/private/tmp/fwp-236-stdlib-doc`.
-They use Rust O1 with assertions/overflow checks. These checks do not verify
-inference, lowering, ownership or native output. No full compiler build ran
-locally. Full builds, suites and benchmarks stay on runners. Never raise limits.
+Standalone harnesses live under `/private/tmp/fwp-236-*`. They use Rust O1 with
+assertions/overflow checks and do not verify inference, lowering or native output.
 
 ## Verified baseline and remaining evidence
 
@@ -135,6 +127,6 @@ count/allocation reductions are independent of those timing failures. No runtime
 patch was justified by the constructor investigation. Follow the ten concrete
 steps in PLAN.md rather than reimplementing completed GC/ARC milestones.
 
-Callable raw archives are checked in. Earlier whole-program Swift artifacts
-expire in January 2027 and still need durable retention. Earlier APFS deduplication
+Callable and whole-program Swift raw archives are checked in; their audit
+recomputes original results without executing retained binaries. Earlier APFS deduplication
 recovered about 1.2 GiB without changing any checkout's contents or status.

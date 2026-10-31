@@ -200,6 +200,15 @@ fn prim(sym: &str, ty: &MT, args: &[Expr]) -> Traps {
             Num::Int(_) => none(),
             Num::Float => None,
         },
+        // Conversion keeps its actual rounding/NaN operation. It has no
+        // language trap, so it may run directly on an array element instead
+        // of first copying that element into an intermediate numeric list.
+        "float.convert"
+            if matches!(num(params.first()?), Some(Num::Float))
+                && matches!(num(result), Some(Num::Float)) =>
+        {
+            none()
+        }
         // F64 lane arithmetic/sum is total. Binary operations use the actual
         // common prefix, so their new array is no larger than either valid
         // input array, even for manually constructed records.
@@ -1480,9 +1489,9 @@ impl Fuser<'_> {
         self.fuse_chain(kind, args, cparams, result_ty, false)
     }
 
-    /// A chain of at least two `map` and `filter` stages whose list is
-    /// used as such: one pass that conses the elements in reverse, then a
-    /// `reverse`, instead of a list per stage.
+    /// Materialize map/filter stages in one traversal. Two list stages, or
+    /// one stage over array.to-list, avoid an intermediate list. Build the
+    /// result in reverse and reverse it once, retaining the original order.
     fn materialize(&mut self, chain: &Expr) -> Option<Expr> {
         let mut n = 0;
         let mut cur = chain;
@@ -1495,7 +1504,10 @@ impl Fuser<'_> {
                 _ => break,
             }
         }
-        if n < 2 {
+        let array_input = matches!(cur, Expr::Call(id, args)
+            if prim_sym(self.funcs, *id) == Some("array.to-list") && args.len() == 1)
+            && std::env::var("FWP_ARRAY_FUSION").map_or(true, |v| v != "0");
+        if n < 2 && !(n == 1 && array_input) {
             return None;
         }
         let Expr::Call(top, _) = chain else {
@@ -1606,13 +1618,19 @@ impl Fuser<'_> {
             if crate::opt::uses(body, *local) == 1 {
                 let mut body = (**body).clone();
                 if let Expr::Call(id, args) = first_evaluated(&mut body) {
-                    if prim_sym(self.funcs, *id) == Some("map")
+                    if matches!(prim_sym(self.funcs, *id), Some("map" | "filter"))
                         && args.len() == 2
                         && matches!(&args[1], Expr::Local(l) if l == local)
                         && self.beh.expr(&args[0]) == none()
                     {
                         let inputs = vec![args[0].clone(), (**value).clone()];
-                        if let Some(fused) = self.map_zip(*id, &inputs) {
+                        if prim_sym(self.funcs, *id) == Some("map") {
+                            if let Some(fused) = self.map_zip(*id, &inputs) {
+                                *first_evaluated(&mut body) = fused;
+                                return self.lists(body);
+                            }
+                        }
+                        if let Some(fused) = self.materialize(&Expr::Call(*id, inputs)) {
                             *first_evaluated(&mut body) = fused;
                             return self.lists(body);
                         }
@@ -1734,6 +1752,14 @@ impl Fuser<'_> {
             }
             e if array && !stages.is_empty() => Producer::Array(e.clone()),
             _ if array => return None,
+            Expr::Call(id, a)
+                if !stages.is_empty()
+                    && a.len() == 1
+                    && prim_sym(funcs, *id) == Some("array.to-list")
+                    && std::env::var("FWP_ARRAY_FUSION").map_or(true, |v| v != "0") =>
+            {
+                Producer::Array(a[0].clone())
+            }
             Expr::Call(id, a) if a.len() == 2 && prim_sym(funcs, *id) == Some("range") => {
                 let t = funcs[*id].ty.params(2).0[0].clone();
                 match num(&t) {
@@ -1807,19 +1833,26 @@ impl Fuser<'_> {
                     let (id, caps) = fns.last()?;
                     let (ps, _) = funcs[*id].ty.params(caps.len() + 1);
                     MT::Con(
-                        if array { "std::Array" } else { "std::List" }.into(),
+                        if array || array_source {
+                            "std::Array"
+                        } else {
+                            "std::List"
+                        }
+                        .into(),
                         vec![(*ps.last()?).clone()],
                     )
                 }
             },
         };
-        if array {
+        if array || array_source {
             if !elem(&prod_ty).is_some_and(|t| unboxed_numeric(&t)) {
                 return None;
             }
-            for (id, captures) in &fns {
+            for ((id, captures), stage) in fns.iter().zip(&stages) {
                 let (params, result) = funcs[*id].ty.params(captures.len() + 1);
-                if !unboxed_numeric(params.last()?) || !unboxed_numeric(result) {
+                if !unboxed_numeric(params.last()?)
+                    || (matches!(stage, Stage::Map(_)) && !unboxed_numeric(result))
+                {
                     return None;
                 }
             }

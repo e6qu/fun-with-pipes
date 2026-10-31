@@ -147,6 +147,17 @@ Keep [existing failed timing controls](docs/measurements/buffer-current.md).
 
 ## 7. Numerical loops
 
+Selected next change: traverse a numeric array directly when `array.to-list`
+feeds known map/filter/fold callbacks. Keep floating conversions and reduction
+order; remove the intermediate list, not arithmetic. At lengths 0, 1, 129 and
+4,096, a mapped-list result must remove at least one 24-byte list cell per input
+versus the same compiler with array fusion disabled. The
+[array traversal protocol](docs/measurements/array-list-traversal.md) fixes all
+measurement settings before the candidate runs. A scalar fold must construct
+no element list. Keep input aliases, slices, empty arrays, callback traps and
+mixed-stage failure order. The matrix implementation stays under its existing
+exact-result controls; no matrix speed claim follows from this list removal.
+
 Inspect the selected map/reduce and matrix workloads for repeated shape/bounds
 checks, boxed loop state, generic conversions and unnecessary data movement.
 Extend existing typed workers and contiguous traversal where evidence identifies
@@ -159,6 +170,19 @@ The original N1/N2 [kernel controls](docs/measurements/kernel-baselines.md) rema
 open; new results must not silently replace their failed observations.
 
 ## 8. Automatic differentiation
+
+The same array-to-list boundary occurs in `rev._backward-float`: it converts the
+numeric adjoint array to a list, then maps `float.convert`. Apply step 7's direct
+traversal without deleting the conversion (NaNs and narrower formats matter).
+Measure this path at 3, 33 and 129 coordinates, including zero/one/199 updates.
+Require unchanged result checks and raw tape storage, complete cleanup, and at
+least one fewer list cell per returned coordinate per gradient. Attribute setup,
+forward recording, reverse setup/traversal, result array and retirement separately;
+the final list conversion lies outside those runtime phases and must be reported
+as such. Keep ordinary and instrumented timings separate. The selected change's
+timing acceptance is at most 2% regression against its same-source control, with
+identical-copy variation at most 2%; failed/noisy cases stay open. This does not
+replace D2's original 5% improvement requirement.
 
 For Rosenbrock descent, attribute forward recording, backward traversal, gradient
 construction and retirement separately. Compare AD with an explicit derivative

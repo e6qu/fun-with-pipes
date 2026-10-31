@@ -86,7 +86,7 @@ def ownership_budget_failures(profiles, baseline):
 
 def paired_budget_failures(results, comparison):
     """Apply the selected pre-candidate limits and report every violation."""
-    assert comparison in {'scalar-recording', 'eager-captures'}
+    assert comparison in {'scalar-recording', 'eager-captures', 'array-lists'}
     failures = []
 
     def require(case, program, metric, actual, limit):
@@ -102,9 +102,12 @@ def paired_budget_failures(results, comparison):
             reference = label + '-reference'
             current, old = (row['fwpProfiles'][name] for name in [label, reference])
             require(case, label, 'candidate/reference time', medians[label] / medians[reference],
-                    0.95 if row['updates'] else 1.02)
+                    1.02 if comparison == 'array-lists' else 0.95 if row['updates'] else 1.02)
             savings = ([('requests', nodes), ('requestedBytes', 40 * nodes)]
                        if comparison == 'scalar-recording' else [('requests', int(row['updates'] > 0))])
+            if comparison == 'array-lists':
+                cells = row['dimensions'] * row['updates'] * row['solvesPerProcess']
+                savings = [('requests', cells), ('requestedBytes', 24 * cells)]
             for key, saving in savings + [('retains', 0), ('peakChargedBytes', 0), ('finalChargedBytes', 0)]:
                 limit = 0 if key == 'finalChargedBytes' else old['managed'][key] - saving
                 require(case, label, key, current['managed'][key], limit)
@@ -125,7 +128,7 @@ def paired_budget_failures(results, comparison):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--compiler', required=True, type=Path)
-    parser.add_argument('--comparison', required=True, choices=['current', 'scalar-recording', 'eager-captures'])
+    parser.add_argument('--comparison', required=True, choices=['current', 'scalar-recording', 'eager-captures', 'array-lists'])
     parser.add_argument('--reference-compiler', type=Path)
     parser.add_argument('--reference-manifest', type=Path)
     parser.add_argument('--cc', required=True)
@@ -147,9 +150,10 @@ def main():
     parser.add_argument('--output', required=True, type=Path)
     args = parser.parse_args()
     paired = args.comparison != 'current'
-    assert bool(args.reference_compiler) == bool(args.reference_manifest) == paired
-    reference_manifest = json.loads(args.reference_manifest.read_text()) if paired else None
-    if paired:
+    separate_compiler = paired and args.comparison != 'array-lists'
+    assert bool(args.reference_compiler) == bool(args.reference_manifest) == separate_compiler
+    reference_manifest = json.loads(args.reference_manifest.read_text()) if separate_compiler else None
+    if separate_compiler:
         assert reference_manifest['source'] == os.environ['GITHUB_SHA']
         assert digest(args.reference_compiler.read_bytes()) == reference_manifest['compilerSha256']
         if args.comparison == 'scalar-recording':
@@ -251,8 +255,13 @@ def main():
             verify(reference.stdout, expected, solves)
             assert not reference.stderr
             code = directory / (label + '.c')
-            emitter = args.reference_compiler if label.endswith('-reference') else args.compiler
-            build([emitter.resolve(), 'build', '--emit-c', '-O2', fwp_source, '-o', code])
+            emitter = args.reference_compiler if separate_compiler and label.endswith('-reference') else args.compiler
+            command = [emitter.resolve(), 'build', '--emit-c', '-O2', fwp_source, '-o', code]
+            if args.comparison == 'array-lists':
+                # The exact same compiler emits both variants. This explicit
+                # build setting appears in the retained command, not timing.
+                command = ['env', 'FWP_ARRAY_FUSION=' + ('0' if label.endswith('-reference') else '1'), *command]
+            build(command)
             text = code.read_text()
             assert 'FWP_ARC_ONLY' not in text
             assert not re.search(r'^\s*#\s*define\s+FWP_NO_REUSE\b', text, re.M)
@@ -442,7 +451,7 @@ def main():
     paths = ['scripts/descent-baselines.py', 'scripts/measure-descent-peers.py', 'scripts/measure-ad-application.py',
              'scripts/ad-storage-profile.py', 'scripts/measure-iteration.py', 'scripts/descent-phases.py',
              'tests/fixtures/descent_phases.c', 'scripts/prepare-recording-reference.py',
-             'scripts/prepare-capture-reference.py', 'src/opt.rs',
+             'scripts/prepare-capture-reference.py', 'src/opt.rs', 'src/fuse.rs',
              'tests/fixtures/ad_raw_storage_probe.c', 'tests/fixtures/descent_explicit.fwp',
              'tests/fixtures/descent_explicit.c', 'tests/fixtures/descent_explicit.rs',
              'tests/fixtures/descent_packed.fwp', 'src/ownership.rs', 'src/escape.rs', 'src/cgen.rs', 'src/rc.rs', 'tests/boxed_projection_ownership.rs',
@@ -461,6 +470,7 @@ def main():
             'current': 'Six current-source implementations and one byte-identical AD-current control. ',
             'scalar-recording': 'Current-source scalar recording comparison: reference compiler disables only the ad.push no-escape fact. ',
             'eager-captures': 'Current-source eager-capture comparison: reference compiler restores only constant-only capture hoisting; both compilers retain scalar recording stack storage. ',
+            'array-lists': 'One current compiler with FWP_ARRAY_FUSION explicitly 1 versus 0. This toggles all numeric array fusion, including result formatting, so whole-solve differences are not attributed solely to gradient-list removal. Independent direct-boundary counts establish that removal. ',
         }[args.comparison] +
         ('Candidate and reference record and reverse the same derivatives; an identical candidate copy checks timing noise. '
          if paired else '') +
