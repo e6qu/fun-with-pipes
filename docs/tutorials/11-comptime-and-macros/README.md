@@ -32,7 +32,12 @@ Call it with `name!(...)`; its returned syntax becomes part of the program:
 macro twice = quote (unquote!(0) | unquote!(0))
 ```
 
-`unquote!(0)` stands for the macro's first syntax argument. Resolved names in
+`unquote!(0)` stands for the macro's first syntax argument; indices range from
+0 to 63. `unquote!(expression)` instead evaluates an expression producing Syntax.
+That computation runs once when the quote/template is built, including when the
+template also has positional placeholders. Calling the template does not repeat
+it. A nested `quote` has its own placeholders; its code stays data until that
+quote is evaluated. Resolved names in
 a quote refer to their definition module; spliced argument names keep their
 caller spelling. Local binders introduced inside a quote have fresh identities,
 so `quote (let x = 100 in unquote!(0))` cannot capture an argument's unrelated `x`.

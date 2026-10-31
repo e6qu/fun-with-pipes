@@ -18,17 +18,16 @@ is closed and empty, so `Stop ()` ends the loop. `Some value` calls the handler,
 then `Again worker` continues. This processes each value before receiving the
 next; it does not build a list of every message as `channel.drain` would.
 
-The `Some` match supplies the message and the saved pair to its branch.
-`curry` turns a function of that pair into the curried branch function. Inside it,
-`.0` is the message and `.1 | .0` is the handler. `fork apply` calls that handler
-with the message; `tap` keeps the pair while the call runs. The final `.1` recovers
-the worker state. These tuple projections are zero-indexed.
+`fn (handler, channel) -> ...` names the two parts of the worker state. In the
+`Some value` arm, the local binding runs `handler value` once before returning
+`Again`. `_` discards the handler's unit result. The names remain available in
+the match arms because those arms are inside the function's scope.
 
-`serve` delays the loop until its final `()` argument arrives. `const work`
-ignores one argument and returns the function `work`; `flip` supplies the worker
-pair afterward. It does not start the loop when the callback is constructed.
-`subscribe` takes a handler and a channel, then spawns that delayed computation.
-The caller keeps `(channel, task)` to control its lifetime.
+`serve` takes the worker pair and returns `fn _ -> loop step worker`. That inner
+function ignores its unit input and starts the loop only when called. Constructing
+it captures the worker; it does not run the loop. `subscribe` supplies the pair
+and passes the resulting function to `task.spawn`. The caller keeps `(channel,
+task)` to control its lifetime.
 
 ## Finish or stop
 
@@ -75,9 +74,10 @@ shows this policy, active cancellation with a child task, reentry and scope fail
 interpretation with native O1/O2 execution. Eight and 64 rounds must return to the
 same managed-byte balance after each outer scope, then release all runtime charge.
 Broken message, task-owner and callback releases must fail; reporting completion
-before joining children must also fail. Tracing stress/reuse checks remain in the
-comparison. These checks passed on all six native targets in
+before joining children must also fail. The original checks passed on all six native targets in
 [#213](../../roadmap-history.md#scoped-subscriber-lifetimes-pr-213).
+Tracing GC has since been removed. Current ownership checks require physical
+release and safe reuse; this rewritten example must pass those maintained gates.
 
 ## Run it
 
@@ -105,21 +105,29 @@ Handler = I64 -> () ! {Async, IO, Network, FileIO}
 Worker = (Handler, Channel[I64])
 
 step : Worker -> Step[Worker, ()] ! {Async, IO, Network, FileIO}
-step = both (.1 | channel.recv) id | match
-    (None, _) -> const () | Stop
-    (Some _, _) -> curry (tap (fork apply .0 (.1 | .0)) | .1 | Again)
+step = fn (handler, channel) ->
+    channel.recv channel | match
+        None -> Stop ()
+        Some value ->
+            let _ = handler value
+            in Again (handler, channel)
 
 serve : Worker -> () -> () ! {Async, IO, Network, FileIO}
-serve = flip (const (loop step))
+serve = fn worker -> fn _ -> loop step worker
 
 subscribe : Handler -> Channel[I64] -> Task[()] ! {Async}
-subscribe = curry (serve | task.spawn)
+subscribe = fn handler -> fn channel -> task.spawn (serve (handler, channel))
 
 finish : (Channel[I64], Task[()]) -> Option[()] ! {Async}
-finish = tap (.0 | channel.close) | .1 | task.await
+finish = fn (channel, task) ->
+    let _ = channel.close channel
+    in task.await task
 
 stop : (Channel[I64], Task[()]) -> Option[()] ! {Async}
-stop = tap (.0 | channel.close) | .1 | tap task.cancel | task.await
+stop = fn (channel, task) ->
+    let _ = channel.close channel
+    in let _ = task.cancel task
+    in task.await task
 
 main =
     2

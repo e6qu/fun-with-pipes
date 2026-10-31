@@ -71,6 +71,9 @@ jobs:
         run: echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
       - run: cargo fmt --all -- --check
       - run: cargo clippy --lib --bin fwp --test local_bindings -- -D warnings
+      - name: Macro scope dependencies
+        if: ${{ !cancelled() }}
+        run: cargo test --lib macros::tests
       - name: Lexical bindings and affected language contracts
         if: ${{ !cancelled() }}
         run: cargo test --no-fail-fast --test local_bindings --test compiler_call_liveness --test debugger --test infix --test fmt --test golden_parse --test golden_check --test lint --test lsp --test resource_frames --test closure_ownership --test closure_cleanup

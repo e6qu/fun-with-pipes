@@ -35,6 +35,7 @@ const S_MACRO: u32 = 15;
 const S_FIELDS: u32 = 16;
 const S_LET: u32 = 17;
 const S_LAMBDA: u32 = 18;
+const S_QUOTE: u32 = 19;
 
 const P_HOLE: u32 = 0;
 const P_INT: u32 = 1;
@@ -75,11 +76,13 @@ pub trait QuoteCtx {
 /// Lower `quote e` (or a macro argument) to IR building a `Syntax` value.
 pub fn quote(e: &Expr, cx: &mut dyn QuoteCtx) -> Result<IR, Diagnostic> {
     let mut renamed = e.clone();
-    rename_binders(&mut renamed, &mut Vec::new(), &|id, n| cx.local_name(id, n));
-    quote_inner(&renamed, cx)
+    rename_binders(&mut renamed, &mut vec![Vec::new()], &|id, n| {
+        cx.local_name(id, n)
+    });
+    quote_inner(&renamed, cx, 0)
 }
 
-fn quote_inner(e: &Expr, cx: &mut dyn QuoteCtx) -> Result<IR, Diagnostic> {
+fn quote_inner(e: &Expr, cx: &mut dyn QuoteCtx, depth: usize) -> Result<IR, Diagnostic> {
     let c = |tag: u32, args: Vec<IR>| IR::Construct(tag, args);
     Ok(match &e.kind {
         ExprKind::Int {
@@ -99,19 +102,22 @@ fn quote_inner(e: &Expr, cx: &mut dyn QuoteCtx) -> Result<IR, Diagnostic> {
         ExprKind::Ctor(n) => c(S_CTOR, vec![s(&cx.ctor_name(n))]),
         ExprKind::Selector(path) => c(S_SELECT, vec![list(path.iter().map(|p| s(p)).collect())]),
         ExprKind::App(f, args) | ExprKind::Operator(_, f, args) => {
-            let fq = quote_inner(f, cx)?;
+            let fq = quote_inner(f, cx, depth)?;
             let mut xs = Vec::new();
             for a in args {
-                xs.push(quote_inner(a, cx)?);
+                xs.push(quote_inner(a, cx, depth)?);
             }
             c(S_APPLY, vec![fq, list(xs)])
         }
-        ExprKind::Pipe(a, b) => c(S_PIPE, vec![quote_inner(a, cx)?, quote_inner(b, cx)?]),
+        ExprKind::Pipe(a, b) => c(
+            S_PIPE,
+            vec![quote_inner(a, cx, depth)?, quote_inner(b, cx, depth)?],
+        ),
         ExprKind::Unit => c(S_UNIT, vec![]),
         ExprKind::Tuple(items) | ExprKind::List(items) => {
             let mut xs = Vec::new();
             for a in items {
-                xs.push(quote_inner(a, cx)?);
+                xs.push(quote_inner(a, cx, depth)?);
             }
             let tag = if matches!(e.kind, ExprKind::Tuple(_)) {
                 S_TUPLE
@@ -123,39 +129,51 @@ fn quote_inner(e: &Expr, cx: &mut dyn QuoteCtx) -> Result<IR, Diagnostic> {
         ExprKind::Record(fields) => {
             let mut xs = Vec::new();
             for (n, a) in fields {
-                xs.push(IR::Record(vec![s(n), quote_inner(a, cx)?]));
+                xs.push(IR::Record(vec![s(n), quote_inner(a, cx, depth)?]));
             }
             c(S_RECORD, vec![list(xs)])
         }
         ExprKind::Let(p, v, b) => c(
             S_LET,
-            vec![pattern(p, cx), quote_inner(v, cx)?, quote_inner(b, cx)?],
+            vec![
+                pattern(p, cx),
+                quote_inner(v, cx, depth)?,
+                quote_inner(b, cx, depth)?,
+            ],
         ),
-        ExprKind::Lambda(p, b) => c(S_LAMBDA, vec![pattern(p, cx), quote_inner(b, cx)?]),
+        ExprKind::Lambda(p, b) => c(S_LAMBDA, vec![pattern(p, cx), quote_inner(b, cx, depth)?]),
         ExprKind::Match(arms) => {
             let mut xs = Vec::new();
             for arm in arms {
                 xs.push(IR::Record(vec![
                     pattern(&arm.pat, cx),
-                    quote_inner(&arm.body, cx)?,
+                    quote_inner(&arm.body, cx, depth)?,
                 ]));
             }
             c(S_MATCH, vec![list(xs)])
         }
-        ExprKind::Comptime(x) => c(S_COMPTIME, vec![quote_inner(x, cx)?]),
+        ExprKind::Quote(x) => c(S_QUOTE, vec![quote_inner(x, cx, depth + 1)?]),
+        ExprKind::Comptime(x) => c(S_COMPTIME, vec![quote_inner(x, cx, depth)?]),
         ExprKind::MacroCall(n, args) if n == "unquote" => {
             if args.len() != 1 {
                 return Err(Diagnostic::error(e.span, "`unquote!` takes one argument"));
             }
-            match hole_index(e) {
-                Some(i) => cx.hole(i),
-                None => cx.unquote(&args[0])?,
+            if depth > 0 {
+                c(
+                    S_MACRO,
+                    vec![s(n), list(vec![quote_inner(&args[0], cx, depth)?])],
+                )
+            } else {
+                match hole_index(e) {
+                    Some(i) => cx.hole(i),
+                    None => cx.unquote(&args[0])?,
+                }
             }
         }
         ExprKind::MacroCall(n, args) => {
             let mut xs = Vec::new();
             for a in args {
-                xs.push(quote_inner(a, cx)?);
+                xs.push(quote_inner(a, cx, depth)?);
             }
             c(S_MACRO, vec![s(n), list(xs)])
         }
@@ -173,7 +191,7 @@ fn quote_inner(e: &Expr, cx: &mut dyn QuoteCtx) -> Result<IR, Diagnostic> {
             };
             let mut xs = Vec::new();
             for (n, a) in fs {
-                xs.push(IR::Record(vec![s(n), quote_inner(a, cx)?]));
+                xs.push(IR::Record(vec![s(n), quote_inner(a, cx, depth)?]));
             }
             c(S_FIELDS, vec![s(&kind), list(xs)])
         }
@@ -240,7 +258,7 @@ pub fn hole_count(e: &Expr) -> u32 {
         .unwrap_or(0)
 }
 
-fn collect_unquote_calls<'e>(e: &'e Expr, out: &mut Vec<&'e Expr>) {
+pub(crate) fn collect_unquote_calls<'e>(e: &'e Expr, out: &mut Vec<&'e Expr>) {
     match &e.kind {
         ExprKind::MacroCall(n, _) if n == "unquote" => out.push(e),
         ExprKind::App(f, args) | ExprKind::Operator(_, f, args) => {
@@ -266,9 +284,7 @@ fn collect_unquote_calls<'e>(e: &'e Expr, out: &mut Vec<&'e Expr>) {
             collect_unquote_calls(a, out);
             collect_unquote_calls(b, out);
         }
-        ExprKind::Lambda(_, x) | ExprKind::Comptime(x) | ExprKind::Quote(x) => {
-            collect_unquote_calls(x, out)
-        }
+        ExprKind::Lambda(_, x) | ExprKind::Comptime(x) => collect_unquote_calls(x, out),
         _ => {}
     }
 }
@@ -454,6 +470,7 @@ impl Builder<'_> {
                 Box::new(self.expr(&fs[2])?),
             ),
             S_LAMBDA => ExprKind::Lambda(self.pattern(&fs[0])?, Box::new(self.expr(&fs[1])?)),
+            S_QUOTE => ExprKind::Quote(Box::new(self.expr(&fs[0])?)),
             S_COMPTIME => ExprKind::Comptime(Box::new(self.expr(&fs[0])?)),
             S_MACRO => {
                 let mut args = Vec::new();
@@ -613,7 +630,7 @@ pub fn from_value(v: &Value, span: Span, next_id: &mut NodeId) -> Result<Expr, S
     if let Some(message) = invalid {
         return Err(message);
     }
-    rename_binders(&mut e, &mut Vec::new(), &|id, name| {
+    rename_binders(&mut e, &mut vec![Vec::new()], &|id, name| {
         if name.starts_with("::local::") {
             format!("::local::{id}::{}", name.rsplit("::").next().unwrap())
         } else {
@@ -713,7 +730,7 @@ fn unqualify_expr(e: &mut Expr) {
 /// unquote. Absolute local names cannot capture an ordinary caller identifier.
 fn rename_binders(
     e: &mut Expr,
-    names: &mut Vec<(String, String)>,
+    levels: &mut Vec<Vec<(String, String)>>,
     rename: &dyn Fn(NodeId, &str) -> String,
 ) {
     fn bind(
@@ -742,45 +759,59 @@ fn rename_binders(
     }
     match &mut e.kind {
         ExprKind::Var(n) => {
-            if let Some((_, new)) = names.iter().rev().find(|(old, _)| old == n) {
+            if let Some((_, new)) = levels
+                .last()
+                .unwrap()
+                .iter()
+                .rev()
+                .find(|(old, _)| old == n)
+            {
                 *n = new.clone();
             }
         }
-        ExprKind::MacroCall(n, _) if n == "unquote" => {}
+        ExprKind::MacroCall(n, args) if n == "unquote" => {
+            if levels.len() > 1 {
+                let quoted = levels.pop().unwrap();
+                for arg in args {
+                    rename_binders(arg, levels, rename);
+                }
+                levels.push(quoted);
+            }
+        }
         ExprKind::Let(p, v, b) => {
-            rename_binders(v, names, rename);
-            let saved = names.len();
-            bind(p, names, rename);
-            rename_binders(b, names, rename);
-            names.truncate(saved);
+            rename_binders(v, levels, rename);
+            let saved = levels.last().unwrap().len();
+            bind(p, levels.last_mut().unwrap(), rename);
+            rename_binders(b, levels, rename);
+            levels.last_mut().unwrap().truncate(saved);
         }
         ExprKind::Lambda(p, b) => {
-            let saved = names.len();
-            bind(p, names, rename);
-            rename_binders(b, names, rename);
-            names.truncate(saved);
+            let saved = levels.last().unwrap().len();
+            bind(p, levels.last_mut().unwrap(), rename);
+            rename_binders(b, levels, rename);
+            levels.last_mut().unwrap().truncate(saved);
         }
         ExprKind::Match(arms) => {
             for a in arms {
-                let saved = names.len();
-                bind(&mut a.pat, names, rename);
-                rename_binders(&mut a.body, names, rename);
-                names.truncate(saved);
+                let saved = levels.last().unwrap().len();
+                bind(&mut a.pat, levels.last_mut().unwrap(), rename);
+                rename_binders(&mut a.body, levels, rename);
+                levels.last_mut().unwrap().truncate(saved);
             }
         }
         ExprKind::App(f, xs) | ExprKind::Operator(_, f, xs) => {
-            rename_binders(f, names, rename);
+            rename_binders(f, levels, rename);
             for x in xs {
-                rename_binders(x, names, rename);
+                rename_binders(x, levels, rename);
             }
         }
         ExprKind::Pipe(a, b) => {
-            rename_binders(a, names, rename);
-            rename_binders(b, names, rename);
+            rename_binders(a, levels, rename);
+            rename_binders(b, levels, rename);
         }
         ExprKind::Tuple(xs) | ExprKind::List(xs) | ExprKind::MacroCall(_, xs) => {
             for x in xs {
-                rename_binders(x, names, rename);
+                rename_binders(x, levels, rename);
             }
         }
         ExprKind::Record(fs)
@@ -789,10 +820,15 @@ fn rename_binders(
         | ExprKind::Make(_, fs)
         | ExprKind::Update(fs) => {
             for (_, x) in fs {
-                rename_binders(x, names, rename);
+                rename_binders(x, levels, rename);
             }
         }
-        ExprKind::Comptime(x) | ExprKind::Quote(x) => rename_binders(x, names, rename),
+        ExprKind::Comptime(x) => rename_binders(x, levels, rename),
+        ExprKind::Quote(x) => {
+            levels.push(Vec::new());
+            rename_binders(x, levels, rename);
+            levels.pop();
+        }
         _ => {}
     }
 }

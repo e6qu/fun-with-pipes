@@ -1608,16 +1608,29 @@ impl<'a> Infer<'a> {
                 // `unquote!(N)` make the quote a function of N+1 syntaxes
                 let syn = Type::con("std::Syntax");
                 let mut splices = Vec::new();
-                collect_unquotes(body, &mut splices);
-                for x in splices {
-                    if matches!(
-                        &x.kind,
-                        ExprKind::Int {
-                            neg: false,
-                            suffix: None,
-                            ..
+                crate::syntax::collect_unquote_calls(body, &mut splices);
+                for splice in splices {
+                    let ExprKind::MacroCall(_, args) = &splice.kind else {
+                        unreachable!()
+                    };
+                    let [x] = args.as_slice() else {
+                        return Err(Diagnostic::error(
+                            splice.span,
+                            "`unquote!` takes one argument",
+                        ));
+                    };
+                    if let ExprKind::Int {
+                        neg: false,
+                        mag,
+                        suffix: None,
+                    } = &x.kind
+                    {
+                        if *mag >= 64 {
+                            return Err(Diagnostic::error(
+                                x.span,
+                                "template hole index must be between 0 and 63",
+                            ));
                         }
-                    ) {
                         continue;
                     }
                     let t = self.infer(x, ctx)?;
@@ -2058,37 +2071,6 @@ impl<'a> Infer<'a> {
                 Ok(exhaust::Pat::Ctor(canon, ps))
             }
         }
-    }
-}
-
-/// The arguments of `unquote!` inside a quoted expression.
-pub fn collect_unquotes<'e>(e: &'e Expr, out: &mut Vec<&'e Expr>) {
-    match &e.kind {
-        ExprKind::MacroCall(n, args) if n == "unquote" => out.extend(args.iter()),
-        ExprKind::App(f, args) | ExprKind::Operator(_, f, args) => {
-            collect_unquotes(f, out);
-            args.iter().for_each(|a| collect_unquotes(a, out));
-        }
-        ExprKind::Pipe(a, b) => {
-            collect_unquotes(a, out);
-            collect_unquotes(b, out);
-        }
-        ExprKind::Tuple(xs) | ExprKind::List(xs) | ExprKind::MacroCall(_, xs) => {
-            xs.iter().for_each(|a| collect_unquotes(a, out))
-        }
-        ExprKind::Record(fs)
-        | ExprKind::NominalRecord(_, fs)
-        | ExprKind::With(fs)
-        | ExprKind::Make(_, fs)
-        | ExprKind::Update(fs) => fs.iter().for_each(|(_, a)| collect_unquotes(a, out)),
-        ExprKind::Let(_, a, b) => {
-            collect_unquotes(a, out);
-            collect_unquotes(b, out);
-        }
-        ExprKind::Lambda(_, b) => collect_unquotes(b, out),
-        ExprKind::Match(arms) => arms.iter().for_each(|a| collect_unquotes(&a.body, out)),
-        ExprKind::Comptime(x) | ExprKind::Quote(x) => collect_unquotes(x, out),
-        _ => {}
     }
 }
 

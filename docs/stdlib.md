@@ -139,6 +139,7 @@ Syntax =
     | SFields String List[(String, Syntax)]
     | SLet SynPat Syntax Syntax
     | SLambda SynPat Syntax
+    | SQuote Syntax
 
 SynPat =
     | PHole

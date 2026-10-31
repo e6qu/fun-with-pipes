@@ -243,8 +243,13 @@ spelling and are excluded from binder renaming. This prevents an introduced
 `let x` from capturing the caller's unrelated `x`. Manually constructing `SName`
 values or unresolved quoted names still requests spelling-based resolution.
 `SLet`, `SLambda`, `PName`, `PRecord` and `PIgnore` represent the added forms;
-`PHole` retains match forwarding. Template functions may capture lexical Syntax
-values used by unquotes; their explicit capture parameters precede hole parameters.
+`PHole` retains match forwarding. A non-positional splice is evaluated once when the template is constructed;
+its Syntax result becomes an explicit capture before the hole parameters. Template
+invocation supplies placeholders without repeating those computations. Hole
+indices are integer literals 0–63. `SQuote` preserves a nested quote as syntax:
+its placeholders and unquotes belong to that later evaluation stage. Hygiene
+tracks separate binder scopes per quote, returning to the surrounding scope
+inside an unquote.
 `SOther` represents syntax through validated source text; decoding reparses it
 with the same expression parser. `SFloat` carries decimal text rather than F64.
 

@@ -373,6 +373,9 @@ impl Expr {
                     scope: &mut Vec<&'a Pattern>,
                     f: &mut dyn FnMut(&'a Expr, &[&'a Pattern]),
                 ) {
+                    if matches!(e.kind, ExprKind::Quote(_)) {
+                        return;
+                    }
                     if let ExprKind::MacroCall(name, args) = &e.kind {
                         if name == "unquote" {
                             for arg in args {

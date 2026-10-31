@@ -50,6 +50,9 @@ fn local_scope_monomorphism_and_resource_rules_are_checked() {
         "main = (let x = 1 in x) + x\n",
         "main = let x = x in x\n",
         "main = let same = fn x -> x in (same 1, same True)\n",
+        "main = quote (unquote!(64))\n",
+        "main = quote (unquote!())\n",
+        "main = quote (unquote!(0, 1))\n",
         "resource Token = builtin\nbad : Token -> (Token, Token)\nbad = fn x -> (x, x)\n",
         "resource Token = builtin\nbad : Token -> I64 -> Token\nbad = fn x -> fn _ -> x\n",
     ] {
@@ -127,6 +130,30 @@ main = task.scope (fn _ ->
     in task.await running | echo)
 "#.into(),
             "None\n",
+            None,
+        ),
+        (
+            "template-order",
+            r#"part : () -> Syntax ! {IO}
+part = fn _ -> let _ = "captured" | echo in quote 2
+main = let template = quote (unquote!(part ()), unquote!(0))
+    in let _ = "constructed" | echo
+    in let _ = template (quote 3) | syntax.show | echo
+    in template (quote 4) | syntax.show | echo
+"#.into(),
+            "captured\nconstructed\n(2, 3)\n(2, 4)\n",
+            None,
+        ),
+        (
+            "nested-quotes",
+            r#"macro make-template = const (quote (quote (unquote!(0))))
+macro make-identity = const (quote (fn value -> quote (unquote!(value))))
+main = let identity = make-identity!(())
+    in let template = make-template!(())
+    in let _ = identity (quote 7) | syntax.show | echo
+    in template (quote 8) | syntax.show | echo
+"#.into(),
+            "7\n8\n",
             None,
         ),
         (

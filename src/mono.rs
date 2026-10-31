@@ -1392,41 +1392,45 @@ impl<'a> Mono<'a> {
                         s,
                         fb,
                         hole_offset: 0,
+                        splices: HashMap::new(),
                     };
                     return crate::syntax::quote(x, &mut cx);
                 }
-                // Template holes follow explicit captured syntax values. Capture only
-                // inferred unquotes, not the unevaluated names inside the quote.
-                let mut captured = std::collections::BTreeSet::new();
-                x.walk(&mut |node| {
-                    if let Some(id) = self.typed.local_uses.get(&node.id) {
-                        if fb.bindings.contains_key(id) {
-                            captured.insert(*id);
-                        }
+                // Compute non-positional splices once, in source order, while
+                // constructing the template. Calls only supply positional holes.
+                let mut calls = Vec::new();
+                crate::syntax::collect_unquote_calls(x, &mut calls);
+                let mut splices = HashMap::new();
+                let mut args = Vec::new();
+                for call in calls {
+                    if crate::syntax::hole_index(call).is_some() {
+                        continue;
                     }
-                });
-                let offset = captured.len() as u32;
+                    let ExprKind::MacroCall(_, parts) = &call.kind else {
+                        unreachable!()
+                    };
+                    if parts.len() != 1 {
+                        return Err(Diagnostic::error(
+                            call.span,
+                            "`unquote!` takes one argument",
+                        ));
+                    }
+                    splices.insert(parts[0].id, args.len() as Local);
+                    args.push(self.expr(&parts[0], s, fb)?);
+                }
+                let offset = args.len() as u32;
                 let mt = fun_of(
-                    captured
-                        .iter()
-                        .map(|id| fb.locals[fb.bindings[id] as usize].clone())
-                        .collect(),
+                    vec![MT::con("std::Syntax"); args.len()],
                     self.node_mt(e.id, s),
                 );
-                let args = captured
-                    .iter()
-                    .map(|id| Expr::Local(fb.bindings[id]))
-                    .collect();
                 let mut tfb = FB::params(&mt, offset + holes);
-                for (local, id) in captured.iter().enumerate() {
-                    tfb.bindings.insert(*id, local as Local);
-                }
                 let body = {
                     let mut cx = QuoteCx {
                         mono: self,
                         s,
                         fb: &mut tfb,
                         hole_offset: offset,
+                        splices,
                     };
                     crate::syntax::quote(x, &mut cx)?
                 };
@@ -1679,6 +1683,7 @@ struct QuoteCx<'m, 'a, 's, 'f> {
     s: &'s Subst,
     fb: &'f mut FB,
     hole_offset: u32,
+    splices: HashMap<NodeId, Local>,
 }
 
 impl crate::syntax::QuoteCtx for QuoteCx<'_, '_, '_, '_> {
@@ -1712,7 +1717,10 @@ impl crate::syntax::QuoteCtx for QuoteCx<'_, '_, '_, '_> {
     }
 
     fn unquote(&mut self, x: &ast::Expr) -> Result<Expr, Diagnostic> {
-        self.mono.expr(x, self.s, self.fb)
+        match self.splices.get(&x.id) {
+            Some(local) => Ok(Expr::Local(*local)),
+            None => self.mono.expr(x, self.s, self.fb),
+        }
     }
 }
 

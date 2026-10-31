@@ -113,7 +113,7 @@ imported under the same name.
 | `with { f = v }` | replace field `f` |
 | `match` arms, `match { P -> e, ... }` | pattern matching (below) |
 | `comptime e` | evaluate `e` at compile time |
-| `quote e`, `unquote!(x)` | syntax as data; `unquote!(0)` etc. make a template function |
+| `quote e`, `unquote!(x)` | syntax as data; literal indices 0–63 make a template function; other splice expressions run once at construction |
 | `name!(args)` | macro call, expanded before type checking |
 | `type[T]` | a `TypeInfo` value describing `T` |
 

@@ -1,139 +1,113 @@
 # Current work
 
-**Next:** run and audit focused lexical-binding validation, repair all failures,
-then complete the named/tacit optimization evidence before final-head validation.
-The user approved all ten steps in the revised PLAN.md. New syntax is in progress,
-not verified support; do not publish examples as runnable until checks pass.
+**Next:** audit focused lexical-binding CI, fix every compiler/test failure, then
+complete the named/tacit cost checks before final-head production validation.
+The user authorized all ten steps in [PLAN.md](../PLAN.md). Steps 1–3 are in
+progress; steps 4–10 remain open. New syntax is not verified support yet.
 
 Worktree: `/private/tmp/fwp-returned-callables`; branch `language-design-review`,
-based on merged main `781ebabb0463efc2f03f0d3aa44b7d2c4766959d`. Draft [PR #236](https://github.com/e6qu/fun-with-pipes/pull/236) is the sole active PR.
-The primary checkout has unrelated preserved work; do not reset it.
-
-## Latest delivery
-
-The user merged [PR #235](https://github.com/e6qu/fun-with-pipes/pull/235).
-Its merge tree `9eda0ac6113d18741d9b0f85c1dcadbba409b2ac` exactly matches tested
-head `adeb9794544cd12deae3f7050fef79cf874a3f55`. The merge subject is one line,
-61 characters, with no body, trailers or attribution.
-
-All nine jobs in production run `41229416050` pass:
-
-| Coverage | Job IDs |
-|---|---|
-| Linux ARM64 / AMD64 | `124620261881` / `124620262099` |
-| macOS ARM64 regular / ownership | `124620262003` / `124620262156` |
-| macOS AMD64 regular / ownership | `124620261993` / `124620262192` |
-| Windows ARM64 / AMD64 | `124620261994` / `124620262055` |
-| C/Rust benchmarks | `124620261780` |
-
-Documentation run `41229416071`, job `124620261925`, also passes, including
-nine phase, six context and six paired-record tests. Completed logs are audited:
-all production test summaries pass, with no unexpected compiler diagnostics.
-Windows scheduler panics and documentation runner failures are deliberate
-negative controls, checked against their source/log context. The earlier
-unstarted runs `41229143323` and `41229136089` were cancelled before the wording
-repair; they are superseded, not pending work.
-
-## Current implementation
-
-The initial implementation adds source fn/let nodes, named and record patterns, lexical
-monomorphic inference, resource duplication/capture constraints, and lifted
-functions with explicit capture parameters. Quote/format traversal and initial
-regressions are included. The first focused run `41242796910` failed compilation on all three platforms: the macro record-pattern decoder moved a field out of a value with a destructor. All failed steps were audited; none reached language tests. The repair borrows that field, validates macro-created patterns, captures lexical syntax in templates, and fixes scope-aware linting and pipe formatting. Support remains unverified. Documentation run `41242798221` passes.
-The second batch adds scope-aware editor definition/references/rename (including
-field-label preservation), debugger source names and Python inspection by name,
-shared-capture cleanup controls, and rewritten introductory/data/macro lessons.
-The reference and parser guide document the grammar, hygiene and lowering. The
-library reference was regenerated from source. Old milestone links now identify
-maintained guarantees or current concrete steps rather than obsolete backlogs.
-Still required: compile/test this integration, finish the all-doc audit, and
-complete the remaining optimization/evidence steps. Nothing here is verified
-language support until focused and final-head checks pass.
-
-Run `41243195909` remained queued without starting any of its three jobs and is
-superseded by the integrated batch. Run `41243748366` also stayed queued with no started jobs and is superseded by
-the next batch. The focused suite now includes the named/tacit cost matrix,
-debugger, editor, ownership, tutorials, generated docs and raw interpreter corpus.
-
-Use `fn pattern -> body` and `let pattern = value in body`. Bindings are immutable,
-strict and nonrecursive. In fn/let, `_` discards; existing match holes still forward
-their values to arm bodies. Record patterns are irrefutable field selections.
-The handoff changes from the previous design-review turn are preserved.
+based on main `781ebabb0463efc2f03f0d3aa44b7d2c4766959d`.
+Draft [PR #236](https://github.com/e6qu/fun-with-pipes/pull/236) is the only active
+PR. Preserve unrelated changes in the primary checkout.
 
 ## Roadmap status
 
 | Step | Status | Remaining work |
 |---|---|---|
-| 1 | In progress | Complete and verify local bindings, named inputs and patterns |
-| 2 | In progress | Update all syntax consumers, tooling and teaching material |
-| 3 | In progress | Eight named/tacit cost pairs added; compiler validation pending |
+| 1 | In progress | Validate local names, patterns, types and cleanup |
+| 2 | In progress | Validate tooling/tutorials and finish the documentation audit |
+| 3 | In progress | Verify eight named/tacit cost pairs and repair extra costs |
 | 4 | Pending | Extend measured borrowing/move cases |
-| 5 | Pending | Extend direct tuple/record/variant representation |
+| 5 | Pending | Remove selected tuple/record/variant boxes |
 | 6 | Pending | Extend eligible collection pipeline removal |
-| 7 | Pending | Select and verify remaining numerical loop work |
+| 7 | Pending | Measure and remove remaining numerical loop costs |
 | 8 | Pending | Attribute and remove a demonstrated derivative cost |
 | 9 | Pending | Complete Swift attribution and qualified comparisons |
 | 10 | Pending | Integrated application and final-head delivery gates |
 
-## Performance and memory evidence
+## Current batch
 
-GC removal is verified; broader ARC minimization remains incomplete.
-[Callable phases](measurements/callable-phases.md) retain the Swift/C/Rust
-comparison, all raw archives and the original three AMD64 construction failures.
-All eight original RAM limits pass. Swift allocation/count attribution is missing;
-RSS and phase times do not isolate ARC cost. No production runtime patch was
-justified by the constructor investigation.
+Implemented, awaiting compiler/native validation:
 
-Inside-one-process run `41225841156` at diagnostic source `73707460` passes
-collection on ARM64 `124609688723` and AMD64 `124609689465`. ARM has 32 qualified
-and four short phases; AMD has 19 qualified and 17 inconclusive phases on a
-different CPU. All twelve AMD construction phases miss the duration floor.
-Both hosts show order effects even without calls. Preserve original failures;
-any new study needs explicit CPU qualification and work counts frozen through
-reference-only calibration. Do not retry unchanged runs or relax thresholds.
+- Strict immutable `let pattern = value in body`, single-input `fn pattern ->
+  body`, named match patterns, tuple/record destructuring and record shorthand.
+  Local types are monomorphic; duplication/capture rules still apply. `_`
+  discards in fn/let and retains its forwarding meaning in match.
+- Explicit capture lowering and direct parameters for simple fn inputs. Eight
+  named/tacit cost pairs check dispatch, allocation and count limits. Alias,
+  error, cancellation and physical-release controls cover captured values.
+- Macro pattern validation before freshening names; separate scopes for nested
+  quotes; computed splices run once when a template is constructed. Invalid
+  splice arity and out-of-range template indices are type errors.
+- Scope-aware linting, editor navigation/rename/completion and debugger names;
+  Python inspection accepts a source name. Generated OpenAPI names use the
+  lexer's keyword list. Field shorthand retains labels when a local is renamed.
+- Replaced the roadmap, corrected obsolete links, updated the reference/parser
+  and compiler guides, and rewrote lessons 1, 2, 6, 11, 12, 20 and 24. The glossary
+  explains local scope/capture and the two meanings of `_`. Library docs are
+  regenerated from source. The remaining documentation audit is still open.
 
-Original derivative/kernel timing acceptance, comparable measurements and integrated application verification remain open in [PLAN.md](../PLAN.md).
-Selected count/allocation reductions remain verified independently of timing.
-Prioritize removing intermediate storage, extending proved borrowing and direct
-representations, and measuring numerical/AD work against equivalent peers.
+The nested-quote and later-tutorial changes follow published head
+`a48c9c5b9ea6fc0f26c80a31d8f7bbb2ee44844e`; obtain their source from the next commit,
+not that earlier head. Do not present added tests as passing native evidence.
 
-## Local limits
+## Validation and failures
 
-Full builds, suites and benchmarks run on GitHub. The unchanged guard admits
-this batch's focused checks: `cargo fmt --all` passes (CPU 1.05 s / 1.94 s elapsed);
-`python3 scripts/test-native-test-runner.py` passes 21 tests (9.25 s elapsed),
-including complete coverage for the new `local_bindings` target. The frozen
-primitive inventory passes: 394 declarations, 384 symbols, no review symbols.
-`python3 scripts/check-roadmap.py` passes 192 doc link sets, 106 immutable pairs
-and ten roadmap steps (3.63 s elapsed). Inventory output is
-`/private/tmp/fwp-lexical-inventory/candidate.json`. The first formatter attempt
-could not sample `ps` inside the sandbox; rerunning the same guard with approved
-process access passed. No resource limit was raised. Do not run full builds or
-saved measurement executables locally.
+Focused run `41242796910` failed compilation on all three hosts: macro record
+pattern decoding moved a field from a value with a destructor. All failed steps
+were audited; no language tests ran. The repair borrows the field. Documentation
+run `41242798221` passes.
 
-Earlier byte-preserving APFS deduplication recovered about 1.2 GiB; all ten older
-checkout statuses and the primary checkout were preserved. Earlier whole-program
-Swift raw artifacts still expire in January 2027; their checked-in summary is not
-a complete archive. The callable raw archives are retained in the repository.
+Runs `41243195909` and `41243748366` never started and were cancelled when their
+sources were superseded. Run `41244787126` at `a48c9c5b` remains queued on Linux
+ARM64/GCC, Linux AMD64/GCC and macOS ARM64/Clang. Documentation run `41244782819`
+is also queued. Replace these only when the next coherent batch is published.
+The focused suite covers language/ownership, named/tacit costs, editor/debugger,
+macro scopes, tutorial execution and source copies, and the raw interpreter corpus.
+Full production validation follows the completed batch; draft skips are not passes.
 
-Latest guarded checks: standalone `stdlib_doc.rs` generation passes (Rust O1,
-assertions and overflow checks enabled; 0.66 CPU seconds to compile, 0.01 seconds
-test time). This builds only the documentation generator, not the compiler.
-The updated roadmap audit still passes all 192 link sets, 106 preparation pairs
-and ten steps (3.65 seconds). Formatting and `git diff --check` pass.
+Local checks through the unchanged guard:
 
-The third batch removes wrapper matches/aliases for simple fn inputs, adds eight
-named/tacit cost pairs, captures across handled error and synchronized cancellation,
-and lexical editor completions. OpenAPI generation now uses the lexer keyword
-list rather than a stale duplicate. Source and macro patterns share validation,
-including validation before hygienic freshening. An encountered inline Rust import
-in `closure_cleanup` moved to the header. Recent merged PRs #230–235 are indexed.
+| Check | Result |
+|---|---|
+| `cargo fmt --all` and `git diff --check` | Pass; formatting about 1 CPU second |
+| `scripts/test-native-test-runner.py` | 21 pass, including new target coverage |
+| Frozen primitive inventory | 394 declarations, 384 symbols, no review symbols |
+| `scripts/check-roadmap.py` | 192 doc link sets, 106 preparation pairs, ten steps pass |
+| Standalone production parser/formatter modules | 13 pass, including nine changed programs and round trips; 3.22 CPU seconds to compile |
+| Standalone `tests/examples.rs` source/output-copy test | All tutorial copies pass; no fwp execution |
+| Standalone `tests/stdlib_doc.rs` generator | Pass; library reference regenerated |
 
-Focused parser/formatter validation uses actual source modules and the unchanged
-`escape_str` function in a temporary standalone harness: all 13 checks pass,
-including changed programs and round trips (3.10 CPU seconds to compile, 0.02
-seconds test time). This checks syntax only. The existing standalone tutorial
-source/output-copy test passes for all lessons (1.17 CPU seconds to compile,
-0.01 seconds test time). The library generator, formatting and roadmap audit pass.
-No full compiler build or full suite ran locally; native/type/ownership results
-remain pending. Full production validation waits for the completed batch.
+Standalone harnesses are `/private/tmp/fwp-236-parser-check.rs`,
+`/private/tmp/fwp-236-tutorial-docs` and `/private/tmp/fwp-236-stdlib-doc`.
+They use Rust O1 with assertions/overflow checks. They do not verify inference,
+lowering, ownership or native output. No full compiler build ran locally.
+Full builds, suites and benchmarks stay on runners. Never raise the guard limits.
+
+## Verified baseline and remaining evidence
+
+The user merged [#235](https://github.com/e6qu/fun-with-pipes/pull/235). Its tree
+`9eda0ac6113d18741d9b0f85c1dcadbba409b2ac` matches tested head
+`adeb9794544cd12deae3f7050fef79cf874a3f55`. Production `41229416050` passes all nine
+jobs; documentation `41229416071` passes. Completed logs are audited. The merge
+subject is one line, 61 characters, with no body/trailers. Duplicate postmerge run
+`41241035081` was cancelled after confirming this identity. Old run `38888712709`
+listed all jobs as finished; GitHub rejected cancellation because it was complete.
+
+GC removal is verified; broader ARC minimization remains incomplete. The
+[callable measurements](measurements/callable-phases.md) retain all eight passing
+RAM limits and the three original Xeon construction regressions (8.6–16.1%).
+Swift allocation/count attribution is missing; RSS does not isolate ARC cost.
+The separate paired run `41225841156` has 32 qualified/four short ARM phases and
+19 qualified/17 inconclusive AMD phases on a different CPU. All twelve AMD
+construction phases are too short. Preserve those limits and failures; do not
+retry unchanged experiments or claim the different CPU settles the regression.
+
+D2 derivative timing and N1/N2 kernel timing acceptance remain open. Verified
+count/allocation reductions are independent of those timing failures. No runtime
+patch was justified by the constructor investigation. Follow the ten concrete
+steps in PLAN.md rather than reimplementing completed GC/ARC milestones.
+
+Callable raw archives are checked in. Earlier whole-program Swift artifacts
+expire in January 2027 and still need durable retention. Earlier APFS deduplication
+recovered about 1.2 GiB without changing any checkout's contents or status.
