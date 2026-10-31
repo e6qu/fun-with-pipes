@@ -63,7 +63,8 @@ C's copy control at 1.0269 against the unchanged 1.02 limit. These ranges are
 not a qualified four-session speed comparison. The parent-wait repair removes
 a demonstrated harness delay; it does not resolve all timing variation.
 
-The source still allocates an array, fills it, then sums it. Investigate
-[removing that intermediate allocation](generated-array-folds.md) with explicit
-semantic and storage requirements. Keep timing acceptance separate and open;
+The measured source allocates an array, fills it, then sums it. The later
+[array-removal change](generated-array-folds.md) eliminates that intermediate
+under explicit semantic and storage requirements. Its report owns current
+verification status. Keep timing acceptance separate and open;
 do not retry the failed sessions, increase their counts or relax their limits.

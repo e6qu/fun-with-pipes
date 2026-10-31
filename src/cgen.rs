@@ -5472,7 +5472,10 @@ impl<'g, 'p> FnGen<'g, 'p> {
         {
             return None;
         }
-        if n == 0 || !matches!(sym.as_str(), "fold" | "fold-right") {
+        let direct_loop = sym == "loop" && n == 0 && loop_shape(&self.g.prog.funcs[g]).is_some();
+        if !direct_loop && (n == 0 || !matches!(sym.as_str(), "fold" | "fold-right")) {
+            // A specialized loop executes its step body directly. Keep a
+            // runtime entry only if another use actually creates that value.
             self.g.used_closures[g] = true;
         }
         if matches!(
@@ -5640,9 +5643,12 @@ impl<'g, 'p> FnGen<'g, 'p> {
             if let Some(Some(width)) = loop_shape(&self.g.prog.funcs[g]) {
                 let flat = record_fields(&self.g.prog.shapes, &self.g.prog.funcs[g].locals[0])
                     .is_some_and(|fields| {
-                        fields
-                            .iter()
-                            .all(|(_, ty)| record_fields(&self.g.prog.shapes, ty).is_none())
+                        fields.iter().all(|(_, ty)| {
+                            // Unit occupies one ordinary value slot, not
+                            // a nested record that needs unpacking.
+                            record_fields(&self.g.prog.shapes, ty)
+                                .is_none_or(|fields| fields.is_empty())
+                        })
                     });
                 if flat && self.unboxed(&args[1]) == Some(width) {
                     if !self.g.loops.iter().any(|(step, _)| *step == g) {
@@ -10803,10 +10809,9 @@ static const fwp_exec_spec exec_spec{i} = {{
     for (step, _) in &g.loops {
         let _ = writeln!(out, "static V fwp_loop{}(V s);", step);
         if let Some(fields) = record_fields(&prog.shapes, &prog.funcs[*step].locals[0]) {
-            if fields
-                .iter()
-                .all(|(_, ty)| record_fields(&prog.shapes, ty).is_none())
-            {
+            if fields.iter().all(|(_, ty)| {
+                record_fields(&prog.shapes, ty).is_none_or(|fields| fields.is_empty())
+            }) {
                 let parameters = (0..fields.len())
                     .map(|i| format!("V a{i}"))
                     .collect::<Vec<_>>()

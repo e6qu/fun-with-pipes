@@ -1,4 +1,4 @@
-//! Establish the cost of repeated service scopes before changing their lifetimes.
+//! Compare repeated service scopes over the same reused input list.
 use std::process::{Command, Output};
 
 #[path = "support/http2_values.rs"]
@@ -121,7 +121,12 @@ fn repeated_service_scopes_preserve_state_and_report_storage() {
         for count in [1, 32, 128] {
             let label = format!("{name}-{count}");
             let input = dir.join(format!("{label}.fwp"));
-            let source = format!("# Each input triggers one state update; the final count must equal the input length.\nmain = range 0 {count} | run-state 0 (each ({body})) | .1 | echo\n");
+            // Both consumers use the list, keeping input construction identical.
+            // Otherwise State-range fusion can remove it only in cases whose
+            // captures are plain scalars, confounding the scope comparison.
+            let source = format!(
+                "# Compare the final state with the length of the same reused list.\nmain = range 0 {count} | both (run-state 0 (each ({body})) | .1) length | echo\n"
+            );
             std::fs::write(&input, &source).unwrap();
             let raw = checked(
                 Command::new(compiler)
@@ -139,7 +144,7 @@ fn repeated_service_scopes_preserve_state_and_report_storage() {
                 (&raw.stdout, &raw.stderr),
                 (&optimized.stdout, &optimized.stderr)
             );
-            assert_eq!(raw.stdout, format!("{count}\n").as_bytes());
+            assert_eq!(raw.stdout, format!("({count}, {count})\n").as_bytes());
             assert!(raw.stderr.is_empty());
             let cfile = dir.join(format!("{label}.c"));
             checked(
@@ -187,6 +192,18 @@ fn repeated_service_scopes_preserve_state_and_report_storage() {
             }
         }
     }
+    eprintln!("{report}\n{layouts}");
+    // The shared-input control must really retain one 24-byte node per element.
+    // Printing the two three-digit counts adds two bytes at n=128 versus n=32.
+    assert_eq!(
+        measurements[&("plain", 128)][0] - measurements[&("plain", 32)][0],
+        96
+    );
+    assert_eq!(
+        measurements[&("plain", 128)][1] - measurements[&("plain", 32)][1],
+        96 * 24 + 2
+    );
+    assert!(measurements.values().all(|values| values[2] == 0));
     for name in ["gzip", "deadline", "empty-metadata", "filtered-metadata"] {
         for (metric, label) in ["allocation requests", "requested bytes", "charged bytes"]
             .into_iter()
@@ -218,7 +235,6 @@ fn repeated_service_scopes_preserve_state_and_report_storage() {
         96,
         "capture allocates its result once without a forwarding wrapper copy"
     );
-    eprintln!("{report}\n{layouts}");
     // Raw TLS/capture buffers,
     // allocator metadata, pages and total process memory are outside this count.
 }

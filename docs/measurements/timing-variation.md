@@ -189,21 +189,14 @@ the next value, then stores the result as integer bits. The C peer keeps a
 settings. Therefore missing vectorization is not an explanation of this gap.
 The reports establish a representation difference, not its measured cost.
 
-Next, test a compiler representation change: store statically known F32/F64 loop
-fields as C `float`/`double` members, with ordinary value words for other fields.
-Use the existing bit-preserving conversions at generic boundaries. Keep the same
-field evaluation order, current/next state separation, owner transfers and
-cancellation cleanup. Do not reassociate operations or add fused arithmetic.
-Check scalar, flat and nested states, signed zero, subnormals, infinities and NaN
-payloads; retain the existing alias, preparation-failure and cancellation probes.
-Require raw/optimized interpreter agreement where the language exposes bits,
-and native O1/O2 checks with production GCC and Clang.
-
-This first experiment establishes correctness and whether GCC keeps a floating
-accumulator across iterations. It is not a timing acceptance run. The separate
-allocation-inclusive measurement failure must be resolved and N2's timing/code/
-stack budgets published before accepting a speed claim. D2's failed zero-update
-requirement also remains open. A source change alone closes neither goal.
+The typed-state change shipped in [PR #227](../roadmap-history.md#eager-captures-and-typed-numerical-loops-pr-227).
+Known F32/F64 loop fields now use C `float`/`double` members, with bit-preserving
+conversions at generic boundaries. Other fields keep ordinary value words.
+Field evaluation order, current/next state separation, owner transfers and
+cancellation cleanup are unchanged; arithmetic is not reassociated or fused.
+The results below verify representation and correctness. N2 still needs declared
+timing/code/stack budgets and a qualified allocation-inclusive comparison;
+D2's failed zero-update timing requirement also remains open.
 
 ### Typed-state results
 
@@ -220,8 +213,8 @@ array still needs its byte-load interpretation, but the accumulator no longer
 converts to integer bits and back on each iteration. The conversion to the
 ordinary return word occurs once after the loop. Both 65,537- and 262,145-element
 programs match the exact oracle and finish with zero live storage. This verifies
-the intended representation change on those compilers; it is not measured timing
-or full-platform acceptance. Keep the two unresolved timing requirements above.
+the intended representation change on those compilers. PR #227 subsequently
+passed every production gate; the two timing requirements above remain open.
 
 ## Resource-counter diagnostic, declared before implementation
 

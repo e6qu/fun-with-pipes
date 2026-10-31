@@ -82,7 +82,7 @@ For example, at `n = 128` the known array callback requests one allocation and
 no applications or retains; its unknown-callback control requests three
 allocations, 512 applications and 128 retains. The known fold requests none;
 its control requests 129 allocations, 256 applications and 128 retains. The
-known `each` still allocates per element. These are selected fixture results,
+known `each` allocates per element in this recorded baseline. These are selected fixture results,
 not universal costs for all callbacks or proof of parity with C/Rust.
 
 ### Generated-array removal
@@ -99,6 +99,32 @@ the assertion failed because the allocation was gone. The repaired expectation
 requires exactly zero, rather than permitting a range. The original table and
 raw measurements above remain historical evidence. Full verification of the
 updated test is pending; these counters make no elapsed-time claim.
+
+### State over a temporary range
+
+The [State range candidate](measurements/state-range-folds.md) targets:
+
+```fwp
+sum-range : I64 -> I64
+sum-range = range 0 | run-state 0 (each (add | modify)) | .1
+```
+
+The signature says it takes and returns a signed 64-bit integer (`I64`).
+For input `4`, `range 0` supplies `0, 1, 2, 3`. `each` visits them in order;
+`add | modify` adds each number to the scoped State value, initially zero.
+`each` returns unit, written `()`, meaning there is no result to carry. `run-state`
+returns that result and the final State as `((), 6)`; `.1` selects `6` using
+zero-based indexing.
+
+The candidate passes the two bounds to a specialized callback and loops over
+indices, avoiding the temporary list. Its acceptance requires exactly two
+allocations and 152 bytes at both measured sizes: State scratch storage and the
+returned pair remain. This is neither zero-allocation nor a speed claim.
+Only a known, single-use I64 range consumer with plain captures qualifies;
+unknown consumers and reused lists retain ordinary ownership. General eager
+map/fold fusion still requires its existing effect and trap-order proofs.
+Focused correctness, cleanup, code/stack and full production verification are
+tracked in the linked report; the historical table above is not rewritten.
 
 ## Tail calls and weak handles
 

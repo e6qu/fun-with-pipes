@@ -1,11 +1,13 @@
 # Remove an immediately consumed numeric array
 
-**Focused native and compiler-budget checks pass; full production verification is pending.**
+**Production verification is complete in PR #232; timing acceptance stays open.**
 The first full matrix found a stale one-allocation expectation in the existing
 functional-call test: its known array pipeline now requests zero allocations.
 Both input sizes still return the expected sum and restore live storage.
 The exact zero-cost expectation and its [explanation](../functional-costs.md#generated-array-removal)
-are updated; the repaired full matrix is still required.
+are updated, and the repaired full matrix passes. The
+[delivery record](../roadmap-history.md#generated-array-elimination-pr-232)
+identifies the tested source, complete log audits and verified squash merge.
 The [current buffer results](buffer-current.md)
 retain all four sessions, including their failed timing controls. This work
 targets a remaining allocation, without claiming that the measurements already
@@ -150,7 +152,7 @@ Both G2 compiler-analysis hosts pass: Linux AMD64 and Intel macOS each pass
 ownership analysis with ordinary optimization disabled; it does not isolate
 the compile-time cost of this fusion transformation.
 
-The full production matrix remains required. The [timing index](generated-array-timings-2026-10-31.json)
+The full production matrix passes. The [timing index](generated-array-timings-2026-10-31.json)
 records all four completed sessions. Each was independently reconstructed on
 CI and from its retained archive locally. Each
 session times 256 scans per process, including process startup, output and

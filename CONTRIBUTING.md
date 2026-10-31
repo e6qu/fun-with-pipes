@@ -40,6 +40,10 @@ You need:
   compiler, linker and runtime libraries aligned. Also install the
   `wasm32-wasip1` Rust target (`rustup target add wasm32-wasip1`), node 24,
   and binaryen's `wasm-opt` (`npm install -g binaryen`).
+  When building that Rust target alongside native GCC builds, set
+  `CC_wasm32_wasip1=clang` and `CXX_wasm32_wasip1=clang++` explicitly.
+  These select the compiler's target libraries; `FWP_WASM_CC` selects the
+  compiler for generated WebAssembly programs.
 - Optional, for the cross-compilation tests: an aarch64 C compiler and
   qemu (`gcc-aarch64-linux-gnu libc6-dev-arm64-cross qemu-user`). Tests
   that need a missing tool skip themselves.
@@ -162,6 +166,13 @@ symbols and aliases with the frozen baseline and preserves failed observations.
 It does not replace alias, failure, cancellation and runtime cleanup tests.
 New test targets also need the native shard-coverage check; do not omit them
 from a platform to shorten its gate.
+
+Measurement tools may read or rewrite compiler source. When changing a module
+they use, inspect those callers before launching the full matrix. For `src/opt.rs`,
+run `python3 scripts/local-guard.py python3 scripts/test-capture-reference.py`.
+The comparison must disable only its named optimization and preserve every other
+current source byte. Historical results remain tied to their recorded revisions;
+they must not freeze unrelated future compiler development.
 
 For memory/representation changes, keep actual C/binaries, source/toolchain IDs,
 complete measurements and independent review. Deliberately broken controls must

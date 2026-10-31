@@ -90,7 +90,7 @@ def main():
               f"extra time {100 * (ratio - 1):+.1f}%", flush=True)
     report = {
         "source_revision": run(["git", "rev-parse", "HEAD"], env).strip(),
-        "comparison": "Current fold-based list each versus its previous map-based definition, built by the same compiler with -O2. Both build the same integer list, update an integer state once per element and print its length. Counted owners release storage at last use.",
+        "comparison": "Current fold-based list each versus its previous map-based definition, built by the same compiler with -O2. Both express the same integer range, update an integer state once per element and print its length. Current State-range fusion can eliminate the fold program's input list; this comparison includes that saving as well as eliminating the discarded result list. It does not isolate the cost of changing the library definition alone. Counted owners release remaining storage at last use.",
         "timing_scope": "Whole process including input construction, state updates, output and teardown, plus the same GNU time launcher. One unrecorded warmup per binary; eight recorded samples, alternating implementation order equally. Compilation is timed separately, once per binary: fwp startup/C generation and C compilation are recorded separately with their exact commands.",
         "limits": "Comparison between fwp implementations, not C/Rust parity. No timing assertion from these noisy samples. Peak RSS includes the whole native process; GNU time rounds CPU times. Allocation counts are measured separately by state_sequence_ownership at 32/128 elements; these uninstrumented binaries contain no allocation counters.",
         "environment": {"host": platform.uname()._asdict(),

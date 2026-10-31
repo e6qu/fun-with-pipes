@@ -80,7 +80,9 @@ impl<'p> Behaviors<'p> {
 
     /// What calling function `id` with `args` (all of them) can do.
     fn call(&mut self, id: FuncId, args: &[Expr]) -> Traps {
-        let f = &self.funcs[id];
+        // Rewrites can introduce functions after this analysis snapshot.
+        // Their behavior is unproved here, rather than an index into old IR.
+        let f = self.funcs.get(id)?;
         match &f.body {
             Body::Ctor(_) => none(),
             Body::Prim(sym) => match self.higher_order(sym, args) {
@@ -137,8 +139,13 @@ impl<'p> Behaviors<'p> {
             }
             Expr::Local(_) | Expr::Const(_) => none(),
             // a constant binding is evaluated; a function is a value
-            Expr::Func(id) if self.funcs[*id].arity == 0 => self.call(*id, &[]),
-            Expr::Func(_) => none(),
+            Expr::Func(id) => {
+                if self.funcs.get(*id)?.arity == 0 {
+                    self.call(*id, &[])
+                } else {
+                    none()
+                }
+            }
             Expr::Call(id, args) => union(self.all(args), self.call(*id, args)),
             Expr::Apply(f, args) => {
                 let (id, mut all) = match &**f {
@@ -150,7 +157,7 @@ impl<'p> Behaviors<'p> {
                     _ => return None,
                 };
                 all.extend(args.iter().cloned());
-                let arity = self.funcs[id].arity as usize;
+                let arity = self.funcs.get(id)?.arity as usize;
                 let t = self.all(&all);
                 if all.len() < arity {
                     t
@@ -347,7 +354,8 @@ fn fn_value(funcs: &[Func], e: &Expr, n: usize) -> Option<(FuncId, Vec<Expr>)> {
     {
         return None;
     }
-    (funcs[id].arity as usize == caps.len() + n && funcs[id].arity > 0).then_some((id, caps))
+    let function = funcs.get(id)?;
+    (function.arity as usize == caps.len() + n && function.arity > 0).then_some((id, caps))
 }
 
 fn prim_sym(funcs: &[Func], id: FuncId) -> Option<&str> {
@@ -445,6 +453,11 @@ impl Fuser<'_> {
         if let Some(direct) = self.splat_dot(&e) {
             return direct;
         }
+        if let Expr::Call(id, args) = &e {
+            if let Some(direct) = self.state_range(*id, args) {
+                return direct;
+            }
+        }
         match &e {
             Expr::Call(id, args) if self.consumer(*id, args).is_some() => {
                 self.consume(*id, args).unwrap_or(e)
@@ -463,7 +476,8 @@ impl Fuser<'_> {
                 let first = first_evaluated(&mut b);
                 let fused = match first {
                     Expr::Call(id, args)
-                        if self.consumer(*id, args).is_some()
+                        if (self.consumer(*id, args).is_some()
+                            || prim_sym(self.funcs, *id) == Some("run-state"))
                             && matches!(args.last(), Some(Expr::Local(x)) if *x == l)
                             && args[..args.len() - 1]
                                 .iter()
@@ -471,7 +485,11 @@ impl Fuser<'_> {
                     {
                         let mut args = args.clone();
                         *args.last_mut().unwrap() = v.clone();
-                        self.consume(*id, &args)
+                        if prim_sym(self.funcs, *id) == Some("run-state") {
+                            self.state_range(*id, &args)
+                        } else {
+                            self.consume(*id, &args)
+                        }
                     }
                     _ => None,
                 };
@@ -485,6 +503,154 @@ impl Fuser<'_> {
             }
             _ => e,
         }
+    }
+
+    /// A known State consumer can receive range bounds instead of a list.
+    /// Keep the handler itself: only its input and callback representation change.
+    fn state_range(&mut self, handler: FuncId, args: &[Expr]) -> Option<Expr> {
+        if prim_sym(self.funcs, handler) != Some("run-state")
+            || args.len() != 3
+            || std::env::var("FWP_STATE_RANGE_FUSION").as_deref() == Ok("0")
+        {
+            return None;
+        }
+        let integer = MT::con("std::I64");
+        let plain =
+            |ty: &MT| unboxed_numeric(ty) || *ty == MT::con("std::Bool") || *ty == MT::unit();
+        let (handler_params, result) = self.funcs[handler].ty.params(3);
+        if *handler_params[0] != integer {
+            return None;
+        }
+        let result = result.clone();
+        let Expr::Call(range, bounds) = &args[2] else {
+            return None;
+        };
+        if prim_sym(self.funcs, *range) != Some("range")
+            || bounds.len() != 2
+            || *self.funcs[*range].ty.params(2).0[0] != integer
+            || !bounds.iter().all(|bound| match bound {
+                Expr::Local(_) | Expr::Const(Value::I64(_)) => true,
+                Expr::Field(record, _) => matches!(&**record, Expr::Local(_)),
+                _ => false,
+            })
+        {
+            return None;
+        }
+        let (callback, mut captures) = fn_value(self.funcs, &args[1], 1)?;
+        let funcs = self.funcs;
+        let function = &funcs[callback];
+        let list = captures.len() as Local;
+        let (parameters, output) = function.ty.params(function.arity as usize);
+        if *output != MT::unit() || !parameters[..captures.len()].iter().all(|ty| plain(ty)) {
+            return None;
+        }
+        let Body::Expr(body) = &function.body else {
+            return None;
+        };
+        if crate::opt::uses(body, list) != 1 {
+            return None;
+        }
+        let mut tail = body;
+        while let Expr::Let(local, value, rest) = tail {
+            if !plain(&function.locals[*local as usize])
+                || !matches!(&**value, Expr::Local(_) | Expr::Const(_))
+            {
+                return None;
+            }
+            tail = rest;
+        }
+        let Expr::Call(fold, inputs) = tail else {
+            return None;
+        };
+        if prim_sym(self.funcs, *fold) != Some("fold")
+            || inputs.len() != 3
+            || !matches!(&inputs[2], Expr::Local(local) if *local == list)
+        {
+            return None;
+        }
+        let (fold_params, fold_result) = self.funcs[*fold].ty.params(3);
+        if *fold_params[1] != MT::unit() || *fold_result != MT::unit() {
+            return None;
+        }
+        let fold_params = fold_params.into_iter().cloned().collect();
+        let (step, step_captures) = fn_value(self.funcs, &inputs[0], 2)?;
+        if !self.funcs[step]
+            .ty
+            .params(step_captures.len())
+            .0
+            .iter()
+            .all(|ty| plain(ty))
+        {
+            return None;
+        }
+
+        // Literal lower bounds need no closure field. A local bound becomes
+        // one plain capture; the upper bound replaces the old list argument.
+        let capture_lower = !matches!(&bounds[0], Expr::Const(Value::I64(_)));
+        let extra = Local::from(capture_lower);
+        let lower = if capture_lower {
+            Expr::Local(list)
+        } else {
+            bounds[0].clone()
+        };
+        let producer = Expr::Call(*range, vec![lower, Expr::Local(list + extra)]);
+        let substitutions = (0..function.nlocals())
+            .map(|local| {
+                Some(if local == list {
+                    producer.clone()
+                } else {
+                    Expr::Local(local + if local > list { extra } else { 0 })
+                })
+            })
+            .collect::<Vec<_>>();
+        let mut rewritten = crate::opt::substitute(body, &substitutions);
+        let mut locals = function.locals.clone();
+        locals[list as usize] = integer.clone();
+        if capture_lower {
+            locals.insert(list as usize + 1, integer.clone());
+        }
+        let mut tail = &mut rewritten;
+        while let Expr::Let(_, _, rest) = tail {
+            tail = rest;
+        }
+        let Expr::Call(_, inputs) = tail else {
+            unreachable!("substitution preserves the checked fold body");
+        };
+        let saved = std::mem::replace(&mut self.locals, locals);
+        let fused = self.fuse_chain("fold", inputs, fold_params, MT::unit(), true);
+        let locals = std::mem::replace(&mut self.locals, saved);
+        *tail = fused?;
+        let callback_type = locals[..function.arity as usize + extra as usize]
+            .iter()
+            .rev()
+            .fold(MT::unit(), |result, argument| {
+                MT::Fun(Box::new(argument.clone()), Box::new(result))
+            });
+        let specialized = self.new_func(Func {
+            name: "range-state-consumer".into(),
+            arity: function.arity + extra,
+            locals,
+            ty: callback_type,
+            body: Body::Expr(rewritten),
+        });
+        if capture_lower {
+            captures.push(bounds[0].clone());
+        }
+        let callback = if captures.is_empty() {
+            Expr::Func(specialized)
+        } else {
+            Expr::Apply(Box::new(Expr::Func(specialized)), captures)
+        };
+        let callback_type = MT::Fun(Box::new(integer.clone()), Box::new(MT::unit()));
+        let handler_type = MT::Fun(
+            Box::new(integer.clone()),
+            Box::new(fun2(&callback_type, &integer, &result)),
+        );
+        let handler = self.prim("run-state", handler_type, 3);
+        Some(Expr::Call(
+            handler,
+            vec![args[0].clone(), callback, bounds[1].clone()],
+        ))
     }
 
     /// Two consecutive splats whose only uses are the first dot call can stay
@@ -1262,7 +1428,7 @@ impl Fuser<'_> {
         let (cparams, result_ty) = self.funcs[cons_id].ty.params(args.len());
         let cparams: Vec<MT> = cparams.into_iter().cloned().collect();
         let result_ty = result_ty.clone();
-        self.fuse_chain(kind, args, cparams, result_ty)
+        self.fuse_chain(kind, args, cparams, result_ty, false)
     }
 
     /// A chain of at least two `map` and `filter` stages whose list is
@@ -1292,6 +1458,7 @@ impl Fuser<'_> {
             std::slice::from_ref(chain),
             vec![list_ty.clone()],
             list_ty,
+            false,
         )
     }
 
@@ -1479,6 +1646,7 @@ impl Fuser<'_> {
         args: &[Expr],
         cparams: Vec<MT>,
         result_ty: MT,
+        effectful_range: bool,
     ) -> Option<Expr> {
         let array = kind.starts_with("array-");
         let kind = match kind {
@@ -1539,7 +1707,20 @@ impl Fuser<'_> {
             "find" => Some(fn_value(funcs, &args[0], 1)?),
             _ => None,
         };
+        // Only the State-consumer rewrite may admit effects here. It supplies
+        // a bare I64 range and a unit fold: there are no eager mapping stages
+        // to interleave and no element owners to move across the callback.
+        if effectful_range
+            && !(kind == "fold"
+                && stages.is_empty()
+                && matches!(&producer, Producer::Range(_, _, t) if *t == MT::con("std::I64"))
+                && cparams[1] == MT::unit()
+                && result_ty == MT::unit())
+        {
+            return None;
+        }
         let mut traps = match &cv {
+            Some(_) if effectful_range => BTreeSet::new(),
             Some((id, _)) => self.beh.call(*id, &dummy_args(funcs, *id))?,
             None => BTreeSet::new(),
         };
@@ -1934,10 +2115,11 @@ fn closure(funcs: &[Func], e: &Expr) -> bool {
     }
     match e {
         Expr::Local(_) => true,
-        Expr::Func(id) => funcs[*id].arity > 0,
+        Expr::Func(id) => funcs.get(*id).is_some_and(|f| f.arity > 0),
         Expr::Apply(f, a) => match &**f {
             Expr::Func(id) => {
-                a.len() < funcs[*id].arity as usize && a.iter().all(|x| arg(funcs, x))
+                funcs.get(*id).is_some_and(|f| a.len() < f.arity as usize)
+                    && a.iter().all(|x| arg(funcs, x))
             }
             _ => false,
         },
@@ -2163,6 +2345,43 @@ pub fn specialize_matrices(prog: &mut Program) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn functions_created_after_the_analysis_snapshot_remain_unproved() {
+        let integer = MT::con("std::I64");
+        let original = Func {
+            name: "original".into(),
+            arity: 2,
+            locals: vec![integer.clone(), integer.clone()],
+            ty: fun2(&integer, &integer, &integer),
+            body: Body::Expr(Expr::Local(0)),
+        };
+        let snapshot = vec![original.clone()];
+        let created = snapshot.len();
+        let mut current = snapshot.clone();
+        current.push(Func {
+            name: "created".into(),
+            ..original
+        });
+        for expression in [
+            Expr::Func(created),
+            Expr::Apply(
+                Box::new(Expr::Func(created)),
+                vec![Expr::Const(Value::I64(1))],
+            ),
+            Expr::Call(
+                created,
+                vec![Expr::Const(Value::I64(1)), Expr::Const(Value::I64(2))],
+            ),
+        ] {
+            assert_eq!(Behaviors::new(&snapshot).expr(&expression), None);
+            assert_eq!(Behaviors::new(&current).expr(&expression), none());
+        }
+        assert!(fn_value(&snapshot, &Expr::Func(created), 2).is_none());
+        assert!(fn_value(&current, &Expr::Func(created), 2).is_some());
+        assert!(!closure(&snapshot, &Expr::Func(created)));
+        assert!(closure(&current, &Expr::Func(created)));
+    }
 
     #[test]
     fn f64_lane_proofs_respect_sizes_and_numeric_rules() {

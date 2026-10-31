@@ -8,6 +8,71 @@ use std::process::{Command, Output};
 mod functional_costs;
 
 #[test]
+fn direct_loop_steps_keep_runtime_entries_only_for_function_values() {
+    let dir = fwp::cgen::TempDir::new("loop-step-entries").unwrap();
+    for exposed in [false, true] {
+        let mut source = String::from(
+            "step : I64 -> Step[I64, I64]\n\
+             step = if (eq 0) Stop (sub 1 | Again)\n\
+             export direct : I64 -> I64\n\
+             direct = loop step\n",
+        );
+        if exposed {
+            source.push_str(
+                "export expose : () -> {step: I64 -> Step[I64, I64]}\n\
+                 expose = make {step = const step}\n\
+                 main = [32 | direct | echo, apply 0 (.step (expose ())) | echo] | ignore\n",
+            );
+        } else {
+            source.push_str("main = 32 | direct | echo\n");
+        }
+        let input = dir.join(format!("steps-{exposed}.fwp"));
+        std::fs::write(&input, &source).unwrap();
+        let reference = checked(
+            Command::new(env!("CARGO_BIN_EXE_fwp"))
+                .env("FWP_NO_OPT", "1")
+                .args(["run", "--interp"])
+                .arg(&input),
+        );
+        assert!(reference.stderr.is_empty(), "{reference:?}");
+        let (_, program) = fwp::driver::compile_source(
+            "steps.fwp",
+            &source,
+            fwp::mono::Roots {
+                main: true,
+                exports: true,
+                ..Default::default()
+            },
+        )
+        .map_err(|error| error.rendered)
+        .unwrap();
+        let step = program
+            .funcs
+            .iter()
+            .position(|function| function.name == "step")
+            .expect("the loop step remains a known function");
+        let code = fwp::cgen::generate(&program).unwrap();
+        assert!(code.contains(&format!("static V fwp_loop{step}(V s) {{")));
+        assert_eq!(
+            code.contains(&format!("static V e{step}(V *a) {{")),
+            exposed,
+            "only an actual function value needs a runtime entry"
+        );
+        assert_eq!(
+            code.contains(&format!("static V fwp_owned_entry{step}(V *a) {{")),
+            exposed
+        );
+        for level in ["-O1", "-O2"] {
+            let binary = dir.join(format!("steps-{exposed}{level}.exe"));
+            fwp::cgen::compile_c(&code, &binary, level).unwrap();
+            let output = checked(&mut Command::new(binary));
+            assert_eq!(output.stdout, reference.stdout);
+            assert_eq!(output.stderr, reference.stderr);
+        }
+    }
+}
+
+#[test]
 fn temporary_channel_fields_preserve_owners_and_nonlocal_cleanup() {
     let channel = MT::Con("std::Channel".into(), vec![MT::con("std::String")]);
     let integer = MT::con("std::I64");

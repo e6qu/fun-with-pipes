@@ -5,6 +5,15 @@ observations of those programs, not current compiler budgets. Commands refer
 to the recorded measurement revision. Read [measurement terms](../benchmarks.md)
 for timing and memory boundaries; [the plan](../../PLAN.md) owns remaining work.
 
+Current service-scope tests reuse each input list for both State updates and
+`length`, printing the two counts. This keeps list construction the same in all
+cases: the State-range optimization can otherwise remove the plain loop's list
+but cannot remove lists whose callbacks capture records such as `Duration`.
+The test requires one 24-byte input node per added element before comparing
+scope costs, and requires zero remaining charged storage. This change does not
+rewrite the historical rows below. The separate
+[State-range comparison](state-range-folds.md) measures list elimination itself.
+
 `each` calls a supplied function for every list element and returns `()`, meaning
 no result. Its previous definition used `map`, which builds a list of results,
 then discarded that list. The replacement walks the input with `fold`, keeping
@@ -30,6 +39,10 @@ construction, updates, printing and cleanup. Both use the same C compiler and
 `-O2` and counted ownership. The report also records
 peak process memory, build commands/times and binary sizes. Separate 32/128-element
 tests count allocations without contaminating timed executables with counters.
+With current State-range fusion, the fold program can also avoid its input list.
+New runs therefore compare the complete optimized programs, including that
+saving; they do not isolate the library-definition change. This differs from the
+October 16 results below, whose input list still allocated.
 
 The [accepted comparison](service-context-iteration-2026-10-16.json)
 at `20f0f5f0` passes the focused checks on all six native hosts. At one million

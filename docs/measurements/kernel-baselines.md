@@ -151,7 +151,8 @@ two passing ARM sessions at `bf46f776` and an inconclusive AMD session 2. Its sm
 matrix's byte-identical executables differ by 3.27% in computation and 3.49%
 including allocation, exceeding 2%. Every result, process, binary, frame, memory
 profile and full log is audited; both failed rules remain. No qualified AMD
-session 1 completed. The [timing diagnostic](timing-variation.md) is next;
+session 1 completed. Subsequent [timing diagnostics](timing-variation.md) did not
+resolve all acceptance failures;
 [all rejected hosts](kernels-recheck-rejections-2026-10-29.json) remain recorded.
 Do not retry the unchanged measurement to get a passing result.
 

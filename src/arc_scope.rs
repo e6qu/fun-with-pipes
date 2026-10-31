@@ -1962,6 +1962,46 @@ mod tests {
         }
     }
 
+    // Mirror the identical labels within each pair of permutations. A batch
+    // has 64 triplets, so it ends after a whole pair, but not a whole six-order
+    // cycle. Global balance alone did not balance the compared batch medians.
+    const OWNERSHIP_TIMING_ORDERS: [[usize; 3]; 6] = [
+        [0, 1, 2],
+        [0, 2, 1],
+        [1, 2, 0],
+        [2, 1, 0],
+        [1, 0, 2],
+        [2, 0, 1],
+    ];
+
+    #[test]
+    fn ownership_timing_batches_balance_identical_copy_positions() {
+        let mut previous = 2; // The untimed checks finish with SeparateCopy.
+        let mut order_counts = [0; 6];
+        for round in 0..12 {
+            let mut positions = [[0usize; 3]; 3];
+            let mut after_merged = [0usize; 3];
+            for proof in 0..64 {
+                let order = (round * 64 + proof) % OWNERSHIP_TIMING_ORDERS.len();
+                order_counts[order] += 1;
+                let mut sorted = OWNERSHIP_TIMING_ORDERS[order];
+                sorted.sort();
+                assert_eq!(sorted, [0, 1, 2]);
+                for (position, index) in OWNERSHIP_TIMING_ORDERS[order].into_iter().enumerate() {
+                    positions[index][position] += 1;
+                    after_merged[index] += usize::from(previous == 0);
+                    previous = index;
+                }
+            }
+            assert_eq!(positions[1], positions[2], "batch {round}");
+            assert!(after_merged[1].abs_diff(after_merged[2]) <= 1);
+            assert!(positions
+                .iter()
+                .all(|counts| counts.iter().sum::<usize>() == 64));
+        }
+        assert_eq!(order_counts, [128; 6]);
+    }
+
     // This is a compiler-analysis measurement, not a language execution benchmark.
     // Run alone with raw lowering so optimization cannot erase its input growth.
     #[test]
@@ -2043,14 +2083,6 @@ touch = curry (both .1 (.0 | recur) | uncurry channel.send | ignore)
                 });
                 assert_eq!(expected[1], expected[2]);
                 const PROOFS: usize = 64;
-                const ORDERS: [[usize; 3]; 6] = [
-                    [0, 1, 2],
-                    [1, 2, 0],
-                    [2, 0, 1],
-                    [2, 1, 0],
-                    [1, 0, 2],
-                    [0, 2, 1],
-                ];
                 let mut samples: [Vec<Vec<u128>>; 3] = std::array::from_fn(|_| Vec::new());
                 // Interleave individual fresh proofs rather than measuring all
                 // 64 calls of a label together. Nearby comparisons reduce drift
@@ -2062,7 +2094,9 @@ touch = curry (both .1 (.0 | recur) | uncurry channel.send | ignore)
                         label.push(Vec::with_capacity(PROOFS));
                     }
                     for proof in 0..PROOFS {
-                        for index in ORDERS[(round * PROOFS + proof) % ORDERS.len()] {
+                        for index in OWNERSHIP_TIMING_ORDERS
+                            [(round * PROOFS + proof) % OWNERSHIP_TIMING_ORDERS.len()]
+                        {
                             let start = Instant::now();
                             let actual = super::check(
                                 &program,

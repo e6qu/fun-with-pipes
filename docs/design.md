@@ -261,7 +261,7 @@ matches can expose direct callbacks, but multiple tested fields, whole-value use
 and protected resources retain their required representation. A compiler-generated
 loop is not permission to interleave two trapping eager stages.
 
-The generated-array transformation, currently awaiting full production verification,
+The generated-array transformation, verified in [PR #232](roadmap-history.md#generated-array-elimination-pr-232),
 extends this rule to `flip array.generate id | array.fold add 0`. With input
 `4`, the generator produces indices `0, 1, 2, 3`, and the fold adds them to get
 `6`. The reference builds an array first; the transformation generates and adds
@@ -272,6 +272,16 @@ evaluation even for empty arrays. Reused arrays, resources, F128 values and
 unknown callbacks do not qualify. The [allocation acceptance requirements](measurements/generated-array-folds.md)
 separate correctness, cleanup, allocation, code/stack costs and timing; the
 implementation alone establishes none of those results.
+
+The [State range candidate](measurements/state-range-folds.md) crosses one
+specific handler boundary: `range 0 | run-state 0 (each (add | modify)) | .1`.
+For input `4`, it adds `0, 1, 2, 3` to the scoped State and returns `6`.
+It keeps the handler but specializes its known, single-use I64 list consumer to
+accept bounds and iterate directly. Effects still run once per index in order;
+there is no eager mapping stage to reorder. Scalar captures must already be
+evaluated in the original order. Shared lists, unknown consumers, resources and
+wider element types do not qualify. This is a separate proof from pure eager
+pipeline fusion, whose requirements are unchanged. Full verification is pending.
 
 When a worker returns record fields separately, every `match` arm must produce
 that same representation. An arm may unpack a dynamically returned record; an
