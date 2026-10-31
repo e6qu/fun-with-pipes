@@ -1,8 +1,9 @@
 # Returned functions compared with C and Rust
 
 The first B1 callable baseline passes focused checks on all three declared hosts.
-It does not claim timing parity or complete production delivery. State range
-removal is verified and merged in #233. This candidate still exceeds its ARM64
+It does not claim timing parity or complete production validation. The user
+merged the runtime change in #234; its main production matrix remains tracked
+in the [handoff](../development-state.md). It still exceeds the original ARM64
 O1 code-size limit. The user prioritizes runtime performance and working memory;
 [Swift comparisons](../benchmarks.md#swift-comparison) and missing callable timing
 now guide the next assessment. Preserve the original rejection.
@@ -202,7 +203,7 @@ Against this frozen baseline, at O1/O2 on **all three hosts**:
 These are count/code/stack limits, not a speed budget. Retain rejected results.
 This candidate cannot close D2/N1 timing acceptance or establish C/Rust parity.
 
-The original whole-text rejection remains below. Delivery now requires assessing
+The original whole-text rejection remains below. The [follow-up phase experiment](callable-phases.md) assesses
 performance and working memory under the user’s updated priority; the count
 savings alone do not prove a speedup.
 `scripts/check-returned-callable-budget.py` independently recomputes the retained

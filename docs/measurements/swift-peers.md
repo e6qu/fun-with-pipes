@@ -6,8 +6,9 @@ The [separate audit](https://github.com/e6qu/fun-with-pipes/actions/runs/4121521
 rechecks all four artifacts without executing their binaries. Full job logs have
 no unexpected compiler diagnostics. The container package manager notes an absent
 C++ manual page; compilation, arithmetic and ownership controls pass.
-This is the candidate branch in PR #234, not a new release or completed full
-production matrix. The [summary JSON](swift-peers-2026-10-31.json) retains every
+These measurements precede the user merge of PR #234. Its full production
+matrix is tracked in the [handoff](../development-state.md); these focused jobs
+do not replace that matrix. The [summary JSON](swift-peers-2026-10-31.json) retains every
 session's timings, all copy-control ratios, RSS samples and artifact identities.
 
 ## What the numbers mean

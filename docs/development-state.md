@@ -1,15 +1,18 @@
 # Current work
 
-**Next:** run the frozen [callable phase comparison](measurements/callable-phases.md),
-audit both sessions on each native host, and fix any failed main production job.
+**Next:** diagnose the three qualified AMD64 construction regressions using
+byte-identical object reproduction and GCC source-level reports. Preserve the
+[phase results](measurements/callable-phases.md), and fix any main production failure.
 Prioritize execution time and working memory; preserve inconclusive measurements.
 
-Worktree: `/private/tmp/fwp-returned-callables`; branch `callable-phase-costs`.
+Worktree: `/private/tmp/fwp-returned-callables`; branch `callable-phase-costs`;
+[PR #235](https://github.com/e6qu/fun-with-pipes/pull/235) is the only active PR.
 The primary checkout has unrelated preserved work; do not reset it.
 User-merged PR #234: `219e3a0130c18d60750fd55ec9c0a684c1dcefd4`, tree
 `b4a70d124eb2674b3f9138ece4600f77cc427dab`. The subject is one line with no body.
-Its full production matrix had not run before merge. Main CI `41218527464` and
-docs `41218527417` are pending; preserve them and inspect all failures/diagnostics.
+Its full production matrix had not run before merge. Main CI `41218527464`
+remains running/queued; benchmark job `124588033339` and docs `41218527417` /
+`124588033356` pass and their logs are audited. Preserve the remaining gates.
 
 ## This batch
 
@@ -25,6 +28,21 @@ docs `41218527417` are pending; preserve them and inspect all failures/diagnosti
 - Test checksum rejection, missing/reordered/noninteger timings, insufficient
   duration, noisy copies, schedule balance and exact reference transformation.
   Add the actual new clock helper to failed-clock and omitted-check controls.
+
+## Phase results and current checks
+
+Measured source `dfb6ff8e`, run `41219092543`: ARM64 `124589718380` and AMD64
+`124589718541` both pass two sessions and artifact audits. All compiler logs and
+completed controls are reviewed. Six record tests, 56 clock controls and 33 Swift
+arithmetic cases pass per host, plus fwp count/cleanup controls. ARM64 meets all
+candidate timing/RAM limits. AMD64 has three qualified construction regressions
+(8.6–16.1%) and one noisy addition case; combined timing acceptance remains open.
+The first-run summary retains all results; no unchanged measurement retry.
+
+Independent audit `41219859189` / `124591988150` is queued. The source head's docs
+`41219094215` passes; its complete log still needs review. Diagnostic builds will
+recompile only archived C objects with optimization-report flags and require
+byte identity. They do not run the saved executables or inspect disassembly.
 
 ## Existing evidence
 
@@ -49,8 +67,8 @@ Free disk is about 60 GiB, below the required 64 GiB. The unchanged local guard
 refuses the new focused Python test. Its first sandbox attempt could not inspect
 `ps`; the escalated guard reached the disk check and refused before execution.
 Do not bypass limits, build locally or download large artifacts. Checks and
-measurements run on GitHub. The new test/clock/workflow changes are unverified
-until the dispatched checks run; no local passing result is claimed.
+measurements run on GitHub. The focused native jobs now verify the test/clock/workflow changes; no local
+passing result is claimed. New diagnostic code still needs its dispatched check.
 
 Require nine exact-head production jobs and docs before our next squash merge.
 Use one subject of at most 80 characters, empty body and no attribution/trailers.

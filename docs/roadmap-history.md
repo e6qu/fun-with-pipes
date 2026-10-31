@@ -1410,3 +1410,20 @@ message is exactly `Avoid temporary range lists in State folds`, with no body or
 trailers. Duplicate post-merge runs `41180750528` and `41180750575` were cancelled
 after verifying the tree and message. Callable comparisons and D2/N1 timing
 acceptance remain open.
+
+
+## Borrowed calls and Swift comparisons (PR #234)
+
+The user merged #234 as `219e3a0130c18d60750fd55ec9c0a684c1dcefd4` on
+2026-10-31, tree `b4a70d124eb2674b3f9138ece4600f77cc427dab`. The one-line
+subject has no body or trailers. Full production validation was not complete;
+main run `41218527464` supplies that matrix. Its C/Rust benchmark job
+`124588033339` and docs `41218527417` / `124588033356` pass; other jobs remain
+tracked in the [handoff](development-state.md). This is not yet verified delivery.
+
+The [callable report](measurements/returned-callables.md) retains the reduced
+ownership operations and original ARM O1 size rejection. The
+[Swift report](measurements/swift-peers.md) retains four completed native sessions,
+all noisy rows, different AMD64 CPUs and the independent artifact audit.
+PR #235 adds [phase timing](measurements/callable-phases.md) and carries any
+required repairs. No elapsed-time benefit for borrowed calls is claimed yet.
