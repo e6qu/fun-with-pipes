@@ -44,8 +44,9 @@ int main(void) {
             printf("%zu %d %d %llu %llu\n",n,sliced,operation,
                    (unsigned long long)calls,(unsigned long long)bytes);
         }
-        if(fwp_rc_release_last(input)) fwp_rc_free_arr(input);
-        if(fwp_rc_release_last(backing)) fwp_rc_free_arr(backing);
+        /* Typed destruction also releases a packed slice's backing owner. */
+        (void)fDROP_ARRAY(input);
+        (void)fDROP_ARRAY(backing);
         if(fwp_heap.live!=initial || fwp_cleanups) return 181;
     }
     return 0;

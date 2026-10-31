@@ -41,6 +41,7 @@ fn numeric_array_to_list_consumers_avoid_intermediate_cells() {
                 ("folded-list", "fFOLDED"),
                 ("release-mapped", "fRELEASE"),
                 ("release-filtered", "fDROP_FILTERED"),
+                ("release-input", "fDROP_ARRAY"),
             ] {
                 let start = source.find(&format!("/* {name} :")).unwrap();
                 let id = source[start..]
@@ -87,7 +88,10 @@ fn numeric_array_to_list_consumers_avoid_intermediate_cells() {
                     &binary,
                     &result,
                 );
-                assert!(result.status.success(), "{result:?}");
+                assert!(
+                    result.status.success(),
+                    "packing={packing} fusion={mode} opt={opt}: {result:?}"
+                );
                 assert!(result.stderr.is_empty(), "{result:?}");
                 let rows: Vec<Vec<u64>> = String::from_utf8(result.stdout)
                     .unwrap()

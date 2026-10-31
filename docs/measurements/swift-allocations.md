@@ -68,3 +68,18 @@ Dispatch `swift-allocations` in `.github/workflows/numerics.yml`. The runner use
 every retained file hash, recomputes totals from stacks, checks both controls and
 compares benchmark sources with the recorded Git commit. It never executes the
 retained binaries. The protocol is part of [plan step 9](../../PLAN.md#9-measurements).
+
+## Profiler verification
+
+Run `41253559042` at `9a2e954e` passes the controls and all profiles on AMD64.
+ARM64 records the allocation sizes but no instruction addresses: every stack is
+`??`, so attribution fails before any peer result is accepted. This is a failed
+observer control, not evidence about fwp or Swift ownership.
+
+The next check pins GNU libunwind 1.8.3 by release SHA-256, records the linked
+library and compares direct `unw_backtrace`/`unw_step` probes against the system
+library on the same host. It retains syscall diagnostics and both observations.
+Only the explicitly selected library is used for profiles; no failed profile
+switches automatically to another observer. Both allocation/release controls
+must still pass. A newer dependency has not yet been verified to repair this
+failure; the current evidence does not identify a particular upstream defect.

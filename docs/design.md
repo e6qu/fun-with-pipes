@@ -65,7 +65,13 @@ on Linux ARM64/AMD64 and macOS ARM64; this is focused evidence, not final delive
 A named function's entry may group consecutive `fn` inputs only while no
 computation or observable owner release lies between them. A `let` calculation
 ends that group. A top-level `let` is a cached value entry, even when it returns
-a function; a `match` entry takes one input before evaluating its selected arm. Unknown applications remain successive calls; combining them
+a function; a `match` entry takes one input before evaluating its selected arm.
+Applications subtract supplied inputs from the constructor's current stage,
+following checked aliases. For example, if `make = fn x -> let y = 10 / x in fn z -> y + z`,
+reading `saved = make 0` must fail before a later argument to `saved` is evaluated.
+The returned function's type cannot justify delaying that division. A composed
+pipe likewise takes its input before evaluating any returned function's next input.
+Unknown applications remain successive calls; combining them
 could run a later argument before a first-stage failure. REPL results use cached
 value entries even when their type is a function, so their construction runs once
 and later redefinitions cannot replace their saved code or captures.

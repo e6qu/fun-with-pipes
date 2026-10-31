@@ -11,6 +11,20 @@ SPEC.loader.exec_module(PROFILE)
 
 
 class AllocationRecords(unittest.TestCase):
+    def test_unwinding_must_walk_callers_with_the_selected_library(self):
+        record = dict(selectedLibrary='/chosen/libunwind.so.8', selected=dict(
+            libraries='libunwind.so.8 => /chosen/libunwind.so.8',
+            observation=dict(frames=4, steps=3, stepStatus=0, contextStatus=0, initStatus=0, pageBytes=4096)))
+        PROFILE.check_unwinding(record)
+        for key, value in [('frames', 0), ('steps', 0), ('stepStatus', -10), ('initStatus', -1)]:
+            changed = copy.deepcopy(record)
+            changed['selected']['observation'][key] = value
+            with self.subTest(key=key), self.assertRaises(AssertionError):
+                PROFILE.check_unwinding(changed)
+        record['selected']['libraries'] = 'libunwind.so.8 => /system/libunwind.so.8'
+        with self.assertRaises(AssertionError):
+            PROFILE.check_unwinding(record)
+
     def test_recompute_and_reject_incomplete_stack_counts(self):
         with tempfile.TemporaryDirectory() as temporary:
             folder = Path(temporary)

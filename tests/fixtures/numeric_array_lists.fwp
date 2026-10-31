@@ -9,5 +9,7 @@ export release-mapped : List[F32] -> ()
 release-mapped = ignore
 export release-filtered : List[F64] -> ()
 release-filtered = ignore
+export release-input : Array[F64] -> ()
+release-input = ignore
 
 main = [1.25, -0.0, 16777217.0] | array.from-list | mapped-list | echo

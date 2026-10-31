@@ -476,54 +476,11 @@ impl<'a> Mono<'a> {
             .zip(key.iter().cloned())
             .collect();
         let ty = self.mt(&scheme.ty, &s);
-        // A simple alias keeps the target's stage boundaries. Following names
-        // uses the checked identities, including imported aliases; recursive
-        // aliases terminate at the existing type-based rule below.
-        let mut body = &b.body;
-        let mut aliases = HashSet::new();
-        while let ExprKind::Var(_) = &body.kind {
-            let Some(inst) = self.typed.insts.get(&body.id) else {
-                break;
-            };
-            let GlobalKind::Binding(target) = &self.env.globals[&inst.target].kind else {
-                break;
-            };
-            if !aliases.insert(*target) {
-                break;
-            }
-            body = &self.env.bindings[*target].body;
-        }
-        let arity =
-            if self.value_bindings.contains(&b.name) || matches!(body.kind, ExprKind::Let(..)) {
-                // Reading this binding evaluates its strict initializer before a
-                // returned function can receive an argument.
-                0
-            } else if matches!(body.kind, ExprKind::Match(..)) {
-                // Selecting an arm runs its body before a returned function's
-                // argument. Pattern tests and arm computations are a stage.
-                1
-            } else if matches!(body.kind, ExprKind::Lambda(..)) {
-                self.register_shapes(&ty);
-                // Consecutive fn bodies only construct another function. Group
-                // those inputs unless doing so extends an observable owner. Stop
-                // before any computation between stages, even checked arithmetic.
-                let mut stage = &ty;
-                let mut arity = 0;
-                while let ExprKind::Lambda(_, next) = &body.kind {
-                    arity += 1;
-                    let (input, output) = stage.as_fun().expect("checked fn type");
-                    if crate::resource::may_hold_resource(&self.prog.shapes, input)
-                        || crate::resource::contains_channel(&self.prog.shapes, input)
-                    {
-                        break;
-                    }
-                    body = next;
-                    stage = output;
-                }
-                arity
-            } else {
-                spine_arity(&self.env.table, &scheme.ty)
-            };
+        let arity = if self.value_bindings.contains(&b.name) {
+            0
+        } else {
+            self.stage_arity(&b.body, &s, &mut HashSet::from([idx]))
+        };
         let id = self.new_func(
             display_name(&b.name),
             arity,
@@ -537,6 +494,74 @@ impl<'a> Mono<'a> {
         self.instances.insert(k, id);
         self.work.push((id, idx, s));
         Ok(id)
+    }
+
+    // A function type describes possible later inputs, not when its constructor
+    // executes. Follow checked source identities and subtract supplied inputs
+    // from the current stage only. Saturation evaluates the returned value now;
+    // it must not acquire the returned function's inputs by eta expansion.
+    fn stage_arity(&mut self, e: &ast::Expr, s: &Subst, visiting: &mut HashSet<usize>) -> u32 {
+        match &e.kind {
+            ExprKind::Let(..) => 0,
+            ExprKind::Match(..) | ExprKind::Selector(..) => 1,
+            ExprKind::Lambda(..) => {
+                let ty = self.node_mt(e.id, s);
+                self.register_shapes(&ty);
+                let mut stage = &ty;
+                let mut body = e;
+                let mut arity = 0;
+                while let ExprKind::Lambda(_, next) = &body.kind {
+                    arity += 1;
+                    let (input, output) = stage.as_fun().expect("checked fn type");
+                    if crate::resource::may_hold_resource(&self.prog.shapes, input)
+                        || crate::resource::contains_channel(&self.prog.shapes, input)
+                    {
+                        break;
+                    }
+                    body = next;
+                    stage = output;
+                }
+                arity
+            }
+            ExprKind::App(f, args) | ExprKind::Operator(_, f, args) => self
+                .stage_arity(f, s, visiting)
+                .saturating_sub(args.len() as u32),
+            ExprKind::Pipe(_, right) => {
+                if self.typed.pipe_modes.get(&e.id) == Some(&PipeMode::Compose) {
+                    1
+                } else {
+                    self.stage_arity(right, s, visiting).saturating_sub(1)
+                }
+            }
+            ExprKind::Var(_) => {
+                if let Some(inst) = self.typed.insts.get(&e.id) {
+                    if let GlobalKind::Binding(idx) = self.env.globals[&inst.target].kind {
+                        let binding = &self.env.bindings[idx];
+                        if self.value_bindings.contains(&binding.name) {
+                            return 0;
+                        }
+                        if visiting.insert(idx) {
+                            let types: Vec<_> = if inst.types.is_empty() {
+                                binding
+                                    .mono_vars
+                                    .iter()
+                                    .map(|v| self.mt(&Type::Var(*v), s))
+                                    .collect()
+                            } else {
+                                inst.types.iter().map(|t| self.mt(t, s)).collect()
+                            };
+                            let substitution =
+                                binding.mono_vars.iter().cloned().zip(types).collect();
+                            let arity = self.stage_arity(&binding.body, &substitution, visiting);
+                            visiting.remove(&idx);
+                            return arity;
+                        }
+                    }
+                }
+                self.node_mt(e.id, s).params(usize::MAX).0.len() as u32
+            }
+            _ => self.node_mt(e.id, s).params(usize::MAX).0.len() as u32,
+        }
     }
 
     fn foreign_instance(&mut self, canon: &str, symbol: &str, ty: MT) -> FuncId {

@@ -101,9 +101,20 @@ mapped list fails the frozen savings rule: at length 129 it allocates 258 cells
 versus 259 allocation requests in the reference (6,192 versus 7,232 requested
 bytes). The input list is gone, but generated C calls the borrowing `reverse`
 primitive, which copies the newly built result. Length one saves only 16 bytes.
-Correctness, alias, cleanup and all separate AD tests pass on the first completed
-Linux ARM64 job in run `41252379702`; this is not acceptance of the cost change.
+Word-array correctness/alias/cleanup and all separate AD tests pass in run
+`41252379702`. The first cost assertion stopped that probe before packed arrays;
+it did not establish packed-slice cleanup. Both original session-2 timing jobs
+completed: timing, copy, raw-tape and cleanup checks pass, but both list forms
+fail allocation/byte limits in all five cases with updates. The zero-update
+control passes. Preserve these failed allocation observations.
 
 The repair uses backward traversal only under the total-callback proof above;
 its measurements are pending. Original limits remain unchanged. The probe now
 collects all cost failures across both storage modes before reporting them.
+
+At `9a2e954e`, all word-array cases meet the count limits at O1/O2. Packed-array
+verification exposes a probe error at length 129: it physically frees a slice
+header without releasing its backing owner. The repair calls an exported typed
+`Array[F64] -> ()` destructor for both inputs. This is a test ownership repair;
+neither the cleanup assertion nor the allocation limits are relaxed. Full packed
+verification and whole-solve acceptance remain pending.

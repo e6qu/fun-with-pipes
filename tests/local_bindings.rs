@@ -114,6 +114,24 @@ fn named_tacit_captures_and_macros_agree_across_backends() {
             Some("division by zero"),
         ),
         (
+            "top-level-saturated-function-constructor",
+            "make-checked : I64 -> I64 -> I64\nmake-checked = fn divisor -> let inverse = 10 / divisor in fn value -> inverse + value\nchecked = make-checked 0\nmain = let unused = checked in 42 | echo\n".into(),
+            "",
+            Some("division by zero"),
+        ),
+        (
+            "top-level-piped-function-constructor",
+            "make-checked : I64 -> I64 -> I64\nmake-checked = fn divisor -> let inverse = 10 / divisor in fn value -> inverse + value\nchecked = 0 | make-checked\nalias = checked\nmain = alias (1 | tap (const \"later\" | echo)) | echo\n".into(),
+            "",
+            Some("division by zero"),
+        ),
+        (
+            "composed-function-stage",
+            "make-checked : I64 -> I64 -> I64\nmake-checked = fn divisor -> let inverse = 10 / divisor in fn value -> inverse + value\ncomposed = id | make-checked\nmain = composed 0 (1 | tap (const \"later\" | echo)) | echo\n".into(),
+            "",
+            Some("division by zero"),
+        ),
+        (
             "match-stage-before-next-argument",
             "make-checked : I64 -> I64 -> I64\nmake-checked = match { divisor -> let inverse = 10 / divisor in fn value -> inverse + value }\nmain = make-checked 0 (1 | tap (const \"later\" | echo)) | echo\n".into(),
             "",

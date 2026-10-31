@@ -42,6 +42,31 @@ int main(int argc, char **argv) {
     return 0;
 }
 '''
+UNWIND_CONTROL = r'''
+#define UNW_LOCAL_ONLY
+#include <libunwind.h>
+#include <stdio.h>
+#include <unistd.h>
+__attribute__((noinline)) int capture_control(void) {
+    void *frames[64];
+    int count = unw_backtrace(frames, 64);
+    unw_context_t context;
+    unw_cursor_t cursor;
+    int context_status = unw_getcontext(&context);
+    int init_status = unw_init_local(&cursor, &context);
+    int steps = 0, status = init_status;
+    if (!context_status && !init_status)
+        while ((status = unw_step(&cursor)) > 0 && steps < 64) steps++;
+    printf("{\"frames\":%d,\"steps\":%d,\"stepStatus\":%d,\"contextStatus\":%d,\"initStatus\":%d,\"pageBytes\":%ld}\n",
+           count, steps, status, context_status, init_status, sysconf(_SC_PAGESIZE));
+    return count;
+}
+__attribute__((noinline)) int caller_control(void) {
+    int count = capture_control();
+    return count + 1;
+}
+int main(void) { return caller_control() < 0; }
+'''
 
 
 def digest(path):
@@ -80,6 +105,14 @@ def check_control(ordinary, omitted):
     assert omitted['control']['leaked'] == 1048578, omitted
 
 
+def check_unwinding(record):
+    observation = record['selected']['observation']
+    assert observation['frames'] >= 3 and observation['steps'] >= 2, observation
+    assert observation['stepStatus'] == observation['contextStatus'] == observation['initStatus'] == 0, observation
+    assert observation['pageBytes'] > 0
+    assert record['selectedLibrary'] in record['selected']['libraries']
+
+
 def collect(args):
     assert os.environ.get('GITHUB_ACTIONS') == 'true', 'full profiles run on GitHub'
     assert platform.system() == 'Linux' and platform.machine() == args.arch
@@ -91,30 +124,48 @@ def collect(args):
     out = args.output.resolve()
     out.mkdir(parents=True, exist_ok=False)
     env = {k: v for k, v in os.environ.items()
-           if not k.startswith('FWP_') and k not in ('GH_TOKEN', 'GITHUB_TOKEN', 'LD_PRELOAD')}
+           if not k.startswith('FWP_') and k not in ('GH_TOKEN', 'GITHUB_TOKEN', 'LD_PRELOAD', 'LD_LIBRARY_PATH')}
     env.update(CC=args.cc, FWP_STACK='1', FWP_LTO='0', LC_ALL='C', SWIFT_BACKTRACE='enable=no')
 
-    def run(command):
+    selected_env = dict(env, LD_LIBRARY_PATH=str(args.unwind_library_directory.resolve()))
+
+    def run(command, environment):
         command = list(map(str, command))
-        result = run_capture(command, env=env, cwd=None, input_data=None, input_stream=None,
+        result = run_capture(command, env=environment, cwd=None, input_data=None, input_stream=None,
                              text=True, encoding='utf-8', timeout=180, check=False)
         with (out / 'commands.jsonl').open('a') as log:
-            log.write(json.dumps(dict(command=command, status=result.returncode,
+            log.write(json.dumps(dict(command=command, libraryPath=environment.get('LD_LIBRARY_PATH'), status=result.returncode,
                                      stdout=result.stdout, stderr=result.stderr)) + '\n')
         assert result.returncode == 0, result
         return result
 
     report = dict(source=args.source, architecture=args.arch, host=platform.uname()._asdict(),
-                  cpu=run(['lscpu']).stdout, compilerSha256=digest(args.compiler),
-                  versions={name: run([getattr(args, name), '--version']).stdout for name in
+                  cpu=run(['lscpu'], env).stdout, compilerSha256=digest(args.compiler),
+                  versions={name: run([getattr(args, name), '--version'], env).stdout for name in
                             ('cc', 'rustc', 'swiftc', 'heaptrack', 'heaptrack_print')},
                   settings={key: str(value) if isinstance(value, Path) else value for key, value in vars(args).items()},
                   programs={}, controls={})
     flags = ['-std=gnu11', '-O2', '-g', '-ffp-contract=off', '-fno-fast-math', '-fno-lto', '-march=' + args.c_arch]
+    unwind_source = out / 'unwind-control.c'
+    unwind_source.write_text(UNWIND_CONTROL)
+    unwind_binary = out / 'unwind-control'
+    run([args.cc, *flags, unwind_source, '-lunwind', '-o', unwind_binary], env)
+    report['unwinding'] = {}
+    for label, environment in [('system', env), ('selected', selected_env)]:
+        result = run([args.strace, '-o', out / (label + '-unwind.syscalls'),
+                      '-e', 'trace=process_vm_readv,pipe2,read,write,mincore', unwind_binary], environment)
+        report['unwinding'][label] = dict(observation=json.loads(result.stdout),
+                                          libraries=run(['ldd', unwind_binary], environment).stdout)
+    selected_library = args.unwind_library_directory.resolve() / 'libunwind.so.8'
+    shutil.copyfile(selected_library, out / 'libunwind.so.8')
+    report['unwinding']['selectedLibrary'] = str(selected_library)
+    report['unwinding']['selectedLibrarySha256'] = digest(selected_library)
+    (out / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
+    check_unwinding(report['unwinding'])
 
     def profile(binary, arguments, directory, expected):
         directory.mkdir(parents=True)
-        result = run([args.heaptrack, '-o', directory / 'trace', binary, *arguments])
+        result = run([args.heaptrack, '-o', directory / 'trace', binary, *arguments], selected_env)
         # heaptrack's launcher adds nonnumeric status lines around program stdout.
         actual = ''.join(line + '\n' for line in result.stdout.splitlines() if line.isdecimal())
         assert actual == expected, result
@@ -124,18 +175,18 @@ def collect(args):
             result = run([args.heaptrack_print, '--file', traces[0], '--merge-backtraces', '0',
                           '--print-peaks', '1', '--print-allocators', '1', '--print-temporary', '1',
                           '--print-leaks', '1', '--peak-limit', '20', '--sub-peak-limit', '20',
-                          '--flamegraph-cost-type', cost, '--print-flamegraph', directory / (cost + '.stacks')])
+                          '--flamegraph-cost-type', cost, '--print-flamegraph', directory / (cost + '.stacks')], selected_env)
             (directory / (cost + '.txt')).write_text(result.stdout)
         return summarize(directory)
 
     control = out / 'control.c'
     control.write_text(CONTROL)
     binary = out / 'control'
-    run([args.cc, *flags, control, '-o', binary])
+    run([args.cc, *flags, control, '-o', binary], env)
     for name, arguments in [('release', []), ('omit-release', ['omit'])]:
         report['controls'][name] = profile(binary, arguments, out / name, '3\n')
-    check_control(report['controls']['release'], report['controls']['omit-release'])
     (out / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
+    check_control(report['controls']['release'], report['controls']['omit-release'])
 
     for name in PROGRAMS:
         folder = out / name
@@ -149,7 +200,7 @@ def collect(args):
             binary.parent.mkdir()
             if language == 'fwp':
                 generated = folder / 'generated.c'
-                run([args.compiler.resolve(), 'build', source, '-O2', '--memory', 'dynamic', '--emit-c', '-o', generated])
+                run([args.compiler.resolve(), 'build', source, '-O2', '--memory', 'dynamic', '--emit-c', '-o', generated], env)
                 command = [args.cc, *flags, generated, '-lm', '-lpthread', '-ldl', '-o', binary]
             elif language == 'c':
                 command = [args.cc, *flags, source, '-o', binary]
@@ -159,12 +210,12 @@ def collect(args):
             else:
                 command = [args.swiftc, '-swift-version', '6', '-O', '-g', '-whole-module-optimization',
                            '-target', args.target, '-warnings-as-errors', source, '-o', binary]
-            result = run(command)
+            result = run(command, env)
             assert not result.stdout and not result.stderr, result
             header = binary.read_bytes()[:20]
             assert header[:6] == b'\x7fELF\x02\x01'
             assert struct.unpack_from('<H', header, 18)[0] == {'x86_64': 62, 'aarch64': 183}[args.arch]
-            result = run([binary])
+            result = run([binary], env)
             assert result.stdout and not result.stderr, result
             if expected is None:
                 expected = result.stdout
@@ -179,10 +230,10 @@ def collect(args):
                 managed_source = folder / 'managed.c'
                 managed_source.write_text(PROFILE.instrument(generated.read_text()))
                 managed_binary = folder / 'managed'
-                run([args.cc, *flags, managed_source, '-lm', '-lpthread', '-ldl', '-o', managed_binary])
+                run([args.cc, *flags, managed_source, '-lm', '-lpthread', '-ldl', '-o', managed_binary], env)
                 entry['managed'] = []
                 for sample in range(2):
-                    result = run([managed_binary])
+                    result = run([managed_binary], env)
                     assert result.stdout == expected
                     counters = json.loads(result.stderr)
                     assert set(counters) == {'requests', 'requestedBytes', 'retains', 'peakChargedBytes', 'finalChargedBytes'}
@@ -212,6 +263,14 @@ def audit(args):
         assert digest(out / name) == checksum, name
     report = json.loads((out / 'report.json').read_text())
     assert report['source'] == args.source and report['architecture'] == args.arch
+    check_unwinding(report['unwinding'])
+    assert report['unwinding']['selectedLibrarySha256'] == digest(out / 'libunwind.so.8')
+    commands = [json.loads(line) for line in (out / 'commands.jsonl').read_text().splitlines()]
+    for label in ('system', 'selected'):
+        traces = [command for command in commands if any(argument.endswith('/' + label + '-unwind.syscalls')
+                                                          for argument in command['command'])]
+        assert len(traces) == 1 and traces[0]['status'] == 0
+        assert json.loads(traces[0]['stdout']) == report['unwinding'][label]['observation']
     for name in ('release', 'omit-release'):
         assert report['controls'][name] == summarize(out / name)
     check_control(report['controls']['release'], report['controls']['omit-release'])
@@ -224,7 +283,6 @@ def audit(args):
             assert row['stdout'] == programs['c']['stdout']
             assert row['profiles'] == [summarize(folder / str(sample)) for sample in range(2)]
             if language == 'fwp':
-                commands = [json.loads(line) for line in (out / 'commands.jsonl').read_text().splitlines()]
                 observations = [json.loads(command['stderr']) for command in commands
                                 if len(command['command']) == 1 and command['command'][0].endswith('/' + name + '/managed')]
                 assert len(observations) == 2 and row['managed'] == observations
@@ -238,9 +296,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest='action', required=True)
     collect_parser = commands.add_parser('collect')
-    for name in ('compiler', 'output'):
+    for name in ('compiler', 'output', 'unwind-library-directory'):
         collect_parser.add_argument('--' + name, required=True, type=Path)
-    for name in ('cc', 'rustc', 'swiftc', 'heaptrack', 'heaptrack-print', 'c-arch', 'rust-cpu', 'target'):
+    for name in ('cc', 'rustc', 'swiftc', 'heaptrack', 'heaptrack-print', 'strace', 'c-arch', 'rust-cpu', 'target'):
         collect_parser.add_argument('--' + name, required=True)
     audit_parser = commands.add_parser('audit')
     audit_parser.add_argument('--input', required=True, type=Path)

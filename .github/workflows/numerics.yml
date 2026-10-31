@@ -340,7 +340,21 @@ jobs:
           python3 scripts/check-swift-arithmetic.py --swiftc swiftc --target "${{ matrix.arch }}-unknown-linux-gnu" --output swift-arithmetic
       - name: Allocation profiler
         if: inputs.suite == 'swift-allocations'
-        run: apt-get install -y heaptrack
+        shell: bash
+        run: |
+          set -euo pipefail
+          apt-get install -y heaptrack libunwind-dev strace make
+          curl --fail --location --output swift-setup/libunwind-1.8.3.tar.gz \
+            https://github.com/libunwind/libunwind/releases/download/v1.8.3/libunwind-1.8.3.tar.gz
+          echo 'be30d910e67f58d82e753231f1357f326a1a088acf126b21ff77e60aab19b90b  swift-setup/libunwind-1.8.3.tar.gz' | sha256sum --check
+          tar -xf swift-setup/libunwind-1.8.3.tar.gz -C swift-setup
+          cd swift-setup/libunwind-1.8.3
+          ./configure --prefix="$GITHUB_WORKSPACE/swift-setup/unwinder" --disable-static --disable-tests --disable-documentation \
+            2>&1 | tee ../unwind-configure.log
+          make -j2 2>&1 | tee ../unwind-build.log
+          make install 2>&1 | tee ../unwind-install.log
+          cd "$GITHUB_WORKSPACE"
+          rm -rf swift-setup/libunwind-1.8.3
       - name: Allocation report controls
         if: inputs.suite == 'swift-allocations'
         run: python3 scripts/test-swift-allocation-records.py
@@ -351,7 +365,8 @@ jobs:
           --compiler target/debug/fwp --source "$GITHUB_SHA" --arch "${{ matrix.arch }}"
           --cc gcc --rustc rustc --swiftc swiftc --c-arch "${{ matrix.c_arch }}"
           --rust-cpu "${{ matrix.rust_cpu }}" --target "${{ matrix.arch }}-unknown-linux-gnu"
-          --heaptrack heaptrack --heaptrack-print heaptrack_print --output swift-allocation-evidence
+          --heaptrack heaptrack --heaptrack-print heaptrack_print --strace strace
+          --unwind-library-directory swift-setup/unwinder/lib --output swift-allocation-evidence
       - name: Recompute allocator observations
         if: inputs.suite == 'swift-allocations'
         run: >-
