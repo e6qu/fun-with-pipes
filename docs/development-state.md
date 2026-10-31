@@ -48,12 +48,21 @@ forgetting and physical-free optimized bodies are identical within each host.
 No runtime patch has been selected from these findings. The small report
 artifacts (under 180 KB each) were read locally; no saved executable ran.
 
-Independent audit `41221077777` on ARM64 passes; its complete log still needs
-review. The superseded AMD64 audit `41219859189` was cancelled while unstarted.
+Independent audit `41221077777` / `124595575639` on ARM64 passes; its complete
+log is reviewed with no unexpected diagnostics. The superseded AMD64 audit `41219859189` was cancelled while unstarted.
 The snapshot test freezes 26 passing, three failed and three inconclusive phases.
-New context controls must pass in the next dispatched study. Main macOS ARM64
-regular job `124588033328` now passes; its log contains no unexpected diagnostics.
-Other production jobs remain running/queued.
+The snapshot test passes in docs `41221082589` / `124595586076`; that log and
+earlier docs `41220304693` / `124593276704` are reviewed, with only intentional
+test-runner failure controls. The complete compiler-report archives are now
+retained in the repository; their new integrity/body-equality test awaits CI.
+Shared-constructor study
+`41222337204`, source `17a6d13c`, is queued: AMD64 `124599348496` and ARM64
+`124599348603`. Its record controls and docs `41222339131` remain pending.
+Check actual CPU models before attributing observations to the original host.
+Main macOS ARM64 regular `124588033328`, Intel macOS ownership `124588033386`
+and Windows AMD64 `124588033538` pass. Their logs contain no unexpected compiler
+diagnostics; Windows includes intentional scheduler panics and the rejected-CA
+TLS control. Other production jobs remain running/queued.
 
 ## Existing evidence
 
@@ -74,7 +83,7 @@ Elapsed-time acceptance has not been established. Do not infer it from counts.
 
 ## Local checks
 
-Free disk is about 60 GiB, below the required 64 GiB. The unchanged local guard
+Free disk is about 63 GiB, below the required 64 GiB. The unchanged local guard
 refuses the new focused Python test. Its first sandbox attempt could not inspect
 `ps`; the escalated guard reached the disk check and refused before execution.
 Do not bypass limits, build locally or download large artifacts. Checks and

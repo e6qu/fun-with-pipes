@@ -135,27 +135,22 @@ not erase them or satisfy the frozen combined rule.
 The source construction path is unchanged between the reference and current
 variants: allocate storage, set function/count fields, copy captures, establish
 one owner. No observed allocation or cleanup defect explains the timing yet.
-Next, reproduce the measured objects while retaining GCC's
+The follow-up reproduced the measured objects while retaining GCC's
 [source-level optimization reports](https://gcc.gnu.org/onlinedocs/gcc-13.1.0/gcc/Developer-Options.html).
-Require byte-identical objects before using those reports to explain the actual
-measured compilation. This diagnostic does not rerun timing, inspect disassembly,
+It required byte-identical objects before using those reports to explain the
+measured compilation. This diagnostic did not rerun timing, inspect disassembly,
 change runtime behavior or relax the acceptance limits.
-
-
-The first diagnostic run, `41220300146`, reproduces both ARM64 objects byte for
-byte (`124593267740`). GCC inlines the same partial-application constructor and
-owner setup into both factories. This does not explain the AMD64 regression;
-its native diagnosis is still queued. Source changes have not been selected from
-this result. Read-only artifact audits can run on ARM64 because they verify
-bytes and records without executing the saved programs.
 
 
 ## Follow-up: one constructor, two invocation paths
 
 Both native diagnoses pass: AMD64 job `124593267611` and ARM64 `124593267740`
-in `41220300146` reproduce the original objects byte for byte. On each host,
-GCC's optimized bodies for `returned_make`, `fwp_heap_alloc`, its slow/refill
-paths, `fwp_rc_forget_slot` and `fwp_mem_free` are identical between variants.
+in `41220300146` reproduce the original objects byte for byte.
+The complete [AMD64](callable-construction-amd64-2026-10-31.zip) and
+[ARM64](callable-construction-arm64-2026-10-31.zip) report/object archives are
+retained here, with digest and body-equality tests. On each host, GCC's optimized
+bodies for `returned_make`, `fwp_heap_alloc`, its slow/refill paths,
+`fwp_rc_forget_slot` and `fwp_mem_free` are identical between variants.
 The factory and allocator's source-level optimization decisions do not explain
 the regression. This is not a claim of identical final instruction placement,
 nor proof that preceding work has no effect on a later phase.

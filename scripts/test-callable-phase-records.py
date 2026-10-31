@@ -5,6 +5,7 @@ import json
 import importlib.util
 from pathlib import Path
 import unittest
+import zipfile
 
 SPEC = importlib.util.spec_from_file_location("phases", Path(__file__).with_name("measure-callable-phases.py"))
 PHASE = importlib.util.module_from_spec(SPEC)
@@ -111,6 +112,38 @@ class PhaseRecords(unittest.TestCase):
         self.assertEqual(sum(v is True for v in outcomes), 26)
         self.assertEqual(sum(v is False for v in outcomes), 3)
         self.assertEqual(sum(v is None for v in outcomes), 3)
+
+    def test_complete_compiler_reports_preserve_identical_constructor_bodies(self):
+        artifacts = {
+            "amd64": (62, "6b1db9f6bc396ca1ae36fbb898b81457a9c470563fd0e0ac2e565c76bc495f5b"),
+            "arm64": (183, "70a16a4006f5e669ad32fe43a7c2e2c1e36ea0d923eb2f917dddc09a8de4cd80"),
+        }
+        names = ("returned_make", "fwp_heap_alloc", "fwp_heap_alloc_slow",
+                 "fwp_heap_refill", "fwp_rc_forget_slot", "fwp_mem_free")
+        for arch, (machine, expected) in artifacts.items():
+            path = PHASE.ROOT / f"docs/measurements/callable-construction-{arch}-2026-10-31.zip"
+            self.assertEqual(hashlib.sha256(path.read_bytes()).hexdigest(), expected)
+            with zipfile.ZipFile(path) as archive:
+                report = json.loads(archive.read("report.json"))
+                self.assertEqual(report["source"], "dfb6ff8e8aac215009e9a9cf48a8bce492ef4eae")
+                self.assertEqual(report["session"], 2)
+                functions = {}
+                for peer in ("reference", "fwp"):
+                    obj = archive.read(peer + ".o")
+                    self.assertEqual(obj[:6], b"\x7fELF\x02\x01")
+                    self.assertEqual(int.from_bytes(obj[16:18], "little"), 1)
+                    self.assertEqual(int.from_bytes(obj[18:20], "little"), machine)
+                    records = report["results"][peer]
+                    self.assertEqual(hashlib.sha256(obj).hexdigest(), records["objectSha256"])
+                    for extension, field in (("inline", "inlineSha256"), ("optimized", "optimizedSha256")):
+                        data = archive.read(peer + "." + extension + ".txt")
+                        self.assertEqual(hashlib.sha256(data).hexdigest(), records[field])
+                    text = archive.read(peer + ".optimized.txt").decode()
+                    functions[peer] = {section.split(" ", 1)[0]: section for section in text.split(";; Function ")[1:]}
+                for name in names:
+                    self.assertIn(name, functions["reference"])
+                    self.assertIn(name, functions["fwp"])
+                    self.assertEqual(functions["reference"][name], functions["fwp"][name])
 
     def test_reference_requires_exactly_one_real_guard(self):
         runtime = (PHASE.ROOT / "runtime/fwp_rt_heap.c").read_text()

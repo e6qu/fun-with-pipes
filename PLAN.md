@@ -29,15 +29,14 @@ collector is not the same as removing these costs. The
 
 ## Work order
 
-1. Extend the [completed Swift comparison](docs/measurements/swift-peers.md) to
-   returned-callable construction, repeated invocation and release, with a
-   same-source fwp control disabling only the new borrowed-call path. Use the frozen
-   [phase protocol](docs/measurements/callable-phases.md) and its timing/RAM limits. Preserve the
-   original ARM O1 size rejection; prioritize execution time and working memory.
-   The seven-program runs qualify five repeated ARM64 cases; noisy map/pipeline
-   rows and different AMD64 CPUs remain explicit. Do not retry unchanged rows.
-   PR #234 was user-merged before full validation; complete its pending main
-   matrix and the next PR’s final-head matrix without assuming verified support.
+1. Resolve the three AMD64 construction regressions in the
+   [closure phase comparison](docs/measurements/callable-phases.md). ARM64 passes
+   all candidate limits; AMD64 invocation improves but its combined rule fails.
+   Factory/allocator optimized bodies match, so the next diagnostic shares one
+   constructor across both invocation paths and tests zero, one and sixteen calls.
+   Preserve original failures and noise controls; do not repeat unchanged runs.
+   Prioritize execution time and working memory over executable size. Complete
+   #234's pending main matrix and the next PR's final-head production validation.
 2. Resolve D2/N1's failed measurements before claiming numerical speed acceptance.
    Fixed CPU affinity and equal executable names did not resolve the controls.
    Do not rerun unchanged experiments or increase sample counts again.

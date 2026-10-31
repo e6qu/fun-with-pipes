@@ -5,7 +5,7 @@ no single number for “fwp overhead.” A report must say whether it compares f
 with handwritten C/Rust, two versions of fwp, or one isolated runtime operation.
 A faster new fwp build does not establish parity with another language.
 
-## Latest merged-code snapshot: 31 October 2026
+## PR 233 whole-program baseline
 
 PR #233's [production benchmark job](https://github.com/e6qu/fun-with-pipes/actions/runs/41174213818/job/124458289963)
 measures `fd19b9e4`, whose tree matches merged `73a6b20d`. Host: Linux AMD64,
@@ -109,10 +109,11 @@ its binaries; supply the explicit evidence run and full measured source commit.
 
 Execution time and working memory take priority over executable size. Keep size
 and stack costs visible because they can affect caches and memory; a size increase
-alone does not establish a slowdown. For the current callable candidate, preserve
+alone does not establish a slowdown. For the merged borrowed-call change, preserve
 the original 17.7% ARM O1 text-budget rejection, but assess its performance and
 memory rather than treating the percentage alone as the delivery decision.
-Its count reduction is verified; its elapsed-time benefit is still unmeasured.
+The [phase measurements](measurements/callable-phases.md) show faster invocation,
+but three AMD64 construction regressions fail the combined acceptance rule.
 
 ## Choose the question first
 

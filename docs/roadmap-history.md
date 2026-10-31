@@ -1426,4 +1426,5 @@ ownership operations and original ARM O1 size rejection. The
 [Swift report](measurements/swift-peers.md) retains four completed native sessions,
 all noisy rows, different AMD64 CPUs and the independent artifact audit.
 PR #235 adds [phase timing](measurements/callable-phases.md) and carries any
-required repairs. No elapsed-time benefit for borrowed calls is claimed yet.
+required repairs. Invocation improves in the qualified phase comparisons, but
+three AMD64 construction regressions leave combined timing acceptance open.
