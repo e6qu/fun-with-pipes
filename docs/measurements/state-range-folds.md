@@ -93,4 +93,17 @@ eligibility check and its declaration; the two-allocation budget is unchanged.
 macOS also failed two TLS-using targets because this focused workflow omitted
 `FWP_OPENSSL_DIR`; the repair supplies the documented setting. Both Linux runs
 passed all 225 compiler unit tests; macOS passed 224 and failed the TLS case.
-These repairs and the code/stack budgets still require runner verification.
+The repair run `41158976900` at `f82016d9` passes all 247 focused Rust cases on
+all three hosts, including the exact cost assertion and both TLS cases. Linux
+also passes the two measurement controls. The native code-size check fails:
+ARM worker bytes grow from 1,880 to 2,136 (13.62%); AMD grows from 1,814 to 2,109
+(16.26%). Largest frame components stay 944/1,008 bytes respectively. These
+are failed 5% checks even though total executable `.text` grows much less.
+
+Generated C retains an unused boxed-step callback through the runtime table,
+alongside the direct loop. The next repair marks the runtime entry as needed
+only when some use actually creates/calls that function value. Ordinary function
+values must keep their entries; a regression covers both cases. Neither the
+code-size metric nor its 5% limit changes. G2's Intel timing control also fails;
+the [analysis report](ownership-analysis.md#state-range-recheck) records that
+failure and the batch-order correction being checked.

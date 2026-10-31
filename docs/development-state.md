@@ -1,7 +1,13 @@
 # Current work
 
-**Next:** publish and verify the combined unit-field/OpenSSL repair and native
-code/stack check on GCC Linux ARM64/AMD64 and Clang macOS ARM64. First focused
+**Next:** publish the unused-loop-entry and analysis-order repairs, then verify
+all three focused hosts and both G2 hosts. Repair `f82016d9` passes all 247 Rust
+cases on each focused host, but code-size budgets fail on both Linux hosts;
+G2's Intel identical-copy timing control also fails. Keep all original limits.
+Focused run `41158976900`, G2 run `41158981359`. The three focused
+jobs are GCC AMD `124412028515`, GCC ARM `124412028732`, Clang ARM `124412028844`.
+G2 jobs: Intel macOS `124412043318`, Linux AMD `124412043370`.
+Audit all completed targets and diagnostics before any further repair push. First focused
 run `41157639553` at `855f53ce8d3dd3aaebb62e97112a3afb6a860226` is fully audited:
 Linux has one failing exact-cost case each; macOS has that case and two
 missing-OpenSSL-header failures. All other completed targets pass.
@@ -20,8 +26,11 @@ delivery worktree has the full documentation.
 [PR #232](https://github.com/e6qu/fun-with-pipes/pull/232) remains the only open
 PR. Its worktree is `/private/tmp/fwp-ownership-peer-baselines`; preserve head
 `05d96484a77241c9782a420e76ea69094b965e11` while final gates run. Production run
-`41153845461`, docs run `41153845377`: documentation, benchmarks and both ARM macOS jobs pass and their complete
-logs are audited; six platform jobs remain running. The active
+`41153845461`, docs run `41153845377`: documentation, benchmarks, both ARM macOS
+jobs, Intel ownership and both Windows hosts pass with complete log audits. Two Linux jobs remain
+running; Intel regular passes its tests but artifact creation fails with DNS
+`ENOTFOUND`. GitHub refuses a job rerun until the original run finishes (HTTP 403).
+The active
 worktree's handoff owns every job ID, prior failure audit and recovery details.
 Squash-merge only after all nine production jobs and docs pass, with one subject
 of at most 80 characters and an explicitly empty body. Verify the merged tree.
@@ -57,6 +66,29 @@ restoring the root-completion call bypassed by replacing CLI dispatch. Its
 initial observer failure was a harness defect, not a runtime leak. No full
 local build or suite ran. Final runner measurements and repaired compiler
 checks remain pending; do not claim either from these preflights.
+
+## Remaining focused repairs
+
+At `f82016d9`, all three hosts pass 247 Rust cases; macOS's complete log audit
+passes. Both Linux jobs also pass two measurement controls, but worker code
+grows 13.62%/16.26% (ARM/AMD), above the frozen 5%. Frames are unchanged.
+Retained ARM generated C identifies an unused boxed-step entry kept through the
+runtime function table. The repair avoids marking that entry for direct loops;
+other function-value uses still require it. A new regression tests both uses.
+The new regression's source/output preflight passes (0.61s); its first draft
+used invalid record syntax/function application, corrected before publication.
+
+G2 Linux passes all checks (227 Rust cases, complete log audit). All three failed
+Linux size/Intel G2 jobs are completely audited; there are no other diagnostics
+or failed targets. Intel passes
+units, lint, counts, absolute limits and startup, but N=32's identical copies
+differ by 5.63% (>5%). Logs and audits use `/private/tmp/fwp-state-*-f820.*`.
+The repaired six-order sequence balances each 64-triplet batch's copy positions,
+not merely the whole run. No sample count, batch size, median or limit changes.
+An extracted production-O1 Rust check passes the new schedule and rejects the
+old one (1.34s). This repairs a protocol imbalance; it does not establish that
+the Intel variation is resolved. The complete failed observation stays recorded
+in [the analysis report](measurements/ownership-analysis.md#state-range-recheck).
 
 Preserve the dirty detached primary checkout and original CI archives. Full
 builds, broad tests and measurements belong on GitHub. No local guard limit may

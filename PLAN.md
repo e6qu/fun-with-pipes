@@ -109,7 +109,9 @@ records eight paired fixtures, exact allocation expectations, lifetime rules,
 stack observations and the accepted restricted scalar mutual-loop transformation.
 
 Known calls avoid selected closure/dispatch costs; unknown calls retain required
-owners. State `each` still allocates per element. Weak metadata and proved plain
+owners. The verified State `each` baseline allocates per element; the B1
+[range candidate](docs/measurements/state-range-folds.md) targets that list only,
+with final verification pending. Weak metadata and proved plain
 captures may survive the loop transformation; strong resources, tasks and unknown
 captures retain their restrictions. Arbitrary recursion, resource frames and
 foreign calls are not promised constant stack space.

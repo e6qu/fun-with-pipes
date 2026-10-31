@@ -508,9 +508,9 @@ impl Fuser<'_> {
     /// A known State consumer can receive range bounds instead of a list.
     /// Keep the handler itself: only its input and callback representation change.
     fn state_range(&mut self, handler: FuncId, args: &[Expr]) -> Option<Expr> {
-        if std::env::var("FWP_STATE_RANGE_FUSION").as_deref() == Ok("0")
-            || prim_sym(self.funcs, handler) != Some("run-state")
+        if prim_sym(self.funcs, handler) != Some("run-state")
             || args.len() != 3
+            || std::env::var("FWP_STATE_RANGE_FUSION").as_deref() == Ok("0")
         {
             return None;
         }

@@ -5472,7 +5472,10 @@ impl<'g, 'p> FnGen<'g, 'p> {
         {
             return None;
         }
-        if n == 0 || !matches!(sym.as_str(), "fold" | "fold-right") {
+        let direct_loop = sym == "loop" && n == 0 && loop_shape(&self.g.prog.funcs[g]).is_some();
+        if !direct_loop && (n == 0 || !matches!(sym.as_str(), "fold" | "fold-right")) {
+            // A specialized loop executes its step body directly. Keep a
+            // runtime entry only if another use actually creates that value.
             self.g.used_closures[g] = true;
         }
         if matches!(
