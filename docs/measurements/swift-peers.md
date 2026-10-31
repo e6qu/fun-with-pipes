@@ -108,9 +108,11 @@ value is 16 bytes, aligned to eight bytes; that is not its total captured storag
 A separate reference-capture control observes normal release and detects an
 intentionally retained closure. It does not count scalar-closure allocations.
 
-Next, measure callable construction/invocation/release and the fwp candidate
-against the same source with its count optimization disabled. Add Swift allocation
-and ARC-operation observations before attributing costs to ownership. Keep
+The [closure phase comparison](callable-phases.md) now measures construction,
+invocation and release against the same fwp source with its count optimization
+disabled. It retains three AMD64 construction regressions and failed noise
+controls. Add Swift allocation and ARC-operation observations before attributing
+costs to ownership. Keep
 parser, weak-subscription and numerical Swift comparisons as explicit missing
 coverage. The existing D2/N1 timing failures remain open. Prioritize measured
 execution time and working memory, retaining executable-size costs as context.

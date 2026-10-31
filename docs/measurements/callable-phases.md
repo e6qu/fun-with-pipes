@@ -94,7 +94,12 @@ Source `dfb6ff8e8aac215009e9a9cf48a8bce492ef4eae`,
 passes both jobs: ARM64 `124589718380`, AMD64 `124589718541`. Each completes both
 sessions and audits its artifacts. The [summary](callable-phases-2026-10-31.json)
 retains all phase medians, copy decisions, memory samples, CPUs and artifact IDs.
-Raw artifacts currently expire in January 2027; the summary is not their replacement.
+The complete [AMD64 archive](callable-phases-amd64-2026-10-31.zip) and
+[ARM64 archive](callable-phases-arm64-2026-10-31.zip) retain raw samples, commands,
+sources, binaries and memory/control observations for both sessions. Their
+digest-checked CI audit recomputes the summary without executing saved binaries.
+The source is retained by `roadmap/callable-phases-2026-10-31`; GitHub's expiring
+artifacts are no longer the only copies of this experiment.
 Both jobs pass six timing-record tests, 56 clock executions, 33 Swift arithmetic
 cases and both fwp variants' cleanup/count controls. The only setup diagnostic is
 an absent C++ manual page; there are no compiler warnings in these jobs.
@@ -131,6 +136,25 @@ has markedly different absolute durations and failed copy controls; do not merge
 it with later durations or retry it unchanged. Three qualified construction
 regressions remain even after excluding that case. Faster overall execution does
 not erase them or satisfy the frozen combined rule.
+
+For the three AMD64 case/session rows with qualified invocation comparisons,
+the peer costs are below. These ranges describe individual observations, not a
+pooled result; addition qualifies only in session 2. RAM covers all twelve
+separate samples per implementation, including the first case's memory runs.
+
+| Implementation | Invoke 16,777,216 times | Complete process | Peak resident RAM |
+|---|---:|---:|---:|
+| C inline capture | 19.56–24.45 ms | 21.69–26.63 ms | 1,660–1,780 KiB |
+| Rust core, C caller | 19.60–24.45 ms | 21.74–26.63 ms | 1,660–1,780 KiB |
+| Swift native closure | 313.69–313.92 ms | 395.63–397.20 ms | 9,352–10,140 KiB |
+| Reference fwp | 384.61–387.08 ms | 424.11–428.28 ms | 1,868–2,188 KiB |
+| Current fwp | 175.12–175.28 ms | 217.84–218.71 ms | 1,868–2,264 KiB |
+
+Current fwp takes about 44% less invocation time than Swift in these three rows,
+but 7.2–8.9 times Rust's invocation time. Its smaller resident footprint includes
+runtime/library differences; it is not a measurement of ARC overhead alone.
+The first addition observation remains in the summary with failed invocation
+controls and is excluded from these timing ranges, not deleted.
 
 The source construction path is unchanged between the reference and current
 variants: allocate storage, set function/count fields, copy captures, establish

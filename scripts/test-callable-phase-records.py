@@ -1,9 +1,13 @@
 """Preserve workload identity and reject noisy, short or damaged phase records."""
 import copy
+from contextlib import redirect_stdout
 import hashlib
+import io
 import json
 import importlib.util
 from pathlib import Path
+import tempfile
+from types import SimpleNamespace
 import unittest
 import zipfile
 
@@ -144,6 +148,34 @@ class PhaseRecords(unittest.TestCase):
                     self.assertIn(name, functions["reference"])
                     self.assertIn(name, functions["fwp"])
                     self.assertEqual(functions["reference"][name], functions["fwp"][name])
+
+    def test_permanent_raw_archives_reproduce_all_four_sessions(self):
+        source = "dfb6ff8e8aac215009e9a9cf48a8bce492ef4eae"
+        artifacts = {
+            "amd64": ("x86_64", "e9339d54f15ca511738d4f740a788b983a724737a466cd5fe70c51496be82a49"),
+            "arm64": ("aarch64", "38df765e6b19e37b929ebf550678d1c5c5c1e0d33a4b721449ad919222adef85"),
+        }
+        saved = json.loads((PHASE.ROOT / "docs/measurements/callable-phases-2026-10-31.json").read_text())
+        for name, (arch, digest) in artifacts.items():
+            path = PHASE.ROOT / f"docs/measurements/callable-phases-{name}-2026-10-31.zip"
+            self.assertEqual(hashlib.sha256(path.read_bytes()).hexdigest(), digest)
+            with zipfile.ZipFile(path) as archive, tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                archive.extractall(root)
+                for session in (1, 2):
+                    folder = root / f"callable-phase-evidence-{session}"
+                    # Audit outputs, commands, checksums, native file headers,
+                    # ownership controls and every sample without executing code.
+                    with redirect_stdout(io.StringIO()):
+                        PHASE.audit(SimpleNamespace(input=folder, source=source, arch=arch))
+                    report = json.loads((folder / "report.json").read_text())
+                    summary = next(row for row in saved["sessions"]
+                                   if (row["architecture"], row["session"]) == (arch, session))
+                    self.assertEqual(summary["cpu"], report["cpu"])
+                    for case in summary["cases"]:
+                        original = report["cases"][str(case["kind"])]
+                        self.assertEqual(case["phases"], original["summary"])
+                        self.assertEqual(case["memory"], original["memory"])
 
     def test_reference_requires_exactly_one_real_guard(self):
         runtime = (PHASE.ROOT / "runtime/fwp_rt_heap.c").read_text()

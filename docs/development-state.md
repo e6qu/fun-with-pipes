@@ -55,12 +55,17 @@ The snapshot test passes in docs `41221082589` / `124595586076`; that log and
 earlier docs `41220304693` / `124593276704` are reviewed, with only intentional
 test-runner failure controls. The complete compiler-report archives are now
 retained in the repository; their new integrity/body-equality test awaits CI.
+Both complete phase archives are also retained (about 4.3 MiB compressed), with
+a read-only test auditing all four sessions against the summary. Measured source
+`dfb6ff8e` is retained by `roadmap/callable-phases-2026-10-31`.
 Shared-constructor study
 `41222337204`, source `17a6d13c`, is queued: AMD64 `124599348496` and ARM64
-`124599348603`. Its record controls and docs `41222339131` remain pending.
+`124599348603`. Its record controls remain pending. Superseded docs
+`41222339131` was cancelled while queued; docs `41223876762` / `124603867592`
+at `fd075c32` is queued. The next docs gate must verify the raw-archive audit too.
 Check actual CPU models before attributing observations to the original host.
 Main macOS ARM64 regular `124588033328`, Intel macOS ownership `124588033386`
-and Windows AMD64 `124588033538` pass. Their logs contain no unexpected compiler
+and Windows AMD64 `124588033538` and ARM64 `124588033441` pass. Their logs contain no unexpected compiler
 diagnostics; Windows includes intentional scheduler panics and the rejected-CA
 TLS control. Other production jobs remain running/queued.
 
