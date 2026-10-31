@@ -86,4 +86,40 @@ main = [
     32 | both each-count (unknown-each (accumulate ())) | echo,
     32 | both folded (unknown-fold (addition ())) | echo,
     32 | both state-loop (unknown-state (state-callback ())) | echo,
+    32 | both pipe named-pipe | echo,
+    32 | both partial named-partial | echo,
+    32 | both borrowed named-borrowed | echo,
+    32 | both captured named-captured | echo,
+    32 | both result named-result | echo,
+    32 | both each-count named-each-count | echo,
+    32 | both folded named-folded | echo,
+    32 | both state-loop named-state-loop | echo,
 ] | ignore
+
+# The same work with lexical values: names must not introduce runtime costs.
+export named-pipe : I64 -> I64
+named-pipe = fn n -> let incremented = n + 1 in incremented * 2
+export named-partial : I64 -> I64
+named-partial = fn n -> let add-n = add n in add-n n
+export named-borrowed : I64 -> I64
+named-borrowed = fn n ->
+    let values = array.generate n (fn i -> i)
+    in values | array.map (fn x -> x + 1) | array.fold add 0
+export named-captured : I64 -> I64
+named-captured = fn n -> let calculate = fn x -> (x + n) * 2 in calculate 3
+export named-result : I64 -> I64
+named-result = fn n -> let result = produce n in consume result
+export named-each-count : I64 -> I64
+named-each-count = fn n ->
+    let values = range 0 n
+    in values | run-state 0 (each (fn value -> modify (add value))) | .1
+export named-folded : I64 -> I64
+named-folded = fn n ->
+    let values = range 0 n
+    in values | fold (fn value -> fn total -> total + value) 0
+export named-state-loop : I64 -> I64
+named-state-loop = fn n ->
+    let step = match
+        0 -> Stop ()
+        remaining -> let _ = modify (add remaining) in Again (remaining - 1)
+    in n | run-state 0 (loop step) | .1

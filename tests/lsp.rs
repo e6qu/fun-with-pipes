@@ -422,6 +422,15 @@ fn local_navigation_and_rename_preserve_shadowing_and_field_labels() {
     assert!(edits
         .iter()
         .any(|e| e.get("newText").and_then(Json::as_str) == Some("x = value")));
+    let completions = c.request("textDocument/completion", at(&uri, 1, field + 1));
+    let locals: Vec<_> = completions
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|item| item.get("label").and_then(Json::as_str) == Some("x"))
+        .collect();
+    assert_eq!(locals.len(), 1, "{completions}");
+    assert_eq!(locals[0].get("detail").and_then(Json::as_str), Some("I64"));
     let hover = c.request("textDocument/hover", at(&uri, 1, field));
     assert!(hover
         .at(&["contents", "value"])

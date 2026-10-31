@@ -100,6 +100,36 @@ fn named_tacit_captures_and_macros_agree_across_backends() {
             None,
         ),
         (
+            "capture-error",
+            r#"work : () -> I64 ! {IO, Error[String]}
+work = fn _ ->
+    let text = read-all () | concat "stop"
+    in let append = fn suffix -> text | concat suffix
+    in fail (append "!")
+main = attempt work () | echo
+"#.into(),
+            "Err \"stop!\"\n",
+            None,
+        ),
+        (
+            "capture-cancel",
+            r#"worker : Channel[()] -> () -> String ! {Async, IO}
+worker = fn ready -> fn _ ->
+    let text = read-all () | concat "held"
+    in let append = fn suffix -> text | concat suffix
+    in let _ = channel.send ready ()
+    in loop (fn saved -> let _ = task.yield () in Again saved) append | apply "!"
+main = task.scope (fn _ ->
+    let ready = channel.make 0
+    in let running = task.spawn (worker ready)
+    in let _ = channel.recv ready
+    in let _ = task.cancel running
+    in task.await running | echo)
+"#.into(),
+            "None\n",
+            None,
+        ),
+        (
             "order",
             "main = let x = (\"first\" | echo) in let y = (\"second\" | echo) in ()\n".into(),
             "first\nsecond\n",
@@ -164,4 +194,30 @@ fn named_tacit_captures_and_macros_agree_across_backends() {
         }
     }
     std::fs::remove_dir_all(directory).unwrap();
+}
+
+#[test]
+fn generated_clients_escape_language_keywords() {
+    for keyword in ["fn", "let", "in"] {
+        let document = format!(
+            r#"{{"openapi":"3.0.0","info":{{"title":"keywords","version":"1"}},
+            "paths":{{"/value":{{"get":{{"operationId":"{keyword}","responses":{{"204":{{"description":"empty"}}}}}}}}}},
+            "components":{{"schemas":{{"Record":{{"type":"object","properties":{{"{keyword}":{{"type":"integer"}}}},"required":["{keyword}"]}}}}}}
+        }}"#
+        );
+        let generated = fwp::openapi_import::client(&document).unwrap();
+        assert!(
+            generated.text.contains(&format!("{keyword}-op")),
+            "{}",
+            generated.text
+        );
+        assert!(
+            generated.text.contains(&format!("{keyword}-field")),
+            "{}",
+            generated.text
+        );
+        if let Err(error) = check_source("client.fwp", &generated.text, None) {
+            panic!("{}\n{}", generated.text, error.rendered);
+        }
+    }
 }

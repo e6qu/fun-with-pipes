@@ -51,8 +51,9 @@ complete the remaining optimization/evidence steps. Nothing here is verified
 language support until focused and final-head checks pass.
 
 Run `41243195909` remained queued without starting any of its three jobs and is
-superseded by the integrated batch. The next focused workflow includes debugger,
-editor, ownership, tutorials, generated docs and the raw interpreter corpus.
+superseded by the integrated batch. Run `41243748366` also stayed queued with no started jobs and is superseded by
+the next batch. The focused suite now includes the named/tacit cost matrix,
+debugger, editor, ownership, tutorials, generated docs and raw interpreter corpus.
 
 Use `fn pattern -> body` and `let pattern = value in body`. Bindings are immutable,
 strict and nonrecursive. In fn/let, `_` discards; existing match holes still forward
@@ -65,7 +66,7 @@ The handoff changes from the previous design-review turn are preserved.
 |---|---|---|
 | 1 | In progress | Complete and verify local bindings, named inputs and patterns |
 | 2 | In progress | Update all syntax consumers, tooling and teaching material |
-| 3 | Pending | Prove and measure named/tacit direct-call and capture equivalence |
+| 3 | In progress | Eight named/tacit cost pairs added; compiler validation pending |
 | 4 | Pending | Extend measured borrowing/move cases |
 | 5 | Pending | Extend direct tuple/record/variant representation |
 | 6 | Pending | Extend eligible collection pipeline removal |
@@ -120,3 +121,19 @@ assertions and overflow checks enabled; 0.66 CPU seconds to compile, 0.01 second
 test time). This builds only the documentation generator, not the compiler.
 The updated roadmap audit still passes all 192 link sets, 106 preparation pairs
 and ten steps (3.65 seconds). Formatting and `git diff --check` pass.
+
+The third batch removes wrapper matches/aliases for simple fn inputs, adds eight
+named/tacit cost pairs, captures across handled error and synchronized cancellation,
+and lexical editor completions. OpenAPI generation now uses the lexer keyword
+list rather than a stale duplicate. Source and macro patterns share validation,
+including validation before hygienic freshening. An encountered inline Rust import
+in `closure_cleanup` moved to the header. Recent merged PRs #230–235 are indexed.
+
+Focused parser/formatter validation uses actual source modules and the unchanged
+`escape_str` function in a temporary standalone harness: all 13 checks pass,
+including changed programs and round trips (3.10 CPU seconds to compile, 0.02
+seconds test time). This checks syntax only. The existing standalone tutorial
+source/output-copy test passes for all lessons (1.17 CPU seconds to compile,
+0.01 seconds test time). The library generator, formatting and roadmap audit pass.
+No full compiler build or full suite ran locally; native/type/ownership results
+remain pending. Full production validation waits for the completed batch.

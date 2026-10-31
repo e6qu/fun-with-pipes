@@ -26,16 +26,12 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Write as _;
 
 use crate::json::Json;
+use crate::lexer::Kw;
 
 pub struct Module {
     pub text: String,
     pub warnings: Vec<String>,
 }
-
-const KEYWORDS: &[&str] = &[
-    "rec", "match", "trait", "impl", "where", "comptime", "import", "export", "macro", "quote",
-    "resource", "foreign", "with", "type", "test", "make", "update",
-];
 
 /// Names the generated code uses, which an operation must not shadow.
 const RESERVED_FUNCS: &[&str] = &["curry", "const", "id", "main", "builtin"];
@@ -177,7 +173,7 @@ fn kebab(s: &str) -> String {
 /// Whether a name is an fwp name (of a field or a function) as it is.
 fn is_fwp_name(s: &str) -> bool {
     let b = s.as_bytes();
-    if b.is_empty() || !b[0].is_ascii_lowercase() || KEYWORDS.contains(&s) {
+    if b.is_empty() || !b[0].is_ascii_lowercase() || Kw::from_str(s).is_some() {
         return false;
     }
     b.iter().enumerate().all(|(i, &c)| {
@@ -194,7 +190,7 @@ fn fwp_name(s: &str) -> String {
     } else {
         kebab(s)
     };
-    if KEYWORDS.contains(&n.as_str()) {
+    if Kw::from_str(&n).is_some() {
         n.push_str("-field");
     }
     n
@@ -1058,7 +1054,7 @@ fn operation(
         .map(str::to_string)
         .unwrap_or_else(|| format!("{} {}", method.to_ascii_lowercase(), path));
     let mut name = kebab(&id);
-    if KEYWORDS.contains(&name.as_str()) {
+    if Kw::from_str(&name).is_some() {
         name.push_str("-op");
     }
     if RESERVED_FUNCS.contains(&name.as_str()) {

@@ -20,7 +20,7 @@ fn functional_call_matrix_counts_executed_work_and_releases_owners() {
     );
     assert_eq!(
         raw.stdout,
-        b"(66, 66)\n(64, 64)\n(528, 528)\n(70, 70)\n(65, 65)\n(496, 496)\n(496, 496)\n(528, 528)\n"
+        b"(66, 66)\n(64, 64)\n(528, 528)\n(70, 70)\n(65, 65)\n(496, 496)\n(496, 496)\n(528, 528)\n(66, 66)\n(64, 64)\n(528, 528)\n(70, 70)\n(65, 65)\n(496, 496)\n(496, 496)\n(528, 528)\n"
     );
     assert!(raw.stderr.is_empty(), "{raw:?}");
     let (_, program) = fwp::driver::compile_source(
@@ -134,6 +134,7 @@ fn functional_call_matrix_counts_executed_work_and_releases_owners() {
     ] {
         for (variant, expression) in [
             ("known", format!("{}(n)", entry(name))),
+            ("named", format!("{}(n)", entry(&format!("named-{name}")))),
             ("boundary", control),
         ] {
             calls.push_str(&format!(
@@ -249,7 +250,7 @@ int main(int argc, char **argv) {{
                     .is_none());
             }
         }
-        assert_eq!(observations.len(), 32);
+        assert_eq!(observations.len(), 48);
         // Freeze the measured known-call costs, including costs still present.
         // All supported native targets use 64-bit values. These are runtime
         // requests, not C instructions; changing them needs a measured decision.
@@ -269,6 +270,13 @@ int main(int argc, char **argv) {{
                     expected,
                     "known-call cost changed: {name} n={n}: {report}"
                 );
+                let named = &observations[&(name.into(), "named".into(), n)];
+                for (got, limit) in named.iter().zip(expected) {
+                    assert!(
+                        *got <= limit,
+                        "named form adds work: {name} n={n}: {report}"
+                    );
+                }
             }
         }
         for name in [

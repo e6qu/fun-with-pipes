@@ -428,4 +428,6 @@ architecture. Full grouped platform checks subsequently pass in
 The [implementation plan](../../PLAN.md#8-automatic-differentiation) owns acceptance and
 [the handoff](../development-state.md) owns the current action. D1's repeated baseline
 and fixed limits are complete. PR #226 verifies the allocation-only delivery;
-the eager-capture report owns the next D2 experiment and its delivery status.
+the [eager-capture report](eager-captures.md) records the subsequent change.
+The original combined timing requirement remains open; the current plan calls
+for separating forward recording, backward traversal, results and retirement.

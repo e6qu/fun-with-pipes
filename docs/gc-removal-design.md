@@ -162,8 +162,9 @@ The subscription contract remains [lesson 24](tutorials/24-subscriptions/README.
 finish drains; stop cancels and awaits; both wait for active work. The existing
 failure, reentry and cancellation tests remain required. Returned partial
 applications likewise keep their captures; weak observation must not shorten
-that lifetime. The parser/AD row preserves current scoped guarantees; A6 adds
-the new count-free parser region after GC removal.
+that lifetime. The parser/AD row preserves scoped guarantees; the
+[parser workspace](parser-workspace.md) verifies the bounded count-free region
+added after GC removal. General region inference remains outside that proof.
 
 **Retained C callbacks use an explicit registration protocol.**
 [Selected C exports](retained-callbacks.md) can register copied leading arguments

@@ -592,6 +592,27 @@ fn set_span(e: &mut Expr, span: Span) {
 /// the given span).
 pub fn from_value(v: &Value, span: Span, next_id: &mut NodeId) -> Result<Expr, String> {
     let mut e = Builder { next_id, span }.expr(v)?;
+    // Validate before fresh identities could hide duplicate introduced names.
+    let mut invalid = None;
+    e.walk(&mut |node| {
+        let mut check = |p: &Pattern, refutable| {
+            if invalid.is_none() {
+                invalid = p.validate(refutable).err().map(|d| d.message);
+            }
+        };
+        match &node.kind {
+            ExprKind::Let(p, _, _) | ExprKind::Lambda(p, _) => check(p, false),
+            ExprKind::Match(arms) => {
+                for arm in arms {
+                    check(&arm.pat, true);
+                }
+            }
+            _ => {}
+        }
+    });
+    if let Some(message) = invalid {
+        return Err(message);
+    }
     rename_binders(&mut e, &mut Vec::new(), &|id, name| {
         if name.starts_with("::local::") {
             format!("::local::{id}::{}", name.rsplit("::").next().unwrap())

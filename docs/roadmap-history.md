@@ -6,6 +6,35 @@ and complete platform validation are different events. Measurements retain their
 original source and settings; old numbers are not measurements of current main.
 The linked PRs, runs and data records supply the detailed evidence.
 
+## Closures and peer measurements (PR #235)
+
+[PR #235](https://github.com/e6qu/fun-with-pipes/pull/235) measures construction,
+invocation and release against Swift, C and Rust. It retains the original three
+AMD64 construction regressions, passing RAM limits and later inconclusive timing
+controls. A different CPU or a faster noisy sample does not settle those failures.
+[The phase report](measurements/callable-phases.md) contains the sources, raw
+archives, work counts and limits; Swift allocation/count attribution remains open.
+
+All nine [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/41229416050)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/41229416071)
+pass with complete log audits. Merge `781ebabb0463efc2f03f0d3aa44b7d2c4766959d`
+and tested head `adeb9794544cd12deae3f7050fef79cf874a3f55` share tree
+`9eda0ac6113d18741d9b0f85c1dcadbba409b2ac`. The user merged it. No speculative
+runtime patch was justified by the constructor investigation.
+
+## Intervening deliveries (PRs #230–234)
+
+This index records merged source, not a new validation or timing claim. Linked
+reports retain each delivery's exact checks and any failed acceptance controls.
+
+| PR | Change and evidence | Merge commit |
+|---|---|---|
+| [230](https://github.com/e6qu/fun-with-pipes/pull/230) | [Windows file cleanup](measurements/file-read-failures.md) and roadmap simplification | `3639f4fad3da318346340f92a89d8ba127f04e73` |
+| [231](https://github.com/e6qu/fun-with-pipes/pull/231) | Scalar fold overhead and benchmark timing repair; [retained records](measurements/scalar-fold-artifacts-2026-10-30.json) | `97b2c29ae15ebec84f2534c523b8f1260fd2fb67` |
+| [232](https://github.com/e6qu/fun-with-pipes/pull/232) | [Temporary generated-array removal](measurements/generated-array-folds.md) | `c71ac217c5ea09d8bf1868f799fc0d8a574d2e2a` |
+| [233](https://github.com/e6qu/fun-with-pipes/pull/233) | [Range-list removal in State folds](measurements/state-range-folds.md) | `73a6b20d4d10a4f2dff50d78dc0b32ee2c17b4b5` |
+| [234](https://github.com/e6qu/fun-with-pipes/pull/234) | [Borrowed calls and Swift comparison](measurements/returned-callables.md); timing acceptance remained open | `219e3a0130c18d60750fd55ec9c0a684c1dcefd4` |
+
 ## String costs and application cleanup (PR #229)
 
 Uniquely owned, non-growing string replacements reuse their storage; one-byte

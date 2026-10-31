@@ -1536,6 +1536,24 @@ impl<'a> Mono<'a> {
                 .map(|(i, (id, _))| (*id, i as Local))
                 .collect(),
         };
+        // A name is the input slot itself, not a runtime pattern match or alias.
+        // Unit/discard inputs also need no test after type checking. Resource
+        // preservation still sees the original typed function parameter.
+        if let ExprKind::Lambda(pattern, body) = &e.kind {
+            if matches!(
+                pattern.kind,
+                PatKind::Bind(_) | PatKind::Ignore | PatKind::Unit
+            ) {
+                if matches!(pattern.kind, PatKind::Bind(_)) {
+                    fb.bindings.insert(pattern.id, input);
+                }
+                let body = self.expr(body, s, &mut fb)?;
+                let function = &mut self.prog.funcs[id];
+                function.body = Body::Expr(body);
+                function.locals = fb.locals;
+                return Ok(());
+            }
+        }
         let arms: Vec<(&ast::Pattern, &ast::Expr)> = match &e.kind {
             ExprKind::Lambda(p, b) => vec![(p, b)],
             ExprKind::Match(arms) => arms.iter().map(|a| (&a.pat, &a.body)).collect(),

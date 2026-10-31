@@ -1,6 +1,7 @@
 //! Abstract syntax tree.
 
-use crate::diag::Span;
+use crate::diag::{Diagnostic, Span};
+use std::collections::HashSet;
 
 pub type NodeId = u32;
 
@@ -454,6 +455,44 @@ impl Decl {
 }
 
 impl Pattern {
+    /// Macro syntax enters after parsing, so admission cannot rely on parser checks.
+    pub fn validate(&self, refutable: bool) -> Result<(), Diagnostic> {
+        fn visit(
+            p: &Pattern,
+            refutable: bool,
+            names: &mut HashSet<String>,
+        ) -> Result<(), Diagnostic> {
+            match &p.kind {
+            PatKind::Bind(name) => {
+                if !names.insert(name.clone()) {
+                    return Err(Diagnostic::error(p.span, format!("duplicate pattern binding `{name}`")));
+                }
+            }
+            PatKind::Ignore | PatKind::Unit => {}
+            PatKind::Tuple(items) => {
+                for item in items { visit(item, refutable, names)?; }
+            }
+            PatKind::Record(fields) => {
+                let mut labels = HashSet::new();
+                for (label, value) in fields {
+                    if !labels.insert(label) {
+                        return Err(Diagnostic::error(value.span, format!("duplicate pattern field `{label}`")));
+                    }
+                    visit(value, false, names)?;
+                }
+            }
+            _ if !refutable => return Err(Diagnostic::error(p.span,
+                "fn, let and record field patterns must always match; use match for alternatives (PIgnore discards a macro binder)")),
+            PatKind::Ctor(_, Some(items)) => {
+                for item in items { visit(item, true, names)?; }
+            }
+            _ => {}
+        }
+            Ok(())
+        }
+        visit(self, refutable, &mut HashSet::new())
+    }
+
     /// Visit named leaves, retaining their source positions and identities.
     pub fn walk_bindings(&self, f: &mut dyn FnMut(&Pattern, &str)) {
         match &self.kind {

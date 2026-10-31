@@ -178,7 +178,7 @@ does this at several stages, not in one universal desugaring pass.
 | `comptime e` | The checked expression runs in the interpreter during specialization/lowering; its result becomes an IR constant. |
 | `{ x }` | Parser expands the field to `x = x`; no implicit input is introduced. |
 | `let pattern = value in body` | Inference assigns lexical binding identities; lowering evaluates the value once, then binds a local or destructures an irrefutable match. |
-| `fn pattern -> body` and named match arms | Lowering creates a function with explicit capture parameters followed by its single source input. Existing specialization/ownership passes see ordinary typed IR. |
+| `fn pattern -> body` and named match arms | Lowering creates a function with explicit capture parameters followed by its single source input. A simple fn name uses that input slot directly; no wrapper match or alias is emitted. Destructuring uses typed patterns. |
 | Generic calls | Concrete used types select specialized functions and trait methods. |
 
 `a - b` is not rewritten to `sub b a` by swapping unevaluated expressions: that

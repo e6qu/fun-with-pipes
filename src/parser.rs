@@ -1177,14 +1177,14 @@ impl<'a> Parser<'a> {
             Tok::Keyword(Kw::Fn) => {
                 let mut pat = self.pattern()?;
                 Self::irrefutable(&mut pat)?;
-                Self::unique_bindings(&pat)?;
+                pat.validate(true)?;
                 self.expect_sym(Sym::Arrow)?;
                 ExprKind::Lambda(pat, Box::new(self.expr()?))
             }
             Tok::Keyword(Kw::Let) => {
                 let mut pat = self.pattern()?;
                 Self::irrefutable(&mut pat)?;
-                Self::unique_bindings(&pat)?;
+                pat.validate(true)?;
                 self.expect_sym(Sym::Eq)?;
                 let value = self.expr()?;
                 if !self.at_kw(Kw::In) || self.at_boundary_strict() {
@@ -1207,7 +1207,7 @@ impl<'a> Parser<'a> {
     fn match_arms(&mut self, span: Span) -> DResult<Vec<Arm>> {
         let arms = self.block(|p| {
             let pat = p.pattern()?;
-            Self::unique_bindings(&pat)?;
+            pat.validate(true)?;
             p.expect_sym(Sym::Arrow)?;
             let body = p.expr()?;
             Ok(Arm { pat, body })
@@ -1240,32 +1240,6 @@ impl<'a> Parser<'a> {
             )),
         }
         Ok(())
-    }
-
-    fn unique_bindings(p: &Pattern) -> DResult<()> {
-        fn visit(p: &Pattern, seen: &mut std::collections::HashSet<String>) -> DResult<()> {
-            match &p.kind {
-                PatKind::Bind(name) if !seen.insert(name.clone()) => {
-                    return Err(Diagnostic::error(
-                        p.span,
-                        format!("duplicate pattern binding `{name}`"),
-                    ))
-                }
-                PatKind::Tuple(ps) | PatKind::Ctor(_, Some(ps)) => {
-                    for p in ps {
-                        visit(p, seen)?;
-                    }
-                }
-                PatKind::Record(fs) => {
-                    for (_, p) in fs {
-                        visit(p, seen)?;
-                    }
-                }
-                _ => {}
-            }
-            Ok(())
-        }
-        visit(p, &mut std::collections::HashSet::new())
     }
 
     fn pattern(&mut self) -> DResult<Pattern> {

@@ -53,11 +53,26 @@ Unknown-call controls must execute a runtime application; known callbacks must
 not add applications as input size grows. Existing alias, callback-failure and
 caller-cleanup tests run alongside this matrix.
 
-The next [borrowed-call change](measurements/returned-callables.md) removes one
+The later [borrowed-call change](measurements/returned-callables.md) removed one
 application-helper entry from each known State case, keeping two allocations
-and 152 requested bytes. The maintained expectations reflect that candidate;
-three-host and full production verification are still pending. Historical
-State-range measurements retain their original two-entry observations.
+and 152 requested bytes. PR #235 passed the full production matrix; its timing
+comparisons remain qualified separately in the [phase report](measurements/callable-phases.md).
+Historical State-range measurements retain their original two-entry observations.
+
+### Local names: candidate coverage
+
+The same fixture now includes eight named versions using `fn`, `let`, local
+callbacks and named match arms. The native probe calls all three forms—known
+tacit, known named and unknown/escaping control—with inputs 32 and 128. It requires
+the named version to add no allocation requests, bytes, runtime applications,
+boxes or retains relative to the maintained known-form limits. Each call must
+restore live storage and cleanup state. Source, generated C, executable and
+binary listing are retained with the existing artifact setting.
+
+These additions are awaiting compiler validation in PR #236. They establish a
+finite test scope, not a measured speedup or a claim that every local function
+is free. The source forms, inputs, phase boundaries and existing limits are
+fixed before inspecting the candidate counts.
 
 These counters describe operations requested by generated C. One application can
 enter more than one runtime helper, and a C compiler can optimize a helper's

@@ -1,5 +1,6 @@
 //! Escaping closures transfer captures by type and keep retained aliases valid.
 #![cfg(unix)]
+use std::os::unix::process::ExitStatusExt;
 use std::path::PathBuf;
 use std::process::{Command, Output};
 
@@ -31,7 +32,6 @@ impl Drop for Scratch {
 
 #[test]
 fn deep_capture_cleanup_uses_bounded_c_stack() {
-    use std::os::unix::process::ExitStatusExt;
     for branching in [false, true] {
         let dir = Scratch::new("deep");
         let src = dir.0.join("deep.fwp");

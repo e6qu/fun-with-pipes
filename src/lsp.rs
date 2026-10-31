@@ -9,7 +9,7 @@
 //! declarations, formatting runs `fwp fmt`, and completion offers the
 //! file's names and the standard library's with their types.
 
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::io::{BufRead, Write};
 use std::path::{Path, PathBuf};
 
@@ -196,7 +196,7 @@ impl<W: Write> Server<W> {
 
     fn request(&mut self, method: &str, uri: &str, pos: Option<(u32, u32)>, params: &Json) -> Json {
         if method == "textDocument/completion" {
-            return self.completion(uri);
+            return self.completion(uri, pos);
         }
         let Some(doc) = self.docs.get(uri) else {
             return Json::Null;
@@ -306,7 +306,7 @@ impl<W: Write> Server<W> {
         );
     }
 
-    fn completion(&mut self, uri: &str) -> Json {
+    fn completion(&mut self, uri: &str, position: Option<(u32, u32)>) -> Json {
         if self.std_items.is_none() {
             let items = match self.docs.get(uri).and_then(|d| d.comp.as_ref()) {
                 Some(c) => std_items(c),
@@ -317,21 +317,53 @@ impl<W: Write> Server<W> {
             self.std_items = Some(items);
         }
         let mut items = Vec::new();
+        let mut locals = BTreeMap::new();
         if let Some(doc) = self.docs.get(uri) {
+            if let Some((line, column)) = position.map(|(l, c)| from_lsp(&doc.text, l, c)) {
+                let token = token_at(&doc.text, line, column)
+                    .or_else(|| token_at(&doc.text, line, column.saturating_sub(1)));
+                if let Some(token) = token {
+                    for declaration in &doc.module.decls {
+                        for body in declaration.bodies() {
+                            body.walk_scoped(&mut Vec::new(), &mut |e, scope| {
+                                if same_position(e.span, token.span) {
+                                    for p in scope {
+                                        p.walk_bindings(&mut |p, name| {
+                                            let ty = doc
+                                                .comp
+                                                .as_ref()
+                                                .and_then(|c| node_type(c, p.span))
+                                                .unwrap_or_default();
+                                            locals.insert(name.to_string(), ty);
+                                        });
+                                    }
+                                }
+                            });
+                        }
+                    }
+                }
+            }
+            for (name, ty) in &locals {
+                items.push(completion_item(name, ty));
+            }
             for d in &doc.module.decls {
                 let name = match d {
                     Decl::Bind(b) => &b.name,
                     Decl::Foreign { name, .. } => name,
                     _ => continue,
                 };
-                items.push(completion_item(
-                    name,
-                    &type_of_name(doc, name).unwrap_or_default(),
-                ));
+                if !locals.contains_key(name) {
+                    items.push(completion_item(
+                        name,
+                        &type_of_name(doc, name).unwrap_or_default(),
+                    ));
+                }
             }
         }
         for (name, ty) in self.std_items.as_deref().unwrap_or_default() {
-            items.push(completion_item(name, ty));
+            if !locals.contains_key(name) {
+                items.push(completion_item(name, ty));
+            }
         }
         Json::Arr(items)
     }
