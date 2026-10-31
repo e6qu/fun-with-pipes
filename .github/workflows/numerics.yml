@@ -85,7 +85,8 @@ jobs:
 
   swift_peer_report:
     if: inputs.suite == 'swift-peer-report' || inputs.suite == 'callable-phase-report'
-    runs-on: ubuntu-24.04
+    # Read-only Python audit; no retained executable runs on this host.
+    runs-on: ubuntu-24.04-arm
     timeout-minutes: 10
     permissions:
       contents: read

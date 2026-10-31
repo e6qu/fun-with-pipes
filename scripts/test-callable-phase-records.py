@@ -1,5 +1,7 @@
 """Preserve workload identity and reject noisy, short or damaged phase records."""
 import copy
+import hashlib
+import json
 import importlib.util
 from pathlib import Path
 import unittest
@@ -72,6 +74,43 @@ class PhaseRecords(unittest.TestCase):
                 PHASE.parse_output(text, 0)
         with self.assertRaises(AssertionError):
             PHASE.parse_output(output, 1)
+
+    def test_first_results_keep_failed_and_inconclusive_phases(self):
+        path = PHASE.ROOT / "docs/measurements/callable-phases-2026-10-31.json"
+        self.assertEqual(hashlib.sha256(path.read_bytes()).hexdigest(), "c475a20e3f86e4fff8f2a599b0c191d46090a02cea45564a102946ad7ce8ae98")
+        data = json.loads(path.read_text())
+        self.assertEqual(data["source"], "dfb6ff8e8aac215009e9a9cf48a8bce492ef4eae")
+        sessions = {(row["architecture"], row["session"]): row for row in data["sessions"]}
+        self.assertEqual(set(sessions), {(arch, i) for arch in ("aarch64", "x86_64") for i in (1, 2)})
+        for arch in ("aarch64", "x86_64"):
+            model = lambda row: [line for line in row["cpu"].splitlines() if line.startswith("Model name:")]
+            self.assertEqual(model(sessions[arch, 1]), model(sessions[arch, 2]))
+        outcomes = []
+        for session in sessions.values():
+            self.assertEqual([row["kind"] for row in session["cases"]], [0, 1])
+            for case in session["cases"]:
+                self.assertEqual(set(case["phases"]), set(PHASE.PHASES))
+                for phase, row in case["phases"].items():
+                    medians = row["medianNs"]
+                    self.assertEqual(set(medians), set(PHASE.LABELS))
+                    copies = {p: max(medians[p], medians[p + "-copy"]) / min(medians[p], medians[p + "-copy"])
+                              for p in PHASE.PEERS}
+                    self.assertEqual(row["copyRatios"], copies)
+                    self.assertEqual(row["fwpOverPeer"], {p: medians["fwp"] / medians[p] for p in PHASE.PEERS[:-1]})
+                    qualified = all(copies[p] <= 1.02 for p in ("reference", "fwp")) and all(
+                        medians[p] >= 5_000_000 for p in ("reference", "reference-copy", "fwp", "fwp-copy"))
+                    self.assertEqual(row["candidateQualified"], qualified)
+                    self.assertEqual(row["withinBudget"],
+                                     row["fwpOverPeer"]["reference"] <= (0.95 if phase == "invocation" else 1.02) if qualified else None)
+                    if session["architecture"] == "aarch64":
+                        self.assertIs(row["withinBudget"], True)
+                    outcomes.append(row["withinBudget"])
+                memory = case["memory"]
+                self.assertLessEqual(max(v["peakRssKiB"] for v in memory["fwp"]),
+                                     max(v["peakRssKiB"] for v in memory["reference"]) + 1024)
+        self.assertEqual(sum(v is True for v in outcomes), 26)
+        self.assertEqual(sum(v is False for v in outcomes), 3)
+        self.assertEqual(sum(v is None for v in outcomes), 3)
 
     def test_reference_requires_exactly_one_real_guard(self):
         runtime = (PHASE.ROOT / "runtime/fwp_rt_heap.c").read_text()

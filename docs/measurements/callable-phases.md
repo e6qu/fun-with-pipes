@@ -140,3 +140,11 @@ Next, reproduce the measured objects while retaining GCC's
 Require byte-identical objects before using those reports to explain the actual
 measured compilation. This diagnostic does not rerun timing, inspect disassembly,
 change runtime behavior or relax the acceptance limits.
+
+
+The first diagnostic run, `41220300146`, reproduces both ARM64 objects byte for
+byte (`124593267740`). GCC inlines the same partial-application constructor and
+owner setup into both factories. This does not explain the AMD64 regression;
+its native diagnosis is still queued. Source changes have not been selected from
+this result. Read-only artifact audits can run on ARM64 because they verify
+bytes and records without executing the saved programs.

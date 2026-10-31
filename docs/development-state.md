@@ -39,10 +39,14 @@ candidate timing/RAM limits. AMD64 has three qualified construction regressions
 (8.6–16.1%) and one noisy addition case; combined timing acceptance remains open.
 The first-run summary retains all results; no unchanged measurement retry.
 
-Independent audit `41219859189` / `124591988150` is queued. The source head's docs
-`41219094215` passes; its complete log still needs review. Diagnostic builds will
-recompile only archived C objects with optimization-report flags and require
-byte identity. They do not run the saved executables or inspect disassembly.
+The source head's docs `41219094215` / `124589718157` passes; its full log is
+reviewed, with only intentional runner/selector failures. Diagnostic run
+`41220300146`: ARM64 `124593267740` passes and reproduces both objects byte for
+byte; its factory inlining decisions agree. AMD64 `124593267611` remains queued.
+Independent audit `41219859189` / `124591988150` remains queued on AMD64; move that
+read-only audit to ARM64 and supersede only its unstarted run. No saved binaries
+execute in the artifact audit. A new record test freezes all 26 passing, three
+failed and three inconclusive candidate phases; it needs the new head's docs gate.
 
 ## Existing evidence
 
