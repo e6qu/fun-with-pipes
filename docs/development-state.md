@@ -1,13 +1,14 @@
 # Current work
 
-**Next:** finish and run the native Swift/C/Rust/fwp comparison, audit every
-result and publish the performance/memory assessment. The user prioritizes runtime
+**Next:** run the repaired native Swift comparison, audit every result and
+publish the performance/memory assessment. The first run stopped before timing. The user prioritizes runtime
 performance over executable size and requires Swift as an ARC peer. The original
 callable size-budget rejection stays recorded; fewer counts are not a measured
-speedup. PR #233 is verified, merged and integrated. No next PR is open yet.
+speedup. PR #233 is verified, merged and integrated. Draft PR #234 groups this
+ownership change with the Swift comparison; final production gates have not run.
 
 This worktree is `/private/tmp/fwp-returned-callables`, branch
-`returned-callable-peers`. No PR is open for it. Revised candidate
+`returned-callable-peers`, [PR #234](https://github.com/e6qu/fun-with-pipes/pull/234). Revised candidate
 `dacaf253d02b40bb18b0b39977afa69b3c2001f7` runs in `41179056746`: macOS ARM job
 `124472518749`, Linux ARM `124472518855`, Linux AMD `124472518974`.
 All three completed and are fully audited: 49 Rust tests, 16 Python cases and
@@ -98,7 +99,15 @@ workflow runs two native sessions on each Linux architecture, with explicit Swif
 and separate RSS samples. Historical C/Rust results remain unchanged. Native Swift
 closure factories use a separate module; reference-capture cleanup is a separate
 control. Scalar Swift allocation/count and phase-time measurements are still open.
-No Swift speed or memory result has been collected yet.
+First collection: `41212931691`, source `3e6dbb4d9f8b25df313ea6d61892dcabd5da7c9a`.
+AMD sessions 1/2 are jobs `124571511919` / `124571512131`; ARM sessions 1/2
+are `124571512142` / `124571512086`. All four complete logs are audited: the container lacked `cc1plus`, needed by
+fwp's numeric C++ support. Install `g++`, select `CXX=g++`, preserve build logs
+before measurements, and only upload existing evidence. Rustup's sudo check is
+explicitly disabled for GitHub's known root-container /github/home layout; no
+HOME variable is changed. No timing samples were collected, so this is a setup
+repair, not a retry of an observed measurement. Raw logs: `/private/tmp/fwp-swift-*-3e6d.log`.
+No Swift speed or memory result has been accepted yet.
 
 Focused local Swift 6.2.1 ARM64 checks pass (2.92s): eight checksum/representation
 rows, normal release and omitted-release exit 78. Three timing-record tests pass

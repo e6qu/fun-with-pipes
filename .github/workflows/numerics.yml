@@ -58,6 +58,7 @@ jobs:
     timeout-minutes: 40
     env:
       CC: gcc
+      CXX: g++
       CARGO_BUILD_JOBS: 2
       CARGO_INCREMENTAL: '0'
       CARGO_PROFILE_DEV_OPT_LEVEL: '1'
@@ -65,11 +66,14 @@ jobs:
       CARGO_PROFILE_DEV_OVERFLOW_CHECKS: 'true'
     steps:
       - name: Native build and measurement dependencies
-        run: apt-get update && apt-get install -y git gcc libssl-dev pkg-config python3 time llvm curl
+        run: apt-get update && apt-get install -y git gcc g++ libssl-dev pkg-config python3 time llvm curl
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - uses: dtolnay/rust-toolchain@master
+        env:
+          # GitHub supplies /github/home to the root container; no sudo was used.
+          RUSTUP_INIT_SKIP_SUDO_CHECK: 'yes'
         with:
           toolchain: 1.99.1
       - uses: actions/cache@v6
@@ -83,9 +87,12 @@ jobs:
           cat /etc/os-release
           test "$(uname -m)" = "${{ matrix.arch }}"
       - name: Build the current compiler
+        shell: bash
         run: |
-          cargo fetch --locked
-          cargo build --locked --offline --bin fwp
+          set -o pipefail
+          mkdir swift-setup
+          cargo fetch --locked 2>&1 | tee swift-setup/fetch.log
+          cargo build --locked --offline --bin fwp 2>&1 | tee swift-setup/build.log
       - name: Measurement schedule and Swift overflow controls
         run: |
           python3 scripts/test-swift-peer-records.py
@@ -103,11 +110,12 @@ jobs:
           python3 scripts/measure-swift-peers.py audit --input swift-peer-evidence
           --source "$GITHUB_SHA" --arch "${{ matrix.arch }}"
       - name: Preserve all completed and failed observations
-        if: always()
+        if: ${{ always() && hashFiles('swift-setup/**', 'swift-peer-evidence/**', 'swift-arithmetic/**') != '' }}
         uses: actions/upload-artifact@v7
         with:
           name: swift-peers-${{ matrix.arch }}-${{ matrix.session }}
           path: |
+            swift-setup/
             swift-peer-evidence/
             swift-arithmetic/
           if-no-files-found: error
