@@ -6,8 +6,18 @@ handoff is `/private/tmp/fwp-state-range-folds/docs/development-state.md`.
 Keep both tested heads unchanged while their remaining gates run.
 
 This worktree is `/private/tmp/fwp-returned-callables`, branch
-`returned-callable-peers`. No PR is open for it. Candidate
-`1f92902205c5da0269d1a0b20a2550736baff475` runs in focused matrix `41177534238`:
+`returned-callable-peers`. No PR is open for it. Revised candidate
+`dacaf253d02b40bb18b0b39977afa69b3c2001f7` runs in `41179056746`: macOS ARM job
+`124472518749`, Linux ARM `124472518855`, Linux AMD `124472518974`.
+All three completed and are fully audited: 49 Rust tests, 16 Python cases and
+170 measurement commands per host. The same ARM O1 text limit fails; every
+other decision passes. The second complete rejection archive and immutable tag
+`roadmap/returned-callables-copy-rejected-2026-10-31` retain the results.
+An asynchronous user decision is pending: accept this specific code-size cost
+with the count reductions, or withhold the runtime change. Do not silently alter
+the original budget. Continue the independent #233 delivery while waiting.
+
+First candidate `1f92902205c5da0269d1a0b20a2550736baff475`, run `41177534238`:
 Linux AMD job `124468086194`, Linux ARM `124468086417`, macOS ARM `124468086503`.
 All three completed: 49 Rust tests / eleven targets, 14 Python controls and eight
 programs pass per host, with complete logs audited. Five code-level budgets pass;
@@ -24,20 +34,20 @@ in the callable report's compressed archives. Limits and hardware protection sta
 unchanged. The one-shot workflow was removed after retaining its results;
 `scripts/report-callable-link.py` remains the explicit relinking tool.
 
-Next candidate action: publish the slice-copy revision, then run the consolidated
-three-host checks. Two contiguous plain-value slices now use `memcpy`; an empty
-supplied slice is never passed to it. The added full-capture/zero-new-argument
+Two contiguous
+plain-value slices now use `memcpy`; an empty supplied slice is never passed to
+it. The added full-capture/zero-new-argument
 case and all existing lifetime controls pass locally at O1/O2 (2.17s). Phase,
 overflow and cleanup checks pass (1.80s). These do not establish native acceptance.
 Independent first-candidate audits/downloads are `/private/tmp/fwp-callables-*-1f92*`;
 linker files/audits are `/private/tmp/fwp-callable-link-23d5*`.
 
 PR #233 tests `fd19b9e4d67c6c5f85ebbe6a12da14aaeedb0b1c` in `41174213818`,
-with docs `41174213793`. Five gates are fully audited and passing: docs,
-benchmarks, both ARM macOS jobs and Intel macOS ownership. Both Windows native
-phase archives also pass their 49 resource and six callback targets. Linux,
-Windows TLS/ownership and regular Intel macOS are still running. No current
-failed step is reported. The State handoff owns the earlier repairs and audits.
+with docs `41174213793`. Nine gates are fully audited and passing: docs,
+benchmarks, all four macOS jobs, Linux ARM and both Windows jobs. Both Windows native
+phase archives also pass their 49 resource and six callback targets. Linux AMD
+is still running without a reported failure. The State handoff
+owns the earlier repairs and audits.
 
 ## What this batch changes
 
@@ -91,7 +101,8 @@ All checks used `scripts/local-guard.py`. No full local build, suite or benchmar
   `/private/tmp/fwp-check-plain-functional.py`. State helper counts fall from two
   to one. These preflights do not replace production Rust tests or GCC checks.
 - Three budget tests pass (0.37s), including 18 damaged limits. Three complete
-  baseline archive tests pass (3.08s). Workflow lint passes (5.61s); roadmap audit
+  baseline archive tests pass (3.08s). Five revised budget/archive/linker tests
+  pass (1.47s). Workflow lint passes (5.03s); roadmap audit
   passes (3.02s): 190 link sets, 106 immutable pairs and eight steps.
 - Rust formatting uses the repository's 2021 edition (0.14s). An initial check
   mistakenly used 2024 and reported only style differences. Diff check passes.

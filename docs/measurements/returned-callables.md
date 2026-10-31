@@ -199,7 +199,7 @@ Against this frozen baseline, at O1/O2 on **all three hosts**:
 These are count/code/stack limits, not a speed budget. Retain rejected results.
 This candidate cannot close D2/N1 timing acceptance or establish C/Rust parity.
 
-The candidate is implemented and awaiting the consolidated three-host checks.
+The implemented candidate is held by the whole-text rejection below.
 `scripts/check-returned-callable-budget.py` independently recomputes the retained
 commands and results before comparing every limit with the frozen baseline.
 It writes all decisions before rejecting a failed budget. Its rejection tests
@@ -228,6 +228,11 @@ protection stays enabled. The runtime's lifetime checks passed independently.
 The next revision copies the two contiguous plain-value slices with `memcpy`
 instead of separate element loops. It skips the supplied-slice copy when empty,
 because that slice may be null. A saturated closure with no new arguments joins
-the existing lifetime regression. Local O1/O2 controls pass; native budgets must
-be measured again. This source simplification is not a general promise to avoid
-linker padding, nor a measured speedup.
+the existing lifetime regression. Run `41179056746` at `dacaf253` passes all
+49 ownership tests and 16 Python controls per host. The
+[second complete archive](returned-callables-copy-rejected-2026-10-31.json.gz)
+retains the unchanged sole rejection: ARM O1 text is still 28,892 bytes.
+All other limits pass; macOS O2 text shrinks relative to the first candidate,
+while AMD O2 text grows by 80 bytes and remains within its limit. The revision
+does not qualify under the original whole-text rule. This source simplification
+is not a general promise to avoid linker padding, nor a measured speedup.

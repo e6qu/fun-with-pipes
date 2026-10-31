@@ -69,16 +69,25 @@ class CallableBudget(unittest.TestCase):
             with self.subTest(damage=damage), self.assertRaises((AssertionError, ValueError)):
                 BUDGET.compare(self.baselines["linux-amd"], candidate)
 
-    def test_complete_rejected_candidate_keeps_every_decision(self):
-        source = "1f92902205c5da0269d1a0b20a2550736baff475"
-        payload = (BUDGET.ROOT / "docs/measurements/returned-callables-rejected-2026-10-31.json.gz").read_bytes()
-        self.assertEqual(hashlib.sha256(payload).hexdigest(),
-                         "74d301f87b3a2e22760b367cf28727e0bd227681730359e5c20c4ce176b6b6ee")
+    def test_complete_rejected_candidates_keep_every_decision(self):
+        cases = [
+            ("returned-callables-rejected-2026-10-31", "1f92902205c5da0269d1a0b20a2550736baff475",
+             "74d301f87b3a2e22760b367cf28727e0bd227681730359e5c20c4ce176b6b6ee", 41177534238),
+            ("returned-callables-copy-rejected-2026-10-31", "dacaf253d02b40bb18b0b39977afa69b3c2001f7",
+             "a1677216c686061b2002c20d4fd617f7ddb1b4d55f058d6049ad086cc2e31aea", 41179056746),
+        ]
+        for name, source, digest, run in cases:
+            with self.subTest(source=source):
+                self.check_rejection(name, source, digest, run)
+
+    def check_rejection(self, name, source, digest, run):
+        payload = (BUDGET.ROOT / "docs/measurements" / (name + ".json.gz")).read_bytes()
+        self.assertEqual(hashlib.sha256(payload).hexdigest(), digest)
         archive = json.loads(gzip.decompress(payload))
         self.assertEqual(archive["source"], source)
-        self.assertEqual(archive["run"], 41177534238)
+        self.assertEqual(archive["run"], run)
         self.assertEqual(subprocess.check_output([
-            "git", "rev-parse", "roadmap/returned-callables-rejected-2026-10-31"], text=True).strip(), source)
+            "git", "rev-parse", "roadmap/" + name], text=True).strip(), source)
         self.assertEqual(set(archive["hosts"]), set(BUDGET.MACHINES))
         with tempfile.TemporaryDirectory(prefix="fwp-callable-rejection-") as scratch:
             for host, row in archive["hosts"].items():
