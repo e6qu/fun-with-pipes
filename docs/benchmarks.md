@@ -101,7 +101,9 @@ release and deliberately retained ownership. It does not fabricate allocation
 counts for the scalar closure. Swift callable phase timing, allocation/count
 instrumentation, weak subscriptions and parser/numerical peers remain required
 before broader ownership or numerical parity claims. No Swift result exists until
-the new collection completes and its artifacts are audited.
+the new collection completes and its artifacts are audited. The `swift-peer-report`
+workflow rechecks a completed run and prints timing/RSS rows without executing
+its binaries; supply the explicit evidence run and full measured source commit.
 
 Execution time and working memory take priority over executable size. Keep size
 and stack costs visible because they can affect caches and memory; a size increase

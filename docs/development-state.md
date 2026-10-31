@@ -1,7 +1,8 @@
 # Current work
 
-**Next:** run the Swift comparison after the checkout-trust repair, audit every
-result and publish the performance/memory assessment. Neither setup run timed programs. The user prioritizes runtime
+**Next:** monitor Swift run `41214191081` at `80a0504a`, then use
+`swift-peer-report` to audit all four artifacts on a runner and publish timing/RAM
+results. Neither previous setup run timed programs. The user prioritizes runtime
 performance over executable size and requires Swift as an ARC peer. The original
 callable size-budget rejection stays recorded; fewer counts are not a measured
 speedup. PR #233 is verified, merged and integrated. Draft PR #234 groups this
@@ -121,6 +122,16 @@ Focused local Swift 6.2.1 ARM64 checks pass (2.92s): eight checksum/representati
 rows, normal release and omitted-release exit 78. Three timing-record tests pass
 (0.13s), including balanced ordering and incomplete/noisy records. Workflow lint
 passes (5.83s); the roadmap audit passes (3.11s). Full measurement stays on runners.
+
+The current run's jobs are AMD `124575187490` / `124575187736` and ARM
+`124575187763` / `124575187723`. Keep those observations if any control fails.
+The `swift-peer-report` workflow accepts that run ID and its full source commit;
+it only reads artifacts and emits recomputed timing/RSS rows, never old binaries.
+
+The local guard refused the final two-line workflow recheck: free disk is below
+64 GiB. Do not bypass it or download large artifacts locally. Earlier lint passed;
+remaining validation and artifact audits belong on GitHub. No local cleanup of
+unidentified files was performed.
 
 ## Local verification
 

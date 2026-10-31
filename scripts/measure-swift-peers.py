@@ -273,6 +273,12 @@ def audit(args):
     for path in (folder / "callable").glob("*.swift"):
         assert path.read_bytes() == subprocess.check_output(["git", "show", f"{args.source}:tests/fixtures/{path.name}"], cwd=ROOT)
     print("Seven four-language timing/RSS rows and Swift closure controls verified; noisy rows remain inconclusive")
+    print("HOST", json.dumps(dict(source=report["source"], architecture=report["architecture"],
+                                 session=report["session"], cpu=report["cpu"], versions=report["versions"])))
+    for name, row in report["programs"].items():
+        print("RESULT", json.dumps(dict(program=name, **row["summary"],
+            peakRssKiB={language: [sample["peakRssKiB"] for sample in values]
+                        for language, values in row["memory"].items()})))
 
 
 def main():
