@@ -916,7 +916,7 @@ jobs:
           rustc --version > state-range-evidence/rustc.txt
           "$CC" --version > state-range-evidence/cc.txt
           set -o pipefail
-          cargo test --locked --offline --no-run --lib --test compiler_call_liveness --test state_sequence_ownership --test typed_state_ownership --test fold_unwind_ownership --test loop_unwind_ownership 2>&1 | tee state-range-evidence/build.log
+          cargo test --locked --offline --no-run --lib --test compiler_call_liveness --test state_sequence_ownership --test service_context_storage --test typed_state_ownership --test fold_unwind_ownership --test loop_unwind_ownership 2>&1 | tee state-range-evidence/build.log
       - name: Rust and source formatting
         if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
         run: |
@@ -926,7 +926,7 @@ jobs:
         if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
         run: >-
           cargo clippy --locked --offline --keep-going --lib
-          --test compiler_call_liveness --test state_sequence_ownership
+          --test compiler_call_liveness --test state_sequence_ownership --test service_context_storage
           --test typed_state_ownership --test fold_unwind_ownership --test loop_unwind_ownership
           -- -D warnings
       - name: Compiler proof checks
@@ -936,7 +936,7 @@ jobs:
         if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
         run: |
           set -o pipefail
-          cargo test --locked --offline --no-fail-fast --test compiler_call_liveness --test state_sequence_ownership --test typed_state_ownership --test fold_unwind_ownership --test loop_unwind_ownership -- --nocapture 2>&1 | tee state-range-evidence/tests.log
+          cargo test --locked --offline --no-fail-fast --test compiler_call_liveness --test state_sequence_ownership --test service_context_storage --test typed_state_ownership --test fold_unwind_ownership --test loop_unwind_ownership -- --nocapture 2>&1 | tee state-range-evidence/tests.log
       - name: Native State range code and stack budgets
         if: ${{ !cancelled() && steps.compiler.outcome == 'success' && runner.os == 'Linux' }}
         run: |

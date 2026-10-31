@@ -104,7 +104,8 @@ this test. Both sizes returned the correct result and restored live storage;
 the assertion failed because the allocation was gone. The repaired expectation
 requires exactly zero, rather than permitting a range. The original table and
 raw measurements above remain historical evidence. Full verification of the
-updated test is pending; these counters make no elapsed-time claim.
+updated test passes in [PR #232](roadmap-history.md#generated-array-elimination-pr-232);
+these counters make no elapsed-time claim.
 
 ### State over a temporary range
 

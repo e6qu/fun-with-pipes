@@ -29,29 +29,29 @@ collector is not the same as removing these costs. The
 
 ## Work order
 
-1. Finish verification of [generated-array elimination](docs/measurements/generated-array-folds.md).
-   Both focused native GCC suites and compiler-analysis budgets pass. All four
-   timing sessions are audited; three fail the unchanged copy-control limit.
-   The complete first matrix is audited: six jobs fail only an obsolete
-   one-allocation expectation. Verify the combined expectation/cleanup-test
-   repair on all production hosts. Preserve oversized-count checks, argument/effect/failure order and
-   outer-owner cleanup. Allocation removal and timing acceptance are separate.
-   The [four repaired full-buffer
-   sessions](docs/measurements/buffer-current.md) are audited: 25/48 copy controls
-   fail, and no workload passes all four. Do not retry unchanged measurements.
-2. Finish production verification of [State range-list removal](docs/measurements/state-range-folds.md),
-   the next B1 allocation task. Focused checks pass on GCC ARM64/AMD64 and Clang
-   ARM64; both G2 hosts pass. The known I64 consumer keeps its State handler and
-   uses two fixed allocations / 152 bytes. Code shrinks and frames stay unchanged.
-   Verify the full native matrix, rejected shapes and cleanup before delivery.
-3. Resolve D2/N1's failed measurements before claiming numerical speed acceptance.
+1. Resolve the [returned-callable candidate's size decision](docs/measurements/returned-callables.md#rejected-first-candidate-and-linker-diagnosis)
+   before publishing its runtime change. C/Rust/fwp baselines and ownership checks
+   pass on three native hosts. Calls lose their retain/release pair, but ARM O1
+   text grows 17.7%, exceeding the frozen 5% limit. A user decision on this
+   specific cost is pending; retain both rejected runs and the hardware protection.
+   If accepted, finish the complete production matrix and docs before merge.
+2. Resolve D2/N1's failed measurements before claiming numerical speed acceptance.
    Fixed CPU affinity and equal executable names did not resolve the controls.
    Do not rerun unchanged experiments or increase sample counts again.
-4. Complete the remaining B1/B2 comparisons and finite V1/V2 application matrix.
+3. Complete the remaining B1/B2 comparisons and finite V1/V2 application matrix.
 
 [#231's scalar-fold delivery](docs/roadmap-history.md#direct-scalar-folds-and-process-timing-pr-231)
-has verified production gates; its timing acceptance remains open. The
+and [#232's array elimination](docs/roadmap-history.md#generated-array-elimination-pr-232)
+have verified production gates; their timing acceptance remains open. Three of
+four array-removal sessions fail the unchanged copy-control limit. The
+[full-buffer comparison](docs/measurements/buffer-current.md) also retains its
+25 failed controls out of 48; no workload qualifies in all four sessions.
+Do not retry unchanged measurements or turn allocation savings into speed claims. The
 [handoff](docs/development-state.md) owns current source IDs and check results.
+
+[State range-list removal](docs/roadmap-history.md#state-range-elimination-pr-233)
+is verified and merged in #233: two fixed allocations / 152 bytes, smaller code,
+unchanged reported frames and preserved handler/cleanup behavior. No speed claim.
 
 The original intermittent Intel macOS compiler abort remains an open defect.
 Preserve [its evidence](docs/measurements/compiler-abort.md); diagnose a recurrence
@@ -111,9 +111,9 @@ records eight paired fixtures, exact allocation expectations, lifetime rules,
 stack observations and the accepted restricted scalar mutual-loop transformation.
 
 Known calls avoid selected closure/dispatch costs; unknown calls retain required
-owners. The verified State `each` baseline allocates per element; the B1
-[range candidate](docs/measurements/state-range-folds.md) targets that list only,
-with final verification pending. Weak metadata and proved plain
+owners. The historical State `each` baseline allocates per element;
+[range-list removal](docs/measurements/state-range-folds.md), verified in #233,
+eliminates that list for the stated known I64 consumer. Weak metadata and proved plain
 captures may survive the loop transformation; strong resources, tasks and unknown
 captures retain their restrictions. Arbitrary recursion, resource frames and
 foreign calls are not promised constant stack space.

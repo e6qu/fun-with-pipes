@@ -35,6 +35,7 @@ jobs:
       FWP_TAIL_ARTIFACTS: ownership-evidence/tail
       FWP_CALLBACK_CAPTURE_ARTIFACTS: ownership-evidence/direct-captures
       FWP_ARRAY_CAPTURE_ARTIFACTS: ownership-evidence/array-captures
+      FWP_CONTEXT_ARTIFACTS: ownership-evidence/service-context
     steps:
       - uses: actions/checkout@v7
         with:

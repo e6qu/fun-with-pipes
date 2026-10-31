@@ -1,9 +1,9 @@
 # Current work
 
-**Next:** finish [PR #233](https://github.com/e6qu/fun-with-pipes/pull/233), then
-integrate its verified merge here before opening the next single PR. Its active
-handoff is `/private/tmp/fwp-state-range-folds/docs/development-state.md`.
-Keep both tested heads unchanged while their remaining gates run.
+**Next:** resolve the pending callable code-size decision before publishing its
+runtime change. PR #233 is verified and squash-merged; its passing tree is
+integrated here. No new PR is open. Keep the original rejected budgets intact
+unless the user explicitly accepts the recorded exception.
 
 This worktree is `/private/tmp/fwp-returned-callables`, branch
 `returned-callable-peers`. No PR is open for it. Revised candidate
@@ -15,7 +15,8 @@ other decision passes. The second complete rejection archive and immutable tag
 `roadmap/returned-callables-copy-rejected-2026-10-31` retain the results.
 An asynchronous user decision is pending: accept this specific code-size cost
 with the count reductions, or withhold the runtime change. Do not silently alter
-the original budget. Continue the independent #233 delivery while waiting.
+the original budget. The scalar-fold decision accepts verified reductions with
+timing open; it does not authorize this separate callable code-size exception.
 
 First candidate `1f92902205c5da0269d1a0b20a2550736baff475`, run `41177534238`:
 Linux AMD job `124468086194`, Linux ARM `124468086417`, macOS ARM `124468086503`.
@@ -42,12 +43,14 @@ overflow and cleanup checks pass (1.80s). These do not establish native acceptan
 Independent first-candidate audits/downloads are `/private/tmp/fwp-callables-*-1f92*`;
 linker files/audits are `/private/tmp/fwp-callable-link-23d5*`.
 
-PR #233 tests `fd19b9e4d67c6c5f85ebbe6a12da14aaeedb0b1c` in `41174213818`,
-with docs `41174213793`. Nine gates are fully audited and passing: docs,
-benchmarks, all four macOS jobs, Linux ARM and both Windows jobs. Both Windows native
-phase archives also pass their 49 resource and six callback targets. Linux AMD
-is still running without a reported failure. The State handoff
-owns the earlier repairs and audits.
+PR #233 passed all nine production jobs and docs at
+`fd19b9e4d67c6c5f85ebbe6a12da14aaeedb0b1c`. All complete logs are audited.
+Squash `73a6b20d4d10a4f2dff50d78dc0b32ee2c17b4b5`, merged at 07:28:43 UTC on
+2026-10-31, has the same tree `2a8c3c40755fc8b60b5f20861fd8b1051a23a400`.
+Its exact 42-character subject is `Avoid temporary range lists in State folds`,
+with no body or trailers. Duplicate runs `41180750528` and `41180750575` are
+confirmed cancelled. [Delivery history](roadmap-history.md#state-range-elimination-pr-233)
+records every job, result and repair; raw audits are `/private/tmp/fwp-233-*`.
 
 ## What this batch changes
 
@@ -106,10 +109,12 @@ All checks used `scripts/local-guard.py`. No full local build, suite or benchmar
   passes (3.02s): 190 link sets, 106 immutable pairs and eight steps.
 - Rust formatting uses the repository's 2021 edition (0.14s). An initial check
   mistakenly used 2024 and reported only style differences. Diff check passes.
+- After integrating #233: workflow lint passes (5.82s), roadmap audit passes
+  (2.62s: 190 link sets, 106 immutable pairs and eight steps), and no merge
+  conflicts remain. Compiler/runtime files match the tested `dacaf253` candidate.
 
 Tracked measurement files were restored for docs checks after checking the
-64-GiB free-space floor. Preserve local resource limits. After #233 merges,
-integrate its shared-input service repair before this branch's full matrix.
+64-GiB free-space floor. Preserve local resource limits. The #233 shared-input service repair is integrated before this branch's full matrix.
 Require all nine final-head production jobs plus docs before squash merge.
 
 ## Roadmap status
@@ -122,7 +127,7 @@ Require all nine final-head production jobs plus docs before squash merge.
 | 4 | Verified | Preserve decimal savings and the recorded loop gap |
 | 5 | In progress | Meet D2's remaining timing requirement |
 | 6 | In progress | Resolve N1 controls before N2 timing acceptance |
-| 7 | In progress | Deliver State reductions and finish B1/B2 comparisons |
+| 7 | In progress | Resolve callable size acceptance and finish B1/B2 comparisons |
 | 8 | In progress | Complete numerical and integrated V1/V2 acceptance |
 
 [PLAN.md](../PLAN.md) retains the unchanged budgets and failed timing controls.

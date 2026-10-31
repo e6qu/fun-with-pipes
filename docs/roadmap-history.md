@@ -1316,3 +1316,97 @@ has the tested tree `86715a392ec4e67674b8a47861d5596199257a53`.
 Its subject, `Reduce numeric fold overhead and repair process timing`, is
 54 characters with no body or trailers. Duplicate post-merge runs `41140834224`
 and `41140834097` were cancelled after verifying the tree and commit message.
+
+## Generated-array elimination (PR #232)
+
+[PR #232](https://github.com/e6qu/fun-with-pipes/pull/232) combines generation
+and reduction when a numeric array has one known, pure consumer. Three scans of
+4,096 elements remove three allocations and 98,328 requested bytes. Worker
+instruction bytes grow 3.17% on ARM64 and 3.03% on AMD64, within the frozen 5%
+limit; largest reported frames remain 368/320 bytes. The
+[report](measurements/generated-array-folds.md) retains the proof, binaries,
+focused GCC checks and all four timing sessions. Three sessions fail the
+unchanged identical-copy limit; no overall speed acceptance is claimed.
+
+The complete first matrix found one obsolete allocation expectation in six jobs.
+The repair requires exactly zero allocations and cleans up seven old ownership
+probes: remove inert GC controls, preserve repeated success after failure, and
+verify input teardown with a deliberately omitted-release control. Windows cwd
+checks also observe storage after the second read fails. Artifact collection now
+uploads actual retained failure files without misleading empty-archive warnings.
+
+All nine production gates in run `41153845461` and documentation `41153845377`
+pass at `05d96484a77241c9782a420e76ea69094b965e11`. Every complete log and
+diagnostic was audited. Counts are passed Rust cases / summaries; Python cases
+are additional.
+
+| Gate | Audited job | Result |
+|---|---|---|
+| Linux ARM64 | `124396181579` | 997 / 257; 12 Python |
+| Linux AMD64 | `124396181773` | 997 / 257; 12 Python |
+| macOS ARM64 regular | `124396181633` | 628 / 132; 22 Python |
+| macOS AMD64 regular | `124422281020` | 628 / 132; 22 Python |
+| macOS ARM64 ownership | `124396181421` | 366 / 127 |
+| macOS AMD64 ownership | `124396181642` | 366 / 127 |
+| Windows ARM64 | `124396181682` | 822 / 206; 22 Python |
+| Windows AMD64 | `124396181690` | 822 / 206; 22 Python |
+| C/Rust benchmarks | `124396181702` | 2 / 2; 14 Python |
+| Documentation | `124396180907` | 47 Python suites / 320 cases |
+
+Intel regular's first job `124396181638` passed all tests but failed one artifact
+upload with DNS `ENOTFOUND`. Attempt 2 reran only that job, preserving the other
+eight passing executions; the retry passed tests, packaging and uploads. Windows
+logs include sixteen intentional panic controls, each with its parent test
+passing. Platform-specific Python skips do not establish POSIX support on Windows.
+
+Squash `c71ac217c5ea09d8bf1868f799fc0d8a574d2e2a`, merged 2026-10-31,
+has exactly the tested tree. Its subject is `Eliminate temporary arrays in numeric
+folds`, on one line with no body or trailers. Duplicate post-merge runs
+`41166703635` and `41166703619` were cancelled after tree/message verification.
+State range-list removal followed in #233 below. D2/N1 timing and the wider
+B1/B2/V1/V2 requirements remain open.
+
+
+## State range elimination (PR #233)
+
+Known, single-use I64 ranges consumed by State `each` now iterate over bounds
+without building a list. At inputs 32 and 128, the measured consumer uses two
+allocations / 152 bytes, two runtime application entries, one result box and no
+retains. Worker code shrinks 41.28% on ARM64 and 39.20% on AMD64; reported frames
+stay unchanged. The [report](measurements/state-range-folds.md) preserves the
+restricted proof, failures, both G2 hosts and complete focused observations.
+This is an allocation/code reduction, not an elapsed-time claim.
+
+The full matrix exposed an unfair service comparison: only the plain State
+callback qualified for range removal. The repaired comparison reuses the same
+list on both sides. Its assertions retain the 96-request slope, 24 bytes per
+node and zero final charged storage. The capture-reference checker now freezes
+its actual transformation blocks instead of unrelated optimizer visibility.
+Linux explicitly selects Clang for WASI Rust builds while keeping GCC for native
+code. These repairs and all completed diagnostics were audited together.
+
+All nine production jobs in `41174213818` and docs `41174213793` pass at
+`fd19b9e4d67c6c5f85ebbe6a12da14aaeedb0b1c`. Every complete log was audited.
+
+| Gate | Job | Rust passed / summaries | Python cases |
+|---|---|---:|---:|
+| Linux ARM64 | `124458289938` | 1,003 / 257 | 12 |
+| Linux AMD64 | `124458290045` | 1,003 / 257 | 12 |
+| macOS ARM64 regular | `124458289949` | 633 / 132 | 22 |
+| macOS AMD64 regular | `124458290009` | 633 / 132 | 22 |
+| macOS ARM64 ownership | `124458290043` | 367 / 127 | 0 |
+| macOS AMD64 ownership | `124458289859` | 367 / 127 | 0 |
+| Windows ARM64 | `124458290007` | 828 / 206 | 22 |
+| Windows AMD64 | `124458289996` | 828 / 206 | 22 |
+| C/Rust benchmarks | `124458289963` | 2 / 2 | 14 |
+| Documentation | `124458289609` | — | 328 in 49 suites |
+
+Each Windows job includes 16 intentional panic controls with passing parent
+tests. Platform-specific Python skips do not establish unsupported capabilities.
+No unexpected diagnostic remains. The merged commit is
+`73a6b20d4d10a4f2dff50d78dc0b32ee2c17b4b5`, dated 2026-10-31; tree
+`2a8c3c40755fc8b60b5f20861fd8b1051a23a400` equals the tested tree. Its 42-character
+message is exactly `Avoid temporary range lists in State folds`, with no body or
+trailers. Duplicate post-merge runs `41180750528` and `41180750575` were cancelled
+after verifying the tree and message. Callable comparisons and D2/N1 timing
+acceptance remain open.

@@ -8,6 +8,7 @@ It inspects existing artifacts; it never compiles or runs their executables.
 """
 
 import argparse, csv, hashlib, json, re, subprocess
+from collections import Counter
 from fractions import Fraction
 from pathlib import Path
 
@@ -44,6 +45,14 @@ for host,job in sorted(jobs.items()):
     indexed={(r['case'],r['iterations']):r for r in rows}
     assert len(rows)==21 and set(indexed)=={(case,n) for case in cases for n in [1,32,128]}
     assert all(set(r) == {'case', 'iterations', 'managed_requests', 'requested_bytes', 'final_charged_bytes'} for r in rows)
+    assert indexed[('plain',128)]['managed_requests'] - indexed[('plain',32)]['managed_requests'] == 96
+    assert indexed[('plain',128)]['requested_bytes'] - indexed[('plain',32)]['requested_bytes'] == 96*24+2
+    assert all(row['final_charged_bytes'] == 0 for row in rows)
+    for case in cases:
+        for n in [1,32,128]:
+            source = (folder/f'{case}-{n}.fwp').read_text()
+            assert f'main = range 0 {n} | both (run-state 0 (each (' in source
+            assert source.endswith(' | .1) length | echo\n'), (host,case,n)
     extra={case:{k:Fraction(indexed[(case,128)][k]-indexed[(case,32)][k]-indexed[('plain',128)][k]+indexed[('plain',32)][k],96) for k in metrics} for case in cases[1:]}
     for case in ['gzip','deadline','empty-metadata','filtered-metadata']: assert set(extra[case].values())=={0},(host,case,extra[case])
     assert extra['metadata']['managed_requests']==1 and extra['metadata']['final_charged_bytes']==0
@@ -57,7 +66,18 @@ for host,job in sorted(jobs.items()):
     def fingerprint(path): return {'bytes':path.stat().st_size,'sha256':hashlib.sha256(path.read_bytes()).hexdigest()}
     inventory=json.loads((folder/'contracts.json').read_text())
     assert inventory['head']==args.head
-    assert inventory['counts']['contract']==347 and inventory['counts']['runtime_or_specialization_review']==7
+    assert inventory['status']=='Expected contract changes verified'
+    assert inventory['baselineSha256']=='fa71949b3e93e8696b7c8bc7c35b729641c3ef156896803b679b05ccb4b62e0e'
+    assert inventory['baselineHead']=='669c19e7cb6779536377af7f78651f97dc1e51d9'
+    assert inventory['rows']
+    assert inventory['counts']==dict(Counter(row['bucket'] for row in inventory['rows']))
+    assert set(inventory['counts'])=={'contract','ir_template','flat_scalar_signature'}
+    assert inventory['declarations']==len(inventory['rows'])
+    assert len({(row['file'],row['declared']) for row in inventory['rows']})==len(inventory['rows'])
+    assert inventory['distinctSymbols']==len({row['symbol'] for row in inventory['rows']})
+    assert inventory['explicitAliases']==sum(row['aliased'] for row in inventory['rows'])
+    assert inventory['reviewSymbols']==0
+    assert all(row['bucket']!='runtime_or_specialization_review' for row in inventory['rows'])
     files={name:fingerprint(folder/name) for name in ['environment.txt','storage.tsv','layout.tsv','job.log','contracts.json']}
     binaries={}
     for case in cases:
@@ -94,7 +114,7 @@ for host,job in sorted(jobs.items()):
                 for suffix in ['.fwp','.c','.exe']:
                     name=f'each-{kind}-{n}{suffix}'
                     files[name]=fingerprint(folder/name)
-        iteration={'rows':each_rows,'saved_per_additional_element_between_32_and_128':{k:str(v) for k,v in savings.items()},'comparison':'Old map-based each versus fold-based each, identical counting program and input list, O2 with counted ownership. Includes input construction, startup and printing; slope differences cancel fixed costs. Managed allocation requests and requested payload bytes only, not elapsed time or peak/process memory.'}
+        iteration={'rows':each_rows,'saved_per_additional_element_between_32_and_128':{k:str(v) for k,v in savings.items()},'comparison':'Old map-based each versus fold-based each, equivalent counting programs over the same range, O2 with counted ownership. Current State-range fusion can also remove the fold program input list; savings include that transformation and are not isolated library-definition costs. Includes input construction, startup and printing; slope differences cancel fixed costs. Managed allocation requests and requested payload bytes only, not elapsed time or peak/process memory.'}
     timing=None
     if args.each_comparison and host.startswith('ubuntu-'):
         timing_path=folder/'iteration-timing/timings.json'
@@ -126,6 +146,6 @@ for host,job in sorted(jobs.items()):
             assert fingerprint(baseline_assembly)['sha256']==observations['baseline_assembly_sha256']
             files[observations['baseline_assembly']]=fingerprint(baseline_assembly)
     hosts.append({'runner':host,'iteration':iteration,'iteration_timing':timing,'binary_observations':observations,'job':{k:job[k] for k in ['name','databaseId','conclusion']},'environment':environment,'primitive_counts':inventory['counts'],'extra_per_call_versus_plain_between_32_and_128':{case:{k:str(v) for k,v in values.items()} for case,values in extra.items()},'layouts':{name:next({k:v for k,v in row.items() if k!='case'} for row in layouts if row['case']==name+'-128') for name in cases},'rows':rows,'files':files,'binaries':binaries})
-report={'title':'Memory used by service helpers and list iteration','source_revision':args.head,'run':run['url'],'comparison':'Each fwp service scope versus plain fwp state updates at 1/32/128 calls, O2 with counted ownership. Managed requests, requested bytes and final charged storage from constant initialization through main cleanup. Fixed scheduler startup remains included in rows; per-call slopes subtract fixed costs.','limits':'Service allocation rows exclude raw TLS/capture buffers, allocator metadata, pages and total process memory; they do not measure speed. Separate iteration_timing entries retain elapsed time and peak process memory when present. Neither comparison establishes C/Rust parity. Plain programs omit service fields; their task sizes are not the old service-task baseline.','hosts':hosts}
+report={'title':'Memory used by service helpers and list iteration','source_revision':args.head,'run':run['url'],'comparison':'Each fwp service scope versus plain fwp state updates at 1/32/128 calls, O2 with counted ownership. Every input list is reused by the State consumer and length; both counts are printed. This preserves the same list construction in all cases despite their different capture types. Managed requests, requested bytes and final charged storage run from constant initialization through main cleanup. Per-call slopes subtract fixed costs and the matching list/printing work; the control requires one 24-byte node per added input and zero retained storage.','limits':'Service allocation rows exclude raw TLS/capture buffers, allocator metadata, pages and total process memory; they do not measure speed. Separate iteration_timing entries retain elapsed time and peak process memory when present. Neither comparison establishes C/Rust parity. Plain programs omit service fields; their task sizes are not the old service-task baseline.','hosts':hosts}
 args.output.write_text(json.dumps(report,indent=2)+'\n')
 for host in hosts: print(host['runner'],host['extra_per_call_versus_plain_between_32_and_128'],host['layouts']['gzip'])

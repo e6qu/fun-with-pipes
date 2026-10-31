@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Reject changed capture references and preserve the prepared production code."""
+"""Disable only eager capture binding; preserve all other current compiler code."""
 import hashlib
 import importlib.util
 from pathlib import Path
@@ -13,11 +13,38 @@ CURRENT = (ROOT / 'src/opt.rs').read_text()
 
 
 class CaptureReference(unittest.TestCase):
-    def test_reference_restores_exact_preparation_production_code(self):
+    def assert_only_capture_change(self, current, restored):
+        self.assertEqual(restored.count(REFERENCE.ORIGINAL_BINDING), 1)
+        self.assertEqual(restored.count(REFERENCE.ORIGINAL_METHOD), 1)
+        self.assertNotIn(REFERENCE.CANDIDATE_BINDING, restored)
+        reconstructed = restored.replace(REFERENCE.ORIGINAL_BINDING, REFERENCE.CANDIDATE_BINDING)
+        reconstructed = reconstructed.replace(REFERENCE.ORIGINAL_METHOD, '')
+        self.assertEqual(reconstructed, current)
+
+    def test_reference_changes_only_the_selected_capture_code(self):
+        self.assert_only_capture_change(CURRENT, REFERENCE.reference_source(CURRENT))
+
+    def test_historical_capture_blocks_are_unchanged(self):
+        # These are the original method/binding from the frozen preparation.
+        # Other optimizer code belongs to the current compiler in both builds.
+        self.assertEqual(hashlib.sha256(REFERENCE.ORIGINAL_METHOD.encode()).hexdigest(),
+                         '8051d7b098c288a557b4c2aa86dd07c63bab89ee1da18c39f5be3322eb55f410')
+        self.assertEqual(hashlib.sha256(REFERENCE.ORIGINAL_BINDING.encode()).hexdigest(),
+                         '8f077e172e10d8571f8ec79506ec27fb910ec320db049c7771dfe5cdbaece1c9')
+
+    def test_unrelated_current_compiler_changes_are_preserved(self):
+        changed = CURRENT.replace('pub(crate) fn substitute(', 'pub fn substitute(', 1)
+        self.assertNotEqual(changed, CURRENT)
+        self.assert_only_capture_change(changed, REFERENCE.reference_source(changed))
+
+    def test_unrelated_reference_edits_are_rejected(self):
         restored = REFERENCE.reference_source(CURRENT)
-        production = restored.split('#[cfg(test)]', 1)[0].rstrip() + '\n'
-        self.assertEqual(hashlib.sha256(production.encode()).hexdigest(), 'dd3320de417633e5af3a9745e17c510b53dcfb29a50aa4397d67eeafe2325860')
-        self.assertEqual(restored.split('#[cfg(test)]', 1)[1], CURRENT.split('#[cfg(test)]', 1)[1])
+        for old, new in [('pub(crate) fn substitute(', 'fn substitute('),
+                         ('pub(crate) fn substitute(', 'pub fn substitute('),
+                         ('match &s[*l as usize]', 'match &s[0]')]:
+            self.assertEqual(restored.count(old), 1)
+            with self.subTest(change=new), self.assertRaises(AssertionError):
+                self.assert_only_capture_change(CURRENT, restored.replace(old, new, 1))
 
     def test_changed_or_duplicate_candidate_block_is_rejected(self):
         for changed in [CURRENT.replace(REFERENCE.CANDIDATE_BINDING, ''),

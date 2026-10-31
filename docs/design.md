@@ -273,7 +273,7 @@ matches can expose direct callbacks, but multiple tested fields, whole-value use
 and protected resources retain their required representation. A compiler-generated
 loop is not permission to interleave two trapping eager stages.
 
-The generated-array transformation, currently awaiting full production verification,
+The generated-array transformation, verified in [PR #232](roadmap-history.md#generated-array-elimination-pr-232),
 extends this rule to `flip array.generate id | array.fold add 0`. With input
 `4`, the generator produces indices `0, 1, 2, 3`, and the fold adds them to get
 `6`. The reference builds an array first; the transformation generates and adds
@@ -293,7 +293,8 @@ accept bounds and iterate directly. Effects still run once per index in order;
 there is no eager mapping stage to reorder. Scalar captures must already be
 evaluated in the original order. Shared lists, unknown consumers, resources and
 wider element types do not qualify. This is a separate proof from pure eager
-pipeline fusion, whose requirements are unchanged. Full verification is pending.
+pipeline fusion, whose requirements are unchanged. Full production verification
+passes in [PR #233](roadmap-history.md#state-range-elimination-pr-233).
 
 When a worker returns record fields separately, every `match` arm must produce
 that same representation. An arm may unpack a dynamically returned record; an

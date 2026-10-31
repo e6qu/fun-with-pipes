@@ -1,8 +1,9 @@
 # Returned functions compared with C and Rust
 
 The first B1 callable baseline passes focused checks on all three declared hosts.
-It does not claim timing parity or complete production delivery. Finish the State
-range PR before opening the next PR with this comparison.
+It does not claim timing parity or complete production delivery. State range
+removal is verified and merged in #233. This candidate still exceeds its ARM64
+O1 code-size limit; a decision on accepting that cost is pending.
 
 Partial application supplies one argument and keeps a function waiting for the
 next. For example, `add 7` produces a function that maps `3` to `10`. The captured
