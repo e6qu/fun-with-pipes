@@ -1,7 +1,8 @@
 # Returned functions compared with C and Rust
 
 This is preparation for B1's callable comparison, not a result. Finish the State
-range delivery before publishing this as another PR. No measurements have run.
+range delivery before publishing this as another PR. Peer correctness fixtures
+are being implemented; no complete fwp/C/Rust measurement has run.
 
 Partial application supplies one argument and keeps a function waiting for the
 next. For example, `add 7` produces a function that maps `3` to `10`. The captured
@@ -41,6 +42,14 @@ Do not add malloc or `Box` solely to imitate fwp's current representation. This
 is a comparison with explicit callable records, not every C callback API or a
 Rust trait-object benchmark. Report the actual size/alignment of each returned
 value and fwp's separately allocated capture storage.
+
+A common C observer drives the three implementations through their native
+interfaces. Compile the C and Rust callable implementations separately from that
+observer. The Rust scalar worker uses `core` without an allocator or standard-
+library startup; it is a Rust callable library, not a whole Rust application
+comparison. All peers report overflow through the same observer function.
+This reporting path is outside successful arithmetic; no success path calls it.
+Keep these boundaries explicit in later code, storage and timing reports.
 
 Prevent the caller from assuming a particular callback identity through a real
 separate compilation boundary, with link-time optimization disabled. Retain the
