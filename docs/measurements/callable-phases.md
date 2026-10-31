@@ -148,3 +148,34 @@ owner setup into both factories. This does not explain the AMD64 regression;
 its native diagnosis is still queued. Source changes have not been selected from
 this result. Read-only artifact audits can run on ARM64 because they verify
 bytes and records without executing the saved programs.
+
+
+## Follow-up: one constructor, two invocation paths
+
+Both native diagnoses pass: AMD64 job `124593267611` and ARM64 `124593267740`
+in `41220300146` reproduce the original objects byte for byte. On each host,
+GCC's optimized bodies for `returned_make`, `fwp_heap_alloc`, its slow/refill
+paths, `fwp_rc_forget_slot` and `fwp_mem_free` are identical between variants.
+The factory and allocator's source-level optimization decisions do not explain
+the regression. This is not a claim of identical final instruction placement,
+nor proof that preceding work has no effect on a later phase.
+
+Freeze the following **diagnostic** before collecting it. Build one executable
+containing both invocation paths, sharing exactly one factory and allocator.
+Select the invocation entry once before timing. Both paths use the same indirect
+call in the separate C caller; this extra indirection means the new numbers are
+not replacements for the original timings. Keep a byte-identical executable
+copy. Compare zero, one and sixteen calls per closure for both operations, with
+the same 4,096 closures and 256 batches. Zero calls supplies an identical-work
+control: the selected invocation entry never runs.
+
+Run two sessions on each native host, two warmup rounds and twenty measured
+rounds per case. Four-round blocks balance both mode/copy pairs' positions and
+predecessors. Preserve every output and timestamp, require the exact checksum
+for each call count, and keep the existing 2% copy and 5 ms duration controls.
+The zero-call invocation phase should be too short to qualify. Verify final
+payload cleanup after every batch. No production runtime changes, memory-saving
+claims, unchanged timing retries or acceptance-limit changes are part of this
+study. If a construction difference persists only after invocation within this
+shared executable, preceding work affects its measured cost; that alone cannot
+distinguish cache, scheduling, frequency or other hardware effects.

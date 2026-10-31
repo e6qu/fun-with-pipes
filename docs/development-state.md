@@ -1,8 +1,9 @@
 # Current work
 
-**Next:** diagnose the three qualified AMD64 construction regressions using
-byte-identical object reproduction and GCC source-level reports. Preserve the
-[phase results](measurements/callable-phases.md), and fix any main production failure.
+**Next:** run the frozen shared-constructor diagnostic at zero, one and sixteen
+calls per closure. Both object reproductions show identical factory/allocator
+optimized bodies; test effects of preceding invocation work before changing the
+runtime. Preserve [all original results](measurements/callable-phases.md).
 Prioritize execution time and working memory; preserve inconclusive measurements.
 
 Worktree: `/private/tmp/fwp-returned-callables`; branch `callable-phase-costs`;
@@ -41,12 +42,18 @@ The first-run summary retains all results; no unchanged measurement retry.
 
 The source head's docs `41219094215` / `124589718157` passes; its full log is
 reviewed, with only intentional runner/selector failures. Diagnostic run
-`41220300146`: ARM64 `124593267740` passes and reproduces both objects byte for
-byte; its factory inlining decisions agree. AMD64 `124593267611` remains queued.
-Independent audit `41219859189` / `124591988150` remains queued on AMD64; move that
-read-only audit to ARM64 and supersede only its unstarted run. No saved binaries
-execute in the artifact audit. A new record test freezes all 26 passing, three
-failed and three inconclusive candidate phases; it needs the new head's docs gate.
+`41220300146` passes ARM64 `124593267740` and AMD64 `124593267611`. Both reproduce
+the measured objects byte for byte. Factory, allocator, slow/refill, count-slot
+forgetting and physical-free optimized bodies are identical within each host.
+No runtime patch has been selected from these findings. The small report
+artifacts (under 180 KB each) were read locally; no saved executable ran.
+
+Independent audit `41221077777` on ARM64 passes; its complete log still needs
+review. The superseded AMD64 audit `41219859189` was cancelled while unstarted.
+The snapshot test freezes 26 passing, three failed and three inconclusive phases.
+New context controls must pass in the next dispatched study. Main macOS ARM64
+regular job `124588033328` now passes; its log contains no unexpected diagnostics.
+Other production jobs remain running/queued.
 
 ## Existing evidence
 

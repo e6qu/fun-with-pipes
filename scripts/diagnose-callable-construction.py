@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Reproduce measured objects and retain GCC's source-level optimization reports.
+"""Reproduce compiler reports or isolate preceding-call effects in one binary.
 
-No timing reruns, runtime patch, disassembly, or change to accepted limits.
+No unchanged timing retry, production runtime patch, or disassembly.
 """
 import argparse
 import importlib.util
@@ -9,8 +9,11 @@ import json
 import os
 from pathlib import Path
 import platform
+import resource
 import shutil
 import subprocess
+
+from callable_context import collect
 
 SPEC = importlib.util.spec_from_file_location("phases", Path(__file__).with_name("measure-callable-phases.py"))
 PHASES = importlib.util.module_from_spec(SPEC)
@@ -24,8 +27,10 @@ def main():
     parser.add_argument("--source", required=True)
     parser.add_argument("--arch", choices=("aarch64", "x86_64"), required=True)
     parser.add_argument("--cc", required=True)
+    parser.add_argument("--study", choices=("reports", "context"), required=True)
     args = parser.parse_args()
     assert os.environ.get("GITHUB_ACTIONS") == "true"
+    resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
     assert platform.system() == "Linux" and platform.machine() == args.arch
     PHASES.audit(args)
     report = json.loads((args.input / "report.json").read_text())
@@ -40,6 +45,9 @@ def main():
     out = args.output.resolve()
     out.mkdir(parents=True, exist_ok=False)
     commands = [json.loads(line) for line in (root / "commands.jsonl").read_text().splitlines()]
+    if args.study == "context":
+        collect(args, root, out / "context", PHASES)
+        return
     results = {}
     for peer in ("reference", "fwp"):
         source = root / peer / "implementation.c"
