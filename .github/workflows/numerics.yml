@@ -86,6 +86,8 @@ jobs:
           uname -m
           cat /etc/os-release
           test "$(uname -m)" = "${{ matrix.arch }}"
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
       - name: Build the current compiler
         shell: bash
         run: |

@@ -1,7 +1,7 @@
 # Current work
 
-**Next:** run the repaired native Swift comparison, audit every result and
-publish the performance/memory assessment. The first run stopped before timing. The user prioritizes runtime
+**Next:** run the Swift comparison after the checkout-trust repair, audit every
+result and publish the performance/memory assessment. Neither setup run timed programs. The user prioritizes runtime
 performance over executable size and requires Swift as an ARC peer. The original
 callable size-budget rejection stays recorded; fewer counts are not a measured
 speedup. PR #233 is verified, merged and integrated. Draft PR #234 groups this
@@ -107,7 +107,15 @@ before measurements, and only upload existing evidence. Rustup's sudo check is
 explicitly disabled for GitHub's known root-container /github/home layout; no
 HOME variable is changed. No timing samples were collected, so this is a setup
 repair, not a retry of an observed measurement. Raw logs: `/private/tmp/fwp-swift-*-3e6d.log`.
-No Swift speed or memory result has been accepted yet.
+Second run `41213323565` at `c4c84ca1`: all four compilers, three Python controls
+and 33 Swift arithmetic cases pass; all four then reject Git checkout ownership
+before creating measurement output. Jobs: AMD `124572647815` / `124572647984`,
+ARM `124572648040` / `124572648045`. Complete logs are audited in
+`/private/tmp/fwp-swift-*-c4c8.log`. Trust only `$GITHUB_WORKSPACE` inside this
+throwaway container and verify the exact source before building. No timing retry.
+The documentation gate `41213289806` / `124572548658` passes: 344 Python cases
+across 53 suites, preserved historical rejections and intentional reporter-failure
+controls; no unexpected compiler diagnostic. No Swift timing result exists yet.
 
 Focused local Swift 6.2.1 ARM64 checks pass (2.92s): eight checksum/representation
 rows, normal release and omitted-release exit 78. Three timing-record tests pass
