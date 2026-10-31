@@ -339,6 +339,80 @@ pub struct Module {
 }
 
 impl Expr {
+    /// Visit evaluated expressions with the lexical patterns visible at each node.
+    /// Quoted syntax is data; only its unquoted expressions are evaluated here.
+    pub fn walk_scoped<'a>(
+        &'a self,
+        scope: &mut Vec<&'a Pattern>,
+        f: &mut dyn FnMut(&'a Expr, &[&'a Pattern]),
+    ) {
+        f(self, scope);
+        match &self.kind {
+            ExprKind::Let(p, value, body) => {
+                value.walk_scoped(scope, f);
+                scope.push(p);
+                body.walk_scoped(scope, f);
+                scope.pop();
+            }
+            ExprKind::Lambda(p, body) => {
+                scope.push(p);
+                body.walk_scoped(scope, f);
+                scope.pop();
+            }
+            ExprKind::Match(arms) => {
+                for arm in arms {
+                    scope.push(&arm.pat);
+                    arm.body.walk_scoped(scope, f);
+                    scope.pop();
+                }
+            }
+            ExprKind::Quote(body) => {
+                fn unquotes<'a>(
+                    e: &'a Expr,
+                    scope: &mut Vec<&'a Pattern>,
+                    f: &mut dyn FnMut(&'a Expr, &[&'a Pattern]),
+                ) {
+                    if let ExprKind::MacroCall(name, args) = &e.kind {
+                        if name == "unquote" {
+                            for arg in args {
+                                arg.walk_scoped(scope, f);
+                            }
+                            return;
+                        }
+                    }
+                    e.children(&mut |child| unquotes(child, scope, f));
+                }
+                unquotes(body, scope, f);
+            }
+            _ => self.children(&mut |child| child.walk_scoped(scope, f)),
+        }
+    }
+
+    /// Immediate expression children in source evaluation order.
+    fn children<'a>(&'a self, f: &mut dyn FnMut(&'a Expr)) {
+        match &self.kind {
+            ExprKind::App(g, args) | ExprKind::Operator(_, g, args) => {
+                f(g);
+                args.iter().for_each(f);
+            }
+            ExprKind::Pipe(a, b) | ExprKind::Let(_, a, b) => {
+                f(a);
+                f(b);
+            }
+            ExprKind::Tuple(xs) | ExprKind::List(xs) | ExprKind::MacroCall(_, xs) => {
+                xs.iter().for_each(f)
+            }
+            ExprKind::Record(fs)
+            | ExprKind::NominalRecord(_, fs)
+            | ExprKind::With(fs)
+            | ExprKind::Make(_, fs)
+            | ExprKind::Update(fs) => fs.iter().for_each(|(_, x)| f(x)),
+            ExprKind::Match(arms) => arms.iter().for_each(|a| f(&a.body)),
+            ExprKind::Lambda(_, x) | ExprKind::Comptime(x) | ExprKind::Quote(x) => f(x),
+            _ => {}
+        }
+    }
+
     /// Visit this expression and every expression inside it, outer first.
     pub fn walk(&self, f: &mut dyn FnMut(&Expr)) {
         f(self);

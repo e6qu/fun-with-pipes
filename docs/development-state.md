@@ -6,7 +6,7 @@ The user approved all ten steps in the revised PLAN.md. New syntax is in progres
 not verified support; do not publish examples as runnable until checks pass.
 
 Worktree: `/private/tmp/fwp-returned-callables`; branch `language-design-review`,
-based on merged main `781ebabb0463efc2f03f0d3aa44b7d2c4766959d`. The language batch will be published as the sole draft PR.
+based on merged main `781ebabb0463efc2f03f0d3aa44b7d2c4766959d`. Draft [PR #236](https://github.com/e6qu/fun-with-pipes/pull/236) is the sole active PR.
 The primary checkout has unrelated preserved work; do not reset it.
 
 ## Latest delivery
@@ -39,7 +39,7 @@ repair; they are superseded, not pending work.
 The initial implementation adds source fn/let nodes, named and record patterns, lexical
 monomorphic inference, resource duplication/capture constraints, and lifted
 functions with explicit capture parameters. Quote/format traversal and initial
-regressions are included. Compiler validation is pending; this is not support.
+regressions are included. The first focused run `41242796910` failed compilation on all three platforms: the macro record-pattern decoder moved a field out of a value with a destructor. All failed steps were audited; none reached language tests. The repair borrows that field, validates macro-created patterns, captures lexical syntax in templates, and fixes scope-aware linting and pipe formatting. Support remains unverified. Documentation run `41242798221` passes.
 Still required: finish macro/capture edge cases, formatter/tooling, ownership tests,
 full documentation/tutorial audit and the remaining optimization batches.
 

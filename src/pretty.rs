@@ -252,7 +252,14 @@ pub fn expr(e: &Expr) -> String {
     match &e.kind {
         ExprKind::Lambda(p, b) => format!("fn {} -> {}", pattern(p), expr(b)),
         ExprKind::Let(p, v, b) => format!("let {} = {} in {}", pattern(p), expr(v), expr(b)),
-        ExprKind::Pipe(a, b) => format!("{} | {}", app_level(a), app_level(b)),
+        ExprKind::Pipe(a, b) => {
+            let left = if matches!(a.kind, ExprKind::Lambda(..) | ExprKind::Let(..)) {
+                app_level(a)
+            } else {
+                expr(a)
+            };
+            format!("{} | {}", left, app_level(b))
+        }
         ExprKind::Comptime(x) => format!("comptime ({})", expr(x)),
         _ => app_level(e),
     }

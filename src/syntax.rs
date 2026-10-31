@@ -63,6 +63,8 @@ fn list(items: Vec<IR>) -> IR {
 pub trait QuoteCtx {
     /// Name assigned to a binder introduced by this quote.
     fn local_name(&self, id: NodeId, name: &str) -> String;
+    /// IR parameter corresponding to a positional template hole.
+    fn hole(&self, index: u32) -> IR;
     /// Qualified form of a value name (or the name itself if free).
     fn value_name(&self, n: &str) -> String;
     fn ctor_name(&self, n: &str) -> String;
@@ -146,7 +148,7 @@ fn quote_inner(e: &Expr, cx: &mut dyn QuoteCtx) -> Result<IR, Diagnostic> {
                 return Err(Diagnostic::error(e.span, "`unquote!` takes one argument"));
             }
             match hole_index(e) {
-                Some(i) => IR::Local(i),
+                Some(i) => cx.hole(i),
                 None => cx.unquote(&args[0])?,
             }
         }
@@ -298,6 +300,9 @@ pub fn const_value(e: &IR) -> Option<Value> {
 pub struct Plain;
 
 impl QuoteCtx for Plain {
+    fn hole(&self, index: u32) -> IR {
+        IR::Local(index)
+    }
     fn local_name(&self, _id: NodeId, name: &str) -> String {
         name.to_string()
     }
@@ -499,7 +504,7 @@ impl Builder<'_> {
             P_RECORD => {
                 let mut fields = Vec::new();
                 for field in fs[0].list_items() {
-                    let Value::Record(pair) = field else {
+                    let Value::Record(pair) = &field else {
                         return Err("malformed record pattern".into());
                     };
                     if pair.len() != 2 {

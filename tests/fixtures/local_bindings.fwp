@@ -28,4 +28,7 @@ main =
     in let x = x + 1
     in let _ = { x } | .x | echo
     in let x = 42
-    in keep-caller!(x) | echo
+    in let _ = keep-caller!(x) | echo
+    in let first = quote 2
+    in let template = quote (unquote!(first), unquote!(0))
+    in template (quote 3) | syntax.show | echo

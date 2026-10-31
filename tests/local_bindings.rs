@@ -49,13 +49,31 @@ fn local_scope_monomorphism_and_resource_rules_are_checked() {
         "main = let same = fn x -> x in (same 1, same True)\n",
         "resource Token = builtin\nbad : Token -> (Token, Token)\nbad = fn x -> (x, x)\n",
         "resource Token = builtin\nbad : Token -> I64 -> Token\nbad = fn x -> fn _ -> x\n",
-        "main = let x = 1 in comptime x\n",
     ] {
         let checked = check_source("locals.fwp", source, None);
-        // Compile-time dependence is rejected during lowering, below.
-        if !source.contains("comptime") {
-            assert!(checked.is_err(), "unexpected acceptance: {source}");
+        assert!(checked.is_err(), "unexpected acceptance: {source}");
+    }
+    assert!(fwp::driver::compile_source(
+        "locals.fwp",
+        "main = let x = 1 in comptime x\n",
+        fwp::mono::Roots {
+            main: true,
+            ..Default::default()
         }
+    )
+    .is_err());
+    for pattern in [
+        "PInt 1",
+        "PHole",
+        "PTuple [PName \"x\", PName \"x\"]",
+        "PRecord [(\"x\", PName \"a\"), (\"x\", PName \"b\")]",
+    ] {
+        let source =
+            format!("macro invalid = const (SLambda ({pattern}) (SInt 1))\nmain = invalid!(())\n");
+        assert!(
+            check_source("locals.fwp", &source, None).is_err(),
+            "{source}"
+        );
     }
 }
 
@@ -69,7 +87,7 @@ fn named_tacit_captures_and_macros_agree_across_backends() {
         (
             "values",
             std::fs::read_to_string(root.join("tests/fixtures/local_bindings.fwp")).unwrap(),
-            "18\n18\n7\n13\n8\n0\n9\nhello!\n4\n42\n",
+            "18\n18\n7\n13\n8\n0\n9\nhello!\n4\n42\n(2, 3)\n",
             None,
         ),
         (

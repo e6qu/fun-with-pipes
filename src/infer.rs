@@ -720,6 +720,7 @@ impl<'a> Infer<'a> {
             };
             self.current = b.name.clone();
             self.wanted.clear();
+            self.locals.clear();
             match self.check_binding(&b) {
                 Ok(_) => {}
                 Err(d) => {
@@ -1608,6 +1609,7 @@ impl<'a> Infer<'a> {
                 Ok(Type::fun(tin, tout, eff))
             }
             ExprKind::Let(pat, value, body) => {
+                validate_pattern(pat, false)?;
                 let value_type = self.infer(value, ctx)?;
                 let saved = self.locals.len();
                 self.check_pattern(pat, &value_type, &mut Vec::new())?;
@@ -1617,6 +1619,7 @@ impl<'a> Infer<'a> {
                 result
             }
             ExprKind::Lambda(pat, body) => {
+                validate_pattern(pat, false)?;
                 let start = self.env.table.vars.len();
                 let input = self.fresh();
                 let effect = self.fresh_eff();
@@ -1903,6 +1906,7 @@ impl<'a> Infer<'a> {
         let eff = self.fresh_eff();
         let mut rows = Vec::new();
         for arm in arms {
+            validate_pattern(&arm.pat, true)?;
             let saved = self.locals.len();
             let mut holes = Vec::new();
             let p = self.check_pattern(&arm.pat, &scrut, &mut holes)?;
@@ -2161,4 +2165,38 @@ pub fn module_bindings(env: &Env, module: &str) -> Vec<usize> {
         .collect();
     v.sort_by_key(|&i| (env.bindings[i].span.line, env.bindings[i].span.col));
     v
+}
+
+/// Macro syntax enters after parsing, so admission cannot rely on parser checks.
+fn validate_pattern(pattern: &Pattern, refutable: bool) -> IResult<()> {
+    fn visit(p: &Pattern, refutable: bool, names: &mut HashSet<String>) -> IResult<()> {
+        match &p.kind {
+            PatKind::Bind(name) => {
+                if !names.insert(name.clone()) {
+                    return Err(Diagnostic::error(p.span, format!("duplicate pattern binding `{name}`")));
+                }
+            }
+            PatKind::Ignore | PatKind::Unit => {}
+            PatKind::Tuple(items) => {
+                for item in items { visit(item, refutable, names)?; }
+            }
+            PatKind::Record(fields) => {
+                let mut labels = HashSet::new();
+                for (label, value) in fields {
+                    if !labels.insert(label) {
+                        return Err(Diagnostic::error(value.span, format!("duplicate pattern field `{label}`")));
+                    }
+                    visit(value, false, names)?;
+                }
+            }
+            _ if !refutable => return Err(Diagnostic::error(p.span,
+                "fn, let and record field patterns must always match; use match for alternatives (PIgnore discards a macro binder)")),
+            PatKind::Ctor(_, Some(items)) => {
+                for item in items { visit(item, true, names)?; }
+            }
+            _ => {}
+        }
+        Ok(())
+    }
+    visit(pattern, refutable, &mut HashSet::new())
 }

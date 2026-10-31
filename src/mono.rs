@@ -14,6 +14,7 @@ use crate::value::Value;
 
 type Subst = HashMap<TV, MT>;
 type MResult<T> = Result<T, Diagnostic>;
+type LiftedWork = (FuncId, NodeId, Subst, String, Vec<(NodeId, MT)>);
 
 /// Which entry points to compile.
 #[derive(Clone, Debug, Default)]
@@ -52,7 +53,7 @@ pub struct Mono<'a> {
     generated: HashMap<String, FuncId>,
     match_funcs: HashMap<(NodeId, Vec<(TV, MT)>), FuncId>,
     work: Vec<(FuncId, usize, Subst)>,
-    match_work: Vec<(FuncId, NodeId, Subst, String, Vec<(NodeId, MT)>)>,
+    match_work: Vec<LiftedWork>,
     matches: HashMap<NodeId, &'a ast::Expr>,
     /// Module of the code being lowered (for hygienic quotes).
     cur_module: String,
@@ -1364,23 +1365,52 @@ impl<'a> Mono<'a> {
             ExprKind::Quote(x) => {
                 let holes = crate::syntax::hole_count(x);
                 if holes == 0 {
-                    let mut cx = QuoteCx { mono: self, s, fb };
+                    let mut cx = QuoteCx {
+                        mono: self,
+                        s,
+                        fb,
+                        hole_offset: 0,
+                    };
                     return crate::syntax::quote(x, &mut cx);
                 }
-                // a syntax template: a function of its positional holes
-                let mt = self.node_mt(e.id, s);
-                let mut tfb = FB::params(&mt, holes);
+                // Template holes follow explicit captured syntax values. Capture only
+                // inferred unquotes, not the unevaluated names inside the quote.
+                let mut captured = std::collections::BTreeSet::new();
+                x.walk(&mut |node| {
+                    if let Some(id) = self.typed.local_uses.get(&node.id) {
+                        if fb.bindings.contains_key(id) {
+                            captured.insert(*id);
+                        }
+                    }
+                });
+                let offset = captured.len() as u32;
+                let mt = fun_of(
+                    captured
+                        .iter()
+                        .map(|id| fb.locals[fb.bindings[id] as usize].clone())
+                        .collect(),
+                    self.node_mt(e.id, s),
+                );
+                let args = captured
+                    .iter()
+                    .map(|id| Expr::Local(fb.bindings[id]))
+                    .collect();
+                let mut tfb = FB::params(&mt, offset + holes);
+                for (local, id) in captured.iter().enumerate() {
+                    tfb.bindings.insert(*id, local as Local);
+                }
                 let body = {
                     let mut cx = QuoteCx {
                         mono: self,
                         s,
                         fb: &mut tfb,
+                        hole_offset: offset,
                     };
                     crate::syntax::quote(x, &mut cx)?
                 };
-                let id = self.new_func("quote".into(), holes, mt, Body::Expr(body));
+                let id = self.new_func("quote".into(), offset + holes, mt, Body::Expr(body));
                 self.prog.funcs[id].locals = tfb.locals;
-                Ok(Expr::Func(id))
+                Ok(self.mk_apply(Expr::Func(id), args))
             }
             ExprKind::TypeOf(_) => {
                 let t = self
@@ -1608,9 +1638,13 @@ struct QuoteCx<'m, 'a, 's, 'f> {
     mono: &'m mut Mono<'a>,
     s: &'s Subst,
     fb: &'f mut FB,
+    hole_offset: u32,
 }
 
 impl crate::syntax::QuoteCtx for QuoteCx<'_, '_, '_, '_> {
+    fn hole(&self, index: u32) -> Expr {
+        Expr::Local(self.hole_offset + index)
+    }
     fn local_name(&self, id: NodeId, name: &str) -> String {
         format!("::local::{id}::{name}")
     }
