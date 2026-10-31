@@ -81,7 +81,7 @@ mirror-step : WebSocket -> Step[WebSocket, ()] ! {Async, IO, Network, FileIO}
 mirror-step = fn socket ->
     ws.recv socket | match
         Some (WsMessage.Close code reason) -> Stop ()
-        Some message -> let _ = ws.send socket message in Again socket
+        Some message -> let _ = ws.send message socket in Again socket
         None -> Stop ()
 ```
 
@@ -177,7 +177,7 @@ mirror-step : WebSocket -> Step[WebSocket, ()] ! {Async, IO, Network, FileIO}
 mirror-step = fn socket ->
     ws.recv socket | match
         Some (WsMessage.Close code reason) -> Stop ()
-        Some message -> let _ = ws.send socket message in Again socket
+        Some message -> let _ = ws.send message socket in Again socket
         None -> Stop ()
 
 routes : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}

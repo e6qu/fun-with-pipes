@@ -766,7 +766,15 @@ impl Fmt<'_> {
     fn arms(&self, arms: &[Arm], indent: usize) -> String {
         let mut s = String::from("match");
         for a in arms {
-            let head = format!("{} ->", self.pattern(&a.pat, false));
+            // A leading brace opens the arm block. Parenthesize a record
+            // pattern so the same grammar works in layout and explicit blocks.
+            let pattern = self.pattern(&a.pat, false);
+            let pattern = if matches!(a.pat.kind, PatKind::Record(_)) {
+                format!("({pattern})")
+            } else {
+                pattern
+            };
+            let head = format!("{pattern} ->");
             s.push('\n');
             s.push_str(&pad(indent + INDENT));
             s.push_str(&self.rhs(&head, &a.body, indent + INDENT));

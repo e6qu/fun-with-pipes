@@ -72,21 +72,33 @@ jobs:
           echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
           echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
       - run: cargo fmt --all -- --check
-      - run: cargo clippy --lib --bin fwp --test local_bindings --test compiler_call_liveness --test debugger --test infix --test fmt --test golden_parse --test golden_check --test lint --test lsp --test resource_frames --test closure_ownership --test closure_cleanup --test preempt -- -D warnings
+      - run: cargo clippy --lib --bin fwp --test local_bindings --test compiler_call_liveness --test debugger --test infix --test fmt --test golden_parse --test golden_check --test lint --test lsp --test resource_frames --test closure_ownership --test closure_cleanup --test preempt --test repl --test numeric_array_fusion -- -D warnings
       - name: Macro scope dependencies
         if: ${{ !cancelled() }}
-        run: cargo test --lib macros::tests
+        run: |
+          cargo test --lib macros::tests
+          cargo test --lib opt::tests
       - name: Lexical bindings and affected language contracts
         if: ${{ !cancelled() }}
-        run: cargo test --no-fail-fast --test local_bindings --test compiler_call_liveness --test debugger --test infix --test fmt --test golden_parse --test golden_check --test lint --test lsp --test resource_frames --test closure_ownership --test closure_cleanup --test preempt
+        run: cargo test --no-fail-fast --test local_bindings --test compiler_call_liveness --test debugger --test infix --test fmt --test golden_parse --test golden_check --test lint --test lsp --test resource_frames --test closure_ownership --test closure_cleanup --test preempt --test repl --test numeric_array_fusion
       - name: Tutorial programs and source copies
         if: ${{ !cancelled() }}
         run: cargo test --test examples --test stdlib_doc --no-fail-fast
+      - name: Notebook and debugger integration
+        if: ${{ !cancelled() }}
+        env:
+          FWP_TEST_BIN: ${{ github.workspace }}/target/debug/fwp
+          PYTHONPATH: sdk/python
+        run: >-
+          python3 sdk/python/tests/test_tools.py
+          Tools.test_notebook_local_names_are_not_cell_dependencies
+          Tools.test_notebook_replaces_definitions_and_never_replays_other_expressions
+          Tools.test_source_instrumentation_preserves_tutorial_behavior
       - name: Raw interpreter corpus
         if: ${{ !cancelled() }}
         env:
           FWP_NO_OPT: '1'
-        run: cargo test --test golden_run -- --skip golden_programs_with_counted_ownership
+        run: cargo test --test golden_run
   callable_construction_diagnosis:
     if: inputs.suite == 'callable-construction-diagnosis' || inputs.suite == 'callable-phase-context' || inputs.suite == 'callable-phase-paired'
     strategy:

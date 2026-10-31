@@ -180,6 +180,10 @@ fn numeric_array_fusion_preserves_effects_checked_traps_and_raw_semantics() {
       ("numeric",basic,0),
       ("generated",include_str!("fixtures/generated_array_folds.fwp"),0),
       ("generated-effect-order","main = array.generate 3 (tap echo) | array.fold add 9223372036854775807 | echo\n",101),
+      ("named-generated-effects","main = let values = array.generate 3 (tap echo) in values | array.map (add 1) | array.fold add 9223372036854775807 | echo\n",101),
+      ("named-generated-traps","main = let values = array.generate 3 (add 9223372036854775806) in values | array.map (div 0) | array.fold add 0 | echo\n",101),
+      ("named-generated-seed","main = let values = array.generate 3 (tap echo) in array.fold add (99 | tap echo) (values | array.map (add 1)) | echo\n",0),
+      ("named-generated-alias","main = let values = array.generate 4 id in (values | array.map (add 1) | array.fold add 0, values | array.to-list) | echo\n",0),
       ("generated-small-overflow","main = array.generate 2 (const 127i8) | array.fold add 0i8 | echo\n",101),
       ("generated-distinct-traps","main = array.generate 3 (add 9223372036854775806) | array.fold div 0 | echo\n",101),
       ("generated-size","main = array.generate 2305843009213693952 id | array.fold add 0 | echo\n",101),
@@ -212,7 +216,7 @@ fn numeric_array_fusion_preserves_effects_checked_traps_and_raw_semantics() {
         if label == "effect-order" {
             assert_eq!(reference.stdout, b"1\n2\n");
         }
-        if label == "generated-effect-order" {
+        if matches!(label, "generated-effect-order" | "named-generated-effects") {
             assert_eq!(reference.stdout, b"0\n1\n2\n");
         }
         if label == "generated" {
@@ -236,6 +240,12 @@ fn numeric_array_fusion_preserves_effects_checked_traps_and_raw_semantics() {
                 10000000000000000.0
             );
         }
+        if label == "named-generated-seed" {
+            assert_eq!(reference.stdout, b"0\n1\n2\n99\n105\n");
+        }
+        if label == "named-generated-alias" {
+            assert_eq!(reference.stdout, b"(10, [0, 1, 2, 3])\n");
+        }
         if label == "generated-nested-seed" {
             assert_eq!(reference.stdout, b"9\n");
         }
@@ -245,7 +255,10 @@ fn numeric_array_fusion_preserves_effects_checked_traps_and_raw_semantics() {
         if label == "generated-size" {
             assert!(String::from_utf8_lossy(&reference.stderr).contains("array too large"));
         }
-        if matches!(label, "distinct-traps" | "generated-distinct-traps") {
+        if matches!(
+            label,
+            "distinct-traps" | "generated-distinct-traps" | "named-generated-traps"
+        ) {
             assert!(
                 String::from_utf8_lossy(&reference.stderr).contains("arithmetic overflow in I64")
             );

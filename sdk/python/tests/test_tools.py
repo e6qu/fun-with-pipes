@@ -12,6 +12,20 @@ FWP = os.environ["FWP_TEST_BIN"]
 
 
 class Tools(unittest.TestCase):
+    def test_notebook_local_names_are_not_cell_dependencies(self):
+        with tempfile.TemporaryDirectory() as directory:
+            kernel = Kernel(FWP, directory)
+            document = {"cells": [
+                {"id": "definition", "kind": "code", "source": "x = 99"},
+                {"id": "result", "kind": "code", "source": "let out1 = 4 in let x = out1 in x + x"},
+            ]}
+            try:
+                result = kernel.run(document, ["result"])
+                self.assertEqual(result["results"]["result"]["result"]["value"], "8")
+                self.assertEqual(result["dependencies"]["result"], [])
+            finally:
+                kernel.interrupt()
+
     def test_failed_debugger_start_preserves_compiler_diagnostic(self):
         with tempfile.TemporaryDirectory() as directory:
             source = Path(directory) / "bad.fwp"

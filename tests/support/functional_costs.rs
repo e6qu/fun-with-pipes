@@ -184,6 +184,7 @@ int main(int argc, char **argv) {{
 }}
 "#
     ));
+    let mut failures = Vec::new();
     for optimization in ["-O0", "-O2"] {
         let binary = dir.join(format!("functional{optimization}.exe"));
         let artifact = std::env::var_os("FWP_ARC_ARTIFACTS").map(|root| {
@@ -265,17 +266,17 @@ int main(int argc, char **argv) {{
                 ("folded", [0, 0, 0, 0, 0]),
                 ("state-loop", [2, 152, 1, 1, 0]),
             ] {
-                assert_eq!(
-                    observations[&(name.into(), "known".into(), n)],
-                    expected,
-                    "known-call cost changed: {name} n={n}: {report}"
-                );
+                let known = &observations[&(name.into(), "known".into(), n)];
+                if known != &expected {
+                    failures.push(format!(
+                        "{optimization} known {name} n={n}: {known:?} != {expected:?}"
+                    ));
+                }
                 let named = &observations[&(name.into(), "named".into(), n)];
-                for (got, limit) in named.iter().zip(expected) {
-                    assert!(
-                        *got <= limit,
-                        "named form adds work: {name} n={n}: {report}"
-                    );
+                if named.iter().zip(expected).any(|(got, limit)| *got > limit) {
+                    failures.push(format!(
+                        "{optimization} named {name} n={n}: {named:?} exceeds {expected:?}"
+                    ));
                 }
             }
         }
@@ -307,4 +308,5 @@ int main(int argc, char **argv) {{
             std::fs::write(prefix.with_extension("txt"), &report).unwrap();
         }
     }
+    assert!(failures.is_empty(), "{}", failures.join("\n"));
 }

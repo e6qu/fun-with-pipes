@@ -42,7 +42,7 @@ finished batch. Do not let unresolved timing noise stop independent compiler wor
 - Add `fn pattern -> body`. It takes one argument. Successive arguments use
   nested functions; tuple arguments stay tuples. Keep tacit definitions unchanged.
 - Permit names in match patterns. Existing `_` holes keep forwarding their values
-  to the arm body. In fn/let patterns, `_` explicitly discards the matched input.
+  to the arm body. In fn/let and record-field patterns, `_` discards the input.
   Refutable fn/let patterns are rejected: use `match` for alternatives.
 - Add tuple and record destructuring, including nested irrefutable fields.
   Record patterns select named fields; unlisted fields are ignored. Add value

@@ -32,7 +32,7 @@ Implemented, awaiting compiler/native validation:
 - Strict immutable `let pattern = value in body`, single-input `fn pattern ->
   body`, named match patterns, tuple/record destructuring and record shorthand.
   Local types are monomorphic; duplication/capture rules still apply. `_`
-  discards in fn/let and retains its forwarding meaning in match.
+  discards in fn/let and record fields; other match holes forward their values.
 - Explicit capture lowering and direct parameters for simple fn inputs. Eight
   named/tacit cost pairs check dispatch, allocation and count limits. Alias,
   error, cancellation and physical-release controls cover captured values.
@@ -47,40 +47,48 @@ Implemented, awaiting compiler/native validation:
   explains local scope/capture and the two meanings of `_`. Library docs are
   regenerated from source. The remaining documentation audit is still open.
 
-The next batch follows tested source `70ab0307e73b04587abd5c2b815af2c4864b6310`.
-It adds scope-correct vector/matrix constructor recognition, readable aligned
-let formatting, preserved field shorthand, further API/ownership lessons and an
-overflow-safe C sorting comparator. These changes need their own runner checks.
+The next batch repairs the failures below and adds scope-aware notebook
+analysis, REPL continuation for let/fn, saved-closure tests, record-pattern
+formatting and clearer interactive guides. History is ordered by delivery;
+duplicate status summaries are removed without deleting evidence.
 
 ## Validation and failures
 
-Focused run `41242796910` failed compilation on all three hosts: macro record
-pattern decoding moved a field from a value with a destructor. All failed steps
-were audited; no language tests ran. The repair borrows the field. Documentation
-run `41242798221` passes.
+Focused run `41246880525`, source `bcb4a468e44c1cb66424505c231f5a8ac943c385`,
+completed on Linux ARM64/AMD64 (GCC) and macOS ARM64 (Clang). All three complete
+logs were audited, including successful targets and diagnostics. Docs run
+`41246883800` passes. The three hosts report the same failures:
 
-Runs `41243195909`, `41243748366` and `41244787126` never started and were
-cancelled after their sources were superseded. Completed run `41245768888` at
-`70ab0307` was audited on all three hosts:
+- Named array mapping/folding retains one temporary array: 264 bytes at 32
+  elements, 1,032 at 128. Named list folding creates two allocations per element
+  and four runtime applications. Other named pairs meet their limits at O0.
+  These are failed cost requirements, not timing results. O2 did not run after
+  the assertion; the repaired test now collects cost failures across both levels.
+- The new shared-capture fixture used reserved `make` as a name. The OpenAPI
+  fixture expected an unreferenced schema to be emitted. Both fixtures are fixed;
+  all lexical cases now run even when an earlier one fails.
+- WebSocket lesson 19 passed socket/message arguments in reverse order. Its
+  source and README now use the declared data-last order.
+- Compiler lint, macro scopes, closure ownership/cleanup, other call-liveness
+  tests, debugger, infix syntax, formatting, golden parsing/checking, lint,
+  editor tests, preemption and resource frames pass. Tutorial programs, source
+  copies and library docs pass. The raw corpus passes on all three hosts.
 
-- Compiler lint and the macro scope unit test pass everywhere.
-- The language-target group did not execute: the named cost probe's untyped Rust
-  closure parameter acquired a borrowed temporary's lifetime. It now declares
-  `&str` explicitly; focused clippy now covers every affected target.
-- Tutorial programs, source copies and generated library docs pass everywhere.
-  All terminal sessions pass on Linux. macOS TLS sessions fail because the new
-  workflow selected the OpenSSL library but omitted OpenSSL 3's executable from
-  PATH; its setup now matches production and the tutorial names that requirement.
-- The raw corpus differs only in `preempt.fwp` scheduling, identically in both
-  backends on all hosts. Raw IR has different function-entry counts. A separate
-  exact raw transcript preserves this check alongside the optimized transcript;
-  no output is normalized or skipped. The dedicated scheduling suite is included.
-- Documentation run `41245767296` passes.
+Pending compiler repairs reconnect a single-use named generator before array
+fusion, crossing only total argument expressions. Known curried callbacks expose
+both argument stages through existing specialization; resource frames and eager
+capture evaluation remain in place. Numerical controls cover aliases, callback
+effects, seed evaluation and distinct first traps. Cost limits are unchanged.
 
-All three repairs need fresh runner verification. The focused suite covers
-language/ownership, named/tacit costs, editor/debugger, macro scopes, tutorials,
-scheduling and the raw corpus. Full production validation follows the completed
-batch; draft skips are not passes.
+The preceding run `41245768888` failed the Rust probe's inferred borrow lifetime,
+macOS OpenSSL executable selection and raw preemption transcript. Those repairs
+are verified by `41246880525`. Earlier compile failure `41242796910` was fixed by
+borrowing a macro record field instead of moving it from a value with Drop.
+Superseded queued runs `41243195909`, `41243748366`, `41244787126` were cancelled.
+
+The next focused run must verify these repairs, notebook/REPL integration and
+all remaining lexical cases. Full production validation follows the completed
+batch; draft skips are not passes. No final-head production matrix has run yet.
 
 Local checks through the unchanged guard:
 
@@ -90,7 +98,7 @@ Local checks through the unchanged guard:
 | `scripts/test-native-test-runner.py` | 21 pass, including new target coverage |
 | Frozen primitive inventory | 394 declarations, 384 symbols, no review symbols |
 | `scripts/check-roadmap.py` | 192 doc link sets, 106 preparation pairs, ten steps pass |
-| Standalone production parser/formatter modules | 15 pass, including all tutorial programs and round trips; 3.14 CPU seconds to compile |
+| Standalone production parser/formatter modules | 16 pass, including REPL continuation, record patterns, tutorial programs and round trips; 3.36 CPU seconds to compile |
 | Standalone `tests/examples.rs` source/output-copy test | All tutorial copies pass; no fwp execution |
 | Standalone `tests/stdlib_doc.rs` generator | Pass; library reference regenerated |
 

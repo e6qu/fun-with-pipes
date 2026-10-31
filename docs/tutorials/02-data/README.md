@@ -61,7 +61,8 @@ the side lengths and uses `abs` to make the area nonnegative.
 
 A match must cover every alternative. Omitting `Rect` is an error. Existing
 tacit patterns remain available: `Some _ -> add 1` forwards the stored value to
-`add 1`. In a **match**, `_` forwards a value; in **fn/let**, `_` discards it.
+`add 1`. A match `_` hole forwards a value. In **fn/let** and record-field
+patterns, `_` discards it; `{ x, y = _ }` keeps only the name `x`.
 Thus `Some value -> value + 1` and `Some _ -> add 1` mean the same thing.
 A bare constructor with fields, such as `Some`, is shorthand for its holes.
 `None -> 0` has no payload and returns `0` directly. Avoid mixing names and holes

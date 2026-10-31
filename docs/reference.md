@@ -318,10 +318,18 @@ A named binder supplies no argument to the arm body; it makes the value availabl
 by name. In `match { (left, _) -> add left }`, only the second component is
 forwarded; the arm adds it to the named first component.
 
-`_` therefore forwards in `match` and discards in `fn`/`let`. Use named patterns
+Record-field patterns only destructure: `{ x, y = _ }` binds `x` and discards
+`y`, including inside a match arm. To forward a record field, name it and pass it
+explicitly. Outside record fields, `_` forwards in `match` and discards in
+`fn`/`let`. Use named patterns
 when a formula is clearer with ordinary values. Use holes when the arm is already
 a pipeline. `const` remains explicit for a hole arm returning a fixed result:
 `match { Some _ -> const 1, None -> 0 }`.
+
+Parenthesize a record pattern at the start of an indented match arm:
+`match ({ x, y = _ }) -> x`. Otherwise the leading `{` opens an explicit block
+of arms. The formatter adds these parentheses when converting a braced match to
+indented layout.
 
 ### Counts and indices
 

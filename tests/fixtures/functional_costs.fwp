@@ -116,7 +116,7 @@ named-each-count = fn n ->
 export named-folded : I64 -> I64
 named-folded = fn n ->
     let values = range 0 n
-    in values | fold (fn value -> fn total -> total + value) 0
+    in values | fold (fn total -> fn value -> total + value) 0
 export named-state-loop : I64 -> I64
 named-state-loop = fn n ->
     let step = match

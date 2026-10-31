@@ -11,6 +11,7 @@ fn syntax_round_trips_and_rejects_refutable_binders() {
         "fn x -> let square = x * x in square + square",
         "fn (x, y) -> x + y",
         "fn { x, y = other } -> x + other",
+        "match { { x, y = _ } -> x }",
         "let x = 3 in let x = x + 1 in { x }",
         "match { Some value -> value + 1, None -> 0 }",
         "match { (left, _) -> add left }",
@@ -35,6 +36,7 @@ fn syntax_round_trips_and_rejects_refutable_binders() {
         "let { x, x } = { x = 1 } in x",
         "let x = 1",
         "fn x x -> x",
+        "match { { x = 1 } -> 2 }",
         "match { Some (x, x) -> x, None -> 0 }",
     ] {
         assert!(
@@ -89,6 +91,7 @@ fn named_tacit_captures_and_macros_agree_across_backends() {
     let directory = std::env::temp_dir().join(format!("fwp-locals-{}", std::process::id()));
     std::fs::create_dir_all(&directory).unwrap();
     let compiler = env!("CARGO_BIN_EXE_fwp");
+    let mut failures = Vec::new();
     for (name, source, output, failure) in [
         (
             "values",
@@ -97,8 +100,20 @@ fn named_tacit_captures_and_macros_agree_across_backends() {
             None,
         ),
         (
+            "curried-fold-order",
+            "main = let base = 10 in [1, 2, 3] | fold (fn total -> fn value -> total * base + value) 0 | echo\n".into(),
+            "123\n",
+            None,
+        ),
+        (
+            "record-discard",
+            "main = { x = 3, y = 4 } | (match ({ x, y = _ }) -> x) | echo\n".into(),
+            "3\n",
+            None,
+        ),
+        (
             "shared-capture",
-            "make : String -> String -> String\nmake = fn text -> fn suffix -> text | concat suffix\nmain = let original = read-all () | concat \"retained\" in let append = make original in (append \"!\", original, append \"?\") | echo\n".into(),
+            "make-closure : String -> String -> String\nmake-closure = fn text -> fn suffix -> text | concat suffix\nmain = let original = read-all () | concat \"retained\" in let append = make-closure original in (append \"!\", original, append \"?\") | echo\n".into(),
             "(\"retained!\", \"retained\", \"retained?\")\n",
             None,
         ),
@@ -175,68 +190,74 @@ main = let identity = make-identity!(())
             Some("overflow"),
         ),
     ] {
-        let path = directory.join(format!("{name}.fwp"));
-        std::fs::write(&path, source).unwrap();
-        let reference = Command::new(compiler)
-            .args(["run", "--interp"])
-            .arg(&path)
-            .env("FWP_NO_OPT", "1")
-            .output()
-            .unwrap();
-        assert_eq!(
-            String::from_utf8_lossy(&reference.stdout),
-            output,
-            "{reference:?}"
-        );
-        if let Some(message) = failure {
-            assert!(!reference.status.success(), "{reference:?}");
-            assert!(
-                String::from_utf8_lossy(&reference.stderr).contains(message),
-                "{reference:?}"
-            );
-        } else {
-            assert!(reference.status.success(), "{reference:?}");
-            assert!(reference.stderr.is_empty(), "{reference:?}");
-        }
-        for opt in ["-O1", "-O2"] {
-            let executable = directory.join(format!("{name}{opt}{}", std::env::consts::EXE_SUFFIX));
-            let build = Command::new(compiler)
-                .args(["build", opt])
+        let checked = std::panic::catch_unwind(|| {
+            let path = directory.join(format!("{name}.fwp"));
+            std::fs::write(&path, source).unwrap();
+            let reference = Command::new(compiler)
+                .args(["run", "--interp"])
                 .arg(&path)
-                .arg("-o")
-                .arg(&executable)
+                .env("FWP_NO_OPT", "1")
                 .output()
                 .unwrap();
-            assert!(build.status.success(), "{build:?}");
-            let native = Command::new(&executable).output().unwrap();
             assert_eq!(
-                native.status.code(),
-                reference.status.code(),
-                "{name} {opt}"
+                String::from_utf8_lossy(&reference.stdout),
+                output,
+                "{reference:?}"
             );
-            assert_eq!(native.stdout, reference.stdout, "{name} {opt}");
-            assert_eq!(native.stderr, reference.stderr, "{name} {opt}");
-            if failure.is_none() {
-                let counted = Command::new(&executable).env("FWP_ALLOC_STATS", "1").output().unwrap();
-                assert!(counted.status.success(), "{counted:?}");
-                assert_eq!(counted.stdout, reference.stdout);
-                let report = allocation_report::parse(&String::from_utf8_lossy(&counted.stderr)).unwrap();
-                assert_eq!(report.live, 0, "{name} {opt}: {report:?}");
-                assert_eq!(report.allocated, report.released, "{name} {opt}: {report:?}");
+            if let Some(message) = failure {
+                assert!(!reference.status.success(), "{reference:?}");
+                assert!(
+                    String::from_utf8_lossy(&reference.stderr).contains(message),
+                    "{reference:?}"
+                );
+            } else {
+                assert!(reference.status.success(), "{reference:?}");
+                assert!(reference.stderr.is_empty(), "{reference:?}");
             }
+            for opt in ["-O1", "-O2"] {
+                let executable = directory.join(format!("{name}{opt}{}", std::env::consts::EXE_SUFFIX));
+                let build = Command::new(compiler)
+                    .args(["build", opt])
+                    .arg(&path)
+                    .arg("-o")
+                    .arg(&executable)
+                    .output()
+                    .unwrap();
+                assert!(build.status.success(), "{build:?}");
+                let native = Command::new(&executable).output().unwrap();
+                assert_eq!(
+                    native.status.code(),
+                    reference.status.code(),
+                    "{name} {opt}"
+                );
+                assert_eq!(native.stdout, reference.stdout, "{name} {opt}");
+                assert_eq!(native.stderr, reference.stderr, "{name} {opt}");
+                if failure.is_none() {
+                    let counted = Command::new(&executable).env("FWP_ALLOC_STATS", "1").output().unwrap();
+                    assert!(counted.status.success(), "{counted:?}");
+                    assert_eq!(counted.stdout, reference.stdout);
+                    let report = allocation_report::parse(&String::from_utf8_lossy(&counted.stderr)).unwrap();
+                    assert_eq!(report.live, 0, "{name} {opt}: {report:?}");
+                    assert_eq!(report.allocated, report.released, "{name} {opt}: {report:?}");
+                }
+            }
+        });
+        if checked.is_err() {
+            failures.push(name);
         }
     }
     std::fs::remove_dir_all(directory).unwrap();
+    assert!(failures.is_empty(), "failed lexical cases: {failures:?}");
 }
 
 #[test]
 fn generated_clients_escape_language_keywords() {
     for keyword in ["fn", "let", "in"] {
         let document = format!(
-            r#"{{"openapi":"3.0.0","info":{{"title":"keywords","version":"1"}},
-            "paths":{{"/value":{{"get":{{"operationId":"{keyword}","responses":{{"204":{{"description":"empty"}}}}}}}}}},
+            r##"{{"openapi":"3.0.0","info":{{"title":"keywords","version":"1"}},
+            "paths":{{"/value":{{"get":{{"operationId":"{keyword}","responses":{{"200":{{"description":"value","content":{{"application/json":{{"schema":{{"$ref":"#/components/schemas/Record"}}}}}}}}}}}}}}}},
             "components":{{"schemas":{{"Record":{{"type":"object","properties":{{"{keyword}":{{"type":"integer"}}}},"required":["{keyword}"]}}}}}}
-        }}"#
+        }}"##
         );
         let generated = fwp::openapi_import::client(&document).unwrap();
         assert!(

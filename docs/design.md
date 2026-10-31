@@ -52,6 +52,15 @@ The initializer stays at its original position; optimization must prove any
 removal or movement, even when the local name is unused. Local aliases do not
 change resource duplication or lifetime rules. See the [local binding contract](reference.md#local-bindings-and-named-functions).
 
+A known curried callback can return another known partial function. Higher-order
+specialization exposes both argument stages to the ordinary simplifier; it keeps
+the original resource frames and computation order. Direct entries that already
+accept the required arguments need no additional specialization. A single-use
+local generated array can rejoin its immediate map/fold chain before fusion,
+provided every argument crossed has no effects or traps. The normal fusion proof
+still decides whether interleaving element work is valid. These PR #236 changes
+await the [named/tacit cost checks](functional-costs.md#local-names-candidate-coverage).
+
 ## Eager computations in partial applications
 
 `add (calculate ())` evaluates `calculate ()` when the partial function is made.

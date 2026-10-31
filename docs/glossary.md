@@ -23,7 +23,7 @@ reading the tutorials.
 | Tuple / projection | A tuple groups values by position, such as `(3, "cat")`. A projection selects one: `.0` is the first, `.1` the second. |
 | Record / field | A record groups values by name, such as `{ age = 3 }`. `.age` selects that field. |
 | Variant / constructor | A type with named alternatives, such as `Option[T]`, whose values are `None` or `Some value`. A constructor makes one alternative. |
-| Pattern / arm | A pattern names or selects parts of an input. A match arm is the expression after `->`. In `match`, `_` forwards an argument to that expression; in `fn` and `let`, `_` discards the input. |
+| Pattern / arm | A pattern names or selects parts of an input. A match arm is the expression after `->`. A match `_` hole forwards an argument to that expression. In `fn`, `let` and record-field patterns, `_` discards the input. |
 | Immutable value | A value whose meaning cannot change after creation. An update returns a new logical value, even if the compiler can safely reuse its storage. |
 
 ## Types and actions

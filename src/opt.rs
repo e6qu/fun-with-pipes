@@ -1125,16 +1125,33 @@ fn rewrite_hofs(
         budget: 0,
         resource_locals: Vec::new(),
     };
-    let Expr::Apply(function, captures) = fexpr else {
-        return;
-    };
-    let Expr::Func(id) = &**function else {
-        return;
-    };
-    if captures.len() >= funcs.get(*id).map_or(0, |f| f.arity as usize) {
-        // An unknown or saturated computation returning a function has no
-        // known callback body to expose. Do not add a forwarding wrapper.
-        return;
+    match fexpr {
+        Expr::Apply(function, captures) => {
+            let Expr::Func(id) = &**function else { return };
+            if captures.len() >= funcs.get(*id).map_or(0, |f| f.arity as usize) {
+                return;
+            }
+        }
+        Expr::Func(id) => {
+            let function = &funcs[*id];
+            // A curried named callback can return a known partial function.
+            // Expose both argument stages to the existing specializer, which
+            // preserves resource frames and eager capture evaluation. Already
+            // saturated entries and unknown returned functions need no wrapper.
+            if function.arity == 0 || function.arity as usize >= n {
+                return;
+            }
+            let Body::Expr(Expr::Apply(returned, captures)) = &function.body else {
+                return;
+            };
+            let Expr::Func(returned) = &**returned else {
+                return;
+            };
+            if funcs[*returned].arity as usize != captures.len() + n - function.arity as usize {
+                return;
+            }
+        }
+        _ => return,
     }
     let mut bindings = Vec::new();
     // Bind aggregate captures once, including pure constructions. Otherwise

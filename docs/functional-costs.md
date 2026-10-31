@@ -69,10 +69,16 @@ boxes or retains relative to the maintained known-form limits. Each call must
 restore live storage and cleanup state. Source, generated C, executable and
 binary listing are retained with the existing artifact setting.
 
-These additions are awaiting compiler validation in PR #236. They establish a
-finite test scope, not a measured speedup or a claim that every local function
-is free. The source forms, inputs, phase boundaries and existing limits are
-fixed before inspecting the candidate counts.
+Focused run `41246880525` at `bcb4a468` found two failed O0 requirements on
+Linux ARM64/AMD64 and macOS ARM64. The named array path still requests one array
+(`8(n + 1)` bytes). Named list folding requests `2n` allocations, `40n` bytes,
+`4n` applications and `n` boxes; the corresponding tacit path requests none.
+The other six named pairs meet their limits. O2 was not reached after the failed
+assertion. PR #236 repairs these compiler paths and now collects both levels;
+those repairs remain unverified until a fresh runner result passes.
+
+This is a finite test scope, not a speedup or a claim that every local function
+is free. Inputs, phase boundaries and cost limits remain unchanged.
 
 These counters describe operations requested by generated C. One application can
 enter more than one runtime helper, and a C compiler can optimize a helper's
