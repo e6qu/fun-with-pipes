@@ -1,6 +1,6 @@
 # Current work
 
-**Next:** publish and validate the cached-function/evaluation-order repairs and
+**Next:** validate the published cached-function/evaluation-order repairs and
 the eight new local ownership/representation/collection cases through the
 three-host `lexical-bindings` suite. Audit every completed job before another push.
 The user authorized all ten steps in [PLAN.md](../PLAN.md). Steps 1–6 are in
@@ -35,7 +35,7 @@ editor navigation/rename, debugger inspection and notebook dependencies recogniz
 local names. Tutorials and the reference introduce these concepts with examples.
 The remaining whole-repository documentation audit stays open.
 
-The unpublished batch adds eight cases at 0/32/128 inputs, with count/allocation
+The latest batch adds eight cases at 0/32/128 inputs, with count/allocation
 requirements in PLAN.md before observations: local aliases, two String owner
 loops, four aggregate representations and a range/map/filter/fold. It exposes an
 immediately destructured record payload to existing scalar replacement and rejoins
@@ -64,6 +64,10 @@ calculation until after the next argument. Named entries now stop their argument
 group before intervening work or observable resource disposal; unknown calls
 stay sequential. Regressions cover unused returned functions, aliases and unknown
 callbacks. These repairs await runner validation.
+
+Dispatch for `253da9e8` was rejected before jobs started: adding evidence upload
+accidentally removed the next workflow job heading. The heading is restored;
+this was a workflow editing error, not a runner failure.
 
 Docs run `41248112966` failed a stale evidence-reader count (nine REPL tests
 instead of eleven). The count, synthetic log and total are repaired; eight guarded

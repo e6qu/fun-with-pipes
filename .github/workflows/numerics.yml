@@ -108,7 +108,7 @@ jobs:
           name: lexical-evidence-${{ matrix.runner }}
           path: lexical-evidence/
           if-no-files-found: error
-
+  callable_construction_diagnosis:
     if: inputs.suite == 'callable-construction-diagnosis' || inputs.suite == 'callable-phase-context' || inputs.suite == 'callable-phase-paired'
     strategy:
       fail-fast: false
