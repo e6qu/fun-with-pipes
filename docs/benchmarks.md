@@ -100,8 +100,10 @@ optimized intermediate code. A separate reference-capture control verifies norma
 release and deliberately retained ownership. It does not fabricate allocation
 counts for the scalar closure. Swift callable phase timing, allocation/count
 instrumentation, weak subscriptions and parser/numerical peers remain required
-before broader ownership or numerical parity claims. No Swift result exists until
-the new collection completes and its artifacts are audited. The `swift-peer-report`
+before broader ownership or numerical parity claims. **The [first four sessions and their artifact audit](measurements/swift-peers.md)
+are complete.** Five ARM64 cases pass both sessions’ noise controls; map and
+pipeline do not. The two AMD64 sessions use different CPU models and cannot
+establish repeated-host results. All observations remain recorded. The `swift-peer-report`
 workflow rechecks a completed run and prints timing/RSS rows without executing
 its binaries; supply the explicit evidence run and full measured source commit.
 

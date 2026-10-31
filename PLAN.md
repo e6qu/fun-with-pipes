@@ -29,12 +29,14 @@ collector is not the same as removing these costs. The
 
 ## Work order
 
-1. Complete the [Swift comparison](docs/benchmarks.md#swift-comparison) and report
-   current execution time and working memory alongside C/Rust. Prioritize those
-   over executable size. For the returned-callable candidate, preserve its original
-   ARM O1 size-budget failure; measure its timing benefit rather than infer it
-   from fewer counts. Keep the hardware protection. Finish the production matrix
-   before delivering any runtime change.
+1. Extend the [completed Swift comparison](docs/measurements/swift-peers.md) to
+   returned-callable construction, repeated invocation and release, with a
+   same-source fwp control disabling only the new borrowed-call path. Freeze the
+   timing/working-memory rules before collecting that comparison. Preserve the
+   original ARM O1 size rejection; prioritize execution time and working memory.
+   The seven-program runs qualify five repeated ARM64 cases; noisy map/pipeline
+   rows and different AMD64 CPUs remain explicit. Do not retry unchanged rows.
+   Finish the full production matrix before delivering the runtime change.
 2. Resolve D2/N1's failed measurements before claiming numerical speed acceptance.
    Fixed CPU affinity and equal executable names did not resolve the controls.
    Do not rerun unchanged experiments or increase sample counts again.

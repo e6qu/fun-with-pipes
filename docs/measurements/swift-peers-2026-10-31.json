@@ -1,0 +1,1422 @@
+{
+  "source": "80a0504a97f7c96291e77be6e8f843d5cb8c7391",
+  "run": 41214191081,
+  "auditRun": 41215212017,
+  "auditJob": 124578208152,
+  "auditLogSha256": "6f4a99340797015b0bfa99d3c6ccaea5ef08735b5cdfb9a9fc4c891c56ec4fbf",
+  "scope": "Summary transcribed from the runner artifact audit; full samples, commands, sources and binaries are in the named GitHub artifacts. No local remeasurement.",
+  "sessions": [
+    {
+      "source": "80a0504a97f7c96291e77be6e8f843d5cb8c7391",
+      "architecture": "x86_64",
+      "session": 1,
+      "cpuModel": "AMD EPYC 9V45 96-Core Processor",
+      "availableCpus": 4,
+      "versions": {
+        "cc": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+        "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\n",
+        "swiftc": "Swift version 6.4.2 (swift-6.4.2-RELEASE)\nTarget: x86_64-unknown-linux-gnu\n",
+        "time": "time (GNU Time) UNKNOWN\nCopyright (C) 2018 Free Software Foundation, Inc.\nLicense GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>.\nThis is free software: you are free to change and redistribute it.\nThere is NO WARRANTY, to the extent permitted by law.\n\nWritten by David Keppel, David MacKenzie, and Assaf Gordon.\n",
+        "objdump": "Ubuntu LLVM version 18.1.3\n  Optimized build.\n\n\n  Registered Targets:\n    aarch64     - AArch64 (little endian)\n    aarch64_32  - AArch64 (little endian ILP32)\n    aarch64_be  - AArch64 (big endian)\n    amdgcn      - AMD GCN GPUs\n    arm         - ARM\n    arm64       - ARM64 (little endian)\n    arm64_32    - ARM64 (little endian ILP32)\n    armeb       - ARM (big endian)\n    avr         - Atmel AVR Microcontroller\n    bpf         - BPF (host endian)\n    bpfeb       - BPF (big endian)\n    bpfel       - BPF (little endian)\n    hexagon     - Hexagon\n    lanai       - Lanai\n    loongarch32 - 32-bit LoongArch\n    loongarch64 - 64-bit LoongArch\n    m68k        - Motorola 68000 family\n    mips        - MIPS (32-bit big endian)\n    mips64      - MIPS (64-bit big endian)\n    mips64el    - MIPS (64-bit little endian)\n    mipsel      - MIPS (32-bit little endian)\n    msp430      - MSP430 [experimental]\n    nvptx       - NVIDIA PTX 32-bit\n    nvptx64     - NVIDIA PTX 64-bit\n    ppc32       - PowerPC 32\n    ppc32le     - PowerPC 32 LE\n    ppc64       - PowerPC 64\n    ppc64le     - PowerPC 64 LE\n    r600        - AMD GPUs HD2XXX-HD6XXX\n    riscv32     - 32-bit RISC-V\n    riscv64     - 64-bit RISC-V\n    sparc       - Sparc\n    sparcel     - Sparc LE\n    sparcv9     - Sparc V9\n    systemz     - SystemZ\n    thumb       - Thumb\n    thumbeb     - Thumb (big endian)\n    ve          - VE\n    wasm32      - WebAssembly 32-bit\n    wasm64      - WebAssembly 64-bit\n    x86         - 32-bit X86: Pentium-Pro and above\n    x86-64      - 64-bit X86: EM64T and AMD64\n    xcore       - XCore\n    xtensa      - Xtensa 32\n"
+      },
+      "programs": [
+        {
+          "program": "fib",
+          "medianNs": {
+            "c": 42775404.0,
+            "c-copy": 42925223.0,
+            "rs": 41553154.0,
+            "rs-copy": 41835236.0,
+            "swift": 43911789.0,
+            "swift-copy": 44397867.0,
+            "fwp": 12476232.5,
+            "fwp-copy": 12255386.5
+          },
+          "copyRatios": {
+            "c": 1.0035024566921682,
+            "rs": 1.0067884618337275,
+            "swift": 1.011069419194012,
+            "fwp": 1.018020321105336
+          },
+          "stable": true,
+          "fwpOverPeer": {
+            "c": 0.29166837325487327,
+            "rs": 0.3002475455894395,
+            "swift": 0.2841203418061605
+          },
+          "peakRssKiB": {
+            "c": [
+              1528,
+              1580,
+              1672
+            ],
+            "rs": [
+              2120,
+              2064,
+              2072
+            ],
+            "swift": [
+              8716,
+              8944,
+              9044
+            ],
+            "fwp": [
+              2040,
+              1972,
+              1916
+            ]
+          }
+        },
+        {
+          "program": "loop",
+          "medianNs": {
+            "c": 121786797.5,
+            "c-copy": 125320035.0,
+            "rs": 92522885.5,
+            "rs-copy": 91284189.0,
+            "swift": 105108208.5,
+            "swift-copy": 104966047.5,
+            "fwp": 126595903.0,
+            "fwp-copy": 125692220.5
+          },
+          "copyRatios": {
+            "c": 1.0290116627789643,
+            "rs": 1.0135696719614828,
+            "swift": 1.0013543522251802,
+            "fwp": 1.007189645440308
+          },
+          "stable": false,
+          "fwpOverPeer": {
+            "c": 1.0394879050826507,
+            "rs": 1.36826583299761,
+            "swift": 1.204434028575418
+          },
+          "peakRssKiB": {
+            "c": [
+              1520,
+              1644,
+              1672
+            ],
+            "rs": [
+              2072,
+              2040,
+              2008
+            ],
+            "swift": [
+              9092,
+              8788,
+              8996
+            ],
+            "fwp": [
+              2120,
+              2092,
+              1972
+            ]
+          }
+        },
+        {
+          "program": "map",
+          "medianNs": {
+            "c": 309732277.0,
+            "c-copy": 308779626.0,
+            "rs": 264455593.0,
+            "rs-copy": 263070821.5,
+            "swift": 449424519.5,
+            "swift-copy": 447454849.5,
+            "fwp": 272691739.0,
+            "fwp-copy": 275844907.5
+          },
+          "copyRatios": {
+            "c": 1.0030852132711632,
+            "rs": 1.0052638734014825,
+            "swift": 1.0044019413404526,
+            "fwp": 1.0115631243966654
+          },
+          "stable": true,
+          "fwpOverPeer": {
+            "c": 0.8804111138859448,
+            "rs": 1.0311437769440557,
+            "swift": 0.606757591471375
+          },
+          "peakRssKiB": {
+            "c": [
+              16840,
+              16624,
+              16852
+            ],
+            "rs": [
+              9980,
+              9828,
+              10032
+            ],
+            "swift": [
+              20352,
+              20184,
+              20092
+            ],
+            "fwp": [
+              17644,
+              17468,
+              17548
+            ]
+          }
+        },
+        {
+          "program": "pipeline",
+          "medianNs": {
+            "c": 18127682.5,
+            "c-copy": 18182106.0,
+            "rs": 16640458.0,
+            "rs-copy": 16661106.0,
+            "swift": 1000859263.5,
+            "swift-copy": 996630453.0,
+            "fwp": 9170210.5,
+            "fwp-copy": 9092083.5
+          },
+          "copyRatios": {
+            "c": 1.0030022315318023,
+            "rs": 1.0012408312319288,
+            "swift": 1.0042431078513312,
+            "fwp": 1.0085928599313898
+          },
+          "stable": true,
+          "fwpOverPeer": {
+            "c": 0.5058677798444451,
+            "rs": 0.5510792130841591,
+            "swift": 0.009162337637693254
+          },
+          "peakRssKiB": {
+            "c": [
+              13304,
+              13304,
+              13300
+            ],
+            "rs": [
+              9928,
+              9936,
+              10036
+            ],
+            "swift": [
+              23892,
+              24164,
+              24092
+            ],
+            "fwp": [
+              1912,
+              1972,
+              1976
+            ]
+          }
+        },
+        {
+          "program": "range-set",
+          "medianNs": {
+            "c": 11662811.0,
+            "c-copy": 11556457.0,
+            "rs": 11734233.5,
+            "rs-copy": 11672020.0,
+            "swift": 14217219.0,
+            "swift-copy": 14157264.5,
+            "fwp": 15347115.5,
+            "fwp-copy": 14993539.0
+          },
+          "copyRatios": {
+            "c": 1.009202993616469,
+            "rs": 1.005330139941501,
+            "swift": 1.0042348929766765,
+            "fwp": 1.0235819241874784
+          },
+          "stable": false,
+          "fwpOverPeer": {
+            "c": 1.315901929646292,
+            "rs": 1.3078924584209102,
+            "swift": 1.0794738056718407
+          },
+          "peakRssKiB": {
+            "c": [
+              9224,
+              9332,
+              9240
+            ],
+            "rs": [
+              9884,
+              9968,
+              9852
+            ],
+            "swift": [
+              17024,
+              17020,
+              17024
+            ],
+            "fwp": [
+              9440,
+              9892,
+              9692
+            ]
+          }
+        },
+        {
+          "program": "strings",
+          "medianNs": {
+            "c": 77501581.5,
+            "c-copy": 77618805.0,
+            "rs": 91927779.5,
+            "rs-copy": 91488293.5,
+            "swift": 92551694.0,
+            "swift-copy": 92529975.5,
+            "fwp": 3234482.5,
+            "fwp-copy": 3065457.0
+          },
+          "copyRatios": {
+            "c": 1.0015125304249437,
+            "rs": 1.0048037402730656,
+            "swift": 1.000234718531834,
+            "fwp": 1.0551387607133291
+          },
+          "stable": false,
+          "fwpOverPeer": {
+            "c": 0.04173440641337106,
+            "rs": 0.03518503892504006,
+            "swift": 0.034947847632048744
+          },
+          "peakRssKiB": {
+            "c": [
+              1640,
+              1704,
+              1560
+            ],
+            "rs": [
+              2088,
+              2140,
+              2048
+            ],
+            "swift": [
+              8900,
+              8880,
+              9128
+            ],
+            "fwp": [
+              1508,
+              1872,
+              1680
+            ]
+          }
+        },
+        {
+          "program": "text-length",
+          "medianNs": {
+            "c": 2677132.0,
+            "c-copy": 2690827.0,
+            "rs": 4538081.5,
+            "rs-copy": 4570345.5,
+            "swift": 5712273.5,
+            "swift-copy": 5791602.5,
+            "fwp": 2736462.5,
+            "fwp-copy": 2788220.0
+          },
+          "copyRatios": {
+            "c": 1.0051155490278403,
+            "rs": 1.0071096122888052,
+            "swift": 1.013887465297311,
+            "fwp": 1.0189140176413891
+          },
+          "stable": true,
+          "fwpOverPeer": {
+            "c": 1.0221619628766905,
+            "rs": 0.6029998579796331,
+            "swift": 0.4790496288386752
+          },
+          "peakRssKiB": {
+            "c": [
+              1544,
+              1672,
+              1584
+            ],
+            "rs": [
+              2108,
+              2064,
+              2112
+            ],
+            "swift": [
+              9056,
+              9072,
+              9140
+            ],
+            "fwp": [
+              1716,
+              1748,
+              1748
+            ]
+          }
+        }
+      ],
+      "artifact": {
+        "digest": "sha256:f9db5e18d2b1da4d773a5efc84a18ce8d347db8a9f4c6a9761bef3f34d35f9c0",
+        "expired": false,
+        "expires_at": "2027-01-29T15:18:08Z",
+        "id": 13047154895,
+        "name": "swift-peers-x86_64-1",
+        "size_in_bytes": 17849460
+      }
+    },
+    {
+      "source": "80a0504a97f7c96291e77be6e8f843d5cb8c7391",
+      "architecture": "x86_64",
+      "session": 2,
+      "cpuModel": "INTEL(R) XEON(R) PLATINUM 8573C",
+      "availableCpus": 4,
+      "versions": {
+        "cc": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+        "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\n",
+        "swiftc": "Swift version 6.4.2 (swift-6.4.2-RELEASE)\nTarget: x86_64-unknown-linux-gnu\n",
+        "time": "time (GNU Time) UNKNOWN\nCopyright (C) 2018 Free Software Foundation, Inc.\nLicense GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>.\nThis is free software: you are free to change and redistribute it.\nThere is NO WARRANTY, to the extent permitted by law.\n\nWritten by David Keppel, David MacKenzie, and Assaf Gordon.\n",
+        "objdump": "Ubuntu LLVM version 18.1.3\n  Optimized build.\n\n\n  Registered Targets:\n    aarch64     - AArch64 (little endian)\n    aarch64_32  - AArch64 (little endian ILP32)\n    aarch64_be  - AArch64 (big endian)\n    amdgcn      - AMD GCN GPUs\n    arm         - ARM\n    arm64       - ARM64 (little endian)\n    arm64_32    - ARM64 (little endian ILP32)\n    armeb       - ARM (big endian)\n    avr         - Atmel AVR Microcontroller\n    bpf         - BPF (host endian)\n    bpfeb       - BPF (big endian)\n    bpfel       - BPF (little endian)\n    hexagon     - Hexagon\n    lanai       - Lanai\n    loongarch32 - 32-bit LoongArch\n    loongarch64 - 64-bit LoongArch\n    m68k        - Motorola 68000 family\n    mips        - MIPS (32-bit big endian)\n    mips64      - MIPS (64-bit big endian)\n    mips64el    - MIPS (64-bit little endian)\n    mipsel      - MIPS (32-bit little endian)\n    msp430      - MSP430 [experimental]\n    nvptx       - NVIDIA PTX 32-bit\n    nvptx64     - NVIDIA PTX 64-bit\n    ppc32       - PowerPC 32\n    ppc32le     - PowerPC 32 LE\n    ppc64       - PowerPC 64\n    ppc64le     - PowerPC 64 LE\n    r600        - AMD GPUs HD2XXX-HD6XXX\n    riscv32     - 32-bit RISC-V\n    riscv64     - 64-bit RISC-V\n    sparc       - Sparc\n    sparcel     - Sparc LE\n    sparcv9     - Sparc V9\n    systemz     - SystemZ\n    thumb       - Thumb\n    thumbeb     - Thumb (big endian)\n    ve          - VE\n    wasm32      - WebAssembly 32-bit\n    wasm64      - WebAssembly 64-bit\n    x86         - 32-bit X86: Pentium-Pro and above\n    x86-64      - 64-bit X86: EM64T and AMD64\n    xcore       - XCore\n    xtensa      - Xtensa 32\n"
+      },
+      "programs": [
+        {
+          "program": "fib",
+          "medianNs": {
+            "c": 68219020.5,
+            "c-copy": 67635736.0,
+            "rs": 60513389.5,
+            "rs-copy": 60301282.5,
+            "swift": 64616531.0,
+            "swift-copy": 64746761.0,
+            "fwp": 16777950.0,
+            "fwp-copy": 16647685.0
+          },
+          "copyRatios": {
+            "c": 1.008623909999294,
+            "rs": 1.0035174542100327,
+            "swift": 1.002015428528653,
+            "fwp": 1.0078248116780202
+          },
+          "stable": true,
+          "fwpOverPeer": {
+            "c": 0.2459424054615384,
+            "rs": 0.2772601260420225,
+            "swift": 0.2596541433027409
+          },
+          "peakRssKiB": {
+            "c": [
+              1520,
+              1560,
+              1544
+            ],
+            "rs": [
+              2052,
+              2124,
+              2012
+            ],
+            "swift": [
+              8748,
+              9160,
+              9172
+            ],
+            "fwp": [
+              2040,
+              1916,
+              1916
+            ]
+          }
+        },
+        {
+          "program": "loop",
+          "medianNs": {
+            "c": 200768432.5,
+            "c-copy": 202246449.0,
+            "rs": 160440204.5,
+            "rs-copy": 161694680.0,
+            "swift": 177034674.0,
+            "swift-copy": 179259568.0,
+            "fwp": 221286965.5,
+            "fwp-copy": 225534642.0
+          },
+          "copyRatios": {
+            "c": 1.0073617972785638,
+            "rs": 1.0078189597421012,
+            "swift": 1.0125675606350426,
+            "fwp": 1.0191953307796613
+          },
+          "stable": true,
+          "fwpOverPeer": {
+            "c": 1.1021999960078386,
+            "rs": 1.3792488372202243,
+            "swift": 1.2499639788079029
+          },
+          "peakRssKiB": {
+            "c": [
+              1672,
+              1656,
+              1520
+            ],
+            "rs": [
+              2152,
+              2016,
+              2112
+            ],
+            "swift": [
+              9152,
+              9012,
+              9004
+            ],
+            "fwp": [
+              1924,
+              2008,
+              1924
+            ]
+          }
+        },
+        {
+          "program": "map",
+          "medianNs": {
+            "c": 468834265.0,
+            "c-copy": 469886074.0,
+            "rs": 425424040.5,
+            "rs-copy": 426816065.5,
+            "swift": 704457873.0,
+            "swift-copy": 705041785.5,
+            "fwp": 425840545.5,
+            "fwp-copy": 425526626.0
+          },
+          "copyRatios": {
+            "c": 1.0022434559044016,
+            "rs": 1.0032720882401567,
+            "swift": 1.00082888207,
+            "fwp": 1.000737719994048
+          },
+          "stable": true,
+          "fwpOverPeer": {
+            "c": 0.9082965501678936,
+            "rs": 1.0009790349400811,
+            "swift": 0.6044939829922236
+          },
+          "peakRssKiB": {
+            "c": [
+              16736,
+              16772,
+              16884
+            ],
+            "rs": [
+              9832,
+              9800,
+              10016
+            ],
+            "swift": [
+              20364,
+              20252,
+              20088
+            ],
+            "fwp": [
+              17676,
+              17580,
+              17676
+            ]
+          }
+        },
+        {
+          "program": "pipeline",
+          "medianNs": {
+            "c": 33095866.5,
+            "c-copy": 33282128.0,
+            "rs": 25769012.0,
+            "rs-copy": 25882620.0,
+            "swift": 1592212748.5,
+            "swift-copy": 1590539575.0,
+            "fwp": 22365117.0,
+            "fwp-copy": 22570774.5
+          },
+          "copyRatios": {
+            "c": 1.005627938461741,
+            "rs": 1.004408706084657,
+            "swift": 1.0010519533913516,
+            "fwp": 1.0091954582665497
+          },
+          "stable": true,
+          "fwpOverPeer": {
+            "c": 0.6757676823478848,
+            "rs": 0.8679074308320397,
+            "swift": 0.01404656320021922
+          },
+          "peakRssKiB": {
+            "c": [
+              13304,
+              13208,
+              13384
+            ],
+            "rs": [
+              10056,
+              10048,
+              10084
+            ],
+            "swift": [
+              23900,
+              23980,
+              24056
+            ],
+            "fwp": [
+              1992,
+              2116,
+              2116
+            ]
+          }
+        },
+        {
+          "program": "range-set",
+          "medianNs": {
+            "c": 15388012.5,
+            "c-copy": 15140252.0,
+            "rs": 15260583.0,
+            "rs-copy": 15403759.5,
+            "swift": 18133694.0,
+            "swift-copy": 18117092.5,
+            "fwp": 18982269.0,
+            "fwp-copy": 17967152.5
+          },
+          "copyRatios": {
+            "c": 1.0163643577398844,
+            "rs": 1.0093821120726514,
+            "swift": 1.0009163446066194,
+            "fwp": 1.0564984629590026
+          },
+          "stable": false,
+          "fwpOverPeer": {
+            "c": 1.2335750961990706,
+            "rs": 1.243875741837648,
+            "swift": 1.0467954846927494
+          },
+          "peakRssKiB": {
+            "c": [
+              9272,
+              9328,
+              9240
+            ],
+            "rs": [
+              9948,
+              9988,
+              9936
+            ],
+            "swift": [
+              16940,
+              17024,
+              17212
+            ],
+            "fwp": [
+              9556,
+              9524,
+              9556
+            ]
+          }
+        },
+        {
+          "program": "strings",
+          "medianNs": {
+            "c": 150899764.0,
+            "c-copy": 150783180.5,
+            "rs": 141269239.5,
+            "rs-copy": 141434096.5,
+            "swift": 159988351.5,
+            "swift-copy": 159801328.0,
+            "fwp": 4540806.5,
+            "fwp-copy": 4974147.5
+          },
+          "copyRatios": {
+            "c": 1.0007731863700806,
+            "rs": 1.0011669702518644,
+            "swift": 1.0011703500987177,
+            "fwp": 1.0954326065204496
+          },
+          "stable": false,
+          "fwpOverPeer": {
+            "c": 0.0300915414287858,
+            "rs": 0.03214292450409914,
+            "swift": 0.028382106931078666
+          },
+          "peakRssKiB": {
+            "c": [
+              1608,
+              1672,
+              1544
+            ],
+            "rs": [
+              2036,
+              2204,
+              1964
+            ],
+            "swift": [
+              9292,
+              8844,
+              9260
+            ],
+            "fwp": [
+              1712,
+              1668,
+              1656
+            ]
+          }
+        },
+        {
+          "program": "text-length",
+          "medianNs": {
+            "c": 4650643.5,
+            "c-copy": 4596477.0,
+            "rs": 6039387.0,
+            "rs-copy": 6033682.0,
+            "swift": 8346372.5,
+            "swift-copy": 8441517.5,
+            "fwp": 3920885.0,
+            "fwp-copy": 4733533.0
+          },
+          "copyRatios": {
+            "c": 1.0117843513630114,
+            "rs": 1.0009455254685282,
+            "swift": 1.0113995631036117,
+            "fwp": 1.2072613708384714
+          },
+          "stable": false,
+          "fwpOverPeer": {
+            "c": 0.8430844032659136,
+            "rs": 0.6492190349782189,
+            "swift": 0.4697711490830298
+          },
+          "peakRssKiB": {
+            "c": [
+              1544,
+              1560,
+              1608
+            ],
+            "rs": [
+              2024,
+              2100,
+              2020
+            ],
+            "swift": [
+              9032,
+              9008,
+              9152
+            ],
+            "fwp": [
+              1716,
+              1740,
+              1748
+            ]
+          }
+        }
+      ],
+      "artifact": {
+        "digest": "sha256:8e7744a074052b769ecbf6cef16bdd60e6488c11dce7d6ce383926fe830160c8",
+        "expired": false,
+        "expires_at": "2027-01-29T15:18:08Z",
+        "id": 13047439501,
+        "name": "swift-peers-x86_64-2",
+        "size_in_bytes": 17849505
+      }
+    },
+    {
+      "source": "80a0504a97f7c96291e77be6e8f843d5cb8c7391",
+      "architecture": "aarch64",
+      "session": 1,
+      "cpuModel": "Neoverse-N2",
+      "availableCpus": 4,
+      "versions": {
+        "cc": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+        "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\n",
+        "swiftc": "Swift version 6.4.2 (swift-6.4.2-RELEASE)\nTarget: aarch64-unknown-linux-gnu\n",
+        "time": "time (GNU Time) UNKNOWN\nCopyright (C) 2018 Free Software Foundation, Inc.\nLicense GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>.\nThis is free software: you are free to change and redistribute it.\nThere is NO WARRANTY, to the extent permitted by law.\n\nWritten by David Keppel, David MacKenzie, and Assaf Gordon.\n",
+        "objdump": "Ubuntu LLVM version 18.1.3\n  Optimized build.\n\n\n  Registered Targets:\n    aarch64     - AArch64 (little endian)\n    aarch64_32  - AArch64 (little endian ILP32)\n    aarch64_be  - AArch64 (big endian)\n    amdgcn      - AMD GCN GPUs\n    arm         - ARM\n    arm64       - ARM64 (little endian)\n    arm64_32    - ARM64 (little endian ILP32)\n    armeb       - ARM (big endian)\n    avr         - Atmel AVR Microcontroller\n    bpf         - BPF (host endian)\n    bpfeb       - BPF (big endian)\n    bpfel       - BPF (little endian)\n    hexagon     - Hexagon\n    lanai       - Lanai\n    loongarch32 - 32-bit LoongArch\n    loongarch64 - 64-bit LoongArch\n    m68k        - Motorola 68000 family\n    mips        - MIPS (32-bit big endian)\n    mips64      - MIPS (64-bit big endian)\n    mips64el    - MIPS (64-bit little endian)\n    mipsel      - MIPS (32-bit little endian)\n    msp430      - MSP430 [experimental]\n    nvptx       - NVIDIA PTX 32-bit\n    nvptx64     - NVIDIA PTX 64-bit\n    ppc32       - PowerPC 32\n    ppc32le     - PowerPC 32 LE\n    ppc64       - PowerPC 64\n    ppc64le     - PowerPC 64 LE\n    r600        - AMD GPUs HD2XXX-HD6XXX\n    riscv32     - 32-bit RISC-V\n    riscv64     - 64-bit RISC-V\n    sparc       - Sparc\n    sparcel     - Sparc LE\n    sparcv9     - Sparc V9\n    systemz     - SystemZ\n    thumb       - Thumb\n    thumbeb     - Thumb (big endian)\n    ve          - VE\n    wasm32      - WebAssembly 32-bit\n    wasm64      - WebAssembly 64-bit\n    x86         - 32-bit X86: Pentium-Pro and above\n    x86-64      - 64-bit X86: EM64T and AMD64\n    xcore       - XCore\n    xtensa      - Xtensa 32\n"
+      },
+      "programs": [
+        {
+          "program": "fib",
+          "medianNs": {
+            "c": 34232838.0,
+            "c-copy": 34202721.0,
+            "rs": 31560127.5,
+            "rs-copy": 31538967.0,
+            "swift": 36355011.5,
+            "swift-copy": 36289681.5,
+            "fwp": 7033096.5,
+            "fwp-copy": 7067208.0
+          },
+          "copyRatios": {
+            "c": 1.000880543977773,
+            "rs": 1.0006709319300153,
+            "swift": 1.0018002362462177,
+            "fwp": 1.004850139622
+          },
+          "stable": true,
+          "fwpOverPeer": {
+            "c": 0.20544882957118543,
+            "rs": 0.2228475312718556,
+            "swift": 0.19345603837864278
+          },
+          "peakRssKiB": {
+            "c": [
+              1308,
+              1384,
+              1320
+            ],
+            "rs": [
+              1696,
+              1560,
+              1572
+            ],
+            "swift": [
+              8224,
+              8228,
+              8228
+            ],
+            "fwp": [
+              1396,
+              1396,
+              1396
+            ]
+          }
+        },
+        {
+          "program": "loop",
+          "medianNs": {
+            "c": 179146729.5,
+            "c-copy": 178190750.5,
+            "rs": 116428232.5,
+            "rs-copy": 116774883.5,
+            "swift": 118460451.5,
+            "swift-copy": 118559883.5,
+            "fwp": 134317672.0,
+            "fwp-copy": 134009766.5
+          },
+          "copyRatios": {
+            "c": 1.0053649193199845,
+            "rs": 1.002977379219426,
+            "swift": 1.0008393687407142,
+            "fwp": 1.0022976347772383
+          },
+          "stable": true,
+          "fwpOverPeer": {
+            "c": 0.749763461353058,
+            "rs": 1.1536520748951506,
+            "swift": 1.133860881831942
+          },
+          "peakRssKiB": {
+            "c": [
+              1384,
+              1316,
+              1320
+            ],
+            "rs": [
+              1572,
+              1572,
+              1572
+            ],
+            "swift": [
+              8228,
+              8228,
+              8228
+            ],
+            "fwp": [
+              1652,
+              1772,
+              1572
+            ]
+          }
+        },
+        {
+          "program": "map",
+          "medianNs": {
+            "c": 499729878.0,
+            "c-copy": 504678103.5,
+            "rs": 437120265.0,
+            "rs-copy": 442338595.5,
+            "swift": 729375946.0,
+            "swift-copy": 714202444.5,
+            "fwp": 465004964.5,
+            "fwp-copy": 468621571.5
+          },
+          "copyRatios": {
+            "c": 1.009901800388249,
+            "rs": 1.0119379743238397,
+            "swift": 1.0212453788374005,
+            "fwp": 1.0077775664263904
+          },
+          "stable": false,
+          "fwpOverPeer": {
+            "c": 0.9305126328668305,
+            "rs": 1.0637918251170533,
+            "swift": 0.6375381133010383
+          },
+          "peakRssKiB": {
+            "c": [
+              16420,
+              16488,
+              16424
+            ],
+            "rs": [
+              9508,
+              9508,
+              9508
+            ],
+            "swift": [
+              19440,
+              19440,
+              19440
+            ],
+            "fwp": [
+              17404,
+              17272,
+              17276
+            ]
+          }
+        },
+        {
+          "program": "pipeline",
+          "medianNs": {
+            "c": 28593430.0,
+            "c-copy": 28495828.5,
+            "rs": 23894224.5,
+            "rs-copy": 23979511.0,
+            "swift": 1482671103.5,
+            "swift-copy": 1483191325.0,
+            "fwp": 14474162.0,
+            "fwp-copy": 14180798.0
+          },
+          "copyRatios": {
+            "c": 1.0034251153638154,
+            "rs": 1.0035693353429402,
+            "swift": 1.0003508677674853,
+            "fwp": 1.0206874112444166
+          },
+          "stable": false,
+          "fwpOverPeer": {
+            "c": 0.5062058661727536,
+            "rs": 0.6057598563200911,
+            "swift": 0.009762220337222616
+          },
+          "peakRssKiB": {
+            "c": [
+              13032,
+              13080,
+              13096
+            ],
+            "rs": [
+              9488,
+              9612,
+              9612
+            ],
+            "swift": [
+              23180,
+              23180,
+              23176
+            ],
+            "fwp": [
+              1652,
+              1652,
+              1652
+            ]
+          }
+        },
+        {
+          "program": "range-set",
+          "medianNs": {
+            "c": 11084226.0,
+            "c-copy": 11040827.0,
+            "rs": 11308878.5,
+            "rs-copy": 11295622.0,
+            "swift": 13697113.0,
+            "swift-copy": 13752028.0,
+            "fwp": 12193100.0,
+            "fwp-copy": 12213497.5
+          },
+          "copyRatios": {
+            "c": 1.003930774388549,
+            "rs": 1.0011735962835866,
+            "swift": 1.0040092390272315,
+            "fwp": 1.0016728723622377
+          },
+          "stable": true,
+          "fwpOverPeer": {
+            "c": 1.1000407245395394,
+            "rs": 1.0781882571291221,
+            "swift": 0.8901948899742596
+          },
+          "peakRssKiB": {
+            "c": [
+              9120,
+              9116,
+              9128
+            ],
+            "rs": [
+              9384,
+              9384,
+              9380
+            ],
+            "swift": [
+              16108,
+              16092,
+              16108
+            ],
+            "fwp": [
+              9200,
+              9192,
+              9204
+            ]
+          }
+        },
+        {
+          "program": "strings",
+          "medianNs": {
+            "c": 145299103.5,
+            "c-copy": 145283093.0,
+            "rs": 145433508.0,
+            "rs-copy": 145462202.0,
+            "swift": 201189235.0,
+            "swift-copy": 203761863.0,
+            "fwp": 4046597.0,
+            "fwp-copy": 4063018.5
+          },
+          "copyRatios": {
+            "c": 1.0001102020866255,
+            "rs": 1.0001972997859614,
+            "swift": 1.0127871056321676,
+            "fwp": 1.0040581011650036
+          },
+          "stable": true,
+          "fwpOverPeer": {
+            "c": 0.027850116776529182,
+            "rs": 0.02782437868445008,
+            "swift": 0.02011338727939395
+          },
+          "peakRssKiB": {
+            "c": [
+              1320,
+              1384,
+              1384
+            ],
+            "rs": [
+              1564,
+              1572,
+              1572
+            ],
+            "swift": [
+              8360,
+              8360,
+              8360
+            ],
+            "fwp": [
+              1396,
+              1396,
+              1396
+            ]
+          }
+        },
+        {
+          "program": "text-length",
+          "medianNs": {
+            "c": 3257216.0,
+            "c-copy": 3252780.0,
+            "rs": 6950930.5,
+            "rs-copy": 6913884.0,
+            "swift": 7252541.5,
+            "swift-copy": 7289231.5,
+            "fwp": 3943387.0,
+            "fwp-copy": 3931198.0
+          },
+          "copyRatios": {
+            "c": 1.001363756540559,
+            "rs": 1.0053582761874513,
+            "swift": 1.005058916243361,
+            "fwp": 1.0031005815530025
+          },
+          "stable": true,
+          "fwpOverPeer": {
+            "c": 1.2106618044366724,
+            "rs": 0.5673178576594889,
+            "swift": 0.543724844594133
+          },
+          "peakRssKiB": {
+            "c": [
+              1320,
+              1320,
+              1384
+            ],
+            "rs": [
+              1572,
+              1572,
+              1572
+            ],
+            "swift": [
+              8232,
+              8232,
+              8216
+            ],
+            "fwp": [
+              1396,
+              1392,
+              1396
+            ]
+          }
+        }
+      ],
+      "artifact": {
+        "digest": "sha256:18cb176655e73a3dfaf2ac07f348274450796211dcf8db9e4512bc652a051453",
+        "expired": false,
+        "expires_at": "2027-01-29T15:18:08Z",
+        "id": 13046964064,
+        "name": "swift-peers-aarch64-1",
+        "size_in_bytes": 15106044
+      }
+    },
+    {
+      "source": "80a0504a97f7c96291e77be6e8f843d5cb8c7391",
+      "architecture": "aarch64",
+      "session": 2,
+      "cpuModel": "Neoverse-N2",
+      "availableCpus": 4,
+      "versions": {
+        "cc": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+        "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\n",
+        "swiftc": "Swift version 6.4.2 (swift-6.4.2-RELEASE)\nTarget: aarch64-unknown-linux-gnu\n",
+        "time": "time (GNU Time) UNKNOWN\nCopyright (C) 2018 Free Software Foundation, Inc.\nLicense GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>.\nThis is free software: you are free to change and redistribute it.\nThere is NO WARRANTY, to the extent permitted by law.\n\nWritten by David Keppel, David MacKenzie, and Assaf Gordon.\n",
+        "objdump": "Ubuntu LLVM version 18.1.3\n  Optimized build.\n\n\n  Registered Targets:\n    aarch64     - AArch64 (little endian)\n    aarch64_32  - AArch64 (little endian ILP32)\n    aarch64_be  - AArch64 (big endian)\n    amdgcn      - AMD GCN GPUs\n    arm         - ARM\n    arm64       - ARM64 (little endian)\n    arm64_32    - ARM64 (little endian ILP32)\n    armeb       - ARM (big endian)\n    avr         - Atmel AVR Microcontroller\n    bpf         - BPF (host endian)\n    bpfeb       - BPF (big endian)\n    bpfel       - BPF (little endian)\n    hexagon     - Hexagon\n    lanai       - Lanai\n    loongarch32 - 32-bit LoongArch\n    loongarch64 - 64-bit LoongArch\n    m68k        - Motorola 68000 family\n    mips        - MIPS (32-bit big endian)\n    mips64      - MIPS (64-bit big endian)\n    mips64el    - MIPS (64-bit little endian)\n    mipsel      - MIPS (32-bit little endian)\n    msp430      - MSP430 [experimental]\n    nvptx       - NVIDIA PTX 32-bit\n    nvptx64     - NVIDIA PTX 64-bit\n    ppc32       - PowerPC 32\n    ppc32le     - PowerPC 32 LE\n    ppc64       - PowerPC 64\n    ppc64le     - PowerPC 64 LE\n    r600        - AMD GPUs HD2XXX-HD6XXX\n    riscv32     - 32-bit RISC-V\n    riscv64     - 64-bit RISC-V\n    sparc       - Sparc\n    sparcel     - Sparc LE\n    sparcv9     - Sparc V9\n    systemz     - SystemZ\n    thumb       - Thumb\n    thumbeb     - Thumb (big endian)\n    ve          - VE\n    wasm32      - WebAssembly 32-bit\n    wasm64      - WebAssembly 64-bit\n    x86         - 32-bit X86: Pentium-Pro and above\n    x86-64      - 64-bit X86: EM64T and AMD64\n    xcore       - XCore\n    xtensa      - Xtensa 32\n"
+      },
+      "programs": [
+        {
+          "program": "fib",
+          "medianNs": {
+            "c": 34298679.5,
+            "c-copy": 34338118.0,
+            "rs": 31690524.0,
+            "rs-copy": 31662126.0,
+            "swift": 36568186.5,
+            "swift-copy": 36549451.5,
+            "fwp": 7251208.0,
+            "fwp-copy": 7248652.0
+          },
+          "copyRatios": {
+            "c": 1.001149854763359,
+            "rs": 1.0008969075544707,
+            "swift": 1.00051259319172,
+            "fwp": 1.0003526172866348
+          },
+          "stable": true,
+          "fwpOverPeer": {
+            "c": 0.21141362016575593,
+            "rs": 0.22881313038560044,
+            "swift": 0.19829279748395506
+          },
+          "peakRssKiB": {
+            "c": [
+              1320,
+              1384,
+              1316
+            ],
+            "rs": [
+              1556,
+              1564,
+              1572
+            ],
+            "swift": [
+              8228,
+              8228,
+              8228
+            ],
+            "fwp": [
+              1396,
+              1384,
+              1384
+            ]
+          }
+        },
+        {
+          "program": "loop",
+          "medianNs": {
+            "c": 179733852.0,
+            "c-copy": 180343427.0,
+            "rs": 116912517.0,
+            "rs-copy": 116725529.0,
+            "swift": 118538270.0,
+            "swift-copy": 118580125.0,
+            "fwp": 133290869.5,
+            "fwp-copy": 133384139.5
+          },
+          "copyRatios": {
+            "c": 1.0033915425125368,
+            "rs": 1.0016019460490087,
+            "swift": 1.0003530927184952,
+            "fwp": 1.000699747854822
+          },
+          "stable": true,
+          "fwpOverPeer": {
+            "c": 0.7416013623298965,
+            "rs": 1.1400906671096647,
+            "swift": 1.1244543175803055
+          },
+          "peakRssKiB": {
+            "c": [
+              1384,
+              1320,
+              1320
+            ],
+            "rs": [
+              1572,
+              1572,
+              1572
+            ],
+            "swift": [
+              8220,
+              8228,
+              8228
+            ],
+            "fwp": [
+              1780,
+              1780,
+              1716
+            ]
+          }
+        },
+        {
+          "program": "map",
+          "medianNs": {
+            "c": 504960109.5,
+            "c-copy": 506929287.0,
+            "rs": 443571133.5,
+            "rs-copy": 444120136.5,
+            "swift": 741605233.5,
+            "swift-copy": 725966312.5,
+            "fwp": 462162519.5,
+            "fwp-copy": 462225259.0
+          },
+          "copyRatios": {
+            "c": 1.0038996694252738,
+            "rs": 1.0012376887460375,
+            "swift": 1.0215422130899496,
+            "fwp": 1.0001357520295413
+          },
+          "stable": false,
+          "fwpOverPeer": {
+            "c": 0.9152456021875129,
+            "rs": 1.0419129753852658,
+            "swift": 0.623192095501845
+          },
+          "peakRssKiB": {
+            "c": [
+              16424,
+              16424,
+              16424
+            ],
+            "rs": [
+              9508,
+              9508,
+              9496
+            ],
+            "swift": [
+              19440,
+              19440,
+              19376
+            ],
+            "fwp": [
+              17276,
+              17260,
+              17268
+            ]
+          }
+        },
+        {
+          "program": "pipeline",
+          "medianNs": {
+            "c": 28748033.5,
+            "c-copy": 28762919.5,
+            "rs": 24369037.5,
+            "rs-copy": 24849101.5,
+            "swift": 1484704113.0,
+            "swift-copy": 1484587213.5,
+            "fwp": 15336750.5,
+            "fwp-copy": 14430991.5
+          },
+          "copyRatios": {
+            "c": 1.0005178093312017,
+            "rs": 1.0196997521957936,
+            "swift": 1.0000787420900146,
+            "fwp": 1.062764848832459
+          },
+          "stable": false,
+          "fwpOverPeer": {
+            "c": 0.5334886819301918,
+            "rs": 0.6293539701762944,
+            "swift": 0.010329836339585867
+          },
+          "peakRssKiB": {
+            "c": [
+              13032,
+              13032,
+              13088
+            ],
+            "rs": [
+              9616,
+              9488,
+              9488
+            ],
+            "swift": [
+              23180,
+              23180,
+              23180
+            ],
+            "fwp": [
+              1652,
+              1652,
+              1644
+            ]
+          }
+        },
+        {
+          "program": "range-set",
+          "medianNs": {
+            "c": 11378149.5,
+            "c-copy": 11242682.0,
+            "rs": 11532975.5,
+            "rs-copy": 11472223.0,
+            "swift": 14054053.0,
+            "swift-copy": 14015031.0,
+            "fwp": 12530069.5,
+            "fwp-copy": 12287829.0
+          },
+          "copyRatios": {
+            "c": 1.012049393552179,
+            "rs": 1.0052956170743892,
+            "swift": 1.0027842963743712,
+            "fwp": 1.0197138566951087
+          },
+          "stable": true,
+          "fwpOverPeer": {
+            "c": 1.1012396611593125,
+            "rs": 1.0864559193765737,
+            "swift": 0.8915627043672029
+          },
+          "peakRssKiB": {
+            "c": [
+              9064,
+              9128,
+              9128
+            ],
+            "rs": [
+              9380,
+              9372,
+              9384
+            ],
+            "swift": [
+              16108,
+              16220,
+              16108
+            ],
+            "fwp": [
+              9140,
+              9200,
+              9204
+            ]
+          }
+        },
+        {
+          "program": "strings",
+          "medianNs": {
+            "c": 145347775.5,
+            "c-copy": 145404072.5,
+            "rs": 145639983.0,
+            "rs-copy": 145546497.0,
+            "swift": 203690070.5,
+            "swift-copy": 203655949.0,
+            "fwp": 4157134.0,
+            "fwp-copy": 4122223.5
+          },
+          "copyRatios": {
+            "c": 1.0003873261892473,
+            "rs": 1.0006423102027664,
+            "swift": 1.0001675448233531,
+            "fwp": 1.0084688518223235
+          },
+          "stable": true,
+          "fwpOverPeer": {
+            "c": 0.028601290839845018,
+            "rs": 0.02854390610578415,
+            "swift": 0.020409114640666786
+          },
+          "peakRssKiB": {
+            "c": [
+              1320,
+              1320,
+              1384
+            ],
+            "rs": [
+              1696,
+              1572,
+              1572
+            ],
+            "swift": [
+              8360,
+              8360,
+              8360
+            ],
+            "fwp": [
+              1392,
+              1396,
+              1332
+            ]
+          }
+        },
+        {
+          "program": "text-length",
+          "medianNs": {
+            "c": 3345504.5,
+            "c-copy": 3334585.0,
+            "rs": 7044825.5,
+            "rs-copy": 7016555.0,
+            "swift": 7652825.0,
+            "swift-copy": 7583322.0,
+            "fwp": 4062793.0,
+            "fwp-copy": 4027695.0
+          },
+          "copyRatios": {
+            "c": 1.0032746203800473,
+            "rs": 1.0040291140025268,
+            "swift": 1.009165244466739,
+            "fwp": 1.0087141652980178
+          },
+          "stable": true,
+          "fwpOverPeer": {
+            "c": 1.214403687097118,
+            "rs": 0.5767059808649625,
+            "swift": 0.530888005409767
+          },
+          "peakRssKiB": {
+            "c": [
+              1384,
+              1320,
+              1384
+            ],
+            "rs": [
+              1572,
+              1572,
+              1696
+            ],
+            "swift": [
+              8092,
+              8232,
+              8232
+            ],
+            "fwp": [
+              1396,
+              1396,
+              1384
+            ]
+          }
+        }
+      ],
+      "artifact": {
+        "digest": "sha256:1fd2a6e38a5be221e1f7d5b96966f06a45b540288cfe96fbee8ae7fc763000df",
+        "expired": false,
+        "expires_at": "2027-01-29T15:18:08Z",
+        "id": 13047885413,
+        "name": "swift-peers-aarch64-2",
+        "size_in_bytes": 15106139
+      }
+    }
+  ]
+}
