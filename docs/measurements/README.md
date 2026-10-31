@@ -208,3 +208,6 @@ complete the accepted scalar-pair decision without discarding the noisy session.
 [Proved scalar bounds](proved-scalar-bounds.md) rejects both range-index and
 character-sum candidates under the unchanged CPU limits. Boundary tests, all
 observations and report-integrity checks remain; no compiler speedup is accepted.
+
+[Returned-function phases](callable-phases.md) freezes the next C/Rust/Swift/fwp
+construction, invocation and release comparison, including the same-source control.
