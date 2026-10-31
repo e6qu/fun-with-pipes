@@ -58,6 +58,11 @@ identical-copy difference was 5.63%. Those failures are not overwritten. The
 first `855f53ce` run exposed the unit-field box and missing focused macOS
 `FWP_OPENSSL_DIR`; both are fixed and verified. Full production remains pending.
 
+The maintained `scripts/check-state-range-evidence.py` now recomputes both saved
+decisions. Its three tests preserve the rejected code/timing results and reject
+15 kinds of missing or damaged evidence. Documentation CI runs these controls;
+no benchmark or full compiler suite is repeated for this audit addition.
+
 ## Local checks and recovery
 
 No full local build, suite or benchmark ran. All focused checks used the guard:
@@ -66,6 +71,9 @@ Rust format 1.69s; diff check 0.14s; workflow lint 5.59s; two measurement contro
 0.73s; loop-function-value source preflight 0.61s; extracted production-O1 timing
 schedule test 1.34s (new order passes, old order fails). Complete log audits and
 evidence recomputation also pass under the guard. These do not replace runner gates.
+The retained-evidence controls pass in 0.13s. Their first run correctly rejected
+a damaged startup limit but raised `ValueError`; an explicit cardinality check
+now reports the intended assertion failure, and every damage control passes.
 
 Raw logs/metadata/audits/archives use `/private/tmp/fwp-state-*`; suffixes `855f`,
 `f820`, `ea0f` identify sources. Record generators and auditors are temporary

@@ -26,6 +26,15 @@ identical-copy differences are 0.42% and 1.32%, within 5%. Every original analys
 count, absolute-time and ratio limit passes. This verifies the stated focused
 checks; it does not replace the final nine production jobs and documentation.
 
+`python3 scripts/test-state-range-evidence.py` recomputes both retained decisions
+and rejects changed outputs, missing observations, changed limits and falsely
+passing failure records. It checks symbol totals, recorded frame sizes, exact
+allocation rows, all analysis samples/medians and startup checks. It performs no
+new measurement. Binary/source hashes identify the original runner archives;
+the checked-in JSON does not contain those binaries or replace their original
+archive verification. Cached-expression/type counts were checked by the runner
+tests but are not printed in these retained scaling rows.
+
 ## Program and source finding
 
 `range 0 | run-state 0 (each (add | modify)) | .1` sums the integers from zero
@@ -127,10 +136,10 @@ both reports, commands and verified binary/source hashes. Largest frame componen
 stay 944/1,008 bytes respectively. These
 are failed 5% checks even though total executable `.text` grows much less.
 
-Generated C retains an unused boxed-step callback through the runtime table,
-alongside the direct loop. The next repair marks the runtime entry as needed
+Generated C retained an unused boxed-step callback through the runtime table,
+alongside the direct loop. The repair marks the runtime entry as needed
 only when some use actually creates/calls that function value. Ordinary function
 values must keep their entries; a regression covers both cases. Neither the
 code-size metric nor its 5% limit changes. G2's Intel timing control also fails;
 the [analysis report](ownership-analysis.md#state-range-recheck) records that
-failure and the batch-order correction being checked.
+failure and the verified batch-order correction.
