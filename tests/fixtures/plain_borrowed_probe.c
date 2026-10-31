@@ -118,6 +118,10 @@ int main(void) {
         V text = fwp_apply_borrowed(show, 1, (V[]){123});
         if (*fwp_rc_slot(text) != 1 || STR(text)->len != 3 || memcmp(STR(text)->d, "123", 3)) return 238;
         fwp_rc_free_obj(text); fwp_closure_drop(show);
+        V saturated = fwp_rc_fresh(fwp_pap(ADD_FN, 2, (V[]){7, 3}));
+        if (fwp_apply_borrowed(saturated, 0, NULL) != 10 ||
+            CLO(saturated)->n != 2 || *fwp_rc_slot(saturated) != 1) return 243;
+        fwp_closure_drop(saturated);
         size_t before = fwp_heap.live;
         V function = fwp_rc_fresh(fwp_pap((uint32_t)factory, 0, NULL));
         if (fwp_apply_borrowed(function, 2, (V[]){7, 3}) != 10) return 239;

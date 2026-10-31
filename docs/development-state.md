@@ -16,12 +16,21 @@ decoded instructions grow by 272 bytes; 4,080 extra text bytes are zero padding
 before `__divti3`. All count/storage and frame limits pass. This candidate is
 not accepted. Keep the published limits and this rejection.
 
-Next candidate action: run the `callable-link` diagnostic. It relinks retained
-baseline/candidate objects with native GCC and a linker map, requiring exact
-original executable hashes. It records the actual driver/linker options. This
-identifies the padding without changing compiler code or repeating timing tests.
-No repair has been selected. Independent audits and complete downloads are
-`/private/tmp/fwp-callables-*-1f92*`; the only expected audit failure is ARM O1 text.
+The byte-identical linker diagnosis passes in run `41178567613`, job
+`124471094949`, source `23d55c0a`. GCC's effective link includes the Cortex-A53
+843419 repair; its 16-byte stub reserves a 4-KiB region. Both O1/O2 baseline and
+candidate hashes match. The rejected candidate and linker diagnosis are retained
+in the callable report's compressed archives. Limits and hardware protection stay
+unchanged. The one-shot workflow was removed after retaining its results;
+`scripts/report-callable-link.py` remains the explicit relinking tool.
+
+Next candidate action: publish the slice-copy revision, then run the consolidated
+three-host checks. Two contiguous plain-value slices now use `memcpy`; an empty
+supplied slice is never passed to it. The added full-capture/zero-new-argument
+case and all existing lifetime controls pass locally at O1/O2 (2.17s). Phase,
+overflow and cleanup checks pass (1.80s). These do not establish native acceptance.
+Independent first-candidate audits/downloads are `/private/tmp/fwp-callables-*-1f92*`;
+linker files/audits are `/private/tmp/fwp-callable-link-23d5*`.
 
 PR #233 tests `fd19b9e4d67c6c5f85ebbe6a12da14aaeedb0b1c` in `41174213818`,
 with docs `41174213793`. Five gates are fully audited and passing: docs,

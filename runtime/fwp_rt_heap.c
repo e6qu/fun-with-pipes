@@ -1082,8 +1082,9 @@ static V fwp_apply_borrowed_span(V f, uint32_t n, V *args, uint32_t owned_start,
         if (first && !fi->owned->drop_arguments && n == fi->arity - c->n) {
             if (!c->n) return fi->owned->entry(args);
             V all[fi->arity ? fi->arity : 1];
-            for (uint32_t i = 0; i < c->n; i++) all[i] = c->a[i];
-            for (uint32_t i = 0; i < n; i++) all[c->n + i] = args[i];
+            memcpy(all, c->a, c->n * sizeof(V));
+            /* An empty supplied slice may be NULL, even for a zero-byte copy. */
+            if (n) memcpy(all + c->n, args, n * sizeof(V));
             return fi->owned->entry(all);
         }
 #if FWP_UNWIND

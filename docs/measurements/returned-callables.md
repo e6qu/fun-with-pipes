@@ -205,3 +205,29 @@ commands and results before comparing every limit with the frozen baseline.
 It writes all decisions before rejecting a failed budget. Its rejection tests
 cover each limit, missing frames and missing phases. No accepted speed result is
 inferred from removing count operations.
+
+## Rejected first candidate and linker diagnosis
+
+Run `41177534238`, source `1f929022`, passes 49 ownership tests and 14 Python
+checks per host. Every count/storage and frame limit passes at O1/O2. Five
+code-level comparisons pass; Linux ARM64 O1 whole text grows from 24,540 to
+28,892 bytes, exceeding the unchanged 5% limit. This candidate is rejected.
+The [complete archive](returned-callables-rejected-2026-10-31.json.gz) preserves
+all three hosts, commands, binaries, logs and decisions. Its immutable source tag
+is `roadmap/returned-callables-rejected-2026-10-31`.
+
+Decoded instructions grow by 272 bytes; 4,080 additional text bytes are zeros.
+The [linker diagnosis](returned-callable-link-2026-10-31.json.gz), run
+`41178567613`, reproduces all four original ARM executables byte for byte while
+emitting maps. GCC 13.3 invokes GNU ld 2.42 with `--fix-cortex-a53-843419`.
+The candidate O1 map contains a 16-byte `.text.stub` occupying a 4-KiB region.
+This matches the [linker's documented erratum handling](https://sourceware.org/legacy-ml/binutils/2015-03/msg00445.html).
+The padding is real output cost and remains in the rejected budget; hardware
+protection stays enabled. The runtime's lifetime checks passed independently.
+
+The next revision copies the two contiguous plain-value slices with `memcpy`
+instead of separate element loops. It skips the supplied-slice copy when empty,
+because that slice may be null. A saturated closure with no new arguments joins
+the existing lifetime regression. Local O1/O2 controls pass; native budgets must
+be measured again. This source simplification is not a general promise to avoid
+linker padding, nor a measured speedup.
