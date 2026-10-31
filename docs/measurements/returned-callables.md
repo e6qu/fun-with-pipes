@@ -1,8 +1,8 @@
 # Returned functions compared with C and Rust
 
-This is preparation for B1's callable comparison, not a result. Finish the State
-range delivery before publishing this as another PR. Peer correctness fixtures
-are being implemented; no complete fwp/C/Rust measurement has run.
+This is preparation for B1's callable comparison, not an accepted result. Finish
+the State range delivery before opening another PR. Focused Clang checks pass;
+the complete three-host evidence collection is next.
 
 Partial application supplies one argument and keeps a function waiting for the
 next. For example, `add 7` produces a function that maps `3` to `10`. The captured
@@ -87,3 +87,35 @@ must explicitly cover construction, invocation, destruction and whole-program
 time, control every compared executable, and qualify two sessions on each named
 Linux CPU before setting a candidate budget. Existing failed timing controls in
 other workloads remain failed; this experiment cannot replace them.
+
+## Running and reading the checks
+
+The `returned-callables` suite in the numerical evidence workflow builds the
+current compiler, then checks GCC on Linux ARM64/AMD64 and Clang on macOS ARM64.
+Each host runs O1/O2 peers, ordinary and separately instrumented fwp programs,
+raw/optimized interpretation, overflow cases, and failure/retry controls.
+`scripts/check-returned-callables.py` records every command and its output before
+checking it. A failed collection retains its partial directory; it is not a
+passing baseline. No previous fwp executable is required.
+
+In each counted row, phase 0 constructs the callable, phase 1 invokes it, and
+phase 2 destroys it. Phase 3 separately checks failure and retry. The direct-call
+control runs outside those counters. An application count records entry into a
+runtime helper; it is not an instruction count or necessarily a separate indirect
+machine call. Effective retains/releases count changes to real owners, excluding
+no-op checks on scalar values.
+
+Payload requests and their live-byte peak exclude slot padding, allocator backing
+and stack space. The report also records charged payload bytes and count-table
+bytes at each phase boundary. Freeing the last closure can restore payload storage
+while the allocator retains a count table for reuse. That retained storage stays
+visible in the report; it is not described as zero memory. C/Rust keep the capture
+inside their 16-byte callable value and have no payload allocator call in these
+workers. Their observer and process startup are outside that claim.
+
+Instruction listings and frame reports come from ordinary builds. Worker byte
+totals include decoded alignment padding and inlined arithmetic, and exclude the
+shared fwp runtime and observer. The full listing and text-section output retain
+those other costs. Rust's frame-report pass is an explicit setting: LLVM 22 names
+it `prologepilog`; the current CI toolchain uses `prolog-epilog`. A missing or
+mismatched report fails; the script does not retry with a different compiler setting.

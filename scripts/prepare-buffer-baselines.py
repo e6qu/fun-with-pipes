@@ -29,10 +29,11 @@ def sections(text):
     return values
 
 
-def rust_frames(text):
+def rust_frames(text, pass_name):
     # Stable rustc exposes LLVM's final frame sizes through optimization remarks.
     # With production debuginfo=0 it emits this one location warning; retain it
     # and reject every other diagnostic, including an empty/missing frame report.
+    assert pass_name in ('prolog-epilog', 'prologepilog'), pass_name
     warning = '-C remark requires "-C debuginfo=n" to show source locations'
     result = []
     warnings = 0
@@ -45,7 +46,7 @@ def rust_frames(text):
             warnings += 1
         else:
             assert row['level'] == 'note', row
-            match = re.fullmatch(r"<unknown file>:0:0 prolog-epilog \(analysis\): ([0-9]+) stack bytes in function '([^']+)'", row['message'])
+            match = re.fullmatch(r"<unknown file>:0:0 " + re.escape(pass_name) + r" \(analysis\): ([0-9]+) stack bytes in function '([^']+)'", row['message'])
             assert match, row
             result.append(dict(functions=match[2], bytes=int(match[1])))
     assert warnings == 1 and result, 'missing Rust stack remarks or location diagnostic'
@@ -94,7 +95,7 @@ def main():
             stream.write(json.dumps(row) + '\n')
         assert row['status'] == 0 and not row['timedOut'], row
         if stack_remarks:
-            rust_frames(result.stderr.decode())
+            rust_frames(result.stderr.decode(), 'prolog-epilog')
         else:
             assert not result.stderr, row
         return result
@@ -144,7 +145,7 @@ def main():
                 assert text_paths[0].read_bytes() == text_paths[1].read_bytes(), 'stack report changed Rust instructions'
                 stack_text = stack_result.stderr.decode()
                 (folder / 'rust-stack.jsonl').write_text(stack_text)
-                frames = rust_frames(stack_text)
+                frames = rust_frames(stack_text, 'prolog-epilog')
             else:
                 usage, = folder.glob(binary.name + '*.su')
                 frames = c_frames(usage.read_text())

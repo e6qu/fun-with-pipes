@@ -53,6 +53,7 @@ jobs:
         run: |
           python3 scripts/test-unique-buffer-baselines.py
           python3 scripts/test-buffer-program-records.py
+          python3 scripts/test-returned-callables.py
           python3 scripts/test-buffer-processes.py
           python3 scripts/test-generated-buffer-observers.py
           python3 scripts/test-state-range-size.py

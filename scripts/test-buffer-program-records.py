@@ -28,13 +28,17 @@ class ProgramRecords(unittest.TestCase):
         leaf = diagnostic('note', "<unknown file>:0:0 prolog-epilog (analysis): 0 stack bytes in function 'leaf'")
         work = diagnostic('note', "<unknown file>:0:0 prolog-epilog (analysis): 32 stack bytes in function 'work'")
         text = warning + leaf + work
-        self.assertEqual(PROGRAMS.rust_frames(text), [dict(functions='leaf', bytes=0), dict(functions='work', bytes=32)])
+        expected = [dict(functions='leaf', bytes=0), dict(functions='work', bytes=32)]
+        self.assertEqual(PROGRAMS.rust_frames(text, 'prolog-epilog'), expected)
+        self.assertEqual(PROGRAMS.rust_frames(text.replace('prolog-epilog', 'prologepilog'), 'prologepilog'), expected)
+        with self.assertRaises(AssertionError):
+            PROGRAMS.rust_frames(text, 'prologepilog')
         for damaged in ['', warning, leaf, text.replace('32 stack', '-32 stack'),
                         text + warning, text + diagnostic('warning', 'incomplete'),
                         text.replace('prolog-epilog', 'another-pass'),
                         text.replace('"children": []', '"children": [{}]')]:
             with self.subTest(damaged=damaged), self.assertRaises(AssertionError):
-                PROGRAMS.rust_frames(damaged)
+                PROGRAMS.rust_frames(damaged, 'prolog-epilog')
 
     def test_c_frames_do_not_relabel_dynamic_frames_as_static(self):
         text = 'peer.c:1:1:work\t48\tstatic\npeer.c:9:1:other\t80\tdynamic,bounded\n'

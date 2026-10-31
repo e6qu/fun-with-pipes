@@ -89,7 +89,7 @@ def check_build(folder, source, machine, qualification):
             metadata = programs['entries'][entry][language]
             assert metadata['sections'] == PROGRAMS.sections((directory / (language + '-sections.txt')).read_text())
             if language == 'rust':
-                frames = PROGRAMS.rust_frames((directory / 'rust-stack.jsonl').read_text())
+                frames = PROGRAMS.rust_frames((directory / 'rust-stack.jsonl').read_text(), 'prolog-epilog')
                 ordinary = (directory / 'rust-text.bin').read_bytes()
                 assert ordinary and ordinary == (directory / 'rust-stack-text.bin').read_bytes()
             else:
@@ -102,7 +102,7 @@ def check_build(folder, source, machine, qualification):
         assert type(row['status']) is int and row['status'] == 0 and row['timedOut'] is False
         stderr = base64.b64decode(row['stderr'], validate=True)
         if 'remark=prolog-epilog' in row['command']:
-            PROGRAMS.rust_frames(stderr.decode())
+            PROGRAMS.rust_frames(stderr.decode(), 'prolog-epilog')
         else:
             assert stderr == b'', row
     tools = {}
