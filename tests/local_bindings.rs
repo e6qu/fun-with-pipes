@@ -57,6 +57,8 @@ fn local_scope_monomorphism_and_resource_rules_are_checked() {
         "main = quote (unquote!(0, 1))\n",
         "resource Token = builtin\nbad : Token -> (Token, Token)\nbad = fn x -> (x, x)\n",
         "resource Token = builtin\nbad : Token -> I64 -> Token\nbad = fn x -> fn _ -> x\n",
+        "use : (I64 -> I64) -> I64 ! {IO}\nuse = fn calculate -> calculate (1 | tap echo)\nmain = use (fn x -> let _ = x | echo in x) | echo\n",
+        "bad : (I64 -> I64) -> I64\nbad = fn calculate -> calculate (1 | tap echo)\n",
     ] {
         let checked = check_source("locals.fwp", source, None);
         assert!(checked.is_err(), "unexpected acceptance: {source}");
@@ -102,6 +104,30 @@ fn named_tacit_captures_and_macros_agree_across_backends() {
         (
             "curried-stage-trap",
             "make-checked : I64 -> I64 -> I64\nmake-checked = fn divisor -> let inverse = 10 / divisor in fn value -> inverse + value\nmain = let unused = make-checked 0 in 42 | echo\n".into(),
+            "",
+            Some("division by zero"),
+        ),
+        (
+            "top-level-strict-function-value",
+            "checked : I64 -> I64\nchecked = let inverse = 10 / 0 in fn value -> inverse + value\nmain = let unused = checked in 42 | echo\n".into(),
+            "",
+            Some("division by zero"),
+        ),
+        (
+            "match-stage-before-next-argument",
+            "make-checked : I64 -> I64 -> I64\nmake-checked = match { divisor -> let inverse = 10 / divisor in fn value -> inverse + value }\nmain = make-checked 0 (1 | tap (const \"later\" | echo)) | echo\n".into(),
+            "",
+            Some("division by zero"),
+        ),
+        (
+            "record-owner-before-borrow",
+            "main = let text = read-all () | concat \"held\" in (text, text, string.length text) | echo\n".into(),
+            "(\"held\", \"held\", 4)\n",
+            None,
+        ),
+        (
+            "record-owner-before-failed-borrow",
+            "main = let text = read-all () | concat \"held\" in (text, string.length text / 0) | echo\n".into(),
             "",
             Some("division by zero"),
         ),

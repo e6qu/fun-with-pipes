@@ -493,30 +493,37 @@ impl<'a> Mono<'a> {
             }
             body = &self.env.bindings[*target].body;
         }
-        let arity = if self.value_bindings.contains(&b.name) {
-            0
-        } else if matches!(body.kind, ExprKind::Lambda(..)) {
-            self.register_shapes(&ty);
-            // Consecutive fn bodies only construct another function. Group
-            // those inputs unless doing so extends an observable owner. Stop
-            // before any computation between stages, even checked arithmetic.
-            let mut stage = &ty;
-            let mut arity = 0;
-            while let ExprKind::Lambda(_, next) = &body.kind {
-                arity += 1;
-                let (input, output) = stage.as_fun().expect("checked fn type");
-                if crate::resource::may_hold_resource(&self.prog.shapes, input)
-                    || crate::resource::contains_channel(&self.prog.shapes, input)
-                {
-                    break;
+        let arity =
+            if self.value_bindings.contains(&b.name) || matches!(body.kind, ExprKind::Let(..)) {
+                // Reading this binding evaluates its strict initializer before a
+                // returned function can receive an argument.
+                0
+            } else if matches!(body.kind, ExprKind::Match(..)) {
+                // Selecting an arm runs its body before a returned function's
+                // argument. Pattern tests and arm computations are a stage.
+                1
+            } else if matches!(body.kind, ExprKind::Lambda(..)) {
+                self.register_shapes(&ty);
+                // Consecutive fn bodies only construct another function. Group
+                // those inputs unless doing so extends an observable owner. Stop
+                // before any computation between stages, even checked arithmetic.
+                let mut stage = &ty;
+                let mut arity = 0;
+                while let ExprKind::Lambda(_, next) = &body.kind {
+                    arity += 1;
+                    let (input, output) = stage.as_fun().expect("checked fn type");
+                    if crate::resource::may_hold_resource(&self.prog.shapes, input)
+                        || crate::resource::contains_channel(&self.prog.shapes, input)
+                    {
+                        break;
+                    }
+                    body = next;
+                    stage = output;
                 }
-                body = next;
-                stage = output;
-            }
-            arity
-        } else {
-            spine_arity(&self.env.table, &scheme.ty)
-        };
+                arity
+            } else {
+                spine_arity(&self.env.table, &scheme.ty)
+            };
         let id = self.new_func(
             display_name(&b.name),
             arity,

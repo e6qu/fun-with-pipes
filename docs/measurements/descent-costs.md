@@ -54,7 +54,8 @@ arithmetic and temporary collection/value construction; this does not attribute
 that time solely to tape appends. The clocks perturb execution: paired
 instrumented/ordinary timings, including both faster and slower observations,
 are retained. Investigate the temporary values around recording before assuming
-larger raw-buffer caches will help; D2 first targets the heap record passed to scalar `ad.push`; its lifetime proof and fixed comparison limits remain.
+larger raw-buffer caches will help. The later scalar `ad.push` record removal
+is reported below; its speed requirement remains open.
 
 ## Retained evidence
 
@@ -400,7 +401,7 @@ correctness tests pass 247 Rust tests and 17 measurement controls on each Linux
 architecture. Full grouped platform checks subsequently pass in
 [PR #226](../roadmap-history.md#derivative-allocation-and-accuracy-pr-226).
 
-## Separating costs before selecting D2
+## Attribution for the next derivative change
 
 1. Compare AD-history and AD-current to quantify retaining old vectors. Compare
    explicit list/packed forms to expose representation costs, retaining their
@@ -417,7 +418,7 @@ architecture. Full grouped platform checks subsequently pass in
    packed fwp and C/Rust: full vector formatting versus a shared checksum consumer,
    with exact result bits verified separately. Four audited sessions retain their
    inconclusive short controls. Do not call zero-update time “output cost.”
-4. Select D2 only after these observations identify a removable cost. Write its
+4. Select the next change only after these observations identify a removable cost. Write its
    per-size storage/time limits before measuring a candidate. Preserve failure,
    cancellation and nested-scope cleanup; recomputation may replay only pure work.
 5. D3 checks F64/F128 analytic and numerical derivatives, nesting, branch-domain

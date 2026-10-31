@@ -124,12 +124,10 @@ fn inlined_helper_frames_release_original_locals_before_the_next_call() {
         format!(
             r#"discard : () -> () ! {{FileIO, Error[IoError]}}
 discard = const "{}" | file.open | ignore
-release-first : File -> File -> ()
+release-first : UdpSocket -> UdpSocket -> ()
 release-first = fn _ -> fn _ -> ()
-main = [discard (), discard (), release-first (file.open "{}") (file.open "{}")] | ignore | const "closed" | print
+main = [discard (), discard (), release-first (udp.bind "127.0.0.1:0") (udp.bind "127.0.0.1:0")] | ignore | const "closed" | print
 "#,
-            data.display(),
-            data.display(),
             data.display()
         ),
     )

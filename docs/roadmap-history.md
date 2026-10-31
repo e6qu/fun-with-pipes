@@ -561,8 +561,8 @@ analysis hosts pass the unchanged count/time budgets; see the
 was raised or required test skipped. The older intermittent Intel compiler abort
 remains unexplained; [its evidence](measurements/compiler-abort.md) is retained.
 
-G1–G5 are complete. ARC minimization remains A2–A6. Historical benchmark results
-are not relabeled as measurements of this source.
+This delivery completed G1–G5. A2–A6 followed in the later entries above.
+Historical benchmarks retain their actual measured source.
 
 ## Shared lifetime checks and clearer guides (PR #216)
 

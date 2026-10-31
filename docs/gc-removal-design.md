@@ -5,7 +5,8 @@ sharing, and explicit weak links where an owning cycle would otherwise form.
 Weak channels and retained C callbacks passed all production gates in #215.
 A [restricted count-free array path](measurements/unique-array-storage.md) is
 verified in #219. The [scoped parser path](parser-workspace.md) now implements
-one bounded region proof; its complete platform validation is pending.
+one bounded region proof, verified with full native and declared WASI checks
+in #221. Tracing removal itself is verified in #217.
 
 [PLAN.md](../PLAN.md) gives the work order and completion checks;
 [ownership.md](ownership.md) describes current implementation. APIs and layouts
@@ -88,9 +89,10 @@ These are studies of published designs, not independent soundness audits or
 reproduced performance results. Some documents include unfinished work; do not
 turn their aspirations into fwp acceptance claims.
 
-## Engineering effort
+## Why this combination was selected
 
-Relative estimates below are engineering judgments, not schedules. Keeping APIs
+The original effort comparison below explains the design decision, not a backlog.
+Relative estimates are engineering judgments, not schedules. Keeping APIs
 is not a constraint. Keeping an explicit, testable lifetime contract is.
 
 | Route | Main implementation work | Cost and uncertainty |
@@ -134,7 +136,7 @@ this is not a promise to prove arbitrary external code safe.
 
 These boundary contracts and regression cases were verified in #215. A6 adds
 [count-free parser storage](parser-workspace.md) inside the compiler without a
-new public API; its full platform acceptance is pending.
+new public API; its full platform acceptance is verified in #221.
 
 | Case | Accepted shape to implement or preserve | Required rejection or cleanup check |
 |---|---|---|
@@ -189,63 +191,42 @@ introduce general region inference or alter the completed collector removal.
 
 ## Keep compiler cost bounded and visible
 
-Today [arc_scope.rs](../src/arc_scope.rs) repeatedly visits all known function
-contexts until its facts stop changing. It merges channel contents by type and
-some aggregate contents without field distinctions. This can reject independent
-owners with the same type. [arc.rs](../src/arc.rs) also rejects potential channel
-cycles structurally. These are current tradeoffs, not requirements to retain.
+[arc_scope.rs](../src/arc_scope.rs) uses finite function/scope summaries and an
+ordered queue of changed dependencies. It caches completed type queries and
+distinguishes closure creation sites. It still merges channel contents by type
+and some aggregate contents without field distinctions, so independent owners
+can be rejected conservatively. [arc.rs](../src/arc.rs) also rejects potential
+channel cycles structurally. These limits may improve when a concrete example
+justifies the extra proof cost.
 
-Use finite function summaries: which inputs a result/capture may retain, which
-inputs are borrowed or consumed, and which scopes they depend on. Process only
-summaries affected by a changed dependency. Process mutually recursive functions
-together; cache type properties. Add allocation-site or field distinctions only
-where a named example needs them. Avoid enumerating arbitrary execution paths
-or specializing on every concrete call chain.
+The [analysis protocol](measurements/ownership-analysis.md) records 16/32/64-worker
+inputs, separate proof timers, fact/visit limits and two REST startup budgets.
+Its identical-code control detects noisy timings. A finite analysis is not
+necessarily linear; process RSS and bytes per stored fact do not isolate its
+peak heap use. Preserve the existing budgets and compare exact final facts when
+changing scheduling or representation. Avoid unbounded path or call-history
+specialization.
 
-Measure the ownership pass separately from specialization, C generation and the
-C compiler. Record time, peak memory, analyzed IR size, summary updates and
-specialized function count for N, 2N and 4N versions of independent queues,
-nested captures, recursive calls and pipelines. Compare the same source before
-and after a change. Termination of a finite analysis is not proof of linear cost.
-Select numeric compile-time budgets from that baseline before widening analysis.
-The [first analysis baseline](measurements/ownership-analysis.md) measures the
-creation-site repair against the earlier merging rule and sets count/time
-ceilings. It covers one combined fixture; its process-memory peak does not isolate
-the proof heap, and three sizes do not establish an asymptotic bound.
+## Completed removal and maintained checks
 
-## Finite route to deleting tracing
+G3/G4 delivered the six contracts, weak channels, C registrations and ownership
+diagnostics. G5 removed tracing in [#217](roadmap-history.md#tracing-gc-removal-pr-217):
+one admission policy now applies before interpreter effects and native generation,
+including REPL, notebooks and compile-time execution. Collector selection,
+root discovery, marking and sweeping are gone. There is no compatibility collector.
 
-G3/G4 delivered the six contracts, weak channels, C registrations and replacement
-ownership diagnostics. G5 completed the following groups in
-[#217](roadmap-history.md#tracing-gc-removal-pr-217). This records the removal
-requirements; it is not a second backlog:
+The [replacement checks](ownership-diagnostics.md#collector-specific-tests-and-retained-assertions)
+preserve allocation, failure/cancellation cleanup, reuse/copy comparisons and
+binary inspection. All nine production jobs and documentation verified removal.
+Preserve these guarantees; do not treat collector deletion as unfinished work.
 
-1. **Unify admission and move ordinary memory tests to ARC.** Apply queue and
-   State/autodiff lifetime rules before interpreter entry effects, including
-   REPL/notebook and compile-time execution. Keep supported-program output tests
-   separate from deliberate rejection/runtime-defense fixtures. Compare reuse
-   against copying with reference counts enabled in both variants; retain the
-   existing allocation and process-memory limits.
-2. **Remove the collector.** Follow the [deletion table](ownership-diagnostics.md#collector-specific-tests-and-retained-assertions):
-   remove tracing selection, root discovery, marking/sweeping and collector-only
-   tests. Preserve allocation, resource cleanup and their observations. Update
-   reports and workflow settings together. There is no compatibility collector.
-3. **Verify the integrated result.** Check deliberate cleanup faults and repeated
-   work, then inspect actual binaries for collector removal. Use focused checks
-   during implementation and the complete nine-job matrix plus documentation
-   after the batch is ready. Full builds and suites run on GitHub. Audit every
-   failure before publishing a repair.
+ARC reduction continues separately. Count-free local arrays passed in #219,
+sort-owner/key storage in #220, and scoped parser storage in #221. Their
+[delivery records](roadmap-history.md) and linked measurements state the finite
+supported shapes. The current [plan](../PLAN.md) extends local borrowing, moves,
+representation and collection fusion; it does not promise to remove every count.
 
-ARC minimization remains separate from the completed collector deletion.
-PLAN A5 verified a [restricted local-array path](measurements/unique-array-storage.md)
-with one proved owner, no count slot and direct cleanup on normal and exceptional
-exits. All final production, documentation and analysis gates passed in #219.
-The next batch combines [redundant sort owners](measurements/sort-key-ownership.md)
-and [contiguous key storage](measurements/inline-sort-keys.md). Their reports
-distinguish count savings from actual storage,
-code size, stack use and execution speed.
-
-## Performance comparisons to run
+## Comparisons and remaining coverage
 
 Goose's [benchmark design](https://aardappel.github.io/goose/bench/design.html)
 separates idiomatic from optimized representations and includes teardown.
@@ -256,11 +237,15 @@ release-build signed wrapping versus debug overflow checks, unlike fwp's checked
 arithmetic contract. Compare equivalent arithmetic, not just equal happy-path
 checksums.
 
-For fwp, pair four workloads with C and Rust: a unique numeric buffer, a returned
-closure, a subscription with weak back-links, and a graph/autodiff arena. Use
-equivalent ownership/lifetime behavior and report any required representation
-changes. Include construction, steady-state work and destruction separately and
-together. Record heap requests, retain/release/weak acquisitions, peak live bytes,
+The [unique-buffer](measurements/unique-buffer-peers.md) and
+[returned-function](measurements/returned-callables.md) comparisons have retained
+C/Rust measurements; [Swift](measurements/swift-peers.md) adds ordinary optimized
+values and closures. Several timing controls remain inconclusive. Weak
+subscriptions and region/graph workloads still lack equivalent four-language
+comparisons. Swift allocation/count attribution is also incomplete.
+
+Use equivalent ownership/lifetime behavior and report representation differences.
+Include construction, steady-state work and destruction separately and together. Record heap requests, retain/release/weak acquisitions, peak live bytes,
 committed and reserved memory, elapsed time, compiler/flags/host and compile time.
 Measure small, cache-sized and larger working sets. Report
 `(fwp_time / baseline_time - 1) * 100` as extra time, with repeated-run variation;

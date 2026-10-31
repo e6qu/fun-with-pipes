@@ -361,6 +361,33 @@ impl<'p> Opt<'p> {
                     .into_iter()
                     .map(|(p, b)| (p, self.expr(b, depth)))
                     .collect();
+                // An irrefutable local record pattern reads fields; it does
+                // not inspect a tag or choose an alternative. Expose those
+                // reads to scalar replacement and loop-state unpacking before
+                // ownership insertion. Observable resources keep their frame.
+                if let (Expr::Local(local), [(Pat::Record(parts), body)]) = (&s, arms.as_slice()) {
+                    if parts.iter().all(|p| matches!(p, Pat::Bind(_) | Pat::Wild))
+                        && !crate::resource::observable_type(
+                            self.funcs,
+                            self.shapes,
+                            &self.locals[*local as usize],
+                        )
+                        && record_fields(self.shapes, &self.locals[*local as usize])
+                            .is_some_and(|fields| fields.len() == parts.len())
+                    {
+                        let mut body = body.clone();
+                        for (index, pattern) in parts.iter().enumerate().rev() {
+                            if let Pat::Bind(bound) = pattern {
+                                body = Expr::Let(
+                                    *bound,
+                                    Box::new(Expr::Field(Box::new(s.clone()), index as u32)),
+                                    Box::new(body),
+                                );
+                            }
+                        }
+                        return self.expr(body, depth);
+                    }
+                }
                 if let Some(lowered) = self.known_record(&s, &arms, None) {
                     self.expr(lowered, depth)
                 } else {

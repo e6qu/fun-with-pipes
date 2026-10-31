@@ -68,6 +68,9 @@ pub struct Infer<'a> {
     pub(crate) group: HashMap<String, Type>,
     pub(crate) current: String,
     locals: Vec<(String, NodeId, Type)>,
+    /// Declared fn inputs checked before the body, so caller effects cannot
+    /// become effects of an otherwise pure function-valued parameter.
+    declared_inputs: HashMap<NodeId, Type>,
     deferred: Vec<Deferred>,
     field_reqs: Vec<FieldReq>,
     /// Predicates required by the binding being checked.
@@ -108,6 +111,7 @@ pub fn check_program(env: &mut Env, out: &mut Typed) {
             group: HashMap::new(),
             current: String::new(),
             locals: Vec::new(),
+            declared_inputs: HashMap::new(),
             deferred: Vec::new(),
             field_reqs: Vec::new(),
             wanted: Vec::new(),
@@ -164,6 +168,7 @@ fn check_superclasses(env: &mut Env, out: &mut Typed) {
             group: HashMap::new(),
             current: String::new(),
             locals: Vec::new(),
+            declared_inputs: HashMap::new(),
             deferred: Vec::new(),
             field_reqs: Vec::new(),
             wanted: Vec::new(),
@@ -1040,7 +1045,6 @@ impl<'a> Infer<'a> {
     fn check_binding(&mut self, b: &BindingInfo) -> IResult<Type> {
         let ctx = self.fresh_eff();
         self.ctxs.push((b.name.clone(), ctx.clone(), b.body.span));
-        let t = self.infer(&b.body, &ctx)?;
         let expected = if b.annotated {
             let sc = self.env.globals[&b.name].scheme.clone().unwrap();
             // the definition chooses its abstract sizes
@@ -1058,6 +1062,25 @@ impl<'a> Infer<'a> {
         } else {
             self.group[&b.name].clone()
         };
+        if b.annotated {
+            let mut body = &b.body;
+            let mut stage = expected.clone();
+            loop {
+                match &body.kind {
+                    ExprKind::Lambda(_, next) => {
+                        let Type::Fun(input, output, _) = self.env.table.resolve(&stage) else {
+                            break;
+                        };
+                        self.declared_inputs.insert(body.id, *input);
+                        body = next;
+                        stage = *output;
+                    }
+                    ExprKind::Let(_, _, next) => body = next,
+                    _ => break,
+                }
+            }
+        }
+        let t = self.infer(&b.body, &ctx)?;
         let what = if b.test_name.is_some() {
             "test (tests must produce a `Bool`)".to_string()
         } else {
@@ -1586,7 +1609,10 @@ impl<'a> Infer<'a> {
             ExprKind::Lambda(pat, body) => {
                 pat.validate(false)?;
                 let start = self.env.table.vars.len();
-                let input = self.fresh();
+                let input = self
+                    .declared_inputs
+                    .remove(&e.id)
+                    .unwrap_or_else(|| self.fresh());
                 let effect = self.fresh_eff();
                 let saved = self.locals.len();
                 self.check_pattern(pat, &input, &mut Vec::new())?;

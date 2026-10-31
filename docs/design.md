@@ -64,7 +64,8 @@ on Linux ARM64/AMD64 and macOS ARM64; this is focused evidence, not final delive
 
 A named function's entry may group consecutive `fn` inputs only while no
 computation or observable owner release lies between them. A `let` calculation
-ends that group. Unknown applications remain successive calls; combining them
+ends that group. A top-level `let` is a cached value entry, even when it returns
+a function; a `match` entry takes one input before evaluating its selected arm. Unknown applications remain successive calls; combining them
 could run a later argument before a first-stage failure. REPL results use cached
 value entries even when their type is a function, so their construction runs once
 and later redefinitions cannot replace their saved code or captures.
@@ -88,7 +89,9 @@ nothing.
 ## Types and effects
 
 Type inference solves constraints from uses, so ordinary expressions need few
-annotations. A **row** describes fields or effects, possibly with an unknown
+annotations. An explicit signature supplies named input types before their bodies
+are checked. This keeps a pure callback parameter separate from IO performed
+while its caller evaluates an argument. A **row** describes fields or effects, possibly with an unknown
 remainder. This lets `.name` work with different records that contain `name`.
 Named records remain distinct types. Tuples are records with numeric labels;
 unit `()` is the empty record.

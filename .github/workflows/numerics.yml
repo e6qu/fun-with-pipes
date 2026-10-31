@@ -73,11 +73,12 @@ jobs:
           echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
       - run: cargo fmt --all -- --check
       - run: cargo clippy --lib --bin fwp --test local_bindings --test compiler_call_liveness --test debugger --test infix --test fmt --test golden_parse --test golden_check --test lint --test lsp --test resource_frames --test closure_ownership --test closure_cleanup --test preempt --test repl --test numeric_array_fusion -- -D warnings
-      - name: Macro scope dependencies
+      - name: Macro, optimizer and ownership dependencies
         if: ${{ !cancelled() }}
         run: |
           cargo test --lib macros::tests
           cargo test --lib opt::tests
+          cargo test --lib rc::tests
       - name: Lexical bindings and affected language contracts
         if: ${{ !cancelled() }}
         env:
@@ -203,6 +204,19 @@ jobs:
                 --source "$SOURCE_REVISION" --arch "$arch"
             done
           done
+      - name: Preserve complete Swift peer evidence after audit
+        if: inputs.suite == 'swift-peer-report'
+        run: >-
+          tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner
+          -c -C swift-results . | xz -T1 -6 > swift-peer-retained.tar.xz
+      - name: Upload audited archive for durable retention
+        if: inputs.suite == 'swift-peer-report'
+        uses: actions/upload-artifact@v7
+        with:
+          name: swift-peer-retained
+          path: swift-peer-retained.tar.xz
+          compression-level: 0
+          if-no-files-found: error
 
   swift_peers:
     if: inputs.suite == 'swift-peers' || inputs.suite == 'callable-phases'
