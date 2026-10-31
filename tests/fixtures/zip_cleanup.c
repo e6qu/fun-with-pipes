@@ -1,4 +1,4 @@
-static int zip_case,zip_collect,zip_x_calls,zip_y_calls,zip_items_calls,zip_pair_calls,zip_node_calls;
+static int zip_case,zip_x_calls,zip_y_calls,zip_items_calls,zip_pair_calls,zip_node_calls;
 static jmp_buf zip_jump;
 static int zip_recover(void){return 1;}
 static void zip_drop_string(V value){if(fwp_rc_release_last(value))fwp_rc_free_obj(value);}
@@ -35,10 +35,11 @@ static V zip_probe_node(V *fields){
 }
 int main(void){
     fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
+    size_t baseline=fwp_heap.live;
     V values[4];for(int i=0;i<4;i++)values[i]=fwp_rc_fresh(fwp_cstr("zip input"));
     V xs=fwp_rc_fresh(fwp_cons(values[0],fwp_rc_fresh(fwp_cons(values[1],0))));
     V ys=fwp_rc_fresh(fwp_cons(values[2],fwp_rc_fresh(fwp_cons(values[3],0))));
-    for(zip_collect=0;zip_collect<2;zip_collect++)for(zip_case=0;zip_case<8;zip_case++)for(int repeat=0;repeat<16;repeat++){
+    for(int repeat=0;repeat<32;repeat++)for(zip_case=0;zip_case<8;zip_case++){
         zip_x_calls=zip_y_calls=zip_items_calls=zip_pair_calls=zip_node_calls=0;
         if(zip_case==7){uint8_t *slot=fwp_rc_slot(values[2]);*slot=254;fwp_rc_dup(values[2]);(*fwp_rc_wide_link(slot))->count=SIZE_MAX;}
         size_t before=fwp_heap.live;
@@ -57,7 +58,9 @@ int main(void){
             if(zip_case==7&&i==2){if(*slot!=255||(*fwp_rc_wide_link(slot))->count!=SIZE_MAX)return 247;fwp_rc_forget_slot(slot);*slot=1;}
             else if(*slot!=1)return 248;
         }
-        if(!zip_collect&&fwp_heap.live!=before)return 249;
+        if(fwp_heap.live!=before)return 249;
     }
-    zip_drop_input(xs);zip_drop_input(ys);return 0;
+    zip_drop_input(xs);zip_drop_input(ys);
+    if(fwp_heap.live!=baseline)return 250;
+    return 0;
 }

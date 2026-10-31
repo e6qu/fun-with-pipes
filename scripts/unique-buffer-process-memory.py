@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Add explicit Linux process-memory checkpoints to separate buffer programs."""
 from pathlib import Path
+import re
 
 ROOT = Path(__file__).resolve().parent.parent
 PROTOTYPE = 'void buffer_memory_checkpoint(const char *stage);\n'
@@ -21,14 +22,22 @@ def c_peer(code):
     return code
 
 
-def fwp(code, entry):
+def fwp(code, entry, scan_storage):
     assert entry in ('unique', 'callback', 'scan')
     code = replace_once(code, 'typedef uint64_t V;', 'typedef uint64_t V;\n' + PROTOTYPE)
     start = code.index(f'/* {entry} : I64 -> I64 */')
     end = code.index('\n}', start) + 2
-    body = replace_once(code[start:end], 'l1 = t2;', 'l1 = t2;\n    buffer_memory_checkpoint("constructed");')
-    release = 'fwp_drop0(l1);' if entry == 'scan' else 'fwp_mem_free((void *)(uintptr_t)l1);'
-    body = replace_once(body, release, release + '\n    buffer_memory_checkpoint("released");')
+    body = code[start:end]
+    if entry == 'scan' and scan_storage == 'elided':
+        opening = body.index('{\n') + 2
+        body = body[:opening] + '    buffer_memory_checkpoint("before-work");\n' + body[opening:]
+        returned, = re.findall(r'return \(int64_t\)\([^\n]+;', body)
+        body = replace_once(body, returned, 'int64_t checkpoint_result = ' + returned.removeprefix('return ')
+            + '\n    buffer_memory_checkpoint("after-work");\n    return checkpoint_result;')
+    else:
+        body = replace_once(body, 'l1 = t2;', 'l1 = t2;\n    buffer_memory_checkpoint("constructed");')
+        release = 'fwp_drop0(l1);' if entry == 'scan' else 'fwp_mem_free((void *)(uintptr_t)l1);'
+        body = replace_once(body, release, release + '\n    buffer_memory_checkpoint("released");')
     code = code[:start] + body + code[end:]
     code = replace_once(code, 'int main(int argc, char **argv) {', 'int main(int argc, char **argv) {\n    buffer_memory_checkpoint("entry");')
     code = replace_once(code, '    buffer_benchmark();', '    buffer_benchmark();\n    buffer_memory_checkpoint("returned");')

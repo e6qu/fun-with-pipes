@@ -133,7 +133,7 @@ Do not replace that failed control with an earlier passing run. See
 ASCII case conversion, trimming and replacement consume the source owner. If
 bytes stay unchanged, the result receives that owner. ASCII case conversion can
 reuse uniquely owned input; changed trimmed results use a new string. The current
-replacement candidate also reuses unique storage when the result cannot grow.
+replacement implementation also reuses unique storage when the result cannot grow.
 Shared inputs receive a separate changed result, preserving the original bytes. Failure and cancellation must release consumed owners; deliberately
 omitted cleanup must fail its observer. `string.repeat` borrows its source and
 returns a separate result, including when the count is one.
@@ -246,12 +246,12 @@ extension. Machine headers verify the runner's actual architecture. The original
 directory-boundary probes above add that coverage for directory traversal; the [file-read boundary controls](measurements/file-read-failures.md) add probes
 for text/byte reads. Focused ARM64 macOS and AMD64 GCC checks and complete
 six-host platform coverage pass in #229. Other operations still need their own
-allocation-failure evidence. The prepared
+allocation-failure evidence. The
 [file-boundary portability checks](measurements/file-boundary-portability.md)
 extend error, flush and borrowed-handle probes to Windows. Both repaired native
-Windows focused runs pass, with all 22 saved executions per host audited. Complete
-final-head coverage, including related resource-frame and WASI repairs, remains
-required.
+Windows focused runs pass, with all 22 saved executions per host audited.
+Complete production coverage, including the resource-frame and WASI repairs,
+is verified in [#230](roadmap-history.md#file-cleanup-portability-and-measurement-clocks-pr-230).
 
 The observer reads Linux `/proc`, macOS `ps`, and Windows
 `K32GetProcessMemoryInfo` working-set counters. Windows sampling opens and closes

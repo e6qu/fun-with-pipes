@@ -23,6 +23,7 @@ def main():
     parser.add_argument('--rustc', required=True)
     parser.add_argument('--native-checks', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--scan-storage', choices=['materialized', 'elided'], required=True)
     args = parser.parse_args()
     assert args.cc and args.rustc and args.ar
     if args.mode == 'linux':
@@ -86,7 +87,7 @@ int main(int argc, char **argv) {
     for entry_index, entry in enumerate(ENTRIES):
         sources = {'c': MEMORY.c_peer((ROOT / 'tests/fixtures/unique_buffer_peer.c').read_text()),
                    'rust': MEMORY.rust_peer((ROOT / 'tests/fixtures/unique_buffer_peer.rs').read_text()),
-                   'fwp': MEMORY.fwp((args.native_checks / f'{entry}-harness.c').read_text(), entry)}
+                   'fwp': MEMORY.fwp((args.native_checks / f'{entry}-harness.c').read_text(), entry, args.scan_storage)}
         for level in [1, 2]:
             obj = args.output / f'memory-{entry}-O{level}.o'
             build([args.cc, '-std=gnu11', f'-O{level}', '-fPIC', '-Wall', '-Wextra', '-Werror', '-c', helper_path, '-o', obj])
@@ -113,7 +114,8 @@ int main(int argc, char **argv) {
                     expected = length * (length - 1) // 2 if entry == 'scan' else length * (2 if entry == 'unique' else 1)
                     assert result.returncode == 0 and result.stdout == f'{expected}\n'.encode(), result
                     events = [json.loads(line) for line in result.stderr.splitlines()]
-                    assert [row['stage'] for row in events] == ['entry', 'constructed', 'released', 'returned', 'before-exit'], events
+                    stages = ['before-work', 'after-work'] if (entry, language, args.scan_storage) == ('scan', 'fwp', 'elided') else ['constructed', 'released']
+                    assert [row['stage'] for row in events] == ['entry', *stages, 'returned', 'before-exit'], events
                     for row in events:
                         assert set(row) == {'stage', 'virtualKiB', 'residentKiB', 'proportionalKiB', 'anonymousKiB', 'swapKiB', 'sharedHugeTlbKiB', 'privateHugeTlbKiB'}, row
                         assert all(type(value) is int and value >= 0 for key, value in row.items() if key != 'stage'), row
@@ -122,6 +124,7 @@ int main(int argc, char **argv) {
                         assert row['proportionalKiB'] <= row['residentKiB'], row
                     observations.append(dict(entry=entry, language=language, level=level, length=length, events=events))
     (args.output / 'report.json').write_text(json.dumps(dict(mode=args.mode, parserControls=parsed,
+        scanStorage=args.scan_storage,
         scope='Diagnostic snapshots include observer overhead; no ordinary-program timing or memory claim.',
         observations=observations), indent=2) + '\n')
     print(f'Process-memory checks: {parsed} parser controls, 18 compiled programs, {len(observations)} Linux executions')

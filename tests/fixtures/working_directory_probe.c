@@ -1,4 +1,4 @@
-static int cwd_mode, cwd_live, cwd_collect;
+static int cwd_mode, cwd_live;
 static jmp_buf cwd_failure;
 static int cwd_recover(void) { return 1; }
 static void cwd_event(void) {
@@ -39,37 +39,35 @@ static int cwd_drop_error(V value){
 }
 int main(void){
     fwp_heap_start();fwp_fns=fwp_fn_table;fwp_init_consts();
-    const int collect_limit=0;
-    for(cwd_collect=0;cwd_collect<=collect_limit;cwd_collect++){
-        size_t live_bytes=fwp_heap.live;
-        for(cwd_mode=0;cwd_mode<4;cwd_mode++)for(int repeat=0;repeat<128;repeat++){
-            if(cwd_mode==1){
-                fwp_handler handler={0};handler.prev=fwp_handlers;handler.cleanup=fwp_cleanups;fwp_handlers=&handler;
-                if(!setjmp(handler.jb)){(void)fEXERCISE(FWP_UNIT);return 222;}
-                fwp_handlers=handler.prev;
-                int status=cwd_drop_error(handler.value);if(status)return status;handler.value=0;
-            }else if(cwd_mode==3){
-                fwp_trap_recover=cwd_recover;fwp_trap_jb=&cwd_failure;fwp_trap_cleanup=fwp_cleanups;
-                if(!setjmp(cwd_failure)){(void)fEXERCISE(FWP_UNIT);return 223;}
-                fwp_trap_recover=0;fwp_trap_jb=0;fwp_trap_cleanup=0;
-            }else{
-                V path=fEXERCISE(FWP_UNIT);
-                if(*fwp_rc_slot(path)!=1)return 219;
-                if(!STR(path)->len||(cwd_mode==2&&STR(path)->len!=6000))return 220;
-                cwd_drop(path);
-            }
-            if(cwd_live)return 221;
-            if(fwp_cleanups)return 226;
-            if(!cwd_collect&&fwp_heap.live!=live_bytes)return 228;
+    size_t live_bytes=fwp_heap.live;
+    for(cwd_mode=0;cwd_mode<4;cwd_mode++)for(int repeat=0;repeat<128;repeat++){
+        if(cwd_mode==1){
+            fwp_handler handler={0};handler.prev=fwp_handlers;handler.cleanup=fwp_cleanups;fwp_handlers=&handler;
+            if(!setjmp(handler.jb)){(void)fEXERCISE(FWP_UNIT);return 222;}
+            fwp_handlers=handler.prev;
+            int status=cwd_drop_error(handler.value);if(status)return status;handler.value=0;
+        }else if(cwd_mode==3){
+            fwp_trap_recover=cwd_recover;fwp_trap_jb=&cwd_failure;fwp_trap_cleanup=fwp_cleanups;
+            if(!setjmp(cwd_failure)){(void)fEXERCISE(FWP_UNIT);return 223;}
+            fwp_trap_recover=0;fwp_trap_jb=0;fwp_trap_cleanup=0;
+        }else{
+            V path=fEXERCISE(FWP_UNIT);
+            if(*fwp_rc_slot(path)!=1)return 219;
+            if(!STR(path)->len||(cwd_mode==2&&STR(path)->len!=6000))return 220;
+            cwd_drop(path);
         }
-#ifdef _WIN32
-        cwd_mode=4;
-        fwp_handler handler={0};handler.prev=fwp_handlers;handler.cleanup=fwp_cleanups;fwp_handlers=&handler;
-        if(!setjmp(handler.jb)){(void)fEXERCISE(FWP_UNIT);return 222;}
-        fwp_handlers=handler.prev;
-        int status=cwd_drop_error(handler.value);if(status)return status;
-        if(cwd_live||fwp_cleanups)return 221;
-#endif
+        if(cwd_live)return 221;
+        if(fwp_cleanups)return 226;
+        if(fwp_heap.live!=live_bytes)return 228;
     }
+#ifdef _WIN32
+    cwd_mode=4;
+    fwp_handler handler={0};handler.prev=fwp_handlers;handler.cleanup=fwp_cleanups;fwp_handlers=&handler;
+    if(!setjmp(handler.jb)){(void)fEXERCISE(FWP_UNIT);return 222;}
+    fwp_handlers=handler.prev;
+    int status=cwd_drop_error(handler.value);if(status)return status;
+    if(cwd_live||fwp_cleanups)return 221;
+    if(fwp_heap.live!=live_bytes)return 228;
+#endif
     return 0;
 }

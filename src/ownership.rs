@@ -693,7 +693,7 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
             None,
             &[0, 1],
         ),
-        "array.length" | "map.size" | "set.size" => (&[B], R, None, &[]),
+        "array._checked-count" | "array.length" | "map.size" | "set.size" => (&[B], R, None, &[]),
         "map.empty" | "set.empty" => (&[], ResultOwnership::Static, None, &[]),
         "map.contains" | "set.contains" => (&[B, B], R, None, &[]),
         "map.from-list" | "set.from-list" | "map.keys" | "map.values" | "map.to-list"

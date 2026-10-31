@@ -29,21 +29,19 @@ collector is not the same as removing these costs. The
 
 ## Work order
 
-1. Preserve [#230's verified file and clock delivery](docs/roadmap-history.md#file-cleanup-portability-and-measurement-clocks-pr-230).
+1. Preserve [#231's verified scalar-fold delivery](docs/roadmap-history.md#direct-scalar-folds-and-process-timing-pr-231).
+   All production gates pass; its timing acceptance remains open.
    The [handoff](docs/development-state.md) names the current source and checks.
-2. Use the [B1 buffer results and frozen scan budget](docs/measurements/unique-buffer-peers.md):
-   four audited sessions retain all results; 35/48 case controls fail and cannot
-   support stable speed claims. The 4,096-element scan passes all four sessions but
-   takes 10.1–14.4× C's time. The scalar-fold candidate removes per-element dispatch
-   and ineffective count calls, with smaller code and reported frames. The user
-   accepted these reductions while leaving timing acceptance open. The parent
-   polling-delay repair is tested; four new sessions are audited. Three qualify,
-   but AMD session 2 has 2.040% candidate-copy variation (limit 2%). Keep that
-   failure and the original 3.88% failure; do not retry unchanged measurements.
-   Complete the final production gate, then apply the repaired waiting method to
-   the full buffer comparison: the same three entries, four sizes, counts and
-   limits, two sessions per architecture. Declare its source before collecting;
-   retain every case, including unstable short cases, before selecting more code changes.
+2. Finish verification of [generated-array elimination](docs/measurements/generated-array-folds.md).
+   Both focused native GCC suites and compiler-analysis budgets pass. All four
+   timing sessions are audited; three fail the unchanged copy-control limit.
+   The complete first matrix is audited: six jobs fail only an obsolete
+   one-allocation expectation. Verify the combined expectation/cleanup-test
+   repair on all production hosts. Preserve oversized-count checks, argument/effect/failure order and
+   outer-owner cleanup. Allocation removal and timing acceptance are separate.
+   The [four repaired full-buffer
+   sessions](docs/measurements/buffer-current.md) are audited: 25/48 copy controls
+   fail, and no workload passes all four. Do not retry unchanged measurements.
 3. Resolve D2/N1's failed measurements before claiming numerical speed acceptance.
    Fixed CPU affinity and equal executable names did not resolve the controls.
    Do not rerun unchanged experiments or increase sample counts again.

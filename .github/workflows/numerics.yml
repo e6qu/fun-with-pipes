@@ -45,12 +45,14 @@ jobs:
         include:
           - runner: ubuntu-latest
             machine: x86_64
+            reference_artifact: '13009398337'
             cpu: AMD EPYC 7763 64-Core Processor
             c_version: gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0
             c_arch: x86-64
             rust_cpu: x86-64
           - runner: ubuntu-24.04-arm
             machine: aarch64
+            reference_artifact: '13010485230'
             cpu: Neoverse-N2
             c_version: gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
             c_arch: armv8-a
@@ -97,9 +99,11 @@ jobs:
       - name: Verify the frozen standalone reference programs
         env:
           GH_TOKEN: ${{ github.token }}
+          REFERENCE_ARTIFACT: ${{ matrix.reference_artifact }}
         run: |
-          gh run download 41103040883 --name "buffer-baseline-$MACHINE-1" --dir scan/reference
-          python3 scripts/check-buffer-baselines.py --input scan/reference/observed --source fadebf713e0854d6d132fc6e3666f275b214fc17 --machine "$MACHINE" --session 1 --origin observed --wait-policy timed-polling
+          gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$REFERENCE_ARTIFACT/zip" > scan/reference.zip
+          python3 -m zipfile -e scan/reference.zip scan/reference
+          python3 scripts/check-buffer-baselines.py --input scan/reference/observed --source 3ca66b543bb8764527fe2a5142119831df15cfb7 --machine "$MACHINE" --session 1 --origin observed --wait-policy posix-alarm
       - name: Build the current compiler and verify scalar folds
         run: |
           set -o pipefail
@@ -113,7 +117,7 @@ jobs:
       - name: Verify allocation and release diagnostics
         run: >-
           python3 scripts/check-unique-buffer-storage.py --native-checks scan/native
-          --output scan/storage --cc gcc --rustc rustc
+          --output scan/storage --cc gcc --rustc rustc --scan-storage elided
       - name: Prepare ordinary programs and compiler reports
         run: >-
           python3 scripts/prepare-buffer-baselines.py --native-checks scan/native
@@ -126,16 +130,16 @@ jobs:
           python3 scripts/check-buffer-pipeline.py --programs scan/reference/observed/programs --output scan/baseline-control
           python3 scripts/test-buffer-processes.py
           python3 scripts/test-unique-buffer-baselines.py
-          python3 scripts/check-scan-pipeline.py --reference scan/reference/observed/programs --candidate scan/programs --output scan/synthetic-control 2>&1 | tee scan/pipeline.log
+          python3 scripts/check-scan-pipeline.py --experiment generated-array --reference scan/reference/observed/programs --candidate scan/programs --output scan/synthetic-control 2>&1 | tee scan/pipeline.log
       - name: Collect exactly the declared paired session
         run: >-
-          python3 scripts/scan-comparison.py collect --reference scan/reference/observed/programs
+          python3 scripts/scan-comparison.py collect --experiment generated-array --reference scan/reference/observed/programs
           --candidate scan/programs --qualification scan/qualification.json --output scan/observed
           --session "$SESSION" --cpu-policy all --timeout 45
       - name: Independently reconstruct the complete comparison
         if: ${{ !cancelled() && hashFiles('scan/observed/manifest.json') != '' }}
         run: >-
-          python3 scripts/scan-comparison.py check --input scan/observed --source "$GITHUB_SHA"
+          python3 scripts/scan-comparison.py check --experiment generated-array --input scan/observed --source "$GITHUB_SHA"
           --machine "$MACHINE" --session "$SESSION" --origin observed --wait-policy posix-alarm
       - name: Retain complete or partial paired evidence and diagnostics
         if: ${{ always() && hashFiles('scan/**') != '' }}
@@ -267,17 +271,20 @@ jobs:
           mkdir buffer-checks
           set -o pipefail
           cargo build --locked --release --bin fwp 2>&1 | tee buffer-checks/build.log
-      - name: Scalar fold semantics and failure cleanup
+      - name: Scalar folds, generated arrays and failure cleanup
         if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
+        env:
+          FWP_ARRAY_FUSION_ARTIFACTS: buffer-checks/fusion
         run: |
           set -o pipefail
-          cargo test --locked --release --no-fail-fast --test array_loop_borrows --test array_unwind_ownership --test fold_unwind_ownership 2>&1 | tee buffer-checks/scalar-fold-tests.log
+          cargo test --locked --release --no-fail-fast --test array_loop_borrows --test array_unwind_ownership --test fold_unwind_ownership --test numeric_array_fusion --test array_size_limits 2>&1 | tee buffer-checks/scalar-fold-tests.log
       - name: Peer results, argument errors and schedule
         if: ${{ !cancelled() && inputs.suite == 'buffer-peer-checks' && steps.compiler.outcome == 'success' }}
         run: |
           set -o pipefail
           python3 scripts/check-unique-buffer-peers.py --cc gcc --rustc rustc --output buffer-checks/peers 2>&1 | tee buffer-checks/peers.log
           python3 scripts/test-unique-buffer-baselines.py 2>&1 | tee buffer-checks/schedule.log
+          python3 scripts/test-generated-buffer-observers.py 2>&1 | tee buffer-checks/observer-controls.log
           python3 scripts/check-measurement-clocks.py --cc gcc 2>&1 | tee buffer-checks/clocks.log
       - name: Raw, optimized and native fwp results
         id: native
@@ -290,18 +297,18 @@ jobs:
         if: ${{ !cancelled() && steps.native.outcome == 'success' }}
         run: >-
           python3 scripts/check-unique-buffer-phases.py --native-checks buffer-checks/native
-          --output buffer-checks/phases --cc gcc --rustc rustc
+          --output buffer-checks/phases --cc gcc --rustc rustc --scan-storage elided
       - name: Allocation observers and omitted releases
         if: ${{ !cancelled() && steps.native.outcome == 'success' }}
         run: >-
           python3 scripts/check-unique-buffer-storage.py --native-checks buffer-checks/native
-          --output buffer-checks/storage --cc gcc --rustc rustc
+          --output buffer-checks/storage --cc gcc --rustc rustc --scan-storage elided
       - name: Linux process memory checkpoints
         if: ${{ !cancelled() && steps.native.outcome == 'success' }}
         run: >-
           python3 scripts/check-unique-buffer-process-memory.py --ar ar --mode linux
           --native-checks buffer-checks/native --output buffer-checks/process-memory
-          --cc gcc --rustc rustc
+          --cc gcc --rustc rustc --scan-storage elided
       - name: Ordinary programs and compiler stack reports
         id: programs
         if: ${{ !cancelled() && steps.native.outcome == 'success' }}

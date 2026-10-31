@@ -1,0 +1,21 @@
+# Generate each index and sum from left to right. The intermediate array has
+# no other reader; the optimizer may remove it when callbacks are pure.
+export generated-sum : I64 -> I64
+generated-sum = flip array.generate id | array.fold add 0
+export generated-mapped : I64 -> I64
+generated-mapped = flip array.generate id | array.map (add 1) | array.fold add 0
+mixed-step : I64 -> F32 -> I64
+mixed-step = curry (both .0 (.1 | float.to-int | option.unwrap-or 0) | uncurry add)
+export generated-mixed : I64 -> I64
+generated-mixed = flip array.generate int.to-float | array.fold mixed-step 0
+main = [
+    -3 | generated-sum | echo,
+    0 | generated-sum | echo,
+    4 | generated-sum | echo,
+    4 | generated-mapped | echo,
+    4 | generated-mixed | echo,
+    # Each addition rounds in the declared format. Reassociation would change
+    # both results: adding four first would produce 16777220 / 10000000000000004.
+    array.generate 4 (const 1.0f32) | array.fold add 16777216.0f32 | echo,
+    array.generate 4 (const 1.0) | array.fold add 10000000000000000.0 | echo,
+] | ignore

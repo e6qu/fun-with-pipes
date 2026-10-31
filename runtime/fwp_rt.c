@@ -185,8 +185,13 @@ static V fwp_list_from(const V *a, size_t n) {
     return r;
 }
 
-static V fwp_arr_new(size_t n) {
+static size_t fwp_array_checked_count(size_t n) {
     if (n > (SIZE_MAX - sizeof(fwp_arr)) / sizeof(V)) fwp_trap("array too large");
+    return n;
+}
+
+static V fwp_arr_new(size_t n) {
+    n = fwp_array_checked_count(n);
     fwp_arr *a = (fwp_arr *)fwp_alloc(sizeof(fwp_arr) + n * sizeof(V));
     a->len = n;
     return PTR(a);
@@ -372,7 +377,7 @@ static inline void fwp_array_store(V a, size_t i, V value, const fwp_desc *elem)
 }
 static V fwp_array_new_packed(size_t n, const fwp_desc *elem) {
     /* Preserve the established count/trap boundary in every layout mode. */
-    if (n > (SIZE_MAX - sizeof(fwp_arr)) / sizeof(V)) fwp_trap("array too large");
+    n = fwp_array_checked_count(n);
     if (fwp_array_stride(elem) > sizeof(V) && n > (SIZE_MAX - sizeof(fwp_arr)) / fwp_array_stride(elem)) fwp_trap("array too large");
     size_t bytes = sizeof(fwp_arr) + n * fwp_array_stride(elem);
     void *storage = fwp_array_numeric(elem) ? fwp_alloc_leaf(bytes) : fwp_alloc(bytes);

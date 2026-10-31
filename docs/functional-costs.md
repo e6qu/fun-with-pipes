@@ -66,9 +66,9 @@ Run `40719252691`, source `ca914eec2ede1b5de61ac42f1c8068d8de3942e9`, passes on 
 and AMD64 at O0/O2. All four combinations produce the same request counts.
 The [raw observations](measurements/functional-calls-2026-10-28.json) retain each
 pair, binary hashes and stack observations. Outputs match the interpreter and
-all calls restore their live-storage baseline. The known-call rows are now
-regression expectations; they include remaining costs instead of claiming that
-every abstraction is free.
+all calls restore their live-storage baseline. The table records that revision;
+the test keeps exact expectations for the current compiler, including the
+generated-array change described below.
 
 | Known construct | Allocations | Requested bytes | Applications | Boxes | Retains |
 |---|---:|---:|---:|---:|---:|
@@ -84,6 +84,21 @@ allocations, 512 applications and 128 retains. The known fold requests none;
 its control requests 129 allocations, 256 applications and 128 retains. The
 known `each` still allocates per element. These are selected fixture results,
 not universal costs for all callbacks or proof of parity with C/Rust.
+
+### Generated-array removal
+
+The [generated-array change](measurements/generated-array-folds.md) removes the
+known array callback's last allocation. It computes `1 + 2 + ... + n` directly,
+without storing the generated numbers. Its current regression expectation is
+zero allocations, requested bytes, applications, boxes and retains at both
+`n = 32` and `128`. The unknown callback still needs its array and owners.
+
+The first full production run exposed the old one-allocation expectation in
+this test. Both sizes returned the correct result and restored live storage;
+the assertion failed because the allocation was gone. The repaired expectation
+requires exactly zero, rather than permitting a range. The original table and
+raw measurements above remain historical evidence. Full verification of the
+updated test is pending; these counters make no elapsed-time claim.
 
 ## Tail calls and weak handles
 

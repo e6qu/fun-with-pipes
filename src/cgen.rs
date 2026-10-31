@@ -6369,6 +6369,9 @@ impl<'p> Gen<'p> {
         if sym == "array.length" {
             return Ok("return (V)(int64_t)fwp_array_len(l0);".into());
         }
+        if sym == "array._checked-count" {
+            return Ok("return (V)fwp_array_checked_count(fwp_count_arg(l0));".into());
+        }
         if sym == "simd._splat-dot-f64" {
             if result != MT::con("std::F64")
                 || params

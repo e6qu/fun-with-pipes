@@ -761,6 +761,7 @@ impl<'p> Interp<'p> {
                     v.push(a[0].clone());
                     Value::Array(Rc::new(v))
                 }
+                "array._checked-count" => Value::I64(array_count(&a[0])? as i64),
                 "array.make" => Value::Array(Rc::new(vec![a[1].clone(); array_count(&a[0])?])),
                 "array.generate" => {
                     let f = a[1].clone();

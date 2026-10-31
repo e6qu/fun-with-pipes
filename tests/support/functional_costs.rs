@@ -257,7 +257,7 @@ int main(int argc, char **argv) {{
             for (name, expected) in [
                 ("pipe", [0, 0, 0, 0, 0]),
                 ("partial", [0, 0, 0, 0, 0]),
-                ("borrowed", [1, 8 * (n + 1), 0, 0, 0]),
+                ("borrowed", [0, 0, 0, 0, 0]),
                 ("captured", [0, 0, 0, 0, 0]),
                 ("result", [1, 24, 0, 1, 1]),
                 ("each-count", [n + 2, 24 * n + 152, 2, n + 1, 1]),

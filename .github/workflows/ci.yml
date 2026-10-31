@@ -301,15 +301,30 @@ jobs:
           path: ${{ runner.temp }}/macos-ownership-tests/
           if-no-files-found: warn
       - name: Preserve failed native corpus binaries, C and statuses
+        id: native_failures
         if: failure()
+        shell: bash
         run: |
           mkdir -p "$RUNNER_TEMP/native-golden-failures"
-          find "${TMPDIR:-/tmp}" -maxdepth 1 -type f -name 'fwp-golden-*' -exec cp {} "$RUNNER_TEMP/native-golden-failures/" ";"
+          shopt -s nullglob
+          retained_files=()
+          for retained_file in "${TMPDIR:-/tmp}"/fwp-golden-*; do
+            if [[ -f "$retained_file" && ! -L "$retained_file" ]]; then
+              retained_files+=("$retained_file")
+            fi
+          done
+          if ((${#retained_files[@]})); then
+            echo "found=true" >> "$GITHUB_OUTPUT"
+            cp "${retained_files[@]}" "$RUNNER_TEMP/native-golden-failures/"
+          else
+            echo "found=false" >> "$GITHUB_OUTPUT"
+          fi
       - uses: actions/upload-artifact@v7
-        if: failure()
+        if: failure() && steps.native_failures.outputs.found == 'true'
         with:
           name: native-golden-failures-${{ matrix.runner }}
           path: ${{ runner.temp }}/native-golden-failures/
+          if-no-files-found: error
 
       - name: Package and verify ownership evidence
         if: always()

@@ -15,12 +15,31 @@ SPEC.loader.exec_module(STORAGE)
 ENTRIES = ('unique', 'callback', 'scan')
 
 
+def check_counts(counts, entry, scan_storage):
+    if entry == 'scan' and scan_storage == 'elided':
+        assert all(value == 0 for value in counts['managed'].values()), counts
+        assert all(operation['calls'] == 0 for operation in counts['operations'].values()), counts
+        metadata = counts['metadata']
+        assert metadata['allocationRequests'] == metadata['requestedCountBytes'] == 0, counts
+        assert metadata['initialCountBytes'] == metadata['finalCountBytes'] == metadata['peakCountBytes'] == 0, counts
+    else:
+        assert counts['managed']['requests'] >= 3, counts
+        if entry != 'scan':
+            assert counts['managed']['requests'] == 3, counts
+            assert all(operation['calls'] == 0 for operation in counts['operations'].values()), counts
+            assert counts['metadata']['requestedCountBytes'] == 0, counts
+        else:
+            assert counts['metadata']['requestedCountBytes'] > 0, counts
+            assert counts['operations']['fresh']['effective'] >= 3, counts
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--native-checks', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--cc', required=True)
     parser.add_argument('--rustc', required=True)
+    parser.add_argument('--scan-storage', choices=['materialized', 'elided'], required=True)
     args = parser.parse_args()
     assert args.cc and args.rustc
     args.output.mkdir(parents=True, exist_ok=False)
@@ -50,17 +69,26 @@ def main():
         sources = {'c': STORAGE.c_peer((ROOT / 'tests/fixtures/unique_buffer_peer.c').read_text()),
                    'rust': STORAGE.rust_peer((ROOT / 'tests/fixtures/unique_buffer_peer.rs').read_text()), 'fwp': fwp}
         for language, code in sources.items():
+            control = 'omitted-release'
             if language == 'c':
                 leaked = STORAGE.replace_once(code, '    buffer_release(values);', '    (void)buffer_release;')
             elif language == 'rust':
                 leaked = STORAGE.replace_once(code, '    drop(values);', '    std::mem::forget(values);')
+            elif entry == 'scan' and args.scan_storage == 'elided':
+                control = 'inserted-allocation'
+                # Allocate and free inside the measured call. Cleanup still
+                # succeeds, but the zero-allocation observer must reject it.
+                leaked = STORAGE.replace_once(code, 'size_t buffer_before = fwp_heap.live;',
+                    'size_t buffer_before = fwp_heap.live;\n'
+                    '        void *unexpected = fwp_alloc_leaf(8);\n'
+                    '        fwp_mem_free(unexpected);')
             else:
                 start = code.index(f'/* {entry} : I64 -> I64 */')
                 end = code.index('\n}', start) + 2
                 release = 'fwp_drop0(l1);' if entry == 'scan' else 'fwp_mem_free((void *)(uintptr_t)l1);'
                 leaked = code[:start] + STORAGE.replace_once(code[start:end], release, '(void)l1;') + code[end:]
             source_hashes[f'{entry}-{language}'] = hashlib.sha256(code.encode()).hexdigest()
-            for variant, generated in [('observed', code), ('omitted-release', leaked)]:
+            for variant, generated in [('observed', code), (control, leaked)]:
                 source = args.output / f'{entry}-{language}-{variant}.{"rs" if language == "rust" else "c"}'
                 source.write_text(generated)
                 for level in [1, 2]:
@@ -75,7 +103,7 @@ def main():
                                    '-fno-lto', f'-DBUFFER_ENTRY={entry_index}', source, '-o', executable, *flags]
                     built = run(command)
                     assert (built.returncode, built.stdout, built.stderr) == (0, b'', b''), built
-                    for length in ([16] if variant == 'omitted-release' else [0, 16, 4096, 262144]):
+                    for length in ([16] if variant != 'observed' else [0, 16, 4096, 262144]):
                         result = run([executable, entry, length, 3])
                         if variant == 'omitted-release':
                             assert (result.returncode, result.stdout, result.stderr) == (225, b'', b'buffer still live\n'), result
@@ -85,14 +113,16 @@ def main():
                         assert result.returncode == 0 and result.stdout == f'{value * 3}\n'.encode(), result
                         if language == 'fwp':
                             counts = STORAGE.parse_fwp(result.stderr, sites)
-                            assert counts['managed']['requests'] >= 3, counts
-                            if entry != 'scan':
+                            if variant == 'inserted-allocation':
                                 assert counts['managed']['requests'] == 3, counts
-                                assert all(operation['calls'] == 0 for operation in counts['operations'].values()), counts
-                                assert counts['metadata']['requestedCountBytes'] == 0, counts
+                                try:
+                                    check_counts(counts, entry, args.scan_storage)
+                                except AssertionError:
+                                    pass
+                                else:
+                                    raise AssertionError('accepted an unexpected scan allocation')
                             else:
-                                assert counts['metadata']['requestedCountBytes'] > 0, counts
-                                assert counts['operations']['fresh']['effective'] >= 3, counts
+                                check_counts(counts, entry, args.scan_storage)
                         else:
                             counts = json.loads(result.stderr)
                             assert counts == dict(requests=3 if length else 0, requestedBytes=3 * length * 8,
@@ -100,8 +130,10 @@ def main():
                         results.append(dict(entry=entry, language=language, level=level, variant=variant, length=length, counts=counts))
     (args.output / 'report.json').write_text(json.dumps(dict(
         scope='Diagnostic allocation requests and ownership only; not ordinary timing or OS memory release.',
+        scanStorage=args.scan_storage,
         sourceHashes=source_hashes, results=results), indent=2) + '\n')
-    print(f'Storage observers: {len(results)} executions pass, including 18 omitted-release failures')
+    controls = sum(row['variant'] != 'observed' for row in results)
+    print(f'Storage observers: {len(results)} executions pass, including {controls} deliberate defects')
 
 
 if __name__ == '__main__':
