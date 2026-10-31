@@ -102,8 +102,12 @@ explicitly. No session is selected implicitly.
 `prepare-capture-reference.py` restores the original capture block and helper in
 an isolated checkout of the same source. It verifies that only `src/opt.rs`
 changes and scalar ownership stays identical, then records both source hashes,
-the patch and reference compiler hash. The reference tests check the production
-source against preparation `8a495a72` and reject incomplete or changed transforms.
+the patch and reference compiler hash. The reference tests freeze the two replaced
+blocks from preparation `8a495a72` and verify that reversing the replacement
+reproduces the complete current source, including its tests. They reject partial,
+duplicate or unrelated reference edits. Other compiler development stays in both
+builds: State fusion's shared `substitute` helper, for example, retains its current
+visibility. Historical source hashes, measurements and limits remain unchanged.
 Both comparison protocols use the shared budget evaluator with an explicit
 comparison name; their allocation requirements remain distinct. The original
 scalar-recording archive and every rejected timing case still pass their audits.

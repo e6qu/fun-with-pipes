@@ -21,6 +21,7 @@ env:
   FWP_KERNEL_BOUNDS_ARTIFACTS: ownership-evidence/kernel-bounds
   FWP_CALLBACK_CAPTURE_ARTIFACTS: ownership-evidence/direct-captures
   FWP_ARRAY_CAPTURE_ARTIFACTS: ownership-evidence/array-captures
+  FWP_CONTEXT_ARTIFACTS: ownership-evidence/service-context
 
 jobs:
   windows:
@@ -361,6 +362,7 @@ jobs:
   test:
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     env:
+      CC: gcc
       FWP_ARC_ARTIFACTS: ownership-evidence/arc
       FWP_FILE_APPLICATION_ARTIFACTS: ownership-evidence/file-applications
       FWP_HTTP_APPLICATION_ARTIFACTS: ownership-evidence/http-application

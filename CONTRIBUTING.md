@@ -163,6 +163,13 @@ It does not replace alias, failure, cancellation and runtime cleanup tests.
 New test targets also need the native shard-coverage check; do not omit them
 from a platform to shorten its gate.
 
+Measurement tools may read or rewrite compiler source. When changing a module
+they use, inspect those callers before launching the full matrix. For `src/opt.rs`,
+run `python3 scripts/local-guard.py python3 scripts/test-capture-reference.py`.
+The comparison must disable only its named optimization and preserve every other
+current source byte. Historical results remain tied to their recorded revisions;
+they must not freeze unrelated future compiler development.
+
 For memory/representation changes, keep actual C/binaries, source/toolchain IDs,
 complete measurements and independent review. Deliberately broken controls must
 fail their intended observer. Require the complete golden corpus, reuse and physical-release controls, and

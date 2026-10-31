@@ -144,3 +144,19 @@ values must keep their entries; a regression covers both cases. Neither the
 code-size metric nor its 5% limit changes. G2's Intel timing control also fails;
 the [analysis report](ownership-analysis.md#state-range-recheck) records that
 failure and the verified batch-order correction.
+
+## Production comparison repairs
+
+The first full matrix at `a7f62461` exposed two invalid comparisons. The eager
+capture reference test froze unrelated optimizer code; sharing `substitute`
+with State fusion changed that hash. Its repair preserves the original capture
+blocks and checks that every other byte matches the current compiler.
+
+The service-scope test compared a plain State loop whose list now disappears
+with a deadline callback that captures a `Duration` record and retains its list.
+The latter still allocates one 24-byte node per element, not a new scope owner.
+The repaired comparison [reuses each input list](list-iteration.md) for State
+updates and `length`, verifies the list-node slope, and keeps every scope limit.
+All seven comparisons pass a focused Clang O2 reproduction with the exact CI
+compiler; final native verification remains pending. Neither repair changes
+compiler eligibility, historical measurements or timing acceptance rules.

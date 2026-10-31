@@ -1,99 +1,120 @@
 # Current work
 
-**Next:** publish the State range batch as the next single PR, run the full
-production matrix, and audit every completed log and failed step. Squash-merge
-only when all nine production jobs and documentation pass for the final head.
-Keep one active PR. Preserve passing heads while remaining gates run.
+**Next:** watch the repaired [PR #233](https://github.com/e6qu/fun-with-pipes/pull/233)
+at its new exact head. Merge only after all nine production jobs and docs pass.
+Keep one active PR; the independent callable preparation is not another PR.
 
-## Previous delivery: PR #232
-
-Verified and merged as `c71ac217c5ea09d8bf1868f799fc0d8a574d2e2a`, with exactly
-the tested `05d96484` tree and a one-line subject, empty body and no trailers.
-All nine production jobs (`41153845461`) and docs (`41153845377`) pass and have
-complete log audits. Intel retry `124422281020` passes 628 Rust / 22 Python cases
-and all uploads after the original DNS failure. The
-[delivery history](roadmap-history.md#generated-array-elimination-pr-232) owns
-the results. Local logs/audits are `/private/tmp/fwp-232-*`; the final combined
-audit is `/private/tmp/fwp-check-232-merge-ready.py`. Both duplicate post-merge
-runs were cancelled after tree/message verification.
-
-## Prepared State range batch
+## Active State range delivery
 
 Worktree `/private/tmp/fwp-state-range-folds`, branch `state-range-folds`.
-Verified main is merged through `203c501f`; resolving duplicate squash-history
-conflicts preserves the complete prepared tree byte-for-byte. No PR is open yet.
-Protocol `68c99a3d` preceded implementation.
-Current compiler/test source: `ea0f300b2c553b519a1a9ae266b7b974c388bdd7`.
-Documentation and evidence distinguish focused success from final acceptance.
-Tracked documentation is restored for the complete roadmap/link audit. Expected
-production results: Linux 1,003 Rust cases / 257 summaries; regular macOS 633/132;
-ownership macOS 367/127; Windows 828/206; benchmark 2/2. Expected Python cases:
-Linux 12, regular macOS and Windows 22, benchmark 14, docs 325 in 49 suites.
-Confirm actual results and diagnostics; these expectations do not waive a gate.
+The first head `a7f6246150d7f300b926afe3e101e46db8e5bd59` has known comparison failures;
+**do not merge that head**. Production run `41166997085`, docs `41166997076`.
+The batched repair changes tests, measurement checks, workflows and docs; compiler
+and runtime source remain the focused `ea0f300b` implementation.
 
-The [contract and results](measurements/state-range-folds.md) describe the scope:
-replace a known single-use I64 range input to a State consumer with scalar bounds,
-keep the handler, effects and failure order, and reject unproved shapes. Correct
-unit-field loop entry avoids an initial box. Direct loops no longer retain an
-unused runtime callback entry; actual function values retain theirs.
+Use squash subject `Avoid temporary range lists in State folds`, with an empty
+body. Verify the merged tree equals the passing head and the commit has exactly
+one line, at most 80 characters, no trailers or attribution.
 
-Focused run `41160459668` passes on all three hosts, with complete audits:
-GCC AMD `124416661976`, GCC ARM `124416662138`, Clang ARM `124416662052`. Each
-passes 226 library + 23 integration cases; Linux also passes two measurement
-controls. At O0/O2 and n=32/128, exactly two allocations / 152 bytes remain.
-Worker bytes shrink 1,880 -> 1,104 on ARM and 1,814 -> 1,103 on AMD. Largest frame
-components stay 944/1,008 bytes. Both frozen code/stack budgets pass.
+### First matrix: all ten jobs completely audited
 
-G2 run `41160463103` passes and is fully audited: AMD `124416671214`, Intel macOS
-`124416671326`, each with 228 Rust cases, all-target lint and startup checks.
-The corrected schedule balances identical-copy positions within each compared
-batch. Samples, batch sizes, medians and limits are unchanged. Maximum copy
-variation is 0.42%/1.32%, below 5%; this is not a compiler speedup claim.
+| Gate | Job | Result at a7f62461 |
+|---|---|---|
+| Benchmarks | 124436595057 | Pass: 2 Rust / 14 Python cases |
+| macOS ARM regular | 124436595221 | Pass: 633 Rust / 22 Python |
+| macOS Intel regular | 124436595213 | Pass: 633 Rust / 22 Python |
+| macOS ARM ownership | 124436595281 | 366 passed / one service comparison failure |
+| macOS Intel ownership | 124436595251 | 366 passed / the same failure |
+| Linux ARM | 124436595302 | 1,002 passed / the same failure; 12 Python pass |
+| Windows ARM | 124436595447 | 827 passed / the same failure; 22 Python pass |
+| Windows AMD | 124436595325 | 827 passed / the same failure; 22 Python pass |
+| Linux AMD | 124436595442 | 1,002 passed / the same failure; 12 Python pass |
+| Documentation | 124436595008 | Sole capture-reference hash failure; 20 later steps skipped |
 
-[Passing evidence](measurements/state-range-focused-2026-10-31.json) retains
-cost rows, code/stack reports, verified binary identities, commands and 13,824
-analysis timings. [Rejected evidence](measurements/state-range-rejected-2026-10-31.json)
-retains the earlier code-size failures and all 13,824 prior timings. At `f82016d9`,
-all semantics/cleanup passed, but worker code grew 13.62%/16.26% and Intel's
-identical-copy difference was 5.63%. Those failures are not overwritten. The
-first `855f53ce` run exposed the unit-field box and missing focused macOS
-`FWP_OPENSSL_DIR`; both are fixed and verified. Full production remains pending.
+Both Windows audits distinguish their 16 intentional panic controls from the
+service failure. The ARM macOS compiler-report artifact contains only the
+compiler, no crash report. Linux target artifacts `13030914670` / `13032515528`
+and Windows TLS artifacts `13030059727` / `13031253656` were also audited as soon
+as their phases completed. No additional unexpected diagnostic was found.
 
-The maintained `scripts/check-state-range-evidence.py` now recomputes both saved
-decisions. Its three tests preserve the rejected code/timing results and reject
-15 kinds of missing or damaged evidence. Documentation CI runs these controls;
-no benchmark or full compiler suite is repeated for this audit addition.
+Logs, metadata, archives and audits: `/private/tmp/fwp-233-*`.
+Auditors: `/private/tmp/fwp-audit-233-green.py`,
+`fwp-audit-233-service-failure.py`, `fwp-audit-233-linux-tests.py`,
+`fwp-audit-233-windows-tls.py` and `fwp-audit-233-docs-failure.py`.
+These are frozen to the first head; supply the actual new source in final audits.
 
-Independent B1 preparation is published at `8c77d111` on
-`returned-callable-peers` in `/private/tmp/fwp-returned-callables`. It defines
-equivalent escaped-callable work, permits inline C/Rust captures, and requires
-repeated-call/failure cleanup and separate code/storage observations before
-timing. No callable implementation or measurement has run and no PR is open.
-This does not replace D2/N1's unresolved timing work or the active delivery order.
+After repair, expected complete counts are Linux 1,003 Rust / 257 summaries;
+regular macOS 633/132; ownership macOS 367/127; Windows 828/206; benchmarks 2/2.
+Expected Python cases: Linux 12, regular macOS and Windows 22, benchmarks 14,
+docs 328 in 49 suites. Confirm actual results; expectations do not waive gates.
 
-## Local checks and recovery
+## Batched repairs
 
-No full local build, suite or benchmark ran. All focused checks used the guard:
-Rust format 1.69s; diff check 0.14s; workflow lint 5.59s; two measurement controls
-0.14s; retained-C unit-field repair at O0/O2 1.35s; reference measurement harness
-0.73s; loop-function-value source preflight 0.61s; extracted production-O1 timing
-schedule test 1.34s (new order passes, old order fails). Complete log audits and
-evidence recomputation also pass under the guard. These do not replace runner gates.
-The retained-evidence controls pass in 0.13s. Their first run correctly rejected
-a damaged startup limit but raised `ValueError`; an explicit cardinality check
-now reports the intended assertion failure, and every damage control passes.
+The capture-reference test froze the whole optimizer module. Making `substitute`
+visible to State fusion changed that hash, although capture behavior was intact.
+The repair freezes only the two original capture blocks and requires reversing
+the replacement to reproduce the complete current source. The original blocks
+still match preparation `8a495a72`; historical measurements and limits are intact.
+Six reference and eight derivative-budget tests pass under the guard.
 
-Raw logs/metadata/audits/archives use `/private/tmp/fwp-state-*`; suffixes `855f`,
-`f820`, `ea0f` identify sources. Record generators and auditors are temporary
-`/private/tmp/fwp-record-state-*` and `/private/tmp/fwp-audit-state-*` scripts.
-The primary detached checkout now has a current-worktree pointer; its old handoff
-is preserved byte-for-byte below it and in
+The service comparison mixed different input costs. Plain State eliminates its
+range list; the deadline callback captures a `Duration` record and keeps it.
+The exact packaged compiler reproduces two fixed requests for plain versus
+35/131 requests for deadline at 32/128 inputs. Reusing each list for State updates
+and `length` makes input construction comparable. All seven scope comparisons
+pass with their original limits and zero retained storage. The test additionally
+checks the input-node slope and prints rows before assertions. CI now preserves
+service sources/counters/binaries; the focused State workflow includes this caller.
+Linux explicitly selects GCC for those evidence records.
+
+Caller review found an obsolete 347-contract/seven-unresolved assertion in the
+service collector. It now checks the frozen-baseline audit and complete,
+consistent rows, requiring no unresolved contracts. The current 373-contract
+report passes; twelve damaged reports fail, including empty and duplicate rows.
+List-iteration descriptions now explain that the current full-program comparison
+also includes range elimination. Historical numbers and timing policy are intact.
+Stale directions to implement already-merged array and typed-state work are removed.
+
+Focused local verification uses the guard only: the native service reproduction
+passes in 27.68s (13.78s CPU); retained-row/inventory controls in 0.13s each;
+Rust format in 1.71s; workflow lint in 0.26s/5.66s; the final roadmap audit in
+2.62s (189 link sets, 106 immutable preparation pairs, eight steps and commit
+subjects). Scripts/data: `/private/tmp/fwp-check-service-comparison.py`,
+`fwp-check-service-inventory.py`, `fwp-233-service-comparison/rows.json`.
+This Clang check does not establish GCC or Windows support; the new full matrix must.
+
+## Existing evidence and next preparation
+
+[State range scope and evidence](measurements/state-range-folds.md) owns the
+frozen protocol, three-host focused results, both G2 results and retained rejected
+experiments. The maintained evidence checker recomputes both decisions without
+rerunning measurements. There is no elapsed-time acceptance claim.
+
+[PR #232](roadmap-history.md#generated-array-elimination-pr-232) is verified and
+merged as `c71ac217`, with the exact tested `05d96484` tree and required commit
+format. Both duplicate post-merge runs were cancelled after verification. Do not
+resume its old retry. The State branch includes that verified main through
+`203c501f`, preserving the prepared tree exactly.
+
+Independent B1 worktree `/private/tmp/fwp-returned-callables`, branch
+`returned-callable-peers`, is published through `df8f9ce8` (protocol `8c77d111`).
+C/Rust peers pass O1/O2 checksums and overflow controls (1.98s). An additional
+uncommitted fwp fixture passes raw/optimized checksums (0.48s); a temporary native
+probe passes separate-compilation repeated calls and pre-teardown cleanup at
+Clang O1/O2 (1.11s). Its handoff records remaining phase counters, failure/retry,
+omitted-release controls, GCC checks and complete evidence work. There is no
+complete comparison or speed result and no second PR. Integrate verified #233
+before publication. D2/N1's failed timing requirements remain open.
+
+## Local workspace
+
+No full local build, suite or benchmark ran. Preserve the dirty primary checkout
+and other worktrees. The primary handoff points here; its original content is
+preserved below that pointer and in
 `/private/tmp/fwp-primary-handoff-before-current-pointer-2026-10-31.md`.
-Preserve its other edits. Five clean historical worktrees omit duplicate archived
-measurement files to preserve the 64-GiB disk floor; no evidence was removed from Git.
-The latest two are `fwp-application-failures` and `fwp-numerical-controls`:
-unchanged heads and clean status verified, about 580 MiB recovered in 0.26s.
-Dirty historical worktrees and original downloaded archives remain untouched.
+Five clean historical worktrees omit duplicate measurement files through sparse
+checkout; their Git objects and original downloaded archives remain intact.
+Keep the 64-GiB disk floor and all other guard limits; never bypass them.
 
 ## Roadmap status
 
@@ -108,5 +129,5 @@ Dirty historical worktrees and original downloaded archives remain untouched.
 | 7 | In progress | Deliver State reductions and finish B1/B2 comparisons |
 | 8 | In progress | Complete numerical and integrated V1/V2 acceptance |
 
-Keep the limits and retained failures in [PLAN.md](../PLAN.md); these allocation
-reductions do not close D2/N1 execution-timing acceptance.
+[PLAN.md](../PLAN.md) retains the scopes, unchanged budgets and failed controls.
+Allocation reductions do not complete D2/N1 execution-timing acceptance.
