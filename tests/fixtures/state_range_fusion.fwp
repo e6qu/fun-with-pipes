@@ -1,0 +1,68 @@
+# A State scope owns one current value. Each callback replaces it through
+# modify; run-state returns (callback result, final State), so .1 is the sum.
+export summed : I64 -> I64
+summed = range 0 | run-state 0 (each (add | modify)) | .1
+
+export bounded : (I64, I64) -> I64
+bounded = uncurry range | run-state 0 (each (add | modify)) | .1
+
+trace-step : I64 -> () ! {IO, State[I64]}
+trace-step = tap echo | add | modify
+traced = range 0 | run-state 0 (each trace-step) | .1
+
+fail-step : I64 -> () ! {Error[String], State[I64]}
+fail-step = if (eq 3) (const "three" | fail) (add | modify)
+failed = range 0 | run-state 0 (each fail-step) | .1
+
+nested-step : I64 -> () ! {State[I64]}
+nested-step = run-state 100 (add | modify) | .1 | add | modify
+nested = range 0 | run-state 0 (each nested-step) | .1
+
+shift-step : I64 -> I64 -> () ! {State[I64]}
+shift-step = add | flip compose (add | modify)
+shifted : I64 -> I64 -> I64
+shifted = curry (both (.0 | shift-step | each | run-state 0) (.1 | range 0)
+    | uncurry (flip apply)
+    | .1)
+
+# Reusing the list must keep its contents available to the second consumer.
+export reused : I64 -> (I64, I64)
+reused = range 0 | both (run-state 0 (each (add | modify)) | .1) (fold add 0)
+
+# An exported unknown callback does not provide a known fold body to specialize.
+export unknown : (List[I64] -> () ! {State[I64]}) -> I64 -> I64
+unknown =
+    curry (both (.0 | run-state 0) (.1 | range 0) | uncurry (flip apply) | .1)
+
+# A map is eager. Its callbacks must all finish before the State consumer starts.
+eager = range 0 | map (tap echo) | run-state 0 (each trace-step) | .1
+
+pause-step : I64 -> () ! {IO, Async, State[I64]}
+pause-step =
+    tap (const "waiting" | echo) | tap (const 1s | task.sleep) | add | modify
+cancelled : () -> I64 ! {IO, Async}
+cancelled = const 32 | range 0 | run-state 0 (each pause-step) | .1
+
+main = [
+    [-3, 0, 1, 4, 32] | map summed | echo,
+    [
+        (5, 2),
+        (-3, 2),
+        (9223372036854775806, 9223372036854775807),
+        (-9223372036854775808, -9223372036854775807),
+    ] | map bounded | echo,
+    3 | traced | echo,
+    5 | attempt failed | echo,
+    2 | attempt failed | echo,
+    3 | nested | echo,
+    4 | shifted 10 | echo,
+    4 | reused | echo,
+    4 | unknown (each (add | modify)) | echo,
+    3 | eager | echo,
+    task.spawn cancelled
+    | tap (const () | task.yield)
+    | tap task.cancel
+    | task.await
+    | echo,
+    4 | summed | echo,
+] | ignore

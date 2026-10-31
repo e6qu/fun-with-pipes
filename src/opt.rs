@@ -770,7 +770,7 @@ fn applied_first(e: &Expr, l: Local) -> bool {
 
 /// Replace callee locals: in expressions with the mapped expressions, in
 /// binding positions (let, patterns) with the mapped locals.
-fn substitute(e: &Expr, s: &[Option<Expr>]) -> Expr {
+pub(crate) fn substitute(e: &Expr, s: &[Option<Expr>]) -> Expr {
     let local = |l: &Local| match &s[*l as usize] {
         Some(Expr::Local(x)) => *x,
         _ => *l,

@@ -4,6 +4,8 @@ use std::process::{Command, Output};
 
 #[path = "support/allocation_report.rs"]
 mod allocation_report;
+#[path = "support/record_probe.rs"]
+mod record_probe;
 
 fn checked(command: &mut Command) -> Output {
     let out = command.output().unwrap();
@@ -422,5 +424,230 @@ fn each_avoids_allocating_a_discarded_result_list() {
     eprint!("{report}");
     if let Some(path) = std::env::var_os("FWP_CONTEXT_ARTIFACTS") {
         std::fs::write(PathBuf::from(path).join("each-storage.tsv"), report).unwrap();
+    }
+}
+
+#[test]
+fn range_state_consumers_preserve_bounds_effects_and_cleanup() {
+    let dir = Scratch::new("range-state");
+    let input = dir.0.join("range-state.fwp");
+    std::fs::write(&input, include_str!("fixtures/state_range_fusion.fwp")).unwrap();
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    let raw = checked(
+        Command::new(compiler)
+            .env("FWP_NO_OPT", "1")
+            .args(["run", "--interp"])
+            .arg(&input),
+    );
+    let expected = b"[0, 0, 0, 6, 496]\n[0, -5, 9223372036854775806, -9223372036854775808]\n0\n1\n2\n3\nErr \"three\"\nOk 1\n303\n46\n(6, 6)\n6\n0\n1\n2\n0\n1\n2\n3\nwaiting\nNone\n6\n";
+    assert_eq!(raw.stdout, expected);
+    assert!(raw.stderr.is_empty(), "{raw:?}");
+    for mode in ["0", "1"] {
+        let interpreted = checked(
+            Command::new(compiler)
+                .env_remove("FWP_NO_OPT")
+                .env("FWP_STATE_RANGE_FUSION", mode)
+                .args(["run", "--interp"])
+                .arg(&input),
+        );
+        assert_eq!(interpreted.stdout, expected);
+        assert!(interpreted.stderr.is_empty(), "{interpreted:?}");
+        for stack in ["0", "1"] {
+            let cfile = dir.0.join(format!("range-{mode}-{stack}.c"));
+            checked(
+                Command::new(compiler)
+                    .env_remove("FWP_NO_OPT")
+                    .env("FWP_STATE_RANGE_FUSION", mode)
+                    .env("FWP_STACK", stack)
+                    .args(["build", "--memory", "dynamic", "-O2", "--emit-c"])
+                    .arg(&input)
+                    .arg("-o")
+                    .arg(&cfile),
+            );
+            let original = std::fs::read_to_string(&cfile).unwrap();
+            assert_eq!(original.contains("/* range-state-consumer :"), mode == "1");
+            let marker = "    /* Ownership observation point: before runtime teardown. */\n";
+            assert_eq!(original.matches(marker).count(), 1);
+            let code = original.replace(marker, &format!("{marker}    if (fwp_heap.live || fwp_cleanups || fwp_state_len || fwp_state_owners) _Exit(239);\n"));
+            for opt in ["-O1", "-O2"] {
+                let label = format!("range-state-{mode}-{stack}{opt}");
+                let binary = dir.0.join(format!("{label}.exe"));
+                fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+                let output = Command::new(&binary)
+                    .env("FWP_ALLOC_STATS", "0")
+                    .output()
+                    .unwrap();
+                record_probe::save("range-state", &label, &code, &binary, &output);
+                assert!(output.status.success(), "{label}: {output:?}");
+                assert_eq!(output.stdout, expected, "{label}");
+                assert!(output.stderr.is_empty(), "{label}: {output:?}");
+                if mode == "1" && stack == "1" && opt == "-O2" {
+                    let free = "        fwp_mem_free(fwp_state);";
+                    assert_eq!(code.matches(free).count(), 1);
+                    let broken = code.replace(
+                        free,
+                        "        /* deliberately omit State scratch release */",
+                    );
+                    fwp::cgen::compile_c(&broken, &binary, opt).unwrap();
+                    let output = Command::new(&binary)
+                        .env("FWP_ALLOC_STATS", "0")
+                        .output()
+                        .unwrap();
+                    record_probe::save(
+                        "range-state",
+                        "missing-state-scratch",
+                        &broken,
+                        &binary,
+                        &output,
+                    );
+                    assert_eq!(output.status.code(), Some(239), "{output:?}");
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn range_state_fusion_keeps_unproved_list_inputs() {
+    for (name, source) in [
+        (
+            "shared",
+            r#"
+export reused : I64 -> (I64, I64)
+reused = range 0 | both (run-state 0 (each (add | modify)) | .1) (fold add 0)
+"#,
+        ),
+        (
+            "unknown",
+            r#"
+export unknown : (List[I64] -> () ! {State[I64]}) -> I64 -> I64
+unknown = curry (both (.0 | run-state 0) (.1 | range 0)
+    | uncurry (flip apply) | .1)
+"#,
+        ),
+        (
+            "eager-effects",
+            r#"
+export eager : I64 -> I64 ! {IO}
+eager = range 0 | map (tap echo) | run-state 0 (each (add | modify)) | .1
+"#,
+        ),
+        (
+            "wide",
+            r#"
+export wide : I128 -> I64
+wide = range 0i128 | run-state 0 (each (const (add 1) | modify)) | .1
+"#,
+        ),
+        (
+            "resource-capture",
+            r#"
+log-step : String -> I64 -> () ! {IO, State[I64]}
+log-step = curry (tap (.0 | echo) | .1 | add | modify)
+export logged : String -> I64 -> I64 ! {IO}
+logged = curry (both (.0 | log-step | each | run-state 0) (.1 | range 0)
+    | uncurry (flip apply) | .1)
+"#,
+        ),
+    ] {
+        let (_, program) = fwp::driver::compile_source(
+            name,
+            source,
+            fwp::mono::Roots {
+                exports: true,
+                ..Default::default()
+            },
+        )
+        .map_err(|error| error.rendered)
+        .unwrap();
+        assert!(
+            program
+                .funcs
+                .iter()
+                .all(|function| function.name != "range-state-consumer"),
+            "{name}"
+        );
+        assert!(program.funcs.iter().any(|function|
+            matches!(&function.body, fwp::ir::Body::Prim(symbol) if symbol == "range")), "{name}");
+    }
+}
+
+#[test]
+fn range_state_traps_keep_prior_output_and_eager_captures() {
+    let dir = Scratch::new("range-state-traps");
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    for (name, source, prefix) in [
+        (
+            "overflow",
+            r#"
+main = range 0 4 | run-state 9223372036854775807 (each (tap echo | add | modify)) | .1 | echo
+"#,
+            "0\n1\n",
+        ),
+        (
+            "empty-capture",
+            r#"
+step : I64 -> I64 -> () ! {State[I64]}
+step = add | flip compose (add | modify)
+main = range 0 0 | run-state 0 (each (step (div 0 1))) | .1 | echo
+"#,
+            "",
+        ),
+    ] {
+        let input = dir.0.join(format!("{name}.fwp"));
+        std::fs::write(&input, source).unwrap();
+        let raw = Command::new(compiler)
+            .env("FWP_NO_OPT", "1")
+            .args(["run", "--interp"])
+            .arg(&input)
+            .output()
+            .unwrap();
+        assert_eq!(raw.status.code(), Some(101), "{name}: {raw:?}");
+        assert_eq!(raw.stdout, prefix.as_bytes());
+        for mode in ["0", "1"] {
+            let interpreted = Command::new(compiler)
+                .env_remove("FWP_NO_OPT")
+                .env("FWP_STATE_RANGE_FUSION", mode)
+                .args(["run", "--interp"])
+                .arg(&input)
+                .output()
+                .unwrap();
+            assert_eq!(
+                (
+                    interpreted.status.code(),
+                    &interpreted.stdout,
+                    &interpreted.stderr
+                ),
+                (raw.status.code(), &raw.stdout, &raw.stderr),
+                "{name}/{mode}"
+            );
+            let cfile = dir.0.join(format!("{name}-{mode}.c"));
+            checked(
+                Command::new(compiler)
+                    .env_remove("FWP_NO_OPT")
+                    .env("FWP_STATE_RANGE_FUSION", mode)
+                    .env("FWP_STACK", "1")
+                    .args(["build", "--memory", "dynamic", "-O2", "--emit-c"])
+                    .arg(&input)
+                    .arg("-o")
+                    .arg(&cfile),
+            );
+            let code = std::fs::read_to_string(&cfile).unwrap();
+            for opt in ["-O1", "-O2"] {
+                let label = format!("range-state-{name}-{mode}{opt}");
+                let binary = dir.0.join(format!("{label}.exe"));
+                fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+                let output = Command::new(&binary)
+                    .env("FWP_ALLOC_STATS", "0")
+                    .output()
+                    .unwrap();
+                record_probe::save("range-state", &label, &code, &binary, &output);
+                assert_eq!(
+                    (output.status.code(), &output.stdout, &output.stderr),
+                    (raw.status.code(), &raw.stdout, &raw.stderr),
+                    "{label}"
+                );
+            }
+        }
     }
 }

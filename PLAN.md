@@ -42,10 +42,14 @@ collector is not the same as removing these costs. The
    The [four repaired full-buffer
    sessions](docs/measurements/buffer-current.md) are audited: 25/48 copy controls
    fail, and no workload passes all four. Do not retry unchanged measurements.
-3. Resolve D2/N1's failed measurements before claiming numerical speed acceptance.
+3. Prepare [State range-list removal](docs/measurements/state-range-folds.md) as
+   the next B1 allocation task: keep the existing State handler, specialize only
+   its proved single-use range consumer, and require the declared correctness,
+   cleanup, exact-count, code-size, stack and analysis checks. It is not verified.
+4. Resolve D2/N1's failed measurements before claiming numerical speed acceptance.
    Fixed CPU affinity and equal executable names did not resolve the controls.
    Do not rerun unchanged experiments or increase sample counts again.
-4. Complete the remaining B1/B2 comparisons and finite V1/V2 application matrix.
+5. Complete the remaining B1/B2 comparisons and finite V1/V2 application matrix.
 
 The original intermittent Intel macOS compiler abort remains an open defect.
 Preserve [its evidence](docs/measurements/compiler-abort.md); diagnose a recurrence
