@@ -1,5 +1,14 @@
 # Current work
 
+Preparation worktree `/private/tmp/fwp-returned-callables`, branch
+`returned-callable-peers`, contains only the next B1
+[callable comparison plan](measurements/returned-callables.md). It is based on
+State preparation `903b1819`; no callable implementation or measurement has run,
+and no PR is open for it. Finish the active deliveries below first. Historical
+measurement copies are omitted by sparse checkout in this preparation worktree;
+their Git objects are preserved. Its new links have a focused local check;
+the complete documentation audit belongs to the eventual integrated source.
+
 **Next:** monitor PR #232's Intel macOS retry `124422281020`, audit its full log,
 and squash-merge only after all gates pass. Then publish
 the prepared State range batch as the next single PR and run its full matrix.
