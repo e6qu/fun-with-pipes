@@ -1,7 +1,7 @@
 # Current work
 
-**Next:** publish the completed result/archive batch, mark PR #235 ready and audit
-its nine exact-head production jobs plus documentation before squash merge.
+**Next:** audit PR #235's nine exact-head production jobs plus documentation
+before squash merge. The completed result/archive batch is published and ready.
 Original AMD64 construction failures remain open; [the report](measurements/callable-phases.md)
 records both completed diagnostics and the requirements for a new measurement.
 Do not repeat unchanged timings or modify the runtime without a demonstrated cause.
@@ -75,14 +75,17 @@ controls; no unexpected compiler diagnostics remain. Main docs `41218527417` /
 `124588033356` also passes for that merged source. Production delivery is now
 verified; the original timing/size failures remain separate and unchanged.
 
-PR #235 remains draft. Docs `41225842983` / `124609686778` at `73707460` passes,
+PR #235 is ready for review. Docs `41225842983` / `124609686778` at `73707460` passes,
 including nine phase, six context and four paired-record tests. Its full log is
 reviewed, with only intentional test-runner/selector failure controls.
 Queued documentation jobs at superseded heads were cancelled before execution.
 The docs gate now explicitly uses Ubuntu ARM64, preserving every check; it reads
 archived binaries and runs only its small native controls. The nine production
 jobs remain unchanged. The completed batch adds two retained paired-archive tests; these still need CI
-verification before merge. Publish once before final validation.
+verification before merge. Initial final-head jobs `41229143323` and docs
+`41229136089` had not started when review found stale #227 delivery wording.
+Cancel those unstarted runs and publish the wording repair with this handoff;
+record the replacement exact-head job IDs when auditing their results.
 
 ## Existing evidence and local limits
 
