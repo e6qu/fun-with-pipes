@@ -23,14 +23,15 @@ Every session below runs exactly as shown: the test suite runs them.
 
 ## Reading the example
 
-In `words.fwp`, `repeated` receives an options record and word list as a pair
-inside `curry`. It repeats each word `times` times, flattens those lists with
-`list.flat-map`, then joins them with `sep`. `say` chooses uppercase or unchanged
-output from the Boolean option. `divide` handles a zero divisor explicitly;
-`swap | uncurry div` restores the intended numerator/divisor order for data-last
-`div`. `non-blank` returns `None` to suppress an empty line. `containing` returns
-matching words plus an `Outcome` status: `then2` attaches the result-processing step
-so it runs after both inputs have reached the filtering function.
+In `words.fwp`, `repeated` names its options record and word list with two
+successive `fn` expressions. It repeats each word `times` times, flattens those
+lists with `list.flat-map`, then joins them with `sep`. `say` computes that text
+once in a local binding and selects uppercase or unchanged output.
+
+`divide` matches the divisor before evaluating division, returning an explicit
+error for zero. Infix `numerator / value` uses mathematical operand order.
+`non-blank` returns `None` to suppress an empty line. `containing` filters the
+words, then attaches an `Outcome` status based on whether the result is empty.
 
 ## Exposing functions as commands
 
@@ -265,9 +266,8 @@ does when nothing matches:
 # The words that contain TEXT; the exit status is 1 when there are none.
 # args: TEXT WORDS...
 export containing : String -> List[String] -> Outcome[List[String]]
-containing =
-    curry (fork filter (.0 | string.contains) .1)
-    | then2 id (outcome.fail-if is-empty)
+containing = fn text -> fn words ->
+    words | filter (string.contains text) | outcome.fail-if is-empty
 ```
 
 ```console
@@ -323,14 +323,15 @@ Flags = {
 }
 
 greeting : Flags -> List[String] -> String
-greeting =
-    curry (both (.0 | .loud) (.1 | join " " | flip concat "hello, ") | match
-        (True, _) -> upper
-        (False, _) -> id)
+greeting = fn flags -> fn names ->
+    let text = "hello, " | concat (join " " names)
+    in flags | .loud | match
+        True -> upper text
+        False -> text
 
 main = () | args | cli.parse Flags { loud = False } | match
-    Ok _ -> uncurry greeting | print
-    Err _ -> cli.usage-error "usage: greet [-l] NAME..."
+    Ok (flags, names) -> greeting flags names | print
+    Err message -> cli.usage-error "usage: greet [-l] NAME..." message
 ```
 
 ```console
@@ -375,26 +376,27 @@ export defaults : {times: I64, sep: String}
 defaults = { times = 1, sep = " " }
 
 repeated : Options -> List[String] -> String
-repeated = curry (both
-        (.0 | .sep)
-        (fork list.flat-map (.0 | .times | repeat) .1)
-    | uncurry join)
+repeated = fn options -> fn words ->
+    words | list.flat-map (repeat (options | .times)) | join (options | .sep)
 
 # Repeat words.
 #
 # Each word is written `--times` times.
 # args: WORDS...
 export say : Options -> List[String] -> String
-say = curry (both (.0 | .upper) (uncurry repeated) | match
-    (True, _) -> upper
-    (False, _) -> id)
+say = fn options -> fn words ->
+    let text = repeated options words
+    in options | .upper | match
+        True -> upper text
+        False -> text
 
 # Divide N by D.
 # args: N D
 export divide : I64 -> I64 -> Result[I64, String]
-divide = curry (match
-    (_, 0) -> const (Err "cannot divide by zero")
-    (_, _) -> curry (swap | uncurry div | Ok))
+divide = fn numerator -> fn divisor ->
+    divisor | match
+        0 -> Err "cannot divide by zero"
+        value -> Ok (numerator / value)
 
 # Keep the lines that are not blank.
 export non-blank : String -> Option[String]
@@ -409,18 +411,18 @@ Volume =
 # Say a word, normally unless VOLUME says otherwise.
 # args: WORD VOLUME
 export shout : String -> Option[Volume] -> String
-shout = curry (match
-    (_, Some Quiet) -> lower
-    (_, Some Loud) -> upper | concat "!"
-    (_, Some Normal) -> id
-    (_, None) -> id)
+shout = fn word -> fn volume ->
+    volume | match
+        Some Quiet -> lower word
+        Some Loud -> upper word | concat "!"
+        Some Normal -> word
+        None -> word
 
 # The words that contain TEXT; the exit status is 1 when there are none.
 # args: TEXT WORDS...
 export containing : String -> List[String] -> Outcome[List[String]]
-containing =
-    curry (fork filter (.0 | string.contains) .1)
-    | then2 id (outcome.fail-if is-empty)
+containing = fn text -> fn words ->
+    words | filter (string.contains text) | outcome.fail-if is-empty
 ```
 
 ---

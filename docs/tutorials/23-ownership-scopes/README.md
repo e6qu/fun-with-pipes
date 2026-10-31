@@ -16,11 +16,9 @@ would create a cycle.
 ## A scoped event callback
 
 `channel.make 1` creates a queue with room for one message. `emit` takes that
-channel, then `()`, and sends 7. `channel.send` takes the channel before the
-message; `flip channel.send 7` selects the message first, so the channel can be
-piped into it. `ignore` discards the success flag. `const` ignores an input:
-`flip (const work)` turns `work channel` into a callback accepting `()` after
-the channel has been supplied, without running the work during partial application.
+channel, then `()`, and sends 7. `fn _ -> ...` ignores the unit input and delays
+the send until that callback is invoked. `channel.send channel 7` states the
+channel and message explicitly; `ignore` discards its success flag.
 
 `task.scope` runs that callback and waits for its children before returning.
 `tap` performs an action while preserving its input channel. Closing the channel
@@ -32,8 +30,8 @@ data-only queue.
 
 ## A worker and cancellation
 
-`produce` sends 1, 2 and 3, then closes the queue. `send-all` applies the same send
-to each list element; `compose ignore` discards each success flag. The parent
+`produce` sends 1, 2 and 3 with `each`, then closes the queue. The local `let _`
+finishes all sends before closing; the send callback discards each success flag. The parent
 spawns the producer and drains the queue concurrently, so a capacity of one does
 not deadlock. `sum` returns 6. Child tasks remain owned by their parent scope.
 
@@ -45,11 +43,10 @@ already been released. The queue never owns the task handle.
 
 ## Sending a channel through another channel
 
-`routes` makes a queue whose messages are integer channels. `route-message`
-creates an `inbox`, sends 42 to it and closes it, preserving that message.
-`both id (const 1 | routes)` pairs the inbox with a new routing queue.
-`fork channel.send .1 .0` sends the inbox (`.0`) through the routing queue (`.1`).
-Here `fork f g h` computes `f (g input) (h input)`, so the send order is explicit.
+`route-message` creates an `inbox`, sends 42 and closes it, preserving that
+message. It then makes a routing queue and sends the inbox through it with
+`channel.send routes inbox`. The local names expose which queue is sent and
+which receives it. Each `let _` sequences one action before the next.
 
 Receiving from the routing queue gives `Some inbox`; mapping `channel.recv`
 over that option receives `Some 42` from the inbox. The result is therefore
@@ -66,21 +63,19 @@ messages that remain; no implicit drain operation is added.
 
 ## Sending a function through a channel
 
-`callbacks` creates a queue for functions of type `I64 -> I64`. The partial
+The local `callbacks` value is a queue for functions of type `I64 -> I64`. The partial
 application `add 3` saves the number `3` for a later call. That saved value is a
 **capture**. It cannot refer back to the queue, so this function has no ownership
 cycle. `add-through-queue` sends it, receives it, then applies it to `5`:
 
 ```fwp
-add-through-queue =
-    const 1
-    | callbacks
-    | tap (flip channel.send (add 3))
-    | channel.recv
-    | option.map (apply 5)
+add-through-queue = fn _ ->
+    let callbacks = channel.make 1
+    in let _ = channel.send callbacks (add 3)
+    in channel.recv callbacks | option.map (apply 5)
 ```
 
-`const 1` ignores the initial `()` and selects a capacity of one.
+`fn _` ignores the initial `()`; `channel.make 1` explicitly selects capacity one.
 The result is `Some 8`. `option.map` runs its function only for a received message;
 `apply 5` calls that received function with `5`.
 
@@ -145,51 +140,38 @@ arbitrary callbacks or graphs safe.
 
 ```fwp
 emit : Channel[I64] -> () -> () ! {Async}
-emit = flip (const (flip channel.send 7 | ignore))
-
-send-all : Channel[I64] -> List[I64] -> () ! {Async}
-send-all = channel.send | flip compose ignore | each
+emit = fn channel -> fn _ -> channel.send channel 7 | ignore
 
 produce : Channel[I64] -> () -> () ! {Async, IO, Network, FileIO}
-produce = flip (const (both (flip send-all [1, 2, 3]) channel.close | ignore))
+produce = fn channel -> fn _ ->
+    let _ = [1, 2, 3] | each (channel.send channel | ignore)
+    in channel.close channel
 
 wait-for-message : Channel[I64] -> () -> () ! {Async}
-wait-for-message = flip (const (channel.recv | ignore))
+wait-for-message = fn channel -> fn _ -> channel.recv channel | ignore
 
 cancel-worker : Channel[I64] -> Option[()] ! {Async, IO, Network, FileIO}
-cancel-worker =
-    wait-for-message
-    | task.spawn
-    | tap (const () | task.yield)
-    | tap task.cancel
-    | task.await
+cancel-worker = fn channel ->
+    let worker = task.spawn (wait-for-message channel)
+    in let _ = task.yield ()
+    in let _ = task.cancel worker
+    in task.await worker
 
-inbox : I64 -> Channel[I64] ! {Async}
-inbox = channel.make
-routes : I64 -> Channel[Channel[I64]] ! {Async}
-routes = channel.make
 route-message : () -> Option[Option[I64]] ! {Async}
-route-message =
-    const 1
-    | inbox
-    | tap (flip channel.send 42)
-    | tap channel.close
-    | both id (const 1 | routes)
-    | tap (fork channel.send .1 .0)
-    | .1
-    | tap channel.close
-    | channel.recv
-    | option.map channel.recv
+route-message = fn _ ->
+    let inbox = channel.make 1
+    in let _ = channel.send inbox 42
+    in let _ = channel.close inbox
+    in let routes = channel.make 1
+    in let _ = channel.send routes inbox
+    in let _ = channel.close routes
+    in channel.recv routes | option.map channel.recv
 
-callbacks : I64 -> Channel[I64 -> I64] ! {Async}
-callbacks = channel.make
 add-through-queue : () -> Option[I64] ! {Async}
-add-through-queue =
-    const 1
-    | callbacks
-    | tap (flip channel.send (add 3))
-    | channel.recv
-    | option.map (apply 5)
+add-through-queue = fn _ ->
+    let callbacks = channel.make 1
+    in let _ = channel.send callbacks (add 3)
+    in channel.recv callbacks | option.map (apply 5)
 
 Node = { label: String, links: List[I64] }
 graph : Map[I64, Node]

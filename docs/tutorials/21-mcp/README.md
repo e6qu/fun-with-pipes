@@ -25,14 +25,13 @@ sessions below run exactly as shown: the test suite runs them. They use
 ## Reading the example
 
 `convert` first converts the input to Celsius, then to the requested output
-unit. `fork` supplies the target unit and intermediate value to `from-celsius`.
-These are F64 calculations and can round.
+unit. The record pattern names `value`, `from` and `to`; the pipe then reads in
+conversion order. These are F64 calculations and can round.
 
 `split-bill` validates the person count, computes integer quotient and remainder,
-then maps `share` over zero-based person indices. For nonnegative cents, the first
-`remainder` people receive one extra cent. `fork lt (.0 | .extra) .1` passes the
-extra-count first and the index last, testing `index < extra`. All shares therefore
-sum to the original amount. The code is a small example, not a full payment system.
+then maps over zero-based person indices. The local values `base` and `extra`
+are computed once. For nonnegative cents, the first `extra` people receive one
+extra cent, selected by `index < extra`. Their shares sum to the original amount. The code is a small example, not a full payment system.
 
 ## Functions are tools
 
@@ -65,7 +64,7 @@ Reading = {
 ```fwp
 # Convert a temperature from one unit to another.
 export convert : Reading -> F64
-convert = fork from-celsius .to (fork celsius .from .value)
+convert = fn { value, from, to } -> value | celsius from | from-celsius to
 ```
 
 A function of several parameters takes one argument per parameter,
@@ -287,29 +286,24 @@ from-celsius = match
 
 # Convert a temperature from one unit to another.
 export convert : Reading -> F64
-convert = fork from-celsius .to (fork celsius .from .value)
+convert = fn { value, from, to } -> value | celsius from | from-celsius to
 
 # Split a bill of CENTS between PEOPLE: equal shares in cents, the first
 # ones a cent more when it does not divide evenly.
 # args: cents people
 export split-bill : I64 -> I64 -> List[I64] ! {Error[String]}
-split-bill = curry (tap (.1 | le 0 | match
+split-bill = fn cents -> fn people ->
+    let _ = people <= 0 | match
         True -> fail "there must be at least one person"
-        False -> ())
-    | shares)
-
-Split = { base: I64, extra: I64 }
-
-shares : (I64, I64) -> List[I64]
-shares =
-    fork
-        map
-        (make Split { base = swap | uncurry div, extra = swap | uncurry rem }
-            | share)
-        (.1 | range 0)
-
-share : Split -> I64 -> I64
-share = curry (if (fork lt (.0 | .extra) .1) (.0 | .base | add 1) (.0 | .base))
+        False -> ()
+    in let base = cents / people
+    in let extra = cents % people
+    in
+        range 0 people
+        | map (fn index ->
+            index < extra | match
+                True -> base + 1
+                False -> base)
 ```
 
 ---

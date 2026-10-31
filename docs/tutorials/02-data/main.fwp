@@ -16,8 +16,7 @@ shift-right = update { x = add 1.0 }
 area : Shape -> F64
 area = match
     Circle centre radius -> radius * radius * 3.14159
-    Rect { x = x0, y = y0 } { x = x1, y = y1 } ->
-        abs ((x1 - x0) * (y1 - y0))
+    Rect { x = x0, y = y0 } { x = x1, y = y1 } -> abs ((x1 - x0) * (y1 - y0))
 
 origin : Point
 origin = { x = 0.0, y = 0.0 }

@@ -88,7 +88,8 @@ commands = comptime ([
 
 run : String -> String -> String
 run = fn name -> fn text ->
-    let command = commands | map.get name | option.unwrap-or (const "unknown command")
+    let command =
+        commands | map.get name | option.unwrap-or (const "unknown command")
     in command text
 
 Order = { id: I64, item: String, quantity: U32 }

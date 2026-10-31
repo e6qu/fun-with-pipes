@@ -126,7 +126,16 @@ fn snapshots(native: bool) {
     entries.sort();
     let mut failures = Vec::new();
     for path in entries {
-        let out = path.with_extension("out");
+        // This fixture deliberately observes scheduler entry counts. Removing
+        // function entries changes its schedule, so raw and optimized IR have
+        // separate exact transcripts; neither is normalized or skipped.
+        let out = if std::env::var_os("FWP_NO_OPT").is_some()
+            && path.file_name().and_then(|n| n.to_str()) == Some("preempt.fwp")
+        {
+            path.with_extension("raw.out")
+        } else {
+            path.with_extension("out")
+        };
         let want = std::fs::read_to_string(&out).unwrap_or_default();
         let got = if native {
             run_native(&path, &want)

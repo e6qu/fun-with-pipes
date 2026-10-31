@@ -157,6 +157,12 @@ main = let identity = make-identity!(())
             None,
         ),
         (
+            "shadow-sized-builtins",
+            "main = let vector = length in let matrix = length in (vector [1, 2], [[3, 4]] | matrix) | echo\n".into(),
+            "(2, 1)\n",
+            None,
+        ),
+        (
             "order",
             "main = let x = (\"first\" | echo) in let y = (\"second\" | echo) in ()\n".into(),
             "first\nsecond\n",

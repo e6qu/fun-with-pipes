@@ -43,13 +43,14 @@ Implemented, awaiting compiler/native validation:
   Python inspection accepts a source name. Generated OpenAPI names use the
   lexer's keyword list. Field shorthand retains labels when a local is renamed.
 - Replaced the roadmap, corrected obsolete links, updated the reference/parser
-  and compiler guides, and rewrote lessons 1, 2, 6, 11, 12, 20 and 24. The glossary
+  and compiler guides, and rewrote lessons 1, 2, 6, 9, 11, 12, 16, 17, 19, 20, 21, 23 and 24. The glossary
   explains local scope/capture and the two meanings of `_`. Library docs are
   regenerated from source. The remaining documentation audit is still open.
 
-The nested-quote and later-tutorial changes follow published head
-`a48c9c5b9ea6fc0f26c80a31d8f7bbb2ee44844e`; obtain their source from the next commit,
-not that earlier head. Do not present added tests as passing native evidence.
+The next batch follows tested source `70ab0307e73b04587abd5c2b815af2c4864b6310`.
+It adds scope-correct vector/matrix constructor recognition, readable aligned
+let formatting, preserved field shorthand, further API/ownership lessons and an
+overflow-safe C sorting comparator. These changes need their own runner checks.
 
 ## Validation and failures
 
@@ -58,13 +59,28 @@ pattern decoding moved a field from a value with a destructor. All failed steps
 were audited; no language tests ran. The repair borrows the field. Documentation
 run `41242798221` passes.
 
-Runs `41243195909` and `41243748366` never started and were cancelled when their
-sources were superseded. Run `41244787126` at `a48c9c5b` remains queued on Linux
-ARM64/GCC, Linux AMD64/GCC and macOS ARM64/Clang. Documentation run `41244782819`
-is also queued. Replace these only when the next coherent batch is published.
-The focused suite covers language/ownership, named/tacit costs, editor/debugger,
-macro scopes, tutorial execution and source copies, and the raw interpreter corpus.
-Full production validation follows the completed batch; draft skips are not passes.
+Runs `41243195909`, `41243748366` and `41244787126` never started and were
+cancelled after their sources were superseded. Completed run `41245768888` at
+`70ab0307` was audited on all three hosts:
+
+- Compiler lint and the macro scope unit test pass everywhere.
+- The language-target group did not execute: the named cost probe's untyped Rust
+  closure parameter acquired a borrowed temporary's lifetime. It now declares
+  `&str` explicitly; focused clippy now covers every affected target.
+- Tutorial programs, source copies and generated library docs pass everywhere.
+  All terminal sessions pass on Linux. macOS TLS sessions fail because the new
+  workflow selected the OpenSSL library but omitted OpenSSL 3's executable from
+  PATH; its setup now matches production and the tutorial names that requirement.
+- The raw corpus differs only in `preempt.fwp` scheduling, identically in both
+  backends on all hosts. Raw IR has different function-entry counts. A separate
+  exact raw transcript preserves this check alongside the optimized transcript;
+  no output is normalized or skipped. The dedicated scheduling suite is included.
+- Documentation run `41245767296` passes.
+
+All three repairs need fresh runner verification. The focused suite covers
+language/ownership, named/tacit costs, editor/debugger, macro scopes, tutorials,
+scheduling and the raw corpus. Full production validation follows the completed
+batch; draft skips are not passes.
 
 Local checks through the unchanged guard:
 
@@ -74,13 +90,13 @@ Local checks through the unchanged guard:
 | `scripts/test-native-test-runner.py` | 21 pass, including new target coverage |
 | Frozen primitive inventory | 394 declarations, 384 symbols, no review symbols |
 | `scripts/check-roadmap.py` | 192 doc link sets, 106 preparation pairs, ten steps pass |
-| Standalone production parser/formatter modules | 13 pass, including nine changed programs and round trips; 3.22 CPU seconds to compile |
+| Standalone production parser/formatter modules | 15 pass, including all tutorial programs and round trips; 3.14 CPU seconds to compile |
 | Standalone `tests/examples.rs` source/output-copy test | All tutorial copies pass; no fwp execution |
 | Standalone `tests/stdlib_doc.rs` generator | Pass; library reference regenerated |
 
 Standalone harnesses are `/private/tmp/fwp-236-parser-check.rs`,
 `/private/tmp/fwp-236-tutorial-docs` and `/private/tmp/fwp-236-stdlib-doc`.
-They use Rust O1 with assertions/overflow checks. They do not verify inference,
+They use Rust O1 with assertions/overflow checks. The local checks do not verify inference,
 lowering, ownership or native output. No full compiler build ran locally.
 Full builds, suites and benchmarks stay on runners. Never raise the guard limits.
 

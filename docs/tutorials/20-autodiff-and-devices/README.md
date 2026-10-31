@@ -75,7 +75,8 @@ use fewer workers; WebAssembly executes serially. GPU execution is not supported
 ```fwp
 rosenbrock : List[t] -> t where Ring[t], FromFloat[t], Dup[t]
 rosenbrock = fn values ->
-    values | zip (drop 1 values)
+    values
+    | zip (drop 1 values)
     | map (fn (x, y) ->
         let distance = y - x * x
         in let offset = 1.0 - x

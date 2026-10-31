@@ -118,14 +118,17 @@ The first four outputs come from standard C functions: `strlen` counts the five
 bytes of "hello", `hypot` computes √(3² + 4²), `div` returns quotient 3 and
 remainder 2, and `getenv` returns no pointer for the deliberately absent variable.
 
-The final example copies I32 values into a raw buffer. Each I32 uses four bytes,
-so allocation multiplies the list length by four. `enumerate` supplies `(index,
-value)` pairs to `write-at`. `qsort` receives the buffer, element count, element
-size and comparison callback. Its subtraction comparator is suitable for these
-small sample values; arbitrary I32 extremes need an overflow-safe comparator.
-`read-all` copies sorted values back into a managed list. `both` evaluates that
-read before `mem.free`, then `.0` keeps the list and discards the unit result of
-freeing. The sorted output is therefore `[-2, 0, 3, 5, 9]`.
+The final two calls copy I32 values into a raw buffer. `let` names each step:
+count the values, check that the count fits C's `size_t`, allocate four bytes per
+I32, write the values, call `qsort`, copy the result and free the buffer. A failed
+size conversion traps before allocation. `enumerate` supplies `(index, value)`
+pairs; the named pattern unpacks each pair for `ptr.write`.
+
+`qsort` receives the buffer, element count, element size and comparison callback.
+The callback returns −1, 0 or 1 using comparisons, so even I32's minimum and maximum
+sort without subtraction overflow. The `result` binding finishes copying into a
+managed list before `mem.free`; that list stays valid after the raw buffer is gone.
+The outputs include both the small sample and `[-2147483648, 0, 2147483647]`.
 
 The `mylib.c`, `program.fwp` and `geom.fwp` commands above are usage templates;
 those files are not supplied by this lesson. A static library is linked into
@@ -195,31 +198,31 @@ foreign "C" getenv : String -> Option[Ptr[U8]] ! {IO}
 foreign "C" qsort : Ptr[I32] -> USize -> USize -> (Ptr[I32] -> Ptr[I32] -> I32 ! {Unsafe}) -> () ! {Unsafe}
 
 compare : Ptr[I32] -> Ptr[I32] -> I32 ! {Unsafe}
-compare = curry (both (.0 | ptr.read) (.1 | ptr.read) | uncurry (flip sub))
+compare = fn left -> fn right ->
+    let a = ptr.read left
+    in let b = ptr.read right
+    in a < b | match
+        True -> -1
+        False -> a > b | match
+            True -> 1
+            False -> 0
 
 sort-in-c : List[I32] -> List[I32] ! {Unsafe}
-sort-in-c = fork sort-buffer length to-buffer
-
-to-buffer : List[I32] -> Ptr[I32] ! {Unsafe}
-to-buffer = fork write-all id (length | mul 4 | mem.alloc)
-
-write-all : List[I32] -> Ptr[I32] -> Ptr[I32] ! {Unsafe}
-write-all = curry (tap (fork each (.1 | write-at) (.0 | enumerate)) | .1)
-
-write-at : Ptr[I32] -> (I64, I32) -> () ! {Unsafe}
-write-at = curry (fork ptr.write (.1 | .1) (fork ptr.at (.1 | .0) .0))
-
-sort-buffer : I64 -> Ptr[I32] -> List[I32] ! {Unsafe}
-sort-buffer = curry (tap (both .1 (.0 | int.convert | option.unwrap-or 0usize)
-        | uncurry qsort
-        | apply 4usize
-        | apply compare)
-    | both (fork read-all .0 .1) (.1 | mem.free)
-    | .0)
-
-read-all : I64 -> Ptr[I32] -> List[I32] ! {Unsafe}
-read-all =
-    curry (fork map (.1 | flip ptr.at | flip compose ptr.read) (.0 | range 0))
+sort-in-c = fn values ->
+    let count = length values
+    in let c-count = int.convert count | match
+        Some size -> size
+        None -> prim.trap "list length does not fit C size_t"
+    in let buffer = mem.alloc (count * 4)
+    in let _ =
+        values
+        | enumerate
+        | each (fn (index, value) -> ptr.write value (ptr.at index buffer))
+    in let _ = qsort buffer c-count 4usize compare
+    in let result =
+        range 0 count | map (fn index -> ptr.at index buffer | ptr.read)
+    in let _ = mem.free buffer
+    in result
 
 main = [
     "hello" | strlen | echo,
@@ -227,6 +230,7 @@ main = [
     div 17 5 | echo,
     "NO_SUCH_VARIABLE_HERE" | getenv | option.is-none | echo,
     [5, -2, 9, 0, 3] | sort-in-c | echo,
+    [2147483647, -2147483648, 0] | sort-in-c | echo,
 ] | ignore
 ```
 
@@ -240,6 +244,7 @@ build an executable with `fwp build docs/tutorials/09-c-interop/main.fwp -o c-in
 DivResult {quot = 3, rem = 2}
 True
 [-2, 0, 3, 5, 9]
+[-2147483648, 0, 2147483647]
 ```
 
 `fwp run` compiles the program to native code, so foreign calls are

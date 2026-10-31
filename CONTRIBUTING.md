@@ -91,6 +91,12 @@ All **nine production jobs and documentation** must pass for the exact final hea
 | C/Rust benchmarks | Equivalent-output checks, paired arithmetic controls and retained measurements |
 | Documentation audit | Links, immutable records, tutorial copies and test-runner/evidence controls |
 
+`FWP_NO_OPT=1` runs the raw IR corpus. Its `preempt.fwp` fixture deliberately
+observes scheduler function-entry counts, which optimization can change; the
+`.raw.out` file records that mode's exact transcript. Every other fixture keeps
+the same expected output. The dedicated preemption tests compare native and
+interpreted scheduling for each declared entry budget.
+
 A skip, cancelled job, emulated execution or draft-PR skip is not a passing gate.
 Draft PRs use dispatched focused checks; marking ready starts the full matrix.
 Before a repair push, audit every failed job and completed target, then batch all

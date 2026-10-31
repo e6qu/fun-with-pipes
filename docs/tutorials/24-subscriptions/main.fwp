@@ -5,9 +5,7 @@ step : Worker -> Step[Worker, ()] ! {Async, IO, Network, FileIO}
 step = fn (handler, channel) ->
     channel.recv channel | match
         None -> Stop ()
-        Some value ->
-            let _ = handler value
-            in Again (handler, channel)
+        Some value -> let _ = handler value in Again (handler, channel)
 
 serve : Worker -> () -> () ! {Async, IO, Network, FileIO}
 serve = fn worker -> fn _ -> loop step worker
@@ -16,15 +14,11 @@ subscribe : Handler -> Channel[I64] -> Task[()] ! {Async}
 subscribe = fn handler -> fn channel -> task.spawn (serve (handler, channel))
 
 finish : (Channel[I64], Task[()]) -> Option[()] ! {Async}
-finish = fn (channel, task) ->
-    let _ = channel.close channel
-    in task.await task
+finish = fn (channel, task) -> let _ = channel.close channel in task.await task
 
 stop : (Channel[I64], Task[()]) -> Option[()] ! {Async}
 stop = fn (channel, task) ->
-    let _ = channel.close channel
-    in let _ = task.cancel task
-    in task.await task
+    let _ = channel.close channel in let _ = task.cancel task in task.await task
 
 main =
     2

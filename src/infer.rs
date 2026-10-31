@@ -1759,10 +1759,12 @@ impl<'a> Infer<'a> {
 
     /// `vector [...]` and `matrix [[...]]` take their sizes from the literal.
     fn size_literal(&mut self, e: &Expr, f: &Expr, args: &[Expr], t: &Type) -> IResult<()> {
-        let ExprKind::Var(name) = &f.kind else {
+        let ExprKind::Var(_) = &f.kind else {
             return Ok(());
         };
-        let which = self.env.resolve_value(&self.scope, name);
+        // Use the resolved occurrence: a local named vector/matrix is an
+        // ordinary function and must not acquire the builtin literal rules.
+        let which = self.out.insts.get(&f.id).map(|inst| inst.target.clone());
         let [arg] = args else { return Ok(()) };
         let ExprKind::List(items) = &arg.kind else {
             return Ok(());

@@ -68,9 +68,7 @@ f : t -> t where Ring[t], FromFloat[t]
 f = fn x -> x * x - 2.0
 
 newton-step : F64 -> F64
-newton-step = fn x ->
-    let slope = derivative f x
-    in x - f x / slope
+newton-step = fn x -> let slope = derivative f x in x - f x / slope
 
 main = [
     a | matmul a | echo,

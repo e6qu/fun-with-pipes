@@ -160,7 +160,9 @@ parser. Nested lets consume their own `in` first. No symbol table, type query,
 backtracking or new arithmetic precedence level is needed. A named pattern is
 recognized by its lowercase token; constructors retain uppercase tokens.
 Duplicate names and refutable fn/let patterns are rejected. The type checker
-repeats these admission rules for macro-generated trees, which bypass parsing.
+repeats these admission rules for macro-generated trees, which bypass parsing. The
+formatter keeps successive `in let` clauses aligned and consecutive `fn` inputs
+on one line when they fit; it preserves written record-field shorthand.
 
 ## Where desugaring happens
 

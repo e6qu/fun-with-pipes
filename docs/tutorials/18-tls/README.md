@@ -27,6 +27,12 @@ the `openssl` command.
 
 ## A certificate
 
+Use the OpenSSL 3 command-line tools for the commands below. On macOS, the
+Homebrew library directory alone does not select that executable; first run
+`export PATH="$(brew --prefix openssl@3)/bin:$PATH"`. `openssl version` should
+identify OpenSSL 3. The system-provided tool may generate a different certificate
+chain even when similarly named commands are accepted.
+
 A server needs a certificate and its private key. For a test, make a CA of
 your own and a certificate for `localhost` that it signs (in production,
 the certificate comes from a CA that clients already trust):

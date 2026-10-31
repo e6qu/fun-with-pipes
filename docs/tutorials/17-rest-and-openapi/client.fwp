@@ -10,11 +10,9 @@ express : api.RatesQuery
 express = api.RatesQuery { express = Some True, max-days = None }
 
 calls : String -> () ! {Async, IO, Network, Error[RestError]}
-calls =
-    tap (fork api.carrier id (const "steady") | option.map .countries | echo)
-    | fork apply (const parcel) (fork api.rates id (const express))
-    | json.write
-    | print
+calls = fn address ->
+    let _ = api.carrier address "steady" | option.map .countries | echo
+    in api.rates address express parcel | json.write | print
 
 main =
     ()

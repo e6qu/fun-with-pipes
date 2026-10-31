@@ -38,7 +38,7 @@ fn functional_call_matrix_counts_executed_work_and_releases_owners() {
         let (_, id) = program.exports.iter().find(|(n, _)| n == name).unwrap();
         *id
     };
-    let entry = |name| format!("f{}", function(name));
+    let entry = |name: &str| format!("f{}", function(name));
     // Arrow-spine functions use saturated C entries. A caller supplying fewer
     // arguments constructs an owned partial application, not a short C call.
     // All captures in this fixture are scalars or unit, so no child owner moves.
