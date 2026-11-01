@@ -84,7 +84,8 @@ unchanged resource guard; full builds and suites run on GitHub.
 
 ## Additional regression check
 
-Artifact review of `ea354e13` found that zero recording records can coexist with
+[Saved observations](derivative-recording-moves-rejected-2026-11-01.json.gz)
+from `ea354e13` show that zero recording records can coexist with
 more allocations elsewhere: nested arithmetic callbacks raised cumulative charge
 from 43,056 to 100,576 bytes with stack promotion. That candidate is rejected.
 The source repair preserves complete-operation arithmetic workers. In addition
@@ -100,3 +101,58 @@ ceilings on every host, optimization level and workspace setting:
 
 These counters cover the complete 256-operation fixture, including setup and
 backward arithmetic. They measure fwp-managed charge, not process RSS or speed.
+
+## Focused results
+
+[Run 41307125882](https://github.com/e6qu/fun-with-pipes/actions/runs/41307125882)
+passes at `4c4b2ed5cbb08e3e63906e8e39ec27f0cc4aaebf`. Linux ARM64 uses GCC 13.3,
+Linux AMD64 uses GCC 15.2, and macOS ARM64 uses Clang 23.1.4. Each passes all
+34 native tests in nine targets, two ownership unit tests, lint and the frozen
+primitive inventory. Documentation run `41307132107` also passes.
+
+[Retained measurements](derivative-recording-moves-2026-11-01.json.gz) contain
+compiler identities, outputs, source/image hashes and static-frame reports.
+The artifact audit checks native architecture and hashes for 102 image/source
+pairs, all 84 typed outcomes and 72 transfer-control outcomes across three hosts.
+
+- F64, F128 and nested chains: 256 recording calls, zero heap argument records
+  with stack storage off/on. Interpreter and native answers agree.
+- Typed recording: zero weight retains inside the primitive. Alias owners survive;
+  failure before/after growth and before publication releases incoming owners.
+  Missing cleanup and extra-retain controls fail with 237 and 243 respectively.
+- The earlier adjoint/result ownership checks still pass, including deliberately
+  broken extra-owner and borrowed-zero-drop cases. Final fixture charge is zero.
+
+Both optimization levels and workspace settings agree on the complete-fixture
+charges below. The baseline is #237's matching fixture; both calculate the same
+256-edge identity derivative and check that the caller's input remains unchanged.
+
+| Weight type | Cumulative bytes: baseline stack off / on → current either | Peak bytes: baseline off / on → current either |
+|---|---:|---:|
+| F128 | 30,608 / 18,320 → 18,320 | 11,056 / 11,056 → 11,056 |
+| Rev[F64] | 96,384 / 43,056 → 43,056 | 31,680 / 31,664 → 31,664 |
+
+The stack switch also changes other eligible records. Only the dedicated record
+counter isolates the 256 recording arguments. Current allocation totals match
+the baseline with stack promotion enabled; this is not a claim of lower total
+allocation in that setting. The rejected helper rewrite and its larger totals
+remain recorded above.
+
+Instrumented executable sizes are identical with stack storage off/on:
+
+| Host | F128 O1 / O2 bytes | Nested O1 / O2 bytes |
+|---|---:|---:|
+| Linux ARM64 | 156,272 / 155,880 | 79,568 / 79,248 |
+| Linux AMD64 | 130,288 / 146,448 | 73,904 / 77,760 |
+| macOS ARM64 | 148,160 / 164,528 | 89,344 / 89,232 |
+
+The largest reported static frame stays 704 bytes on Linux ARM64 and 720 on
+macOS ARM64. AMD64 F128 stays 688/720 at O1/O2; nested O1 stays 688, while nested
+O2 rises from a 720-byte maximum to 768. In that image, the generated `f3` frame
+changes from 672 to 768 bytes. These are per-function compiler reports, not
+whole-program stack bounds. [Baseline image/frame costs](typed-derivative-owners.md#focused-results)
+remain available. No execution times were measured; D2/N1/N2 remain open.
+
+The focused result establishes the change's stated count, memory and cleanup
+requirements. [The handoff](../development-state.md) tracks the separate full
+final-head integration gates and merge.

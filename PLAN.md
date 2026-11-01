@@ -32,6 +32,10 @@ manual recording examples and frozen-inventory exceptions explicitly. Retire
 the old current-source record-allocation comparison when its representation no
 longer exists; retain its historical results and acceptance checker.
 
+The [focused results](docs/measurements/derivative-recording-moves.md#focused-results)
+pass steps 2–3, including the repaired arithmetic allocation regression. Step 4
+still requires the full final-head matrix and merge.
+
 Full builds and suites run on GitHub after the batch is complete. Local checks
 use the unchanged resource guard. Audit every failing job/target before batching
 repairs. Keep one active PR; squash with one subject of at most 80 characters and

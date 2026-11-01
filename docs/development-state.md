@@ -1,10 +1,11 @@
 # Current work
 
-**Next:** verify the arithmetic-helper repair and whole-fixture memory limits in
-[PR #238](https://github.com/e6qu/fun-with-pipes/pull/238), then run the full nine-job
-matrix. Head `ea354e13` passed focused run `41303592060` and docs `41303595440`,
-but its nested derivative fixture allocates more memory than #237. It is not
-accepted. [The protocol](measurements/derivative-recording-moves.md) defines acceptance.
+**Next:** publish the audited evidence for [PR #238](https://github.com/e6qu/fun-with-pipes/pull/238),
+mark it ready, and monitor all nine production jobs plus documentation for that
+final head. Focused source `4c4b2ed5cbb08e3e63906e8e39ec27f0cc4aaebf` passes run
+`41307125882`; docs `41307132107` pass. All completed logs and native artifacts
+are audited. [Results and limits](measurements/derivative-recording-moves.md#focused-results)
+include the repaired allocation regression and the AMD64 O2 frame increase.
 
 Worktree `/private/tmp/fwp-returned-callables`, branch `move-derivative-weights`.
 Base `94abb83cb33cb52bdcafb19c67c855cf9007059f`. Preserve the primary checkout's
@@ -17,8 +18,8 @@ one-line subject, at most 80 characters, empty body and no trailers or attributi
 |---|---|---|
 | 1 | Verified | Protocol published as `238926d0` |
 | 2 | Implemented | Direct arguments, ownership transfer and tuple-lowering repair pass focused checks |
-| 3 | Implemented | Counts/cleanup pass; repair extra arithmetic callback allocations |
-| 4 | In progress | Expanded focused suite, evidence audit, full exact-head gates and merge |
+| 3 | Implemented | Counts, cleanup, aliases and baseline memory limits pass all focused hosts |
+| 4 | In progress | Focused suite and artifact audit pass; full exact-head gates and merge remain |
 
 ## Current repair and evidence
 
@@ -39,27 +40,25 @@ one-line subject, at most 80 characters, empty body and no trailers or attributi
   their failure text is the deliberate runner-control fixture. The current head's
   focused suite passed all 34 native cases and two ownership unit tests per host.
 
-### Memory regression found during artifact audit
+### Allocation repair and accepted evidence
 
-On all three hosts, the nested 256-operation fixture at `ea354e13` charges
-100,576 bytes cumulatively and peaks at 31,776. With stack promotion, #237 used
-43,056 and 31,664 respectively. Final live charge is zero in both. Zero recording
-argument records therefore did not establish a net allocation improvement.
+The rejected `ea354e13` helper rewrite increased nested cumulative/peak charge to
+100,576/31,776 bytes. `4c4b2ed5` restores complete-operation arithmetic workers
+with explicit `curry`/`curry3`: charge returns to 43,056/31,664 with either stack
+setting. F128 uses 18,320/11,056. Zero recording argument records and zero final
+charge hold across all hosts, O1/O2 and workspace settings. Whole-fixture baseline
+limits now guard against moving allocations into other callbacks.
 
-Generated C shows that the rewritten curried arithmetic helpers construct runtime
-partial callbacks; the original complete-operation workers specialize directly.
-The repair restores tuple-input workers with explicit `curry`/`curry3`, retaining
-the new direct recording arguments and strict call-stage ownership rules. The
-fixture now checks total and peak charge against #237 for each type/stack setting.
-Retain the failed observation; verify the repair before starting full CI.
+All 34 native cases, two ownership unit tests, lint and inventory pass on each
+focused host. The audit verifies 102 image/source pairs, 84 typed outcomes and
+72 transfer controls. The protocol links both accepted and rejected measurements.
+AMD64 nested O2's largest static frame rises from 720 to 768 bytes; no speedup
+or whole-program stack bound is claimed.
 
-Compact rejected-head observations: `/private/tmp/fwp-238-recording-evidence.json.gz`.
-Generated C comparison: `/private/tmp/fwp-238-{current,baseline}-nested.c`.
-
-Full logs are `/private/tmp/fwp-238-{focused,repair}-{arm,amd,mac}.log` and
-`/private/tmp/fwp-238-docs-{first,repair}.log`. The prepared read-only artifact audit
-is `/private/tmp/fwp-238-collect-evidence.py RUN SOURCE OUTPUT.gz`; after a passing
-focused run, verify its source/image hashes, architecture and control statuses.
+Completed logs: `/private/tmp/fwp-238-memory-{arm,amd,mac}.log` and
+`/private/tmp/fwp-238-docs-memory.log`. Earlier failed-run logs remain under
+`/private/tmp/fwp-238-{focused,repair}-{arm,amd,mac}.log`. The read-only artifact
+audit is `/private/tmp/fwp-238-collect-evidence.py RUN SOURCE OUTPUT.gz`.
 
 ## Local checks and limits
 
