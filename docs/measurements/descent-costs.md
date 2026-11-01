@@ -232,10 +232,13 @@ updates, prints the complete vector and releases its temporary values.
 | 33:199 | 32 |
 | 129:199 | 8 |
 
-fwp repeats its source pipeline with `range | each`; C/Rust repeat their complete
-workload functions, including input/gradient allocation and release. Runtime and
-constant initialization happen once. Dividing time by the solve count gives an
-amortized cost, not standalone startup or pure arithmetic time. Loop/dispatch,
+fwp uses `range | each (const initial | solve | echo)`: `const` captures the
+immutable initial input once; each iteration runs the solver and prints its
+result. C/Rust call their input-initializing workload bodies each time. Compilers
+may optimize those constructions; this is not a claim of equal input-allocation
+work. Candidate/reference fwp programs use the same capture rule. Runtime
+initialization and teardown happen once. Dividing time by the solve count gives
+an amortized cost, not standalone startup or pure arithmetic time. Loop/dispatch,
 formatting and language-specific collection costs remain included.
 
 Use seven fresh processes per label per sample, two warmup rounds and 98 measured

@@ -34,7 +34,7 @@ def execution_order(labels, processes, round_index, seed):
 
 
 def repeat_source(source, language, solves):
-    """Repeat complete solves, including input construction and full output."""
+    """Repeat solves and output; fwp captures its immutable initial input once."""
     assert solves > 0
     if language == 'fwp':
         assert source.count('main = ') == 1

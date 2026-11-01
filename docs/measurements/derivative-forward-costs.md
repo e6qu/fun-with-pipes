@@ -279,6 +279,14 @@ this is not a measurement of total call-stack use.
 
 ### Audited timings: candidate not accepted
 
+Unlike the one-solve count observations above, timing repeats the solver and
+full output within each process. The fwp wrapper captures its immutable starting
+list once with `const`; it does not rebuild that list for every solve. Both fwp
+candidate/reference programs share this rule. C/Rust repeat their workload
+bodies, which initialize their inputs; their compilers may optimize that work.
+See the [repeat protocol](descent-costs.md#repeating-solves-within-one-process).
+These complete-process ratios do not isolate arithmetic or equalize allocation.
+
 [Run 41325932590](https://github.com/e6qu/fun-with-pipes/actions/runs/41325932590)
 completed on `a4cef01b`, whose compiler is unchanged from the count run.
 [Audit 41329444021](https://github.com/e6qu/fun-with-pipes/actions/runs/41329444021)
@@ -327,8 +335,8 @@ counter zero to the loop, receives the list immediately, prints it and releases
 the temporary owners. The derivative-update branch is not taken. The emitted
 loop-step body is identical in both versions; other functions and generated
 names differ. This establishes neither identical optimized machine code nor the
-cause of the slowdown. Check GCC 15.2's optimization reports next, before making
-a compiler change or attributing the result to code layout.
+cause of the slowdown. The GCC investigation below checks the optimized program
+without changing the measured source or attributing the result to code layout.
 
 The `record-zip-codegen` diagnostic audits AMD64 session 2's saved evidence, then
 rebuilds its four zero-update programs with the original GCC version, source
@@ -339,10 +347,33 @@ shows GCC's optimized intermediate program. Each new executable must match the
 measured executable's SHA-256 before execution; output must match its saved
 hash and all 32,768 lines. Reports, build commands and outputs remain artifacts.
 This is a compilation diagnostic, not a new timing session or an acceptance
-exception. It tests whether GCC removes the initially stopped loop and whether
-inlining of iteration, printing or cleanup differs between candidate/reference
-or between current-only/history forms. A difference is a hypothesis to test,
-not proof of timing causality.
+exception. A difference is a hypothesis to test, not proof of timing causality.
+
+[Diagnostic run 41337215456](https://github.com/e6qu/fun-with-pipes/actions/runs/41337215456)
+passes on source `14f60e11`, job `124939474741`. All four executable and output
+hashes reproduce exactly. The runner was an Intel Xeon 8370C with GCC 15.2;
+it reproduces the saved AMD64 programs, not their EPYC timing conditions.
+
+- GCC removes the initially stopped derivative loop from both current-only
+  entry functions, `f0`.
+- Their 619-line optimized function sections match after consistently renaming
+  GCC's `D.<number>` temporary identifiers and mapping `fwp_drop9` to
+  `fwp_drop10`. Those two generated string-cleanup functions have identical
+  C bodies. No other entry-body difference is removed by this comparison.
+- The history form's optimized thread entry differs, including cleanup
+  inlining. It did not exceed the zero-update timing limit. Do not generalize
+  the current-only comparison to every helper or to identical machine code.
+- The current-only slowdown remains unexplained. The report establishes no
+  source-level extra work in that entry body and justifies no speculative
+  allocator or compiler change. All original failed timing limits remain open.
+
+The [complete diagnostic archive](derivative-record-zip-2026-11-01/zero-codegen.zip)
+contains all 26 files: compiler reports, commands, output and identities.
+Its [GitHub metadata](derivative-record-zip-2026-11-01/zero-codegen-download.json)
+records artifact `13097820491` and the verified archive digest; the
+[full job log](derivative-record-zip-2026-11-01/zero-codegen.log.gz) retains the
+input audit and rebuild results. Each report/output hash was checked against
+the archive manifest and the previously audited AMD64 session.
 
 Full reports and complete measurement logs are retained together:
 [ARM64 / 1](derivative-record-zip-2026-11-01/original/aarch64-1.json.gz),
@@ -372,6 +403,8 @@ immutable tag `roadmap/derivative-record-zip-sources-2026-11-01`
 retains source commits through `844ff77f` and their preparation ancestors.
 Tag `roadmap/derivative-record-zip-audits-2026-11-01` retains the later audit code
 and replacement-session sources through `215db5de`.
+Tag `roadmap/derivative-record-zip-codegen-2026-11-01` retains the GCC diagnostic
+source `14f60e11`.
 
 The candidate does not meet its frozen timing requirements. A decision about
 retaining its verified allocation reductions with timing requirements explicitly

@@ -1,9 +1,10 @@
 # Current work
 
-**Next:** dispatch `record-zip-codegen` for completed run `41330973213`, source
-`215db5dea22ebbf1e2052b69660c068959e4a2c7`, then inspect GCC 15.2's reports for the
-four reproduced zero-update programs. Source review has not found an ownership
-defect. Resolve the timing acceptance decision before final gates.
+**Next:** resolve the explicit timing acceptance decision: retain the verified
+allocation reductions with the ten timing limits unmet, or continue optimization
+until all frozen limits pass. The GCC investigation is complete and establishes
+no source-level repair. If retention is accepted, mark the final batch ready and
+run all nine production jobs plus documentation on that exact commit.
 
 [PR #239](https://github.com/e6qu/fun-with-pipes/pull/239) is draft on branch
 `derivative-forward-costs`, worktree `/private/tmp/fwp-returned-callables`.
@@ -67,15 +68,26 @@ Its zero-update C and executable hashes match AMD64-1 exactly. Guarded extractio
 verifies the full archive digest and both C hashes before saving:
 `/private/tmp/fwp-239-zero-fwp-ad.c` and
 `/private/tmp/fwp-239-zero-fwp-ad-reference.c`.
-The callback retains the input, immediately exits the loop at counter zero,
-prints and releases its owners. The loop-step C body is identical in both
-versions. Other emitted functions/names differ; no timing cause is established.
+GCC diagnostic `41337215456` / `124939474741` passes on `14f60e11`. Its four
+rebuilt zero-update executables and outputs match the original hashes exactly.
+GCC removes the stopped derivative loop from both current-only `f0` entries;
+their optimized bodies match after renaming generated temporary IDs and the
+string-cleanup symbol (whose C body is identical). Other helpers and the history
+thread entry differ. No timing cause or justified repair is established.
+The Xeon 8370C runner reproduces compilation, not the EPYC timing conditions.
 Use source/compiler evidence, not speculative disassembly-led allocator changes.
+Documentation fixes clarify that repeated fwp timings capture the initial
+immutable input once with `const`; they repeat the solver/output, not that input's
+construction. The helper docstring and future report wording are corrected;
+generated programs, measured observations and acceptance limits are unchanged.
 
 Retained reports and complete logs live under
 `docs/measurements/derivative-record-zip-2026-11-01/`.
 AMD64-2 summary artifact `13095277190`, full archive `13094323983`;
 original summary `13094271343`, full archive `13094620286`.
+The complete GCC diagnostic archive `13097820491`, its API metadata and full
+job log are retained beside them. The guarded reader verified all 26 files,
+command statuses, report hashes and original binary/output identities.
 The guarded reader verifies each downloaded summary's API digest and all
 report/log hashes. Full audits ran on GitHub, without executing saved images.
 Local full logs: `/private/tmp/fwp-239-timing-amd-2.log`,
@@ -85,15 +97,19 @@ Local full logs: `/private/tmp/fwp-239-timing-amd-2.log`,
 Immutable tags `roadmap/derivative-record-zip-sources-2026-11-01` (`844ff77f`)
 and `roadmap/derivative-record-zip-audits-2026-11-01` (`215db5de`) preserve the
 measured sources, frozen requirements and audit code through squash merge.
+`roadmap/derivative-record-zip-codegen-2026-11-01` preserves diagnostic source
+`14f60e11`.
 
 ## Checks and local limits
 
-Documentation `41335118219` / `124933194898` passes on published `0a45a10e`.
-Complete log `/private/tmp/fwp-239-docs-0a45a10e.log`: 197 link sets, 106 preparation
+Documentation `41337220023` / `124939483733` passes on `14f60e11`.
+Complete log `/private/tmp/fwp-239-docs-14f60e11.log`: 197 link sets, 106 preparation
 pairs/tags, four plan steps and commit messages pass, along with all observer,
 reference, archive and retention controls. Runner errors/timeouts and the
 `intentional runner control` panic are deliberate tests with passing enclosing
 results. This is documentation coverage, not the nine production gates.
+Production CI `41337220082` skipped because the PR is draft; that is not passing
+coverage. Both formerly queued jobs completed without a restart.
 
 Earlier focused guarded checks and native probe audits are recorded in the
 measurement report. Latest guarded checks: small summary retention passes
@@ -102,9 +118,14 @@ Commands use `python3 scripts/local-guard.py`; temporary readers are
 `/private/tmp/fwp-239-read-retained.py` and `/private/tmp/fwp-239-read-zero-source.py`.
 Streamlining initially changed the handoff's required heading/status labels;
 both were restored to the checker's contract.
-The new compiler-report script passes guarded Python syntax checking; workflow
-actionlint and the roadmap check also pass. Native compilation/hash reproduction
-must run in `record-zip-codegen` on GitHub; no local full build ran.
+The compiler-report script passes guarded Python syntax checking and native
+compilation/hash reproduction; workflow actionlint and the roadmap check pass.
+Diagnostic archive verification and current-only entry comparison each pass
+under the guard in 0.13 seconds. The comparison helper initially assumed history
+kept a separate `f0`; it now explicitly selects its inlined thread entry.
+Temporary readers: `/private/tmp/fwp-239-read-zero-codegen.py`,
+`/private/tmp/fwp-239-compare-zero-codegen.py`,
+`/private/tmp/fwp-239-retain-zero-codegen.py`. No local full build ran.
 
 Disk previously stopped checks below 64 GiB. Cleanup removed only redundant old
 downloads after confirming original GitHub artifacts remain unexpired and their

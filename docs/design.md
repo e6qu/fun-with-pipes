@@ -380,7 +380,8 @@ building the intermediate list of pairs. Both input lists remain alive until
 the loop finishes; the shorter input determines the output length. Record fields
 containing strings, nested records, functions, resources or boxed wide numbers
 do not qualify. The [candidate protocol](measurements/derivative-forward-costs.md#candidate-acceptance-frozen-before-compiler-edits)
-separates this implemented selection from pending native and timing verification.
+records passing native correctness/ownership checks, unmet timing limits and
+pending full production verification.
 
 The generated-array transformation, verified in [PR #232](roadmap-history.md#generated-array-elimination-pr-232),
 extends this rule to `flip array.generate id | array.fold add 0`. With input

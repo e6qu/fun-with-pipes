@@ -42,7 +42,11 @@ Diagnostic clocks place all reference forward work at
 only 4.4–4.9% of process time in the one-update case, suggesting this selected
 change's 5% whole-process target was too aggressive. The clocks perturb execution;
 this is evidence about scope, not permission to weaken the target. The zero-update
-slowdown remains unexplained.
+slowdown remains unexplained. GCC diagnostic run `41337215456` reproduces all
+four measured zero-update executables and outputs exactly. Both current-only
+optimized entry bodies already omit the derivative loop and match after
+generated temporary/cleanup names are accounted for. This supplies no justified
+source-level repair and does not establish identical machine code or timings.
 These failed requirements remain unmet; retaining the optimization on allocation
 evidence alone needs an explicit acceptance decision. The complete production
 gates remain open.
