@@ -1,6 +1,7 @@
 # Current work
 
-**Next:** run the combined focused native checks for the three implemented reductions in
+**Next:** finish the repository-wide documentation style pass while auditing the
+combined focused native checks for the three implemented reductions in
 [the protocol](measurements/typed-derivative-owners.md), together with the worked
 [terminology guide](terminology.md). Keep one substantial PR for the batch.
 
@@ -25,7 +26,7 @@ The 68-character squash subject and empty body were verified. Details are in
 
 | Step | Status | Remaining acceptance |
 |---|---|---|
-| 1 | Verified | Worked example, links and merged-source status checked; final documentation CI remains part of step 4 |
+| 1 | In progress | User expanded this to all docs: shorten prose, use diagrams/lists, clarify `in`; 195 Markdown files inventoried |
 | 2 | Implemented | Focused native cost/lifetime controls and final gates pending |
 | 3 | Implemented | Local Clang O1 ledger passes; full new-source native and unwind controls pending |
 | 4 | Pending | Focused native checks, evidence audit, complete final-head matrix and merge |
@@ -56,7 +57,26 @@ All six modes pass: zero initialization retains, expected result-owner retains,
 correct values and zero final storage delta. This does not verify GCC or the
 new Rust lowering. Native images/static frames and failure controls run in the
 new `typed-derivative-owners` suite on both Linux hosts and ARM64 macOS.
-PR [#237](https://github.com/e6qu/fun-with-pipes/pull/237) is draft.
+PR [#237](https://github.com/e6qu/fun-with-pipes/pull/237) is draft. Combined native
+run `41289222076` tests implementation `5f1741624834da7ded8e4990ef3bc3245ac8aacd`;
+all three hosts completed. Existing derivative/precision/checkpoint/workspace/
+scope/cancellation tests pass; both new probes fail. The fault-injection marker
+matched four result constructors instead of only the guarded transfer; the
+record counter incorrectly used a capacity helper that excludes immutable
+record allocations. Both probes are repaired without changing runtime code or
+acceptance limits. The report failure follows from the failed input probe.
+All three full job logs are audited at `/private/tmp/fwp-237-{mac,amd,arm}.log`.
+A local attempt to relink the F128 artifact lacked its required math archive and
+produced no executable; it establishes no native result. Use the complete runner
+toolchain for the recording check. Documentation
+`41289225334` passes; its complete log still needs audit. Preparation documentation
+`41288414731` passes and is audited (test-runner negative controls are expected).
+
+The user requests concise style across all docs, diagrams/lists where useful, and
+worked explanations of `in` and the manual recording test. Keep that work in this
+PR. Inventory: 195 Markdown files, about 305,000 words including generated library
+reference and historical measurement protocols. Preserve frozen criteria, raw
+evidence and runnable tutorial source copies while shortening surrounding prose.
 
 Use the local guard serially; full builds, suites and benchmarks run on GitHub.
 Free disk was about 65 GiB at start, close to the fixed 64 GiB floor. Do not raise

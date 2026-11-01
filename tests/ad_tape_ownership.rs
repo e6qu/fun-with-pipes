@@ -374,18 +374,18 @@ fn typed_recording_borrows_the_outer_record_and_keeps_weight_owners() {
             let mut code = std::fs::read_to_string(cfile).unwrap();
             let entry = "static V fwp_p_ad_push_owned(V tuple, const fwp_desc *elem) {";
             assert_eq!(code.matches(entry).count(), 1);
-            code = code.replace(entry, &format!("static unsigned typed_calls, typed_heap_records;\n{entry}\n    typed_calls++;\n    if (fwp_rc_capacity(tuple)) typed_heap_records++;"));
+            code = code.replace(entry, &format!("static unsigned typed_calls, typed_heap_records;\n{entry}\n    typed_calls++;\n    size_t chunk;\n    if (fwp_heap_chunk_of((uintptr_t)tuple, &chunk)) typed_heap_records++;"));
             let observation = "    /* Ownership observation point: before runtime teardown. */";
             assert_eq!(code.matches(observation).count(), 1);
             code = code.replace(
                 observation,
                 &format!(
                     r#"{observation}
+    fprintf(stderr,"typed recording: %u calls, %u heap records\n",typed_calls,typed_heap_records);
+    fprintf(stderr,"typed memory: process peak charged %zu, cumulative charged %.0f, final charged %zu\n",fwp_heap.peak,fwp_heap.total_alloc,fwp_heap.live);
     if (typed_calls != 256 || typed_heap_records != {expected_records}) exit(211);
     if (fwp_owned_tapes || fwp_heap.live || fwp_heap.rc_wide_len) exit(212);
     for (int64_t i=0;i<fwp_ntapes;i++) if (fwp_tapes[i].live) exit(213);
-    fprintf(stderr,"typed recording: %u calls, %u heap records\n",typed_calls,typed_heap_records);
-    fprintf(stderr,"typed memory: process peak charged %zu, cumulative charged %.0f, final charged %zu\n",fwp_heap.peak,fwp_heap.total_alloc,fwp_heap.live);
 "#
                 ),
             );
@@ -448,7 +448,7 @@ fn typed_adjoints_borrow_zero_and_transfer_results_without_extra_owners() {
         code = code.replace(marker, replacement);
     }
     code.push_str(include_str!("fixtures/ad_typed_owners_probe.c"));
-    let extra_result = "        result.value = fwp_rc_fresh(fwp_cons(value, result.value));";
+    let extra_result = "        result.value = fwp_rc_fresh(fwp_cons(value, result.value));\n        fwp_cleanup_pop(&input_cleanup);";
     let zero_drop = "if (owner->adj[i] != owner->zero) owner->elem->drop(owner->adj[i]);";
     assert_eq!(code.matches(extra_result).count(), 1);
     assert_eq!(code.matches(zero_drop).count(), 1);
