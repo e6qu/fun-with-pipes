@@ -67,7 +67,9 @@ computation or observable owner release lies between them. A `let` calculation
 ends that group. A top-level `let` is a cached value entry, even when it returns
 a function; a `match` entry takes one input before evaluating its selected arm.
 Applications subtract supplied inputs from the constructor's current stage,
-following checked aliases. For example, if `make = fn x -> let y = 10 / x in fn z -> y + z`,
+following checked aliases and the selected trait implementation. Runtime primitives
+use their declared stage: substituting a function for a generic result does not
+add inputs to that stage. For example, if `make = fn x -> let y = 10 / x in fn z -> y + z`,
 reading `saved = make 0` must fail before a later argument to `saved` is evaluated.
 The returned function's type cannot justify delaying that division. A composed
 pipe likewise takes its input before evaluating any returned function's next input.

@@ -138,6 +138,38 @@ fn named_tacit_captures_and_macros_agree_across_backends() {
             Some("division by zero"),
         ),
         (
+            "generic-primitive-function-result",
+            "checked : I64 -> I64\nchecked = prim.trap \"constructor\"\nmain = checked (1 | tap (const \"later\" | echo)) | echo\n".into(),
+            "",
+            Some("constructor"),
+        ),
+        (
+            "generic-primitive-alias-stage",
+            "make-checked : String -> I64 -> I64\nmake-checked = prim.trap\nmain = make-checked \"constructor\" (1 | tap (const \"later\" | echo)) | echo\n".into(),
+            "",
+            Some("constructor"),
+        ),
+        (
+            "generic-state-function-read",
+            r#"read-function : () -> (I64 -> I64) ! {State[(I64 -> I64)]}
+read-function = get
+work : () -> I64 ! {State[(I64 -> I64)]}
+work = fn _ ->
+    let saved = read-function ()
+    in let _ = put (add 100)
+    in saved 1
+main = run-state (add 1) work () | .0 | echo
+"#.into(),
+            "2\n",
+            None,
+        ),
+        (
+            "trait-method-constructor-stage",
+            "trait Factory[T] = { make : T -> I64 -> I64 }\nimpl Factory[I64] = { make = fn divisor -> let inverse = 10 / divisor in fn value -> inverse + value }\nalias : I64 -> I64 -> I64\nalias = make\nmain = alias 0 (1 | tap (const \"later\" | echo)) | echo\n".into(),
+            "",
+            Some("division by zero"),
+        ),
+        (
             "record-owner-before-borrow",
             "main = let text = read-all () | concat \"held\" in (text, text, string.length text) | echo\n".into(),
             "(\"held\", \"held\", 4)\n",

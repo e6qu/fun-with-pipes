@@ -1,16 +1,25 @@
 # Current work
 
-**Next:** finish [PR #236](https://github.com/e6qu/fun-with-pipes/pull/236):
-audit all nine production jobs and documentation for its latest published head. Repair any failures together; squash-merge only after passing gates.
-Focused language/cost checks and repaired analysis checks pass. Numerical cost
-reductions pass; combined timing acceptance stays open under the user’s decision
-to retain verified reductions when a timing control fails.
+**Next:** verify the generic-primitive and trait-alias stage repair in
+[PR #236](https://github.com/e6qu/fun-with-pipes/pull/236), then finish production.
+Source review found that aliases still counted arrows added by substituting a
+function for a primitive result, or ignored a trait implementation's strict
+constructor boundary. The repair uses declared primitive stages and shares
+trait selection with lowering. New regressions require a trap before a later
+argument's `echo`. No timing/count limit is relaxed.
+
+Production run `41261060185` tests prior head
+`20109cf0f0e4ce5688e72a7e04f548f2c385f353`: benchmark and docs `41261025980`
+pass/audited; eight platform jobs continue without a reported failed step.
+Keep auditing them for other failures. This head must not be merged: it predates
+the new semantic repair. Mark the PR draft while focused validation runs, then
+require all nine production jobs and docs on the repaired final head.
 
 All ten steps in [PLAN.md](../PLAN.md), publication and squash merge after passing
 gates are authorized. Worktree `/private/tmp/fwp-returned-callables`, branch
 `language-design-review`, base `781ebabb0463efc2f03f0d3aa44b7d2c4766959d`.
-Preserve unrelated changes in the primary checkout. No final production matrix
-has run for this PR; draft skips are not acceptance.
+Preserve unrelated changes in the primary checkout. The first production matrix is running on the superseded source above;
+draft skips and older passing heads do not establish final acceptance.
 
 ## Current checks
 
@@ -34,7 +43,7 @@ pushing. Full suites, benchmarks and archive regeneration stay on GitHub.
 |---|---|---|
 | 1 | Implemented | Local names, patterns and strict evaluation on all supported hosts |
 | 2 | Implemented | Final tooling, macro, tutorial and documentation gates |
-| 3 | Implemented | Production known-callback and escaping-function cost checks |
+| 3 | In progress | Generic primitive/trait alias order regressions and known-call cost checks |
 | 4 | Implemented | Production alias/failure controls and zero/one-retain String loops |
 | 5 | Implemented | Production direct scalar record/variant costs |
 | 6 | Implemented | Production named fusion and eager evaluation order |

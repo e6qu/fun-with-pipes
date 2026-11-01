@@ -479,7 +479,7 @@ impl<'a> Mono<'a> {
         let arity = if self.value_bindings.contains(&b.name) {
             0
         } else {
-            self.stage_arity(&b.body, &s, &mut HashSet::from([idx]))
+            self.stage_arity(&b.body, &s, &mut HashSet::from([idx]))?
         };
         let id = self.new_func(
             display_name(&b.name),
@@ -500,8 +500,13 @@ impl<'a> Mono<'a> {
     // executes. Follow checked source identities and subtract supplied inputs
     // from the current stage only. Saturation evaluates the returned value now;
     // it must not acquire the returned function's inputs by eta expansion.
-    fn stage_arity(&mut self, e: &ast::Expr, s: &Subst, visiting: &mut HashSet<usize>) -> u32 {
-        match &e.kind {
+    fn stage_arity(
+        &mut self,
+        e: &ast::Expr,
+        s: &Subst,
+        visiting: &mut HashSet<usize>,
+    ) -> MResult<u32> {
+        Ok(match &e.kind {
             ExprKind::Let(..) => 0,
             ExprKind::Match(..) | ExprKind::Selector(..) => 1,
             ExprKind::Lambda(..) => {
@@ -524,24 +529,22 @@ impl<'a> Mono<'a> {
                 arity
             }
             ExprKind::App(f, args) | ExprKind::Operator(_, f, args) => self
-                .stage_arity(f, s, visiting)
+                .stage_arity(f, s, visiting)?
                 .saturating_sub(args.len() as u32),
             ExprKind::Pipe(_, right) => {
                 if self.typed.pipe_modes.get(&e.id) == Some(&PipeMode::Compose) {
                     1
                 } else {
-                    self.stage_arity(right, s, visiting).saturating_sub(1)
+                    self.stage_arity(right, s, visiting)?.saturating_sub(1)
                 }
             }
             ExprKind::Var(_) => {
                 if let Some(inst) = self.typed.insts.get(&e.id) {
-                    if let GlobalKind::Binding(idx) = self.env.globals[&inst.target].kind {
-                        let binding = &self.env.bindings[idx];
-                        if self.value_bindings.contains(&binding.name) {
-                            return 0;
-                        }
-                        if visiting.insert(idx) {
-                            let types: Vec<_> = if inst.types.is_empty() {
+                    let global = &self.env.globals[&inst.target];
+                    let (idx, types) = match &global.kind {
+                        GlobalKind::Binding(idx) => {
+                            let binding = &self.env.bindings[*idx];
+                            let types = if inst.types.is_empty() {
                                 binding
                                     .mono_vars
                                     .iter()
@@ -550,18 +553,43 @@ impl<'a> Mono<'a> {
                             } else {
                                 inst.types.iter().map(|t| self.mt(t, s)).collect()
                             };
-                            let substitution =
-                                binding.mono_vars.iter().cloned().zip(types).collect();
-                            let arity = self.stage_arity(&binding.body, &substitution, visiting);
-                            visiting.remove(&idx);
-                            return arity;
+                            (*idx, types)
                         }
+                        GlobalKind::Foreign { abi, symbol, .. } => {
+                            // Instantiating a result variable with a function
+                            // does not add inputs to the primitive's stage.
+                            if abi != "C" {
+                                if let Some((arity, _)) = combinator(symbol) {
+                                    return Ok(arity);
+                                }
+                            }
+                            return Ok(spine_arity(
+                                &self.env.table,
+                                &global.scheme.as_ref().expect("checked foreign type").ty,
+                            ));
+                        }
+                        GlobalKind::Method { trait_name } => {
+                            let types: Vec<_> = inst.types.iter().map(|t| self.mt(t, s)).collect();
+                            let ntrait = self.env.traits[trait_name].params.len();
+                            let (targs, own) = types.split_at(ntrait.min(types.len()));
+                            self.method_binding(trait_name, &inst.target, targs, own, e.span)?
+                        }
+                    };
+                    let binding = &self.env.bindings[idx];
+                    if self.value_bindings.contains(&binding.name) {
+                        return Ok(0);
+                    }
+                    if visiting.insert(idx) {
+                        let substitution = binding.mono_vars.iter().cloned().zip(types).collect();
+                        let arity = self.stage_arity(&binding.body, &substitution, visiting)?;
+                        visiting.remove(&idx);
+                        return Ok(arity);
                     }
                 }
                 self.node_mt(e.id, s).params(usize::MAX).0.len() as u32
             }
             _ => self.node_mt(e.id, s).params(usize::MAX).0.len() as u32,
-        }
+        })
     }
 
     fn foreign_instance(&mut self, canon: &str, symbol: &str, ty: MT) -> FuncId {
@@ -635,15 +663,15 @@ impl<'a> Mono<'a> {
         id
     }
 
-    /// Resolve a trait method at concrete trait arguments.
-    fn method_instance(
-        &mut self,
+    /// Select the same implementation for staging and later instantiation.
+    fn method_binding(
+        &self,
         trait_name: &str,
         method: &str,
         targs: &[MT],
         own: &[MT],
         span: Span,
-    ) -> MResult<FuncId> {
+    ) -> MResult<(usize, Vec<MT>)> {
         for imp in &self.env.impls {
             if imp.trait_name != trait_name {
                 continue;
@@ -662,7 +690,7 @@ impl<'a> Mono<'a> {
                     .map(|v| sub.get(v).cloned().unwrap_or(MT::unit()))
                     .collect();
                 key.extend(own.iter().cloned());
-                return self.binding_instance(idx, key, span);
+                return Ok((idx, key));
             }
         }
         let args: Vec<String> = targs.iter().map(|t| t.to_string()).collect();
@@ -675,6 +703,19 @@ impl<'a> Mono<'a> {
                 display_name(method)
             ),
         ))
+    }
+
+    /// Resolve a trait method at concrete trait arguments.
+    fn method_instance(
+        &mut self,
+        trait_name: &str,
+        method: &str,
+        targs: &[MT],
+        own: &[MT],
+        span: Span,
+    ) -> MResult<FuncId> {
+        let (idx, key) = self.method_binding(trait_name, method, targs, own, span)?;
+        self.binding_instance(idx, key, span)
     }
 
     fn literal_via_trait(
