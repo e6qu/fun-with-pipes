@@ -491,6 +491,9 @@ impl<'a> Mono<'a> {
             self.prog.std_names.insert(id, b.name.clone());
         }
         self.prog.binding_names.insert(id, b.name.clone());
+        if self.value_bindings.contains(&b.name) {
+            self.prog.cached_values.insert(id);
+        }
         self.instances.insert(k, id);
         self.work.push((id, idx, s));
         Ok(id)

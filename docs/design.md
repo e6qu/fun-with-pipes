@@ -96,6 +96,9 @@ Unknown applications remain successive calls; combining them
 could run a later argument before a first-stage failure. REPL results use cached
 value entries even when their type is a function, so their construction runs once
 and later redefinitions cannot replace their saved code or captures.
+The IR marks these cached entries explicitly; constructor-stage optimization
+must leave them at zero arguments. Session linking remaps that marker with the
+function IDs, and the IR validator checks the entry contract.
 
 CLI, REST, MCP, gRPC and C library argument lists come from the complete public
 function type, not an internal entry's current stage. CLI, gRPC and C libraries

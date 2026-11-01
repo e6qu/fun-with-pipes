@@ -1,9 +1,9 @@
 # Current work
 
-**Next:** monitor all final-head checks on [PR #236](https://github.com/e6qu/fun-with-pipes/pull/236/checks).
-Require the complete matrix. Fix any failure, audit every completed target and compiler diagnostic,
-and squash-merge only after nine production jobs plus documentation pass.
-Focused passes and draft skips do not establish final acceptance.
+**Next:** verify the saved-REPL-function repair on [PR #236](https://github.com/e6qu/fun-with-pipes/pull/236/checks),
+using the expanded lexical probes and unit/lint checks. Keep auditing the running
+production jobs for other failures. The PR is draft again; require nine production
+jobs plus documentation on the repaired final head before squash-merging.
 
 All ten steps in [PLAN.md](../PLAN.md), publication and merge are authorized.
 Worktree `/private/tmp/fwp-returned-callables`, branch `language-design-review`,
@@ -21,17 +21,28 @@ Compiler source `4f1a63a2fe60ce4dd14efa1055c1f90d5ad2ea64` passes:
 | `41265260150` | Linux and Intel macOS: 234 unit tests, all-target Clippy, analysis scaling and raw server startup | Both pass; all logs audited; limits unchanged |
 | `41265234234` | Documentation and retained evidence readers | Pass |
 
-The following documentation-only changes do not yet have final-head production
-acceptance. The full matrix must test the exact PR head. Local checks use
+Production run `41265952785` at `bed8b365` exposed a saved-function REPL failure
+in Windows AMD64's native socket/library step; every target in that artifact is
+audited, and only `saved_lexical_closures_keep_their_code_and_captures` fails.
+Constant-function optimization promoted a saved result to an argument-taking
+entry, violating the session's zero-argument evaluation contract. The repair
+marks saved entries in IR, preserves the marker during session linking and
+excludes them from stage promotion. IR validation checks that contract; the
+constructor unit test covers saved and ordinary entries with constant/computed
+captures. Focused lexical probes now include the complete REPL target.
+This repair awaits runner verification. The benchmark and documentation jobs
+pass at `bed8b365`; other production jobs continue and must be audited.
+
+The full matrix must test the exact repaired PR head. Local checks use
 `python3 scripts/local-guard.py`; formatting, workflow syntax and documentation
 checks pass. No full compiler build, suite or benchmark ran locally.
 
 The superseded production run `41261060185` at `20109cf0` continues as a failure
-audit. Both macOS regular shards, ARM64 ownership, Windows resource/callback
-artifacts, Windows ARM64 TLS/autodiff steps and the benchmark job are audited.
+audit. Both macOS regular and ownership shards, Linux ARM64, Windows ARM64,
+Windows AMD64 resource/TLS/autodiff artifacts and the benchmark job are audited.
 Their only diagnosed failures are CLI stdin, iterator callback scope, vector
 fusion and the `iter.each` allocation probe, all repaired at the verified source.
-Linux, Intel ownership and later Windows steps still need complete log audits.
+Linux AMD64 and later Windows AMD64 steps still need complete log audits.
 Logs/artifacts are under `/private/tmp/fwp-236-*`; do not treat an artifact named
 `compiler-crashes-*` as a crash without an actual crash report.
 

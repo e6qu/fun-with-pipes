@@ -20,6 +20,9 @@ pub(super) fn flatten(prog: &mut Program) {
     let mut changes = Vec::new();
     let observable_captures = crate::resource::has_observable_captures(&prog.funcs, &prog.shapes);
     for (id, function) in prog.funcs.iter().enumerate() {
+        if prog.cached_values.contains(&id) {
+            continue;
+        }
         let Body::Expr(body) = &function.body else {
             continue;
         };
@@ -232,7 +235,7 @@ mod tests {
 
     #[test]
     fn constant_function_values_can_flatten_but_computed_captures_stay_eager() {
-        for computed in [false, true] {
+        for (computed, cached) in [(false, false), (false, true), (true, false), (true, true)] {
             let capture = if computed {
                 Expr::Call(
                     0,
@@ -245,10 +248,13 @@ mod tests {
             program.funcs[1].ty = program.funcs[1].ty.after_args(1).clone();
             program.funcs[1].arity = 0;
             program.funcs[1].locals.clear();
+            if cached {
+                program.cached_values.insert(1);
+            }
             program.funcs[2].body = Body::Expr(Expr::Record(vec![Expr::Func(1)]));
             flatten(&mut program);
             crate::ir::check_locals(&program).unwrap();
-            assert_eq!(program.funcs[1].arity, u32::from(!computed));
+            assert_eq!(program.funcs[1].arity, u32::from(!computed && !cached));
         }
     }
 

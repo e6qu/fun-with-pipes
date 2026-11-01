@@ -225,7 +225,7 @@ jobs:
         shell: bash
         run: |
           case "$TEST_SCOPE" in
-            lexical-probes) cargo test --no-fail-fast --test compiler_call_liveness --test local_bindings --test cli --test iterator_fusion --test vector_ownership ;;
+            lexical-probes) cargo test --no-fail-fast --test compiler_call_liveness --test local_bindings --test cli --test iterator_fusion --test vector_ownership --test repl ;;
             lexical-bindings) cargo test --no-fail-fast --test local_bindings --test compiler_call_liveness --test debugger --test infix --test fmt --test golden_parse --test golden_check --test lint --test lsp --test resource_frames --test closure_ownership --test closure_cleanup --test preempt --test repl --test numeric_array_fusion ;;
             *) exit 1 ;;
           esac

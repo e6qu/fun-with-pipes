@@ -379,6 +379,9 @@ impl Session {
             if fresh.self_tail.contains(&index) {
                 self.program.self_tail.insert(ids[index]);
             }
+            if fresh.cached_values.contains(&index) {
+                self.program.cached_values.insert(ids[index]);
+            }
             self.program.funcs.push(function);
         }
         for (ty, shape) in fresh.shapes {

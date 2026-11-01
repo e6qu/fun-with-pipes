@@ -427,6 +427,9 @@ pub struct Program {
     pub self_tail: std::collections::BTreeSet<FuncId>,
     /// Canonical source bindings, for persistent interpreter sessions.
     pub binding_names: std::collections::HashMap<FuncId, String>,
+    /// Session results must remain zero-argument values, even when they return
+    /// functions. Their code and captures are saved at evaluation time.
+    pub cached_values: std::collections::BTreeSet<FuncId>,
     /// Shapes of all named types reachable from function types.
     pub shapes: Shapes,
     pub main: Option<FuncId>,
@@ -486,6 +489,15 @@ pub fn check_locals(prog: &Program) -> Result<(), String> {
         }
         if let Body::Expr(e) = &f.body {
             check_expr(&func, shapes, &f.locals, e).map_err(err)?;
+        }
+    }
+    for id in &prog.cached_values {
+        if !prog
+            .funcs
+            .get(*id)
+            .is_some_and(|function| function.arity == 0)
+        {
+            return Err(format!("cached value {id} must have a zero-argument entry"));
         }
     }
     Ok(())
