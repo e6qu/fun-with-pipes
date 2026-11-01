@@ -111,7 +111,8 @@ source rewrites. Site line numbers refer to those files. They do not refer to th
 final instrumented file, whose inserted counters shift line numbers.
 
 After downloading both job archives, `scripts/summarize-derivative-forward-costs.py`
-requires explicit `--arm64`, `--amd64`, `--source`, `--run` and `--output` arguments.
+requires explicit `--arm64`, `--amd64`, `--source`, `--run`, `--output` and
+`--comparison` arguments.
 It checks every archived file's hash, recomputes all observations from saved
 stderr, checks output against the analytic result, and adds C caller names to
 active sites. The output is a compressed JSON record. No saved binary is executed
@@ -220,6 +221,43 @@ numbers at this selection boundary. Existing numeric selection remains intact.
   count limits, checks instruction/stack growth, and writes failures before
   rejecting them. `--comparison baseline` audits the original measurement alone.
 
-No candidate result is accepted yet. The implementation and measurement controls
-are ready; native correctness, count savings, paired timings and final production
-gates remain to be verified.
+### Verified allocation and ownership results
+
+[Run 41324329567](https://github.com/e6qu/fun-with-pipes/actions/runs/41324329567)
+passes on `b094fdd8c1aedde2957d0109a127b0a66efbdc0f`. Both native Linux jobs pass
+the affected tests, GCC O1/O2 measurement controls and all six workloads. Complete
+logs contain no compiler warnings or failed tests. The
+[audited candidate report](derivative-record-zip-counts-2026-11-01.json.gz)
+rechecks archive hashes, native image headers, outputs, phase/site counts,
+allocation/retain limits and code/stack costs. All 96 observations match between
+architectures.
+
+For 129 coordinates and 199 updates, keeping only the current vector:
+
+| Whole-solve measurement | Before | After | Reduction |
+|---|---:|---:|---:|
+| Managed allocation requests | 284,502 | 233,359 | 51,143 |
+| Requested managed bytes | 8,642,558 | 7,214,534 | 1,428,024 |
+| Effective retains | 179,299 | 102,883 | 76,416 |
+| Peak managed charge, bytes | 25,952 | 21,888 | 4,064 |
+| Final managed charge, bytes | 0 | 0 | — |
+
+These counts agree at GCC O1/O2 with workspace reuse both off and on. Keeping
+the full vector history produces the same request/byte/retain reductions; its
+peak charge falls from 845,088 to 841,024 bytes. Managed charge excludes raw tape
+buffers, allocator metadata and stacks; it is not total process memory. Raw
+tape/workspace observations and zero-update counts are unchanged.
+
+The separate record-pair probes cover 28 length/alias combinations per image.
+Both architectures pass at O1/O2; all retained input fields survive, results are
+correct, and live storage returns to its starting value. All omitted-result-cleanup
+images exit 238 as required. Callback failure, partial-result failure and
+cancellation checks also pass. Saved C and native images were inspected.
+
+Ordinary instruction sections shrink by 848–2,496 bytes on ARM64 and
+896–2,864 bytes on AMD64. The largest static frame is unchanged in every program;
+this is not a measurement of total call-stack use.
+
+Paired timing run `41325932590` uses source `a4cef01b`, whose compiler is unchanged
+from the count run. Timing acceptance and the final nine production jobs remain
+pending. These verified count reductions do not yet establish a speedup.

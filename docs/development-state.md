@@ -1,7 +1,7 @@
 # Current work
 
-**Next:** audit the focused `record-zip-checks` run `41324329567` on both native
-Linux hosts, repair failures together, then run the prepared paired timing suite for
+**Next:** monitor and audit all four `record-zip-time` sessions in run
+`41325932590`, repair every encountered failure, then finish the production gates for
 [PR #239](https://github.com/e6qu/fun-with-pipes/pull/239).
 The [protocol](measurements/derivative-forward-costs.md) was published first at `02d4aa26`.
 [PLAN.md](../PLAN.md) defines this batch's four steps. The compiler candidate
@@ -21,7 +21,7 @@ characters, with no body, trailers or attribution.
 | 1 | Verified | Preparation `02d4aa26`; documentation run `41318586442` passes |
 | 2 | Verified | Native known-work, omission, wrong-phase and unfinished-sequence controls pass |
 | 3 | Verified | Both hosts pass; all 96 observations and complete logs audited at `afc0f78f`, run `41319946864` |
-| 4 | In progress | Requirements published at `73cec3e5` before compiler edits; candidate and controls implemented, native verification pending |
+| 4 | In progress | Candidate correctness/count/cleanup/code/stack checks pass on both Linux hosts; four paired timing sessions dispatched; final production gates pending |
 
 ## Current implementation boundaries
 
@@ -30,11 +30,12 @@ characters, with no body, trailers or attribution.
   records, trapping arithmetic, partial results and cancellation. Nested records,
   managed fields and boxed wide numbers remain excluded. The count gate requires
   savings of two requests, 48 requested bytes and three effective retains per pair.
-  These are acceptance limits, not yet verified candidate results.
+  Both hosts meet these limits in all six workloads and modes.
 - `record-zip-time` reuses the paired derivative runner with a same-source
   reference that disables only flat-record zip/map selection. Two sessions per
   qualified host retain the frozen 5% speed and 2% identical-copy limits. Its
-  reference builder and budget controls pass locally; timing has not run yet.
+  reference builder and budget controls pass locally and in documentation CI;
+  four timing jobs are queued in run `41325932590`.
 - Reuse `measure-iteration.py` for managed requests/bytes, effective retains and
   live charge; `ownership-profile.py` for source-site ownership operations; and
   `descent-phases.py` for the six derivative boundaries.
@@ -75,14 +76,35 @@ and known-work failures. All detailed counts match across architectures. The
 [explanation/requirements](measurements/derivative-forward-costs.md#verified-baseline-and-selected-change)
 retain the result. Full production gates follow the complete batch.
 
-Candidate `b094fdd8` is published. Focused native run `41324329567` and its
-documentation run `41324313889` were queued at the last check. Production draft
-skips are not passing gates. Preserve the focused run while preparing timing;
-the compiler source has not changed since that dispatch.
+Candidate `b094fdd8` passes focused run `41324329567`: AMD64 job `124900983795`,
+ARM64 job `124900983956`. Both complete logs (`/private/tmp/fwp-239-record-{amd,arm}.log`)
+were audited; 19 integration cases and three fusion unit tests pass per host,
+without compiler diagnostics. All 96 count observations pass independent archive
+audit and match across architectures. The largest current-only solve saves
+51,143 requests, 1,428,024 requested bytes and 76,416 effective retains; peak
+managed charge falls from 25,952 to 21,888 bytes. Every largest static frame is
+unchanged. The [candidate results](measurements/derivative-forward-costs.md#verified-allocation-and-ownership-results)
+retain scope and limits; speed remains unverified.
 
-Documentation run `41322983262` passes on preparation commit `73cec3e5`; the superseded
-queued docs run `41319949124` was cancelled. The library's misleading “about one
+Timing tools and docs are published at `a4cef01b`; compiler source is unchanged.
+Timing run `41325932590` is queued on that source: AMD sessions 1/2 are jobs
+`124905745526`/`124905745487`; ARM sessions 1/2 are `124905745488`/`124905745590`.
+Do not restart merely because a status request is slow. Production draft skips
+are not passing gates; the final matrix has not been launched.
+
+Documentation run `41324800221` passes on `a4cef01b`. Its complete 4,820-line log
+is `/private/tmp/fwp-239-docs-a4cef01b.log`; diagnostic review finds only the
+deliberate runner failure/invalid-selection controls, which pass their parent tests.
+Superseded queued documentation runs `41319949124` and `41324313889` were cancelled.
+The library's misleading “about one
 evaluation” claim is corrected and its reference regenerated.
+
+Candidate archives are `/private/tmp/fwp-239-record-derivative-forward-evidence-{aarch64,x86_64}.zip`
+(IDs `13091590309`, `13090939053`) and
+`/private/tmp/fwp-239-record-record-zip-checks-{aarch64,x86_64}.zip`
+(IDs `13091176820`, `13091261239`). API SHA-256 digests are verified; adjacent JSON
+files preserve artifact metadata. Disk remains only about 1 GiB above the floor;
+avoid extracting whole archives or downloading duplicate images.
 
 Artifacts: `/private/tmp/fwp-239-aarch64.zip` (ID `13089053399`) and
 `/private/tmp/fwp-239-x86_64.zip` (ID `13089073406`). Complete compressed job logs
@@ -107,6 +129,13 @@ Focused local commands, each through `python3 scripts/local-guard.py`:
 - The updated forward-cost archive auditor rechecks both original archives with
   `--comparison baseline`; all 96 observations pass. The committed baseline
   artifact is unchanged.
+- The candidate archive auditor with `--comparison record-zip` passes all 96
+  observations and count/code/stack limits; output is
+  `docs/measurements/derivative-record-zip-counts-2026-11-01.json.gz`.
+- `/private/tmp/fwp-239-audit-record-probes.py`: all eight ordinary and eight
+  omitted-cleanup native images pass the saved-result/header audit. Each ordinary
+  image covers 28 length/alias combinations. The temporary script initially lacked
+  its `scripts` import path; that was fixed and the complete guarded audit passes.
 - `python3 scripts/test-descent-phases.py --cc clang`: 4 pass. GCC runs on CI.
 - `python3 scripts/check-roadmap.py`: 197 link sets, 106 preparation pairs and
   four plan steps pass. No full local compiler build or suite was run.

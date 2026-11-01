@@ -31,6 +31,12 @@ whole-program, ownership-site and derivative-boundary code; do not add a paralle
 profiler framework. These are count measurements, not a new timing acceptance rule.
 D2 remains open. A measured cost is not proof that it can safely be removed.
 
+The candidate now passes native Linux ARM64/AMD64 correctness, ownership and all
+96 count observations. Its largest current-only solve saves 51,143 allocation
+requests and 76,416 effective retains, with lower peak managed memory and no
+larger static frame. [Results and limits](docs/measurements/derivative-forward-costs.md#verified-allocation-and-ownership-results)
+are explicit. Paired timing and the complete production gates remain open.
+
 Run focused observer controls during implementation. Run native measurements on
 GitHub after the observer is complete, then batch affected checks for any selected
 compiler/runtime change. Run the full nine-job matrix and documentation once the
