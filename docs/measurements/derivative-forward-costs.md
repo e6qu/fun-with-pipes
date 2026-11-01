@@ -214,6 +214,12 @@ numbers at this selection boundary. Existing numeric selection remains intact.
   the new flat-record eligibility test; it verifies that no other tracked source
   changes. The reference retains scalar zip/map fusion, which already removes
   allocation during derivative-input construction.
+- For each timing session, reuse `check-array-list-evidence.py` with explicit
+  `--protocol record-zip --input-format zip --input MEASUREMENTS.zip --reference
+  REFERENCE.zip`, plus the tested source, architecture, session and output-summary
+  arguments. It checks saved process observations, outputs, ownership profiles,
+  image/stack sizes and the exact reference-source patch without extracting or
+  running the binaries. Failed acceptance limits remain in its summary.
 - `summarize-derivative-forward-costs.py --comparison record-zip --baseline
   docs/measurements/derivative-forward-costs-2026-11-01.json.gz` audits the two
   downloaded count archives. Supply their paths, tested source, run ID and output

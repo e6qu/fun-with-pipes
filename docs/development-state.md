@@ -1,165 +1,104 @@
 # Current work
 
-**Next:** monitor and audit all four `record-zip-time` sessions in run
-`41325932590`, repair every encountered failure, then finish the production gates for
-[PR #239](https://github.com/e6qu/fun-with-pipes/pull/239).
-The [protocol](measurements/derivative-forward-costs.md) was published first at `02d4aa26`.
-[PLAN.md](../PLAN.md) defines this batch's four steps. The compiler candidate
-selected from the audited results eliminates temporary zipped
-flat numeric records, including adjacent `Rev[F64]` pairs.
+**Next:** monitor all four `record-zip-time` jobs in run `41325932590`, audit their
+saved observations and exact reference patch, then fix failures together before
+running the final production gates for [PR #239](https://github.com/e6qu/fun-with-pipes/pull/239).
 
 Worktree `/private/tmp/fwp-returned-callables`, branch `derivative-forward-costs`.
-Base `c124d0c8f13373b0ee11c58d685d850b1b9a5a08`. Preserve the primary checkout's
-unrelated edits. One active PR at a time; publication and squash merge after all
-final-head gates pass remain authorized. Every commit has one line, at most 80
-characters, with no body, trailers or attribution.
+Published head `0dd02a4e`; base `c124d0c8` (verified PR #238). Preserve unrelated
+primary-checkout edits. One active PR; publication and squash merge after all
+final-head gates pass remain authorized. Every commit has one line, at most
+80 characters, with no body, trailers or attribution.
 
 ## Roadmap status
 
-| Step | Status | Remaining work |
+| Step | Status | Evidence / remaining work |
 |---|---|---|
-| 1 | Verified | Preparation `02d4aa26`; documentation run `41318586442` passes |
-| 2 | Verified | Native known-work, omission, wrong-phase and unfinished-sequence controls pass |
-| 3 | Verified | Both hosts pass; all 96 observations and complete logs audited at `afc0f78f`, run `41319946864` |
-| 4 | In progress | Candidate correctness/count/cleanup/code/stack checks pass on both Linux hosts; four paired timing sessions dispatched; final production gates pending |
+| 1 | Verified | Protocol published at `02d4aa26`; candidate limits frozen at `73cec3e5` before compiler edits |
+| 2 | Verified | Known-work, omission, wrong-phase and unfinished-sequence controls pass |
+| 3 | Verified | Run `41319946864`, source `afc0f78f`: both hosts and all 96 baseline observations audited |
+| 4 | In progress | Candidate correctness/count/cleanup/code/stack checks pass; paired timing and final production gates pending |
 
-## Current implementation boundaries
+[PLAN.md](../PLAN.md) defines scope. The [protocol and results](measurements/derivative-forward-costs.md)
+contain the inputs, acceptance limits and measured reductions. [History](roadmap-history.md#direct-derivative-recording-pr-238)
+retains the previous delivery; do not reuse its monitor for this PR.
 
-- `src/fuse.rs` extends existing zip/map selection to flat numeric records.
-  Tests cover values, captures, both input aliases, unequal lengths, returned
-  records, trapping arithmetic, partial results and cancellation. Nested records,
-  managed fields and boxed wide numbers remain excluded. The count gate requires
-  savings of two requests, 48 requested bytes and three effective retains per pair.
-  Both hosts meet these limits in all six workloads and modes.
-- `record-zip-time` reuses the paired derivative runner with a same-source
-  reference that disables only flat-record zip/map selection. Two sessions per
-  qualified host retain the frozen 5% speed and 2% identical-copy limits. Its
-  reference builder and budget controls pass locally and in documentation CI;
-  four timing jobs are queued in run `41325932590`.
-- Reuse `measure-iteration.py` for managed requests/bytes, effective retains and
-  live charge; `ownership-profile.py` for source-site ownership operations; and
-  `descent-phases.py` for the six derivative boundaries.
-- The older `measure-ad-allocation-sites.py` profiles allocator return addresses
-  for four small examples. Preserve its evidence. The new report uses source
-  sites and phases for the six existing whole-solve inputs; it must explain the
-  difference between a runtime allocator site and the original language caller.
-- Keep ordinary, totals-only and phase/site-instrumented programs separate. No
-  timing claim follows from instrumentation or count reductions. No runtime
-  default, public language syntax or compatibility adapter is needed.
+## Current implementation and verified results
 
-## Verified baseline
+`src/fuse.rs` extends existing zip/map fusion to flat numeric records, including
+`Rev[F64]`. Both source lists stay live; pair order and shorter-list length stay
+unchanged. Nested records, managed fields and boxed wide numbers remain excluded.
+No public primitive or runtime switch was added.
 
-PR #238 is squash-merged as `c124d0c8`. Production `41308228518` and documentation
-`41308192400` pass on `c5e29fe9`; all logs are audited. Merge and tested source have
-tree `04b9d0704938621f56c7d122ca83fdfed15317df`. The merge message is exactly
-`Move derivative weights directly into tape ownership`, with no body or trailers.
-[History](roadmap-history.md#direct-derivative-recording-pr-238) and
-[measurements](measurements/derivative-recording-moves.md#focused-results) retain
-the accepted/rejected results and limits. Duplicate post-merge production run
-`41317561459` was cancelled with no failed steps; short post-merge documentation
-run `41317561418` also passes.
+Candidate `b094fdd8` passes run `41324329567`: AMD64 job `124900983795`, ARM64
+`124900983956`. Per host: 19 affected integration cases, three fusion unit tests,
+GCC O1/O2 observer controls and 48 complete-solve observations pass. Both full logs
+were audited without compiler diagnostics. Independent archive audits verify
+all hashes, native headers, outputs, counts, code/stack limits and saved probes.
 
-Completed production logs: `/private/tmp/fwp-238-final-logs/`. The final read-only
-audit `/private/tmp/fwp-238-merge-audit.py` passed after distinguishing successful
-`0 failed` summaries and Homebrew's already-installed notice from real errors.
-The earlier monitor is fixed to #238's head; do not use it for this new branch.
+Largest current-only solve: 51,143 fewer requests, 1,428,024 fewer requested bytes,
+76,416 fewer effective retains; peak managed charge 25,952 → 21,888 bytes. Raw tape
+storage and zero-update counts are unchanged. Every largest static frame is
+unchanged. Both architectures agree on all detailed counts. This does not prove
+a speedup; D2 timing acceptance remains open.
 
-## Checks and constraints
+## Active CI
 
-The last batch passed focused GCC/Clang O1/O2 checks, artifact/source hash audits,
-all nine native production jobs and documentation. For this batch, numerical run
-`41319946864` passes on `afc0f78f` (jobs `124887807761` and `124887808036`).
-Both complete logs have no compiler/test diagnostics. The archive auditor verifies
-all file hashes, saved observations, source sites, native headers, compilation flags
-and known-work failures. All detailed counts match across architectures. The
-[report](measurements/derivative-forward-costs-2026-11-01.json.gz) and
-[explanation/requirements](measurements/derivative-forward-costs.md#verified-baseline-and-selected-change)
-retain the result. Full production gates follow the complete batch.
+Timing run `41325932590` uses `a4cef01b`, with compiler source unchanged from the
+verified candidate. All four jobs were queued at the last check:
 
-Candidate `b094fdd8` passes focused run `41324329567`: AMD64 job `124900983795`,
-ARM64 job `124900983956`. Both complete logs (`/private/tmp/fwp-239-record-{amd,arm}.log`)
-were audited; 19 integration cases and three fusion unit tests pass per host,
-without compiler diagnostics. All 96 count observations pass independent archive
-audit and match across architectures. The largest current-only solve saves
-51,143 requests, 1,428,024 requested bytes and 76,416 effective retains; peak
-managed charge falls from 25,952 to 21,888 bytes. Every largest static frame is
-unchanged. The [candidate results](measurements/derivative-forward-costs.md#verified-allocation-and-ownership-results)
-retain scope and limits; speed remains unverified.
+| Session | Job |
+|---|---|
+| AMD64 1 | `124905745526` |
+| AMD64 2 | `124905745487` |
+| ARM64 1 | `124905745488` |
+| ARM64 2 | `124905745590` |
 
-Timing tools and docs are published at `a4cef01b`; compiler source is unchanged.
-Timing run `41325932590` is queued on that source: AMD sessions 1/2 are jobs
-`124905745526`/`124905745487`; ARM sessions 1/2 are `124905745488`/`124905745590`.
-Do not restart merely because a status request is slow. Production draft skips
-are not passing gates; the final matrix has not been launched.
+Use the frozen qualified hosts, 98 rounds, seven fresh processes, 5% speed limit
+and 2% identical-copy limit. Preserve failed/noisy observations. A slow status
+request is not a stopped job; poll the same handle before taking action.
 
-Documentation run `41324800221` passes on `a4cef01b`. Its complete 4,820-line log
-is `/private/tmp/fwp-239-docs-a4cef01b.log`; diagnostic review finds only the
-deliberate runner failure/invalid-selection controls, which pass their parent tests.
-Superseded queued documentation runs `41319949124` and `41324313889` were cancelled.
-The library's misleading “about one
-evaluation” claim is corrected and its reference regenerated.
+Documentation `41324800221` passes on `a4cef01b`; its complete log was audited.
+The current-head documentation run is `41326183619`, last seen queued. Superseded
+queued docs `41319949124` and `41324313889` were cancelled. No current failure is
+known. The final nine-job matrix has not run; draft skips are not passing gates.
 
-Candidate archives are `/private/tmp/fwp-239-record-derivative-forward-evidence-{aarch64,x86_64}.zip`
-(IDs `13091590309`, `13090939053`) and
-`/private/tmp/fwp-239-record-record-zip-checks-{aarch64,x86_64}.zip`
-(IDs `13091176820`, `13091261239`). API SHA-256 digests are verified; adjacent JSON
-files preserve artifact metadata. Disk remains only about 1 GiB above the floor;
-avoid extracting whole archives or downloading duplicate images.
+## Evidence and local checks
 
-Artifacts: `/private/tmp/fwp-239-aarch64.zip` (ID `13089053399`) and
-`/private/tmp/fwp-239-x86_64.zip` (ID `13089073406`). Complete compressed job logs
-are in `/private/tmp/fwp-239-logs/`. Both artifact API digests were verified.
+- Committed baseline and candidate reports:
+  [baseline](measurements/derivative-forward-costs-2026-11-01.json.gz),
+  [candidate](measurements/derivative-record-zip-counts-2026-11-01.json.gz).
+- Baseline ZIPs: `/private/tmp/fwp-239-{aarch64,x86_64}.zip`; artifact IDs
+  `13089053399` / `13089073406`. Logs: `/private/tmp/fwp-239-logs/`.
+- Candidate count ZIPs: `/private/tmp/fwp-239-record-derivative-forward-evidence-{aarch64,x86_64}.zip`;
+  IDs `13091590309` / `13090939053`.
+- Candidate probe ZIPs: `/private/tmp/fwp-239-record-record-zip-checks-{aarch64,x86_64}.zip`;
+  IDs `13091176820` / `13091261239`. Adjacent JSON files retain verified API digests.
+- Native logs: `/private/tmp/fwp-239-record-{amd,arm}.log`; docs log:
+  `/private/tmp/fwp-239-docs-a4cef01b.log`. Only intentional runner-failure controls
+  appear as errors in the passing documentation log.
 
-Focused local commands, each through `python3 scripts/local-guard.py`:
+Focused checks used `python3 scripts/local-guard.py` serially:
+`test-derivative-ownership-profile.py` (9 pass), `test-record-zip-reference.py`
+(3), `test-descent-budgets.py` (10), `test-descent-groups.py` (12),
+`test-descent-phases.py --cc clang` (4), and `test-array-list-evidence.py` (8).
+The three updated ZIP/patch controls also pass separately. `check-roadmap.py`
+and workflow `actionlint -shellcheck= -pyflakes=` pass.
 
-- `python3 scripts/test-derivative-ownership-profile.py`: 9 pass, including
-  swapped phase labels, archive corruption and failed candidate count budgets.
-- `/private/tmp/fwp-239-record-probe-check.py`: the new record-alias/count probe
-  runs with the verified baseline compiler and Clang O1; all 28 cases release
-  storage. Omitting result cleanup exits 238 as required. This verifies the
-  observer, not the new compiler selection, which must run on GitHub.
-- `python3 scripts/test-record-zip-reference.py`: 3 pass; only the selected
-  eligibility block changes, and altered/missing/duplicate blocks are rejected.
-- `python3 scripts/test-descent-budgets.py`: 10 pass, including record count,
-  timing/noise, storage, code-size and stack limits.
-- `python3 scripts/test-descent-groups.py`: 12 pass; historical failed sessions
-  remain failed when the archive checker gains the new comparison protocol.
-- `actionlint -shellcheck= -pyflakes= .github/workflows/numerics.yml
-  .github/workflows/roadmap.yml`: workflow syntax and expressions pass.
-- The updated forward-cost archive auditor rechecks both original archives with
-  `--comparison baseline`; all 96 observations pass. The committed baseline
-  artifact is unchanged.
-- The candidate archive auditor with `--comparison record-zip` passes all 96
-  observations and count/code/stack limits; output is
-  `docs/measurements/derivative-record-zip-counts-2026-11-01.json.gz`.
-- `/private/tmp/fwp-239-audit-record-probes.py`: all eight ordinary and eight
-  omitted-cleanup native images pass the saved-result/header audit. Each ordinary
-  image covers 28 length/alias combinations. The temporary script initially lacked
-  its `scripts` import path; that was fixed and the complete guarded audit passes.
-- `python3 scripts/test-descent-phases.py --cc clang`: 4 pass. GCC runs on CI.
-- `python3 scripts/check-roadmap.py`: 197 link sets, 106 preparation pairs and
-  four plan steps pass. No full local compiler build or suite was run.
-- `env FWP_BLESS=1 /private/tmp/fwp-237-stdlib-doc`: the existing standalone
-  documentation generator passes and updates `docs/stdlib.md` from library comments.
-- `/private/tmp/fwp-239-observer-control.py` and
-  `/private/tmp/fwp-239-local-negative-controls.py`: Clang O1 native known-work and
-  all four deliberately broken controls pass, using the verified #238 compiler
-  package (SHA-256 `59fad77f00615340906d15bf87b7b96cc8d849b3e524eea96502929d8c3c9049`).
-- `/private/tmp/fwp-239-small-gradient-control.py`: one three-coordinate update
-  agrees across raw interpretation and ordinary/totals/detailed native images,
-  workspace off/on, with zero final storage. No local compiler rebuild or sweep.
-- `scripts/summarize-derivative-forward-costs.py` with both downloaded archives,
-  full source ID and run `41319946864`: all 96 observations and controls pass;
-  guarded audit takes about four seconds. No saved binary is executed by the audit.
+`summarize-derivative-forward-costs.py` passes both original archives with
+`--comparison baseline` and both candidate archives with `--comparison record-zip`
+and the committed baseline. `/private/tmp/fwp-239-audit-record-probes.py` verifies
+all eight ordinary and eight omitted-cleanup native images, 28 alias/length cases
+per ordinary image. Its initial temporary import-path error was fixed.
 
-Old run `38888712709` shows a stale aggregate “in progress” status, but all its
-October 16 jobs are terminal. GitHub refuses cancellation because the run is
-completed. It has no active runner and was not restarted.
+The extended `check-array-list-evidence.py` reuses the existing timing audit with
+explicit `--protocol record-zip --input-format zip --reference REFERENCE.zip`.
+It checks every process observation, image, stack report and ownership profile,
+and reconstructs the reference source/patch. Use it when timing artifacts arrive;
+do not execute archived binaries or extract whole archives locally.
 
-Use the unchanged local guard serially. Full builds, suites, benchmarks and large
-regeneration use GitHub. Disk remains near the 64 GiB floor; retain the guard's
-limits. Do not rebuild the compiler locally or duplicate large downloaded archives.
-
-D2/N1/N2 timing limits, original Xeon closure regressions and individual Swift ARC
-counts remain open. Measured reductions do not establish universal zero-cost
-sharing, arbitrary stack storage or parity with C/Rust.
+Keep the unchanged guard: 64 GiB free disk, target data below 2 GiB, sampled RSS
+below 1 GiB, 180-second deadline. Full builds, suites, benchmarks and large evidence
+regeneration belong on GitHub. Disk is near the floor; avoid duplicate downloads.
+D2/N1/N2 timings, original Xeon regressions and individual Swift ARC counts remain
+open as recorded in the plan. The new measured reduction does not settle them.

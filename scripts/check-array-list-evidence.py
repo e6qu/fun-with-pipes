@@ -1,18 +1,24 @@
 #!/usr/bin/env python3
-"""Recompute numeric array comparison evidence without executing saved binaries."""
+"""Recompute paired derivative evidence without executing saved binaries."""
 import argparse
+from contextlib import ExitStack
+import difflib
 import hashlib
 import importlib.util
 import json
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import re
 import struct
 import subprocess
+import zipfile
 
 ROOT = Path(__file__).resolve().parent.parent
 SPEC = importlib.util.spec_from_file_location('descent_groups', ROOT / 'scripts/check-descent-groups.py')
 GROUPS = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(GROUPS)
+SPEC = importlib.util.spec_from_file_location('record_reference', ROOT / 'scripts/prepare-record-zip-reference.py')
+REFERENCE = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(REFERENCE)
 
 
 def digest(data):
@@ -71,30 +77,100 @@ def check_profiles(folder, row):
         assert row['phaseObservations'][label]['observations'] == phases
 
 
-def check_directory(folder, source, architecture, session):
+def check_reference(folder, report, source, architecture):
+    manifest = json.loads((folder / 'manifest.json').read_text())
+    assert manifest == report['referenceCompiler'] and manifest['source'] == source
+    assert manifest['disabledTransformation'] == 'flat numeric record zip/map fusion'
+    compiler = (folder / 'fwp').read_bytes()
+    assert digest(compiler) == manifest['compilerSha256']
+    instruction_bytes(compiler, architecture)
+    candidate = subprocess.check_output(['git', 'show', source + ':src/fuse.rs'], cwd=ROOT)
+    ownership = subprocess.check_output(['git', 'show', source + ':src/ownership.rs'], cwd=ROOT)
+    assert digest(candidate) == manifest['candidateFusionSha256']
+    assert digest(ownership) == manifest['ownershipSha256']
+    reference = (folder / 'fusion-reference.rs').read_bytes()
+    assert digest(reference) == manifest['referenceFusionSha256']
+    assert reference == REFERENCE.reference_source(candidate.decode()).encode()
+    patch = (folder / 'reference.patch').read_bytes()
+    assert digest(patch) == manifest['patchSha256']
+    check_reference_patch(patch.decode(), candidate.decode(), reference.decode())
+
+
+def check_reference_patch(patch, candidate, reference):
+    lines = patch.splitlines(keepends=True)
+    assert len(lines) >= 4
+    assert lines[0] == 'diff --git a/src/fuse.rs b/src/fuse.rs\n'
+    assert re.fullmatch(r'index [0-9a-f]+\.\.[0-9a-f]+ 100644\n', lines[1])
+    # Git appends a function context to hunk headers; difflib does not.
+    actual = [re.sub(r'^(@@ -\d+(?:,\d+)? \+\d+(?:,\d+)? @@)[^\n]*', r'\1', line)
+              if line.startswith('@@ ') else line for line in lines[2:]]
+    expected = list(difflib.unified_diff(candidate.splitlines(keepends=True),
+                    reference.splitlines(keepends=True), fromfile='a/src/fuse.rs', tofile='b/src/fuse.rs'))
+    assert actual == expected, 'reference patch changes more than the selected eligibility block'
+
+
+def file_inventory(folder):
+    """Read directories or zipfile.Path trees without extracting archives."""
+    files = {}
+    pending = [('', folder)]
+    while pending:
+        prefix, directory = pending.pop()
+        for child in directory.iterdir():
+            name = prefix + child.name
+            if child.is_dir():
+                pending.append((name + '/', child))
+            else:
+                assert child.is_file() and name not in files
+                raw = child.read_bytes()
+                files[name] = dict(bytes=len(raw), sha256=digest(raw))
+    return dict(sorted(files.items()))
+
+
+def check_zip(archive):
+    names = archive.namelist()
+    assert len(names) == len(set(names)), 'duplicate archive path'
+    for name in names:
+        path = PurePosixPath(name)
+        assert not path.is_absolute() and '..' not in path.parts
+        assert str(path) == name.rstrip('/')
+
+
+def check_directory(folder, source, architecture, session, protocol, reference):
+    assert protocol in ('array-lists', 'record-zip')
+    assert (protocol == 'record-zip') == (reference is not None)
     report = json.loads((folder / 'comparison.json').read_text())
-    GROUPS.check_report(report, source, 'array-lists')
+    GROUPS.check_report(report, source, protocol)
     assert report['machine'] == architecture and report['configuration']['session'] == session
     assert report['results'] == json.loads((folder / 'results.json').read_text())
     assert report['commands'] == json.loads((folder / 'build-commands.json').read_text())
-    failures = GROUPS.DESCENT.paired_budget_failures(report['results'], 'array-lists')
+    failures = GROUPS.DESCENT.paired_budget_failures(report['results'], protocol)
     assert failures == json.loads((folder / 'budget-failures.json').read_text())
     for path, checksum in report['sourceHashes'].items():
         assert digest(subprocess.check_output(['git', 'show', source + ':' + path], cwd=ROOT)) == checksum, path
     emitters = [command['command'] for command in report['commands'] if '--emit-c' in command['command']]
     assert len(emitters) == 24
-    assert len({command[2] for command in emitters}) == 1
-    for command in emitters:
-        assert command[0] == 'env'
-        source_path = next(argument for argument in command if argument.endswith('.fwp'))
-        expected = '0' if Path(source_path).stem.endswith('-reference') else '1'
-        assert command[1] == 'FWP_ARRAY_FUSION=' + expected
+    if protocol == 'array-lists':
+        assert len({command[2] for command in emitters}) == 1
+        for command in emitters:
+            assert command[0] == 'env'
+            source_path = next(argument for argument in command if argument.endswith('.fwp'))
+            expected = '0' if Path(source_path).stem.endswith('-reference') else '1'
+            assert command[1] == 'FWP_ARRAY_FUSION=' + expected
+    else:
+        check_reference(reference, report, source, architecture)
+        candidates, references = set(), set()
+        for command in emitters:
+            assert command[1] == 'build'
+            source_path = next(argument for argument in command if argument.endswith('.fwp'))
+            selected = references if Path(source_path).stem.endswith('-reference') else candidates
+            selected.add(command[0])
+        assert len(candidates) == len(references) == 1 and candidates.isdisjoint(references)
     for name, row in report['results'].items():
         case = folder / name
         assert row['oracle'] == GROUPS.DESCENT.AD.analytic(row['dimensions'], row['updates'] + 1)
         saved = json.loads((case / 'samples.json').read_text())
         assert saved == {key: row[key] for key in ('orders', 'samplesNs', 'processesPerLabel')}
-        for phase, count in [('warmup', 2), ('sample', 49)]:
+        for phase, count in [('warmup', 2), ('sample', report['configuration']['samples'])]:
             for index in range(count):
                 record = json.loads((case / f'{phase}-{index:03d}.json').read_text())
                 totals = check_round(record, row['orders'][index], row['outputSha256'])
@@ -132,20 +208,39 @@ def check_directory(folder, source, architecture, session):
             assert digest((case / (name + '.stdout')).read_bytes()) == control['stdoutSha256']
             assert (case / (name + '.stderr')).read_text() == control['stderr']
         check_profiles(case, row)
-    files = {str(path.relative_to(folder)): dict(bytes=path.stat().st_size, sha256=digest(path.read_bytes()))
-             for path in sorted(folder.rglob('*')) if path.is_file()}
+    files = file_inventory(folder)
+    if protocol == 'record-zip':
+        assert len(files) == 1334
+    reference_files = file_inventory(reference) if reference is not None else None
+    if reference_files is not None:
+        assert set(reference_files) == {'manifest.json', 'fwp', 'fusion-reference.rs', 'reference.patch'}
     return dict(source=source, architecture=architecture, session=session, files=files,
+                referenceFiles=reference_files,
                 budgetFailures=failures, decision='not-accepted' if failures else 'accepted')
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--input', type=Path, required=True)
+    parser.add_argument('--input-format', choices=['directory', 'zip'], required=True)
+    parser.add_argument('--protocol', choices=['array-lists', 'record-zip'], required=True)
+    parser.add_argument('--reference', type=Path)
     parser.add_argument('--source', required=True)
     parser.add_argument('--arch', choices=['x86_64', 'aarch64'], required=True)
     parser.add_argument('--session', type=int, choices=[1, 2], required=True)
     parser.add_argument('--summary', type=Path, required=True)
     args = parser.parse_args()
-    summary = check_directory(args.input, args.source, args.arch, args.session)
+    with ExitStack() as stack:
+        folder = args.input
+        reference = args.reference
+        if args.input_format == 'zip':
+            archive = stack.enter_context(zipfile.ZipFile(args.input))
+            check_zip(archive)
+            folder = zipfile.Path(archive)
+            if args.reference is not None:
+                reference_archive = stack.enter_context(zipfile.ZipFile(args.reference))
+                check_zip(reference_archive)
+                reference = zipfile.Path(reference_archive)
+        summary = check_directory(folder, args.source, args.arch, args.session, args.protocol, reference)
     args.summary.write_text(json.dumps(summary, indent=2) + '\n')
     print(f"All six cases audited; {len(summary['budgetFailures'])} original budget failures retained")

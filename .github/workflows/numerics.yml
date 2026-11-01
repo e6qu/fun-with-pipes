@@ -242,6 +242,7 @@ jobs:
               case "$runner" in ubuntu-latest) arch=x86_64 ;; ubuntu-24.04-arm) arch=aarch64 ;; esac
               for session in $sessions; do
                 python3 scripts/check-array-list-evidence.py \
+                  --protocol array-lists --input-format directory \
                   --input "retained-evidence/array-list-$runner-$session/array-list-evidence" \
                   --source "$SOURCE_REVISION" --arch "$arch" --session "$session" \
                   --summary "retained-evidence/audit-$arch-$session.json"
