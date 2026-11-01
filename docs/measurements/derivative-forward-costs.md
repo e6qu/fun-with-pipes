@@ -269,13 +269,34 @@ Ordinary instruction sections shrink by 848–2,496 bytes on ARM64 and
 896–2,864 bytes on AMD64. The largest static frame is unchanged in every program;
 this is not a measurement of total call-stack use.
 
-Paired timing run `41325932590` uses source `a4cef01b`, whose compiler is unchanged
-from the count run. Timing acceptance and the final nine production jobs remain
-pending. These verified count reductions do not yet establish a speedup.
+### Timing results awaiting archive audit
 
-AMD64 session 2 was rejected before building: its runner had an EPYC 9V45 rather
-than the frozen EPYC 7763. Replacement run `41327509981` requests only that session
-on `844ff77f`; measured source/tool files are unchanged. The rejected host, job
-`124905745487`, and qualification artifact `13092045996` remain evidence, not a
-timing result. The immutable tag `roadmap/derivative-record-zip-sources-2026-11-01`
-retains all these source commits and their preparation ancestors after squash merge.
+[Run 41325932590](https://github.com/e6qu/fun-with-pipes/actions/runs/41325932590)
+completed on `a4cef01b`, whose compiler is unchanged from the count run. Its job
+reports reject these candidate/reference elapsed-time ratios:
+
+| Host/session | Coordinates, updates | Current vector | Full history | Required maximum |
+|---|---|---:|---:|---:|
+| ARM64 / 1 | 3, 1 | 0.990137 | 0.991596 | 0.95 |
+| ARM64 / 2 | 3, 1 | 0.991153 | 0.994167 | 0.95 |
+| AMD64 / 1 | 3, 0 | 1.025398 | Pass | 1.02 |
+| AMD64 / 1 | 3, 1 | 0.996431 | 0.998850 | 0.95 |
+
+For example, 0.996431 means about 0.36% less elapsed time, below the required
+5% improvement. The zero-update ratio means 2.54% more elapsed time, exceeding
+the allowed 2%. All other limits in these three job reports pass. The complete
+saved observations still need the independent archive audit; its run is
+`41329444021`. Do not treat these results as accepted timings or explain the
+zero-update regression from unchanged allocation counts alone.
+
+AMD64 session 2 has not measured: the original job `124905745487` and replacement
+run `41327509981` both received an EPYC 9V45 instead of the frozen EPYC 7763 and
+stopped before building. Run `41328989036` requests that missing session on
+`9ce7bdd6`; measured source/tool files remain unchanged. Rejected hosts remain
+evidence, not timing results. Run `41328986141` audits the first replacement's
+rejection. The immutable tag `roadmap/derivative-record-zip-sources-2026-11-01`
+retains source commits through `844ff77f` and their preparation ancestors.
+
+The candidate does not meet its frozen timing requirements. A decision about
+retaining its verified allocation reductions with timing requirements explicitly
+unmet is pending. The final nine production jobs have not run.

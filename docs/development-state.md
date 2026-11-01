@@ -1,8 +1,8 @@
 # Current work
 
-**Next:** monitor timing runs `41325932590` and replacement `41327509981`; after
-each completes, dispatch `record-zip-report` with its full source ID to audit the
-saved observations on GitHub. Fix failures together before
+**Next:** finish archive audits `41329444021` / `41328986141` and the missing
+AMD64 timing session `41328989036`; inspect their saved observations on GitHub.
+Fix failures together before
 running the final production gates for [PR #239](https://github.com/e6qu/fun-with-pipes/pull/239).
 
 Worktree `/private/tmp/fwp-returned-callables`, branch `derivative-forward-costs`.
@@ -46,11 +46,27 @@ a speedup; D2 timing acceptance remains open.
 ## Active CI
 
 Timing run `41325932590` uses `a4cef01b`, with compiler source unchanged from the
-verified candidate. Both ARM64 sessions and AMD64 session 1 are measuring.
+verified candidate. It is completed: both ARM64 sessions and AMD64 session 1
+measured all six cases; AMD64 session 2 rejected its host before building.
+Both ARM sessions miss only the frozen 5% speed requirement for case `3-1`:
+current ratios 0.990137 / 0.991153, history 0.991596 / 0.994167. Their other
+reported timing/count/memory/code/stack limits pass. AMD64 session 1 misses the
+same case (current 0.996431, history 0.998850), plus current zero-update time
+1.025398 against 1.02. Its remaining reported limits pass. Complete log:
+`/private/tmp/fwp-239-timing-amd-1.log`. Full artifact audits remain.
+The updated asynchronous question includes the AMD64 regression and asks whether
+to retain the verified reductions with timing requirements unmet or continue
+optimization until every limit passes. No answer has arrived; do not relabel
+these failures. Audit run `41329444021`, job `124916252154`, is queued for the
+completed original run and all four outcomes.
 AMD64 session 2 stopped before building: GitHub assigned an EPYC 9V45 instead
 of the frozen EPYC 7763. The replacement run `41327509981` uses source
 `844ff77ff17e9a3edec5ef73362faad130c351e7`, with unchanged measured code and tools.
-Its AMD64 session 2 job `124910457839` was queued at the last check.
+Its job `124910457839` was also rejected for an EPYC 9V45 before building.
+Second replacement `41328989036`, job `124914897632`, is queued on
+`9ce7bdd6c7a735062e63dc05d7399e6c1d766673`; measured source/tool files remain unchanged.
+Retention run `41328986141`, job `124914887625`, is queued to audit the first
+replacement's rejected-host evidence on GitHub.
 
 | Session | Job |
 |---|---|
@@ -64,12 +80,15 @@ and 2% identical-copy limit. Preserve failed/noisy observations. A slow status
 request is not a stopped job; poll the same handle before taking action.
 
 Documentation `41324800221` passes on `a4cef01b`; its complete log was audited.
-Documentation `41327106604` passes on `844ff77f`. Its complete log is
+Documentation `41328332813` passes on `9ce7bdd6`, including all three new
+download/host-rejection controls. Complete log diagnostics are only intentional
+runner controls. Earlier documentation `41327106604` passes on `844ff77f`; its log is
 `/private/tmp/fwp-239-docs-844ff77f.log`; diagnostics are the expected runner controls.
 Superseded docs `41319949124`, `41324313889`, `41326183619` and `41326898762` were
 cancelled; the last had started but had no failed steps before cancellation.
-The host rejection is the only known current CI failure; no measurement ran in
-that job. The final nine-job matrix has not run; draft skips are not passing gates.
+Known failures are the two host rejections, three one-update timing misses
+and the AMD64 zero-update regression. No correctness or storage failure is known. The final nine-job matrix
+has not run; draft skips are not passing gates.
 
 ## Evidence and local checks
 
@@ -118,8 +137,8 @@ Local checks are currently stopped: the guard found less than 64 GiB free disk
 (about 62.2 GiB at inspection). Known local build caches are empty; this PR's
 temporary data cannot restore the missing headroom. Do not bypass the guard.
 `record-zip-report` moves artifact download, audit and compression to GitHub,
-retaining partial output on audit failure. Its new download/rejection controls
-must pass CI; they have not run locally because of the disk limit.
+retaining partial output on audit failure. Its three download/rejection controls
+pass in documentation CI; they have not run locally because of the disk limit.
 
 Keep the unchanged guard: 64 GiB free disk, target data below 2 GiB, sampled RSS
 below 1 GiB, 180-second deadline. Full builds, suites, benchmarks and large evidence

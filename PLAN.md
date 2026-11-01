@@ -35,7 +35,12 @@ The candidate now passes native Linux ARM64/AMD64 correctness, ownership and all
 96 count observations. Its largest current-only solve saves 51,143 allocation
 requests and 76,416 effective retains, with lower peak managed memory and no
 larger static frame. [Results and limits](docs/measurements/derivative-forward-costs.md#verified-allocation-and-ownership-results)
-are explicit. Paired timing and the complete production gates remain open.
+are explicit. Three completed timing sessions miss the 5% speed target on the
+one-update case; AMD64 also reports a 2.54% zero-update regression, above the 2%
+limit. Audit their saved observations and finish the second AMD64 session.
+These failed requirements remain unmet; retaining the optimization on allocation
+evidence alone needs an explicit acceptance decision. The complete production
+gates remain open.
 
 Run focused observer controls during implementation. Run native measurements on
 GitHub after the observer is complete, then batch affected checks for any selected
