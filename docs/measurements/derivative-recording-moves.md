@@ -9,7 +9,10 @@ The [tape example](../terminology.md#tape-and-backward-pass) explains recording.
 Recording takes two parent IDs and two local derivative weights. Currently they
 arrive in a record; typed recording retains both weights and the caller later
 releases its copies. For 256 operations that is 512 avoidable retain/release
-pairs when the incoming weights can transfer ownership.
+pairs when the incoming weights can transfer ownership. This is a boundary
+count, not a whole-program count: a caller that keeps or shares a weight still
+needs a separate owner. Report those limits rather than claiming every retain
+in a 256-operation calculation disappears.
 
 Use explicit curried arguments for `ad.push`, `ad.push-owned` and `rev._push`:
 

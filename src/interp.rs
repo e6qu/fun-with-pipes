@@ -539,7 +539,7 @@ impl<'p> Interp<'p> {
                 crate::numerics::with_tape_scope(|| self.apply(a[0].clone(), a[1..].to_vec()))
             }
             "ad.tape-owned" => crate::numerics::tape_owned(&a[0], &a[1]),
-            "ad.push-owned" => crate::numerics::push_owned(a),
+            "ad.push-owned" => crate::numerics::push_owned(&a),
             "ad.backward-owned" => {
                 crate::numerics::backward_owned(&a[0], &a[1], &a[2], |f, values| {
                     self.apply(f, values)
