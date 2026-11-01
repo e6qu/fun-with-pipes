@@ -1,210 +1,154 @@
 # Current work
 
-**Next:** publish the repaired native-call probes and independent evidence audits,
-then check those probes and retain the original/repaired measurements. Next
-verify two numerical sessions per architecture on the integrated compiler and
-run the final production matrix. The user authorized all
-ten steps in [PLAN.md](../PLAN.md), in
-draft [PR #236](https://github.com/e6qu/fun-with-pipes/pull/236).
+**Next:** repair the known-callback regression exposed by strict call stages.
+Retain compiler IR and all O0/O2 cost failures to locate the lost specialization;
+keep the existing limits and constructor trap-order guarantees. Audit remaining
+numerical/allocation jobs and retain their raw evidence. Then finish
+the documentation audit and run the final production matrix for
+[draft PR #236](https://github.com/e6qu/fun-with-pipes/pull/236).
 
-Worktree: `/private/tmp/fwp-returned-callables`; branch `language-design-review`,
-based on main `781ebabb0463efc2f03f0d3aa44b7d2c4766959d`.
+The user authorized all ten steps in [PLAN.md](../PLAN.md), publication and squash
+merge after passing gates. Worktree `/private/tmp/fwp-returned-callables`, branch
+`language-design-review`, base `781ebabb0463efc2f03f0d3aa44b7d2c4766959d`.
 Preserve unrelated changes in the primary checkout. No final production matrix
 has run for this PR; draft production skips are not acceptance.
 
 ## Roadmap status
 
-| Step | Status | Remaining work |
+| Step | Status | Remaining verification |
 |---|---|---|
-| 1 | Implemented | Preserve scope, effects and strict stages through integration |
-| 2 | Implemented | Finish whole-repository documentation audit |
-| 3 | Implemented | Preserve eight named/tacit cost pairs through integration |
-| 4 | Implemented | Preserve alias, failure and zero/one-retain String loops |
-| 5 | Implemented | Preserve four direct-representation probes |
-| 6 | Implemented | Preserve named range/map/filter and eager-stage controls |
-| 7 | In progress | Verify direct numeric array traversal and allocation limits |
-| 8 | In progress | Measure gradient-list savings and full solve/phase costs |
-| 9 | In progress | Original Swift archive retained; allocation attribution remains |
-| 10 | Pending | Integrated applications and final-head production gates |
+| 1 | Implemented | Preserve local names, patterns and strict evaluation in integration |
+| 2 | Implemented | Finish documentation audit and tooling/platform gates |
+| 3 | Implemented | Updated native-call and returned-callable probes |
+| 4 | Implemented | Preserve alias/failure controls and zero/one-retain String loops |
+| 5 | Implemented | Preserve direct scalar record/variant cost limits |
+| 6 | Implemented | Preserve named fusion and eager evaluation order |
+| 7 | In progress | Two numerical sessions per architecture and retained evidence |
+| 8 | In progress | Gradient-list savings, exact results and complete phase observations |
+| 9 | In progress | Same-host observer diagnosis and durable allocation archives |
+| 10 | Pending | Finite application matrix, nine production jobs and documentation |
 
-## Implemented language and ownership changes
+## Current runner work
 
-Strict immutable `let`, single-input `fn`, named match patterns, tuple/record
-destructuring and record shorthand work with explicit captures and monomorphic
-local inference. Macros preserve scope and quote stages. Formatter, editor
-navigation/rename, debugger and notebook dependencies recognize local names.
-Tutorials and the reference introduce each concept before using it.
+All runs below use published source `9d47a5fc` except where an audited historical
+source is explicit. Full source IDs are in GitHub run metadata.
 
-Local bindings expose known calls, immediate record/variant destructuring and
-single-use ranges to existing optimizations. Flat loop fields remain visible to
-ownership analysis; final moves may wait through proved borrows. Named input
-annotations prevent the caller's IO from changing a pure callback parameter.
-Curried stages preserve initializer effects, failures and resource release.
+| Run | Scope | Last observed state |
+|---|---|---|
+| `41256202095` | `lexical-probes`: Linux ARM64/AMD64 GCC, macOS ARM64 Clang | Fails: each dispatch grows with input; escaped composition constructs three closures |
+| `41256205285` | `array-list-measurements`: two sessions per Linux architecture | Running |
+| `41256208614` | `swift-allocations`: native Linux ARM64/AMD64 | AMD64 passes; ARM64 running |
+| `41256218712` | `array-list-report`: original `dc0a6407`, run `41252379702`, session 2 | Fails: output verifier was nested inside collector; now exported and tested |
+| `41256230139` | `array-list-report`: repaired `9a2e954e`, run `41253549233`, session 2 | Same verifier failure; repair ready |
 
-## Published verification
+Do not repeat the unchanged full language corpus while repairing these probes.
+The final production matrix will cover the integrated source. Completed logs are
+saved under `/private/tmp/fwp-236-*.log`; audit every target and diagnostic, not
+just the first failing step. Known deliberate failure controls are expected only
+inside their passing observer tests.
 
-Head `a61addc640793a54f4bef19d4e2110bbc3196a54` passes focused run
-`41251272638` on Linux ARM64/AMD64 GCC and macOS ARM64 Clang. All completed
-targets and compiler diagnostics are audited: no unexpected warnings or failures.
-This includes 54 RC unit tests, eleven REPL cases, all language/ownership targets,
-tutorial programs and source copies, Python tools and the raw interpreter corpus.
-The String loops meet zero/one-retain limits at 0/32/128; the other six new cost
-cases and eight original named/tacit pairs also pass. Counts are not timings.
-Logs: `/private/tmp/fwp-236-a61-{amd,arm,mac}.log`.
+At `9d47a5fc`, all three probe logs are audited. Other call/cleanup tests pass;
+`each-count` dispatch/allocations grow with input and returned composition uses
+three closures (56 bytes) with per-call retains. This is a compiler regression,
+not permission to relax count requirements. Generated C and native observations
+are retained in `41256202095`; the next probe also saves compiler IR and collects
+all O0/O2 cost failures before failing. Both evidence-audit failures share the
+non-exported Python verifier, repaired with an analytic-output corruption test.
+Docs `41256193316` fails because historical generated C was compared with today's
+adapter. The auditor now loads the exact recorded adapter source; its three
+historical/corruption tests pass locally. All failure logs are audited.
 
-Documentation `41251273915` passes. Its deliberate failing-runner controls are
-expected inside passing tests, not hidden failures; full log is
-`/private/tmp/fwp-236-a61-docs.log`. The three failures in `41250023104` are repaired:
-loop field/move visibility, pure callback input inference and an invalid affine
-File fixture (replaced by a shareable socket disposal test). Earlier saved-REPL
-closure, workflow-heading and evidence-reader failures are also repaired.
+## Verified behavior and repaired failures
 
-Swift retention `41251278856` passes all four original audits. Archive
-`docs/measurements/swift-peers-2026-10-31.tar.xz` retains sources, commands,
-reports and binaries from original measured source
-`80a0504a97f7c96291e77be6e8f843d5cb8c7391`, run `41214191081`.
-Its SHA-256 is `8ddb06a630969718322cacd10e3a3472f7e0da1c5da97106b8c0090806604118`.
-The local audit recomputes timings and memory samples without executing binaries.
+At `a61addc6`, focused run `41251272638` passes all three native hosts: language,
+macros, ownership, tooling, tutorial copies, Python integration and raw interpreter
+corpus. Eight named/tacit pairs and eight added cost cases pass. String loops
+meet zero/one-retain limits at 0/32/128. Counts are not timings.
 
-## Numerical candidate and root-cause repair
+At `a33c8ba9`, run `41254567543` passes those language contracts and all
+word/packed numeric-array cost checks at O1/O2, including offset slices, aliases
+and physical cleanup. Its sole failure on each host is a probe that assumes every
+arrow in a function type belongs to one C entry. `9d47a5fc` repairs that helper
+and the returned-callable benchmark adapter to use the compiler's actual stages.
+A saturated constructor may return a function; subsequent inputs call that result.
+The source algorithms and their cost requirements are unchanged.
 
-`src/fuse.rs` directly traverses numeric arrays beneath eligible list map/filter
-and fold stages, retaining actual floating conversions and arithmetic order.
-The [protocol](measurements/array-list-traversal.md) freezes inputs and limits
-before observations. New native probes use dynamic arrays, retained slices,
-packed/word storage and O1/O2. Semantics controls cover rounding/NaNs, aliases,
-eager effects, distinct traps and early stopping. Existing AD ownership and
-precision targets accompany whole-solve measurements on both Linux architectures.
-The first candidate `dc0a6407b5e5aa23517a86db71a3221a418cc7d6` fails the new
-allocation limit. Numerical run `41252379702` session 1 is fully audited on both
-Linux architectures: 33 tests pass, one cost test fails. At length one the mapped
-list saves only 16 bytes; at length 129 it still creates 258 list cells. Retained
-C shows a reversed result followed by the borrowing `reverse` primitive, which
-copies it. Direct folds allocate nothing. Original requirements are unchanged.
+The underlying compiler repair at `a33c8ba9` prevents delayed construction of
+function-valued globals. New raw/native controls require constructor failure
+before a later argument's effect, including aliases and composed constructors.
+Ownership run `41254575615` passes Linux and Intel macOS: 229 unit checks and
+analysis budgets. Docs `41254565452` passes. All completed logs are audited.
 
-Published `9a2e954e` visits a numeric array backward only for list results
-whose callbacks are total/pure and whose captures are scalar. Prepending builds
-the final list directly. Folds and potentially trapping/effectful callbacks keep
-forward order. New cost diagnostics collect both storage modes before failing.
-Focused `41252383957` also fails only the same cost test on all three hosts.
-All completed logs and diagnostics are audited; other targets, tutorials, Python
-tools and the raw corpus pass without unexpected warnings.
-Documentation `41252374022` passes and its completed log is audited. Both original
-session-2 timing jobs in `41252379702` have finished. All six cases pass timing,
-copy, raw-tape, cleanup, code/stack and phase controls; both list forms fail the
-allocation/byte limits in all five updated cases (20 failures per host).
-Both logs are audited. Artifacts: ARM `13062585975`, AMD `13061623214`.
+### Numerical evidence
 
-At `9a2e954e`, numerical run `41253549233` session 1 fails only the list probe on
-both hosts. It now reaches packed slices: the probe frees the view header without
-releasing its backing owner and exits 181 at length 129. Word-array cases pass
-O1/O2 cost limits. The repair published at `a33c8ba9` calls an exported typed array destructor
-for inputs/backing arrays. All word/packed, offset-slice and alias controls now
-pass O1/O2 on Linux ARM64/AMD64 and macOS ARM64. No runtime patch or relaxed
-limit was needed.
-Both numerical logs and focused logs from `41253554264` are audited; other targets
-pass. Both numerical session-2 jobs pass all six frozen budgets; completed logs
-are audited. Session 1 has no timings because its probe failed. Documentation `41253482421` and
-ownership budgets `41253562992` pass; completed logs contain no compiler warnings.
+The [array-list protocol](measurements/array-list-traversal.md) freezes six solve
+cases, allocation limits, two sessions, copy/noise controls, phase measurements
+and code/stack bounds. The final gradient list lies outside runtime phase clocks;
+whole-solve savings are not a forward-recording reduction.
 
+- Original `dc0a6407`, run `41252379702`: both session-2 hosts meet timing,
+  raw-tape, cleanup, phase and code/stack limits but fail twenty allocation/byte
+  limits each. Generated C builds a reversed list and copies it during reversal.
+- `9a2e954e` constructs final-order lists directly for pure, total callbacks
+  with scalar captures. Folds and trapping/effectful callbacks stay forward.
+  Both session-2 hosts in `41253549233` meet all six frozen case budgets.
+- Session 1 instead exposes a packed-view test bug: freeing only its header
+  leaves its backing owner. `a33c8ba9` uses the exported typed array destructor;
+  all three focused hosts now pass. No runtime patch or relaxed limit was needed.
 
-`array-list-measurements` compares the same compiler with numeric array fusion
-explicitly enabled/disabled. It measures six whole-solve cases and six runtime
-phases, including original copy/noise controls. The final gradient list lies
-outside those phase clocks; whole-solve allocation savings cannot be called a
-recording-time reduction. Original D2 and N1/N2 timing requirements remain open.
+Both failed and passing logs are fully audited. Independent
+`check-array-list-evidence.py` recomputes raw totals, medians, ratios, memory,
+phases, ELF text sizes and stack records without executing saved binaries. It
+preserves failed budgets. Its four corruption tests and twelve older derivative
+archive tests pass. Full directory audits and durable raw archives remain pending.
 
-## Swift attribution and remaining review
+### Swift evidence
 
-New `swift-allocations` jobs profile the pipeline and map peers with heaptrack
-on native Linux ARM64/AMD64. They retain exact allocator-stack totals and require
-an independent three-allocation/omitted-release control. fwp's direct-mapped
-managed heap is outside malloc tracking, so its existing managed observer runs
-separately; never call malloc-only bytes complete fwp heap use or add independent
-peaks. Run `41253559042` passes on AMD64, including allocation/release controls.
-ARM64 fails the control because all traces have zero instruction addresses
-(`??` stacks). Both logs are audited. At `a33c8ba9`, run `41254571983` passes both
-architectures with pinned libunwind 1.8.3, including allocation/release controls.
-Standalone direct unwinding also passes with the system library: it does not
-reproduce heaptrack's missing frames. The next observer check runs the full
-heaptrack controls with both libraries on the same host and retains both.
-Unused coredump/ptrace helper libraries emitted upstream implementation warnings;
-their builds are removed. This does not disable allocation stack collection.
-The [protocol](measurements/swift-allocations.md) introduces each metric and the
-actual peer algorithms. Three local damaged-record/unwinder tests pass.
+The original four-session timing archive is retained as
+`docs/measurements/swift-peers-2026-10-31.tar.xz`, SHA-256
+`8ddb06a630969718322cacd10e3a3472f7e0da1c5da97106b8c0090806604118`.
+Retention run `41251278856` audits original source `80a0504a`, run `41214191081`.
 
-Source review found that type-spine arity can delay a saturated top-level function
-constructor. Published `stage_arity` at `a33c8ba9` follows checked aliases, subtracts supplied
-arguments from the constructor's current stage and keeps composition at one input.
-New cases require division by zero before a later argument effect for top-level
-application, pipe application and composition. Raw/native constructor trap-order cases pass on all three focused hosts in
-`41254567543`. Its only failure on each host is the functional-cost probe's old
-assumption that every arrow in a type belongs to one C entry. The repaired helper
-uses the actual construction stage, then consumes returned functions as needed.
-The returned-callable measurement adapter had the same assumption and is repaired
-without changing its source algorithms. Next `lexical-probes` verifies both helpers
-on the three native hosts, without repeating the unchanged full language corpus.
-Ownership `41254575615` passes Linux and Intel macOS, including all 229 unit
-checks and analysis budgets. Docs `41254565452` passes; its deliberate failing-runner
-controls are expected. All focused, Swift, ownership and docs logs are audited
-(`/private/tmp/fwp-236-a33-*.log`); no additional failures remain unexamined.
+[Allocation profiling](measurements/swift-allocations.md) at `a33c8ba9`, run
+`41254571983`, passes independent allocation/omitted-release controls on both
+architectures with explicitly selected libunwind 1.8.3. The previous ARM observer
+recorded no stack addresses. Standalone unwinding also passes with the system
+library, so it does not reproduce that heaptrack defect. The current run compares
+full heaptrack controls with both libraries on each host; there is no automatic
+observer substitution. Unused coredump/ptrace helper builds were removed after
+emitting upstream implementation warnings. All completed logs are audited.
 
-The unpublished `check-array-list-evidence.py` recomputes process totals, medians,
-ratios, profiles, phases, RSS, stack reports and actual ELF instruction-section
-sizes. It preserves failed budgets instead of treating rejected experiments as
-corrupt evidence. New report workflow retains raw files, job identities and logs.
-The first AMD session-2 report is checked in; three corruption tests and all twelve
-older derivative archive tests pass. Full directory audits and durable raw archives
-remain to run on CI. Retain a33 Swift profiles only with their recorded source;
-the next collector adds same-host system heaptrack controls to its format.
+fwp's managed heap uses direct mappings outside heaptrack's allocator boundary.
+Its requests/live storage are reported separately. Never add independent peaks
+or treat malloc-only totals as complete fwp heap use. Individual Swift ARC-operation
+counts remain unmeasured. Current profiles need a durable raw archive after audit.
 
-## Local checks
+## Local checks and delivery
 
-All checks use the unchanged resource guard. No full compiler build ran locally.
-Full builds, suites and benchmarks stay on runners; never raise local limits.
+Use the unchanged resource guard; no full build ran locally. Full builds, suites,
+benchmarks and large archive regeneration remain on GitHub runners.
 
-| Check | Result |
-|---|---|
-| `cargo fmt --all`, `git diff --check` | Pass |
-| Workflow actionlint | Pass |
-| `scripts/test-native-test-runner.py` | 21 pass, including target coverage |
-| Frozen primitive inventory | 394 declarations, 384 symbols, no review symbols |
-| `scripts/check-roadmap.py` | 194 doc link sets, 106 preparation pairs, ten steps pass |
-| Standalone production parser/formatter | 17 tests and tutorial/new fixture round trips pass |
-| Tutorial source copies and library reference generator | Pass |
-| `scripts/test-collection-evidence.py` | Eight pass; new numeric test count included |
-| `scripts/test-descent-budgets.py` | Nine pass, including exact new savings/timing limits |
-| `scripts/test-swift-peer-records.py` | Five pass, including retained archive recomputation |
-| `scripts/test-swift-allocation-records.py` | Three pass, including incomplete-stack, omitted-release and unwinder controls |
+Passed: Rust formatting, diff checks, workflow actionlint, 194 documentation link
+sets/106 preparation anchors/ten plan steps, primitive inventory (394 declarations,
+384 symbols), 21 runner/coverage checks, 17 standalone parser/formatter tests,
+tutorial copies and generated library reference. Evidence tests pass: collection
+8, derivative budgets 9, derivative archives 12, array-list audit 4, Swift timing
+archive 5, Swift allocator/unwinder 3, callable records 5. Standalone syntax tests
+do not verify compiler inference or native behavior.
 
-Standalone harnesses live under `/private/tmp/fwp-236-*`. They use Rust O1 with
-assertions/overflow checks and do not verify inference, lowering or native output.
+After final-head gates pass, squash-merge with an explicit one-line subject of
+at most 80 characters and empty body; verify no trailers or attribution. Keep one
+active PR. A completed PR does not settle the open timing goals below.
 
-## Verified baseline and remaining evidence
+## Maintained guarantees and open limits
 
-The user merged [#235](https://github.com/e6qu/fun-with-pipes/pull/235). Its tree
-`9eda0ac6113d18741d9b0f85c1dcadbba409b2ac` matches tested head
-`adeb9794544cd12deae3f7050fef79cf874a3f55`. Production `41229416050` passes all nine
-jobs; documentation `41229416071` passes. Completed logs are audited. The merge
-subject is one line, 61 characters, with no body/trailers. Duplicate postmerge run
-`41241035081` was cancelled after confirming this identity. Old run `38888712709`
-listed all jobs as finished; GitHub rejected cancellation because it was complete.
+Baseline #235's merged tree `9eda0ac6113d18741d9b0f85c1dcadbba409b2ac` matches
+verified head `adeb9794544cd12deae3f7050fef79cf874a3f55`; production `41229416050`
+passes all nine jobs and docs `41229416071` passes. Logs are audited.
 
-GC removal is verified; broader ARC minimization remains incomplete. The
-[callable measurements](measurements/callable-phases.md) retain all eight passing
-RAM limits and the three original Xeon construction regressions (8.6–16.1%).
-Swift allocation attribution passes ARM64 and AMD64 controls; RSS and native
-allocator calls do not isolate ARC-operation costs.
-The separate paired run `41225841156` has 32 qualified/four short ARM phases and
-19 qualified/17 inconclusive AMD phases on a different CPU. All twelve AMD
-construction phases are too short. Preserve those limits and failures; do not
-retry unchanged experiments or claim the different CPU settles the regression.
-
-D2 derivative timing and N1/N2 kernel timing acceptance remain open. Verified
-count/allocation reductions are independent of those timing failures. No runtime
-patch was justified by the constructor investigation. Follow the ten concrete
-steps in PLAN.md rather than reimplementing completed GC/ARC milestones.
-
-Callable and whole-program Swift raw archives are checked in; their audit
-recomputes original results without executing retained binaries. Earlier APFS deduplication
-recovered about 1.2 GiB without changing any checkout's contents or status.
+GC removal and scoped A1–A6 ARC reductions are verified; broader ARC minimization
+remains incomplete. D2 derivative speed and N1/N2 kernel timing acceptance remain
+open. The [callable study](measurements/callable-phases.md) retains three Xeon
+construction regressions (8.6–16.1%); noisy/short observations on a different CPU
+do not settle them. Retain the [Intel macOS compiler-abort evidence](measurements/compiler-abort.md);
+its root cause is still unknown. Do not resume speculative disassembly-led fixes.

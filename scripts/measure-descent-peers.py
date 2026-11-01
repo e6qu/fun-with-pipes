@@ -32,6 +32,16 @@ BASELINE = importlib.util.module_from_spec(BASELINE_SPEC)
 BASELINE_SPEC.loader.exec_module(BASELINE)
 
 
+def verify(raw, expected, solves):
+    lines = raw.splitlines()
+    assert len(lines) == solves
+    for line in lines:
+        values = json.loads(line)
+        assert len(values) == len(expected)
+        assert all(math.isfinite(a) and math.isclose(a, b, abs_tol=1e-10, rel_tol=1e-10)
+                   for a, b in zip(values, expected)), (values, expected)
+    assert all(line == lines[0] for line in lines), 'repeated solve changed its output'
+
 def digest(data):
     return hashlib.sha256(data).hexdigest()
 
@@ -218,15 +228,6 @@ def main():
         (out / 'build-commands.json').write_text(json.dumps(commands, indent=2) + '\n')
         return result
 
-    def verify(raw, expected, solves):
-        lines = raw.splitlines()
-        assert len(lines) == solves
-        for line in lines:
-            values = json.loads(line)
-            assert len(values) == len(expected)
-            assert all(math.isfinite(a) and math.isclose(a, b, abs_tol=1e-10, rel_tol=1e-10)
-                       for a, b in zip(values, expected)), (values, expected)
-        assert all(line == lines[0] for line in lines), 'repeated solve changed its output'
 
     results = {}
     for case in args.case:

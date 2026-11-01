@@ -211,6 +211,7 @@ int main(int argc, char **argv) {{
             let root = PathBuf::from(root).join("functional");
             std::fs::create_dir_all(&root).unwrap();
             std::fs::write(root.join("functional.fwp"), source).unwrap();
+            std::fs::write(root.join("program.ir"), format!("{program:#?}")).unwrap();
             let prefix = root.join(format!("functional{optimization}"));
             std::fs::write(prefix.with_extension("c"), &code).unwrap();
             prefix
@@ -339,10 +340,12 @@ int main(int argc, char **argv) {{
         ] {
             let small = &observations[&(name.into(), "known".into(), 32)];
             let large = &observations[&(name.into(), "known".into(), 128)];
-            assert_eq!(
-                small[2], large[2],
-                "known callback dispatch grew: {name}: {report}"
-            );
+            if small[2] != large[2] {
+                failures.push(format!(
+                    "{optimization} known callback dispatch grew: {name}: {} -> {}",
+                    small[2], large[2]
+                ));
+            }
             if name != "result" {
                 assert!(
                     observations[&(name.into(), "boundary".into(), 32)][2] > 0,

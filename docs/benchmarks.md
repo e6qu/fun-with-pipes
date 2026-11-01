@@ -90,11 +90,12 @@ same result. Retain every duration/output/status. An identical-copy median ratio
 above 1.02 makes that case/session inconclusive; do not drop it, relax the limit
 or retry unchanged observations. These establish descriptive baselines, not a
 candidate speed budget. Keep three separate peak-RSS runs per ordinary executable.
-Swift/C/Rust allocation and ARC-operation counts are **not yet measured** here.
-Neither elapsed time nor RSS alone attributes overhead to ARC. The separate
-[allocation profile](measurements/swift-allocations.md) adds allocator call stacks
-and exact counts, with fwp managed storage reported separately because it uses
-direct mappings. That profile has no accepted results yet.
+This timing suite does not count allocations or ARC operations. Neither elapsed
+time nor RSS alone attributes overhead to ARC. The separate
+[allocation profile](measurements/swift-allocations.md) measures allocator calls
+and stacks for pipeline/map programs on Linux ARM64/AMD64. It reports fwp managed
+storage separately because it uses direct mappings. Individual ARC-operation
+counts remain unmeasured for the peers.
 
 The same suite compiles a Swift closure factory separately from its caller.
 It checks both scalar operations from the [callable comparison](measurements/returned-callables.md),

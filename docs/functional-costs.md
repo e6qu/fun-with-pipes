@@ -90,7 +90,9 @@ is free. Inputs, phase boundaries and cost limits remain unchanged.
 Seven new cases extend the same probe, with empty-input controls at 0 as well
 as 32 and 128. They return integers, so every temporary owner must be released
 before the call finishes. These are predeclared requirements for roadmap steps
-4–5; observations are pending.
+4–5. All seven meet these limits on Linux ARM64/AMD64 and macOS ARM64
+at `a61addc6` (run `41251272638`). Later staged-call changes require the updated
+native probe described above; final integrated acceptance remains separate.
 
 | Case | Work and required cost |
 |---|---|

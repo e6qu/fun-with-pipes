@@ -1,8 +1,8 @@
 # Reading numeric arrays without a temporary list
 
 This candidate belongs to steps 7–8 of [PLAN.md](../../PLAN.md). One timing session
-per architecture passes; a second session and the repaired packed-slice check
-remain. The [handoff](../development-state.md) records exact source verification.
+per architecture passes, and repaired packed-slice checks pass on three native
+hosts. Two sessions per architecture on the integrated compiler remain. The [handoff](../development-state.md) records exact source verification.
 
 An array stores elements contiguously. A list stores a head and a link to the next
 cell. Converting an array to a list before immediately mapping or folding it can
@@ -117,8 +117,10 @@ At `9a2e954e`, all word-array cases meet the count limits at O1/O2. Packed-array
 verification exposes a probe error at length 129: it physically frees a slice
 header without releasing its backing owner. The repair calls an exported typed
 `Array[F64] -> ()` destructor for both inputs. This is a test ownership repair;
-neither the cleanup assertion nor the allocation limits are relaxed. Full packed
-verification and whole-solve acceptance remain pending.
+neither the cleanup assertion nor the allocation limits are relaxed. At `a33c8ba9`,
+run `41254567543` passes all word/packed cost checks on Linux ARM64/AMD64 and
+macOS ARM64, including offset slices, aliases and cleanup. Whole-solve acceptance
+on the integrated compiler remains pending.
 
 Both session-2 jobs in run `41253549233` pass for `9a2e954e`: all six whole-solve
 cases meet the frozen time, copy, allocation, tape, peak-memory and code/stack

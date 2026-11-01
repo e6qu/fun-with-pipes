@@ -86,8 +86,7 @@ every block-allocation failure, nested/recursive owners and cancellation after
 tree construction. Deliberate extra-count and missing-free controls must fail.
 [wasm_arc](../tests/wasm_arc.rs),
 `wasi_parser_regions_release_blocks_and_keep_links_out_of_count_tables`, checks
-actual WASI allocation and release. Focused Linux/WASI validation passes; full
-platform acceptance is pending. [The report](measurements/parser-workspace.md)
+actual WASI allocation and release. Focused Linux/WASI checks and full #221 platform acceptance pass. [The report](measurements/parser-workspace.md)
 separates node storage from the remaining owned Strings and token list.
 
 ## Remaining relationships with explicit controls

@@ -3,8 +3,9 @@
 The ordinary [Swift comparison](swift-peers.md) measures elapsed time and peak
 resident memory (RSS). RSS includes code, stacks and runtime pages; it cannot
 show how many objects a program allocates. This separate profile answers that
-question at the **native allocator** boundary, with separate fwp managed-heap counters. It has no
-accepted results yet.
+question at the **native allocator** boundary, with separate fwp managed-heap
+counters. Both native architectures pass the observer controls; the results
+below describe allocation traffic, not elapsed time or individual ARC operations.
 
 The Linux profiler [heaptrack](https://github.com/KDE/heaptrack) records allocation
 calls and their call stacks. Swift's [allocation guide](https://www.swift.org/documentation/server/guides/allocations.html)

@@ -38,6 +38,17 @@ class Evidence(unittest.TestCase):
             with self.subTest(changed=changed), self.assertRaises(AssertionError):
                 CHECK.GROUPS.check_report(report, SOURCE, 'array-lists')
 
+    def test_repeated_outputs_match_the_analytic_oracle(self):
+        expected = REPORT['results']['3-1']['oracle']
+        output = (json.dumps(expected) + '\n').encode() * 2
+        CHECK.GROUPS.DESCENT.verify(output, expected, 2)
+        wrong = [expected[0] + 1, *expected[1:]]
+        for changed in (b'', output[:-1].splitlines()[0],
+                        (json.dumps(wrong) + '\n').encode() * 2,
+                        b'[NaN, 0, 0]\n' * 2):
+            with self.subTest(changed=changed), self.assertRaises(AssertionError):
+                CHECK.GROUPS.DESCENT.verify(changed, expected, 2)
+
     def test_round_recomputes_totals_and_rejects_bad_process_observations(self):
         record = dict(complete=True, order=['a', 'b', 'a'], totalsNs=dict(a=8, b=4), observations=[
             dict(label=label, elapsedNs=4, status=0, stdoutSha256=label,

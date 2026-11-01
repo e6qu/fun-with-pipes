@@ -109,10 +109,10 @@ unchanged result transfers that same owner, without an extra retain/release pair
 A changed result reuses eligible unique storage or owns a copy and releases the
 consumed source.
 
-ASCII case conversion can change uniquely owned storage in place. Tracing mode
-also requires that storage to be young (not yet preserved by a collection);
-reuse verification forces a copy. Shared strings copy, preserving every older
-value. Changed trim and replacement results use separate storage.
+ASCII case conversion can change uniquely owned storage in place; the
+reuse-verification control forces a copy. Shared strings copy, preserving aliases.
+Changed trim results use separate storage. Replacement can reuse unique storage
+when its result cannot grow; otherwise it allocates the changed result.
 ASCII case conversion returns the source when no relevant ASCII letter changes;
 trim returns it when no boundary whitespace is removed. Replacement returns it
 for an empty pattern, equal pattern/replacement or no occurrence. Embedded NUL

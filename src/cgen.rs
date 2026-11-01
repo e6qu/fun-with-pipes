@@ -4728,8 +4728,8 @@ impl<'g, 'p> FnGen<'g, 'p> {
         }
         let t = self.locals[x as usize].clone();
         let d = self.typed_drop(&t).unwrap_or_else(|| "fwp_rc_drop".into());
-        // The token no longer owns any fields, including scalar words that
-        // could look like reused young addresses to conservative tracing.
+        // The token owns only the outer cell. Clear retired field values
+        // while that cell awaits reuse or cleanup.
         self.line(&format!(
             "    memset(OBJ(l{x})->f, 0, {} * sizeof(V));",
             tys.len()
