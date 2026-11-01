@@ -61,6 +61,18 @@ Closing a queue does not discard its messages,
 and receiving transfers the queued owner. Dropping the last owner releases any
 messages that remain; no implicit drain operation is added.
 
+### Draw the ownership direction
+
+```mermaid
+flowchart LR
+    R["routing queue"] -->|owns queued message| I["inbox"]
+    I -->|owns queued message| N["integer 42"]
+```
+
+There is no arrow back from `42` to either queue. Receiving the inbox transfers
+its queued owner to the receiver. The two `Some` constructors in
+`Some (Some 42)` come from receiving a queue, then receiving its integer.
+
 ## Sending a function through a channel
 
 The local `callbacks` value is a queue for functions of type `I64 -> I64`. The partial
@@ -84,10 +96,13 @@ permits immutable captures, including strings, containers and other proved
 functions. The compiler also admits shared socket handles (`UdpSocket`,
 `Listener`, `Conn`): they cannot own a queue or callback. The
 [socket example and validation status](../../ownership.md#functions-stored-in-channels)
-explain their lifetime and current checks. Known data-only channels and task computations can also pass when their
+explain their lifetime and current checks.
+
+Known data-only channels and task computations can also pass when their
 captures and results cannot lead back to the queue. Unknown producers and
 unproved HTTP/2 stream contexts remain rejected. Files have a separate single-use rule that forbids
 capturing them in reusable functions; pass a file as the last argument instead.
+
 A function using State
 or autodiff must still run inside the required scope after it is received; sending
 it does not preserve a sender's temporary scope. See the

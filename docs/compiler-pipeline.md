@@ -7,6 +7,20 @@ for a runnable macro example. An **AST** is a tree of source expressions; an
 
 ## Compilation order
 
+```mermaid
+flowchart TD
+    S["Source and imports"] --> L["Lex: tokens"] --> P["Parse: expression trees"]
+    P --> M["Expand macros"] --> T["Resolve and check types/effects"]
+    M --> MC["Check and interpret macro implementations"] --> M
+    T --> I["Specialize and lower; evaluate comptime"]
+    I --> R["Preserve resource lifetimes"] --> O["Optimize"]
+    O --> E["Check entry lifetimes; interpret"]
+    O --> C["Choose storage; insert ownership; emit C"]
+    C --> N["C compiler and linker: executable"]
+```
+
+The arrows show stage order; the table identifies the responsible source files.
+
 | Stage | Input → output | Implementation |
 |---|---|---|
 | Load | Main file, imports and bundled library → source modules | `src/driver.rs` |
@@ -39,17 +53,22 @@ Setting `FWP_NO_OPT=1` skips the optimization stages listed above; it does not s
 parsing, expansion, type checking, lowering or resource preservation. Native
 ownership lowering is separate. Unset `FWP_NO_OPT` to enable optimization:
 its presence disables the passes, even with a value of `0`. Debug builds also validate local types after
-passes and check inserted reference operations. The interpreter uses Rust-owned
+passes and check inserted reference operations.
+
+The interpreter uses Rust-owned
 values rather than executing the generated C reference-count machinery.
 Public interpreter entries now check queue/State/autodiff lifetimes before
 language effects, using the same proof as native ARC. Successful checks are
 cached per entry in the immutable program; unreachable definitions are not roots.
+
 This entry check passed [G5 verification](roadmap-history.md#tracing-gc-removal-pr-217).
 Direct-call borrowing changes who keeps an argument alive during a call, without
 changing its source type. Its proof runs before reference operations are inserted;
 [the ownership design](design.md#ownership-implementation) explains the limits.
 Before either step, `src/cgen/scalar_text.rs` removes eligible temporary integer
-displays used only by printing or character counting. It preserves the scalar
+displays used only by printing or character counting.
+
+It preserves the scalar
 inputs and their evaluation order; [the text lowering rules](design.md#measuring-integer-text-without-building-it)
 explain which expressions qualify.
 
@@ -74,7 +93,9 @@ In LL terminology, the first L means reading left to right and the second means
 constructing a leftmost derivation: expand the leftmost unfinished grammar rule.
 The number in LL(k) is the allowed token lookahead. FIRST/FOLLOW sets describe
 which tokens can begin a rule or follow it; proving their required separations
-would be part of a formal predictive-grammar argument. LR instead constructs a
+would be part of a formal predictive-grammar argument.
+
+LR instead constructs a
 rightmost derivation in reverse, combining recognized pieces from the bottom up.
 PEGs use prioritized alternatives; packrat is a memoized implementation technique.
 Their absence here is a description of the code, not a claim that those parser
@@ -142,7 +163,9 @@ a quoted text format of its own, separate from fwp source syntax.
 `2 + 3 * 4 | echo` groups as `(2 + (3 * 4)) | echo` and prints `14`.
 `20 - 6 - 2` groups as `(20 - 6) - 2` and gives `12`. In
 `operator_expr(min_precedence)`, the right operand uses `precedence + 1`; that is
-what makes equal-precedence arithmetic associate left. At the comparison level,
+what makes equal-precedence arithmetic associate left.
+
+At the comparison level,
 a second comparison produces a diagnostic unless parentheses already grouped
 an operand. Thus `1 + 2 == 3 | echo` prints `True`, but `1 < 2 < 3` is rejected.
 This adds a fixed precedence level and six tokens; no backtracking or type-driven
@@ -157,7 +180,9 @@ the token grammar or introduce new operators.
 `fn`, `let` and `in` are reserved tokens. Their fixed delimiters keep parsing
 predictive: `in` ends the initializer; the body uses the ordinary expression
 parser. Nested lets consume their own `in` first. No symbol table, type query,
-backtracking or new arithmetic precedence level is needed. A named pattern is
+backtracking or new arithmetic precedence level is needed.
+
+A named pattern is
 recognized by its lowercase token; constructors retain uppercase tokens.
 Duplicate names and refutable fn/let patterns are rejected. The type checker
 repeats these admission rules for macro-generated trees, which bypass parsing. The
@@ -242,16 +267,21 @@ Quoted names that resolve in the definition module become fully qualified names.
 Quoted lexical binders carry private identities and expansion assigns fresh
 identities to introduced bindings. Spliced argument names retain their caller
 spelling and are excluded from binder renaming. This prevents an introduced
-`let x` from capturing the caller's unrelated `x`. Manually constructing `SName`
+`let x` from capturing the caller's unrelated `x`.
+
+Manually constructing `SName`
 values or unresolved quoted names still requests spelling-based resolution.
 `SLet`, `SLambda`, `PName`, `PRecord` and `PIgnore` represent the added forms;
 `PHole` retains match forwarding. A non-positional splice is evaluated once when the template is constructed;
-its Syntax result becomes an explicit capture before the hole parameters. Template
+its Syntax result becomes an explicit capture before the hole parameters.
+
+Template
 invocation supplies placeholders without repeating those computations. Hole
 indices are integer literals 0–63. `SQuote` preserves a nested quote as syntax:
 its placeholders and unquotes belong to that later evaluation stage. Hygiene
 tracks separate binder scopes per quote, returning to the surrounding scope
 inside an unquote.
+
 `SOther` represents syntax through validated source text; decoding reparses it
 with the same expression parser. `SFloat` carries decimal text rather than F64.
 

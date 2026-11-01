@@ -89,11 +89,14 @@ forbids program standard input; pass a path to supply it. `timeout=30` bounds ea
 protocol read to 30 seconds. The context manager closes and reaps the debugger
 process. `on` registers a
 Python callback; `trace` selects which execution events the interpreter emits.
+
 The example gathers typed expression results after stopping in `square`.
 `call`/`return` mark function boundaries, `expression` marks an internal operation
 about to run, `value` contains a completed source expression's result, and `bind`
 records a local slot being assigned. Output, stops and completion have their own
-events. Each execution event identifies its task, function, call depth and source
+events.
+
+Each execution event identifies its task, function, call depth and source
 location when available. Capturing every expression has time and output costs;
 select the events needed for a measurement.
 
@@ -179,13 +182,17 @@ The example allows 180 seconds per subprocess. The third `Target` argument
 selects fwp's C generation target: `"native"` for the host, or a supported Linux
 triple. C is generated separately for each target.
 With Clang, supply `triple=...` to select its target. `triple=None` uses the
-selected compiler's target, as in the cross-GCC examples. A **sysroot** supplies
+selected compiler's target, as in the cross-GCC examples.
+
+A **sysroot** supplies
 the target's headers and libraries; pass its path or explicitly use `sysroot=None`
 to use the selected compiler's header search configuration. Missing toolchains or
 headers fail explicitly; the tool does not substitute another architecture.
 `O0` disables C optimization; `O1`, `O2` and `O3` select the compiler's increasing
 optimization levels. fwp's own earlier optimization passes are the same in each
-variant. You can also request `Os`, `Oz` or `Og` when the selected C compiler
+variant.
+
+You can also request `Os`, `Oz` or `Og` when the selected C compiler
 supports them; unsupported flags report an error. An instruction can correspond to several C operations after inlining or
 other transformations; debug line tables are associations, not a one-to-one proof.
 

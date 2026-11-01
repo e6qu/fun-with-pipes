@@ -11,7 +11,8 @@ input; the shell pipe connects it to the executable. The function `scale` takes
 the multiplier first, so `./scale 10` multiplies each input line by ten.
 
 Every exported function can be compiled into a standalone executable.
-The examples on this page use `examples/shell/tools.fwp`, which contains:
+The examples on this page use `examples/shell/tools.fwp`. From the repository
+root, run `cd examples/shell` before the commands below. That file contains:
 
 ```
 export scale : I64 -> I64 -> I64
@@ -86,7 +87,9 @@ The stream has a header, zero or more value frames and an end marker. A frame
 contains a kind and length, so the reader knows where its payload ends. In the
 notation below, `u8` is one unsigned byte, `u32le` is a four-byte unsigned integer
 in least-significant-byte-first order, and LEB128 is a variable-length integer
-encoding with seven value bits per byte. `utf8` is Unicode text encoded as bytes.
+encoding with seven value bits per byte.
+
+`utf8` is Unicode text encoded as bytes.
 The fingerprint is a compact identity of the type description, not an encryption
 or authentication check. `PIPE_V1` names the transport family; `version = 2`
 names the current value encoding.
@@ -194,7 +197,9 @@ A futex is a Linux wait/wake mechanism used when spinning would waste CPU.
 The ring has one producer and one consumer without locks: a 4096-byte
 header (the `FWPS` magic, version 1, the capacity of 1 MiB, the bytes
 written and read so far on separate cache lines, and a futex word with a
-waiting flag for each direction) followed by the data. A side that finds
+waiting flag for each direction) followed by the data.
+
+A side that finds
 the ring empty (or full) spins for up to 50 µs (yielding the processor
 now and then, in case the other side waits for it), then sleeps on the futex;
 the other side wakes it only when it is sleeping, so a busy stream needs
@@ -205,11 +210,14 @@ Producers check for a consumer at most once a millisecond (when they
 flush, and every 64 frames), and stop offering after 5 seconds, so a
 stream that a consumer does not ask to move stays on the pipe. The probing
 still has a cost; this is not a measured zero-overhead guarantee.
+
 With `FWP_TRANSPORT_WAIT=ms` the producer waits that long after its
 header for the consumer to ask, so that the whole stream moves; `fwp pipe`
 sets it, since all its stages are fwp programs. Other readers of the pipe
 (`xxd`, a file, an older fwp) get the stream unchanged on the pipe:
-nobody connects. A producer also enlarges its stdout pipe to 1 MiB where
+nobody connects.
+
+A producer also enlarges its stdout pipe to 1 MiB where
 the system allows. Elsewhere than on Linux, and on WebAssembly, streams
 stay on the pipe.
 

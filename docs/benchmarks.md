@@ -5,16 +5,35 @@ no single number for “fwp overhead.” A report must say whether it compares f
 with handwritten Swift/C/Rust, two versions of fwp, or one isolated runtime operation.
 A faster new fwp build does not establish parity with another language.
 
+## Read a result
+
+| If the table says… | It establishes… | It does not establish… |
+|---|---|---|
+| fwp 12 ms; C 10 ms | fwp takes 1.2× the time, or 20% extra, for this case | A universal 20% language overhead |
+| 256 fewer allocations | 256 allocation requests were eliminated | A measured speedup or lower peak memory |
+| Zero final managed bytes | The observed managed storage was released | Zero process RAM, stack or runtime cache |
+| An identical copy varies beyond the limit | This timing session is inconclusive | Permission to discard the result and retry for a pass |
+
+Each report should answer: **which implementations, which input, what timed work,
+which host/toolchain, and what difference in behavior or algorithm?** Detailed
+[measurement terms](terminology.md#tests-and-measurements) explain ratios and memory.
+
 ## PR 233 whole-program baseline
 
-PR #233's [production benchmark job](https://github.com/e6qu/fun-with-pipes/actions/runs/41174213818/job/124458289963)
-measures `fd19b9e4`, whose tree matches merged `73a6b20d`. Host: Linux AMD64,
-AMD EPYC 7763, four available CPUs; GCC 15.2.0, Rust 1.99.1; C/fwp O2 and Rust
-optimized, no fwp LTO. One warmup and six rotated runs measure whole processes,
-including startup, construction, computation, output and cleanup. Compilation is
-excluded. These are a **single CI snapshot**, without identical-code controls or
-a second session. They are observations, not stable speed guarantees or an
-estimate of language-wide overhead. Detailed inputs are [below](#what-each-program-actually-does).
+Source: `fd19b9e4`, same tree as merged `73a6b20d`;
+[production job](https://github.com/e6qu/fun-with-pipes/actions/runs/41174213818/job/124458289963).
+
+| Setting | Recorded value |
+|---|---|
+| Host | Linux AMD64, AMD EPYC 7763, four available CPUs |
+| Compilers | GCC 15.2.0, Rust 1.99.1; C/fwp O2, Rust optimized, no fwp LTO |
+| Samples | One warmup, six rotated measured runs |
+| Timed | Whole process: startup, construction, computation, output, cleanup |
+| Excluded | Compilation |
+| Qualification | One CI snapshot; no identical-code controls or second session |
+
+These observations are not stable speed guarantees or language-wide overhead.
+Inputs and implementation differences are [below](#what-each-program-actually-does).
 
 | Program | C ms | Rust ms | fwp ms | fwp extra time vs C / Rust |
 |---|---:|---:|---:|---:|
@@ -48,7 +67,9 @@ Separate fwp profiles report zero managed requests/retains for Fibonacci, loop,
 pipeline and both character-count programs. The map makes four requests totaling
 24,000,032 bytes, peaks at 16,000,008 charged bytes and performs one retain. The
 set makes one 8,000,008-byte request with no retains. All seven finish with zero
-managed charge; deliberate leaks are detected. These counters exclude raw runtime
+managed charge; deliberate leaks are detected.
+
+These counters exclude raw runtime
 buffers, stacks and allocator metadata. **Allocated bytes over time, live payload,
 resident RAM and reserved virtual addresses are different measurements.** The
 [buffer report](measurements/unique-buffer-peers.md#process-memory-and-virtual-reservations)
@@ -77,36 +98,47 @@ The first `swift-peers` suite compares all seven programs on native Linux ARM64
 and AMD64, in two independent sessions per architecture. It uses the official
 `swift:6.4.2-noble` container, Swift language mode 6, `-O` and whole-module
 optimization, checked arithmetic, and explicit native targets. Never use
-`-Ounchecked`. C and generated fwp C use GCC O2, disabled floating contraction,
+`-Ounchecked`.
+
+C and generated fwp C use GCC O2, disabled floating contraction,
 no fast math or LTO; Rust uses optimized builds without LTO. Retain actual CPU,
 compiler/target versions, dynamic libraries, sources, generated C and executables.
 Compare sessions only when host/toolchain identities match. Container runtime
 startup is outside the process timer; each program's runtime startup is inside.
 
-Before measurement, freeze this protocol: two warmup rounds, then 24 measured
-rounds of eight labels (each language and its byte-identical copy). Eight-round
-blocks balance positions and preceding programs. Every process must return the
-same result. Retain every duration/output/status. An identical-copy median ratio
-above 1.02 makes that case/session inconclusive; do not drop it, relax the limit
-or retry unchanged observations. These establish descriptive baselines, not a
-candidate speed budget. Keep three separate peak-RSS runs per ordinary executable.
-This timing suite does not count allocations or ARC operations. Neither elapsed
-time nor RSS alone attributes overhead to ARC. The separate
-[allocation profile](measurements/swift-allocations.md) measures allocator calls
-and stacks for pipeline/map programs on Linux ARM64/AMD64. It reports fwp managed
-storage separately because it uses direct mappings. Individual ARC-operation
-counts remain unmeasured for the peers.
+The frozen sampling rules are:
+
+| Setting | Requirement |
+|---|---|
+| Warmups | Two rounds |
+| Measured rounds | 24; eight labels (four languages and their byte-identical copies) |
+| Ordering | Eight-round blocks balance positions and preceding programs |
+| Correctness | Same result from every process; retain all durations, outputs and statuses |
+| Copy-control limit | Median ratio above 1.02 makes the case/session inconclusive |
+| Process memory | Three separate peak-RSS runs per ordinary executable |
+
+Do not discard failures, relax limits or retry unchanged observations for a pass.
+These are descriptive baselines, not a candidate speed budget. Timing/RSS cannot
+attribute overhead to ARC. The separate [allocation profile](measurements/swift-allocations.md)
+measures pipeline/map allocator calls and stacks on both Linux architectures;
+fwp's direct mappings have separate managed-storage counters. Individual peer
+ARC operations remain unmeasured.
 
 The same suite compiles a Swift closure factory separately from its caller.
 It checks both scalar operations from the [callable comparison](measurements/returned-callables.md),
 counts 0/1/16/4,096, checked-overflow cases, actual native binaries and Swift's
 optimized intermediate code. A separate reference-capture control verifies normal
-release and deliberately retained ownership. It does not fabricate allocation
-counts for the scalar closure. Swift callable phase timing, allocation/count
-instrumentation, weak subscriptions and parser/numerical peers remain required
-before broader ownership or numerical parity claims. **The [first four sessions and their artifact audit](measurements/swift-peers.md)
+release and deliberately retained ownership.
+
+It does not fabricate allocation
+counts for the scalar closure. [Callable phase timings](measurements/callable-phases.md) now exist, with the
+original regressions retained. Scalar-closure allocation/count instrumentation,
+weak subscriptions and parser/numerical peers still lack the evidence needed
+for broader ownership or numerical parity claims. **The [first four sessions and their artifact audit](measurements/swift-peers.md)
 are complete.** Five ARM64 cases pass both sessions’ noise controls; map and
-pipeline do not. The two AMD64 sessions use different CPU models and cannot
+pipeline do not.
+
+The two AMD64 sessions use different CPU models and cannot
 establish repeated-host results. All observations remain recorded. The `swift-peer-report`
 workflow rechecks a completed run and prints timing/RSS rows without executing
 its binaries; supply the explicit evidence run and full measured source commit.
@@ -154,7 +186,7 @@ that still needs a new measurement run.
 
 ## Planned ownership comparisons
 
-These comparisons belong to [the measurement plan](../PLAN.md#9-measurements). Compiler improvements and their ownership
+These comparisons belong to [the measurement plan](../PLAN.md). Compiler improvements and their ownership
 checks already exist; the table identifies which peer comparisons still need
 work. The [ownership direction](gc-removal-design.md) explains the lifetime rules.
 
@@ -224,7 +256,9 @@ Each directory in [`bench/`](../bench) contains `main.fwp`, `main.c` and
 `main.rs`. The programs must print the same result. The runner builds native
 executables with `fwp build -O2`, the explicitly selected `CC -std=c11 -O2 -ffp-contract=off`,
 and `rustc --edition=2021 -O`. Native fwp uses counted ownership; there is no
-tracing mode. `CC` must name the compiler and `FWP_LTO=0`
+tracing mode.
+
+`CC` must name the compiler and `FWP_LTO=0`
 keeps generated C in one source file without link-time optimization.
 After one warmup per executable, it measures six runs each and reports the median: the average of
 the two middle times after sorting. Execution order rotates C/Rust/fwp,
@@ -235,11 +269,14 @@ The clock covers **process startup, input construction, calculation, allocation
 and printing**. It excludes compilation. It is not a measurement of just the
 inner calculation, startup alone or peak memory. The report separately records
 one compilation time and the executable file size for each implementation.
+
 Compilation includes tool startup and linking; it excludes building the fwp
 compiler itself. Binary sizes include differing runtime and linking choices.
 The report names its memory mode and build flags. Older snapshots may use
 tracing; they are not checked-ARC measurements and do not become such when the
-runner changes. Do not infer an ARC speedup from different runs or hosts.
+runner changes.
+
+Do not infer an ARC speedup from different runs or hosts.
 ARC means automatic reference counting, which releases objects when their last
 owning reference disappears.
 
@@ -255,7 +292,9 @@ Production benchmarks and the focused `benchmark-comparison` suite also measure
 peak process memory with
 GNU time in three separate runs of each actual timed executable. Separate fwp
 binaries count managed allocations, retain operations and charged live storage;
-these exclude raw buffers, stack storage and allocator metadata. Each instrumented
+these exclude raw buffers, stack storage and allocator metadata.
+
+Each instrumented
 program is paired with an intentional unreleased allocation that the observer
 must detect. Their timings are not used. Saved C, binaries, observations and
 stack reports permit inspection; those stack reports describe the instrumented
@@ -376,7 +415,9 @@ A *control* is a deliberately changed implementation used for comparison. For
 example, disabling one optimization in the current compiler isolates that
 optimization better than comparing unrelated compiler releases. It still does
 not reproduce every cost of an earlier release.
-Process resident memory (RSS) includes more than managed values. It can include
+Process resident memory (RSS) includes more than managed values.
+
+It can include
 stacks, allocator pages, native buffers and loaded libraries; reserved virtual
 address space is another quantity again. A decrease in managed charge does not
 imply the same decrease in RSS. `0` collections does not prove collector code
@@ -412,7 +453,9 @@ summary. The `benchmark-comparison` focused suite runs this checked-ARC comparis
 on native Linux AMD64/ARM64 with GCC. Both it and production CI inspect the actual
 C/Rust/fwp binaries with the [binary reviewer](../scripts/inspect-benchmark-binaries.py),
 check input hashes and timing summaries, and require checked-ARC
-fwp images to exclude tracing scans. The inspection does not execute downloaded
+fwp images to exclude tracing scans.
+
+The inspection does not execute downloaded
 binaries or turn these descriptive timings into a speed guarantee.
 [Corruption controls](../scripts/test-benchmark-evidence.py) must reject a wrong
 memory label, wrong machine architecture, object file and missing timing sample. For remote reproduction, push the source branch and dispatch the appropriate
@@ -426,7 +469,9 @@ Record the resulting run URL and full source SHA. Confirm the run actually used
 that SHA and all required native jobs completed. Download its artifacts; preserve
 raw samples, source inputs, compiler commands, generated C and measured binaries.
 The report's `source`/`source_revision` (some use `compilerSource`) identifies
-code; `run`/`run_url` identifies evidence. Host entries contain the environment,
+code; `run`/`run_url` identifies evidence.
+
+Host entries contain the environment,
 variants and samples. Schemas differ by suite; use its collector's `--help` and
 supply the exact run/head rather than guessing the baseline. Run collectors
 locally through `python3 scripts/local-guard.py`; compilation and benchmarking

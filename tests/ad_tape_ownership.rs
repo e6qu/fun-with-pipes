@@ -337,3 +337,143 @@ fn scalar_recording_arguments_use_stack_storage_without_retaining_the_record() {
         }
     }
 }
+
+#[test]
+fn typed_recording_borrows_the_outer_record_and_keeps_weight_owners() {
+    let scratch = Scratch::new("typed-recording");
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    for (name, ty, one, zero) in [
+        ("quad", "F128", "1.0f128", "0.0f128"),
+        ("nested", "Rev[F64]", "(rev.const 1.0)", "(rev.const 0.0)"),
+    ] {
+        let input = scratch.0.join(format!("{name}.fwp"));
+        let source = include_str!("fixtures/ad_typed_recording.fwp")
+            .replace("WEIGHT_TYPE", ty)
+            .replace("WEIGHT_ONE", one)
+            .replace("WEIGHT_ZERO", zero);
+        std::fs::write(&input, source).unwrap();
+        let reference = checked(
+            Command::new(compiler)
+                .env("FWP_NO_OPT", "1")
+                .args(["run", "--interp"])
+                .arg(&input),
+        );
+        assert_eq!(reference.stdout, b"True\n");
+        assert!(reference.stderr.is_empty());
+        for (stack, expected_records) in [("0", 256), ("1", 0)] {
+            let cfile = scratch.0.join(format!("{name}-{stack}.c"));
+            checked(
+                Command::new(compiler)
+                    .env_remove("FWP_NO_OPT")
+                    .env("FWP_STACK", stack)
+                    .args(["build", "--memory", "dynamic", "--emit-c"])
+                    .arg(&input)
+                    .arg("-o")
+                    .arg(&cfile),
+            );
+            let mut code = std::fs::read_to_string(cfile).unwrap();
+            let entry = "static V fwp_p_ad_push_owned(V tuple, const fwp_desc *elem) {";
+            assert_eq!(code.matches(entry).count(), 1);
+            code = code.replace(entry, &format!("static unsigned typed_calls, typed_heap_records;\n{entry}\n    typed_calls++;\n    size_t chunk;\n    if (fwp_heap_chunk_of((uintptr_t)tuple, &chunk)) typed_heap_records++;"));
+            let observation = "    /* Ownership observation point: before runtime teardown. */";
+            assert_eq!(code.matches(observation).count(), 1);
+            code = code.replace(
+                observation,
+                &format!(
+                    r#"{observation}
+    fprintf(stderr,"typed recording: %u calls, %u heap records\n",typed_calls,typed_heap_records);
+    fprintf(stderr,"typed memory: process peak charged %zu, cumulative charged %.0f, final charged %zu\n",fwp_heap.peak,fwp_heap.total_alloc,fwp_heap.live);
+    if (typed_calls != 256 || typed_heap_records != {expected_records}) exit(211);
+    if (fwp_owned_tapes || fwp_heap.live || fwp_heap.rc_wide_len) exit(212);
+    for (int64_t i=0;i<fwp_ntapes;i++) if (fwp_tapes[i].live) exit(213);
+"#
+                ),
+            );
+            for opt in ["-O1", "-O2"] {
+                let executable = scratch.0.join(format!("{name}-{stack}{opt}.exe"));
+                fwp::cgen::compile_c(&code, &executable, opt).unwrap();
+                for workspace in ["0", "1"] {
+                    let output = Command::new(&executable)
+                        .env("FWP_AD_WORKSPACE", workspace)
+                        .output()
+                        .unwrap();
+                    let label = format!("typed-{name}-stack{stack}{opt}-workspace{workspace}");
+                    record_probe::save("ad_tape_ownership", &label, &code, &executable, &output);
+                    assert!(output.status.success(), "{label}: {output:?}");
+                    assert_eq!(output.stdout, reference.stdout, "{label}");
+                    let stderr = String::from_utf8(output.stderr)
+                        .unwrap()
+                        .replace("\r\n", "\n");
+                    let lines = stderr.lines().collect::<Vec<_>>();
+                    assert_eq!(lines.len(), 2);
+                    assert_eq!(
+                        lines[0],
+                        format!("typed recording: 256 calls, {expected_records} heap records")
+                    );
+                    assert!(lines[1].starts_with("typed memory: process peak charged "));
+                    assert!(lines[1].ends_with(", final charged 0"));
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn typed_adjoints_borrow_zero_and_transfer_results_without_extra_owners() {
+    let scratch = Scratch::new("typed-adjoints");
+    let input = scratch.0.join("runtime.fwp");
+    let cfile = scratch.0.join("runtime.c");
+    std::fs::write(&input, "main = echo \"runtime\"\n").unwrap();
+    checked(
+        Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .env_remove("FWP_NO_OPT")
+            .env("FWP_STACK", "1")
+            .args(["build", "--memory", "dynamic", "--emit-c"])
+            .arg(&input)
+            .arg("-o")
+            .arg(&cfile),
+    );
+    let mut code = std::fs::read_to_string(cfile).unwrap();
+    for (marker, replacement) in [
+        ("static V fwp_p_ad_backward_owned(V base, V outs, V seeds, const fwp_desc *list_type) {",
+            "static void typed_begin(int);\nstatic V fwp_p_ad_backward_owned(V base, V outs, V seeds, const fwp_desc *list_type) {"),
+        ("    /* The tape owns zero until all slots and result transfers are finished. */",
+            "    typed_begin(1);\n    /* The tape owns zero until all slots and result transfers are finished. */"),
+        ("    V output_cursor = outs, seed_cursor = seeds;", "    typed_begin(0);\n    V output_cursor = outs, seed_cursor = seeds;"),
+        ("    for (int64_t i = tp.leaves; i; i--) {", "    typed_begin(2);\n    for (int64_t i = tp.leaves; i; i--) {"),
+        ("    fwp_cleanup_pop(&result_cleanup);\n    fwp_cleanup_pop(&value_cleanup);", "    typed_begin(0);\n    fwp_cleanup_pop(&result_cleanup);\n    fwp_cleanup_pop(&value_cleanup);"),
+        ("int main(int argc, char **argv)", "int original_main(int argc, char **argv)"),
+    ] {
+        assert_eq!(code.matches(marker).count(), 1, "{marker}");
+        code = code.replace(marker, replacement);
+    }
+    code.push_str(include_str!("fixtures/ad_typed_owners_probe.c"));
+    let extra_result = "        result.value = fwp_rc_fresh(fwp_cons(value, result.value));\n        fwp_cleanup_pop(&input_cleanup);";
+    let zero_drop = "if (owner->adj[i] != owner->zero) owner->elem->drop(owner->adj[i]);";
+    assert_eq!(code.matches(extra_result).count(), 1);
+    assert_eq!(code.matches(zero_drop).count(), 1);
+    let cases = [
+        ("owners", code.clone(), 0),
+        ("extra-owner", code.replace(extra_result, &format!("{extra_result}\n        typed_begin(0); owner->elem->dup(value); typed_begin(2);")), 188),
+        ("drop-borrowed-zero", code.replace(zero_drop, "owner->elem->drop(owner->adj[i]);"), 187),
+    ];
+    for opt in ["-O1", "-O2"] {
+        for (name, source, expected) in &cases {
+            let executable = scratch.0.join(format!("{name}{opt}.exe"));
+            fwp::cgen::compile_c(source, &executable, opt).unwrap();
+            for workspace in ["0", "1"] {
+                let output = Command::new(&executable)
+                    .env("FWP_AD_WORKSPACE", workspace)
+                    .output()
+                    .unwrap();
+                let label = format!("typed-{name}{opt}-workspace{workspace}");
+                record_probe::save("ad_tape_ownership", &label, source, &executable, &output);
+                assert_eq!(output.status.code(), Some(*expected), "{label}: {output:?}");
+                if *expected == 0 {
+                    assert_eq!(String::from_utf8_lossy(&output.stdout).lines().count(), 6);
+                    assert!(output.stderr.is_empty());
+                }
+            }
+        }
+    }
+}

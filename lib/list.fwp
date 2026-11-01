@@ -1,11 +1,13 @@
-# Lists. Functions take the list last so they compose with `|`.
+# Lists are ordered sequences, such as `[1, 2, 3]`. Functions take the list last.
 #
-# A list is an ordered sequence written `[1, 2, 3]`. `map` transforms each
-# item, `filter` keeps items satisfying a predicate (a Boolean-valued function),
-# and `fold` combines items with an accumulator (the running result).
-# For example, `[1, 2, 3] | map (add 1)` gives `[2, 3, 4]`, and
-# `[1, 2, 3] | fold add 0` gives 6. Indices start at zero; optional results
-# use `Some value` or `None` when no item exists.
+# | Operation | Example result |
+# |---|---|
+# | Transform each item: `map (add 1)` | `[1, 2, 3]` becomes `[2, 3, 4]`. |
+# | Keep matches: `filter (gt 1)` | `[1, 2, 3]` becomes `[2, 3]`. |
+# | Combine with a running result: `fold add 0` | `[1, 2, 3]` becomes `6`. |
+#
+# Indices start at zero. Optional lookups return `Some value` or `None`.
+# A predicate is a function returning `Bool`; an accumulator is the running result.
 
 foreign "fwp" map : (a -> b ! e) -> List[a] -> List[b] ! e
 foreign "fwp" filter : (a -> Bool ! e) -> List[a] -> List[a] ! e

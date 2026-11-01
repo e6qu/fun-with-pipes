@@ -1,18 +1,18 @@
-# C interop: raw pointers and memory for `foreign "C"` functions.
+# Foreign-function interoperation (FFI) calls C from fwp:
 #
-#     foreign "C" strlen : String -> USize
-#     repr(C) DivResult = { quot: I32, rem: I32 }
-#     foreign "C" div : I32 -> I32 -> DivResult
+# ```fwp
+# foreign "C" strlen : String -> USize
+# repr(C) DivResult = { quot: I32, rem: I32 }
+# foreign "C" div : I32 -> I32 -> DivResult
+# ```
 #
-# Pointers are only dereferenced under the `Unsafe` effect. `Option[Ptr[T]]`
-# is a nullable pointer (`None` is NULL); fwp itself has no null.
+# - `Ptr[T]` is an address of elements of type `T`; `Option[Ptr[T]]` can be NULL.
+# - `mem.alloc` takes bytes; `ptr.at` steps by elements; release raw allocations
+#   with `mem.free`.
+# - `Unsafe` marks the obligation to use valid addresses; it does not prove them valid.
+# - `repr(C)` requests C record layout. A callback is a function C may call.
 #
-# Foreign-function interoperation (FFI) calls C code from fwp. A pointer is an
-# address, and Ptr[T] says what element type it addresses. mem.alloc takes bytes;
-# ptr.at steps by elements. The programmer must ensure valid addresses and free
-# raw allocations with mem.free. Unsafe records this obligation, not a proof.
-# repr(C) requests C record layout; a callback is a function passed for C to call.
-# Tutorial 9 follows a buffer from allocation through sorting to release.
+# [Lesson 9](tutorials/09-c-interop/README.md) traces allocation, sorting and release.
 
 Ptr[T] = builtin
 

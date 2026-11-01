@@ -1,22 +1,17 @@
-# Lazy tensor expressions. `realize` evaluates supported elementwise operations
-# together without full-length intermediate arrays. An arbitrary `tensor.map`
-# function is evaluated first on the CPU and becomes an input. Graph passes
-# rewrite expressions before evaluation.
+# A tensor expression describes elementwise array arithmetic. A leaf supplies
+# an input vector; a kernel executes combined operations. Building this description
+# costs work/storage before elements are evaluated.
 #
-# Expressions implement the numeric traits (`Ring`, `Field`, `Floating`),
-# so generic numeric code builds fused elementwise kernels. They run on a
-# `Device`: `Cpu` or `CpuParallel n` (up to n workers). Elementwise results are the
-# same on every CPU device and in both backends, bit for bit; reductions
-# (`tensor.sum`) add blocks of 4096 elements from the left and then the
-# block sums from the left, whatever the number of threads, so they are
-# reproducible too. See docs/numerics.md.
+# - `realize` combines supported operations without full-length intermediate arrays.
+#   An arbitrary `tensor.map` function runs first on the CPU and becomes an input.
+# - Numeric traits let generic code build these expressions; graph passes rewrite them.
+# - `Cpu` uses one thread; `CpuParallel n` permits up to n workers (1–256).
+#   Availability checks the setting, not whether worker startup will succeed.
+# - CPU devices/backends preserve elementwise results. Sums add 4096-element blocks
+#   from the left, then block sums from the left, independently of thread count.
 #
-# A tensor expression is a description of elementwise array arithmetic.
-# A leaf supplies an input vector; a kernel executes the combined operations.
-# Building the description costs work and storage, even before evaluating elements.
-# Cpu uses one thread; CpuParallel accepts worker limits from 1 to 256.
-# Availability checks that setting; worker startup can still fail.
-# Tutorial 20 explains realization, reduction (combining elements) and gradients.
+# [Lesson 20](tutorials/20-autodiff-and-devices/README.md) explains realization,
+# reductions and gradients; [numerics](numerics.md) defines precision limits.
 
 TensorExpr[N] =
     | TLeaf Vector[F64, N]

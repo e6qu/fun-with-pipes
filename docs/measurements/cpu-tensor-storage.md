@@ -1,9 +1,8 @@
 # CPU tensor output storage
 
-Historical measurements at the revisions named below. Counts and timings are
-observations of those programs, not current compiler budgets. Commands refer
-to the recorded measurement revision. Read [measurement terms](../benchmarks.md)
-for timing and memory boundaries; [the plan](../../PLAN.md) owns remaining work.
+Historical results; reproduce with the recorded revisions, not current main.
+[Measurement terms](../benchmarks.md) explain the costs;
+[PLAN.md](../../PLAN.md) tracks current work.
 
 **Comparison:** previous versus direct-output fwp executors, with only that runtime
 section replaced in the control. **Work:** multiply 8,193 F64 values (their indices)

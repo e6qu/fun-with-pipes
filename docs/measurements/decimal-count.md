@@ -48,7 +48,9 @@ Let `b` be its bit width, from 1 through 64, and `e = (b * 1233) >> 12`.
 The fraction 1233/4096 approximates log10(2), but correctness does not depend on
 floating-point approximation. For **each of the 64 integer intervals**
 `[2^(b-1), 2^b - 1]`, the measured revision’s tests verified that both endpoint digit counts are either
-`e` or `e+1`. Decimal width is monotone, so those are the only possible counts
+`e` or `e+1`.
+
+Decimal width is monotone, so those are the only possible counts
 throughout that interval. Comparing with exactly `10^e` determines which applies:
 `1 + e - (x < 10^e)`. The largest table index is 19; all twenty powers fit U64.
 
@@ -78,7 +80,9 @@ width transition, signed extrema, zero, Unicode concatenation, sharing and
 checked-arithmetic effects. Compare raw interpretation with native O0/O1/O2/O3.
 A separate test extracts the actual emitted helpers and compares them with C's
 `snprintf`: all unsigned values through 65,535 and their signed opposites, all
-binary/decimal boundaries and full-width extrema. For the table candidate, removing the exact correction must fail. For the tree,
+binary/decimal boundaries and full-width extrema.
+
+For the table candidate, removing the exact correction must fail. For the tree,
 removing the one-versus-two-digit comparison must fail at every optimization level. This is a correctness oracle,
 not a timing comparison with formatted text.
 
@@ -185,6 +189,7 @@ For text-length, instruction bytes fell from 11,164 to 10,796 on ARM64 and
 11,986 to 11,490 on AMD64. Both whole binaries grew by 40 bytes, with a
 160-byte readonly table at offsets 48 and 32 within a 64-byte alignment unit.
 Main/worker stack frames stayed 144/272 bytes on ARM64 and 128/256 on AMD64.
+
 Loop instruction bytes, binary size and stack frames were unchanged. Separate
 profiles report zero named managed-memory counters for both measured programs;
 that does not mean process RSS is zero. All seven peer timings and storage/RSS
@@ -244,7 +249,9 @@ JSON checkpoints use compact formatting outside the timed intervals.
 Collect two independent qualified jobs per architecture. Select the first two
 by workflow run/job ID, independent of their results; retain all host rejections
 and any additional scheduled observations. Each job rebuilds and measures both
-the original grouped-division baseline and the unchanged tree. These are fresh
+the original grouped-division baseline and the unchanged tree.
+
+These are fresh
 same-job baseline observations for the longer protocol; old short durations are
 not directly pooled with them. Every selected session must pass both noise and
 regression limits, and text must meet the fixed improvement limit. Do not reset
@@ -268,6 +275,7 @@ passes correctness and artifact checks but is inconclusive. Loop's control passe
 at 1.015622; text's control fails at 1.094294 against 1.052444. The text median
 ratio is 0.634587, not an accepted speedup. In round 24, the original helper takes
 1.171 seconds and the identical binary measured later takes 0.944 seconds.
+
 Their process medians are 9.316 and 6.979 milliseconds. Multiple consecutive
 processes shift together; a single extreme observation does not explain the gap.
 This identifies a weakness in comparing separated batches, without establishing
@@ -322,6 +330,7 @@ Keep 60 samples, two warmups, the same host/toolchain/input requirements and all
 original numerical limits. Record every process's execution sequence and reject
 missing, duplicate or reordered positions. Save complete rounds outside timing;
 on an exception, timeout or interrupt, save the partial round before rethrowing.
+
 No slow samples are removed. JSON formatting is compact. Collect the first two
 qualified jobs per architecture by run/job ID, regardless of results, and require
 all four to pass. Do not combine short, whole-batch and interleaved observations
@@ -420,6 +429,7 @@ The text instruction section grows by 496 bytes on ARM64 (11,164 to 11,660) and
 560 on AMD64 (11,986 to 12,546). Readonly sections, whole binary file sizes and
 all reported stack frames are unchanged. No lookup table or heap storage is
 added. Both loop and text-length retain zero managed requests and count updates.
+
 All seven benchmark programs, 21 peer images and 14 storage/control images per
 session were audited. The other five programs retain identical instruction bytes;
 `strings` and `text-length` retain the same fwp calculation. Ordinary peer timings,

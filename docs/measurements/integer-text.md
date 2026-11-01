@@ -80,6 +80,7 @@ A separate 4,096-element probe uses the same integer pattern plus literal
 `"é🙂"` and prints `40240`. At the measured revision, it tested O0 and O2 builds in
 both memory modes: tracing GC follows references to find live objects;
 automatic reference counting (ARC) releases storage when its last owner goes.
+
 The probe makes **zero
 managed leaf-allocation requests after constant initialization**. A leaf
 allocation holds bytes rather than references to other managed values. An
@@ -139,6 +140,7 @@ architectures from executable files, timing samples, binary hashes and the
 primitive inventory.
 To re-audit the historical artifacts above, use the audit script from their
 recorded revision; their schema and measurements have not been rewritten.
+
 The separate `scalar-text-memory` suite reuses those artifacts with explicit
 `evidence_run` and `source_revision` inputs. Measurement source
 `fd1c1ec0292fa3c49a8f4f3cf37e76cb420058d6`, tagged

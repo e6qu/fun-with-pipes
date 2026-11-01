@@ -60,11 +60,15 @@ AMD64 headers. Artifact `12975797627` retains the evidence.
 Windows ARM run `41053015126`, job `124053490719`, completes all six targets:
 13 tests pass and three C probes fail compilation. Their prefixes include C
 headers before declaring the Windows 10 API target; those headers select an older
-target, which the production runtime correctly rejects. The repair declares the
+target, which the production runtime correctly rejects.
+
+The repair declares the
 required target before every include, including the shared stream observer and
 the independent flush probe. The full log has no other failures or warnings.
 Windows AMD run `41053005173`, job `124053458381`, has exactly the same three
-failures among 13 passes; its full log is audited. ARM Mac run `41053051853`, job
+failures among 13 passes; its full log is audited.
+
+ARM Mac run `41053051853`, job
 `124053615503`, passes 16 tests in six targets. Its full log and all 22 saved
 executions/native headers are audited; artifact `12976686469` retains the evidence.
 

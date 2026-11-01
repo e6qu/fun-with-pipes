@@ -1,105 +1,94 @@
 # Current work
 
-**Next:** monitor the final-head matrix on [PR #236](https://github.com/e6qu/fun-with-pipes/pull/236/checks).
-Audit every completed target and compiler diagnostic; fix any failure. Require
-nine production jobs plus documentation on the exact final head before
-squash-merging. Focused passes do not replace those gates.
+**Next:** audit PR #237's exact-head nine production jobs and documentation.
+The PR is ready and published; use its check URLs to follow the current head.
+Fix all failures in one repair batch; squash-merge only after every gate passes.
 
-All ten steps in [PLAN.md](../PLAN.md), publication and merge are authorized.
-Worktree `/private/tmp/fwp-returned-callables`, branch `language-design-review`,
-base `781ebabb0463efc2f03f0d3aa44b7d2c4766959d`. Preserve the primary checkout.
-Keep one active PR. Commit messages: one line, at most 80 characters, empty body,
-no attribution or trailers.
-
-## Verified repairs and pending integration
-
-Compiler source is `d339f8a701df6b48d32b3ea864690e53843bd3d2`.
-Subsequent changes through `2de5980b3d9b8a919d5d92c14220813dc91b78c5` affect
-only tests, workflows and documentation. These checks pass; all logs are audited:
-
-| Run and source | Coverage |
-|---|---|
-| `41268079378`, `bbce38e1` | Linux ARM64/AMD64 and macOS ARM64: CLI, local bindings, all 11 REPL tests, call cleanup, fold controls/unwind, iterator/vector behavior, returned-callable costs and iteration allocations |
-| `41267001566`, `d339f8a7` | Linux and Intel macOS: 234 unit tests, all-target lint, analysis scaling and raw server startup; limits unchanged |
-| `41271608106`, `2de5980b` | Both Linux hosts: actual WASI fixed-capture execution with stack promotion off/on, each at O1/O2; C, source and WASM retained |
-| `41271600167`, `2de5980b` | Documentation, source copies and retained evidence readers |
-
-The superseded matrix `41268735692` at `786f90b0` passes benchmarks and both
-macOS ARM64 jobs; documentation `41268726225` passes. Those logs are audited.
-Both Windows hosts pass the former REPL step and ARM64 also passes the fold
-step. Other jobs continue and need complete audits. This matrix lacks the WASI
-test repair, so it cannot establish final acceptance.
-
-Both earlier complete matrices (`41261060185` at `20109cf0`, `41265952785` at
-`bed8b365`) are fully audited. CLI stdin, iterator callback scope, vector fusion
-and the iteration allocation probe were repaired and verified. The later repairs:
-
-| Failure | Repair and verification |
-|---|---|
-| Saved REPL functions gained arguments during optimization | Explicit cached-value IR marker preserves zero-argument entries through optimization and session linking; IR validation and all REPL tests pass |
-| Right-fold leak control injected an extra owner into an obsolete variable | Target the actual accumulator; both fold controls require exactly one source match, an observed leak in the broken control and zero live storage in ordinary code; original release margin retained |
-| WASI fixture demanded static captures with stack promotion enabled | Supply both storage settings; require static objects and initialization with promotion off, and unchanged program output in both settings at O1/O2 |
-
-Local checks use `python3 scripts/local-guard.py`: formatting, workflow syntax
-and documentation pass. No full build, suite or benchmark ran locally. A bounded
-emission check used the passed `786f90b0` package:
-`python3 scripts/local-guard.py env FWP_STACK=0
-/private/tmp/fwp-236-786-mac-package/fwp-macos-arm64/fwp build --target wasm32-wasi
---emit-c tests/run/static_functions.fwp -o /private/tmp/fwp-236-static-stack0.c`,
-then the same command with `FWP_STACK=1` and `stack1.c`. These produced three and
-zero static captured-function objects respectively. Actual WASI execution is
-verified by the runner checks above. Logs/artifacts are `/private/tmp/fwp-236-*`;
-an artifact named `compiler-crashes-*` is not itself evidence of a crash.
+Worktree `/private/tmp/fwp-returned-callables`, branch `reduce-derivative-ownership`.
+Base `658123c7c09aa8991ca69cbb82643e68244edc95`. The primary checkout has unrelated
+local changes; preserve them. Implementation, publication and squash merge are
+authorized. Commit messages: one line, at most 80 characters, empty body/trailers.
 
 ## Roadmap status
 
 | Step | Status | Remaining acceptance |
 |---|---|---|
-| 1 | Implemented | Final-head local-name, pattern, type and strict-evaluation checks on all supported hosts |
-| 2 | Implemented | Final tooling, macro, tutorial and documentation gates |
-| 3 | Implemented | Final protocol, constructor and known-call cost checks |
-| 4 | Implemented | Final alias/failure controls and zero/one-retain String loops |
-| 5 | Implemented | Final direct scalar record/variant cost checks |
-| 6 | Implemented | Final collection fusion and effect/trap-order checks |
-| 7 | Implemented | Final numerical cost/cleanup controls; timing acceptance remains open |
-| 8 | Implemented | Final gradient-list/phase controls; original D2 speed goal remains open |
-| 9 | Verified | Numerical/Swift records audited and retained; individual Swift ARC counts unmeasured |
-| 10 | Pending | Application families, nine production jobs and documentation on the integrated head |
+| 1 | Implemented | Broad docs/tutorial revision and local audits complete; final-head docs/native example gates pending |
+| 2 | Implemented | All three focused hosts pass stack-record controls; full final-head matrix pending |
+| 3 | Implemented | All three focused hosts pass adjoint, alias, failure and cancellation checks; full matrix pending |
+| 4 | In progress | Audit nine production jobs plus docs, then squash-merge |
 
-The [application matrix](application-acceptance.md) defines the final coverage.
-After a verified squash merge, update the next batch rather than declaring the
-broader roadmap complete.
+## What changed
 
-## Measurements and limits to preserve
+- Typed F128/nested derivative recording borrows direct outer argument records;
+  retained weight children keep their independent owners.
+- Initial adjoints borrow the tape-owned exact zero. Distinct owned input results
+  move into list cells, protected through allocation failure.
+- All 24 tutorials have additional worked traces/tables/diagrams. Lesson 1 teaches
+  `let … in …` as one expression and runs chained, nested and shadowed bindings.
+- Terminology, reference, parser/pipeline, memory limits and benchmarking explain
+  concepts before use. All 28 library introductions were revised through source
+  comments and regenerated. Historical prose is shorter; raw evidence and frozen
+  criteria remain. Stale delivered/pending claims were corrected.
+- Scope and acceptance: [PLAN.md](../PLAN.md) and the
+  [typed-derivative protocol/results](measurements/typed-derivative-owners.md).
 
-[Numeric array traversal](measurements/array-list-traversal.md) retains all six
-cases, frozen limits, raw observations and failed results. At `f7f5309c`, eight
-129-coordinate solves remove 208,552 requests and 6,622,720 requested bytes;
-retains and peak managed storage do not change. Run `41258782085` passes all
-correctness/allocation/cleanup limits. AMD64 session 2 fails identical-copy
-variation (2.1023% versus 2%); the combined timing result remains inconclusive.
-Retention/audit `41260368842` passes. Final gradient-list conversion is outside
-the six runtime phase clocks, so these savings are not forward-recording gains.
+## Native checks and evidence
 
-Earlier `dc0a6407` allocation failures, the `9a2e954e` final-order repair and
-`9d47a5fc` timing rejection remain in that report and immutable source archives.
-A later pass does not erase them. Source tags are
-`roadmap/array-lists-{first,repaired,pure-constructors}-2026-11-01` and
-`roadmap/swift-allocations-2026-11-01`. Historical readers use their recorded
-source adapters. Do not compare old generated C with today's adapter.
+Focused run [41290359214](https://github.com/e6qu/fun-with-pipes/actions/runs/41290359214)
+passes at `c5acb7d980a0efba9505b5edc4a37802337cad4f`:
+Linux ARM64/GCC 13.3, Linux AMD64/GCC 15.2 and macOS ARM64/Clang 23.1.4.
+Every host passes eight affected targets, ownership unit checks and primitive
+inventory. All job logs and completed targets were audited; no compiler warnings
+or unexpected failures. Thirty image/source hashes and native architectures,
+84 typed-probe outcomes and all static-frame reports were independently checked.
+[Saved observations](measurements/typed-derivative-owners-2026-11-01.json.gz)
+retain source/run/artifact identities and the measurements. No speed claim.
 
-[Swift allocation profiles](measurements/swift-allocations.md) pass both hosts
-at `9d47a5fc` (`41256208614`, audit `41257220044`). fwp's directly mapped managed
-heap is outside heaptrack: report its requests/live storage separately from
-native allocator traffic. Do not add independent peaks or invent ARC-operation
-counts. [Swift timings](measurements/swift-peers.md) retain four separate sessions.
+First run `41289222076` at `5f1741624834da7ded8e4990ef3bc3245ac8aacd`
+failed only the two new probes on all hosts. A source marker matched four sites;
+a capacity query omitted immutable heap records. `c5acb7d9` repairs both observers
+without runtime changes or relaxed limits. Existing targets passed throughout.
+Details and distinct negative-control statuses are in the linked report.
 
-GC removal and scoped ARC reductions remain maintained guarantees. Baseline
-#235's tree `9eda0ac6113d18741d9b0f85c1dcadbba409b2ac` matches verified head
-`adeb9794544cd12deae3f7050fef79cf874a3f55`; production `41229416050` and docs
-`41229416071` pass. Broader ARC minimization, D2 derivative speed and N1/N2 kernel
-timing remain open. The [callable study](measurements/callable-phases.md) retains
-Xeon construction regressions of 8.6–16.1%; another CPU does not settle them.
-The [Intel compiler abort](measurements/compiler-abort.md) has no established
-root cause. Diagnose a recurrence from its input/source path; do not resume
-speculative disassembly-led allocator changes.
+Documentation runs `41288414731`, `41289225334` and `41290361065` pass and their
+logs are audited. Deliberate duplicate/unknown/failing/hung runner controls are
+expected, not unresolved failures. Draft production skips do not count as gates. Initial ready run `41291903384`
+and docs `41291886572` target `d36dc26a`; the final command-path/handoff correction
+supersedes that head. Follow the newer exact-head checks, not those old statuses.
+
+## Focused local checks
+
+All workloads use `python3 scripts/local-guard.py`; full builds/suites stay on CI.
+The sandbox initially denied `ps`; the same unchanged guard ran with permission.
+No resource limit was bypassed. Free disk remains about 65 GiB, near the 64 GiB floor.
+
+| Check | Command after the guard | Result |
+|---|---|---|
+| Links, preparation records, plan | `python3 scripts/check-roadmap.py` | 195 docs, 106 immutable pairs, four steps pass |
+| Rust formatting | `cargo fmt --all -- --check` | Pass |
+| Library docs | Standalone O1 `tests/stdlib_doc.rs`; `FWP_BLESS=1` regeneration, then ordinary check | Pass; standard-library-only harness, no compiler rebuild |
+| Tutorial listings/output copies | Standalone O1 `tests/examples.rs`, exact `tutorial_readmes_match_their_programs` | All pass |
+| Lesson 1 results | `env FWP_NO_OPT=1 /private/tmp/fwp-236-786-mac-package/fwp-macos-arm64/fwp run --interp docs/tutorials/01-pipes-and-functions/main.fwp` | Matches `main.out`, including 7/16/4; 0.10 CPU seconds |
+| Tape example and typed fixtures | Same verified raw interpreter | `[6.0]`; both typed fixtures `True` |
+| Artifact audit | `python3 /private/tmp/fwp-237-audit.py` | 0.10 CPU seconds; hashes, headers, outcomes and frames pass |
+
+Standalone Rust harnesses use O1, debug assertions and overflow checks. Binaries
+are `/private/tmp/fwp-237-{stdlib-doc,tutorial-doc-check}`. This does not replace
+new-source native verification. Earlier direct F128 relinking omitted its math
+archive and produced no executable; the successful runner checks use the complete
+toolchain. Full logs/ZIPs are `/private/tmp/fwp-237-retry-{mac,arm,amd}.*`.
+
+## Baseline and remaining goals
+
+PR #236 passed nine production jobs `41272009971` and docs `41271982217`.
+Tested `f89ef8a597d9ba64b0b0de165e7c21cc9f787494` and merge
+`658123c7c09aa8991ca69cbb82643e68244edc95` share tree
+`3ea5adc038b819c9a6e5b722d0dd41ca4437485f`; the one-line squash was verified.
+[History](roadmap-history.md#local-names-and-allocation-optimizations-pr-236) owns details.
+
+D2/N1/N2 timing requirements and original Xeon closure regressions remain open.
+Preserve inconclusive copy controls, array-traversal allocation savings and Swift's
+separate allocator/managed-memory accounting; individual Swift ARC counts are
+unmeasured. The Intel compiler abort remains unexplained: diagnose a recurrence
+from source/input, not speculative disassembly-led changes.

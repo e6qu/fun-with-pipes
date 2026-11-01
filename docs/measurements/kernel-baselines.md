@@ -3,7 +3,7 @@
 This records the original N1 protocol and its still-incomplete timing acceptance.
 ARM sessions pass; AMD measurements retain missing coverage and failed copy
 controls. Later compiler work may proceed using independently verified costs;
-[PLAN.md](../../PLAN.md#7-numerical-loops) owns that work. Neither later allocations
+[PLAN.md](../../PLAN.md) owns that work. Neither later allocations
 removed nor a different CPU settles these original timing requirements.
 
 The protocol below predates its measurement runner and selected no optimization.
@@ -37,7 +37,9 @@ Each fwp case exports the calculation as a function called by a native C harness
 That harness fills inputs through fwp's array-storage API; the C and Rust peers
 fill their own native buffers. This measures the compiled kernel and its native
 entry/allocation costs, not an entire fwp application or the speed of an fwp
-input generator. The retained sources show this boundary. These task-free
+input generator.
+
+The retained sources show this boundary. These task-free
 programs emit `FWP_TASK_TICKS=0`; their timers contain no scheduler tick checks.
 Matrix byte loads/stores use fixed-size copy intrinsics for C aliasing safety,
 while the peers use typed floating-point buffers. Do not attribute every observed
@@ -87,7 +89,9 @@ every observation, including outliers. Ordinary scheduling remains unchanged.
 For each label and timing scope, sum all its samples in a round (1,280 for the
 small matrix, twenty otherwise). Compare the medians of the sixteen round totals;
 within-process samples are not independent sessions. The byte-identical pair must differ by no more than 2%
-for both timing scopes in each case. This is a predeclared measurement-resolution
+for both timing scopes in each case.
+
+This is a predeclared measurement-resolution
 requirement, not a compiler regression budget. If it fails, keep the result as
 inconclusive and repair the measurement method before accepting any candidate.
 Do not remove slow samples, increase the limit or retry unchanged for a pass.
@@ -192,6 +196,7 @@ Each eight-round array sample allocates eight buffers in all implementations.
 The fwp buffer needs eight metadata bytes beyond the peer's payload. Matrix
 samples request 40 allocations in fwp versus 24 in C/Rust: the native harness
 passes two record-wrapped input matrices per round, in addition to three buffers.
+
 These entry/record costs are included in the broader timer, outside the matrix
 kernel timer. Profiles observe no effective retains or nonlast releases, and all
 live-storage ledgers return to zero. The reports retain process RSS, allocator

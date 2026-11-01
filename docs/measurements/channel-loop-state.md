@@ -49,7 +49,9 @@ samples and 20 ordinary binaries with C and disassembly hashes. It uses the
 [same five programs and measurement boundaries](channel-transfer-protocol.md)
 as [the integrated PR #175 baseline](channel-count-integrated-2026-10-20.json)
 at `f3c6f8d9`, run `39362629293`: GCC O2, LTO disabled, raw interpreter/native
-output comparison, inputs 0/16/1024 and three fresh profiles. Hosts are AMD EPYC 7763 and Neoverse-N2, with GCC 13.3.0 on both revisions.
+output comparison, inputs 0/16/1024 and three fresh profiles.
+
+Hosts are AMD EPYC 7763 and Neoverse-N2, with GCC 13.3.0 on both revisions.
 Both revisions include the preprocessing repair that excludes tracing code from ARC binaries.
 The integrated baseline reproduces the previous `tap` allocation/retain/memory
 counts; its executable sizes differ, so the size comparisons below use this
@@ -84,11 +86,15 @@ In the fresh-text binary, the executing loop moves from `work` (`w0`) into
 `fwp_loop_fields7.constprop.0`; `work` tail-jumps to it after releasing its own
 frame. The loop's own frame is 296 bytes on AMD64 (248 local bytes plus six
 saved registers), down from 504, and 288 bytes on ARM64 including saved registers,
-down from 464. The exchange worker remains 376/368 bytes on AMD64/ARM64.
+down from 464.
+
+The exchange worker remains 376/368 bytes on AMD64/ARM64.
 AMD64 counts exclude the return address; ARM64 counts include the saved link
 register. These are individual frames, excluding callees and total task-stack peaks.
 Generated C now uses three state slots and has no state-record allocation in
-the executing loop. Focused ownership run `39364385408` passes 47 integration
+the executing loop.
+
+Focused ownership run `39364385408` passes 47 integration
 tests plus all compiler units on each native host, and 18 checks on each WASI
 host, with none ignored or filtered. Separate Linux resource-field runs
 `39365324259`/`39365327202` each pass 37 tests. Final production acceptance passed in PR #176.
@@ -114,10 +120,13 @@ In ordinary ARC fresh-text binaries, the generated C calls the length function
 directly. The actual exchange worker no longer calls `fwp_apply_owned`; GCC
 inlines the UTF-8 character-count loop. Its own frame shrinks from 376 to 328
 bytes on AMD64 and from 368 to 320 on ARM64, using the same frame accounting
-as above. The enclosing loop frames remain 296/288 bytes. The fresh-text `.text`
+as above.
+
+The enclosing loop frames remain 296/288 bytes. The fresh-text `.text`
 section shrinks by 624/208 bytes, and the whole executable by 384/312 bytes,
 on AMD64/ARM64 respectively. The other four cases have unchanged file and
 section sizes. Neither code size nor frame size establishes a timing improvement.
+
 The combined candidate passes focused ownership run `39366497033`: 62
 integration tests plus all compiler units on each of six native hosts, and 18
 checks on each WASI host, none ignored or filtered. Final production acceptance passed in PR #176.

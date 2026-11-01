@@ -37,11 +37,16 @@ one. These are shell operations, separate from fwp's `|` for applying/composing
 functions. Quoting keeps spaces or symbols inside one shell argument. Background
 servers are started with `&`; stop them after the session as shown.
 
-The tests compare each program's interpreter/native output, replay the terminal
-sessions, and check that README source copies match the actual files. A transcript
-is an expected test result, not a benchmark. The larger [example applications](../../examples/README.md)
-have their own guide; their general test gate checks types, which alone does not
-prove every external deployment works.
+For each lesson:
+
+1. Read the concept and trace its small example.
+2. Run the supplied file or terminal session.
+3. Compare with the displayed output and explain each result.
+
+Tests compare interpreter/native output, replay sessions and check README source
+copies. A transcript is an expected result, not a benchmark. The larger
+[example applications](../../examples/README.md) have a separate guide; their
+general gate checks types, not every external deployment.
 
 ## Lessons
 
@@ -73,5 +78,5 @@ prove every external deployment works.
 | 24 | [Subscriptions](24-subscriptions/README.md) | Streaming callbacks, explicit finish/stop, active cancellation and reentry |
 
 Use the [reference](../reference.md) to look up exact syntax and the
-[glossary](../glossary.md) for terminology. Lessons introduce concepts before
+[terminology guide](../terminology.md) for terminology. Lessons introduce concepts before
 using them; those links supplement the explanation.

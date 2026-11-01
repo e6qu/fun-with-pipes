@@ -42,7 +42,9 @@ Before signaling shutdown, the test reads the request counter to confirm that
 the slow request entered its handler and checks that its reply is still pending.
 The `http-application` focused suite checks this example alone. The full
 `server-checks` suite splits protocol tests from application/connection tests to
-fit the existing 25-minute job limit. All twelve jobs passed on six native hosts
+fit the existing 25-minute job limit.
+
+All twelve jobs passed on six native hosts
 in [run 40062164443](https://github.com/e6qu/fun-with-pipes/actions/runs/40062164443).
 Production CI keeps both HTTP test suites. The separate
 [API memory check](measurements/http-application-memory.md) samples between
@@ -126,7 +128,7 @@ open: the repaired-source zero-update recheck exceeds its unchanged 2% limit.
 [Capture costs](measurements/eager-captures.md) and
 [timing variation](measurements/timing-variation.md) retain all observations.
 Do not replace that failed control with an earlier passing run. See
-[the derivative plan](../PLAN.md#8-automatic-differentiation) for remaining acceptance work.
+[the derivative plan](../PLAN.md) for remaining acceptance work.
 
 ## Testing unchanged string ownership
 
@@ -146,13 +148,17 @@ The [direct-result experiment](measurements/direct-string-results.md) removes
 temporary libc buffers from replacement and repetition. Its first candidate
 passes native/WASI checks but fails the timing requirement. Unique replacement
 storage then confirms fewer managed allocations, with all six native hosts and
-both WASI hosts passing, but still misses the required speed gain. The latest
+both WASI hosts passing, but still misses the required speed gain.
+
+The latest
 one-byte search candidate passes four timing sessions and complete final-head
 production acceptance in #229. Retains and peak managed
 charge remain unchanged; raw-buffer removal alone is not an ARC reduction.
 Compare exact old/new function bodies, preserve the current word-frequency
 budgets, and retain separate raw-buffer, managed-storage, timing, code and stack
-observations. The word-frequency application does not use `string.repeat`, so
+observations.
+
+The word-frequency application does not use `string.repeat`, so
 its timing cannot establish a speedup for repetition.
 
 ## Repeated directory and file work
@@ -181,7 +187,9 @@ The directory case creates 64 and 1,024 files spread among sixteen visible
 folders and a hidden folder. Names include Unicode, hidden files and five
 extension categories. A separate Rust calculation supplies expected file/byte
 totals and sort order. Three reports cover hidden-file filtering, largest counts
-and the first two names. Each process then repeats successful reports, missing
+and the first two names.
+
+Each process then repeats successful reports, missing
 paths, a file used as a directory, and a permission-denied subtree 64 times.
 The denied subtree sorts after a readable subtree, exercising partial traversal.
 Tests verify that the operating system denies access and restore permissions.
@@ -230,23 +238,32 @@ larger observations use counted ownership. Each checkpoint records:
 Controls deliberately omit managed releases, handle closes and file-read scratch
 frees. A separate task-file control omits only write closes while flushing their
 bytes, so later reads still see the same data. It must fail the handle observer,
-not an unrelated output assertion. Each control must fail before shutdown.
+not an unrelated output assertion.
+
+Each control must fail before shutdown.
 The expanded focused suite retains generated C, 40 native binaries, disassembly,
 twenty memory series and 80 execution outcomes per host. Both ordinary runs and
 deliberately broken controls save stdout, stderr and exit status before any
-result assertion; incomplete runs retain their partial observations. Production
+result assertion; incomplete runs retain their partial observations.
+
+Production
 jobs also upload these sources, binaries and execution records with their
 ownership artifacts. On macOS, directory evidence comes from the ownership/corpus job
 and text/task evidence from the regular job; both archives are required. A
 coverage check follows the actual test assignments and rejects missing exports.
+
 Focused measurements explicitly disable link-time optimization; production
 artifacts retain production compiler settings. The earlier four-program report
 retains its original 30 binaries and sixteen series; it does not verify this
-extension. Machine headers verify the runner's actual architecture. The original scale cases do not cover forced allocation failure. The separate
+extension. Machine headers verify the runner's actual architecture. The original scale cases do not cover forced allocation failure.
+
+The separate
 directory-boundary probes above add that coverage for directory traversal; the [file-read boundary controls](measurements/file-read-failures.md) add probes
 for text/byte reads. Focused ARM64 macOS and AMD64 GCC checks and complete
 six-host platform coverage pass in #229. Other operations still need their own
-allocation-failure evidence. The
+allocation-failure evidence.
+
+The
 [file-boundary portability checks](measurements/file-boundary-portability.md)
 extend error, flush and borrowed-handle probes to Windows. Both repaired native
 Windows focused runs pass, with all 22 saved executions per host audited.

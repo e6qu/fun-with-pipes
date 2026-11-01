@@ -1,9 +1,8 @@
 # Mapping numeric pairs without building a temporary zip
 
-Historical measurements at the revisions named below. Counts and timings are
-observations of those programs, not current compiler budgets. Commands refer
-to the recorded measurement revision. Read [measurement terms](../benchmarks.md)
-for timing and memory boundaries; [the plan](../../PLAN.md) owns remaining work.
+Historical results; reproduce with the recorded revisions, not current main.
+[Measurement terms](../benchmarks.md) explain the costs;
+[PLAN.md](../../PLAN.md) tracks current work.
 
 **Comparison:** identical fwp programs with `FWP_ZIP_MAP=0` versus `1`, in tracing
 and ARC. `xs | zip ys | map f` stops at the shorter list. For known numeric

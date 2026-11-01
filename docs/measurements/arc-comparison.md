@@ -221,11 +221,15 @@ including comparisons during sorting and compaction after scratch release.
 A separate 4,096-key fixture puts its input lanes on the stack to isolate builder
 storage. Ordinary map/set peaks are 65,544 / 32,776 charged bytes, ending at zero.
 Deliberately delaying scratch release raises them to 131,080 / 65,544 and must
-fail the budget with exit 241. These fixture peaks exclude the input lanes; the
+fail the budget with exit 241.
+
+These fixture peaks exclude the input lanes; the
 whole-program profile above includes its heap input. The [repeat run](https://github.com/e6qu/fun-with-pipes/actions/runs/40079580345)
 passes all six hosts at `4c294917006b2688a491d088a0cab297b07d274c`.
 [Independent review](map-scratch-native-2026-10-24.json) covers 138 actual images,
 96 peak observations, comparison/cleanup failures and reuse controls. Saved C
 matches the recorded builder, and each negative-control source makes exactly its
-intended change. ARC images exclude tracing symbols; tracing controls include them.
+intended change.
+
+ARC images exclude tracing symbols; tracing controls include them.
 [PR #209](../roadmap-history.md#map-peak-storage-and-explicit-benchmarks-pr-209) records subsequent passing production and documentation checks.

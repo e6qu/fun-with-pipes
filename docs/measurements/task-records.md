@@ -1,11 +1,12 @@
 # Compact task records
 
-The current G5 test compares one counted scheduler with byte flags against the
+The maintained collector-free test compares one counted scheduler with byte flags against the
 same scheduler with integer flags. It no longer reconstructs collector fields.
 O0/O2 checks require equal outputs, allocation requests and retains; smaller
 requested bytes and task records; unchanged alignment; and zero final charge.
-This updated comparison has not run in integrated CI. The results below describe
-the older source, including its separate tracing mode and stack-marker control.
+The migrated test passed [#217's platform gates](../roadmap-history.md#tracing-gc-removal-pr-217)
+and remains in the production suite. The historical results below retain their
+older two-mode runtime and stack-marker control; they are not fresh measurements.
 
 All six native focused jobs passed. [PR #189](../roadmap-history.md#compact-task-records-and-repaired-native-validation-pr-189)
 also passed all nine final production jobs and documentation before squash merge.

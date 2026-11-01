@@ -81,7 +81,9 @@ Both focused jobs pass 17 checks with none ignored or filtered, including
 callback-effect tests, type-checker snapshots, ordered
 constant/effect regressions and direct-call checks. Native examples compare raw
 interpretation with optimized interpretation and O0/O2 in both memory modes.
-Tracing runs use GC stress, GC verification and reuse verification. ARC runs
+Tracing runs use GC stress, GC verification and reuse verification.
+
+ARC runs
 physically release storage and reject those tracing/retained-storage options.
 Revision tag `roadmap/revision-channel-match-7a0c93ef` preserves the measured source.
 The final delivery also includes the tacit example in the native/GC/WASI golden

@@ -10,7 +10,9 @@ The [protocol](float-text.md) explains the optimization and every measured input
 Each solve creates a vector, applies explicit gradient formulas, and prints every
 result. It does not build an automatic-differentiation tape. Only the formatter
 body differs between the old and new fwp binaries; their output must match the
-raw interpreter byte for byte. C/Rust use equivalent formulas and reuse buffers,
+raw interpreter byte for byte.
+
+C/Rust use equivalent formulas and reuse buffers,
 but use their own float printers: C uses `printf("%.17g", value)` and Rust uses
 ordinary `Display`. fwp searches precisions for text that parses back to the
 original float. Cross-language checks compare numerical values, not identical
@@ -99,6 +101,7 @@ The formatter adds no heap storage. Separate instrumentation observes unchanged
 fwp allocation counts and live storage for both versions. The largest case makes
 459 managed allocation requests per solve, no retains, and reaches 7,200 charged
 managed bytes. Every solve ends with zero managed and raw derivative bytes.
+
 C/Rust observations cover their numerical buffers; fwp observations cover its
 managed values and derivative storage. Instrumentation can prevent allocation
 elimination, and these scopes exclude library-private allocations. They are not
@@ -110,6 +113,7 @@ dynamic use) and 208 to 288 bytes on ARM64 (static). Writer frames stay at 720/7
 bytes. Largest-program text-section bytes grow 33,010→33,826 and 30,972→31,516.
 AMD64 executable size stays 69,184 bytes; ARM64 changes 82,904→82,896 bytes despite
 more text-section bytes, because total file size includes alignment and metadata.
+
 These sizes measure the ELF `.text` section, including padding; historical raw
 records name the field `instructionBytes`. Actual disassembly and compiler frame
 records were reviewed. Individual frame

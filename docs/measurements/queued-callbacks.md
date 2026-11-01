@@ -58,6 +58,7 @@ relationship for error and state handlers, aliases and returned records. Its
 [expected output](../../tests/fixtures/handled_callbacks.out) includes caught
 errors, successful unit and state results, and `before` printed before a failure.
 Separate type checks reject undeclared IO and preserve ordinary callback rules.
+
 The recorded native execution covered ARC/tracing at O0/O2. WASI, the WebAssembly system
 interface, covers ARC at O1/O2 on Node running on Linux ARM64 and AMD64. Its
 cleanup checks physical allocations, bytes and count-table entries; deliberately

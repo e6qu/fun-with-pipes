@@ -27,12 +27,16 @@ Those operations are described in the [numerics guide](../../numerics.md).
 The example's `rosenbrock` sums `100(y − x²)² + (1 − x)²` for adjacent input
 pairs. `zip (drop 1 values)` pairs each value with its successor; the pattern
 `fn (x, y) -> ...` names those two numbers. Local `distance` and `offset` values
-make the formula readable and are computed once per pair. Its trait requirements
+make the formula readable and are computed once per pair.
+
+Its trait requirements
 allow ordinary or derivative-tracking numbers.
 `descend` multiplies the gradient by 0.001 and subtracts it from the original
 vector: one small step toward reducing the function. `zip-with sub` combines
 corresponding elements; because subtraction takes its subject last, the original
-vector is the final argument. Repeating this step lowers the objective in this
+vector is the final argument.
+
+Repeating this step lowers the objective in this
 example; it does not guarantee convergence for arbitrary functions.
 
 The descent loop keeps a pair `(steps-left, weights)`. `both (const 199) id`
@@ -46,6 +50,42 @@ the final result. `iterate 200 descend | last` would retain 200 vectors includin
 the starting one and perform the same 199 updates. The
 [measured comparison](../../measurements/ad-application.md) explains the storage
 saved by the loop and the remaining cost of derivative recording.
+
+## What the tape records: a smaller example
+
+Before the Rosenbrock program, consider `f(x) = x*x + 2` at `x = 3`.
+A **node** identifies a recorded value. An edge says which earlier value it used;
+its **weight** is the local derivative for that use.
+
+```mermaid
+flowchart LR
+    X["x = 3"] -->|"weight 3: first operand"| M["x*x = 9"]
+    X -->|"weight 3: second operand"| M
+    M -->|"weight 1"| Y["result = 11"]
+```
+
+| Backward step | Contribution |
+|---|---|
+| Seed the result | `1`: differentiate the result with respect to itself. |
+| Through addition of 2 | Multiplication result receives `1 × 1 = 1`. |
+| Through the two uses of `x` | `x` receives `1 × 3 + 1 × 3 = 6`. |
+
+The derivative is `6`; the function value is `11`. The accumulated derivative
+at a node is its **adjoint**. The tape retains dependencies and weights until
+this backward pass finishes. A [complete runnable example](../../terminology.md#derivatives-and-tapes)
+and a worked multi-output `vjp` explain the remaining notation.
+
+The program below uses the same process for many operations. Its two local
+bindings inside `rosenbrock` mean:
+
+```text
+let distance = y - x*x
+in (let offset = 1 - x
+    in distance*distance*100 + offset*offset)
+```
+
+Parentheses above show nesting. Both local names are available in the final
+formula; each initializer runs once per adjacent pair.
 
 ## Expressions and execution devices
 

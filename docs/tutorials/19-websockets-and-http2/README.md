@@ -92,6 +92,17 @@ Pings get pongs, fragmented messages arrive whole, and a message over
 ends the session with the close code 1009. A request to `/mirror` that is
 not an upgrade gets 400.
 
+### Trace an echo message
+
+```text
+HTTP upgrade → WebSocket session → receive Some message
+             → send the same message → Again socket → receive next message
+```
+
+A close message selects `Stop ()` instead. In
+`let _ = ws.send message socket in Again socket`, sending finishes before the
+next loop step starts; `_` discards the send result, not the send itself.
+
 ## Serving
 
 [`app.fwp`](app.fwp) serves `app` on the address its argument names. Start

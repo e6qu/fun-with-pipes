@@ -15,7 +15,9 @@ uses `main.fwp` in `examples/services`, with commands in [the example guide](../
 An fwp program can be compiled as **one executable** holding every module, in which its modules call each other's
 functions directly, or as **separate executables** that call each other
 over gRPC. The source is the same in both builds; only the
-build command differs. You can write, test and debug a system as one
+build command differs.
+
+You can write, test and debug a system as one
 program, then deploy parts of it as services when the need arises (to
 scale a part on its own, to isolate it, to call it from another language)
 and go back just as easily. The first build gives one executable, the
@@ -57,7 +59,9 @@ The decision is made in one place, the monomorphizer (`src/mono.rs`),
 which resolves every reference to a binding. For a reference from module
 `a` to an exported function `f` of a split module `m` (with `a` ≠ `m`), it
 produces a function whose body is `Remote { module: m, method: f }` instead
-of `f`'s body. A stub is an ordinary function value: it can be partially
+of `f`'s body.
+
+A stub is an ordinary function value: it can be partially
 applied, passed to `map` or composed, exactly like the function it
 replaces. Both backends implement the stub: the interpreter in
 `src/services.rs`, the C runtime in `runtime/fwp_rt_grpc.c`.
@@ -140,7 +144,9 @@ records passing final production acceptance.
 An iterator computes later elements on demand. That makes **when** its next step
 runs part of the ownership check. A **handler** supplies a temporary state store
 or derivative-recording context to a calculation. A call that sends an iterator
-and receives one result consumes its input in the calling task. A call that
+and receives one result consumes its input in the calling task.
+
+A call that
 streams in both directions uses a background sender that does not inherit the
 caller's handlers. Its producer can install a handler inside its own step.
 Similarly, the server drains a returned iterator after the method returns; that
@@ -197,7 +203,9 @@ A function can be served when it is exported, has a monomorphic type (all parame
 at least one parameter, and every parameter, its result and its `Error`
 type can be encoded: numbers, `Bool`, `String`, `Bytes`, `Duration`,
 records, tuples, `()`, variants, `List`, `Array`, `Set`, `Map` and
-`Option`, in any combination. An `Iterator` result or parameter and a
+`Option`, in any combination.
+
+An `Iterator` result or parameter and a
 final `Channel` parameter are streams ([below](#streaming)).
 Other functions, resources (`File`), and runtime handles (`Task`,
 `Channel`, sockets) cannot cross a process boundary; a split build that
@@ -282,10 +290,13 @@ cannot fail: use `Iterator[Result[R, GrpcError]]` for streams that may
 fail part way), a remote `A -> Channel[R] -> ()` sends each received value
 to the caller's channel (with backpressure) and returns when the stream
 ends, and a client stream sends the elements of the caller's iterator.
+
 A bidirectional call sends them from a task of its own while the caller
 receives the responses, so requests and responses interleave: the request
 iterator may be infinite, or wait for time to pass, and the call ends when
-the server ends it. In the [test service](../tests/grpc/greeter.fwp), `firsts`
+the server ends it.
+
+In the [test service](../tests/grpc/greeter.fwp), `firsts`
 takes three input values and multiplies each by ten. Thus
 `iter.count-from 1 | greeter.firsts` returns an iterator over `10`, `20`, `30`:
 the server ends the call after three requests even though its input can keep
@@ -331,7 +342,9 @@ Cancelling a task that is waiting for another reader does not cancel that reader
 If cancellation interrupts decoding before a value is saved, the received bytes
 return to the front of the queue so a surviving reader can still receive them.
 Cancelling the task actually receiving a client response can still reset the
-remote call. Retaining an earlier position also retains its saved values and
+remote call.
+
+Retaining an earlier position also retains its saved values and
 continuations, so sharing an iterator can increase memory use. Native stream
 storage has typed owners: a shared position keeps its saved values until its
 last reader releases it. The [ownership guide](services.md#reading-the-same-stream-in-two-tasks)

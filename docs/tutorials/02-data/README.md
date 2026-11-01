@@ -47,7 +47,9 @@ produce `sqrt 25.0`, or `5.0`. The typed input is a `Point`, not a pair.
 `Point { x, y }` in an expression means `Point { x = x, y = y }`. This **field
 shorthand** uses existing values; it does not select fields from an implicit input.
 `make Point { x = .0, y = .1 }` instead builds a point by running the two field
-functions on one input. `make { .name, .age }` selects existing input fields.
+functions on one input.
+
+`make { .name, .age }` selects existing input fields.
 Use `update { x = add 1.0 }` to transform one field, or `with { y = 9.0 }` to
 replace it. These return new logical values; they do not mutate the original.
 
@@ -63,10 +65,23 @@ A match must cover every alternative. Omitting `Rect` is an error. Existing
 tacit patterns remain available: `Some _ -> add 1` forwards the stored value to
 `add 1`. A match `_` hole forwards a value. In **fn/let** and record-field
 patterns, `_` discards it; `{ x, y = _ }` keeps only the name `x`.
+
 Thus `Some value -> value + 1` and `Some _ -> add 1` mean the same thing.
 A bare constructor with fields, such as `Some`, is shorthand for its holes.
 `None -> 0` has no payload and returns `0` directly. Avoid mixing names and holes
 unless forwarding makes the arm clearer.
+
+## Trace a record transformation
+
+| Step | Value |
+|---|---|
+| Start with a pair | `(1.0, 2.0)` |
+| `from-pair` names `x` and `y`, then constructs `Point { x, y }` | `Point {x = 1.0, y = 2.0}` |
+| `shift-right` applies `add 1.0` to `.x` | `Point {x = 2.0, y = 2.0}` |
+
+Only `.x` changes in the result. Keeping the original point would still give
+its original coordinates. For alternatives, `Circle origin 1.0 | area` selects
+the circle arm and calculates `1 × 1 × 3.14159 = 3.14159`.
 
 ## The program
 

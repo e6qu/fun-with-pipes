@@ -1,12 +1,12 @@
-# SIMD means single instruction, multiple data: each lane holds a value and an
-# operation acts lane by lane. Vec[N, T] has N lanes of type T, stored in an array
-# inside a record. The current native implementation emits C loops; the C compiler
-# may vectorize eligible loops for the target. The API does not guarantee vector
-# instructions, stack-only storage or a speedup. Integer addition, subtraction,
-# multiplication and sum wrap on overflow, unlike ordinary checked arithmetic.
-# Division retains its arithmetic checks. Choose these numeric rules explicitly.
-# simd.from-array checks the lane count; directly constructing the exposed record
-# does not. Binary operations use the common input prefix for manual records.
+# SIMD means single instruction, multiple data: an operation acts on each lane.
+# `Vec[N, T]` stores N values of type T in an array inside a record.
+#
+# - Native code emits C loops; the C compiler may vectorize eligible loops.
+#   Vector instructions, stack-only storage and speedups are not guaranteed.
+# - Integer add/subtract/multiply/sum wrap on overflow, unlike ordinary checked
+#   arithmetic. Division keeps its checks. Choose these rules explicitly.
+# - `simd.from-array` checks the lane count; direct record construction does not.
+#   Binary operations on manual records use their common input prefix.
 
 Vec[N, T] = { lanes: Array[T] }
 

@@ -1,9 +1,8 @@
 # List iteration compared with its previous definition
 
-Historical measurements at the revisions named below. Counts and timings are
-observations of those programs, not current compiler budgets. Commands refer
-to the recorded measurement revision. Read [measurement terms](../benchmarks.md)
-for timing and memory boundaries; [the plan](../../PLAN.md) owns remaining work.
+Historical results; reproduce with the recorded revisions, not current main.
+[Measurement terms](../benchmarks.md) explain the costs;
+[PLAN.md](../../PLAN.md) tracks current work.
 
 Current service-scope tests reuse each input list for both State updates and
 `length`, printing the two counts. This keeps list construction the same in all
@@ -35,11 +34,14 @@ final count and `echo` prints `3`.
 at 10,000, 100,000 and 1,000,000 elements on Linux runners. The current protocol records eight samples
 in equally alternating order after a warmup; its new run is pending. The historical
 report below used seven samples. Timing includes process startup, input
-construction, updates, printing and cleanup. Both use the same C compiler and
+construction, updates, printing and cleanup.
+
+Both use the same C compiler and
 `-O2` and counted ownership. The report also records
 peak process memory, build commands/times and binary sizes. Separate 32/128-element
 tests count allocations without contaminating timed executables with counters.
 With current State-range fusion, the fold program can also avoid its input list.
+
 New runs therefore compare the complete optimized programs, including that
 saving; they do not isolate the library-definition change. This differs from the
 October 16 results below, whose input list still allocated.
@@ -71,7 +73,9 @@ To reproduce the six-host service and iteration measurements, dispatch
 The tests upload counts, generated C, executables, environment details and Linux
 timing samples. Once all six native jobs pass,
 [`collect-service-measurements.py`](../../scripts/collect-service-measurements.py)
-checks the run and creates the report. Supply its exact commit with `--head`,
+checks the run and creates the report.
+
+Supply its exact commit with `--head`,
 the workflow number with `--run`, a download directory with `--artifacts`, a
 report path with `--output`, and `--capture-requests 1 --each-comparison` for the
 current implementation. It uses authenticated `gh`; it does not run downloaded

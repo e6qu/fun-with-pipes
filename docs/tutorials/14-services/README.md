@@ -121,6 +121,18 @@ serves the module, and `fwp run --interp --service library main.fwp` runs `main`
 against it. Native and
 interpreted servers and clients mix freely.
 
+### Where a call runs
+
+```mermaid
+flowchart LR
+    A["One executable: caller"] --> B["library.book: local call"]
+    C["Split: caller"] --> D["Encode request"] --> E["library server"]
+    E --> F["Encode result"] --> C
+```
+
+For ISBN `"978-9"`, both paths return `None`. The split path additionally needs
+a reachable server and transfers bytes; equal outputs do not imply equal costs.
+
 ## The wire format
 
 The parts talk gRPC over HTTP/2, with protobuf messages derived from the

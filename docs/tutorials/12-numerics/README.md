@@ -39,11 +39,15 @@ numbers, matrices, complex numbers and forward differentiation.
 Here `f` computes `x² − 2`; `Ring` supplies addition/subtraction/multiplication
 and `FromFloat` converts the floating-point literal for the chosen number type.
 Its derivative is `2x`, so at 3 the program prints 6. `newton-step` applies
-`x − f(x)/f′(x)`, moving toward a root of `f`. `iterate 5` includes the starting
+`x − f(x)/f′(x)`, moving toward a root of `f`.
+
+`iterate 5` includes the starting
 value, so four updates from 1 approach √2.
 The final function names two list elements and computes `x² + y`, whose gradient
 at `[3, 4]` is `[6, 1]`. `nth` returns an `Option`; `option.unwrap-or zero`
-explicitly uses zero if that element is absent. The sample supplies both elements.
+explicitly uses zero if that element is absent.
+
+The sample supplies both elements.
 The local bindings give each lookup a name and evaluate it once.
 
 The remaining outputs follow from these calculations:
@@ -55,6 +59,21 @@ The remaining outputs follow from these calculations:
 | `a \| determinant` | For this 2×2 matrix, `4*3 - 1*1 = 11`. |
 | Complex multiplication | `(3-i)*(1+2i) = 5+5i`, using `i*i = -1`. |
 | `last` after iteration | `Some` holds the final estimate; the list contains the initial value and four updates. |
+
+## Follow a derivative through multiplication
+
+A dual number can be read as `(ordinary value, derivative)`. At input `3`,
+the input's derivative with respect to itself is `1`:
+
+| Calculation | Ordinary value | Derivative |
+|---|---|---|
+| Input `x` | `3` | `1` |
+| `x * x` | `9` | `1 × 3 + 3 × 1 = 6` |
+| `x * x - 2` | `7` | `6 - 0 = 6` |
+
+`derivative f 3.0` returns the derivative `6.0`, not the ordinary value `7.0`.
+The next lesson on [reverse mode](../20-autodiff-and-devices/README.md) shows
+how a tape records the same dependencies for a backward calculation.
 
 ## The program
 

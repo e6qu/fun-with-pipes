@@ -1,10 +1,9 @@
-# URLs, percent-encoding, query strings and form bodies.
+# A URL selects a scheme, host, optional port, path and query.
+# `https://example.test:8443/items?q=red` uses HTTPS, port 8443, path `/items`
+# and query `q=red`.
 #
-# A URL has a scheme, hostname, optional port, path and query. For example,
-# https://example.test:8443/items?q=red selects HTTPS, port 8443, path /items
-# and query q=red. Percent-encoding writes reserved bytes as % followed by two
-# hexadecimal digits. Form bodies use name/value pairs; encoding them is separate
-# from making an HTTP request.
+# Percent-encoding writes reserved bytes as `%` plus two hexadecimal digits.
+# Form bodies hold name/value pairs. Encoding a URL or form does not send a request.
 
 Url = { scheme: String, host: String, port: I64, path: String, query: String }
 

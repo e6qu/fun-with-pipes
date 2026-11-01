@@ -39,11 +39,15 @@ Interpreter values, native scalar arithmetic, text/JSON
 and protocol encoding use binary16/bfloat16/binary128. Half and bfloat native
 arrays use two-byte elements. F128 generic values are boxed 16-byte leaves;
 arrays now store 16-byte elements at eight-byte alignment, copying into an owned
-box when a scalar escapes. Half/bfloat workers use u16 bits. Closed quad workers
+box when a scalar escapes.
+
+Half/bfloat workers use u16 bits. Closed quad workers
 use direct bit-struct arithmetic, with passing four-host execution controls.
 Closed flat numeric records now carry quad/wide values in C structs between
 workers; four-host ownership controls and measured allocation reductions are
-recorded in [the measurement artifact](measurements/wide-records-2026-10-14.json). Generic
+recorded in [the measurement artifact](measurements/wide-records-2026-10-14.json).
+
+Generic
 boundaries box once and register partially constructed results for unwind.
 The C boundary maps half/bfloat to u16 bits and quad to `struct fwp_binary128`,
 including record fields, callbacks and pointer access. [Delivery evidence](roadmap-history.md)
@@ -55,7 +59,9 @@ The implementation uses shared binary16/bfloat16/binary128 arithmetic and exact
 decimal cores. For these three formats (F16, BF16 and F128), arithmetic and
 conversion NaNs are canonical positive quiet NaNs. F32/F64 arithmetic NaN signs
 and payloads are implementation dependent. Raw bit transport preserves payloads
-and signs for every format. Tests of NaN key ordering must supply the same bits
+and signs for every format.
+
+Tests of NaN key ordering must supply the same bits
 to both implementations, rather than derive keys from arithmetic such as 0/0. Decimal conversion uses explicit per-call
 scratch ownership, including cleanup on allocation failure. Delivery evidence
 records language integration and native verification alongside core arithmetic
@@ -76,7 +82,9 @@ Generated programs using these formats link the shared C11 arithmetic/decimal
 and C++20 math cores. The object cache includes their source, compiler identities,
 target options and relevant header-search environment; each link owns a private
 archive copy while cache eviction proceeds. `--emit-c out.c` also emits
-`out.float.c` and `out.float.cpp` when needed. Manual builds must compile and link
+`out.float.c` and `out.float.cpp` when needed.
+
+Manual builds must compile and link
 these companions with `-fno-fast-math -ffp-contract=off`; the C++ companion also
 uses `-fno-exceptions -fno-rtti` and has no C++ runtime dependency. Ordinary
 `fwp build` handles this compilation and caching. The bit-struct C ABI does not

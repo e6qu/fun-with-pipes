@@ -1,14 +1,15 @@
-# fwp standard prelude.
+# Core types and functions. The transformed input comes last:
+# `5 | sub 1` gives `4`; `10 | div 2` gives `5`; `3 | lt 5` gives `True`.
 #
-# Argument order convention: the "subject" of an operation comes last, so
-# that `x | sub 1` means x - 1, `x | div 2` means x / 2 and `x | lt 5`
-# means x < 5.
+# | Helper | Example |
+# |---|---|
+# | `id` returns its input | `5 | id` gives `5`. |
+# | `const x` ignores an input | `5 | const 1` gives `1`. |
+# | `both f g` computes two results | `5 | both id (add 1)` gives `(5, 6)`. |
+# | `fork h f g` passes both results to `h` | Uses `f`'s result first, then `g`'s. |
 #
-# The prelude supplies core types and function-building helpers. `id` returns
-# its input; `const x` ignores a later input and returns x. `both f g` makes a
-# pair of results from one input, while `fork h f g` passes those results to h.
-# For example, `5 | add 1` is 6 and `5 | const 1` is 1. Signatures below are
-# reference declarations, not a program to paste in full.
+# A number is a value; `const` explicitly makes a function returning that value.
+# See [lesson 1](tutorials/01-pipes-and-functions/README.md).
 
 # ---------------------------------------------------------------- primitives
 I8 = builtin

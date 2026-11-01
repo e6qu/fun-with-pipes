@@ -35,12 +35,16 @@ fwp build main.fwp --target wasm32-browser -o palindromes.wasm
 `stdin` (a string). The page must be served over HTTP, since the loader
 fetches the `.wasm` file, for example with `python3 -m http.server`. The
 program gets standard streams, clocks and random numbers; there are no
-files. As in [tutorial 10](../10-webassembly/README.md), programs with
+files.
+
+As in [tutorial 10](../10-webassembly/README.md), programs with
 `Network` are rejected when they are compiled, and compiling needs clang with
 a WASI sysroot. Tasks need a host that can suspend and resume their execution.
 JavaScript Promise Integration (JSPI) provides that ability directly. On a host
 without JSPI, build with `--wasm-async=asyncify`: Binaryen's `wasm-opt` transforms
-the module to save and restore its execution state. That transformation adds
+the module to save and restore its execution state.
+
+That transformation adds
 code and memory costs; see the [measured example](../../measurements/wasm-host-storage.md#webassembly-task-and-browser-loader-ownership).
 The loader checks here run under Node; they do not establish support in every
 browser engine.
@@ -79,18 +83,32 @@ reasons. This interpreter build runs tasks as fibers: suspended computations res
 by the browser through JavaScript Promise Integration (JSPI). The example menu
 includes [tutorial 6](../06-tasks-and-channels/README.md), which needs a host with
 JSPI enabled, or a playground built with `scripts/build-playground.sh --asyncify`.
+
 That option requires Binaryen's `wasm-opt` and a host compatible with the
 transformed module. This build exposes no sockets, cannot start processes, and
 cannot load C code. A program that needs sockets or foreign C functions, or tasks
 without the required host suspension support, is rejected
-before it starts, with an error that names what is missing. `fwp build` (except
+before it starts, with an error that names what is missing.
+
+`fwp build` (except
 `--emit-c`), `fwp pipe` and `fwp serve` say that they are not available.
 Ordinary recursion uses the host engine's call stack; its limit depends on the
 engine and program. Eligible direct self-tail calls reuse their frame in the
 interpreter, while the raw interpreter and source debugger retain recursive calls.
+
 [Lesson 22](../22-recursion-and-sharing/README.md) explains that distinction.
 Use `loop` for explicit bounded-stack iteration. Its callback can still recurse
 or retain growing data; list length alone is not a call-depth limit.
+
+## Follow one displayed line
+
+```text
+fwp print → loader's stdout callback → out.textContent → visible page text
+```
+
+The callback receives output; it does not evaluate fwp source. In the playground,
+the Web Worker instead runs the fwp interpreter first. Compiling a program to
+WebAssembly and running the interpreter in WebAssembly are different paths.
 
 ## Reading the example
 

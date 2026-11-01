@@ -1,23 +1,15 @@
-# REST endpoints from functions. `fwp build --rest` and `fwp serve --rest`
-# serve exported functions exposed as `rest` as HTTP endpoints with a JSON
-# contract and an OpenAPI document (see docs/rest.md); the program they
-# generate is made of these functions, which hand-written servers can use
-# too:
+# A REST endpoint maps an HTTP method/path to a function. `--rest` builds or
+# serves exported functions exposed as `rest`; generated servers use these helpers.
 #
-#     rest.main openapi-text [rest.endpoint route function, ...]
+# - Path, query, header and body values supply arguments, decoded with `json.read`.
+# - Invalid input produces 400 with its location, such as
+#   `query.limit: expected an integer, got "x"`.
+# - `json.write` encodes results. `None` gives 404; `Err` or raised `Error`
+#   produces `{"error": ...}` with the route's status.
+# - Schemas describe valid JSON; OpenAPI collects schemas and endpoint descriptions.
 #
-# A request's path parameters, query parameters and body become the
-# function's arguments, decoded with `json.read` (a decoding error is a
-# 400 naming the parameter: `query.limit: expected an integer, got "x"`).
-# The result is written with `json.write`; a `None` result is a 404, and
-# an `Err` result or an `Error` the function raises is an error response
-# `{"error": ...}` whose status comes from the route.
-#
-# A REST endpoint maps an HTTP method/path to a function. Request values may
-# come from the path, query, headers or body. A schema describes valid JSON;
-# OpenAPI collects these schemas with endpoint descriptions. Generated servers
-# use the helpers below; most applications only need exported functions and
-# exposure comments. Tutorial 17 shows that workflow.
+# A hand-written server can assemble `rest.main openapi-text [rest.endpoint route function, ...]`.
+# Most applications use exposure comments; see [lesson 17](tutorials/17-rest-and-openapi/README.md).
 
 # Where an argument of an endpoint comes from: a path parameter, a query
 # parameter (required or not), every value of a repeated query parameter,

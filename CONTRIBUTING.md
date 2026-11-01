@@ -3,7 +3,7 @@
 This guide explains how to change the compiler, test it and submit a pull request.
 Learn the source language through the [tutorials](docs/tutorials/README.md); use
 [compiler design](docs/design.md) to find the implementation and
-[the glossary](docs/glossary.md) to look up unfamiliar terms.
+[terminology and examples](docs/terminology.md) to look up unfamiliar terms.
 The [compiler pipeline](docs/compiler-pipeline.md) maps parsing, expansion,
 desugaring and execution to source files. [Design limits](docs/design-limits.md)
 separate measurable goals from promises the compiler cannot make.
@@ -120,11 +120,13 @@ replace the production correctness gates.
 named suites; use that workflow's inputs and the relevant measurement protocol.
 Each suite declares its own host matrix. Where it supports `native_runner`, a
 selected host narrows that matrix and `all` uses the suite’s complete matrix.
+
 Functional probes run on two Linux hosts; analysis runs on Linux and Intel macOS.
 The `kernels` and `queued-sockets` suites also include their declared WebAssembly
 jobs. None of these selections replaces the nine production acceptance jobs.
 Derivative timing suites (`descent-peers`, `descent-recording`,
 `eager-capture-time`) require explicit `comparison_session=both`, `1` or `2`.
+
 Use `both` for the declared experiment; select one session only to replace a host
 rejected before timing, retaining the original evidence. `descent-checks` has one
 correctness session and does not use this setting. Missing or unsupported timing
@@ -190,7 +192,7 @@ The separate benchmark job runs
 `CC=gcc FWP_LTO=0 cargo test --release --test bench benchmarks -- --ignored --exact --nocapture`.
 It fails on different program results, but currently reports rather than gates
 on timing. [The benchmark guide](docs/benchmarks.md) defines what each comparison
-includes; the [measurement plan](PLAN.md#9-measurements) defines the remaining evidence requirements.
+includes; the [measurement plan](PLAN.md) defines the remaining evidence requirements.
 
 ## Rules the code follows
 
@@ -348,6 +350,7 @@ explained as well as tested. Generated library docs come from source comments.
 Comments can also become CLI help, MCP descriptions and OpenAPI documents;
 when those comments change, regenerate the affected fixtures and run their
 focused comparison tests without `FWP_BLESS` afterward.
+
 For performance, name both implementations, equivalent work, timing scope and
 extra cost as a ratio or percentage; state when a comparison cannot isolate
 language overhead. “Fewer allocations” does not by itself mean “faster.”
@@ -398,11 +401,15 @@ compiler archive for that OS/architecture. `scripts/package-native.py` checks
 ELF/Mach-O/PE machine types (the native executable formats) and executes a copied compiler, raw interpreter and
 generated programs outside the checkout. The archive includes its
 manifest and requirements: a system C toolchain for native compilation and
-OpenSSL 3 for TLS. `iteration-evidence-*` retains C/disassembly and paired
+OpenSSL 3 for TLS.
+
+`iteration-evidence-*` retains C/disassembly and paired
 measurements; `ownership-evidence-*` retains ARC and workspace controls.
 Linux/macOS ownership evidence is a verified ZIP uploaded directly, alongside a
 JSON manifest containing the source revision and each file's size and SHA-256.
-Packaging checks every archived byte before publication. A read failure names
+Packaging checks every archived byte before publication.
+
+A read failure names
 the input file in the manifest and fails the job; it does not omit evidence or
 publish a partial archive. Windows retains ownership evidence in its native
 test artifact.

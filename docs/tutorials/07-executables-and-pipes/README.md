@@ -67,6 +67,16 @@ $ ./fahrenheit '{celsius = -40.0, sensor = "pole"}'
 Reading {celsius = -40.0, sensor = "pole"}
 ```
 
+### Follow a line through two tools
+
+```text
+input 3 → scale 2 → 6 → scale 5 → 30
+```
+
+Each stage takes one integer and returns one integer. The next command builds
+that connection. In contrast, `total` takes `List[I64]`, so the earlier three
+input lines become `[1, 2, 3]` before summation.
+
 ## Typed pipes
 
 Executables connect like Unix tools. When one fwp program feeds another,

@@ -82,7 +82,9 @@ These are those functions' own frames, excluding callees and total task stacks.
 The transfer must keep a pending message protected until insertion or cleanup.
 The standalone `step` wrapper also remains in the binary, but is not the loop's
 executed body. The generated loop already avoids allocating `Step` variants;
-its state tuple and the tuple passed to `exchange` still allocate. Those are
+its state tuple and the tuple passed to `exchange` still allocate.
+
+Those are
 separate costs from queue ownership. No execution-time improvement is established,
 and no C/Rust peer was measured. Separate ownership and full production checks
 passed in PR #175; the count experiment alone does not establish cleanup safety.
@@ -126,6 +128,7 @@ The fresh-text machine code now calls `exchange` through worker `w17`. Its own
 frame grows from 360 to 376 bytes on AMD64 (including saved registers, excluding
 the return address), and from 352 to 368 bytes on ARM64. The enclosing `work`
 frame shrinks from 632 to 504 bytes on AMD64 and from 544 to 464 bytes on ARM64.
+
 These are individual frames, not total task-stack peaks. In table order, ARC
 executable file sizes change by −8/0/−4416/−48/+48 bytes on AMD64 and
 −16/−8/−280/−120/+48 on ARM64. No execution timing or C/Rust comparison was run.
@@ -160,12 +163,16 @@ returns a function that ignores its later argument and returns `value`.
 Run the explicit `channel-costs` suite in `numerics.yml`. It uses native Linux
 AMD64 and ARM64 runners, GCC and `-O2`, with counted ownership.
 The current protocol produces 45 samples per host (five programs × three input
-sizes × three repetitions) and five ordinary binaries. Historical reports below
+sizes × three repetitions) and five ordinary binaries.
+
+Historical reports below
 used two memory modes; reproduce those with their recorded source revision. `compile_c` also supplies `-std=gnu11 -ffp-contract=off -w` and native
 runtime links. The workflow explicitly sets `FWP_LTO=0`, disabling link-time
 optimization. The recorded baseline and first transfer run also compiled without
 it: their C files are below the compiler's automatic size threshold of 1,000,000
-bytes. This keeps future counts independent of that threshold.
+bytes.
+
+This keeps future counts independent of that threshold.
 Artifacts identify the exact source, CPU, kernel and tool versions,
 and retain fwp source, generated C, ordinary and instrumented binaries and actual
 ordinary-binary disassembly. They include ordinary binary file size in bytes.

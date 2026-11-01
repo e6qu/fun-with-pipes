@@ -17,7 +17,7 @@ pipe: `5 | mul 2`.
 
 Start with [the tutorials](docs/tutorials/README.md). They explain functions,
 data, types and error handling before building larger programs. The
-[glossary](docs/glossary.md) explains terms used in the reference and compiler
+[terminology guide](docs/terminology.md) explains terms used in the reference and compiler
 documentation; you do not need to learn them all before writing a program.
 
 ## What the language offers
@@ -51,15 +51,17 @@ comparisons with Swift, C and Rust and the limits of the evidence.
 
 ## Project direction
 
-[PLAN.md](PLAN.md) separates verified tracing-GC removal from the remaining
-reference-counting and allocation costs in named unshared workloads.
-[Weak channels](docs/weak-channels.md) and [retained C callbacks](docs/retained-callbacks.md)
-are implemented and verified. The current batch adds local `let` bindings, named single-argument `fn` functions,
-destructuring and field shorthand alongside tacit pipes. The plan gives concrete
-acceptance checks for their semantics, tooling and documentation, then for known
-calls, borrowing, direct storage, collection pipelines, numerics and derivatives.
-Swift joins C/Rust in performance and memory comparisons; unresolved timing
-results stay explicit rather than becoming completed optimization claims.
+Tracing GC removal and the local `let`/`fn` syntax are delivered. The current
+[plan](PLAN.md) reduces temporary allocations and ownership operations in typed
+derivatives, alongside this documentation revision.
+
+- Prefer moves, borrows, direct values and storage reuse; count necessary sharing.
+- Preserve simple pipes, immutable values, checked arithmetic and effect order.
+- Compare time and memory with Swift, C and Rust; keep failed or noisy results visible.
+- Use ahead-of-time compilation. JIT and backward compatibility are excluded.
+
+[Ownership](docs/ownership.md) distinguishes verified reductions from remaining
+costs. [History](docs/roadmap-history.md) records completed deliveries.
 
 The [design limits](docs/design-limits.md) explain achievable guarantees and
 tradeoffs. Eligible direct self-tail calls already reuse stack frames in native code and

@@ -18,7 +18,9 @@ files); its result is the JSON response (or text, or CSV), and its errors
 are error responses. The functions of a file exposed as `rest` (a line
 `# expose: rest` above the `export`, or in the file's leading comment for
 all of them) build into one HTTP server, which also serves its OpenAPI
-3.1 document. In the other direction, `fwp openapi --import` turns the
+3.1 document.
+
+In the other direction, `fwp openapi --import` turns the
 supported OpenAPI documents (JSON or YAML, OpenAPI 3 or Swagger 2.0) into
 an fwp module of typed client functions. There is no routing or JSON code
 to write.
@@ -308,12 +310,16 @@ A form fills the fields of the body's record by name (their JSON names):
 `Option`s and `List`s of `Bytes` and `Upload` work the same way. Other
 field types (records, nested lists) cannot come from a form, and a body
 that is not a record cannot be a form: both are errors when the server
-is built. A text value that is not UTF-8 is a 400, as is a multipart
+is built.
+
+A text value that is not UTF-8 is a 400, as is a multipart
 body without parts (`{"error": "invalid multipart/form-data body"}`);
 values that do not decode are 400s as in JSON bodies
 (`$.size: expected an integer, got "x"`). In JSON, an `Upload` is an
 object whose `bytes` are base64, so an endpoint that also accepts JSON
-takes files that way. The whole body is in memory (within the server's
+takes files that way.
+
+The whole body is in memory (within the server's
 body size limit) before it is decoded.
 
 For hand-written servers, `rest.multipart-parts boundary bytes` gives the
@@ -699,6 +705,7 @@ whose body is neither JSON, a form nor `multipart/form-data`, or that
 only accept credentials of other schemes (HTTP basic authentication, mutual TLS), are left out; each
 is reported on stderr, as in
 `fwp openapi: spec.json: POST /user/logout: its security scheme \`basic\` is not supported (bearer tokens and API keys are); it is left out`.
+
 The round trip is tested: a client generated from the document a server
 serves calls that server, interpreted and natively, and decodes what it
 answers (`tests/rest/roundtrip.fwp`; `tests/rest/secureroundtrip.fwp`
@@ -734,7 +741,9 @@ body as it is, or a JSON object of a form's fields:
 `RestSource.Content`), decodes them with `json.read` at the type of the function's
 parameters (a tuple for several), calls the function under `attempt`, and
 writes the result or the error with `json.write` (`rest.endpoint-as`
-writes the result in the format that `Accept` chooses). `rest.secured` checks
+writes the result in the format that `Accept` chooses).
+
+`rest.secured` checks
 credentials before the endpoint's handler, `rest.within` gives it a time
 limit, and `rest.serve` adds `/openapi.json`, `/docs`, CORS
 (`rest.cors`) and JSON errors (`rest.error-response` as the server's

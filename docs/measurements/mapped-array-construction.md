@@ -1,9 +1,8 @@
 # Building numeric arrays without temporary list nodes
 
-Historical measurements at the revisions named below. Counts and timings are
-observations of those programs, not current compiler budgets. Commands refer
-to the recorded measurement revision. Read [measurement terms](../benchmarks.md)
-for timing and memory boundaries; [the plan](../../PLAN.md) owns remaining work.
+Historical results; reproduce with the recorded revisions, not current main.
+[Measurement terms](../benchmarks.md) explain the costs;
+[PLAN.md](../../PLAN.md) tracks current work.
 
 **Comparison:** the same fwp compiler with mapped-array combining off/on, in
 tracing and ARC modes. `map f | array.from-list` normally builds a result list;

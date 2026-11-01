@@ -3,7 +3,8 @@
 **Both compiler changes were rejected.** Their arithmetic is correct, but neither
 meets the performance rules frozen before the experiment. The compiler keeps its
 existing checked additions. New boundary tests and the complete measurements
-remain; P2 still needs a measured repair.
+remain. [Later decimal-count work](decimal-count.md) records a different accepted
+implementation; it does not change the rejection of these two candidates.
 
 ## What we tested
 

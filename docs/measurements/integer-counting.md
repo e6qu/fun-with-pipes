@@ -4,7 +4,9 @@
 a string. For example, `-123456` has seven characters, including its minus sign.
 The runtime now counts digits in groups of 16, 8, 4, 2 and 1. Dividing `123456`
 by 10,000 removes four digits and leaves `12`; one further comparison gives six
-digits. Signed values use unsigned magnitude and add the sign, so I64's minimum
+digits.
+
+Signed values use unsigned magnitude and add the sign, so I64's minimum
 does not require an overflowing signed negation. There is no lookup table or
 new heap storage. Ordinary inline hints let the C compiler combine this work
 with its caller; they do not force inlining.
@@ -132,12 +134,16 @@ interpretation and native execution at O0/O2 in ARC and tracing modes.
 Inputs include signed/unsigned extremes and
 values immediately before, at and after every representable power of ten, with
 both signs for signed cases. Binary I64 payloads are independently checked against
-Rust decimal-format lengths. Other cases preserve Unicode lengths, shared
+Rust decimal-format lengths.
+
+Other cases preserve Unicode lengths, shared
 strings, effects, trap order and output-protocol separation. Allocation controls
 must detect deliberately inserted storage requests. The artifact audit verifies
 all 24 native executables across both hosts, their C, disassembly and controls.
 The current tests retain those inputs and allocation controls in one counted
-runtime: six binaries per host. That migration passed integrated validation in
+runtime: six binaries per host.
+
+That migration passed integrated validation in
 [#217](../roadmap-history.md#tracing-gc-removal-pr-217). These checks do not remeasure
 the historical timing samples.
 
@@ -146,7 +152,9 @@ medians were 1–4% higher on EPYC 9V74 and 2–3% higher on N2 than unchanged f
 Its [complete samples](integer-counting-loop-2026-10-21.json) remain available.
 Unhinted grouping (`58520171`, run `39526333980`) saved 16–19% on EPYC 9V74 and
 13–14% on N2 in those sessions; its [samples](integer-counting-groups-2026-10-21.json)
-are also retained, alongside the later, slower Xeon result. Both preparations'
+are also retained, alongside the later, slower Xeon result.
+
+Both preparations'
 focused test runs exposed the new test's binary-versus-text assertion mistake
 and consequent missing artifacts. All failed targets were audited; the repaired
 protocol assertion and complete binary inspection pass in the selected run above.

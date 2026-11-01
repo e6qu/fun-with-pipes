@@ -56,7 +56,9 @@ not affect only one policy. Keep address randomization enabled.
 For the small matrix use C, Rust, fwp and its byte-identical copy. For zero-update
 history use the candidate, reference and a byte-identical copy of each. Run 16
 rounds per policy, four processes per label per round, with the existing balanced
-four-label schedule and seed 20261029. Keep five internal kernel samples and the
+four-label schedule and seed 20261029.
+
+Keep five internal kernel samples and the
 original eight calculations per sample; keep all 32,768 derivative solves per
 process. Check every output/hash and live-storage result. Preserve every process
 duration and order, including outliers. Do not treat these diagnostic timings as
@@ -83,7 +85,9 @@ The `timing-diagnostics` selection in `.github/workflows/numerics.yml` requires
 before downloading or running the failed programs; a rejection remains an
 artifact. `scripts/diagnose-timing-variation.py` checks executable identities,
 retains every stdout/stderr stream and duration, and restores the original CPU
-affinity even after failure. `scripts/test-timing-diagnostic.py` checks observation
+affinity even after failure.
+
+`scripts/test-timing-diagnostic.py` checks observation
 placement, changed instrumentation boundaries and rejected corrupt outputs.
 Run `40949475361`, job `123713471516`, completed on EPYC 7763 at `535031b3`.
 The [archive](timing-diagnostic-artifacts-2026-10-29.json) retains all 1,089 process
@@ -97,11 +101,15 @@ rejected EPYC 9V45 before downloading or executing; its qualification/log remain
 Fixed-CPU execution does not repair the matrix control. The fwp/identical ratio
 is 1.0389 with normal scheduling and 0.9633 when pinned (reciprocal 1.0381).
 Every one of 2,560 recorded matrix calls has input/output offsets `(8, 8, 8)`
-modulo 64 KiB. Only two unbound calls change CPU; none pinned do. Pinned fwp
+modulo 64 KiB. Only two unbound calls change CPU; none pinned do.
+
+Pinned fwp
 processes still range from 5.38 to 10.25 ms for their five calculation samples.
 These observations reject CPU affinity and these low address bits as sufficient
 explanations. They do not identify a runtime defect or prove other placement or
-host-load effects absent. The matrix source preserves shape bounds, live inputs,
+host-load effects absent.
+
+The matrix source preserves shape bounds, live inputs,
 a fresh output and alias-safe byte copies; no unsafe access was identified.
 
 Zero-update history remains near the limit: candidate/reference 1.0204 unbound
@@ -123,7 +131,9 @@ placements. The present sample size cannot reliably resolve the 2% control.
 For **both architectures**, increase the small matrix from four to **256 fresh
 processes per label per round**. Keep 16 measured rounds and two warmup rounds:
 4,096 measured processes per label. Repeat the existing 16-entry balanced cycle
-64 times within each round; keep the same seed and rotations. This retains
+64 times within each round; keep the same seed and rotations.
+
+This retains
 position and within-round predecessor balance. Keep ordinary scheduling, five
 samples per process, eight calculations per sample, both timing boundaries,
 the median of complete round totals, all observations and the **1.02** limit.
@@ -133,7 +143,9 @@ As a planning estimate only, independent sample means at the observed variation
 would have about 1.4% two-sided 99% difference uncertainty at 4,096 processes,
 versus about 11% at 64. The actual statistic uses round medians and host conditions
 may be correlated; this estimate does not replace the unchanged control or
-promise a pass. Run two independent qualified sessions per architecture after
+promise a pass.
+
+Run two independent qualified sessions per architecture after
 implementing this declared count. A further failure stays inconclusive: do not
 increase counts again after seeing those outcomes or discard old results.
 This repair changes measurement precision, not the programs or D2's limits.
@@ -157,7 +169,9 @@ Before selecting an optimization, compile the retained C and fwp timing sources
 for all four cases on native ARM64/AMD64 with the matching GCC version and
 explicit original architecture/O2 settings. Add only GCC's vectorization report and optimized-tree dump options.
 Require the rebuilt executable's hash to match its recorded ordinary binary
-and verify every output hash/live-storage result. Preserve the source, commands,
+and verify every output hash/live-storage result.
+
+Preserve the source, commands,
 compiler reports, binaries and outputs. This is compiler inspection, not another
 timing acceptance run; do not select or discard elapsed-time observations.
 It can explain generated code choices while the separate allocation-inclusive
@@ -270,7 +284,9 @@ Array kernel/inclusive copy ratios are 1.00099/0.99525. This stable diagnostic
 control does not replace the earlier failed acceptance session. History's
 reference and its byte-identical copy differ by about 2.1% in CPU time. Page-fault
 counts are nearly equal; no major faults occur. Waiting to run therefore does
-not explain all observed variation. Nor does this prove that the candidate adds
+not explain all observed variation.
+
+Nor does this prove that the candidate adds
 source-level work: the identical reference programs also differ. The cause is
 still unresolved; do not attribute it to instruction layout, heap placement or
 host load without an experiment that distinguishes those effects.
@@ -304,7 +320,9 @@ Compare two explicit naming policies. `named` uses the resource diagnostic's
 role-based basenames. `equal` uses four eight-character basenames, `slot0exe`
 through `slot3exe`, inside each group's directory. Create the equal names as hard
 links to the named files and verify device/inode equality: both policies execute
-the same file, not independently compiled or copied programs. All paths are
+the same file, not independently compiled or copied programs.
+
+All paths are
 absolute. Each invocation passes its executable path as argument zero; C/Rust
 array peers retain their explicit `array` argument. Keep the same environment,
 working directory, allowed CPU set and all remaining arguments for both policies.
@@ -314,11 +332,15 @@ separate their individual effects or identify a stack/cache mechanism.
 For each group, run sixteen rounds with four processes per role per policy,
 seed 20261029 and the existing balanced four-label schedule. Alternate which
 policy runs first each round. Retain all **1,024 process observations**, including
-failures and outliers; no timing is an acceptance sample. Record elapsed time,
+failures and outliers; no timing is an acceptance sample.
+
+Record elapsed time,
 child CPU time, faults, context switches, exact commands and stdout/stderr hashes.
 Check every result, all five array samples and zero final live storage. Preserve
 all original binary bytes, the source/report identities, environment identity,
-file-link identities and complete job logs. Reject a different host before
+file-link identities and complete job logs.
+
+Reject a different host before
 running any program. A host rejected before execution may be replaced; a measured
 result must not be rerun because its ratios are inconvenient.
 
@@ -326,7 +348,9 @@ For each policy report candidate/reference and both history copy controls,
 plus array kernel, allocation-inclusive and whole-child copy controls. Compare
 median complete round totals, with individual observations retained. The prior
 2% failures remain failures; this diagnostic neither changes those limits nor
-closes D2/N1. A difference between policies is evidence about this invocation
+closes D2/N1.
+
+A difference between policies is evidence about this invocation
 change on this host, not proof of a general compiler cost or a future passing
 baseline. If normalizing names does not explain the discrepancy, say so. Any
 later acceptance repair needs its own published protocol and must control every

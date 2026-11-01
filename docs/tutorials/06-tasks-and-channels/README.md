@@ -58,6 +58,18 @@ input. `fn _ -> ...` ignores that input and delays the body until the task start
 before closing the channel; `_` discards the unit result. Its effect signature
 lists the actions allowed at this task boundary, not actions every call performs.
 
+### Follow the receiving loop
+
+| Receive | Previous total | Next step |
+|---|---|---|
+| `Some 1` | `0` | `Again (channel, 1)` |
+| `Some 2` | `1` | `Again (channel, 3)` |
+| `Some 3` | `3` | `Again (channel, 6)` |
+| `None` | `6` | `Stop 6` |
+
+The producer can wait when the queue is full while the consumer makes room.
+Closing ends future sends; it does not erase the queued `3`.
+
 ## Deadlines
 
 A **deadline** is a time limit. `task.within 50ms` cancels its task after

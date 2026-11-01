@@ -59,7 +59,9 @@ For the subtraction-only candidate, the loop instruction section shrinks by
 48 bytes on AMD64 and 32 on ARM64. Its main runtime-thread frame remains
 288 and 304 bytes respectively. The Fibonacci instruction section grows by
 1,328 bytes on AMD64 and 1,024 on ARM64; its main runtime-thread frame falls
-from 320 to 256 and 272 bytes respectively. These are compiler-reported frames
+from 320 to 256 and 272 bytes respectively.
+
+These are compiler-reported frames
 for those functions, not maximum recursion-stack usage. Instruction-section sizes
 include padding; whole-file sizes also include linker metadata and other data.
 Both candidates' complete size/frame records are retained in the data file.

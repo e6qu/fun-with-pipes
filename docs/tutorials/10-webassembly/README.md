@@ -42,6 +42,7 @@ when they are compiled for these targets, with an error naming the
 effect. Tasks and channels (`Async`) need JavaScript Promise Integration (JSPI),
 which lets the host suspend a WebAssembly stack while a task waits, or a build
 with `--wasm-async=asyncify`, which transforms the module to support suspension.
+
 The repository tests these paths separately. In wasmtime, starting a task traps.
 WASI file access is limited to directories the host explicitly opens for the
 module (preopened directories). See the [target limits](../../reference.md#targets)
@@ -72,6 +73,17 @@ there is no recursive callback here. Starting at 27 counts 112 terms, including 
 each with its length, sorts by `.1`, and selects the last. `last` returns an
 `Option` because a list can be empty. This range gives `Some (871, 179)`.
 The final line reverses `"fwp"` and uppercases it, printing `PWF`.
+
+### A small loop trace
+
+For input `3`, the states are:
+
+```text
+(3,1) → (10,2) → (5,3) → (16,4) → (8,5) → (4,6) → (2,7) → (1,8)
+```
+
+The first field follows Collatz; the second counts terms, including the initial
+`3` and final `1`. At `(1,8)`, `Stop 8` finishes the loop.
 
 ## The program
 

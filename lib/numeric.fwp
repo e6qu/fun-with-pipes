@@ -1,21 +1,16 @@
-# Numerical computing: statically sized vectors and matrices, complex
-# numbers and dense linear algebra.
+# Vectors store sequences of numbers; matrices store rectangular grids;
+# complex numbers have real and imaginary parts. Linear algebra combines them
+# through dot products, multiplication and solving equations.
 #
-# `vector [1.0, 2.0]` has type Vector[F64, 2] and `matrix [[1, 2], [3, 4]]`
-# has type Matrix[I64, 2, 2]: dimensions come from the literal and take
-# part in type checking, so `a | matmul b` with mismatched inner
-# dimensions is a compile error. A size known only when the program runs
-# is abstract: `vector.from-list : List[t] -> Vector[t, _]` gives each
-# call a size of its own, unknown but rigid, and `vector.same-size` checks
-# at run time that two vectors agree. Performance: abstract sizes cost a
-# length comparison and an `Option` at each such check.
+# - `vector [1.0, 2.0]` has type `Vector[F64, 2]`.
+# - `matrix [[1, 2], [3, 4]]` has type `Matrix[I64, 2, 2]`.
+# - Dimensions participate in checking: mismatched multiplication is rejected.
+# - `vector.from-list : List[t] -> Vector[t, _]` produces a size known only at
+#   runtime, distinct for each call. `vector.same-size` checks agreement with a
+#   length comparison and an `Option` result.
 #
-# A vector is an ordered set of numbers; a matrix is a rectangular grid.
-# Dimensions are type arguments, so Vector[F64, 3] contains three F64 elements.
-# A complex number has real and imaginary parts. Linear algebra combines these
-# values through dot products, matrix multiplication and solving equations.
-# Numeric traits state which operations a generic algorithm needs. Tutorial 12
-# introduces these operations and explains their expected output.
+# Traits state the arithmetic an algorithm requires.
+# [Lesson 12](tutorials/12-numerics/README.md) works through the calculations.
 
 Vector[T, N] = { data: Array[T] }
 Matrix[T, M, N] = { rows: I64, cols: I64, data: Array[T] }

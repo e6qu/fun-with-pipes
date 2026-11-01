@@ -11,7 +11,9 @@ A strong channel value owns its queue. `WeakChannel[a]` observes the identity of
 a channel carrying `a`, without owning that queue or its messages. It owns only
 small metadata that records whether the target still exists. Equality compares
 target identity, including after expiration: two downgrades of one channel stay
-equal, and references to different channels stay unequal. Comparing, displaying or
+equal, and references to different channels stay unequal.
+
+Comparing, displaying or
 duplicating a weak handle does not inspect or duplicate its payload. Runtime
 identities cannot be encoded, decoded or canonically hashed; use explicit
 application keys when data must cross a serialization boundary. It is not a weak
@@ -82,7 +84,9 @@ When a generated program uses weak channels, its channel structure has one
 nullable metadata pointer. The first downgrade allocates one control object;
 later downgrades reuse it. Programs without the feature omit that field.
 The control object has one owner held by the live channel plus one per weak
-value. The channel's final release clears the target, releases that metadata
+value.
+
+The channel's final release clears the target, releases that metadata
 owner, then destroys queued values and the channel itself. The control object
 is freed after its last owner disappears. It may outlive the payload, but cannot
 keep that payload alive. Address reuse cannot change an expired control object
@@ -106,7 +110,9 @@ raw/optimized interpretation versus native O1/O2, close versus expiration,
 returned weak captures, attempted cycle recreation, repeated metadata cleanup,
 actual address reuse, identity equality, allocation failure, language error and
 task cancellation. A native reference-count overflow during upgrade must release
-the unfinished `Some` cell without releasing the borrowed target. A control that
+the unfinished `Some` cell without releasing the borrowed target.
+
+A control that
 omits that construction cleanup must fail its allocation-balance check.
 Dynamic/static native storage and WASI JSPI/Asyncify cases
 are included. Deliberately omitting expiration or the channel's

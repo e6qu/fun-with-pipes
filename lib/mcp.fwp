@@ -1,17 +1,16 @@
-# Model Context Protocol servers (docs/mcp.md): functions as the tools of
-# a stateless MCP server, protocol version 2026-07-28. `fwp serve --mcp`
-# and `fwp build --mcp` generate one from the exported functions exposed
-# as `mcp`. Requests are independent: there is no session and no
-# `initialize`; each request names its protocol version in `_meta`, and
-# `server/discover` describes the server. The transport is standard input
-# and output (one JSON-RPC message per line), or HTTP (`--listen
-# host:port`: `POST /mcp`).
+# Model Context Protocol (MCP) lets compatible clients discover and call tools
+# with structured arguments. JSON-RPC carries a method, parameters and reply ID;
+# schemas describe valid values. Annotations are hints, not permission to call.
 #
-# MCP lets a compatible client discover tools and call them with structured
-# arguments. JSON-RPC messages carry a method, parameters and an ID for matching
-# replies. Schemas describe valid values; annotations are hints, not permission
-# to call. Clients must support this implementation's explicit protocol version.
-# Tutorial 21 shows actual discovery, listing and call messages.
+# - This implementation uses protocol version `2026-07-28` and independent requests.
+# - There is no session or `initialize`; requests name the version in `_meta`.
+#   `server/discover` describes the server.
+# - Transport is one message per line on standard input/output, or `POST /mcp`
+#   with `--listen host:port`.
+# - `fwp serve --mcp` and `fwp build --mcp` expose selected exported functions.
+#
+# Clients must support this version and stateless behavior.
+# [Lesson 21](tutorials/21-mcp/README.md) shows discovery, listing and calls.
 
 # A tool: its name, and its call from the arguments of `tools/call` to
 # its result (the JSON text of a `CallToolResult`).

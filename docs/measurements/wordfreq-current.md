@@ -17,7 +17,9 @@ come from `scripts/measure-wordfreq.py`. Check every complete output.
 All peers normalize words, count in sorted contiguous key/count pairs, rank and
 print five results. C/Rust combine the three normalization operations; fwp uses
 its ordinary strings, lists and maps. Inputs are ASCII. This does not compare
-arbitrary Unicode or all language features. Time the complete fresh process:
+arbitrary Unicode or all language features.
+
+Time the complete fresh process:
 startup, input reads, normalization, counting, ranking, printing and cleanup.
 Exclude input generation, compilation, the parent opening the input file and
 evidence writes from that interval. Warmups reuse the same input files; no OS

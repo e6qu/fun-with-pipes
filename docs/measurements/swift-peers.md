@@ -6,12 +6,14 @@ The [separate audit](https://github.com/e6qu/fun-with-pipes/actions/runs/4121521
 rechecks all four artifacts without executing their binaries. Full job logs have
 no unexpected compiler diagnostics. The container package manager notes an absent
 C++ manual page; compilation, arithmetic and ownership controls pass.
+
 These measurements precede the merge of PR #234. Its full production acceptance
 is recorded in [delivery history](../roadmap-history.md); the focused measurement
 jobs did not replace that matrix. The [summary JSON](swift-peers-2026-10-31.json) retains every
 session's timings, all copy-control ratios, RSS samples and artifact identities.
 The [complete archive](swift-peers-2026-10-31.tar.xz) retains all four original
 manifests, sources, commands, samples and native binaries (7.3 MB compressed).
+
 [Retention audit 41251278856](https://github.com/e6qu/fun-with-pipes/actions/runs/41251278856)
 rechecked every file before packing it. `scripts/test-swift-peer-records.py`
 verifies the archive hash, reruns the read-only audit and matches the summary;
@@ -24,7 +26,9 @@ The [protocol and seven inputs](../benchmarks.md#swift-comparison) use GCC 13.3,
 Rust 1.99.1 and Swift 6.4.2. Each Linux job has four available CPUs. Swift uses
 language mode 6, optimized checked builds and ordinary arrays/closures. C and
 fwp use O2; no peer uses LTO. The timer includes process startup, construction,
-computation, output and cleanup. It excludes compilation. A C output precheck
+computation, output and cleanup.
+
+It excludes compilation. A C output precheck
 precedes two warmup rounds and 24 measured rounds. Every language also runs a
 byte-identical copy; a median difference above 2% makes the whole case/session
 inconclusive. A successful CI job means records and results are valid, not that

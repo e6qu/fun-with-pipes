@@ -19,7 +19,9 @@ starts again from the original vector.
 For this saved fwp program only, replace the single cached main invocation with
 512 direct calls to its numerical entry. Require that it has no other cached
 top-level computations and no constant initialization work. Runtime initialization
-and final teardown occur once per process. In C and Rust, name the original main
+and final teardown occur once per process.
+
+In C and Rust, name the original main
 body `workload` and call it 512 times, preserving error returns. The compiler may
 optimize the harness under the same O2 flags; inspect its generated machine code.
 No derivative, arithmetic, bounds check, allocation or output statement is edited.
@@ -36,7 +38,9 @@ Run on native Linux AMD64 and ARM64 with GCC O2, baseline architecture, no fast-
 or floating contraction, and Rust O2/generic CPU/checked overflow/no LTO. Record
 CPU models, compiler versions and full commands. Four warmups precede **48 samples**
 per entry. A six-round schedule balances each position and every ordered adjacent
-pair within the block; shuffle blocks with seed 20261022. Cross-block boundaries
+pair within the block; shuffle blocks with seed 20261022.
+
+Cross-block boundaries
 are not balanced. Time the whole process, including all output, initialization and
 teardown; compilation and instrumented profiles are separate. Dividing by 512 is
 amortized per-solve time, not the startup cost of a standalone program.
@@ -65,7 +69,9 @@ the timed executable keeps the original workload and repeated output.
 The 33-coordinate, 199-update case has two additional controls for each compiler.
 One allocates a small owned string before the loop and deliberately retains it
 until final cleanup. The between-solve observer must detect its live storage on
-the first solve and exit with status 225. The other makes the same delayed release
+the first solve and exit with status 225.
+
+The other makes the same delayed release
 but omits the between-solve observer: it must complete with zero final storage.
 Together they show why a clean exit alone cannot establish bounded idle storage.
 The observer checks every solve, not selected samples. The raw-storage check here

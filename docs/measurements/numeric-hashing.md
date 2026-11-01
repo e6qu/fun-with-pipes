@@ -4,16 +4,17 @@ The current protocol keeps five implementations: specialized fwp, generic fwp,
 fwp with a temporary encoding buffer, C and Rust. It runs ten process samples per
 implementation, rotating and reversing their order so each occupies every
 position twice. Separate allocation profiles have five managed-memory fields;
-every fwp profile must restore its final live-byte baseline. Correctness artifacts
+every fwp profile must restore its final live-byte baseline.
+
+Correctness artifacts
 cover eight numeric binaries per host: typed dispatch off/on, packed arrays off/on,
 and O0/O2. All must omit collector symbols. A new run of this standalone comparison
 is still needed; historical results below retain their original sources and
 six-implementation, twelve-sample protocol.
 
-Historical measurements at the revisions named below. Counts and timings are
-observations of those programs, not current compiler budgets. Commands refer
-to the recorded measurement revision. Read [measurement terms](../benchmarks.md)
-for timing and memory boundaries; [the plan](../../PLAN.md) owns remaining work.
+Historical results; reproduce with the recorded revisions, not current main.
+[Measurement terms](../benchmarks.md) explain the costs;
+[PLAN.md](../../PLAN.md) tracks current work.
 
 **Work:** build integers `0..N-1` in an array, hash `(iteration, array)` repeatedly,
 and XOR the results. Small: 16 integers × 4,096 hashes. Large: 4,096 integers ×
@@ -239,6 +240,7 @@ Specialized and general ARC profiles now match at **one managed allocation**,
 zero retains and zero charge after cleanup. Small/large/set programs request
 136 / 32,776 / 524,296 bytes and peak at 144 / 32,776 / 524,296 bytes. This is
 the input buffer; direct integer printing removes the earlier second request.
+
 C/Rust count one application buffer of 128 / 32,768 / 524,288 bytes. fwp's extra
 eight requested bytes store length; charged storage can include rounding.
 Counters exclude allocator metadata and libc output storage. Hash bodies add

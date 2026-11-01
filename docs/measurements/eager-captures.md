@@ -4,6 +4,7 @@ The comparison was published in `8a495a72` before implementation. All four match
 audit at the original sources listed below. Full CI exposed a mixed-record
 return defect; its repair passes focused checks. The repaired-source recheck
 retains one failed zero-update timing rule, so D2 acceptance remains open.
+
 [PR #227 delivered the implementation](../roadmap-history.md#eager-captures-and-typed-numerical-loops-pr-227)
 after all production, documentation and analysis checks passed; its user merge
 does not close the failed performance requirement.
@@ -105,7 +106,9 @@ an isolated checkout of the same source. It verifies that only `src/opt.rs`
 changes and scalar ownership stays identical, then records both source hashes,
 the patch and reference compiler hash. The reference tests freeze the two replaced
 blocks from preparation `8a495a72` and verify that reversing the replacement
-reproduces the complete current source, including its tests. They reject partial,
+reproduces the complete current source, including its tests.
+
+They reject partial,
 duplicate or unrelated reference edits. Other compiler development stays in both
 builds: State fusion's shared `substitute` helper, for example, retains its current
 visibility. Historical source hashes, measurements and limits remain unchanged.
@@ -119,7 +122,9 @@ The comparison uses the Rosenbrock objective, a sum over adjacent coordinates:
 `100 * (y - x*x)^2 + (1 - x)^2`. Inputs alternate -1.2 and 1.0. Each update
 computes its gradient and subtracts `0.001 * gradient` from the coordinates.
 The current-result program keeps the latest vector; the history program retains
-every update. Candidate and reference compute the same derivatives and outputs.
+every update.
+
+Candidate and reference compute the same derivatives and outputs.
 The reference disables only eager-capture binding; both keep #226's stack
 recording. C/Rust compute explicit derivative formulas using two reusable buffers,
 so their timings do not isolate compiler overhead from general AD work.
@@ -169,11 +174,15 @@ it does not make automatic recording equivalent to a handwritten derivative.
 Full run `40901634818` at `56528ffb` fails two ARM macOS REST cases. An authorized
 DELETE returning an empty reply crashes natively, though both interpreters return
 204 correctly. A direct record was split into fields before a `match`, then read
-as a boxed local because another branch could fail. The C generator repair keeps
+as a boxed local because another branch could fail.
+
+The C generator repair keeps
 each branch in the caller's field-return context. Regression cases include
 dynamic record returns, caller aliases and exceptional cleanup. The repair at
 `694e31b7` passes focused run `40909968650`: 333 tests/22 summaries, lint and the
-raw interpreter corpus on GCC ARM64/AMD64 and Clang ARM64. Every full log is
+raw interpreter corpus on GCC ARM64/AMD64 and Clang ARM64.
+
+Every full log is
 audited. Both original Linux and both regular macOS jobs fail only the same two
 REST cases; both Windows and both ownership jobs, plus benchmarks, pass.
 

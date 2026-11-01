@@ -8,7 +8,9 @@ record on the stack. Other live aliases keep their existing owners.
 For example, consider a temporary pair containing an array and the integer `7`.
 After inspecting the pair, a function returns its array field and never uses the
 pair again. Previously this path added an array owner for the result, then removed
-the pair's owner. The result can instead take over the existing owner. The integer
+the pair's owner.
+
+The result can instead take over the existing owner. The integer
 needs no cleanup, and the array remains alive until the result is released.
 The array's buffer still lives on the heap; moving its handle does not move its data
 onto the stack or prove that the whole program is allocation-free.
@@ -40,7 +42,9 @@ and shared-owner cases 64 times. It checks the same array handle and contents,
 no extra retains during projection, and complete cleanup. Separate repetitions
 fail or cancel after ownership transfers and check that cleanup still releases
 it. Tests run at O0/O2 with ARC and tracing; tracing also uses collection stress,
-heap verification and reuse checks. Two deliberately broken versions restore the
+heap verification and reuse checks.
+
+Two deliberately broken versions restore the
 extra retain or omit the result release and must fail with codes 201 and 204.
 These controls test that the observer can detect the mistakes being prevented.
 

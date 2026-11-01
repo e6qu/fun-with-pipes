@@ -76,7 +76,9 @@ type errors and lint warnings; hovering over a name shows its inferred type;
 go-to-definition jumps to local, top-level, imported and standard library names;
 it finds a name's references and renames it across the file; and it lists
 the file's declarations, completes names with their types and formats the
-file. Point your editor's LSP client at the command `fwp lsp`
+file.
+
+Point your editor's LSP client at the command `fwp lsp`
 for `*.fwp` files; the [reference](../../reference.md#fwp-lsp) has
 configurations for Neovim, Helix and VS Code.
 
@@ -86,6 +88,17 @@ selected binding and its uses, including nested functions that capture it; a
 shadowing binding with the same spelling stays separate. Renaming `x` in record
 shorthand `{ x }` preserves the field label, producing `{ x = new-name }`.
 The formatter aligns successive `let`/`in` bindings without adding nesting.
+
+### A rename that preserves scope
+
+```text
+Before: fn x -> let square = x * x in square + square
+After:  fn input -> let square = input * input in square + square
+```
+
+Renaming the selected `x` changes its definition and two uses. It does not rename
+a different nested `x`. `let square` still evaluates once, and `in` still begins
+its body; formatting or renaming changes neither rule.
 
 ## The program
 

@@ -59,7 +59,9 @@ mode or compatibility wrappers.
 The first scope is I64 bounds, I64 State, unit callback results and plain scalar
 captures. I64 is a signed 64-bit integer; unit, written `()`, carries no result.
 A capture is a value kept from the surrounding expression; here only numbers,
-booleans and unit qualify, with no resource owner to move. The callback must
+booleans and unit qualify, with no resource owner to move.
+
+The callback must
 consume its list exactly once through a known fold;
 only trivial local bindings may precede it. Keep argument and capture evaluation
 in their original order, including empty/reversed ranges. Evaluate each callback
@@ -112,6 +114,7 @@ The 5% limit applies to retained generated entries, workers, callbacks and their
 numbered loop/ownership/argument helpers in the linked binary, including GCC
 clones and runtime work inlined into them. Shared runtime functions are excluded;
 the report also gives the entire `.text` section, so that exclusion is visible.
+
 Identical symbol aliases count once. The stack report lists every compiler frame
 and compares the largest component against the unchanged +64-byte limit. This
 is not a whole-call-chain bound. Sources, commands, binaries, symbol sizes,
@@ -122,14 +125,20 @@ section sizes, stack reports and outputs are retained; no elapsed time is sample
 Run `41157639553` at `855f53ce` passed all new semantic, failure, cancellation and
 rejected-shape checks on both GCC hosts and macOS Clang. The exact-cost test
 found one extra 32-byte allocation: the initial loop tuple was boxed because
-the generator treated its unit field as a nested record. Its existing direct
+the generator treated its unit field as a nested record.
+
+Its existing direct
 field entry supports unit as an ordinary value slot. The repair corrects that
 eligibility check and its declaration; the two-allocation budget is unchanged.
 macOS also failed two TLS-using targets because this focused workflow omitted
-`FWP_OPENSSL_DIR`; the repair supplies the documented setting. Both Linux runs
+`FWP_OPENSSL_DIR`; the repair supplies the documented setting.
+
+Both Linux runs
 passed all 225 compiler unit tests; macOS passed 224 and failed the TLS case.
 The repair run `41158976900` at `f82016d9` passes all 247 focused Rust cases on
-all three hosts, including the exact cost assertion and both TLS cases. Linux
+all three hosts, including the exact cost assertion and both TLS cases.
+
+Linux
 also passes the two measurement controls. The native code-size check fails:
 ARM worker bytes grow from 1,880 to 2,136 (13.62%); AMD grows from 1,814 to 2,109
 (16.26%). The [retained failed checks](state-range-rejected-2026-10-31.json) include
@@ -157,6 +166,7 @@ with a deadline callback that captures a `Duration` record and retains its list.
 The latter still allocates one 24-byte node per element, not a new scope owner.
 The repaired comparison [reuses each input list](list-iteration.md) for State
 updates and `length`, verifies the list-node slope, and keeps every scope limit.
+
 All seven comparisons pass a focused Clang O2 reproduction with the exact CI
 compiler; final native verification passes in #233. Neither repair changes
 compiler eligibility, historical measurements or timing acceptance rules.

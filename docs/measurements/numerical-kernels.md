@@ -35,24 +35,32 @@ The array workload reduces 65,537 elements eight times. Round `r=0..7` fills
 index `i` with `((i+r)%19 - 9)/4` as F64, maps `x*3 + 1` with separate operations,
 and sums left to right starting at negative zero. Its kernel time includes
 consuming and releasing the input, but excludes input allocation and filling.
+
 The matrix workload multiplies 65×67 by 67×63 matrices eight times using tiles
 of width 32. Its kernel timer starts after output allocation and zeroing and
 covers only multiplication and accumulation. Left matrix elements use the same
 fill formula as the array; right elements
-use `((i+r)%13 - 6)/8`. Output starts at zero. Allocation-inclusive time includes
+use `((i+r)%13 - 6)/8`.
+
+Output starts at zero. Allocation-inclusive time includes
 input/output construction, computation, result-bit checksumming and cleanup;
 printing the sample report, process startup and runtime initialization are outside.
 C, Rust and fwp use the same inputs, ordered arithmetic and algorithms; multiply and add remain separate operations.
+
 The C reference marks fresh output non-aliasing (`restrict`); generated fwp C can
 communicate different alias information to its C optimizer. Equal mathematical
 work does not imply identical optimization information or machine instructions.
 Forty uninstrumented samples per implementation come from eight rotating process
-batches of five samples after one warmup process per implementation. That
+batches of five samples after one warmup process per implementation.
+
+That
 historical run has **four** labels: C, Rust, tracing fwp and ARC fwp; each occupies
 every process-order position twice. The present GC-free runner has three labels
 and six batches instead. Separate binaries
 collect allocation counts and memory;
-profiling overhead is excluded from timings. Compilation and process startup
+profiling overhead is excluded from timings.
+
+Compilation and process startup
 are outside these timers. No stable regression threshold is inferred from shared
 runner timings.
 
@@ -109,7 +117,9 @@ This run shows a substantial AMD64 Linux gain, small Mac gains and a small Linux
 ARM64 slowdown. It does not establish a portable speedup or C/Rust parity.
 The kernel timer excludes the record conversions, so a changed kernel timing
 cannot be read as time spent in those operations alone: generated-code layout,
-cache state and runner variation also matter. A preceding AMD64 numerical run
+cache state and runner variation also matter.
+
+A preceding AMD64 numerical run
 used Xeon 8370C; the current cross-language run used 8573C. Its absolute times
 cannot isolate record moves. Keep the slower current C/Rust result alongside
 the paired result when selecting the next optimization.

@@ -35,7 +35,9 @@ The list application probe runs every function over every input; flat-map joins
 the lists returned by its callback. Both check result order, shared elements,
 scratch-buffer release and cleanup after callback failure or task cancellation.
 Their input lists now have explicit owners, and normal completion must restore
-the initial live-byte balance. The separate State-slot probe uses scalar markers
+the initial live-byte balance.
+
+The separate State-slot probe uses scalar markers
 to test clearing and restoration after growth, errors, served calls and task exit.
 It explicitly releases task handles and result boxes. Owned State values and
 aliases remain covered by `typed_state_ownership` and interpreter/native examples.
@@ -121,6 +123,7 @@ The callback, reuse-token and variant probes check every completed round over 32
 rounds. Their ARC checks now consult the live-address table when checking whether
 an allocation was freed. A zero reference count alone is insufficient: the last
 owner can be released while a broken allocator leaves the storage allocated.
+
 The stack-child cases run 8 and 1,024 iterations, with dynamic allocation and a
 static pool at O1/O2. Their normal programs must restore both live-address and
 physical-byte balances, and match the raw interpreter. Removing the child release
@@ -176,7 +179,9 @@ return, nested language errors, recoverable traps and suspended-task cancellatio
 An outer owner must survive an inner unwind; inner owners release in reverse
 order. File closure and file-object release have separate observers. Dynamic
 and static O1/O2 runs use 8 and 1,024 rounds, restoring both live allocations and
-charged bytes each round. Omitting a value free, unwind cleanup, OS close or
+charged bytes each round.
+
+Omitting a value free, unwind cleanup, OS close or
 file-object release must produce 231, 232, 235 or 236 respectively. The source
 file-handler example also compares counted native output with the raw interpreter.
 C, executables, output and status are retained under
@@ -188,7 +193,9 @@ Most counts fit in the allocator's byte-sized slot. More than 254 owners require
 a separate exact count; saturation must not silently turn a value into an
 unreclaimed object. [The ARC probe](../tests/wide_counts.rs),
 `wide_counts_release_values_and_metadata_each_round`, creates 601 owners of
-small text, a function capturing text, and large text. It also checks that an
+small text, a function capturing text, and large text.
+
+It also checks that an
 interior address maps to its live allocation's count and that reused storage
 starts with one owner. Released objects are observed through the address ledger,
 not read through stale pointers. It verifies the contents
@@ -199,12 +206,15 @@ A separate observer counts actual metadata `malloc`/`free` events, outside the
 managed allocation ledger. Removing the metadata free while still decrementing
 its logical count must fail with 239. Overflow must trap with 101; failure to
 allocate metadata must terminate with 102. Normal rounds return managed bytes,
-managed allocations and metadata allocations to baseline. The source-level
+managed allocations and metadata allocations to baseline.
+
+The source-level
 high-fanout string/function example compares native O1/O2 output with the raw
 interpreter, with stack placement enabled and disabled. A separate negative
 control omits physical frees while keeping counts and typed destruction. Sweep
 and automatic-promotion-to-tracing cases are retired with the collector. These
-migrated checks still need integrated validation. Probe artifacts use
+migrated checks passed the [#217 delivery](roadmap-history.md#tracing-gc-removal-pr-217)
+and remain in the production suite. Probe artifacts use
 `record-ownership/wide_counts`.
 
 ## Weak references and external resources
@@ -340,7 +350,9 @@ array representation without counts. `array_element_ownership` invokes actual
 exported functions at O1/O2 and checks allocation/free counts, absence of count
 operations on the array, empty count metadata, and restored live-byte charge.
 An extra count call fails with probe status 224; recording a free while skipping
-its allocator body fails with 225. These are observer exits, not language error
+its allocator body fails with 225.
+
+These are observer exits, not language error
 codes. Failure during generation, failure while a completed array is live and
 cancellation use the same independent checks. A static-memory generated entry
 supplements the allocator's static allocation/reuse checks.
@@ -372,6 +384,7 @@ requests, requested bytes, effective retains, peak live-byte growth and final
 live-byte growth. Measurement starts after constant initialization and ends at
 the generated ownership observation point, before full runtime shutdown. HTTP
 server probes that reuse this observer call the same row `server-memory`.
+
 Neither row includes collection counts. They exclude raw network buffers,
 allocator metadata, OS resources and process RSS; separate observers cover those.
 The integrated production consumers pass. Separately dispatched measurement
@@ -389,7 +402,9 @@ that send an unproved derivative lifetime to another task. The nested-derivative
 tests check that rejection with and without optimization in both engines. A
 separate C probe creates real tape owners and task IDs to test the runtime guard:
 a later task cannot reuse a retired task's tape, and starting the scheduler does
-not change the root task's identity. Deliberately repeated IDs or removed guards
+not change the root task's identity.
+
+Deliberately repeated IDs or removed guards
 must change the result. This probe does not make the rejected program legal.
 
 Workspace checks retain both direct runtime calls inside an explicit scope and

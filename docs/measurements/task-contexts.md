@@ -18,11 +18,14 @@ from service settings and the language's `State` effect.
 glibc is the C library used by the supported Linux runners. On these hosts, the
 saved image was embedded in each heap-allocated task record.
 The candidate places each child's image at an aligned address in that task's
-existing stack allocation, above its usable call frames. The task record holds
+existing stack allocation, above its usable call frames.
+
+The task record holds
 a pointer. The root task uses the host's stack, so its image occupies runtime
 static storage, which belongs to the program rather than a heap allocation.
 The runtime clears that image at teardown and clears
 completed child pointers before reusing their stacks.
+
 Programs that never use the task runtime do not initialize or clear a saved root
 image. Native task-free checks and an unconditional-clear control pass on both
 Linux architectures.
@@ -150,7 +153,9 @@ The existing [72-call service fixture](queued-grpc-responses.md) supplies a seco
 workload. Service task records shrink from 1,584 to 624 bytes on AMD64 and 5,296
 to 736 on ARM64; they have extra fields beyond the standalone record. Managed
 requested bytes fall from 210,304 to 131,584 on AMD64 and 514,688 to 140,768 on
-ARM64. All configurations still make 902 allocation requests and 481 retains.
+ARM64.
+
+All configurations still make 902 allocation requests and 481 retains.
 The live listener accounts for the final 544 charged bytes; every response owner,
 stream, connection and child task finishes. This interval starts after listener
 readiness and excludes stack pools, root static storage, allocator metadata and
@@ -161,7 +166,9 @@ OS buffers. It does not measure service speed or orderly listener shutdown.
 At the recorded revision, a separate C probe excluded ordinary stack copies and checked that objects held
 only in saved root/child register images survived collection. Deliberately hiding
 those images must exit 191/192; omitting root-state cleanup must exit 193. All ten
-register/teardown omission controls passed across the two hosts. Two more controls
+register/teardown omission controls passed across the two hosts.
+
+Two more controls
 detect unnecessary clearing in task-free programs. The probe also checks rounding
 and signal-mask restoration. Task, scope, cancellation and 72-call service cleanup
 regressions pass on both hosts. Library unload checks include an intentionally

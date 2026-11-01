@@ -1,9 +1,8 @@
 # Memory used by complete remote-stream clients
 
-Historical measurements at the revisions named below. Counts and timings are
-observations of those programs, not current compiler budgets. Commands refer
-to the recorded measurement revision. Read [measurement terms](../benchmarks.md)
-for timing and memory boundaries; [the plan](../../PLAN.md) owns remaining work.
+Historical results; reproduce with the recorded revisions, not current main.
+[Measurement terms](../benchmarks.md) explain the costs;
+[PLAN.md](../../PLAN.md) tracks current work.
 
 **Work:** a native client receives integers 1..N from an interpreted loopback
 HTTP/2 server. N is 64, 1,024 or 16,384. Clients either sum the stream, keep the

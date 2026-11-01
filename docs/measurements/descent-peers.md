@@ -72,7 +72,9 @@ For 129 coordinates and 199 updates, fwp AD takes **5.60×/6.56×** the fwp
 explicit time on AMD64/ARM64. Even the explicit fwp form takes **6.38×/6.91×**
 C time (538%/591% extra) and **4.58×/5.40×** Rust time (358%/440% extra).
 fwp AD takes 35.68×/45.36× C time, but that includes general differentiation
-work that the C program does not perform. Small cases are dominated by whole-
+work that the C program does not perform.
+
+Small cases are dominated by whole-
 process costs and show mixed AD/explicit ordering; they do not establish an AD
 speed advantage. Hardware differs from earlier descent reports, so absolute
 times across those reports must not be treated as a compiler speedup.
@@ -90,11 +92,15 @@ An allocation request is a call to fwp's allocation interface, not necessarily
 an operating-system allocation. Managed request/retain counters start after
 constant initialization and continue through program cleanup; raw counters track
 tape registries, parent indices, local derivatives and adjoints. They do not
-measure every process allocation. A retain adds a counted owner. Requested bytes
+measure every process allocation.
+
+A retain adds a counted owner. Requested bytes
 accumulate across the run, while a peak is storage live at one instant. Both
 managed and raw ledgers reach zero after teardown, with no collections. The AD
 case retains 33,904 raw bytes between updates: 104 registry bytes and 33,800 bytes
-of workspace. Separate uninstrumented process-memory observations are in the
+of workspace.
+
+Separate uninstrumented process-memory observations are in the
 data; their peaks include other storage and must not be added to these peaks.
 No C/Rust allocation-count parity is claimed.
 

@@ -188,6 +188,7 @@ replacement, errors, allocation failure, task switches and cancellation. Six
 controls omit individual ownership operations; another omits the final fixture
 owner. Whole programs cover nested handlers, arrays, functions stored in state,
 and stack placement on/off. The older two-mode run produced 56 saved outcomes.
+
 The current single-mode suite produces 20 at C O1/O2: 16 probe cases and four
 whole-program cases. It also releases the result box returned when awaiting an
 injected task. The report contains owner-record, cleanup-record and task sizes

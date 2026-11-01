@@ -60,6 +60,16 @@ owning cycle: the queued value remains an integer. However, sending to a full
 queue from its only consumer can deadlock. Choose capacity/flow rules explicitly;
 ownership safety is not a proof of progress.
 
+### Pick a shutdown policy
+
+| Operation | Queued messages | Running worker | Completion reported by |
+|---|---|---|---|
+| `finish` | Process in order | Runs until closed queue is empty | `task.await`, usually `Some ()` |
+| `stop` | Remain owned by the channel until received or released | Request cancellation, then join | `task.await`; cancelled work gives `None` |
+
+For the first example: send `1`, send `2`, close, print `11` and `12`, then
+finish with `Some ()`. Closing alone is not the same as awaiting completion.
+
 ## Errors and checks
 
 A spawned task must handle its errors. For a fallible handler, put `attempt`

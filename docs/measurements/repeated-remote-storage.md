@@ -1,9 +1,8 @@
 # Memory left behind by repeated remote calls
 
-Historical measurements at the revisions named below. Counts and timings are
-observations of those programs, not current compiler budgets. Commands refer
-to the recorded measurement revision. Read [measurement terms](../benchmarks.md)
-for timing and memory boundaries; [the plan](../../PLAN.md) owns remaining work.
+Historical results; reproduce with the recorded revisions, not current main.
+[Measurement terms](../benchmarks.md) explain the costs;
+[PLAN.md](../../PLAN.md) tracks current work.
 
 **Work:** repeat the same 64-value remote call in one process for 1/16/256
 batches. Full readers sum to 2,080; partial readers take 32 values and sum to 528.

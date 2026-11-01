@@ -5,18 +5,17 @@ functions, data, types, effects and collections. Examples here can be syntax
 fragments: an ellipsis (`...`) or a signature without a body is explanatory,
 not a complete program. The tutorials contain complete runnable files.
 
-Read `A -> B` as “takes A and returns B”; repeated arrows take arguments one at
-a time. `! {IO}` declares an external action. `[T]` supplies a type argument,
-while `where Trait[T]` requires operations available for that type. A lowercase
-identifier in a type is a type variable, not a value parameter name. Definitions
-usually combine functions without naming their input; this is called *tacit*
-style. The [glossary](glossary.md) provides a lookup for other compiler terms.
+| Notation | Read as |
+|---|---|
+| `A -> B` | Takes an `A`, returns a `B`; repeated arrows take inputs one at a time. |
+| `! {IO}` | May perform the declared external action. |
+| `List[T]` | A list with element type `T`. |
+| `where Trait[T]` | Requires the trait's operations for `T`. |
+| Lowercase name in a type | A type variable, not a value parameter. |
 
-fwp is a tacit, curried, pipe-oriented language with static types, effect
-tracking, and two backends: an interpreter and native code through C. This
-page is the reference for the language as implemented. For a gentler
-introduction, see the [tutorials](tutorials/README.md); the standard
-library is listed in [stdlib.md](stdlib.md).
+*Tacit* definitions combine functions without naming the input. See
+[terminology](terminology.md) for worked explanations and [stdlib](stdlib.md)
+for library signatures. Execution uses the interpreter or native code through C.
 
 ## Lexical structure
 
@@ -121,9 +120,9 @@ imported under the same name.
 constant stack space for the loop itself; its callback can still recurse or
 retain growing data. Use it for long-running iteration instead of relying on
 recursive-call optimization.
-Some native recursive calls are optimized, but arbitrary tail recursion is not
-a portable constant-stack guarantee, and the interpreter still uses recursive
-evaluation. See [tail calls and recursion](design.md#tail-calls-and-recursion).
+Eligible direct self-tail calls reuse frames in native code and ordinary
+interpretation. Arbitrary tail recursion has no portable constant-stack guarantee;
+raw interpretation and source debugging preserve the original calls. See [tail calls and recursion](design.md#tail-calls-and-recursion).
 
 The data being transformed comes last: `sub 1` subtracts one, `div 2` halves, `lt 0` tests
 `x < 0`, and `concat "!"` appends.
@@ -135,12 +134,32 @@ energy : I64 -> I64
 energy = fn x -> let square = x * x in square + square
 ```
 
-`fn` creates a single-argument function. `let` evaluates its initializer exactly
-once, then evaluates the expression after `in` with the new name available.
-For `energy 3`, the product is `9` and the body adds it to itself, giving `18`.
-The binding is strict, immutable and nonrecursive. An unused initializer still
-runs and may fail. `let x = x + 1 in x` reads an outer `x`, then shadows it.
-Without an outer definition that initializer is an error.
+`fn` creates a single-argument function. **`let … in …` is one expression**:
+
+| Part of `energy 3` | Meaning |
+|---|---|
+| `let square = x * x` | Evaluate `3 * 3` once and name the value `square`. |
+| `in` | Separate the definition from its body. |
+| `square + square` | The body produces `18`, the value of the whole `let`. |
+
+`in` is not a pipe, output command or early return. A body may be another `let`:
+
+```fwp
+let a = 3
+in let b = a * 2
+in b + 1
+```
+
+This produces `7`: define `a`, define `b = 6`, then calculate `b + 1`.
+The first `in` belongs to `let a`; the second belongs to `let b`. `in let` is
+not a separate construct. See [lesson 1](tutorials/01-pipes-and-functions/README.md#several-calculations-in-order)
+for the nested reading and pipe equivalent.
+
+Bindings are strict, immutable and nonrecursive:
+
+- An unused initializer still runs and may fail.
+- `let x = x + 1 in x` reads an outer `x`, then shadows it in the body.
+- Without an outer `x`, that initializer is an error.
 
 The body extends to the enclosing expression's boundary. Write
 `map (fn x -> x * x)` when a function is one argument, or
@@ -703,11 +722,15 @@ A file argument of `-` reads the program from standard input.
 and `--mcp`) and the stages of `fwp pipe` compile the program to a native
 executable through C, as `fwp build` would, and run it in place of `fwp`
 (on Unix the executable replaces the `fwp` process, so it has its process
-id, signals and exit status). The executable is cached under the hash of
+id, signals and exit status).
+
+The executable is cached under the hash of
 its C source, C compiler identity and options, header-search environment, files
 given to `--link` and the version of fwp. Linked C and preprocessed assembly
 sources are expanded before lookup, so edited or missing included headers cannot
-silently reuse an old executable. Exact-float programs also include their C++
+silently reuse an old executable.
+
+Exact-float programs also include their C++
 compiler identity; integer-only programs do not require C++. Cache hits avoid
 native recompilation. The type checker and dependency checks still run on every
 start, so startup is separate from the compiled program's execution time.
@@ -897,12 +920,15 @@ Cross targets currently name 64-bit little-endian Linux systems. Native
 macOS on Apple Silicon and Intel passed the full native CI gate: use
 `--target native` with Apple Clang and consult
 [delivery history](roadmap-history.md) for verification. Shared libraries
-use `.dylib`; native `--static` linking is rejected. Build a separate binary
+use `.dylib`; native `--static` linking is rejected.
+
+Build a separate binary
 for each supported OS/architecture; universal binaries are outside project scope.
 The verified native platform matrix is Linux, macOS and Windows on ARM64 (`aarch64`)
 and AMD64 (`x86_64`); see [current acceptance](../README.md#supported-platforms).
 Native Windows ARM64/AMD64 is accepted. Darwin cross targets are not implemented;
 `--pgo` requires GCC.
+
 For TLS set `FWP_OPENSSL_DIR` as described in [tls.md](tls.md#openssl).
 To try an ARM executable on an x86 machine,
 run it with qemu: `qemu-aarch64 -L /usr/aarch64-linux-gnu ./main`.
@@ -916,7 +942,9 @@ is a fiber whose stack the JavaScript host suspends and resumes
 native one (or, in fwp.wasm, the interpreter's), with the same order of
 tasks; waiting for a timer suspends the program on a JavaScript timer
 rather than busy-waiting, and a program whose tasks all wait for each
-other traps with `fwp: trap: deadlock: every task is waiting`. Tasks are
+other traps with `fwp: trap: deadlock: every task is waiting`.
+
+Tasks are
 preempted there as natively ([preemption](concurrency.md#preemption)):
 each switch at the end of a slice is a JSPI suspension.
 
@@ -939,12 +967,16 @@ builds a program with tasks for engines without JSPI: binaryen's Asyncify
 pass (`wasm-opt --asyncify`) rewrites the module so that its call stack
 can be unwound into memory and rewound later, and `web/fibers.js` then
 switches fibers by unwinding the one that suspends and rewinding the next
-(the module exports `asyncify_*`, which the loader recognizes). It supplies task suspension without JSPI on a compatible JavaScript host,
+(the module exports `asyncify_*`, which the loader recognizes).
+
+It supplies task suspension without JSPI on a compatible JavaScript host,
 with the same intended output, preemption and cancellation; not in WASI runtimes without a
 JavaScript host. wasm-opt is an optional tool, needed only for this
 option and only by programs with tasks: it comes with binaryen (`npm
 install -g binaryen`, or a system package); `FWP_WASM_OPT` names the
-executable. Asyncify adds code and execution-state save/restore work; its cost
+executable.
+
+Asyncify adds code and execution-state save/restore work; its cost
 depends on the module and host. Compare the same program and host in JSPI and
 Asyncify modes, recording compiler settings, time and memory, before making a
 performance claim. The default stays `--wasm-async=jspi`. For the compiler/interpreter module,

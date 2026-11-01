@@ -1,0 +1,17 @@
+# The test substitutes the scalar type and its one/zero constructors.
+push-one : I64 -> I64
+push-one = fn node -> ad.push-owned (node, WEIGHT_ONE, -1, WEIGHT_ZERO)
+
+record-chain : List[WEIGHT_TYPE] -> List[WEIGHT_TYPE]
+record-chain = fn inputs ->
+    let base = ad.tape-owned (WEIGHT_ZERO, add, mul, rev._inactive-zero) inputs
+    in let final = (256, base) | loop (fn (remaining, node) ->
+        remaining == 0 | match
+            True -> Stop node
+            False -> Again (remaining - 1, push-one node))
+    in let result = ad.backward-owned base [final] [WEIGHT_ONE]
+    in inputs == [WEIGHT_ONE] | match
+        True -> result
+        False -> prim.trap "input alias changed"
+
+main = [WEIGHT_ONE] | ad.scope record-chain | eq [WEIGHT_ONE] | echo

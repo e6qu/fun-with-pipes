@@ -68,6 +68,19 @@ record. `format "{} °C"` fills the `{}` placeholder with that field. The four
 outputs demonstrate a generic pair, a custom description, a Boolean description,
 and floating-point division.
 
+## Follow one trait call
+
+```text
+True | shout
+     → describe True     # choose the Describe[Bool] implementation
+     → "yes" | upper
+     → "YES"
+```
+
+The compiler selects the implementation from the input type. `21.5` alone is
+not a `Temperature`; the program constructs that record before calling its
+`describe`. Try predicting `False | shout`: it produces `"NO"`.
+
 ## The program
 
 [`main.fwp`](main.fwp):

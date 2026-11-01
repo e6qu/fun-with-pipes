@@ -24,7 +24,9 @@ The compiler uses its existing typed loop and callback proof. Known numeric
 map/filter stages can read the array directly; unsupported callbacks retain
 their existing implementation. Retained inputs and slices keep their owners.
 Effectful stages, distinct possible traps and early stopping keep the existing
-fusion restrictions. For a returned list, callbacks proved total, pure and free of owned captures may
+fusion restrictions.
+
+For a returned list, callbacks proved total, pure and free of owned captures may
 visit elements backward and prepend results directly in source order. This avoids
 copying a reversed list. Folds and possibly trapping callbacks retain forward
 order. No new language syntax or runtime primitive is introduced.
@@ -103,7 +105,9 @@ At `dc0a6407`, the direct fold meets zero-allocation requirements. The returned
 mapped list fails the frozen savings rule: at length 129 it allocates 258 cells
 versus 259 allocation requests in the reference (6,192 versus 7,232 requested
 bytes). The input list is gone, but generated C calls the borrowing `reverse`
-primitive, which copies the newly built result. Length one saves only 16 bytes.
+primitive, which copies the newly built result.
+
+Length one saves only 16 bytes.
 Word-array correctness/alias/cleanup and all separate AD tests pass in run
 `41252379702`. The first cost assertion stopped that probe before packed arrays;
 it did not establish packed-slice cleanup. Both original session-2 timing jobs
@@ -118,11 +122,13 @@ collects all cost failures across both storage modes before reporting them.
 At `9a2e954e`, all word-array cases meet the count limits at O1/O2. Packed-array
 verification exposes a probe error at length 129: it physically frees a slice
 header without releasing its backing owner. The repair calls an exported typed
-`Array[F64] -> ()` destructor for both inputs. This is a test ownership repair;
+`Array[F64] -> ()` destructor for both inputs.
+
+This is a test ownership repair;
 neither the cleanup assertion nor the allocation limits are relaxed. At `a33c8ba9`,
 run `41254567543` passes all word/packed cost checks on Linux ARM64/AMD64 and
 macOS ARM64, including offset slices, aliases and cleanup. Whole-solve acceptance
-on the integrated compiler remains pending.
+on the integrated compiler passed in [PR #236](../roadmap-history.md#local-names-and-allocation-optimizations-pr-236).
 
 Both session-2 jobs in run `41253549233` pass for `9a2e954e`: all six whole-solve
 cases meet the frozen time, copy, allocation, tape, peak-memory and code/stack
@@ -134,7 +140,9 @@ At `9d47a5fc`, run `41256205285` completes both sessions per architecture.
 Both ARM64 sessions and AMD64 session 2 meet every limit. AMD64 session 1 passes
 all correctness, cleanup, allocation, raw-tape, phase and copy controls, but its
 zero-update history case takes 1.023851 times the reference time (2.39% slower),
-exceeding the 2% limit. The combined timing acceptance therefore remains open.
+exceeding the 2% limit.
+
+The combined timing acceptance therefore remains open.
 This is a recorded rejected timing result, not a reason to repeat unchanged runs
 or relax the budget. The next source change repairs pure-constructor specialization;
 its own cost and timing evidence must be identified separately.
@@ -144,11 +152,15 @@ its own cost and timing evidence must be identified separately.
 At `f7f5309c`, run `41258782085` completes four sessions after restoring known
 pure-constructor specialization. Both ARM64 sessions and AMD64 session 1 pass.
 Hosts are ARM Neoverse-N2 with GCC 13.3 and AMD EPYC 7763 with GCC 15.2,
-both with four available CPUs and Rust 1.99.1. These are the recorded toolchains;
+both with four available CPUs and Rust 1.99.1.
+
+These are the recorded toolchains;
 old runs on different hosts or compilers are not relabeled as these sessions.
 AMD64 session 2 passes every candidate/reference, allocation, correctness and
 cleanup limit, but identical candidate copies differ by **2.1023%** in the
-3-coordinate/1,999-update case, exceeding 2%. Keep the cost reduction; the combined
+3-coordinate/1,999-update case, exceeding 2%.
+
+Keep the cost reduction; the combined
 timing result remains inconclusive. This does not erase the earlier rejected
 zero-update timing or complete D2/N1/N2. All four full logs are audited.
 

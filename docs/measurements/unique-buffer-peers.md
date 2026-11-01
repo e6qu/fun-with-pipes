@@ -340,12 +340,16 @@ delay; it does not prove that it explains every failed timing control.
 deadline. It requires serial execution in the main thread and an unused,
 unblocked alarm; it restores the prior handler and signal mask. Windows retains
 its kernel-backed timeout. Timeout and cancellation still kill/reap the child,
-and failed compiler builds stop their descendants. Lifecycle tests reject an
+and failed compiler builds stop their descendants.
+
+Lifecycle tests reject an
 injected timed-wait call and verify that this rejection also reaps the child.
 They do not assume every Python version polls: [CPython 3.15](https://github.com/python/cpython/blob/v3.15.0/Lib/subprocess.py)
 can use kernel waits. The initial negative control made that assumption and
 hung on the macOS runner after its deadline, because its context manager waited
-for an unreleased child. The repaired control uses the tested kill/reap path;
+for an unreleased child.
+
+The repaired control uses the tested kill/reap path;
 CI reports the Python version and bounds the standalone check to two minutes.
 
 The declared repair runs two new independent sessions per architecture with **only this waiting

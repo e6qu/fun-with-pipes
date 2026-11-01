@@ -126,7 +126,9 @@ The selected contract rejects unproved owning cycles, including stores of
 acquired owners that can recreate them. The diagnostic must identify the edge
 and show a usable alternative: an explicit weak edge, an independent owner, or
 a region/graph handle. A proof may conservatively reject a program that would
-not actually cycle. Improving that precision is separate from memory safety.
+not actually cycle.
+
+Improving that precision is separate from memory safety.
 Swift-style programmer-managed strong-cycle leaks are not the selected policy.
 Logical cycles inside a region are allowed only when its internal links do not
 own the region. Unsafe/foreign contracts still need their stated obligations;
@@ -151,12 +153,16 @@ The first weak queue contract is specified in [weak channels](weak-channels.md).
 A separate [graph fixture](../tests/fixtures/graph_generations.fwp) specifies
 node identity without weak pointers. A key contains a slot number and generation,
 and is interpreted against an explicit graph snapshot. The generation is a
-counter that changes each time the slot is deleted. Each slot stores its
+counter that changes each time the slot is deleted.
+
+Each slot stores its
 generation and an optional node. Deletion replaces the node with `None` and
 increments the generation using checked arithmetic; reuse keeps that new
 generation. An exhausted generation traps rather than wrapping. The fixture
 reuses one bounded slot 64 times, checks stale keys and keeps an old snapshot
-alive as a control. Its expected output is checked independently. Tombstone
+alive as a control.
+
+Its expected output is checked independently. Tombstone
 metadata remains in the slot, but deleted payloads and edges do not. An older
 immutable graph snapshot intentionally still owns its older node.
 

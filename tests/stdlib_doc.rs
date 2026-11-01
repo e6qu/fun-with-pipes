@@ -145,25 +145,34 @@ fn module_doc(text: &str) -> (String, String) {
 
 fn generate(root: &Path) -> String {
     let mut out = String::from(
-        "# Standard library\n\n\
-         This is a signature reference. Start with [tutorials 1–5](tutorials/README.md)\n\
-         for functions, data, types, effects and collections. Each module below explains\n\
-         its purpose and vocabulary before listing declarations. Every module is available\n\
-         without an import.\n\n\
-         Read `A -> B` as a function taking A and returning B. Repeated arrows take\n\
-         arguments one at a time, with the data being transformed last. `List[a]` is a\n\
-         list of an element type `a`; `where Ord[a]` requires ordering operations for it.\n\
-         `! e` propagates a caller's effects; `! {IO}` explicitly requires IO.\n\
-         `foreign \"fwp\"` declares a runtime primitive, not a C function you must supply.\n\
-         Types marked `builtin` have hidden runtime implementations. A signature describes\n\
-         a function; it is not a complete implementation to paste into a program.\n\n\
-         For example, `map : (a -> b ! e) -> List[a] -> List[b] ! e` takes a transforming\n\
-         function, then a list, and returns the transformed list with that function's\n\
-         effects. `[1, 2] | map (add 1)` produces `[2, 3]`.\n\n\
-         Generated from `lib/*.fwp` by `tests/stdlib_doc.rs`; edit those sources rather\n\
-         than this file. Contributors can regenerate this focused document with\n\
-         `python3 scripts/local-guard.py env FWP_BLESS=1 cargo test --test stdlib_doc`\n\
-         when the local limits permit; otherwise use a GitHub runner.\n\n",
+        r#"# Standard library
+
+A signature reference; start with [tutorials 1–5](tutorials/README.md).
+Modules below are available without an import. Signatures describe functions,
+not complete programs to paste into a file.
+
+| Notation | Meaning |
+|---|---|
+| `A -> B` | Takes A, returns B; repeated arrows take inputs one at a time. |
+| `List[a]` | List with element type `a`. |
+| `where Ord[a]` | Requires ordering operations for `a`. |
+| `! e` / `! {IO}` | Propagates effects / requires IO. |
+| `foreign "fwp"` | Runtime primitive; no external C function to supply. |
+| `builtin` | Type with hidden runtime implementation. |
+
+Read `map : (a -> b ! e) -> List[a] -> List[b] ! e` in three steps:
+
+1. Supply a function from `a` to `b`, possibly performing effects `e`.
+2. Supply a list of `a` values; the transformed data comes last.
+3. Receive a list of `b` values, with those same effects.
+
+Example: `[1, 2] | map (add 1)` gives `[2, 3]`.
+
+Generated from `lib/*.fwp` by `tests/stdlib_doc.rs`; edit those sources.
+Regenerate with `FWP_BLESS=1 cargo test --test stdlib_doc` on a GitHub runner,
+or through `scripts/local-guard.py` when local limits permit.
+
+"#,
     );
     for (_, title) in MODULES {
         out.push_str(&format!("- [{}](#{})\n", title, anchor(title)));

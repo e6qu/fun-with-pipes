@@ -33,6 +33,17 @@ error for zero. Infix `numerator / value` uses mathematical operand order.
 `non-blank` returns `None` to suppress an empty line. `containing` filters the
 words, then attaches an `Outcome` status based on whether the result is empty.
 
+### From shell arguments to a value
+
+```text
+./words say hello world
+        └─ command   └─ input words: ["hello", "world"]
+```
+
+The generated command interface decodes arguments, calls `say`, and writes its
+result. The function still uses ordinary records and lists; flag parsing is
+outside its body. The next sections show which comments supply its option values.
+
 ## Exposing functions as commands
 
 An exported function is not a command until you say so. The line

@@ -20,7 +20,9 @@ The `cpu-baselines` runner suite builds the existing seven-peer comparison and
 keeps its binary, output, arithmetic and memory audits. It adds repeated timing
 only for the two programs above. Two independent jobs run on each Linux
 architecture. Each job uses GCC O2, Rust optimized, counted ownership and no
-link-time optimization. Execution explicitly allows all CPUs assigned to the
+link-time optimization.
+
+Execution explicitly allows all CPUs assigned to the
 runner; it does not pin a core or fix CPU frequency. Compiler versions and flags are copied from the build
 record, not guessed from the host. No previous fwp executable is needed to build.
 
@@ -28,12 +30,15 @@ Each program gets two warmup batches per variant, then 32 measured batches.
 A loop batch contains one process; a character-counting batch contains 32 fresh
 processes, each with the original two-million-index input and output check.
 Order rotates through C, Rust, fwp and the **same fwp executable** again.
+
 That last variant is the noise control: identical code should take similar time.
 Each process timer encloses creation, runtime startup, all work, output and
 cleanup. A batch observation sums those process durations. The shorter workload
 uses 32 processes because the previous complete-program log has roughly 7 ms
 runs with substantial variation; batching reduces that noise without excluding
-startup or relaxing a limit. Compilation, JSON writes and memory profiling are
+startup or relaxing a limit.
+
+Compilation, JSON writes and memory profiling are
 outside the timers. Every process retains its status, output, error output and
 duration; each batch also records order, binary hash and its checked sum.
 
@@ -52,11 +57,15 @@ Keep the failed observations and repair the measurement before proceeding.
 sessions per architecture are complete and stable. Each selected pair must use
 the same CPU model, compiler versions, settings and source inputs. For each
 program/host, let `d` be the larger session's 95th-percentile control deviation
-from 1. The future candidate/baseline median ratio may be at most `1 + 2d`, and
+from 1.
+
+The future candidate/baseline median ratio may be at most `1 + 2d`, and
 its new identical-code control must stay within `1 + d`. For example, observed
 control variation of 1.2% gives a 2.4% regression limit. These thresholds are
 chosen from baseline evidence and committed **before** a candidate is measured;
-they are never silently recomputed from candidate results. A claimed speedup
+they are never silently recomputed from candidate results.
+
+A claimed speedup
 also needs a ratio below the reciprocal, `1 / (1 + 2d)`. Results inside this band
 do not distinguish a gain from control variation, even if they pass the regression
 limit. This is an empirical decision rule, not a statistical confidence guarantee.
@@ -98,6 +107,7 @@ The two supplementary jobs in [run 40768027818](https://github.com/e6qu/fun-with
 also pass and are independently audited. Session 1 repeats EPYC 7763; session 2
 uses EPYC 9V74. The selector orders jobs by workflow run and session label,
 then chooses the first repeated CPU model, regardless of speed or noise.
+
 It therefore selects the two Neoverse-N2 sessions and the two EPYC 7763 sessions.
 The Xeon and EPYC 9V74 observations remain in the table as additional sessions.
 A noisy selected pair cannot be replaced with a later stable one. Job identity
@@ -165,7 +175,9 @@ Both fwp programs report zero managed allocation requests, requested bytes,
 retains, peak charge and final charge in all separate ordinary memory runs.
 This excludes raw runtime storage and stacks. Process RSS spans 1,388–2,200 KiB
 for fwp across these runs; it is a separate whole-process measure, not an ARC
-allocation count. The timed fwp text sections are 10,316/11,116 bytes on ARM64
+allocation count.
+
+The timed fwp text sections are 10,316/11,116 bytes on ARM64
 and 11,058/11,954 bytes on AMD64 for loop/character counting. Corresponding
 C text sections are 600/600 and 489/569 bytes; Rust text sections are
 218,780/218,876 and 242,131/242,195 bytes. These linked-code totals include

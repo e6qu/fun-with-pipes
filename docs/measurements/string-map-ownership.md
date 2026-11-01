@@ -16,11 +16,15 @@ prevent an otherwise private string from being changed in place.
 The compiler selects `map` calls with both arguments supplied and a known
 `String -> String` callback that stores no captured runtime values. Before reference-count insertion, it gives
 that call an internal contract that consumes the input list. A unique node moves
-its string and tail to their next owners. At the first shared node, map keeps the
+its string and tail to their next owners.
+
+At the first shared node, map keeps the
 remaining list alive and gives callbacks separate string references. Existing
 list, tail and element aliases therefore keep their values. Output nodes remain
 fresh: a callback can collect, so changing older immutable nodes would require a
-separate collector proof. Changed ASCII case conversions can reuse unique young
+separate collector proof.
+
+Changed ASCII case conversions can reuse unique young
 string storage; shared, static and older storage is copied.
 
 Other element types, captured callbacks and unknown callbacks keep their current
@@ -84,11 +88,15 @@ These meet the previously set limits of 230,000 requests, 80,000 retains and
 7,794,440 peak charged bytes. Both ARC time ratios also meet the 1.05× baseline
 screen. Counts exclude raw buffers, stacks and allocator metadata. Separate
 single-process peak resident-memory observations are 7.7–8.9 MB for new ARC,
-10.3–11.3 MB before, 4.4–4.6 MB for C and 6.1–6.3 MB for Rust. Resident memory
+10.3–11.3 MB before, 4.4–4.6 MB for C and 6.1–6.3 MB for Rust.
+
+Resident memory
 includes the whole process and must not be equated with managed charged bytes.
 ARC machine-code sections grow from 47,330 to 48,722 bytes on AMD64 and from
 46,956 to 48,204 bytes on ARM64. The allocation savings therefore have a code-size
-cost. Whole executable files are 102,288 and 152,760 bytes respectively; section
+cost.
+
+Whole executable files are 102,288 and 152,760 bytes respectively; section
 sizes and file sizes measure different things. No stack-usage reduction is claimed.
 
 ## Correctness and delivery

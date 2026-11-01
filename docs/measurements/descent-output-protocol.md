@@ -40,12 +40,16 @@ its final print can use internal C-library storage, outside the numerical-buffer
 observer's scope.
 The formatters differ: fwp searches decimal precisions until parsing the result
 returns the original float, C uses `printf("%.17g", value)`, and Rust uses its
-ordinary `Display` formatter. Checks compare parsed coordinates, not identical
+ordinary `Display` formatter.
+
+Checks compare parsed coordinates, not identical
 text across languages. Full-output ratios therefore include different formatting
 algorithms; they do not isolate compiler overhead.
 Therefore, subtracting these timings does **not** give pure formatting time.
 The checksum variant still includes input creation, all updates, bounds checks,
-allocation, cleanup, runtime startup and the checksum itself. With numeric-array
+allocation, cleanup, runtime startup and the checksum itself.
+
+With numeric-array
 text fusion enabled, neither fwp mode builds an output list. The older results
 before this optimization also included list construction in their full-output
 mode; keep that difference explicit when comparing revisions.
@@ -71,7 +75,9 @@ Before timing, an untimed consumer prints each coordinate's exact 64-bit
 representation. The runner checks every coordinate and every solve against the
 numerical reference with relative and absolute tolerances of `1e-10`, then
 independently computes the checksum of those bits. Precisely, the accepted error
-is at most `max(1e-10, 1e-10 * max(abs(actual), abs(expected)))`. Full fwp output
+is at most `max(1e-10, 1e-10 * max(abs(actual), abs(expected)))`.
+
+Full fwp output
 must additionally match its raw interpreter byte for byte.
 Each implementation must reproduce its own checksum on every timed run. Decimal
 formatting and small allowed numerical differences do not require equal checksums
