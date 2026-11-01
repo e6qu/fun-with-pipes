@@ -26,7 +26,9 @@ The sessions below run exactly as shown: the test suite runs them.
 builds a 200 text response. `sum-numbers` requires a JSON array, then
 `filter-map json.as-number` converts numeric members to `F64` and drops other
 members: it does not reject a mixed array. `F64` is a 64-bit floating-point type;
-this example therefore uses floating-point rounding when adding. The JSON tree
+this example therefore uses floating-point rounding when adding.
+
+The JSON tree
 itself keeps each number's exact text. `json.encode-value` converts the computed
 sum back into a JSON value for the response. `admin` checks the demonstration
 bearer token before returning a fixed message. `const` discards the authenticated request;
@@ -36,6 +38,18 @@ it does not skip the preceding check.
 as the pipeline value. `fork http.serve-on id (const (...))` supplies the listener
 and the fixed configuration/handler pair to the server. `attempt` turns a startup
 failure into `Err`; the final match prints its message and exits with status 1.
+
+### Trace one request
+
+```mermaid
+flowchart LR
+    C["GET /hello/fwp"] --> R["Router selects hello"]
+    R --> P["name = Some fwp"] --> T["Text: hello, fwp"]
+    T --> O["HTTP 200 response"]
+```
+
+For `POST /sum` with `[1, 2, 3.5]`, the numeric list totals `6.5`.
+With `{}`, the array check fails first and produces HTTP 400; summation never runs.
 
 ## Handlers
 

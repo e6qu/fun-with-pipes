@@ -1,13 +1,11 @@
-# Networking: TCP, UDP and DNS. Socket operations suspend only the calling
-# task. Addresses are "host:port" strings.
+# TCP provides an ordered byte stream; UDP sends independent datagrams;
+# DNS resolves names to addresses. A listener accepts connections.
 #
-# TCP is an ordered byte-stream connection, UDP sends independent datagrams,
-# and DNS resolves hostnames to network addresses. A listener accepts incoming
-# connections; a connection reads/writes bytes. A host:port address such as
-# 127.0.0.1:8080 selects this computer and a port. Suspending a task while IO
-# waits lets other ready tasks run; it does not make IO instantaneous.
-# A socket address containing a NUL byte fails with IoError instead of being
-# silently shortened at that byte.
+# - Addresses use `host:port`: `127.0.0.1:8080` selects this computer and port 8080.
+# - Socket waiting suspends only the calling task, letting other ready tasks run.
+# - A NUL byte in an address raises `IoError`; it never silently shortens the address.
+#
+# Connections read/write bytes. See [networking](concurrency.md).
 
 Listener = builtin
 Conn = builtin

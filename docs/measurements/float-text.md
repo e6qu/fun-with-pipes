@@ -22,6 +22,7 @@ interpreter at C O1/O2, with ARC and tracing, including tracing stress. A second
 probe compares a frozen copy of the previous formatter with the candidate:
 signed zeros, infinities, NaNs, subnormals, binary and decimal boundaries, large
 integers, deterministic bit patterns and all four C rounding directions.
+
 It checks each precision from one to seventeen for finite F64 values. Deliberate
 digit changes and writes into an adjacent canary must fail with distinct statuses.
 The frozen implementation is a test oracle, not a runtime compatibility path.
@@ -39,6 +40,7 @@ The largest generated program's GCC formatter stack frame grows from 224 to 256
 bytes on AMD64 (bounded dynamic stack use), and 208 to 288 bytes on ARM64 (static).
 The caller's writer frame stays at 720/704 bytes respectively. Whole-program
 text-section bytes grow from 33,010 to 33,826 on AMD64 and 30,972 to 31,516 on ARM64.
+
 The byte counts measure the ELF `.text` section, including padding; the
 historical raw field is named `instructionBytes`. These costs accompany a
 possible elapsed-time gain; the change does not reduce
@@ -101,12 +103,15 @@ measurements. Invoke it with `native_runner=all`. A successful job means the
 experiment completed; the saved `meetsSingleRunScreen` field is not final
 acceptance. Repeat measurements with `suite=float-text-costs` and
 `native_runner=all`; this does not repeat the unchanged six-host correctness
-jobs. To obtain a missing same-model repetition, select `native_runner=ubuntu-latest`
+jobs.
+
+To obtain a missing same-model repetition, select `native_runner=ubuntu-latest`
 or `native_runner=ubuntu-24.04-arm` explicitly. GitHub's standard runners may
 assign different CPU models; retain unmatched runs and repeat only the needed
 architecture. A single selected host never establishes two-architecture coverage.
 [Repeated results](float-text-results.md) retain every run, including unmatched
 CPU models, and report stack/code-size costs alongside timing gains.
+
 `suite=float-text-checks` runs only the six native correctness jobs, so a test
 repair does not repeat unchanged benchmarks. The Windows probe uses CRLF in its
 one-line summary; the Rust test parses a line rather than requiring LF bytes.

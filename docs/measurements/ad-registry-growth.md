@@ -1,9 +1,8 @@
 # Autodiff registry growth
 
-Historical measurements at the revisions named below. Counts and timings are
-observations of those programs, not current compiler budgets. Commands refer
-to the recorded measurement revision. Read [measurement terms](../benchmarks.md)
-for timing and memory boundaries; [the plan](../../PLAN.md) owns remaining work.
+Historical results; reproduce with the recorded revisions, not current main.
+[Measurement terms](../benchmarks.md) explain the costs;
+[PLAN.md](../../PLAN.md) tracks current work.
 
 The runtime keeps a table of active tapes, called a **registry**.
 [This comparison](ad-registry-2026-10-15.json) runs identical fwp

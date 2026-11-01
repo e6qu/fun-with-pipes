@@ -82,12 +82,16 @@ libunwind 1.8.3 by release SHA-256. It records the linked
 library and compares direct `unw_backtrace`/`unw_step` probes against the system
 library on the same host. It retains syscall diagnostics and both observations.
 Only the explicitly selected library is used for profiles; no failed profile
-switches automatically to another observer. Both allocation/release controls
+switches automatically to another observer.
+
+Both allocation/release controls
 pass. The standalone unwinding probes also pass with the old system library,
 so they do not reproduce heaptrack's missing-frame failure. At `9d47a5fc`, run `41256208614` compares full heaptrack controls with both
 libraries on each host. AMD64 passes with both. ARM64 again loses the control
 stack with the system library, while the selected library reports all three
-allocations and the deliberately unfreed 1,048,578 bytes. This reproduces the
+allocations and the deliberately unfreed 1,048,578 bytes.
+
+This reproduces the
 integration problem but does not identify a particular upstream defect. Unneeded
 core-dump, remote-process and setjmp observer libraries are excluded from this
 build; they are unrelated to in-process allocation tracing. Their implementation
@@ -125,7 +129,9 @@ independently sampled peaks.
 The largest Swift pipeline stack accounts for 360 array-buffer growth allocations;
 two further array-buffer stacks account for twenty each. Rust's largest pipeline
 stack accounts for twenty vector allocations; consuming filtering can reuse the
-mapped vector's capacity. C allocates its reusable work buffers once. These
+mapped vector's capacity. C allocates its reusable work buffers once.
+
+These
 algorithm/collection choices explain much of the traffic difference; they do
 not measure the cost of one ARC retain/release. Swift's map stores its table in
 a top-level variable; the roughly 8 MB still present at process exit must not be

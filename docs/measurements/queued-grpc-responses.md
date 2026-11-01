@@ -82,17 +82,22 @@ and servers at O0/O2. Separate measured servers count response channels,
 completed calls, finalized streams/connections and
 remaining tasks. Allocation and retain counts cover the server's managed runtime
 and application values during those requests, starting after listener setup;
-they are not counts for closures alone. The final sample follows all 72 calls
+they are not counts for closures alone.
+
+The final sample follows all 72 calls
 and connection teardown.
 A retain acquires another counted owner. The counter records operations that
 actually increase a count, excluding no-op retains. Requested bytes add up every
 allocation request, even when earlier storage has already been freed; peak charge
 is the largest simultaneously live allocator charge above the readiness baseline.
+
 Charge includes size-class rounding, so it can exceed the requested object size.
 It requires zero live response channels/tasks. The service still listens, so the
 test separately identifies its socket-wait storage, allocated lazily after the
 readiness baseline. Linux keeps a descriptor table and one wait record; macOS
-and Windows keep a polling array. Checks require those objects to belong only
+and Windows keep a polling array.
+
+Checks require those objects to belong only
 to the listener. No managed allocation charge beyond those actual objects may
 remain. There is no fixed byte allowance. These counters exclude OS buffers,
 allocator metadata, process memory, stack pools and storage created before the

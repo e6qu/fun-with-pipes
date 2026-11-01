@@ -74,5 +74,93 @@ and limits before running the candidate; retain every failed observation.
 Run focused checks together after all three changes are implemented. Then require
 the exact final head's nine production jobs and documentation. Full builds,
 suites and benchmarks run on GitHub; local work stays under the resource guard.
-Results are pending until their source IDs, logs and retained observations are
-recorded here and in [the handoff](../development-state.md).
+Focused results follow below. [The handoff](../development-state.md) tracks
+full final-head production validation.
+
+## Read the recording fixture
+
+[The fixture](../../tests/fixtures/ad_typed_recording.fwp) manually constructs an
+identity-derivative chain to isolate recording costs. Its `WEIGHT_*` names are
+replaced by the test harness with F128 or nested `Rev[F64]` types/constants.
+They are test placeholders, not new language syntax.
+
+| Local name | What its initializer does | Value used afterward |
+|---|---|---|
+| `base` | Register the input values with `ad.tape-owned` | ID of the first input node, not its numeric value |
+| `final` | Loop 256 times, recording one weight-1 edge each time | Last node ID |
+| `result` | Run backward from `[final]` with seed `[WEIGHT_ONE]` | Input derivatives: `[WEIGHT_ONE]` |
+
+```text
+let base = create the tape input
+in (let final = record the chain
+    in (let result = calculate the derivatives
+        in check the input alias, then select result or trap))
+```
+
+This is an explanation of nesting, not runnable source. Each `in` belongs to
+the preceding `let`; `in let final` means the first binding's body is another
+binding. The last body returns the saved derivative list only if the input
+still equals `[WEIGHT_ONE]`. That checks preservation of the caller's alias.
+See [local names](../terminology.md#local-names) for a small runnable calculation.
+
+The loop carries `(remaining, node)`. `Again` decrements the count and records
+the next node; at zero, `Stop node` supplies `final`. Every edge has derivative
+weight one, so a final seed of one propagates back to one at the input.
+
+## Focused results
+
+[Run 41290359214](https://github.com/e6qu/fun-with-pipes/actions/runs/41290359214)
+passes at `c5acb7d980a0efba9505b5edc4a37802337cad4f` on Linux ARM64 (GCC 13.3),
+Linux AMD64 (GCC 15.2) and macOS ARM64 (Clang 23.1.4). Each host passes eight
+derivative/cleanup targets, ownership unit checks and the frozen primitive audit.
+The [retained observations](typed-derivative-owners-2026-11-01.json.gz) include
+compiler identities, outputs/statuses, image/source hashes and static-frame reports.
+
+- Both weight types, O1/O2 and workspace off/on: 256 recording calls;
+  stack off uses 256 heap argument records, stack on uses zero.
+- All six adjoint modes: zero initialization retains; result retains are
+  `2, 3, 3, 2, 0, 3`, solely for independently owned shared-zero results.
+- All positive cases return to zero final charge or their stated baseline.
+  Extra-owner and borrowed-zero-drop controls fail with 188 and 187 respectively.
+  The nested suite also checks missing cleanup during result transfer.
+- Thirty reported images match their source hashes and native architecture;
+  all 84 saved typed-probe outcomes match their expected status.
+
+Whole-process charged storage for the recording fixtures agrees across these hosts:
+
+| Weight type | Stack off → on: cumulative charged bytes | Peak charged bytes | Final charged bytes |
+|---|---:|---:|---:|
+| F128 | 30,608 → 18,320 | 11,056 → 11,056 | 0 → 0 |
+| Nested `Rev[F64]` | 96,384 → 43,056 | 31,680 → 31,664 | 0 → 0 |
+
+These are allocator-charge counters, not requested payload bytes or process RAM.
+The stack switch affects other eligible records too; do not attribute the entire
+nested reduction to the 256 counted outer records. The dedicated record counter
+isolates those records. The six-mode ledger's process peak stays 1,504 charged
+bytes; it is cumulative across modes, not a reset per-mode peak.
+
+Instrumented executable file sizes, with stack storage off → on:
+
+| Host | F128 O1 / O2 bytes | Nested O1 / O2 bytes |
+|---|---|---|
+| macOS ARM64 | 148,112 → 148,112 / 164,496 → 164,496 | 89,360 → 89,296 / 89,248 → 89,200 |
+| Linux ARM64 | 156,224 → 156,224 / 155,872 → 155,832 | 79,568 → 79,464 / 79,264 → 79,200 |
+| Linux AMD64 | 134,336 → 130,240 / 146,440 → 146,400 | 82,120 → 77,920 / 85,968 → 81,808 |
+
+Largest reported function frames stay unchanged per comparison: macOS 720 bytes;
+Linux ARM64 704; Linux AMD64 688 at O1 and 720 at O2. Individual frames remain in
+the record. These are separately compiled static estimates, not maximum stack
+usage of the running process. File sizes include linking/layout costs and are
+not instruction counts. There is no elapsed-time measurement in this batch.
+
+The first run, `41289222076` at `5f1741624834da7ded8e4990ef3bc3245ac8aacd`,
+failed both new probes on all hosts. Existing targets passed. Repairs:
+
+| Probe fault | Repair |
+|---|---|
+| Fault-injection text matched four constructors | Match the specific guarded result transfer; require exactly one site. |
+| Heap counter queried mutable-buffer capacity | Use heap membership; immutable records deliberately have no such capacity. |
+
+No runtime change or acceptance relaxation was needed. Counts now print before
+assertions so failed observations remain visible. Full final-head production
+validation remains required; this focused result covers three of the six hosts.

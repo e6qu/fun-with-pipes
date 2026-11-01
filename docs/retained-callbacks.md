@@ -125,7 +125,9 @@ The [C probe](../tests/fixtures/retained_callbacks_probe.c) checks physical byte
 and live allocation identities before teardown. Deliberately omitted capture or
 context destruction must fail with status 241; premature destruction with 242;
 missing active-call completion with 243. Omitting the library scheduler root
-release must fail its final allocation check with 205. On Linux, a separate
+release must fail its final allocation check with 205.
+
+On Linux, a separate
 control omits release of idle descriptor-wait metadata belonging to the library;
 the host can keep the descriptor itself open. Identity is checked before reading a
 possibly freed capture. These tests passed on the six native targets in #215.

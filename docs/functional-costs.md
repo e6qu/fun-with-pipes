@@ -38,19 +38,27 @@ The test runs an unoptimized interpreter reference at `n = 32`, then invokes the
 actual native exported entries at `n = 32` and `128`, compiled at O0 and O2.
 Allocation requests, requested bytes, runtime application requests, record/variant
 construction requests and effective count increments are recorded only during
-the measured calls. Inputs are supplied by the native caller. All pairs must
+the measured calls.
+
+Inputs are supplied by the native caller. All pairs must
 use the actual C entry signatures and evaluation stages. Supplying fewer arguments
 than a native entry accepts constructs an owned partial application, including
 its allocation in the control's counts. Saturating an entry runs its body; later
-inputs call the returned function. The probe reads the lowered arity instead of
+inputs call the returned function.
+
+The probe reads the lowered arity instead of
 assuming every arrow belongs to one C call. Captures here are integers or unit. The fixture also
 exports these identities as first-class values, so the compiler emits their
 typed runtime callback entries. A direct-call export alone does not require
-those entries. A native preflight checks them; the returned identity record is
+those entries.
+
+A native preflight checks them; the returned identity record is
 not constructed inside the measured work. Both versions must
 return the expected results and restore the live-storage baseline after each call.
 The normal root-completion operation runs after each entry; it releases empty
-State scratch storage. That storage's allocation remains inside the measurement.
+State scratch storage.
+
+That storage's allocation remains inside the measurement.
 Unknown-call controls must execute a runtime application; known callbacks must
 not add applications as input size grows. Existing alias, callback-failure and
 caller-cleanup tests run alongside this matrix.
@@ -186,6 +194,7 @@ The candidate passes the two bounds to a specialized callback and loops over
 indices, avoiding the temporary list. Its acceptance requires exactly two
 allocations and 152 bytes at both measured sizes: State scratch storage and the
 returned pair remain. This is neither zero-allocation nor a speed claim.
+
 Only a known, single-use I64 range consumer with plain captures qualifies;
 unknown consumers and reused lists retain ordinary ownership. General eager
 map/fold fusion still requires its existing effect and trap-order proofs.
@@ -205,10 +214,12 @@ whose payload type is a callback, fail during next-argument evaluation and cance
 an active loop. Raw interpretation of small inputs supplies the semantic reference.
 Native O0/O2 checks execute deep inputs, sample frame addresses at loop entries,
 reject a deliberately broken stack observation, and check storage after cleanup.
+
 The report records each loop’s visits and observed stack range, plus allocation
 requests, requested bytes and live storage before/after execution. Allocation
 counts include the whole fixture after constant initialization—including output
 and cleanup—not just the recursive body. They do not measure elapsed speed.
+
 Known partial applications containing only plain data or weak handles can lose
 their cleanup boundary, allowing direct calls to emerge. Unknown or strong
 captures, cached closures and fully applied closure factories keep their boundary.
@@ -227,12 +238,16 @@ Non-tail calls retain ordinary frames. Only I64, Bool and unit locals qualify.
 The measurement computes parity by alternating two countdown functions. It compares
 ordinary mutual calls, the grouped version of the **same typed intermediate code**,
 and an explicit fwp `loop`. Each invocation counts down from 4,096 or 4,097;
-65,536 invocations must produce checksum 32,768. The first two sessions used
+65,536 invocations must produce checksum 32,768.
+
+The first two sessions used
 1,024 invocations/checksum 512; their source IDs and original settings remain
 unchanged in the records. Timed binaries contain no counters.
 A common volatile native entry pointer prevents the C compiler from hoisting
 repeated invocations. Wall time includes process startup, all invocations, checksum
-output and cleanup. Saving measurement logs is outside the timer. This is a
+output and cleanup.
+
+Saving measurement logs is outside the timer. This is a
 comparison among fwp implementations, not C/Rust parity.
 
 Before measuring, the runner records these acceptance limits:
@@ -249,7 +264,9 @@ Two warmups precede timing; candidate order rotates through eight samples. Separ
 instrumented binaries collect function-entry counts and stack-address ranges.
 Their instrumentation changes frames, so retained compiler stack-use reports from
 the uninstrumented build are reported separately. Actual binaries, code, compiler
-and hardware details, all samples and failed budgets are retained. A failed budget
+and hardware details, all samples and failed budgets are retained.
+
+A failed budget
 requires repair or a documented rejection of the prototype; a completed workflow
 alone does not accept it. Excessive timing noise or a missing ordinary-stack
 control makes the comparison inconclusive; it cannot justify accepting or
@@ -262,9 +279,9 @@ limit. The [raw record](measurements/mutual-recursion-2026-10-28-first.json)
 retains all samples, controls, profiles, toolchain/hardware details and hashes.
 An independent audit recomputes ratios and verifies actual ELF text sizes,
 binary hashes, sample order, compile flags and stack reports. This supports
-retaining the prototype for final platform verification; F1 and the full PR
-were still pending at this source. The next session verifies the runtime repair
-but has one inconclusive timing row, described below.
+retaining the prototype for platform verification, subsequently completed in
+[#222](roadmap-history.md#functional-calls-and-recursion-pr-222). The second
+session below verifies the runtime repair but retains an inconclusive timing row.
 
 Median milliseconds include process startup and 1,024 countdown invocations:
 
@@ -279,6 +296,7 @@ AMD64 O2 is about 0.7% slower than ordinary calls, despite beating the explicit
 loop. These short O2 timings include substantial startup cost; they do not
 isolate per-iteration language overhead. Identical-code control ratios are
 1.002–1.021, within 1.10. Every numeric entry makes zero managed allocations.
+
 Grouped text grows by 112 bytes at O0; at O2 it shrinks by 144 bytes on ARM64
 and 96 on AMD64. Its instrumented stack range stays 320 bytes at O0 and 34 at
 O2 as input grows from 16 to 4,096. Ordinary O0 grows from 1,728 to 393,408

@@ -338,7 +338,9 @@ roff, generated from the same commands, flags and comments as the help.
 They work the same way in multi-command programs and in single-command
 executables (where they are not listed in the help, and a flag of the
 same name takes precedence), with the interpreter and in both native and
-WebAssembly builds. The first line loads bash completion into the
+WebAssembly builds.
+
+The first line loads bash completion into the
 current shell; the others install it for bash, zsh (in a directory of
 `$fpath`) and fish, and write the man page:
 
@@ -432,7 +434,9 @@ Programs that parse their own arguments use the same rules through the
 `cli.parse defaults arguments` is `Ok (options, positional)` or
 `Err message`; a field whose flag is absent keeps its value in
 `defaults`, and `--help` is a flag like any other, so a program that
-wants it has a `help: Bool` field. Choices, value names and
+wants it has a `help: Bool` field.
+
+Choices, value names and
 `[requires: ...]`/`[conflicts: ...]` work as for executables;
 environment variables do not (`cli.parse` is pure). `cli.help defaults` is the help lines
 of the flags, and `cli.usage-error usage message` prints both and exits

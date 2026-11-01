@@ -113,10 +113,12 @@ ASCII case conversion can change uniquely owned storage in place; the
 reuse-verification control forces a copy. Shared strings copy, preserving aliases.
 Changed trim results use separate storage. Replacement can reuse unique storage
 when its result cannot grow; otherwise it allocates the changed result.
+
 ASCII case conversion returns the source when no relevant ASCII letter changes;
 trim returns it when no boundary whitespace is removed. Replacement returns it
 for an empty pattern, equal pattern/replacement or no occurrence. Embedded NUL
 and non-ASCII bytes keep the existing length-aware behavior.
+
 [PR #192](roadmap-history.md#string-ownership-and-repeated-file-cleanup-pr-192)
 accepted unchanged-result transfers;
 [PR #194](roadmap-history.md#string-map-ownership-and-native-reuse-checks-pr-194)
@@ -171,12 +173,16 @@ Channel close preserves queued values; it does not break an owning cycle.
 Unproved cycles are rejected even when a later drain is planned. The compiler admits
 nested channels when following their payload types cannot lead back to the same
 channel type. HTTP stream handles remain excluded because their hidden owners
-can lead back to the queue. The [task-message extension](measurements/task-channels.md)
+can lead back to the queue.
+
+The [task-message extension](measurements/task-channels.md)
 also follows each known task's computation and result; unknown producers and
 captured task-bearing queues remain rejected. The
 [queued-function capture proof](ownership.md#functions-stored-in-channels)
 checks actual captures and call scopes separately. The queue owns each
-retained message and the last channel owner releases remaining messages. See the
+retained message and the last channel owner releases remaining messages.
+
+See the
 [type proof](ownership.md#ownership-boundaries). Preserve callback, trap and task ordering when extending
 contracts. These contracts describe the current runtime. Checked ARC additionally
 enforces its lifetime and cycle rules, rejecting unproved shared boundaries.
@@ -253,6 +259,7 @@ Immediate await/receive matches can carry fields directly, as described in the
 pointer-bearing payload; scalar words
 do not select reference destructors. task.deadline borrows its typed argument
 and retains the returned alias instead of forcing it into runtime sharing.
+
 The `task.spawn` and `task.within` contracts consume one callback owner;
 the compiler duplicates it first only if another use needs an independent owner.
 The task keeps that owner through preparation, completion or cancellation.
@@ -260,6 +267,7 @@ Deadline calls protect it while reading the clock. These contracts passed
 [PR #190](roadmap-history.md#queued-task-owners-and-callback-transfers-pr-190);
 [the comparison](measurements/queued-task-handles.md#transferring-task-callbacks)
 records the saved retains and unchanged allocations.
+
 Scope results remain protected through joining and unwind. Counted
 task handles own typed cached results; repeated awaits return separate owners.
 Typed sends consume message owners and transfer them into the queue; the compiler
@@ -418,6 +426,7 @@ releases partially copied fields if a managed result allocation fails. The sourc
 stream remains live during copying. HTTP clients give pooled connections, I/O
 tasks and requests explicit owners, accepted across the native platform matrix in
 [PR #162](roadmap-history.md#http-client-owners-and-complete-connection-keys-pr-162).
+
 The server extension gives stream handles typed owners and retains handler captures
 once per connection. [PR #163](roadmap-history.md#http-server-owners-and-fixed-function-storage-pr-163)
 records passing native focused and production checks.
@@ -434,7 +443,9 @@ the stream ended. Multiple reads of one position must return its saved result.
 The operation consumes one position owner. When that owner is exclusive,
 it moves the saved result; otherwise it adds one result owner. Typed cleanup
 releases cached values and continuation wrappers, stopping at a shared wrapper.
-It follows long cache chains in a loop. Positions and receive sources use raw
+It follows long cache chains in a loop.
+
+Positions and receive sources use raw
 runtime layouts, so their release must not interpret them as record headers
 when verifying memory reuse. This position contract is one part of the complete
 connection, stream and decoder-capture ownership needed for remote calls.
@@ -455,7 +466,9 @@ and adds no language syntax or runtime mode.
 `ad.push-owned`, used for F128 and nested derivative values, also borrows its
 outer argument record. Its weight children have separate owners: recording
 retains both before publishing them, and partial failure releases acquired owners.
-The caller keeps the borrowed fields alive through this work. The
+The caller keeps the borrowed fields alive through this work.
+
+The
 [typed-recording protocol](measurements/typed-derivative-owners.md) verifies that
 contract separately from scalar recording. The scalar 256-operation regression
 compares stack storage on/off, native O1/O2 and workspace reuse on/off. The runtime

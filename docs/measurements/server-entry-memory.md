@@ -43,7 +43,9 @@ floating-point multiplication/addition rounding. The workflow records source,
 compiler, CPU and platform identities.
 [The report reader](../../scripts/summarize-server-entries.py) requires all six
 native hosts. Per host it checks six standard-input rows, 27 HTTP rows, 15 RSS
-samples and four ordinary binaries, including the omitted-free control. Binary
+samples and four ordinary binaries, including the omitted-free control.
+
+Binary
 headers must match the host; collector symbols must be absent. Source hashes,
 section sizes and generated C accompany the results. A missing row or failed
 control invalidates the report; historical data keeps its original schema.

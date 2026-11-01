@@ -1,36 +1,22 @@
-# HTTP/1.1 and HTTP/2 server and client.
+# HTTP exchanges requests (method, path, headers, body) and responses
+# (status, headers, body). A route chooses a handler; middleware adds behavior.
+# A handler is a `Request -> Response` function, for example:
 #
-# A handler is an ordinary function `Request -> Response`, and middleware is
-# ordinary composition:
+# ```fwp
+# handler = timeout 2s | auth.bearer token | service | json.response
+# ```
 #
-#     handler = timeout 2s | auth.bearer token | service | json.response
+# - Connections run in separate tasks with connection/request-size/count limits
+#   and idle, header, body, write and request timeouts.
+# - SIGINT/SIGTERM stops acceptance, permits a grace period, then cancels remaining work.
+# - TLS configuration enables HTTPS; TLS connections use the same `Conn` interface.
+# - HTTP/2 uses TLS protocol selection (`h2`) or cleartext preface/upgrade (`h2c`).
+#   Each stream runs in a task with the same handlers, limits and timeouts.
+# - The client pools one HTTP/2 connection per origin after TLS negotiation.
+# - Responses can be compressed via config or middleware; encoded request bodies
+#   and client responses are decompressed.
 #
-# The server runs every connection in its own task. It bounds the number of
-# connections (accepting waits while all slots are taken), the size of
-# request heads and bodies and the requests per connection; it applies idle,
-# header, body, write and per-request timeouts; and on SIGINT/SIGTERM it
-# stops accepting, lets in-flight requests finish within a grace period,
-# then cancels the rest.
-#
-# With `tls` in its config the server speaks HTTPS, and the client speaks
-# HTTPS to `https://` URLs (lib/tls.fwp): the same code runs over TLS
-# connections, which are `Conn`s too.
-#
-# The server also speaks HTTP/2: over TLS when the client chooses "h2"
-# with ALPN, and on cleartext connections that start with HTTP/2's
-# connection preface (h2c with prior knowledge) or ask for it with
-# `Upgrade: h2c`. Every stream runs in its
-# own task, with the same handler, limits and timeouts. The client uses
-# HTTP/2 when a TLS server chooses it, pooling one connection per origin.
-# Responses can be compressed (`compress` in the config, or the
-# `http.compress` middleware), request bodies with a content encoding
-# are decompressed, and the client decompresses responses.
-#
-# HTTP sends a request (method, path, headers and body) and receives a response
-# (status, headers and body). A handler computes that response; middleware wraps
-# a handler to add behavior such as a deadline. A route selects a handler.
-# JSON is a text format for structured bodies. Tutorial 8 builds a complete
-# server before introducing generated REST interfaces.
+# [Lesson 8](tutorials/08-http-server/README.md) builds a complete server.
 
 Request = {
     method: String,

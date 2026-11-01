@@ -350,9 +350,8 @@ Squash `56d5aac63a9963ae6b16574f10d6dc3087a08d8a` has the identical tested tree
 `1c824b804dddd30460bb11b2f5a9a40dd9fe16b4`. Its message is one 55-character line
 with no body/trailers. Duplicate postmerge CI `40552108647` was cancelled after
 that verification. Separate postmerge docs `40552108553` exposed a guard-test
-fixture depending on 64 GiB of real runner free space. The next batch isolates
-its test readings and adds refusal/boundary controls in #221; the production
-guard's limits are unchanged. [The handoff](development-state.md) tracks acceptance.
+fixture depending on 64 GiB of real runner free space. #221 isolated its test
+readings and added refusal/boundary controls; production guard limits stayed unchanged.
 
 ## Unique local arrays without counts (PR #219)
 
@@ -747,11 +746,14 @@ has the same tree as head `fc1386501955109b1f1271429a57b6ea42022aec`.
 The [cancellation-only comparison](measurements/task-cancellation.md) has earlier
 six-host evidence. The added Windows fiber probe passed its first execution but
 its assertion expected LF instead of the C runtime's CRLF output on both Windows
-architectures. That stopped the remaining variants and left incomplete artifacts.
+architectures.
+
+That stopped the remaining variants and left incomplete artifacts.
 The completed [production run](https://github.com/e6qu/fun-with-pipes/actions/runs/39635039734)
 has six passing jobs, these two Windows failures, and a macOS ARM64 GC-stress
 failure resolving crates.io before compilation. Every full log was audited;
 documentation passed. This merge is not full platform acceptance.
+
 [PR #189](https://github.com/e6qu/fun-with-pipes/pull/189) repairs the assertion
 and dependency fetching, and reruns every variant with the
 [compact-record measurements](measurements/task-records.md). PR #189 has full production
@@ -878,6 +880,7 @@ Loops can now keep state fields in locals even when an action or branch precedes
 `Again`. For example, printing a string before updating `(count, text)` no longer
 forces a new state tuple on each iteration. Known capture-free function aliases
 also expose direct calls; constants that can evaluate or trap stay in order.
+
 [Examples and measurements](measurements/channel-loop-state.md) explain the
 five channel programs, counts, generated C and actual machine-code comparisons.
 Each saves one allocation per additional message from loop-state lowering.
@@ -1030,7 +1033,9 @@ known callbacks directly, and joins related buffers. At 65,536 inputs with at
 most 257 keys, map requests fall 196,614 → 5 and set requests 131,077 → 4.
 An unnecessary second compiler build caused the Intel macOS timeout and was
 removed without reducing coverage. **At this revision, Xeon 8573C full-map tracing
-was 4.4–4.6% slower**; allocation savings do not resolve that result. Cached-map
+was 4.4–4.6% slower**; allocation savings do not resolve that result.
+
+Cached-map
 borrowing candidate `774d838c` is not part of this merge. PR #167 above supplies
 the subsequent implementation and matching-host repair evidence.
 
@@ -1068,7 +1073,9 @@ HTTP request/connection/task owners now clean up on failure and cancellation.
 A 24-byte combined handle replaces separate handle/job allocations; a 64 KiB
 receive buffer moves to the stack. Socket waits use readiness and deadlines.
 Keeping one copy of the existing ARC check reduces code size without removing
-checks. Fixed function captures use static records: approximately 899 → 722
+checks.
+
+Fixed function captures use static records: approximately 899 → 722
 allocations and 2,318 → 1,901 retains per HTTP request. Paired Linux request
 measurements are 4–6% faster than older fwp, not a C/Rust comparison. Failure
 injection and UDP counter fixtures were repaired before acceptance.

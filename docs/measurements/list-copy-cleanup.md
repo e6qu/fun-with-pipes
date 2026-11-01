@@ -49,7 +49,9 @@ elapsed-time improvement is claimed.
 `tests/support/list_copy.rs`. It compares native results with the interpreter with optimizations disabled
 and interrupts every allocation/retain in all seven list operations, both by
 trap and by task cancellation. It separately interrupts the first, middle and
-last key callback. Independent aliases must remain valid; eight rounds must
+last key callback.
+
+Independent aliases must remain valid; eight rounds must
 return ARC storage to the starting balance. Tracing runs force frequent collection, verify collector consistency and
 exercise reused memory. Deliberately missing key, scratch and partial-list releases
 must fail the allocation ledger, which records allocations and explicit releases
@@ -58,18 +60,24 @@ so collection cannot hide missing cleanup.
 The local runtime-only reproduction passes on macOS ARM64 Clang O1: handled
 failures and success end at zero managed charge; omitting key release leaks
 16, 32 or 48 bytes. It uses saved #206 emitted C with the current runtime and new
-call applied explicitly. It does **not** validate current Rust code generation,
+call applied explicitly.
+
+It does **not** validate current Rust code generation,
 GCC or other hosts. The `list-copy` focused run `40088243982` tests source `883f1c140089` at
 production settings. Linux and macOS pass on both architectures. Both Windows
 jobs pass the new cleanup tests but expose a scalar-key probe that expected LF
-while writing through Windows text mode. It now selects binary stdout, matching
+while writing through Windows text mode.
+
+It now selects binary stdout, matching
 the generated program convention. All three list targets are added to Windows
 production coverage. Source `851c7a774b92` passes both complete repair runs:
 [Windows AMD64](https://github.com/e6qu/fun-with-pipes/actions/runs/40089546129)
 and [Windows ARM64](https://github.com/e6qu/fun-with-pipes/actions/runs/40089548269).
 All completed logs are audited. Independent review covers [144 actual binaries](list-copy-native-2026-10-24.json)
 across the six hosts: six balanced observations and twelve deliberately missing
-cleanup controls per host. Windows uses the repaired test revision; compiler,
+cleanup controls per host.
+
+Windows uses the repaired test revision; compiler,
 runtime and library sources match the four Unix jobs. [PR #210](../roadmap-history.md#collection-cleanup-and-interpreter-shutdown-pr-210) records the later passing final CI and user merge.
 Independent final-head binary review was not completed before that merge.
 
@@ -77,7 +85,9 @@ The separate `list-copy-costs` measurement uses 0, 1, 32 and 4,096 input words
 through `read-all | words | sort | length` and the analogous array conversion.
 It compares the repair with extra separate scratch lanes restored, keeping the
 new cleanup in both. Counts include parsing, result construction and output;
-ordinary and instrumented binaries are separate, each at O1/O2. Three fresh
+ordinary and instrumented binaries are separate, each at O1/O2.
+
+Three fresh
 processes must agree on counts and finish with zero managed charge. No timing
 measurement is inferred from these instrumented runs. Both Linux jobs and
 independent binary reviews pass; [results](list-sort-storage.md) give exact

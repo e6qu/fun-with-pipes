@@ -1,98 +1,95 @@
 # Design goals and practical limits
 
-These are engineering goals with defined acceptance cases, not universal
-optimality guarantees. Before selecting a performance change, name the programs,
-inputs, hosts, semantic rules and measured budget it must satisfy. Set budgets
-from reproducible baselines; do not invent a universal percentage or move a target
-after seeing a regression. Correctness obligations apply beyond the benchmark set.
+A goal needs a named workload, input, host, semantic contract and measured budget.
+Set limits before testing a candidate; retain regressions and inconclusive results.
+Correctness obligations extend beyond the benchmark cases.
 
-**Memory ownership is feasible, but unrestricted cycle reclamation is not
-provided by ordinary ARC.** Immutable values, explicit effects and specialization
-help infer moves and borrows. Runtime-dependent sharing still needs an ownership
-mechanism; the compiler need not prove every safe lifetime to be useful. A channel
-holding a callback that captures that channel can form an owning cycle. Closing
-the channel currently preserves queued messages, so silently draining it would
-change behavior. The [accepted direction](gc-removal-design.md) rejects unproved
-owning cycles and adds explicit weak links for selected objects. Regions serve
-bounded grouped lifetimes; returned functions and partial applications remain.
-[Weak channels](weak-channels.md) define the implemented API. General regions
-remain planned. [G2 measurements](measurements/ownership-analysis.md) bound the
-current creation-site analysis; greater precision needs its own cost comparison. Arbitrary strong cycles, ordinary
-ARC alone and guaranteed automatic reclamation cannot all be promised together.
-Rust also permits leaked reference cycles; memory safety is not leak freedom.
-See [Rust's cycle explanation](https://doc.rust-lang.org/book/ch15-06-reference-cycles.html).
+## Ownership and cycles
 
-Ownership contracts at foreign calls must state when the host releases or stops
-using a value. Compiling fwp cannot prove arbitrary foreign code obeys them or
-remove a JavaScript host's collector. Bounded memory means bounded by live data
-and documented workspace/cache limits, not constant memory for a program that
-keeps growing its results. Prefer fewer necessary heap objects, not zero heap
-storage for unbounded or escaping data. Functional in-place reuse has research
-precedent in [Perceus](https://www.microsoft.com/en-us/research/publication/perceus-garbage-free-reference-counting-with-reuse/);
-that precedent does not establish fwp's callback/channel contracts.
+**Feasible:** prove moves, borrows and bounded lifetimes; count necessary sharing.
+**Not promised:** automatic reclamation of every owning cycle using ordinary ARC.
 
-**Ownership analysis must have a measured cost.** Use finite function summaries
-and revisit only changed dependencies; measure time, memory and specialization
-growth as programs grow. More precise types do not decide all possible runtime
-lifetimes. Conservative rejection is permitted; unbounded search for an exact
-proof is not the compiler design. A terminating analysis need not scale linearly.
+```mermaid
+flowchart LR
+    Q["Queue"] -->|owns| C["Callback"]
+    C -->|captures a strong owner| Q
+```
 
-**Zero-cost abstraction is a claim about named patterns.** Known curried calls
-can become direct native calls without intermediate closures. An escaping
-function with runtime captures needs those values stored somewhere; an unknown
-target may need indirect dispatch. Sharing immutable old and new values can
-require extra storage or bookkeeping. Fusion must preserve effects, termination
-and trap order: a strict two-stage list traversal cannot always become one
-element-at-a-time loop. Eliminate abstraction machinery where a proof permits it;
-do not promise every higher-order program is allocation-free.
+Neither object reaches zero owners merely because outside references disappear.
+fwp rejects unproved relationships of this kind. A weak back-link observes the
+queue without owning it; acquisition can fail after the final strong owner goes.
 
-**Native performance is attainable; universal C/Rust parity and optimal
-register/cache use are not acceptance criteria.** The existing C backend already
-delegates instruction selection and register allocation to mature toolchains.
-Finite registers require spills in some programs. Alignment can add padding;
-smaller layouts can require extra loads or decoding. Optimize measured tradeoffs.
-Checked overflow, observable traps and ordered floating-point arithmetic constrain
-legal transformations. Compare against implementations honoring the same rules;
-unchecked or reassociated comparisons remain useful only with that difference
-explicit. [LLVM's vectorizer documentation](https://llvm.org/docs/Vectorizers.html)
-describes the restrictions on floating-point reductions. It does not imply that
-all strict arithmetic prevents vectorization.
+- [Weak channels](weak-channels.md) are implemented. Closing preserves queued
+  messages; silently draining them to break a cycle would change behavior.
+- [Scoped parser storage](parser-workspace.md) proves one grouped lifetime.
+  General region relationships are not implemented.
+- Foreign code must obey explicit lifetime/release contracts. fwp cannot prove
+  arbitrary host behavior or remove a JavaScript host's collector.
+- Bounded storage means bounded by live data and declared workspace/cache limits.
+  A program that keeps adding results needs growing storage.
+- Memory safety is not universal leak freedom; even Rust permits reference cycles
+  ([explanation](https://doc.rust-lang.org/book/ch15-06-reference-cycles.html)).
 
-**Efficient differentiation is feasible within its mathematical and storage
-limits.** Reverse mode needs intermediate information, supplied by storage or
-recomputation. Checkpointing trades memory for repeated work and requires safe
-replay; fwp currently exposes it for pure steps. Gradient/Hessian outputs also
-require space proportional to the values returned. Arbitrary nesting cannot have
-constant cost. Preserve F128's defined arithmetic, without promising F64 speed or
-exact real-number derivatives. Branchwise differentiation does not create a
-derivative at a discontinuity. See the [AD survey](https://www.jmlr.org/papers/v18/17-468.html)
-and the implemented [precision and tape contracts](numerics.md#reverse-mode).
+[Accepted ownership design](gc-removal-design.md) states fwp's chosen tradeoffs.
+[Perceus](https://www.microsoft.com/en-us/research/publication/perceus-garbage-free-reference-counting-with-reuse/)
+is research precedent for functional reuse, not evidence for fwp's contracts.
 
-**CPU numerics fits the design; portable GPU execution without runtime
-compilation needs a narrower scope.** Improve known CPU kernels while preserving
-their rounding/reduction rules; do not silently enable reassociation or fused
-operations to match a different numerical contract. GPU execution is outside this roadmap, and JIT compilation is excluded.
-The numerical tasks target the existing serial and parallel CPU kernels.
+## Compiler analysis
 
-**Dependable measurement is achievable; noise-free or universal overhead
-numbers are not.** Repeated same-host comparisons can distinguish useful effects
-from ordinary variation. They cannot guarantee a speedup on every CPU, input,
-allocator or compiler. Separate equivalent-work overhead from algorithm changes;
-report allocation counts, peak live storage and process memory as different
-quantities. A performance improvement can trade one of these for another.
+Use finite summaries and revisit changed dependencies. Measure analysis time,
+memory and specialization growth as inputs grow; preserve the
+[G2 budgets](measurements/ownership-analysis.md).
 
-**Representative application validation is achievable and must be finite.**
-Strong ordinary inference and simple pipes do not require eliminating all type
-annotations; explicit generic signatures already bound the language's inference
-model. Improve diagnostics and libraries against real programs. Testing can
-establish the maintained acceptance matrix, not prove every possible program
-correct, fast, leak-free or easy to express. Keep larger coverage a maintenance
-obligation after a defined roadmap milestone is complete.
+More precise types cannot decide every runtime lifetime. Conservative rejection
+is permitted; unbounded search for an exact proof is not. A terminating analysis
+is not necessarily linear-time.
 
-## Related design work
+## Abstraction and native code
 
-[Ownership contracts](ownership.md#cycle-and-retention-contract) explain callback and
-channel restrictions, weak references and scoped cleanup.
-[Tail calls](design.md#tail-calls-and-recursion) explain implemented self-tail
-frame reuse and the limits of extending it to other calls.
-The [plan](../PLAN.md) owns priorities; this page owns their feasibility limits.
+| Pattern | Achievable result | Necessary limit |
+|---|---|---|
+| Known curried calls | Direct calls without intermediate closures | Preserve computation between argument stages. |
+| Escaping function | Store its captures efficiently | Runtime captures must live somewhere. |
+| Unknown callback | Share or borrow safely | Indirect dispatch may remain. |
+| Collection fusion | Remove intermediate collections | Preserve effects, termination and first failure. |
+| Immutable reuse | Update unique storage | Keep older shared values unchanged. |
+| Native layout/code | Improve measured time and working memory | Padding, decoding, register spills and cache tradeoffs remain. |
+
+For example, two strict traversals cannot always become one interleaved loop:
+that can run a second-stage effect before a first-stage failure. “Zero-cost”
+therefore describes proved patterns, not every higher-order program.
+
+The C backend delegates instruction selection and register allocation to mature
+compilers. Universal C/Rust parity or optimal register/cache use is not an
+acceptance criterion. Compare equivalent arithmetic: checked overflow and ordered
+floating-point operations restrict legal transformations. LLVM's
+[vectorizer documentation](https://llvm.org/docs/Vectorizers.html) explains reduction
+restrictions; strict arithmetic does not prevent every form of vectorization.
+
+## Numerical work
+
+- Reverse differentiation stores intermediate information or recomputes it.
+  Checkpointing trades memory for replay; fwp exposes it for pure steps.
+- Gradient/Hessian outputs need space proportional to their returned values.
+  Arbitrary derivative nesting cannot have constant cost.
+- Preserve F128's arithmetic without promising F64 speed or exact real arithmetic.
+  A branch derivative does not create a derivative at a discontinuity.
+- Improve serial/parallel CPU kernels while preserving rounding and reduction
+  order. GPU execution is outside this roadmap; JIT is excluded.
+
+See [implemented numerical contracts](numerics.md#reverse-mode) and the
+[AD survey](https://www.jmlr.org/papers/v18/17-468.html).
+
+## Evidence and validation
+
+| Evidence | What it can establish | Limit |
+|---|---|---|
+| Repeated same-host comparisons | A useful change for stated inputs | No universal speedup or noise-free overhead number |
+| Allocation and live-storage counters | Specific costs and release behavior | Not whole-process resident memory |
+| Representative programs | Maintained behavior and usability cases | Not correctness of every possible program |
+| Inferred ordinary types | Fewer annotations | Generic signatures remain explicit |
+
+[Benchmarks](benchmarks.md) define comparable work and overhead.
+[Ownership](ownership.md#cycle-and-retention-contract) defines lifetime boundaries.
+[Tail calls](design.md#tail-calls-and-recursion) define frame-reuse limits.
+[PLAN.md](../PLAN.md) owns priorities; this page owns feasibility limits.

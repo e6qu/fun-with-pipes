@@ -33,6 +33,7 @@ Do not lift ownership to a surrounding repetition loop: each parse needs its own
 cleanup boundary. Reject self-tail roots until region cleanup across their back
 edges is implemented and measured. Within
 it, nodes may appear in local records and pass through known recursive helpers.
+
 Every helper that receives or returns those nodes needs a specialized internal
 version. The ordinary helper remains available to the `escaping` example, which
 returns a tree to its caller. Returning a tree is legal; it prevents this storage
@@ -48,7 +49,9 @@ cannot return a node. Validate its precise existing contract before admitting it
 Use a finite worklist over types and direct helper calls. Cache containment of
 the candidate node type, visit each selected helper once, and count analysis
 work. Recursive helpers do not require arbitrary symbolic execution. The current selection budget is eight units per original expression, local and
-type edge; proof visits consume it. Completed cloned functions and locals may add at most
+type edge; proof visits consume it.
+
+Completed cloned functions and locals may add at most
 twice the original expression/local weight; check their actual rewritten weight
 before publishing a candidate. A candidate that exceeds a budget
 keeps ordinary ownership. Measure these limits on larger programs and preserve
@@ -64,11 +67,15 @@ program. It would also make mixed records easy to destroy incorrectly.
 Pass the region address explicitly between specialized internal helpers. Do not
 use a process/thread-global current region: nested invocations and task suspension
 must preserve the correct owner. A recursive call to the public entry creates a
-fresh owner; helper recursion within one parse uses that parse's existing owner. The original public function signature remains
+fresh owner; helper recursion within one parse uses that parse's existing owner.
+
+The original public function signature remains
 unchanged. The lowering uses an internal region-entry body that creates
 the owner and calls a worker with an explicit extra context parameter. Specialized
 node shapes carry region identity; selection must never depend on a generated
-type-name prefix. Ordinary constructors and workers stay available for escaping
+type-name prefix.
+
+Ordinary constructors and workers stay available for escaping
 callers. One cleanup registration owns the block list before the first possible
 allocation; ordinary pending-argument cleanup remains responsible for token and
 String owners. Helpers never destroy the region. Every exit from its owner does.
@@ -120,7 +127,9 @@ The [measurement protocol](measurements/parser-workspace.md) defines the peers,
 phase boundaries, storage accounting, repeated sessions and rejection controls.
 For timing, compare the previous counted fwp program, the candidate and explicit
 C/Rust arena implementations of the same prefix grammar. Predeclare token inputs,
-node counts, checked arithmetic and output oracle. Separate tokenization from tree
+node counts, checked arithmetic and output oracle.
+
+Separate tokenization from tree
 construction, traversal and cleanup. Report end-to-end cost separately if the
 implementations use different token containers. C/Rust must perform the tree
 work; evaluating tokens directly is a different algorithm. Freeze same-host noise

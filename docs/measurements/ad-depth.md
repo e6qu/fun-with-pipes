@@ -2,7 +2,8 @@
 
 **Status:** both native Linux matrices pass and their complete artifacts/logs
 are audited at `8e299f9f4b94fbe062b7f891eefb4ce6e4ac792e`. This establishes the
-measured cases below; the PR still needs its final nine-job production gate.
+measured cases below. [PR #226](../roadmap-history.md#derivative-allocation-and-accuracy-pr-226)
+subsequently passed all nine production jobs and documentation.
 This is D3's finite depth/size check, separate from the
 [descent optimization](descent-costs.md).
 
@@ -44,7 +45,9 @@ For each of the 18 depth/size/format combinations, retain generated source, ordi
 and observed native images, hashes, machine instructions and compiler stack
 estimates. Separate ledgers record managed requests, requested bytes, retains and
 peak/live charge, and raw tape allocation/release. They exclude allocator metadata
-and OS reservations and must not be added to estimate process memory. Both ledgers
+and OS reservations and must not be added to estimate process memory.
+
+Both ledgers
 must finish at zero; no extra cleanup is inserted to produce that result.
 Each AD case must record one completed backward pass per derivative level.
 Intermediate checkpoints may retain enclosing tapes; after the last pass only

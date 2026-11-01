@@ -1,16 +1,12 @@
-# Files, directories and paths. Paths are strings with `/` separators;
-# the `path.*` functions only compute with them and touch no file.
-# Failures are `IoError`s whose message names the path, as in
-# `missing.txt: No such file or directory`. A zero byte cannot occur in an OS
-# path: operations reject it with `path contains a NUL character` before any
-# access; `file.exists` and `file.is-dir` return False. For example,
-# `"notes.txt\0suffix"` never names or modifies `"notes.txt"`.
+# Files, directories and paths. A path names a location; a directory holds entries.
 #
-# A path names a location; a directory contains named entries. Path helpers
-# only manipulate strings, while file operations declare FileIO and can fail
-# with Error[IoError]. File is an affine resource: it cannot be duplicated.
-# Use the scoped helpers to keep it open for the intended operation and close
-# it on exit. FileInfo describes byte size, modification time and directory status.
+# - `path.*` functions manipulate strings with `/` separators without accessing files.
+# - File operations declare `FileIO` and can raise `Error[IoError]`, naming the path.
+# - `File` is an affine resource: it cannot be duplicated. Scoped helpers close it
+#   on exit; `FileInfo` reports size, modification time and directory status.
+# - OS paths cannot contain a zero byte. Operations reject one before access with
+#   `path contains a NUL character`; `file.exists` and `file.is-dir` return `False`.
+#   For example, `"notes.txt\0suffix"` cannot name or modify `"notes.txt"`.
 
 FileInfo = { size: I64, modified: Duration, is-dir: Bool }
 

@@ -32,7 +32,9 @@ Cancelling a task cancels its whole subtree. A task notices cancellation
 when it next suspends (when it sleeps, waits on a channel, awaits another
 task, or waits on a socket) or reaches the end of its time slice (see
 [preemption](#preemption)), so a task that only computes is cancelled
-too. At that point it unwinds. Cancellation is not an
+too.
+
+At that point it unwinds. Cancellation is not an
 error, so `attempt` does not catch it. A deadline cancels its task when it
 passes, so a deadline set on a task also applies to all of its children.
 `task.scope f` waits for the tasks that `f` started; if `f` fails, those
@@ -72,7 +74,9 @@ A native program in which every task waits forever stops with a
 Native socket waits use one OS readiness query for the parked tasks, bounded by
 the next actual timer or task deadline. They do not add a periodic sleep before
 checking each socket. Task preemption also checks sockets without waiting, so
-ready network work can run alongside computation. Closing a local socket wakes
+ready network work can run alongside computation.
+
+Closing a local socket wakes
 its waiters explicitly; cancellation removes a task's wait record before its
 stack unwinds. On macOS and Windows, a reusable event array grows with concurrent
 waiters and is freed when the last waiter leaves.
@@ -100,7 +104,9 @@ programs (where `fwp build` adds a decrement and a branch to the entry of
 each function of a program that uses tasks or services, and nothing to
 other programs), a program interleaves the same on both, from run to run:
 three tasks that each compute and print interleave their lines in one
-fixed order. Where tasks also wait for timers or sockets, the order
+fixed order.
+
+Where tasks also wait for timers or sockets, the order
 depends on time, as before. One exception: callbacks of the runtime's own
 algorithms, such as the comparisons of a sort, may be called a different
 number of times by the two backends.
@@ -224,7 +230,9 @@ with a transfer encoding are rejected with 501, and requests whose
 with 400, so that a request's length is never ambiguous. A response whose
 status is not three digits or that has a header that cannot be written as
 is (a name that is not a token, a value with CR, LF, NUL or another
-control character) is replaced by a 500. The client likewise refuses such
+control character) is replaced by a 500.
+
+The client likewise refuses such
 methods and headers, and URLs with spaces or control characters; its
 `host` header carries the port when it is not the scheme's default.
 
@@ -260,7 +268,9 @@ Every stream runs in its own task and becomes the same `Request`
 (`version` is `"HTTP/2"`, `:authority` is the `host` header), so routing,
 middleware and `http.fail` work unchanged. A `Body.Full` response is sent
 with `content-length`, and a `Body.Stream` as DATA frames, one per chunk,
-with HTTP/2's flow control giving the producer backpressure. The limits
+with HTTP/2's flow control giving the producer backpressure.
+
+The limits
 apply per stream: `max-header-bytes` (431), `max-body-bytes` (413),
 `body-timeout` (408) and `request-timeout` (503).
 `max-requests-per-connection` counts streams: after the last one the

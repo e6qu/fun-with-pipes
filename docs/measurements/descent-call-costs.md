@@ -18,6 +18,7 @@ The program repeatedly updates a vector using an explicit derivative formula.
 For example, 129×199 means 129 coordinates and 199 updates. The unchanged fwp
 executable is rebuilt from saved C alongside two variants: an ordinary `inline`
 hint and `always_inline` on helper `w36` (`next-contribution` in the fwp source).
+
 The helper reads a neighbouring coordinate and checks its index. No checks,
 arithmetic operations or failure paths were removed. The accepted C and Rust
 programs implement the same explicit derivative with reusable buffers; fwp

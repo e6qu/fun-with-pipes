@@ -23,7 +23,9 @@ has 128 or 4,096 data records. Task files contain 128 or 4,096 UTF-8 items.
 For the task application, a seeded file starts with unchecked items named
 “task héllo 0”, “task héllo 1”, and so on. Each successful round marks the first
 item done, rejects item zero, clears completed items, adds “new 世界” and lists
-the result. The seed is restored before each round, so retained input size is
+the result.
+
+The seed is restored before each round, so retained input size is
 bounded. A failed-write round appends to the first store before attempting a
 missing second directory; that first append must persist. A failed-read round
 reads one valid store before invalid UTF-8 in the second. The tests check both

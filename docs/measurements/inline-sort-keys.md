@@ -108,18 +108,24 @@ operation-count success alone is not a timing result.
 the same native GCC O2 flags. It calls their actual word-frequency sort entries;
 it does not reconstruct an allegedly equivalent implementation. The harness
 builds 256 or 4,096 `(word, count)` records once, then checks exact sorted object
-order against C `qsort`. Counts have repeated values, so text breaks ties.
+order against C `qsort`.
+
+Counts have repeated values, so text breaks ties.
 The timed loop performs 32,768 or 2,048 complete sorts respectively, including key
 calculation, merge scratch, result-list construction and result release. Input
 construction, the independent order check, process startup and printing are outside
-the monotonic timer. Physical live storage must return to its input baseline after
+the monotonic timer.
+
+Physical live storage must return to its input baseline after
 the loop and to its empty baseline after releasing input. This is fwp before versus
 fwp after; C `qsort` is a correctness oracle and is not timed as a competing language.
 
 Each sample is a fresh process pinned to CPU 1. Before running the candidate,
 two sampling sessions each take two warmups and six alternating pairs of executions
 of two byte-identical baseline binaries. The budget is `1 + 2E`, where E is the
-largest absolute deviation of a baseline-copy/baseline ratio from 1. The factor 2
+largest absolute deviation of a baseline-copy/baseline ratio from 1.
+
+The factor 2
 allows observed noise on both sides of a comparison. A control ratio deviation
 over the explicit 10% noise limit rejects the experiment; it does not widen the
 budget. The budget is saved before any candidate timing is observed.

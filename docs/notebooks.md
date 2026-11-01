@@ -45,7 +45,9 @@ formats, domains and rounding.
 
 Local names stay inside their expression. For example, an expression cell can
 contain `let square = 3 * 3 in square + square`, which displays `18`. The
-initializer computes `9` once; the body adds it twice. It neither creates a
+initializer computes `9` once; the body adds that value to itself. `let` and
+`in` belong to the same expression: `in` separates the definition from its body.
+It neither creates a
 notebook-wide `square` nor depends on another cell defining that name. A local
 name such as `out1` is an ordinary binding, not a reference to a REPL result.
 Named inputs in `fn x -> x * x` likewise do not create cell dependencies.

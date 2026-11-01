@@ -57,19 +57,26 @@ specialization exposes both argument stages to the ordinary simplifier; it keeps
 the original resource frames and computation order. Direct entries that already
 accept the required arguments need no additional specialization. A single-use
 local generated array can rejoin its immediate map/fold chain before fusion,
-provided every argument crossed has no effects or traps. The normal fusion proof
+provided every argument crossed has no effects or traps.
+
+The normal fusion proof
 still decides whether interleaving element work is valid. The eight
 [named/tacit cost pairs](functional-costs.md#local-names-candidate-coverage) pass
-on Linux ARM64/AMD64 and macOS ARM64; this is focused evidence, not final delivery.
+on Linux ARM64/AMD64 and macOS ARM64; #236 subsequently passed the full
+[delivery matrix](roadmap-history.md#local-names-and-allocation-optimizations-pr-236).
 
 A call stage is the group of inputs one internal function accepts before it
 executes. A function constructor executes a stage and returns another function.
 The compiler may group consecutive `fn` inputs only while no computation or
-observable owner release lies between them. A `let` calculation
+observable owner release lies between them.
+
+A `let` calculation
 ends that group. A top-level `let` is a cached value entry, even when it returns
 a function; a `match` entry takes one input before evaluating its selected arm.
 Applications subtract supplied inputs from the constructor's current stage,
-following checked aliases and the selected trait implementation. Runtime primitives
+following checked aliases and the selected trait implementation.
+
+Runtime primitives
 use their declared stage: substituting a function for a generic result does not
 add inputs to that stage. For example:
 
@@ -82,20 +89,25 @@ offset = fn x -> let y = 10 / x in fn z -> y + z
 must fail before a later input is evaluated. The returned function's type
 cannot justify delaying that division. A composed
 pipe likewise takes its input before evaluating any returned function's next input.
+
 The optimizer may combine constructor stages only after proving that construction
 merely captures values: no executed calls, possible traps, observable owners or
 resource frames. It preserves typed local bindings and changes known callers
-together; the source type alone supplies no such proof. This bounded check runs
+together; the source type alone supplies no such proof.
+
+This bounded check runs
 before constructors are inlined into their consumers.
 This includes a cached function value whose captures are already constants.
 `simd.splat` repeats one number across a vector's lanes. Small literal F64 splats
 can become constant vectors within the existing inlining-size budget; their
 signed-zero and NaN bits are copied unchanged.
+
 Other computed captures retain their original evaluation point.
 Unknown applications remain successive calls; combining them
 could run a later argument before a first-stage failure. REPL results use cached
 value entries even when their type is a function, so their construction runs once
 and later redefinitions cannot replace their saved code or captures.
+
 The IR marks these cached entries explicitly; constructor-stage optimization
 must leave them at zero arguments. Session linking remaps that marker with the
 function IDs, and the IR validator checks the entry contract.
@@ -145,19 +157,27 @@ Effects describe actions a function may perform, such as IO or failure. Every
 function arrow has an effect row. A call may use a larger surrounding effect
 context, but cannot silently widen the effects accepted by a nested callback.
 The inference code must preserve required effects when unifying fields and
-payloads. Handlers such as `attempt` and `run-state` remove the effect they handle.
+payloads.
+
+Handlers such as `attempt` and `run-state` remove the effect they handle.
 When a handler accepts a callback with `{Error[x] | e}` and returns a function
 with `e`, the two uses of `e` must stay related. For example,
 `attempt (apply ())` takes a function, calls it with unit and catches its error;
-the result must not still require that handled error. Adding `Error` only to a
+the result must not still require that handled error.
+
+Adding `Error` only to a
 temporary callback type would lose this relationship when the callback's input
 is itself a function. Argument checking preserves these shared rows, including
 handlers returned inside records. Returning a function produces a value;
-accepting one consumes a value. The check follows that direction through record
+accepting one consumes a value.
+
+The check follows that direction through record
 and variant fields, rather than treating every occurrence of the same effect
 variable as a returned effect. It still rejects unrelated required effects,
 such as IO under an error handler. The [runnable regression](../tests/fixtures/handled_callbacks.fwp)
-covers these cases. Only the last arrow of a binding may have effects, so partial application does
+covers these cases.
+
+Only the last arrow of a binding may have effects, so partial application does
 not run that action early. Non-function top-level values must be pure, except
 program/test entry points.
 
@@ -211,7 +231,9 @@ are checked and erased before code generation.
 A selector immediately constrains its input's fields, so callback effects remain
 available during inference. Its input stays linked through a type variable. When
 a signature or call supplies a named record, unification checks the fields and
-preserves that name for other uses of the same variable. Thus
+preserves that name for other uses of the same variable.
+
+Thus
 `if (.value | lt 0) neg id` can select the named input's `Neg` implementation.
 Anonymous records still use structural rows. Refinement checks for infinite types,
 including parameters absent from a record's fields; it adds no runtime conversion.
@@ -238,6 +260,7 @@ from its return value is not a permitted C context. See
 [C §7.13.1.1](https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf). Changed
 non-volatile automatic objects have indeterminate values after such a jump, so
 error/type fields and changing task-scope child metadata are volatile where needed.
+
 Unchanged links need not be. An empty callback argument slice may be null; cleanup
 must not offset it, and partial application must not pass it to `memcpy`, even
 with a zero byte count. Tests must exercise the actual cleanup path at the
@@ -276,11 +299,15 @@ An exactly saturated borrowed callback with only plain parameters can enter its
 typed consuming function without retaining the closure. Saturation means that
 the saved and newly supplied arguments exactly fill that entry. The generator's
 argument-destructor metadata covers the complete arrow spine: a null destructor
-proves no parameter owns storage. Copy scalar captures before entry, keep the
+proves no parameter owns storage.
+
+Copy scalar captures before entry, keep the
 caller's closure intact, and return the entry's owned result. This rule applies
 only to the initial borrowed callable. A function returned during overapplication
 is owned and must still be consumed. Owned captures, partial calls and extra
-arguments keep their existing ownership handling. The
+arguments keep their existing ownership handling.
+
+The
 [callable comparison](measurements/returned-callables.md) records verified native correctness and the still-open timing/size limits;
 correctness alone does not establish performance acceptance.
 
@@ -349,11 +376,15 @@ The generated-array transformation, verified in [PR #232](roadmap-history.md#gen
 extends this rule to `flip array.generate id | array.fold add 0`. With input
 `4`, the generator produces indices `0, 1, 2, 3`, and the fold adds them to get
 `6`. The reference builds an array first; the transformation generates and adds
-each index in one loop. It requires known, terminating callbacks without effects,
+each index in one loop.
+
+It requires known, terminating callbacks without effects,
 inline numeric elements/accumulator/captures, and at most one possible trap
 message across the stages. It preserves the original count check and argument
 evaluation even for empty arrays. Reused arrays, resources, F128 values and
-unknown callbacks do not qualify. The [allocation acceptance requirements](measurements/generated-array-folds.md)
+unknown callbacks do not qualify.
+
+The [allocation acceptance requirements](measurements/generated-array-folds.md)
 separate correctness, cleanup, allocation, code/stack costs and timing; the
 implementation alone establishes none of those results.
 
@@ -361,7 +392,9 @@ The [State range candidate](measurements/state-range-folds.md) crosses one
 specific handler boundary: `range 0 | run-state 0 (each (add | modify)) | .1`.
 For input `4`, it adds `0, 1, 2, 3` to the scoped State and returns `6`.
 It keeps the handler but specializes its known, single-use I64 list consumer to
-accept bounds and iterate directly. Effects still run once per index in order;
+accept bounds and iterate directly.
+
+Effects still run once per index in order;
 there is no eager mapping stage to reorder. Scalar captures must already be
 evaluated in the original order. Shared lists, unknown consumers, resources and
 wider element types do not qualify. This is a separate proof from pure eager
@@ -389,11 +422,15 @@ library behavior. Wider arithmetic and floating formats keep their own contracts
 A numeric derivative tape records two parents and local derivative weights per
 operation. Its backward workspace need only reach the last requested output;
 later forward work and failures still run. Parent buffers share one allocation
-and derivative buffers another; only their base pointers own storage. Growth must
+and derivative buffers another; only their base pointers own storage.
+
+Growth must
 preserve initialized entries and cleanup. A detached numeric workspace cache is
 bounded at 512 KiB; the active-tape table is separate. Nested differentiation
 records typed derivative values. Typed adjoint slots borrow the tape-owned zero
-by exact identity; distinct values remain owned. Final input owners move into
+by exact identity; distinct values remain owned.
+
+Final input owners move into
 result cells with an unwind guard until allocation succeeds.
 [Typed-owner checks](measurements/typed-derivative-owners.md) cover aliasing and
 failed transfers. See [reverse mode](numerics.md#reverse-mode).
@@ -411,17 +448,23 @@ Literal lengths count Unicode scalar values, as ordinary `string.length` does.
 temporary locals. It handles signed and unsigned integers up to 64 bits and
 preserves the order of integer-producing expressions, including their effects
 and traps. A static bound proves that combining the lengths fits I64; the
-generated sum still uses ordinary checked addition. Shared strings, unknown
+generated sum still uses ordinary checked addition.
+
+Shared strings, unknown
 string producers, floating-point displays and wider integers keep their storage.
 The private integer-length operation has no source-language declaration.
 The current [decimal-count experiment](measurements/decimal-count.md) uses a
 balanced tree of exact power-of-ten comparisons, with at most five comparisons
-and no lookup table. Two selected sessions per architecture meet the frozen
+and no lookup table.
+
+Two selected sessions per architecture meet the frozen
 timing limits; the final production matrix remains required before merge. The
 preceding bit-length/table experiment passed correctness but failed the two-host
 timing acceptance rule; its complete results remain in the report.
 Signed values use unsigned magnitude and add one for the minus sign, so I64's
-minimum does not require overflowing signed negation. Ordinary inline hints let
+minimum does not require overflowing signed negation.
+
+Ordinary inline hints let
 the C compiler combine counting with its caller; they do not force inlining.
 [Earlier controlled comparisons](measurements/integer-counting.md) retain the
 previous grouped-division algorithm and its recorded call/size tradeoffs.
@@ -472,6 +515,7 @@ passed in [#212](roadmap-history.md#array-moves-and-the-gc-removal-checklist-pr-
 A value produced by `comptime` is already known when C is generated. For example,
 `table = comptime ([1i8, 2i8] | array.from-list)` needs storage for two bytes and
 an array header, but does not need to allocate that storage on the heap at startup.
+
 The compiler places compound constants, wide numeric literals and closures
 with constant captures in static program storage. Strings already use this model.
 Compile-time evaluation may read files, but its result cannot contain an open
@@ -519,15 +563,20 @@ After simplification, callback specialization and fusion, `src/tailrec.rs`
 marks eligible direct self-tail calls. It keeps their expressions intact so
 native representation selection can still pass records, variants and wide
 numbers as direct fields. The interpreter replaces a proved tail call with the
-next set of parameter values. Generated C prepares those values, retires unused
+next set of parameter values.
+
+Generated C prepares those values, retires unused
 storage-reuse tokens and jumps to the function's entry check. Existing wide
 numeric workers retain their own native loop. Each backend therefore keeps
 bounded call-stack space for the recurrence, including native O0 builds.
 Eligibility requires at least one direct self call in tail position and the
-frame's types to describe plain immutable data. A function may also contain
+frame's types to describe plain immutable data.
+
+A function may also contain
 ordinary recursive calls: calls used to compute arguments, bindings, match
 scrutinees or a later calculation keep their own frames. Only a chain of eligible
 tail transfers has bounded stack use; other recursion can still grow the stack.
+
 For example, [lesson 22](tutorials/22-recursion-and-sharing/README.md) mixes a
 tail countdown with a branch that performs one addition after a recursive call.
 
@@ -549,11 +598,15 @@ and trap-order checks still apply. No whole-program capture search is added.
 Closures with unknown captures and resource/task/strong-channel owners still
 prevent frame reuse. Remaining resource regions and debugger frames cannot be
 discarded. Tail analysis checks all parameters and every remaining local binding
-or use; an unused type-table slot left by inlining owns no value. Function
+or use; an unused type-table slot left by inlining owns no value.
+
+Function
 parameters are prepared in their original order before becoming next-iteration
 state, including swaps and multiple curried arguments. This adds no source
 syntax or intermediate `Step` values. Native record/variant arguments keep their
-existing field layout; the interpreter keeps its ordinary value objects. Native
+existing field layout; the interpreter keeps its ordinary value objects.
+
+Native
 frames selected for reuse do not allocate local stack objects that could become
 next-iteration state. Direct fields remain available without such objects. This
 restriction can leave heap allocations that a non-reused frame could place on
@@ -570,7 +623,9 @@ and a loop can still retain growing data.
 The accepted mutual-recursion pass groups a pair with matching scalar signatures into
 one internal loop. A small integer chooses which original body runs next. The
 original entries select that integer; only direct tail calls change it. Calls
-whose results require further work keep ordinary frames. The pass admits
+whose results require further work keep ordinary frames.
+
+The pass admits
 only I64, Bool and unit locals, rejects dynamic calls and observable cleanup or
 debugger frames, and scans each candidate once. It does not promise constant
 stack space for arbitrary groups or foreign calls. [The measured decision](functional-costs.md#accepted-longer-comparison)
@@ -637,12 +692,16 @@ The [restricted unique-array path](measurements/unique-array-storage.md) was
 verified in PR #219. [The scoped parser path](parser-workspace.md) is implemented
 in `src/cgen/regions.rs` and `runtime/fwp_rt_region.c` and verified in PR #221. A selected call owns aligned blocks and passes an explicit
 context to allocation helpers. Internal node links have no counts; escaped trees
-keep ordinary ownership. [Measurements](measurements/parser-workspace.md) separate
+keep ordinary ownership.
+
+[Measurements](measurements/parser-workspace.md) separate
 this storage change from input/token costs and from general region inference. Tracing removal passed integrated verification in
 [#217](roadmap-history.md#tracing-gc-removal-pr-217). Explicit weak channels and retained
 C callbacks are implemented; see [weak channels](weak-channels.md) and
 [retained callbacks](retained-callbacks.md) for their lifetime rules.
-General strong-cycle reclamation by ordinary ARC is not a goal. The selected
+General strong-cycle reclamation by ordinary ARC is not a goal.
+
+The selected
 model rejects unproved owning cycles and preserves escaping functions.
 JIT compilation is excluded, not deferred. The interpreter prepares foreign-call
 bridges before language execution; CPU kernel interpretation generates no machine

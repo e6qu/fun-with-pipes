@@ -1,97 +1,92 @@
 # Current work
 
-**Next:** finish the repository-wide documentation style pass while auditing the
-combined focused native checks for the three implemented reductions in
-[the protocol](measurements/typed-derivative-owners.md), together with the worked
-[terminology guide](terminology.md). Keep one substantial PR for the batch.
+**Next:** publish the documentation/evidence revision in PR #237, mark it ready,
+then audit all nine final-head production jobs and documentation. Fix all failures
+in one repair batch; squash-merge only after every required gate passes.
 
-Worktree `/private/tmp/fwp-returned-callables`, branch `reduce-derivative-ownership`,
-base `658123c7c09aa8991ca69cbb82643e68244edc95`. The primary checkout contains
-unrelated local changes; preserve it. Implementation, publication and squash merge
-after all exact-head gates pass are authorized. Commit messages have one line,
-at most 80 characters, no body, trailers or attribution.
-
-## Verified baseline
-
-PR #236 is merged. Tested head `f89ef8a597d9ba64b0b0de165e7c21cc9f787494`
-and merge `658123c7c09aa8991ca69cbb82643e68244edc95` share tree
-`3ea5adc038b819c9a6e5b722d0dd41ca4437485f`. All nine production jobs in
-`41272009971` and documentation `41271982217` pass; every completed job log was
-audited. Both Linux hosts passed 257 integration targets, both macOS shards per
-architecture passed, and native Windows ARM64/AMD64 completed tests and packaging.
-The 68-character squash subject and empty body were verified. Details are in
-[history](roadmap-history.md#local-names-and-allocation-optimizations-pr-236).
+Worktree `/private/tmp/fwp-returned-callables`, branch `reduce-derivative-ownership`.
+Base `658123c7c09aa8991ca69cbb82643e68244edc95`. The primary checkout has unrelated
+local changes; preserve them. Implementation, publication and squash merge are
+authorized. Commit messages: one line, at most 80 characters, empty body/trailers.
 
 ## Roadmap status
 
 | Step | Status | Remaining acceptance |
 |---|---|---|
-| 1 | In progress | User expanded this to all docs: shorten prose, use diagrams/lists, clarify `in`; 195 Markdown files inventoried |
-| 2 | Implemented | Focused native cost/lifetime controls and final gates pending |
-| 3 | Implemented | Local Clang O1 ledger passes; full new-source native and unwind controls pending |
-| 4 | Pending | Focused native checks, evidence audit, complete final-head matrix and merge |
+| 1 | Implemented | Broad docs/tutorial revision and local audits complete; final-head docs/native example gates pending |
+| 2 | Implemented | All three focused hosts pass stack-record controls; full final-head matrix pending |
+| 3 | Implemented | All three focused hosts pass adjoint, alias, failure and cancellation checks; full matrix pending |
+| 4 | In progress | Publish final batch, audit nine production jobs plus docs, then squash-merge |
 
-## Checks and constraints
+## What changed
 
-The terminology example uses `x*x+2` at input 3 and prints `[6.0]`. Passed command:
-`python3 scripts/local-guard.py env FWP_NO_OPT=1
-/private/tmp/fwp-236-786-mac-package/fwp-macos-arm64/fwp run --interp
-/private/tmp/fwp-terminology-tape.fwp` (0.11 CPU seconds, exit 0).
-The guarded documentation audit also passes: 195 link sets, 106 immutable
-preparation pairs and four roadmap steps. The first attempt preceded staging the
-glossary rename and saw the old tracked path; after staging, the audit passed.
-This downloaded compiler contains the same compiler source as #236; final new-source
-native checks are still required. Raw interpretation of both new 256-operation F128/nested-weight fixtures passes
-(`True`, about 0.12 CPU seconds each). Formatting passes. The primitive inventory
-initially rejected its old assertion that typed recording must escape; updating
-that explicit proof assertion preserves the frozen declaration baseline and now
-passes (394 declarations, 384 symbols, zero unresolved contracts).
+- Typed F128/nested derivative recording borrows direct outer argument records;
+  retained weight children keep their independent owners.
+- Initial adjoints borrow the tape-owned exact zero. Distinct owned input results
+  move into list cells, protected through allocation failure.
+- All 24 tutorials have additional worked traces/tables/diagrams. Lesson 1 teaches
+  `let … in …` as one expression and runs chained, nested and shadowed bindings.
+- Terminology, reference, parser/pipeline, memory limits and benchmarking explain
+  concepts before use. All 28 library introductions were revised through source
+  comments and regenerated. Historical prose is shorter; raw evidence and frozen
+  criteria remain. Stale delivered/pending claims were corrected.
+- Scope and acceptance: [PLAN.md](../PLAN.md) and the
+  [typed-derivative protocol/results](measurements/typed-derivative-owners.md).
 
-A bounded Clang O1 native probe used the verified emitted runtime with only the
-current `runtime/fwp_rt_kernel.c` substituted, not a rebuilt Rust compiler:
-`python3 scripts/local-guard.py clang -O1 -std=gnu11 -ffp-contract=off
--Wno-unused-function -fstack-usage /private/tmp/fwp-237-typed-owners.c
--o /private/tmp/fwp-237-typed-owners -lm`, followed by
-`python3 scripts/local-guard.py env FWP_AD_WORKSPACE=0 /private/tmp/fwp-237-typed-owners`.
-All six modes pass: zero initialization retains, expected result-owner retains,
-correct values and zero final storage delta. This does not verify GCC or the
-new Rust lowering. Native images/static frames and failure controls run in the
-new `typed-derivative-owners` suite on both Linux hosts and ARM64 macOS.
-PR [#237](https://github.com/e6qu/fun-with-pipes/pull/237) is draft. Combined native
-run `41289222076` tests implementation `5f1741624834da7ded8e4990ef3bc3245ac8aacd`;
-all three hosts completed. Existing derivative/precision/checkpoint/workspace/
-scope/cancellation tests pass; both new probes fail. The fault-injection marker
-matched four result constructors instead of only the guarded transfer; the
-record counter incorrectly used a capacity helper that excludes immutable
-record allocations. Both probes are repaired without changing runtime code or
-acceptance limits. The report failure follows from the failed input probe.
-All three full job logs are audited at `/private/tmp/fwp-237-{mac,amd,arm}.log`.
-A local attempt to relink the F128 artifact lacked its required math archive and
-produced no executable; it establishes no native result. Use the complete runner
-toolchain for the recording check. Documentation
-`41289225334` passes; its complete log still needs audit. Preparation documentation
-`41288414731` passes and is audited (test-runner negative controls are expected).
+## Native checks and evidence
 
-The user requests concise style across all docs, diagrams/lists where useful, and
-worked explanations of `in` and the manual recording test. Keep that work in this
-PR. Inventory: 195 Markdown files, about 305,000 words including generated library
-reference and historical measurement protocols. Preserve frozen criteria, raw
-evidence and runnable tutorial source copies while shortening surrounding prose.
+Focused run [41290359214](https://github.com/e6qu/fun-with-pipes/actions/runs/41290359214)
+passes at `c5acb7d980a0efba9505b5edc4a37802337cad4f`:
+Linux ARM64/GCC 13.3, Linux AMD64/GCC 15.2 and macOS ARM64/Clang 23.1.4.
+Every host passes eight affected targets, ownership unit checks and primitive
+inventory. All job logs and completed targets were audited; no compiler warnings
+or unexpected failures. Thirty image/source hashes and native architectures,
+84 typed-probe outcomes and all static-frame reports were independently checked.
+[Saved observations](measurements/typed-derivative-owners-2026-11-01.json.gz)
+retain source/run/artifact identities and the measurements. No speed claim.
 
-Use the local guard serially; full builds, suites and benchmarks run on GitHub.
-Free disk was about 65 GiB at start, close to the fixed 64 GiB floor. Do not raise
-limits or duplicate large artifacts. No compiler/test workload is running locally.
+First run `41289222076` at `5f1741624834da7ded8e4990ef3bc3245ac8aacd`
+failed only the two new probes on all hosts. A source marker matched four sites;
+a capacity query omitted immutable heap records. `c5acb7d9` repairs both observers
+without runtime changes or relaxed limits. Existing targets passed throughout.
+Details and distinct negative-control statuses are in the linked report.
 
-## Measurements to preserve
+Documentation runs `41288414731`, `41289225334` and `41290361065` pass and their
+logs are audited. Deliberate duplicate/unknown/failing/hung runner controls are
+expected, not unresolved failures. Draft production skips do not count as gates.
 
-The [array traversal report](measurements/array-list-traversal.md) retains the
-verified 208,552 fewer requests and 6,622,720 fewer requested bytes for eight
-129-coordinate solves at its recorded source. Retains and peak managed storage
-stay unchanged. AMD64 session 2's identical-copy variation is 2.1023% against 2%,
-so timing remains inconclusive. This is final-list work, not forward recording.
-The original D2/N1/N2 speed requirements and Xeon closure regressions remain open.
+## Focused local checks
 
-Swift raw/native allocator traffic and fwp's directly mapped managed heap are
-separate observations; individual Swift ARC counts remain unmeasured. Preserve
-all archives and immutable source tags. The Intel compiler abort is unresolved;
-a recurrence needs source/input diagnosis, not speculative allocator changes.
+All workloads use `python3 scripts/local-guard.py`; full builds/suites stay on CI.
+The sandbox initially denied `ps`; the same unchanged guard ran with permission.
+No resource limit was bypassed. Free disk remains about 65 GiB, near the 64 GiB floor.
+
+| Check | Command after the guard | Result |
+|---|---|---|
+| Links, preparation records, plan | `python3 scripts/check-roadmap.py` | 195 docs, 106 immutable pairs, four steps pass before final audit |
+| Rust formatting | `cargo fmt --all -- --check` | Pass |
+| Library docs | Standalone O1 `tests/stdlib_doc.rs`; `FWP_BLESS=1` regeneration, then ordinary check | Pass; standard-library-only harness, no compiler rebuild |
+| Tutorial listings/output copies | Standalone O1 `tests/examples.rs`, exact `tutorial_readmes_match_their_programs` | All pass |
+| Lesson 1 results | `env FWP_NO_OPT=1 /private/tmp/fwp-236-786-mac-package/fwp-macos-arm64/fwp run --interp docs/tutorials/01-pipes-and-functions/main.fwp` | Matches `main.out`, including 7/16/4; 0.10 CPU seconds |
+| Tape example and typed fixtures | Same verified raw interpreter | `[6.0]`; both typed fixtures `True` |
+| Artifact audit | `python3 /private/tmp/fwp-237-audit.py` | 0.10 CPU seconds; hashes, headers, outcomes and frames pass |
+
+Standalone Rust harnesses use O1, debug assertions and overflow checks. Binaries
+are `/private/tmp/fwp-237-{stdlib-doc,tutorial-doc-check}`. This does not replace
+new-source native verification. Earlier direct F128 relinking omitted its math
+archive and produced no executable; the successful runner checks use the complete
+toolchain. Full logs/ZIPs are `/private/tmp/fwp-237-retry-{mac,arm,amd}.*`.
+
+## Baseline and remaining goals
+
+PR #236 passed nine production jobs `41272009971` and docs `41271982217`.
+Tested `f89ef8a597d9ba64b0b0de165e7c21cc9f787494` and merge
+`658123c7c09aa8991ca69cbb82643e68244edc95` share tree
+`3ea5adc038b819c9a6e5b722d0dd41ca4437485f`; the one-line squash was verified.
+[History](roadmap-history.md#local-names-and-allocation-optimizations-pr-236) owns details.
+
+D2/N1/N2 timing requirements and original Xeon closure regressions remain open.
+Preserve inconclusive copy controls, array-traversal allocation savings and Swift's
+separate allocator/managed-memory accounting; individual Swift ARC counts are
+unmeasured. The Intel compiler abort remains unexplained: diagnose a recurrence
+from source/input, not speculative disassembly-led changes.

@@ -54,10 +54,14 @@ In [2]: (fn x -> x * x) 4
 Out[2]: 16
 ```
 
-The first expression adds the stored value `9` to itself. `in` starts the
-expression that uses the binding; it does not call a function or repeat the
-initializer. `square` is local to that expression and is unavailable in the next
-cell. The second expression calls a single-input function with `4`.
+`let … in …` is one expression: define `square = 9`, then calculate `9 + 9`.
+Each `let` has a matching `in`; `in` is the separator, not a return or pipe.
+`square` is unavailable in the next cell. The second expression calls the
+single-input function with `4`.
+
+Try `let a = 3 in let b = a * 2 in b + 1`: it gives `7`. The body of the first
+`let` is the entire second `let`. [Lesson 1](tutorials/01-pipes-and-functions/README.md#several-calculations-in-order)
+shows this nesting step by step.
 
 Nested functions can keep earlier inputs. With `:paste`, enter:
 
@@ -111,10 +115,14 @@ session also retains checked code for captured functions. This deliberately uses
 memory to preserve interactive results; it is not a benchmark of a compiled
 program's ownership or ARC behavior. Consume resources such as open files within
 one cell, using helpers such as `file.with`; reusable results cannot hold affine
-resources (values that may be consumed only once). Child tasks are joined at the
+resources (values that may be consumed only once).
+
+Child tasks are joined at the
 end of a successful cell and cancelled and joined after a failed cell. Background
 connection workers also stop before the cell returns; consume remote streams
-within that cell rather than saving an unfinished stream for later. This keeps
+within that cell rather than saving an unfinished stream for later.
+
+This keeps
 workers from retaining the previous cell's program or output writer. Foreign C calls need
 an ahead-of-time executable; the REPL does not compile C shims.
 

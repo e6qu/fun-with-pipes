@@ -1,19 +1,16 @@
-# TLS: encrypted, authenticated connections, with the system's OpenSSL 3
-# (see docs/tls.md). A TLS connection is a `Conn` like a TCP connection:
-# `tcp.read`, `tcp.write`, `tcp.close` and the rest work on it, encrypting
-# and decrypting, so code written for TCP connections (the HTTP server and
-# client among it) works over TLS unchanged; the `tls.*` names below are
-# the same functions. A connection's handshake happens when it is opened
-# (`tls.connect`), or on its first read or write (`tls.accept`), in the
-# task that uses it: a slow handshake holds up no other task. Failures are
-# `IoError`s of kind "tls" (`certificate verify failed: hostname
-# mismatch`, ...).
+# Transport Layer Security (TLS) encrypts connections and verifies identities
+# using system OpenSSL 3. A certificate names an identity/public key; its owner
+# keeps the private key. Clients check the requested hostname and trusted
+# certificate authorities (CAs). The handshake establishes protection; ALPN
+# selects an application protocol.
 #
-# Transport Layer Security (TLS) encrypts a connection and verifies identities.
-# A certificate contains an identity/public key; the server holds its private
-# key. Clients trust certificate authorities (CAs) and verify the requested
-# hostname. The handshake establishes the protected connection. ALPN chooses an
-# application protocol during that handshake. Tutorial 18 creates test certificates.
+# - A TLS connection is a `Conn`; TCP read/write/close operations work unchanged.
+# - `tls.connect` handshakes on open; `tls.accept` on the first read/write.
+#   Waiting affects that task, not other ready tasks.
+# - Failures are `IoError` with kind `"tls"`, for example a hostname mismatch.
+#
+# [Lesson 18](tutorials/18-tls/README.md) creates test certificates;
+# [the TLS guide](tls.md) gives configuration details.
 
 # How a client connects. The server's certificate is verified unless
 # `insecure`: against the system's CA certificates (`SSL_CERT_FILE` and

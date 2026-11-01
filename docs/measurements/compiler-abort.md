@@ -76,7 +76,9 @@ Macro invocation bypassed the interpreter entry method that joins child tasks on
 success and cancels them on failure. A regression invokes two macros that spawn
 printing children. The existing compiler accepts the program but prints neither
 child message. The merged repair routes macros through `call_root`, with their
-explicit arguments, and uses the same entry method for `comptime`. The original
+explicit arguments, and uses the same entry method for `comptime`.
+
+The original
 nine failing-test inputs do not invoke macros: this repair is not a causal
 explanation of that abort. Both focused hosts pass the macro regression; the final #210 production matrix also passed.
 
@@ -84,13 +86,17 @@ The wider review found background gRPC workers excluded from child joining even
 though they borrow the program and writers. The merged repair closes the pool,
 cancels and joins background workers before entry return, and propagates Rust
 panics only after cleanup. Blocking calls restore the scheduling turn during
-unwinding. Public entry methods enforce this boundary; writers require `Send`,
+unwinding.
+
+Public entry methods enforce this boundary; writers require `Send`,
 and task handles cannot cross arbitrary Rust threads. Shared, locked writers
 replace raw pointers. Repeated cleanup, panic
 and writer-lifetime tests accompany these changes. The core cleanup
 passed 232 focused checks on each of Linux AMD64 and Intel macOS in run
 [40119693758](https://github.com/e6qu/fun-with-pipes/actions/runs/40119693758),
-source `2f20e7fe075e2beb0fa6fae3f3950ebfc6953a9e`. The shared-writer follow-up
+source `2f20e7fe075e2beb0fa6fae3f3950ebfc6953a9e`.
+
+The shared-writer follow-up
 `6cefdf2346ade8fcd9e3130ad7bab21e38589429` passed 234 checks per host in
 [40121036264](https://github.com/e6qu/fun-with-pipes/actions/runs/40121036264).
 The final shutdown batch adds an abort guard for a panic during cleanup itself
@@ -98,6 +104,7 @@ and drains connections registered while shutdown waits for workers. Source
 `0ad90b5a0a6a1653a66e2890586d1d5e56ea6296` passes 236 focused checks per host
 on Linux AMD64 and Intel macOS in
 [40122813261](https://github.com/e6qu/fun-with-pipes/actions/runs/40122813261).
+
 The guard also permits an entry to finish from a Rust destructor during an outer
 panic. Both complete logs are audited. The final #210 production matrix passed;
 independent final-head binary review was not completed before the user merged.

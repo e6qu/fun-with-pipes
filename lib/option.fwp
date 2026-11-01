@@ -1,13 +1,12 @@
-# Option and Result. Multi-argument pattern functions use `curry` with a
-# tuple match: the holes of the matched tuple are passed to the arm body in
-# order.
+# `Option[T]` represents a possibly absent value: `Some value` or `None`.
+# `Result[T, E]` represents success or an explained failure: `Ok value` or `Err error`.
 #
-# `Option[T]` is either `Some T` or `None`, representing a possibly absent
-# value. `Result[T, E]` is `Ok T` or `Err E`, retaining an error explanation.
-# `Some 3 | option.map (add 1)` is `Some 4`; `None | option.unwrap-or 0`
-# is 0. These are values you can match; an `Error[E]` effect instead exits to
-# a handler such as `attempt`. `curry` turns a function of a tuple into a
-# function taking its arguments one at a time.
+# - `Some 3 | option.map (add 1)` gives `Some 4`.
+# - `None | option.unwrap-or 0` gives `0`.
+# - An `Error[E]` effect transfers control to a handler; `attempt` turns it into a Result.
+#
+# `curry` converts a tuple-taking function to successive single-argument calls.
+# In a tuple match, forwarding holes supply payloads to the arm in order.
 
 option.map : (a -> b ! e) -> Option[a] -> Option[b] ! e
 option.map = curry (match

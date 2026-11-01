@@ -55,6 +55,21 @@ When a callback must ignore its incoming word and supply a function as data,
 try to send a number to `modify`, which needs a function. This is why constant
 functions are not implicit.
 
+### Trace the counter
+
+| Word | Length greater than 3? | State after the arm |
+|---|---|---|
+| `"a"` | `False` | `0` |
+| `"long"` | `True` | `1` |
+| `"words"` | `True` | `2` |
+| `"x"` | `False` | `2` |
+
+`each` finishes with `()`, so `run-state` produces `((), 2)`. The final `.1`
+returns `2`. An empty input would leave the counter at `0`.
+
+For errors, follow `"-1"`: parsing succeeds with `-1`, the age check raises
+`"negative"`, and `attempt` turns that failure into `Err "negative"`.
+
 ## The program
 
 [`main.fwp`](main.fwp):

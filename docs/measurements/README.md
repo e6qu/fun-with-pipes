@@ -37,6 +37,10 @@ identities. Do not edit observations to make an old experiment describe new code
 
 ## Numerical applications
 
+- [Typed derivative owners](typed-derivative-owners.md): current F128/nested-tape
+  work; stack-record, initialization and result-transfer counts, plus alias,
+  failure and cancellation controls. Counts are not timing evidence.
+
 - [Array traversal without temporary lists](array-list-traversal.md): verified allocation reductions in numerical and gradient results; rejected allocation and timing observations retained.
 
 - [Nested derivative costs](ad-depth.md): audited F64/F128 depth/size comparisons with explicit fwp formulas, including allocation, code and stack costs; verified in #226.

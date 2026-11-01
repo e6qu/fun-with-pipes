@@ -1,6 +1,6 @@
 # Numerical output after removing temporary lists
 
-The current largest input takes 10.487× C time and 10.453× Rust time on EPYC 7763,
+The largest input at the recorded source takes 10.487× C time and 10.453× Rust time on EPYC 7763,
 and 7.183× / 8.266× on Neoverse-N2. Instrumented fwp uses 200 managed requests per
 solve with full output, 199 with the checksum, and no reference-count increments.
 Formatting and storage choices still contribute to the time difference.

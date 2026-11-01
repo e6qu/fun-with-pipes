@@ -1,18 +1,13 @@
-# gRPC: the calls between the modules of a program split into services
-# (`--service`, docs/services.md).
-#
-# A split program needs no gRPC code: a call to an exported function of a
-# served module is an ordinary call in the source, made remote by the
-# build. This module is for what remains: statuses (`GrpcError`), and the
-# metadata and deadlines of calls. Calls and servers run on the task
-# scheduler: a call waits only in its own task, and a server runs calls
-# concurrently.
-#
 # A remote procedure call (RPC) sends arguments to another process and returns
-# its result. gRPC carries such calls over HTTP/2 with Protocol Buffers messages.
-# Metadata is named information attached to a call; a deadline bounds its duration;
-# a status describes success or failure. Remote calls add encoding, transport
-# and possible connection failure even when source notation stays the same.
+# its result. gRPC carries calls over HTTP/2 using Protocol Buffers messages.
+#
+# `--service` makes exported module calls remote without changing source call
+# notation. This module supplies statuses (`GrpcError`), metadata (named call
+# information) and deadlines (time limits).
+#
+# Calls wait in their own task; servers handle calls concurrently. Remote calls
+# add encoding, transport and possible connection failure.
+# See [services](services.md) and [lesson 14](tutorials/14-services/README.md).
 
 # a failed call: a status code (`grpc.not-found`, ...) and a message. A
 # served function that fails with `Error[GrpcError]` answers with that

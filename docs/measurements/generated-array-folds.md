@@ -128,7 +128,9 @@ hashes, allocation cases, native images, cleanup controls and compiler budgets.
 Independent observers at `048c92c5` use the same compiler implementation; later
 changes repair the test's loop selection and extend its cases. All eight scan
 observations per host (four lengths at O1/O2) have zero managed requests,
-count calls, count storage and peak/final payload. An inserted allocate/free pair
+count calls, count storage and peak/final payload.
+
+An inserted allocate/free pair
 is rejected even though it leaks nothing.
 Review also tightened the diagnostic checker: equal nonzero starting, peak and
 final count storage must fail, not just unequal values. A correlated-error test

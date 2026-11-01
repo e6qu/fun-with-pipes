@@ -20,6 +20,7 @@ coordinate from its previous, current and next input coordinates. New
 [Rust](../../tests/fixtures/descent_coordinate.rs) peers use the same formula and
 boundary cases. The original C/Rust peers compute each adjacent pair's residual
 once and add its contributions to both coordinates; they remain separate entries.
+
 Both C/Rust arrangements reuse two buffers. fwp builds a new immutable array per
 update. Checked indexing also differs. fwp searches decimal precisions for a
 representation that parses back to the original float; the coordinate-based C

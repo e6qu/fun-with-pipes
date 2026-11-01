@@ -26,7 +26,9 @@ calls inside an iteration can still recurse or allocate.
 A function can contain both kinds of call. In `mixed`, the `1` branch calls
 `mixed` on zero and then adds one; that call needs an ordinary frame. The `_`
 branch subtracts one and returns the recursive result directly, so it reuses
-its frame. Starting from four follows `4 → 3 → 2 → 1 → 0` and returns one.
+its frame.
+
+Starting from four follows `4 → 3 → 2 → 1 → 0` and returns one.
 Even a much larger positive input leaves only one addition pending. By contrast,
 `count-back` leaves one pending addition per step. Calls used to compute another
 call's arguments also need ordinary frames: this optimization does not make
@@ -38,6 +40,17 @@ this proof. `FWP_DUMP_IR=1` explains lowering decisions. The raw interpreter
 small four-step examples in those modes. The
 [tail-call contract](../../design.md#tail-calls-and-recursion) lists the supported
 cases and cleanup restrictions.
+
+### Result versus unfinished work
+
+| Call | Result for input 4 | Work waiting for recursion to return |
+|---|---|---|
+| `down` | `0` | None; eligible self-tail calls reuse the frame. |
+| `count-back` | `4` | Four additions; ordinary recursive frames remain. |
+| `mixed` | `1` | One addition in the `1` arm. |
+
+“Tail” describes a call's position, not the whole function. This is why `mixed`
+can contain both reused and ordinary frames.
 
 ## An explicit loop
 

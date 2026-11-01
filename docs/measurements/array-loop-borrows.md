@@ -1,9 +1,8 @@
 # Selecting invariant array data once
 
-Historical measurements at the revisions named below. Counts and timings are
-observations of those programs, not current compiler budgets. Commands refer
-to the recorded measurement revision. Read [measurement terms](../benchmarks.md)
-for timing and memory boundaries; [the plan](../../PLAN.md) owns remaining work.
+Historical results; reproduce with the recorded revisions, not current main.
+[Measurement terms](../benchmarks.md) explain the costs;
+[PLAN.md](../../PLAN.md) tracks current work.
 
 A slice may store an address into another array. The compiler now selects that
 address before a loop when it proves the same F64 array survives every step.
@@ -32,7 +31,9 @@ The separate `array-borrow` evidence suite recompiles the verified emitted C on
 one host, then compares its cached read with the existing per-element selection.
 It changes only the generated load expressions and verifies result hashes and
 allocation profiles. Both memory modes use identical C flags, separate profiles
-and forty samples with rotated process order. That experiment compares two fwp
+and forty samples with rotated process order.
+
+That experiment compares two fwp
 implementations; the table above compares fwp with C and Rust. Two complete
 four-host runs are retained in the report. Below, each pair is the first and
 second run's cached/per-element kernel-time ratio; below 1 means faster.

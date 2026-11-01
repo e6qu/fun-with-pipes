@@ -25,7 +25,9 @@ copy = fork array.generate array.length read-index
 `F64` is a 64-bit floating-point number. The signature says `copy` takes and returns
 an array of those numbers. `fork f g h` applies `g` and `h` to the same input, then
 passes their results to `f`. Here, `array.length` supplies the output count and
-`read-index` supplies a function that remembers the input array. `array.generate`
+`read-index` supplies a function that remembers the input array.
+
+`array.generate`
 calls that function for indices zero through count minus one. Copying
 `array[0.0, 1.25, -2.5]` therefore returns those same elements in a new array;
 the original remains usable. The caller keeps the input alive while the callback
@@ -42,7 +44,9 @@ an array owner inside that pair. Borrowing at entry had moved the retain.
 The ownership pass now eliminates this temporary owner when a record's fields are
 caller-borrowed parameters and all uses project a field or pass the temporary to
 a proved nonescaping call. A nonescaping call cannot keep that record after it
-returns. The caller's owners stay alive throughout. The first repair exposed a second
+returns. The caller's owners stay alive throughout.
+
+The first repair exposed a second
 source of the same retain: a local alias at the last read. Normalization now
 revisits aliases exposed by forwarding and uses the caller's lifetime even when
 there is no later local read. Whole-record escapes,
@@ -90,11 +94,15 @@ Compiler source `80d8f27e1bf57e4665503d6d1ed1af261f7dc672`, tag `roadmap/revisio
 native checks passed, but a new compiler unit fixture incorrectly expected a list
 alias to qualify for an optimization that excludes algebraic lists. The corrected
 fixture tests eligible numeric arrays and verifies that excluded list aliases keep
-their owners, including returned values. It changes no production compiler code.
+their owners, including returned values.
+
+It changes no production compiler code.
 Linux AMD64 passes in [repair run 39789349262](https://github.com/e6qu/fun-with-pipes/actions/runs/39789349262),
 source `3e5763b69ed075516bcbadf5d18dcb2a12f98078`; the failed original job remains in the data. The audit step
 now executes all independent checks before returning failure if any failed.
-Linux uses production GCC, macOS Clang and Windows LLVM-MinGW. Neighboring checks
+Linux uses production GCC, macOS Clang and Windows LLVM-MinGW.
+
+Neighboring checks
 cover folds, array failures, field moves, foreign callbacks, libraries and ARC
 execution. Linux AMD64 also runs compiler unit tests and contract inventories.
 

@@ -12,7 +12,9 @@ This protocol was frozen before the first samples; results follow below.
 Use native Linux ARM64 and AMD64, with two sessions sequentially on each same
 runner. Record actual CPU and toolchains; do not combine different CPU models.
 Both sessions rebuild from the same source, using GCC O2, Rust O2 and Swift `-O`
-with checked arithmetic. Factory and caller compile separately, without LTO.
+with checked arithmetic.
+
+Factory and caller compile separately, without LTO.
 The common C clock uses `CLOCK_MONOTONIC` and fails if the clock cannot be read;
 its failed-clock controls run before measurements. Process timing uses the
 existing deadline-aware child runner, without polling sleeps.
@@ -66,6 +68,7 @@ Three additional runs per implementation/case measure peak resident RAM with
 GNU time. These are separate from timed samples and include runtime, allocator
 and mapped libraries. Require current fwp's maximum no more than 1 MiB above its
 reference's maximum in each session. Do not call RSS an allocation count.
+
 Separate diagnostic executables retain the existing single-closure construction,
 invocation, release, intentionally omitted release and failure/retry controls.
 They must show unchanged payload requests/storage and zero invocation retain/
@@ -105,12 +108,16 @@ sessions and audits its artifacts. The [summary](callable-phases-2026-10-31.json
 retains all phase medians, copy decisions, memory samples, CPUs and artifact IDs.
 The complete [AMD64 archive](callable-phases-amd64-2026-10-31.zip) and
 [ARM64 archive](callable-phases-arm64-2026-10-31.zip) retain raw samples, commands,
-sources, binaries and memory/control observations for both sessions. Their
+sources, binaries and memory/control observations for both sessions.
+
+Their
 digest-checked CI audit recomputes the summary without executing saved binaries.
 The source is retained by `roadmap/callable-phases-2026-10-31`; GitHub's expiring
 artifacts are no longer the only copies of this experiment.
 Both jobs pass six timing-record tests, 56 clock executions, 33 Swift arithmetic
-cases and both fwp variants' cleanup/count controls. The only setup diagnostic is
+cases and both fwp variants' cleanup/count controls.
+
+The only setup diagnostic is
 an absent C++ manual page; there are no compiler warnings in these jobs.
 
 Both ARM64 sessions use Neoverse-N2. Across the two operations and sessions:
@@ -201,6 +208,7 @@ Run two sessions on each native host, two warmup rounds and twenty measured
 rounds per case. Four-round blocks balance both mode/copy pairs' positions and
 predecessors. Preserve every output and timestamp, require the exact checksum
 for each call count, and keep the existing 2% copy and 5 ms duration controls.
+
 The zero-call invocation phase should be too short to qualify. Verify final
 payload cleanup after every batch. No production runtime changes, memory-saving
 claims, unchanged timing retries or acceptance-limit changes are part of this
@@ -297,10 +305,14 @@ phases are too short. All eight qualified zero-call construction/release checks
 agree within 2%. Construction ratios range from 0.9899 to 1.0096 across all
 labels, cases and sessions. The ratio is consistently below one when reference
 mode runs first and above one when current mode runs first, including zero-call
-cases. This exposes a small order effect without attributing it to the call path.
+cases.
+
+This exposes a small order effect without attributing it to the call path.
 It does not identify the original Xeon's cause or replace its failed observations.
 AMD64 job `124609689465` also passes collection, all nineteen pre-collection
-record tests, exact checksums and cleanup, with no compiler diagnostics. Its
+record tests, exact checksums and cleanup, with no compiler diagnostics.
+
+Its
 [complete archive](callable-paired-amd64-2026-10-31.zip) records **AMD EPYC 9V45**,
 which differs from both the original Xeon and the separate-process EPYC 9V74.
 Of 36 phase comparisons, **19 qualify and 17 are inconclusive**:

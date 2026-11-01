@@ -35,6 +35,18 @@ The program therefore produces `[1, 2, 4, 8, 16]` without constructing an infini
 list. Some producers prepare a successor when stepped; this is not a guarantee
 that every producer performs no lookahead.
 
+### Follow one list through a pipe
+
+```text
+[1, 2, 3, 4, 5, 6]
+  | filter (rem 2 | eq 0)  → [2, 4, 6]
+  | map (mul 10)          → [20, 40, 60]
+```
+
+`filter` chooses elements; `map` changes each chosen element. Neither changes
+the original list. For the iterator example, changing `iter.take 5` to
+`iter.take 3` would collect `[1, 2, 4]`.
+
 ## The program
 
 [`main.fwp`](main.fwp):

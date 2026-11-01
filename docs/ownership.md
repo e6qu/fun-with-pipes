@@ -49,10 +49,12 @@ remove a JavaScript host's collector.
 - Preserve the independent [ownership diagnostics](ownership-diagnostics.md)
   and binary checks for absent collector code as storage representations change.
 - Enforce the compiler analysis budgets in G2 as proof precision changes.
-- Extend the selected A1–A6 reductions through the local call, field, loop and
-  collection cases in the current plan. A6's scoped parser storage is already
-  verified; preserve its [measured limits](measurements/parser-workspace.md).
-  Zero retains alone does not mean zero allocations or count checks on release.
+- Verify the current [typed-derivative reductions](measurements/typed-derivative-owners.md):
+  stack argument records, borrowed zero adjoints and moved result owners.
+- Preserve delivered A1–A6 and #236 call/collection reductions, including the
+  [parser workspace's limits](measurements/parser-workspace.md). Broader reductions
+  need a named workload and proof; zero retains does not mean zero allocations
+  or zero count checks on release.
 
 [PLAN.md](../PLAN.md) defines the fixtures and completion evidence.
 

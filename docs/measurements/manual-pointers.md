@@ -70,7 +70,9 @@ The `pointer-ownership` suite in the **Numerical and ownership evidence** workfl
 uses production GCC on Linux, Clang on macOS and LLVM-MinGW on Windows. Select
 `native_runner=all` for all six hosts, or name a host explicitly. It runs the
 existing corpus, raw-memory, callback, library, ARC execution, C interop and
-pointer-arithmetic targets without stopping after a failed target. Linux AMD64
+pointer-arithmetic targets without stopping after a failed target.
+
+Linux AMD64
 also runs all compiler unit tests and audits the primitive contracts. Each host
 passes 24 test functions across seven integration targets; Linux AMD64 also
 passes 176 compiler unit tests. The corpus function executes its 82 programs
@@ -92,7 +94,9 @@ The accepted suite retains 25 native images per host for inspection: 21
 executables and four static/shared libraries, with their generated C. Inspection
 checks artifact hashes, native architecture, actual disassembly and absence of
 tracing symbols in ARC images. It also checks exact outputs, raw-buffer negative
-controls, callback results and library unload ledgers. The 82 executed corpus
+controls, callback results and library unload ledgers.
+
+The 82 executed corpus
 cases are reported separately; only its C-interoperation binary is part of
 these 25 retained images. Four cover the wide-integer repair. The 32-bit job
 retains 12 WASI modules: pointer-sized storage, wide integers, three oversized

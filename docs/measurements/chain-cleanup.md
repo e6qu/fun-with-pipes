@@ -1,9 +1,8 @@
 # Stack use when releasing wrapped chains
 
-Historical measurements at the revisions named below. Counts and timings are
-observations of those programs, not current compiler budgets. Commands refer
-to the recorded measurement revision. Read [measurement terms](../benchmarks.md)
-for timing and memory boundaries; [the plan](../../PLAN.md) owns remaining work.
+Historical results; reproduce with the recorded revisions, not current main.
+[Measurement terms](../benchmarks.md) explain the costs;
+[PLAN.md](../../PLAN.md) tracks current work.
 
 **Comparison:** recursive wrapper cleanup in `70e36523` versus loop cleanup in
 `aea7d6df`. Each record owns a five-byte string and an optional next record; a

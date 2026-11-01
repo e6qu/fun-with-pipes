@@ -73,7 +73,9 @@ linker layout and metadata; neither size measures execution time.
 
 Actual disassembly of the fresh-text program shows the exchange worker's frame
 shrinking from 328 to 296 bytes on AMD64 and 320 to 288 on ARM64. The receive
-helper grows from 40 to 56 bytes on AMD64 and 64 to 80 on ARM64. AMD64 counts
+helper grows from 40 to 56 bytes on AMD64 and 64 to 80 on ARM64.
+
+AMD64 counts
 include saved registers but exclude return addresses; ARM64 counts include saved
 registers and the link register. These are individual frames, not total stack peaks.
 The first implementation writes the payload through an output pointer. A follow-up
@@ -121,7 +123,9 @@ Focused ownership run `39371669060` passes both Linux and Windows architectures,
 Intel macOS, and both WASI hosts. All seven complete logs are audited: 62
 integrations plus compiler units per native host and 18 checks per WASI host,
 none ignored or filtered. Its unstarted ARM64 macOS job was cancelled when the
-result-layout refinement moved validation to final production. This partial
+result-layout refinement moved validation to final production.
+
+This partial
 focused run does not establish complete platform acceptance.
 Tests exercise blocked receive cancellation, close, timed ready/empty receives,
 queued functions and failures after calling them. A runtime probe verifies that

@@ -89,11 +89,11 @@ The separate `fr-local-guard.py` belongs to fun-refactor; do not use it for fwp.
 
 ## Explain and measure clearly
 
-Introduce concepts and notation before examples; explain what each computes and
-why its output follows. Use plain explanations, not jargon or acronym lists.
-Distinguish implemented behavior, tested support and design goals. Remove stale
-or irrelevant docs; update generated library docs through comments/generators.
-Compare Swift as well as C/Rust. Prioritize time and working memory over file size.
-Benchmarks must identify implementations, inputs, equivalent work, timing
-scope, ratios/extra cost and known differences. Record hardware, compiler, flags,
-allocations, live memory and elapsed time. Faster fwp versus older fwp is not proof of parity with peers. Report code-size and stack costs alongside count savings.
+Introduce concepts before examples; show inputs, calculations and outputs.
+Prefer short prose, flow/lifetime diagrams, comparison tables and parallel bullets.
+Keep `let … in …` one clearly taught expression. Remove repetition and stale status;
+update generated library docs through comments/generators. Preserve historical evidence.
+Distinguish implementation, verified support and goals. Compare Swift and C/Rust;
+prioritize time and working memory over file size. Identify inputs, equivalent work,
+timing scope, ratios, differences, hardware, compilers and flags. Record allocations,
+live memory, elapsed time, code and stack costs; count savings alone prove no speedup.

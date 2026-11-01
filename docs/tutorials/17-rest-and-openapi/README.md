@@ -5,6 +5,7 @@ A REST API exposes operations at HTTP addresses. An **endpoint** is one method
 and path, such as `POST /quote`. A **schema** describes the allowed JSON values.
 OpenAPI is a machine-readable description of endpoints and their schemas; a
 client generator uses it to produce functions that send the corresponding requests.
+
 Encoding turns fwp values into JSON, and decoding checks JSON before building
 fwp values. Generated clients support the subset described in the REST guide;
 an arbitrary external OpenAPI document may use unsupported features.
@@ -36,6 +37,19 @@ steady (`4 + 2 × 1.5 × 1`) or 15 with swift (`9 + 2 × 1.5 × 2`).
 maximum; `Some maximum` compares `days <= maximum`.
 `check-weight` and `routes` raise distinct variants so the interface can map them
 to 422 and 404. This is a fixed illustrative tariff, not live carrier pricing.
+
+### Trace a quote
+
+| Stage | Two-kilogram Medium parcel to FR |
+|---|---|
+| Decode body | Build `Parcel { weight = 2.0, size = Medium, to = "FR" }`. |
+| Validate | Weight is within the example's 30 kg limit. |
+| Price | steady: `4 + 2 × 1.5 × 1 = 7`; swift: `9 + 2 × 1.5 × 2 = 15`. |
+| Filter | With `express`, keep swift's one-day service only. |
+| Encode | Return a JSON list containing that rate. |
+
+Decoding failure produces 400 before `rates` runs. A valid parcel can still
+produce the function's declared `TooHeavy` or `NoRoute` error.
 
 ## Functions are endpoints
 

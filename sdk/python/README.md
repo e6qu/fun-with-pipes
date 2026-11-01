@@ -16,6 +16,17 @@ program, stepping commands, event meanings, binary inspection and target/O0–O3
 comparisons. Read the [notebook guide](../../docs/notebooks.md) for cell semantics,
 launching the browser UI, dependencies and saved files.
 
+Try a complete example. Save `program.fwp`:
+
+```fwp
+square : I64 -> I64
+square = fn x -> x * x
+main = 3 | square | echo
+```
+
+Build the binary that will be inspected: `fwp build program.fwp -O2 -o program`.
+The debugger executes the checked source; the disassembler reads that saved binary.
+
 ```python
 from fwp_tools.debugger import Debugger
 from fwp_tools.disassembler import Disassembler
@@ -28,12 +39,13 @@ listing = Disassembler(fwp="fwp", llvm_objdump="llvm-objdump", timeout=180).insp
 print(listing["text"])
 ```
 
-`program.fwp` must be an existing program with a `main`; `program` must already
-be a compiled binary. Tool paths, timeouts and input choice are required:
-`input_file=None` forbids program standard input, and timeouts are in seconds.
-The context manager reaps the debugger process. Debugger
-inspection is read-only and runs the interpreter; disassembly never executes
-the inspected binary. Cross-target objects do not establish native execution.
+- The output callback prints the program's `9`; it receives an event, not source code.
+- `listing["text"]` contains machine instructions, not another execution result.
+- Tool paths, timeouts and input choice are explicit. `input_file=None` forbids
+  program standard input; the debugger timeout bounds each protocol read.
+- The context manager closes/reaps the debugger. Inspection reads snapshots;
+  disassembly does not execute the binary. Cross-target objects do not verify
+  native execution on that target.
 
 The [integration tests](tests/test_tools.py) run actual compiler processes and
 compare C/object listings on selected native/cross targets. The

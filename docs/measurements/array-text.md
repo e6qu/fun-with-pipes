@@ -30,7 +30,9 @@ tuples before the loop starts.
 Static storage applies only to fixed-width integers through 64 bits and 32-/64-bit
 floating-point literals (F32/F64), including empty arrays. It cannot retain a dynamically produced value.
 The existing representation reserves the array in the executable's data section
-and fills its elements once at startup. Avoiding heap requests does not make
+and fills its elements once at startup.
+
+Avoiding heap requests does not make
 this data or initialization work free; both belong in the cost review.
 Printing can also read inline target-sized integers. Boxed numbers and values
 that own resources keep their existing construction and cleanup rules. Updates
@@ -63,7 +65,9 @@ cases below both add one to each number and sum the results, giving 8,385.
 Here a managed request asks fwp's allocator for an object; it is not an operating
 system allocation. Each program must finish every iteration with its original
 managed-storage balance, no overflow entries for reference counts and no collection.
-A reference count records how many owners share a value. The probe requires
+A reference count records how many owners share a value.
+
+The probe requires
 zero count increments in the optimized cases, while retaining the actual
 disabled-control counts in its output. It also tracks the temporary text buffer's allocated capacity and requires zero
 retained bytes. It deliberately omits managed and buffer releases in separate
@@ -96,7 +100,9 @@ Linux architectures. The [recorded results](array-output-results.md) retain ever
 timing row and failed noise control. Its six inputs, 48 samples, four warmups
 and 2% identical-copy checks remain unchanged. It reports current complete
 programs against C/Rust; an earlier revision measured at another time is not a
-paired speed comparison. Static input initialization occurs once per process and
+paired speed comparison.
+
+Static input initialization occurs once per process and
 remains inside the total timing. The largest case records 200 managed requests with full output and 199 with the
 checksum consumer, with no retained managed storage after each solve. These
 instrumented counts are separate from the uninstrumented timing samples.

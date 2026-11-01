@@ -22,23 +22,30 @@ public API or tracing mechanism changes are planned.
 
 | Step | Work | Completion requirement |
 |---|---|---|
-| 1 | Document terminology and close the merged batch | Worked examples, updated links, exact merged-source verification and no obsolete CI-watch instructions |
+| 1 | Revise docs and tutorials; close the merged batch | Explain concepts before use, add worked examples and diagrams, shorten repetition, fix stale claims/links and preserve measured evidence |
 | 2 | Borrow typed recording records | Direct temporary `ad.push-owned` tuples use stack views while retained weight children remain independently owned; counted fixtures and failure controls pass |
 | 3 | Reduce backward-pass owners | Initial adjoints borrow the tape's zero; completed owned input adjoints move into result cells; alias, failure, cancellation and nested-derivative controls pass |
 | 4 | Verify and deliver together | Focused native checks, audited count/cleanup evidence, all nine production jobs and documentation pass on one final head |
 
 ## 1. Terms and current status
 
-Use `docs/terminology.md` as the single lookup guide. Explain tapes with an actual
-forward/backward calculation; introduce seeds, adjoints, nodes, weights and scopes.
-Include examples for lexical names, ownership, compilation, parsing and measured
-costs. Link from tutorials and design guides; remove the replaced glossary.
-Check runnable examples and distinguish current behavior from goals and history.
+Use `docs/terminology.md` as the lookup guide; teach concepts in the tutorials
+before linking to it. Cover all tracked documentation, including historical reports
+and generated library documentation through its source comments/generator.
 
-Record #236's tested head, merge tree and passing runs in delivery history.
-Replace pending integration claims with their verified outcome. Retain all failed
-or inconclusive measurements and their source identities. The handoff keeps one
-next action and actual checks for the new batch.
+- Explain `let … in …` as one expression. Trace simple and chained bindings,
+  scopes, effects and the manual recording fixture; distinguish it from a pipe.
+- Give tutorials concrete input → calculation → output examples. Use diagrams
+  for flows/lifetimes, tables for comparisons and bullets for parallel rules.
+- Remove repeated introductions and obsolete work instructions. Keep exact syntax,
+  API limitations, parser classification, compilation order and macro behavior.
+- Preserve historical sources, observations, rejected results and frozen limits.
+  Label benchmark peers, inputs, timing boundaries and memory quantities explicitly.
+- Check links, generated docs, source copies and runnable examples. Record which
+  checks actually ran; do not equate a docs audit with native verification.
+
+Record #236's tested head, merge tree and passing runs in history. The handoff
+keeps one next action and current failures instead of a transcript of prior work.
 
 ## 2. Typed recording
 

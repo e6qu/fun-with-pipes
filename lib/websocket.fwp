@@ -1,27 +1,16 @@
-# WebSocket (RFC 6455): servers upgrade HTTP/1.1 requests
-# (`http.websocket`), and clients connect to `ws://` and `wss://` URLs
-# (`ws.connect`).
+# A WebSocket upgrades HTTP/1.1 to a two-way message connection (RFC 6455).
+# `http.websocket` accepts it; `ws.connect` opens `ws://` or encrypted `wss://` URLs.
 #
-# A session is a pair of channels. Messages from the peer arrive on
-# `incoming`, which ends with a `WsMessage.Close` (the peer's code and
-# reason, or the code of the failure that ended the session) and is then
-# closed; messages sent on `outgoing` go to the peer. Closing `outgoing`
-# (`ws.close`), or sending a `WsMessage.Close`, starts the closing
-# handshake, which the peer has `close-timeout` to finish. Pings are
-# answered with pongs, fragmented messages are reassembled, a client masks
-# its frames, and a message larger than `max-message-bytes` ends the
-# session with the code 1009 (1002 for frames that break the protocol,
-# 1007 for text that is not UTF-8).
+# - The session is a pair of channels: `incoming` receives messages, `outgoing` sends.
+# - Incoming ends with `WsMessage.Close` (peer code/reason or failure), then closes.
+# - Closing outgoing, or sending Close, starts a handshake bounded by `close-timeout`.
+# - Frames carry message pieces/control signals. Pings get pongs, fragments are
+#   reassembled and client frames are masked.
+# - Oversized messages close with 1009; invalid frames with 1002; invalid UTF-8 with 1007.
+# - Configured compression uses negotiated permessage-deflate (RFC 7692), with
+#   independent messages and no context takeover in either direction.
 #
-# With `compress` in the config, messages are compressed when the peer
-# agrees (`permessage-deflate`, RFC 7692, each message on its own: no
-# context takeover either way).
-#
-# A WebSocket starts with an HTTP upgrade, then sends messages in both
-# directions over one connection. ws:// is plain; wss:// uses TLS. Frames carry
-# message pieces or control signals such as ping, pong and close. The incoming
-# and outgoing channels below connect that network session to fwp tasks.
-# Tutorial 19 demonstrates a complete exchange.
+# [Lesson 19](tutorials/19-websockets-and-http2/README.md) demonstrates an exchange.
 
 WsMessage =
     | WsMessage.Text String

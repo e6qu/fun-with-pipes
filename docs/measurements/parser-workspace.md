@@ -230,12 +230,16 @@ failure, cancellation and nested owners, including deliberately broken cleanup.
 The `parser-measurements` workflow uses GCC O2 and Rust O2 with checked overflow,
 no LTO and no fast-math. fwp uses explicit dynamic memory and enabled stack
 selection (`FWP_STACK=1`); the harness clears inherited fwp settings. Compiler builds use the same Rust O1 settings. It runs
-twice on separately allocated native Linux AMD64 and ARM64 runners. Each sample
+twice on separately allocated native Linux AMD64 and ARM64 runners.
+
+Each sample
 is a new process pinned to CPU 1. Each variant gets two warmups and six measured
 samples, alternating forward/reverse execution order. There are 131,072 parses per small-tree sample, 32,768 for medium/left-nested
 trees, and 2,048 for the largest tree. The first whole-block run rejected one
 small-tree identical-binary control at 10.08% with only 32,768 parses; the longer
-sample keeps the same 10% rejection limit. It also rejected two later AMD64
+sample keeps the same 10% rejection limit.
+
+It also rejected two later AMD64
 controls, as recorded above; all attempts remain in the data.
 
 Before timing the candidate, compare the baseline executable against an identical

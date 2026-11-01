@@ -1,9 +1,8 @@
 # Building numeric maps and sets without temporary lists
 
-Historical measurements at the revisions named below. Counts and timings are
-observations of those programs, not current compiler budgets. Commands refer
-to the recorded measurement revision. Read [measurement terms](../benchmarks.md)
-for timing and memory boundaries; [the plan](../../PLAN.md) owns remaining work.
+Historical results; reproduce with the recorded revisions, not current main.
+[Measurement terms](../benchmarks.md) explain the costs;
+[PLAN.md](../../PLAN.md) tracks current work.
 
 ## Current reproduction protocol
 
@@ -20,7 +19,9 @@ retains, peak live bytes and final live bytes. These are not whole-process RAM.
 Compilation time, compiler flags, host details, binary size and section sizes are
 recorded separately. The audit requires 28 actual binaries per host: four builder
 failure/control binaries, two compact-set probes, four range-set probes and 18
-timed program variants. It rejects collector symbols in every inspected binary.
+timed program variants.
+
+It rejects collector symbols in every inspected binary.
 This standalone comparison still needs a new measurement run. The results below retain
 their original revisions and memory modes; do not treat them as new measurements.
 
@@ -97,7 +98,9 @@ collections. These are managed-storage counts, not process RAM.
 All 264 focused tests passed with none ignored. The audit inspected 228 binaries,
 including 48 range-set allocation probes. In O2 ARC probes, Linux AMD64 `e0`
 uses packed integer addition and vector stores (`0x4b60` onward); ARM macOS `_e0`
-uses vector addition and paired stores (`0x100002140` onward). Neither filling loop
+uses vector addition and paired stores (`0x100002140` onward).
+
+Neither filling loop
 calls a function or accesses the stack; scalar tails handle leftover keys.
 The surrounding function still allocates and manages its result owner. This is
 evidence for these loops, not universally optimal registers or zero heap use.
@@ -134,6 +137,7 @@ Set requests fall 131,077 → 4; map requests 196,614 → 5. Peak counted bytes 
 4,718,600 → 1,053,696 for sets and 6,815,752 → 2,102,272 for maps. Retains, final
 charge and collections are zero. Counters exclude allocator capacity/process RAM.
 At 32 inputs ratios span 0.861–1.078 with overlapping ranges: no consistent gain.
+
 Temporary storage still grows with input length. The measured revision stored
 unused value slots in final sets; the current compact-set change removes those
 slots, but these historical timings do not measure that change. Small integers
@@ -311,7 +315,9 @@ The same ratios used in the preceding table remain below 1 when faster:
 Borrowing improves the maintained joined layout in both memory modes on every
 host in this run. Some comparisons with the older separate layout are slower:
 Xeon separate/tracing is 4.68% slower, one EPYC separate/ARC sample is 15.70%
-slower, and Neoverse combined/ARC is 1.74% slower. Preserve those distinctions:
+slower, and Neoverse combined/ARC is 1.74% slower.
+
+Preserve those distinctions:
 the change removes repeated ownership bookkeeping, not every layout/cache cost.
 Retains fall from 2,000,001 to 1 with unchanged allocations, peak charged bytes,
 and zero final charge. These are fwp revision comparisons; they say nothing by
@@ -329,7 +335,9 @@ A repeat at `f957980a`, [run 39129855448](https://github.com/e6qu/fun-with-pipes
 passed all five jobs and 60 focused checks. All 80 ordinary/profile binaries and
 their generated C match the earlier same-architecture artifacts byte for byte.
 Two further Xeon 8573C samples put the joined-borrowed/old-separate tracing ratio
-at **0.9731** and **0.9702**: 2.69% and 2.98% less process time. This repeats the
+at **0.9731** and **0.9702**: 2.69% and 2.98% less process time.
+
+This repeats the
 named repair with identical machine code, rather than measuring another compiler
 optimization. [All repeat samples and profiles](cached-map-repeat-2026-10-18.json)
 are retained. Joined borrowing is faster in both modes on all five samples;

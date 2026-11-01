@@ -65,7 +65,9 @@ The revised run uses GCC 13.3.0 and Rust 1.99.1 on Intel Xeon Platinum 8573C and
 The earlier AMD64 runs used AMD EPYC 7763; the revised run uses Intel. This
 host change also prevents attributing cross-run differences solely to ordering.
 C uses O2, a baseline architecture, no fast-math, no floating-point contraction
-and static frame reporting. Rust uses O2, generic CPU, checked overflow and no
+and static frame reporting.
+
+Rust uses O2, generic CPU, checked overflow and no
 link-time optimization. fwp uses checked ARC, stack placement, packed arrays,
 array fusion and bounded derivative workspace; stress instrumentation is off for
 timing. Exact flags, settings, CPU reports and compile times are in the data.

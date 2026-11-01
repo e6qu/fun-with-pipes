@@ -1,9 +1,8 @@
 # Server memory after completed remote calls
 
-Historical measurements at the revisions named below. Counts and timings are
-observations of those programs, not current compiler budgets. Commands refer
-to the recorded measurement revision. Read [measurement terms](../benchmarks.md)
-for timing and memory boundaries; [the plan](../../PLAN.md) owns remaining work.
+Historical results; reproduce with the recorded revisions, not current main.
+[Measurement terms](../benchmarks.md) explain the costs;
+[PLAN.md](../../PLAN.md) tracks current work.
 
 **Work:** four loopback service operations: greet a 64-character name (71-character
 response); return integers 1..64 (sum 2,080); sum 64 received integers (2,080);

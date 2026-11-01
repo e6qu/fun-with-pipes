@@ -24,7 +24,9 @@ weak handle, implicit cleanup or reference-count operation.
 Task results need a separate check: unlike captures fixed before publication,
 a task's result is assigned later. A result that owns its producing task, directly
 or through a returned closure, would make a reference-count cycle. The compiler
-rejects flows that can return to that task. Several creations can share one
+rejects flows that can return to that task.
+
+Several creations can share one
 compile-time summary when their task result types match. If this obscures whether a captured task is older than its owner,
 the compiler rejects the result graph. This can reject safe programs: the
 diagnostic reports a missing proof, not a cycle in every execution. This check also
@@ -82,6 +84,7 @@ main =
 This prints `Some "ready"`. `make Event { read = id }` stores the callback in the
 record. `tap` sends the event while keeping the queue for the next step. Receiving
 transfers the event to the caller; `.read | apply ()` invokes its callback.
+
 `option.and-then` keeps one optional result instead of nesting two `Some` values.
 The captured task remains owned until the callback is released, so receiving an
 event does not invalidate its handle. Raw interpretation and focused native/ARC
@@ -135,7 +138,9 @@ early cancellation and deadline calls. It compares two versions of the same
 generated C at O0/O2 in ARC and tracing modes: direct ownership transfer, and a
 control with the redundant retain/release pair restored. It counts actual counted
 callbacks, allocation requests/bytes, retains, peak/final managed charge and
-collections. This isolates the redundant pair; it is not an old-compiler timing
+collections.
+
+This isolates the redundant pair; it is not an old-compiler timing
 comparison. Both must match raw interpretation, and only the retain count may
 differ. The [source-specific report](queued-task-handles-2026-10-21.json) preserves
 hardware, compilers, flags, counts, generated-C hashes and actual binary inspection.
@@ -164,6 +169,7 @@ sections, compiler flags and CPU details for 22 executed binaries per host. That
 includes failing cleanup controls. All 132 native binaries were independently
 checked against their executed artifacts, including architecture headers, symbols
 and generated C; O0 callback-transfer routines were disassembled independently.
+
 The report rechecks counter differences and absence of tracing entry points in
 ARC binaries. Both WebAssembly artifacts contain 32 executed task-capture modules
 whose headers, source/output hashes and available symbols were inspected.

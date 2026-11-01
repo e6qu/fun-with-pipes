@@ -1,12 +1,14 @@
-# Arrays (immutable, indexed), ordered maps and sets, and byte strings.
-# Updates return new collections. Keys use the structural order (`Ord`).
+# Immutable indexed arrays, ordered maps/sets and raw byte strings.
 #
-# An array is an indexed sequence; a map associates each unique key with a
-# value; a set contains unique values; Bytes is a sequence of raw bytes.
-# Map/set keys use `Ord`, the trait defining their comparison order.
-# `array.get 0` reads the first element as an Option. Updates return a new
-# language value even when the runtime can safely reuse uniquely owned storage.
-# `map` on lists is a transformation function; `map.get` is a map lookup.
+# | Type | Stores | Example operation |
+# |---|---|---|
+# | `Array[T]` | Values by zero-based position | `array.get 0` returns the first as an Option. |
+# | `Map[K, V]` | A value for each unique key | `map.get key` looks up that key. |
+# | `Set[T]` | Distinct values | Keys use the comparison trait `Ord`. |
+# | `Bytes` | Raw bytes | Separate from Unicode text. |
+#
+# Updates return new logical values; proved unique storage may be reused.
+# `map f` transforms a list; `map.get` looks up a key/value map.
 
 foreign "fwp" array.from-list : List[a] -> Array[a]
 foreign "fwp" array.to-list : Array[a] -> List[a]

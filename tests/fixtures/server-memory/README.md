@@ -33,7 +33,9 @@ listener, routing and root-task setup. They cover managed allocation requests,
 requested/charged bytes, reference-count increments and selected allocation
 categories. Categories count allocations, not identities of remaining objects.
 Raw request/wire buffers, stack pools, TLS/OS/allocator metadata, whole-process
-memory and timing are excluded. Both an interpreted server and ordinary native
+memory and timing are excluded.
+
+Both an interpreted server and ordinary native
 server provide functional output references. No timing or C/Rust comparison is
 claimed. Finalized connection/stream counts and zero live tasks check this
 specific cleanup boundary; they do not prove every server lifetime.

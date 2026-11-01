@@ -66,7 +66,9 @@ their existing functional and ownership checks remain required.
 module inserts `tests/fixtures/http_app_memory.c` into generated C. Production
 and the `http-application` focused workflow retain C, native binaries, diagnostic
 logs, exit status and RSS samples for every variant. Native Linux uses GCC;
-macOS and Windows use their production Clang toolchains. Passing one host does
+macOS and Windows use their production Clang toolchains.
+
+Passing one host does
 not establish the others. Review actual binaries before making tracing-removal
 or representation claims. The [saved-binary inspector](../../scripts/inspect-http-application.py)
 checks architecture, executable sections, tracing symbols, all checkpoint records,
@@ -78,6 +80,7 @@ To investigate the original Linux failure, `http-mappings` runs the saved O1/O2 
 three fresh native processes each and records `/proc/PID/smaps` at every idle
 checkpoint. Those snapshots identify resident mappings and large physical pages;
 a successful diagnostic run does not turn an exceeded budget into a pass.
+
 `http-idle-checks` compiles O2 once, verifies both negative controls, then starts
 32 fresh processes from that executable with task/socket wait records. It keeps
 every attempt and fails if any attempt fails. Reusing the binary avoids repeated
@@ -149,7 +152,9 @@ The original Windows ARM64 O2 process completed checkpoint 40 but did not reach
 48 within 20 seconds. This was a normal-request group, before the partial-body
 disconnect group at 56. Its recorded managed charge was stable at 2,576 bytes.
 All three O2 attempts in [diagnostic run 40067911096](https://github.com/e6qu/fun-with-pipes/actions/runs/40067911096)
-passed, including negative controls. Source `4fc97ca1` also passes the six-host
+passed, including negative controls.
+
+Source `4fc97ca1` also passes the six-host
 API matrix (`40069237866`) and 32 fresh isolated Windows ARM64 processes
 (`40069240258`). Those isolated repetitions do not reproduce the original overlap
 between API clients and another test's C compilation. Neither the checkpoint
@@ -160,16 +165,21 @@ ARM64 and AMD64. It records original/cloned handle flags, drops both client
 handles while a child is alive, then checks connection closure after child exit.
 An explicitly inheritable socket is the control. This tests whether unrelated
 compiler children can prolong a cloned client connection, a possibility reported
-in [Rust issue #70719](https://github.com/rust-lang/rust/issues/70719). The first diagnostic (`10626760`, run `40069759142`) showed that the original
+in [Rust issue #70719](https://github.com/rust-lang/rust/issues/70719).
+
+The first diagnostic (`10626760`, run `40069759142`) showed that the original
 socket closes while a child is alive. Its cloned-socket case waited until child
 exit, then the diagnostic incorrectly rejected the resulting connection reset.
 The revised probe records reset and EOF as closure, preserving both results.
+
 [The repaired probe](https://github.com/e6qu/fun-with-pipes/actions/runs/40070406753)
 passes on both native Windows architectures. Original sockets have inheritance
 flags 0 and close while the child lives; cloned sockets have flags 1 and remain
 open until the child exits. The explicit-inheritance control reproduces this.
 The saved PE executables, imports and all six observations were independently
-reviewed. Isolated API repeats did not expose this overlap with compiler children;
+reviewed.
+
+Isolated API repeats did not expose this overlap with compiler children;
 they were diagnostics, not a repair.
 
 The API, ordinary HTTP, WebSocket and GC test clients now hold one `TcpStream`
@@ -188,7 +198,9 @@ A follow-up audit found the same unchecked protection call in Unix static-memory
 startup. It now releases the shared mapping and exits with a specific diagnostic
 if any task guard cannot be installed. The test compiles the production initializer
 at O1/O2, checks that every guard faults while the stack body remains writable,
-and injects first/last guard failures and mapping failure. An intentionally omitted
+and injects first/last guard failures and mapping failure.
+
+An intentionally omitted
 guard must be detected. All four native Linux/macOS jobs pass these checks at `cf3a11e4` in
 [run 40072655673](https://github.com/e6qu/fun-with-pipes/actions/runs/40072655673).
 Independent review verifies eight binaries and forty outcome records. Windows

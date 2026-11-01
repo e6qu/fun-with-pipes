@@ -185,11 +185,14 @@ grow. These are representation tradeoff limits, not runtime speed evidence.
 `089465bb` implements direct construction without changing primitive contracts.
 Focused run `41021988225` passes all six native targets at O0/O1/O2: 18 integration
 tests per host, plus 224 library tests and 20 runner controls on GCC AMD64. Full
-logs and 954 saved boundary/cleanup executions are audited. The
+logs and 954 saved boundary/cleanup executions are audited.
+
+The
 [native evidence archive](direct-strings-native-2026-10-30.json) retains every
 source, output, status and complete job log. All 162 inspected probe images have
 the expected native architecture headers and recorded hashes. Those headers and
 identities are retained locally; full images remain in the named GitHub artifacts.
+
 An expired artifact would limit later inspection of those original binaries.
 This is correctness evidence, not a performance decision. Both WASI hosts in
 `41023744074` pass 32 tests/four summaries with complete log audits. The paired
@@ -251,7 +254,9 @@ as acceptance for the next code.
 After finding a real match, a replacement whose byte length does not exceed the
 pattern's may reuse the source allocation only if the existing ownership query
 proves exactly one owner. Copy unmatched spans with `memmove`, write replacement
-bytes and continue forward through the unread suffix. The destination never
+bytes and continue forward through the unread suffix.
+
+The destination never
 passes that suffix, so the loop needs no sizing scan or temporary allocation.
 Set the final length and terminator and transfer the existing owner to the result.
 Shared/static inputs and growing replacements keep a separately allocated result.
@@ -326,7 +331,9 @@ Protocol `7f58e4d9` was published before implementation. The one-byte search and
 new high-bit/source-alias controls are implemented at `afbafef8`. Focused GCC
 run `41038341027` passes 18 integration tests, 224 library tests and 20 runner
 controls with a complete log audit. All 162 saved probes and 30 native image
-headers/hashes pass independent inspection. Four measurements in `41039113227`
+headers/hashes pass independent inspection.
+
+Four measurements in `41039113227`
 and `41040046127` qualify the frozen branch `byte-search-measurements`; the
 complete final-head platform matrix passes in #229. Keep both earlier rejected experiments,
 the original reference bodies, inputs, CPUs/toolchains, four-session schedule and

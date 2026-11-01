@@ -1,9 +1,8 @@
 # CI compiler build cost
 
-Historical measurements at the revisions named below. Counts and timings are
-observations of those programs, not current compiler budgets. Commands refer
-to the recorded measurement revision. Read [measurement terms](../benchmarks.md)
-for timing and memory boundaries; [the plan](../../PLAN.md) owns remaining work.
+Historical results; reproduce with the recorded revisions, not current main.
+[Measurement terms](../benchmarks.md) explain the costs;
+[PLAN.md](../../PLAN.md) tracks current work.
 
 The [CI profile comparison](ci-compiler-profiles-2026-10-16.json)
 compares two builds of the same fwp revision, `c81b0c9f`, on each runner. Rust

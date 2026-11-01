@@ -16,6 +16,7 @@ source `927c6b1852a69748ae613291d89774bb8ae31121`. The driver checks its archive
 generated-source and compiler-source hashes. If #198's compiler changes,
 regenerate the numerical inputs explicitly before using these results.
 This experiment rebuilds saved C; it does not run a newly built fwp compiler.
+
 Retain the six existing cases and their complete outputs. Add C and Rust programs
 that compute one output coordinate from the previous, current and next input
 coordinates, matching `descent_packed.fwp`'s operation order and boundary cases.
@@ -52,7 +53,9 @@ managed/raw storage after each solve, and the accepted allocation/peak budgets.
 Keep the delayed-release control that demonstrates the final-only blind spot.
 The C/Rust probes count only the two numerical buffers: two successful requests,
 16 times the dimension count in requested and peak live bytes per solve, and
-zero live buffer bytes after each solve. C probes the workload's allocations;
+zero live buffer bytes after each solve.
+
+C probes the workload's allocations;
 Rust observes actual vector allocation/deallocation with a system-allocator hook.
 Formatting, allocator metadata and unrelated runtime storage are excluded. These
 bytes are not directly comparable to fwp's total managed charge or process memory.

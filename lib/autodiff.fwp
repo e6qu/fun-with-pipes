@@ -1,15 +1,16 @@
-# Forward-mode automatic differentiation with dual numbers.
+# Automatic differentiation applies derivative rules during evaluation.
+# For `f(x) = x*x + 2` at `x = 3`, the value is `11` and the derivative is `6`.
 #
-# Write numeric code once, generically (for example with `where Field[a],
-# Floating[a]`); evaluating it at `Dual` computes derivatives. Nesting
-# duals (Dual[Dual[F64]]) gives second derivatives.
+# | Mode | Intermediate information | Example |
+# |---|---|---|
+# | Forward: `Dual` | Value and derivative travel together | Squaring `(3, 1)` gives `(9, 6)`. |
+# | Reverse: `Rev` | A tape records dependencies and local derivatives | Walk backward from the output to accumulate `6` at the input. |
 #
-# A derivative measures local output change; a gradient collects derivatives
-# for all inputs of a scalar function. Forward mode carries a value and derivative
-# in Dual. Reverse mode records dependencies in a tape and accumulates derivatives
-# backward using Rev. Both perform extra work and floating-point rounding still
-# applies. Nested differentiation computes derivatives of derivatives. See tutorials
-# 12 and 20, and docs/numerics.md for precision and lifetime limits.
+# A gradient collects derivatives for all inputs of a scalar result. Nesting,
+# such as `Dual[Dual[F64]]`, computes derivatives of derivatives. Generic numeric
+# code states the required traits (`Field`, `Floating`, etc.). Both modes add work
+# and retain floating-point rounding. See [the tape walkthrough](terminology.md#tape-and-backward-pass)
+# and [precision/lifetime rules](numerics.md).
 
 Dual[T] = { re: T, eps: T }
 

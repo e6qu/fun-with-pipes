@@ -1,19 +1,16 @@
-# Structured concurrency: tasks, channels, cancellation and deadlines.
+# A task is a scheduled computation, not necessarily a parallel OS thread.
+# Tasks form a tree: a parent finishes after its children; cancellation reaches
+# its subtree. A channel is a bounded queue of values.
 #
-# Tasks form a tree: a task finishes only after its children finished, and
-# cancelling a task cancels its subtree. Cancellation is observed when a
-# task suspends (sleeping, waiting on a channel, another task or a socket)
-# and unwinds it; `attempt` does not catch it. A deadline cancels its task
-# when it passes. In the native runtime tasks are green threads on an
-# event loop; the interpreter runs each task on a thread, one at a time. On
-# WebAssembly they are fibers, which need JavaScript Promise Integration.
+# - Sending to a full channel waits; closing preserves messages, then receive gives `None`.
+# - Await waits for completion; a deadline requests cancellation after a time limit.
+# - Cancellation unwinds at cooperation points such as waits and generated-code
+#   scheduling checks. `attempt` does not catch it.
+# - Native tasks use lightweight stacks on an event loop. Interpreter tasks use
+#   host threads with one executing language code at a time.
+# - WebAssembly suspension needs the supported JSPI or Asyncify host/build path.
 #
-# A task is a computation scheduled alongside others; it is not necessarily
-# an operating-system thread running in parallel. A channel is a bounded queue
-# of values. A full queue makes send wait, slowing the producer to the consumer.
-# Closing preserves queued values until received; then recv returns None.
-# Await waits for a task result, and a deadline requests cancellation after a
-# time limit. Tutorial 6 explains task scopes and ordering.
+# [Lesson 6](tutorials/06-tasks-and-channels/README.md) follows a producer and consumer.
 
 Task[a] = builtin
 Channel[a] = builtin

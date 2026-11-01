@@ -101,7 +101,9 @@ Each Linux host passes 217 checks: 161 compiler tests, 54 integration tests,
 the channel measurement and the seven-program benchmark. Full logs are clean.
 The new native probe checks normal return, failure and cancellation at O0/O2/O3,
 independent aliases, callback-context destruction and deliberately broken
-extra-owner/missing-release controls. A separate scope test starts 65 child
+extra-owner/missing-release controls.
+
+A separate scope test starts 65 child
 tasks, raises an error, and verifies output and cleanup over four repetitions
 in ARC and tracing modes. The interpreter provides the output reference.
 [PR #181 acceptance](../roadmap-history.md#temporary-channel-borrows-and-failure-cleanup-pr-181)

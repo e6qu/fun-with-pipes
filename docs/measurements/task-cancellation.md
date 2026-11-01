@@ -49,7 +49,9 @@ must return `Some "inputinput"` both times; awaiting a cancelled task returns
 mode, at fwp optimization level O1. It reconstructs the old embedded `jmp_buf`
 layout in that same generated C. Both compile at native O0 (unoptimized) and O2
 (optimized) using the production compiler for the host, with
-`-std=gnu11 -ffp-contract=off -w`. The focused workflow disables optimization
+`-std=gnu11 -ffp-contract=off -w`.
+
+The focused workflow disables optimization
 across compiled units at the final link (`FWP_LTO=0`), so source length cannot
 silently select a different compilation path for one layout. Artifacts record
 these settings and the platform link libraries. Both layouts contain identical
@@ -127,7 +129,9 @@ ARC-generated C and runs the same task fixture at native O0/O2. It records the
 allocation counters above, context/task sizes, switch count and snapshot count.
 An independent O0/O1/O2 fiber probe keeps pointer and floating-point values live
 in specified registers, checks stack contents and per-fiber rounding, and checks
-host-owned fiber teardown. Restoring the unwanted snapshot must exit with 211;
+host-owned fiber teardown.
+
+Restoring the unwanted snapshot must exit with 211;
 normal execution must pass. The current suite retains static-memory checks;
 collector-root tests were removed in
 [PR #217](../roadmap-history.md#tracing-gc-removal-pr-217).
@@ -163,7 +167,9 @@ The cancellation review found unchecked table growth in the WebAssembly helper
 that records saved return points. Failed allocation could lead to a null-pointer
 access, and doubling could wrap the table capacity or byte count. The repair
 checks both limits before allocation and stops with a diagnostic if allocation
-fails. It also detects exhaustion of the helper's pointer-width identifier counter
+fails.
+
+It also detects exhaustion of the helper's pointer-width identifier counter
 before zero or an older identifier can be reused. On wasm32 this counter permits
 at most 4,294,967,295 registrations per instance; this is an implementation limit,
 not a claim of indefinitely running task workloads.

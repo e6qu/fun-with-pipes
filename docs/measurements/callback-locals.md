@@ -85,10 +85,14 @@ The array and fold checks compare interpreter/native output, assert the chosen
 capture representation and retain stress, error/cancellation/order and deliberate
 broken-cleanup controls. The new boundary fixture covers repeated/stored callbacks,
 ordinary calls and empty input at O0/O2 with stack representations on/off in both
-memory modes. The initial expanded native job exposed two invalid ARC test settings and a
+memory modes.
+
+The initial expanded native job exposed two invalid ARC test settings and a
 right-fold probe that expected a now-removed adapter. The repair instruments the
 actual borrowed body and preserves all cleanup assertions. The repaired change
 shipped in [PR #198](../roadmap-history.md#local-callback-captures-and-repeated-numerical-work-pr-198)
-after all nine production jobs and documentation passed. Final-head inspection
+after all nine production jobs and documentation passed.
+
+Final-head inspection
 covered 480 native binaries and 816 execution observations; preparation failures
 remain historical evidence, not passing checks.

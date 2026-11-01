@@ -129,7 +129,9 @@ SIMD abbreviates single instruction, multiple data. The current implementation
 stores an array inside a record and emits C loops; the C compiler may turn suitable
 loops into vector instructions. The API alone guarantees neither those instructions
 nor a speedup. Integer lane addition, subtraction, multiplication and sum wrap on
-overflow; ordinary fwp integer arithmetic is checked. Division keeps its checks.
+overflow; ordinary fwp integer arithmetic is checked.
+
+Division keeps its checks.
 Floating operations preserve their existing order and format. Choose these rules
 explicitly when using the lane API. [Lane measurements](measurements/vector-lanes.md#fixed-size-lane-calculations-against-c-and-rust)
 compare the same dot-product workloads with C/Rust, explain removed temporary
@@ -181,7 +183,9 @@ arithmetic and values still have runtime costs.
 `Rev[T] = { value: T, vertex: I64 }` pairs a value with a reference to its recorded
 operation. A **tape** stores operations and their dependencies. The
 [worked tape example](terminology.md#tape-and-backward-pass) follows
-`x * x + 2` at `x = 3` through the forward and backward passes to obtain `[6]`. `grad f xs`
+`x * x + 2` at `x = 3` through the forward and backward passes to obtain `[6]`.
+
+`grad f xs`
 records one forward evaluation, then walks backward to compute the gradient.
 Unlike forward `gradient`, it does not rerun the function once per input.
 It does allocate/store records and do extra backward arithmetic; one forward
@@ -206,7 +210,9 @@ derivative. Local partial derivatives are the weights on parent dependencies.
 F16/BF16/F32/F64 tapes accumulate adjoints in F64 and convert results back to the
 element type. F128 weights, seeds and adjoints remain F128, preserving its wider
 precision and exponent range. Nested reverse levels keep typed weights and
-record backward arithmetic on the enclosing tape. A `Float[T]` constraint alone does
+record backward arithmetic on the enclosing tape.
+
+A `Float[T]` constraint alone does
 not describe this nested behavior; generic reverse callers use `ReverseScalar[T]`.
 Comparisons use primal values, so a piecewise program differentiates the branch
 actually taken. This does not define a smooth derivative at every branch boundary.
@@ -397,11 +403,14 @@ block. These are real remaining costs, so tensor evaluation is not heap-free.
 The caller protects output and scratch through validation, allocation and worker
 startup. If a requested native worker cannot start, it joins every worker already
 started, frees pending storage and reports a trap. It does not silently execute
-missing workers on the caller. Counts are validated before conversion to WASI's
+missing workers on the caller.
+
+Counts are validated before conversion to WASI's
 32-bit address size; final reduction blocks use remaining lengths to avoid index
 overflow. The output-storage and failure-cleanup checks passed native and WASI
 validation in [PR #153](roadmap-history.md#owned-decoded-values-and-network-resources-pr-153).
 The worker-range rules also passed the full PR #191 acceptance above.
+
 [Measured storage costs](measurements/cpu-tensor-storage.md#cpu-tensor-output-storage) distinguish the
 removed buffer from remaining allocations. No timing improvement is claimed here.
 

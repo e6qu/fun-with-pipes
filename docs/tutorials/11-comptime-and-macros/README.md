@@ -16,6 +16,21 @@ embeds text, while `comptime (file.open "data.txt")` is rejected. An open handle
 belongs to the compiler process and cannot be embedded in the finished program,
 even inside a container or function capture.
 
+## Choose the operation by what you need
+
+| Need | Construct | Example |
+|---|---|---|
+| Calculate a value during compilation | `comptime` | `comptime (2 + 3)` embeds `5`. |
+| Inspect a type | `type[T]` | `type[Order]` describes the fields of `Order`. |
+| Generate an expression | `quote` and a macro | `twice!(add 1)` produces `add 1 | add 1`. |
+
+```mermaid
+flowchart LR
+    A["twice!(add 1)"] --> B["Macro expands syntax"]
+    B --> C["add 1 | add 1"] --> D["Check generated expression"]
+    D --> E["At runtime: 40 → 41 → 42"]
+```
+
 ## Reflection
 
 `type[T]` describes a type: its name, its type arguments, and its fields or
@@ -36,11 +51,14 @@ macro twice = quote (unquote!(0) | unquote!(0))
 0 to 63. `unquote!(expression)` instead evaluates an expression producing Syntax.
 That computation runs once when the quote/template is built, including when the
 template also has positional placeholders. Calling the template does not repeat
-it. A nested `quote` has its own placeholders; its code stays data until that
+it.
+
+A nested `quote` has its own placeholders; its code stays data until that
 quote is evaluated. Resolved names in
 a quote refer to their definition module; spliced argument names keep their
 caller spelling. Local binders introduced inside a quote have fresh identities,
 so `quote (let x = 100 in unquote!(0))` cannot capture an argument's unrelated `x`.
+
 This protection is called **hygiene**. Constructing `SName "x"` directly asks for
 that spelling; it does not obtain a fresh binding automatically.
 

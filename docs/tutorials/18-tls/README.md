@@ -57,6 +57,18 @@ server.pem
 `server.pem` and `server.key` are the server's; clients that should trust
 it are given `ca.pem`.
 
+### Which file goes where?
+
+| File | Used by | Purpose |
+|---|---|---|
+| `ca.key` | Local certificate-signing command | Sign the test server certificate. |
+| `ca.pem` | Test client | Establish trust in that signer. |
+| `server.key` | Server | Prove possession of its private key. |
+| `server.pem` | Server, sent during handshake | Present its signed identity for `localhost`. |
+
+The successful request below uses `--cacert ca.pem`. Removing it leaves this
+private test CA untrusted; the expected exit 60 demonstrates that check.
+
 ## HTTPS
 
 [`quotes.fwp`](quotes.fwp) has two functions, exposed as REST endpoints:

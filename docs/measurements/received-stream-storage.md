@@ -8,10 +8,9 @@ iteration or network performance. A refreshed standalone measurement run is
 still needed. The results below use their original source and collection-era
 schema; they are not measurements of the collector-free compiler.
 
-Historical measurements at the revisions named below. Counts and timings are
-observations of those programs, not current compiler budgets. Commands refer
-to the recorded measurement revision. Read [measurement terms](../benchmarks.md)
-for timing and memory boundaries; [the plan](../../PLAN.md) owns remaining work.
+Historical results; reproduce with the recorded revisions, not current main.
+[Measurement terms](../benchmarks.md) explain the costs;
+[PLAN.md](../../PLAN.md) tracks current work.
 
 **Comparison:** separate source/result fields (`00c09cdc`) versus one shared
 storage word (`4c26f21f`) in a received stream position. **Work:** queued messages

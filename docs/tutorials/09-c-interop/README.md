@@ -76,6 +76,7 @@ cover copied inputs and failure cleanup;
 records passing native delivery checks.
 C's text is copied into an owned fwp string. Keeping that string in checked
 state is safe after C returns; the copy survives changes to C's original buffer.
+
 C must not retain the callback itself. Returning a managed string from the
 callback remains outside ARC's contract because its C-side lifetime needs a
 separate rule. Passing text into a callback and returning text from one are
@@ -151,6 +152,27 @@ one release function for the whole record; copied pointer bits are aliases,
 not separately owned results. Scalar-only results need no release. Release all
 results and finish all calls before unloading a shared library. Host calls and
 releases must be serialized. Accepted result-ownership evidence is in [delivery history](../../roadmap-history.md#owned-c-results-and-failure-cleanup-pr-165).
+
+### Read the chained `let` expressions in `sort-in-c`
+
+Each `in` begins the body of the preceding `let`. A following `let` simply
+starts another local calculation:
+
+```text
+values → count → checked C count → allocate buffer
+       → write elements → qsort → copy into result → free buffer → result
+```
+
+| Binding | Why the order matters |
+|---|---|
+| `c-count` | Reject an invalid C size before allocating. |
+| `buffer` | Keep the address available for writing, sorting and copying. |
+| `result` | Finish the managed copy while the C buffer is still alive. |
+| Last `let _` | Free the buffer, discarding the release operation's result. |
+| Final `in result` | Use the saved list as the entire expression's value. |
+
+The final `in` does not perform a return operation. Its body happens to be
+`result`, whose value becomes the function result.
 
 ## A pointer into a C buffer
 

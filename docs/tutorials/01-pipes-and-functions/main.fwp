@@ -20,6 +20,9 @@ sum-curried = curry sum-pair
 main = [
     ten | echo,
     3 | energy | echo,
+    (let a = 3 in let b = a * 2 in b + 1) | echo,
+    10 + (let x = 3 in x + x) | echo,
+    (let x = 3 in let x = x + 1 in x) | echo,
     3 | quadruple | echo,
     10 | decrement | echo,
     [3, 5, 10] | average | echo,

@@ -1,26 +1,29 @@
 # Standard library
 
-This is a signature reference. Start with [tutorials 1–5](tutorials/README.md)
-for functions, data, types, effects and collections. Each module below explains
-its purpose and vocabulary before listing declarations. Every module is available
-without an import.
+A signature reference; start with [tutorials 1–5](tutorials/README.md).
+Modules below are available without an import. Signatures describe functions,
+not complete programs to paste into a file.
 
-Read `A -> B` as a function taking A and returning B. Repeated arrows take
-arguments one at a time, with the data being transformed last. `List[a]` is a
-list of an element type `a`; `where Ord[a]` requires ordering operations for it.
-`! e` propagates a caller's effects; `! {IO}` explicitly requires IO.
-`foreign "fwp"` declares a runtime primitive, not a C function you must supply.
-Types marked `builtin` have hidden runtime implementations. A signature describes
-a function; it is not a complete implementation to paste into a program.
+| Notation | Meaning |
+|---|---|
+| `A -> B` | Takes A, returns B; repeated arrows take inputs one at a time. |
+| `List[a]` | List with element type `a`. |
+| `where Ord[a]` | Requires ordering operations for `a`. |
+| `! e` / `! {IO}` | Propagates effects / requires IO. |
+| `foreign "fwp"` | Runtime primitive; no external C function to supply. |
+| `builtin` | Type with hidden runtime implementation. |
 
-For example, `map : (a -> b ! e) -> List[a] -> List[b] ! e` takes a transforming
-function, then a list, and returns the transformed list with that function's
-effects. `[1, 2] | map (add 1)` produces `[2, 3]`.
+Read `map : (a -> b ! e) -> List[a] -> List[b] ! e` in three steps:
 
-Generated from `lib/*.fwp` by `tests/stdlib_doc.rs`; edit those sources rather
-than this file. Contributors can regenerate this focused document with
-`python3 scripts/local-guard.py env FWP_BLESS=1 cargo test --test stdlib_doc`
-when the local limits permit; otherwise use a GitHub runner.
+1. Supply a function from `a` to `b`, possibly performing effects `e`.
+2. Supply a list of `a` values; the transformed data comes last.
+3. Receive a list of `b` values, with those same effects.
+
+Example: `[1, 2] | map (add 1)` gives `[2, 3]`.
+
+Generated from `lib/*.fwp` by `tests/stdlib_doc.rs`; edit those sources.
+Regenerate with `FWP_BLESS=1 cargo test --test stdlib_doc` on a GitHub runner,
+or through `scripts/local-guard.py` when local limits permit.
 
 - [Prelude](#prelude)
 - [Lists](#lists)
@@ -55,17 +58,18 @@ when the local limits permit; otherwise use a GitHub runner.
 
 `lib/prelude.fwp`
 
-fwp standard prelude.
+Core types and functions. The transformed input comes last:
+`5 | sub 1` gives `4`; `10 | div 2` gives `5`; `3 | lt 5` gives `True`.
 
-Argument order convention: the "subject" of an operation comes last, so
-that `x | sub 1` means x - 1, `x | div 2` means x / 2 and `x | lt 5`
-means x < 5.
+| Helper | Example |
+|---|---|
+| `id` returns its input | `5 | id` gives `5`. |
+| `const x` ignores an input | `5 | const 1` gives `1`. |
+| `both f g` computes two results | `5 | both id (add 1)` gives `(5, 6)`. |
+| `fork h f g` passes both results to `h` | Uses `f`'s result first, then `g`'s. |
 
-The prelude supplies core types and function-building helpers. `id` returns
-its input; `const x` ignores a later input and returns x. `both f g` makes a
-pair of results from one input, while `fork h f g` passes those results to h.
-For example, `5 | add 1` is 6 and `5 | const 1` is 1. Signatures below are
-reference declarations, not a program to paste in full.
+A number is a value; `const` explicitly makes a function returning that value.
+See [lesson 1](tutorials/01-pipes-and-functions/README.md).
 
 ```fwp
 I8 = builtin
@@ -398,14 +402,16 @@ ignore : a -> ()
 
 `lib/list.fwp`
 
-Lists. Functions take the list last so they compose with `|`.
+Lists are ordered sequences, such as `[1, 2, 3]`. Functions take the list last.
 
-A list is an ordered sequence written `[1, 2, 3]`. `map` transforms each
-item, `filter` keeps items satisfying a predicate (a Boolean-valued function),
-and `fold` combines items with an accumulator (the running result).
-For example, `[1, 2, 3] | map (add 1)` gives `[2, 3, 4]`, and
-`[1, 2, 3] | fold add 0` gives 6. Indices start at zero; optional results
-use `Some value` or `None` when no item exists.
+| Operation | Example result |
+|---|---|
+| Transform each item: `map (add 1)` | `[1, 2, 3]` becomes `[2, 3, 4]`. |
+| Keep matches: `filter (gt 1)` | `[1, 2, 3]` becomes `[2, 3]`. |
+| Combine with a running result: `fold add 0` | `[1, 2, 3]` becomes `6`. |
+
+Indices start at zero. Optional lookups return `Some value` or `None`.
+A predicate is a function returning `Bool`; an accumulator is the running result.
 
 ```fwp
 map : (a -> b ! e) -> List[a] -> List[b] ! e
@@ -479,16 +485,15 @@ map-accum : (s -> a -> (b, s) ! e) -> s -> List[a] -> (List[b], s) ! e where Dup
 
 `lib/option.fwp`
 
-Option and Result. Multi-argument pattern functions use `curry` with a
-tuple match: the holes of the matched tuple are passed to the arm body in
-order.
+`Option[T]` represents a possibly absent value: `Some value` or `None`.
+`Result[T, E]` represents success or an explained failure: `Ok value` or `Err error`.
 
-`Option[T]` is either `Some T` or `None`, representing a possibly absent
-value. `Result[T, E]` is `Ok T` or `Err E`, retaining an error explanation.
-`Some 3 | option.map (add 1)` is `Some 4`; `None | option.unwrap-or 0`
-is 0. These are values you can match; an `Error[E]` effect instead exits to
-a handler such as `attempt`. `curry` turns a function of a tuple into a
-function taking its arguments one at a time.
+- `Some 3 | option.map (add 1)` gives `Some 4`.
+- `None | option.unwrap-or 0` gives `0`.
+- An `Error[E]` effect transfers control to a handler; `attempt` turns it into a Result.
+
+`curry` converts a tuple-taking function to successive single-argument calls.
+In a tuple match, forwarding holes supply payloads to the arm in order.
 
 ```fwp
 option.map : (a -> b ! e) -> Option[a] -> Option[b] ! e
@@ -513,14 +518,14 @@ result.from-option : x -> Option[a] -> Result[a, x]
 
 `lib/string.fwp`
 
-Strings are immutable UTF-8. Lengths and positions count Unicode scalar
-values; case conversion is ASCII-only.
+Strings are immutable UTF-8 text. A Unicode scalar is one code point;
+a displayed character can contain several, such as a letter plus an accent.
 
-UTF-8 encodes Unicode text as bytes. A Unicode scalar value is one code
-point, which need not equal a whole displayed character: an accent can be a
-separate scalar. `string.length` counts scalars, `string.byte-length` counts
-bytes, and `lower`/`upper` change ASCII letters only. `"Hi" | lower` is `"hi"`.
-`concat "!"` appends the suffix to its piped input; strings remain immutable.
+- `string.length` counts scalars; `string.byte-length` counts encoded bytes.
+- `lower` and `upper` change ASCII letters only: `"Hi" | lower` gives `"hi"`.
+- `concat "!"` appends to the input: `"hi" | concat "!"` gives `"hi!"`.
+
+Positions use scalar indices unless the operation explicitly names bytes.
 
 ```fwp
 trim : String -> String
@@ -585,15 +590,17 @@ string.split-once : String -> String -> Option[(String, String)]
 
 `lib/collections.fwp`
 
-Arrays (immutable, indexed), ordered maps and sets, and byte strings.
-Updates return new collections. Keys use the structural order (`Ord`).
+Immutable indexed arrays, ordered maps/sets and raw byte strings.
 
-An array is an indexed sequence; a map associates each unique key with a
-value; a set contains unique values; Bytes is a sequence of raw bytes.
-Map/set keys use `Ord`, the trait defining their comparison order.
-`array.get 0` reads the first element as an Option. Updates return a new
-language value even when the runtime can safely reuse uniquely owned storage.
-`map` on lists is a transformation function; `map.get` is a map lookup.
+| Type | Stores | Example operation |
+|---|---|---|
+| `Array[T]` | Values by zero-based position | `array.get 0` returns the first as an Option. |
+| `Map[K, V]` | A value for each unique key | `map.get key` looks up that key. |
+| `Set[T]` | Distinct values | Keys use the comparison trait `Ord`. |
+| `Bytes` | Raw bytes | Separate from Unicode text. |
+
+Updates return new logical values; proved unique storage may be reused.
+`map f` transforms a list; `map.get` looks up a key/value map.
 
 ```fwp
 array.from-list : List[a] -> Array[a]
@@ -655,17 +662,13 @@ bytes.find : Bytes -> Bytes -> Option[I64]
 
 `lib/iter.fwp`
 
-Lazy, pull-based iterators, written in fwp. The tail of a non-empty
-iterator is a function that produces the rest on demand, so iterators
-can be infinite.
+An iterator supplies values on demand, so it can describe an infinite sequence.
+`Yield` holds a value and a function producing the rest; `Done` ends it.
 
-An iterator produces values as requested rather than constructing an entire
-list first. `Yield` contains a value and a function for the remaining values;
-`Done` ends the sequence. `iter.take` bounds an otherwise infinite sequence,
-and `iter.to-list` collects it. For example,
 `0 | iter.count-from | iter.take 3 | iter.to-list` gives `[0, 1, 2]`.
-Some producers compute a successor ahead of consumption, so a failing next
-step can still be observable; see the collections tutorial.
+`iter.take` limits consumption; `iter.to-list` collects the results.
+Some producers prepare a successor ahead of consumption, so a failure in that
+next step can still occur. See [lesson 5](tutorials/05-collections/README.md).
 
 ```fwp
 Iterator[T] =
@@ -712,13 +715,14 @@ iter.find : (a -> Bool ! e) -> Iterator[a] -> Option[a] ! e where Dup[a]
 
 `lib/io.fwp`
 
-Console, environment and time.
+Console streams, process settings and time.
 
-Standard input is the process input stream; standard output carries results;
-standard error carries diagnostics. `write` adds no newline, while `print`
-does. `eprint` and `ewrite` use standard error. `read-line` returns None at
-end of input. Environment variables are named process settings. A Duration
-stores an elapsed interval, distinct from a calendar date.
+- Standard input supplies data; `read-line` returns `None` at its end.
+- Standard output carries results: `print "hi"` writes `hi` and a newline;
+  `write` omits the newline.
+- Standard error carries diagnostics; `eprint`/`ewrite` write there.
+- Environment variables are named settings inherited by a process.
+- `Duration` stores an elapsed interval, such as `50ms`, not a calendar date.
 
 ```fwp
 write : String -> () ! {IO}
@@ -774,19 +778,15 @@ duration.from-millis : I64 -> Duration
 
 `lib/fs.fwp`
 
-Files, directories and paths. Paths are strings with `/` separators;
-the `path.*` functions only compute with them and touch no file.
-Failures are `IoError`s whose message names the path, as in
-`missing.txt: No such file or directory`. A zero byte cannot occur in an OS
-path: operations reject it with `path contains a NUL character` before any
-access; `file.exists` and `file.is-dir` return False. For example,
-`"notes.txt\0suffix"` never names or modifies `"notes.txt"`.
+Files, directories and paths. A path names a location; a directory holds entries.
 
-A path names a location; a directory contains named entries. Path helpers
-only manipulate strings, while file operations declare FileIO and can fail
-with Error[IoError]. File is an affine resource: it cannot be duplicated.
-Use the scoped helpers to keep it open for the intended operation and close
-it on exit. FileInfo describes byte size, modification time and directory status.
+- `path.*` functions manipulate strings with `/` separators without accessing files.
+- File operations declare `FileIO` and can raise `Error[IoError]`, naming the path.
+- `File` is an affine resource: it cannot be duplicated. Scoped helpers close it
+  on exit; `FileInfo` reports size, modification time and directory status.
+- OS paths cannot contain a zero byte. Operations reject one before access with
+  `path contains a NUL character`; `file.exists` and `file.is-dir` return `False`.
+  For example, `"notes.txt\0suffix"` cannot name or modify `"notes.txt"`.
 
 ```fwp
 FileInfo = { size: I64, modified: Duration, is-dir: Bool }
@@ -864,18 +864,15 @@ path.normalize : String -> String
 
 `lib/process.fwp`
 
-Running other programs. A command is a list: the program, found on the
-`PATH` like a shell does, and its arguments, passed as they are (there is
-no shell, so no quoting, globbing or redirection). Starting a program
-that does not exist is an `IoError` (`kind = "spawn"`).
+A process is a running external program. Commands are lists: executable, then
+arguments. `PATH` names the directories searched for that executable.
 
-A process is a running external program. PATH is the list of directories
-used to find an executable. A command list passes arguments directly, so `*`
-is a literal argument rather than a shell wildcard. Exit status 0 means
-success; output and error streams are separate strings in the result.
-Use a shell explicitly only when shell parsing is actually intended.
-A zero byte (`\0`) in any argument is rejected with kind `spawn` before
-starting the program; it cannot silently truncate an executable name or argument.
+- Arguments pass directly: `*` stays literal; no shell expansion or redirection runs.
+- Exit status `0` means success; output and error streams are separate strings.
+- A missing executable raises `IoError` with kind `"spawn"`.
+- A zero byte (`\0`) in any argument is rejected with kind `"spawn"` before starting.
+
+Use a shell explicitly when its parsing is intended.
 
 ```fwp
 # What a finished program wrote, and its exit status (128 plus the signal
@@ -904,16 +901,14 @@ process.output : List[String] -> String ! {Process, Error[IoError]}
 
 `lib/cli.fwp`
 
-Command-line programs. Exported functions become programs with flags,
-help and subcommands without any code (see docs/cli.md); these
-functions are for programs with a hand-written `main`, and for output to
-terminals.
+A command-line interface (CLI) accepts positional arguments and named flags.
+`cli.parse` checks argument text against an options-record type and explicit
+defaults; it does not automatically read environment variables.
 
-A command-line interface (CLI) receives positional arguments and named flags.
-An options record groups flags; `cli.parse` checks argument text against its
-type and defaults. It does not read environment variables automatically.
-A terminal may support colors, prompts and progress updates; redirected output
-may not be a terminal. See tutorial 16 for a complete generated command.
+These functions support a hand-written `main`, terminal output, colors, prompts
+and progress. Redirected output may not be a terminal.
+To generate flags, help and subcommands from exported functions, use the
+[CLI guide](cli.md) and [lesson 16](tutorials/16-clis/README.md).
 
 ```fwp
 # Parse command-line arguments as executables do: each field of the
@@ -1027,17 +1022,16 @@ table.widths : List[List[String]] -> List[I64]
 
 `lib/csv.fwp`
 
-CSV (RFC 4180): records of fields separated by commas (or another
-one-byte separator) and lines ending in `\n` or `\r\n`. A field in
-double quotes may contain separators, newlines and quotes written `""`.
-Reading is lenient: text after a closing quote is part of the field, a
-quote that is never closed runs to the end, and empty lines are skipped.
+CSV is a sequence of rows containing text fields, usually separated by commas.
+A header names columns. A tab separator gives TSV.
 
-CSV means comma-separated values: rows contain fields, with quoting for
-separators/newlines inside a field. A header row names columns. The plain parser
-returns rows of strings; typed reading converts fields according to a record
-type and reports conversion failures. A separator can be changed explicitly;
-a tab separator is commonly called TSV.
+- RFC 4180 quoting permits separators/newlines inside double-quoted fields;
+  `""` inside a quoted field means one quote.
+- Separators are explicitly selectable one-byte values; lines end in `\n` or `\r\n`.
+- Reading is lenient: text after a closing quote stays in the field, an unclosed
+  quote extends to the end, and empty lines are skipped.
+- Plain parsing returns strings. Typed reading converts fields to record types
+  and reports conversion failures.
 
 ```fwp
 # `"a,b\n1,2\n" | csv.parse` is `[["a", "b"], ["1", "2"]]`.
@@ -1079,22 +1073,19 @@ csv.format-row : String -> List[String] -> String
 
 `lib/task.fwp`
 
-Structured concurrency: tasks, channels, cancellation and deadlines.
+A task is a scheduled computation, not necessarily a parallel OS thread.
+Tasks form a tree: a parent finishes after its children; cancellation reaches
+its subtree. A channel is a bounded queue of values.
 
-Tasks form a tree: a task finishes only after its children finished, and
-cancelling a task cancels its subtree. Cancellation is observed when a
-task suspends (sleeping, waiting on a channel, another task or a socket)
-and unwinds it; `attempt` does not catch it. A deadline cancels its task
-when it passes. In the native runtime tasks are green threads on an
-event loop; the interpreter runs each task on a thread, one at a time. On
-WebAssembly they are fibers, which need JavaScript Promise Integration.
+- Sending to a full channel waits; closing preserves messages, then receive gives `None`.
+- Await waits for completion; a deadline requests cancellation after a time limit.
+- Cancellation unwinds at cooperation points such as waits and generated-code
+  scheduling checks. `attempt` does not catch it.
+- Native tasks use lightweight stacks on an event loop. Interpreter tasks use
+  host threads with one executing language code at a time.
+- WebAssembly suspension needs the supported JSPI or Asyncify host/build path.
 
-A task is a computation scheduled alongside others; it is not necessarily
-an operating-system thread running in parallel. A channel is a bounded queue
-of values. A full queue makes send wait, slowing the producer to the consumer.
-Closing preserves queued values until received; then recv returns None.
-Await waits for a task result, and a deadline requests cancellation after a
-time limit. Tutorial 6 explains task scopes and ordering.
+[Lesson 6](tutorials/06-tasks-and-channels/README.md) follows a producer and consumer.
 
 ```fwp
 Task[a] = builtin
@@ -1154,16 +1145,14 @@ spawn-with : (a -> b ! {Async, IO, Network, FileIO}) -> a -> Task[b] ! {Async}
 
 `lib/net.fwp`
 
-Networking: TCP, UDP and DNS. Socket operations suspend only the calling
-task. Addresses are "host:port" strings.
+TCP provides an ordered byte stream; UDP sends independent datagrams;
+DNS resolves names to addresses. A listener accepts connections.
 
-TCP is an ordered byte-stream connection, UDP sends independent datagrams,
-and DNS resolves hostnames to network addresses. A listener accepts incoming
-connections; a connection reads/writes bytes. A host:port address such as
-127.0.0.1:8080 selects this computer and a port. Suspending a task while IO
-waits lets other ready tasks run; it does not make IO instantaneous.
-A socket address containing a NUL byte fails with IoError instead of being
-silently shortened at that byte.
+- Addresses use `host:port`: `127.0.0.1:8080` selects this computer and port 8080.
+- Socket waiting suspends only the calling task, letting other ready tasks run.
+- A NUL byte in an address raises `IoError`; it never silently shortens the address.
+
+Connections read/write bytes. See [networking](concurrency.md).
 
 ```fwp
 Listener = builtin
@@ -1229,22 +1218,19 @@ signal.request-shutdown : () -> () ! {Async}
 
 `lib/tls.fwp`
 
-TLS: encrypted, authenticated connections, with the system's OpenSSL 3
-(see docs/tls.md). A TLS connection is a `Conn` like a TCP connection:
-`tcp.read`, `tcp.write`, `tcp.close` and the rest work on it, encrypting
-and decrypting, so code written for TCP connections (the HTTP server and
-client among it) works over TLS unchanged; the `tls.*` names below are
-the same functions. A connection's handshake happens when it is opened
-(`tls.connect`), or on its first read or write (`tls.accept`), in the
-task that uses it: a slow handshake holds up no other task. Failures are
-`IoError`s of kind "tls" (`certificate verify failed: hostname
-mismatch`, ...).
+Transport Layer Security (TLS) encrypts connections and verifies identities
+using system OpenSSL 3. A certificate names an identity/public key; its owner
+keeps the private key. Clients check the requested hostname and trusted
+certificate authorities (CAs). The handshake establishes protection; ALPN
+selects an application protocol.
 
-Transport Layer Security (TLS) encrypts a connection and verifies identities.
-A certificate contains an identity/public key; the server holds its private
-key. Clients trust certificate authorities (CAs) and verify the requested
-hostname. The handshake establishes the protected connection. ALPN chooses an
-application protocol during that handshake. Tutorial 18 creates test certificates.
+- A TLS connection is a `Conn`; TCP read/write/close operations work unchanged.
+- `tls.connect` handshakes on open; `tls.accept` on the first read/write.
+  Waiting affects that task, not other ready tasks.
+- Failures are `IoError` with kind `"tls"`, for example a hostname mismatch.
+
+[Lesson 18](tutorials/18-tls/README.md) creates test certificates;
+[the TLS guide](tls.md) gives configuration details.
 
 ```fwp
 # How a client connects. The server's certificate is verified unless
@@ -1337,39 +1323,25 @@ tls.listen : TlsServer -> String -> Listener ! {Network, Error[IoError]}
 
 `lib/http.fwp`
 
-HTTP/1.1 and HTTP/2 server and client.
+HTTP exchanges requests (method, path, headers, body) and responses
+(status, headers, body). A route chooses a handler; middleware adds behavior.
+A handler is a `Request -> Response` function, for example:
 
-A handler is an ordinary function `Request -> Response`, and middleware is
-ordinary composition:
+```fwp
+handler = timeout 2s | auth.bearer token | service | json.response
+```
 
-    handler = timeout 2s | auth.bearer token | service | json.response
+- Connections run in separate tasks with connection/request-size/count limits
+  and idle, header, body, write and request timeouts.
+- SIGINT/SIGTERM stops acceptance, permits a grace period, then cancels remaining work.
+- TLS configuration enables HTTPS; TLS connections use the same `Conn` interface.
+- HTTP/2 uses TLS protocol selection (`h2`) or cleartext preface/upgrade (`h2c`).
+  Each stream runs in a task with the same handlers, limits and timeouts.
+- The client pools one HTTP/2 connection per origin after TLS negotiation.
+- Responses can be compressed via config or middleware; encoded request bodies
+  and client responses are decompressed.
 
-The server runs every connection in its own task. It bounds the number of
-connections (accepting waits while all slots are taken), the size of
-request heads and bodies and the requests per connection; it applies idle,
-header, body, write and per-request timeouts; and on SIGINT/SIGTERM it
-stops accepting, lets in-flight requests finish within a grace period,
-then cancels the rest.
-
-With `tls` in its config the server speaks HTTPS, and the client speaks
-HTTPS to `https://` URLs (lib/tls.fwp): the same code runs over TLS
-connections, which are `Conn`s too.
-
-The server also speaks HTTP/2: over TLS when the client chooses "h2"
-with ALPN, and on cleartext connections that start with HTTP/2's
-connection preface (h2c with prior knowledge) or ask for it with
-`Upgrade: h2c`. Every stream runs in its
-own task, with the same handler, limits and timeouts. The client uses
-HTTP/2 when a TLS server chooses it, pooling one connection per origin.
-Responses can be compressed (`compress` in the config, or the
-`http.compress` middleware), request bodies with a content encoding
-are decompressed, and the client decompresses responses.
-
-HTTP sends a request (method, path, headers and body) and receives a response
-(status, headers and body). A handler computes that response; middleware wraps
-a handler to add behavior such as a deadline. A route selects a handler.
-JSON is a text format for structured bodies. Tutorial 8 builds a complete
-server before introducing generated REST interfaces.
+[Lesson 8](tutorials/08-http-server/README.md) builds a complete server.
 
 ```fwp
 Request = {
@@ -1566,30 +1538,19 @@ http.send-using : ClientOptions -> ClientRequest -> ClientResponse ! {Async, Net
 
 `lib/websocket.fwp`
 
-WebSocket (RFC 6455): servers upgrade HTTP/1.1 requests
-(`http.websocket`), and clients connect to `ws://` and `wss://` URLs
-(`ws.connect`).
+A WebSocket upgrades HTTP/1.1 to a two-way message connection (RFC 6455).
+`http.websocket` accepts it; `ws.connect` opens `ws://` or encrypted `wss://` URLs.
 
-A session is a pair of channels. Messages from the peer arrive on
-`incoming`, which ends with a `WsMessage.Close` (the peer's code and
-reason, or the code of the failure that ended the session) and is then
-closed; messages sent on `outgoing` go to the peer. Closing `outgoing`
-(`ws.close`), or sending a `WsMessage.Close`, starts the closing
-handshake, which the peer has `close-timeout` to finish. Pings are
-answered with pongs, fragmented messages are reassembled, a client masks
-its frames, and a message larger than `max-message-bytes` ends the
-session with the code 1009 (1002 for frames that break the protocol,
-1007 for text that is not UTF-8).
+- The session is a pair of channels: `incoming` receives messages, `outgoing` sends.
+- Incoming ends with `WsMessage.Close` (peer code/reason or failure), then closes.
+- Closing outgoing, or sending Close, starts a handshake bounded by `close-timeout`.
+- Frames carry message pieces/control signals. Pings get pongs, fragments are
+  reassembled and client frames are masked.
+- Oversized messages close with 1009; invalid frames with 1002; invalid UTF-8 with 1007.
+- Configured compression uses negotiated permessage-deflate (RFC 7692), with
+  independent messages and no context takeover in either direction.
 
-With `compress` in the config, messages are compressed when the peer
-agrees (`permessage-deflate`, RFC 7692, each message on its own: no
-context takeover either way).
-
-A WebSocket starts with an HTTP upgrade, then sends messages in both
-directions over one connection. ws:// is plain; wss:// uses TLS. Frames carry
-message pieces or control signals such as ping, pong and close. The incoming
-and outgoing channels below connect that network session to fwp tasks.
-Tutorial 19 demonstrates a complete exchange.
+[Lesson 19](tutorials/19-websockets-and-http2/README.md) demonstrates an exchange.
 
 ```fwp
 WsMessage =
@@ -1656,14 +1617,12 @@ ws.connect-with : WsConfig -> TlsOptions -> String -> WebSocket ! {Async, Networ
 
 `lib/json.fwp`
 
-JSON values. `null` is the explicit variant `Json.Null`, not a language
-null.
+JSON represents objects, arrays, strings, numbers, Booleans and null as text.
+`Json` is the untyped tree; a typed codec reads/writes a specific fwp type.
 
-JSON is a text representation of objects, arrays, strings, numbers, Booleans
-and null. Json is the untyped value tree; a typed codec instead reads/writes a
-specific fwp type. Encoding makes text/data; decoding validates it and returns
-a value or error. `Json.Null` is an explicit constructor, not a hidden missing
-value. See the REST guide for record/variant and special-number encodings.
+- Encoding produces text/data; decoding validates it and returns a value or error.
+- `Json.Null` is an explicit constructor, not a hidden absent language value.
+- [REST encodings](rest.md) define records, variants and special-number rules.
 
 ```fwp
 # Json.Num stores the original numeric text, not a rounded floating value.
@@ -1730,26 +1689,18 @@ json.strings : List[String] -> Json
 
 `lib/rest.fwp`
 
-REST endpoints from functions. `fwp build --rest` and `fwp serve --rest`
-serve exported functions exposed as `rest` as HTTP endpoints with a JSON
-contract and an OpenAPI document (see docs/rest.md); the program they
-generate is made of these functions, which hand-written servers can use
-too:
+A REST endpoint maps an HTTP method/path to a function. `--rest` builds or
+serves exported functions exposed as `rest`; generated servers use these helpers.
 
-    rest.main openapi-text [rest.endpoint route function, ...]
+- Path, query, header and body values supply arguments, decoded with `json.read`.
+- Invalid input produces 400 with its location, such as
+  `query.limit: expected an integer, got "x"`.
+- `json.write` encodes results. `None` gives 404; `Err` or raised `Error`
+  produces `{"error": ...}` with the route's status.
+- Schemas describe valid JSON; OpenAPI collects schemas and endpoint descriptions.
 
-A request's path parameters, query parameters and body become the
-function's arguments, decoded with `json.read` (a decoding error is a
-400 naming the parameter: `query.limit: expected an integer, got "x"`).
-The result is written with `json.write`; a `None` result is a 404, and
-an `Err` result or an `Error` the function raises is an error response
-`{"error": ...}` whose status comes from the route.
-
-A REST endpoint maps an HTTP method/path to a function. Request values may
-come from the path, query, headers or body. A schema describes valid JSON;
-OpenAPI collects these schemas with endpoint descriptions. Generated servers
-use the helpers below; most applications only need exported functions and
-exposure comments. Tutorial 17 shows that workflow.
+A hand-written server can assemble `rest.main openapi-text [rest.endpoint route function, ...]`.
+Most applications use exposure comments; see [lesson 17](tutorials/17-rest-and-openapi/README.md).
 
 ```fwp
 # Where an argument of an endpoint comes from: a path parameter, a query
@@ -2108,20 +2059,19 @@ rest.multipart-body : a -> Bytes where Encode[a]
 
 `lib/mcp.fwp`
 
-Model Context Protocol servers (docs/mcp.md): functions as the tools of
-a stateless MCP server, protocol version 2026-07-28. `fwp serve --mcp`
-and `fwp build --mcp` generate one from the exported functions exposed
-as `mcp`. Requests are independent: there is no session and no
-`initialize`; each request names its protocol version in `_meta`, and
-`server/discover` describes the server. The transport is standard input
-and output (one JSON-RPC message per line), or HTTP (`--listen
-host:port`: `POST /mcp`).
+Model Context Protocol (MCP) lets compatible clients discover and call tools
+with structured arguments. JSON-RPC carries a method, parameters and reply ID;
+schemas describe valid values. Annotations are hints, not permission to call.
 
-MCP lets a compatible client discover tools and call them with structured
-arguments. JSON-RPC messages carry a method, parameters and an ID for matching
-replies. Schemas describe valid values; annotations are hints, not permission
-to call. Clients must support this implementation's explicit protocol version.
-Tutorial 21 shows actual discovery, listing and call messages.
+- This implementation uses protocol version `2026-07-28` and independent requests.
+- There is no session or `initialize`; requests name the version in `_meta`.
+  `server/discover` describes the server.
+- Transport is one message per line on standard input/output, or `POST /mcp`
+  with `--listen host:port`.
+- `fwp serve --mcp` and `fwp build --mcp` expose selected exported functions.
+
+Clients must support this version and stateless behavior.
+[Lesson 21](tutorials/21-mcp/README.md) shows discovery, listing and calls.
 
 ```fwp
 # A tool: its name, and its call from the arguments of `tools/call` to
@@ -2200,21 +2150,16 @@ mcp.serve : McpServer -> () ! {Async, IO, Network, FileIO}
 
 `lib/grpc.fwp`
 
-gRPC: the calls between the modules of a program split into services
-(`--service`, docs/services.md).
-
-A split program needs no gRPC code: a call to an exported function of a
-served module is an ordinary call in the source, made remote by the
-build. This module is for what remains: statuses (`GrpcError`), and the
-metadata and deadlines of calls. Calls and servers run on the task
-scheduler: a call waits only in its own task, and a server runs calls
-concurrently.
-
 A remote procedure call (RPC) sends arguments to another process and returns
-its result. gRPC carries such calls over HTTP/2 with Protocol Buffers messages.
-Metadata is named information attached to a call; a deadline bounds its duration;
-a status describes success or failure. Remote calls add encoding, transport
-and possible connection failure even when source notation stays the same.
+its result. gRPC carries calls over HTTP/2 using Protocol Buffers messages.
+
+`--service` makes exported module calls remote without changing source call
+notation. This module supplies statuses (`GrpcError`), metadata (named call
+information) and deadlines (time limits).
+
+Calls wait in their own task; servers handle calls concurrently. Remote calls
+add encoding, transport and possible connection failure.
+See [services](services.md) and [lesson 14](tutorials/14-services/README.md).
 
 ```fwp
 # a failed call: a status code (`grpc.not-found`, ...) and a message. A
@@ -2298,13 +2243,12 @@ grpc.with-deadline : Duration -> (() -> a ! {Network | e}) -> a ! {Network | e}
 
 `lib/url.fwp`
 
-URLs, percent-encoding, query strings and form bodies.
+A URL selects a scheme, host, optional port, path and query.
+`https://example.test:8443/items?q=red` uses HTTPS, port 8443, path `/items`
+and query `q=red`.
 
-A URL has a scheme, hostname, optional port, path and query. For example,
-https://example.test:8443/items?q=red selects HTTPS, port 8443, path /items
-and query q=red. Percent-encoding writes reserved bytes as % followed by two
-hexadecimal digits. Form bodies use name/value pairs; encoding them is separate
-from making an HTTP request.
+Percent-encoding writes reserved bytes as `%` plus two hexadecimal digits.
+Form bodies hold name/value pairs. Encoding a URL or form does not send a request.
 
 ```fwp
 Url = { scheme: String, host: String, port: I64, path: String, query: String }
@@ -2331,12 +2275,12 @@ form.encode : List[(String, String)] -> String
 
 `lib/log.fwp`
 
-Structured logs (logfmt lines on stderr) and process metrics.
+Structured logs attach named fields to a message for filtering.
+The logfmt format writes `key=value` fields, one record per line, on standard
+error so normal output stays separate.
 
-A structured log attaches named fields to a message so a reader or program
-can filter it. logfmt writes key=value fields on a line; logs go to standard
-error to avoid corrupting normal output. Metrics report counters or resource
-measurements; a process memory measurement is not just the bytes in fwp values.
+Metrics report counts or resource measurements. Process memory includes more
+than stored fwp values; see [measurement terms](terminology.md#tests-and-measurements).
 
 ```fwp
 # `log.event level message fields`
@@ -2375,24 +2319,19 @@ metrics.render : () -> String ! {IO}
 
 `lib/numeric.fwp`
 
-Numerical computing: statically sized vectors and matrices, complex
-numbers and dense linear algebra.
+Vectors store sequences of numbers; matrices store rectangular grids;
+complex numbers have real and imaginary parts. Linear algebra combines them
+through dot products, multiplication and solving equations.
 
-`vector [1.0, 2.0]` has type Vector[F64, 2] and `matrix [[1, 2], [3, 4]]`
-has type Matrix[I64, 2, 2]: dimensions come from the literal and take
-part in type checking, so `a | matmul b` with mismatched inner
-dimensions is a compile error. A size known only when the program runs
-is abstract: `vector.from-list : List[t] -> Vector[t, _]` gives each
-call a size of its own, unknown but rigid, and `vector.same-size` checks
-at run time that two vectors agree. Performance: abstract sizes cost a
-length comparison and an `Option` at each such check.
+- `vector [1.0, 2.0]` has type `Vector[F64, 2]`.
+- `matrix [[1, 2], [3, 4]]` has type `Matrix[I64, 2, 2]`.
+- Dimensions participate in checking: mismatched multiplication is rejected.
+- `vector.from-list : List[t] -> Vector[t, _]` produces a size known only at
+  runtime, distinct for each call. `vector.same-size` checks agreement with a
+  length comparison and an `Option` result.
 
-A vector is an ordered set of numbers; a matrix is a rectangular grid.
-Dimensions are type arguments, so Vector[F64, 3] contains three F64 elements.
-A complex number has real and imaginary parts. Linear algebra combines these
-values through dot products, matrix multiplication and solving equations.
-Numeric traits state which operations a generic algorithm needs. Tutorial 12
-introduces these operations and explains their expected output.
+Traits state the arithmetic an algorithm requires.
+[Lesson 12](tutorials/12-numerics/README.md) works through the calculations.
 
 ```fwp
 Vector[T, N] = { data: Array[T] }
@@ -2570,18 +2509,19 @@ complex.abs : Complex[a] -> a where Ring[a], Floating[a], Dup[a]
 
 `lib/autodiff.fwp`
 
-Forward-mode automatic differentiation with dual numbers.
+Automatic differentiation applies derivative rules during evaluation.
+For `f(x) = x*x + 2` at `x = 3`, the value is `11` and the derivative is `6`.
 
-Write numeric code once, generically (for example with `where Field[a],
-Floating[a]`); evaluating it at `Dual` computes derivatives. Nesting
-duals (Dual[Dual[F64]]) gives second derivatives.
+| Mode | Intermediate information | Example |
+|---|---|---|
+| Forward: `Dual` | Value and derivative travel together | Squaring `(3, 1)` gives `(9, 6)`. |
+| Reverse: `Rev` | A tape records dependencies and local derivatives | Walk backward from the output to accumulate `6` at the input. |
 
-A derivative measures local output change; a gradient collects derivatives
-for all inputs of a scalar function. Forward mode carries a value and derivative
-in Dual. Reverse mode records dependencies in a tape and accumulates derivatives
-backward using Rev. Both perform extra work and floating-point rounding still
-applies. Nested differentiation computes derivatives of derivatives. See tutorials
-12 and 20, and docs/numerics.md for precision and lifetime limits.
+A gradient collects derivatives for all inputs of a scalar result. Nesting,
+such as `Dual[Dual[F64]]`, computes derivatives of derivatives. Generic numeric
+code states the required traits (`Field`, `Floating`, etc.). Both modes add work
+and retain floating-point rounding. See [the tape walkthrough](terminology.md#tape-and-backward-pass)
+and [precision/lifetime rules](numerics.md).
 
 ```fwp
 Dual[T] = { re: T, eps: T }
@@ -2664,25 +2604,20 @@ vjp-checkpointed : Checkpoint -> (List[Rev[t]] -> List[Rev[t]]) -> List[t] -> Li
 
 `lib/tensor.fwp`
 
-Lazy tensor expressions. `realize` evaluates supported elementwise operations
-together without full-length intermediate arrays. An arbitrary `tensor.map`
-function is evaluated first on the CPU and becomes an input. Graph passes
-rewrite expressions before evaluation.
+A tensor expression describes elementwise array arithmetic. A leaf supplies
+an input vector; a kernel executes combined operations. Building this description
+costs work/storage before elements are evaluated.
 
-Expressions implement the numeric traits (`Ring`, `Field`, `Floating`),
-so generic numeric code builds fused elementwise kernels. They run on a
-`Device`: `Cpu` or `CpuParallel n` (up to n workers). Elementwise results are the
-same on every CPU device and in both backends, bit for bit; reductions
-(`tensor.sum`) add blocks of 4096 elements from the left and then the
-block sums from the left, whatever the number of threads, so they are
-reproducible too. See docs/numerics.md.
+- `realize` combines supported operations without full-length intermediate arrays.
+  An arbitrary `tensor.map` function runs first on the CPU and becomes an input.
+- Numeric traits let generic code build these expressions; graph passes rewrite them.
+- `Cpu` uses one thread; `CpuParallel n` permits up to n workers (1–256).
+  Availability checks the setting, not whether worker startup will succeed.
+- CPU devices/backends preserve elementwise results. Sums add 4096-element blocks
+  from the left, then block sums from the left, independently of thread count.
 
-A tensor expression is a description of elementwise array arithmetic.
-A leaf supplies an input vector; a kernel executes the combined operations.
-Building the description costs work and storage, even before evaluating elements.
-Cpu uses one thread; CpuParallel accepts worker limits from 1 to 256.
-Availability checks that setting; worker startup can still fail.
-Tutorial 20 explains realization, reduction (combining elements) and gradients.
+[Lesson 20](tutorials/20-autodiff-and-devices/README.md) explains realization,
+reductions and gradients; [numerics](numerics.md) defines precision limits.
 
 ```fwp
 TensorExpr[N] =
@@ -2799,10 +2734,11 @@ tensor.grad : TensorExpr[n] -> List[Vector[F64, n]]
 
 `lib/ternary.fwp`
 
-Balanced ternary is base three with digits -1, 0 and +1, called trits.
-TInt[N] has N trits; 0t+-0 means 1*9 - 1*3 + 0 = 6. Arithmetic checks its
-fixed-width range. Packing five trits into a byte is an encoding operation,
-not a claim that the host processor has ternary arithmetic instructions.
+Balanced ternary uses base three with digits −1, 0 and +1, called trits.
+`TInt[N]` has N trits; `0t+-0` means `1×9 - 1×3 + 0 = 6`.
+
+Arithmetic checks the fixed-width range. Packing five trits per byte is an
+encoding, not a claim that the processor has ternary arithmetic instructions.
 
 ```fwp
 trit.from-sign : I64 -> Trit
@@ -2834,15 +2770,15 @@ packed.trits : PackedTrits[n] -> List[Trit]
 
 `lib/simd.fwp`
 
-SIMD means single instruction, multiple data: each lane holds a value and an
-operation acts lane by lane. Vec[N, T] has N lanes of type T, stored in an array
-inside a record. The current native implementation emits C loops; the C compiler
-may vectorize eligible loops for the target. The API does not guarantee vector
-instructions, stack-only storage or a speedup. Integer addition, subtraction,
-multiplication and sum wrap on overflow, unlike ordinary checked arithmetic.
-Division retains its arithmetic checks. Choose these numeric rules explicitly.
-simd.from-array checks the lane count; directly constructing the exposed record
-does not. Binary operations use the common input prefix for manual records.
+SIMD means single instruction, multiple data: an operation acts on each lane.
+`Vec[N, T]` stores N values of type T in an array inside a record.
+
+- Native code emits C loops; the C compiler may vectorize eligible loops.
+  Vector instructions, stack-only storage and speedups are not guaranteed.
+- Integer add/subtract/multiply/sum wrap on overflow, unlike ordinary checked
+  arithmetic. Division keeps its checks. Choose these rules explicitly.
+- `simd.from-array` checks the lane count; direct record construction does not.
+  Binary operations on manual records use their common input prefix.
 
 ```fwp
 Vec[N, T] = { lanes: Array[T] }
@@ -2866,21 +2802,21 @@ simd.mul-add : Vec[n, t] -> Vec[n, t] -> Vec[n, t] -> Vec[n, t] where Numeric[t]
 
 `lib/ffi.fwp`
 
-C interop: raw pointers and memory for `foreign "C"` functions.
+Foreign-function interoperation (FFI) calls C from fwp:
 
-    foreign "C" strlen : String -> USize
-    repr(C) DivResult = { quot: I32, rem: I32 }
-    foreign "C" div : I32 -> I32 -> DivResult
+```fwp
+foreign "C" strlen : String -> USize
+repr(C) DivResult = { quot: I32, rem: I32 }
+foreign "C" div : I32 -> I32 -> DivResult
+```
 
-Pointers are only dereferenced under the `Unsafe` effect. `Option[Ptr[T]]`
-is a nullable pointer (`None` is NULL); fwp itself has no null.
+- `Ptr[T]` is an address of elements of type `T`; `Option[Ptr[T]]` can be NULL.
+- `mem.alloc` takes bytes; `ptr.at` steps by elements; release raw allocations
+  with `mem.free`.
+- `Unsafe` marks the obligation to use valid addresses; it does not prove them valid.
+- `repr(C)` requests C record layout. A callback is a function C may call.
 
-Foreign-function interoperation (FFI) calls C code from fwp. A pointer is an
-address, and Ptr[T] says what element type it addresses. mem.alloc takes bytes;
-ptr.at steps by elements. The programmer must ensure valid addresses and free
-raw allocations with mem.free. Unsafe records this obligation, not a proof.
-repr(C) requests C record layout; a callback is a function passed for C to call.
-Tutorial 9 follows a buffer from allocation through sorting to release.
+[Lesson 9](tutorials/09-c-interop/README.md) traces allocation, sorting and release.
 
 ```fwp
 Ptr[T] = builtin

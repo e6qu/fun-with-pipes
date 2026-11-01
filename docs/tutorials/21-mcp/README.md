@@ -33,6 +33,20 @@ then maps over zero-based person indices. The local values `base` and `extra`
 are computed once. For nonnegative cents, the first `extra` people receive one
 extra cent, selected by `index < extra`. Their shares sum to the original amount. The code is a small example, not a full payment system.
 
+### Follow the integer-cent split
+
+For `100` cents and `3` people:
+
+| Local calculation | Value |
+|---|---|
+| Integer quotient `base` | `33` |
+| Remainder `extra` | `1` |
+| Indices | `0`, `1`, `2` |
+| Add one where `index < extra` | `[34, 33, 33]` |
+
+The shares sum to `100`. Integer cents avoid a floating-point rounding decision
+in this example; the input validation and supported range still apply.
+
 ## Functions are tools
 
 [`converter.fwp`](converter.fwp) converts temperatures and splits bills:

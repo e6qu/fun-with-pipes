@@ -1,15 +1,16 @@
 # Where derivative allocations occur
 
-Historical measurements at the revisions named below. Counts and timings are
-observations of those programs, not current compiler budgets. Commands refer
-to the recorded measurement revision. Read [measurement terms](../benchmarks.md)
-for timing and memory boundaries; [the plan](../../PLAN.md) owns remaining work.
+Historical results; reproduce with the recorded revisions, not current main.
+[Measurement terms](../benchmarks.md) explain the costs;
+[PLAN.md](../../PLAN.md) tracks current work.
 
 An allocation-site profile records the native instruction that requested each
 piece of managed storage. This explains what creates temporary objects; it does
 not measure how long that instruction takes. This baseline predates direct
 numeric mapped-array construction; its counts identify the costs that motivated
-that later optimization. The
+that later optimization.
+
+The
 [four-host report](ad-allocation-sites-2026-10-16.json) compares
 ordinary aggregate profiling against a diagnostic build with two allocation
 functions deliberately kept out of line. Requests, requested bytes, retains and
