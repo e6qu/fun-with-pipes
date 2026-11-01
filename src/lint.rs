@@ -169,7 +169,14 @@ pub fn lint_module(m: &Module) -> Vec<Warning> {
             continue;
         }
         for body in d.bodies() {
-            body.walk(&mut |e| match &e.kind {
+            body.walk_scoped(&mut Vec::new(), &mut |e, scope| {
+                let mut visible = bound.clone();
+                let local_names: Vec<String> = scope.iter().flat_map(|p| {
+                    let mut names = Vec::new(); p.bindings(&mut names); names.into_iter().map(|(_, name)| name)
+                }).collect();
+                for name in &local_names { visible.insert(name.as_str(), e.span); }
+                let bound = &visible;
+                match &e.kind {
                 ExprKind::Pipe(a, b) => {
                     if is_var(b, "id") && !bound.contains_key("id") {
                         warn(
@@ -182,7 +189,7 @@ pub fn lint_module(m: &Module) -> Vec<Warning> {
                     let prev = last_stage(a);
                     if let Some(p) = app1(prev, "filter").filter(|_| !bound.contains_key("filter")) {
                         let p = as_argument(crate::pretty::expr(p));
-                        if is_var(b, "length") && !bound.contains_key("count") {
+                        if is_var(b, "length") && !bound.contains_key("length") && !bound.contains_key("count") {
                             warn(
                                 &mut out,
                                 "filter-count",
@@ -190,7 +197,7 @@ pub fn lint_module(m: &Module) -> Vec<Warning> {
                                 format!("this builds a list to count it; use `count {}`", p),
                             );
                         }
-                        if is_var(b, "head") && !bound.contains_key("find") {
+                        if is_var(b, "head") && !bound.contains_key("head") && !bound.contains_key("find") {
                             warn(
                                 &mut out,
                                 "filter-find",
@@ -229,7 +236,7 @@ pub fn lint_module(m: &Module) -> Vec<Warning> {
                     }
                 }
                 ExprKind::App(f, args)
-                    if is_var(f, "if") && args.len() == 3 && !bound.contains_key("if") =>
+                    if is_var(f, "if") && args.len() == 3 && !bound.contains_key("if") && !bound.contains_key("const") && !bound.contains_key("not") =>
                 {
                     let shown = crate::pretty::expr(&args[0]);
                     let p = paren_free(&shown);
@@ -260,7 +267,7 @@ pub fn lint_module(m: &Module) -> Vec<Warning> {
                     );
                 }
                 _ => {}
-            });
+            }});
         }
     }
 
@@ -341,7 +348,14 @@ fn used_elsewhere(m: &Module, name: &str) -> bool {
         }
         d.bodies().iter().any(|body| {
             let mut found = false;
-            body.walk(&mut |e| found |= is_var(e, name));
+            body.walk_scoped(&mut Vec::new(), &mut |e, scope| {
+                let shadowed = scope.iter().any(|p| {
+                    let mut names = Vec::new();
+                    p.bindings(&mut names);
+                    names.iter().any(|(_, n)| n == name)
+                });
+                found |= !shadowed && is_var(e, name);
+            });
             found
         })
     })

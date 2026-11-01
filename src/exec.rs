@@ -17,6 +17,7 @@
 //! * Input in the binary protocol is detected by its magic bytes; output is
 //!   binary when `FWP_OUT=bin`. Text records are lines.
 
+use std::borrow::Cow;
 use std::io::{BufRead, Write};
 use std::process::{Command, Stdio};
 
@@ -320,8 +321,14 @@ pub fn exec_program(prog: &Program, name: &str, argv: &[String]) -> i32 {
 /// Run a command with its command line. Returns the exit code.
 pub fn exec_command(prog: &Program, cmd: &cli::Command, argv: &[String]) -> i32 {
     let name = cmd.name.as_str();
-    let fid = cmd.fid;
     let n = cmd.params.len();
+    let mut program = Cow::Borrowed(prog);
+    let fid = if prog.funcs[cmd.fid].arity as usize == n {
+        cmd.fid
+    } else {
+        crate::ir::saturated_entry(program.to_mut(), cmd.fid, n as u32)
+    };
+    let prog = program.as_ref();
     let params = &cmd.params;
     // flags, unless a record parameter is given as before (on stdin or as
     // a record argument)

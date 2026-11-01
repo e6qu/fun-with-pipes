@@ -45,6 +45,76 @@ functions and tuple positions start at zero. Fixed-precedence infix arithmetic
 and prefix calls coexist. See [parser rules](compiler-pipeline.md) and the
 [reference](reference.md) for layout, patterns and exact precedence.
 
+Local `let` values are strict and monomorphic. Pattern bindings have identities
+separate from their spelling, so shadowing does not confuse captures or uses.
+`fn` and named `match` arms lower to functions with explicit capture parameters.
+The initializer stays at its original position; optimization must prove any
+removal or movement, even when the local name is unused. Local aliases do not
+change resource duplication or lifetime rules. See the [local binding contract](reference.md#local-bindings-and-named-functions).
+
+A known curried callback can return another known partial function. Higher-order
+specialization exposes both argument stages to the ordinary simplifier; it keeps
+the original resource frames and computation order. Direct entries that already
+accept the required arguments need no additional specialization. A single-use
+local generated array can rejoin its immediate map/fold chain before fusion,
+provided every argument crossed has no effects or traps. The normal fusion proof
+still decides whether interleaving element work is valid. The eight
+[named/tacit cost pairs](functional-costs.md#local-names-candidate-coverage) pass
+on Linux ARM64/AMD64 and macOS ARM64; this is focused evidence, not final delivery.
+
+A call stage is the group of inputs one internal function accepts before it
+executes. A function constructor executes a stage and returns another function.
+The compiler may group consecutive `fn` inputs only while no computation or
+observable owner release lies between them. A `let` calculation
+ends that group. A top-level `let` is a cached value entry, even when it returns
+a function; a `match` entry takes one input before evaluating its selected arm.
+Applications subtract supplied inputs from the constructor's current stage,
+following checked aliases and the selected trait implementation. Runtime primitives
+use their declared stage: substituting a function for a generic result does not
+add inputs to that stage. For example:
+
+```fwp
+offset : I64 -> I64 -> I64
+offset = fn x -> let y = 10 / x in fn z -> y + z
+```
+
+`offset 2` computes `y = 5` and returns a function that adds five. `offset 0`
+must fail before a later input is evaluated. The returned function's type
+cannot justify delaying that division. A composed
+pipe likewise takes its input before evaluating any returned function's next input.
+The optimizer may combine constructor stages only after proving that construction
+merely captures values: no executed calls, possible traps, observable owners or
+resource frames. It preserves typed local bindings and changes known callers
+together; the source type alone supplies no such proof. This bounded check runs
+before constructors are inlined into their consumers.
+This includes a cached function value whose captures are already constants.
+`simd.splat` repeats one number across a vector's lanes. Small literal F64 splats
+can become constant vectors within the existing inlining-size budget; their
+signed-zero and NaN bits are copied unchanged.
+Other computed captures retain their original evaluation point.
+Unknown applications remain successive calls; combining them
+could run a later argument before a first-stage failure. REPL results use cached
+value entries even when their type is a function, so their construction runs once
+and later redefinitions cannot replace their saved code or captures.
+The IR marks these cached entries explicitly; constructor-stage optimization
+must leave them at zero arguments. Session linking remaps that marker with the
+function IDs, and the IR validator checks the entry contract.
+
+CLI, REST, MCP, gRPC and C library argument lists come from the complete public
+function type, not an internal entry's current stage. CLI, gRPC and C libraries
+lower a complete invocation to an entry that follows those stages; the ordinary
+lifetime proof checks it.
+An entry that already accepts all those arguments needs no adapter. REST and MCP
+generate the corresponding source application as before.
+
+The lifetime proof distinguishes calls that construct function values by their
+outer construction site. Nested constructors retain that one source position;
+the proof does not accumulate a call stack. Returned partial functions keep the
+same identity when supplied more inputs. This prevents two `iter.each` values
+from mixing a State callback with an unrelated unscoped callback. Handler
+requirements still apply where the callback is invoked: removing `run-state`
+must reject the State call. Scaling and startup budgets cover this analysis.
+
 ## Eager computations in partial applications
 
 `add (calculate ())` evaluates `calculate ()` when the partial function is made.
@@ -64,7 +134,9 @@ nothing.
 ## Types and effects
 
 Type inference solves constraints from uses, so ordinary expressions need few
-annotations. A **row** describes fields or effects, possibly with an unknown
+annotations. An explicit signature supplies named input types before their bodies
+are checked. This keeps a pure callback parameter separate from IO performed
+while its caller evaluates an argument. A **row** describes fields or effects, possibly with an unknown
 remainder. This lets `.name` work with different records that contain `name`.
 Named records remain distinct types. Tuples are records with numeric labels;
 unit `()` is the empty record.

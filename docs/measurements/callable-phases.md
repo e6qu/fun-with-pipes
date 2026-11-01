@@ -86,7 +86,15 @@ PR #234 was user-merged as `219e3a0130c18d60750fd55ec9c0a684c1dcefd4` before its
 full production matrix. Main run `41218527464` now passes all nine production
 jobs; docs `41218527417` also passes for that merged source. Completed logs are
 reviewed. This verifies production behavior, not the failed timing limits below.
-PR #235 adds these measurements and requires its own final-head validation.
+PR #235 retained these measurements and passed its final production gates; see
+[delivery history](../roadmap-history.md).
+
+The current native measurement adapter reads each constructor's lowered stage.
+A two-input entry is partially applied; a one-input constructor is called to
+obtain its returned function. The direct control supplies both inputs through
+those same stages and consumes any intermediate owner. A function type with two
+arrows does not promise a two-argument C entry. Historical records below retain
+their original source and calling convention; they are not timings of this change.
 
 ## First results: invocation improves, construction still needs work
 

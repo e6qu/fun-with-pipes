@@ -49,10 +49,10 @@ remove a JavaScript host's collector.
 - Preserve the independent [ownership diagnostics](ownership-diagnostics.md)
   and binary checks for absent collector code as storage representations change.
 - Enforce the compiler analysis budgets in G2 as proof precision changes.
-- Complete A6's full platform validation and preserve its
-  [measured costs and limits](measurements/parser-workspace.md). A1–A5 remove their selected count
-  traffic and boxes, including a count-free local buffer. A program with zero
-  retains may still allocate or check a count during destruction.
+- Extend the selected A1–A6 reductions through the local call, field, loop and
+  collection cases in the current plan. A6's scoped parser storage is already
+  verified; preserve its [measured limits](measurements/parser-workspace.md).
+  Zero retains alone does not mean zero allocations or count checks on release.
 
 [PLAN.md](../PLAN.md) defines the fixtures and completion evidence.
 
@@ -265,9 +265,9 @@ instances and copy output strings to callbacks. Asynchronous task support depend
 on the declared host capabilities; emulation or a Node loader check does not prove
 native platform or browser-engine coverage.
 
-Tracing libraries and WebAssembly cannot discover arbitrary host roots. Their
-historical unproved-graph retention is not a solution for the future GC-free
-contract. Checked ARC rejects unsupported ownership instead.
+Host references must follow the explicit ownership contract. Checked ARC rejects
+unsupported relationships; it does not retain an unproved graph forever to avoid
+reclaiming a host-visible value.
 
 ### C library results and foreign calls
 

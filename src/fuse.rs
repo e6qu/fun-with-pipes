@@ -200,6 +200,15 @@ fn prim(sym: &str, ty: &MT, args: &[Expr]) -> Traps {
             Num::Int(_) => none(),
             Num::Float => None,
         },
+        // Conversion keeps its actual rounding/NaN operation. It has no
+        // language trap, so it may run directly on an array element instead
+        // of first copying that element into an intermediate numeric list.
+        "float.convert"
+            if matches!(num(params.first()?), Some(Num::Float))
+                && matches!(num(result), Some(Num::Float)) =>
+        {
+            none()
+        }
         // F64 lane arithmetic/sum is total. Binary operations use the actual
         // common prefix, so their new array is no larger than either valid
         // input array, even for manually constructed records.
@@ -417,6 +426,20 @@ impl Fuser<'_> {
     }
 
     fn expr(&mut self, e: Expr) -> Expr {
+        // Reconnect a named producer before recursively fusing its consumer.
+        // Otherwise map/fold becomes a loop over the still-materialized local
+        // and the original producer is no longer visible to that proof.
+        if let Expr::Let(local, value, body) = &e {
+            if matches!(&**value, Expr::Call(id, args)
+                if matches!(prim_sym(self.funcs, *id), Some("array.generate" | "range")) && args.len() == 2)
+                && crate::opt::uses(body, *local) == 1
+            {
+                let mut joined = (**body).clone();
+                if self.join_collection_input(first_evaluated(&mut joined), *local, value) {
+                    return self.expr(joined);
+                }
+            }
+        }
         let e = match e {
             Expr::ResourceRegion {
                 parameters,
@@ -502,6 +525,41 @@ impl Fuser<'_> {
                 }
             }
             _ => e,
+        }
+    }
+
+    /// Move the sole producer use through an immediate collection chain. Every
+    /// preceding argument must be total; arbitrary calls and resource frames
+    /// stop the search. Fusion still proves callback/trap order independently.
+    fn join_collection_input(&mut self, e: &mut Expr, local: Local, value: &Expr) -> bool {
+        let Expr::Call(id, args) = e else {
+            return false;
+        };
+        if !matches!(
+            prim_sym(self.funcs, *id),
+            Some(
+                "array.map"
+                    | "array.fold"
+                    | "array.length"
+                    | "map"
+                    | "filter"
+                    | "fold"
+                    | "length"
+                    | "find"
+            )
+        ) || args.is_empty()
+            || args[..args.len() - 1]
+                .iter()
+                .any(|arg| self.beh.expr(arg) != none())
+        {
+            return false;
+        }
+        let input = args.last_mut().unwrap();
+        if matches!(input, Expr::Local(id) if *id == local) {
+            *input = value.clone();
+            true
+        } else {
+            self.join_collection_input(input, local, value)
         }
     }
 
@@ -666,6 +724,20 @@ impl Fuser<'_> {
             return None;
         }
         let splat = |expression: &Expr| {
+            if let Expr::Const(Value::Record(fields)) = expression {
+                if let [Value::Array(lanes)] = fields.as_ref() {
+                    let scalar = match lanes.first() {
+                        Some(Value::F64(value)) => *value,
+                        None => 0.0,
+                        _ => return None,
+                    };
+                    if lanes.iter().all(|lane| {
+                        matches!(lane, Value::F64(value) if value.to_bits() == scalar.to_bits())
+                    }) {
+                        return Some((lanes.len() as u64, Expr::Const(Value::F64(scalar))));
+                    }
+                }
+            }
             let Expr::Call(id, args) = expression else {
                 return None;
             };
@@ -1431,9 +1503,9 @@ impl Fuser<'_> {
         self.fuse_chain(kind, args, cparams, result_ty, false)
     }
 
-    /// A chain of at least two `map` and `filter` stages whose list is
-    /// used as such: one pass that conses the elements in reverse, then a
-    /// `reverse`, instead of a list per stage.
+    /// Materialize map/filter stages in one traversal. Two list stages, or
+    /// one stage over array.to-list, avoid an intermediate list. Build the
+    /// result in reverse and reverse it once, retaining the original order.
     fn materialize(&mut self, chain: &Expr) -> Option<Expr> {
         let mut n = 0;
         let mut cur = chain;
@@ -1446,7 +1518,10 @@ impl Fuser<'_> {
                 _ => break,
             }
         }
-        if n < 2 {
+        let array_input = matches!(cur, Expr::Call(id, args)
+            if prim_sym(self.funcs, *id) == Some("array.to-list") && args.len() == 1)
+            && std::env::var("FWP_ARRAY_FUSION").map_or(true, |v| v != "0");
+        if n < 2 && !(n == 1 && array_input) {
             return None;
         }
         let Expr::Call(top, _) = chain else {
@@ -1557,13 +1632,19 @@ impl Fuser<'_> {
             if crate::opt::uses(body, *local) == 1 {
                 let mut body = (**body).clone();
                 if let Expr::Call(id, args) = first_evaluated(&mut body) {
-                    if prim_sym(self.funcs, *id) == Some("map")
+                    if matches!(prim_sym(self.funcs, *id), Some("map" | "filter"))
                         && args.len() == 2
                         && matches!(&args[1], Expr::Local(l) if l == local)
                         && self.beh.expr(&args[0]) == none()
                     {
                         let inputs = vec![args[0].clone(), (**value).clone()];
-                        if let Some(fused) = self.map_zip(*id, &inputs) {
+                        if prim_sym(self.funcs, *id) == Some("map") {
+                            if let Some(fused) = self.map_zip(*id, &inputs) {
+                                *first_evaluated(&mut body) = fused;
+                                return self.lists(body);
+                            }
+                        }
+                        if let Some(fused) = self.materialize(&Expr::Call(*id, inputs)) {
                             *first_evaluated(&mut body) = fused;
                             return self.lists(body);
                         }
@@ -1685,6 +1766,14 @@ impl Fuser<'_> {
             }
             e if array && !stages.is_empty() => Producer::Array(e.clone()),
             _ if array => return None,
+            Expr::Call(id, a)
+                if !stages.is_empty()
+                    && a.len() == 1
+                    && prim_sym(funcs, *id) == Some("array.to-list")
+                    && std::env::var("FWP_ARRAY_FUSION").map_or(true, |v| v != "0") =>
+            {
+                Producer::Array(a[0].clone())
+            }
             Expr::Call(id, a) if a.len() == 2 && prim_sym(funcs, *id) == Some("range") => {
                 let t = funcs[*id].ty.params(2).0[0].clone();
                 match num(&t) {
@@ -1758,19 +1847,26 @@ impl Fuser<'_> {
                     let (id, caps) = fns.last()?;
                     let (ps, _) = funcs[*id].ty.params(caps.len() + 1);
                     MT::Con(
-                        if array { "std::Array" } else { "std::List" }.into(),
+                        if array || array_source {
+                            "std::Array"
+                        } else {
+                            "std::List"
+                        }
+                        .into(),
                         vec![(*ps.last()?).clone()],
                     )
                 }
             },
         };
-        if array {
+        if array || array_source {
             if !elem(&prod_ty).is_some_and(|t| unboxed_numeric(&t)) {
                 return None;
             }
-            for (id, captures) in &fns {
+            for ((id, captures), stage) in fns.iter().zip(&stages) {
                 let (params, result) = funcs[*id].ty.params(captures.len() + 1);
-                if !unboxed_numeric(params.last()?) || !unboxed_numeric(result) {
+                if !unboxed_numeric(params.last()?)
+                    || (matches!(stage, Stage::Map(_)) && !unboxed_numeric(result))
+                {
                     return None;
                 }
             }
@@ -1778,6 +1874,19 @@ impl Fuser<'_> {
                 return None;
             }
         }
+        // Independent, total numeric callbacks may visit elements backward
+        // while consing the final list in source order. This avoids building
+        // and then copying a reversed result. Effects, traps, possible
+        // nontermination and owned captures keep forward traversal instead.
+        let backward_list = kind == "list"
+            && array_source
+            && traps.is_empty()
+            && fns.iter().all(|(id, captures)| {
+                let (params, _) = funcs[*id].ty.params(captures.len() + 1);
+                params[..captures.len()]
+                    .iter()
+                    .all(|ty| unboxed_numeric(ty))
+            });
         // the accumulator: a fold's, a count, the list so far in reverse,
         // or nothing (`find`)
         let (z, acc_ty) = match kind {
@@ -1814,10 +1923,28 @@ impl Fuser<'_> {
                 (Expr::Const(Value::I64(0)), Some(bind(self, &count, &index)))
             }
             Producer::List(e) => (bind(self, e, &prod_ty), None),
-            Producer::Array(e) => (
-                Expr::Record(vec![Expr::Const(Value::I64(0)), bind(self, e, &prod_ty)]),
-                None,
-            ),
+            Producer::Array(e) => {
+                let input = bind(self, e, &prod_ty);
+                let position = if backward_list {
+                    let index = MT::con("std::I64");
+                    let length = self.prim(
+                        "array.length",
+                        MT::Fun(Box::new(prod_ty.clone()), Box::new(index.clone())),
+                        1,
+                    );
+                    let add = self.prim("wrapping.add", fun2(&index, &index, &index), 2);
+                    Expr::Call(
+                        add,
+                        vec![
+                            Expr::Const(Value::I64(-1)),
+                            Expr::Call(length, vec![input.clone()]),
+                        ],
+                    )
+                } else {
+                    Expr::Const(Value::I64(0))
+                };
+                (Expr::Record(vec![position, input]), None)
+            }
         };
 
         // the state: position, accumulator, then the outer locals the step
@@ -1986,14 +2113,20 @@ impl Fuser<'_> {
                 let element = elem(&prod_ty)?;
                 let option = MT::Con("std::Option".into(), vec![element]);
                 let get = self.prim("array.get", fun2(&index_ty, &prod_ty, &option), 2);
-                // The index starts at zero and advances only after a successful
-                // array.get. Array lengths reserve the header's high bit for
-                // views, so position < length <= I64::MAX here. Adding one
-                // cannot overflow; user callback arithmetic remains checked.
+                // A successful read proves 0 <= position < length <= I64::MAX.
+                // Forward traversal increments to length; backward traversal
+                // decrements to -1. Neither can overflow. The next read returns
+                // None at either boundary; callback arithmetic stays checked.
                 let add = self.prim("wrapping.add", fun2(&index_ty, &index_ty, &index_ty), 2);
                 let position = st(0);
                 let input = st(1);
-                let next = Expr::Call(add, vec![Expr::Const(Value::I64(1)), position.clone()]);
+                let next = Expr::Call(
+                    add,
+                    vec![
+                        Expr::Const(Value::I64(if backward_list { -1 } else { 1 })),
+                        position.clone(),
+                    ],
+                );
                 Expr::Match(
                     Box::new(Expr::Call(get, vec![position, input])),
                     vec![
@@ -2095,7 +2228,7 @@ impl Fuser<'_> {
         };
         init.extend(outer.into_iter().map(Expr::Local));
         let mut out = Expr::Call(loop_id, vec![Expr::Func(step), Expr::Record(init)]);
-        if kind == "list" {
+        if kind == "list" && !backward_list {
             let ty = MT::Fun(Box::new(result_ty.clone()), Box::new(result_ty.clone()));
             let rev = self.prim("reverse", ty, 1);
             out = Expr::Call(rev, vec![out]);

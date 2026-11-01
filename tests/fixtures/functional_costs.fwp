@@ -86,4 +86,101 @@ main = [
     32 | both each-count (unknown-each (accumulate ())) | echo,
     32 | both folded (unknown-fold (addition ())) | echo,
     32 | both state-loop (unknown-state (state-callback ())) | echo,
+    32 | both pipe named-pipe | echo,
+    32 | both partial named-partial | echo,
+    32 | both borrowed named-borrowed | echo,
+    32 | both captured named-captured | echo,
+    32 | both result named-result | echo,
+    32 | both each-count named-each-count | echo,
+    32 | both folded named-folded | echo,
+    32 | both state-loop named-state-loop | echo,
+    32 | local-tuple | echo,
+    32 | local-record | echo,
+    32 | local-text-record | echo,
+    32 | local-variant | echo,
+    32 | local-alias | echo,
+    32 | local-owner-loop | echo,
+    32 | local-loop-alias | echo,
+    32 | local-map-filter | echo,
 ] | ignore
+
+# The same work with lexical values: names must not introduce runtime costs.
+export named-pipe : I64 -> I64
+named-pipe = fn n -> let incremented = n + 1 in incremented * 2
+export named-partial : I64 -> I64
+named-partial = fn n -> let add-n = add n in add-n n
+export named-borrowed : I64 -> I64
+named-borrowed = fn n ->
+    let values = array.generate n (fn i -> i)
+    in values | array.map (fn x -> x + 1) | array.fold add 0
+export named-captured : I64 -> I64
+named-captured = fn n -> let calculate = fn x -> (x + n) * 2 in calculate 3
+export named-result : I64 -> I64
+named-result = fn n -> let result = produce n in consume result
+export named-each-count : I64 -> I64
+named-each-count = fn n ->
+    let values = range 0 n
+    in values | run-state 0 (each (fn value -> modify (add value))) | .1
+export named-folded : I64 -> I64
+named-folded = fn n ->
+    let values = range 0 n
+    in values | fold (fn total -> fn value -> total + value) 0
+export named-state-loop : I64 -> I64
+named-state-loop = fn n ->
+    let step = match
+        0 -> Stop ()
+        remaining -> let _ = modify (add remaining) in Again (remaining - 1)
+    in n | run-state 0 (loop step) | .1
+
+# Selected ownership/representation paths. The String itself is a required
+# allocation; local records, tuples and immediate variants need no heap box.
+export local-tuple : I64 -> I64
+local-tuple = fn n -> let (left, right) = (n, n + 1) in left + right
+export local-record : I64 -> I64
+local-record = fn n ->
+    let { left, right } = Pair { left = n, right = n + 1 } in left + right
+TextRecord = { text: String, number: I64 }
+export local-text-record : I64 -> I64
+local-text-record = fn n ->
+    let record = TextRecord { text = show n, number = n }
+    in let { text, number } = record
+    in string.length text + number
+export local-variant : I64 -> I64
+local-variant = fn n ->
+    let result = produce n
+    in result | match
+        Some { left, right } -> left + right
+        None -> 0
+read-text : String -> I64
+read-text = string.length
+export local-alias : I64 -> I64
+local-alias = fn n ->
+    let text = show n in let alias = text in read-text alias + read-text text
+TextWalk = { remaining: I64, text: String, total: I64 }
+text-step : TextWalk -> Step[TextWalk, I64]
+text-step = fn { remaining, text, total } ->
+    remaining | match
+        0 -> Stop total
+        next -> Again TextWalk {
+            remaining = next - 1,
+            text,
+            total = total + string.length text,
+        }
+export local-owner-loop : I64 -> I64
+local-owner-loop = fn n ->
+    TextWalk { remaining = n, text = show n, total = 0 } | loop text-step
+export local-loop-alias : I64 -> I64
+local-loop-alias = fn n ->
+    let text = show n
+    in let total = TextWalk { remaining = n, text, total = 0 } | loop text-step
+    in total + string.length text
+
+# Named stages retain eager semantics while their temporary range is removable.
+export local-map-filter : I64 -> I64
+local-map-filter = fn n ->
+    let values = range 0 n
+    in
+        values
+        | map (fn value -> value + 1)
+        | filter (fn value -> value % 2 == 0)
+        | fold add 0

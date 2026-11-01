@@ -1079,6 +1079,33 @@ impl Pass<'_> {
                 }
             }
         }
+        // A plain owned argument need not acquire a second owner while later
+        // arguments merely read it. Keep the original until those computations
+        // finish, then transfer it at the operation. seq_typed binds the later
+        // computations before that transfer, including their failure cleanup.
+        let mut delayed_moves = BTreeSet::new();
+        for (i, (part, mode)) in parts.iter().zip(modes).enumerate() {
+            let Expr::Local(local) = part else { continue };
+            if matches!(mode, Mode::Consume)
+                && owned.contains(local)
+                && last.get(local).is_some_and(|last| *last > i && *last < end)
+                && borrows::parameter_type(self.prog, &types[i])
+                && !crate::resource::observable_type(&self.prog.funcs, &self.prog.shapes, &types[i])
+                && parts[i + 1..].iter().all(|part| {
+                    borrows::uses_only_borrows(
+                        self.prog,
+                        &self.prog.borrowed_parameters,
+                        &self.locals,
+                        part,
+                        &Set::from([*local]),
+                        false,
+                    )
+                })
+            {
+                delayed_moves.insert(i);
+                last.insert(*local, end);
+            }
+        }
         let mut binds: Vec<(Local, Expr)> = Vec::new();
         let mut xs = Vec::new();
         let mut drop_after: Vec<Local> = Vec::new();
@@ -1122,6 +1149,9 @@ impl Pass<'_> {
             let mut theirs = borrowed.clone();
             theirs.extend(last.iter().filter(|(_, j)| **j > i).map(|(l, _)| *l));
             match (mode, p) {
+                (Mode::Consume, Expr::Local(_)) if delayed_moves.contains(&i) => {
+                    xs.push(p.clone());
+                }
                 (Mode::Borrow, Expr::Local(l)) => {
                     if last.get(l) == Some(&end) && !drop_after.contains(l) {
                         drop_after.push(*l);
@@ -2414,6 +2444,37 @@ mod tests {
         let s = format!("{:?}", counted(&p).0);
         assert_eq!(s.matches("Dup(0").count(), 1, "{}", s);
         assert!(!s.contains("Drop"), "{}", s);
+    }
+
+    #[test]
+    fn field_moves_wait_for_later_borrows_without_losing_duplicate_owners() {
+        for copies in [1, 2] {
+            let string = MT::con("std::String");
+            let number = MT::con("std::I64");
+            let mut fields = vec![Expr::Local(0); copies];
+            fields.push(Expr::Call(1, vec![Expr::Local(0)]));
+            let mut p = prog(vec![string.clone()], vec![], Expr::Record(fields));
+            let mut types: Vec<_> = (0..copies)
+                .map(|i| (i.to_string(), string.clone()))
+                .collect();
+            types.push((copies.to_string(), number.clone()));
+            p.funcs[0].ty = MT::Fun(Box::new(string.clone()), Box::new(MT::Record(types)));
+            p.funcs.push(Func {
+                name: "length".into(),
+                arity: 1,
+                locals: vec![string.clone()],
+                ty: MT::Fun(Box::new(string), Box::new(number)),
+                body: Body::Prim("string.length".into()),
+            });
+            let (body, locals) = counted(&p);
+            let text = format!("{body:?}");
+            assert_eq!(text.matches("Dup(").count(), copies - 1, "{text}");
+            let calls = call_liveness(&p, &p.funcs[0], &body, &locals).unwrap();
+            assert!(
+                calls.values().any(|call| call.at_entry.contains(&(0, 1))),
+                "{calls:?}"
+            );
+        }
     }
 
     #[test]

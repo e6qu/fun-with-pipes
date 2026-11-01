@@ -164,7 +164,7 @@ jobs:
       - name: Iterator and state allocation and binary evidence
         if: ${{ !cancelled() && steps.standalone_compiler.outcome == 'success' }}
         run: |
-          python3 scripts/measure-iteration.py --output "$RUNNER_TEMP/iteration-evidence"
+          python3 scripts/measure-iteration.py --compiler target/release/fwp --output "$RUNNER_TEMP/iteration-evidence"
           python3 scripts/measure-checkpoint.py --output "$RUNNER_TEMP/iteration-evidence/checkpoint"
       - uses: actions/upload-artifact@v7
         if: always()
@@ -539,7 +539,7 @@ jobs:
       - name: Iterator and state allocation and binary evidence
         if: ${{ !cancelled() && steps.standalone_compiler.outcome == 'success' }}
         run: |
-          python3 scripts/measure-iteration.py --output "$RUNNER_TEMP/iteration-evidence"
+          python3 scripts/measure-iteration.py --compiler target/release/fwp --output "$RUNNER_TEMP/iteration-evidence"
           python3 scripts/measure-checkpoint.py --output "$RUNNER_TEMP/iteration-evidence/checkpoint"
       - uses: actions/upload-artifact@v7
         if: always()

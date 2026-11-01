@@ -2,10 +2,10 @@ a = matrix [[4.0, 1.0], [1.0, 3.0]]
 b = vector [1.0, 2.0]
 
 f : t -> t where Ring[t], FromFloat[t]
-f = fork mul id id | sub 2.0
+f = fn x -> x * x - 2.0
 
 newton-step : F64 -> F64
-newton-step = fork sub (fork div (derivative f) f) id
+newton-step = fn x -> let slope = derivative f x in x - f x / slope
 
 main = [
     a | matmul a | echo,
@@ -15,9 +15,9 @@ main = [
     3.0 | derivative f | echo,
     1.0 | iterate 5 newton-step | last | echo,
     [3.0, 4.0]
-    | gradient (fork
-        add
-        (nth 0 | option.unwrap-or zero | fork mul id id)
-        (nth 1 | option.unwrap-or zero))
+    | gradient (fn values ->
+        let x = values | nth 0 | option.unwrap-or zero
+        in let y = values | nth 1 | option.unwrap-or zero
+        in x * x + y)
     | echo,
 ] | ignore

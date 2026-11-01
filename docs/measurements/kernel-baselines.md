@@ -1,10 +1,14 @@
 # CPU array and matrix baselines
 
-This is N1's measurement protocol, published before its new measurement runner.
-It changes no compiler or runtime optimization. N2 must select a cost and publish
-its candidate limits only after these baseline observations are audited. Earlier
-[numerical measurements](numerical-kernels.md) retain their original source,
-settings and outcomes; they are not measurements of the GC-free compiler.
+This records the original N1 protocol and its still-incomplete timing acceptance.
+ARM sessions pass; AMD measurements retain missing coverage and failed copy
+controls. Later compiler work may proceed using independently verified costs;
+[PLAN.md](../../PLAN.md#7-numerical-loops) owns that work. Neither later allocations
+removed nor a different CPU settles these original timing requirements.
+
+The protocol below predates its measurement runner and selected no optimization.
+Earlier [numerical measurements](numerical-kernels.md) use their own recorded
+sources and settings. They are not measurements of the current compiler.
 
 ## Work to compare
 
@@ -167,11 +171,10 @@ report was checked. Both complete logs pass. The byte-identical control differs
 by at most 0.16%, below the 2% limit. The [archive index](kernel-baselines-artifacts-2026-10-29.json)
 links both full reports/logs and 5,782 artifact identities.
 
-These are initial observations, not completed N1 acceptance. PR #227's later
-record-return repair changes the compiler; applicability to that source needs
-verification. Both AMD jobs were rejected before building: session 1 received
+These are initial observations, not completed N1 acceptance. Applicability to
+PR #227's record-return repair was subsequently checked in the recheck above. Both AMD jobs were rejected before building: session 1 received
 Intel Xeon 8573C, session 2 EPYC 9V74, instead of EPYC 7763. Their reports and full
-logs remain in the index. No N2 optimization or acceptance limit is selected.
+logs remain in the index. This baseline selected no N2 optimization or acceptance limit.
 
 The ranges below cover the two ARM sessions. Each ratio is **fwp time / peer
 time**; 1.30 means 30% extra time. Kernel time excludes input allocation/filling;

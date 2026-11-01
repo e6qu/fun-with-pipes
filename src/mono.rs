@@ -2,7 +2,7 @@
 //! concrete instantiation, resolving trait methods to impls statically.
 
 use crate::softfloat::{BFloat16, Binary128, Binary16, FloatFormat};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use crate::ast::{self, ExprKind, NodeId, PatKind};
 use crate::diag::{Diagnostic, Span};
@@ -14,6 +14,7 @@ use crate::value::Value;
 
 type Subst = HashMap<TV, MT>;
 type MResult<T> = Result<T, Diagnostic>;
+type LiftedWork = (FuncId, NodeId, Subst, String, Vec<(NodeId, MT)>);
 
 /// Which entry points to compile.
 #[derive(Clone, Debug, Default)]
@@ -25,6 +26,8 @@ pub struct Roots {
     pub std_tests: bool,
     /// Bindings to compile by canonical name (used for macros).
     pub names: Vec<String>,
+    /// Session bindings evaluated and cached as values, including function values.
+    pub values: Vec<String>,
     /// Serve the exported functions of this module (`fwp serve`, the
     /// service executables of a split build).
     pub service: Option<String>,
@@ -44,6 +47,8 @@ pub const DEFAULT_SERVICE_ADDR: &str = "127.0.0.1:50051";
 
 pub struct Mono<'a> {
     source_steps: bool,
+    value_bindings: HashSet<String>,
+    debug_scopes: HashMap<NodeId, Vec<(NodeId, String)>>,
     env: &'a Env,
     typed: &'a Typed,
     pub prog: Program,
@@ -52,7 +57,7 @@ pub struct Mono<'a> {
     generated: HashMap<String, FuncId>,
     match_funcs: HashMap<(NodeId, Vec<(TV, MT)>), FuncId>,
     work: Vec<(FuncId, usize, Subst)>,
-    match_work: Vec<(FuncId, NodeId, Subst, String)>,
+    match_work: Vec<LiftedWork>,
     matches: HashMap<NodeId, &'a ast::Expr>,
     /// Module of the code being lowered (for hygienic quotes).
     cur_module: String,
@@ -66,6 +71,7 @@ pub struct Mono<'a> {
 struct FB {
     /// The type of each local.
     locals: Vec<MT>,
+    bindings: HashMap<NodeId, Local>,
 }
 
 impl FB {
@@ -74,6 +80,7 @@ impl FB {
         let (ps, _) = ty.params(arity as usize);
         FB {
             locals: ps.into_iter().cloned().collect(),
+            bindings: HashMap::new(),
         }
     }
 
@@ -280,6 +287,8 @@ impl<'a> Mono<'a> {
         }
         Mono {
             source_steps: false,
+            value_bindings: HashSet::new(),
+            debug_scopes: HashMap::new(),
             env,
             typed,
             prog,
@@ -467,7 +476,11 @@ impl<'a> Mono<'a> {
             .zip(key.iter().cloned())
             .collect();
         let ty = self.mt(&scheme.ty, &s);
-        let arity = spine_arity(&self.env.table, &scheme.ty);
+        let arity = if self.value_bindings.contains(&b.name) {
+            0
+        } else {
+            self.stage_arity(&b.body, &s, &mut HashSet::from([idx]))?
+        };
         let id = self.new_func(
             display_name(&b.name),
             arity,
@@ -478,9 +491,108 @@ impl<'a> Mono<'a> {
             self.prog.std_names.insert(id, b.name.clone());
         }
         self.prog.binding_names.insert(id, b.name.clone());
+        if self.value_bindings.contains(&b.name) {
+            self.prog.cached_values.insert(id);
+        }
         self.instances.insert(k, id);
         self.work.push((id, idx, s));
         Ok(id)
+    }
+
+    // A function type describes possible later inputs, not when its constructor
+    // executes. Follow checked source identities and subtract supplied inputs
+    // from the current stage only. Saturation evaluates the returned value now;
+    // it must not acquire the returned function's inputs by eta expansion.
+    fn stage_arity(
+        &mut self,
+        e: &ast::Expr,
+        s: &Subst,
+        visiting: &mut HashSet<usize>,
+    ) -> MResult<u32> {
+        Ok(match &e.kind {
+            ExprKind::Let(..) => 0,
+            ExprKind::Match(..) | ExprKind::Selector(..) => 1,
+            ExprKind::Lambda(..) => {
+                let ty = self.node_mt(e.id, s);
+                self.register_shapes(&ty);
+                let mut stage = &ty;
+                let mut body = e;
+                let mut arity = 0;
+                while let ExprKind::Lambda(_, next) = &body.kind {
+                    arity += 1;
+                    let (input, output) = stage.as_fun().expect("checked fn type");
+                    if crate::resource::may_hold_resource(&self.prog.shapes, input)
+                        || crate::resource::contains_channel(&self.prog.shapes, input)
+                    {
+                        break;
+                    }
+                    body = next;
+                    stage = output;
+                }
+                arity
+            }
+            ExprKind::App(f, args) | ExprKind::Operator(_, f, args) => self
+                .stage_arity(f, s, visiting)?
+                .saturating_sub(args.len() as u32),
+            ExprKind::Pipe(_, right) => {
+                if self.typed.pipe_modes.get(&e.id) == Some(&PipeMode::Compose) {
+                    1
+                } else {
+                    self.stage_arity(right, s, visiting)?.saturating_sub(1)
+                }
+            }
+            ExprKind::Var(_) => {
+                if let Some(inst) = self.typed.insts.get(&e.id) {
+                    let global = &self.env.globals[&inst.target];
+                    let (idx, types) = match &global.kind {
+                        GlobalKind::Binding(idx) => {
+                            let binding = &self.env.bindings[*idx];
+                            let types = if inst.types.is_empty() {
+                                binding
+                                    .mono_vars
+                                    .iter()
+                                    .map(|v| self.mt(&Type::Var(*v), s))
+                                    .collect()
+                            } else {
+                                inst.types.iter().map(|t| self.mt(t, s)).collect()
+                            };
+                            (*idx, types)
+                        }
+                        GlobalKind::Foreign { abi, symbol, .. } => {
+                            // Instantiating a result variable with a function
+                            // does not add inputs to the primitive's stage.
+                            if abi != "C" {
+                                if let Some((arity, _)) = combinator(symbol) {
+                                    return Ok(arity);
+                                }
+                            }
+                            return Ok(spine_arity(
+                                &self.env.table,
+                                &global.scheme.as_ref().expect("checked foreign type").ty,
+                            ));
+                        }
+                        GlobalKind::Method { trait_name } => {
+                            let types: Vec<_> = inst.types.iter().map(|t| self.mt(t, s)).collect();
+                            let ntrait = self.env.traits[trait_name].params.len();
+                            let (targs, own) = types.split_at(ntrait.min(types.len()));
+                            self.method_binding(trait_name, &inst.target, targs, own, e.span)?
+                        }
+                    };
+                    let binding = &self.env.bindings[idx];
+                    if self.value_bindings.contains(&binding.name) {
+                        return Ok(0);
+                    }
+                    if visiting.insert(idx) {
+                        let substitution = binding.mono_vars.iter().cloned().zip(types).collect();
+                        let arity = self.stage_arity(&binding.body, &substitution, visiting)?;
+                        visiting.remove(&idx);
+                        return Ok(arity);
+                    }
+                }
+                self.node_mt(e.id, s).params(usize::MAX).0.len() as u32
+            }
+            _ => self.node_mt(e.id, s).params(usize::MAX).0.len() as u32,
+        })
     }
 
     fn foreign_instance(&mut self, canon: &str, symbol: &str, ty: MT) -> FuncId {
@@ -554,15 +666,15 @@ impl<'a> Mono<'a> {
         id
     }
 
-    /// Resolve a trait method at concrete trait arguments.
-    fn method_instance(
-        &mut self,
+    /// Select the same implementation for staging and later instantiation.
+    fn method_binding(
+        &self,
         trait_name: &str,
         method: &str,
         targs: &[MT],
         own: &[MT],
         span: Span,
-    ) -> MResult<FuncId> {
+    ) -> MResult<(usize, Vec<MT>)> {
         for imp in &self.env.impls {
             if imp.trait_name != trait_name {
                 continue;
@@ -581,7 +693,7 @@ impl<'a> Mono<'a> {
                     .map(|v| sub.get(v).cloned().unwrap_or(MT::unit()))
                     .collect();
                 key.extend(own.iter().cloned());
-                return self.binding_instance(idx, key, span);
+                return Ok((idx, key));
             }
         }
         let args: Vec<String> = targs.iter().map(|t| t.to_string()).collect();
@@ -594,6 +706,19 @@ impl<'a> Mono<'a> {
                 display_name(method)
             ),
         ))
+    }
+
+    /// Resolve a trait method at concrete trait arguments.
+    fn method_instance(
+        &mut self,
+        trait_name: &str,
+        method: &str,
+        targs: &[MT],
+        own: &[MT],
+        span: Span,
+    ) -> MResult<FuncId> {
+        let (idx, key) = self.method_binding(trait_name, method, targs, own, span)?;
+        self.binding_instance(idx, key, span)
     }
 
     fn literal_via_trait(
@@ -619,7 +744,9 @@ impl<'a> Mono<'a> {
                 let func = &self.prog.funcs[id];
                 let ar = func.arity as usize;
                 if ar == 0 {
-                    return Expr::Apply(Box::new(Expr::Func(id)), args);
+                    return args
+                        .into_iter()
+                        .fold(Expr::Func(id), |f, arg| Expr::Apply(Box::new(f), vec![arg]));
                 }
                 if args.len() == ar {
                     if let Body::Ctor(tag) = func.body {
@@ -642,10 +769,13 @@ impl<'a> Mono<'a> {
                         return self.mk_apply(Expr::Func(id), a1);
                     }
                 }
-                a1.extend(args);
-                Expr::Apply(g, a1)
+                args.into_iter().fold(Expr::Apply(g, a1), |f, arg| {
+                    Expr::Apply(Box::new(f), vec![arg])
+                })
             }
-            other => Expr::Apply(Box::new(other), args),
+            other => args
+                .into_iter()
+                .fold(other, |f, arg| Expr::Apply(Box::new(f), vec![arg])),
         }
     }
 
@@ -653,11 +783,21 @@ impl<'a> Mono<'a> {
 
     pub fn with_source_steps(mut self) -> Self {
         self.source_steps = true;
+        for binding in &self.env.bindings {
+            binding.body.walk_scoped(&mut Vec::new(), &mut |e, scope| {
+                let mut names = Vec::new();
+                for p in scope {
+                    p.bindings(&mut names);
+                }
+                self.debug_scopes.insert(e.id, names);
+            });
+        }
         self
     }
 
     pub fn run(mut self, roots: Roots) -> MResult<Program> {
         let env = self.env;
+        self.value_bindings = roots.values.iter().cloned().collect();
         self.remote = roots.remote.clone();
         for (m, _) in &roots.remote {
             if !env.modules.contains_key(m) || m == "main" || m == "std" {
@@ -866,7 +1006,7 @@ impl<'a> Mono<'a> {
             def.methods.push(crate::ir::ServedFn {
                 path: crate::protobuf::path(module, &name),
                 name,
-                func: id?,
+                func: crate::ir::saturated_entry(&mut self.prog, id?, arity),
                 error,
                 iter_fn,
             });
@@ -937,10 +1077,10 @@ impl<'a> Mono<'a> {
                 self.cur_module = saved;
                 continue;
             }
-            if let Some((id, node, s, module)) = self.match_work.pop() {
+            if let Some((id, node, s, module, captures)) = self.match_work.pop() {
                 let saved = std::mem::replace(&mut self.cur_module, module);
                 self.in_progress.insert(id);
-                self.lower_match(id, node, &s)?;
+                self.lower_match(id, node, &s, &captures)?;
                 self.in_progress.remove(&id);
                 self.cur_module = saved;
                 continue;
@@ -952,7 +1092,10 @@ impl<'a> Mono<'a> {
     /// Evaluate `x` at compile time and return its value as a constant.
     fn comptime(&mut self, e: &ast::Expr, x: &ast::Expr, s: &Subst) -> MResult<Expr> {
         let mt = self.node_mt(e.id, s);
-        let mut fb = FB { locals: vec![] };
+        let mut fb = FB {
+            locals: vec![],
+            bindings: HashMap::new(),
+        };
         let body = self.expr(x, s, &mut fb)?;
         let tmp = self.new_func("comptime".into(), 0, mt, Body::Expr(body));
         self.prog.funcs[tmp].locals = fb.locals;
@@ -1056,6 +1199,17 @@ impl<'a> Mono<'a> {
         Ok(if self.source_steps {
             Expr::Trace(
                 SourcePoint {
+                    names: {
+                        let mut names = std::collections::BTreeMap::new();
+                        if let Some(scope) = self.debug_scopes.get(&e.id) {
+                            for (binder, name) in scope {
+                                if let Some(slot) = fb.bindings.get(binder) {
+                                    names.insert(name.clone(), *slot);
+                                }
+                            }
+                        }
+                        names.into_iter().collect()
+                    },
                     span: e.span,
                     ty: self.node_mt(e.id, s),
                 },
@@ -1100,7 +1254,22 @@ impl<'a> Mono<'a> {
             ExprKind::Str(x) => Ok(Expr::Const(Value::str(x))),
             ExprKind::Trits(ts) => Ok(Expr::Const(Value::TInt(trits_value(ts)))),
             ExprKind::Duration(ns) => Ok(Expr::Const(Value::tuple(vec![Value::I64(*ns as i64)]))),
-            ExprKind::Var(_) => self.var(e, s),
+            ExprKind::Var(_) => {
+                if let Some(binder) = self.typed.local_uses.get(&e.id) {
+                    return fb
+                        .bindings
+                        .get(binder)
+                        .copied()
+                        .map(Expr::Local)
+                        .ok_or_else(|| {
+                            Diagnostic::error(
+                                e.span,
+                                "a compile-time expression cannot depend on a runtime local",
+                            )
+                        });
+                }
+                self.var(e, s)
+            }
             ExprKind::Ctor(_) => {
                 let inst = &self.typed.insts[&e.id];
                 let mt = self.node_mt(e.id, s);
@@ -1281,45 +1450,119 @@ impl<'a> Mono<'a> {
                 let f = self.generated(format!("update{:?}", idxs), k + 1, ty, body);
                 Ok(self.mk_apply(Expr::Func(f), vals))
             }
-            ExprKind::Match(_) => {
+            ExprKind::Let(pat, value, body) => {
+                let mt = self.node_mt(value.id, s);
+                self.register_shapes(&mt);
+                let value = self.expr(value, s, fb)?;
+                let pattern = self.pattern(pat, &mt, fb, &mut Vec::new())?;
+                let body = self.expr(body, s, fb)?;
+                let mut bound = Vec::new();
+                pat.bindings(&mut bound);
+                for (id, _) in bound {
+                    fb.bindings.remove(&id);
+                }
+                match pattern {
+                    Pat::Bind(local) => Ok(Expr::Let(local, Box::new(value), Box::new(body))),
+                    other => Ok(Expr::Match(Box::new(value), vec![(other, body)])),
+                }
+            }
+            ExprKind::Lambda(..) | ExprKind::Match(_) => {
+                let mut captured = std::collections::BTreeSet::new();
+                e.walk(&mut |x| {
+                    if let Some(id) = self.typed.local_uses.get(&x.id) {
+                        if fb.bindings.contains_key(id) {
+                            captured.insert(*id);
+                        }
+                    }
+                });
+                let captures: Vec<(NodeId, MT)> = captured
+                    .iter()
+                    .map(|id| (*id, fb.locals[fb.bindings[id] as usize].clone()))
+                    .collect();
+                let args = captured
+                    .iter()
+                    .map(|id| Expr::Local(fb.bindings[id]))
+                    .collect();
                 let mut key: Vec<(TV, MT)> = s.iter().map(|(k, v)| (*k, v.clone())).collect();
                 key.sort();
-                if let Some(id) = self.match_funcs.get(&(e.id, key.clone())) {
-                    return Ok(Expr::Func(*id));
-                }
-                let mt = self.node_mt(e.id, s);
-                let id = self.new_func(
-                    "match".into(),
-                    1,
-                    mt,
-                    Body::Expr(Expr::Const(Value::unit())),
-                );
-                self.match_funcs.insert((e.id, key), id);
-                self.match_work
-                    .push((id, e.id, s.clone(), self.cur_module.clone()));
-                Ok(Expr::Func(id))
+                let id = if let Some(id) = self.match_funcs.get(&(e.id, key.clone())) {
+                    *id
+                } else {
+                    let mt = fun_of(
+                        captures.iter().map(|(_, ty)| ty.clone()).collect(),
+                        self.node_mt(e.id, s),
+                    );
+                    let id = self.new_func(
+                        if matches!(e.kind, ExprKind::Lambda(..)) {
+                            "fn".into()
+                        } else {
+                            "match".into()
+                        },
+                        captures.len() as u32 + 1,
+                        mt,
+                        Body::Expr(Expr::Const(Value::unit())),
+                    );
+                    self.match_funcs.insert((e.id, key), id);
+                    self.match_work
+                        .push((id, e.id, s.clone(), self.cur_module.clone(), captures));
+                    id
+                };
+                Ok(self.mk_apply(Expr::Func(id), args))
             }
             ExprKind::Comptime(x) => self.comptime(e, x, s),
             ExprKind::Quote(x) => {
                 let holes = crate::syntax::hole_count(x);
                 if holes == 0 {
-                    let mut cx = QuoteCx { mono: self, s, fb };
+                    let mut cx = QuoteCx {
+                        mono: self,
+                        s,
+                        fb,
+                        hole_offset: 0,
+                        splices: HashMap::new(),
+                    };
                     return crate::syntax::quote(x, &mut cx);
                 }
-                // a syntax template: a function of its positional holes
-                let mt = self.node_mt(e.id, s);
-                let mut tfb = FB::params(&mt, holes);
+                // Compute non-positional splices once, in source order, while
+                // constructing the template. Calls only supply positional holes.
+                let mut calls = Vec::new();
+                crate::syntax::collect_unquote_calls(x, &mut calls);
+                let mut splices = HashMap::new();
+                let mut args = Vec::new();
+                for call in calls {
+                    if crate::syntax::hole_index(call).is_some() {
+                        continue;
+                    }
+                    let ExprKind::MacroCall(_, parts) = &call.kind else {
+                        unreachable!()
+                    };
+                    if parts.len() != 1 {
+                        return Err(Diagnostic::error(
+                            call.span,
+                            "`unquote!` takes one argument",
+                        ));
+                    }
+                    splices.insert(parts[0].id, args.len() as Local);
+                    args.push(self.expr(&parts[0], s, fb)?);
+                }
+                let offset = args.len() as u32;
+                let mt = fun_of(
+                    vec![MT::con("std::Syntax"); args.len()],
+                    self.node_mt(e.id, s),
+                );
+                let mut tfb = FB::params(&mt, offset + holes);
                 let body = {
                     let mut cx = QuoteCx {
                         mono: self,
                         s,
                         fb: &mut tfb,
+                        hole_offset: offset,
+                        splices,
                     };
                     crate::syntax::quote(x, &mut cx)?
                 };
-                let id = self.new_func("quote".into(), holes, mt, Body::Expr(body));
+                let id = self.new_func("quote".into(), offset + holes, mt, Body::Expr(body));
                 self.prog.funcs[id].locals = tfb.locals;
-                Ok(Expr::Func(id))
+                Ok(self.mk_apply(Expr::Func(id), args))
             }
             ExprKind::TypeOf(_) => {
                 let t = self
@@ -1399,26 +1642,68 @@ impl<'a> Mono<'a> {
         }
     }
 
-    fn lower_match(&mut self, id: FuncId, node: NodeId, s: &Subst) -> MResult<()> {
+    fn lower_match(
+        &mut self,
+        id: FuncId,
+        node: NodeId,
+        s: &Subst,
+        captures: &[(NodeId, MT)],
+    ) -> MResult<()> {
         let e = self.matches[&node];
-        let ExprKind::Match(arms) = &e.kind else {
-            unreachable!()
-        };
         let mt = self.node_mt(node, s);
         let scrut = mt.as_fun().map(|(a, _)| a.clone()).unwrap_or(MT::unit());
+        self.register_shapes(&scrut);
+        let input = captures.len() as Local;
         let mut fb = FB {
-            locals: vec![scrut.clone()],
+            locals: captures
+                .iter()
+                .map(|(_, ty)| ty.clone())
+                .chain(std::iter::once(scrut.clone()))
+                .collect(),
+            bindings: captures
+                .iter()
+                .enumerate()
+                .map(|(i, (id, _))| (*id, i as Local))
+                .collect(),
+        };
+        // A name is the input slot itself, not a runtime pattern match or alias.
+        // Unit/discard inputs also need no test after type checking. Resource
+        // preservation still sees the original typed function parameter.
+        if let ExprKind::Lambda(pattern, body) = &e.kind {
+            if matches!(
+                pattern.kind,
+                PatKind::Bind(_) | PatKind::Ignore | PatKind::Unit
+            ) {
+                if matches!(pattern.kind, PatKind::Bind(_)) {
+                    fb.bindings.insert(pattern.id, input);
+                }
+                let body = self.expr(body, s, &mut fb)?;
+                let function = &mut self.prog.funcs[id];
+                function.body = Body::Expr(body);
+                function.locals = fb.locals;
+                return Ok(());
+            }
+        }
+        let arms: Vec<(&ast::Pattern, &ast::Expr)> = match &e.kind {
+            ExprKind::Lambda(p, b) => vec![(p, b)],
+            ExprKind::Match(arms) => arms.iter().map(|a| (&a.pat, &a.body)).collect(),
+            _ => unreachable!(),
         };
         let mut out = Vec::new();
-        for arm in arms {
+        for (pattern, body) in arms {
             let mut holes = Vec::new();
-            let pat = self.pattern(&arm.pat, &scrut, &mut fb, &mut holes)?;
-            let body = self.expr(&arm.body, s, &mut fb)?;
+            let pat = self.pattern(pattern, &scrut, &mut fb, &mut holes)?;
+            let body = self.expr(body, s, &mut fb)?;
             let body = self.mk_apply(body, holes.into_iter().map(Expr::Local).collect());
             out.push((pat, body));
+            let mut bound = Vec::new();
+            pattern.bindings(&mut bound);
+            for (id, _) in bound {
+                fb.bindings.remove(&id);
+            }
         }
         let f = &mut self.prog.funcs[id];
-        f.body = Body::Expr(Expr::Match(Box::new(Expr::Local(0)), out));
+        f.body = Body::Expr(Expr::Match(Box::new(Expr::Local(input)), out));
         f.locals = fb.locals;
         Ok(())
     }
@@ -1431,6 +1716,25 @@ impl<'a> Mono<'a> {
         holes: &mut Vec<Local>,
     ) -> MResult<Pat> {
         match &p.kind {
+            PatKind::Bind(_) => {
+                let local = fb.local(mt);
+                fb.bindings.insert(p.id, local);
+                Ok(Pat::Bind(local))
+            }
+            PatKind::Ignore => Ok(Pat::Wild),
+            PatKind::Record(fields) => {
+                let labels = record_labels(&self.prog, mt);
+                let mut patterns = vec![Pat::Wild; labels.len()];
+                for (name, pattern) in fields {
+                    let index = record_index(&self.prog, mt, name).ok_or_else(|| {
+                        Diagnostic::error(pattern.span, format!("unknown record field `{name}`"))
+                    })?;
+                    let ty = field_type(&self.prog, mt, index);
+                    self.register_shapes(&ty);
+                    patterns[index as usize] = self.pattern(pattern, &ty, fb, holes)?;
+                }
+                Ok(Pat::Record(patterns))
+            }
             PatKind::Hole => {
                 let l = fb.local(mt);
                 holes.push(l);
@@ -1454,6 +1758,7 @@ impl<'a> Mono<'a> {
                 let mut ps = Vec::new();
                 for (i, item) in items.iter().enumerate() {
                     let ft = field_type(&self.prog, mt, i as u32);
+                    self.register_shapes(&ft);
                     ps.push(self.pattern(item, &ft, fb, holes)?);
                 }
                 Ok(Pat::Record(ps))
@@ -1503,10 +1808,21 @@ struct QuoteCx<'m, 'a, 's, 'f> {
     mono: &'m mut Mono<'a>,
     s: &'s Subst,
     fb: &'f mut FB,
+    hole_offset: u32,
+    splices: HashMap<NodeId, Local>,
 }
 
 impl crate::syntax::QuoteCtx for QuoteCx<'_, '_, '_, '_> {
+    fn hole(&self, index: u32) -> Expr {
+        Expr::Local(self.hole_offset + index)
+    }
+    fn local_name(&self, id: NodeId, name: &str) -> String {
+        format!("::local::{id}::{name}")
+    }
     fn value_name(&self, n: &str) -> String {
+        if n.starts_with("::local::") {
+            return n.to_string();
+        }
         let scope = Scope {
             module: self.mono.cur_module.clone(),
         };
@@ -1527,7 +1843,10 @@ impl crate::syntax::QuoteCtx for QuoteCx<'_, '_, '_, '_> {
     }
 
     fn unquote(&mut self, x: &ast::Expr) -> Result<Expr, Diagnostic> {
-        self.mono.expr(x, self.s, self.fb)
+        match self.splices.get(&x.id) {
+            Some(local) => Ok(Expr::Local(*local)),
+            None => self.mono.expr(x, self.s, self.fb),
+        }
     }
 }
 
@@ -1701,6 +2020,14 @@ fn index_matches(env: &Env) -> HashMap<NodeId, &ast::Expr> {
             | ExprKind::With(fs)
             | ExprKind::Make(_, fs)
             | ExprKind::Update(fs) => fs.iter().for_each(|(_, a)| go(a, out)),
+            ExprKind::Let(_, a, b) => {
+                go(a, out);
+                go(b, out);
+            }
+            ExprKind::Lambda(_, b) => {
+                out.insert(e.id, e);
+                go(b, out);
+            }
             ExprKind::Match(arms) => {
                 out.insert(e.id, e);
                 arms.iter().for_each(|a| go(&a.body, out));

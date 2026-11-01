@@ -73,12 +73,19 @@ shout = upper | flip concat "!"
 `fwp lsp` is a language server: an editor starts it and talks to it over
 stdin and stdout. While you type it shows syntax errors (several at once),
 type errors and lint warnings; hovering over a name shows its inferred type;
-go-to-definition jumps to top-level, imported and standard library names;
+go-to-definition jumps to local, top-level, imported and standard library names;
 it finds a name's references and renames it across the file; and it lists
 the file's declarations, completes names with their types and formats the
 file. Point your editor's LSP client at the command `fwp lsp`
 for `*.fwp` files; the [reference](../../reference.md#fwp-lsp) has
 configurations for Neovim, Helix and VS Code.
+
+Local names follow their scopes. In `fn x -> let square = x * x in square + square`,
+`x` names the input and `square` names the computed product. Rename affects the
+selected binding and its uses, including nested functions that capture it; a
+shadowing binding with the same spelling stays separate. Renaming `x` in record
+shorthand `{ x }` preserves the field label, producing `{ x = new-name }`.
+The formatter aligns successive `let`/`in` bindings without adding nesting.
 
 ## The program
 
@@ -136,7 +143,7 @@ results. Run cells explicitly; editing code marks old results stale rather than
 silently repeating file writes or other effects. Saved notebooks contain source.
 
 A [debugger](../../debugging.md) pauses a program so you can inspect a function's
-input and step through expressions. Its Python SDK can record execution events.
+input or a visible local name and step through expressions. Its Python SDK can record execution events.
 The same guide shows how to compare emitted C with actual machine instructions
 at `O0` through `O3` on explicitly selected targets. This inspection does not run
 a cross-target binary or measure its speed.

@@ -4728,8 +4728,8 @@ impl<'g, 'p> FnGen<'g, 'p> {
         }
         let t = self.locals[x as usize].clone();
         let d = self.typed_drop(&t).unwrap_or_else(|| "fwp_rc_drop".into());
-        // The token no longer owns any fields, including scalar words that
-        // could look like reused young addresses to conservative tracing.
+        // The token owns only the outer cell. Clear retired field values
+        // while that cell awaits reuse or cleanup.
         self.line(&format!(
             "    memset(OBJ(l{x})->f, 0, {} * sizeof(V));",
             tys.len()
@@ -9490,6 +9490,16 @@ pub fn generate_library(
     lib_name: &str,
     callbacks: &[String],
 ) -> Result<(String, String), String> {
+    let mut entry_program = std::borrow::Cow::Borrowed(prog);
+    for (index, (_, target)) in prog.exports.iter().enumerate() {
+        let function = &prog.funcs[*target];
+        let arity = function.ty.params(usize::MAX).0.len() as u32;
+        if function.arity != arity {
+            let program = entry_program.to_mut();
+            program.exports[index].1 = crate::ir::saturated_entry(program, *target, arity);
+        }
+    }
+    let prog = entry_program.as_ref();
     let sigs = export_sigs(prog)?;
     if sigs.is_empty() {
         return Err("the library exports no functions (mark them with `export`)".into());
@@ -9925,7 +9935,18 @@ fn live_functions(prog: &Program, extra: &[FuncId]) -> Result<Vec<bool>, String>
     crate::ir::reachable_functions(prog, &work)
 }
 
-fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
+fn generate_mode(prog: &Program, mut mode: Mode) -> Result<String, String> {
+    let mut entry_program = std::borrow::Cow::Borrowed(prog);
+    if let Mode::Exec(commands, _) = &mut mode {
+        for command in commands {
+            let arity = command.params.len() as u32;
+            if entry_program.funcs[command.fid].arity != arity {
+                command.fid =
+                    crate::ir::saturated_entry(entry_program.to_mut(), command.fid, arity);
+            }
+        }
+    }
+    let prog = entry_program.as_ref();
     crate::ir::check_locals(prog)?;
     // Fuse before ownership lowering separates temporary strings from their
     // consumers. Printing's comparison switch does not disable length fusion.

@@ -137,6 +137,9 @@ Syntax =
     # a record form with fields: kind is "with", "update", "make",
     # "make T", or "record T" for `T { ... }`
     | SFields String List[(String, Syntax)]
+    | SLet SynPat Syntax Syntax
+    | SLambda SynPat Syntax
+    | SQuote Syntax
 
 SynPat =
     | PHole
@@ -146,6 +149,9 @@ SynPat =
     | PBare String
     | PTuple List[SynPat]
     | PUnit
+    | PName String
+    | PRecord List[(String, SynPat)]
+    | PIgnore
 
 # Renders a syntax value as source text, without evaluating it. For example,
 # `SApply (SName "add") [SInt 1] | syntax.show` returns "add 1". The returned

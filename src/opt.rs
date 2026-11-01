@@ -13,6 +13,8 @@
 use crate::ir::*;
 use std::collections::HashSet;
 
+mod stages;
+
 const INLINE_SIZE: usize = 40;
 const MAX_BODY: usize = 4000;
 const ROUNDS: usize = 4;
@@ -361,6 +363,33 @@ impl<'p> Opt<'p> {
                     .into_iter()
                     .map(|(p, b)| (p, self.expr(b, depth)))
                     .collect();
+                // An irrefutable local record pattern reads fields; it does
+                // not inspect a tag or choose an alternative. Expose those
+                // reads to scalar replacement and loop-state unpacking before
+                // ownership insertion. Observable resources keep their frame.
+                if let (Expr::Local(local), [(Pat::Record(parts), body)]) = (&s, arms.as_slice()) {
+                    if parts.iter().all(|p| matches!(p, Pat::Bind(_) | Pat::Wild))
+                        && !crate::resource::observable_type(
+                            self.funcs,
+                            self.shapes,
+                            &self.locals[*local as usize],
+                        )
+                        && record_fields(self.shapes, &self.locals[*local as usize])
+                            .is_some_and(|fields| fields.len() == parts.len())
+                    {
+                        let mut body = body.clone();
+                        for (index, pattern) in parts.iter().enumerate().rev() {
+                            if let Pat::Bind(bound) = pattern {
+                                body = Expr::Let(
+                                    *bound,
+                                    Box::new(Expr::Field(Box::new(s.clone()), index as u32)),
+                                    Box::new(body),
+                                );
+                            }
+                        }
+                        return self.expr(body, depth);
+                    }
+                }
                 if let Some(lowered) = self.known_record(&s, &arms, None) {
                     self.expr(lowered, depth)
                 } else {
@@ -403,6 +432,21 @@ impl<'p> Opt<'p> {
         for (p, body) in arms {
             match p {
                 Pat::Construct(t, _) if t != tag => continue,
+                Pat::Construct(_, ps)
+                    if ps.len() == 1
+                        && args.len() == 1
+                        && matches!(&ps[0], Pat::Record(parts) if parts.iter().all(irrefutable)) =>
+                {
+                    // One immediately destructured payload; every field matches.
+                    // Reuse record elimination to preserve field evaluation and
+                    // typed owners. Refutable fields must keep later arms.
+                    let payload_ty = fields.as_ref().and_then(|fs| fs.first());
+                    return self.known_record(
+                        &args[0],
+                        &[(ps[0].clone(), body.clone())],
+                        payload_ty,
+                    );
+                }
                 Pat::Construct(_, ps) if ps.iter().all(irrefutable) && ps.len() == args.len() => {
                     let mut binds = Vec::new();
                     for (i, (sp, a)) in ps.iter().zip(args).enumerate() {
@@ -529,8 +573,11 @@ impl<'p> Opt<'p> {
             return f;
         }
         match f {
-            // ((g a) b) = (g a b)
-            Expr::Apply(g, mut a1) => {
+            // Only an unsaturated known entry can combine argument groups.
+            // An unknown first application may run or trap before the next
+            // argument is evaluated, even when its result is another function.
+            Expr::Apply(g, mut a1) if matches!(&*g, Expr::Func(id) if a1.len() < self.arity(*id)) =>
+            {
                 a1.extend(args);
                 self.apply(*g, a1, depth)
             }
@@ -569,6 +616,31 @@ impl<'p> Opt<'p> {
 
     fn call(&mut self, id: FuncId, args: Vec<Expr>, depth: usize) -> Expr {
         let callee = &self.funcs[id];
+        // A small literal F64 splat is a constant value, including the exact
+        // NaN/signed-zero bits. Charge its lanes to the ordinary inlining budget
+        // so a large vector remains a runtime construction.
+        if matches!(&callee.body, Body::Prim(symbol) if symbol == "simd.splat") {
+            if let ([Expr::Const(value @ crate::value::Value::F64(_))], MT::Con(name, types)) =
+                (args.as_slice(), callee.ty.after_args(1))
+            {
+                if let [MT::Nat(lanes), element] = types.as_slice() {
+                    if name == "std::Vec"
+                        && element == &MT::con("std::F64")
+                        && *lanes <= INLINE_SIZE as u64
+                        && *lanes <= self.budget.max(0) as u64
+                    {
+                        self.budget -= *lanes as isize;
+                        return Expr::Const(crate::value::Value::Record(
+                            vec![crate::value::Value::Array(std::rc::Rc::new(vec![
+                                value.clone();
+                                *lanes as usize
+                            ]))]
+                            .into(),
+                        ));
+                    }
+                }
+            }
+        }
         // Top-level display of a string preserves its bytes. Eliminate the
         // copy before ownership lowering so aliases receive ordinary owners.
         // Strings nested inside other displayed values still need escaping.
@@ -832,6 +904,7 @@ fn subst_pat(p: &Pat, local: &dyn Fn(&Local) -> Local) -> Pat {
 
 /// Optimize all function bodies in place.
 pub fn optimize(prog: &mut Program) {
+    stages::flatten(prog);
     for _ in 0..ROUNDS {
         let snapshot = prog.funcs.clone();
         for id in 0..prog.funcs.len() {
@@ -1125,16 +1198,33 @@ fn rewrite_hofs(
         budget: 0,
         resource_locals: Vec::new(),
     };
-    let Expr::Apply(function, captures) = fexpr else {
-        return;
-    };
-    let Expr::Func(id) = &**function else {
-        return;
-    };
-    if captures.len() >= funcs.get(*id).map_or(0, |f| f.arity as usize) {
-        // An unknown or saturated computation returning a function has no
-        // known callback body to expose. Do not add a forwarding wrapper.
-        return;
+    match fexpr {
+        Expr::Apply(function, captures) => {
+            let Expr::Func(id) = &**function else { return };
+            if captures.len() >= funcs.get(*id).map_or(0, |f| f.arity as usize) {
+                return;
+            }
+        }
+        Expr::Func(id) => {
+            let function = &funcs[*id];
+            // A curried named callback can return a known partial function.
+            // Expose both argument stages to the existing specializer, which
+            // preserves resource frames and eager capture evaluation. Already
+            // saturated entries and unknown returned functions need no wrapper.
+            if function.arity == 0 || function.arity as usize >= n {
+                return;
+            }
+            let Body::Expr(Expr::Apply(returned, captures)) = &function.body else {
+                return;
+            };
+            let Expr::Func(returned) = &**returned else {
+                return;
+            };
+            if funcs[*returned].arity as usize != captures.len() + n - function.arity as usize {
+                return;
+            }
+        }
+        _ => return,
     }
     let mut bindings = Vec::new();
     // Bind aggregate captures once, including pure constructions. Otherwise
@@ -1238,6 +1328,45 @@ fn rename_locals(e: &Expr, caps: &[Local]) -> Expr {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn literal_splats_preserve_bits_and_respect_the_size_budget() {
+        for lanes in [0, 4, INLINE_SIZE as u64, INLINE_SIZE as u64 + 1] {
+            for bits in [0, 1_u64 << 63, 0x7ff8_0000_0000_0042, 0x3fe0_0000_0000_0000] {
+                let number = MT::con("std::F64");
+                let funcs = vec![Func {
+                    name: "splat".into(),
+                    arity: 1,
+                    ty: MT::Fun(
+                        Box::new(number.clone()),
+                        Box::new(MT::Con(
+                            "std::Vec".into(),
+                            vec![MT::Nat(lanes), number.clone()],
+                        )),
+                    ),
+                    locals: vec![number],
+                    body: Body::Prim("simd.splat".into()),
+                }];
+                let call = Expr::Call(
+                    0,
+                    vec![Expr::Const(crate::value::Value::F64(f64::from_bits(bits)))],
+                );
+                let (result, _) = simplify(&funcs, &Shapes::default(), call, vec![]);
+                if lanes > INLINE_SIZE as u64 {
+                    assert!(matches!(result, Expr::Call(0, _)));
+                    continue;
+                }
+                let Expr::Const(crate::value::Value::Record(fields)) = &result else {
+                    panic!("splat not folded")
+                };
+                let [crate::value::Value::Array(values)] = fields.as_ref() else {
+                    panic!("invalid vector")
+                };
+                assert_eq!(values.len(), lanes as usize);
+                assert!(values.iter().all(|value| matches!(value, crate::value::Value::F64(value) if value.to_bits() == bits)));
+            }
+        }
+    }
 
     #[test]
     fn computed_capture_stays_before_the_continuation_and_exposes_a_direct_call() {

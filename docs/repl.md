@@ -41,10 +41,42 @@ Enter those two declarations with `:paste`, followed by a line containing `:end`
 Now `40 | increment` gives `41`. `I64 -> I64` means one integer argument and one
 integer result. The input remains unnamed: `add 1` already describes the function.
 
+## Name an input or intermediate value
+
+`fn x -> body` defines a function with one input named `x`. A strict local binding,
+`let name = value in body`, computes `value` once and makes the name available in
+`body`. For example, enter these expressions in a fresh session:
+
+```text
+In [1]: let square = 3 * 3 in square + square
+Out[1]: 18
+In [2]: (fn x -> x * x) 4
+Out[2]: 16
+```
+
+The first expression adds the stored value `9` to itself. `in` starts the
+expression that uses the binding; it does not call a function or repeat the
+initializer. `square` is local to that expression and is unavailable in the next
+cell. The second expression calls a single-input function with `4`.
+
+Nested functions can keep earlier inputs. With `:paste`, enter:
+
+```fwp
+make-adder : I64 -> I64 -> I64
+make-adder = fn amount -> fn value -> amount + value
+```
+
+`make-adder 3` returns a function that remembers `3`; `make-adder 3 4` returns `7`.
+Saving the returned function as an expression result preserves its captured value
+and checked code, even if you redefine `make-adder` later. Computation that builds
+the returned function runs when you submit the expression. Reading its `outN`
+result later uses that same value; it does not repeat the construction or its
+effects.
+
 ## Multiline input and terminal editing
 
 An unclosed parenthesis, list or record, or a trailing operator, continues onto
-another line. An indented definition continues until a blank line. For example,
+another line. A `let` without its `in` body also continues. An indented definition continues until a blank line. For example,
 enter `long-word =`, then an indented `string.length | gt 3`, then a blank line.
 `"hello" | long-word` gives `True` because its length, five, exceeds three.
 Use `:paste` / `:end` for a block containing several declarations.
@@ -101,7 +133,7 @@ an ahead-of-time executable; the REPL does not compile C shims.
 to `outN` or `it` needs to be rewritten to a normal definition before using the
 saved file independently. `:time` includes the expression's effects and waiting
 for its tasks. It is a one-shot interpreter measurement, not a repeated native
-benchmark or a comparison with C/Rust. Use the [benchmark guide](benchmarks.md)
+benchmark or a comparison with Swift, C or Rust. Use the [benchmark guide](benchmarks.md)
 for those comparisons.
 
 Choose the session mode explicitly. `--history PATH` enables terminal editing

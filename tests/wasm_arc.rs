@@ -821,17 +821,44 @@ fn fixed_function_captures_initialize_in_wasi() {
     let dir = fwp::cgen::TempDir::new("wasi-fixed-functions").unwrap();
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     let source = root.join("tests/run/static_functions.fwp");
-    let cfile = dir.join("fixed.c");
-    let code = emit(&source, &cfile, &[], "wasm32-wasi");
-    assert!(code.contains("static fwp_clo fwp_static_function"));
-    for opt in ["-O1", "-O2"] {
-        let binary = dir.join(format!("fixed{opt}.wasm"));
-        fwp::cgen::compile_for(&code, &binary, opt, fwp::cgen::Target::Wasi).unwrap();
-        let output = checked(&mut wasi(&binary, root));
-        assert_eq!(
-            output.stdout,
-            include_str!("run/static_functions.out").as_bytes()
+    for stack in ["0", "1"] {
+        let cfile = dir.join(format!("fixed-stack{stack}.c"));
+        checked(
+            Command::new(env!("CARGO_BIN_EXE_fwp"))
+                .args(["build", "--target", "wasm32-wasi", "--emit-c"])
+                .arg(&source)
+                .arg("-o")
+                .arg(&cfile)
+                .env("FWP_STACK", stack)
+                .env_remove("FWP_NO_OPT"),
         );
+        let code = std::fs::read_to_string(cfile).unwrap();
+        assert!(!code.contains("FWP_ARC_ONLY"));
+        assert!(!code.contains("fwp_heap_collect("));
+        // With stack promotion disabled, fixed function captures use static
+        // storage and must be initialized before entry. With it enabled, the
+        // same callbacks can live on the stack or disappear after inlining.
+        if stack == "0" {
+            assert!(code.contains("static fwp_clo fwp_static_function"));
+            assert!(code.contains("fwp_static_function0.a[0] = PTR(&fc"));
+        }
+        for opt in ["-O1", "-O2"] {
+            let binary = dir.join(format!("fixed-stack{stack}{opt}.wasm"));
+            fwp::cgen::compile_for(&code, &binary, opt, fwp::cgen::Target::Wasi).unwrap();
+            if let Some(path) = std::env::var_os("FWP_WASI_ARC_ARTIFACTS") {
+                let path = Path::new(&path).join(format!("fixed-functions-stack{stack}{opt}"));
+                std::fs::create_dir_all(&path).unwrap();
+                std::fs::write(path.join("program.c"), &code).unwrap();
+                std::fs::copy(&source, path.join("program.fwp")).unwrap();
+                std::fs::copy(&binary, path.join("program.wasm")).unwrap();
+            }
+            let output = checked(&mut wasi(&binary, root));
+            assert_eq!(
+                output.stdout,
+                include_str!("run/static_functions.out").as_bytes(),
+                "stack={stack}, {opt}"
+            );
+        }
     }
 }
 

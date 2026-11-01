@@ -129,5 +129,5 @@ and repeat on independent Linux ARM64/AMD64 runner allocations.
 
 This establishes one bounded workspace. It does not establish general region
 inference, constant memory for growing inputs, or a workspace for autodiff.
-See [A6 in the plan](../PLAN.md#2-minimize-arc-in-named-unshared-paths) and
+See [maintained ownership guarantees](../PLAN.md#maintained-guarantees-and-evidence) and
 [the accepted memory direction](gc-removal-design.md).

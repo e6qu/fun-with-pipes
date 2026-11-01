@@ -2,7 +2,7 @@
 
 These checks answer two different questions: what runtime work a convenient
 source construct introduces, and whether a recursive computation can use a
-bounded call stack. They are the F1–F3 work in [PLAN.md](../PLAN.md#3-functional-calls-and-recursion).
+bounded call stack. They supply the baseline for [known-call work](../PLAN.md#3-known-calls-and-captures).
 F1–F3 are verified in PR #222. [Delivery history](roadmap-history.md#functional-calls-and-recursion-pr-222)
 records all nine platform jobs, documentation and analysis budgets. The accepted
 scope is these fixtures and lifetime rules, not zero overhead for every function.
@@ -39,9 +39,11 @@ actual native exported entries at `n = 32` and `128`, compiled at O0 and O2.
 Allocation requests, requested bytes, runtime application requests, record/variant
 construction requests and effective count increments are recorded only during
 the measured calls. Inputs are supplied by the native caller. All pairs must
-use the actual saturated C entry signatures. Supplying fewer curried arguments
-uses the runtime's owned partial-application constructor, including that allocation
-in the control's counts. Captures here are integers or unit. The fixture also
+use the actual C entry signatures and evaluation stages. Supplying fewer arguments
+than a native entry accepts constructs an owned partial application, including
+its allocation in the control's counts. Saturating an entry runs its body; later
+inputs call the returned function. The probe reads the lowered arity instead of
+assuming every arrow belongs to one C call. Captures here are integers or unit. The fixture also
 exports these identities as first-class values, so the compiler emits their
 typed runtime callback entries. A direct-call export alone does not require
 those entries. A native preflight checks them; the returned identity record is
@@ -53,11 +55,68 @@ Unknown-call controls must execute a runtime application; known callbacks must
 not add applications as input size grows. Existing alias, callback-failure and
 caller-cleanup tests run alongside this matrix.
 
-The next [borrowed-call change](measurements/returned-callables.md) removes one
+The later [borrowed-call change](measurements/returned-callables.md) removed one
 application-helper entry from each known State case, keeping two allocations
-and 152 requested bytes. The maintained expectations reflect that candidate;
-three-host and full production verification are still pending. Historical
-State-range measurements retain their original two-entry observations.
+and 152 requested bytes. PR #235 passed the full production matrix; its timing
+comparisons remain qualified separately in the [phase report](measurements/callable-phases.md).
+Historical State-range measurements retain their original two-entry observations.
+
+### Local names: candidate coverage
+
+The same fixture now includes eight named versions using `fn`, `let`, local
+callbacks and named match arms. The native probe calls all three forms—known
+tacit, known named and unknown/escaping control—with inputs 32 and 128. It requires
+the named version to add no allocation requests, bytes, runtime applications,
+boxes or retains relative to the maintained known-form limits. Each call must
+restore live storage and cleanup state. Source, generated C, executable and
+binary listing are retained with the existing artifact setting.
+
+Focused run `41248126920` at `f5b31b07` passes all eight pairs at both O0 and O2
+on Linux ARM64/AMD64 (GCC) and macOS ARM64 (Clang). Pipe, partial, borrowed,
+captured and folded forms request no allocations, applications, boxes or retains.
+The result form uses one 24-byte allocation, one box and one retain. Each/State
+forms use two allocations, 152 bytes, one box and one application, with no retains.
+
+The preceding run `41246880525` at `bcb4a468` found a named array allocation
+(`8(n + 1)` bytes) and named folding costs of `2n` allocations, `40n` bytes,
+`4n` applications and `n` boxes. Producer reconnection and known returned-call
+specialization removed those costs. No timing improvement is claimed.
+
+This is a finite test scope, not a speedup or a claim that every local function
+is free. Inputs, phase boundaries and cost limits remain unchanged.
+
+### Local ownership and representation requirements
+
+Seven new cases extend the same probe, with empty-input controls at 0 as well
+as 32 and 128. They return integers, so every temporary owner must be released
+before the call finishes. These are predeclared requirements for roadmap steps
+4–5. All seven meet these limits on Linux ARM64/AMD64 and macOS ARM64
+at `a61addc6` (run `41251272638`). Later staged-call changes require the updated
+native probe described above. At `f7f5309c`, run `41257967346` passes all
+eight named/tacit pairs and all eight added cases on those three hosts; final
+integrated acceptance remains separate.
+
+| Case | Work and required cost |
+|---|---|
+| `local-tuple`, `local-record` | Build and destructure `(n, n + 1)` or its named record; return `2n + 1`; no allocation, application, box or retain |
+| `local-variant` | Immediately inspect a returned `Some` record and sum its fields; the same zero-cost requirement |
+| `local-text-record` | Format `n`, put its String and `n` in a record, destructure it and return decimal length plus `n`; only the String allocation may remain |
+| `local-alias` | Read one formatted String through two local names and a known function; only the String allocation may remain |
+| `local-owner-loop` | Read a loop-carried String `n` times; no retains |
+| `local-loop-alias` | Also keep and read the caller's String alias after the loop; at most one retain, regardless of trip count |
+
+A formatted String requests eight length bytes, its decimal bytes and one zero
+terminator. The fixture therefore permits one allocation of 10/11/12 bytes for
+inputs 0/32/128 in the two String scalar paths. Loop allocation/box costs are
+reported separately; the retain requirement does not claim allocation-free loops.
+The probe checks results, live-storage restoration and cleanup state at O0/O2.
+Existing ownership tests supply later-argument failure and cancellation controls.
+
+A separate `local-map-filter` case uses a named range, adds one, keeps even values
+and sums them. Inputs 0/32/128 give 0/272/4,160. It requires zero allocations,
+applications, boxes and retains. Reused inputs and callbacks with output or
+competing traps remain semantic controls; a zero-count pure fixture does not
+permit interleaving arbitrary eager stages.
 
 These counters describe operations requested by generated C. One application can
 enter more than one runtime helper, and a C compiler can optimize a helper's

@@ -1,49 +1,36 @@
 emit : Channel[I64] -> () -> () ! {Async}
-emit = flip (const (flip channel.send 7 | ignore))
-
-send-all : Channel[I64] -> List[I64] -> () ! {Async}
-send-all = channel.send | flip compose ignore | each
+emit = fn channel -> fn _ -> channel.send channel 7 | ignore
 
 produce : Channel[I64] -> () -> () ! {Async, IO, Network, FileIO}
-produce = flip (const (both (flip send-all [1, 2, 3]) channel.close | ignore))
+produce = fn channel -> fn _ ->
+    let _ = [1, 2, 3] | each (channel.send channel | ignore)
+    in channel.close channel
 
 wait-for-message : Channel[I64] -> () -> () ! {Async}
-wait-for-message = flip (const (channel.recv | ignore))
+wait-for-message = fn channel -> fn _ -> channel.recv channel | ignore
 
 cancel-worker : Channel[I64] -> Option[()] ! {Async, IO, Network, FileIO}
-cancel-worker =
-    wait-for-message
-    | task.spawn
-    | tap (const () | task.yield)
-    | tap task.cancel
-    | task.await
+cancel-worker = fn channel ->
+    let worker = task.spawn (wait-for-message channel)
+    in let _ = task.yield ()
+    in let _ = task.cancel worker
+    in task.await worker
 
-inbox : I64 -> Channel[I64] ! {Async}
-inbox = channel.make
-routes : I64 -> Channel[Channel[I64]] ! {Async}
-routes = channel.make
 route-message : () -> Option[Option[I64]] ! {Async}
-route-message =
-    const 1
-    | inbox
-    | tap (flip channel.send 42)
-    | tap channel.close
-    | both id (const 1 | routes)
-    | tap (fork channel.send .1 .0)
-    | .1
-    | tap channel.close
-    | channel.recv
-    | option.map channel.recv
+route-message = fn _ ->
+    let inbox = channel.make 1
+    in let _ = channel.send inbox 42
+    in let _ = channel.close inbox
+    in let routes = channel.make 1
+    in let _ = channel.send routes inbox
+    in let _ = channel.close routes
+    in channel.recv routes | option.map channel.recv
 
-callbacks : I64 -> Channel[I64 -> I64] ! {Async}
-callbacks = channel.make
 add-through-queue : () -> Option[I64] ! {Async}
-add-through-queue =
-    const 1
-    | callbacks
-    | tap (flip channel.send (add 3))
-    | channel.recv
-    | option.map (apply 5)
+add-through-queue = fn _ ->
+    let callbacks = channel.make 1
+    in let _ = channel.send callbacks (add 3)
+    in channel.recv callbacks | option.map (apply 5)
 
 Node = { label: String, links: List[I64] }
 graph : Map[I64, Node]

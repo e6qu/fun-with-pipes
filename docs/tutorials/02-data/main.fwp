@@ -5,22 +5,18 @@ Shape =
     | Rect Point Point
 
 dist : Point -> F64
-dist = fork add (.x | fork mul id id) (.y | fork mul id id) | sqrt
+dist = fn { x, y } -> sqrt (x * x + y * y)
 
 from-pair : (F64, F64) -> Point
-from-pair = make Point { x = .0, y = .1 }
+from-pair = fn (x, y) -> Point { x, y }
 
 shift-right : Point -> Point
 shift-right = update { x = add 1.0 }
 
 area : Shape -> F64
 area = match
-    Circle _ _ -> const (fork mul id id | mul 3.14159)
-    Rect _ _ -> curry (both
-            (fork sub (.0 | .x) (.1 | .x))
-            (fork sub (.0 | .y) (.1 | .y))
-        | uncurry mul
-        | abs)
+    Circle centre radius -> radius * radius * 3.14159
+    Rect { x = x0, y = y0 } { x = x1, y = y1 } -> abs ((x1 - x0) * (y1 - y0))
 
 origin : Point
 origin = { x = 0.0, y = 0.0 }

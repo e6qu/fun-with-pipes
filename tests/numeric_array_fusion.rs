@@ -1,5 +1,7 @@
 //! Actual numeric Array fusion, trap order, raw semantics and allocation controls.
 use std::process::{Command, Output};
+#[path = "support/record_probe.rs"]
+mod record_probe;
 fn checked(command: &mut Command) -> Output {
     let out = command.output().unwrap();
     assert!(
@@ -10,6 +12,115 @@ fn checked(command: &mut Command) -> Output {
         String::from_utf8_lossy(&out.stderr)
     );
     out
+}
+
+#[test]
+fn numeric_array_to_list_consumers_avoid_intermediate_cells() {
+    let dir = fwp::cgen::TempDir::new("array-list-costs").unwrap();
+    let input = dir.join("main.fwp");
+    std::fs::write(&input, include_str!("fixtures/numeric_array_lists.fwp")).unwrap();
+    let mut failures = Vec::new();
+    for packing in ["0", "1"] {
+        let mut observations = Vec::new();
+        for mode in ["0", "1"] {
+            let cfile = dir.join("main.c");
+            checked(
+                Command::new(env!("CARGO_BIN_EXE_fwp"))
+                    .env("FWP_ARRAY_FUSION", mode)
+                    .env("FWP_PACKED_ARRAYS", packing)
+                    .args(["build", "--fn", "mapped-list", "--emit-c"])
+                    .arg(&input)
+                    .arg("-o")
+                    .arg(&cfile),
+            );
+            let source = std::fs::read_to_string(cfile).unwrap();
+            let mut probe = include_str!("fixtures/numeric_array_list_probe.c").to_owned();
+            for (name, marker) in [
+                ("mapped-list", "fMAPPED"),
+                ("filtered-list", "fFILTERED"),
+                ("folded-list", "fFOLDED"),
+                ("release-mapped", "fRELEASE"),
+                ("release-filtered", "fDROP_FILTERED"),
+                ("release-input", "fDROP_ARRAY"),
+            ] {
+                let start = source.find(&format!("/* {name} :")).unwrap();
+                let id = source[start..]
+                    .split("static V f")
+                    .nth(1)
+                    .unwrap()
+                    .split('(')
+                    .next()
+                    .unwrap();
+                assert!(id.bytes().all(|b| b.is_ascii_digit()));
+                probe = probe.replace(marker, &format!("f{id}"));
+            }
+            let mut code = source
+                .replace(
+                    "typedef uint64_t V;",
+                    "typedef uint64_t V;\nstatic uint64_t measured_calls, measured_bytes;",
+                )
+                .replace(
+                    "int main(int argc, char **argv)",
+                    "int original_main(int argc, char **argv)",
+                );
+            for (marker, counter) in [
+                (
+                    "static inline void *fwp_alloc_init(size_t n) {",
+                    "measured_calls++; measured_bytes+=n;",
+                ),
+                (
+                    "static inline void *fwp_heap_alloc(size_t n, int kind) {",
+                    "if(kind!=0){measured_calls++;measured_bytes+=n;}",
+                ),
+            ] {
+                assert_eq!(code.matches(marker).count(), 1);
+                code = code.replace(marker, &format!("{marker}{counter}"));
+            }
+            let code = format!("{code}\n{probe}");
+            for opt in ["-O1", "-O2"] {
+                let binary = dir.join("costs.exe");
+                fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+                let result = Command::new(&binary).output().unwrap();
+                record_probe::save(
+                    "numeric_array_lists",
+                    &format!("packing{packing}-fusion{mode}{opt}"),
+                    &code,
+                    &binary,
+                    &result,
+                );
+                assert!(
+                    result.status.success(),
+                    "packing={packing} fusion={mode} opt={opt}: {result:?}"
+                );
+                assert!(result.stderr.is_empty(), "{result:?}");
+                let rows: Vec<Vec<u64>> = String::from_utf8(result.stdout)
+                    .unwrap()
+                    .lines()
+                    .map(|line| {
+                        line.split_whitespace()
+                            .map(|n| n.parse().unwrap())
+                            .collect()
+                    })
+                    .collect();
+                assert_eq!(rows.len(), 24);
+                assert!(rows.iter().all(|row| row.len() == 5));
+                observations.push(rows);
+            }
+        }
+        for (reference, candidate) in observations[..2].iter().zip(&observations[2..]) {
+            for (old, new) in reference.iter().zip(candidate) {
+                assert_eq!(&old[..3], &new[..3]);
+                let n = new[0];
+                if new[3] + n > old[3] || new[4] + 24 * n > old[4] {
+                    failures.push(format!("packing={packing}: {old:?} -> {new:?}"));
+                }
+                if new[2] == 1 && new[3..] != [0, 0] {
+                    failures.push(format!("fold allocates: packing={packing}: {new:?}"));
+                }
+            }
+        }
+    }
+    assert!(failures.is_empty(), "{}", failures.join("\n"));
 }
 
 #[test]
@@ -180,6 +291,10 @@ fn numeric_array_fusion_preserves_effects_checked_traps_and_raw_semantics() {
       ("numeric",basic,0),
       ("generated",include_str!("fixtures/generated_array_folds.fwp"),0),
       ("generated-effect-order","main = array.generate 3 (tap echo) | array.fold add 9223372036854775807 | echo\n",101),
+      ("named-generated-effects","main = let values = array.generate 3 (tap echo) in values | array.map (add 1) | array.fold add 9223372036854775807 | echo\n",101),
+      ("named-generated-traps","main = let values = array.generate 3 (add 9223372036854775806) in values | array.map (div 0) | array.fold add 0 | echo\n",101),
+      ("named-generated-seed","main = let values = array.generate 3 (tap echo) in array.fold add (99 | tap echo) (values | array.map (add 1)) | echo\n",0),
+      ("named-generated-alias","main = let values = array.generate 4 id in (values | array.map (add 1) | array.fold add 0, values | array.to-list) | echo\n",0),
       ("generated-small-overflow","main = array.generate 2 (const 127i8) | array.fold add 0i8 | echo\n",101),
       ("generated-distinct-traps","main = array.generate 3 (add 9223372036854775806) | array.fold div 0 | echo\n",101),
       ("generated-size","main = array.generate 2305843009213693952 id | array.fold add 0 | echo\n",101),
@@ -189,6 +304,11 @@ fn numeric_array_fusion_preserves_effects_checked_traps_and_raw_semantics() {
       ("generated-nested-capture","main = array.generate 4 (add (array.generate 3 id | array.fold add 0)) | array.fold add 0 | echo\n",0),
       ("generated-unknown","unknown : (I64 -> I64 -> I64) -> Array[I64] -> I64\nunknown = flip array.fold 0\nmain = array.generate 4 id | unknown (() | read-line | if (eq None) (const sub) (const add)) | echo\n",0),
       ("effect-order","main = [1i8, 2i8] | array.from-list | array.map (tap echo) | array.fold add 127i8 | echo\n",101),
+      ("array-list-effects","main = [1, 2, 3] | array.from-list | array.to-list | map (tap echo) | filter (fn x -> let _ = \"filter\" | echo in x > 1) | echo\n",0),
+      ("array-list-distinct-traps","main = [0, 9223372036854775807] | array.from-list | array.to-list | map (add 1) | fold div 0 | echo\n",101),
+      ("array-list-rounding","narrow : F64 -> F32\nnarrow = float.convert\nmain = [16777217.0, -0.0, 1.0 / 0.0, 0.0 / 0.0] | array.from-list | array.to-list | map narrow | echo\n",0),
+      ("array-list-reused","main = let xs = [1, 2, 3] | array.from-list | array.to-list in (xs | map (add 1) | fold add 0, xs) | echo\n",0),
+      ("array-list-early-stop","main = [0, 9223372036854775807] | array.from-list | array.to-list | map (add 1) | find (eq 1) | echo\n",101),
       ("distinct-traps","main = [0, 9223372036854775807] | array.from-list | array.map (add 1) | array.fold div 0 | echo\n",101),
       ("length-overflow","main = [127i8] | array.from-list | array.map (add 1i8) | array.length | echo\n",101),
       ("owned-map-lookup","main = map.empty | map.insert \"values\" ([1, 2, 3] | array.from-list) | map.get \"values\" | option.unwrap-or ([] | array.from-list) | array.to-list | echo\n",0),
@@ -212,7 +332,7 @@ fn numeric_array_fusion_preserves_effects_checked_traps_and_raw_semantics() {
         if label == "effect-order" {
             assert_eq!(reference.stdout, b"1\n2\n");
         }
-        if label == "generated-effect-order" {
+        if matches!(label, "generated-effect-order" | "named-generated-effects") {
             assert_eq!(reference.stdout, b"0\n1\n2\n");
         }
         if label == "generated" {
@@ -236,6 +356,12 @@ fn numeric_array_fusion_preserves_effects_checked_traps_and_raw_semantics() {
                 10000000000000000.0
             );
         }
+        if label == "named-generated-seed" {
+            assert_eq!(reference.stdout, b"0\n1\n2\n99\n105\n");
+        }
+        if label == "named-generated-alias" {
+            assert_eq!(reference.stdout, b"(10, [0, 1, 2, 3])\n");
+        }
         if label == "generated-nested-seed" {
             assert_eq!(reference.stdout, b"9\n");
         }
@@ -245,7 +371,10 @@ fn numeric_array_fusion_preserves_effects_checked_traps_and_raw_semantics() {
         if label == "generated-size" {
             assert!(String::from_utf8_lossy(&reference.stderr).contains("array too large"));
         }
-        if matches!(label, "distinct-traps" | "generated-distinct-traps") {
+        if matches!(
+            label,
+            "distinct-traps" | "generated-distinct-traps" | "named-generated-traps"
+        ) {
             assert!(
                 String::from_utf8_lossy(&reference.stderr).contains("arithmetic overflow in I64")
             );

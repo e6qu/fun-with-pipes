@@ -7,6 +7,7 @@ import importlib.util
 import json
 from pathlib import Path
 import subprocess
+import tempfile
 
 
 SPEC = importlib.util.spec_from_file_location(
@@ -17,6 +18,26 @@ SPEC.loader.exec_module(COLLECT)
 
 def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def regenerate(original, source):
+    # Measurement transformations belong to the measured revision. Changing the
+    # current native ABI must not rewrite historical generated-C expectations.
+    with tempfile.TemporaryDirectory(prefix="fwp-callable-adapter-") as scratch:
+        root = Path(scratch)
+        names = ["scripts/returned-callable-source.py", "scripts/ownership-profile.py",
+                 "tests/fixtures/returned_callable_fwp_boundary.c",
+                 "tests/fixtures/returned_callable_profile.c",
+                 "tests/fixtures/returned_callable_phases.c"]
+        for name in names:
+            path = root / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(subprocess.check_output(["git", "show", f"{source}:{name}"]))
+        spec = importlib.util.spec_from_file_location("recorded_adapter", root / names[0])
+        adapter = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(adapter)
+        ordinary = adapter.boundary(original)
+        return ordinary, adapter.profile(ordinary)
 
 
 def audit(folder, source, machine):
@@ -31,8 +52,7 @@ def audit(folder, source, machine):
         expected = subprocess.check_output(["git", "show", f"{source}:tests/fixtures/{path.name}"])
         assert path.read_bytes() == expected, path
     original = (folder / "generated.c").read_text()
-    ordinary = COLLECT.SOURCE.boundary(original)
-    profile = COLLECT.SOURCE.profile(ordinary)
+    ordinary, profile = regenerate(original, source)
     records = [json.loads(line) for line in (folder / "commands.jsonl").read_text().splitlines()]
     assert records and all(not row["timedOut"] for row in records)
     for record in records:

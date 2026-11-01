@@ -6,10 +6,17 @@ The [separate audit](https://github.com/e6qu/fun-with-pipes/actions/runs/4121521
 rechecks all four artifacts without executing their binaries. Full job logs have
 no unexpected compiler diagnostics. The container package manager notes an absent
 C++ manual page; compilation, arithmetic and ownership controls pass.
-These measurements precede the user merge of PR #234. Its full production
-matrix is tracked in the [handoff](../development-state.md); these focused jobs
-do not replace that matrix. The [summary JSON](swift-peers-2026-10-31.json) retains every
+These measurements precede the merge of PR #234. Its full production acceptance
+is recorded in [delivery history](../roadmap-history.md); the focused measurement
+jobs did not replace that matrix. The [summary JSON](swift-peers-2026-10-31.json) retains every
 session's timings, all copy-control ratios, RSS samples and artifact identities.
+The [complete archive](swift-peers-2026-10-31.tar.xz) retains all four original
+manifests, sources, commands, samples and native binaries (7.3 MB compressed).
+[Retention audit 41251278856](https://github.com/e6qu/fun-with-pipes/actions/runs/41251278856)
+rechecked every file before packing it. `scripts/test-swift-peer-records.py`
+verifies the archive hash, reruns the read-only audit and matches the summary;
+it never executes retained binaries. CI artifact expiry no longer removes this
+evidence.
 
 ## What the numbers mean
 
@@ -116,3 +123,7 @@ costs to ownership. Keep
 parser, weak-subscription and numerical Swift comparisons as explicit missing
 coverage. The existing D2/N1 timing failures remain open. Prioritize measured
 execution time and working memory, retaining executable-size costs as context.
+
+The [allocator profile](swift-allocations.md) measures native allocation calls
+and peak heap bytes separately for the pipeline and ordered-map programs. Its
+results must not be interpreted as counts of every ARC operation.

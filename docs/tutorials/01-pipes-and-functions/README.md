@@ -57,68 +57,75 @@ remain identifiers, and `add -1` still means adding negative one.
 `-(2 + 3)` negates the whole sum. These forms use the same numeric types and
 overflow checks as the prefix functions.
 
+## Name an input or an intermediate result
+
+A **local binding** gives a value a name within one expression:
+
+```fwp
+energy : I64 -> I64
+energy = fn x -> let square = x * x in square + square
+```
+
+`I64` is a signed 64-bit integer. The signature says `energy` takes one integer
+and returns one. `fn x -> ...` names its input `x`. `let square = x * x`
+calculates the product once. `in` starts the expression that uses that name;
+its result becomes the result of the entire `let`. For input `3`, `square` is
+`9`, so `square + square` is `18`. It adds two values; it does not call a function
+twice. `3 | energy` and `energy 3` both give `18`.
+
+Bindings are immutable: they cannot be assigned a different value. A nested
+`let` may introduce a new name with the same spelling, called **shadowing**:
+`let x = 3 in let x = x + 1 in x` gives `4`. The initializer sees the outer `x`;
+the body sees the new one. A name is visible only in its own body, not after it.
+Unused initializers still run, including their effects and failures.
+
+The body extends through the rest of its expression. Parentheses delimit a
+function used as an argument: `map (fn x -> x * x)`. Use `fn _ -> 7` to ignore
+an input. `const value` constructs a function that ignores its input and returns
+that value. If `calculate` takes the empty tuple `()`, then `const (calculate ())`
+calculates once when the function is constructed; `fn _ -> calculate ()`
+calculates on every call.
+
+Successive named inputs still mean nested single-argument functions:
+`fn amount -> fn value -> value + amount`. A function can remember a value from
+its surrounding scope; this is a **capture**. For example, `fn amount -> add amount`
+returns a function that remembers `amount`. Captures obey the same ownership and
+resource rules as other stored values; names do not promise heap allocation.
+
 ## Sending one input to several functions
 
-A **combinator** is an ordinary function that connects other functions. `id`
-returns its input unchanged. The combinators used here are:
+A **combinator** connects other functions. Keep these when they make a pipe easy
+to read; use names when a formula is clearer that way.
 
 | Function | Meaning |
 |---|---|
-| `both f g` | Run `f` and `g` on the same input and return `(first result, second result)`. |
-| `fork f g h` | Run `g` and `h` on the input, then give their results to `f`, in that argument order. |
-| `flip f` | Exchange the order of `f`'s first two arguments. |
-| `curry` / `uncurry` | Convert a pair-taking function to successive arguments / convert back to a pair-taking function. |
-| `tap f` | Run `f` on the input, then return the original input; useful for an action such as printing. |
-| `const value` | Make a function that ignores its input and returns `value`. |
+| `id` | Return the input unchanged. |
+| `both f g` | Run both functions on the input and return their results as a pair. |
+| `fork f g h` | Run `g` and `h`, then pass their results to `f`, in that order. |
+| `flip f` | Exchange the first two successive arguments. |
+| `tap f` | Run `f`, then return the original input. |
+| `const value` | Return a function that ignores its input and returns `value`. |
 
-`length` counts elements in a list; `sum` adds them. For `[3, 5, 10]`,
-`both length sum` gives `(3, 18)`. This two-value group is a **tuple**.
-`average = fork div length sum` passes `3` and `18` to `div`; because the input
-is last, `div 3 18` means `18 / 3`, giving `6`.
+`length` counts a list and `sum` adds it. For `[3, 5, 10]`, `both length sum`
+returns `(3, 18)`, a two-value **tuple**. `average = fork div length sum` gives
+`6`: data-last `div 3 18` means `18 / 3`.
 
-A tuple is one value, so taking a tuple still means taking one argument.
-It differs from taking a value and returning another function. The ordinary
-library functions `curry` and `uncurry` make that conversion explicit.
-A **type signature** follows `:`. `I64` means a signed 64-bit integer, and `->`
-separates an input type from its result type:
+A tuple is one argument. `curry` converts a pair-taking function to successive
+arguments; `uncurry` converts back. For example, `sum-pair = uncurry add` takes
+`(2, 3)` and returns `5`; `sum-curried = curry sum-pair` accepts `2` and then `3`.
+The compiler never implicitly unpacks a tuple passed to an ordinary function.
 
-```fwp
-sum-pair : (I64, I64) -> I64
-sum-pair = uncurry add
+`const 7` is a function; `7` is a number. `[1, 2, 3] | map (const 7)` gives
+`[7, 7, 7]`. `map 7` is a type error. Here `const` means “constant function,”
+not an immutable binding declaration. It may also return a function:
+`const (add 1)` ignores one input and returns `add 1`, which still needs a number.
+[Lesson 4](../04-effects/README.md) uses this when updating handled state.
 
-sum-curried : I64 -> I64 -> I64
-sum-curried = curry sum-pair
-```
+## The complete program
 
-The first signature takes one pair and returns an integer. The second takes an
-integer and returns a function from another integer to an integer: `I64 -> (I64 -> I64)`.
-
-`(2, 3) | sum-pair` gives `5`. `3 | sum-curried 2` also gives `5`, as does
-`3 | add 2`. Ordinary curried calls need neither helper; use them when changing
-between a pair and successive arguments. The compiler does not implicitly
-unpack `(2, 3)` when it is passed to `add`.
-
-## Constant functions
-
-`const 7` is a function; `7` is a number. `map` applies a function to each element
-of a list, so `[1, 2, 3] | map (const 7)` gives `[7, 7, 7]`. Passing `7` directly
-to `map` is a type error: the argument needs to be callable.
-
-The name `const` means “constant function,” not an immutable variable declaration.
-It does not delay evaluating its argument. A constant function can return another
-function: `const (add 1)` ignores one input and returns `add 1`, which still needs
-a number. [Lesson 4](../04-effects/README.md) explains why this is useful when
-updating an explicitly handled state value.
-
-## Reading the complete program
-
-Square brackets make a list, and commas separate its elements. In `main`, each
-element prints a result. Elements run left to right, and `ignore` discards the
-resulting list. `echo` prints a value; `print` prints a string without quotes.
-`upper` changes the letters of a string to uppercase. The final line therefore
-prints `PIPES!`.
-
-## The program
+Square brackets make a list. Its elements run left to right; `ignore` discards
+the resulting list. `echo` prints a value, `print` prints a string without quotes,
+and `upper` changes a string's letters to uppercase.
 
 [`main.fwp`](main.fwp):
 
@@ -131,6 +138,9 @@ quadruple = double | double
 
 decrement = sub 1
 
+energy : I64 -> I64
+energy = fn x -> let square = x * x in square + square
+
 average = fork div length sum
 
 sum-pair : (I64, I64) -> I64
@@ -141,6 +151,7 @@ sum-curried = curry sum-pair
 
 main = [
     ten | echo,
+    3 | energy | echo,
     3 | quadruple | echo,
     10 | decrement | echo,
     [3, 5, 10] | average | echo,
@@ -151,12 +162,13 @@ main = [
 ] | ignore
 ```
 
-Run it with `fwp run docs/tutorials/01-pipes-and-functions/main.fwp` (compiled to native code and cached), or
-build an executable with `fwp build docs/tutorials/01-pipes-and-functions/main.fwp -o pipes-and-functions`. The output is
-[`main.out`](main.out):
+Run `fwp run docs/tutorials/01-pipes-and-functions/main.fwp` from the repository
+root. It compiles and caches native code. Add `--interp` to interpret instead.
+Expected [`main.out`](main.out):
 
 ```
 10
+18
 12
 9
 6
@@ -166,10 +178,4 @@ build an executable with `fwp build docs/tutorials/01-pipes-and-functions/main.f
 PIPES!
 ```
 
-`main` is a list because the elements of a list (or a tuple) are
-evaluated, and their effects performed, from left to right; `ignore`
-discards the result. `echo` shows any value; `print` writes a string.
-
----
-
-Next: [Data: records, tuples and variants](../02-data/README.md) · [All tutorials](../README.md)
+Next: [Data](../02-data/README.md) · [All tutorials](../README.md)

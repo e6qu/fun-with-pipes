@@ -262,7 +262,7 @@ fn derived(e: &Expr, aliases: &BTreeSet<Local>) -> bool {
     }
 }
 
-fn uses_only_borrows(
+pub(super) fn uses_only_borrows(
     prog: &Program,
     contracts: &BTreeMap<FuncId, Vec<Local>>,
     locals: &[MT],

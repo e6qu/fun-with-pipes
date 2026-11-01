@@ -9,16 +9,16 @@
 //! declarations, formatting runs `fwp fmt`, and completion offers the
 //! file's names and the standard library's with their types.
 
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::io::{BufRead, Write};
 use std::path::{Path, PathBuf};
 
-use crate::ast::{Decl, Expr, ExprKind, Module};
+use crate::ast::{Decl, Expr, ExprKind, Module, NodeId, Pattern};
 use crate::diag::{Diagnostic, Level, Span};
 use crate::driver::{check_source, show_scheme, Compilation};
 use crate::env::Scope;
 use crate::json::Json;
-use crate::lexer::{lex, Tok, Token};
+use crate::lexer::{lex, Sym, Tok, Token};
 use crate::parser::parse_module_recover;
 
 /// Serve requests from `input` until `exit`; returns the exit status (0
@@ -196,7 +196,7 @@ impl<W: Write> Server<W> {
 
     fn request(&mut self, method: &str, uri: &str, pos: Option<(u32, u32)>, params: &Json) -> Json {
         if method == "textDocument/completion" {
-            return self.completion(uri);
+            return self.completion(uri, pos);
         }
         let Some(doc) = self.docs.get(uri) else {
             return Json::Null;
@@ -306,7 +306,7 @@ impl<W: Write> Server<W> {
         );
     }
 
-    fn completion(&mut self, uri: &str) -> Json {
+    fn completion(&mut self, uri: &str, position: Option<(u32, u32)>) -> Json {
         if self.std_items.is_none() {
             let items = match self.docs.get(uri).and_then(|d| d.comp.as_ref()) {
                 Some(c) => std_items(c),
@@ -317,21 +317,53 @@ impl<W: Write> Server<W> {
             self.std_items = Some(items);
         }
         let mut items = Vec::new();
+        let mut locals = BTreeMap::new();
         if let Some(doc) = self.docs.get(uri) {
+            if let Some((line, column)) = position.map(|(l, c)| from_lsp(&doc.text, l, c)) {
+                let token = token_at(&doc.text, line, column)
+                    .or_else(|| token_at(&doc.text, line, column.saturating_sub(1)));
+                if let Some(token) = token {
+                    for declaration in &doc.module.decls {
+                        for body in declaration.bodies() {
+                            body.walk_scoped(&mut Vec::new(), &mut |e, scope| {
+                                if same_position(e.span, token.span) {
+                                    for p in scope {
+                                        p.walk_bindings(&mut |p, name| {
+                                            let ty = doc
+                                                .comp
+                                                .as_ref()
+                                                .and_then(|c| node_type(c, p.span))
+                                                .unwrap_or_default();
+                                            locals.insert(name.to_string(), ty);
+                                        });
+                                    }
+                                }
+                            });
+                        }
+                    }
+                }
+            }
+            for (name, ty) in &locals {
+                items.push(completion_item(name, ty));
+            }
             for d in &doc.module.decls {
                 let name = match d {
                     Decl::Bind(b) => &b.name,
                     Decl::Foreign { name, .. } => name,
                     _ => continue,
                 };
-                items.push(completion_item(
-                    name,
-                    &type_of_name(doc, name).unwrap_or_default(),
-                ));
+                if !locals.contains_key(name) {
+                    items.push(completion_item(
+                        name,
+                        &type_of_name(doc, name).unwrap_or_default(),
+                    ));
+                }
             }
         }
         for (name, ty) in self.std_items.as_deref().unwrap_or_default() {
-            items.push(completion_item(name, ty));
+            if !locals.contains_key(name) {
+                items.push(completion_item(name, ty));
+            }
         }
         Json::Arr(items)
     }
@@ -501,11 +533,85 @@ fn token_at(text: &str, line: u32, col: u32) -> Option<Token> {
         .find(|t| t.span.line == line && t.span.col <= col && col < t.span.col + t.span.len.max(1))
 }
 
+/// Source occurrences resolved without requiring a successful type check.
+struct LocalOccurrence {
+    binder: NodeId,
+    span: Span,
+    declaration: bool,
+}
+
+fn same_position(a: Span, b: Span) -> bool {
+    a.line == b.line && a.col == b.col
+}
+
+fn local_occurrences(module: &Module) -> Vec<LocalOccurrence> {
+    let mut result = Vec::new();
+    for declaration in &module.decls {
+        for body in declaration.bodies() {
+            body.walk_scoped(&mut Vec::new(), &mut |e, scope| {
+                let mut add_pattern = |p: &Pattern| {
+                    p.walk_bindings(&mut |p, _| {
+                        result.push(LocalOccurrence {
+                            binder: p.id,
+                            span: p.span,
+                            declaration: true,
+                        })
+                    });
+                };
+                match &e.kind {
+                    ExprKind::Let(p, _, _) | ExprKind::Lambda(p, _) => add_pattern(p),
+                    ExprKind::Match(arms) => {
+                        for arm in arms {
+                            add_pattern(&arm.pat);
+                        }
+                    }
+                    _ => {}
+                }
+                if let ExprKind::Var(name) = &e.kind {
+                    for p in scope.iter().rev() {
+                        let mut binder = None;
+                        p.walk_bindings(&mut |p, n| {
+                            if n == name {
+                                binder = Some(p.id);
+                            }
+                        });
+                        if let Some(binder) = binder {
+                            result.push(LocalOccurrence {
+                                binder,
+                                span: e.span,
+                                declaration: false,
+                            });
+                            break;
+                        }
+                    }
+                }
+            });
+        }
+    }
+    result
+}
+
 /// The main module's expression nodes (leaves) at a span.
 fn node_at(c: &Compilation, sp: Span) -> Option<(crate::ast::NodeId, Span)> {
     let mut found = None;
     for b in c.env.bindings.iter().filter(|b| b.module == "main") {
         b.body.walk(&mut |e: &Expr| {
+            let mut pattern = |p: &Pattern| {
+                p.walk_bindings(&mut |p, _| {
+                    if p.span.file == c.root && same_position(p.span, sp) {
+                        found = Some((p.id, p.span));
+                    }
+                })
+            };
+            match &e.kind {
+                ExprKind::Lambda(p, _) | ExprKind::Let(p, _, _) => pattern(p),
+                ExprKind::Match(arms) => {
+                    for arm in arms {
+                        pattern(&arm.pat);
+                    }
+                }
+                _ => {}
+            }
             let leaf = matches!(
                 e.kind,
                 ExprKind::Var(_) | ExprKind::Ctor(_) | ExprKind::Selector(_)
@@ -556,7 +662,15 @@ fn hover(doc: &Doc, line: u32, col: u32) -> Option<Json> {
     let text = match &tok.tok {
         Tok::Ident(name) => {
             let shown = crate::types::display_name(name);
-            match (type_of_name(doc, name), local) {
+            let lexical = local_occurrences(&doc.module)
+                .iter()
+                .any(|o| same_position(o.span, tok.span));
+            let global = if lexical {
+                None
+            } else {
+                type_of_name(doc, name)
+            };
+            match (global, local) {
                 (Some(g), Some(l)) if g != l => {
                     format!("```fwp\n{} : {}\n```\nhere: `{}`", shown, g, l)
                 }
@@ -615,6 +729,17 @@ fn location_in(uri: &str, text: &str, sp: Span) -> Json {
 
 fn definition(doc: &Doc, line: u32, col: u32) -> Option<Json> {
     let tok = token_at(&doc.text, line, col)?;
+    let locals = local_occurrences(&doc.module);
+    if let Some(use_site) = locals.iter().find(|o| same_position(o.span, tok.span)) {
+        let definition = locals
+            .iter()
+            .find(|o| o.binder == use_site.binder && o.declaration)?;
+        return Some(location_in(
+            &path_to_uri(&doc.path),
+            &doc.text,
+            definition.span,
+        ));
+    }
     let (name, upper) = match &tok.tok {
         Tok::Ident(n) => (n.clone(), false),
         Tok::Upper(n) => (n.clone(), true),
@@ -675,8 +800,7 @@ fn declared(doc: &Doc) -> Vec<(String, u32)> {
 }
 
 /// The spans of the name under a position, everywhere in the document
-/// (top-level names have no local shadows); with `decl`, also where it is
-/// declared (the first occurrence on a line that declares it).
+/// resolving local shadows; with `decl`, also include its declaration.
 fn occurrences(doc: &Doc, line: u32, col: u32, decl: bool) -> Vec<Span> {
     let Some(tok) = token_at(&doc.text, line, col) else {
         return vec![];
@@ -685,6 +809,14 @@ fn occurrences(doc: &Doc, line: u32, col: u32, decl: bool) -> Vec<Span> {
         Tok::Ident(n) | Tok::Upper(n) => n.clone(),
         _ => return vec![],
     };
+    let locals = local_occurrences(&doc.module);
+    if let Some(selected) = locals.iter().find(|o| same_position(o.span, tok.span)) {
+        return locals
+            .iter()
+            .filter(|o| o.binder == selected.binder && (decl || !o.declaration))
+            .map(|o| o.span)
+            .collect();
+    }
     let decl_lines: Vec<u32> = declared(doc)
         .into_iter()
         .filter(|(n, _)| *n == name)
@@ -694,6 +826,9 @@ fn occurrences(doc: &Doc, line: u32, col: u32, decl: bool) -> Vec<Span> {
     let mut seen_lines = Vec::new();
     for t in lex(&doc.text, 0).unwrap_or_default() {
         if !matches!(&t.tok, Tok::Ident(n) | Tok::Upper(n) if *n == name) {
+            continue;
+        }
+        if locals.iter().any(|o| same_position(o.span, t.span)) {
             continue;
         }
         let declaring = decl_lines.contains(&t.span.line) && !seen_lines.contains(&t.span.line);
@@ -716,7 +851,10 @@ fn rename(doc: &Doc, line: u32, col: u32, new: &str) -> Option<Json> {
         Tok::Ident(n) | Tok::Upper(n) => n.clone(),
         _ => return None,
     };
-    if !declared(doc).iter().any(|(n, _)| *n == name) {
+    let is_local = local_occurrences(&doc.module)
+        .iter()
+        .any(|o| same_position(o.span, tok.span));
+    if !is_local && !declared(doc).iter().any(|(n, _)| *n == name) {
         return None;
     }
     let same_kind = match lex(new, 0).ok()?.as_slice() {
@@ -729,12 +867,55 @@ fn rename(doc: &Doc, line: u32, col: u32, new: &str) -> Option<Json> {
     if !same_kind {
         return None;
     }
+    // Refuse a name already used in this document: renaming must not capture
+    // another reference or merge two declarations. The client can choose a fresh name.
+    if new != name
+        && lex(&doc.text, 0)
+            .ok()?
+            .iter()
+            .any(|t| matches!(&t.tok, Tok::Ident(n) | Tok::Upper(n) if n == new))
+    {
+        return None;
+    }
+    let tokens = lex(&doc.text, 0).ok()?;
     let edits: Vec<Json> = occurrences(doc, line, col, true)
         .into_iter()
         .map(|sp| {
             Json::obj(vec![
                 ("range", range(&doc.text, sp)),
-                ("newText", Json::str(new)),
+                (
+                    "newText",
+                    Json::str({
+                        // A punned field names both its label and a lexical value.
+                        // Keep the public label while renaming the local reference.
+                        let index = tokens.iter().position(|t| same_position(t.span, sp));
+                        let pun = index.is_some_and(|i| {
+                            let mut delimiters = Vec::new();
+                            for token in &tokens[..i] {
+                                match token.tok {
+                                    Tok::Sym(
+                                        open @ (Sym::LBrace | Sym::LParen | Sym::LBracket),
+                                    ) => delimiters.push(open),
+                                    Tok::Sym(Sym::RBrace | Sym::RParen | Sym::RBracket) => {
+                                        delimiters.pop();
+                                    }
+                                    _ => {}
+                                }
+                            }
+                            delimiters.last() == Some(&Sym::LBrace)
+                                && i > 0
+                                && matches!(tokens[i - 1].tok, Tok::Sym(Sym::LBrace | Sym::Comma))
+                                && tokens.get(i + 1).is_some_and(|t| {
+                                    matches!(t.tok, Tok::Sym(Sym::RBrace | Sym::Comma))
+                                })
+                        });
+                        if pun {
+                            format!("{name} = {new}")
+                        } else {
+                            new.to_string()
+                        }
+                    }),
+                ),
             ])
         })
         .collect();

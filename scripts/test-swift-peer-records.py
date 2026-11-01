@@ -1,9 +1,14 @@
 """Reject incomplete observations and expose identical-program timing noise."""
 import copy
+import contextlib
 import hashlib
+import io
 import json
 import importlib.util
 from pathlib import Path
+import tarfile
+import tempfile
+from types import SimpleNamespace
 import unittest
 
 SPEC = importlib.util.spec_from_file_location("swift_peers", Path(__file__).with_name("measure-swift-peers.py"))
@@ -15,6 +20,32 @@ class Records(unittest.TestCase):
     def samples(self):
         return [dict(round=r, position=p, label=label, elapsedNs=1000)
                 for r in range(PEERS.ROUNDS) for p, label in enumerate(PEERS.order(r))]
+
+    def test_complete_original_evidence_is_retained_and_auditable(self):
+        root = Path(__file__).resolve().parent.parent / "docs/measurements"
+        path = root / "swift-peers-2026-10-31.tar.xz"
+        self.assertEqual(hashlib.sha256(path.read_bytes()).hexdigest(),
+                         "8ddb06a630969718322cacd10e3a3472f7e0da1c5da97106b8c0090806604118")
+        summary = json.loads((root / "swift-peers-2026-10-31.json").read_text())
+        with tempfile.TemporaryDirectory(prefix="fwp-swift-archive-") as temporary:
+            directory = Path(temporary)
+            with tarfile.open(path, "r:xz") as archive:
+                archive.extractall(directory, filter="data")
+            self.assertEqual({p.name for p in directory.iterdir()},
+                             {f"swift-peers-{arch}-{session}" for arch in ("x86_64", "aarch64") for session in (1, 2)})
+            for session in summary["sessions"]:
+                arch, number = session["architecture"], session["session"]
+                source = directory / f"swift-peers-{arch}-{number}" / "swift-peer-evidence"
+                with contextlib.redirect_stdout(io.StringIO()):
+                    PEERS.audit(SimpleNamespace(input=source, source=summary["source"], arch=arch))
+                report = json.loads((source / "report.json").read_text())
+                self.assertEqual(report["session"], number)
+                for row in session["programs"]:
+                    actual = report["programs"][row["program"]]
+                    self.assertEqual(actual["summary"], {key: row[key] for key in actual["summary"]})
+                    self.assertEqual(row["peakRssKiB"], {
+                        lang: [sample["peakRssKiB"] for sample in actual["memory"][lang]]
+                        for lang in PEERS.LANGUAGES})
 
     def test_retained_results_preserve_noise_and_different_hosts(self):
         path = Path(__file__).resolve().parent.parent / "docs/measurements/swift-peers-2026-10-31.json"

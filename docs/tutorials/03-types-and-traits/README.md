@@ -48,6 +48,14 @@ process data format. Resource types have restrictions described in the reference
 Numeric traits describe arithmetic: `Add` provides addition, `Mul`
 multiplication, and larger traits such as `Ring` group related operations.
 
+## Local inference
+
+A local binding has one inferred type. `let same = fn x -> x in same 3` uses an
+integer function. Calling that same local with both an integer and a Boolean in
+one body is rejected. For reusable generic code, declare a top-level function
+with a type-variable signature. This keeps local inference predictable and
+preserves the explicit generic contracts taught above.
+
 ## Numbers in context
 
 `F32` is a 32-bit floating-point type. In `half : F32 -> F32`, the literal `2`

@@ -227,6 +227,7 @@
     "task_ownership",
     "http2_peer_cleanup",
     "infix",
+    "local_bindings",
     "ownership",
     "cache_lifetime",
     "grpc_send_cleanup",

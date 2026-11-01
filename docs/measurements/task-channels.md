@@ -1,5 +1,11 @@
 # Sending task handles through channels
 
+Historical evidence from the recorded source below. Tracing and `--gc` were
+removed in [#217](../roadmap-history.md#tracing-gc-removal-pr-217); current programs
+use checked ownership. Read [the ownership guide](../ownership.md) for current
+acceptance rules and tests, rather than treating the old two-mode checks as
+commands for the current compiler.
+
 This extension and the [queued callback work](queued-task-handles.md) passed
 full production acceptance in [PR #190](../roadmap-history.md#queued-task-owners-and-callback-transfers-pr-190).
 
@@ -9,11 +15,11 @@ handle therefore transfers an owner into the queue; independent aliases can stil
 await that task repeatedly. The existing runtime already has typed task cleanup.
 This change extends the compiler's acceptance proof, with no new runtime operation.
 
-The compiler accepts a known task producer only when its computation and result
+This revision accepted a known task producer only when its computation and result
 cannot own a queue containing callbacks or tasks. Otherwise the queue could own
 a task that owns the queue. Records containing tasks use the same check. Unknown
 task producers and external task-bearing queues remain rejected. Sending nested task-bearing queues, or retaining them inside queued task
-computations/results, still needs a stronger proof.
+computations/results, was outside that revision’s proof.
 A rejection reports a missing proof; it does not establish that every run cycles.
 
 ## Example
@@ -50,7 +56,7 @@ omit queue destruction to prove that the counters detect retention.
 
 Proof tests cover known producers, unknown task inputs, captured task-bearing
 queues, task-result owners and external queues without any local spawn. Separate
-negative programs run in the interpreter and tracing mode before ARC rejection.
+negative programs ran in the interpreter and former tracing mode before ARC rejection.
 An unknown data-only queue stays distinct from one that may own tasks/callbacks;
 a known neighboring field cannot turn an unknown producer into a proof.
 

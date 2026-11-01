@@ -20,7 +20,7 @@ fn functional_call_matrix_counts_executed_work_and_releases_owners() {
     );
     assert_eq!(
         raw.stdout,
-        b"(66, 66)\n(64, 64)\n(528, 528)\n(70, 70)\n(65, 65)\n(496, 496)\n(496, 496)\n(528, 528)\n"
+        b"(66, 66)\n(64, 64)\n(528, 528)\n(70, 70)\n(65, 65)\n(496, 496)\n(496, 496)\n(528, 528)\n(66, 66)\n(64, 64)\n(528, 528)\n(70, 70)\n(65, 65)\n(496, 496)\n(496, 496)\n(528, 528)\n65\n65\n34\n65\n4\n64\n66\n272\n"
     );
     assert!(raw.stderr.is_empty(), "{raw:?}");
     let (_, program) = fwp::driver::compile_source(
@@ -38,14 +38,27 @@ fn functional_call_matrix_counts_executed_work_and_releases_owners() {
         let (_, id) = program.exports.iter().find(|(n, _)| n == name).unwrap();
         *id
     };
-    let entry = |name| format!("f{}", function(name));
-    // Arrow-spine functions use saturated C entries. A caller supplying fewer
-    // arguments constructs an owned partial application, not a short C call.
-    // All captures in this fixture are scalars or unit, so no child owner moves.
-    let partial = |name: &str, argument: &str, arity: u32| {
+    let entry = |name: &str| format!("f{}", function(name));
+    // Use the current native stage, not the number of arrows in the source type.
+    // A saturated entry may return a function; further inputs call that result.
+    // Fewer inputs construct an owned partial application. These constructor
+    // captures are scalars/unit; the outer calls consume their callback owners.
+    let call = |name: &str, arguments: &[&str]| {
         let id = function(name);
-        assert_eq!(program.funcs[id].arity, arity);
-        format!("fwp_rc_fresh(fwp_pap({id}, 1, (V[]){{{argument}}}))")
+        let arity = program.funcs[id].arity as usize;
+        assert!(arity > 0, "expected a callable entry: {name}");
+        if arguments.len() < arity {
+            return format!(
+                "fwp_rc_fresh(fwp_pap({id}, {}, (V[]){{{}}}))",
+                arguments.len(),
+                arguments.join(", ")
+            );
+        }
+        let mut result = format!("f{id}({})", arguments[..arity].join(", "));
+        for argument in &arguments[arity..] {
+            result = format!("fwp_apply_owned({result}, 1, (V[]){{{argument}}})");
+        }
+        result
     };
     let mut code = fwp::cgen::generate(&program).unwrap();
     let declaration = "typedef uint64_t V;";
@@ -67,35 +80,27 @@ fn functional_call_matrix_counts_executed_work_and_releases_owners() {
     for (name, control, expected) in [
         (
             "pipe",
-            format!(
-                "{}({}, n)",
-                entry("unknown-pipe"),
-                partial("increment", "0", 2)
-            ),
+            call("unknown-pipe", &[&call("increment", &["0"]), "n"]),
             "2 * (n + 1)",
         ),
         (
             "partial",
             format!(
                 "fwp_apply_owned({}, 1, (V[]){{n}})",
-                partial("escaped-partial", "n", 2)
+                call("escaped-partial", &["n"])
             ),
             "2 * n",
         ),
         (
             "borrowed",
-            format!(
-                "{}({}, n)",
-                entry("unknown-borrowed"),
-                partial("increment", "0", 2)
-            ),
+            call("unknown-borrowed", &[&call("increment", &["0"]), "n"]),
             "n * (n + 1) / 2",
         ),
         (
             "captured",
             format!(
                 "fwp_apply_owned({}, 1, (V[]){{3}})",
-                partial("escaped-captured", "n", 2)
+                call("escaped-captured", &["n"])
             ),
             "2 * (n + 3)",
         ),
@@ -106,34 +111,23 @@ fn functional_call_matrix_counts_executed_work_and_releases_owners() {
         ),
         (
             "each-count",
-            format!(
-                "{}({}, n)",
-                entry("unknown-each"),
-                partial("accumulate", "0", 2)
-            ),
+            call("unknown-each", &[&call("accumulate", &["0"]), "n"]),
             "n * (n - 1) / 2",
         ),
         (
             "folded",
-            format!(
-                "{}({}, n)",
-                entry("unknown-fold"),
-                partial("addition", "0", 3)
-            ),
+            call("unknown-fold", &[&call("addition", &["0"]), "n"]),
             "n * (n - 1) / 2",
         ),
         (
             "state-loop",
-            format!(
-                "{}({}, n)",
-                entry("unknown-state"),
-                partial("state-callback", "0", 2)
-            ),
+            call("unknown-state", &[&call("state-callback", &["0"]), "n"]),
             "n * (n + 1) / 2",
         ),
     ] {
         for (variant, expression) in [
             ("known", format!("{}(n)", entry(name))),
+            ("named", format!("{}(n)", entry(&format!("named-{name}")))),
             ("boundary", control),
         ] {
             calls.push_str(&format!(
@@ -150,6 +144,31 @@ fn functional_call_matrix_counts_executed_work_and_releases_owners() {
 "#
             ));
         }
+    }
+    for (name, expected) in [
+        ("local-tuple", "2 * n + 1"),
+        ("local-record", "2 * n + 1"),
+        ("local-text-record", "n + digits"),
+        ("local-variant", "2 * n + 1"),
+        ("local-alias", "2 * digits"),
+        ("local-owner-loop", "n * digits"),
+        ("local-loop-alias", "(n + 1) * digits"),
+        ("local-map-filter", "(n / 2) * (n / 2 + 1)"),
+    ] {
+        let function = entry(name);
+        calls.push_str(&format!(
+            r#"
+    cost_requests = cost_bytes = cost_apply = cost_boxes = cost_retains = 0;
+    cost_active = 1;
+    result = {function}(n);
+    fwp_tasks_finish();
+    cost_active = 0;
+    if(result != (V)({expected})) return 215;
+    if(fwp_heap.live != baseline || fwp_cleanups || fwp_state_len || fwp_state_owners) return 216;
+    printf("{name} local %llu %llu %llu %llu %llu %llu\n",
+        (unsigned long long)n, cost_requests, cost_bytes, cost_apply, cost_boxes, cost_retains);
+"#
+        ));
     }
     let main = "int main(int argc, char **argv)";
     assert_eq!(code.matches(main).count(), 1);
@@ -174,6 +193,8 @@ int main(int argc, char **argv) {{
     if(argc != 2) return 210;
     {callable_checks}
     V n = (V)strtoull(argv[1], NULL, 10), result;
+    char decimal[32];
+    V digits = (V)snprintf(decimal, sizeof decimal, "%llu", (unsigned long long)n);
     fwp_heap_start(); fwp_fns = fwp_fn_table; fwp_init_consts();
     size_t baseline = fwp_heap.live;
     {calls}
@@ -183,12 +204,14 @@ int main(int argc, char **argv) {{
 }}
 "#
     ));
+    let mut failures = Vec::new();
     for optimization in ["-O0", "-O2"] {
         let binary = dir.join(format!("functional{optimization}.exe"));
         let artifact = std::env::var_os("FWP_ARC_ARTIFACTS").map(|root| {
             let root = PathBuf::from(root).join("functional");
             std::fs::create_dir_all(&root).unwrap();
             std::fs::write(root.join("functional.fwp"), source).unwrap();
+            std::fs::write(root.join("program.ir"), format!("{program:#?}")).unwrap();
             let prefix = root.join(format!("functional{optimization}"));
             std::fs::write(prefix.with_extension("c"), &code).unwrap();
             prefix
@@ -210,7 +233,7 @@ int main(int argc, char **argv) {{
         let mut observations = BTreeMap::new();
         let mut report =
             String::from("case variant input allocations bytes applications boxes retains\n");
-        for count in [32, 128] {
+        for count in [0, 32, 128] {
             let output = Command::new(&binary)
                 .arg(count.to_string())
                 .output()
@@ -249,7 +272,7 @@ int main(int argc, char **argv) {{
                     .is_none());
             }
         }
-        assert_eq!(observations.len(), 32);
+        assert_eq!(observations.len(), 96);
         // Freeze the measured known-call costs, including costs still present.
         // All supported native targets use 64-bit values. These are runtime
         // requests, not C instructions; changing them needs a measured decision.
@@ -264,11 +287,45 @@ int main(int argc, char **argv) {{
                 ("folded", [0, 0, 0, 0, 0]),
                 ("state-loop", [2, 152, 1, 1, 0]),
             ] {
-                assert_eq!(
-                    observations[&(name.into(), "known".into(), n)],
-                    expected,
-                    "known-call cost changed: {name} n={n}: {report}"
-                );
+                let known = &observations[&(name.into(), "known".into(), n)];
+                if known != &expected {
+                    failures.push(format!(
+                        "{optimization} known {name} n={n}: {known:?} != {expected:?}"
+                    ));
+                }
+                let named = &observations[&(name.into(), "named".into(), n)];
+                if named.iter().zip(expected).any(|(got, limit)| *got > limit) {
+                    failures.push(format!(
+                        "{optimization} named {name} n={n}: {named:?} exceeds {expected:?}"
+                    ));
+                }
+            }
+        }
+        for n in [0_u64, 32, 128] {
+            let digits = n.to_string().len() as u64;
+            for (name, expected) in [
+                ("local-tuple", [0, 0, 0, 0, 0]),
+                ("local-map-filter", [0, 0, 0, 0, 0]),
+                ("local-record", [0, 0, 0, 0, 0]),
+                ("local-variant", [0, 0, 0, 0, 0]),
+                ("local-text-record", [1, 9 + digits, 0, 0, 0]),
+                ("local-alias", [1, 9 + digits, 0, 0, 0]),
+            ] {
+                let got = &observations[&(name.into(), "local".into(), n)];
+                if got != &expected {
+                    failures.push(format!(
+                        "{optimization} {name} n={n}: {got:?} != {expected:?}"
+                    ));
+                }
+            }
+            for (name, retain_limit) in [("local-owner-loop", 0), ("local-loop-alias", 1)] {
+                let got = &observations[&(name.into(), "local".into(), n)];
+                if got[4] > retain_limit {
+                    failures.push(format!(
+                        "{optimization} {name} n={n}: {} retains exceed {retain_limit}",
+                        got[4]
+                    ));
+                }
             }
         }
         for name in [
@@ -283,10 +340,12 @@ int main(int argc, char **argv) {{
         ] {
             let small = &observations[&(name.into(), "known".into(), 32)];
             let large = &observations[&(name.into(), "known".into(), 128)];
-            assert_eq!(
-                small[2], large[2],
-                "known callback dispatch grew: {name}: {report}"
-            );
+            if small[2] != large[2] {
+                failures.push(format!(
+                    "{optimization} known callback dispatch grew: {name}: {} -> {}",
+                    small[2], large[2]
+                ));
+            }
             if name != "result" {
                 assert!(
                     observations[&(name.into(), "boundary".into(), 32)][2] > 0,
@@ -299,4 +358,5 @@ int main(int argc, char **argv) {{
             std::fs::write(prefix.with_extension("txt"), &report).unwrap();
         }
     }
+    assert!(failures.is_empty(), "{}", failures.join("\n"));
 }

@@ -2,7 +2,7 @@
 //! linked functions keep stable IDs so cached values and captured closures live
 //! across cells without evaluating earlier runtime effects again.
 use std::cell::RefCell;
-use std::collections::HashMap;
+use std::collections::{BTreeSet, HashMap, HashSet};
 use std::hash::{Hash, Hasher};
 use std::io::{self, BufRead, IsTerminal, Write};
 use std::path::PathBuf;
@@ -10,10 +10,12 @@ use std::rc::Rc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
 
-use crate::ast::{Decl, Module};
+use crate::ast::{Decl, ExprKind, Module};
 use crate::driver::{self, Compilation};
 use crate::interp::{Ctl, Interp};
 use crate::ir::{Body, Expr, FuncId, Program, MT};
+use crate::json::Json;
+use crate::lexer::{Sym, Tok};
 use crate::value::{Closure, Value};
 
 static INTERRUPTED: AtomicBool = AtomicBool::new(false);
@@ -224,6 +226,15 @@ impl Session {
             c,
             crate::mono::Roots {
                 entry: Some(entry.clone()),
+                values: declarations
+                    .iter()
+                    .filter_map(|decl| match decl {
+                        Decl::Bind(binding) if reserved(&binding.name) => {
+                            Some(format!("main::{}", binding.name))
+                        }
+                        _ => None,
+                    })
+                    .collect(),
                 ..Default::default()
             },
         )
@@ -252,14 +263,8 @@ impl Session {
             if let Some(seed) = self.rng {
                 interpreter.rng = seed;
             }
-            let result = if self.program.funcs[id].arity == 0 {
-                interpreter.call_root(id, vec![])
-            } else {
-                Ok(Value::Closure(Rc::new(Closure {
-                    func: id,
-                    args: Vec::new(),
-                })))
-            };
+            debug_assert_eq!(self.program.funcs[id].arity, 0);
+            let result = interpreter.call_root(id, vec![]);
             self.rng = Some(interpreter.rng);
             result
         };
@@ -373,6 +378,9 @@ impl Session {
             }
             if fresh.self_tail.contains(&index) {
                 self.program.self_tail.insert(ids[index]);
+            }
+            if fresh.cached_values.contains(&index) {
+                self.program.cached_values.insert(ids[index]);
             }
             self.program.funcs.push(function);
         }
@@ -498,14 +506,16 @@ fn remap_expr(expr: &mut Expr, ids: &[FuncId]) {
 /// Delimiters and a trailing operator require more input. Layout blocks finish
 /// with a blank line; :paste is available for several declarations at once.
 pub fn incomplete(text: &str) -> bool {
-    use crate::lexer::{Sym, Tok};
     let tokens = match crate::lexer::lex(text, 0) {
         Ok(tokens) => tokens,
         Err(error) => return error.message.contains("unterminated"),
     };
     let mut open = Vec::new();
+    let mut lets = 0usize;
     for token in &tokens {
         match token.tok {
+            Tok::Keyword(crate::lexer::Kw::Let) => lets += 1,
+            Tok::Keyword(crate::lexer::Kw::In) => lets = lets.saturating_sub(1),
             Tok::Sym(Sym::LParen) | Tok::MacroCall(_) => open.push(Sym::RParen),
             Tok::Sym(Sym::LBracket) => open.push(Sym::RBracket),
             Tok::Sym(Sym::LBrace) => open.push(Sym::RBrace),
@@ -515,14 +525,14 @@ pub fn incomplete(text: &str) -> bool {
             _ => {}
         }
     }
-    if !open.is_empty() {
+    if !open.is_empty() || lets != 0 {
         return true;
     }
     let last = tokens.iter().rev().find(|t| !matches!(t.tok, Tok::Eof));
     if last.is_some_and(|t| {
         matches!(
             t.tok,
-            Tok::Keyword(crate::lexer::Kw::Match)
+            Tok::Keyword(crate::lexer::Kw::Match | crate::lexer::Kw::Fn | crate::lexer::Kw::In)
                 | Tok::Sym(
                     Sym::Eq
                         | Sym::Arrow
@@ -704,7 +714,6 @@ pub fn run_json(
             return Ok(());
         }
         let request = crate::json::Json::parse(&line)?;
-        use crate::json::Json;
         let source = request.get("source").and_then(Json::as_str);
         let command = request.get("command").and_then(Json::as_str);
         let mut printed = Vec::new();
@@ -754,23 +763,23 @@ pub fn run_json(
 }
 
 fn analyze(source: &str) -> Result<crate::json::Json, String> {
-    use crate::json::Json;
-    use crate::lexer::Tok;
     let module = crate::parser::parse_module(source, 0, &mut 0);
     let declarations = module.as_ref().is_ok_and(|m| !m.decls.is_empty());
-    if !declarations {
-        crate::parser::parse_expr_text(source, 0, &mut 0).map_err(|e| e.message)?;
-    }
-    let mut defines = std::collections::BTreeSet::new();
+    let expression = if declarations {
+        None
+    } else {
+        Some(crate::parser::parse_expr_text(source, 0, &mut 0).map_err(|e| e.message)?)
+    };
+    let mut defines = BTreeSet::new();
     let mut global_context = false;
-    if let Ok(module) = module {
-        for decl in module.decls {
+    if let Ok(module) = &module {
+        for decl in &module.decls {
             match decl {
                 Decl::Bind(b) | Decl::Macro(b) => {
-                    defines.insert(b.name);
+                    defines.insert(b.name.clone());
                 }
                 Decl::Type(t) => {
-                    defines.insert(t.name);
+                    defines.insert(t.name.clone());
                     global_context = true;
                 }
                 Decl::Import { .. } | Decl::Trait(_) | Decl::Impl(_) | Decl::Foreign { .. } => {
@@ -780,8 +789,47 @@ fn analyze(source: &str) -> Result<crate::json::Json, String> {
             }
         }
     }
-    let mut uses = std::collections::BTreeSet::new();
+    // Keep conservative type/macro dependencies, but remove lexical binders and
+    // their resolved uses. A local named out1 is not a saved REPL result.
+    let mut local_spans = HashSet::new();
+    let mut bodies: Vec<_> = module
+        .as_ref()
+        .ok()
+        .into_iter()
+        .flat_map(|module| module.decls.iter().flat_map(Decl::bodies))
+        .collect();
+    bodies.extend(expression.iter());
+    for body in bodies {
+        body.walk_scoped(&mut Vec::new(), &mut |node, scope| match &node.kind {
+            ExprKind::Let(pattern, _, _) | ExprKind::Lambda(pattern, _) => {
+                pattern.walk_bindings(&mut |binding, _| {
+                    local_spans.insert(binding.span);
+                });
+            }
+            ExprKind::Match(arms) => {
+                for arm in arms {
+                    arm.pat.walk_bindings(&mut |binding, _| {
+                        local_spans.insert(binding.span);
+                    });
+                }
+            }
+            ExprKind::Var(name) => {
+                for pattern in scope {
+                    pattern.walk_bindings(&mut |_, bound| {
+                        if bound == name {
+                            local_spans.insert(node.span);
+                        }
+                    });
+                }
+            }
+            _ => {}
+        });
+    }
+    let mut uses = BTreeSet::new();
     for token in crate::lexer::lex(source, 0).map_err(|e| e.message)? {
+        if local_spans.contains(&token.span) {
+            continue;
+        }
         match token.tok {
             Tok::Ident(name) | Tok::Upper(name) | Tok::MacroCall(name) => {
                 uses.insert(name);

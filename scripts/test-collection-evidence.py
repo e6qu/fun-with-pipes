@@ -34,13 +34,13 @@ test result: ok. 7 passed; 0 failed; 0 ignored;
 Running tests/mapped_array_construction.rs (target/debug/deps/arrays)
 test result: ok. 3 passed; 0 failed; 0 ignored;
 Running tests/numeric_array_fusion.rs (target/debug/deps/fusion)
-test result: ok. 3 passed; 0 failed; 0 ignored;
+test result: ok. 4 passed; 0 failed; 0 ignored;
 Running tests/protocol.rs (target/debug/deps/protocol)
 test result: ok. 11 passed; 0 failed; 0 ignored;
 Running tests/range_set.rs (target/debug/deps/range_set)
 test result: ok. 3 passed; 0 failed; 0 ignored;
 Running tests/repl.rs (target/debug/deps/repl)
-test result: ok. 9 passed; 0 failed; 0 ignored;
+test result: ok. 11 passed; 0 failed; 0 ignored;
 Running tests/static_constants.rs (target/debug/deps/constants)
 test result: ok. 1 passed; 0 failed; 0 ignored;
 """
@@ -127,7 +127,7 @@ class CollectionEvidence(unittest.TestCase):
     def test_interleaved_streams_and_windows_paths(self):
         for log in [LOG, LOG.replace("tests/", "tests\\").replace(
                 "Running", "\x1b[1;32mRunning\x1b[0m")]:
-            self.assertEqual(sum(REPORT.audit_tests(log).values()), 54)
+            self.assertEqual(sum(REPORT.audit_tests(log).values()), 57)
 
     def test_expected_counts_cover_the_current_test_sources(self):
         for name, count in REPORT.audit_tests(LOG).items():

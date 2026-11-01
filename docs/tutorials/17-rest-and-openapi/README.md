@@ -25,13 +25,15 @@ The sessions below run exactly as shown: the test suite runs them.
 ## Reading the example
 
 `rates` first checks weight, finds carriers serving the destination, computes
-prices, then applies options and sorts by price. `tap` performs the weight check
-while retaining the original pair of options and parcel. `rate` uses
+prices, then applies options and sorts by price. `let _` finishes the weight check
+before looking up routes. `available` holds the serving carriers once; the error
+check and rate calculation share that value. Named record patterns expose the
+fields used by the price formula. `rate` uses
 `base + weight × size-factor × per-kg`. A medium two-kilogram parcel costs 7 with
 steady (`4 + 2 × 1.5 × 1`) or 15 with swift (`9 + 2 × 1.5 × 2`).
 
 `keep` requires both the express test and any maximum-days test. `None` means no
-maximum; `Some n` passes `n` to `le`, making `days | le n` test `days <= n`.
+maximum; `Some maximum` compares `days <= maximum`.
 `check-weight` and `routes` raise distinct variants so the interface can map them
 to 422 and 404. This is a fixed illustrative tariff, not live carrier pricing.
 
@@ -194,11 +196,9 @@ express : api.RatesQuery
 express = api.RatesQuery { express = Some True, max-days = None }
 
 calls : String -> () ! {Async, IO, Network, Error[RestError]}
-calls =
-    tap (fork api.carrier id (const "steady") | option.map .countries | echo)
-    | fork apply (const parcel) (fork api.rates id (const express))
-    | json.write
-    | print
+calls = fn address ->
+    let _ = api.carrier address "steady" | option.map .countries | echo
+    in api.rates address express parcel | json.write | print
 
 main =
     ()
@@ -292,7 +292,8 @@ carrier = eq | compose .name | find | apply carriers
 # route: POST /rates
 # error: TooHeavy 422, NoRoute 404
 export rates : Options -> Parcel -> List[Rate] ! {Error[Problem]}
-rates = curry (tap (.1 | check-weight) | fork offers .0 (.1 | routes))
+rates = fn options -> fn parcel ->
+    let _ = check-weight parcel in routes parcel | offers options
 
 check-weight : Parcel -> () ! {Error[Problem]}
 check-weight = if (.weight | gt 30.0) (.weight | TooHeavy | fail) (const ())
@@ -301,11 +302,11 @@ serving : String -> List[Carrier]
 serving = contains | compose .countries | filter | apply carriers
 
 routes : Parcel -> List[Rate] ! {Error[Problem]}
-routes =
-    if
-        (.to | serving | is-empty)
-        (.to | NoRoute | fail)
-        (fork map rate (.to | serving))
+routes = fn parcel ->
+    let available = serving (parcel | .to)
+    in is-empty available | match
+        True -> parcel | .to | NoRoute | fail
+        False -> available | map (rate parcel)
 
 factor : Size -> F64
 factor = match
@@ -314,29 +315,25 @@ factor = match
     Large -> 2.5
 
 rate : Parcel -> Carrier -> Rate
-rate = curry (make Rate {
-    carrier = .1 | .name,
-    price =
-        fork
-            add
-            (.1 | .base)
-            (fork mul (.1 | .per-kg) (.0 | fork mul .weight (.size | factor))),
-    days = .1 | .days,
-})
+rate = fn { weight, size } -> fn { name, base, per-kg, days } ->
+    let adjusted-weight = weight * factor size
+    in Rate { carrier = name, price = adjusted-weight * per-kg + base, days }
 
 offers : Options -> List[Rate] -> List[Rate]
-offers = curry (fork filter (.0 | keep) .1 | sort-by .price)
+offers = fn options -> filter (keep options) | sort-by .price
 
 keep : Options -> Rate -> Bool
-keep = curry (fork
-    and
-    (if (.0 | .express) (.1 | .days | le 2) (const True))
-    (fork within (.0 | .max-days) (.1 | .days)))
+keep = fn options -> fn rate ->
+    let express-ok = options | .express | match
+        True -> rate | .days | le 2
+        False -> True
+    in and express-ok (within (options | .max-days) (rate | .days))
 
 within : Option[I64] -> I64 -> Bool
-within = curry (match
-    (None, _) -> const True
-    (Some _, _) -> le)
+within = fn limit -> fn days ->
+    limit | match
+        None -> True
+        Some maximum -> days <= maximum
 ```
 
 ---

@@ -13,6 +13,9 @@ reading the tutorials.
 | Curried function | A function receives arguments one at a time. `add 3` is a function still waiting for the number to add to. |
 | Partial application | Supplying some of a function's arguments to make a function waiting for the rest. |
 | Tacit function | A definition that combines functions without naming their input, such as `double = mul 2`. |
+| Named input | `fn x -> x * 2` names its one input `x`. A tuple pattern such as `fn (x, y) -> x + y` still receives one tuple argument. |
+| Local binding / scope | `let x = 3 in x + x` evaluates the value once, then uses its name in the body after `in`. The name is immutable and only visible in that body. |
+| Capture | A function keeps a value from its surrounding scope. In `let n = 3 in fn x -> x + n`, the returned function captures `n`. |
 | Combinator | An ordinary function that connects other functions. `both f g` applies both to one input and returns their two results. |
 | Callback | A function passed to another operation to be called later or for each element, such as `mul 2` in `map (mul 2)`. |
 | Constant function | A function that ignores its input and returns a chosen value. `const 7` returns `7` for every input; the value `7` alone is not a function. |
@@ -20,7 +23,7 @@ reading the tutorials.
 | Tuple / projection | A tuple groups values by position, such as `(3, "cat")`. A projection selects one: `.0` is the first, `.1` the second. |
 | Record / field | A record groups values by name, such as `{ age = 3 }`. `.age` selects that field. |
 | Variant / constructor | A type with named alternatives, such as `Option[T]`, whose values are `None` or `Some value`. A constructor makes one alternative. |
-| Pattern / arm | A pattern describes a value's shape in `match`; its arm is the expression after `->`. In fwp, `_` captures an argument for that expression. |
+| Pattern / arm | A pattern names or selects parts of an input. A match arm is the expression after `->`. A match `_` hole forwards an argument to that expression. In `fn`, `let` and record-field patterns, `_` discards the input. |
 | Immutable value | A value whose meaning cannot change after creation. An update returns a new logical value, even if the compiler can safely reuse its storage. |
 
 ## Types and actions

@@ -1,6 +1,7 @@
 //! Abstract syntax tree.
 
-use crate::diag::Span;
+use crate::diag::{Diagnostic, Span};
+use std::collections::HashSet;
 
 pub type NodeId = u32;
 
@@ -54,7 +55,11 @@ pub enum ExprKind {
     Make(Option<String>, Vec<(String, Expr)>),
     /// Field-wise update `update { a = f }`: applies `f` to field `a`.
     Update(Vec<(String, Expr)>),
-    /// Tacit case function.
+    /// A single-argument function with lexical pattern bindings.
+    Lambda(Pattern, Box<Expr>),
+    /// Strict, nonrecursive local binding.
+    Let(Pattern, Box<Expr>, Box<Expr>),
+    /// Tacit or named case function.
     Match(Vec<Arm>),
     Comptime(Box<Expr>),
     Quote(Box<Expr>),
@@ -147,6 +152,12 @@ pub struct Pattern {
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum PatKind {
+    /// A lexical, monomorphic value binding.
+    Bind(String),
+    /// Discard an irrefutable fn/let input without forwarding it.
+    Ignore,
+    /// Irrefutable field selection; unlisted fields are ignored.
+    Record(Vec<(String, Pattern)>),
     /// A hole: matches anything and passes the value to the arm body.
     Hole,
     Int {
@@ -329,6 +340,83 @@ pub struct Module {
 }
 
 impl Expr {
+    /// Visit evaluated expressions with the lexical patterns visible at each node.
+    /// Quoted syntax is data; only its unquoted expressions are evaluated here.
+    pub fn walk_scoped<'a>(
+        &'a self,
+        scope: &mut Vec<&'a Pattern>,
+        f: &mut dyn FnMut(&'a Expr, &[&'a Pattern]),
+    ) {
+        f(self, scope);
+        match &self.kind {
+            ExprKind::Let(p, value, body) => {
+                value.walk_scoped(scope, f);
+                scope.push(p);
+                body.walk_scoped(scope, f);
+                scope.pop();
+            }
+            ExprKind::Lambda(p, body) => {
+                scope.push(p);
+                body.walk_scoped(scope, f);
+                scope.pop();
+            }
+            ExprKind::Match(arms) => {
+                for arm in arms {
+                    scope.push(&arm.pat);
+                    arm.body.walk_scoped(scope, f);
+                    scope.pop();
+                }
+            }
+            ExprKind::Quote(body) => {
+                fn unquotes<'a>(
+                    e: &'a Expr,
+                    scope: &mut Vec<&'a Pattern>,
+                    f: &mut dyn FnMut(&'a Expr, &[&'a Pattern]),
+                ) {
+                    if matches!(e.kind, ExprKind::Quote(_)) {
+                        return;
+                    }
+                    if let ExprKind::MacroCall(name, args) = &e.kind {
+                        if name == "unquote" {
+                            for arg in args {
+                                arg.walk_scoped(scope, f);
+                            }
+                            return;
+                        }
+                    }
+                    e.children(&mut |child| unquotes(child, scope, f));
+                }
+                unquotes(body, scope, f);
+            }
+            _ => self.children(&mut |child| child.walk_scoped(scope, f)),
+        }
+    }
+
+    /// Immediate expression children in source evaluation order.
+    fn children<'a>(&'a self, f: &mut dyn FnMut(&'a Expr)) {
+        match &self.kind {
+            ExprKind::App(g, args) | ExprKind::Operator(_, g, args) => {
+                f(g);
+                args.iter().for_each(f);
+            }
+            ExprKind::Pipe(a, b) | ExprKind::Let(_, a, b) => {
+                f(a);
+                f(b);
+            }
+            ExprKind::Tuple(xs) | ExprKind::List(xs) | ExprKind::MacroCall(_, xs) => {
+                xs.iter().for_each(f)
+            }
+            ExprKind::Record(fs)
+            | ExprKind::NominalRecord(_, fs)
+            | ExprKind::With(fs)
+            | ExprKind::Make(_, fs)
+            | ExprKind::Update(fs) => fs.iter().for_each(|(_, x)| f(x)),
+            ExprKind::Match(arms) => arms.iter().for_each(|a| f(&a.body)),
+            ExprKind::Lambda(_, x) | ExprKind::Comptime(x) | ExprKind::Quote(x) => f(x),
+            _ => {}
+        }
+    }
+
     /// Visit this expression and every expression inside it, outer first.
     pub fn walk(&self, f: &mut dyn FnMut(&Expr)) {
         f(self);
@@ -337,7 +425,7 @@ impl Expr {
                 g.walk(f);
                 args.iter().for_each(|a| a.walk(f));
             }
-            ExprKind::Pipe(a, b) => {
+            ExprKind::Pipe(a, b) | ExprKind::Let(_, a, b) => {
                 a.walk(f);
                 b.walk(f);
             }
@@ -350,7 +438,7 @@ impl Expr {
             | ExprKind::Make(_, fs)
             | ExprKind::Update(fs) => fs.iter().for_each(|(_, x)| x.walk(f)),
             ExprKind::Match(arms) => arms.iter().for_each(|a| a.body.walk(f)),
-            ExprKind::Comptime(x) | ExprKind::Quote(x) => x.walk(f),
+            ExprKind::Lambda(_, x) | ExprKind::Comptime(x) | ExprKind::Quote(x) => x.walk(f),
             _ => {}
         }
     }
@@ -365,6 +453,82 @@ impl Decl {
             Decl::Trait(t) => t.defaults.iter().map(|b| &b.body).collect(),
             Decl::Impl(i) => i.bindings.iter().map(|b| &b.body).collect(),
             _ => vec![],
+        }
+    }
+}
+
+impl Pattern {
+    /// Macro syntax enters after parsing, so admission cannot rely on parser checks.
+    pub fn validate(&self, refutable: bool) -> Result<(), Diagnostic> {
+        fn visit(
+            p: &Pattern,
+            refutable: bool,
+            names: &mut HashSet<String>,
+        ) -> Result<(), Diagnostic> {
+            match &p.kind {
+            PatKind::Bind(name) => {
+                if !names.insert(name.clone()) {
+                    return Err(Diagnostic::error(p.span, format!("duplicate pattern binding `{name}`")));
+                }
+            }
+            PatKind::Ignore | PatKind::Unit => {}
+            PatKind::Tuple(items) => {
+                for item in items { visit(item, refutable, names)?; }
+            }
+            PatKind::Record(fields) => {
+                let mut labels = HashSet::new();
+                for (label, value) in fields {
+                    if !labels.insert(label) {
+                        return Err(Diagnostic::error(value.span, format!("duplicate pattern field `{label}`")));
+                    }
+                    visit(value, false, names)?;
+                }
+            }
+            _ if !refutable => return Err(Diagnostic::error(p.span,
+                "fn, let and record field patterns must always match; use match for alternatives (PIgnore discards a macro binder)")),
+            PatKind::Ctor(_, Some(items)) => {
+                for item in items { visit(item, true, names)?; }
+            }
+            _ => {}
+        }
+            Ok(())
+        }
+        visit(self, refutable, &mut HashSet::new())
+    }
+
+    /// Visit named leaves, retaining their source positions and identities.
+    pub fn walk_bindings(&self, f: &mut dyn FnMut(&Pattern, &str)) {
+        match &self.kind {
+            PatKind::Bind(name) => f(self, name),
+            PatKind::Tuple(ps) | PatKind::Ctor(_, Some(ps)) => {
+                for p in ps {
+                    p.walk_bindings(f);
+                }
+            }
+            PatKind::Record(fs) => {
+                for (_, p) in fs {
+                    p.walk_bindings(f);
+                }
+            }
+            _ => {}
+        }
+    }
+
+    /// Lexical bindings, in source order. Holes never introduce a name.
+    pub fn bindings(&self, out: &mut Vec<(NodeId, String)>) {
+        match &self.kind {
+            PatKind::Bind(n) => out.push((self.id, n.clone())),
+            PatKind::Tuple(ps) | PatKind::Ctor(_, Some(ps)) => {
+                for p in ps {
+                    p.bindings(out);
+                }
+            }
+            PatKind::Record(fs) => {
+                for (_, p) in fs {
+                    p.bindings(out);
+                }
+            }
+            _ => {}
         }
     }
 }

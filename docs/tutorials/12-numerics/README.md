@@ -26,7 +26,7 @@ works for any number type.
 
 ```fwp
 f : t -> t where Ring[t], FromFloat[t]
-f = fork mul id id | sub 2.0
+f = fn x -> x * x - 2.0
 ```
 
 `f` works on plain floats and on dual numbers alike, which is what lets
@@ -41,7 +41,10 @@ and `FromFloat` converts the floating-point literal for the chosen number type.
 Its derivative is `2x`, so at 3 the program prints 6. `newton-step` applies
 `x − f(x)/f′(x)`, moving toward a root of `f`. `iterate 5` includes the starting
 value, so four updates from 1 approach √2.
-The final function is `x² + y`, whose gradient at `(3, 4)` is `[6, 1]`.
+The final function names two list elements and computes `x² + y`, whose gradient
+at `[3, 4]` is `[6, 1]`. `nth` returns an `Option`; `option.unwrap-or zero`
+explicitly uses zero if that element is absent. The sample supplies both elements.
+The local bindings give each lookup a name and evaluate it once.
 
 The remaining outputs follow from these calculations:
 
@@ -62,10 +65,10 @@ a = matrix [[4.0, 1.0], [1.0, 3.0]]
 b = vector [1.0, 2.0]
 
 f : t -> t where Ring[t], FromFloat[t]
-f = fork mul id id | sub 2.0
+f = fn x -> x * x - 2.0
 
 newton-step : F64 -> F64
-newton-step = fork sub (fork div (derivative f) f) id
+newton-step = fn x -> let slope = derivative f x in x - f x / slope
 
 main = [
     a | matmul a | echo,
@@ -75,10 +78,10 @@ main = [
     3.0 | derivative f | echo,
     1.0 | iterate 5 newton-step | last | echo,
     [3.0, 4.0]
-    | gradient (fork
-        add
-        (nth 0 | option.unwrap-or zero | fork mul id id)
-        (nth 1 | option.unwrap-or zero))
+    | gradient (fn values ->
+        let x = values | nth 0 | option.unwrap-or zero
+        in let y = values | nth 1 | option.unwrap-or zero
+        in x * x + y)
     | echo,
 ] | ignore
 ```

@@ -47,17 +47,16 @@ The callback can still recurse or retain growing data. See
 [lesson 22](../22-recursion-and-sharing/README.md) for tail calls and the limits
 of this guarantee.
 
-Here the state is `(channel, running total)`. `both id (const 0)` creates the
-initial pair. `add-next` receives from the channel and sends the old state and
-the optional received value to `next-step`. In its `None` arm, `.1` extracts
-the total. In its `Some` arm, `curry` groups the captured state and new value
-into a pair, then constructs `Again (channel, updated total)`.
+Here the state is `(channel, accumulated)`. The pattern in `fn (channel,
+accumulated) -> ...` names both fields. `channel.recv` returns `None` when the
+closed queue is empty, so that arm stops with the accumulated total. `Some value`
+names a received integer and continues with the updated total.
 
-`produce` also accepts `()` because spawned task functions use a unit input.
-`const` discards that unused input. `send-all` builds a per-element callback
-from `channel.send`; `compose ignore` discards each send's result before `each`
-continues. Its explicit effect signature includes the actions allowed at this
-task boundary; an effect list is permission, not proof each action occurs.
+`produce` accepts a channel, then `()` because spawned task functions use a unit
+input. `fn _ -> ...` ignores that input and delays the body until the task starts.
+`each` sends the three integers in order. `let _ = ... in ...` finishes sending
+before closing the channel; `_` discards the unit result. Its effect signature
+lists the actions allowed at this task boundary, not actions every call performs.
 
 ## Deadlines
 
@@ -72,24 +71,21 @@ ignoring the task's unit input.
 
 ```fwp
 squares : List[I64] -> List[Option[I64]] ! {Async}
-squares = task.map (fork mul id id)
+squares = task.map (fn x -> x * x)
 
 produce : Channel[I64] -> () -> () ! {Async, IO, Network, FileIO}
-produce = flip (const (both (flip send-all [1, 2, 3]) channel.close | ignore))
-
-send-all : Channel[I64] -> List[I64] -> () ! {Async}
-send-all = channel.send | flip compose ignore | each
+produce = fn channel -> fn _ ->
+    let _ = [1, 2, 3] | each (channel.send channel | ignore)
+    in channel.close channel
 
 total : Channel[I64] -> I64 ! {Async}
-total = both id (const 0) | loop add-next
+total = fn channel -> loop add-next (channel, 0)
 
 add-next : (Channel[I64], I64) -> Step[(Channel[I64], I64), I64] ! {Async}
-add-next = fork next-step id (.0 | channel.recv)
-
-next-step : (Channel[I64], I64) -> Option[I64] -> Step[(Channel[I64], I64), I64]
-next-step = curry (match
-    (_, None) -> .1 | Stop
-    (_, Some _) -> curry (both (.0 | .0) (fork add (.0 | .1) .1) | Again))
+add-next = fn (channel, accumulated) ->
+    channel.recv channel | match
+        None -> Stop accumulated
+        Some value -> Again (channel, accumulated + value)
 
 the-channel : Channel[I64] -> Channel[I64]
 the-channel = id

@@ -227,6 +227,19 @@ impl Debugger {
         if let Expr::Trace(span, _) = expr {
             if let Some(frame) = self.frames.get_mut(&task).and_then(|s| s.last_mut()) {
                 frame.location = Some(span.span);
+                if let Json::Arr(values) = &mut frame.locals {
+                    for value in values {
+                        let slot = value.get("slot").and_then(Json::as_f64).map(|x| x as u32);
+                        if let Json::Obj(fields) = value {
+                            fields.retain(|(key, _)| key != "name");
+                            if let Some((name, _)) =
+                                span.names.iter().find(|(_, local)| Some(*local) == slot)
+                            {
+                                fields.push(("name".into(), Json::str(name)));
+                            }
+                        }
+                    }
+                }
             }
         }
         let operation = match expr {
@@ -488,10 +501,12 @@ impl Debugger {
                 "locals" => Ok(self.frames.get(&task).and_then(|s| s.get(self.selected)).map_or(Json::Null, |f| f.locals.clone())),
                 "frame" => match argument.parse::<usize>() { Ok(n) if n < depth => { self.selected = n; Ok(number(n)) }, _ => Err("frame index is outside the current stack".into()) },
                 "p" | "print" => {
-                    let slot = argument.parse::<usize>();
-                    slot.map_err(|_| "print expects a local slot number; use locals to list slots".to_string()).and_then(|slot| {
-                        self.frames.get(&task).and_then(|s| s.get(self.selected)).and_then(|f| f.locals.as_array()).and_then(|vs| vs.iter().find(|v| v.get("slot") == Some(&number(slot)))).cloned().ok_or("local slot is not initialized in this frame".into())
-                    })
+                    let slot = argument.parse::<usize>().ok();
+                    self.frames.get(&task).and_then(|s| s.get(self.selected))
+                        .and_then(|f| f.locals.as_array()).and_then(|vs| vs.iter().find(|v| {
+                            if let Some(slot) = slot { v.get("slot") == Some(&number(slot)) }
+                            else { v.get("name").and_then(Json::as_str) == Some(argument) }
+                        })).cloned().ok_or("no initialized local with this name or slot; use locals".into())
                 }
                 "l" | "list" => Ok(self.frames.get(&task).and_then(|s| s.get(self.selected)).map_or(Json::Null, |f| self.source_location(f.location))),
                 "trace" => {
@@ -499,7 +514,7 @@ impl Debugger {
                     if kinds.iter().all(|k| ["call", "expression", "value", "bind", "return", "error"].contains(&k.as_str())) { self.trace = kinds; Ok(Json::Null) }
                     else { Err("trace events: call expression value bind return error; empty clears tracing".into()) }
                 }
-                "h" | "help" => Ok(Json::str("break NAME or FILE:LINE; clear NAME; breakpoints; step; next; return; continue; stack; frame INDEX; locals; print SLOT; list; trace EVENTS; quit")),
+                "h" | "help" => Ok(Json::str("break NAME or FILE:LINE; clear NAME; breakpoints; step; next; return; continue; stack; frame INDEX; locals; print NAME_OR_SLOT; list; trace EVENTS; quit")),
                 _ => Err(format!("unknown debugger command {command}; use help")),
             };
             let reply = match result {

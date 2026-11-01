@@ -63,6 +63,24 @@ class DescentBudgets(unittest.TestCase):
         failures = DESCENT.paired_budget_failures({'zero': row}, 'scalar-recording')
         self.assertEqual([failure['metric'] for failure in failures], ['candidate/reference time'])
 
+    def test_array_list_limits_keep_memory_savings_separate_from_noisy_timing(self):
+        row = self.recording_case(1)
+        for label in ['fwp-ad', 'fwp-ad-history']:
+            row['medianNs'][label] = 102
+            profile = row['fwpProfiles'][label]['managed']
+            profile['requests'] = 997
+            profile['requestedBytes'] = 40000 - 72
+        row['medianNs']['fwp-ad-identical'] = 102
+        self.assertEqual(DESCENT.paired_budget_failures({'one': row}, 'array-lists'), [])
+        snapshot = copy.deepcopy(row)
+        row['medianNs']['fwp-ad-identical'] = 99
+        self.assertEqual([failure['metric'] for failure in DESCENT.paired_budget_failures(
+            {'one': row}, 'array-lists')], ['identical median variation'])
+        row = snapshot
+        row['fwpProfiles']['fwp-ad']['managed']['requests'] += 1
+        self.assertEqual([failure['metric'] for failure in DESCENT.paired_budget_failures(
+            {'one': row}, 'array-lists')], ['requests'])
+
     def test_eager_capture_limits_accept_only_lower_updated_allocation_counts(self):
         rows = {str(updates): self.recording_case(updates) for updates in [0, 1]}
         for row in rows.values():

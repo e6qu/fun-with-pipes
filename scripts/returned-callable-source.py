@@ -27,10 +27,10 @@ def boundary(code):
     for name in ("escaped-partial", "escaped-captured"):
         entries = re.findall(r'\{(\d+), e(\d+), "' + name
                              + r'", &fwp_owned_info(\d+)\}', code)
-        if len(entries) != 1 or entries[0][0] != "2" or entries[0][1] != entries[0][2]:
-            raise ValueError(f"missing saturated typed callback: {name}")
-        identities.append(entries[0][1])
-    if len(set(identities)) != 2:
+        if len(entries) != 1 or entries[0][0] not in ("1", "2") or entries[0][1] != entries[0][2]:
+            raise ValueError(f"missing callable construction stage: {name}")
+        identities.append((int(entries[0][0]), entries[0][1]))
+    if len({identity for _, identity in identities}) != 2:
         raise ValueError("the two operations must have distinct typed entries")
     for signature in ("static V fwp_apply_borrowed(", "static void fwp_closure_drop("):
         code = replace_once(code, signature, signature.removeprefix("static "))
@@ -43,8 +43,15 @@ def boundary(code):
                         "    callable_baseline = fwp_heap.live;\n"
                         "    fwp_exit_code = returned_observe(fwp_argc, fwp_argv);")
     extra = (ROOT / "tests/fixtures/returned_callable_fwp_boundary.c").read_text()
-    for marker, value in zip(("PARTIAL_ID", "CAPTURED_ID"), identities, strict=True):
-        extra = extra.replace(marker, value)
+    for marker, (arity, identity) in zip(("PARTIAL", "CAPTURED"), identities, strict=True):
+        if arity == 2:
+            construct = f"fwp_rc_fresh(fwp_pap({identity}, 1, (V[]){{(V)capture}}))"
+            direct = f"f{identity}((V)capture, (V)input)"
+        else:
+            construct = f"f{identity}((V)capture)"
+            direct = f"fwp_apply_owned({construct}, 1, (V[]){{(V)input}})"
+        extra = extra.replace(marker + "_MAKE", construct)
+        extra = extra.replace(marker + "_DIRECT", direct)
     return code + "\n" + extra
 
 

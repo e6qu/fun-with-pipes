@@ -88,3 +88,11 @@ fn lint_command_exit_status() {
         String::from_utf8_lossy(&clean.stderr)
     );
 }
+
+#[test]
+fn lexical_names_do_not_trigger_global_rewrites_or_uses() {
+    let source = "helper = 2\nmain = let helper = 1 in let id = add 1 in helper | id | echo\n";
+    let warnings = fwp::lint::lint_source(source, 0).unwrap();
+    assert!(warnings.iter().any(|w| w.code == "unused-binding"));
+    assert!(!warnings.iter().any(|w| w.code == "redundant-id"));
+}

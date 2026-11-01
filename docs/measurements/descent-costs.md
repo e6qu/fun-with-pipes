@@ -54,7 +54,8 @@ arithmetic and temporary collection/value construction; this does not attribute
 that time solely to tape appends. The clocks perturb execution: paired
 instrumented/ordinary timings, including both faster and slower observations,
 are retained. Investigate the temporary values around recording before assuming
-larger raw-buffer caches will help; D2 first targets the heap record passed to scalar `ad.push`; its lifetime proof and fixed comparison limits remain.
+larger raw-buffer caches will help. The later scalar `ad.push` record removal
+is reported below; its speed requirement remains open.
 
 ## Retained evidence
 
@@ -118,39 +119,29 @@ formatting and runtime startup/teardown. The packed fwp formula may recompute an
 edge residual while C/Rust compute it once and add to two coordinates. Explain
 these differences; do not label the entire ratio “compiler overhead.”
 
-## Original measurements and controls
+## Shared measurement controls
 
-Build every program from current source in the same native Linux job on ARM64 or
-AMD64. Use GCC O2, no fast math, `-ffp-contract=off`, no LTO, an explicit baseline
-architecture and stack-usage output. Rust uses opt-level 2, checked arithmetic,
-one codegen unit, generic CPU and no LTO. Record actual CPU, available processors,
-compiler versions, flags, source hashes and executable hashes.
+All comparisons build from the recorded source on native Linux ARM64/AMD64.
+Use GCC O2, no fast math, no LTO, `-ffp-contract=off`, explicit baseline CPU and
+stack-usage output. Rust uses opt-level 2, checked arithmetic, one codegen unit,
+generic CPU and no LTO. Record CPU, available processors, toolchain versions,
+flags, sources and binary hashes. The original standalone experiment used two
+warmups, 56 rounds, seed 20261029 and two sessions per architecture. Its
+fourteen-round schedule balances positions and adjacent labels within rounds;
+cross-round boundaries are retained, not claimed perfectly balanced.
 
-Run two warmups and 56 measured rounds. Each fourteen-round block balances every
-position and ordered adjacent pair within its seven-entry rows, using the
-existing Williams schedule and explicit seed 20261029. Cross-round boundaries
-are not exactly balanced; retain every actual order. Use a 180-second timeout
-per process and preserve incomplete results and diagnostics if a command fails.
-Collect two independent sessions per architecture. These establish new descent
-baselines; they do not change the CPU-counting budgets or claim a speedup.
+Timing covers process launch, input construction, every update, full output and
+teardown. Compilation, output verification and observers are separate. Each
+process has a 180-second deadline; failures retain completed observations.
+Check fwp against raw interpretation and every implementation against the Python
+analytic derivative at absolute/relative tolerance 1e-10. Timed output must repeat
+exactly. Never pool different hosts or discard slow/noisy cases.
 
-Check each fwp program against its raw interpreter output, and all implementations
-against the independent Python analytic derivative with absolute and relative
-tolerance 1e-10. Each implementation's timed output must repeat exactly. Preserve
-all samples and slow/noisy cases. Report medians and identical-code variation
-separately for each case and session; do not pool hosts or select quieter runs.
-
-Timing includes fresh-process launch, input construction, every update, complete
-output and teardown. Compilation and observers are separate. Record generated C,
-actual native image identities, instruction/file sizes and GCC stack estimates.
-Do not infer memory safety from an instruction listing.
-
-For each fwp form, separately observe managed allocation requests/bytes, retains,
-peak/live charge, and raw derivative registry/parent/weight/adjoint storage.
-Verify each backward traversal retires its tape, idle workspace is bounded by
-512 KiB, and physical raw storage is zero after shutdown. Compare enabled and
-disabled workspace reuse with explicit settings. Keep leak and omitted-observation
-controls; instrumentation must not be used as ordinary execution timing.
+Report managed requests/bytes, retains and peak/final charge separately from raw
+tape buffers and RSS. Every backward pass retires its tape; idle workspace stays
+within 512 KiB, with zero physical raw storage at shutdown. Explicit reuse-on/off,
+leak and omitted-observation controls remain required. Preserve native binaries,
+instruction sizes and stack estimates; these cannot establish memory safety.
 
 ## Matched-host grouped processes
 
@@ -400,32 +391,22 @@ correctness tests pass 247 Rust tests and 17 measurement controls on each Linux
 architecture. Full grouped platform checks subsequently pass in
 [PR #226](../roadmap-history.md#derivative-allocation-and-accuracy-pr-226).
 
-## Separating costs before selecting D2
+## Current derivative work
 
-1. Compare AD-history and AD-current to quantify retaining old vectors. Compare
-   explicit list/packed forms to expose representation costs, retaining their
-   different arithmetic work in the explanation.
-2. In a separate diagnostic image, time tape setup, forward work with recording,
-   reverse setup/traversal, derivative-result construction and retirement. Forward
-   time includes the objective and collection work; it is not pure append cost.
-   Record operation counts and allocation changes at these boundaries. Compare
-   this image with ordinary execution in 12 alternating paired rounds after two
-   warmups to show the observer's own effect. Very
-   short phases may round to zero at the host clock's resolution; do not treat
-   that as zero computation cost.
-3. Preserve the [refreshed output diagnostic](descent-output-current.md) for
-   packed fwp and C/Rust: full vector formatting versus a shared checksum consumer,
-   with exact result bits verified separately. Four audited sessions retain their
-   inconclusive short controls. Do not call zero-update time “output cost.”
-4. Select D2 only after these observations identify a removable cost. Write its
-   per-size storage/time limits before measuring a candidate. Preserve failure,
-   cancellation and nested-scope cleanup; recomputation may replay only pure work.
-5. D3 checks F64/F128 analytic and numerical derivatives, nesting, branch-domain
-   boundaries and checkpointed work. State tolerances and domains explicitly;
-   neither derivatives at discontinuities nor constant storage for arbitrary AD
-   are promised.
+The candidate [array traversal](array-list-traversal.md) removes the temporary
+list between the adjoint array and its element conversion. Its protocol fixes
+counts, correctness controls and whole-solve measurements before observations.
+The final list lies outside the six runtime phase clocks; no result is accepted
+yet, and a list saving must not be called a recording-time saving.
 
-The [implementation plan](../../PLAN.md#5-differentiation) owns acceptance and
-[the handoff](../development-state.md) owns the current action. D1's repeated baseline
-and fixed limits are complete. PR #226 verifies the allocation-only delivery;
-the eager-capture report owns the next D2 experiment and its delivery status.
+Keep the [output diagnostic](descent-output-current.md): full vector formatting
+versus a checksum consumer, with exact result bits checked separately. Its four
+sessions retain inconclusive short controls. Zero-update time includes startup
+and vector construction, not just output. D3 preserves F64/F128 derivative accuracy,
+nesting and checkpoint controls; it promises neither derivatives at discontinuities
+nor constant storage for arbitrary AD.
+
+[PLAN.md](../../PLAN.md#8-automatic-differentiation) owns acceptance and the
+[handoff](../development-state.md) records current work. PR #226 delivered the
+verified allocation reduction; [eager captures](eager-captures.md) records the
+subsequent optimization. D2's original combined timing requirement stays open.

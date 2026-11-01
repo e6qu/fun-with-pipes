@@ -61,7 +61,8 @@ carrier = eq | compose .name | find | apply carriers
 # route: POST /rates
 # error: TooHeavy 422, NoRoute 404
 export rates : Options -> Parcel -> List[Rate] ! {Error[Problem]}
-rates = curry (tap (.1 | check-weight) | fork offers .0 (.1 | routes))
+rates = fn options -> fn parcel ->
+    let _ = check-weight parcel in routes parcel | offers options
 
 check-weight : Parcel -> () ! {Error[Problem]}
 check-weight = if (.weight | gt 30.0) (.weight | TooHeavy | fail) (const ())
@@ -70,11 +71,11 @@ serving : String -> List[Carrier]
 serving = contains | compose .countries | filter | apply carriers
 
 routes : Parcel -> List[Rate] ! {Error[Problem]}
-routes =
-    if
-        (.to | serving | is-empty)
-        (.to | NoRoute | fail)
-        (fork map rate (.to | serving))
+routes = fn parcel ->
+    let available = serving (parcel | .to)
+    in is-empty available | match
+        True -> parcel | .to | NoRoute | fail
+        False -> available | map (rate parcel)
 
 factor : Size -> F64
 factor = match
@@ -83,26 +84,22 @@ factor = match
     Large -> 2.5
 
 rate : Parcel -> Carrier -> Rate
-rate = curry (make Rate {
-    carrier = .1 | .name,
-    price =
-        fork
-            add
-            (.1 | .base)
-            (fork mul (.1 | .per-kg) (.0 | fork mul .weight (.size | factor))),
-    days = .1 | .days,
-})
+rate = fn { weight, size } -> fn { name, base, per-kg, days } ->
+    let adjusted-weight = weight * factor size
+    in Rate { carrier = name, price = adjusted-weight * per-kg + base, days }
 
 offers : Options -> List[Rate] -> List[Rate]
-offers = curry (fork filter (.0 | keep) .1 | sort-by .price)
+offers = fn options -> filter (keep options) | sort-by .price
 
 keep : Options -> Rate -> Bool
-keep = curry (fork
-    and
-    (if (.0 | .express) (.1 | .days | le 2) (const True))
-    (fork within (.0 | .max-days) (.1 | .days)))
+keep = fn options -> fn rate ->
+    let express-ok = options | .express | match
+        True -> rate | .days | le 2
+        False -> True
+    in and express-ok (within (options | .max-days) (rate | .days))
 
 within : Option[I64] -> I64 -> Bool
-within = curry (match
-    (None, _) -> const True
-    (Some _, _) -> le)
+within = fn limit -> fn days ->
+    limit | match
+        None -> True
+        Some maximum -> days <= maximum

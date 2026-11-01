@@ -32,12 +32,14 @@ fn has_call(e: &Expr) -> bool {
         | ExprKind::With(fs)
         | ExprKind::Make(_, fs)
         | ExprKind::Update(fs) => fs.iter().any(|(_, a)| has_call(a)),
+        ExprKind::Let(_, a, b) => has_call(a) || has_call(b),
+        ExprKind::Lambda(_, b) => has_call(b),
         ExprKind::Match(arms) => arms.iter().any(|a| has_call(&a.body)),
         ExprKind::Comptime(x) => has_call(x),
         // inside a quote only unquoted parts are code
         ExprKind::Quote(x) => {
             let mut us = Vec::new();
-            crate::infer::collect_unquotes(x, &mut us);
+            crate::syntax::collect_unquote_calls(x, &mut us);
             us.into_iter().any(has_call)
         }
         _ => false,
@@ -65,30 +67,76 @@ fn decl_bodies_mut(d: &mut Decl) -> Vec<&mut Expr> {
 }
 
 fn names_in(e: &Expr, out: &mut HashSet<String>) {
-    match &e.kind {
-        ExprKind::Var(n) => {
-            out.insert(n.clone());
+    fn visit(e: &Expr, levels: &mut Vec<Vec<String>>, out: &mut HashSet<String>) {
+        fn scoped(
+            pat: &Pattern,
+            body: &Expr,
+            levels: &mut Vec<Vec<String>>,
+            out: &mut HashSet<String>,
+        ) {
+            let scope = levels.last_mut().unwrap();
+            let saved = scope.len();
+            pat.walk_bindings(&mut |_, name| scope.push(name.to_owned()));
+            visit(body, levels, out);
+            levels.last_mut().unwrap().truncate(saved);
         }
-        ExprKind::App(f, args) | ExprKind::Operator(_, f, args) => {
-            names_in(f, out);
-            args.iter().for_each(|a| names_in(a, out));
+        match &e.kind {
+            ExprKind::Var(name) => {
+                if !levels.last().unwrap().contains(name) {
+                    out.insert(name.clone());
+                }
+            }
+            ExprKind::Let(pat, value, body) => {
+                visit(value, levels, out);
+                scoped(pat, body, levels, out);
+            }
+            ExprKind::Lambda(pat, body) => scoped(pat, body, levels, out),
+            ExprKind::Match(arms) => {
+                for arm in arms {
+                    scoped(&arm.pat, &arm.body, levels, out);
+                }
+            }
+            ExprKind::Quote(body) => {
+                levels.push(Vec::new());
+                visit(body, levels, out);
+                levels.pop();
+            }
+            ExprKind::MacroCall(name, args) if name == "unquote" && levels.len() > 1 => {
+                let quoted = levels.pop().unwrap();
+                for arg in args {
+                    visit(arg, levels, out);
+                }
+                levels.push(quoted);
+            }
+            ExprKind::App(f, args) | ExprKind::Operator(_, f, args) => {
+                visit(f, levels, out);
+                for arg in args {
+                    visit(arg, levels, out);
+                }
+            }
+            ExprKind::Pipe(a, b) => {
+                visit(a, levels, out);
+                visit(b, levels, out);
+            }
+            ExprKind::Tuple(xs) | ExprKind::List(xs) | ExprKind::MacroCall(_, xs) => {
+                for x in xs {
+                    visit(x, levels, out);
+                }
+            }
+            ExprKind::Record(fields)
+            | ExprKind::NominalRecord(_, fields)
+            | ExprKind::With(fields)
+            | ExprKind::Make(_, fields)
+            | ExprKind::Update(fields) => {
+                for (_, x) in fields {
+                    visit(x, levels, out);
+                }
+            }
+            ExprKind::Comptime(x) => visit(x, levels, out),
+            _ => {}
         }
-        ExprKind::Pipe(a, b) => {
-            names_in(a, out);
-            names_in(b, out);
-        }
-        ExprKind::Tuple(xs) | ExprKind::List(xs) | ExprKind::MacroCall(_, xs) => {
-            xs.iter().for_each(|a| names_in(a, out))
-        }
-        ExprKind::Record(fs)
-        | ExprKind::NominalRecord(_, fs)
-        | ExprKind::With(fs)
-        | ExprKind::Make(_, fs)
-        | ExprKind::Update(fs) => fs.iter().for_each(|(_, a)| names_in(a, out)),
-        ExprKind::Match(arms) => arms.iter().for_each(|a| names_in(&a.body, out)),
-        ExprKind::Comptime(x) | ExprKind::Quote(x) => names_in(x, out),
-        _ => {}
     }
+    visit(e, &mut vec![Vec::new()], out);
 }
 
 /// Names a declaration defines (as written).
@@ -335,6 +383,11 @@ impl Expander<'_> {
             | ExprKind::With(fs)
             | ExprKind::Make(_, fs)
             | ExprKind::Update(fs) => fs.iter_mut().for_each(|(_, a)| self.expr(a)),
+            ExprKind::Let(_, a, b) => {
+                self.expr(a);
+                self.expr(b);
+            }
+            ExprKind::Lambda(_, b) => self.expr(b),
             ExprKind::Match(arms) => arms.iter_mut().for_each(|a| self.expr(&mut a.body)),
             ExprKind::Comptime(x) => self.expr(x),
             ExprKind::Quote(x) => self.in_quote(x),
@@ -366,8 +419,13 @@ impl Expander<'_> {
             | ExprKind::With(fs)
             | ExprKind::Make(_, fs)
             | ExprKind::Update(fs) => fs.iter_mut().for_each(|(_, a)| self.in_quote(a)),
+            ExprKind::Let(_, a, b) => {
+                self.in_quote(a);
+                self.in_quote(b);
+            }
+            ExprKind::Lambda(_, b) => self.in_quote(b),
             ExprKind::Match(arms) => arms.iter_mut().for_each(|a| self.in_quote(&mut a.body)),
-            ExprKind::Comptime(x) | ExprKind::Quote(x) => self.in_quote(x),
+            ExprKind::Comptime(x) => self.in_quote(x),
             _ => {}
         }
     }
@@ -427,5 +485,32 @@ impl Expander<'_> {
                 format!("macro `{}` produced invalid syntax: {}", name, m),
             )
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::names_in;
+    use crate::parser::parse_expr_text;
+    use std::collections::HashSet;
+
+    #[test]
+    fn dependencies_follow_quote_and_splice_scopes() {
+        for (source, expected) in [
+            ("fn value -> quote value", vec!["value"]),
+            ("fn value -> quote (unquote!(value))", vec![]),
+            ("quote (fn value -> unquote!(value))", vec!["value"]),
+            ("quote (fn value -> quote (unquote!(value)))", vec![]),
+            ("let value = other in value", vec!["other"]),
+        ] {
+            let expression = parse_expr_text(source, 0, &mut 0).unwrap();
+            let mut found = HashSet::new();
+            names_in(&expression, &mut found);
+            assert_eq!(
+                found,
+                expected.into_iter().map(str::to_owned).collect(),
+                "{source}"
+            );
+        }
     }
 }

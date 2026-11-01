@@ -1,5 +1,11 @@
 # Checking queued callbacks and handled errors
 
+Historical evidence from the recorded source below. Tracing and `--gc` were
+removed in [#217](../roadmap-history.md#tracing-gc-removal-pr-217); current programs
+use checked ownership. Read [the ownership guide](../ownership.md) for current
+acceptance rules and tests, rather than treating the old two-mode checks as
+commands for the current compiler.
+
 These are correctness and cleanup checks, not a speed benchmark. They compare
 fwp's interpreter with generated programs. They do not compare fwp with C or Rust,
 measure reference-count traffic, or establish a total-process memory bound.
@@ -11,8 +17,8 @@ The checks here concern correct cleanup; they do not measure that bookkeeping co
 
 A callback is a function stored for a later call. A channel can keep that function
 in its queue, and the function can keep other values alive. The compiler must
-prove that these owners cannot form a cycle before accepting them under
-`--gc arc`, which excludes tracing collection.
+prove that these owners cannot form an owning cycle. The recorded builds
+selected this proof with the former `--gc arc` option.
 
 The [socket fixture](../../tests/fixtures/queued_sockets.fwp) stores an `Event`
 record with a `check` function. The function owns a shared socket and reports
@@ -52,7 +58,7 @@ relationship for error and state handlers, aliases and returned records. Its
 [expected output](../../tests/fixtures/handled_callbacks.out) includes caught
 errors, successful unit and state results, and `before` printed before a failure.
 Separate type checks reject undeclared IO and preserve ordinary callback rules.
-Native execution covers ARC/tracing at O0/O2. WASI, the WebAssembly system
+The recorded native execution covered ARC/tracing at O0/O2. WASI, the WebAssembly system
 interface, covers ARC at O1/O2 on Node running on Linux ARM64 and AMD64. Its
 cleanup checks physical allocations, bytes and count-table entries; deliberately
 omitting a free must fail with exit code 244. This is not WASI socket support.

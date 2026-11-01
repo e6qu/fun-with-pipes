@@ -43,6 +43,14 @@ formats, domains and rounding.
 - A **Markdown cell** contains explanations. The renderer supports headings,
   paragraphs, lists, inline code and fenced code blocks. It treats HTML as text.
 
+Local names stay inside their expression. For example, an expression cell can
+contain `let square = 3 * 3 in square + square`, which displays `18`. The
+initializer computes `9` once; the body adds it twice. It neither creates a
+notebook-wide `square` nor depends on another cell defining that name. A local
+name such as `out1` is an ordinary binding, not a reference to a REPL result.
+Named inputs in `fn x -> x * x` likewise do not create cell dependencies.
+See [local bindings](repl.md#name-an-input-or-intermediate-value) for more examples.
+
 Choose **Run** on a code cell, or press Ctrl/Command + Enter in its editor.
 **Run all** evaluates expression cells in their displayed order after checking
 all definitions. **Stop** terminates the current interpreter session; the next

@@ -388,4 +388,6 @@ the exact source/run identities.
 
 Coverage controls check selected targets against production jobs. Linux-only
 storage tests do not establish Windows support; Windows has its own native storage
-checks. These checks do not complete [the roadmap](../../PLAN.md), including tracing removal.
+checks. These historical deliveries did not establish tracing removal;
+[PR #217](../roadmap-history.md#tracing-gc-removal-pr-217) later verified that
+separately. Current work is in [the plan](../../PLAN.md).

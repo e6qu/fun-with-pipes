@@ -1,11 +1,17 @@
 # Checking callbacks that retain data queues
 
+Historical evidence from the recorded source below. Tracing and `--gc` were
+removed in [#217](../roadmap-history.md#tracing-gc-removal-pr-217); current programs
+use checked ownership. Read [the ownership guide](../ownership.md) for current
+acceptance rules and tests, rather than treating the old two-mode checks as
+commands for the current compiler.
+
 Automatic reference counting (ARC) releases shared storage when its last owner
 finishes. Tracing collection instead finds live objects by following references.
-The `--gc arc` mode uses reference counts without a tracing collector.
+The recorded `--gc arc` mode used counts without tracing.
 
 A queued callback is a function saved in a channel for a later call. That function
-can keep another queue alive. Checked `--gc arc` now accepts this when the captured
+can keep another queue alive. The measured revision accepted this when the captured
 queue comes from `channel.make`, stores data without functions, and has proved
 nested owners. Unknown queue producers remain rejected as captures. Native
 producers need their own contract; the [gRPC response extension](queued-grpc-responses.md)
@@ -15,8 +21,8 @@ rule with a complete example that prints `Some "hello"`.
 
 These are correctness and cleanup checks against fwp's raw interpreter, not a
 speed benchmark or a comparison with C/Rust. They do not measure retain/release
-traffic or total-process memory. They select ARC and tracing explicitly;
-[current native defaults](../ownership.md#checked-arc-delivery) use checked ARC.
+traffic or total-process memory. The original checks selected ARC and tracing
+explicitly; the retained report describes those builds.
 
 ## Programs and counters
 
@@ -25,7 +31,7 @@ It tests delivery and repeated reads, shared aliases, records, lists, nested dat
 queues, empty captures, undrained and closed queues, caught errors, blocked sends
 and cancellation. Successful execution prints `data queues released` once.
 
-Native tests compare ARC and tracing at O0/O2 on Linux, macOS and Windows, each on
+The recorded native tests compared ARC and tracing at O0/O2 on Linux, macOS and Windows, each on
 ARM64 and AMD64. Test-only counters inserted into generated C require at most 64
 live queue objects, at least one created queue, and none remaining at teardown.
 ARC must also return all managed allocator charges and run no tracing collections.
@@ -58,8 +64,8 @@ disassembly audit or execution in an actual browser engine.
 
 ## Reproduce and inspect
 
-Dispatch `.github/workflows/numerics.yml` with `suite=channel-proof` and
-`native_runner=all`. The [report](queued-data-channels-2026-10-21.json) records the
+The recorded workflow was `suite=channel-proof`, `native_runner=all` in
+`.github/workflows/numerics.yml`. Reproduce it at the report’s source revision. The [report](queued-data-channels-2026-10-21.json) records the
 exact compiler source, eight jobs, artifact digests, native compilers and inspected
 outputs. All completed logs were audited.
 [PR #185](../roadmap-history.md#queued-callbacks-retaining-data-queues-pr-185)

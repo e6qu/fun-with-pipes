@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [callable-phase-paired, callable-phase-context, callable-construction-diagnosis, callable-phases, callable-phase-report, swift-peer-report, swift-peers, returned-callables, state-range-checks, scalar-fold-checks, scan-comparison, buffer-baselines, buffer-peer-checks, timing-names, timing-resources, typed-loop-state, kernel-codegen, timing-diagnostics, kernel-baselines, eager-captures, eager-capture-time, runtime-startup, decimal-count, decimal-count-repeat, decimal-count-interleaved, decimal-count-balanced, cpu-phases, cpu-baselines, functional-calls, functional-probes, parser-measurements, parser-workspace, inline-key-time, inline-key-audit, arc-cost-audit, scalar-projections, unique-arrays, unique-array-checks, arc-costs, ownership-analysis, compiler-lifetimes, array-sort, list-copy-costs, list-copy, benchmark-comparison, socket-inheritance, http-mappings, http-idle-checks, array-text, float-text, float-text-checks, float-text-costs, descent-output, coordinate-work, descent-batches, descent-call-costs, descent-peers, descent-recording, descent-checks, ad-depth, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, wordfreq-current, direct-strings, string-reuse, ad-application, wordfreq-baseline, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, memory-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, server-checks, http-application, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
+        options: [array-list-report, swift-allocation-report, swift-allocations, array-list-measurements, lexical-bindings, lexical-probes, callable-phase-paired, callable-phase-context, callable-construction-diagnosis, callable-phases, callable-phase-report, swift-peer-report, swift-peers, returned-callables, state-range-checks, scalar-fold-checks, scan-comparison, buffer-baselines, buffer-peer-checks, timing-names, timing-resources, typed-loop-state, kernel-codegen, timing-diagnostics, kernel-baselines, eager-captures, eager-capture-time, runtime-startup, decimal-count, decimal-count-repeat, decimal-count-interleaved, decimal-count-balanced, cpu-phases, cpu-baselines, functional-calls, functional-probes, parser-measurements, parser-workspace, inline-key-time, inline-key-audit, arc-cost-audit, scalar-projections, unique-arrays, unique-array-checks, arc-costs, ownership-analysis, compiler-lifetimes, array-sort, list-copy-costs, list-copy, benchmark-comparison, socket-inheritance, http-mappings, http-idle-checks, array-text, float-text, float-text-checks, float-text-costs, descent-output, coordinate-work, descent-batches, descent-call-costs, descent-peers, descent-recording, descent-checks, ad-depth, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, wordfreq-current, direct-strings, string-reuse, ad-application, wordfreq-baseline, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, memory-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, fixed-function-checks, server-checks, http-application, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -37,6 +37,234 @@ on:
         description: Exact focused API run supplying native diagnostic executables
         type: string
 jobs:
+  retained_comparisons:
+    if: inputs.suite == 'array-list-report' || inputs.suite == 'swift-allocation-report'
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Audit completed native observations without executing binaries
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVIDENCE_RUN: ${{ inputs.evidence_run }}
+          SOURCE_REVISION: ${{ inputs.source_revision }}
+          REPORT_SUITE: ${{ inputs.suite }}
+          SESSIONS: ${{ inputs.comparison_session }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$EVIDENCE_RUN" =~ ^[0-9]+$ ]]
+          [[ "$SOURCE_REVISION" =~ ^[0-9a-f]{40}$ ]]
+          mkdir retained-evidence
+          gh run view "$EVIDENCE_RUN" --json headSha,status,jobs > retained-evidence/run.json
+          test "$(jq -r .headSha retained-evidence/run.json)" = "$SOURCE_REVISION"
+          test "$(jq -r .status retained-evidence/run.json)" = completed
+          while read -r job; do
+            gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$job" > "retained-evidence/job-$job.json"
+            test "$(jq -r .head_sha "retained-evidence/job-$job.json")" = "$SOURCE_REVISION"
+            gh api --allow-escape-sequences "repos/$GITHUB_REPOSITORY/actions/jobs/$job/logs" > "retained-evidence/job-$job.log"
+          done < <(jq -r '.jobs[] | select(.conclusion != "skipped") | .databaseId' retained-evidence/run.json)
+          if [[ "$REPORT_SUITE" == array-list-report ]]; then
+            gh run download "$EVIDENCE_RUN" --pattern 'array-list-*' --dir retained-evidence
+            case "$SESSIONS" in
+              both) sessions='1 2' ;;
+              1|2) sessions="$SESSIONS" ;;
+              *) exit 1 ;;
+            esac
+            for runner in ubuntu-latest ubuntu-24.04-arm; do
+              case "$runner" in ubuntu-latest) arch=x86_64 ;; ubuntu-24.04-arm) arch=aarch64 ;; esac
+              for session in $sessions; do
+                python3 scripts/check-array-list-evidence.py \
+                  --input "retained-evidence/array-list-$runner-$session/array-list-evidence" \
+                  --source "$SOURCE_REVISION" --arch "$arch" --session "$session" \
+                  --summary "retained-evidence/audit-$arch-$session.json"
+              done
+            done
+          else
+            gh run download "$EVIDENCE_RUN" --pattern 'swift-allocations-*' --dir retained-evidence
+            for arch in x86_64 aarch64; do
+              python3 scripts/profile-swift-allocations.py audit \
+                --input "retained-evidence/swift-allocations-$arch-1/swift-allocation-evidence" \
+                --source "$SOURCE_REVISION" --arch "$arch"
+            done
+          fi
+          tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner \
+            -c -C retained-evidence . | xz -T1 -6 > retained-comparison.tar.xz
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ${{ inputs.suite }}-retained
+          path: retained-comparison.tar.xz
+          compression-level: 0
+          if-no-files-found: error
+
+  array_list_measurements:
+    if: inputs.suite == 'array-list-measurements'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm]
+        session: [1, 2]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    env:
+      CC: gcc
+      CARGO_BUILD_JOBS: 2
+      FWP_ARC_ARTIFACTS: array-list-checks
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Record the native host before building or timing
+        run: |
+          cpu=$(lscpu | sed -n 's/^Model name:[[:space:]]*//p')
+          machine=$(uname -m)
+          c_version=$(gcc --version | head -n 1)
+          rust_version=$(rustc --version)
+          test "$machine" = "${{ matrix.runner == 'ubuntu-latest' && 'x86_64' || 'aarch64' }}"
+          python3 scripts/descent-baselines.py --cpu "$cpu" --machine "$machine"             --cc gcc --rustc rustc --c-version "$c_version" --rust-version "$rust_version"             --source "$GITHUB_SHA" --processors 4 --output array-list-host.json
+      - run: cargo build --locked --release --bin fwp
+      - name: Numerical ownership, conversion and derivative controls
+        if: matrix.session == 1
+        run: >-
+          cargo test --locked --release --no-fail-fast
+          --test numeric_array_fusion --test autodiff_precision --test autodiff_nested
+          --test autodiff_checkpoint --test ad_tape_ownership --test ad_tape_scopes
+          --test autodiff_workspace --test autodiff_capacity_bounds --test cpu_kernel_ownership
+      - name: Measurement and phase-observer controls
+        run: |
+          python3 scripts/test-descent-budgets.py
+          python3 scripts/test-descent-phases.py --cc gcc
+      - name: Measure current gradient results with and without array fusion
+        run: >-
+          python3 scripts/measure-descent-peers.py --compiler target/release/fwp --comparison array-lists
+          --cc gcc --rustc rustc --c-arch "${{ matrix.runner == 'ubuntu-latest' && 'x86-64' || 'armv8-a' }}"
+          --objdump objdump --nm nm --time /usr/bin/time
+          --case 3:0:7:32768 --case 3:1:7:512 --case 3:199:7:32 --case 3:1999:7:4 --case 33:199:7:32 --case 129:199:7:8
+          --warmups 2 --samples 49 --order-seed 20261101 --timeout 180
+          --phase-warmups 2 --phase-samples 12 --session "${{ matrix.session }}"
+          --host "${{ matrix.runner }}" --qualification array-list-host.json --output array-list-evidence
+      - name: Retain all observations, including failed requirements
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: array-list-${{ matrix.runner }}-${{ matrix.session }}
+          path: |
+            array-list-host.json
+            array-list-evidence/
+            array-list-checks/
+          if-no-files-found: error
+
+  lexical_bindings:
+    if: inputs.suite == 'lexical-bindings' || inputs.suite == 'lexical-probes'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04-arm
+            cc: gcc
+            c_arch: armv8-a
+            rust_cpu: generic
+            rust_target: aarch64-unknown-linux-gnu
+          - runner: ubuntu-latest
+            cc: gcc
+            c_arch: x86-64
+            rust_cpu: x86-64
+            rust_target: x86_64-unknown-linux-gnu
+          - runner: macos-15
+            cc: clang
+            c_arch: armv8-a
+            rust_cpu: generic
+            rust_target: aarch64-apple-darwin
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 35
+    env:
+      CC: ${{ matrix.cc }}
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+      CARGO_PROFILE_DEV_OPT_LEVEL: '1'
+      CARGO_PROFILE_DEV_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_DEV_OVERFLOW_CHECKS: 'true'
+      CARGO_PROFILE_TEST_OPT_LEVEL: '1'
+      CARGO_PROFILE_TEST_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_TEST_OVERFLOW_CHECKS: 'true'
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: Native OpenSSL on macOS
+        if: runner.os == 'macOS'
+        run: |
+          echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
+          echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
+      - name: Native binary tools for callable probes
+        shell: bash
+        run: |
+          case "$RUNNER_OS" in
+            Linux) sudo apt-get update && sudo apt-get install -y llvm ;;
+            macOS) brew install llvm && echo "$(brew --prefix llvm)/bin" >> "$GITHUB_PATH" ;;
+            *) exit 1 ;;
+          esac
+      - run: cargo fmt --all -- --check
+      - run: cargo clippy --lib --bin fwp --test local_bindings --test compiler_call_liveness --test debugger --test infix --test fmt --test golden_parse --test golden_check --test lint --test lsp --test resource_frames --test closure_ownership --test closure_cleanup --test preempt --test repl --test numeric_array_fusion --test fold_ownership --test right_fold_ownership --test fold_unwind_ownership -- -D warnings
+      - name: Macro, optimizer and ownership dependencies
+        if: ${{ !cancelled() && inputs.suite == 'lexical-bindings' }}
+        run: |
+          cargo test --lib macros::tests
+          cargo test --lib opt::
+          cargo test --lib rc::tests
+      - name: Lexical bindings and affected language contracts
+        if: ${{ !cancelled() }}
+        env:
+          FWP_ARC_ARTIFACTS: ${{ github.workspace }}/lexical-evidence
+          TEST_SCOPE: ${{ inputs.suite }}
+        shell: bash
+        run: |
+          case "$TEST_SCOPE" in
+            lexical-probes) cargo test --no-fail-fast --test compiler_call_liveness --test local_bindings --test cli --test iterator_fusion --test vector_ownership --test repl --test fold_ownership --test right_fold_ownership --test fold_unwind_ownership ;;
+            lexical-bindings) cargo test --no-fail-fast --test local_bindings --test compiler_call_liveness --test debugger --test infix --test fmt --test golden_parse --test golden_check --test lint --test lsp --test resource_frames --test closure_ownership --test closure_cleanup --test preempt --test repl --test numeric_array_fusion ;;
+            *) exit 1 ;;
+          esac
+      - name: Returned callable native stages and cleanup
+        if: ${{ !cancelled() }}
+        run: >-
+          python3 scripts/check-returned-callables.py --compiler target/debug/fwp
+          --cc "${{ matrix.cc }}" --rustc rustc --c-arch "${{ matrix.c_arch }}"
+          --rust-cpu "${{ matrix.rust_cpu }}" --rust-target "${{ matrix.rust_target }}"
+          --rust-frame-pass prolog-epilog --objdump llvm-objdump --nm llvm-nm --size llvm-size
+          --output lexical-evidence/returned-callables
+      - name: Iterator allocation and instruction regressions
+        if: ${{ !cancelled() && inputs.suite == 'lexical-probes' }}
+        run: python3 scripts/measure-iteration.py --compiler target/debug/fwp --output lexical-evidence/iteration
+      - name: Tutorial programs and source copies
+        if: ${{ !cancelled() && inputs.suite == 'lexical-bindings' }}
+        run: cargo test --test examples --test stdlib_doc --no-fail-fast
+      - name: Notebook and debugger integration
+        if: ${{ !cancelled() && inputs.suite == 'lexical-bindings' }}
+        env:
+          FWP_TEST_BIN: ${{ github.workspace }}/target/debug/fwp
+          PYTHONPATH: sdk/python
+        run: >-
+          python3 sdk/python/tests/test_tools.py
+          Tools.test_notebook_local_names_are_not_cell_dependencies
+          Tools.test_notebook_replaces_definitions_and_never_replays_other_expressions
+          Tools.test_source_instrumentation_preserves_tutorial_behavior
+      - name: Raw interpreter corpus
+        if: ${{ !cancelled() && inputs.suite == 'lexical-bindings' }}
+        env:
+          FWP_NO_OPT: '1'
+        run: cargo test --test golden_run
+      - name: Retain compiler and ownership observations
+        if: ${{ !cancelled() && hashFiles('lexical-evidence/**') != '' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: lexical-evidence-${{ matrix.runner }}
+          path: lexical-evidence/
+          if-no-files-found: error
   callable_construction_diagnosis:
     if: inputs.suite == 'callable-construction-diagnosis' || inputs.suite == 'callable-phase-context' || inputs.suite == 'callable-phase-paired'
     strategy:
@@ -132,13 +360,26 @@ jobs:
                 --source "$SOURCE_REVISION" --arch "$arch"
             done
           done
+      - name: Preserve complete Swift peer evidence after audit
+        if: inputs.suite == 'swift-peer-report'
+        run: >-
+          tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner
+          -c -C swift-results . | xz -T1 -6 > swift-peer-retained.tar.xz
+      - name: Upload audited archive for durable retention
+        if: inputs.suite == 'swift-peer-report'
+        uses: actions/upload-artifact@v7
+        with:
+          name: swift-peer-retained
+          path: swift-peer-retained.tar.xz
+          compression-level: 0
+          if-no-files-found: error
 
   swift_peers:
-    if: inputs.suite == 'swift-peers' || inputs.suite == 'callable-phases'
+    if: inputs.suite == 'swift-peers' || inputs.suite == 'callable-phases' || inputs.suite == 'swift-allocations'
     strategy:
       fail-fast: false
       matrix:
-        session: ${{ fromJSON(inputs.suite == 'callable-phases' && '[1]' || '[1,2]') }}
+        session: ${{ fromJSON(inputs.suite == 'swift-peers' && '[1,2]' || '[1]') }}
         include:
           - runner: ubuntu-24.04
             arch: x86_64
@@ -197,6 +438,41 @@ jobs:
           python3 scripts/test-callable-phase-records.py
           python3 scripts/check-measurement-clocks.py --cc gcc
           python3 scripts/check-swift-arithmetic.py --swiftc swiftc --target "${{ matrix.arch }}-unknown-linux-gnu" --output swift-arithmetic
+      - name: Allocation profiler
+        if: inputs.suite == 'swift-allocations'
+        shell: bash
+        run: |
+          set -euo pipefail
+          apt-get install -y heaptrack libunwind-dev strace make
+          curl --fail --location --output swift-setup/libunwind-1.8.3.tar.gz \
+            https://github.com/libunwind/libunwind/releases/download/v1.8.3/libunwind-1.8.3.tar.gz
+          echo 'be30d910e67f58d82e753231f1357f326a1a088acf126b21ff77e60aab19b90b  swift-setup/libunwind-1.8.3.tar.gz' | sha256sum --check
+          tar -xf swift-setup/libunwind-1.8.3.tar.gz -C swift-setup
+          cd swift-setup/libunwind-1.8.3
+          ./configure --prefix="$GITHUB_WORKSPACE/swift-setup/unwinder" --disable-static --disable-tests --disable-documentation \
+            --disable-coredump --disable-ptrace --disable-setjmp \
+            2>&1 | tee ../unwind-configure.log
+          make -j2 2>&1 | tee ../unwind-build.log
+          make install 2>&1 | tee ../unwind-install.log
+          cd "$GITHUB_WORKSPACE"
+          rm -rf swift-setup/libunwind-1.8.3
+      - name: Allocation report controls
+        if: inputs.suite == 'swift-allocations'
+        run: python3 scripts/test-swift-allocation-records.py
+      - name: Four-language allocation profiles
+        if: inputs.suite == 'swift-allocations'
+        run: >-
+          python3 scripts/profile-swift-allocations.py collect
+          --compiler target/debug/fwp --source "$GITHUB_SHA" --arch "${{ matrix.arch }}"
+          --cc gcc --rustc rustc --swiftc swiftc --c-arch "${{ matrix.c_arch }}"
+          --rust-cpu "${{ matrix.rust_cpu }}" --target "${{ matrix.arch }}-unknown-linux-gnu"
+          --heaptrack heaptrack --heaptrack-print heaptrack_print --strace strace
+          --unwind-library-directory swift-setup/unwinder/lib --output swift-allocation-evidence
+      - name: Recompute allocator observations
+        if: inputs.suite == 'swift-allocations'
+        run: >-
+          python3 scripts/profile-swift-allocations.py audit --input swift-allocation-evidence
+          --source "$GITHUB_SHA" --arch "${{ matrix.arch }}"
       - name: Four-language programs and native Swift closures
         if: inputs.suite == 'swift-peers'
         run: >-
@@ -225,13 +501,14 @@ jobs:
               --input "callable-phase-evidence-$session" --source "$GITHUB_SHA" --arch "${{ matrix.arch }}"
           done
       - name: Preserve all completed and failed observations
-        if: ${{ always() && hashFiles('swift-setup/**', 'swift-peer-evidence/**', 'swift-arithmetic/**', 'callable-phase-evidence-*/**') != '' }}
+        if: ${{ always() && hashFiles('swift-setup/**', 'swift-peer-evidence/**', 'swift-arithmetic/**', 'callable-phase-evidence-*/**', 'swift-allocation-evidence/**') != '' }}
         uses: actions/upload-artifact@v7
         with:
           name: ${{ inputs.suite }}-${{ matrix.arch }}-${{ matrix.session }}
           path: |
             swift-setup/
             swift-peer-evidence/
+            swift-allocation-evidence/
             swift-arithmetic/
             callable-phase-evidence-*/
           if-no-files-found: error
@@ -4329,7 +4606,7 @@ jobs:
           CC: gcc
         run: cargo test --test closure_ownership fixed_function_values_preserve_aliases_and_effect_order -- --exact --nocapture
   fixed_functions_wasi:
-    if: inputs.suite == 'fixed-functions' || inputs.suite == 'channel-proof' || ((inputs.suite == 'kernels' || inputs.suite == 'queued-sockets') && inputs.native_runner == 'all')
+    if: inputs.suite == 'fixed-functions' || inputs.suite == 'fixed-function-checks' || inputs.suite == 'channel-proof' || ((inputs.suite == 'kernels' || inputs.suite == 'queued-sockets') && inputs.native_runner == 'all')
     strategy:
       fail-fast: false
       matrix:
@@ -4373,7 +4650,13 @@ jobs:
         run: bash scripts/setup-wasi-linux.sh
       - name: Asyncify toolchain
         run: npm install -g binaryen
+      - name: Fixed capture initialization with explicit storage settings
+        if: inputs.suite == 'fixed-function-checks'
+        run: |
+          cargo clippy --test wasm_arc -- -D warnings
+          cargo test --test wasm_arc fixed_function_captures_initialize_in_wasi -- --exact --nocapture
       - name: Checked WASI ownership, queues and static capture initialization
+        if: inputs.suite != 'fixed-function-checks'
         run: cargo test --no-fail-fast --test wasm_arc --test wasm_resource_counts -- --nocapture
       - name: Record WASI evidence source
         if: always()
@@ -6349,7 +6632,7 @@ jobs:
         run: cargo build --release --bin fwp
       - name: Iterator allocation and instruction evidence
         if: ${{ !cancelled() && steps.release.outcome == 'success' }}
-        run: python3 scripts/measure-iteration.py --output bundle-evidence/iteration
+        run: python3 scripts/measure-iteration.py --compiler target/release/fwp --output bundle-evidence/iteration
       - name: Wide worker allocation and instruction evidence
         if: ${{ !cancelled() && steps.release.outcome == 'success' }}
         run: python3 scripts/measure-wide.py --output bundle-evidence/wide
@@ -6410,7 +6693,7 @@ jobs:
         if: inputs.suite == 'iteration'
         run: |
           cargo build --release --bin fwp
-          python3 scripts/measure-iteration.py --output iteration-evidence
+          python3 scripts/measure-iteration.py --compiler target/release/fwp --output iteration-evidence
       - uses: actions/upload-artifact@v7
         if: always() && inputs.suite == 'iteration'
         with:

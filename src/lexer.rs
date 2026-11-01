@@ -38,6 +38,9 @@ pub enum Tok {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Kw {
+    Fn,
+    Let,
+    In,
     Rec,
     Match,
     Trait,
@@ -121,6 +124,9 @@ impl Sym {
 impl Kw {
     pub fn text(self) -> &'static str {
         match self {
+            Kw::Fn => "fn",
+            Kw::Let => "let",
+            Kw::In => "in",
             Kw::Rec => "rec",
             Kw::Match => "match",
             Kw::Trait => "trait",
@@ -143,6 +149,9 @@ impl Kw {
 
     pub(crate) fn from_str(s: &str) -> Option<Kw> {
         Some(match s {
+            "fn" => Kw::Fn,
+            "let" => Kw::Let,
+            "in" => Kw::In,
             "rec" => Kw::Rec,
             "match" => Kw::Match,
             "trait" => Kw::Trait,

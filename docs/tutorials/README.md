@@ -47,8 +47,8 @@ prove every external deployment works.
 
 | # | Tutorial | Covers |
 |---|---|---|
-| 1 | [Pipes and functions](01-pipes-and-functions/README.md) | `\|` pipes, currying, data-last arguments, combinators |
-| 2 | [Data: records, tuples and variants](02-data/README.md) | records, tuples, variants, `match`, `make`/`update`/`with` |
+| 1 | [Pipes and functions](01-pipes-and-functions/README.md) | `\|` pipes, `fn`, `let`/`in`, currying, data-last arguments, combinators |
+| 2 | [Data: records, tuples and variants](02-data/README.md) | destructuring, field shorthand, records, tuples, variants, `match` |
 | 3 | [Types and traits](03-types-and-traits/README.md) | signatures, type variables, traits and impls, literals |
 | 4 | [Effects](04-effects/README.md) | effect types, `fail`/`attempt`, `run-state` |
 | 5 | [Collections and strings](05-collections/README.md) | lists, maps, strings, lazy iterators |

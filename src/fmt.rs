@@ -406,6 +406,9 @@ impl Fmt<'_> {
         if let Some(f) = self.flat(e).filter(|f| fits(f, col)) {
             return format!("{} {}", head, f);
         }
+        if matches!(e.kind, ExprKind::Let(..)) {
+            return format!("{}\n{}{}", head, pad(next), self.expr(e, next, next));
+        }
         let ends_in_match = match &e.kind {
             ExprKind::Match(_) => true,
             ExprKind::Pipe(_, last) => matches!(last.kind, ExprKind::Match(_)),
@@ -437,6 +440,17 @@ impl Fmt<'_> {
                 }
                 Some(parts.join(" | "))
             }
+            ExprKind::Lambda(p, b) => Some(format!(
+                "fn {} -> {}",
+                self.pattern(p, false),
+                self.flat(b)?
+            )),
+            ExprKind::Let(p, v, b) => Some(format!(
+                "let {} = {} in {}",
+                self.pattern(p, false),
+                self.flat(v)?,
+                self.flat(b)?
+            )),
             ExprKind::Comptime(x) => Some(format!("comptime {}", self.flat_atom(x)?)),
             _ => self.flat_app(e),
         }
@@ -511,7 +525,9 @@ impl Fmt<'_> {
             ExprKind::Var(v) => v.clone(),
             ExprKind::Ctor(c) => c.clone(),
             ExprKind::Selector(p) => format!(".{}", p.join(".")),
-            ExprKind::App(..)
+            ExprKind::Lambda(..)
+            | ExprKind::Let(..)
+            | ExprKind::App(..)
             | ExprKind::Operator(..)
             | ExprKind::Pipe(..)
             | ExprKind::Comptime(_) => {
@@ -535,6 +551,8 @@ impl Fmt<'_> {
                     .map(|(n, x)| {
                         if projection_field(e, n, x) {
                             Some(format!(".{}", n))
+                        } else if self.value_field_shorthand(n, x) {
+                            Some(n.clone())
                         } else {
                             Some(format!("{} = {}", n, self.flat(x)?))
                         }
@@ -553,11 +571,65 @@ impl Fmt<'_> {
         }
     }
 
+    fn value_field_shorthand(&self, name: &str, value: &Expr) -> bool {
+        if !matches!(&value.kind, ExprKind::Var(n) if n == name) {
+            return false;
+        }
+        let before: String = self
+            .src
+            .line(value.span.line)
+            .chars()
+            .take(value.span.col.saturating_sub(1) as usize)
+            .collect();
+        matches!(before.trim_end().chars().last(), Some('{') | Some(','))
+            || before.trim().is_empty()
+    }
+
     // ----- hugging forms: the first line continues the current one, the
     // last closes at `indent`
 
     fn hug(&self, e: &Expr, indent: usize, col: usize) -> Option<String> {
         match &e.kind {
+            ExprKind::Lambda(p, b) => {
+                let mut head = format!("fn {} ->", self.pattern(p, false));
+                let mut body = b.as_ref();
+                while let ExprKind::Lambda(pattern, next) = &body.kind {
+                    let joined = format!("{head} fn {} ->", self.pattern(pattern, false));
+                    if !fits(&joined, col) {
+                        break;
+                    }
+                    head = joined;
+                    body = next;
+                }
+                Some(format!(
+                    "{head}\n{}{}",
+                    pad(indent + INDENT),
+                    self.expr(body, indent + INDENT, indent + INDENT)
+                ))
+            }
+            ExprKind::Let(p, v, b) => {
+                let base = if col > indent {
+                    indent + INDENT
+                } else {
+                    indent
+                };
+                let mut text = self.rhs(&format!("let {} =", self.pattern(p, false)), v, base);
+                let mut body = b.as_ref();
+                while let ExprKind::Let(pattern, value, next) = &body.kind {
+                    text.push_str(&format!(
+                        "\n{}{}",
+                        pad(base),
+                        self.rhs(
+                            &format!("in let {} =", self.pattern(pattern, false)),
+                            value,
+                            base
+                        )
+                    ));
+                    body = next;
+                }
+                text.push_str(&format!("\n{}{}", pad(base), self.rhs("in", body, base)));
+                Some(text)
+            }
             ExprKind::Match(arms) => Some(self.arms(arms, indent)),
             ExprKind::Comptime(x) => {
                 Some(format!("comptime {}", self.hug_atom(x, indent, col + 9)?))
@@ -622,6 +694,9 @@ impl Fmt<'_> {
 
     fn hug_atom(&self, e: &Expr, indent: usize, col: usize) -> Option<String> {
         match &e.kind {
+            ExprKind::Lambda(..) | ExprKind::Let(..) => {
+                self.hug(e, indent, col + 1).map(|s| format!("({s})"))
+            }
             ExprKind::Match(arms) => Some(format!("({})", self.arms(arms, indent))),
             ExprKind::App(_, args) => {
                 // nested hugs only for a closing bracket or `match`
@@ -663,6 +738,8 @@ impl Fmt<'_> {
                     if projection_field(e, n, x) {
                         s.push('.');
                         s.push_str(n);
+                    } else if self.value_field_shorthand(n, x) {
+                        s.push_str(n);
                     } else {
                         s.push_str(&self.rhs(&format!("{} =", n), x, indent + INDENT));
                     }
@@ -689,7 +766,15 @@ impl Fmt<'_> {
     fn arms(&self, arms: &[Arm], indent: usize) -> String {
         let mut s = String::from("match");
         for a in arms {
-            let head = format!("{} ->", self.pattern(&a.pat, false));
+            // A leading brace opens the arm block. Parenthesize a record
+            // pattern so the same grammar works in layout and explicit blocks.
+            let pattern = self.pattern(&a.pat, false);
+            let pattern = if matches!(a.pat.kind, PatKind::Record(_)) {
+                format!("({pattern})")
+            } else {
+                pattern
+            };
+            let head = format!("{pattern} ->");
             s.push('\n');
             s.push_str(&pad(indent + INDENT));
             s.push_str(&self.rhs(&head, &a.body, indent + INDENT));
@@ -699,7 +784,9 @@ impl Fmt<'_> {
 
     fn pattern(&self, p: &Pattern, atom: bool) -> String {
         match &p.kind {
-            PatKind::Hole => "_".into(),
+            PatKind::Bind(n) => n.clone(),
+            PatKind::Ignore | PatKind::Hole => "_".into(),
+            PatKind::Record(_) => crate::pretty::pattern(p),
             PatKind::Int { .. } | PatKind::Str(_) => match self.src.spelling(p.span) {
                 Some(s) => s.to_string(),
                 None => crate::pretty::pattern(p),
@@ -886,6 +973,14 @@ mod tests {
         assert!(same_program(s, &out), "changed the program:\n{}", out);
         assert_eq!(format_source(&out).unwrap(), out, "not idempotent");
         out
+    }
+
+    #[test]
+    fn local_bindings_stay_aligned() {
+        let source = "calculate = fn first -> fn second ->\n    let squared-first = first * first\n    in let squared-second = second * second\n    in squared-first + squared-second\n";
+        assert_eq!(fmt(source), source);
+        assert_eq!(fmt("f = fn x -> { x }\n"), "f = fn x -> { x }\n");
+        assert_eq!(fmt("f = fn x -> { x = x }\n"), "f = fn x -> { x = x }\n");
     }
 
     #[test]

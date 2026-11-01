@@ -33,6 +33,9 @@ const S_COMPTIME: u32 = 13;
 const S_OTHER: u32 = 14;
 const S_MACRO: u32 = 15;
 const S_FIELDS: u32 = 16;
+const S_LET: u32 = 17;
+const S_LAMBDA: u32 = 18;
+const S_QUOTE: u32 = 19;
 
 const P_HOLE: u32 = 0;
 const P_INT: u32 = 1;
@@ -41,6 +44,9 @@ const P_CTOR: u32 = 3;
 const P_BARE: u32 = 4;
 const P_TUPLE: u32 = 5;
 const P_UNIT: u32 = 6;
+const P_NAME: u32 = 7;
+const P_RECORD: u32 = 8;
+const P_IGNORE: u32 = 9;
 
 fn s(x: &str) -> IR {
     IR::Const(Value::str(x))
@@ -56,6 +62,10 @@ fn list(items: Vec<IR>) -> IR {
 
 /// How names are qualified and unquotes lowered while building syntax.
 pub trait QuoteCtx {
+    /// Name assigned to a binder introduced by this quote.
+    fn local_name(&self, id: NodeId, name: &str) -> String;
+    /// IR parameter corresponding to a positional template hole.
+    fn hole(&self, index: u32) -> IR;
     /// Qualified form of a value name (or the name itself if free).
     fn value_name(&self, n: &str) -> String;
     fn ctor_name(&self, n: &str) -> String;
@@ -65,6 +75,14 @@ pub trait QuoteCtx {
 
 /// Lower `quote e` (or a macro argument) to IR building a `Syntax` value.
 pub fn quote(e: &Expr, cx: &mut dyn QuoteCtx) -> Result<IR, Diagnostic> {
+    let mut renamed = e.clone();
+    rename_binders(&mut renamed, &mut vec![Vec::new()], &|id, n| {
+        cx.local_name(id, n)
+    });
+    quote_inner(&renamed, cx, 0)
+}
+
+fn quote_inner(e: &Expr, cx: &mut dyn QuoteCtx, depth: usize) -> Result<IR, Diagnostic> {
     let c = |tag: u32, args: Vec<IR>| IR::Construct(tag, args);
     Ok(match &e.kind {
         ExprKind::Int {
@@ -84,19 +102,22 @@ pub fn quote(e: &Expr, cx: &mut dyn QuoteCtx) -> Result<IR, Diagnostic> {
         ExprKind::Ctor(n) => c(S_CTOR, vec![s(&cx.ctor_name(n))]),
         ExprKind::Selector(path) => c(S_SELECT, vec![list(path.iter().map(|p| s(p)).collect())]),
         ExprKind::App(f, args) | ExprKind::Operator(_, f, args) => {
-            let fq = quote(f, cx)?;
+            let fq = quote_inner(f, cx, depth)?;
             let mut xs = Vec::new();
             for a in args {
-                xs.push(quote(a, cx)?);
+                xs.push(quote_inner(a, cx, depth)?);
             }
             c(S_APPLY, vec![fq, list(xs)])
         }
-        ExprKind::Pipe(a, b) => c(S_PIPE, vec![quote(a, cx)?, quote(b, cx)?]),
+        ExprKind::Pipe(a, b) => c(
+            S_PIPE,
+            vec![quote_inner(a, cx, depth)?, quote_inner(b, cx, depth)?],
+        ),
         ExprKind::Unit => c(S_UNIT, vec![]),
         ExprKind::Tuple(items) | ExprKind::List(items) => {
             let mut xs = Vec::new();
             for a in items {
-                xs.push(quote(a, cx)?);
+                xs.push(quote_inner(a, cx, depth)?);
             }
             let tag = if matches!(e.kind, ExprKind::Tuple(_)) {
                 S_TUPLE
@@ -108,34 +129,51 @@ pub fn quote(e: &Expr, cx: &mut dyn QuoteCtx) -> Result<IR, Diagnostic> {
         ExprKind::Record(fields) => {
             let mut xs = Vec::new();
             for (n, a) in fields {
-                xs.push(IR::Record(vec![s(n), quote(a, cx)?]));
+                xs.push(IR::Record(vec![s(n), quote_inner(a, cx, depth)?]));
             }
             c(S_RECORD, vec![list(xs)])
         }
+        ExprKind::Let(p, v, b) => c(
+            S_LET,
+            vec![
+                pattern(p, cx),
+                quote_inner(v, cx, depth)?,
+                quote_inner(b, cx, depth)?,
+            ],
+        ),
+        ExprKind::Lambda(p, b) => c(S_LAMBDA, vec![pattern(p, cx), quote_inner(b, cx, depth)?]),
         ExprKind::Match(arms) => {
             let mut xs = Vec::new();
             for arm in arms {
                 xs.push(IR::Record(vec![
                     pattern(&arm.pat, cx),
-                    quote(&arm.body, cx)?,
+                    quote_inner(&arm.body, cx, depth)?,
                 ]));
             }
             c(S_MATCH, vec![list(xs)])
         }
-        ExprKind::Comptime(x) => c(S_COMPTIME, vec![quote(x, cx)?]),
+        ExprKind::Quote(x) => c(S_QUOTE, vec![quote_inner(x, cx, depth + 1)?]),
+        ExprKind::Comptime(x) => c(S_COMPTIME, vec![quote_inner(x, cx, depth)?]),
         ExprKind::MacroCall(n, args) if n == "unquote" => {
             if args.len() != 1 {
                 return Err(Diagnostic::error(e.span, "`unquote!` takes one argument"));
             }
-            match hole_index(e) {
-                Some(i) => IR::Local(i),
-                None => cx.unquote(&args[0])?,
+            if depth > 0 {
+                c(
+                    S_MACRO,
+                    vec![s(n), list(vec![quote_inner(&args[0], cx, depth)?])],
+                )
+            } else {
+                match hole_index(e) {
+                    Some(i) => cx.hole(i),
+                    None => cx.unquote(&args[0])?,
+                }
             }
         }
         ExprKind::MacroCall(n, args) => {
             let mut xs = Vec::new();
             for a in args {
-                xs.push(quote(a, cx)?);
+                xs.push(quote_inner(a, cx, depth)?);
             }
             c(S_MACRO, vec![s(n), list(xs)])
         }
@@ -153,7 +191,7 @@ pub fn quote(e: &Expr, cx: &mut dyn QuoteCtx) -> Result<IR, Diagnostic> {
             };
             let mut xs = Vec::new();
             for (n, a) in fs {
-                xs.push(IR::Record(vec![s(n), quote(a, cx)?]));
+                xs.push(IR::Record(vec![s(n), quote_inner(a, cx, depth)?]));
             }
             c(S_FIELDS, vec![s(&kind), list(xs)])
         }
@@ -164,6 +202,16 @@ pub fn quote(e: &Expr, cx: &mut dyn QuoteCtx) -> Result<IR, Diagnostic> {
 fn pattern(p: &Pattern, cx: &mut dyn QuoteCtx) -> IR {
     let c = |tag: u32, args: Vec<IR>| IR::Construct(tag, args);
     match &p.kind {
+        PatKind::Bind(n) => c(P_NAME, vec![s(n)]),
+        PatKind::Ignore => c(P_IGNORE, vec![]),
+        PatKind::Record(fs) => c(
+            P_RECORD,
+            vec![list(
+                fs.iter()
+                    .map(|(n, p)| IR::Record(vec![s(n), pattern(p, cx)]))
+                    .collect(),
+            )],
+        ),
         PatKind::Hole => c(P_HOLE, vec![]),
         PatKind::Int { neg, mag } => {
             let v = if *neg { -(*mag as i64) } else { *mag as i64 };
@@ -210,7 +258,7 @@ pub fn hole_count(e: &Expr) -> u32 {
         .unwrap_or(0)
 }
 
-fn collect_unquote_calls<'e>(e: &'e Expr, out: &mut Vec<&'e Expr>) {
+pub(crate) fn collect_unquote_calls<'e>(e: &'e Expr, out: &mut Vec<&'e Expr>) {
     match &e.kind {
         ExprKind::MacroCall(n, _) if n == "unquote" => out.push(e),
         ExprKind::App(f, args) | ExprKind::Operator(_, f, args) => {
@@ -232,7 +280,11 @@ fn collect_unquote_calls<'e>(e: &'e Expr, out: &mut Vec<&'e Expr>) {
         ExprKind::Match(arms) => arms
             .iter()
             .for_each(|a| collect_unquote_calls(&a.body, out)),
-        ExprKind::Comptime(x) | ExprKind::Quote(x) => collect_unquote_calls(x, out),
+        ExprKind::Let(_, a, b) => {
+            collect_unquote_calls(a, out);
+            collect_unquote_calls(b, out);
+        }
+        ExprKind::Lambda(_, x) | ExprKind::Comptime(x) => collect_unquote_calls(x, out),
         _ => {}
     }
 }
@@ -264,6 +316,12 @@ pub fn const_value(e: &IR) -> Option<Value> {
 pub struct Plain;
 
 impl QuoteCtx for Plain {
+    fn hole(&self, index: u32) -> IR {
+        IR::Local(index)
+    }
+    fn local_name(&self, _id: NodeId, name: &str) -> String {
+        name.to_string()
+    }
     fn value_name(&self, n: &str) -> String {
         n.to_string()
     }
@@ -406,6 +464,13 @@ impl Builder<'_> {
                 }
                 ExprKind::Match(arms)
             }
+            S_LET => ExprKind::Let(
+                self.pattern(&fs[0])?,
+                Box::new(self.expr(&fs[1])?),
+                Box::new(self.expr(&fs[2])?),
+            ),
+            S_LAMBDA => ExprKind::Lambda(self.pattern(&fs[0])?, Box::new(self.expr(&fs[1])?)),
+            S_QUOTE => ExprKind::Quote(Box::new(self.expr(&fs[0])?)),
             S_COMPTIME => ExprKind::Comptime(Box::new(self.expr(&fs[0])?)),
             S_MACRO => {
                 let mut args = Vec::new();
@@ -451,6 +516,21 @@ impl Builder<'_> {
             return Err("malformed pattern".into());
         };
         let kind = match *tag {
+            P_NAME => PatKind::Bind(Self::str_of(&fs[0])?),
+            P_IGNORE => PatKind::Ignore,
+            P_RECORD => {
+                let mut fields = Vec::new();
+                for field in fs[0].list_items() {
+                    let Value::Record(pair) = &field else {
+                        return Err("malformed record pattern".into());
+                    };
+                    if pair.len() != 2 {
+                        return Err("malformed record pattern".into());
+                    }
+                    fields.push((Self::str_of(&pair[0])?, self.pattern(&pair[1])?));
+                }
+                PatKind::Record(fields)
+            }
             P_HOLE => PatKind::Hole,
             P_INT => match &fs[0] {
                 Value::I64(x) => PatKind::Int {
@@ -507,6 +587,15 @@ fn set_span(e: &mut Expr, span: Span) {
         | ExprKind::With(fs)
         | ExprKind::Make(_, fs)
         | ExprKind::Update(fs) => fs.iter_mut().for_each(|(_, a)| set_span(a, span)),
+        ExprKind::Let(p, v, b) => {
+            p.span = span;
+            set_span(v, span);
+            set_span(b, span);
+        }
+        ExprKind::Lambda(p, b) => {
+            p.span = span;
+            set_span(b, span);
+        }
         ExprKind::Match(arms) => arms.iter_mut().for_each(|a| {
             a.pat.span = span;
             set_span(&mut a.body, span)
@@ -519,7 +608,36 @@ fn set_span(e: &mut Expr, span: Span) {
 /// Convert a `Syntax` value back to an expression (with fresh node ids and
 /// the given span).
 pub fn from_value(v: &Value, span: Span, next_id: &mut NodeId) -> Result<Expr, String> {
-    Builder { next_id, span }.expr(v)
+    let mut e = Builder { next_id, span }.expr(v)?;
+    // Validate before fresh identities could hide duplicate introduced names.
+    let mut invalid = None;
+    e.walk(&mut |node| {
+        let mut check = |p: &Pattern, refutable| {
+            if invalid.is_none() {
+                invalid = p.validate(refutable).err().map(|d| d.message);
+            }
+        };
+        match &node.kind {
+            ExprKind::Let(p, _, _) | ExprKind::Lambda(p, _) => check(p, false),
+            ExprKind::Match(arms) => {
+                for arm in arms {
+                    check(&arm.pat, true);
+                }
+            }
+            _ => {}
+        }
+    });
+    if let Some(message) = invalid {
+        return Err(message);
+    }
+    rename_binders(&mut e, &mut vec![Vec::new()], &|id, name| {
+        if name.starts_with("::local::") {
+            format!("::local::{id}::{}", name.rsplit("::").next().unwrap())
+        } else {
+            name.to_string()
+        }
+    });
+    Ok(e)
 }
 
 /// Source text of a `Syntax` value, with qualified names shown plainly.
@@ -536,6 +654,12 @@ pub fn show(v: &Value) -> String {
 
 /// `::std::map` -> `map`, `::geo::area` -> `geo.area`.
 pub fn unqualify(name: &str) -> String {
+    if name.starts_with("::local::") {
+        return format!(
+            "_quoted_{}",
+            name.strip_prefix("::local::").unwrap().replace("::", "_")
+        );
+    }
     let Some(abs) = name.strip_prefix("::") else {
         return name.to_string();
     };
@@ -548,6 +672,12 @@ pub fn unqualify(name: &str) -> String {
 
 fn unqualify_pat(p: &mut Pattern) {
     match &mut p.kind {
+        PatKind::Bind(n) => *n = unqualify(n),
+        PatKind::Record(fs) => {
+            for (_, p) in fs {
+                unqualify_pat(p);
+            }
+        }
         PatKind::Ctor(n, args) => {
             *n = unqualify(n);
             if let Some(args) = args {
@@ -578,11 +708,127 @@ fn unqualify_expr(e: &mut Expr) {
         | ExprKind::With(fs)
         | ExprKind::Make(_, fs)
         | ExprKind::Update(fs) => fs.iter_mut().for_each(|(_, a)| unqualify_expr(a)),
+        ExprKind::Let(p, a, b) => {
+            unqualify_pat(p);
+            unqualify_expr(a);
+            unqualify_expr(b);
+        }
+        ExprKind::Lambda(p, b) => {
+            unqualify_pat(p);
+            unqualify_expr(b);
+        }
         ExprKind::Match(arms) => arms.iter_mut().for_each(|a| {
             unqualify_pat(&mut a.pat);
             unqualify_expr(&mut a.body)
         }),
         ExprKind::Comptime(x) | ExprKind::Quote(x) => unqualify_expr(x),
+        _ => {}
+    }
+}
+
+/// Rename introduced binders and their lexical uses, never syntax spliced by an
+/// unquote. Absolute local names cannot capture an ordinary caller identifier.
+fn rename_binders(
+    e: &mut Expr,
+    levels: &mut Vec<Vec<(String, String)>>,
+    rename: &dyn Fn(NodeId, &str) -> String,
+) {
+    fn bind(
+        p: &mut Pattern,
+        names: &mut Vec<(String, String)>,
+        rename: &dyn Fn(NodeId, &str) -> String,
+    ) {
+        match &mut p.kind {
+            PatKind::Bind(n) => {
+                let new = rename(p.id, n);
+                names.push((n.clone(), new.clone()));
+                *n = new;
+            }
+            PatKind::Tuple(ps) | PatKind::Ctor(_, Some(ps)) => {
+                for p in ps {
+                    bind(p, names, rename);
+                }
+            }
+            PatKind::Record(fs) => {
+                for (_, p) in fs {
+                    bind(p, names, rename);
+                }
+            }
+            _ => {}
+        }
+    }
+    match &mut e.kind {
+        ExprKind::Var(n) => {
+            if let Some((_, new)) = levels
+                .last()
+                .unwrap()
+                .iter()
+                .rev()
+                .find(|(old, _)| old == n)
+            {
+                *n = new.clone();
+            }
+        }
+        ExprKind::MacroCall(n, args) if n == "unquote" => {
+            if levels.len() > 1 {
+                let quoted = levels.pop().unwrap();
+                for arg in args {
+                    rename_binders(arg, levels, rename);
+                }
+                levels.push(quoted);
+            }
+        }
+        ExprKind::Let(p, v, b) => {
+            rename_binders(v, levels, rename);
+            let saved = levels.last().unwrap().len();
+            bind(p, levels.last_mut().unwrap(), rename);
+            rename_binders(b, levels, rename);
+            levels.last_mut().unwrap().truncate(saved);
+        }
+        ExprKind::Lambda(p, b) => {
+            let saved = levels.last().unwrap().len();
+            bind(p, levels.last_mut().unwrap(), rename);
+            rename_binders(b, levels, rename);
+            levels.last_mut().unwrap().truncate(saved);
+        }
+        ExprKind::Match(arms) => {
+            for a in arms {
+                let saved = levels.last().unwrap().len();
+                bind(&mut a.pat, levels.last_mut().unwrap(), rename);
+                rename_binders(&mut a.body, levels, rename);
+                levels.last_mut().unwrap().truncate(saved);
+            }
+        }
+        ExprKind::App(f, xs) | ExprKind::Operator(_, f, xs) => {
+            rename_binders(f, levels, rename);
+            for x in xs {
+                rename_binders(x, levels, rename);
+            }
+        }
+        ExprKind::Pipe(a, b) => {
+            rename_binders(a, levels, rename);
+            rename_binders(b, levels, rename);
+        }
+        ExprKind::Tuple(xs) | ExprKind::List(xs) | ExprKind::MacroCall(_, xs) => {
+            for x in xs {
+                rename_binders(x, levels, rename);
+            }
+        }
+        ExprKind::Record(fs)
+        | ExprKind::NominalRecord(_, fs)
+        | ExprKind::With(fs)
+        | ExprKind::Make(_, fs)
+        | ExprKind::Update(fs) => {
+            for (_, x) in fs {
+                rename_binders(x, levels, rename);
+            }
+        }
+        ExprKind::Comptime(x) => rename_binders(x, levels, rename),
+        ExprKind::Quote(x) => {
+            levels.push(Vec::new());
+            rename_binders(x, levels, rename);
+            levels.pop();
+        }
         _ => {}
     }
 }

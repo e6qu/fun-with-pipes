@@ -173,7 +173,7 @@ class Debugger:
     def locals(self):
         return self.request("locals", "")
 
-    def inspect(self, slot: int):
+    def inspect(self, slot: int | str):
         return self.request("print", str(slot))
 
     def trace(self, *events: str):

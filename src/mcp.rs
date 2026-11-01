@@ -49,10 +49,11 @@ pub fn tools(prog: &Program) -> Result<Vec<Tool>, String> {
     let mut out = Vec::new();
     for (name, fid) in &prog.exports {
         let f = &prog.funcs[*fid];
-        if !crate::cli::is_command(name) || f.arity == 0 || !prog.docs.exposed(name, "mcp") {
+        let arity = f.ty.params(usize::MAX).0.len();
+        if !crate::cli::is_command(name) || arity == 0 || !prog.docs.exposed(name, "mcp") {
             continue;
         }
-        out.push(tool(prog, name, f.arity as usize, &f.ty)?);
+        out.push(tool(prog, name, arity, &f.ty)?);
     }
     if out.is_empty() {
         return Err(crate::cli::none_exposed("mcp", "an MCP tool"));

@@ -1,7 +1,8 @@
 //! Monomorphic typed IR shared by the interpreter and the C backend.
 //!
 //! Every function value at runtime is a partial application of a known
-//! function: fwp code has no local binders, so lambda lifting is trivial.
+//! function. Lexical functions are lifted with explicit leading capture
+//! parameters; local bindings retain their original evaluation points.
 
 use std::collections::HashSet;
 use std::fmt;
@@ -137,6 +138,8 @@ pub type Local = u32;
 
 #[derive(Clone, Debug)]
 pub struct SourcePoint {
+    /// Visible source names and their physical slots, only in debugger IR.
+    pub names: Vec<(String, Local)>,
     pub span: crate::diag::Span,
     pub ty: MT,
 }
@@ -372,6 +375,31 @@ pub fn type_of<'a>(
     }
 }
 
+/// A protocol entry receives its complete decoded argument list at once.
+/// Keep the source function's construction stages inside that entry, so both
+/// execution and the lifetime proof follow them before returning a wire value.
+pub(crate) fn saturated_entry(prog: &mut Program, target: FuncId, arity: u32) -> FuncId {
+    let function = &prog.funcs[target];
+    if function.arity == arity {
+        return target;
+    }
+    let (parameters, _) = function.ty.params(arity as usize);
+    assert_eq!(parameters.len(), arity as usize);
+    let entry = Func {
+        name: format!("{}-entry", function.name),
+        arity,
+        locals: parameters.into_iter().cloned().collect(),
+        ty: function.ty.clone(),
+        body: Body::Expr(Expr::Apply(
+            Box::new(Expr::Func(target)),
+            (0..arity).map(Expr::Local).collect(),
+        )),
+    };
+    let id = prog.funcs.len();
+    prog.funcs.push(entry);
+    id
+}
+
 /// Information about named types needed at runtime (display, encoding).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum TypeShape {
@@ -399,6 +427,9 @@ pub struct Program {
     pub self_tail: std::collections::BTreeSet<FuncId>,
     /// Canonical source bindings, for persistent interpreter sessions.
     pub binding_names: std::collections::HashMap<FuncId, String>,
+    /// Session results must remain zero-argument values, even when they return
+    /// functions. Their code and captures are saved at evaluation time.
+    pub cached_values: std::collections::BTreeSet<FuncId>,
     /// Shapes of all named types reachable from function types.
     pub shapes: Shapes,
     pub main: Option<FuncId>,
@@ -458,6 +489,15 @@ pub fn check_locals(prog: &Program) -> Result<(), String> {
         }
         if let Body::Expr(e) = &f.body {
             check_expr(&func, shapes, &f.locals, e).map_err(err)?;
+        }
+    }
+    for id in &prog.cached_values {
+        if !prog
+            .funcs
+            .get(*id)
+            .is_some_and(|function| function.arity == 0)
+        {
+            return Err(format!("cached value {id} must have a zero-argument entry"));
         }
     }
     Ok(())

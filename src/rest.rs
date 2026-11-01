@@ -432,7 +432,7 @@ fn verifier(prog: &Program) -> Result<Option<Verifier>, String> {
         )
     };
     let (ps, result) = f.ty.params(1);
-    if f.arity != 1 || ps.len() != 1 || *ps[0] != MT::con("std::String") {
+    if f.ty.params(usize::MAX).0.len() != 1 || ps.len() != 1 || *ps[0] != MT::con("std::String") {
         return Err(bad());
     }
     let principal = match result {
@@ -541,13 +541,14 @@ pub fn api(prog: &Program) -> Result<Api, String> {
     let mut out: Vec<Endpoint> = Vec::new();
     for (name, fid) in &prog.exports {
         let f = &prog.funcs[*fid];
-        if !crate::cli::is_command(name) || f.arity == 0 || !prog.docs.exposed(name, "rest") {
+        let arity = f.ty.params(usize::MAX).0.len();
+        if !crate::cli::is_command(name) || arity == 0 || !prog.docs.exposed(name, "rest") {
             continue;
         }
         if name == VERIFIER && verifier.is_some() {
             continue;
         }
-        let mut ep = endpoint(prog, name, f.arity as usize, &f.ty, verifier.as_ref())?;
+        let mut ep = endpoint(prog, name, arity, &f.ty, verifier.as_ref())?;
         if ep.auth.is_empty() && !has_auth_line(prog, name) {
             ep.auth = default_auth.clone();
         }

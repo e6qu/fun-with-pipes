@@ -25,7 +25,10 @@ Jacobian is the table of derivatives of every output with respect to every input
 Those operations are described in the [numerics guide](../../numerics.md).
 
 The example's `rosenbrock` sums `100(y − x²)² + (1 − x)²` for adjacent input
-pairs. Its trait requirements allow ordinary or derivative-tracking numbers.
+pairs. `zip (drop 1 values)` pairs each value with its successor; the pattern
+`fn (x, y) -> ...` names those two numbers. Local `distance` and `offset` values
+make the formula readable and are computed once per pair. Its trait requirements
+allow ordinary or derivative-tracking numbers.
 `descend` multiplies the gradient by 0.001 and subtracts it from the original
 vector: one small step toward reducing the function. `zip-with sub` combines
 corresponding elements; because subtraction takes its subject last, the original
@@ -71,16 +74,19 @@ use fewer workers; WebAssembly executes serially. GPU execution is not supported
 
 ```fwp
 rosenbrock : List[t] -> t where Ring[t], FromFloat[t], Dup[t]
-rosenbrock =
-    fork zip id (drop 1)
-    | map (fork
-        add
-        (fork sub (.1 | fork mul id id) .0 | fork mul id id | mul 100.0)
-        (.1 | flip sub 1.0 | fork mul id id))
+rosenbrock = fn values ->
+    values
+    | zip (drop 1 values)
+    | map (fn (x, y) ->
+        let distance = y - x * x
+        in let offset = 1.0 - x
+        in distance * distance * 100.0 + offset * offset)
     | sum
 
 descend : List[F64] -> List[F64]
-descend = fork (zip-with sub) (grad rosenbrock | map (mul 0.001)) id
+descend = fn values ->
+    let adjustment = grad rosenbrock values | map (mul 0.001)
+    in values | zip-with sub adjustment
 
 soft : t -> t where Field[t], Floating[t], FromFloat[t]
 soft = exp | add 1.0 | ln

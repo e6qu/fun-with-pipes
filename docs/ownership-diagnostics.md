@@ -1,7 +1,7 @@
 # Checking memory ownership without tracing
 
 An owner keeps an allocation alive. A retain adds an owner; a release gives one
-up. Removing tracing GC requires checks that catch lost owners, premature release
+up. Without tracing GC, checks must catch lost owners, premature release
 and unsafe storage reuse without a collector keeping the affected objects alive.
 G4 passed all nine production jobs and documentation in [#215](roadmap-history.md#weak-channels-and-retained-callbacks-pr-215).
 G5 replaced collector-specific controls while retaining these ownership checks.
@@ -255,30 +255,29 @@ checks normal reuse, duplicate registration and duplicate removal on native and
 WASI hosts. The migrated G5 controls pass integrated native and WASI validation
 in #217; the original #215 results remain historical evidence.
 
-## Which collector checks need replacement?
+## Retired collector checks
 
-The [inventory command](../scripts/inventory-memory-diagnostics.py) records every
-textual mention of the five settings below in tracked compiler/runtime source,
-tests, scripts and workflows. CI saves `memory-diagnostics.json` in the existing
-`ownership-inventory-*` artifacts, with source revision, file hashes and line text.
-It checks the requested revision against the checkout. Comments, disabled settings
-and runtime-selected values remain visible; a mention is not proof of coverage.
+Tracing was removed and the replacement checks passed in
+[PR #217](roadmap-history.md#tracing-gc-removal-pr-217). This table explains old
+records; it is not another removal backlog. The
+[inventory command](../scripts/inventory-memory-diagnostics.py) still records
+mentions in tracked source, tests and workflows with the revision and file hashes.
+A textual mention, including a disabled setting, is not proof of coverage.
 
-| Retired setting/control | Former purpose | Replacement |
+| Retired control | What it tested | Collector-free coverage |
 |---|---|---|
-| `FWP_GC_STRESS` | Collect frequently to expose lost roots during allocation/suspension | Keep the semantic inputs and error/cancellation cases; map each to compiler ownership checks, native allocation/byte checks, or its external/WASI owner test. Values of `0` merely disable stress. |
-| `FWP_GC_VERIFY` | Compare a minor trace against a complete trace | Retire mark/age consistency checks with the collector. Preserve any independent lifetime, alias and cleanup assertions in the same tests. |
-| `FWP_REUSE_VERIFY` | Copy and poison storage instead of reusing/freeing it | Retain current controls until their alias/lifetime cases have ownership-based fault tests. The new live-allocation/reuse checks cover the faults above but not arbitrary stale reads. |
-| `FWP_GC` | Select/disable collector behavior in a generated tracing runtime | Remove the selector with tracing; preserve physical-reclamation tests and verify collector code is absent. Disabling collection alone is not GC removal. |
-| `FWP_GC_STATS` | Print allocation, reclamation, collection and process-memory observations | Preserve allocation/live-byte observations in the collector-free reporting path. Update consumers and their malformed/missing-evidence tests together. |
+| `FWP_GC_STRESS` | Roots surviving frequent collection | Ownership admission plus native/WASI allocation, failure and cancellation checks |
+| `FWP_GC_VERIFY` | Minor versus complete traces | Lifetime, alias and physical-cleanup assertions; mark/age consistency retired |
+| `FWP_REUSE_VERIFY` | Copied/poisoned storage instead of reuse | Allocation/reuse fault controls and original alias outputs; not a general stale-read detector |
+| `FWP_GC` | Collector selection | Ownership cleanup and binary checks for tracing-code absence |
+| `FWP_GC_STATS` | Allocation, reclamation and collection statistics | `FWP_ALLOC_STATS` and malformed/missing-report controls; no collection counter |
 
 ### Collector-specific tests and retained assertions
 
-This is the deletion map for the mixed collector/ownership test families. Keep
-independent lifetime assertions while replacing collector-specific checks; do not treat a filename
-containing `gc` as permission to delete its complete test target.
+The migration retained independent lifetime assertions in each test family. A
+legacy test name does not make those checks obsolete.
 
-| Current family | Retire with tracing | Keep without tracing |
+| Test family | Removed tracing checks | Retained ownership checks |
 |---|---|---|
 | [native_allocator](../tests/native_allocator.rs) | Image/stack root discovery, collector-scratch exclusion and forced-major reclamation | First allocation/free without initialization; small/large and static-pool allocation; `counted_metadata_releases_values_and_resources`; ledger missing-physical-free control |
 | Retired collector-age tests | Major/minor marking, old-to-young transitions, intentionally unowned shared graphs and age-gated-free comparison | `tasks.fwp` output remains in the ARC corpus; typed array/map/closure child cleanup remains in the array/map/callback fault suites; small/large physical release remains in the native ledger and wide-count probes |

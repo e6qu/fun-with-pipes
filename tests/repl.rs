@@ -66,6 +66,83 @@ fn json_requires_explicit_commands_and_recovers_without_executing_them() {
 }
 
 #[test]
+fn notebook_dependencies_exclude_local_bindings() {
+    fwp::driver::with_big_stack(|| {
+        let input = br#"{"command":"analyze","source":"let out1 = 4 in let x = out1 in x + x"}
+{"command":"analyze","source":"calculate = fn x -> let y = x * x in y + scale"}
+{"command":"analyze","source":"let x = x + 1 in x"}
+"#;
+        let mut output = Vec::new();
+        fwp::repl::run_json(&input[..], &mut output, std::env::current_dir().unwrap()).unwrap();
+        let replies: Vec<_> = std::str::from_utf8(&output)
+            .unwrap()
+            .lines()
+            .map(|line| fwp::json::Json::parse(line).unwrap())
+            .collect();
+        assert_eq!(replies.len(), 3);
+        for (reply, expected) in replies.iter().zip(["[]", "[\"scale\"]", "[\"x\"]"]) {
+            assert!(reply.get("error").is_none(), "{reply}");
+            assert_eq!(reply.at(&["result", "uses"]).unwrap().to_string(), expected);
+        }
+    });
+}
+
+#[test]
+fn saved_lexical_closures_keep_their_code_and_captures() {
+    fwp::driver::with_big_stack(|| {
+        let mut session = Session::new(std::env::current_dir().unwrap()).unwrap();
+        let mut output = Vec::new();
+        session
+            .submit(
+                "make-closure : I64 -> I64 -> I64\nmake-closure = fn n -> fn x -> n + x",
+                &mut output,
+            )
+            .unwrap();
+        session.submit("make-closure 3", &mut output).unwrap();
+        session
+            .submit("make-closure = fn n -> fn x -> n * x", &mut output)
+            .unwrap();
+        assert_eq!(
+            session
+                .submit("let value = 4 in out2 value", &mut output)
+                .unwrap()
+                .value
+                .as_deref(),
+            Some("7")
+        );
+        assert_eq!(
+            session
+                .submit("make-closure 3 4", &mut output)
+                .unwrap()
+                .value
+                .as_deref(),
+            Some("12")
+        );
+        session
+            .submit(
+                "let amount = 2 | tap echo in make-closure amount",
+                &mut output,
+            )
+            .unwrap();
+        assert_eq!(output, b"2\n");
+        for (source, expected) in [("out6 5", "10"), ("out6 6", "12")] {
+            assert_eq!(
+                session
+                    .submit(source, &mut output)
+                    .unwrap()
+                    .value
+                    .as_deref(),
+                Some(expected)
+            );
+            assert_eq!(
+                output, b"2\n",
+                "captured computation must run only in cell 6"
+            );
+        }
+    });
+}
+
+#[test]
 fn tools_reject_missing_execution_settings_before_starting() {
     for args in [
         vec!["repl"],
@@ -275,6 +352,11 @@ fn multiline_and_scripted_terminal_commands() {
         "1 ==",
         "value =",
         "f = match",
+        "fn",
+        "fn x ->",
+        "let x = 3",
+        "let x = 3 in",
+        "let x = let y = 3 in y",
         "[1,",
         "assert!(True",
         "(2 + 3",
@@ -284,6 +366,9 @@ fn multiline_and_scripted_terminal_commands() {
     }
     for input in [
         "2 + 3",
+        "fn x -> x + 1",
+        "let x = 3 in x + x",
+        "let x = let y = 3 in y in x",
         "[1, 2]",
         "assert!(True)",
         "f =\n    add 1\n",

@@ -2,7 +2,7 @@
 
 A performance result compares **two implementations of stated work**. There is
 no single number for “fwp overhead.” A report must say whether it compares fwp
-with handwritten C/Rust, two versions of fwp, or one isolated runtime operation.
+with handwritten Swift/C/Rust, two versions of fwp, or one isolated runtime operation.
 A faster new fwp build does not establish parity with another language.
 
 ## PR 233 whole-program baseline
@@ -90,8 +90,12 @@ same result. Retain every duration/output/status. An identical-copy median ratio
 above 1.02 makes that case/session inconclusive; do not drop it, relax the limit
 or retry unchanged observations. These establish descriptive baselines, not a
 candidate speed budget. Keep three separate peak-RSS runs per ordinary executable.
-Swift/C/Rust allocation and ARC-operation counts are **not yet measured** here.
-Neither elapsed time nor RSS alone attributes overhead to ARC.
+This timing suite does not count allocations or ARC operations. Neither elapsed
+time nor RSS alone attributes overhead to ARC. The separate
+[allocation profile](measurements/swift-allocations.md) measures allocator calls
+and stacks for pipeline/map programs on Linux ARM64/AMD64. It reports fwp managed
+storage separately because it uses direct mappings. Individual ARC-operation
+counts remain unmeasured for the peers.
 
 The same suite compiles a Swift closure factory separately from its caller.
 It checks both scalar operations from the [callable comparison](measurements/returned-callables.md),
@@ -150,16 +154,16 @@ that still needs a new measurement run.
 
 ## Planned ownership comparisons
 
-These comparisons belong to plan B1/B2. Compiler improvements and their ownership
+These comparisons belong to [the measurement plan](../PLAN.md#9-measurements). Compiler improvements and their ownership
 checks already exist; the table identifies which peer comparisons still need
 work. The [ownership direction](gc-removal-design.md) explains the lifetime rules.
 
 | Workload | Existing evidence | Remaining comparison work |
 |---|---|---|
 | Unique numeric buffer | [C/Rust peer comparison](measurements/unique-buffer-peers.md) covers lengths 0, 16, 4,096 and 262,144, output/cleanup, payload versus metadata, process memory, code and stack; [newer sessions](measurements/buffer-current.md) retain failed controls | Qualify the remaining timing comparisons without retrying unchanged failures. Separate construction/work/release timing from the existing whole-process totals. Preserve [array removal](measurements/generated-array-folds.md) and [State range](measurements/state-range-folds.md) cost checks without treating them as timing acceptance. |
-| Returned partial application | [Three-host C/Rust/fwp comparison](measurements/returned-callables.md) separates construction, repeated calls and destruction at O1/O2; fwp uses a 16-byte heap payload, while C/Rust captures are inline | The [phase experiment](measurements/callable-phases.md) adds Swift and measures invocation/whole-call costs; retain the original ARM O1 size rejection. The user merged #234 before timing acceptance. |
+| Returned partial application | [Three-host C/Rust/fwp comparison](measurements/returned-callables.md) separates construction, repeated calls and destruction at O1/O2; fwp uses a 16-byte heap payload, while C/Rust captures are inline | The [phase experiment](measurements/callable-phases.md) adds Swift and measures invocation/whole-call costs; retain the original ARM O1 size rejection. Original ARM acceptance and three AMD construction regressions remain open; [the phase report](measurements/callable-phases.md) retains all later qualified and inconclusive results. |
 | Subscription with weak back-link | [Weak-link semantics](gc-removal-design.md) and lifetime tests cover registration, expiration and cleanup | Add explicit C/Rust registrations with the same active-call and cancellation rules. Measure weak metadata allocation, live/expired acquisition, callback work and teardown separately. |
-| Recursive parser workspace | [A6](measurements/parser-workspace.md) already compares all three languages at 31/511/8,191 balanced nodes and 127 left-nested nodes, with phase timings and storage observations | Preserve those results. Complete the broader memory accounting (reserved/committed storage and peer transient peaks) and Rust stack observations before claiming every B1 field; current reported capacities are not process memory. |
+| Recursive parser workspace | [A6](measurements/parser-workspace.md) already compares all three languages at 31/511/8,191 balanced nodes and 127 left-nested nodes, with phase timings and storage observations | Preserve those results. Complete the broader memory accounting (reserved/committed storage and peer transient peaks) and Rust stack observations before claiming complete memory accounting; current reported capacities are not process memory. |
 
 Measure construction, useful work and cleanup separately and together at small,
 cache-sized and larger inputs. Match checked arithmetic and lifetime behavior;

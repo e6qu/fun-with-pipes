@@ -11,13 +11,11 @@ mirror : WebSocket -> () ! {Async, IO, Network, FileIO}
 mirror = loop mirror-step
 
 mirror-step : WebSocket -> Step[WebSocket, ()] ! {Async, IO, Network, FileIO}
-mirror-step = fork mirror-got id ws.recv
-
-mirror-got : WebSocket -> Option[WsMessage] -> Step[WebSocket, ()] ! {Async, IO, Network, FileIO}
-mirror-got = curry (match
-    (_, Some (WsMessage.Close _ _)) -> curry3 (const (Stop ()))
-    (_, Some _) -> curry (tap (fork ws.send .1 .0) | .0 | Again)
-    (_, None) -> const (Stop ()))
+mirror-step = fn socket ->
+    ws.recv socket | match
+        Some (WsMessage.Close code reason) -> Stop ()
+        Some message -> let _ = ws.send message socket in Again socket
+        None -> Stop ()
 
 routes : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
 routes = http.router [

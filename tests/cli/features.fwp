@@ -60,3 +60,9 @@ leave = flip outcome.exit "bye"
 # A number, and the status 3 for a negative one.
 export check : I64 -> Outcome[I64]
 check = outcome.of (if (lt 0) (const 3) (const 0))
+
+# Compute the coefficient before returning the second function.
+# args: DIVISOR VALUE
+export scaled : I64 -> I64 -> I64
+scaled = fn divisor ->
+    let coefficient = 10 / divisor in fn value -> coefficient * value

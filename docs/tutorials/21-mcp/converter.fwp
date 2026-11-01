@@ -34,26 +34,21 @@ from-celsius = match
 
 # Convert a temperature from one unit to another.
 export convert : Reading -> F64
-convert = fork from-celsius .to (fork celsius .from .value)
+convert = fn { value, from, to } -> value | celsius from | from-celsius to
 
 # Split a bill of CENTS between PEOPLE: equal shares in cents, the first
 # ones a cent more when it does not divide evenly.
 # args: cents people
 export split-bill : I64 -> I64 -> List[I64] ! {Error[String]}
-split-bill = curry (tap (.1 | le 0 | match
+split-bill = fn cents -> fn people ->
+    let _ = people <= 0 | match
         True -> fail "there must be at least one person"
-        False -> ())
-    | shares)
-
-Split = { base: I64, extra: I64 }
-
-shares : (I64, I64) -> List[I64]
-shares =
-    fork
-        map
-        (make Split { base = swap | uncurry div, extra = swap | uncurry rem }
-            | share)
-        (.1 | range 0)
-
-share : Split -> I64 -> I64
-share = curry (if (fork lt (.0 | .extra) .1) (.0 | .base | add 1) (.0 | .base))
+        False -> ()
+    in let base = cents / people
+    in let extra = cents % people
+    in
+        range 0 people
+        | map (fn index ->
+            index < extra | match
+                True -> base + 1
+                False -> base)

@@ -22,13 +22,11 @@ The sessions below run exactly as shown: the test suite runs them.
 
 ## Reading the example
 
-`mirror-step` receives one optional message and passes it alongside the original
-WebSocket to `mirror-got`. Its tuple patterns have holes for captured values.
-A close message has three holes (socket, code, reason); `curry3 (const (Stop ()))`
-accepts them and stops with unit. An ordinary message has two holes; the branch
-sends that message back with `tap`, keeps the socket and returns `Again`.
-`None` means the input ended. This explains both the control flow and the nested
-parentheses without adding new syntax.
+`mirror-step` names the socket and receives one optional message. A close
+message or closed input returns `Stop ()`. `Some message` sends the message back,
+then returns `Again socket`. The `let _` binding completes that send before the
+loop continues. Named patterns expose the close code and reason; this example
+ends the loop without using them.
 
 ## Handlers
 
@@ -80,13 +78,11 @@ mirror : WebSocket -> () ! {Async, IO, Network, FileIO}
 mirror = loop mirror-step
 
 mirror-step : WebSocket -> Step[WebSocket, ()] ! {Async, IO, Network, FileIO}
-mirror-step = fork mirror-got id ws.recv
-
-mirror-got : WebSocket -> Option[WsMessage] -> Step[WebSocket, ()] ! {Async, IO, Network, FileIO}
-mirror-got = curry (match
-    (_, Some (WsMessage.Close _ _)) -> curry3 (const (Stop ()))
-    (_, Some _) -> curry (tap (fork ws.send .1 .0) | .0 | Again)
-    (_, None) -> const (Stop ()))
+mirror-step = fn socket ->
+    ws.recv socket | match
+        Some (WsMessage.Close code reason) -> Stop ()
+        Some message -> let _ = ws.send message socket in Again socket
+        None -> Stop ()
 ```
 
 `ws.recv` waits for the next message (`None` when the session is over),
@@ -178,13 +174,11 @@ mirror : WebSocket -> () ! {Async, IO, Network, FileIO}
 mirror = loop mirror-step
 
 mirror-step : WebSocket -> Step[WebSocket, ()] ! {Async, IO, Network, FileIO}
-mirror-step = fork mirror-got id ws.recv
-
-mirror-got : WebSocket -> Option[WsMessage] -> Step[WebSocket, ()] ! {Async, IO, Network, FileIO}
-mirror-got = curry (match
-    (_, Some (WsMessage.Close _ _)) -> curry3 (const (Stop ()))
-    (_, Some _) -> curry (tap (fork ws.send .1 .0) | .0 | Again)
-    (_, None) -> const (Stop ()))
+mirror-step = fn socket ->
+    ws.recv socket | match
+        Some (WsMessage.Close code reason) -> Stop ()
+        Some message -> let _ = ws.send message socket in Again socket
+        None -> Stop ()
 
 routes : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
 routes = http.router [

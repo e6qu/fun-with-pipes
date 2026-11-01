@@ -1,0 +1,15 @@
+# The native probe supplies dynamic arrays, including a retained slice alias.
+export mapped-list : Array[F64] -> List[F32]
+mapped-list = array.to-list | map float.convert
+export filtered-list : Array[F64] -> List[F64]
+filtered-list = array.to-list | filter (gt 0.0)
+export folded-list : Array[F64] -> F64
+folded-list = array.to-list | map (mul 3.0) | fold add -0.0
+export release-mapped : List[F32] -> ()
+release-mapped = ignore
+export release-filtered : List[F64] -> ()
+release-filtered = ignore
+export release-input : Array[F64] -> ()
+release-input = ignore
+
+main = [1.25, -0.0, 16777217.0] | array.from-list | mapped-list | echo

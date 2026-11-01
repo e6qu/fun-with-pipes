@@ -5,21 +5,17 @@ int returned_storage_clean(void) {
 }
 
 V returned_make(int32_t kind, int64_t capture) {
-    uint32_t id;
     switch (kind) {
-    case 0: id = PARTIAL_ID; break;
-    case 1: id = CAPTURED_ID; break;
+    case 0: return PARTIAL_MAKE;
+    case 1: return CAPTURED_MAKE;
     default: fputs("invalid callable kind\n", stderr); exit(71);
     }
-    if (fwp_fn_table[id].arity != 2 || !fwp_fn_table[id].entry ||
-        !fwp_fn_table[id].owned) abort();
-    return fwp_rc_fresh(fwp_pap(id, 1, (V[]){(V)capture}));
 }
 
 int64_t returned_direct(int32_t kind, int64_t capture, int64_t input) {
     switch (kind) {
-    case 0: return (int64_t)fPARTIAL_ID((V)capture, (V)input);
-    case 1: return (int64_t)fCAPTURED_ID((V)capture, (V)input);
+    case 0: return (int64_t)PARTIAL_DIRECT;
+    case 1: return (int64_t)CAPTURED_DIRECT;
     default: fputs("invalid callable kind\n", stderr); exit(71);
     }
 }
