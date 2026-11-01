@@ -1,9 +1,9 @@
 # Current work
 
-**Next:** monitor the final-head matrix on [PR #236](https://github.com/e6qu/fun-with-pipes/pull/236/checks).
-Audit every completed target and compiler diagnostic; fix any failure. Require
-nine production jobs plus documentation on the exact final head before
-squash-merging. Focused passes do not replace those gates.
+**Next:** verify the WASI fixed-capture test repair on [PR #236](https://github.com/e6qu/fun-with-pipes/pull/236/checks)
+with `fixed-function-checks` on both Linux hosts. Keep auditing production jobs;
+the PR is draft again. Require nine production jobs plus documentation on the
+repaired exact final head before squash-merging.
 
 All ten steps in [PLAN.md](../PLAN.md), publication and merge are authorized.
 Worktree `/private/tmp/fwp-returned-callables`, branch `language-design-review`,
@@ -22,6 +22,24 @@ Compiler source `d339f8a701df6b48d32b3ea864690e53843bd3d2` is verified below.
 | `41267001566` | Linux and Intel macOS: 234 unit tests, all-target Clippy, analysis scaling and raw server startup | Both pass; all logs audited; limits unchanged |
 | `41268066813` at `bbce38e1` | Documentation and retained evidence readers | Pass; log audited |
 
+Run `41268735692` at `786f90b0` passes benchmarks and both macOS ARM64 jobs;
+documentation `41268726225` passes. All completed logs are audited. Both Windows
+hosts pass the former REPL step, and ARM64 also passes the repaired fold step.
+Other jobs continue; this run does not include the WASI test repair below.
+
+Both Linux target-log sets from `41265952785` exposed one further failure:
+`fixed_function_captures_initialize_in_wasi` assumed static function objects
+would remain with stack promotion enabled. The native counterpart explicitly
+disables promotion for that representation check. Guarded C emission using the
+passed `786f90b0` macOS package confirms three static captured functions with
+`FWP_STACK=0` and none with `FWP_STACK=1`. No compiler change is needed.
+The WASI test now supplies both settings, requires static objects and their
+initialization when promotion is disabled, and executes both at O1/O2 against
+the unchanged expected output. The focused workflow tests this one case on both
+Linux hosts and retains C/source/WASM for all four settings; runner verification
+is pending. All 257 target logs per old Linux
+host are audited; their other failures are the repaired REPL/fold cases.
+
 Production run `41265952785` at `bed8b365` exposed a saved-function REPL failure
 in both Windows native socket/library steps; every target in those artifacts is
 audited, and only `saved_lexical_closures_keep_their_code_and_captures` fails.
@@ -34,8 +52,9 @@ captures. Focused lexical probes now include the complete REPL target.
 The repair passes all three focused platform jobs above. The benchmark and
 documentation jobs pass at `bed8b365`. Its completed macOS ARM64 regular job
 has only the same REPL failure; all 131 target logs and final steps are audited.
-Remaining production jobs continue and must be audited. That superseded matrix
-cannot verify the repair.
+That entire superseded matrix is now audited, including both Linux final job
+steps. Its only failures are the REPL, right-fold control and WASI fixture cases
+described here. It cannot verify the repairs.
 
 Windows AMD64's later callback step exposed an ineffective right-fold test
 control. Its C-text injection still targeted `z`, while the generic runtime now
@@ -53,6 +72,11 @@ all 128 test summaries and compiler diagnostics were audited.
 The full matrix must test the exact repaired PR head. Local checks use
 `python3 scripts/local-guard.py`; formatting, workflow syntax and documentation
 checks pass. No full compiler build, suite or benchmark ran locally.
+The bounded emission command was `python3 scripts/local-guard.py env FWP_STACK=0
+/private/tmp/fwp-236-786-mac-package/fwp-macos-arm64/fwp build --target wasm32-wasi
+--emit-c tests/run/static_functions.fwp -o /private/tmp/fwp-236-static-stack0.c`,
+repeated with `FWP_STACK=1` and `stack1.c`. Both pass; these inspect generated C,
+not WASI execution. The package manifest identifies `786f90b0`.
 
 The superseded production run `41261060185` at `20109cf0` is completely audited.
 Its only failures were CLI stdin, iterator callback scope, vector fusion and the
