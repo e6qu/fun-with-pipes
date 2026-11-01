@@ -80,8 +80,37 @@ These are new candidate requirements; #239's ten failed limits and D2 remain ope
 Preserve failed/noisy observations; do not repeat unchanged runs to seek a pass.
 
 Run affected checks during implementation, then the final nine production jobs
-and documentation once the complete batch is ready. No implementation or new
-speed result is claimed by this preparation document.
+and documentation once the complete batch is ready. Preparation commit
+`7b300717` and tag `roadmap/derivative-record-fold-protocol-2026-11-02` freeze the
+requirements above before compiler edits.
+
+## Candidate and validation
+
+[PR #240](https://github.com/e6qu/fun-with-pipes/pull/240) implements the selected
+fold in `src/cgen.rs`. Native correctness, count and timing results remain pending.
+The [handoff](../development-state.md) tracks current source and job identities.
+
+Use the `Numerical and ownership evidence` workflow with explicit inputs:
+
+| Suite | Purpose | Additional inputs |
+|---|---|---|
+| `record-fold-checks` | GCC Linux ARM64/AMD64 and Clang macOS ARM64; semantic, alias, ownership and derivative regressions | None |
+| `record-fold-measurements` | Both native Linux hosts; six-case allocation/memory observations and cleanup controls | None |
+| `record-fold-time` | Candidate versus a compiler with only direct record-fold selection disabled; C/Rust comparisons | `native_runner=all`, `comparison_session=both` |
+| `record-fold-report` | Download and independently audit every timing outcome without executing saved binaries | `evidence_run`, exact `source_revision` |
+
+`prepare-record-fold-reference.py` saves the exact `src/cgen.rs` patch, both
+source hashes, unchanged ownership hash and reference compiler hash. It rejects
+missing, duplicate or already-disabled selection blocks. Both compilers retain
+all other optimizations, including #239's record zip/map fusion.
+
+The timing report keeps all raw rounds, output checks, managed allocation counts,
+raw derivative storage, peak RSS, generated C, native images and stack reports.
+Elapsed time includes process execution; phase measurements separately identify
+forward/backward work. C/Rust use explicit derivatives, so their ratios include
+the cost of fwp's automatic differentiation, not just language overhead.
+The [shared measurement description](descent-costs.md) defines the inputs and
+scope. Failed thresholds and noisy identical-copy controls remain in the report.
 
 ## Reproduce the source/count audit
 

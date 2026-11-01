@@ -25,13 +25,14 @@ not public APIs. Other costs include result-list construction and vector updates
 | 3 | Keep eligible callback results direct through their consumers | Extend existing worker/caller generation where proved safe; preserve effects, eager stage order, traps, aliases, empty inputs and failure/cancellation cleanup; update examples and docs |
 | 4 | Verify and deliver one substantial batch | Run affected production-compiler checks, then native count/memory and paired timing comparisons; audit all nine final production jobs and documentation before squash merge |
 
-First inspect the known fold caller and existing direct-worker path in
-`src/cgen.rs`. A numeric accumulator may stay direct between callback calls;
-results retained in lists have a different lifetime. Do not assume every box can
-be removed or combine mapping and summation when that changes recording/trap order.
-The [frozen selection](docs/measurements/derivative-record-folds.md) keeps the
-known left-fold accumulator direct and leaves list-stored results alone. All 96
-saved observations agree. No compiler change or new speed result is claimed yet.
+Steps 1–2 are complete: all 96 saved observations agree on the selected boundary.
+[PR #240](https://github.com/e6qu/fun-with-pipes/pull/240) implements the
+[frozen selection](docs/measurements/derivative-record-folds.md): keep a known
+left-fold accumulator in local numeric fields and leave list-stored results alone.
+Step 3 awaits native correctness and cleanup results; step 4 awaits measurements
+and final validation. No new allocation saving or speedup is verified yet.
+Mapping must still finish before summation when interleaving changes recording
+or trap order.
 
 Use focused checks during implementation, then one complete final validation
 batch. Reuse saved observations before scheduling measurements. Do not rerun

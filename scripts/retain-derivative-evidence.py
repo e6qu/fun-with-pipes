@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Audit a completed record-zip run on GitHub and retain every original outcome."""
+"""Audit a completed paired derivative run on GitHub and retain every original outcome."""
 import argparse
 import gzip
 import hashlib
@@ -50,7 +50,8 @@ def rejected_host(job, host):
             assert step['conclusion'] == 'skipped', step
 
 
-def retain_session(repository, run, source, job, artifacts, output, summary):
+def retain_session(repository, run, source, job, artifacts, output, summary, protocol):
+    assert protocol in ('record-zip', 'record-fold')
     match = re.fullmatch(r'descent_peers \(([12]), (ubuntu-latest|ubuntu-24\.04-arm)\)', job['name'])
     assert match, job['name']
     session, runner = int(match[1]), match[2]
@@ -84,9 +85,9 @@ def retain_session(repository, run, source, job, artifacts, output, summary):
         return label, record
     assert not host['failures']
     download('descent-peers-' + runner + '-' + str(session), folder / 'measurements')
-    download('record-zip-reference-' + runner + '-' + str(session), folder / 'reference')
+    download(protocol + '-reference-' + runner + '-' + str(session), folder / 'reference')
     audit = CHECK.check_directory(folder / 'measurements', source, architecture, session,
-                                 'record-zip', folder / 'reference')
+                                 protocol, folder / 'reference')
     failures = audit['budgetFailures']
     assert job['conclusion'] == ('failure' if failures else 'success')
     failed_steps = [step['name'] for step in job['steps'] if step['conclusion'] == 'failure']
@@ -102,6 +103,7 @@ def retain_session(repository, run, source, job, artifacts, output, summary):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--protocol', choices=['record-zip', 'record-fold'], required=True)
     parser.add_argument('--repository', required=True)
     parser.add_argument('--run', type=int, required=True)
     parser.add_argument('--source', required=True)
@@ -122,13 +124,13 @@ def main():
     artifacts = pages(run_path + '/artifacts', 'artifacts')
     save_json(args.output / 'jobs.json', jobs)
     save_json(args.output / 'artifacts.json', artifacts)
-    index = dict(source=args.source, run=args.run, sessions={}, auditErrors=[])
+    index = dict(protocol=args.protocol, source=args.source, run=args.run, sessions={}, auditErrors=[])
     for job in jobs:
         if job['conclusion'] == 'skipped':
             continue
         try:
             label, record = retain_session(repository, args.run, args.source, job, artifacts,
-                                           args.output, summary)
+                                           args.output, summary, args.protocol)
             assert label not in index['sessions']
             index['sessions'][label] = record
             print(label + ': ' + record['decision'], flush=True)

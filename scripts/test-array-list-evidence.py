@@ -59,14 +59,27 @@ class Evidence(unittest.TestCase):
         body = ''.join(difflib.unified_diff(candidate.splitlines(keepends=True),
                        reference.splitlines(keepends=True), fromfile='a/src/fuse.rs', tofile='b/src/fuse.rs'))
         patch = header + body
-        CHECK.check_reference_patch(patch, candidate, reference)
+        CHECK.check_reference_patch(patch, candidate, reference, 'src/fuse.rs')
         for changed in [patch.replace('a/src/fuse.rs', 'a/src/opt.rs'),
                         patch.replace('+fn zip_map_element(', '+fn broken('),
                         patch + header + body,
                         patch.replace('-fn zip_map_element(', '-fn broken(')]:
             self.assertNotEqual(changed, patch)
             with self.assertRaises(AssertionError):
-                CHECK.check_reference_patch(changed, candidate, reference)
+                CHECK.check_reference_patch(changed, candidate, reference, 'src/fuse.rs')
+
+    def test_fold_reference_patch_changes_only_the_selected_call(self):
+        candidate = (ROOT / 'src/cgen.rs').read_text()
+        reference = CHECK.FOLD_REFERENCE.reference_source(candidate)
+        header = 'diff --git a/src/cgen.rs b/src/cgen.rs\nindex 1234567..2345678 100644\n'
+        patch = header + ''.join(difflib.unified_diff(candidate.splitlines(keepends=True),
+                    reference.splitlines(keepends=True), fromfile='a/src/cgen.rs', tofile='b/src/cgen.rs'))
+        CHECK.check_reference_patch(patch, candidate, reference, 'src/cgen.rs')
+        for changed in [patch.replace('a/src/cgen.rs', 'a/src/fuse.rs'), patch + header,
+                        patch.replace('direct record folds disabled', 'other change')]:
+            self.assertNotEqual(changed, patch)
+            with self.assertRaises(AssertionError):
+                CHECK.check_reference_patch(changed, candidate, reference, 'src/cgen.rs')
 
     def test_retained_reports_preserve_both_failed_and_repaired_decisions(self):
         archives = [

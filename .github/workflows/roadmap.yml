@@ -144,6 +144,7 @@ jobs:
           python3 scripts/test-descent-budgets.py
           python3 scripts/test-capture-reference.py
           python3 scripts/test-record-zip-reference.py
+          python3 scripts/test-record-fold-reference.py
       - name: Matched-host evidence rejection controls
         run: python3 scripts/test-descent-groups.py
       - name: Numeric array comparison evidence controls
