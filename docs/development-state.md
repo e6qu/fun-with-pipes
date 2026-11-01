@@ -1,101 +1,55 @@
 # Current work
 
-**Next:** verify the WASI fixed-capture test repair on [PR #236](https://github.com/e6qu/fun-with-pipes/pull/236/checks)
-with `fixed-function-checks` on both Linux hosts. Keep auditing production jobs;
-the PR is draft again. Require nine production jobs plus documentation on the
-repaired exact final head before squash-merging.
+**Next:** monitor the final-head matrix on [PR #236](https://github.com/e6qu/fun-with-pipes/pull/236/checks).
+Audit every completed target and compiler diagnostic; fix any failure. Require
+nine production jobs plus documentation on the exact final head before
+squash-merging. Focused passes do not replace those gates.
 
 All ten steps in [PLAN.md](../PLAN.md), publication and merge are authorized.
 Worktree `/private/tmp/fwp-returned-callables`, branch `language-design-review`,
-base `781ebabb0463efc2f03f0d3aa44b7d2c4766959d`. Preserve unrelated changes in the
-primary checkout. Keep one active PR. Commit messages must be one line, at most
-80 characters, with an empty body and no attribution or trailers.
+base `781ebabb0463efc2f03f0d3aa44b7d2c4766959d`. Preserve the primary checkout.
+Keep one active PR. Commit messages: one line, at most 80 characters, empty body,
+no attribution or trailers.
 
-## Verified source and pending matrix
+## Verified repairs and pending integration
 
-Compiler source `d339f8a701df6b48d32b3ea864690e53843bd3d2` is verified below.
-`bbce38e10c299446cdcfad6c6b067fc6037e350e` changes tests, workflow and handoff only:
+Compiler source is `d339f8a701df6b48d32b3ea864690e53843bd3d2`.
+Subsequent changes through `2de5980b3d9b8a919d5d92c14220813dc91b78c5` affect
+only tests, workflows and documentation. These checks pass; all logs are audited:
 
-| Run | Checks | Result |
-|---|---|---|
-| `41268079378` at `bbce38e1` | Linux ARM64/AMD64 and macOS ARM64: all 11 REPL tests, CLI, local bindings, call cleanup, both fold controls/unwind, iterator/vector behavior, returned-function costs and iteration allocation probes | All three jobs pass; all logs audited |
-| `41267001566` | Linux and Intel macOS: 234 unit tests, all-target Clippy, analysis scaling and raw server startup | Both pass; all logs audited; limits unchanged |
-| `41268066813` at `bbce38e1` | Documentation and retained evidence readers | Pass; log audited |
+| Run and source | Coverage |
+|---|---|
+| `41268079378`, `bbce38e1` | Linux ARM64/AMD64 and macOS ARM64: CLI, local bindings, all 11 REPL tests, call cleanup, fold controls/unwind, iterator/vector behavior, returned-callable costs and iteration allocations |
+| `41267001566`, `d339f8a7` | Linux and Intel macOS: 234 unit tests, all-target lint, analysis scaling and raw server startup; limits unchanged |
+| `41271608106`, `2de5980b` | Both Linux hosts: actual WASI fixed-capture execution with stack promotion off/on, each at O1/O2; C, source and WASM retained |
+| `41271600167`, `2de5980b` | Documentation, source copies and retained evidence readers |
 
-Run `41268735692` at `786f90b0` passes benchmarks and both macOS ARM64 jobs;
-documentation `41268726225` passes. All completed logs are audited. Both Windows
-hosts pass the former REPL step, and ARM64 also passes the repaired fold step.
-Other jobs continue; this run does not include the WASI test repair below.
+The superseded matrix `41268735692` at `786f90b0` passes benchmarks and both
+macOS ARM64 jobs; documentation `41268726225` passes. Those logs are audited.
+Both Windows hosts pass the former REPL step and ARM64 also passes the fold
+step. Other jobs continue and need complete audits. This matrix lacks the WASI
+test repair, so it cannot establish final acceptance.
 
-Both Linux target-log sets from `41265952785` exposed one further failure:
-`fixed_function_captures_initialize_in_wasi` assumed static function objects
-would remain with stack promotion enabled. The native counterpart explicitly
-disables promotion for that representation check. Guarded C emission using the
-passed `786f90b0` macOS package confirms three static captured functions with
-`FWP_STACK=0` and none with `FWP_STACK=1`. No compiler change is needed.
-The WASI test now supplies both settings, requires static objects and their
-initialization when promotion is disabled, and executes both at O1/O2 against
-the unchanged expected output. The focused workflow tests this one case on both
-Linux hosts and retains C/source/WASM for all four settings; runner verification
-is pending. All 257 target logs per old Linux
-host are audited; their other failures are the repaired REPL/fold cases.
+Both earlier complete matrices (`41261060185` at `20109cf0`, `41265952785` at
+`bed8b365`) are fully audited. CLI stdin, iterator callback scope, vector fusion
+and the iteration allocation probe were repaired and verified. The later repairs:
 
-Production run `41265952785` at `bed8b365` exposed a saved-function REPL failure
-in both Windows native socket/library steps; every target in those artifacts is
-audited, and only `saved_lexical_closures_keep_their_code_and_captures` fails.
-Constant-function optimization promoted a saved result to an argument-taking
-entry, violating the session's zero-argument evaluation contract. The repair
-marks saved entries in IR, preserves the marker during session linking and
-excludes them from stage promotion. IR validation checks that contract; the
-constructor unit test covers saved and ordinary entries with constant/computed
-captures. Focused lexical probes now include the complete REPL target.
-The repair passes all three focused platform jobs above. The benchmark and
-documentation jobs pass at `bed8b365`. Its completed macOS ARM64 regular job
-has only the same REPL failure; all 131 target logs and final steps are audited.
-That entire superseded matrix is now audited, including both Linux final job
-steps. Its only failures are the REPL, right-fold control and WASI fixture cases
-described here. It cannot verify the repairs.
+| Failure | Repair and verification |
+|---|---|
+| Saved REPL functions gained arguments during optimization | Explicit cached-value IR marker preserves zero-argument entries through optimization and session linking; IR validation and all REPL tests pass |
+| Right-fold leak control injected an extra owner into an obsolete variable | Target the actual accumulator; both fold controls require exactly one source match, an observed leak in the broken control and zero live storage in ordinary code; original release margin retained |
+| WASI fixture demanded static captures with stack promotion enabled | Supply both storage settings; require static objects and initialization with promotion off, and unchanged program output in both settings at O1/O2 |
 
-Windows AMD64's later callback step exposed an ineffective right-fold test
-control. Its C-text injection still targeted `z`, while the generic runtime now
-stores the result in `owner.value`. The old source-change assertion could pass
-merely because joining lines removed a trailing newline. The repair targets the
-actual accumulator and requires exactly one matching callback statement. The
-left-fold control gets the same exact-match check. Both still require a real
-retained-owner leak, zero live storage in the ordinary program and the original
-release margin. No runtime behavior or threshold changes. The repaired fold and
-unwind tests pass on all three focused hosts. Both Windows resource/callback
-artifacts have been audited and contain only these known failures.
-The completed macOS ARM64 ownership job has the same sole right-fold failure;
-all 128 test summaries and compiler diagnostics were audited.
-
-The full matrix must test the exact repaired PR head. Local checks use
-`python3 scripts/local-guard.py`; formatting, workflow syntax and documentation
-checks pass. No full compiler build, suite or benchmark ran locally.
-The bounded emission command was `python3 scripts/local-guard.py env FWP_STACK=0
+Local checks use `python3 scripts/local-guard.py`: formatting, workflow syntax
+and documentation pass. No full build, suite or benchmark ran locally. A bounded
+emission check used the passed `786f90b0` package:
+`python3 scripts/local-guard.py env FWP_STACK=0
 /private/tmp/fwp-236-786-mac-package/fwp-macos-arm64/fwp build --target wasm32-wasi
 --emit-c tests/run/static_functions.fwp -o /private/tmp/fwp-236-static-stack0.c`,
-repeated with `FWP_STACK=1` and `stack1.c`. Both pass; these inspect generated C,
-not WASI execution. The package manifest identifies `786f90b0`.
-
-The superseded production run `41261060185` at `20109cf0` is completely audited.
-Its only failures were CLI stdin, iterator callback scope, vector fusion and the
-`iter.each` allocation probe, all repaired and verified in the focused checks.
-Logs/artifacts are under `/private/tmp/fwp-236-*`; do not treat an artifact named
-`compiler-crashes-*` as a crash without an actual crash report.
-
-## Repairs included
-
-Function construction runs before later argument evaluation. Generic primitive
-results and trait aliases preserve that rule. Pure constructors combine stages
-only after a bounded proof excludes computations, traps and observable resources.
-Small literal F64 splats preserve exact bits and obey the existing size budget.
-
-CLI, REST, MCP, gRPC and C libraries use the complete public argument type;
-internal construction stages remain intact. Tests cover stdin, metadata,
-served calls, C exports and retained C callbacks at O1/O2. Lifetime analysis
-keeps finite outer construction-site identities so unrelated returned callbacks
-do not mix. Removing a State handler still rejects its callback.
+then the same command with `FWP_STACK=1` and `stack1.c`. These produced three and
+zero static captured-function objects respectively. Actual WASI execution is
+verified by the runner checks above. Logs/artifacts are `/private/tmp/fwp-236-*`;
+an artifact named `compiler-crashes-*` is not itself evidence of a crash.
 
 ## Roadmap status
 
