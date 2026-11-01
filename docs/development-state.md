@@ -1,11 +1,12 @@
 # Current work
 
-**Next:** monitor native measurement run `41319946864` on source `afc0f78f`,
-audit both artifacts, and select the measured optimization for
+**Next:** publish the frozen flat-record zip/map requirements, then extend the
+existing transformation in `src/fuse.rs` and its ownership/semantic controls in
 [PR #239](https://github.com/e6qu/fun-with-pipes/pull/239).
 The [protocol](measurements/derivative-forward-costs.md) was published first at `02d4aa26`.
-[PLAN.md](../PLAN.md) defines this batch's four steps. No new compiler/runtime
-optimization is selected until the measured costs justify a specific candidate.
+[PLAN.md](../PLAN.md) defines this batch's four steps. The compiler candidate
+selected from the audited results eliminates temporary zipped
+flat numeric records, including adjacent `Rev[F64]` pairs.
 
 Worktree `/private/tmp/fwp-returned-callables`, branch `derivative-forward-costs`.
 Base `c124d0c8f13373b0ee11c58d685d850b1b9a5a08`. Preserve the primary checkout's
@@ -18,9 +19,9 @@ characters, with no body, trailers or attribution.
 | Step | Status | Remaining work |
 |---|---|---|
 | 1 | Verified | Preparation `02d4aa26`; documentation run `41318586442` passes |
-| 2 | In progress | Phase/source counters implemented; verify native known-work and omission controls |
-| 3 | In progress | Both native measurement jobs queued; source `afc0f78f`, run `41319946864` |
-| 4 | Pending | Explain results, select a justified candidate, verify and deliver the batch |
+| 2 | Verified | Native known-work, omission, wrong-phase and unfinished-sequence controls pass |
+| 3 | Verified | Both hosts pass; all 96 observations and complete logs audited at `afc0f78f`, run `41319946864` |
+| 4 | In progress | Publish candidate requirements before compiler edits, implement and verify the complete batch |
 
 ## Current implementation boundaries
 
@@ -55,19 +56,22 @@ The earlier monitor is fixed to #238's head; do not use it for this new branch.
 ## Checks and constraints
 
 The last batch passed focused GCC/Clang O1/O2 checks, artifact/source hash audits,
-all nine native production jobs and documentation. The new Python observer tests
-pass through the local guard (source hooks, exact sums, missing/duplicate rows,
-invalid phase/site IDs). Native controls and measurements are not verified yet.
-The dispatched `derivative-forward-costs` run `41319946864` has no assigned
-runners yet (jobs `124887807761` and `124887808036`, both runner ID 0).
-Documentation run `41319949124` is also queued. Full production gates follow
-the complete batch. Do not restart these jobs merely because they are queued.
+all nine native production jobs and documentation. For this batch, numerical run
+`41319946864` passes on `afc0f78f` (jobs `124887807761` and `124887808036`).
+Both complete logs have no compiler/test diagnostics. The archive auditor verifies
+all file hashes, saved observations, source sites, native headers, compilation flags
+and known-work failures. All detailed counts match across architectures. The
+[report](measurements/derivative-forward-costs-2026-11-01.json.gz) and
+[explanation/requirements](measurements/derivative-forward-costs.md#verified-baseline-and-selected-change)
+retain the result. Full production gates follow the complete batch.
 
-The archive auditor is implemented locally, with eight passing accounting/archive
-controls. It verifies all file hashes, saved observations, phase/site source lines,
-native image headers, compilation flags and known-work failures. Results are not
-available yet; no compiler optimization has been selected. The library's misleading
-“about one evaluation” cost claim is corrected and its reference regenerated.
+Documentation run `41321386688` passes on audit commit `81f2e978`; the superseded
+queued docs run `41319949124` was cancelled. The library's misleading “about one
+evaluation” claim is corrected and its reference regenerated.
+
+Artifacts: `/private/tmp/fwp-239-aarch64.zip` (ID `13089053399`) and
+`/private/tmp/fwp-239-x86_64.zip` (ID `13089073406`). Complete compressed job logs
+are in `/private/tmp/fwp-239-logs/`. Both artifact API digests were verified.
 
 Focused local commands, each through `python3 scripts/local-guard.py`:
 
@@ -78,6 +82,16 @@ Focused local commands, each through `python3 scripts/local-guard.py`:
   four plan steps pass. No full local compiler build or suite was run.
 - `env FWP_BLESS=1 /private/tmp/fwp-237-stdlib-doc`: the existing standalone
   documentation generator passes and updates `docs/stdlib.md` from library comments.
+- `/private/tmp/fwp-239-observer-control.py` and
+  `/private/tmp/fwp-239-local-negative-controls.py`: Clang O1 native known-work and
+  all four deliberately broken controls pass, using the verified #238 compiler
+  package (SHA-256 `59fad77f00615340906d15bf87b7b96cc8d849b3e524eea96502929d8c3c9049`).
+- `/private/tmp/fwp-239-small-gradient-control.py`: one three-coordinate update
+  agrees across raw interpretation and ordinary/totals/detailed native images,
+  workspace off/on, with zero final storage. No local compiler rebuild or sweep.
+- `scripts/summarize-derivative-forward-costs.py` with both downloaded archives,
+  full source ID and run `41319946864`: all 96 observations and controls pass;
+  guarded audit takes about four seconds. No saved binary is executed by the audit.
 
 Old run `38888712709` shows a stale aggregate “in progress” status, but all its
 October 16 jobs are terminal. GitHub refuses cancellation because the run is

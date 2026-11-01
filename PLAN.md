@@ -4,7 +4,7 @@ Build an ahead-of-time language with simple pipes, immutable values, strong type
 and useful inference. Prefer direct values, moves and borrows; reserve ARC for
 necessary sharing. GC is removed; JIT and backward compatibility are excluded.
 
-## Current batch: explain the remaining forward derivative costs
+## Current batch: remove temporary zipped numeric records
 
 [PR #238](docs/roadmap-history.md#direct-derivative-recording-pr-238) is verified
 and merged. It removes recording argument records and transfers typed weights.
@@ -13,12 +13,18 @@ Earlier timings place most derivative time in forward work, which includes
 arithmetic, temporary values and recording. Treating all of it as tape overhead
 would select the wrong optimization.
 
+The phase/source measurements now pass and are audited on both native Linux
+architectures. They identify temporary zipped records as a concrete allocation
+and ARC cost. Extend existing zip/map fusion to flat records of immediate numeric
+fields, including `Rev[F64]`, under the
+[frozen acceptance rules](docs/measurements/derivative-forward-costs.md#candidate-acceptance-frozen-before-compiler-edits).
+
 | Step | Work | Completion requirement |
 |---|---|---|
 | 1 | Freeze inputs, accounting boundaries and controls | Publish the [protocol](docs/measurements/derivative-forward-costs.md) before changing measurement code; retain #238 delivery evidence |
 | 2 | Extend existing allocation and ownership observers with derivative phases | Six phases plus outside-phase work balance exactly with whole-program counters; retain source locations; missing rows and wrong phases fail |
 | 3 | Measure the six Rosenbrock cases on native Linux ARM64/AMD64 | GCC O1/O2, current/history forms and workspace off/on; raw/ordinary/instrumented results agree, all storage is released, artifacts identify source/toolchains |
-| 4 | Publish the explanation and select the next bounded change | Report dominant costs with examples and limits; freeze a specific candidate's semantics/count requirements before implementation; group any resulting change and its verification in this PR |
+| 4 | Remove temporary zipped flat numeric records and verify the batch | Implement the frozen selection, semantic/ownership controls, six-case count comparison and paired timing; complete nine production jobs and documentation before merging |
 
 The protocol defines exact inputs and required observations. Reuse the existing
 whole-program, ownership-site and derivative-boundary code; do not add a parallel

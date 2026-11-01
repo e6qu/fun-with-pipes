@@ -1,6 +1,6 @@
 # Where derivative work allocates and changes owners
 
-Preparation protocol, before new observer code. Baseline: verified PR #238,
+The protocol below was published before observer code. Baseline: verified PR #238,
 merge `c124d0c8f13373b0ee11c58d685d850b1b9a5a08`. Its
 [recording results](derivative-recording-moves.md) remove argument records and
 transfer typed weights; they do not explain the remaining ordinary F64 costs.
@@ -116,3 +116,88 @@ It checks every archived file's hash, recomputes all observations from saved
 stderr, checks output against the analytic result, and adds C caller names to
 active sites. The output is a compressed JSON record. No saved binary is executed
 during this audit. A successful measurement job alone does not replace this audit.
+
+## Verified baseline and selected change
+
+[Run 41319946864](https://github.com/e6qu/fun-with-pipes/actions/runs/41319946864)
+passes on source `afc0f78f9a68881f6c1db3c08be6276a320f7803`. Both complete job logs
+were audited, without compiler warnings or failed tests. The
+[audited report](derivative-forward-costs-2026-11-01.json.gz) covers all 96
+observations, file hashes, source sites, native images and deliberate failures.
+All detailed counts agree between architectures: Neoverse-N2/GCC 13.3 and
+EPYC 7763/GCC 15.2. This establishes counts, not new timings.
+
+For 129 coordinates and 199 updates, retaining only the current vector:
+
+| Phase | Managed requests | Requested bytes | Effective retains |
+|---|---:|---:|---:|
+| Outside the derivative | 77,740 | 2,475,126 | 199 |
+| Forward calculation and recording | 206,563 | 5,960,472 | 179,100 |
+| Result array | 199 | 206,960 | 0 |
+| Other four phases | 0 | 0 | 0 |
+| Whole solve | 284,502 | 8,642,558 | 179,299 |
+
+Peak managed charge is 25,952 bytes; final managed and raw storage are zero.
+History has the same forward costs but retains previous vectors: its peak is
+845,088 bytes. Raw tape buffers are recorded separately in the report. A zero
+managed allocation count in reverse traversal does not mean it does no work.
+
+The forward ownership sites identify a specific intermediate:
+
+```fwp
+values | zip (drop 1 values) | map pair-calculation
+```
+
+For each adjacent pair, `zip` builds a pair and a list node. `map` then reads
+that pair and builds its own result list. For this input that means 25,472
+temporary pairs and 25,472 temporary list nodes. The recorded `zip` retains
+both `Rev[F64]` elements; the map entry retains the pair and extracts owned
+elements again. These counts identify temporary collection ownership, not a
+retain inside the tape append operation.
+
+**Selected candidate:** extend the existing `map_zip` transformation in
+`src/fuse.rs` from immediate numeric elements to flat records whose fields are
+all those same immediate numeric types. `Rev[F64] = {value: F64, vertex: I64}`
+fits. Use the existing `zip-with` construction and cleanup. Do not add a public
+primitive, syntax, runtime switch or general nested-record/cycle analysis.
+
+The source lists stay live throughout the call, the shorter list still determines
+the result length, and the callback still runs once per pair in the same order.
+Flat numeric records have no resource fields whose close timing could change.
+Reject strings, functions, channels/files, nested aggregates and boxed wide
+numbers at this selection boundary. Existing numeric selection remains intact.
+
+### Candidate acceptance, frozen before compiler edits
+
+- Compare raw interpretation, optimized interpretation and native GCC/Clang
+  O1/O2. Cover named records, tuples, mixed scalar/record inputs, empty/unequal
+  lists, captures, retained aliases, callbacks returning inputs, effects and
+  traps. Verify excluded types stay excluded. Keep existing derivative precision,
+  nested-tape, failure/cancellation and physical-release checks.
+- A focused record-pair fixture must remove the temporary pair/list allocations,
+  preserve both input aliases and release every completed/partial result. Its
+  omitted-result-cleanup control must fail. Inspect generated C and native images;
+  do not infer the representation from a timing result.
+- Repeat all six count workloads and modes against the archived baseline. For
+  `p = (coordinates - 1) * updates`, remove at least `2*p` managed requests,
+  `48*p` requested bytes and `3*p` effective retains from each nonzero solve.
+  Peak managed charge must not grow; final charge stays zero. The zero-update
+  observations and raw tape/workspace counters must be unchanged. Preserve
+  derivative node counts and numerical operation order.
+- Use a reference compiler built from the candidate source with only the new
+  flat-record eligibility disabled. Retain its exact patch and source hashes.
+  Disabling all zip/map fusion would also remove existing numeric optimizations
+  and would not isolate this change.
+- Reuse the paired derivative timing protocol: two sessions each on the qualified
+  Neoverse-N2/GCC 13.3 and EPYC 7763/GCC 15.2 hosts; all six cases, current/history
+  forms, 98 rounds, seven fresh processes and the existing per-case solve counts.
+  Include the byte-identical candidate copy and C/Rust context programs. Require
+  copy variation at most 2%, candidate/reference at most 0.95 with updates and
+  1.02 without updates. Retain every failure or inconclusive result. These are
+  this candidate's timing requirements; earlier D2 failures remain historical
+  failures and are not erased by a new comparison.
+- Retain ordinary image sizes and every static frame. Limit instruction-section
+  growth to 1,024 bytes and largest static-frame growth to 128 bytes per program.
+  These are supporting cost limits, not a substitute for speed and live memory.
+- Complete the full nine-job production matrix and documentation on the final
+  head before merging. A focused measurement pass is not that delivery gate.
