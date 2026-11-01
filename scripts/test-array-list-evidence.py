@@ -41,7 +41,8 @@ class Evidence(unittest.TestCase):
                 self.assertEqual(CHECK.file_inventory(zipfile.Path(archive)), CHECK.file_inventory(root))
 
     def test_zip_paths_cannot_escape_repeat_or_change_spelling(self):
-        for name in ['/absolute', '../parent', 'nested/../parent', './local', 'a//b', 'file']:
+        for name in ['/absolute', '../parent', 'nested/../parent', './local', 'a//b',
+                     'file', 'file/', 'file/child', '.', './']:
             stream = io.BytesIO()
             with warnings.catch_warnings():
                 warnings.simplefilter('ignore', UserWarning)

@@ -129,10 +129,14 @@ def file_inventory(folder):
 def check_zip(archive):
     names = archive.namelist()
     assert len(names) == len(set(names)), 'duplicate archive path'
+    files = {name for name in names if not name.endswith('/')}
     for name in names:
         path = PurePosixPath(name)
-        assert not path.is_absolute() and '..' not in path.parts
+        assert path.parts and not path.is_absolute() and '..' not in path.parts
         assert str(path) == name.rstrip('/')
+        assert all(str(parent) not in files for parent in path.parents), 'file shadows archive directory'
+        if name.endswith('/'):
+            assert str(path) not in files, 'file and directory share an archive path'
 
 
 def check_directory(folder, source, architecture, session, protocol, reference):

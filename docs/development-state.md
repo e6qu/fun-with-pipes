@@ -5,7 +5,7 @@ saved observations and exact reference patch, then fix failures together before
 running the final production gates for [PR #239](https://github.com/e6qu/fun-with-pipes/pull/239).
 
 Worktree `/private/tmp/fwp-returned-callables`, branch `derivative-forward-costs`.
-Published head `0dd02a4e`; base `c124d0c8` (verified PR #238). Preserve unrelated
+Base `c124d0c8` (verified PR #238); timing-audit update `6802e209`. Preserve unrelated
 primary-checkout edits. One active PR; publication and squash merge after all
 final-head gates pass remain authorized. Every commit has one line, at most
 80 characters, with no body, trailers or attribution.
@@ -45,7 +45,8 @@ a speedup; D2 timing acceptance remains open.
 ## Active CI
 
 Timing run `41325932590` uses `a4cef01b`, with compiler source unchanged from the
-verified candidate. All four jobs were queued at the last check:
+verified candidate. ARM64 session 1 has passed host qualification and is building;
+the other three jobs were queued at the last check:
 
 | Session | Job |
 |---|---|
@@ -59,9 +60,10 @@ and 2% identical-copy limit. Preserve failed/noisy observations. A slow status
 request is not a stopped job; poll the same handle before taking action.
 
 Documentation `41324800221` passes on `a4cef01b`; its complete log was audited.
-The current-head documentation run is `41326183619`, last seen queued. Superseded
-queued docs `41319949124` and `41324313889` were cancelled. No current failure is
-known. The final nine-job matrix has not run; draft skips are not passing gates.
+Documentation `41326898762` covers the timing-audit update, last seen queued.
+Superseded queued docs `41319949124`, `41324313889` and `41326183619` were cancelled.
+No current CI failure is known. The final nine-job matrix has not run; draft
+skips are not passing gates.
 
 ## Evidence and local checks
 
@@ -84,6 +86,8 @@ Focused checks used `python3 scripts/local-guard.py` serially:
 `test-descent-phases.py --cc clang` (4), and `test-array-list-evidence.py` (8).
 The three updated ZIP/patch controls also pass separately. `check-roadmap.py`
 and workflow `actionlint -shellcheck= -pyflakes=` pass.
+Review also found and fixed a file/directory collision that could hide a ZIP
+entry from traversal; directory-shadow and root-path rejection controls pass.
 
 `summarize-derivative-forward-costs.py` passes both original archives with
 `--comparison baseline` and both candidate archives with `--comparison record-zip`
