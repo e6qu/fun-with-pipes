@@ -6,6 +6,27 @@ and complete platform validation are different events. Measurements retain their
 original source and settings; old numbers are not measurements of current main.
 The linked PRs, runs and data records supply the detailed evidence.
 
+## Numeric record zip/map fusion (PR #239)
+
+[PR #239](https://github.com/e6qu/fun-with-pipes/pull/239) removes temporary zipped
+pairs of flat numeric records, including derivative values. For 129 coordinates
+and 199 updates it saves 51,143 allocation requests and 76,416 retains; peak
+managed storage falls from 25,952 to 21,888 bytes. Larger cases use 5.4–15.6%
+less elapsed time. The user approved retaining these reductions with all ten
+failed timing limits open, including both AMD64 zero-update regressions.
+[The report](measurements/derivative-forward-costs.md) retains the frozen limits,
+four audited sessions and GCC investigation; D2 remains open.
+
+All nine [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/41342124001)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/41342116834)
+pass on `9e326ce8db9ba5d0b404c1d9b77641c9e51fd484`; all completed logs were audited.
+Squash merge `1f35824928abc2d468a469c03622f095ce2a4742` has the identical tree
+`bfb2698617f71c9c64a6426de72e944634cefa6c` and a verified one-line message without
+body or trailers. All six packaged compilers/programs execute on native hosts
+outside the checkout. This verifies delivery, not the unmet timing requirements.
+Redundant post-merge matrix `41351222101` was cancelled after the identical-tree
+check, with no failed steps.
+
 ## Direct derivative recording (PR #238)
 
 [PR #238](https://github.com/e6qu/fun-with-pipes/pull/238) passes recording arguments

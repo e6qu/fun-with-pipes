@@ -1,143 +1,95 @@
 # Current work
 
-**Next:** publish the accepted final batch, mark PR #239 ready and monitor all
-nine production jobs plus documentation on that exact commit. Fix every failure
-before merging; do not count skipped jobs. Retention is approved, while all ten
-failed timing limits remain open.
+**Next:** trace the three remaining derivative callback boxes in the retained
+#239 C to their callers and result lifetimes, starting with the known fold path
+in `src/cgen.rs`. Complete step 1 of [PLAN.md](../PLAN.md) before selecting and
+freezing the next compiler change.
 
-[PR #239](https://github.com/e6qu/fun-with-pipes/pull/239) is draft on branch
-`derivative-forward-costs`, worktree `/private/tmp/fwp-returned-callables`.
-Published evidence head `ab7562029faf11e09c5daa614010649ab3f798ee` retains the GCC
-reports and benchmark-scope corrections. The acceptance update follows it;
-record its exact head and final job IDs after publication.
-Base `c124d0c8` is verified PR #238. Preserve the unrelated primary-checkout edits.
-[PLAN.md](../PLAN.md) and the [measurement report](measurements/derivative-forward-costs.md)
-own scope, all six cases, acceptance rules and retained evidence.
+Branch `derivative-record-callbacks` starts at verified merge `1f358249` in
+`/private/tmp/fwp-returned-callables`. No new PR or compiler change exists yet.
+Preserve unrelated edits in the primary checkout. These delivery/status updates
+are local changes for the next substantial PR, not an untested change to #239.
 
 ## Roadmap status
 
 | Step | Status | Evidence / remaining work |
 |---|---|---|
-| 1 | Verified | Protocol `02d4aa26`; candidate limits frozen at `73cec3e5` before compiler edits |
-| 2 | Verified | Known-work, omission, wrong-phase and unfinished-sequence controls pass |
-| 3 | Verified | Baseline `afc0f78f`, run `41319946864`: both native hosts, all 96 observations audited |
-| 4 | In progress | Candidate correctness, ownership, counts and artifact audits pass; timing limits fail; nine production gates remain |
+| 1 | In progress | Saved counts identify 76,615 callback result boxes in the largest current-vector case; trace consumers and compare all retained modes |
+| 2 | Pending | Prove eligibility and freeze exact requirements before compiler edits |
+| 3 | Pending | Implement the selected transformation and semantic/cleanup controls |
+| 4 | Pending | Audit focused evidence, final nine production jobs and documentation; squash merge |
 
-Compiler change `b094fdd8` extends existing zip/map fusion to flat numeric records,
-including `Rev[F64]`. Both lists stay alive; order and shorter-list behavior stay
-unchanged. Nested/managed fields and boxed wide numbers remain excluded.
-Measured compiler/runtime files have not changed since that candidate.
+## Verified delivery: PR #239
 
-Candidate run `41324329567` passes on AMD64 job `124900983795` and ARM64 job
-`124900983956`: per host, 19 affected integration cases, three fusion unit tests,
-GCC O1/O2 observer controls and 48 solve observations. Logs and saved probes are
-audited. Largest current-only solve saves 51,143 allocation requests and 76,416
-retains; peak managed charge falls from 25,952 to 21,888 bytes. Final managed/raw
-storage is zero, raw storage is unchanged and largest static frames do not grow.
-These results do not establish timing acceptance.
+[PR #239](https://github.com/e6qu/fun-with-pipes/pull/239) merged November 1 as
+`1f35824928abc2d468a469c03622f095ce2a4742`. All nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/41342124001)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/41342116834)
+pass on `9e326ce8db9ba5d0b404c1d9b77641c9e51fd484`.
+The merge tree exactly matches tested tree
+`bfb2698617f71c9c64a6426de72e944634cefa6c`; its sole parent is verified #238,
+`c124d0c8`. The message is one line, under 80 characters, with no body/trailers:
+`Remove temporary numeric record pairs from derivative calculations`.
+Redundant post-merge CI `41351222101` was cancelled after verifying tree identity
+and no failed steps. The post-merge documentation check remains enabled.
 
-## Four timing sessions: all audited, requirements unmet
-
-| Session | Measured run / job | Result |
+| Final job | ID | Audited result |
 |---|---|---|
-| ARM64 1 | `41325932590` / `124905745488` | Both one-update forms miss 5% improvement |
-| ARM64 2 | `41325932590` / `124905745590` | Both one-update forms miss 5% improvement |
-| AMD64 1 | `41325932590` / `124905745526` | Same one-update misses; current zero-update is 2.54% slower |
-| AMD64 2 | `41330973213` / `124920809825` | Same one-update misses; current zero-update is 2.72% slower |
+| Linux ARM64 | `124954172954` | 257 targets, 1,026 passing tests, 13 SDK tests; 7,783 evidence files |
+| Linux AMD64 | `124954172917` | Same coverage; Linux memory-bound checks execute on both hosts |
+| macOS ARM64 regular | `124954172697` | 131 targets, 647 passing tests, 13 SDK tests; 3,970 evidence files |
+| macOS AMD64 regular | `124954172829` | Same coverage |
+| macOS ARM64 ownership | `124954172930` | Counted corpus, 126 targets, 374 passing tests; 3,359 evidence files |
+| macOS AMD64 ownership | `124954172765` | Same coverage |
+| Windows ARM64 | `124954172920` | 154 scheduled targets plus 52 direct Rust runs; 845 passing test invocations |
+| Windows AMD64 | `124954172877` | Same coverage; both native corpora pass |
+| C/Rust benchmarks | `124954172853` | 21 native images, 14 instrumented images, RSS and deliberate leak controls |
+| Documentation | `124954151581` | 197 link sets, 106 preparation pairs/tags, plan consistency and control tests |
 
-Zero-update permits at most 2% regression. Other reported limits pass, including
-identical-copy variation, counts, memory, code and stack. Larger cases show
-5.4–15.6% less elapsed time. Diagnostic forward-work shares of 4.41–4.93% suggest
-that this selected change's 5% whole-process one-update target was too aggressive;
-the clocks perturb execution, so this is not an exact bound or a waiver.
+All six native packages execute outside the checkout. No unexpected diagnostic
+was found. Rust invocation totals include repeated Windows controls. Measurement
+helpers remain explicitly ignored; Linux `/proc` checks are not macOS coverage.
+Windows executes 11 SDK tests and seven process controls, skipping two POSIX
+terminal tests and three POSIX process controls. Intentional scheduler panics,
+runner failures and injected benchmark leaks have passing enclosing controls.
+Complete logs: `/private/tmp/fwp-239-final-*.log`; metadata and merge checks:
+`/private/tmp/fwp-239-final-jobs.json`, `fwp-239-merged.json` and
+`fwp-239-merge-commit.json`. Detailed delivery audit:
+`/private/tmp/fwp-239-delivery-handoff.md`.
 
-Original-run audit `41329444021` / `124916252154` passes. AMD64-2 audit
-`41336025525` / `124935921013` also passes on auditor `0a45a10e`. Every saved
-observation, output, profile, image/stack size and source/reference hash agrees;
-all ten failed timing limits are retained. No correctness or storage failure is
-known. Three earlier AMD64 assignments were rejected before building; their
-successful audits and identities are linked in the report. Do not rerun unchanged
-completed timings to seek acceptance or silently weaken frozen limits.
+## Evidence and unresolved timing goals
 
-On November 1 the user explicitly chose: "Retain reductions; leave timing goals
-open." This decision includes both AMD64 regressions after the GCC investigation.
-It permits delivery after production validation, not relabeling the ten failed
-limits or their retained reports as passing. D2 remains open.
+[The report](measurements/derivative-forward-costs.md) retains all six cases,
+96 count observations and four audited timing sessions. Largest current-only
+savings: 51,143 allocation requests and 76,416 effective retains; peak managed
+charge falls from 25,952 to 21,888 bytes. Final managed/raw storage is zero.
 
-## Source investigation and retained evidence
+The user approved retaining these reductions with all ten timing failures open:
+eight one-update cases miss 5% improvement; AMD64 zero-update is 2.54% and 2.72%
+slower, exceeding 2%. D2 remains open. Original reports and thresholds are unchanged.
+GCC diagnostic `41337215456` reproduces all four zero-update images/outputs but
+establishes no timing cause or justified repair. Do not rerun unchanged timings
+or make speculative allocator changes. Source tags and retained archives are
+linked from the report; they preserve evidence through squash merge.
 
-AMD64-2 measured source is `215db5dea22ebbf1e2052b69660c068959e4a2c7`.
-Its zero-update C and executable hashes match AMD64-1 exactly. Guarded extraction
-verifies the full archive digest and both C hashes before saving:
-`/private/tmp/fwp-239-zero-fwp-ad.c` and
-`/private/tmp/fwp-239-zero-fwp-ad-reference.c`.
-GCC diagnostic `41337215456` / `124939474741` passes on `14f60e11`. Its four
-rebuilt zero-update executables and outputs match the original hashes exactly.
-GCC removes the stopped derivative loop from both current-only `f0` entries;
-their optimized bodies match after renaming generated temporary IDs and the
-string-cleanup symbol (whose C body is identical). Other helpers and the history
-thread entry differ. No timing cause or justified repair is established.
-The Xeon 8370C runner reproduces compilation, not the EPYC timing conditions.
-Use source/compiler evidence, not speculative disassembly-led allocator changes.
-Documentation fixes clarify that repeated fwp timings capture the initial
-immutable input once with `const`; they repeat the solver/output, not that input's
-construction. The helper docstring and future report wording are corrected;
-generated programs, measured observations and acceptance limits are unchanged.
+## Next investigation and local checks
 
-Retained reports and complete logs live under
-`docs/measurements/derivative-record-zip-2026-11-01/`.
-AMD64-2 summary artifact `13095277190`, full archive `13094323983`;
-original summary `13094271343`, full archive `13094620286`.
-The complete GCC diagnostic archive `13097820491`, its API metadata and full
-job log are retained beside them. The guarded reader verified all 26 files,
-command statuses, report hashes and original binary/output identities.
-The guarded reader verifies each downloaded summary's API digest and all
-report/log hashes. Full audits ran on GitHub, without executing saved images.
-Local full logs: `/private/tmp/fwp-239-timing-amd-2.log`,
-`/private/tmp/fwp-239-timing-audit-amd-2.log` and
-`/private/tmp/fwp-239-timing-audit-original.log`.
+In candidate report `derivative-record-zip-counts-2026-11-01.json.gz`, source
+`b094fdd8`, run `41324329567`, case `129-199-current-O2`, workspace off:
+ARM64 ownership sites 458 (`f167`), 452 (`f127`) and 457 (`f164`) create
+25,671, 25,472 and 25,472 flat numeric records. Their generated callback entries
+box direct worker results. Resolve callers/escape boundaries before selecting a
+change. Map/list construction remains another cost; not every box is removable.
 
-Immutable tags `roadmap/derivative-record-zip-sources-2026-11-01` (`844ff77f`)
-and `roadmap/derivative-record-zip-audits-2026-11-01` (`215db5de`) preserve the
-measured sources, frozen requirements and audit code through squash merge.
-`roadmap/derivative-record-zip-codegen-2026-11-01` preserves diagnostic source
-`14f60e11`.
-
-## Checks and local limits
-
-Documentation `41337220023` / `124939483733` passes on `14f60e11`.
-Complete log `/private/tmp/fwp-239-docs-14f60e11.log`: 197 link sets, 106 preparation
-pairs/tags, four plan steps and commit messages pass, along with all observer,
-reference, archive and retention controls. Runner errors/timeouts and the
-`intentional runner control` panic are deliberate tests with passing enclosing
-results. This is documentation coverage, not the nine production gates.
-Production CI `41337220082` skipped because the PR is draft; that is not passing
-coverage. Both formerly queued jobs completed without a restart.
-
-Earlier focused guarded checks and native probe audits are recorded in the
-measurement report. Latest guarded checks: small summary retention passes
-(0.12 seconds); exact-source extraction passes (1.19 CPU / 2.42 elapsed seconds).
-Commands use `python3 scripts/local-guard.py`; temporary readers are
-`/private/tmp/fwp-239-read-retained.py` and `/private/tmp/fwp-239-read-zero-source.py`.
-Streamlining initially changed the handoff's required heading/status labels;
-both were restored to the checker's contract.
-The compiler-report script passes guarded Python syntax checking and native
-compilation/hash reproduction; workflow actionlint and the roadmap check pass.
-Diagnostic archive verification and current-only entry comparison each pass
-under the guard in 0.13 seconds. The comparison helper initially assumed history
-kept a separate `f0`; it now explicitly selects its inlined thread entry.
-Temporary readers: `/private/tmp/fwp-239-read-zero-codegen.py`,
-`/private/tmp/fwp-239-compare-zero-codegen.py`,
-`/private/tmp/fwp-239-retain-zero-codegen.py`. No local full build ran.
-
-Disk previously stopped checks below 64 GiB. Cleanup removed only redundant old
-downloads after confirming original GitHub artifacts remain unexpired and their
-identities match retained logs/reports. Latest removal: six buffer/generated-check
-ZIPs at sources `6eca1176`, `89fda951`, `048c92c5`, about 639 MiB. Metadata is in
-`/private/tmp/fwp-239-cleanup-*-artifacts.json`; logs, source worktrees and current
-PR evidence remain. Guarded checks now run, but free space fluctuates: never bypass
-the 64 GiB floor, 2 GiB target limit, 1 GiB RSS limit or 180-second deadline.
-
-Keep one active PR. Start the nine-job final matrix on the accepted batch. Merge only
-after exact-head gates pass, using one explicit subject of at most 80 characters,
-an empty body and no trailers or attribution. Verify the resulting merge.
+Read-only extraction verifies saved `ownership-base.c` SHA-256
+`b820f990003376116f544c3d638688543ad6154519da34c879444e7eb4aa700a`.
+Guarded report/source reads and final target audits pass in 0.13–0.14 seconds.
+The temporary target reader initially assumed explicit `--test`; it now checks
+`--all-targets` against the complete repository schedule. No production repair
+was needed. Keep full builds/measurements on GitHub and focused local checks under
+`scripts/local-guard.py`; never bypass resource limits. Old redundant downloads
+were removed only after retained source/digest and unexpired remote verification;
+current evidence, logs and source worktrees remain.
+The delivery/next-plan update passes the guarded roadmap check: 197 link sets,
+106 preparation pairs/tags and four plan steps, 2.98 seconds. `git diff --check`
+also passes. Publish these status changes with the next substantial batch.

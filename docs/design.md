@@ -380,8 +380,10 @@ building the intermediate list of pairs. Both input lists remain alive until
 the loop finishes; the shorter input determines the output length. Record fields
 containing strings, nested records, functions, resources or boxed wide numbers
 do not qualify. The [candidate protocol](measurements/derivative-forward-costs.md#candidate-acceptance-frozen-before-compiler-edits)
-records passing native correctness/ownership checks, unmet timing limits and
-pending full production verification.
+records passing native correctness/ownership checks and unmet timing limits.
+[PR #239](roadmap-history.md#numeric-record-zipmap-fusion-pr-239) passed full
+production verification; the user approved retaining the allocation savings
+while leaving those timing limits open.
 
 The generated-array transformation, verified in [PR #232](roadmap-history.md#generated-array-elimination-pr-232),
 extends this rule to `flip array.generate id | array.fold add 0`. With input
