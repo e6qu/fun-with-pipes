@@ -151,7 +151,7 @@ fn named_tacit_captures_and_macros_agree_across_backends() {
         ),
         (
             "generic-state-function-read",
-            r#"read-function : () -> (I64 -> I64) ! {State[(I64 -> I64)]}
+            r#"read-function : () -> s ! {State[s]}
 read-function = get
 work : () -> I64 ! {State[(I64 -> I64)]}
 work = fn _ ->
@@ -165,7 +165,7 @@ main = run-state (add 1) work () | .0 | echo
         ),
         (
             "trait-method-constructor-stage",
-            "trait Factory[T] = { make : T -> I64 -> I64 }\nimpl Factory[I64] = { make = fn divisor -> let inverse = 10 / divisor in fn value -> inverse + value }\nalias : I64 -> I64 -> I64\nalias = make\nmain = alias 0 (1 | tap (const \"later\" | echo)) | echo\n".into(),
+            "trait Factory[T] = { create-function : T -> I64 -> I64 }\nimpl Factory[I64] = { create-function = fn divisor -> let inverse = 10 / divisor in fn value -> inverse + value }\nalias : I64 -> I64 -> I64\nalias = create-function\nmain = alias 0 (1 | tap (const \"later\" | echo)) | echo\n".into(),
             "",
             Some("division by zero"),
         ),

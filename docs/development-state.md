@@ -1,12 +1,22 @@
 # Current work
 
-**Next:** verify the generic-primitive and trait-alias stage repair in
+**Next:** rerun the corrected stage regressions in
 [PR #236](https://github.com/e6qu/fun-with-pipes/pull/236), then finish production.
 Source review found that aliases still counted arrows added by substituting a
 function for a primitive result, or ignored a trait implementation's strict
 constructor boundary. The repair uses declared primitive stages and shares
 trait selection with lowering. New regressions require a trap before a later
 argument's `echo`. No timing/count limit is relaxed.
+
+At `d1dcb06f`, focused run `41262588507` passes both primitive trap cases,
+existing lexical cases, all ten call-cleanup checks and returned-function cost
+probes on three hosts. Two new fixtures fail before execution: the state alias
+used an invalid non-final effect annotation, and the trait method used reserved
+`make`. Use the generic `() -> s ! {State[s]}` signature and `create-function`.
+All three logs are audited. Guarded standalone parsing/formatting passes all
+18 checks with these corrections. Docs `41262432514` pass/audited; analysis
+`41262592222` passes Linux's 231 units, Clippy, scaling and startup budgets,
+with Intel macOS still running. The compiler repair itself is unchanged.
 
 Production run `41261060185` tests prior head
 `20109cf0f0e4ce5688e72a7e04f548f2c385f353`: benchmark and docs `41261025980`
