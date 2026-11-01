@@ -123,13 +123,12 @@ main = (10000, 0) | loop step | echo
     let owned = std::fs::read_to_string(emitted).unwrap();
     let start = owned.find("static V fwp_p_fold_right_own(").unwrap();
     let end = start + owned[start..].find("\n}\n").unwrap();
+    let callback = "owner.value = fwp_apply_borrowed_span(f, 2, args, 1, 1);";
+    assert_eq!(owned[start..end].matches(callback).count(), 1);
     let mut retained = owned.clone();
     retained.replace_range(
         start..end,
-        &owned[start..end].replace(
-            "z = fwp_apply_borrowed_span(f, 2, args, 1, 1);",
-            "z = fwp_apply_borrowed_span(f, 2, args, 1, 1); fwp_rc_dup(z);",
-        ),
+        &owned[start..end].replace(callback, &format!("{callback} fwp_rc_dup(owner.value);")),
     );
     // Captured HOFs also transfer accumulators through the owned entry.
     retained = retained
@@ -149,7 +148,6 @@ main = (10000, 0) | loop step | echo
         })
         .collect::<Vec<_>>()
         .join("\n");
-    assert_ne!(retained, owned, "missing extra accumulator owner control");
     let mut freed = Vec::new();
     for (name, code) in [("retained", &retained), ("owned", &owned)] {
         let exe = dir.0.join(name);

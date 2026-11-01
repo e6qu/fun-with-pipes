@@ -1,7 +1,7 @@
 # Current work
 
-**Next:** verify the saved-REPL-function repair on [PR #236](https://github.com/e6qu/fun-with-pipes/pull/236/checks),
-using the expanded lexical probes and unit/lint checks. Keep auditing the running
+**Next:** verify the right-fold retained-owner test repair on [PR #236](https://github.com/e6qu/fun-with-pipes/pull/236/checks),
+using the expanded lexical probes. Keep auditing the running
 production jobs for other failures. The PR is draft again; require nine production
 jobs plus documentation on the repaired final head before squash-merging.
 
@@ -13,16 +13,16 @@ primary checkout. Keep one active PR. Commit messages must be one line, at most
 
 ## Verified source and pending matrix
 
-Compiler source `4f1a63a2fe60ce4dd14efa1055c1f90d5ad2ea64` passes:
+Compiler source `d339f8a701df6b48d32b3ea864690e53843bd3d2` has these checks:
 
 | Run | Checks | Result |
 |---|---|---|
-| `41265255720` | Linux ARM64/AMD64 and macOS ARM64: CLI, local bindings, call cleanup, iterator/vector behavior, returned-function costs and iteration allocation probes | All three jobs pass; all logs audited |
-| `41265260150` | Linux and Intel macOS: 234 unit tests, all-target Clippy, analysis scaling and raw server startup | Both pass; all logs audited; limits unchanged |
-| `41265234234` | Documentation and retained evidence readers | Pass |
+| `41266999459` | Linux ARM64/AMD64 and macOS ARM64: all 11 REPL tests, CLI, local bindings, call cleanup, iterator/vector behavior, returned-function costs and iteration allocation probes | All three jobs pass; all logs audited |
+| `41267001566` | Linux and Intel macOS: 234 unit tests, all-target Clippy, analysis scaling and raw server startup | Both pass; all logs audited; limits unchanged |
+| `41266988338` | Documentation and retained evidence readers | Pass; log audited |
 
 Production run `41265952785` at `bed8b365` exposed a saved-function REPL failure
-in Windows AMD64's native socket/library step; every target in that artifact is
+in both Windows native socket/library steps; every target in those artifacts is
 audited, and only `saved_lexical_closures_keep_their_code_and_captures` fails.
 Constant-function optimization promoted a saved result to an argument-taking
 entry, violating the session's zero-argument evaluation contract. The repair
@@ -30,19 +30,30 @@ marks saved entries in IR, preserves the marker during session linking and
 excludes them from stage promotion. IR validation checks that contract; the
 constructor unit test covers saved and ordinary entries with constant/computed
 captures. Focused lexical probes now include the complete REPL target.
-This repair awaits runner verification. The benchmark and documentation jobs
-pass at `bed8b365`; other production jobs continue and must be audited.
+The repair passes all three focused platform jobs above. The benchmark and
+documentation jobs pass at `bed8b365`; other production jobs continue and must
+be audited. That superseded matrix cannot verify the repair.
+
+Windows AMD64's later callback step exposed an ineffective right-fold test
+control. Its C-text injection still targeted `z`, while the generic runtime now
+stores the result in `owner.value`. The old source-change assertion could pass
+merely because joining lines removed a trailing newline. The repair targets the
+actual accumulator and requires exactly one matching callback statement. The
+left-fold control gets the same exact-match check. Both still require a real
+retained-owner leak, zero live storage in the ordinary program and the original
+release margin. No runtime behavior or threshold changes. Lexical probes now
+include both folds and unwind cleanup; this test repair awaits verification.
+All completed Windows AMD64 resource/callback targets have been audited.
+The completed macOS ARM64 ownership job has the same sole right-fold failure;
+all 128 test summaries and compiler diagnostics were audited.
 
 The full matrix must test the exact repaired PR head. Local checks use
 `python3 scripts/local-guard.py`; formatting, workflow syntax and documentation
 checks pass. No full compiler build, suite or benchmark ran locally.
 
-The superseded production run `41261060185` at `20109cf0` continues as a failure
-audit. Both macOS regular and ownership shards, Linux ARM64, Windows ARM64,
-Windows AMD64 resource/TLS/autodiff artifacts and the benchmark job are audited.
-Their only diagnosed failures are CLI stdin, iterator callback scope, vector
-fusion and the `iter.each` allocation probe, all repaired at the verified source.
-Linux AMD64 and later Windows AMD64 steps still need complete log audits.
+The superseded production run `41261060185` at `20109cf0` is completely audited.
+Its only failures were CLI stdin, iterator callback scope, vector fusion and the
+`iter.each` allocation probe, all repaired and verified in the focused checks.
 Logs/artifacts are under `/private/tmp/fwp-236-*`; do not treat an artifact named
 `compiler-crashes-*` as a crash without an actual crash report.
 
@@ -58,12 +69,6 @@ internal construction stages remain intact. Tests cover stdin, metadata,
 served calls, C exports and retained C callbacks at O1/O2. Lifetime analysis
 keeps finite outer construction-site identities so unrelated returned callbacks
 do not mix. Removing a State handler still rejects its callback.
-
-Earlier checks `41264671580` and `41264675358` exposed three new test mistakes:
-missing command-completion text, omitted driver documentation metadata in a raw
-IR fixture, and moving a field from a Rust value with a destructor. All were
-fixed together; the five passing jobs above supersede them. Earlier generic
-primitive/trait checks passed at `7bb57453` (`41263005386`, `41262592222`).
 
 ## Roadmap status
 
