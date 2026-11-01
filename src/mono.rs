@@ -1003,7 +1003,7 @@ impl<'a> Mono<'a> {
             def.methods.push(crate::ir::ServedFn {
                 path: crate::protobuf::path(module, &name),
                 name,
-                func: id?,
+                func: crate::ir::saturated_entry(&mut self.prog, id?, arity),
                 error,
                 iter_fn,
             });

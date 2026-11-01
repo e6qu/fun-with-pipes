@@ -18,7 +18,7 @@ use std::collections::{BTreeMap, BTreeSet, HashMap};
 enum Origin {
     // Capture counts share the IR's u32 arity range. Keep them compact in every
     // origin set and dependency key; conversion at construction is checked.
-    Function(FuncId, u32, u8, Option<Site>),
+    Function(FuncId, u32, u8, Option<(Site, Option<Site>)>),
     UnknownFunction,
     Queue(FuncId),
     GrpcSender(FuncId),
@@ -49,18 +49,21 @@ type Context = (FuncId, u8);
 // Zero is the function/runtime boundary; expression/constant positions start at one.
 // Sites are finite positions in the immutable IR, never dynamic call histories.
 type Site = (FuncId, usize);
+// Function constructors keep the outer construction site through nested
+// constructors. This is one finite source position, not an unbounded call stack.
+type Invocation = (Context, Option<Site>);
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 enum Work {
     Service,
-    Function(Context),
+    Function(Invocation),
 }
 
 // Record reads even when the set is still empty. Later writes must wake every
 // consumer, including recursive callers and runtime/service boundaries.
 #[derive(Clone, Debug, Hash, PartialEq, Eq)]
 enum Summary {
-    Output(Context),
+    Output(Invocation),
     Capture(Origin),
     Callback(Context),
     Channel(MT),
@@ -92,14 +95,15 @@ struct TypeProperties {
 struct Proof<'a> {
     program: &'a Program,
     sites: ClosureSites,
+    constructor: Option<Site>,
     type_cache: RefCell<HashMap<MT, TypeProperties>>,
     expression_types: HashMap<Site, Option<MT>>,
     // Capture identities are only looked up, never traversed in proof order.
     // Site separation grows this table with the program; avoid ordered searches
     // on every fixed-point visit. Origin sets below remain ordered.
     captures: HashMap<Origin, Vec<Targets>>,
-    inputs: BTreeMap<Context, Vec<Targets>>,
-    outputs: BTreeMap<Context, Targets>,
+    inputs: BTreeMap<Invocation, Vec<Targets>>,
+    outputs: BTreeMap<Invocation, Targets>,
     callback_values: BTreeMap<Context, Targets>,
     channel_values: BTreeMap<MT, Targets>,
     task_thunks: BTreeMap<FuncId, Targets>,
@@ -326,6 +330,7 @@ impl<'a> Proof<'a> {
         Self {
             program,
             sites,
+            constructor: None,
             type_cache: RefCell::new(HashMap::new()),
             expression_types: HashMap::new(),
             captures: HashMap::new(),
@@ -366,7 +371,7 @@ impl<'a> Proof<'a> {
 
     fn visit(
         &mut self,
-        (id, scoped): Context,
+        ((id, scoped), constructor): Invocation,
         args: &[Targets],
         _stats: &mut AnalysisStats,
     ) -> Result<(), String> {
@@ -374,7 +379,11 @@ impl<'a> Proof<'a> {
         {
             _stats.visits += 1;
         }
-        let mut result = self.function(id, scoped, args).map_err(|error| {
+        let previous = self.constructor;
+        self.constructor = constructor;
+        let evaluated = self.function(id, scoped, args);
+        self.constructor = previous;
+        let mut result = evaluated.map_err(|error| {
             format!(
                 "{error}\n  while checking `{}`",
                 self.program.funcs[id].name
@@ -387,8 +396,9 @@ impl<'a> Proof<'a> {
             result.retain(|origin| !origin.callable());
         }
         self.refine_origins(&mut result, result_type);
-        let updated = join(self.outputs.entry((id, scoped)).or_default(), &result);
-        self.publish(Summary::Output((id, scoped)), updated);
+        let key = ((id, scoped), constructor);
+        let updated = join(self.outputs.entry(key).or_default(), &result);
+        self.publish(Summary::Output(key), updated);
         #[cfg(test)]
         {
             _stats.summary_updates += usize::from(updated);
@@ -736,13 +746,13 @@ impl<'a> Proof<'a> {
                 )?;
                 let mut args = vec![Targets::new(); function.arity as usize];
                 args[0] = input;
-                self.request(method.func, 0, None, &args);
+                self.request(method.func, 0, None, &args, (method.func, 0));
             }
             if matches!(shape.output, crate::rpc::Output::Iter(_)) {
-                self.read(Summary::Output((method.func, 0)));
+                self.read(Summary::Output(((method.func, 0), None)));
                 let returned = self
                     .outputs
-                    .get(&(method.func, 0))
+                    .get(&((method.func, 0), None))
                     .cloned()
                     .unwrap_or_default();
                 // The runtime drains a result after the method has returned.
@@ -759,8 +769,24 @@ impl<'a> Proof<'a> {
         scoped: u8,
         capture: Option<Origin>,
         args: &[Targets],
+        site: Site,
     ) -> Targets {
-        let key = (id, scoped);
+        let function = &self.program.funcs[id];
+        let constructor = if function
+            .ty
+            .after_args(function.arity as usize)
+            .as_fun()
+            .is_some()
+        {
+            let captured_site = match capture {
+                Some(Origin::Function(_, _, _, Some((_, constructor)))) => constructor,
+                _ => None,
+            };
+            Some(captured_site.or(self.constructor).unwrap_or(site))
+        } else {
+            None
+        };
+        let key = ((id, scoped), constructor);
         self.read(Summary::Output(key));
         if let Some(capture) = capture {
             self.read(Summary::Capture(capture));
@@ -788,7 +814,14 @@ impl<'a> Proof<'a> {
         self.outputs.get(&key).cloned().unwrap_or_default()
     }
 
-    fn partial(&mut self, id: FuncId, args: Vec<Targets>, scoped: u8, site: Site) -> Targets {
+    fn partial(
+        &mut self,
+        id: FuncId,
+        args: Vec<Targets>,
+        scoped: u8,
+        site: Site,
+        constructor: Option<Site>,
+    ) -> Targets {
         // Distinct partials of the same helper can hold different callbacks,
         // including a scope-opening wrapper and its unscoped worker. Keep
         // their creation sites separate even when both are made outside the
@@ -802,7 +835,7 @@ impl<'a> Proof<'a> {
                 None
             } else {
                 match self.sites {
-                    ClosureSites::Separate => Some(site),
+                    ClosureSites::Separate => Some((site, constructor)),
                     #[cfg(test)]
                     ClosureSites::Merged => None,
                 }
@@ -859,17 +892,30 @@ impl<'a> Proof<'a> {
             if captured.len() + args.len() == arity {
                 // request records the capture dependency. Nothing can change
                 // captures between the length query above and that read.
-                let returned = self.request(id, scoped, Some(closure), args);
+                let returned = self.request(id, scoped, Some(closure), args, site);
                 join(&mut result, &returned);
                 continue;
             }
+            let captured_len = captured.len();
             let mut all = captured.to_vec();
             self.read(Summary::Capture(closure));
             all.extend_from_slice(args);
             let value = if all.len() < arity {
-                self.partial(id, all, scoped, site)
+                let constructor = match closure {
+                    Origin::Function(_, _, _, Some((_, constructor))) => {
+                        constructor.or(self.constructor)
+                    }
+                    _ => self.constructor,
+                };
+                self.partial(id, all, scoped, site, constructor)
             } else {
-                let returned = self.request(id, scoped, None, &all[..arity]);
+                let returned = self.request(
+                    id,
+                    scoped,
+                    Some(closure),
+                    &args[..arity - captured_len],
+                    site,
+                );
                 self.apply(&returned, &all[arity..], scoped, site)?
             };
             join(&mut result, &value);
@@ -887,7 +933,7 @@ impl<'a> Proof<'a> {
                     .iter()
                     .map(|arg| self.constant(arg, next_site))
                     .collect();
-                self.partial(closure.func, args, 0, site)
+                self.partial(closure.func, args, 0, site, self.constructor)
             }
             Value::Record(fields) | Value::Data(_, fields) => fields
                 .iter()
@@ -1007,7 +1053,7 @@ impl<'a> Proof<'a> {
             Expr::Local(local) => locals[*local as usize].clone(),
             Expr::Const(value) => self.constant(value, next_site),
             Expr::Func(id) if self.program.funcs[*id].arity == 0 => {
-                self.request(*id, scoped, None, &[])
+                self.request(*id, scoped, None, &[], site)
             }
             Expr::Func(id) => BTreeSet::from([Origin::Function(*id, 0, 0, None)]),
             Expr::Call(id, args) => {
@@ -1015,7 +1061,7 @@ impl<'a> Proof<'a> {
                     .iter()
                     .map(|arg| self.expr(arg, locals, local_types, scoped, next_site))
                     .collect::<Result<Vec<_>, _>>()?;
-                self.request(*id, scoped, None, &values)
+                self.request(*id, scoped, None, &values, site)
             }
             Expr::Apply(callee, args) => {
                 let targets = self.expr(callee, locals, local_types, scoped, next_site)?;
@@ -1041,7 +1087,7 @@ impl<'a> Proof<'a> {
                 result
             }
             Expr::BorrowGlobal(local, global, body) => {
-                locals[*local as usize] = self.request(*global, scoped, None, &[]);
+                locals[*local as usize] = self.request(*global, scoped, None, &[], site);
                 self.expr(body, locals, local_types, scoped, next_site)?
             }
             Expr::Let(local, value, body) => {
@@ -1096,7 +1142,7 @@ impl<'a> Proof<'a> {
             Body::RegionEntry { worker } => {
                 let mut arguments = args.to_vec();
                 arguments.push(Targets::new());
-                Ok(self.request(*worker, scoped, None, &arguments))
+                Ok(self.request(*worker, scoped, None, &arguments, site))
             }
             Body::RegionCtor(_) => Ok(Targets::new()),
             Body::Expr(body) => {
@@ -1525,8 +1571,8 @@ pub(crate) struct AnalysisStats {
 #[derive(Debug, PartialEq, Eq)]
 struct Facts {
     captures: HashMap<Origin, Vec<Targets>>,
-    inputs: BTreeMap<Context, Vec<Targets>>,
-    outputs: BTreeMap<Context, Targets>,
+    inputs: BTreeMap<Invocation, Vec<Targets>>,
+    outputs: BTreeMap<Invocation, Targets>,
     callback_values: BTreeMap<Context, Targets>,
     channel_values: BTreeMap<MT, Targets>,
     task_thunks: BTreeMap<FuncId, Targets>,
@@ -1657,7 +1703,7 @@ fn check_scheduled(
                 origins
             })
             .collect();
-        proof.request(entry, 0, None, &args);
+        proof.request(entry, 0, None, &args, (entry, 0));
     }
     let mut stats = AnalysisStats::default();
     #[cfg(test)]
@@ -1678,11 +1724,13 @@ fn check_scheduled(
         .iter()
         .map(|(&key, args)| (key, args.clone()))
         .collect();
-    for ((id, scoped), args) in inputs {
+    for (((id, scoped), constructor), args) in inputs {
+        proof.constructor = constructor;
         proof
             .function(id, scoped, &args)
             .map_err(|error| format!("{error}\n  while checking `{}`", program.funcs[id].name))?;
     }
+    proof.constructor = None;
     for (&task, results) in &proof.task_results {
         proof.task_result_owners(task, results, &mut BTreeSet::new())?;
     }
@@ -1730,6 +1778,50 @@ mod tests {
     use super::*;
     use crate::ir::{Func, ServedFn, ServiceDef};
     use std::time::Instant;
+
+    #[test]
+    fn returned_callbacks_keep_their_constructor_call_sites() {
+        let source = r#"
+main = [
+    [7] | iter.from-list | iter.take 0 | iter.each (div 0 | ignore),
+    [1, 2, 3] | array.from-list | array.to-list | iter.from-list
+        | run-state [] (iter.each (Cons | modify)) | ignore,
+] | ignore
+"#;
+        let checked = crate::driver::check_source("constructor-sites.fwp", source, None)
+            .unwrap_or_else(|error| panic!("{}", error.rendered));
+        // Exercise actual unoptimized lowering without changing process-wide
+        // settings or letting constructor optimization erase this boundary.
+        let mut program = crate::mono::Mono::new(&checked.env, &checked.typed)
+            .run(crate::mono::Roots {
+                main: true,
+                ..crate::mono::Roots::default()
+            })
+            .unwrap();
+        let entries = [program.main.unwrap()];
+        check(
+            &program,
+            &entries,
+            EntryChannels::Unknown,
+            ClosureSites::Separate,
+        )
+        .unwrap();
+        // Removing the handler must still reject the same returned callback.
+        let handler = program
+            .funcs
+            .iter_mut()
+            .find(|function| matches!(&function.body, Body::Prim(symbol) if symbol == "run-state"))
+            .unwrap();
+        handler.body = Body::Expr(Expr::Apply(Box::new(Expr::Local(1)), vec![Expr::Local(2)]));
+        assert!(check(
+            &program,
+            &entries,
+            EntryChannels::Unknown,
+            ClosureSites::Separate
+        )
+        .unwrap_err()
+        .contains("outside a State scope"));
+    }
 
     // Existing positive and negative lifetime fixtures run under both
     // schedulers. Measurements below explicitly call super::check instead.
@@ -2532,8 +2624,8 @@ touch = curry (both .1 (.0 | recur) | uncurry channel.send | ignore)
             ]);
             let mut proof = Proof::new(&program, ClosureSites::Separate);
             proof.validate = true;
-            let captured = proof.partial(3, vec![Targets::new()], 0, (0, 0));
-            let nested = proof.partial(4, vec![captured.clone()], 0, (0, 0));
+            let captured = proof.partial(3, vec![Targets::new()], 0, (0, 0), None);
+            let nested = proof.partial(4, vec![captured.clone()], 0, (0, 0), None);
             for value in [captured, nested] {
                 let checked = proof.queued_targets(&value, &mut BTreeSet::new());
                 if matches!(&captured_type, MT::Con(name, _) if matches!(name.as_str(),
@@ -3051,27 +3143,27 @@ touch = curry (both .1 (.0 | recur) | uncurry channel.send | ignore)
         proof.validate = true;
         let queue = proof.function(0, 0, &[Targets::new()]).unwrap();
         assert_eq!(queue, Targets::from([Origin::Queue(0)]));
-        let captured = proof.partial(3, vec![queue.clone()], 0, (0, 0));
+        let captured = proof.partial(3, vec![queue.clone()], 0, (0, 0), None);
         proof
             .queued_targets(&captured, &mut BTreeSet::new())
             .unwrap();
         let outer = proof.function(1, 0, &[Targets::new()]).unwrap();
         proof.channel_values.insert(nested.clone(), queue.clone());
-        let captured_outer = proof.partial(4, vec![outer.clone()], 0, (0, 0));
+        let captured_outer = proof.partial(4, vec![outer.clone()], 0, (0, 0), None);
         proof
             .queued_targets(&captured_outer, &mut BTreeSet::new())
             .unwrap();
 
         // Empty immutable containers contain no channel owner to invent.
-        let empty = proof.partial(6, vec![Targets::new()], 0, (0, 0));
+        let empty = proof.partial(6, vec![Targets::new()], 0, (0, 0), None);
         proof.queued_targets(&empty, &mut BTreeSet::new()).unwrap();
-        let contained = proof.partial(6, vec![queue.clone()], 0, (0, 0));
+        let contained = proof.partial(6, vec![queue.clone()], 0, (0, 0), None);
         proof
             .queued_targets(&contained, &mut BTreeSet::new())
             .unwrap();
 
         let function_queue = proof.function(2, 0, &[Targets::new()]).unwrap();
-        let captured_functions = proof.partial(5, vec![function_queue], 0, (0, 0));
+        let captured_functions = proof.partial(5, vec![function_queue], 0, (0, 0), None);
         assert!(proof
             .queued_targets(&captured_functions, &mut BTreeSet::new())
             .unwrap_err()
@@ -3086,7 +3178,7 @@ touch = curry (both .1 (.0 | recur) | uncurry channel.send | ignore)
             .queued_targets(&captured_outer, &mut BTreeSet::new())
             .unwrap_err()
             .contains("cannot prove the producer"));
-        let captured_unknown = proof.partial(3, vec![mixed], 0, (0, 0));
+        let captured_unknown = proof.partial(3, vec![mixed], 0, (0, 0), None);
         assert!(proof
             .queued_targets(&captured_unknown, &mut BTreeSet::new())
             .unwrap_err()

@@ -501,6 +501,8 @@ fn feature_cases() -> Vec<FeatureCase> {
         c(&["leave", "-1"], &[], "bye\ncode=255"),
         (vec!["check"], "1\n-2\n3\n", vec![], "1\n-2\n3\ncode=3".into()),
         (vec!["check"], "4\n", vec![], "4\ncode=0".into()),
+        c(&["scaled", "2", "3"], &[], "15\ncode=0"),
+        (vec!["scaled", "2"], "3\n4\n", vec![], "15\n20\ncode=0".into()),
         // completion scripts and the man page
         c(
             &["--completions"],

@@ -23,12 +23,11 @@ pub(super) fn flatten(prog: &mut Program) {
         let Body::Expr(body) = &function.body else {
             continue;
         };
-        if function.arity == 0
-            || function
-                .ty
-                .after_args(function.arity as usize)
-                .as_fun()
-                .is_none()
+        if function
+            .ty
+            .after_args(function.arity as usize)
+            .as_fun()
+            .is_none()
             || size(body) > MAX_BODY
             || calls(body, id)
         {
@@ -63,8 +62,9 @@ pub(super) fn flatten(prog: &mut Program) {
         let (inputs, _) = function.ty.after_args(arity).params(extra);
         if inputs.len() != extra
             || inputs.iter().any(|ty| {
-                crate::resource::may_hold_resource(&prog.shapes, ty)
+                crate::resource::contains_resource(&prog.shapes, ty)
                     || crate::resource::contains_channel(&prog.shapes, ty)
+                    || (observable_captures && crate::resource::may_hold_resource(&prog.shapes, ty))
             })
         {
             continue;
@@ -228,6 +228,28 @@ mod tests {
         };
         assert!(matches!(&fields[0], Expr::Apply(function, args)
             if matches!(&**function, Expr::Func(1)) && matches!(args.as_slice(), [Expr::Local(0)])));
+    }
+
+    #[test]
+    fn constant_function_values_can_flatten_but_computed_captures_stay_eager() {
+        for computed in [false, true] {
+            let capture = if computed {
+                Expr::Call(
+                    0,
+                    vec![Expr::Const(Value::I64(1)), Expr::Const(Value::I64(2))],
+                )
+            } else {
+                Expr::Const(Value::I64(1))
+            };
+            let mut program = program(MT::con("std::I64"), partial(capture));
+            program.funcs[1].ty = program.funcs[1].ty.after_args(1).clone();
+            program.funcs[1].arity = 0;
+            program.funcs[1].locals.clear();
+            program.funcs[2].body = Body::Expr(Expr::Record(vec![Expr::Func(1)]));
+            flatten(&mut program);
+            crate::ir::check_locals(&program).unwrap();
+            assert_eq!(program.funcs[1].arity, u32::from(!computed));
+        }
     }
 
     #[test]

@@ -78,10 +78,28 @@ merely captures values: no executed calls, possible traps, observable owners or
 resource frames. It preserves typed local bindings and changes known callers
 together; the source type alone supplies no such proof. This bounded check runs
 before constructors are inlined into their consumers.
+This includes a cached function value whose captures are already constants.
+Small literal F64 splats can become constant vectors within the existing
+inlining-size budget; their signed-zero and NaN bits are copied unchanged.
+Other computed captures retain their original evaluation point.
 Unknown applications remain successive calls; combining them
 could run a later argument before a first-stage failure. REPL results use cached
 value entries even when their type is a function, so their construction runs once
 and later redefinitions cannot replace their saved code or captures.
+
+CLI, REST and gRPC argument lists come from the complete public function type,
+not an internal entry's current stage. CLI and gRPC lower a complete invocation
+to an entry that follows those stages; the ordinary lifetime proof checks it.
+An already saturated entry needs no adapter. REST generates the corresponding
+source application as before.
+
+The lifetime proof distinguishes calls that construct function values by their
+outer construction site. Nested constructors retain that one source position;
+the proof does not accumulate a call stack. Returned partial functions keep the
+same identity when supplied more inputs. This prevents two `iter.each` values
+from mixing a State callback with an unrelated unscoped callback. Handler
+requirements still apply where the callback is invoked: removing `run-state`
+must reject the State call. Scaling and startup budgets cover this analysis.
 
 ## Eager computations in partial applications
 

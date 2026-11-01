@@ -375,6 +375,31 @@ pub fn type_of<'a>(
     }
 }
 
+/// A protocol entry receives its complete decoded argument list at once.
+/// Keep the source function's construction stages inside that entry, so both
+/// execution and the lifetime proof follow them before returning a wire value.
+pub(crate) fn saturated_entry(prog: &mut Program, target: FuncId, arity: u32) -> FuncId {
+    let function = &prog.funcs[target];
+    if function.arity == arity {
+        return target;
+    }
+    let (parameters, _) = function.ty.params(arity as usize);
+    assert_eq!(parameters.len(), arity as usize);
+    let entry = Func {
+        name: format!("{}-entry", function.name),
+        arity,
+        locals: parameters.into_iter().cloned().collect(),
+        ty: function.ty.clone(),
+        body: Body::Expr(Expr::Apply(
+            Box::new(Expr::Func(target)),
+            (0..arity).map(Expr::Local).collect(),
+        )),
+    };
+    let id = prog.funcs.len();
+    prog.funcs.push(entry);
+    id
+}
+
 /// Information about named types needed at runtime (display, encoding).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum TypeShape {

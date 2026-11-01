@@ -47,6 +47,65 @@ fn syntax_round_trips_and_rejects_refutable_binders() {
 }
 
 #[test]
+fn protocol_metadata_uses_the_complete_function_type() {
+    let source = r#"# expose: cli, rest
+
+export read : I64 -> I64
+read = let offset = 3 in add offset
+# args: DIVISOR VALUE
+export scaled : I64 -> I64 -> I64
+scaled = fn divisor -> let coefficient = 10 / divisor in fn value -> coefficient * value
+"#;
+    let checked = check_source("protocol-stages.fwp", source, None)
+        .unwrap_or_else(|error| panic!("{}", error.rendered));
+    let program = fwp::mono::Mono::new(&checked.env, &checked.typed)
+        .run(fwp::mono::Roots {
+            exports: true,
+            ..fwp::mono::Roots::default()
+        })
+        .unwrap();
+    let commands = fwp::cli::commands(&program, Some("stages")).unwrap();
+    assert_eq!(
+        commands
+            .iter()
+            .map(|command| (command.export.as_str(), command.params.len()))
+            .collect::<Vec<_>>(),
+        [("read", 1), ("scaled", 2)]
+    );
+    let endpoints = fwp::rest::endpoints(&program).unwrap();
+    assert_eq!(
+        endpoints
+            .iter()
+            .map(|endpoint| (endpoint.function.as_str(), endpoint.params.len()))
+            .collect::<Vec<_>>(),
+        [("read", 1), ("scaled", 2)]
+    );
+    let served = fwp::mono::Mono::new(&checked.env, &checked.typed)
+        .run(fwp::mono::Roots {
+            service: Some("main".into()),
+            ..fwp::mono::Roots::default()
+        })
+        .unwrap();
+    let methods = &served.service.as_ref().unwrap().methods;
+    let mut output = Vec::new();
+    let mut interpreter = fwp::interp::Interp::new(&served, Box::new(&mut output)).unwrap();
+    for (method, args, expected) in [
+        (&methods[0], vec![fwp::value::Value::I64(2)], 5),
+        (
+            &methods[1],
+            vec![fwp::value::Value::I64(2), fwp::value::Value::I64(3)],
+            15,
+        ),
+    ] {
+        assert_eq!(served.funcs[method.func].arity as usize, args.len());
+        assert_eq!(
+            interpreter.call_root(method.func, args).unwrap(),
+            fwp::value::Value::I64(expected)
+        );
+    }
+}
+
+#[test]
 fn local_scope_monomorphism_and_resource_rules_are_checked() {
     for source in [
         "main = (let x = 1 in x) + x\n",

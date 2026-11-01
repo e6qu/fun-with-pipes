@@ -1,29 +1,37 @@
 # Current work
 
-**Next:** rerun the corrected stage regressions in
-[PR #236](https://github.com/e6qu/fun-with-pipes/pull/236), then finish production.
-Source review found that aliases still counted arrows added by substituting a
-function for a primitive result, or ignored a trait implementation's strict
-constructor boundary. The repair uses declared primitive stages and shares
-trait selection with lowering. New regressions require a trap before a later
-argument's `echo`. No timing/count limit is relaxed.
+**Next:** verify the production-failure repair batch in
+[PR #236](https://github.com/e6qu/fun-with-pipes/pull/236), which remains draft.
+Continue auditing the still-running jobs from `41261060185`. Both Windows
+resource-test artifacts are now audited: their only failure is vector fusion,
+already included in this batch; later TLS and application steps still run.
 
-At `d1dcb06f`, focused run `41262588507` passes both primitive trap cases,
-existing lexical cases, all ten call-cleanup checks and returned-function cost
-probes on three hosts. Two new fixtures fail before execution: the state alias
-used an invalid non-final effect annotation, and the trait method used reserved
-`make`. Use the generic `() -> s ! {State[s]}` signature and `create-function`.
-All three logs are audited. Guarded standalone parsing/formatting passes all
-18 checks with these corrections. Docs `41262432514` pass/audited; analysis
-`41262592222` passes Linux's 231 units, Clippy, scaling and startup budgets,
-with Intel macOS still running. The compiler repair itself is unchanged.
+That superseded production source, `20109cf0`, exposes four diagnosed failures:
+CLI prints a function instead of consuming stdin; raw iterator analysis merges
+returned callbacks from two construction sites; vector fusion disappears; and
+the `iter.each` allocation probe loses its fused worker. Both completed macOS
+ARM64 logs and all their individual target results are audited. Each Windows
+artifact contains 57 logs and 135 test summaries (including aggregate duplicates);
+there are no other failures or compiler warnings. Linux, Intel macOS and later
+Windows steps continue; benchmark and documentation jobs pass.
 
-Production run `41261060185` tests prior head
-`20109cf0f0e4ce5688e72a7e04f548f2c385f353`: benchmark and docs `41261025980`
-pass/audited; eight platform jobs continue without a reported failed step.
-Keep auditing them for other failures. This head must not be merged: it predates
-the new semantic repair. Mark the PR draft while focused validation runs, then
-require all nine production jobs and docs on the repaired final head.
+The repair batch separates protocol argument lists from internal call stages,
+keeps finite construction-site identities through returned callbacks, admits
+iterator inputs when no observable resource capture exists, and folds small
+literal F64 splats without changing their bits. Added tests cover CLI stdin,
+REST metadata, staged service entries, removed-handler rejection and vector
+constant budgets. Existing fusion/count requirements remain unchanged. Run
+`lexical-probes` (now including CLI, iterator/vector tests and iteration evidence)
+and `ownership-analysis`; then require a new complete final-head matrix.
+
+The earlier generic-primitive/trait stage repair is verified at `7bb57453`:
+`41263005386` passes local bindings, ten call-cleanup tests and returned-function
+cost probes on Linux ARM64/AMD64 and macOS ARM64. `41262592222` passes 231 units,
+Clippy, scaling and startup budgets on Linux and Intel macOS. All logs are
+audited. The preceding run's two invalid fixtures were corrected together.
+Docs `41262432514` and `41263003110` pass. These results do not verify the new
+repair batch. Local Rust formatting, workflow syntax and documentation audits
+pass under the unchanged resource guard; no compiler build ran locally.
 
 All ten steps in [PLAN.md](../PLAN.md), publication and squash merge after passing
 gates are authorized. Worktree `/private/tmp/fwp-returned-callables`, branch
@@ -53,10 +61,10 @@ pushing. Full suites, benchmarks and archive regeneration stay on GitHub.
 |---|---|---|
 | 1 | Implemented | Local names, patterns and strict evaluation on all supported hosts |
 | 2 | Implemented | Final tooling, macro, tutorial and documentation gates |
-| 3 | In progress | Generic primitive/trait alias order regressions and known-call cost checks |
+| 3 | In progress | Production protocol entries, constructor identities and known-call cost checks |
 | 4 | Implemented | Production alias/failure controls and zero/one-retain String loops |
 | 5 | Implemented | Production direct scalar record/variant costs |
-| 6 | Implemented | Production named fusion and eager evaluation order |
+| 6 | In progress | Restore vector/iterator fusion while preserving eager evaluation order |
 | 7 | Implemented | Preserve numerical cost/cleanup checks in production; timing acceptance open |
 | 8 | Implemented | Preserve gradient-list savings and phase checks; original D2 speed goal open |
 | 9 | Verified | Raw numerical/Swift records audited and retained; individual Swift ARC counts unmeasured |

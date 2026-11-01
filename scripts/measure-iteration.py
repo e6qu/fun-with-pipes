@@ -95,11 +95,12 @@ def loop_evidence(code):
 def main():
     assert os.environ.get('GITHUB_ACTIONS') == 'true', 'full evidence runs on GitHub'
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--compiler', required=True, type=Path)
     parser.add_argument('--output', required=True, type=Path)
     options = parser.parse_args()
     out = options.output.resolve()
     out.mkdir(parents=True, exist_ok=True)
-    compiler = ROOT / 'target/release/fwp'
+    compiler = options.compiler.resolve()
     cc = os.environ.get('CC', 'cc')
     environment = dict(os.environ)
     environment.pop('FWP_NO_OPT', None)

@@ -1074,8 +1074,8 @@ pub fn command(
     version: Option<String>,
 ) -> Result<Command, String> {
     let f = &prog.funcs[fid];
-    let n = f.arity as usize;
-    let (params, result) = f.ty.params(n);
+    let (params, result) = f.ty.params(usize::MAX);
+    let n = params.len();
     let params: Vec<MT> = params.into_iter().cloned().collect();
     let result = result.clone();
     let doc = prog.docs.funcs.get(export).cloned().unwrap_or_default();

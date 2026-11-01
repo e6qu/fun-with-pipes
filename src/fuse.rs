@@ -724,6 +724,20 @@ impl Fuser<'_> {
             return None;
         }
         let splat = |expression: &Expr| {
+            if let Expr::Const(Value::Record(fields)) = expression {
+                if let [Value::Array(lanes)] = fields.as_ref() {
+                    let scalar = match lanes.first() {
+                        Some(Value::F64(value)) => *value,
+                        None => 0.0,
+                        _ => return None,
+                    };
+                    if lanes.iter().all(|lane| {
+                        matches!(lane, Value::F64(value) if value.to_bits() == scalar.to_bits())
+                    }) {
+                        return Some((lanes.len() as u64, Expr::Const(Value::F64(scalar))));
+                    }
+                }
+            }
             let Expr::Call(id, args) = expression else {
                 return None;
             };

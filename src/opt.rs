@@ -616,6 +616,31 @@ impl<'p> Opt<'p> {
 
     fn call(&mut self, id: FuncId, args: Vec<Expr>, depth: usize) -> Expr {
         let callee = &self.funcs[id];
+        // A small literal F64 splat is a constant value, including the exact
+        // NaN/signed-zero bits. Charge its lanes to the ordinary inlining budget
+        // so a large vector remains a runtime construction.
+        if matches!(&callee.body, Body::Prim(symbol) if symbol == "simd.splat") {
+            if let ([Expr::Const(value @ crate::value::Value::F64(_))], MT::Con(name, types)) =
+                (args.as_slice(), callee.ty.after_args(1))
+            {
+                if let [MT::Nat(lanes), element] = types.as_slice() {
+                    if name == "std::Vec"
+                        && element == &MT::con("std::F64")
+                        && *lanes <= INLINE_SIZE as u64
+                        && *lanes <= self.budget.max(0) as u64
+                    {
+                        self.budget -= *lanes as isize;
+                        return Expr::Const(crate::value::Value::Record(
+                            vec![crate::value::Value::Array(std::rc::Rc::new(vec![
+                                value.clone();
+                                *lanes as usize
+                            ]))]
+                            .into(),
+                        ));
+                    }
+                }
+            }
+        }
         // Top-level display of a string preserves its bytes. Eliminate the
         // copy before ownership lowering so aliases receive ordinary owners.
         // Strings nested inside other displayed values still need escaping.
@@ -1303,6 +1328,45 @@ fn rename_locals(e: &Expr, caps: &[Local]) -> Expr {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn literal_splats_preserve_bits_and_respect_the_size_budget() {
+        for lanes in [0, 4, INLINE_SIZE as u64, INLINE_SIZE as u64 + 1] {
+            for bits in [0, 1_u64 << 63, 0x7ff8_0000_0000_0042, 0x3fe0_0000_0000_0000] {
+                let number = MT::con("std::F64");
+                let funcs = vec![Func {
+                    name: "splat".into(),
+                    arity: 1,
+                    ty: MT::Fun(
+                        Box::new(number.clone()),
+                        Box::new(MT::Con(
+                            "std::Vec".into(),
+                            vec![MT::Nat(lanes), number.clone()],
+                        )),
+                    ),
+                    locals: vec![number],
+                    body: Body::Prim("simd.splat".into()),
+                }];
+                let call = Expr::Call(
+                    0,
+                    vec![Expr::Const(crate::value::Value::F64(f64::from_bits(bits)))],
+                );
+                let (result, _) = simplify(&funcs, &Shapes::default(), call, vec![]);
+                if lanes > INLINE_SIZE as u64 {
+                    assert!(matches!(result, Expr::Call(0, _)));
+                    continue;
+                }
+                let Expr::Const(crate::value::Value::Record(fields)) = result else {
+                    panic!("splat not folded")
+                };
+                let [crate::value::Value::Array(values)] = fields.as_ref() else {
+                    panic!("invalid vector")
+                };
+                assert_eq!(values.len(), lanes as usize);
+                assert!(values.iter().all(|value| matches!(value, crate::value::Value::F64(value) if value.to_bits() == bits)));
+            }
+        }
+    }
 
     #[test]
     fn computed_capture_stays_before_the_continuation_and_exposes_a_direct_call() {

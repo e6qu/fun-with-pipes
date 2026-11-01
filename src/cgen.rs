@@ -9925,7 +9925,18 @@ fn live_functions(prog: &Program, extra: &[FuncId]) -> Result<Vec<bool>, String>
     crate::ir::reachable_functions(prog, &work)
 }
 
-fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
+fn generate_mode(prog: &Program, mut mode: Mode) -> Result<String, String> {
+    let mut entry_program = std::borrow::Cow::Borrowed(prog);
+    if let Mode::Exec(commands, _) = &mut mode {
+        for command in commands {
+            let arity = command.params.len() as u32;
+            if entry_program.funcs[command.fid].arity != arity {
+                command.fid =
+                    crate::ir::saturated_entry(entry_program.to_mut(), command.fid, arity);
+            }
+        }
+    }
+    let prog = entry_program.as_ref();
     crate::ir::check_locals(prog)?;
     // Fuse before ownership lowering separates temporary strings from their
     // consumers. Printing's comparison switch does not disable length fusion.
