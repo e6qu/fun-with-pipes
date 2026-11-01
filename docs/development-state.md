@@ -1,7 +1,8 @@
 # Current work
 
-**Next:** verify the phase/source observer, then run the frozen six-case measurement
-on both native Linux hosts in [PR #239](https://github.com/e6qu/fun-with-pipes/pull/239).
+**Next:** monitor native measurement run `41319946864` on source `afc0f78f`,
+audit both artifacts, and select the measured optimization for
+[PR #239](https://github.com/e6qu/fun-with-pipes/pull/239).
 The [protocol](measurements/derivative-forward-costs.md) was published first at `02d4aa26`.
 [PLAN.md](../PLAN.md) defines this batch's four steps. No new compiler/runtime
 optimization is selected until the measured costs justify a specific candidate.
@@ -18,7 +19,7 @@ characters, with no body, trailers or attribution.
 |---|---|---|
 | 1 | Verified | Preparation `02d4aa26`; documentation run `41318586442` passes |
 | 2 | In progress | Phase/source counters implemented; verify native known-work and omission controls |
-| 3 | Pending | Native six-case measurements and artifact audit |
+| 3 | In progress | Both native measurement jobs queued; source `afc0f78f`, run `41319946864` |
 | 4 | Pending | Explain results, select a justified candidate, verify and deliver the batch |
 
 ## Current implementation boundaries
@@ -57,16 +58,30 @@ The last batch passed focused GCC/Clang O1/O2 checks, artifact/source hash audit
 all nine native production jobs and documentation. The new Python observer tests
 pass through the local guard (source hooks, exact sums, missing/duplicate rows,
 invalid phase/site IDs). Native controls and measurements are not verified yet.
-Run `derivative-forward-costs` in the numerical evidence workflow after publication;
-full production gates follow the complete batch.
+The dispatched `derivative-forward-costs` run `41319946864` has no assigned
+runners yet (jobs `124887807761` and `124887808036`, both runner ID 0).
+Documentation run `41319949124` is also queued. Full production gates follow
+the complete batch. Do not restart these jobs merely because they are queued.
+
+The archive auditor is implemented locally, with eight passing accounting/archive
+controls. It verifies all file hashes, saved observations, phase/site source lines,
+native image headers, compilation flags and known-work failures. Results are not
+available yet; no compiler optimization has been selected. The library's misleading
+“about one evaluation” cost claim is corrected and its reference regenerated.
 
 Focused local commands, each through `python3 scripts/local-guard.py`:
 
-- `python3 scripts/test-derivative-ownership-profile.py`: 7 pass, including
-  known-work rejection of valid but swapped phase labels.
+- `python3 scripts/test-derivative-ownership-profile.py`: 8 pass, including
+  swapped phase labels and missing/extra/changed/duplicate archived files.
 - `python3 scripts/test-descent-phases.py --cc clang`: 4 pass. GCC runs on CI.
 - `python3 scripts/check-roadmap.py`: 197 link sets, 106 preparation pairs and
   four plan steps pass. No full local compiler build or suite was run.
+- `env FWP_BLESS=1 /private/tmp/fwp-237-stdlib-doc`: the existing standalone
+  documentation generator passes and updates `docs/stdlib.md` from library comments.
+
+Old run `38888712709` shows a stale aggregate “in progress” status, but all its
+October 16 jobs are terminal. GitHub refuses cancellation because the run is
+completed. It has no active runner and was not restarted.
 
 Use the unchanged local guard serially. Full builds, suites, benchmarks and large
 regeneration use GitHub. Disk remains near the 64 GiB floor; retain the guard's

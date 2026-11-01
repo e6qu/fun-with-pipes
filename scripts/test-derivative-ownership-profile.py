@@ -1,16 +1,21 @@
 #!/usr/bin/env python3
 """Reject lost/duplicated phase evidence and changed allocator/runtime hooks."""
 import copy
+import hashlib
 import importlib.util
+import io
 import json
 from pathlib import Path
 import re
 import unittest
+import warnings
+import zipfile
 
 SPEC = importlib.util.spec_from_file_location('profile', Path(__file__).with_name('derivative-ownership-profile.py'))
 PROFILE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(PROFILE)
 MEASURE = PROFILE.ARC.module('measure-derivative-forward-costs')
+SUMMARY = PROFILE.ARC.module('summarize-derivative-forward-costs')
 
 
 class Evidence(unittest.TestCase):
@@ -121,6 +126,27 @@ static void use(void) { fwp_alloc_init(24); }
                 self.assertEqual(site['source'], lines[site['line'] - 1].strip())
         with self.assertRaises(ValueError):
             PROFILE.instrument(source.replace('    return (V)(id << 32);', ''))
+
+    def test_archive_missing_extra_changed_and_duplicate_members_fail(self):
+        report = dict(files={'ordinary.c': hashlib.sha256(b'original').hexdigest()})
+
+        def check(entries):
+            buffer = io.BytesIO()
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', UserWarning)  # deliberately duplicate ZIP member
+                with zipfile.ZipFile(buffer, 'w') as archive:
+                    archive.writestr('report.json', json.dumps(report))
+                    for name, data in entries:
+                        archive.writestr(name, data)
+            with zipfile.ZipFile(buffer) as archive:
+                SUMMARY.verify_manifest(archive, report)
+
+        check([('ordinary.c', b'original')])
+        for entries in ([], [('ordinary.c', b'changed')],
+                        [('ordinary.c', b'original'), ('extra.c', b'extra')],
+                        [('ordinary.c', b'original'), ('ordinary.c', b'original')]):
+            with self.subTest(entries=entries), self.assertRaises(AssertionError):
+                check(entries)
 
 
 if __name__ == '__main__':

@@ -352,9 +352,10 @@ value-and-grad = ad.scope2 rev._value-and-grad
 rev._value-and-grad : (List[Rev[t]] -> Rev[t]) -> List[t] -> (t, List[t]) where ReverseScalar[t], One[t], Dup[t]
 rev._value-and-grad = second | compose rev._seed | flip compose rev._finish
 
-# All partial derivatives of a scalar function at a point (reverse mode;
-# the same numbers as `gradient`, for any number of inputs at the cost of
-# about one evaluation).
+# All partial derivatives of a scalar function at a point, using reverse mode.
+# Evaluates the function once while recording operations, then traverses that
+# record backwards. Recording and traversal add time and storage; this is not
+# the cost of an ordinary evaluation. `gradient` uses forward mode instead.
 grad : (List[Rev[t]] -> Rev[t]) -> List[t] -> List[t] where ReverseScalar[t], One[t], Dup[t]
 grad = ad.scope2 rev._grad
 

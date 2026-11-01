@@ -90,3 +90,29 @@ runtime candidate from those observations, then publish its specific semantic,
 count, memory and timing requirements before implementing it in this batch.
 Do not weaken D2/N1/N2 limits, infer C/Rust parity, or infer Swift ARC counts.
 The full final-head production matrix and documentation still gate delivery.
+
+## Running and reading this measurement
+
+The `derivative-forward-costs` suite in the numerical evidence workflow runs both
+native Linux hosts. Each host records 24 program/optimization combinations, each
+with workspace reuse off and on: 48 complete-solve observations per host.
+`scripts/measure-derivative-forward-costs.py` saves the ordinary, totals-only and
+detailed C/images, their outputs, source-site tables, compile commands and hashes.
+
+The detailed report separates:
+
+- `phases`: whole-phase requests, bytes, peaks and ownership operations;
+- `allocations`: individual allocator sites within each phase;
+- `ownership`: individual ownership-call sites within each phase;
+- `raw`: tape buffers and cached workspace, outside the managed allocator.
+
+`allocation-base.c` and `ownership-base.c` are the exact inputs to the respective
+source rewrites. Site line numbers refer to those files. They do not refer to the
+final instrumented file, whose inserted counters shift line numbers.
+
+After downloading both job archives, `scripts/summarize-derivative-forward-costs.py`
+requires explicit `--arm64`, `--amd64`, `--source`, `--run` and `--output` arguments.
+It checks every archived file's hash, recomputes all observations from saved
+stderr, checks output against the analytic result, and adds C caller names to
+active sites. The output is a compressed JSON record. No saved binary is executed
+during this audit. A successful measurement job alone does not replace this audit.
