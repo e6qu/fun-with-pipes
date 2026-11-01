@@ -1,9 +1,9 @@
 # Reading numeric arrays without a temporary list
 
 This change belongs to steps 7–8 of [PLAN.md](../../PLAN.md). Allocation and
-cleanup checks pass on three native hosts. Three of four whole-solve sessions
-pass; one misses the unchanged 2% timing limit. The constructor optimization
-needs its own measurements. The [handoff](../development-state.md) records current
+cleanup checks pass on three native hosts. The latest four whole-solve sessions
+retain one failed identical-copy timing control, so combined timing acceptance
+remains open. The [handoff](../development-state.md) records current
 verification; the rejected observations remain below.
 
 An array stores elements contiguously. A list stores a head and a link to the next
@@ -139,6 +139,75 @@ This is a recorded rejected timing result, not a reason to repeat unchanged runs
 or relax the budget. The next source change repairs pure-constructor specialization;
 its own cost and timing evidence must be identified separately.
 
+## Constructor repair: cost reduction retained, timing acceptance open
+
+At `f7f5309c`, run `41258782085` completes four sessions after restoring known
+pure-constructor specialization. Both ARM64 sessions and AMD64 session 1 pass.
+Hosts are ARM Neoverse-N2 with GCC 13.3 and AMD EPYC 7763 with GCC 15.2,
+both with four available CPUs and Rust 1.99.1. These are the recorded toolchains;
+old runs on different hosts or compilers are not relabeled as these sessions.
+AMD64 session 2 passes every candidate/reference, allocation, correctness and
+cleanup limit, but identical candidate copies differ by **2.1023%** in the
+3-coordinate/1,999-update case, exceeding 2%. Keep the cost reduction; the combined
+timing result remains inconclusive. This does not erase the earlier rejected
+zero-update timing or complete D2/N1/N2. All four full logs are audited.
+
+The table describes **current-result AD**, which keeps the latest vector instead
+of its history. Each value is elapsed time with fusion divided by the named
+comparison's time; below 1 is faster. Ranges show the two observed sessions,
+not confidence intervals. Every ratio compares programs on the same host.
+C/Rust use explicit derivatives; these large gaps include recording, temporary
+values and different representations, not just compiler overhead. The
+[explicit-fwp baseline](descent-costs.md#initial-single-process-results) separates
+some of that algorithmic difference at its own recorded revision.
+
+| Architecture | Coordinates / updates | Fusion on / off | fwp / C | fwp / Rust |
+|---|---|---:|---:|---:|
+| ARM64 | 3 / 0 | 1.003–1.004 | 1.830–1.830 | 1.735–1.751 |
+| ARM64 | 3 / 1 | 0.994–0.996 | 6.662–7.254 | 5.663–6.235 |
+| ARM64 | 3 / 199 | 0.944–0.949 | 8.944–10.406 | 7.572–8.808 |
+| ARM64 | 3 / 1,999 | 0.938–0.940 | 10.472–12.073 | 8.937–10.301 |
+| ARM64 | 33 / 199 | 0.949–0.949 | 40.009–41.401 | 37.416–39.042 |
+| ARM64 | 129 / 199 | 0.949–0.950 | 39.385–39.610 | 39.064–39.408 |
+| AMD64 | 3 / 0 | 0.981–0.987 | 2.290–2.353 | 1.460–1.484 |
+| AMD64 | 3 / 1 | 0.968–1.005 | 7.763–8.034 | 5.542–5.807 |
+| AMD64 | 3 / 199 | 0.959–0.960 | 10.049–10.171 | 8.587–8.635 |
+| AMD64 | 3 / 1,999 (copy control fails) | 0.961–0.978 | 11.704–11.863 | 10.149–10.369 |
+| AMD64 | 33 / 199 | 0.951–0.954 | 46.057–47.292 | 43.860–44.929 |
+| AMD64 | 129 / 199 | 0.953–0.955 | 48.815–50.391 | 45.871–47.863 |
+
+For example, the 129-coordinate ARM64 case takes about 5% less time with fusion,
+but still about 39.5 times the explicit C program's time. Removing this list is
+one measured improvement; it does not establish close-to-C derivative performance.
+
+### Memory for 129 coordinates and 199 updates
+
+Each process performs eight complete solves and prints every final vector.
+The managed counters below agree across both sessions and architectures. They
+count generated allocation/retain requests, not live objects or malloc calls.
+The fusion control changes all eligible numeric array paths; these whole-solve
+differences are not attributed only to gradient-list construction.
+
+| fwp form | Allocation requests | Requested bytes | Retains | Peak managed charge |
+|---|---:|---:|---:|---:|
+| Current result, fusion on | 2,275,114 | 69,118,816 | 1,434,400 | 30,336 bytes |
+| Current result, fusion off | 2,483,666 | 75,741,536 | 1,434,400 | 30,336 bytes |
+| Full history, fusion on | 2,278,322 | 69,208,480 | 1,437,600 | 845,344 bytes |
+| Full history, fusion off | 2,486,874 | 75,831,200 | 1,437,600 | 845,344 bytes |
+
+Fusion removes 208,552 requests and 6,622,720 requested bytes per process here;
+it does not reduce retains or peak managed charge. Separate raw derivative
+buffers peak at 33,904 bytes in every form. Managed and raw final storage are
+both zero. Do not add their separately observed peaks or equate requested bytes
+with simultaneously live memory.
+
+Whole-process peak RSS for current-result fwp is 1,945,600–2,002,944 bytes on
+ARM64 and 2,367,488–2,371,584 on AMD64. C is 1,413,120–1,417,216 and 1,581,056
+respectively; Rust is 1,675,264–1,802,240 and 2,293,760–2,363,392. RSS includes
+runtime/code pages and stacks and is sampled separately from the counters.
+The [Swift profiles](swift-allocations.md) compare different pipeline/map programs;
+they are not a Swift AD implementation of this descent.
+
 ## Independent audit and retention
 
 `check-array-list-evidence.py` reads saved evidence without executing binaries.
@@ -164,14 +233,16 @@ The raw records are retained in the repository:
 | `dc0a6407`, `roadmap/array-lists-first-2026-11-01` | [Original](array-lists-dc0a6407.tar.xz) | `41257190382` | Twenty allocation/byte failures on each host |
 | `9a2e954e`, `roadmap/array-lists-repaired-2026-11-01` | [Repaired](array-lists-9a2e954e.tar.xz) | `41257193865` | Both session-2 hosts meet all limits; session 1 stopped before timing |
 | `9d47a5fc`, `roadmap/swift-allocations-2026-11-01` | [Four complete sessions](array-lists-9d47a5fc.tar.xz) | `41258487184` | Three pass; AMD64 session 1 retains one timing rejection |
+| `f7f5309c`, `roadmap/array-lists-pure-constructors-2026-11-01` | [Constructor repair](array-lists-f7f5309c.tar.xz) | `41260368842` | Three pass; AMD64 session 2 retains one copy-control rejection |
 
 The archives retain failed probe records, original job logs, generated C,
 executables, raw process/phase samples and the independent file-hash/decision
 audit. The first two SHA-256 values are respectively
 `0fb471b4743980b3c5a886513fa273cd9e8042d40282e62e80715b24a493a293` and
 `a83aa024e11318cb2f65af151ec70271089b0449226f8093408ae0761e22c607`.
-The four-session archive is
-`095c3ff58d5901c31cd94f26ac3309eaa1c05c652d063460689793d866ce884c`.
+The next two archives are
+`095c3ff58d5901c31cd94f26ac3309eaa1c05c652d063460689793d866ce884c` and
+`fe662ed86f19b06476c1806ba47c0843aaf4463dcc8fcea9dc59f626769e087d`.
 Documentation checks stream the archives, verify their immutable source tags and
 recompute each report's costs/decision. The full directory audit above also
 reconciles raw files; it runs separately on GitHub rather than rerunning programs.

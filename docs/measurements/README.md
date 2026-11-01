@@ -9,7 +9,7 @@ identities. Do not edit observations to make an old experiment describe new code
 
 ## Ownership costs
 
-- [Swift allocation attribution](swift-allocations.md): pipeline/map allocator stacks and separate fwp managed counters; candidate protocol, no accepted results yet.
+- [Swift allocation attribution](swift-allocations.md): pipeline/map allocator stacks and separate fwp managed counters; audited ARM64/AMD64 profiles and allocation/release controls; individual ARC counts remain unmeasured.
 
 - [Swift, C, Rust and fwp](swift-peers.md): seven programs on four native sessions, elapsed time and resident RAM; repeated ARM64 results, failed noise controls and different AMD64 CPUs remain explicit.
 
@@ -37,7 +37,7 @@ identities. Do not edit observations to make an old experiment describe new code
 
 ## Numerical applications
 
-- [Array traversal without temporary lists](array-list-traversal.md): numerical and gradient-result candidate; first allocation-budget failure retained, repair under validation.
+- [Array traversal without temporary lists](array-list-traversal.md): verified allocation reductions in numerical and gradient results; rejected allocation and timing observations retained.
 
 - [Nested derivative costs](ad-depth.md): audited F64/F128 depth/size comparisons with explicit fwp formulas, including allocation, code and stack costs; verified in #226.
 

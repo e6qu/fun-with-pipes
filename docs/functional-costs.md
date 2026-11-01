@@ -92,7 +92,9 @@ as 32 and 128. They return integers, so every temporary owner must be released
 before the call finishes. These are predeclared requirements for roadmap steps
 4–5. All seven meet these limits on Linux ARM64/AMD64 and macOS ARM64
 at `a61addc6` (run `41251272638`). Later staged-call changes require the updated
-native probe described above; final integrated acceptance remains separate.
+native probe described above. At `f7f5309c`, run `41257967346` passes all
+eight named/tacit pairs and all eight added cases on those three hosts; final
+integrated acceptance remains separate.
 
 | Case | Work and required cost |
 |---|---|

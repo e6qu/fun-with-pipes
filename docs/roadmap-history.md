@@ -13,7 +13,8 @@ invocation and release against Swift, C and Rust. It retains the original three
 AMD64 construction regressions, passing RAM limits and later inconclusive timing
 controls. A different CPU or a faster noisy sample does not settle those failures.
 [The phase report](measurements/callable-phases.md) contains the sources, raw
-archives, work counts and limits; Swift allocation/count attribution remains open.
+archives, work counts and limits. Later [allocation profiles](measurements/swift-allocations.md)
+measure allocator traffic; individual Swift ARC counts remain unmeasured.
 
 All nine [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/41229416050)
 and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/41229416071)
@@ -150,10 +151,8 @@ Final head `8e29187617eaa84fd29a2f6a55d954d28d385266` passes all nine
 [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/40962967746),
 [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/40962940196)
 and [both analysis hosts](https://github.com/e6qu/fun-with-pipes/actions/runs/40962971405).
-Full logs are audited: 992 tests per Linux host, 626 per regular macOS host,
-363 per ownership macOS host, 810 per Windows host and two benchmark tests.
-Both analysis hosts pass 226 tests. Focused scalar-bit/ownership coverage also
-passes on GCC ARM64/AMD64 and Clang ARM64.
+Full logs and focused scalar-bit/ownership checks pass on GCC ARM64/AMD64
+and Clang ARM64.
 
 The user merged [#227](https://github.com/e6qu/fun-with-pipes/pull/227) as
 `0e114aa56866c33e0f4617c1887e4514316a7447`. Its tree is exactly the tested
@@ -175,17 +174,12 @@ Final head `02e4ee2184a135df14f5e279c199134f7deb2816` passes all nine
 [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/40876750803),
 [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/40876747233) and
 [both analysis hosts](https://github.com/e6qu/fun-with-pipes/actions/runs/40876750730).
-Every full log is audited: 987 tests per Linux host, 622 per regular macOS host,
-362 per ownership macOS host, 805 per Windows host and two benchmark tests.
-Both analysis hosts pass 223 tests and lint; their
-[final record](measurements/ownership-analysis-final-226-2026-10-29.json) retains
+The analysis [record](measurements/ownership-analysis-final-226-2026-10-29.json) retains
 all 13,824 individual proof durations and full logs.
 
 The user merged [#226](https://github.com/e6qu/fun-with-pipes/pull/226) as
 `cdf881067dd87610badad56ed15cc5ecfbf66e17`. Its tree matches tested tree
-`873ded2873c1fdcaa059bda5acc034b9daf7dbfc`. Duplicate post-merge CI `40899114681`
-was cancelled after checking tree equality. The remaining log audits were finished
-after the merge; they found no additional failures.
+`873ded2873c1fdcaa059bda5acc034b9daf7dbfc`; full log audits found no further failures.
 
 ## Decimal counting and current derivative baselines (PR #225)
 
@@ -202,8 +196,6 @@ costs, differing work and unreliable short timings; they claim no AD speedup.
 Final source `fbed316b9f31bf792702c0e6914fbb77c86ba643` passed all nine
 [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/40821277777)
 and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/40821277750).
-Complete logs are audited: 981 tests per Linux host, 619 per regular macOS host,
-359 per ownership macOS host, 799 per Windows host and two benchmark tests.
 The original artifact-stream error and older Intel compiler abort remain unexplained.
 
 Squash `6735c4e3841ad4991f99c3c413daeb9d432c709c` matches tested tree
@@ -221,10 +213,7 @@ observations, including noisy controls and rejected hardware, remain available.
 Final head `b4e004d5788f2b2479b085a7dc6a48c435cce477` passed all nine
 [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/40790143419)
 and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/40790141513).
-Every target and diagnostic was audited: 978 passing tests per Linux host, 618
-per regular macOS host, 357 per ownership macOS host, 798 per Windows host and
-two benchmark tests. The Windows TLS unknown-CA message is the tested rejection
-of a rogue client certificate, not a failed test.
+Full log audits include the expected Windows TLS rejection of a rogue client certificate.
 
 Squash `52e8da582644a93d996816d344894fdf5435a92f` matches the tested tree
 `baca4d6d34a96828c49c3200ba942ef3375754e2`. Numerical timing acceptance remains open: a rejected experiment is useful evidence,
@@ -240,16 +229,11 @@ records, mismatched hosts and silent budget resets. No compiler speedup is claim
 Final head `a4cceb8d5a219ab7d691127844bc3ddc23a24001` passes all nine
 [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/40771179934)
 and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/40771144344).
-Every completed test target and compiler diagnostic was audited: 977 passing tests
-per Linux host, 617 per regular macOS host, 357 per ownership macOS host and 797
-per Windows host. The benchmark job's two targets and all evidence controls pass.
-No failed target or compiler warning remains; Brew's already-installed notice is
-informational. Draft-skipped runs are not acceptance.
+Full log audits and benchmark evidence controls pass.
 
 Squash merge `330a08939ea68a7967aecdc60a2c77ac9b55a1bb` has the same tree,
-`e3774208e2da356915f479688e5839d37d404b79`, and a single-line message with no body
-or trailers. B1/P1 and the B2 integrity controls are complete for these two programs;
-P2/P3 and broader A/D/N baselines remain open.
+`e3774208e2da356915f479688e5839d37d404b79`. These baselines cover the two named
+programs; later derivative and kernel reports own their separate observations.
 
 ## Functional calls and recursion (PR #222)
 

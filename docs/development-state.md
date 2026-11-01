@@ -1,10 +1,10 @@
 # Current work
 
-**Next:** finish the integrated checks for [draft PR #236](https://github.com/e6qu/fun-with-pipes/pull/236),
-repair every failure, then run the final nine-job production matrix and docs.
-The pure-constructor optimization restores the native callback cost limits.
-Its resource-frame unit fixture incorrectly marked an integer as a resource;
-the pending repair supplies a real `File` owner. Do not weaken the IR validator.
+**Next:** finish [PR #236](https://github.com/e6qu/fun-with-pipes/pull/236):
+audit all nine production jobs and documentation for its latest published head. Repair any failures together; squash-merge only after passing gates.
+Focused language/cost checks and repaired analysis checks pass. Numerical cost
+reductions pass; combined timing acceptance stays open under the user’s decision
+to retain verified reductions when a timing control fails.
 
 All ten steps in [PLAN.md](../PLAN.md), publication and squash merge after passing
 gates are authorized. Worktree `/private/tmp/fwp-returned-callables`, branch
@@ -16,12 +16,13 @@ has run for this PR; draft skips are not acceptance.
 
 | Source / run | Scope | Last observed result |
 |---|---|---|
-| `f7f5309c`, `41257967346` | Full lexical, ownership, tooling, tutorial and raw checks on Linux ARM64/AMD64 and macOS ARM64 | Language and native callback probes pass on all three hosts; unit fixture fails; tutorial/raw checks continue |
-| `f7f5309c`, `41257970283` | Unit checks, Clippy and analysis budgets on Linux and Intel macOS | 230 unit checks pass; only invalid resource fixture fails; Clippy and analysis budgets pass |
-| `f7f5309c`, `41257924374` | Documentation and retained evidence | Pass; log audited |
-| `f7f5309c`, `41258782085` | Two numerical sessions per Linux architecture | Running; measures the changed compiler, not an unchanged timing retry |
+| `f7f5309c`, `41257967346` | Full lexical, ownership, tooling, tutorial and raw checks on Linux ARM64/AMD64 and macOS ARM64 | All language, callback, tutorial, tooling and raw/native checks pass; only invalid unit fixture fails; all logs audited |
+| `119439ea`, `41259139151` | Repaired unit checks and analysis budgets | Both pass: 231 unit checks, Clippy, scaling and startup budgets; logs audited |
+| `119439ea`, `41259126851` | Documentation and all retained evidence | Pass; log audited |
+| `f7f5309c`, `41258782085` | Two numerical sessions per Linux architecture | Complete: three pass; AMD64 session 2 fails identical-copy timing variation only; logs audited |
 | `9d47a5fc`, `41256205285` | Previous four numerical sessions | Three pass; AMD64 session 1 has one timing rejection; all correctness/allocation/cleanup controls pass |
 | `9d47a5fc`, `41258487184` | Independent audit/retention of those four sessions | Pass; all four sessions retained with the timing rejection |
+| `f7f5309c`, `41260368842` | Independent audit/retention of current numerical sessions | Pass; all four sessions independently audited; copy-control rejection preserved |
 
 Audit every completed target and compiler diagnostic, including passing jobs.
 Logs are saved under `/private/tmp/fwp-236-*.log`. Batch known repairs before
@@ -33,13 +34,13 @@ pushing. Full suites, benchmarks and archive regeneration stay on GitHub.
 |---|---|---|
 | 1 | Implemented | Local names, patterns and strict evaluation on all supported hosts |
 | 2 | Implemented | Final tooling, macro, tutorial and documentation gates |
-| 3 | Implemented | Known-callback proof fixture repair and production cost checks |
+| 3 | Implemented | Production known-callback and escaping-function cost checks |
 | 4 | Implemented | Production alias/failure controls and zero/one-retain String loops |
 | 5 | Implemented | Production direct scalar record/variant costs |
 | 6 | Implemented | Production named fusion and eager evaluation order |
-| 7 | In progress | Changed-source numerical sessions and retained measurements |
-| 8 | In progress | Gradient-list savings and phase observations; preserve timing rejections |
-| 9 | In progress | Complete numerical archives and peer ratios; Swift profiles retained |
+| 7 | Implemented | Preserve numerical cost/cleanup checks in production; timing acceptance open |
+| 8 | Implemented | Preserve gradient-list savings and phase checks; original D2 speed goal open |
+| 9 | Verified | Raw numerical/Swift records audited and retained; individual Swift ARC counts unmeasured |
 | 10 | Pending | Application families, nine production jobs and documentation |
 
 Focused run `41251272638` at `a61addc6` passes eight named/tacit pairs and eight
@@ -58,7 +59,8 @@ composition built three closures. All logs from `41256202095` and diagnostic
 It excludes executed computations, resource frames, observable locals, new
 resource-bearing inputs and unused parameters. It renumbers locals and updates
 known callers together. Strict construction/trap tests and cost limits remain
-unchanged. The failing unit fixture is a validation error before this proof runs.
+unchanged. The invalid resource fixture failed before this proof ran; `119439ea` uses
+a real File owner, and both analysis hosts pass all 231 unit checks.
 
 ## Retained measurements
 
@@ -74,6 +76,11 @@ array destructor repairs it at `a33c8ba9` without changing runtime behavior.
 At `9d47a5fc`, all four sessions complete. AMD64 session 1 takes 1.023851 times
 the reference time for zero-update history, exceeding 1.02. Preserve this
 rejection; allocation, raw tape, cleanup, phase and copy controls pass everywhere.
+The later `f7f5309c` run also completes four sessions: both ARM64 sessions and
+AMD64 session 1 pass; AMD64 session 2 fails only identical-copy variation
+(2.1023% versus 2%). All cost and cleanup requirements pass. The report states
+C/Rust ratios and separate managed/raw storage. Its source tag is
+`roadmap/array-lists-pure-constructors-2026-11-01`.
 The gradient's final list conversion lies outside the six runtime phase clocks;
 whole-solve savings are not a forward-recording improvement.
 

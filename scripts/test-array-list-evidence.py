@@ -30,6 +30,9 @@ class Evidence(unittest.TestCase):
             ('9d47a5fc', '9d47a5fcfb5c9342d9fca9da2a8c162f5ac1d38c', 'swift-allocations',
              {('x86_64', 1): 1, ('x86_64', 2): 0, ('aarch64', 1): 0, ('aarch64', 2): 0},
              '095c3ff58d5901c31cd94f26ac3309eaa1c05c652d063460689793d866ce884c'),
+            ('f7f5309c', 'f7f5309c2de142149adc47e35da081c90c1adcc6', 'array-lists-pure-constructors',
+             {('x86_64', 1): 0, ('x86_64', 2): 1, ('aarch64', 1): 0, ('aarch64', 2): 0},
+             'fe662ed86f19b06476c1806ba47c0843aaf4463dcc8fcea9dc59f626769e087d'),
         ]
         for short, source, tag, expected, checksum in archives:
             with self.subTest(source=source):

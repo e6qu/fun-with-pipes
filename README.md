@@ -47,7 +47,7 @@ Generics are resolved when compiling, so they do not require runtime method
 lookup through type dictionaries. That does **not** mean every abstraction is
 free: some values still need heap storage, reference-count updates or indirect
 function calls. [Performance measurements](docs/benchmarks.md) explain the
-comparisons with C and Rust and the limits of the evidence.
+comparisons with Swift, C and Rust and the limits of the evidence.
 
 ## Project direction
 
