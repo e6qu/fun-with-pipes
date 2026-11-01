@@ -1,14 +1,19 @@
 #!/usr/bin/env python3
 """Reject altered numeric observations and preserve failed acceptance limits."""
 import copy
+import difflib
 import gzip
 import hashlib
 import importlib.util
+import io
 import json
 from pathlib import Path
 import subprocess
 import tarfile
+import tempfile
 import unittest
+import warnings
+import zipfile
 
 ROOT = Path(__file__).resolve().parent.parent
 SPEC = importlib.util.spec_from_file_location('array_evidence', ROOT / 'scripts/check-array-list-evidence.py')
@@ -19,6 +24,50 @@ REPORT = json.loads(gzip.decompress((ROOT / 'docs/measurements/array-list-first-
 
 
 class Evidence(unittest.TestCase):
+    def test_zip_inventory_matches_directory_without_extraction(self):
+        contents = {'report.json': b'{"complete": true}', 'case/image': b'ELF fixture',
+                    'case/logs/stdout': b'1\n'}
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            stream = io.BytesIO()
+            with zipfile.ZipFile(stream, 'w') as archive:
+                for name, raw in contents.items():
+                    archive.writestr(name, raw)
+                    path = root / name
+                    path.parent.mkdir(parents=True, exist_ok=True)
+                    path.write_bytes(raw)
+            with zipfile.ZipFile(stream) as archive:
+                CHECK.check_zip(archive)
+                self.assertEqual(CHECK.file_inventory(zipfile.Path(archive)), CHECK.file_inventory(root))
+
+    def test_zip_paths_cannot_escape_repeat_or_change_spelling(self):
+        for name in ['/absolute', '../parent', 'nested/../parent', './local', 'a//b',
+                     'file', 'file/', 'file/child', '.', './']:
+            stream = io.BytesIO()
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', UserWarning)
+                with zipfile.ZipFile(stream, 'w') as archive:
+                    archive.writestr('file', b'original')
+                    archive.writestr(name, b'changed')
+            with zipfile.ZipFile(stream) as archive, self.subTest(name=name), self.assertRaises(AssertionError):
+                CHECK.check_zip(archive)
+
+    def test_reference_patch_is_exact_and_preserves_other_source(self):
+        candidate = (ROOT / 'src/fuse.rs').read_text()
+        reference = CHECK.REFERENCE.reference_source(candidate)
+        header = 'diff --git a/src/fuse.rs b/src/fuse.rs\nindex 1234567..2345678 100644\n'
+        body = ''.join(difflib.unified_diff(candidate.splitlines(keepends=True),
+                       reference.splitlines(keepends=True), fromfile='a/src/fuse.rs', tofile='b/src/fuse.rs'))
+        patch = header + body
+        CHECK.check_reference_patch(patch, candidate, reference)
+        for changed in [patch.replace('a/src/fuse.rs', 'a/src/opt.rs'),
+                        patch.replace('+fn zip_map_element(', '+fn broken('),
+                        patch + header + body,
+                        patch.replace('-fn zip_map_element(', '-fn broken(')]:
+            self.assertNotEqual(changed, patch)
+            with self.assertRaises(AssertionError):
+                CHECK.check_reference_patch(changed, candidate, reference)
+
     def test_retained_reports_preserve_both_failed_and_repaired_decisions(self):
         archives = [
             ('dc0a6407', SOURCE, 'array-lists-first',

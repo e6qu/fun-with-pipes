@@ -232,10 +232,13 @@ updates, prints the complete vector and releases its temporary values.
 | 33:199 | 32 |
 | 129:199 | 8 |
 
-fwp repeats its source pipeline with `range | each`; C/Rust repeat their complete
-workload functions, including input/gradient allocation and release. Runtime and
-constant initialization happen once. Dividing time by the solve count gives an
-amortized cost, not standalone startup or pure arithmetic time. Loop/dispatch,
+fwp uses `range | each (const initial | solve | echo)`: `const` captures the
+immutable initial input once; each iteration runs the solver and prints its
+result. C/Rust call their input-initializing workload bodies each time. Compilers
+may optimize those constructions; this is not a claim of equal input-allocation
+work. Candidate/reference fwp programs use the same capture rule. Runtime
+initialization and teardown happen once. Dividing time by the solve count gives
+an amortized cost, not standalone startup or pure arithmetic time. Loop/dispatch,
 formatting and language-specific collection costs remain included.
 
 Use seven fresh processes per label per sample, two warmup rounds and 98 measured
@@ -403,8 +406,12 @@ list between the adjoint array and its element conversion. Its protocol fixes
 counts, correctness controls and whole-solve measurements before observations.
 The final list lies outside the six runtime phase clocks. Allocation savings and
 full integration passed in PR #236; timing remains inconclusive. A list saving
-must not be called a recording-time saving. The next
-[typed-owner batch](typed-derivative-owners.md) targets F128 and nested derivatives.
+must not be called a recording-time saving. The delivered
+[typed-owner batch](typed-derivative-owners.md) reduces F128 and nested ownership
+costs. The delivered [recording-transfer batch](derivative-recording-moves.md) passes
+weights directly and removes redundant recording retains. The next
+[phase/source report](derivative-forward-costs.md) identifies remaining work;
+these count results do not settle D2 timing acceptance.
 
 Keep the [output diagnostic](descent-output-current.md): full vector formatting
 versus a checksum consumer, with exact result bits checked separately. Its four

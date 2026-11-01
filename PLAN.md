@@ -4,42 +4,59 @@ Build an ahead-of-time language with simple pipes, immutable values, strong type
 and useful inference. Prefer direct values, moves and borrows; reserve ARC for
 necessary sharing. GC is removed; JIT and backward compatibility are excluded.
 
-## Current batch: move derivative weights into the tape
+## Current batch: remove temporary zipped numeric records
 
-[PR #237](docs/roadmap-history.md#typed-derivative-owners-and-documentation-pr-237)
-passed all nine production jobs and documentation. It removed temporary typed
-recording records and redundant adjoint owners. Recording still retains each
-weight before the caller drops its owner. The next change transfers those owners
-instead, and removes the recording argument record from both scalar and typed APIs.
+[PR #238](docs/roadmap-history.md#direct-derivative-recording-pr-238) is verified
+and merged. It removes recording argument records and transfers typed weights.
+It does not identify the remaining costs in ordinary F64 gradient calculations.
+Earlier timings place most derivative time in forward work, which includes
+arithmetic, temporary values and recording. Treating all of it as tape overhead
+would select the wrong optimization.
+
+The phase/source measurements now pass and are audited on both native Linux
+architectures. They identify temporary zipped records as a concrete allocation
+and ARC cost. Extend existing zip/map fusion to flat records of immediate numeric
+fields, including `Rev[F64]`, under the
+[frozen acceptance rules](docs/measurements/derivative-forward-costs.md#candidate-acceptance-frozen-before-compiler-edits).
 
 | Step | Work | Completion requirement |
 |---|---|---|
-| 1 | Close the merged batch and freeze the recording contract | Preserve #237 evidence; document argument order, ownership, failure and count requirements before implementation |
-| 2 | Pass recording arguments directly and move typed weights | Update library, interpreter, C generation and runtime together; preserve arithmetic, evaluation and trap order |
-| 3 | Verify ownership transfers and update callers/docs | Raw/native results, aliases, inactive nodes, growth, stale/mixed nodes, failure and cancellation pass; inventory and measured owner counts agree |
-| 4 | Verify and deliver the complete batch | Focused GCC/Clang O1/O2 checks, evidence audit, nine exact-head production jobs and documentation pass before squash merge |
+| 1 | Freeze inputs, accounting boundaries and controls | Publish the [protocol](docs/measurements/derivative-forward-costs.md) before changing measurement code; retain #238 delivery evidence |
+| 2 | Extend existing allocation and ownership observers with derivative phases | Six phases plus outside-phase work balance exactly with whole-program counters; retain source locations; missing rows and wrong phases fail |
+| 3 | Measure the six Rosenbrock cases on native Linux ARM64/AMD64 | GCC O1/O2, current/history forms and workspace off/on; raw/ordinary/instrumented results agree, all storage is released, artifacts identify source/toolchains |
+| 4 | Remove temporary zipped flat numeric records and verify the batch | Implement the frozen selection, semantic/ownership controls, six-case count comparison and paired timing; complete nine production jobs and documentation before merging |
 
-The [recording protocol](docs/measurements/derivative-recording-moves.md) defines
-specific acceptance. A 256-operation chain must create no recording argument
-records with stack promotion either enabled or disabled. Typed recording must
-perform zero weight retains: each weight enters with one owner, which moves to
-the tape or is released when no node is recorded. Shared caller aliases keep
-their separate owners. Failure before publication releases both incoming owners.
+The protocol defines exact inputs and required observations. Reuse the existing
+whole-program, ownership-site and derivative-boundary code; do not add a parallel
+profiler framework. These are count measurements, not a new timing acceptance rule.
+D2 remains open. A measured cost is not proof that it can safely be removed.
 
-No new syntax, public optimization switch, compatibility wrapper or implicit
-conversion is needed. Functions remain curried and single-argument. Update
-manual recording examples and frozen-inventory exceptions explicitly. Retire
-the old current-source record-allocation comparison when its representation no
-longer exists; retain its historical results and acceptance checker.
+The candidate now passes native Linux ARM64/AMD64 correctness, ownership and all
+96 count observations. Its largest current-only solve saves 51,143 allocation
+requests and 76,416 effective retains, with lower peak managed memory and no
+larger static frame. [Results and limits](docs/measurements/derivative-forward-costs.md#verified-allocation-and-ownership-results)
+are explicit. All four completed timing sessions miss the 5% speed target on the
+one-update case; AMD64 reports 2.54% and 2.72% zero-update regressions, above the 2%
+limit. Every session's saved observations pass independent archive audits.
+Diagnostic clocks place all reference forward work at
+only 4.4–4.9% of process time in the one-update case, suggesting this selected
+change's 5% whole-process target was too aggressive. The clocks perturb execution;
+this is evidence about scope, not permission to weaken the target. The zero-update
+slowdown remains unexplained. GCC diagnostic run `41337215456` reproduces all
+four measured zero-update executables and outputs exactly. Both current-only
+optimized entry bodies already omit the derivative loop and match after
+generated temporary/cleanup names are accounted for. This supplies no justified
+source-level repair and does not establish identical machine code or timings.
+On November 1, after reviewing these results, the user approved retaining the
+reductions while leaving all ten failed timing limits open. This is permission
+to ship the measured improvement, not a timing pass or a change to the saved
+limits. D2 and the zero-update regression remain open. Complete the nine
+production jobs and documentation gate before merging.
 
-The [focused results](docs/measurements/derivative-recording-moves.md#focused-results)
-pass steps 2–3, including the repaired arithmetic allocation regression. Step 4
-still requires the full final-head matrix and merge.
-
-Full builds and suites run on GitHub after the batch is complete. Local checks
-use the unchanged resource guard. Audit every failing job/target before batching
-repairs. Keep one active PR; squash with one subject of at most 80 characters and
-an empty body after every final-head gate passes. Counts alone prove no speedup.
+Run focused observer controls during implementation. Run native measurements on
+GitHub after the observer is complete, then batch affected checks for any selected
+compiler/runtime change. Run the full nine-job matrix and documentation once the
+whole batch is ready. Audit every failure and completed target before merging.
 
 ## Open performance goals
 

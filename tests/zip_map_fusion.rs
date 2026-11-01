@@ -1,5 +1,8 @@
 //! Eliminate numeric zip intermediates without moving effects or ownership.
 use std::process::{Command, Output};
+
+#[path = "support/record_probe.rs"]
+mod record_probe;
 fn checked(command: &mut Command) -> Output {
     let out = command.output().unwrap();
     assert!(out.status.success(), "{command:?}: {out:?}");
@@ -49,6 +52,56 @@ main = first () | zip (second ()) | map (tap echo | uncurry sub) | echo
         ("trap", "main = [1i8, 127i8, 2i8] | zip [1i8, 1i8, 1i8] | map (tap echo | uncurry add) | echo\n", true, 101),
         ("prefix-effect", "main = [1, 2] | zip [10, 20] | both (const \"before\" | echo) (map (tap echo | uncurry add)) | .1 | echo\n", false, 0),
         ("managed-input", "main = [\"a\", \"b\"] | zip [\"c\", \"d\"] | map (uncurry concat) | echo\n", false, 0),
+        ("numeric-records", r#"
+Point = {x: F64, index: I64}
+main = [
+    [Point {x = 1.5, index = 2}, Point {x = 3.0, index = 4}]
+    | zip [Point {x = 10.0, index = 20}]
+    | map (fn (a, b) -> ((a | .x) - (b | .x), (a | .index) + (b | .index)))
+    | echo,
+    [(1, 2.0), (3, 4.0)] | zip [(5, 6.0)] | map (fn (a, b) -> (a | .0) + (b | .0)) | echo,
+    [Point {x = 1.5, index = 2}] | zip [10.0, 20.0]
+    | map (fn (a, b) -> (a | .x) + b) | echo,
+    [] | zip [Point {x = 1.0, index = 2}]
+    | map (fn (a, b) -> (a | .x) + (b | .x)) | echo,
+] | ignore
+"#, true, 0),
+        ("record-alias", r#"
+Point = {x: F64, index: I64}
+work : List[Point] -> (List[(Point, Point)], List[Point])
+work = both (zip [Point {x = 10.0, index = 20}] | map id) id
+main = [Point {x = 1.0, index = 2}, Point {x = 3.0, index = 4}] | work | echo
+"#, true, 0),
+        ("record-trap", r#"
+Small = {value: I8}
+main = [Small {value = 1i8}, Small {value = 127i8}, Small {value = 2i8}]
+    | zip [Small {value = 1i8}, Small {value = 1i8}, Small {value = 1i8}]
+    | map (tap echo | fn (a, b) -> (a | .value) + (b | .value)) | echo
+"#, true, 101),
+        ("record-capture", r#"
+Point = {x: F64, index: I64}
+offset : F64 -> (Point, Point) -> F64
+offset = fn extra -> fn (a, b) -> extra + (a | .x) + (b | .x)
+work : F64 -> List[Point] -> List[F64]
+work = curry (both (.0 | offset) (.1 | zip [Point {x = 10.0, index = 20}]) | uncurry map)
+main = [Point {x = 1.0, index = 2}] | work (args () | length | int.to-float) | echo
+"#, true, 0),
+        ("nested-record-excluded", r#"
+Point = {x: F64}
+Nested = {point: Point}
+main = [Nested {point = Point {x = 1.0}}] | zip [Nested {point = Point {x = 2.0}}]
+    | map (fn (a, b) -> (a | .point | .x) + (b | .point | .x)) | echo
+"#, false, 0),
+        ("managed-record-excluded", r#"
+Text = {value: String}
+main = [Text {value = "a"}] | zip [Text {value = "b"}]
+    | map (fn (a, b) -> (a | .value) | concat (b | .value)) | echo
+"#, false, 0),
+        ("wide-record-excluded", r#"
+Wide = {value: F128}
+main = [Wide {value = 1.0f128}] | zip [Wide {value = 2.0f128}]
+    | map (fn (a, b) -> (a | .value) + (b | .value)) | echo
+"#, false, 0),
     ];
     for (name, source, eligible, status) in cases {
         let input = dir.join("main.fwp");
@@ -222,6 +275,124 @@ fn numeric_zip_maps_remove_pairs_and_nodes_and_preserve_input_aliases() {
             "counted: {before:?} vs {after:?}"
         );
         assert!(before[3] >= after[3], "counted: {before:?} vs {after:?}");
+    }
+}
+
+#[test]
+fn numeric_record_zip_maps_remove_temporary_owners_and_preserve_both_aliases() {
+    let dir = fwp::cgen::TempDir::new("zip-map-record-counts").unwrap();
+    let input = dir.join("main.fwp");
+    std::fs::write(
+        &input,
+        r#"
+Point = {index: I64, value: F64}
+export transform : List[Point] -> List[Point] -> List[I64]
+transform = curry (uncurry zip | map (fn (a, b) -> (b | .index) - (a | .index)))
+"#,
+    )
+    .unwrap();
+    let mut measured = Vec::new();
+    for enabled in ["0", "1"] {
+        let cfile = dir.join("main.c");
+        checked(
+            Command::new(env!("CARGO_BIN_EXE_fwp"))
+                .env_remove("FWP_NO_OPT")
+                .env("FWP_ZIP_MAP", enabled)
+                .args(["build", "--fn", "transform", "--emit-c"])
+                .arg(&input)
+                .arg("-o")
+                .arg(&cfile),
+        );
+        let code = std::fs::read_to_string(cfile).unwrap();
+        assert_eq!(code.contains("/* fused-zip-map :"), enabled == "1");
+        let start = code.find("/* transform :").unwrap();
+        let entry = code[start..]
+            .split("static V f")
+            .nth(1)
+            .unwrap()
+            .split('(')
+            .next()
+            .unwrap();
+        let drop_name = |ty: &str| {
+            let start = code
+                .find(&format!("/* {ty} */\nstatic void fwp_drop"))
+                .unwrap();
+            code[start..]
+                .split("static void ")
+                .nth(1)
+                .unwrap()
+                .split('(')
+                .next()
+                .unwrap()
+                .to_string()
+        };
+        let drop_result = drop_name("List[I64]");
+        let drop_input = drop_name("List[Point]");
+        let probe = include_str!("fixtures/zip_map_record_counts.c")
+            .replace("fTRANSFORM", &format!("f{entry}"))
+            .replace("fDROP_RESULT", &drop_result)
+            .replace("fDROP_INPUT", &drop_input);
+        let prefix = &code[..code.find("int main(").unwrap()];
+        let mut source = prefix.replace("typedef uint64_t V;",
+            "typedef uint64_t V;\nstatic uint64_t zip_calls,zip_bytes,zip_retains;")
+            .replace("static inline void *fwp_heap_alloc(size_t n, int kind) {",
+                "static inline void *fwp_heap_alloc(size_t n, int kind) {\nif(kind!=0){zip_calls++;zip_bytes+=n;}")
+            .replace("static inline void *fwp_alloc_init(size_t n) {",
+                "static inline void *fwp_alloc_init(size_t n) {\nzip_calls++;zip_bytes+=n;");
+        let retain = "static inline void fwp_rc_dup(V v) {\n    uint8_t *c = fwp_rc_slot(v);\n    if (c && *c) {";
+        assert_eq!(source.matches(retain).count(), 1);
+        source = source.replace(retain, &(retain.to_string() + "\nzip_retains++;"));
+        source += &probe;
+        for opt in ["-O1", "-O2"] {
+            let binary = dir.join("counts.exe");
+            fwp::cgen::compile_c(&source, &binary, opt).unwrap();
+            let output = Command::new(&binary).output().unwrap();
+            let label = format!("records-{enabled}-{}", opt.trim_start_matches('-'));
+            record_probe::save("zip_map_fusion", &label, &source, &binary, &output);
+            assert!(output.status.success(), "{label}: {output:?}");
+            let counts: Vec<u64> = String::from_utf8(output.stdout)
+                .unwrap()
+                .split_whitespace()
+                .map(|value| value.parse().unwrap())
+                .collect();
+            assert_eq!(counts.len(), 112);
+            measured.push(counts);
+            let marker = format!("/* negative control: remove the result's last-owner destruction */\n        {drop_result}(result);");
+            assert_eq!(source.matches(&marker).count(), 1);
+            let broken = source.replace(&marker, "/* result cleanup deliberately omitted */");
+            fwp::cgen::compile_c(&broken, &binary, opt).unwrap();
+            let failed = Command::new(&binary).output().unwrap();
+            record_probe::save(
+                "zip_map_fusion",
+                &(label + "-missing-cleanup"),
+                &broken,
+                &binary,
+                &failed,
+            );
+            assert_eq!(failed.status.code(), Some(238), "{failed:?}");
+        }
+    }
+    assert_eq!(measured[0], measured[1]);
+    assert_eq!(measured[2], measured[3]);
+    for (before, after) in measured[0]
+        .as_chunks::<4>()
+        .0
+        .iter()
+        .zip(measured[2].as_chunks::<4>().0)
+    {
+        assert_eq!(before[0], after[0]);
+        assert!(
+            before[1] >= after[1] + 2 * after[0],
+            "requests: {before:?} vs {after:?}"
+        );
+        assert!(
+            before[2] >= after[2] + 48 * after[0],
+            "bytes: {before:?} vs {after:?}"
+        );
+        assert!(
+            before[3] >= after[3] + 3 * after[0],
+            "retains: {before:?} vs {after:?}"
+        );
     }
 }
 

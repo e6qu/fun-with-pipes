@@ -2579,9 +2579,10 @@ rev.const : t -> Rev[t]
 # forward and one backward pass.
 value-and-grad : (List[Rev[t]] -> Rev[t]) -> List[t] -> (t, List[t]) where ReverseScalar[t], One[t], Dup[t]
 
-# All partial derivatives of a scalar function at a point (reverse mode;
-# the same numbers as `gradient`, for any number of inputs at the cost of
-# about one evaluation).
+# All partial derivatives of a scalar function at a point, using reverse mode.
+# Evaluates the function once while recording operations, then traverses that
+# record backwards. Recording and traversal add time and storage; this is not
+# the cost of an ordinary evaluation. `gradient` uses forward mode instead.
 grad : (List[Rev[t]] -> Rev[t]) -> List[t] -> List[t] where ReverseScalar[t], One[t], Dup[t]
 
 # `grad` of a function of a vector

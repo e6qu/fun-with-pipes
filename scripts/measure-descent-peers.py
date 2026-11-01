@@ -96,7 +96,7 @@ def ownership_budget_failures(profiles, baseline):
 
 def paired_budget_failures(results, comparison):
     """Apply the selected pre-candidate limits and report every violation."""
-    assert comparison in {'scalar-recording', 'eager-captures', 'array-lists'}
+    assert comparison in {'scalar-recording', 'eager-captures', 'array-lists', 'record-zip'}
     failures = []
 
     def require(case, program, metric, actual, limit):
@@ -118,7 +118,15 @@ def paired_budget_failures(results, comparison):
             if comparison == 'array-lists':
                 cells = row['dimensions'] * row['updates'] * row['solvesPerProcess']
                 savings = [('requests', cells), ('requestedBytes', 24 * cells)]
-            for key, saving in savings + [('retains', 0), ('peakChargedBytes', 0), ('finalChargedBytes', 0)]:
+            if comparison == 'record-zip':
+                pairs = (row['dimensions'] - 1) * row['updates'] * row['solvesPerProcess']
+                savings = [('requests', 2 * pairs), ('requestedBytes', 48 * pairs), ('retains', 3 * pairs)]
+                if not row['updates'] and current['managed'] != old['managed']:
+                    failures.append(dict(case=case, program=label, metric='zero-update counts',
+                                         actual=current['managed'], expected=old['managed']))
+            else:
+                savings += [('retains', 0)]
+            for key, saving in savings + [('peakChargedBytes', 0), ('finalChargedBytes', 0)]:
                 limit = 0 if key == 'finalChargedBytes' else old['managed'][key] - saving
                 require(case, label, key, current['managed'][key], limit)
             for key in ['rawDerivativeStorage', 'expandedRawSha256']:
@@ -138,7 +146,7 @@ def paired_budget_failures(results, comparison):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--compiler', required=True, type=Path)
-    parser.add_argument('--comparison', required=True, choices=['current', 'eager-captures', 'array-lists'])
+    parser.add_argument('--comparison', required=True, choices=['current', 'eager-captures', 'array-lists', 'record-zip'])
     parser.add_argument('--reference-compiler', type=Path)
     parser.add_argument('--reference-manifest', type=Path)
     parser.add_argument('--cc', required=True)
@@ -166,10 +174,14 @@ def main():
     if separate_compiler:
         assert reference_manifest['source'] == os.environ['GITHUB_SHA']
         assert digest(args.reference_compiler.read_bytes()) == reference_manifest['compilerSha256']
-        assert args.comparison == 'eager-captures'
-        assert reference_manifest['candidateOptimizerSha256'] == digest((ROOT / 'src/opt.rs').read_bytes())
         assert reference_manifest['ownershipSha256'] == digest((ROOT / 'src/ownership.rs').read_bytes())
-        assert reference_manifest['disabledTransformation'] == 'once-used eager capture bindings'
+        if args.comparison == 'eager-captures':
+            assert reference_manifest['candidateOptimizerSha256'] == digest((ROOT / 'src/opt.rs').read_bytes())
+            assert reference_manifest['disabledTransformation'] == 'once-used eager capture bindings'
+        else:
+            assert args.comparison == 'record-zip'
+            assert reference_manifest['candidateFusionSha256'] == digest((ROOT / 'src/fuse.rs').read_bytes())
+            assert reference_manifest['disabledTransformation'] == 'flat numeric record zip/map fusion'
     fwp_labels = ['fwp-ad-history', 'fwp-ad', 'fwp-ad-history-reference', 'fwp-ad-reference'] if paired else [
         'fwp-ad-history', 'fwp-ad', 'fwp-explicit', 'fwp-packed']
     assert os.environ.get('GITHUB_ACTIONS') == 'true' and platform.system() == 'Linux'
@@ -286,7 +298,7 @@ def main():
             profiles[label] = dict(managed=managed, rawDerivativeStorage=raw, expandedRawSha256=raw_hash)
             if label.startswith('fwp-ad'):
                 phase_code = directory / (label + '-phases.c')
-                phase_code.write_text(PHASE.instrument(text))
+                phase_code.write_text(PHASE.instrument(text, PHASE.TIME_OBSERVER))
                 phase_binary = directory / (label + '-phases')
                 build([args.cc, *cflags, '-w', phase_code, '-o', phase_binary, '-lm', '-lpthread', '-ldl'])
                 phase_binaries[label] = phase_binary
@@ -448,7 +460,7 @@ def main():
     paths = ['scripts/descent-baselines.py', 'scripts/measure-descent-peers.py', 'scripts/measure-ad-application.py',
              'scripts/ad-storage-profile.py', 'scripts/measure-iteration.py', 'scripts/descent-phases.py',
              'tests/fixtures/descent_phases.c',
-             'scripts/prepare-capture-reference.py', 'src/opt.rs', 'src/fuse.rs',
+             'scripts/prepare-capture-reference.py', 'scripts/prepare-record-zip-reference.py', 'src/opt.rs', 'src/fuse.rs',
              'tests/fixtures/ad_raw_storage_probe.c', 'tests/fixtures/descent_explicit.fwp',
              'tests/fixtures/descent_explicit.c', 'tests/fixtures/descent_explicit.rs',
              'tests/fixtures/descent_packed.fwp', 'src/ownership.rs', 'src/escape.rs', 'src/cgen.rs', 'src/rc.rs', 'tests/boxed_projection_ownership.rs',
@@ -467,6 +479,7 @@ def main():
             'current': 'Six current-source implementations and one byte-identical AD-current control. ',
             'eager-captures': 'Current-source eager-capture comparison: reference compiler restores only constant-only capture hoisting; both compilers retain scalar recording stack storage. ',
             'array-lists': 'One current compiler with FWP_ARRAY_FUSION explicitly 1 versus 0. This toggles all numeric array fusion, including result formatting, so whole-solve differences are not attributed solely to gradient-list removal. Independent direct-boundary counts establish that removal. ',
+            'record-zip': 'Same-source compilers differ only in flat numeric record zip/map selection. Both retain the existing scalar numeric zip/map fusion and all other current optimizations. ',
         }[args.comparison] +
         ('Candidate and reference record and reverse the same derivatives; an identical candidate copy checks timing noise. '
          if paired else '') +
@@ -477,8 +490,10 @@ def main():
         'All input/output vectors and update counts match; '
         'work, allocation and formatting strategies differ. No previous compiler or generated C is required. '
         'Each timed output matches its own checked reference exactly; the independent analytic tolerance is absolute/relative 1e-10. '
-        'Times include one process launch, repeated independent solves with complete output, and teardown, excluding compilation/observers. '
-        'Each solve starts from the original input. fwp repeats its source pipeline; C/Rust repeat input/gradient allocation and release. '
+        'Times include one process launch, repeated solver calls with complete output, and teardown, excluding compilation/observers. '
+        'fwp captures its immutable initial input once with const; C/Rust call their input-initializing workload bodies each time. '
+        'The compiler may optimize those constructions; equal input-allocation work is not claimed. '
+        'Each solve starts from the original input values. '
         'Runtime/constant initialization occurs once; per-solve time is amortized and does not describe standalone startup. '
         'Zero updates include construction and printing, not pure startup. Each sample sums multiple fresh processes per label. '
         'The rotated 49-entry cycle balances all cyclic predecessor pairs, including repeats, and positions over 49 samples. '

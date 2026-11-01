@@ -4,14 +4,14 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 PHASES = ('setup', 'forwardWithRecording', 'reverseSetup', 'reverseTraversal',
           'resultArray', 'retirement')
+TIME_OBSERVER = (ROOT / 'tests/fixtures/descent_phases.c').read_text()
 
 
-def instrument(source):
+def instrument(source, observer):
     """Require exact runtime sites; reject unsupported/nested tapes in the probe."""
     changes = [
         ('/* ------------------------------------------------------------------ tapes */',
-         (ROOT / 'tests/fixtures/descent_phases.c').read_text() +
-         '\n/* ------------------------------------------------------------------ tapes */'),
+         observer + '\n/* ------------------------------------------------------------------ tapes */'),
         ('static V fwp_ad_tape_new(V nv, fwp_owned_tape *owned) {',
          'static V fwp_ad_tape_new(V nv, fwp_owned_tape *owned) {\n'
          '    if (owned) descent_phase_fail();\n'

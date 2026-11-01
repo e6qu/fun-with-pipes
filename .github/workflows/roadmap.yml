@@ -42,6 +42,8 @@ jobs:
         run: python3 scripts/test-collection-evidence.py
       - name: Ownership operation evidence controls
         run: python3 scripts/test-ownership-profile.py
+      - name: Derivative phase and source accounting controls
+        run: python3 scripts/test-derivative-ownership-profile.py
       - name: Sorting-time evidence controls
         run: python3 scripts/test-sort-time-evidence.py
       - name: Parser measurement evidence controls
@@ -141,10 +143,13 @@ jobs:
         run: |
           python3 scripts/test-descent-budgets.py
           python3 scripts/test-capture-reference.py
+          python3 scripts/test-record-zip-reference.py
       - name: Matched-host evidence rejection controls
         run: python3 scripts/test-descent-groups.py
       - name: Numeric array comparison evidence controls
         run: python3 scripts/test-array-list-evidence.py
+      - name: Derivative evidence downloads and host-rejection controls
+        run: python3 scripts/test-retain-derivative-evidence.py
       - name: Matched grouped-process baselines and noisy controls
         run: python3 scripts/check-descent-groups.py --archive docs/measurements/descent-groups-artifacts-2026-10-29.json --protocol grouped
       - name: Repeated-solve baselines and fixed noise qualification

@@ -1,6 +1,7 @@
 # Move derivative weights into the tape
 
-Preparation protocol, fixed before implementation. Baseline: PR #237, merge
+Delivered in [PR #238](../roadmap-history.md#direct-derivative-recording-pr-238).
+The protocol below was fixed before implementation. Baseline: PR #237, merge
 `94abb83cb33cb52bdcafb19c67c855cf9007059f`, with all production/docs gates passed.
 The [tape example](../terminology.md#tape-and-backward-pass) explains recording.
 
@@ -153,6 +154,7 @@ changes from 672 to 768 bytes. These are per-function compiler reports, not
 whole-program stack bounds. [Baseline image/frame costs](typed-derivative-owners.md#focused-results)
 remain available. No execution times were measured; D2/N1/N2 remain open.
 
-The focused result establishes the change's stated count, memory and cleanup
-requirements. [The handoff](../development-state.md) tracks the separate full
-final-head integration gates and merge.
+The focused result establishes the stated count, memory and cleanup requirements.
+All nine final-head production jobs and documentation subsequently passed;
+[history](../roadmap-history.md#direct-derivative-recording-pr-238) records the
+verified source and squash merge.
