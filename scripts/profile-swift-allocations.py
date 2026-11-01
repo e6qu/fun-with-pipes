@@ -163,9 +163,9 @@ def collect(args):
     (out / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
     check_unwinding(report['unwinding'])
 
-    def profile(binary, arguments, directory, expected):
+    def profile(binary, arguments, directory, expected, environment):
         directory.mkdir(parents=True)
-        result = run([args.heaptrack, '-o', directory / 'trace', binary, *arguments], selected_env)
+        result = run([args.heaptrack, '-o', directory / 'trace', binary, *arguments], environment)
         # heaptrack's launcher adds nonnumeric status lines around program stdout.
         actual = ''.join(line + '\n' for line in result.stdout.splitlines() if line.isdecimal())
         assert actual == expected, result
@@ -175,7 +175,7 @@ def collect(args):
             result = run([args.heaptrack_print, '--file', traces[0], '--merge-backtraces', '0',
                           '--print-peaks', '1', '--print-allocators', '1', '--print-temporary', '1',
                           '--print-leaks', '1', '--peak-limit', '20', '--sub-peak-limit', '20',
-                          '--flamegraph-cost-type', cost, '--print-flamegraph', directory / (cost + '.stacks')], selected_env)
+                          '--flamegraph-cost-type', cost, '--print-flamegraph', directory / (cost + '.stacks')], environment)
             (directory / (cost + '.txt')).write_text(result.stdout)
         return summarize(directory)
 
@@ -183,8 +183,10 @@ def collect(args):
     control.write_text(CONTROL)
     binary = out / 'control'
     run([args.cc, *flags, control, '-o', binary], env)
+    report['systemControls'] = {}
     for name, arguments in [('release', []), ('omit-release', ['omit'])]:
-        report['controls'][name] = profile(binary, arguments, out / name, '3\n')
+        report['systemControls'][name] = profile(binary, arguments, out / ('system-' + name), '3\n', env)
+        report['controls'][name] = profile(binary, arguments, out / name, '3\n', selected_env)
     (out / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
     check_control(report['controls']['release'], report['controls']['omit-release'])
 
@@ -222,7 +224,7 @@ def collect(args):
             assert result.stdout == expected, result
             entry = programs[language] = dict(stdout=expected, binarySha256=digest(binary), profiles=[])
             for sample in range(2):
-                entry['profiles'].append(profile(binary, [], binary.parent / str(sample), expected))
+                entry['profiles'].append(profile(binary, [], binary.parent / str(sample), expected, selected_env))
             if language == 'fwp':
                 # The managed heap reserves mmap storage, outside heaptrack's
                 # malloc boundary. Preserve its separate counters; never label
@@ -273,6 +275,7 @@ def audit(args):
         assert json.loads(traces[0]['stdout']) == report['unwinding'][label]['observation']
     for name in ('release', 'omit-release'):
         assert report['controls'][name] == summarize(out / name)
+        assert report['systemControls'][name] == summarize(out / ('system-' + name))
     check_control(report['controls']['release'], report['controls']['omit-release'])
     assert set(report['programs']) == set(PROGRAMS)
     for name, programs in report['programs'].items():

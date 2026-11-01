@@ -39,13 +39,26 @@ fn functional_call_matrix_counts_executed_work_and_releases_owners() {
         *id
     };
     let entry = |name: &str| format!("f{}", function(name));
-    // Arrow-spine functions use saturated C entries. A caller supplying fewer
-    // arguments constructs an owned partial application, not a short C call.
-    // All captures in this fixture are scalars or unit, so no child owner moves.
-    let partial = |name: &str, argument: &str, arity: u32| {
+    // Use the current native stage, not the number of arrows in the source type.
+    // A saturated entry may return a function; further inputs call that result.
+    // Fewer inputs construct an owned partial application. These constructor
+    // captures are scalars/unit; the outer calls consume their callback owners.
+    let call = |name: &str, arguments: &[&str]| {
         let id = function(name);
-        assert_eq!(program.funcs[id].arity, arity);
-        format!("fwp_rc_fresh(fwp_pap({id}, 1, (V[]){{{argument}}}))")
+        let arity = program.funcs[id].arity as usize;
+        assert!(arity > 0, "expected a callable entry: {name}");
+        if arguments.len() < arity {
+            return format!(
+                "fwp_rc_fresh(fwp_pap({id}, {}, (V[]){{{}}}))",
+                arguments.len(),
+                arguments.join(", ")
+            );
+        }
+        let mut result = format!("f{id}({})", arguments[..arity].join(", "));
+        for argument in &arguments[arity..] {
+            result = format!("fwp_apply_owned({result}, 1, (V[]){{{argument}}})");
+        }
+        result
     };
     let mut code = fwp::cgen::generate(&program).unwrap();
     let declaration = "typedef uint64_t V;";
@@ -67,35 +80,27 @@ fn functional_call_matrix_counts_executed_work_and_releases_owners() {
     for (name, control, expected) in [
         (
             "pipe",
-            format!(
-                "{}({}, n)",
-                entry("unknown-pipe"),
-                partial("increment", "0", 2)
-            ),
+            call("unknown-pipe", &[&call("increment", &["0"]), "n"]),
             "2 * (n + 1)",
         ),
         (
             "partial",
             format!(
                 "fwp_apply_owned({}, 1, (V[]){{n}})",
-                partial("escaped-partial", "n", 2)
+                call("escaped-partial", &["n"])
             ),
             "2 * n",
         ),
         (
             "borrowed",
-            format!(
-                "{}({}, n)",
-                entry("unknown-borrowed"),
-                partial("increment", "0", 2)
-            ),
+            call("unknown-borrowed", &[&call("increment", &["0"]), "n"]),
             "n * (n + 1) / 2",
         ),
         (
             "captured",
             format!(
                 "fwp_apply_owned({}, 1, (V[]){{3}})",
-                partial("escaped-captured", "n", 2)
+                call("escaped-captured", &["n"])
             ),
             "2 * (n + 3)",
         ),
@@ -106,29 +111,17 @@ fn functional_call_matrix_counts_executed_work_and_releases_owners() {
         ),
         (
             "each-count",
-            format!(
-                "{}({}, n)",
-                entry("unknown-each"),
-                partial("accumulate", "0", 2)
-            ),
+            call("unknown-each", &[&call("accumulate", &["0"]), "n"]),
             "n * (n - 1) / 2",
         ),
         (
             "folded",
-            format!(
-                "{}({}, n)",
-                entry("unknown-fold"),
-                partial("addition", "0", 3)
-            ),
+            call("unknown-fold", &[&call("addition", &["0"]), "n"]),
             "n * (n - 1) / 2",
         ),
         (
             "state-loop",
-            format!(
-                "{}({}, n)",
-                entry("unknown-state"),
-                partial("state-callback", "0", 2)
-            ),
+            call("unknown-state", &[&call("state-callback", &["0"]), "n"]),
             "n * (n + 1) / 2",
         ),
     ] {

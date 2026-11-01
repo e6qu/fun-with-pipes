@@ -39,9 +39,11 @@ actual native exported entries at `n = 32` and `128`, compiled at O0 and O2.
 Allocation requests, requested bytes, runtime application requests, record/variant
 construction requests and effective count increments are recorded only during
 the measured calls. Inputs are supplied by the native caller. All pairs must
-use the actual saturated C entry signatures. Supplying fewer curried arguments
-uses the runtime's owned partial-application constructor, including that allocation
-in the control's counts. Captures here are integers or unit. The fixture also
+use the actual C entry signatures and evaluation stages. Supplying fewer arguments
+than a native entry accepts constructs an owned partial application, including
+its allocation in the control's counts. Saturating an entry runs its body; later
+inputs call the returned function. The probe reads the lowered arity instead of
+assuming every arrow belongs to one C call. Captures here are integers or unit. The fixture also
 exports these identities as first-class values, so the compiler emits their
 typed runtime callback entries. A direct-call export alone does not require
 those entries. A native preflight checks them; the returned identity record is

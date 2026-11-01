@@ -24,271 +24,110 @@ runtime patch was justified by the constructor investigation.
 
 ## Borrowed calls and Swift comparisons (PR #234)
 
-The user merged #234 as `219e3a0130c18d60750fd55ec9c0a684c1dcefd4` on
-2026-10-31, tree `b4a70d124eb2674b3f9138ece4600f77cc427dab`. Validation completed after merge: main run
-`41218527464` passes all nine production jobs for the merged commit, and docs
-`41218527417` / `124588033356` passes. All completed logs are reviewed, with no
-unexpected compiler diagnostics. This verifies production delivery; the original
-size rejection and open timing acceptance are unchanged.
+Borrowed calls remove selected ownership operations. The
+[callable report](measurements/returned-callables.md) preserves the original ARM
+O1 code-size rejection; the [Swift comparison](measurements/swift-peers.md)
+retains four native sessions, noisy results and different AMD64 CPUs. These
+count reductions do not settle the later construction-time regressions.
 
-| Production coverage | Passing job IDs |
-|---|---|
-| Linux ARM64 / AMD64 | `124588033135` / `124588033346` |
-| macOS ARM64, regular / ownership | `124588033328` / `124588033321` |
-| macOS AMD64, regular / ownership | `124588033403` / `124588033386` |
-| Windows ARM64 / AMD64 | `124588033441` / `124588033538` |
-| C/Rust benchmarks | `124588033339` |
-
-The [callable report](measurements/returned-callables.md) retains the reduced
-ownership operations and original ARM O1 size rejection. The
-[Swift report](measurements/swift-peers.md) retains four completed native sessions,
-all noisy rows, different AMD64 CPUs and the independent artifact audit.
-PR #235 adds [phase timing](measurements/callable-phases.md). Invocation improves in the qualified phase comparisons, but
-three AMD64 construction regressions leave combined timing acceptance open.
+Merge `219e3a0130c18d60750fd55ec9c0a684c1dcefd4` passes all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/41218527464)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/41218527417).
+Validation finished after the user merged; the merge alone was not acceptance.
 
 ## State range elimination (PR #233)
 
-Known, single-use I64 ranges consumed by State `each` now iterate over bounds
-without building a list. At inputs 32 and 128, the measured consumer uses two
-allocations / 152 bytes, two runtime application entries, one result box and no
-retains. Worker code shrinks 41.28% on ARM64 and 39.20% on AMD64; reported frames
-stay unchanged. The [report](measurements/state-range-folds.md) preserves the
-restricted proof, failures, both G2 hosts and complete focused observations.
-This is an allocation/code reduction, not an elapsed-time claim.
+A known, single-use integer range consumed by State `each` iterates over bounds
+without constructing a list. At 32/128 elements it uses two allocations, 152
+requested bytes and no retains. The [report](measurements/state-range-folds.md)
+retains code/stack costs and the restricted proof; this is not a speed claim.
+The service comparison was repaired to reuse the same input list on both sides,
+and Linux WASI builds now select Clang explicitly while native builds use GCC.
 
-The full matrix exposed an unfair service comparison: only the plain State
-callback qualified for range removal. The repaired comparison reuses the same
-list on both sides. Its assertions retain the 96-request slope, 24 bytes per
-node and zero final charged storage. The capture-reference checker now freezes
-its actual transformation blocks instead of unrelated optimizer visibility.
-Linux explicitly selects Clang for WASI Rust builds while keeping GCC for native
-code. These repairs and all completed diagnostics were audited together.
-
-All nine production jobs in `41174213818` and docs `41174213793` pass at
-`fd19b9e4d67c6c5f85ebbe6a12da14aaeedb0b1c`. Every complete log was audited.
-
-| Gate | Job | Rust passed / summaries | Python cases |
-|---|---|---:|---:|
-| Linux ARM64 | `124458289938` | 1,003 / 257 | 12 |
-| Linux AMD64 | `124458290045` | 1,003 / 257 | 12 |
-| macOS ARM64 regular | `124458289949` | 633 / 132 | 22 |
-| macOS AMD64 regular | `124458290009` | 633 / 132 | 22 |
-| macOS ARM64 ownership | `124458290043` | 367 / 127 | 0 |
-| macOS AMD64 ownership | `124458289859` | 367 / 127 | 0 |
-| Windows ARM64 | `124458290007` | 828 / 206 | 22 |
-| Windows AMD64 | `124458289996` | 828 / 206 | 22 |
-| C/Rust benchmarks | `124458289963` | 2 / 2 | 14 |
-| Documentation | `124458289609` | — | 328 in 49 suites |
-
-Each Windows job includes 16 intentional panic controls with passing parent
-tests. Platform-specific Python skips do not establish unsupported capabilities.
-No unexpected diagnostic remains. The merged commit is
-`73a6b20d4d10a4f2dff50d78dc0b32ee2c17b4b5`, dated 2026-10-31; tree
-`2a8c3c40755fc8b60b5f20861fd8b1051a23a400` equals the tested tree. Its 42-character
-message is exactly `Avoid temporary range lists in State folds`, with no body or
-trailers. Duplicate post-merge runs `41180750528` and `41180750575` were cancelled
-after verifying the tree and message. Callable comparisons and D2/N1 timing
-acceptance remain open.
-
-
+All nine [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/41174213818)
+and [docs](https://github.com/e6qu/fun-with-pipes/actions/runs/41174213793) pass at
+`fd19b9e4d67c6c5f85ebbe6a12da14aaeedb0b1c`. Merge
+`73a6b20d4d10a4f2dff50d78dc0b32ee2c17b4b5` has the same files.
 
 ## Generated-array elimination (PR #232)
 
-[PR #232](https://github.com/e6qu/fun-with-pipes/pull/232) combines generation
-and reduction when a numeric array has one known, pure consumer. Three scans of
-4,096 elements remove three allocations and 98,328 requested bytes. Worker
-instruction bytes grow 3.17% on ARM64 and 3.03% on AMD64, within the frozen 5%
-limit; largest reported frames remain 368/320 bytes. The
-[report](measurements/generated-array-folds.md) retains the proof, binaries,
-focused GCC checks and all four timing sessions. Three sessions fail the
-unchanged identical-copy limit; no overall speed acceptance is claimed.
+Generation and reduction combine when a numeric array has one known, pure
+consumer. Three scans of 4,096 elements remove three allocations and 98,328
+requested bytes. Code grows within the frozen limit; frames stay unchanged.
+The [report](measurements/generated-array-folds.md) retains all four sessions:
+three fail the identical-copy noise limit, so timing acceptance remains open.
+Integration also repaired file-failure probes and obsolete allocation expectations.
 
-The complete first matrix found one obsolete allocation expectation in six jobs.
-The repair requires exactly zero allocations and cleans up seven old ownership
-probes: remove inert GC controls, preserve repeated success after failure, and
-verify input teardown with a deliberately omitted-release control. Windows cwd
-checks also observe storage after the second read fails. Artifact collection now
-uploads actual retained failure files without misleading empty-archive warnings.
-
-All nine production gates in run `41153845461` and documentation `41153845377`
-pass at `05d96484a77241c9782a420e76ea69094b965e11`. Every complete log and
-diagnostic was audited. Counts are passed Rust cases / summaries; Python cases
-are additional.
-
-| Gate | Audited job | Result |
-|---|---|---|
-| Linux ARM64 | `124396181579` | 997 / 257; 12 Python |
-| Linux AMD64 | `124396181773` | 997 / 257; 12 Python |
-| macOS ARM64 regular | `124396181633` | 628 / 132; 22 Python |
-| macOS AMD64 regular | `124422281020` | 628 / 132; 22 Python |
-| macOS ARM64 ownership | `124396181421` | 366 / 127 |
-| macOS AMD64 ownership | `124396181642` | 366 / 127 |
-| Windows ARM64 | `124396181682` | 822 / 206; 22 Python |
-| Windows AMD64 | `124396181690` | 822 / 206; 22 Python |
-| C/Rust benchmarks | `124396181702` | 2 / 2; 14 Python |
-| Documentation | `124396180907` | 47 Python suites / 320 cases |
-
-Intel regular's first job `124396181638` passed all tests but failed one artifact
-upload with DNS `ENOTFOUND`. Attempt 2 reran only that job, preserving the other
-eight passing executions; the retry passed tests, packaging and uploads. Windows
-logs include sixteen intentional panic controls, each with its parent test
-passing. Platform-specific Python skips do not establish POSIX support on Windows.
-
-Squash `c71ac217c5ea09d8bf1868f799fc0d8a574d2e2a`, merged 2026-10-31,
-has exactly the tested tree. Its subject is `Eliminate temporary arrays in numeric
-folds`, on one line with no body or trailers. Duplicate post-merge runs
-`41166703635` and `41166703619` were cancelled after tree/message verification.
-State range-list removal followed in #233 below. D2/N1 timing and the wider
-B1/B2/V1/V2 requirements remain open.
-
-
+All nine [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/41153845461)
+and [docs](https://github.com/e6qu/fun-with-pipes/actions/runs/41153845377) pass at
+`05d96484a77241c9782a420e76ea69094b965e11`. The Intel macOS job required a
+same-source retry after a DNS upload failure; its original tests had passed.
+Merge `c71ac217c5ea09d8bf1868f799fc0d8a574d2e2a` has the tested files.
 
 ## Direct scalar folds and process timing (PR #231)
 
-[PR #231](https://github.com/e6qu/fun-with-pipes/pull/231) gives known scalar
-folds a direct numeric call instead of per-element generic dispatch. Three
-4,096-element scans remove 12,288 ineffective duplicate calls and 12,288 release
-calls. The arrays still allocate. Instruction bytes fall from 16,780 to 10,588
-on ARM64 and 18,162 to 11,090 on AMD64; the largest reported frame component
-falls from 592 to 368 and 576 to 320 bytes respectively. These are scoped cost
-reductions, not total-stack bounds or C/Rust parity.
+Known scalar folds call numeric workers directly. Three 4,096-element scans
+remove 12,288 ineffective duplicate calls and 12,288 release calls; arrays still
+allocate. Code and reported frame sizes also fall. The
+[report](measurements/unique-buffer-peers.md#scalar-folds-cost-reductions-retained-timing-acceptance-open)
+preserves all timing observations, including AMD64's failed 2% copy control
+(2.04% observed). The verified reductions were retained with timing acceptance open.
+Process timing now uses blocking waits with deadlines, avoiding Python polling delay.
 
-The process timer now uses explicit blocking waits with a POSIX alarm deadline,
-avoiding Python's timed-wait polling delay; Windows uses its kernel wait. Bounded
-negative controls verify timeout cleanup, including Python 3.15. The
-[scalar-fold report](measurements/unique-buffer-peers.md#scalar-folds-cost-reductions-retained-timing-acceptance-open)
-retains all timing results. One repaired AMD64 session still fails its 2% copy
-control (2.04% observed). The user accepted the verified reductions with timing
-acceptance open; the failed result was not retried or relabeled as passing.
-
-All nine production jobs in `41128213017` and documentation `41128213024`
-pass at `377cf9ce25c65afba595b6413e5bb1d50721ea7a`. Every full log was audited.
-Counts below are passed Rust tests / summaries; Python controls are additional.
-
-| Gate | Job | Audited result |
-|---|---|---|
-| Linux ARM64 | `124312094665` | 996 / 257 |
-| Linux AMD64 | `124312094775` | 996 / 257 |
-| macOS ARM64 regular | `124312094382` | 627 / 132 |
-| macOS AMD64 regular | `124312094945` | 627 / 132 |
-| macOS ARM64 ownership | `124312094852` | 366 / 127 |
-| macOS AMD64 ownership | `124312094834` | 366 / 127 |
-| Windows ARM64 | `124312094988` | 819 / 205 |
-| Windows AMD64 | `124312094733` | 819 / 205 |
-| C/Rust benchmarks | `124312094873` | 2 / 2 |
-| Documentation | `124312093982` | 46 Python suites, 318 cases |
-
-The SDK passes twelve tests on Linux/macOS and ten on Windows, with two
-POSIX-terminal skips. Windows wait controls pass seven tests with three
-POSIX-only skips. These skips do not establish POSIX capability on Windows.
-The only diagnostics were expected OpenSSL installation notices and intentional
-TLS failure controls.
-
-Squash `97b2c29ae15ebec84f2534c523b8f1260fd2fb67`, merged 2026-10-30,
-has the tested tree `86715a392ec4e67674b8a47861d5596199257a53`.
-Its subject, `Reduce numeric fold overhead and repair process timing`, is
-54 characters with no body or trailers. Duplicate post-merge runs `41140834224`
-and `41140834097` were cancelled after verifying the tree and commit message.
-
+All nine [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/41128213017)
+and [docs](https://github.com/e6qu/fun-with-pipes/actions/runs/41128213024) pass at
+`377cf9ce25c65afba595b6413e5bb1d50721ea7a`. Merge
+`97b2c29ae15ebec84f2534c523b8f1260fd2fb67` has the tested files.
 
 ## File cleanup portability and measurement clocks (PR #230)
 
-[PR #230](https://github.com/e6qu/fun-with-pipes/pull/230) verifies file-error,
-borrowed-stream and flush-visibility controls on native Windows. It also repairs
-seven invalid C recovery contexts and five unchecked measurement clocks, and
-removes obsolete roadmap directions. Compiler/runtime/library/build inputs are
-unchanged from #229. The [file-boundary report](measurements/file-boundary-portability.md)
-owns the test contracts, 22 saved executions per focused host and Windows header repair.
+Native Windows checks cover file errors, borrowed streams and flushed output.
+Seven invalid C recovery contexts and five unchecked measurement clocks were
+repaired. Compiler/runtime/library/build inputs remain unchanged from #229.
+The [file-boundary report](measurements/file-boundary-portability.md) retains
+the contracts, Windows header repair and all focused observations.
 
-All nine production jobs in `41075128588` and documentation/GCC controls in
-`41071247882` pass at `e2fad32c2b2fd05658a8229fe90708d5756f329b`.
-Every full log was audited, including warnings. Counts are tests/summaries:
-
-| Gate | Job | Audited result |
-|---|---|---|
-| Linux AMD64 | `124129161927` | 994/257; 12 SDK tests |
-| Linux ARM64 | `124129162084` | 994/257; 12 SDK tests |
-| macOS ARM64 regular | `124129161379` | 627/132; 12 SDK tests |
-| macOS AMD64 regular | `124129161824` | 627/132; 12 SDK tests |
-| macOS ARM64 ownership | `124129161812` | 364/127 |
-| macOS AMD64 ownership | `124129162126` | 364/127 |
-| Windows AMD64 | `124129161796` | 817/205; 10 SDK passes, two POSIX terminal skips |
-| Windows ARM64 | `124129161880` | 817/205; 10 SDK passes, two POSIX terminal skips |
-| C/Rust benchmarks | `124129161888` | 2/2 |
-| Documentation/GCC | `124115723586` | Complete audit, including 40 clock controls |
-
-Earlier Linux jobs at `570b777a` failed because the clock preflight passed an
-unset compiler argument. Both completed 993/256 while skipping required docs,
-inventory and lint checks. Every old job was audited; the missing-inventory
-warning and skipped coverage remain recorded. Explicit GCC/Clang selection fixes
-the cause; the final jobs run all required checks. The negative clock fixture
-initializes timestamps even when its deliberately omitted guard receives failure.
-
-Squash `3639f4fad3da318346340f92a89d8ba127f04e73`, merged 2026-10-30,
-has the tested tree `d3645c3ba7c3277d64d61b4d5aee1926e3d6c9db`.
-Its 55-character subject has no body or trailers. Duplicate post-merge runs
-`41094194847` and `41094194934` were cancelled after tree/message verification.
-This delivery does not resolve the original intermittent compiler abort, D2/N1's
-failed timing controls or the remaining application/comparison matrix.
-
+All nine [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/41075128588)
+and [documentation/GCC controls](https://github.com/e6qu/fun-with-pipes/actions/runs/41071247882)
+pass at `e2fad32c2b2fd05658a8229fe90708d5756f329b`. Earlier Linux jobs skipped
+required checks after an unset compiler argument; explicit GCC/Clang selection
+repaired the cause. Merge `3639f4fad3da318346340f92a89d8ba127f04e73` has the
+tested files. The intermittent compiler abort and numerical timing failures remain open.
 
 ## String costs and application cleanup (PR #229)
 
-Uniquely owned, non-growing string replacements reuse their storage; one-byte
-patterns use bounded byte search. Other replacements and repetitions construct
-their final result directly. Shared aliases preserve their original contents.
-[Four qualified sessions](measurements/direct-string-results.md) show 16.4–19.2%
-less large-input word-counting time and 26,216 fewer managed requests. Retains and
-peak managed charge do not fall. fwp still takes 2.08 times C on ARM64 and
-2.42–2.44 on AMD64. Both rejected candidates and all 222,120 observations remain.
+Unique, non-growing string replacements reuse storage; other replacements and
+repetitions construct their final result directly. Aliases retain their contents.
+[Four sessions](measurements/direct-string-results.md) show 16.4–19.2% less
+large-input word-counting time and 26,216 fewer requests, but unchanged retains
+and peak charge. fwp still takes 2.08 times C on ARM64 and 2.42–2.44 on AMD64.
+Rejected candidates remain recorded. [File-read checks](measurements/file-read-failures.md)
+cover failed allocation, cleanup, retry and aliases; two observers were repaired
+to recognize directly constructed strings.
 
-[File-read probes](measurements/file-read-failures.md) cover allocation failures,
-cleanup, retries, aliases and separate terminal OOM exits. Two C-library test
-observers now recognize directly constructed strings; deliberately missing
-observations reproduce their earlier failures. The
-[executable-name experiment](measurements/timing-variation.md#executable-name-results)
-retains 1,024 observations and does not resolve D2/N1's failed timing requirements.
-
-Squash `bae1a858126794845552c98108237002fb114f37` exactly matches tested
-`8d908e0e0d5db3a2d836e2fc978c70fa99ad04a8`, tree
-`bdccb27c1278a9291e0e64718e71659d37b32c9a`. All nine
-[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/41051447921),
-[documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/41051447945)
-and [both G2 hosts](https://github.com/e6qu/fun-with-pipes/actions/runs/41051466208)
-pass with complete log audits. Linux passes 994 tests per host, regular Mac 627,
-ownership Mac 364, Windows 812, benchmarks two and G2 226 per host. Linux/Mac
-pass twelve SDK/terminal checks each; Windows passes ten and explicitly skips
-two POSIX terminal harness checks. No unexamined diagnostics remain.
-
-The production code and build inputs match measured source `afbafef8`. The
-original full matrix had only the two repaired observers; both Mac crash artifacts
-were the intentional cleanup-panic control. Duplicate post-merge production
-`41065907093` and documentation `41065907207` were cancelled after tree equality
-was verified, with no failed job to discard. The original compiler abort remains
-unexplained. Numerical and broader application acceptance remain open.
+All nine [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/41051447921),
+[docs](https://github.com/e6qu/fun-with-pipes/actions/runs/41051447945) and
+[analysis hosts](https://github.com/e6qu/fun-with-pipes/actions/runs/41051466208)
+pass at `8d908e0e0d5db3a2d836e2fc978c70fa99ad04a8`. Merge
+`bae1a858126794845552c98108237002fb114f37` has the tested files. The
+[executable-name study](measurements/timing-variation.md#executable-name-results)
+does not resolve the numerical timing failures or the original compiler abort.
 
 ## Directory cleanup and current application costs (PR #228)
 
-Directory-report probes now check four allocation boundaries, preserved caller
-aliases, recovery/retry and deliberately missing cleanup. Terminal OOM remains a
-separate diagnostic/exit-102 contract. The [directory report](measurements/directory-failures.md)
-retains all six native hosts and 84 saved probes. The [word-frequency baseline](measurements/wordfreq-current.md)
-retains four qualified sessions, 37,080 observations, native images and independent
-evidence checks. Large-input fwp/C remains 2.49 on ARM64 and 3.03–3.04 on AMD64;
-this delivery sets candidate limits and makes no speedup claim.
+Directory-report checks cover allocation failures, retained aliases, retry and
+deliberately missing cleanup on six native hosts. Terminal out-of-memory exits
+remain distinct from recoverable errors. The [directory report](measurements/directory-failures.md)
+retains 84 probes. The [word-frequency baseline](measurements/wordfreq-current.md)
+retains four sessions and 37,080 observations: large-input fwp takes 2.49 times C
+on ARM64 and 3.03–3.04 on AMD64. This establishes a baseline, not an improvement.
 
-Squash `667e71f0a0f6b0bbb8e0aa4f90c547bd16481fab` exactly matches tested
-`f3eb507280e5a71083190ec1e26bbbdbe555dae8`, tree `2027294be3d55f8b29f19be05d029d2287f551fe`.
 All nine [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/41018509811),
-[documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/41018509711) and
-[both G2 hosts](https://github.com/e6qu/fun-with-pipes/actions/runs/41018512169)
-pass with complete log audits. The Intel Mac job initially passed its tests but
-failed two DNS-dependent uploads. Its same-source retry `123979346074` passes
-626 tests/132 summaries, 12 terminal/SDK tests, packaging and the 3,357-file
-archive upload. Linux passes 993/257 per host, ownership Mac 364/127, Windows
-811/202, benchmarks 2/2 and G2 226/3 per host. The duplicate post-merge production
-run was cancelled only after exact tree equality and absence of failures were
-verified. D2/N1 timing requirements and the original compiler abort remain open.
+[docs](https://github.com/e6qu/fun-with-pipes/actions/runs/41018509711) and
+[analysis hosts](https://github.com/e6qu/fun-with-pipes/actions/runs/41018512169)
+pass at `f3eb507280e5a71083190ec1e26bbbdbe555dae8`. Intel macOS required a
+same-source retry after DNS upload failures. Merge
+`667e71f0a0f6b0bbb8e0aa4f90c547bd16481fab` has the tested files.
 
 ## Eager captures and typed numerical loops (PR #227)
 
@@ -1445,7 +1284,7 @@ The final production/docs gates are in the table above.
 ## Source identities
 
 [Preparation records](preparation-records.md) retain the immutable commit/tag
-mapping used by the documentation audit. The detailed pre-overhaul narrative is
-available in [the merged source](https://github.com/e6qu/fun-with-pipes/blob/380fa8412327e52db420b96918d20e2528bbfc7c/docs/roadmap-history.md).
+mapping used by the documentation audit. Detailed job tables and merge bookkeeping remain in the
+[pre-overhaul snapshot](https://github.com/e6qu/fun-with-pipes/blob/a33c8ba944635283899407349e3e3a761ed30db5/docs/roadmap-history.md).
 It is historical evidence, not instructions for current work. Numerical samples
 and acceptance records remain in the repository with their original identities.

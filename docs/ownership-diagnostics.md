@@ -1,7 +1,7 @@
 # Checking memory ownership without tracing
 
 An owner keeps an allocation alive. A retain adds an owner; a release gives one
-up. Removing tracing GC requires checks that catch lost owners, premature release
+up. Without tracing GC, checks must catch lost owners, premature release
 and unsafe storage reuse without a collector keeping the affected objects alive.
 G4 passed all nine production jobs and documentation in [#215](roadmap-history.md#weak-channels-and-retained-callbacks-pr-215).
 G5 replaced collector-specific controls while retaining these ownership checks.

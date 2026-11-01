@@ -1,9 +1,9 @@
 # Current work
 
-**Next:** publish the typed slice-release probe repair, source-stage lowering and
-profiler diagnostics together. Run `lexical-bindings`, `swift-allocations` and
-`ownership-analysis`; preserve running numerical observations, then audit and
-retain all original/repaired results before integration. The user authorized all
+**Next:** publish the repaired native-call probes and independent evidence audits,
+then check those probes and retain the original/repaired measurements. Next
+verify two numerical sessions per architecture on the integrated compiler and
+run the final production matrix. The user authorized all
 ten steps in [PLAN.md](../PLAN.md), in
 draft [PR #236](https://github.com/e6qu/fun-with-pipes/pull/236).
 
@@ -98,10 +98,13 @@ Both logs are audited. Artifacts: ARM `13062585975`, AMD `13061623214`.
 At `9a2e954e`, numerical run `41253549233` session 1 fails only the list probe on
 both hosts. It now reaches packed slices: the probe frees the view header without
 releasing its backing owner and exits 181 at length 129. Word-array cases pass
-O1/O2 cost limits. The pending repair calls an exported typed array destructor
-for inputs/backing arrays. No runtime patch or relaxed limit is needed.
+O1/O2 cost limits. The repair published at `a33c8ba9` calls an exported typed array destructor
+for inputs/backing arrays. All word/packed, offset-slice and alias controls now
+pass O1/O2 on Linux ARM64/AMD64 and macOS ARM64. No runtime patch or relaxed
+limit was needed.
 Both numerical logs and focused logs from `41253554264` are audited; other targets
-pass. Numerical session-2 jobs remain running. Documentation `41253482421` and
+pass. Both numerical session-2 jobs pass all six frozen budgets; completed logs
+are audited. Session 1 has no timings because its probe failed. Documentation `41253482421` and
 ownership budgets `41253562992` pass; completed logs contain no compiler warnings.
 
 
@@ -120,19 +123,40 @@ managed heap is outside malloc tracking, so its existing managed observer runs
 separately; never call malloc-only bytes complete fwp heap use or add independent
 peaks. Run `41253559042` passes on AMD64, including allocation/release controls.
 ARM64 fails the control because all traces have zero instruction addresses
-(`??` stacks). Both logs are audited. The pending repair compares direct unwinding
-with system libunwind and pinned 1.8.3, retaining linked libraries and syscall
-diagnostics. Only the explicitly selected observer can produce accepted profiles;
-allocation/release controls remain mandatory. The newer dependency is unverified.
+(`??` stacks). Both logs are audited. At `a33c8ba9`, run `41254571983` passes both
+architectures with pinned libunwind 1.8.3, including allocation/release controls.
+Standalone direct unwinding also passes with the system library: it does not
+reproduce heaptrack's missing frames. The next observer check runs the full
+heaptrack controls with both libraries on the same host and retains both.
+Unused coredump/ptrace helper libraries emitted upstream implementation warnings;
+their builds are removed. This does not disable allocation stack collection.
 The [protocol](measurements/swift-allocations.md) introduces each metric and the
 actual peer algorithms. Three local damaged-record/unwinder tests pass.
 
 Source review found that type-spine arity can delay a saturated top-level function
-constructor. Pending `stage_arity` follows checked aliases, subtracts supplied
+constructor. Published `stage_arity` at `a33c8ba9` follows checked aliases, subtracts supplied
 arguments from the constructor's current stage and keeps composition at one input.
 New cases require division by zero before a later argument effect for top-level
-application, pipe application and composition. Verify raw/native semantics, cost
-pairs and analysis budgets before integration.
+application, pipe application and composition. Raw/native constructor trap-order cases pass on all three focused hosts in
+`41254567543`. Its only failure on each host is the functional-cost probe's old
+assumption that every arrow in a type belongs to one C entry. The repaired helper
+uses the actual construction stage, then consumes returned functions as needed.
+The returned-callable measurement adapter had the same assumption and is repaired
+without changing its source algorithms. Next `lexical-probes` verifies both helpers
+on the three native hosts, without repeating the unchanged full language corpus.
+Ownership `41254575615` passes Linux and Intel macOS, including all 229 unit
+checks and analysis budgets. Docs `41254565452` passes; its deliberate failing-runner
+controls are expected. All focused, Swift, ownership and docs logs are audited
+(`/private/tmp/fwp-236-a33-*.log`); no additional failures remain unexamined.
+
+The unpublished `check-array-list-evidence.py` recomputes process totals, medians,
+ratios, profiles, phases, RSS, stack reports and actual ELF instruction-section
+sizes. It preserves failed budgets instead of treating rejected experiments as
+corrupt evidence. New report workflow retains raw files, job identities and logs.
+The first AMD session-2 report is checked in; three corruption tests and all twelve
+older derivative archive tests pass. Full directory audits and durable raw archives
+remain to run on CI. Retain a33 Swift profiles only with their recorded source;
+the next collector adds same-host system heaptrack controls to its format.
 
 ## Local checks
 
@@ -169,7 +193,7 @@ listed all jobs as finished; GitHub rejected cancellation because it was complet
 GC removal is verified; broader ARC minimization remains incomplete. The
 [callable measurements](measurements/callable-phases.md) retain all eight passing
 RAM limits and the three original Xeon construction regressions (8.6–16.1%).
-Swift allocation attribution is verified only on AMD64 so far; RSS and native
+Swift allocation attribution passes ARM64 and AMD64 controls; RSS and native
 allocator calls do not isolate ARC-operation costs.
 The separate paired run `41225841156` has 32 qualified/four short ARM phases and
 19 qualified/17 inconclusive AMD phases on a different CPU. All twelve AMD

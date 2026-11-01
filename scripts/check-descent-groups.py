@@ -26,25 +26,32 @@ SOLVES = {'3-0': 32768, '3-1': 512, '3-199': 32, '3-1999': 4, '33-199': 32, '129
 
 
 def check_report(report, source, protocol):
-    assert protocol in {'grouped', 'repeated', 'recording', 'eager-captures'}
-    paired = protocol in {'recording', 'eager-captures'}
+    assert protocol in {'grouped', 'repeated', 'recording', 'eager-captures', 'array-lists'}
+    paired = protocol in {'recording', 'eager-captures', 'array-lists'}
+    samples, seed = (49, 20261101) if protocol == 'array-lists' else (98, 20261029)
     labels = (['fwp-ad-history', 'fwp-ad', 'fwp-ad-history-reference', 'fwp-ad-reference',
                'c-explicit', 'rust-explicit', 'fwp-ad-identical'] if paired else LABELS)
     assert report['source'] == source
     config = report['configuration']
     assert (config['samples'], config['warmups'], config['order_seed'],
-            config['phase_samples'], config['phase_warmups']) == (98, 2, 20261029, 12, 2)
+            config['phase_samples'], config['phase_warmups']) == (samples, 2, seed, 12, 2)
     host = report['qualification']
     assert host['source'] == source and host['qualified'] and not host['failures']
     assert host['actual'] == host['expected']
-    expected_host = dict(system='Linux', machine=report['machine'], processors=4,
-                        rustVersion='rustc 1.99.1 (58cf8f9c3 2026-10-13)')
-    if report['machine'] == 'aarch64':
-        expected_host.update(cpu='Neoverse-N2', cVersion='gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0')
+    if protocol == 'array-lists':
+        # This protocol records each native host before building; unlike the
+        # older repeated-solve baseline, it did not freeze one CPU model.
+        actual = host['actual']
+        assert report['machine'] in {'aarch64', 'x86_64'}
+        assert actual['system'] == 'Linux' and actual['machine'] == report['machine']
+        assert actual['processors'] == 4
+        assert all(actual[key] for key in ('cpu', 'cVersion', 'rustVersion'))
+        assert actual['cpu'] in host['lscpu']
+        assert report['cCompiler'].splitlines()[0] == actual['cVersion']
+        assert report['rustCompiler'].splitlines()[0] == actual['rustVersion']
+        assert config['comparison'] == protocol and report['referenceCompiler'] is None
     else:
-        assert report['machine'] == 'x86_64'
-        expected_host.update(cpu='AMD EPYC 7763 64-Core Processor', cVersion='gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0')
-    assert host['actual'] == expected_host
+        check_frozen_host(report)
     assert report['commands'] and all(c['status'] == 0 and not c['stderr'] for c in report['commands'])
     assert set(report['results']) == set(GROUPS)
     for name, row in report['results'].items():
@@ -59,21 +66,32 @@ def check_report(report, source, protocol):
             assert 'solvesPerProcess' not in row
         case = f'{dimensions}:{updates}:{processes}' + (f':{solves}' if protocol != 'grouped' else '')
         assert case in config['case'] and len(config['case']) == 6
-        assert row['orders'] == [SCHEDULE.execution_order(labels, processes, index, 20261029) for index in range(98)]
+        assert row['orders'] == [SCHEDULE.execution_order(labels, processes, index, seed) for index in range(samples)]
         assert set(row['samplesNs']) == set(row['medianNs']) == set(row['outputSha256']) == set(labels)
         for label, values in row['samplesNs'].items():
-            assert len(values) == 98 and all(type(value) is int and value > 0 for value in values)
+            assert len(values) == samples and all(type(value) is int and value > 0 for value in values)
             assert row['medianNs'][label] == statistics.median(values)
         for label, ratios in row['ratios'].items():
             for peer, value in ratios.items():
                 assert value == row['medianNs'][label] / row['medianNs'][peer]
-        if protocol != 'grouped':
+        if protocol not in {'grouped', 'array-lists'}:
             ratio = row['medianNs']['fwp-ad'] / row['medianNs']['fwp-ad-identical']
             assert max(ratio, 1 / ratio) <= 1.02, (name, ratio)
         CHECK.check_observations(name, row, updates * solves,
                                  "recording" if paired else "baseline")
     if protocol == 'eager-captures':
         assert config['comparison'] == protocol
+
+
+def check_frozen_host(report):
+    expected_host = dict(system='Linux', machine=report['machine'], processors=4,
+                        rustVersion='rustc 1.99.1 (58cf8f9c3 2026-10-13)')
+    if report['machine'] == 'aarch64':
+        expected_host.update(cpu='Neoverse-N2', cVersion='gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0')
+    else:
+        assert report['machine'] == 'x86_64'
+        expected_host.update(cpu='AMD EPYC 7763 64-Core Processor', cVersion='gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0')
+    assert report['qualification']['actual'] == expected_host
 
 
 def check_archive(path, protocol):

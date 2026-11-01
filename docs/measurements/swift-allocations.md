@@ -76,10 +76,54 @@ ARM64 records the allocation sizes but no instruction addresses: every stack is
 `??`, so attribution fails before any peer result is accepted. This is a failed
 observer control, not evidence about fwp or Swift ownership.
 
-The next check pins GNU libunwind 1.8.3 by release SHA-256, records the linked
+Run `41254571983` at `a33c8ba9` passes both architectures after pinning GNU
+libunwind 1.8.3 by release SHA-256. It records the linked
 library and compares direct `unw_backtrace`/`unw_step` probes against the system
 library on the same host. It retains syscall diagnostics and both observations.
 Only the explicitly selected library is used for profiles; no failed profile
 switches automatically to another observer. Both allocation/release controls
-must still pass. A newer dependency has not yet been verified to repair this
-failure; the current evidence does not identify a particular upstream defect.
+pass. The standalone unwinding probes also pass with the old system library,
+so they do not reproduce heaptrack's missing-frame failure. A same-host comparison
+of the full heaptrack controls is added next to narrow this distinction; the
+evidence does not yet identify a particular upstream defect. Unneeded core-dump,
+remote-process and setjmp observer libraries are excluded from the next build;
+they are unrelated to in-process allocation tracing and emitted implementation warnings.
+
+## Observed allocations
+
+At `a33c8ba9`, both samples on each architecture agree. The hosts are Intel
+Xeon 6973P-C and ARM Neoverse-N2, with GCC 13.3, Rust 1.99.1, Swift 6.4.2,
+heaptrack 1.5.0 and the selected libunwind 1.8.3. These are allocation profiles,
+not new timing results; use [the ordinary measurements](swift-peers.md) for elapsed
+time and RSS with their recorded source/hosts.
+
+| Program | Language | Native allocation calls | Peak tracked bytes, AMD64 | Unfreed exit bytes, AMD64 |
+|---|---|---:|---:|---:|
+| Pipeline | C | 4 | 16,077,824 | 4,096 |
+| Pipeline | Rust | 31 | 8,074,276 | 548 |
+| Pipeline | Swift | 460 | 14,563,007 | 5,551 |
+| Pipeline | fwp | 3 | 78,160 | 4,096 |
+| Ordered map | C | 4 | 16,073,728 | 4,096 |
+| Ordered map | Rust | 12 | 8,075,300 | 548 |
+| Ordered map | Swift | 85 | 12,075,743 | 8,005,815 |
+| Ordered map | fwp | 6 | 80,209 | 6,145 |
+
+ARM64 has the same call counts. Swift peak/exit totals are eight bytes larger
+for the pipeline and 24 bytes larger for the map; the other totals match.
+
+fwp's separate managed observer reports zero requests, bytes or retains for the
+fused pipeline. For the map it reports four requests, 24,000,032 requested bytes,
+one retain, 16,000,008 peak charged bytes and zero final bytes. **The native fwp
+columns omit this storage.** The map therefore does not use only 80 KB, and fewer
+allocation calls do not imply lower peak memory than Swift. Do not add the two
+independently sampled peaks.
+
+The largest Swift pipeline stack accounts for 360 array-buffer growth allocations;
+two further array-buffer stacks account for twenty each. Rust's largest pipeline
+stack accounts for twenty vector allocations; consuming filtering can reuse the
+mapped vector's capacity. C allocates its reusable work buffers once. These
+algorithm/collection choices explain much of the traffic difference; they do
+not measure the cost of one ARC retain/release. Swift's map stores its table in
+a top-level variable; the roughly 8 MB still present at process exit must not be
+called a demonstrated leak. The independent omitted-release control verifies
+the observer's ability to detect a deliberately unreleased allocation.

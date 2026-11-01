@@ -107,7 +107,7 @@ def main():
     profiled = SOURCE.profile(ordinary)
     # Negative metadata controls must be rejected before any C is compiled.
     for damaged in (original.read_text().replace('"escaped-partial"', '"missing-partial"'),
-                    re.sub(r'\{2, (e\d+, "escaped-partial")', r'{1, \1', original.read_text())):
+                    re.sub(r'\{\d+, (e\d+, "escaped-partial")', r'{0, \1', original.read_text())):
         try:
             SOURCE.boundary(damaged)
         except ValueError:

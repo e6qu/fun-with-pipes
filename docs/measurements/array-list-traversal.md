@@ -1,7 +1,8 @@
 # Reading numeric arrays without a temporary list
 
-This candidate belongs to steps 7–8 of [PLAN.md](../../PLAN.md). It has no accepted
-measurement yet. The [handoff](../development-state.md) records verification.
+This candidate belongs to steps 7–8 of [PLAN.md](../../PLAN.md). One timing session
+per architecture passes; a second session and the repaired packed-slice check
+remain. The [handoff](../development-state.md) records exact source verification.
 
 An array stores elements contiguously. A list stores a head and a link to the next
 cell. Converting an array to a list before immediately mapping or folding it can
@@ -108,8 +109,8 @@ completed: timing, copy, raw-tape and cleanup checks pass, but both list forms
 fail allocation/byte limits in all five cases with updates. The zero-update
 control passes. Preserve these failed allocation observations.
 
-The repair uses backward traversal only under the total-callback proof above;
-its measurements are pending. Original limits remain unchanged. The probe now
+The repair uses backward traversal only under the total-callback proof above.
+Original limits remain unchanged. The probe now
 collects all cost failures across both storage modes before reporting them.
 
 At `9a2e954e`, all word-array cases meet the count limits at O1/O2. Packed-array
@@ -118,3 +119,27 @@ header without releasing its backing owner. The repair calls an exported typed
 `Array[F64] -> ()` destructor for both inputs. This is a test ownership repair;
 neither the cleanup assertion nor the allocation limits are relaxed. Full packed
 verification and whole-solve acceptance remain pending.
+
+Both session-2 jobs in run `41253549233` pass for `9a2e954e`: all six whole-solve
+cases meet the frozen time, copy, allocation, tape, peak-memory and code/stack
+limits. This establishes one observation per architecture, not the required two.
+Session 1 stopped at the packed-slice probe before timing. The newer source-stage
+change also needs its own measurements; old results are not relabeled as its runs.
+
+## Independent audit and retention
+
+`check-array-list-evidence.py` reads saved evidence without executing binaries.
+It recomputes all process totals, medians, ratios, allocation limits and timing
+failures, checks the six analytic outputs and reconciles raw profiles, phase
+observations, RSS, stack reports and binary/source hashes. It reads ELF section
+headers to verify native architecture and actual instruction bytes. A failed
+acceptance rule remains in the audit output; a complete rejected experiment is
+different from an incomplete or corrupted record.
+
+Dispatch `array-list-report` with the measured run/source and explicit sessions.
+For the two original runs above, select session `2`: session `1` has no completed
+timings and its failed probe artifacts/logs remain in the archive. For final
+acceptance, select `both` and require all four reports. The archive preserves raw
+files and job identities, including failures. The
+[first AMD64 report](array-list-first-2026-10-31-amd-2.json.gz) also exercises the
+auditor's rejection controls: all twenty original allocation failures must remain.
