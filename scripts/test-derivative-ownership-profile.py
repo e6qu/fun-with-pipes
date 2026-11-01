@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Reject lost/duplicated phase evidence and changed allocator/runtime hooks."""
 import copy
+import gzip
 import hashlib
 import importlib.util
 import io
@@ -147,6 +148,40 @@ static void use(void) { fwp_alloc_init(24); }
                         [('ordinary.c', b'original'), ('ordinary.c', b'original')]):
             with self.subTest(entries=entries), self.assertRaises(AssertionError):
                 check(entries)
+
+    def test_record_zip_limits_reject_missing_savings_and_other_regressions(self):
+        baseline = json.loads(gzip.decompress((PROFILE.ARC.ROOT /
+            'docs/measurements/derivative-forward-costs-2026-11-01.json.gz').read_bytes()))
+        cases = baseline['hosts']['aarch64']['cases']
+        report = dict(machine='aarch64', cases={
+            name: copy.deepcopy(case['observations']) for name, case in cases.items()})
+        self.assertTrue(MEASURE.comparison_failures(report, baseline))
+        # This fixture isolates budget checks; native reports must additionally
+        # pass the independent phase/site sums and output verification.
+        for name, observations in report['cases'].items():
+            dimensions, updates = map(int, name.split('-')[:2])
+            pairs = (dimensions - 1) * updates
+            for actual in observations.values():
+                managed = actual['totals']['managed']
+                managed['requests'] -= 2 * pairs
+                managed['requestedBytes'] -= 48 * pairs
+                managed['retains'] -= 3 * pairs
+        self.assertEqual(MEASURE.comparison_failures(report, baseline), [])
+        for field in ('requests', 'requestedBytes', 'retains', 'peakChargedBytes', 'finalChargedBytes'):
+            changed = copy.deepcopy(report)
+            changed['cases']['129-199-current-O2']['0']['totals']['managed'][field] += 1
+            with self.subTest(field=field):
+                self.assertTrue(MEASURE.comparison_failures(changed, baseline))
+        for field in ('visits', 'raw'):
+            changed = copy.deepcopy(report)
+            changed['cases']['129-199-current-O2']['1'][field] = {}
+            self.assertTrue(MEASURE.comparison_failures(changed, baseline))
+        changed = copy.deepcopy(report)
+        changed['cases']['3-0-current-O2']['1']['totals']['managed']['requests'] += 1
+        self.assertTrue(MEASURE.comparison_failures(changed, baseline))
+        del changed['cases']['3-0-current-O2']
+        with self.assertRaises(AssertionError):
+            MEASURE.comparison_failures(changed, baseline)
 
 
 if __name__ == '__main__':

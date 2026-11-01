@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Runner-only phase/source counts for the six frozen scalar derivative cases."""
 import argparse
+import gzip
 import importlib.util
 import json
 import os
@@ -58,6 +59,39 @@ def parse_totals(stderr):
     return managed[0], raw[0]
 
 
+def comparison_failures(report, baseline):
+    """Apply the frozen record-zip count limits to every case and storage mode."""
+    old = baseline['hosts'][report['machine']]['cases']
+    assert set(report['cases']) == set(old)
+    failures = []
+    for name, observations in report['cases'].items():
+        dimensions, updates = map(int, name.split('-')[:2])
+        pairs = (dimensions - 1) * updates
+        assert set(observations) == {'0', '1'}
+        for mode, actual in observations.items():
+            previous = old[name]['observations'][mode]
+            current = actual['totals']['managed']
+            before = previous['totals']['managed']
+            label = name + '/workspace' + mode
+            if not updates:
+                if current != before or actual['phases'] != previous['phases']:
+                    failures.append(label + ': zero-update counts changed')
+            else:
+                for field, saving in [('requests', 2 * pairs), ('requestedBytes', 48 * pairs),
+                                      ('retains', 3 * pairs)]:
+                    if current[field] > before[field] - saving:
+                        failures.append(f'{label}: {field} saving {before[field] - current[field]} < {saving}')
+                if current['peakChargedBytes'] > before['peakChargedBytes']:
+                    failures.append(label + ': peak managed charge grew')
+            if current['finalChargedBytes']:
+                failures.append(label + ': managed storage remains live')
+            if actual['visits'] != previous['visits']:
+                failures.append(label + ': derivative work changed')
+            if actual['raw'] != previous['raw']:
+                failures.append(label + ': raw tape/workspace storage changed')
+    return failures
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--compiler', required=True, type=Path)
@@ -67,7 +101,11 @@ def main():
     parser.add_argument('--source', required=True)
     parser.add_argument('--timeout', required=True, type=int)
     parser.add_argument('--output', required=True, type=Path)
+    parser.add_argument('--comparison', required=True, choices=('baseline', 'record-zip'))
+    parser.add_argument('--baseline', type=Path)
     args = parser.parse_args()
+    assert (args.comparison == 'record-zip') == (args.baseline is not None)
+    baseline = json.loads(gzip.decompress(args.baseline.read_bytes())) if args.baseline else None
     assert os.environ.get('GITHUB_ACTIONS') == 'true' and platform.system() == 'Linux'
     assert platform.machine() == args.machine and args.timeout > 0
     assert args.c_arch == {'aarch64': 'armv8-a', 'x86_64': 'x86-64'}[args.machine]
@@ -84,6 +122,8 @@ def main():
                   'Managed charge excludes allocator metadata, raw buffers and stacks. '
                   'Allocation sites name runtime allocator callers, not fwp call stacks. '
                   'Ownership sites name generated-C calls. Both retain their exact input C.')
+    report['comparison'] = dict(policy=args.comparison,
+                                baselineSource=baseline['source'] if baseline else None)
 
     def run(command, directory, label, env):
         command = list(map(str, command))
@@ -212,6 +252,9 @@ def main():
                         observations[str(workspace)] = actual
                     print(name + ': ordinary, totals and phase/site observations agree', flush=True)
         report['complete'] = True
+        if baseline is not None:
+            report['comparisonFailures'] = comparison_failures(report, baseline)
+            assert not report['comparisonFailures'], '\n'.join(report['comparisonFailures'])
     finally:
         report['files'] = {str(path.relative_to(out)): ARC.digest(path)
                            for path in sorted(out.rglob('*')) if path.is_file() and path.name != 'report.json'}

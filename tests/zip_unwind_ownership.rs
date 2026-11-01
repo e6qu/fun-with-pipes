@@ -43,6 +43,12 @@ captured : List[String] -> List[String] ! {Error[String]}
 captured = zip-with (transform-cap "suffix") ["L", "R"]
 dynamic : (String -> String -> String ! {Error[String]}) -> List[String] -> List[String] ! {Error[String]}
 dynamic = flip zip-with ["L", "R"]
+Point = {index: I64, value: F64}
+records : List[Point] -> List[String] ! {Error[String]}
+records = zip [Point {index = 10, value = 10.5}, Point {index = 20, value = 20.5}]
+    | map (fn (a, b) -> (a | .index) == 2 | match
+        True -> "expected" | fail
+        False -> a | .index | show)
 main = [
     task.yield (),
     [1, 2] | attempt scalars | echo,
@@ -50,6 +56,7 @@ main = [
     ["a", "stop", "b"] | attempt captured | echo,
     ["a", "stop", "b"] | attempt (dynamic transform) | echo,
     ["a", "b"] | direct | echo,
+    [Point {index = 1, value = 1.5}, Point {index = 2, value = 2.5}] | attempt records | echo,
 ] | ignore
 "#;
 
@@ -92,6 +99,8 @@ fn zip_callbacks_partial_spines_and_allocation_failure_release_owners() {
         let captured = function_id(&emitted, "captured");
         let dynamic = function_id(&emitted, "dynamic");
         let transform = function_id(&emitted, "transform");
+        let records = function_id(&emitted, "records");
+        assert!(emitted.contains("/* fused-zip-map :"));
         let probe = r#"
 static volatile V source_list, input_leaf, input_alias;
 static int recover_map_trap(void) { return 1; }
@@ -119,10 +128,12 @@ int main(void) {
     fwp_heap_start(); fwp_fns = fwp_fn_table; fwp_init_consts();
     size_t baseline = fwp_heap.live;
     for (volatile int round=0; round<32; round++) {
-    for (volatile int mode = 0; mode < 3; mode++) {
-        input_leaf = fwp_rc_fresh(fwp_str_new("a", 1));
+    for (volatile int mode = 0; mode < 4; mode++) {
+        input_leaf = fwp_rc_fresh(mode == 3
+            ? fwp_record(2, (V[]){(V)1, fwp_from_f64(1.5)}) : fwp_str_new("a", 1));
         input_alias = input_leaf; fwp_rc_dup(input_alias);
-        V stop = fwp_rc_fresh(fwp_str_new("stop", 4));
+        V stop = fwp_rc_fresh(mode == 3
+            ? fwp_record(2, (V[]){(V)2, fwp_from_f64(2.5)}) : fwp_str_new("stop", 4));
         V tail = fwp_rc_fresh(fwp_data(1, 2, (V[]){stop, 0}));
         source_list = fwp_rc_fresh(fwp_data(1, 2, (V[]){input_leaf, tail}));
         observed_count = 0; observed_result = 0; observed_scratch = 0; observed_second = 0; scratch_calls = 0;
@@ -133,13 +144,17 @@ int main(void) {
         if (!setjmp(h.jb)) {
             if (mode == 0) fDIRECT(source_list);
             else if (mode == 1) fCAPTURED(source_list);
-            else fDYNAMIC(PTR(&fcTRANSFORM), source_list);
+            else if (mode == 2) fDYNAMIC(PTR(&fcTRANSFORM), source_list);
+            else fRECORDS(source_list);
             return 1;
         }
         fwp_handlers = h.prev; fwp_trap_recover = NULL; fwp_trap_jb = NULL;
         if (fwp_cleanups || observed_count != 1 || !observed_result || !observed_scratch) return 2;
         if (!dead_string(observed_result) || !dead_scratch(observed_scratch) || !observed_second || !dead_scratch(observed_second)) return 3;
-        if (*fwp_rc_slot(input_alias) != 1 || STR(input_alias)->len != 1 || STR(input_alias)->d[0] != 'a') return 4;
+        if (*fwp_rc_slot(input_alias) != 1) return 4;
+        if (mode == 3) {
+            if (OBJ(input_alias)->f[0] != 1 || fwp_f64(OBJ(input_alias)->f[1]) != 1.5) return 4;
+        } else if (STR(input_alias)->len != 1 || STR(input_alias)->d[0] != 'a') return 4;
         if (!dead_string(stop)) return 5;
         /* The retained input alias remains owned independently of the map. */
         fwp_rc_free_obj(input_alias);
@@ -149,7 +164,7 @@ int main(void) {
     puts("zip results and both scratch buffers release on failure");
     return 0;
 }
-"#.replace("DIRECT", direct).replace("CAPTURED", captured).replace("DYNAMIC", dynamic).replace("TRANSFORM", transform);
+"#.replace("DIRECT", direct).replace("CAPTURED", captured).replace("DYNAMIC", dynamic).replace("TRANSFORM", transform).replace("RECORDS", records);
         // Observe the actual cleanup state, retaining the generated implementation.
         let release = "static void fwp_map_release(void *arg) {";
         assert_eq!(emitted.matches(release).count(), 1);
@@ -161,7 +176,9 @@ int main(void) {
         assert_eq!(helper.matches(allocate).count(), 1);
         let mut builder = runtime.clone();
         builder.replace_range(start..end, &helper.replace(allocate, &format!("        if (owner->count == 1 && owner->built) fwp_trap(\"injected map allocation failure\");\n{allocate}")));
-        let builder_probe = probe.replace("fwp_str_new(\"stop\", 4)", "fwp_str_new(\"b\", 1)").replace("        if (!dead_string(stop)) return 5;", "        if (!dead_string(stop)) return 5;\n        if (!observed_built || !dead_string(observed_built_element)) return 6;\n        if (!dead_data(observed_built)) return 7;");
+        let builder_probe = probe.replace("fwp_str_new(\"stop\", 4)", "fwp_str_new(\"b\", 1)")
+            .replace("(V)2, fwp_from_f64(2.5)", "(V)3, fwp_from_f64(3.5)")
+            .replace("        if (!dead_string(stop)) return 5;", "        if (!dead_string(stop)) return 5;\n        if (!observed_built || !dead_string(observed_built_element)) return 6;\n        if (!dead_data(observed_built)) return 7;");
         let cancelled = "static void cancel_map_after_result(void);\n".to_string()
             + &runtime.replace(
                 "        owner.count++;",

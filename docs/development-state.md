@@ -1,7 +1,7 @@
 # Current work
 
-**Next:** publish the frozen flat-record zip/map requirements, then extend the
-existing transformation in `src/fuse.rs` and its ownership/semantic controls in
+**Next:** run the focused `record-zip-checks` suite on both native Linux hosts,
+audit every result, and prepare the same-source timing reference for
 [PR #239](https://github.com/e6qu/fun-with-pipes/pull/239).
 The [protocol](measurements/derivative-forward-costs.md) was published first at `02d4aa26`.
 [PLAN.md](../PLAN.md) defines this batch's four steps. The compiler candidate
@@ -21,10 +21,16 @@ characters, with no body, trailers or attribution.
 | 1 | Verified | Preparation `02d4aa26`; documentation run `41318586442` passes |
 | 2 | Verified | Native known-work, omission, wrong-phase and unfinished-sequence controls pass |
 | 3 | Verified | Both hosts pass; all 96 observations and complete logs audited at `afc0f78f`, run `41319946864` |
-| 4 | In progress | Publish candidate requirements before compiler edits, implement and verify the complete batch |
+| 4 | In progress | Requirements published at `73cec3e5` before compiler edits; candidate and controls implemented, native verification pending |
 
 ## Current implementation boundaries
 
+- `src/fuse.rs` extends existing zip/map selection to flat numeric records.
+  Tests cover values, captures, both input aliases, unequal lengths, returned
+  records, trapping arithmetic, partial results and cancellation. Nested records,
+  managed fields and boxed wide numbers remain excluded. The count gate requires
+  savings of two requests, 48 requested bytes and three effective retains per pair.
+  These are acceptance limits, not yet verified candidate results.
 - Reuse `measure-iteration.py` for managed requests/bytes, effective retains and
   live charge; `ownership-profile.py` for source-site ownership operations; and
   `descent-phases.py` for the six derivative boundaries.
@@ -65,7 +71,7 @@ and known-work failures. All detailed counts match across architectures. The
 [explanation/requirements](measurements/derivative-forward-costs.md#verified-baseline-and-selected-change)
 retain the result. Full production gates follow the complete batch.
 
-Documentation run `41321386688` passes on audit commit `81f2e978`; the superseded
+Documentation run `41322983262` passes on preparation commit `73cec3e5`; the superseded
 queued docs run `41319949124` was cancelled. The library's misleading “about one
 evaluation” claim is corrected and its reference regenerated.
 
@@ -75,8 +81,12 @@ are in `/private/tmp/fwp-239-logs/`. Both artifact API digests were verified.
 
 Focused local commands, each through `python3 scripts/local-guard.py`:
 
-- `python3 scripts/test-derivative-ownership-profile.py`: 8 pass, including
-  swapped phase labels and missing/extra/changed/duplicate archived files.
+- `python3 scripts/test-derivative-ownership-profile.py`: 9 pass, including
+  swapped phase labels, archive corruption and failed candidate count budgets.
+- `/private/tmp/fwp-239-record-probe-check.py`: the new record-alias/count probe
+  runs with the verified baseline compiler and Clang O1; all 28 cases release
+  storage. Omitting result cleanup exits 238 as required. This verifies the
+  observer, not the new compiler selection, which must run on GitHub.
 - `python3 scripts/test-descent-phases.py --cc clang`: 4 pass. GCC runs on CI.
 - `python3 scripts/check-roadmap.py`: 197 link sets, 106 preparation pairs and
   four plan steps pass. No full local compiler build or suite was run.

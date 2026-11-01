@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [derivative-forward-costs, typed-derivative-owners, array-list-report, swift-allocation-report, swift-allocations, array-list-measurements, lexical-bindings, lexical-probes, callable-phase-paired, callable-phase-context, callable-construction-diagnosis, callable-phases, callable-phase-report, swift-peer-report, swift-peers, returned-callables, state-range-checks, scalar-fold-checks, scan-comparison, buffer-baselines, buffer-peer-checks, timing-names, timing-resources, typed-loop-state, kernel-codegen, timing-diagnostics, kernel-baselines, eager-captures, eager-capture-time, runtime-startup, decimal-count, decimal-count-repeat, decimal-count-interleaved, decimal-count-balanced, cpu-phases, cpu-baselines, functional-calls, functional-probes, parser-measurements, parser-workspace, inline-key-time, inline-key-audit, arc-cost-audit, scalar-projections, unique-arrays, unique-array-checks, arc-costs, ownership-analysis, compiler-lifetimes, array-sort, list-copy-costs, list-copy, benchmark-comparison, socket-inheritance, http-mappings, http-idle-checks, array-text, float-text, float-text-checks, float-text-costs, descent-output, coordinate-work, descent-batches, descent-call-costs, descent-peers, descent-checks, ad-depth, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, wordfreq-current, direct-strings, string-reuse, ad-application, wordfreq-baseline, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, memory-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, fixed-function-checks, server-checks, http-application, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
+        options: [record-zip-checks, derivative-forward-costs, typed-derivative-owners, array-list-report, swift-allocation-report, swift-allocations, array-list-measurements, lexical-bindings, lexical-probes, callable-phase-paired, callable-phase-context, callable-construction-diagnosis, callable-phases, callable-phase-report, swift-peer-report, swift-peers, returned-callables, state-range-checks, scalar-fold-checks, scan-comparison, buffer-baselines, buffer-peer-checks, timing-names, timing-resources, typed-loop-state, kernel-codegen, timing-diagnostics, kernel-baselines, eager-captures, eager-capture-time, runtime-startup, decimal-count, decimal-count-repeat, decimal-count-interleaved, decimal-count-balanced, cpu-phases, cpu-baselines, functional-calls, functional-probes, parser-measurements, parser-workspace, inline-key-time, inline-key-audit, arc-cost-audit, scalar-projections, unique-arrays, unique-array-checks, arc-costs, ownership-analysis, compiler-lifetimes, array-sort, list-copy-costs, list-copy, benchmark-comparison, socket-inheritance, http-mappings, http-idle-checks, array-text, float-text, float-text-checks, float-text-costs, descent-output, coordinate-work, descent-batches, descent-call-costs, descent-peers, descent-checks, ad-depth, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, wordfreq-current, direct-strings, string-reuse, ad-application, wordfreq-baseline, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, memory-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, fixed-function-checks, server-checks, http-application, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -38,7 +38,7 @@ on:
         type: string
 jobs:
   derivative_forward_costs:
-    if: inputs.suite == 'derivative-forward-costs'
+    if: inputs.suite == 'derivative-forward-costs' || inputs.suite == 'record-zip-checks'
     strategy:
       fail-fast: false
       matrix:
@@ -57,6 +57,10 @@ jobs:
       CARGO_PROFILE_DEV_OPT_LEVEL: '1'
       CARGO_PROFILE_DEV_DEBUG_ASSERTIONS: 'true'
       CARGO_PROFILE_DEV_OVERFLOW_CHECKS: 'true'
+      CARGO_PROFILE_TEST_OPT_LEVEL: '1'
+      CARGO_PROFILE_TEST_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_TEST_OVERFLOW_CHECKS: 'true'
+      FWP_ARC_ARTIFACTS: record-zip-checks
       FWP_LTO: '0'
     steps:
       - uses: actions/checkout@v7
@@ -70,21 +74,47 @@ jobs:
           path: ~/.cargo/registry
           key: cargo-registry-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Cargo.lock') }}
       - name: Fetch locked dependencies and build the current compiler
+        id: compiler_build
         run: |
           cargo fetch --locked
           CARGO_NET_OFFLINE=true cargo build --locked --bin fwp
-      - name: Native known-work controls and all six derivative inputs
+      - name: Record eligibility and affected target lint
+        if: inputs.suite == 'record-zip-checks'
+        run: |
+          cargo fmt --all -- --check
+          CARGO_NET_OFFLINE=true cargo clippy --locked --lib --bin fwp --test zip_map_fusion --test zip_unwind_ownership --test autodiff_nested --test autodiff_precision --test ad_tape_scopes -- -D warnings
+          CARGO_NET_OFFLINE=true cargo test --locked --lib fuse::tests
+      - name: Record pair values, aliases, failures, cancellation and derivative controls
+        if: ${{ !cancelled() && steps.compiler_build.outcome == 'success' && inputs.suite == 'record-zip-checks' }}
         run: >-
-          python3 scripts/measure-derivative-forward-costs.py
-          --compiler target/debug/fwp --cc gcc --machine "${{ matrix.machine }}"
-          --c-arch "${{ matrix.arch }}" --source "$GITHUB_SHA" --timeout 180
-          --output derivative-forward-evidence
+          env CARGO_NET_OFFLINE=true python3 scripts/run-native-tests.py
+          --targets zip_map_fusion zip_unwind_ownership autodiff_nested autodiff_precision ad_tape_scopes
+          --idle-timeout 600 --logs record-zip-checks/targets
+      - name: Native known-work controls and all six derivative inputs
+        if: ${{ !cancelled() && steps.compiler_build.outcome == 'success' }}
+        shell: bash
+        run: |
+          comparison=(--comparison baseline)
+          if [ "${{ inputs.suite }}" = record-zip-checks ]; then
+            comparison=(--comparison record-zip --baseline docs/measurements/derivative-forward-costs-2026-11-01.json.gz)
+          fi
+          python3 scripts/measure-derivative-forward-costs.py \
+            --compiler target/debug/fwp --cc gcc --machine "${{ matrix.machine }}" \
+            --c-arch "${{ matrix.arch }}" --source "$GITHUB_SHA" --timeout 180 \
+            --output derivative-forward-evidence "${comparison[@]}"
       - name: Preserve complete and rejected observations
         if: ${{ !cancelled() && hashFiles('derivative-forward-evidence/**') != '' }}
         uses: actions/upload-artifact@v7
         with:
           name: derivative-forward-evidence-${{ matrix.machine }}
           path: derivative-forward-evidence/
+          if-no-files-found: error
+      - name: Preserve focused record ownership probes and target logs
+        if: ${{ !cancelled() && hashFiles('record-zip-checks/**') != '' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: record-zip-checks-${{ matrix.machine }}
+          path: record-zip-checks/
           if-no-files-found: error
 
   typed_derivative_owners:

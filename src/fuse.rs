@@ -296,6 +296,16 @@ fn unboxed_numeric(ty: &MT) -> bool {
         )
 }
 
+/// Flat numeric records have no owned children or observable close operation.
+/// The record box itself may be shared; zip-with keeps both source lists live
+/// and acquires callback arguments through its existing typed ownership path.
+fn zip_map_element(shapes: &Shapes, ty: &MT) -> bool {
+    unboxed_numeric(ty)
+        || record_fields(shapes, ty).is_some_and(|fields| {
+            !fields.is_empty() && fields.iter().all(|(_, field)| unboxed_numeric(field))
+        })
+}
+
 fn numeric_literal_list(mut expression: &Expr) -> Option<Vec<Value>> {
     let mut values = Vec::new();
     loop {
@@ -1539,9 +1549,9 @@ impl Fuser<'_> {
 
     /// Run after existing consumers have fused: replacing map too early would
     /// hide it from fold/array construction and reintroduce their list results.
-    /// Numeric zip inputs have no resource owners whose destruction would move
-    /// across a callback. Keep both eager inputs and the existing zip-with result
-    /// cleanup, but specialize away the pair consumed by a known map function.
+    /// Numeric and flat numeric-record inputs have no resource owners whose
+    /// destruction would move across a callback. Keep both eager inputs and the
+    /// existing zip-with result cleanup, but specialize away the mapped pair.
     fn map_zip(&mut self, map: FuncId, args: &[Expr]) -> Option<Expr> {
         if std::env::var("FWP_ZIP_MAP").as_deref() == Ok("0") {
             return None;
@@ -1552,8 +1562,8 @@ impl Fuser<'_> {
         while let Expr::Let(local, value, body) = producer {
             let ty = self.locals.get(*local as usize)?;
             let numeric_list = matches!(ty, MT::Con(name, elements)
-                if name == "std::List" && elements.len() == 1 && unboxed_numeric(&elements[0]));
-            if !unboxed_numeric(ty) && !numeric_list {
+                if name == "std::List" && elements.len() == 1 && zip_map_element(self.shapes, &elements[0]));
+            if !zip_map_element(self.shapes, ty) && !numeric_list {
                 return None;
             }
             // Only numeric owners can remain live through the mapped callbacks;
@@ -1570,7 +1580,7 @@ impl Fuser<'_> {
         let (zip_params, _) = self.funcs[*zip].ty.params(2);
         let left = elem(zip_params[0])?;
         let right = elem(zip_params[1])?;
-        if !unboxed_numeric(&left) || !unboxed_numeric(&right) {
+        if !zip_map_element(self.shapes, &left) || !zip_map_element(self.shapes, &right) {
             return None;
         }
         let (callback_params, result) = self.funcs[callback].ty.params(captures.len() + 1);
@@ -2478,6 +2488,38 @@ pub fn specialize_matrices(prog: &mut Program) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn zip_map_records_exclude_owned_children_and_boxed_numbers() {
+        let mut shapes = Shapes::new();
+        let point = MT::con("Point");
+        let fields = vec![
+            ("value".into(), MT::con("std::F64")),
+            ("vertex".into(), MT::con("std::I64")),
+        ];
+        shapes.insert(point.clone(), TypeShape::Record(fields.clone()));
+        assert!(zip_map_element(&shapes, &point));
+        assert!(zip_map_element(&shapes, &MT::Record(fields)));
+        for field in [
+            point,
+            MT::con("std::String"),
+            MT::con("std::File"),
+            MT::con("std::F128"),
+            MT::con("std::I128"),
+            MT::con("std::F16"),
+            MT::Con("std::List".into(), vec![MT::con("std::I64")]),
+            MT::Con("std::Channel".into(), vec![MT::con("std::I64")]),
+            MT::Fun(Box::new(MT::con("std::I64")), Box::new(MT::con("std::I64"))),
+        ] {
+            let wrapper = MT::con("Wrapper");
+            shapes.insert(
+                wrapper.clone(),
+                TypeShape::Record(vec![("field".into(), field)]),
+            );
+            assert!(!zip_map_element(&shapes, &wrapper));
+        }
+        assert!(!zip_map_element(&shapes, &MT::unit()));
+    }
 
     #[test]
     fn functions_created_after_the_analysis_snapshot_remain_unproved() {
