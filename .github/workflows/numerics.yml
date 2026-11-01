@@ -91,14 +91,14 @@ jobs:
       - run: cargo fmt --all -- --check
       - name: Typed ownership lint and unit checks
         run: |
-          cargo clippy --locked --lib --bin fwp --test ad_tape_ownership --test ad_tape_scopes --test autodiff_nested --test autodiff_precision --test autodiff_checkpoint --test autodiff_workspace --test autodiff_capacity_bounds --test autodiff_library -- -D warnings
+          cargo clippy --locked --lib --bin fwp --test ad_tape_ownership --test ad_tape_scopes --test autodiff_nested --test autodiff_precision --test autodiff_checkpoint --test autodiff_workspace --test autodiff_capacity_bounds --test autodiff_library --test local_bindings -- -D warnings
           cargo test --locked --lib ownership::tests
       - name: All affected derivative and cleanup targets
         if: ${{ !cancelled() }}
         run: >-
           python3 scripts/run-native-tests.py --targets ad_tape_ownership ad_tape_scopes
           autodiff_nested autodiff_precision autodiff_checkpoint autodiff_workspace
-          autodiff_capacity_bounds autodiff_library --idle-timeout 600
+          autodiff_capacity_bounds autodiff_library local_bindings --idle-timeout 600
           --logs typed-derivative-evidence/targets
       - name: Primitive declarations and frozen contracts
         if: ${{ !cancelled() }}

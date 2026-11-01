@@ -51,7 +51,10 @@ explains eligibility, preserved cleanup and the raw/debugger exceptions.
 
 Setting `FWP_NO_OPT=1` skips the optimization stages listed above; it does not skip
 parsing, expansion, type checking, lowering or resource preservation. Native
-ownership lowering is separate. Unset `FWP_NO_OPT` to enable optimization:
+ownership lowering is separate. Destructuring `let (x, y) = expression in body`
+keeps the computed tuple’s checked type in an internal binding until the optimizer
+can safely remove the tuple. This lets cleanup select the correct field owners
+even when inlining replaces a function call with a record literal. Unset `FWP_NO_OPT` to enable optimization:
 its presence disables the passes, even with a value of `0`. Debug builds also validate local types after
 passes and check inserted reference operations.
 

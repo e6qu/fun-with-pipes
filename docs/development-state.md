@@ -1,9 +1,10 @@
 # Current work
 
-**Next:** dispatch the repaired focused suite for
-[PR #238](https://github.com/e6qu/fun-with-pipes/pull/238), audit all results, then
-run the full final-head matrix. [The protocol](measurements/derivative-recording-moves.md)
-defines acceptance. No full compiler/native verification has passed yet.
+**Next:** publish the typed-destructuring repair and rerun the affected native
+suite, now including `local_bindings`, for
+[PR #238](https://github.com/e6qu/fun-with-pipes/pull/238). Audit all results before
+the full final-head matrix. [The protocol](measurements/derivative-recording-moves.md)
+defines acceptance.
 
 Worktree `/private/tmp/fwp-returned-callables`, branch `move-derivative-weights`.
 Base `94abb83cb33cb52bdcafb19c67c855cf9007059f`. Preserve the primary checkout's
@@ -63,3 +64,22 @@ identical tree; it had no failed steps. Preserve pending #238 runs. Use
 `python3 scripts/local-guard.py` for focused local work, serially. Full builds,
 suites and measurements stay on runners. Disk has about 64.3 GiB free, close to
 the fixed 64 GiB floor; move refused work to CI instead of bypassing the guard.
+
+## Destructuring repair
+
+Run `41302699512` on `9285227a3f8e360a9c191ea1dc45ac95e0e6a62d` was audited
+on GCC ARM64/AMD64 and Clang ARM64: all 29 affected native cases ran per host;
+23 passed and six failed in four targets. Direct recording/counts, physical
+cleanup, cancellation, workspace, capacity and library unload passed. The six
+failures share an unresolved `?` type during native ownership admission (scopes,
+nested/Jacobian, precision and checkpoint semantics). Lint, two ownership unit
+tests, inventory and native reports passed. Docs `41302703312` passed; its only
+failure text comes from the deliberately failing runner-control fixture.
+
+A small `fn`/tuple-destructuring helper reproduces the rejection with the existing
+#236 compiler. Adding an explicitly typed intermediate binding makes it compile.
+`mono.rs` now preserves that binding automatically for destructuring lets, so
+inlining cannot erase the value’s known type before ownership lowering. Ownership
+admission remains strict. A regression in `local_bindings` exercises a generic
+sine derivative rule through raw interpretation and native modes. Runner checks
+of this repair are pending.

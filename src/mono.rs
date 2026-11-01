@@ -1463,7 +1463,20 @@ impl<'a> Mono<'a> {
                 }
                 match pattern {
                     Pat::Bind(local) => Ok(Expr::Let(local, Box::new(value), Box::new(body))),
-                    other => Ok(Expr::Match(Box::new(value), vec![(other, body)])),
+                    other => {
+                        // Inlining can replace the value with a bare record,
+                        // which carries no type in IR. Keep its checked type
+                        // until the optimizer proves field-wise elimination.
+                        let local = fb.local(&mt);
+                        Ok(Expr::Let(
+                            local,
+                            Box::new(value),
+                            Box::new(Expr::Match(
+                                Box::new(Expr::Local(local)),
+                                vec![(other, body)],
+                            )),
+                        ))
+                    }
                 }
             }
             ExprKind::Lambda(..) | ExprKind::Match(_) => {
