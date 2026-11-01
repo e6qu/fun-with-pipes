@@ -52,8 +52,8 @@ comparisons with Swift, C and Rust and the limits of the evidence.
 ## Project direction
 
 Tracing GC removal and the local `let`/`fn` syntax are delivered. The current
-[plan](PLAN.md) reduces temporary allocations and ownership operations in typed
-derivatives, alongside this documentation revision.
+[plan](PLAN.md) passes derivative recording arguments directly and moves their
+weights into the tape, avoiding temporary records and redundant ARC operations.
 
 - Prefer moves, borrows, direct values and storage reuse; count necessary sharing.
 - Preserve simple pipes, immutable values, checked arithmetic and effect order.

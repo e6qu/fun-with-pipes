@@ -454,25 +454,21 @@ accepted checked ARC for supported gRPC clients and services on all six native
 hosts. The [ownership guide](ownership.md#native-executables-and-services)
 states the remaining restrictions, including cycles through channel payloads.
 
-## Scalar derivative recording
+## Derivative recording
 
-`ad.push` receives a record containing two node indices and two F64 weights.
-It copies all four scalars before growing a tape buffer, stores no pointer to the
-record, invokes no callback and returns an integer node ID. The compiler therefore
-allows this argument record to live on the caller's stack. Its lifetime ends after
-the call; the tape owns the copied numbers. This uses the existing escape analysis
-and adds no language syntax or runtime mode.
+`ad.push parent-a weight-a parent-b weight-b` receives four separate values.
+The F64 weights are immediate numeric bits; the runtime copies them into tape
+buffers. There is no outer argument record to allocate or keep alive.
 
-`ad.push-owned`, used for F128 and nested derivative values, also borrows its
-outer argument record. Its weight children have separate owners: recording
-retains both before publishing them, and partial failure releases acquired owners.
-The caller keeps the borrowed fields alive through this work.
+`ad.push-owned` uses the same argument order for F128 and nested derivatives.
+It consumes one owner per weight. The caller retains a separate owner only when
+it will use that value again. Recording protects both arguments through validation
+and growth, then moves them into the tape. An inactive call releases both; a failed
+call releases them without publishing a partial node. Equal arguments still
+represent two incoming owners and require two eventual releases.
 
-The
-[typed-recording protocol](measurements/typed-derivative-owners.md) verifies that
-contract separately from scalar recording. The scalar 256-operation regression
-compares stack storage on/off, native O1/O2 and workspace reuse on/off. The runtime
-unwind probe also overwrites the caller's record before differentiating its node.
-The [measurement protocol](measurements/descent-costs.md#fixed-scalar-recording-acceptance-rules)
-requires actual allocation, time, code and stack evidence before accepting the
-optimization; the contract alone does not establish a speedup.
+[The transfer protocol](measurements/derivative-recording-moves.md) defines count,
+alias, failure and physical-release checks. [Earlier borrowed-record results](measurements/typed-derivative-owners.md)
+retain their original source and measurements. Implementation is not verification;
+[the handoff](development-state.md) records current validation. Count reductions
+do not establish elapsed-time improvements.

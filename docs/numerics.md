@@ -275,7 +275,11 @@ output formatting. Checked ARC finishes with zero retained managed charge
 at O1/O2 with workspace reuse off/on. These totals exclude unmanaged
 registry, linked-library and host allocations; they measure neither peak process
 memory nor speed relative to C/Rust. A failed append
-releases partially acquired owners without publishing an incomplete record.
+releases incoming owners without publishing an incomplete node. Current native
+recording takes separate parent/weight arguments and transfers typed weights
+into the tape; [the transfer protocol](measurements/derivative-recording-moves.md)
+tracks verification of that change. The older allocation totals above describe
+their recorded source, not a measurement of the current compiler.
 
 Typed native backward storage keeps one owner of its zero value. Untouched slots
 borrow that exact value; other slots own their computed adjoints. Callback results

@@ -15,7 +15,7 @@ fn autodiff_library_unload_releases_live_and_cached_buffers() {
         &input,
         r#"
 record : I64 -> I64
-record = ad.tape | make { 0 = id, 1 = const 1.0, 2 = const -1, 3 = const 0.0 } | ad.push
+record = ad.tape | (fn node -> ad.push node 1.0 -1 0.0)
 export probe : I64 -> I64
 probe = ad.scope record
 export managed : I64 -> I64

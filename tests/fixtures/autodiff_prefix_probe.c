@@ -5,11 +5,11 @@ static int prefix_case(int64_t leaves, int constants) {
     if(leaves) {
         OBJ(tuple)->f[0]=base;OBJ(tuple)->f[1]=fwp_from_f64(2.0);
         OBJ(tuple)->f[2]=base+1;OBJ(tuple)->f[3]=fwp_from_f64(3.0);
-        early=fwp_p_ad_push(tuple);tail=early;
+        early=fwp_p_ad_push(OBJ(tuple)->f[0], OBJ(tuple)->f[1], OBJ(tuple)->f[2], OBJ(tuple)->f[3]);tail=early;
         for(int i=0;i<4096;i++) {
             OBJ(tuple)->f[0]=tail;OBJ(tuple)->f[1]=fwp_from_f64(NAN);
             OBJ(tuple)->f[2]=(V)(int64_t)-1;OBJ(tuple)->f[3]=fwp_from_f64(0.0);
-            tail=fwp_p_ad_push(tuple);
+            tail=fwp_p_ad_push(OBJ(tuple)->f[0], OBJ(tuple)->f[1], OBJ(tuple)->f[2], OBJ(tuple)->f[3]);
         }
     }
     if(constants) {

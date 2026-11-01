@@ -49,8 +49,8 @@ remove a JavaScript host's collector.
 - Preserve the independent [ownership diagnostics](ownership-diagnostics.md)
   and binary checks for absent collector code as storage representations change.
 - Enforce the compiler analysis budgets in G2 as proof precision changes.
-- Verify the current [typed-derivative reductions](measurements/typed-derivative-owners.md):
-  stack argument records, borrowed zero adjoints and moved result owners.
+- Verify [direct recording and weight transfers](measurements/derivative-recording-moves.md).
+  Preserve #237’s [borrowed zero adjoints and moved result owners](measurements/typed-derivative-owners.md).
 - Preserve delivered A1–A6 and #236 call/collection reductions, including the
   [parser workspace's limits](measurements/parser-workspace.md). Broader reductions
   need a named workload and proof; zero retains does not mean zero allocations

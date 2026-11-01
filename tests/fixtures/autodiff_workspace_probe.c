@@ -55,7 +55,7 @@ static uint64_t workspace_gradient(size_t n){
         double x=((double)(int)(i%17)-8.0)/4.0;
         OBJ(workspace_node)->f[0]=workspace_base+(V)i;
         OBJ(workspace_node)->f[1]=fwp_from_f64(2.0*x);
-        V node=fwp_p_ad_push(workspace_node);
+        V node=fwp_p_ad_push(OBJ(workspace_node)->f[0], OBJ(workspace_node)->f[1], OBJ(workspace_node)->f[2], OBJ(workspace_node)->f[3]);
         fwp_array_store(workspace_outputs,i,node,&index);
         fwp_array_store(workspace_seeds,i,fwp_from_f64(1.0),&number);
     }

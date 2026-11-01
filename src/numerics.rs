@@ -286,7 +286,7 @@ fn tape_new(n: i64, owned: bool) -> R<i64> {
     Ok(base)
 }
 
-/// `ad.push (a, da, b, db)`: a node with the parents a and b (-1: none)
+/// `ad.push a da b db`: a node with the parents a and b (-1: none)
 /// and the partial derivatives da and db.
 fn push(ra: i64, da: f64, rb: i64, db: f64) -> R<i64> {
     if ra < 0 && rb < 0 {
@@ -419,13 +419,7 @@ pub(crate) fn tape_owned(parameters: &Value, inputs: &Value) -> R<Value> {
     Ok(Value::I64(base))
 }
 
-pub(crate) fn push_owned(value: &Value) -> R<Value> {
-    let Value::Record(fields) = value else {
-        return trap("ad.push-owned: expected a tuple");
-    };
-    if fields.len() != 4 {
-        return trap("ad.push-owned: expected four fields");
-    }
+pub(crate) fn push_owned(fields: &[Value]) -> R<Value> {
     let (ra, rb) = (int(&fields[0]), int(&fields[2]));
     if ra < 0 && rb < 0 {
         return Ok(Value::I64(-1));
@@ -784,12 +778,8 @@ pub fn prim(sym: &str, a: &[Value]) -> Option<R<Value>> {
             "matrix._mul-f64" => matrix_product(a)?,
             "ad.tape" => Value::I64(tape_new(int(&a[0]), false)?),
             "ad.push" => {
-                let f = match &a[0] {
-                    Value::Record(f) => f.clone(),
-                    _ => return trap("ad.push: expected a tuple"),
-                };
                 let fl = |v: &Value| v.as_f64().unwrap_or(0.0);
-                Value::I64(push(int(&f[0]), fl(&f[1]), int(&f[2]), fl(&f[3]))?)
+                Value::I64(push(int(&a[0]), fl(&a[1]), int(&a[2]), fl(&a[3]))?)
             }
             "ad.backward" => f64_array(&backward(int(&a[0]), &ints(&a[1]), &f64s(&a[2]))?),
             "device.run" | "device.sum" => {

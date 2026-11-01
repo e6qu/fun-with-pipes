@@ -2559,11 +2559,17 @@ Rev[T] = { value: T, vertex: I64 }
 # Nested Rev scalars evaluate backward arithmetic on the enclosing tape.
 trait ReverseScalar[T] : Field[T], Neg[T], Dup[T] =
     rev._seed : List[T] -> (I64, List[Rev[T]])
-    rev._push : (I64, T, I64, T) -> I64
+    rev._push : I64 -> T -> I64 -> T -> I64
     rev._backward : I64 -> List[I64] -> List[T] -> List[T]
     rev._inactive-zero : T -> Bool
 ad.tape-owned : (t, t -> t -> t, t -> t -> t, t -> Bool) -> List[t] -> I64 where Dup[t]
-ad.push-owned : (I64, t, I64, t) -> I64 where Dup[t]
+
+# Record two parents and their derivative weights: parent-a, weight-a, parent-b,
+# weight-b. Parent -1 means inactive. For example, `ad.push-owned node 1.0f128
+# -1 0.0f128` records a unit derivative from node, with no second parent.
+# Use within ad.scope; weights transfer to the native tape, while separately
+# owned caller aliases remain valid. Both inactive parents return -1.
+ad.push-owned : I64 -> t -> I64 -> t -> I64 where Dup[t]
 ad.backward-owned : I64 -> List[I64] -> List[t] -> List[t] where Dup[t]
 
 # a constant: no gradient flows through it

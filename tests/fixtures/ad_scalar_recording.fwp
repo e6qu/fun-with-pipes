@@ -1,6 +1,6 @@
 # Record 256 identity operations, then seed the final node with derivative 1.
 push-one : I64 -> I64
-push-one = make { 0 = id, 1 = const 1.0, 2 = const -1, 3 = const 0.0 } | ad.push
+push-one = fn node -> ad.push node 1.0 -1 0.0
 record-chain : I64 -> I64
 record-chain =
     ad.tape

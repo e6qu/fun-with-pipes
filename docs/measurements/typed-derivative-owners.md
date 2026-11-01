@@ -1,6 +1,9 @@
 # Fewer owners in typed reverse derivatives
 
-This protocol is fixed before implementation. The baseline is merged PR #236,
+Historical protocol delivered in PR #237. The requirements below describe that
+source; current recording arguments and fixtures follow the separate
+[weight-transfer protocol](derivative-recording-moves.md). This protocol was fixed
+before its implementation. The baseline is merged PR #236,
 `658123c7c09aa8991ca69cbb82643e68244edc95`; its complete platform gates pass.
 The [tape example](../terminology.md#tape-and-backward-pass) explains the terms.
 The work concerns F128 and nested reverse calculations, whose weights and
@@ -162,5 +165,6 @@ failed both new probes on all hosts. Existing targets passed. Repairs:
 | Heap counter queried mutable-buffer capacity | Use heap membership; immutable records deliberately have no such capacity. |
 
 No runtime change or acceptance relaxation was needed. Counts now print before
-assertions so failed observations remain visible. Full final-head production
-validation remains required; this focused result covers three of the six hosts.
+assertions so failed observations remain visible. Full final-head production and documentation subsequently passed in
+[PR #237](../roadmap-history.md#typed-derivative-owners-and-documentation-pr-237).
+The focused results above retain their own source and three-host scope.

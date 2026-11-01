@@ -194,6 +194,19 @@ fn named_tacit_captures_and_macros_agree_across_backends() {
             None,
         ),
         (
+            "computed-tuple-keeps-ownership-type",
+            r#"apply-rule : (t -> (t, t)) -> Rev[t] -> Rev[t] where ReverseScalar[t], Dup[t]
+apply-rule = fn rule -> fn input ->
+    let (value, weight) = rule (input | .value)
+    in Rev { value, vertex = rev._push (input | .vertex) weight -1 zero }
+sine : Rev[F64] -> Rev[F64]
+sine = apply-rule (both sin cos)
+main = [0.0] | grad (map sine | sum) | eq [1.0] | echo
+"#.into(),
+            "True\n",
+            None,
+        ),
+        (
             "curried-stage-trap",
             "make-checked : I64 -> I64 -> I64\nmake-checked = fn divisor -> let inverse = 10 / divisor in fn value -> inverse + value\nmain = let unused = make-checked 0 in 42 | echo\n".into(),
             "",

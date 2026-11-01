@@ -138,7 +138,7 @@ def paired_budget_failures(results, comparison):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--compiler', required=True, type=Path)
-    parser.add_argument('--comparison', required=True, choices=['current', 'scalar-recording', 'eager-captures', 'array-lists'])
+    parser.add_argument('--comparison', required=True, choices=['current', 'eager-captures', 'array-lists'])
     parser.add_argument('--reference-compiler', type=Path)
     parser.add_argument('--reference-manifest', type=Path)
     parser.add_argument('--cc', required=True)
@@ -166,14 +166,10 @@ def main():
     if separate_compiler:
         assert reference_manifest['source'] == os.environ['GITHUB_SHA']
         assert digest(args.reference_compiler.read_bytes()) == reference_manifest['compilerSha256']
-        if args.comparison == 'scalar-recording':
-            assert reference_manifest['candidateOwnershipSha256'] == digest((ROOT / 'src/ownership.rs').read_bytes())
-            assert reference_manifest['disabledFact'] == 'borrows_without_escape(ad.push, 0)'
-        else:
-            assert args.comparison == 'eager-captures'
-            assert reference_manifest['candidateOptimizerSha256'] == digest((ROOT / 'src/opt.rs').read_bytes())
-            assert reference_manifest['ownershipSha256'] == digest((ROOT / 'src/ownership.rs').read_bytes())
-            assert reference_manifest['disabledTransformation'] == 'once-used eager capture bindings'
+        assert args.comparison == 'eager-captures'
+        assert reference_manifest['candidateOptimizerSha256'] == digest((ROOT / 'src/opt.rs').read_bytes())
+        assert reference_manifest['ownershipSha256'] == digest((ROOT / 'src/ownership.rs').read_bytes())
+        assert reference_manifest['disabledTransformation'] == 'once-used eager capture bindings'
     fwp_labels = ['fwp-ad-history', 'fwp-ad', 'fwp-ad-history-reference', 'fwp-ad-reference'] if paired else [
         'fwp-ad-history', 'fwp-ad', 'fwp-explicit', 'fwp-packed']
     assert os.environ.get('GITHUB_ACTIONS') == 'true' and platform.system() == 'Linux'
@@ -451,7 +447,7 @@ def main():
         print(f'{name}: outputs, cleanup, binaries and {args.samples} timing rounds recorded', flush=True)
     paths = ['scripts/descent-baselines.py', 'scripts/measure-descent-peers.py', 'scripts/measure-ad-application.py',
              'scripts/ad-storage-profile.py', 'scripts/measure-iteration.py', 'scripts/descent-phases.py',
-             'tests/fixtures/descent_phases.c', 'scripts/prepare-recording-reference.py',
+             'tests/fixtures/descent_phases.c',
              'scripts/prepare-capture-reference.py', 'src/opt.rs', 'src/fuse.rs',
              'tests/fixtures/ad_raw_storage_probe.c', 'tests/fixtures/descent_explicit.fwp',
              'tests/fixtures/descent_explicit.c', 'tests/fixtures/descent_explicit.rs',
@@ -469,7 +465,6 @@ def main():
         sourceHashes={name: digest((ROOT / name).read_bytes()) for name in paths}, results=results,
         scope={
             'current': 'Six current-source implementations and one byte-identical AD-current control. ',
-            'scalar-recording': 'Current-source scalar recording comparison: reference compiler disables only the ad.push no-escape fact. ',
             'eager-captures': 'Current-source eager-capture comparison: reference compiler restores only constant-only capture hoisting; both compilers retain scalar recording stack storage. ',
             'array-lists': 'One current compiler with FWP_ARRAY_FUSION explicitly 1 versus 0. This toggles all numeric array fusion, including result formatting, so whole-solve differences are not attributed solely to gradient-list removal. Independent direct-boundary counts establish that removal. ',
         }[args.comparison] +

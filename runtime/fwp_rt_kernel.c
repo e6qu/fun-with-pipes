@@ -357,10 +357,10 @@ static V fwp_p_ad_tape_owned(V parameters, V inputs, const fwp_desc *elem) {
     return base;
 }
 
-/* (a, da, b, db): a node with parents a and b (-1: none) */
-static V fwp_p_ad_push(V tup) {
-    int64_t ra = (int64_t)OBJ(tup)->f[0], rb = (int64_t)OBJ(tup)->f[2];
-    double da = fwp_f64(OBJ(tup)->f[1]), db = fwp_f64(OBJ(tup)->f[3]);
+/* A node with parents a and b (-1: none), with immediate F64 weights. */
+static V fwp_p_ad_push(V a, V wa, V b, V wb) {
+    int64_t ra = (int64_t)a, rb = (int64_t)b;
+    double da = fwp_f64(wa), db = fwp_f64(wb);
     if (ra < 0 && rb < 0) return (V)(int64_t)-1;
     if (ra >= 0 && rb >= 0 && (ra >> 32) != (rb >> 32)) fwp_trap(FWP_AD_MIXED);
     if (ra < 0) {
@@ -452,9 +452,18 @@ static V fwp_p_ad_backward(V base, V outs, V seeds) {
     return r;
 }
 
-static V fwp_p_ad_push_owned(V tuple, const fwp_desc *elem) {
-    int64_t ra = (int64_t)OBJ(tuple)->f[0], rb = (int64_t)OBJ(tuple)->f[2];
-    if (ra < 0 && rb < 0) return (V)(int64_t)-1;
+static V fwp_p_ad_push_owned(V a, V da, V b, V db, const fwp_desc *elem) {
+    /* Both arguments arrive with independent owners, even when they alias. */
+    fwp_value_owner left = {da, elem->drop}, right = {db, elem->drop};
+    fwp_cleanup left_cleanup, right_cleanup;
+    fwp_cleanup_push(&left_cleanup, fwp_value_release, &left);
+    fwp_cleanup_push(&right_cleanup, fwp_value_release, &right);
+    int64_t ra = (int64_t)a, rb = (int64_t)b;
+    if (ra < 0 && rb < 0) {
+        fwp_cleanup_pop(&right_cleanup); fwp_value_release(&right);
+        fwp_cleanup_pop(&left_cleanup); fwp_value_release(&left);
+        return (V)(int64_t)-1;
+    }
     if (ra >= 0 && rb >= 0 && (ra >> 32) != (rb >> 32)) fwp_trap(FWP_AD_MIXED);
     int64_t id = (ra >= 0 ? ra : rb) >> 32;
     fwp_tape *t = fwp_tape_of(id);
@@ -468,18 +477,12 @@ static V fwp_p_ad_push_owned(V tuple, const fwp_desc *elem) {
         fwp_trap(FWP_AD_INVALID_NODE);
     int64_t op = idx - t->leaves;
     fwp_tape_reserve(t, op + 1);
-    V da = OBJ(tuple)->f[1], db = OBJ(tuple)->f[3];
-    if (elem->dup) {
-        elem->dup(da);
-        fwp_value_owner weight = {da, elem->drop};
-        fwp_cleanup weight_cleanup;
-        fwp_cleanup_push(&weight_cleanup, fwp_value_release, &weight);
-        elem->dup(db);
-        fwp_cleanup_pop(&weight_cleanup);
-    }
     owner->weights[2*op] = da; owner->weights[2*op+1] = db;
     t->pa[op] = ra < 0 ? -1 : (int32_t)(ra & 0xffffffff);
     t->pb[op] = rb < 0 ? -1 : (int32_t)(rb & 0xffffffff);
+    /* No failure point lies between removing these guards and publication. */
+    fwp_cleanup_pop(&right_cleanup);
+    fwp_cleanup_pop(&left_cleanup);
     owner->len = t->len = idx + 1;
 
     return (V)((id << 32) | idx);

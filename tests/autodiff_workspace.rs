@@ -20,21 +20,50 @@ fn input_nodes_omit_metadata_and_managed_weights_transfer_atomically() {
             .output()
             .unwrap();
         assert!(output.status.success(), "{output:?}");
-        let code = std::fs::read_to_string(cfile).unwrap().replace(
+        let mut code = std::fs::read_to_string(cfile).unwrap().replace(
             "int main(int argc, char **argv)",
             "int original_main(int argc, char **argv)",
         );
+        let entry = "static V fwp_p_ad_push_owned(V a, V da, V b, V db, const fwp_desc *elem) {";
+        assert_eq!(code.matches(entry).count(), 1);
+        code = code.replace(
+            entry,
+            &format!("static void operation_point(int);\n{entry}"),
+        );
+        let start = code.find(entry).unwrap();
+        let end = start + code[start..].find("static V fwp_owned_tape_add").unwrap();
+        let mut recording = code[start..end].to_owned();
+        for (point, marker) in [
+            (1, "    int64_t op = idx - t->leaves;"),
+            (2, "    fwp_tape_reserve(t, op + 1);"),
+            (
+                3,
+                "    /* No failure point lies between removing these guards and publication. */",
+            ),
+        ] {
+            assert_eq!(recording.matches(marker).count(), 1);
+            recording =
+                recording.replace(marker, &format!("{marker}\n    operation_point({point});"));
+        }
+        code.replace_range(start..end, &recording);
         let marker = "    t->len = n;";
         assert_eq!(code.matches(marker).count(), 1);
         let padded = code.replace(marker, &format!("{marker}\n    fwp_tape_reserve(t, n);"));
-        let registration = "        fwp_cleanup_push(&weight_cleanup, fwp_value_release, &weight);";
-        assert_eq!(code.matches(registration).count(), 1);
-        let unprotected = code.replace(registration, "");
+        let owner = "right = {db, elem->drop}";
+        assert_eq!(code.matches(owner).count(), 1);
+        let unprotected = code.replace(owner, "right = {db, NULL}");
+        let retain_site = "    fwp_cleanup_push(&right_cleanup, fwp_value_release, &right);";
+        assert_eq!(code.matches(retain_site).count(), 1);
+        let extra = code.replace(
+            retain_site,
+            &format!("{retain_site}\n    if (elem->dup) elem->dup(da);"),
+        );
         let probe = include_str!("fixtures/autodiff_operations_probe.c");
         let mut cases = vec![
             ("operations", code.clone(), probe.to_owned(), 0),
             ("padded", padded, probe.to_owned(), 230),
             ("unprotected", unprotected, probe.to_owned(), 237),
+            ("extra-retain", extra, probe.to_owned(), 243),
         ];
 
         for (label, release) in [
