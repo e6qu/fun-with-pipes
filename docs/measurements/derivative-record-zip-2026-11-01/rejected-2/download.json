@@ -1,0 +1,20 @@
+{
+  "id": 13093780168,
+  "node_id": "MDg6QXJ0aWZhY3QxMzA5Mzc4MDE2OA==",
+  "name": "record-zip-report-summary",
+  "size_in_bytes": 11361,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13093780168",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13093780168/zip",
+  "expired": false,
+  "digest": "sha256:2e5a314770652fd4b2717b01fa46c792581ae966ff61491361f1ed5939db3fc4",
+  "created_at": "2026-11-01T17:18:13Z",
+  "updated_at": "2026-11-01T17:18:13Z",
+  "expires_at": "2027-01-30T16:57:52Z",
+  "workflow_run": {
+    "id": 41328986141,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "derivative-forward-costs",
+    "head_sha": "9ce7bdd6c7a735062e63dc05d7399e6c1d766673"
+  }
+}

@@ -264,6 +264,13 @@ jobs:
                 --source "$SOURCE_REVISION" --arch "$arch"
             done
           fi
+      - name: Preserve compact reports and complete job logs
+        if: ${{ !cancelled() && hashFiles('retained-evidence/summary/**') != '' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ inputs.suite }}-summary
+          path: retained-evidence/summary/
+          if-no-files-found: error
       - name: Package all collected evidence, including failed audits
         if: ${{ !cancelled() && hashFiles('retained-evidence/**') != '' }}
         shell: bash
@@ -276,14 +283,6 @@ jobs:
           name: ${{ inputs.suite }}-retained
           path: retained-comparison.tar.xz
           compression-level: 0
-          if-no-files-found: error
-
-      - name: Preserve compact reports and complete job logs
-        if: ${{ !cancelled() && hashFiles('retained-evidence/summary/**') != '' }}
-        uses: actions/upload-artifact@v7
-        with:
-          name: ${{ inputs.suite }}-summary
-          path: retained-evidence/summary/
           if-no-files-found: error
 
   array_list_measurements:

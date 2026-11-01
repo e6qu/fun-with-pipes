@@ -37,7 +37,12 @@ requests and 76,416 effective retains, with lower peak managed memory and no
 larger static frame. [Results and limits](docs/measurements/derivative-forward-costs.md#verified-allocation-and-ownership-results)
 are explicit. Three completed timing sessions miss the 5% speed target on the
 one-update case; AMD64 also reports a 2.54% zero-update regression, above the 2%
-limit. Audit their saved observations and finish the second AMD64 session.
+limit. Their saved observations now pass the independent archive audit; finish
+the second AMD64 session. Diagnostic clocks place all reference forward work at
+only 4.4–4.7% of process time in the one-update case, suggesting this selected
+change's 5% whole-process target was too aggressive. The clocks perturb execution;
+this is evidence about scope, not permission to weaken the target. The zero-update
+slowdown remains unexplained.
 These failed requirements remain unmet; retaining the optimization on allocation
 evidence alone needs an explicit acceptance decision. The complete production
 gates remain open.

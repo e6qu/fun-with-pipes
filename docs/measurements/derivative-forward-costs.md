@@ -243,15 +243,23 @@ rechecks archive hashes, native image headers, outputs, phase/site counts,
 allocation/retain limits and code/stack costs. All 96 observations match between
 architectures.
 
-For 129 coordinates and 199 updates, keeping only the current vector:
+Whole-solve counts, keeping only the current vector. Each arrow is baseline →
+candidate; final managed charge is zero in every row.
 
-| Whole-solve measurement | Before | After | Reduction |
-|---|---:|---:|---:|
-| Managed allocation requests | 284,502 | 233,359 | 51,143 |
-| Requested managed bytes | 8,642,558 | 7,214,534 | 1,428,024 |
-| Effective retains | 179,299 | 102,883 | 76,416 |
-| Peak managed charge, bytes | 25,952 | 21,888 | 4,064 |
-| Final managed charge, bytes | 0 | 0 | — |
+| Coordinates, updates | Allocation requests | Requested bytes | Effective retains | Peak managed bytes |
+|---|---:|---:|---:|---:|
+| 3, 0 | 4 → 4 | 98 → 98 | 0 → 0 | 128 → 128 |
+| 3, 1 | 48 → 43 | 1,232 → 1,112 | 19 → 13 | 480 → 448 |
+| 3, 199 | 8,562 → 7,567 | 211,905 → 188,025 | 3,781 → 2,587 | 512 → 480 |
+| 3, 1,999 | 85,962 → 75,967 | 2,127,100 → 1,887,220 | 37,981 → 25,987 | 512 → 480 |
+| 33, 199 | 74,262 → 61,327 | 2,219,198 → 1,860,998 | 45,571 → 26,467 | 6,560 → 5,568 |
+| 129, 199 | 284,502 → 233,359 | 8,642,558 → 7,214,534 | 179,299 → 102,883 | 25,952 → 21,888 |
+
+The one-update case saves five allocations and six retains, all in forward
+calculation and recording. Its 16 allocations outside the derivative and one
+result-array allocation are unchanged. The largest case saves 51,143 requests,
+1,428,024 requested bytes and 76,416 retains. Count savings explain which work
+disappeared; they do not determine the fraction of elapsed time it occupied.
 
 These counts agree at GCC O1/O2 with workspace reuse both off and on. Keeping
 the full vector history produces the same request/byte/retain reductions; its
@@ -269,33 +277,73 @@ Ordinary instruction sections shrink by 848–2,496 bytes on ARM64 and
 896–2,864 bytes on AMD64. The largest static frame is unchanged in every program;
 this is not a measurement of total call-stack use.
 
-### Timing results awaiting archive audit
+### Audited timings: candidate not accepted
 
 [Run 41325932590](https://github.com/e6qu/fun-with-pipes/actions/runs/41325932590)
-completed on `a4cef01b`, whose compiler is unchanged from the count run. Its job
-reports reject these candidate/reference elapsed-time ratios:
+completed on `a4cef01b`, whose compiler is unchanged from the count run.
+[Audit 41329444021](https://github.com/e6qu/fun-with-pipes/actions/runs/41329444021)
+passes: all saved process observations, outputs, profiles, image/stack sizes,
+source hashes and exact reference patches agree with the reports. Failed limits
+remain failures in the [retained index](derivative-record-zip-2026-11-01/original/index.json.gz).
 
-| Host/session | Coordinates, updates | Current vector | Full history | Required maximum |
-|---|---|---:|---:|---:|
-| ARM64 / 1 | 3, 1 | 0.990137 | 0.991596 | 0.95 |
-| ARM64 / 2 | 3, 1 | 0.991153 | 0.994167 | 0.95 |
-| AMD64 / 1 | 3, 0 | 1.025398 | Pass | 1.02 |
-| AMD64 / 1 | 3, 1 | 0.996431 | 0.998850 | 0.95 |
+Each cell below gives **current-vector / full-history** candidate/reference
+elapsed-time ratios. Smaller is faster; bold values miss the frozen maximum.
+
+| Coordinates, updates | ARM64 / 1 | ARM64 / 2 | AMD64 / 1 | Maximum |
+|---|---:|---:|---:|---:|
+| 3, 0 | 0.9993 / 1.0037 | 1.0006 / 1.0033 | **1.0254** / 1.0057 | 1.02 |
+| 3, 1 | **0.9901 / 0.9916** | **0.9912 / 0.9942** | **0.9964 / 0.9988** | 0.95 |
+| 3, 199 | 0.9237 / 0.9215 | 0.9200 / 0.9216 | 0.9373 / 0.9192 | 0.95 |
+| 3, 1,999 | 0.9149 / 0.9159 | 0.9159 / 0.9158 | 0.9326 / 0.9140 | 0.95 |
+| 33, 199 | 0.8627 / 0.8615 | 0.8624 / 0.8617 | 0.8682 / 0.8664 | 0.95 |
+| 129, 199 | 0.8508 / 0.8443 | 0.8510 / 0.8447 | 0.8527 / 0.8489 | 0.95 |
 
 For example, 0.996431 means about 0.36% less elapsed time, below the required
 5% improvement. The zero-update ratio means 2.54% more elapsed time, exceeding
-the allowed 2%. All other limits in these three job reports pass. The complete
-saved observations still need the independent archive audit; its run is
-`41329444021`. Do not treat these results as accepted timings or explain the
-zero-update regression from unchanged allocation counts alone.
+the allowed 2%. The identical-copy, count, memory, code and stack limits pass in
+all three sessions. Cases with 199 or 1,999 updates record 6.3–15.6% less elapsed
+time. This does not establish all-case acceptance or replace the missing second
+AMD64 session.
 
-AMD64 session 2 has not measured: the original job `124905745487` and replacement
-run `41327509981` both received an EPYC 9V45 instead of the frozen EPYC 7763 and
-stopped before building. Run `41328989036` requests that missing session on
-`9ce7bdd6`; measured source/tool files remain unchanged. Rejected hosts remain
-evidence, not timing results. Run `41328986141` audits the first replacement's
-rejection. The immutable tag `roadmap/derivative-record-zip-sources-2026-11-01`
+The one-update diagnostic repeats 512 complete solves per process. In the
+reference, the six derivative phases together occupy about 6.35–6.76% of elapsed
+time; forward calculation/recording occupies only 4.41–4.72%. These ranges are
+medians of each diagnostic sample's phase time divided by its process time,
+across both forms and the three sessions. The optimization removes only part of
+forward work. This evidence suggests the 5% whole-process target was too
+aggressive for this selected change; it does not authorize weakening that target.
+
+The clocks perturb execution: diagnostic/ordinary elapsed ratios range from
+0.962 to 1.042 across these one-update observations. Phase shares are therefore
+diagnostic evidence, not exact bounds on uninstrumented speed. They also do not
+attribute all outside-phase time to printing. The zero-update regression remains
+unexplained. Its candidate and reference C/image hashes differ even though their
+allocation counts agree; code size alone does not explain the time difference.
+
+Full reports and complete measurement logs are retained together:
+[ARM64 / 1](derivative-record-zip-2026-11-01/original/aarch64-1.json.gz),
+[ARM64 / 2](derivative-record-zip-2026-11-01/original/aarch64-2.json.gz),
+[AMD64 / 1](derivative-record-zip-2026-11-01/original/x86_64-1.json.gz).
+The index identifies every original file hash, job and artifact. The downloaded
+summary's API digest and each decompressed report/log hash were also verified.
+
+AMD64 session 2 is measuring. The original job `124905745487` and replacement
+run `41327509981` received an EPYC 9V45; run `41328989036` received an EPYC 9V74.
+All three stopped before building because the frozen host is an EPYC 7763.
+Run `41330973213` qualified its host and is measuring the missing session on
+`215db5de`; measured source/tool files remain unchanged. These replacements do
+not rerun completed timings.
+
+Rejected hosts remain evidence, not timing results. Audit `41328986141` passes
+for the first replacement, including its artifact digest and skipped build/timing
+steps. Audit `41330970147` also passes for the second replacement. Their retained
+indexes preserve [attempt 2](derivative-record-zip-2026-11-01/rejected-2/index.json.gz)
+and [attempt 3](derivative-record-zip-2026-11-01/rejected-3/index.json.gz); the
+original rejected attempt is in the main index above. The
+immutable tag `roadmap/derivative-record-zip-sources-2026-11-01`
 retains source commits through `844ff77f` and their preparation ancestors.
+Tag `roadmap/derivative-record-zip-audits-2026-11-01` retains the later audit code
+and replacement-session sources through `215db5de`.
 
 The candidate does not meet its frozen timing requirements. A decision about
 retaining its verified allocation reductions with timing requirements explicitly
