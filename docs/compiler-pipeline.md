@@ -17,7 +17,7 @@ for a runnable macro example. An **AST** is a tree of source expressions; an
 | Infer and check | Expressions → ordinary types, effects, resource checks and resolved calls | `src/infer.rs`, `src/types.rs` |
 | Specialize and lower | Reachable concrete uses → typed IR; evaluate `comptime` expressions | `src/mono.rs`, `src/ir.rs` |
 | Preserve resources | Record original resource scopes before transformations | `src/resource.rs` |
-| Optimize | Matrix specialization → simplification/inlining → known callback specialization → fusion → self-tail proof | `src/fuse.rs`, `src/opt.rs`, `src/tailrec.rs` |
+| Optimize | Matrix specialization → pure-constructor proof → simplification/inlining → known callback specialization → fusion → self-tail proof | `src/fuse.rs`, `src/opt.rs`, `src/opt/stages.rs`, `src/tailrec.rs` |
 | Interpret | Check entry lifetimes, then execute typed IR directly | `src/arc.rs`, `src/arc_scope.rs`, `src/interp.rs` |
 | Or generate native code | Select representations, prove direct-call borrows, insert and verify reference operations, check ownership for default ARC execution, emit C/runtime | `src/cgen.rs`, `src/rc/borrows.rs`, `src/rc.rs`, `src/ownership.rs` |
 | Compile and link | Generated C and required libraries → native executable/library or supported WebAssembly module | C toolchain, selected by `src/cgen.rs` |

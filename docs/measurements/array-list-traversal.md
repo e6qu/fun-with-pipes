@@ -1,8 +1,10 @@
 # Reading numeric arrays without a temporary list
 
-This candidate belongs to steps 7–8 of [PLAN.md](../../PLAN.md). One timing session
-per architecture passes, and repaired packed-slice checks pass on three native
-hosts. Two sessions per architecture on the integrated compiler remain. The [handoff](../development-state.md) records exact source verification.
+This change belongs to steps 7–8 of [PLAN.md](../../PLAN.md). Allocation and
+cleanup checks pass on three native hosts. Three of four whole-solve sessions
+pass; one misses the unchanged 2% timing limit. The constructor optimization
+needs its own measurements. The [handoff](../development-state.md) records current
+verification; the rejected observations remain below.
 
 An array stores elements contiguously. A list stores a head and a link to the next
 cell. Converting an array to a list before immediately mapping or folding it can
@@ -128,6 +130,15 @@ limits. This establishes one observation per architecture, not the required two.
 Session 1 stopped at the packed-slice probe before timing. The newer source-stage
 change also needs its own measurements; old results are not relabeled as its runs.
 
+At `9d47a5fc`, run `41256205285` completes both sessions per architecture.
+Both ARM64 sessions and AMD64 session 2 meet every limit. AMD64 session 1 passes
+all correctness, cleanup, allocation, raw-tape, phase and copy controls, but its
+zero-update history case takes 1.023851 times the reference time (2.39% slower),
+exceeding the 2% limit. The combined timing acceptance therefore remains open.
+This is a recorded rejected timing result, not a reason to repeat unchanged runs
+or relax the budget. The next source change repairs pure-constructor specialization;
+its own cost and timing evidence must be identified separately.
+
 ## Independent audit and retention
 
 `check-array-list-evidence.py` reads saved evidence without executing binaries.
@@ -145,3 +156,22 @@ acceptance, select `both` and require all four reports. The archive preserves ra
 files and job identities, including failures. The
 [first AMD64 report](array-list-first-2026-10-31-amd-2.json.gz) also exercises the
 auditor's rejection controls: all twenty original allocation failures must remain.
+
+The raw records are retained in the repository:
+
+| Source / tag | Archive | Independent audit | Recorded decision |
+|---|---|---|---|
+| `dc0a6407`, `roadmap/array-lists-first-2026-11-01` | [Original](array-lists-dc0a6407.tar.xz) | `41257190382` | Twenty allocation/byte failures on each host |
+| `9a2e954e`, `roadmap/array-lists-repaired-2026-11-01` | [Repaired](array-lists-9a2e954e.tar.xz) | `41257193865` | Both session-2 hosts meet all limits; session 1 stopped before timing |
+| `9d47a5fc`, `roadmap/swift-allocations-2026-11-01` | [Four complete sessions](array-lists-9d47a5fc.tar.xz) | `41258487184` | Three pass; AMD64 session 1 retains one timing rejection |
+
+The archives retain failed probe records, original job logs, generated C,
+executables, raw process/phase samples and the independent file-hash/decision
+audit. The first two SHA-256 values are respectively
+`0fb471b4743980b3c5a886513fa273cd9e8042d40282e62e80715b24a493a293` and
+`a83aa024e11318cb2f65af151ec70271089b0449226f8093408ae0761e22c607`.
+The four-session archive is
+`095c3ff58d5901c31cd94f26ac3309eaa1c05c652d063460689793d866ce884c`.
+Documentation checks stream the archives, verify their immutable source tags and
+recompute each report's costs/decision. The full directory audit above also
+reconciles raw files; it runs separately on GitHub rather than rerunning programs.

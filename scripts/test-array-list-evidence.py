@@ -2,9 +2,12 @@
 """Reject altered numeric observations and preserve failed acceptance limits."""
 import copy
 import gzip
+import hashlib
 import importlib.util
 import json
 from pathlib import Path
+import subprocess
+import tarfile
 import unittest
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -16,6 +19,52 @@ REPORT = json.loads(gzip.decompress((ROOT / 'docs/measurements/array-list-first-
 
 
 class Evidence(unittest.TestCase):
+    def test_retained_reports_preserve_both_failed_and_repaired_decisions(self):
+        archives = [
+            ('dc0a6407', SOURCE, 'array-lists-first',
+             {('x86_64', 2): 20, ('aarch64', 2): 20},
+             '0fb471b4743980b3c5a886513fa273cd9e8042d40282e62e80715b24a493a293'),
+            ('9a2e954e', '9a2e954e1526b510f11025aa256dda74692cac53', 'array-lists-repaired',
+             {('x86_64', 2): 0, ('aarch64', 2): 0},
+             'a83aa024e11318cb2f65af151ec70271089b0449226f8093408ae0761e22c607'),
+            ('9d47a5fc', '9d47a5fcfb5c9342d9fca9da2a8c162f5ac1d38c', 'swift-allocations',
+             {('x86_64', 1): 1, ('x86_64', 2): 0, ('aarch64', 1): 0, ('aarch64', 2): 0},
+             '095c3ff58d5901c31cd94f26ac3309eaa1c05c652d063460689793d866ce884c'),
+        ]
+        for short, source, tag, expected, checksum in archives:
+            with self.subTest(source=source):
+                path = ROOT / f'docs/measurements/array-lists-{short}.tar.xz'
+                self.assertEqual(hashlib.sha256(path.read_bytes()).hexdigest(), checksum)
+                self.assertEqual(subprocess.check_output(
+                    ['git', 'rev-parse', f'roadmap/{tag}-2026-11-01'],
+                    cwd=ROOT, text=True).strip(), source)
+                audits, reports = {}, {}
+                with tarfile.open(path, 'r|xz') as archive:
+                    for member in archive:
+                        relative = Path(member.name)
+                        self.assertFalse(relative.is_absolute() or '..' in relative.parts)
+                        if not member.isfile():
+                            self.assertTrue(member.isdir())
+                            continue
+                        if relative.name.startswith('audit-') and relative.suffix == '.json':
+                            record = json.load(archive.extractfile(member))
+                            audits[(record['architecture'], record['session'])] = record
+                        elif relative.name == 'comparison.json':
+                            raw = archive.extractfile(member).read()
+                            report = json.loads(raw)
+                            reports[(report['machine'], report['configuration']['session'])] = (report, CHECK.digest(raw))
+                self.assertEqual(set(reports), set(expected))
+                self.assertEqual(set(audits), set(reports))
+                for key, (report, raw_hash) in reports.items():
+                    CHECK.GROUPS.check_report(report, source, 'array-lists')
+                    decision = CHECK.GROUPS.DESCENT.paired_budget_failures(report['results'], 'array-lists')
+                    audit = audits[key]
+                    self.assertEqual((audit['source'], audit['session']), (source, key[1]))
+                    self.assertEqual(audit['files']['comparison.json']['sha256'], raw_hash)
+                    self.assertEqual(audit['budgetFailures'], decision)
+                    self.assertEqual(len(decision), expected[key])
+                    self.assertEqual(audit['decision'], 'not-accepted' if expected[key] else 'accepted')
+
     def test_original_rejected_report_is_auditable_without_claiming_acceptance(self):
         CHECK.GROUPS.check_report(REPORT, SOURCE, 'array-lists')
         failures = CHECK.GROUPS.DESCENT.paired_budget_failures(REPORT['results'], 'array-lists')

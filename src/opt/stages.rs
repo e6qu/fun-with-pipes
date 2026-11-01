@@ -163,7 +163,7 @@ mod tests {
     use super::*;
     use crate::value::Value;
 
-    fn program(body: Expr) -> Program {
+    fn program(input: MT, body: Expr) -> Program {
         let integer = MT::con("std::I64");
         let unary = MT::Fun(Box::new(integer.clone()), Box::new(integer.clone()));
         let binary = MT::Fun(Box::new(integer.clone()), Box::new(unary.clone()));
@@ -179,18 +179,18 @@ mod tests {
                 Func {
                     name: "factory".into(),
                     arity: 1,
-                    ty: binary,
-                    locals: vec![integer.clone(), integer.clone()],
+                    ty: MT::Fun(Box::new(input.clone()), Box::new(unary.clone())),
+                    locals: vec![input.clone(), integer.clone()],
                     body: Body::Expr(body),
                 },
                 Func {
                     name: "caller".into(),
                     arity: 1,
                     ty: MT::Fun(
-                        Box::new(integer.clone()),
+                        Box::new(input.clone()),
                         Box::new(MT::Record(vec![("function".into(), unary)])),
                     ),
-                    locals: vec![integer],
+                    locals: vec![input],
                     body: Body::Expr(Expr::Record(vec![Expr::Call(1, vec![Expr::Local(0)])])),
                 },
             ],
@@ -204,11 +204,14 @@ mod tests {
 
     #[test]
     fn pure_constructor_flattens_without_losing_its_local_bindings_or_callers() {
-        let mut program = program(Expr::Let(
-            1,
-            Box::new(Expr::Const(Value::unit())),
-            Box::new(partial(Expr::Local(0))),
-        ));
+        let mut program = program(
+            MT::con("std::I64"),
+            Expr::Let(
+                1,
+                Box::new(Expr::Const(Value::unit())),
+                Box::new(partial(Expr::Local(0))),
+            ),
+        );
         program.funcs[1].locals[1] = MT::unit();
         crate::ir::check_locals(&program).unwrap();
         flatten(&mut program);
@@ -229,23 +232,29 @@ mod tests {
 
     #[test]
     fn computations_resource_frames_and_unused_owners_keep_their_stage() {
-        for body in [
-            Expr::Let(
-                1,
-                Box::new(Expr::Call(
-                    0,
-                    vec![Expr::Local(0), Expr::Const(Value::I64(1))],
-                )),
-                Box::new(partial(Expr::Local(1))),
+        for (input, body) in [
+            (
+                MT::con("std::I64"),
+                Expr::Let(
+                    1,
+                    Box::new(Expr::Call(
+                        0,
+                        vec![Expr::Local(0), Expr::Const(Value::I64(1))],
+                    )),
+                    Box::new(partial(Expr::Local(1))),
+                ),
             ),
-            Expr::ResourceRegion {
-                parameters: vec![0],
-                bindings: vec![],
-                body: Box::new(partial(Expr::Local(0))),
-            },
-            partial(Expr::Const(Value::I64(1))),
+            (
+                MT::con("std::File"),
+                Expr::ResourceRegion {
+                    parameters: vec![0],
+                    bindings: vec![],
+                    body: Box::new(partial(Expr::Const(Value::I64(1)))),
+                },
+            ),
+            (MT::con("std::I64"), partial(Expr::Const(Value::I64(1)))),
         ] {
-            let mut program = program(body);
+            let mut program = program(input, body);
             crate::ir::check_locals(&program).unwrap();
             let before = format!("{program:?}");
             flatten(&mut program);

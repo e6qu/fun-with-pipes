@@ -4,6 +4,7 @@ import hashlib
 import importlib.util
 import json
 from pathlib import Path
+import subprocess
 import tarfile
 import tempfile
 from types import SimpleNamespace
@@ -20,6 +21,9 @@ class AllocationRecords(unittest.TestCase):
         self.assertEqual(hashlib.sha256(path.read_bytes()).hexdigest(),
                          '8690b2516204c1b40a86a9211ae72f77fbd229482db43d61ae76da8c264169e5')
         source = '9d47a5fcfb5c9342d9fca9da2a8c162f5ac1d38c'
+        self.assertEqual(subprocess.check_output(
+            ['git', 'rev-parse', 'roadmap/swift-allocations-2026-11-01'],
+            cwd=PROFILE.ROOT, text=True).strip(), source)
         with tempfile.TemporaryDirectory(prefix='fwp-allocations-record-') as scratch:
             root = Path(scratch)
             with tarfile.open(path, 'r:xz') as archive:

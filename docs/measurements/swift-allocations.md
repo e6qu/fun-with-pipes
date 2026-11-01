@@ -138,7 +138,8 @@ The [raw archive](swift-allocations-2026-11-01.tar.xz) contains both architectur
 all command/output records, generated sources, binaries, allocation stacks,
 compressed heaptrack traces, managed-heap profiles and both unwinder controls.
 Measured source: `9d47a5fcfb5c9342d9fca9da2a8c162f5ac1d38c`; original run
-`41256208614`, independent retention audit `41257220044`.
+`41256208614`, independent retention audit `41257220044`. The immutable tag
+`roadmap/swift-allocations-2026-11-01` preserves that source after squash merge.
 Archive SHA-256: `8690b2516204c1b40a86a9211ae72f77fbd229482db43d61ae76da8c264169e5`.
 The documentation check recomputes both reports from these files without running
 saved executables. It also preserves the failed ARM system-library control;

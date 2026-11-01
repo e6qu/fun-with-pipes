@@ -81,8 +81,10 @@ Unused initializers still run, including their effects and failures.
 
 The body extends through the rest of its expression. Parentheses delimit a
 function used as an argument: `map (fn x -> x * x)`. Use `fn _ -> 7` to ignore
-an input. This differs from `const (calculate ())`: the latter calculates once
-when the function is constructed; `fn _ -> calculate ()` calculates on every call.
+an input. `const value` constructs a function that ignores its input and returns
+that value. If `calculate` takes the empty tuple `()`, then `const (calculate ())`
+calculates once when the function is constructed; `fn _ -> calculate ()`
+calculates on every call.
 
 Successive named inputs still mean nested single-argument functions:
 `fn amount -> fn value -> value + amount`. A function can remember a value from
