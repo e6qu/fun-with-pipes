@@ -392,7 +392,11 @@ later forward work and failures still run. Parent buffers share one allocation
 and derivative buffers another; only their base pointers own storage. Growth must
 preserve initialized entries and cleanup. A detached numeric workspace cache is
 bounded at 512 KiB; the active-tape table is separate. Nested differentiation
-records typed derivative values. See [reverse mode](numerics.md#reverse-mode).
+records typed derivative values. Typed adjoint slots borrow the tape-owned zero
+by exact identity; distinct values remain owned. Final input owners move into
+result cells with an unwind guard until allocation succeeds.
+[Typed-owner checks](measurements/typed-derivative-owners.md) cover aliasing and
+failed transfers. See [reverse mode](numerics.md#reverse-mode).
 
 ## Measuring integer text without building it
 

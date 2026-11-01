@@ -153,9 +153,14 @@ impl Contract {
 /// Array reads return a scalar or separately owned element, never the outer array.
 /// Scalar AD recording copies two node indices and two F64 weights before any
 /// buffer growth. It stores no record pointer and returns an immediate node ID.
-/// Typed `ad.push-owned` has separate ownership obligations and is excluded.
+/// Typed recording likewise never stores the outer record: it retains the two
+/// weight children independently before publishing them in the tape. Borrowed
+/// field owners must remain alive through buffer growth and both retains.
 pub fn borrows_without_escape(symbol: &str, index: usize) -> bool {
     if symbol == "ad.push" && index == 0 {
+        return true;
+    }
+    if symbol == "ad.push-owned" && index == 0 {
         return true;
     }
     if (matches!(symbol, "hash" | "array._show-list" | "array.length") && index == 0)
@@ -769,11 +774,15 @@ mod tests {
         assert!(!borrows_without_escape("array._show-list", 1));
         assert!(borrows_without_escape("ad.push", 0));
         assert!(!borrows_without_escape("ad.push", 1));
-        assert!(!borrows_without_escape("ad.push-owned", 0));
+        assert!(borrows_without_escape("ad.push-owned", 0));
+        assert!(!borrows_without_escape("ad.push-owned", 1));
         let recording = primitive("ad.push").unwrap();
         assert_eq!(recording.arguments, &[Argument::Borrow]);
         assert_eq!(recording.result, ResultOwnership::Shared);
         assert!(recording.callback.is_none() && recording.aliases.is_empty());
+        let typed_recording = primitive("ad.push-owned").unwrap();
+        assert_eq!(typed_recording.arguments, &[Argument::Borrow]);
+        assert!(typed_recording.callback.is_none() && typed_recording.aliases.is_empty());
         let display = primitive("array._show-list").unwrap();
         assert_eq!(display.arguments, &[Argument::Borrow]);
         assert_eq!(display.result, ResultOwnership::FreshLeaf);
@@ -781,7 +790,7 @@ mod tests {
         assert!(borrows_without_escape("map", 0));
         assert!(!borrows_without_escape("map", 1));
         assert!(!borrows_without_escape("task.spawn", 0));
-        for symbol in ["array.get", "get", "put", "ad.push-owned", "unknown"] {
+        for symbol in ["array.get", "get", "put", "ad.tape-owned", "unknown"] {
             assert!(!borrows_without_escape(symbol, 0), "{symbol}");
         }
     }

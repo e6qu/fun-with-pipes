@@ -452,8 +452,12 @@ allows this argument record to live on the caller's stack. Its lifetime ends aft
 the call; the tape owns the copied numbers. This uses the existing escape analysis
 and adds no language syntax or runtime mode.
 
-`ad.push-owned`, used for F128 and nested derivative values, is excluded: its
-weights have separate typed ownership obligations. The 256-operation regression
+`ad.push-owned`, used for F128 and nested derivative values, also borrows its
+outer argument record. Its weight children have separate owners: recording
+retains both before publishing them, and partial failure releases acquired owners.
+The caller keeps the borrowed fields alive through this work. The
+[typed-recording protocol](measurements/typed-derivative-owners.md) verifies that
+contract separately from scalar recording. The scalar 256-operation regression
 compares stack storage on/off, native O1/O2 and workspace reuse on/off. The runtime
 unwind probe also overwrites the caller's record before differentiating its node.
 The [measurement protocol](measurements/descent-costs.md#fixed-scalar-recording-acceptance-rules)

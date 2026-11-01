@@ -29,7 +29,7 @@ typedef struct fwp_owned_tape {
     const fwp_desc *elem;
     uint64_t task; /* Zero identifies the root before and after task startup. */
     V zero, add, mul, inactive_zero;
-    V *weights, *adj;
+    V *weights, *adj; /* An adjoint equal to zero borrows that tape-owned value. */
     int64_t leaves, len, cap, nadj;
 } fwp_owned_tape;
 static fwp_owned_tape *fwp_owned_tapes;
@@ -45,7 +45,8 @@ static void fwp_owned_tape_release(void *pointer) {
             owner->elem->drop(owner->weights[2*i]);
             owner->elem->drop(owner->weights[2*i+1]);
         }
-        for (int64_t i = 0; i < owner->nadj; i++) owner->elem->drop(owner->adj[i]);
+        for (int64_t i = 0; i < owner->nadj; i++)
+            if (owner->adj[i] != owner->zero) owner->elem->drop(owner->adj[i]);
         owner->elem->drop(owner->zero);
     }
     fwp_closure_drop(owner->add); fwp_closure_drop(owner->mul);
@@ -487,7 +488,13 @@ static V fwp_p_ad_push_owned(V tuple, const fwp_desc *elem) {
 static V fwp_owned_tape_add(fwp_owned_tape *owner, V value, V old) {
     V args[2] = {value, old};
     V result = fwp_apply_borrowed(owner->add, 2, args);
-    if (owner->elem->drop) owner->elem->drop(old);
+    /* Callback results own their value, even when they return a borrowed input.
+     * Normalize the exact shared zero to a borrowed slot; numerical equality
+     * would incorrectly conflate distinct owned values. */
+    if (owner->elem->drop) {
+        if (result == owner->zero) owner->elem->drop(result);
+        if (old != owner->zero) owner->elem->drop(old);
+    }
     return result;
 }
 
@@ -513,9 +520,8 @@ static V fwp_p_ad_backward_owned(V base, V outs, V seeds, const fwp_desc *list_t
     if (fwp_list_len(outs) != fwp_list_len(seeds))
         fwp_trap("autodiff: seed count differs from output count");
     owner->adj = fwp_mem_alloc((size_t)(tp.len ? tp.len : 1) * sizeof(V));
-    memset(owner->adj, 0, (size_t)(tp.len ? tp.len : 1) * sizeof(V));
+    /* The tape owns zero until all slots and result transfers are finished. */
     for (int64_t i = 0; i < tp.len; i++) {
-        if (owner->elem->dup) owner->elem->dup(owner->zero);
         owner->adj[i] = owner->zero; owner->nadj = i + 1;
     }
     V output_cursor = outs, seed_cursor = seeds;
@@ -550,8 +556,13 @@ static V fwp_p_ad_backward_owned(V base, V outs, V seeds, const fwp_desc *list_t
     fwp_cleanup_push(&result_cleanup, fwp_value_release, &result);
     for (int64_t i = tp.leaves; i; i--) {
         V value = owner->adj[i - 1];
-        if (owner->elem->dup) owner->elem->dup(value);
+        if (value == owner->zero && owner->elem->dup) owner->elem->dup(value);
+        fwp_value_owner input_owner = {value, owner->elem->drop};
+        fwp_cleanup input_cleanup;
+        fwp_cleanup_push(&input_cleanup, fwp_value_release, &input_owner);
+        owner->adj[i - 1] = owner->zero;
         result.value = fwp_rc_fresh(fwp_cons(value, result.value));
+        fwp_cleanup_pop(&input_cleanup);
     }
     fwp_cleanup_pop(&result_cleanup);
     fwp_cleanup_pop(&value_cleanup); fwp_owned_tape_release(owner);

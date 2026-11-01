@@ -108,7 +108,9 @@ The [preceding audited baseline](ad-depth-artifacts-2026-10-29.json) at `89bbec5
 uses heap argument records. At 128 inputs it has 1,686 / 6,572 / 19,907 managed
 requests for F64 depths 1 / 2 / 3. Stack recording removes 384 / 2,047 / 6,270
 requests. Both peak ledgers remain unchanged, as do all F128 allocation counts:
-those typed recording arguments are deliberately excluded from the new proof.
+those typed recording arguments were deliberately excluded from that proof.
+The later [typed-owner batch](typed-derivative-owners.md) has its own checks;
+it does not change these historical measurements.
 
 Code does not shrink uniformly. F64 AD instruction bytes change by
 -1,408 / +240 / +1,232 on ARM64 and -1,600 / 0 / +672 on AMD64 for the three depths.

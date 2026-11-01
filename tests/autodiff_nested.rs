@@ -257,12 +257,13 @@ fn managed_tapes_release_across_recovered_failure_and_task_cancellation() {
             ),
             (
                 5,
-                "        result.value = fwp_rc_fresh(fwp_cons(value, result.value));\n    }\n    fwp_cleanup_pop(&result_cleanup);\n    fwp_cleanup_pop(&value_cleanup);",
+                "        fwp_cleanup_pop(&input_cleanup);\n    }\n    fwp_cleanup_pop(&result_cleanup);\n    fwp_cleanup_pop(&value_cleanup);",
             ),
             (7, "    V zero = OBJ(parameters)->f[0];"),
             (8, "    owner->zero = zero;"),
             (9, "    V callback = OBJ(parameters)->f[1]; fwp_rc_dup(callback); owner->add = callback;"),
             (10, "    callback = OBJ(parameters)->f[2]; fwp_rc_dup(callback); owner->mul = callback;"),
+            (12, "        owner->adj[i - 1] = owner->zero;"),
         ] {
             assert_eq!(code.matches(marker).count(), 1, "stage {point}");
             let injected = if point == 5 {
@@ -286,7 +287,7 @@ fn managed_tapes_release_across_recovered_failure_and_task_cancellation() {
     for opt in ["-O1", "-O2"] {
         let binary = dir.join("unwind.exe");
         fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-        for mode in 0..=11 {
+        for mode in 0..=12 {
             checked(
                 Command::new(&binary)
                     .arg(mode.to_string())
@@ -308,11 +309,30 @@ fn managed_tapes_release_across_recovered_failure_and_task_cancellation() {
         );
 
         let registration = "        fwp_cleanup_push(&weight_cleanup, fwp_value_release, &weight);";
+        assert_eq!(code.matches(registration).count(), 1);
         let missing_weight = code.replace(registration, "");
         fwp::cgen::compile_c(&missing_weight, &binary, opt).unwrap();
         assert_eq!(
             Command::new(&binary)
                 .arg("11")
+                .env("FWP_AD_WORKSPACE", "0")
+                .output()
+                .unwrap()
+                .status
+                .code(),
+            Some(197)
+        );
+
+        let input_release = "fwp_value_owner input_owner = {value, owner->elem->drop};";
+        assert_eq!(code.matches(input_release).count(), 1);
+        let missing_input_owner = code.replace(
+            input_release,
+            "fwp_value_owner input_owner = {value, NULL};",
+        );
+        fwp::cgen::compile_c(&missing_input_owner, &binary, opt).unwrap();
+        assert_eq!(
+            Command::new(&binary)
+                .arg("12")
                 .env("FWP_AD_WORKSPACE", "0")
                 .output()
                 .unwrap()

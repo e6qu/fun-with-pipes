@@ -1,6 +1,6 @@
 # Current work
 
-**Next:** implement and verify the three typed-derivative ownership reductions in
+**Next:** run the combined focused native checks for the three implemented reductions in
 [the protocol](measurements/typed-derivative-owners.md), together with the worked
 [terminology guide](terminology.md). Keep one substantial PR for the batch.
 
@@ -26,8 +26,8 @@ The 68-character squash subject and empty body were verified. Details are in
 | Step | Status | Remaining acceptance |
 |---|---|---|
 | 1 | Verified | Worked example, links and merged-source status checked; final documentation CI remains part of step 4 |
-| 2 | Pending | Typed recording proof, cost fixture and lifetime controls |
-| 3 | Pending | Shared-zero adjoints, result moves and failure/count controls |
+| 2 | Implemented | Focused native cost/lifetime controls and final gates pending |
+| 3 | Implemented | Local Clang O1 ledger passes; full new-source native and unwind controls pending |
 | 4 | Pending | Focused native checks, evidence audit, complete final-head matrix and merge |
 
 ## Checks and constraints
@@ -40,7 +40,23 @@ The guarded documentation audit also passes: 195 link sets, 106 immutable
 preparation pairs and four roadmap steps. The first attempt preceded staging the
 glossary rename and saw the old tracked path; after staging, the audit passed.
 This downloaded compiler contains the same compiler source as #236; final new-source
-native checks are still required. No new compiler/runtime implementation has run.
+native checks are still required. Raw interpretation of both new 256-operation F128/nested-weight fixtures passes
+(`True`, about 0.12 CPU seconds each). Formatting passes. The primitive inventory
+initially rejected its old assertion that typed recording must escape; updating
+that explicit proof assertion preserves the frozen declaration baseline and now
+passes (394 declarations, 384 symbols, zero unresolved contracts).
+
+A bounded Clang O1 native probe used the verified emitted runtime with only the
+current `runtime/fwp_rt_kernel.c` substituted, not a rebuilt Rust compiler:
+`python3 scripts/local-guard.py clang -O1 -std=gnu11 -ffp-contract=off
+-Wno-unused-function -fstack-usage /private/tmp/fwp-237-typed-owners.c
+-o /private/tmp/fwp-237-typed-owners -lm`, followed by
+`python3 scripts/local-guard.py env FWP_AD_WORKSPACE=0 /private/tmp/fwp-237-typed-owners`.
+All six modes pass: zero initialization retains, expected result-owner retains,
+correct values and zero final storage delta. This does not verify GCC or the
+new Rust lowering. Native images/static frames and failure controls run in the
+new `typed-derivative-owners` suite on both Linux hosts and ARM64 macOS.
+PR [#237](https://github.com/e6qu/fun-with-pipes/pull/237) is draft.
 
 Use the local guard serially; full builds, suites and benchmarks run on GitHub.
 Free disk was about 65 GiB at start, close to the fixed 64 GiB floor. Do not raise

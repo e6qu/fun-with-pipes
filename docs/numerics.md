@@ -271,6 +271,14 @@ registry, linked-library and host allocations; they measure neither peak process
 memory nor speed relative to C/Rust. A failed append
 releases partially acquired owners without publishing an incomplete record.
 
+Typed native backward storage keeps one owner of its zero value. Untouched slots
+borrow that exact value; other slots own their computed adjoints. Callback results
+that return that same zero release their extra owner. Finished input adjoints move
+into the result list, protected against allocation failure; returning a borrowed
+zero acquires the owner the result needs. This changes reference operations, not
+arithmetic or callback order. The [count and cleanup protocol](measurements/typed-derivative-owners.md)
+records verification status; it makes no speed claim.
+
 The vertex token encodes `(tape id << 32) | index`, with −1 for constants.
 The tape ID encodes `(generation << 16) | (slot + 1)`. Generation numbers prevent
 an old token from naming a new tape in a reused slot; slots retire after generation
