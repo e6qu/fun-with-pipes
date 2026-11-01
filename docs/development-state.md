@@ -1,13 +1,15 @@
 # Current work
 
-**Next:** resolve the explicit timing acceptance decision: retain the verified
-allocation reductions with the ten timing limits unmet, or continue optimization
-until all frozen limits pass. The GCC investigation is complete and establishes
-no source-level repair. If retention is accepted, mark the final batch ready and
-run all nine production jobs plus documentation on that exact commit.
+**Next:** publish the accepted final batch, mark PR #239 ready and monitor all
+nine production jobs plus documentation on that exact commit. Fix every failure
+before merging; do not count skipped jobs. Retention is approved, while all ten
+failed timing limits remain open.
 
 [PR #239](https://github.com/e6qu/fun-with-pipes/pull/239) is draft on branch
 `derivative-forward-costs`, worktree `/private/tmp/fwp-returned-callables`.
+Published evidence head `ab7562029faf11e09c5daa614010649ab3f798ee` retains the GCC
+reports and benchmark-scope corrections. The acceptance update follows it;
+record its exact head and final job IDs after publication.
 Base `c124d0c8` is verified PR #238. Preserve the unrelated primary-checkout edits.
 [PLAN.md](../PLAN.md) and the [measurement report](measurements/derivative-forward-costs.md)
 own scope, all six cases, acceptance rules and retained evidence.
@@ -57,9 +59,10 @@ known. Three earlier AMD64 assignments were rejected before building; their
 successful audits and identities are linked in the report. Do not rerun unchanged
 completed timings to seek acceptance or silently weaken frozen limits.
 
-The acceptance question remains unanswered: retain verified reductions with
-these timing requirements explicitly unmet, or continue optimization until all
-limits pass. Both AMD64 regressions must remain part of that decision.
+On November 1 the user explicitly chose: "Retain reductions; leave timing goals
+open." This decision includes both AMD64 regressions after the GCC investigation.
+It permits delivery after production validation, not relabeling the ten failed
+limits or their retained reports as passing. D2 remains open.
 
 ## Source investigation and retained evidence
 
@@ -135,7 +138,6 @@ ZIPs at sources `6eca1176`, `89fda951`, `048c92c5`, about 639 MiB. Metadata is i
 PR evidence remain. Guarded checks now run, but free space fluctuates: never bypass
 the 64 GiB floor, 2 GiB target limit, 1 GiB RSS limit or 180-second deadline.
 
-Keep one active PR. Publish the next evidence/source batch together; start the
-nine-job final matrix when the candidate and acceptance are settled. Merge only
+Keep one active PR. Start the nine-job final matrix on the accepted batch. Merge only
 after exact-head gates pass, using one explicit subject of at most 80 characters,
 an empty body and no trailers or attribution. Verify the resulting merge.

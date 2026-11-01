@@ -47,9 +47,11 @@ four measured zero-update executables and outputs exactly. Both current-only
 optimized entry bodies already omit the derivative loop and match after
 generated temporary/cleanup names are accounted for. This supplies no justified
 source-level repair and does not establish identical machine code or timings.
-These failed requirements remain unmet; retaining the optimization on allocation
-evidence alone needs an explicit acceptance decision. The complete production
-gates remain open.
+On November 1, after reviewing these results, the user approved retaining the
+reductions while leaving all ten failed timing limits open. This is permission
+to ship the measured improvement, not a timing pass or a change to the saved
+limits. D2 and the zero-update regression remain open. Complete the nine
+production jobs and documentation gate before merging.
 
 Run focused observer controls during implementation. Run native measurements on
 GitHub after the observer is complete, then batch affected checks for any selected

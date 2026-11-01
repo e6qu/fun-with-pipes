@@ -277,7 +277,7 @@ Ordinary instruction sections shrink by 848–2,496 bytes on ARM64 and
 896–2,864 bytes on AMD64. The largest static frame is unchanged in every program;
 this is not a measurement of total call-stack use.
 
-### Audited timings: candidate not accepted
+### Audited timings: unmet limits, retention approved
 
 Unlike the one-solve count observations above, timing repeats the solver and
 full output within each process. The fwp wrapper captures its immutable starting
@@ -406,6 +406,10 @@ and replacement-session sources through `215db5de`.
 Tag `roadmap/derivative-record-zip-codegen-2026-11-01` retains the GCC diagnostic
 source `14f60e11`.
 
-The candidate does not meet its frozen timing requirements. A decision about
-retaining its verified allocation reductions with timing requirements explicitly
-unmet is pending. The final nine production jobs have not run.
+The candidate does not meet its frozen timing requirements. On November 1,
+after the four timing sessions and GCC investigation, the user explicitly chose
+"Retain reductions; leave timing goals open." This approves delivery of the
+verified reductions while preserving all ten failed limits, including both
+AMD64 zero-update regressions. It does not turn the saved `not-accepted` timing
+reports into passes. D2 remains open. The final nine production jobs and
+documentation must pass before merge.
