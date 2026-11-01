@@ -403,8 +403,12 @@ list between the adjoint array and its element conversion. Its protocol fixes
 counts, correctness controls and whole-solve measurements before observations.
 The final list lies outside the six runtime phase clocks. Allocation savings and
 full integration passed in PR #236; timing remains inconclusive. A list saving
-must not be called a recording-time saving. The next
-[typed-owner batch](typed-derivative-owners.md) targets F128 and nested derivatives.
+must not be called a recording-time saving. The delivered
+[typed-owner batch](typed-derivative-owners.md) reduces F128 and nested ownership
+costs. The delivered [recording-transfer batch](derivative-recording-moves.md) passes
+weights directly and removes redundant recording retains. The next
+[phase/source report](derivative-forward-costs.md) identifies remaining work;
+these count results do not settle D2 timing acceptance.
 
 Keep the [output diagnostic](descent-output-current.md): full vector formatting
 versus a checksum consumer, with exact result bits checked separately. Its four

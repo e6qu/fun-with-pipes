@@ -6,6 +6,22 @@ and complete platform validation are different events. Measurements retain their
 original source and settings; old numbers are not measurements of current main.
 The linked PRs, runs and data records supply the detailed evidence.
 
+## Direct derivative recording (PR #238)
+
+[PR #238](https://github.com/e6qu/fun-with-pipes/pull/238) passes recording arguments
+directly and moves typed weight owners into the tape. It also preserves checked
+tuple types through destructuring/inlining. [The report](measurements/derivative-recording-moves.md)
+retains the count and cleanup proofs, a rejected arithmetic-helper allocation
+regression, its repair, and the AMD64 O2 static-frame increase. No speedup is claimed.
+
+All nine [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/41308228518)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/41308192400)
+pass on `c5e29fe92df9250dd81ebb033f7511d5a26732e5`; every completed log was audited.
+Squash merge `c124d0c8f13373b0ee11c58d685d850b1b9a5a08` has the identical tree
+`04b9d0704938621f56c7d122ca83fdfed15317df` and a verified one-line message without
+body or trailers. Redundant post-merge production run `41317561459` was cancelled
+with no failed steps after the tree check. D2/N1/N2 timing acceptance remains open.
+
 ## Typed derivative owners and documentation (PR #237)
 
 Typed F128/nested recording borrows temporary outer records. Adjoint slots borrow
