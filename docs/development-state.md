@@ -1,171 +1,108 @@
 # Current work
 
-**Next:** verify the production-failure repair batch in
-[PR #236](https://github.com/e6qu/fun-with-pipes/pull/236), which remains draft.
-`e95e36b2` restores iterator/vector fusion and iteration allocation probes on
-Linux ARM64/AMD64 and macOS ARM64 (`41264671580`); call cleanup and all earlier
-local-binding cases also pass. The only runtime-test failures are new fixture
-mistakes: command completion omits `scaled`, and raw IR lacks the documentation
-metadata normally added by the driver. Both are corrected in the follow-up.
-Ownership run `41264675358` fails to compile only the new splat assertion, which
-must borrow a `Value` field because `Value` implements Drop; corrected too.
-All five completed logs are audited; docs `41264657908` pass.
+**Next:** monitor all final-head checks on [PR #236](https://github.com/e6qu/fun-with-pipes/pull/236/checks).
+Require the complete matrix. Fix any failure, audit every completed target and compiler diagnostic,
+and squash-merge only after nine production jobs plus documentation pass.
+Focused passes and draft skips do not establish final acceptance.
 
-The caller audit also found MCP and C-library exports using the internal stage
-count. The follow-up applies the complete public argument type to both and
-tests C exports and retained callbacks at O1/O2. Verify it with `lexical-probes`
-and `ownership-analysis`, then require a new complete final-head matrix.
+All ten steps in [PLAN.md](../PLAN.md), publication and merge are authorized.
+Worktree `/private/tmp/fwp-returned-callables`, branch `language-design-review`,
+base `781ebabb0463efc2f03f0d3aa44b7d2c4766959d`. Preserve unrelated changes in the
+primary checkout. Keep one active PR. Commit messages must be one line, at most
+80 characters, with an empty body and no attribution or trailers.
 
-Continue auditing the still-running jobs from `41261060185`. Both Windows
-resource-test artifacts are now audited: their only failure is vector fusion,
-already included in this batch; later TLS and application steps still run.
+## Verified source and pending matrix
 
-That superseded production source, `20109cf0`, exposes four diagnosed failures:
-CLI prints a function instead of consuming stdin; raw iterator analysis merges
-returned callbacks from two construction sites; vector fusion disappears; and
-the `iter.each` allocation probe loses its fused worker. Both completed macOS
-ARM64 logs and all their individual target results are audited. Intel macOS's
-regular shard has the same CLI/iterator failures; all 131 target logs are audited.
-Each Windows
-artifact contains 57 logs and 135 test summaries (including aggregate duplicates);
-there are no other failures or compiler warnings. Linux, Intel macOS and later
-Windows steps continue; benchmark and documentation jobs pass.
+Compiler source `4f1a63a2fe60ce4dd14efa1055c1f90d5ad2ea64` passes:
 
-The repair batch separates protocol argument lists from internal call stages,
-keeps finite construction-site identities through returned callbacks, admits
-iterator inputs when no observable resource capture exists, and folds small
-literal F64 splats without changing their bits. Added tests cover CLI stdin,
-REST/MCP metadata, staged service/C entries, removed-handler rejection and vector
-constant budgets. Existing fusion/count requirements remain unchanged.
-
-The earlier generic-primitive/trait stage repair is verified at `7bb57453`:
-`41263005386` passes local bindings, ten call-cleanup tests and returned-function
-cost probes on Linux ARM64/AMD64 and macOS ARM64. `41262592222` passes 231 units,
-Clippy, scaling and startup budgets on Linux and Intel macOS. All logs are
-audited. The preceding run's two invalid fixtures were corrected together.
-Docs `41262432514` and `41263003110` pass. These results do not verify the new
-repair batch. Local Rust formatting, workflow syntax and documentation audits
-pass under the unchanged resource guard; no compiler build ran locally.
-
-All ten steps in [PLAN.md](../PLAN.md), publication and squash merge after passing
-gates are authorized. Worktree `/private/tmp/fwp-returned-callables`, branch
-`language-design-review`, base `781ebabb0463efc2f03f0d3aa44b7d2c4766959d`.
-Preserve unrelated changes in the primary checkout. The first production matrix is running on the superseded source above;
-draft skips and older passing heads do not establish final acceptance.
-
-## Current checks
-
-| Source / run | Scope | Last observed result |
+| Run | Checks | Result |
 |---|---|---|
-| `f7f5309c`, `41257967346` | Full lexical, ownership, tooling, tutorial and raw checks on Linux ARM64/AMD64 and macOS ARM64 | All language, callback, tutorial, tooling and raw/native checks pass; only invalid unit fixture fails; all logs audited |
-| `119439ea`, `41259139151` | Repaired unit checks and analysis budgets | Both pass: 231 unit checks, Clippy, scaling and startup budgets; logs audited |
-| `119439ea`, `41259126851` | Documentation and all retained evidence | Pass; log audited |
-| `f7f5309c`, `41258782085` | Two numerical sessions per Linux architecture | Complete: three pass; AMD64 session 2 fails identical-copy timing variation only; logs audited |
-| `9d47a5fc`, `41256205285` | Previous four numerical sessions | Three pass; AMD64 session 1 has one timing rejection; all correctness/allocation/cleanup controls pass |
-| `9d47a5fc`, `41258487184` | Independent audit/retention of those four sessions | Pass; all four sessions retained with the timing rejection |
-| `f7f5309c`, `41260368842` | Independent audit/retention of current numerical sessions | Pass; all four sessions independently audited; copy-control rejection preserved |
+| `41265255720` | Linux ARM64/AMD64 and macOS ARM64: CLI, local bindings, call cleanup, iterator/vector behavior, returned-function costs and iteration allocation probes | All three jobs pass; all logs audited |
+| `41265260150` | Linux and Intel macOS: 234 unit tests, all-target Clippy, analysis scaling and raw server startup | Both pass; all logs audited; limits unchanged |
+| `41265234234` | Documentation and retained evidence readers | Pass |
 
-Audit every completed target and compiler diagnostic, including passing jobs.
-Logs are saved under `/private/tmp/fwp-236-*.log`. Batch known repairs before
-pushing. Full suites, benchmarks and archive regeneration stay on GitHub.
+The following documentation-only changes do not yet have final-head production
+acceptance. The full matrix must test the exact PR head. Local checks use
+`python3 scripts/local-guard.py`; formatting, workflow syntax and documentation
+checks pass. No full compiler build, suite or benchmark ran locally.
+
+The superseded production run `41261060185` at `20109cf0` continues as a failure
+audit. Both macOS regular shards, ARM64 ownership, Windows resource/callback
+artifacts, Windows ARM64 TLS/autodiff steps and the benchmark job are audited.
+Their only diagnosed failures are CLI stdin, iterator callback scope, vector
+fusion and the `iter.each` allocation probe, all repaired at the verified source.
+Linux, Intel ownership and later Windows steps still need complete log audits.
+Logs/artifacts are under `/private/tmp/fwp-236-*`; do not treat an artifact named
+`compiler-crashes-*` as a crash without an actual crash report.
+
+## Repairs included
+
+Function construction runs before later argument evaluation. Generic primitive
+results and trait aliases preserve that rule. Pure constructors combine stages
+only after a bounded proof excludes computations, traps and observable resources.
+Small literal F64 splats preserve exact bits and obey the existing size budget.
+
+CLI, REST, MCP, gRPC and C libraries use the complete public argument type;
+internal construction stages remain intact. Tests cover stdin, metadata,
+served calls, C exports and retained C callbacks at O1/O2. Lifetime analysis
+keeps finite outer construction-site identities so unrelated returned callbacks
+do not mix. Removing a State handler still rejects its callback.
+
+Earlier checks `41264671580` and `41264675358` exposed three new test mistakes:
+missing command-completion text, omitted driver documentation metadata in a raw
+IR fixture, and moving a field from a Rust value with a destructor. All were
+fixed together; the five passing jobs above supersede them. Earlier generic
+primitive/trait checks passed at `7bb57453` (`41263005386`, `41262592222`).
 
 ## Roadmap status
 
 | Step | Status | Remaining acceptance |
 |---|---|---|
-| 1 | Implemented | Local names, patterns and strict evaluation on all supported hosts |
+| 1 | Implemented | Final-head local-name, pattern, type and strict-evaluation checks on all supported hosts |
 | 2 | Implemented | Final tooling, macro, tutorial and documentation gates |
-| 3 | In progress | Production protocol entries, constructor identities and known-call cost checks |
-| 4 | Implemented | Production alias/failure controls and zero/one-retain String loops |
-| 5 | Implemented | Production direct scalar record/variant costs |
-| 6 | In progress | Restore vector/iterator fusion while preserving eager evaluation order |
-| 7 | Implemented | Preserve numerical cost/cleanup checks in production; timing acceptance open |
-| 8 | Implemented | Preserve gradient-list savings and phase checks; original D2 speed goal open |
-| 9 | Verified | Raw numerical/Swift records audited and retained; individual Swift ARC counts unmeasured |
-| 10 | Pending | Application families, nine production jobs and documentation |
+| 3 | Implemented | Final protocol, constructor and known-call cost checks |
+| 4 | Implemented | Final alias/failure controls and zero/one-retain String loops |
+| 5 | Implemented | Final direct scalar record/variant cost checks |
+| 6 | Implemented | Final collection fusion and effect/trap-order checks |
+| 7 | Implemented | Final numerical cost/cleanup controls; timing acceptance remains open |
+| 8 | Implemented | Final gradient-list/phase controls; original D2 speed goal remains open |
+| 9 | Verified | Numerical/Swift records audited and retained; individual Swift ARC counts unmeasured |
+| 10 | Pending | Application families, nine production jobs and documentation on the integrated head |
 
-Focused run `41251272638` at `a61addc6` passes eight named/tacit pairs and eight
-additional cost cases on three native hosts. String loops meet zero/one-retain
-limits at 0/32/128. Numeric-array run `41254567543` at `a33c8ba9` passes
-word/packed storage at O1/O2, with slices, aliases and physical cleanup.
+The [application matrix](application-acceptance.md) defines the final coverage.
+After a verified squash merge, update the next batch rather than declaring the
+broader roadmap complete.
 
-The strict-stage repair at `a33c8ba9` ensures a saturated function constructor
-runs before evaluating later arguments, including aliases and composed pipes.
-Native probes at `9d47a5fc` follow those stages correctly and exposed a real
-callback regression: pure `each` constructors hid known callbacks, while escaped
-composition built three closures. All logs from `41256202095` and diagnostic
-`41257109274` are audited. The latter retains compiler IR and all O0/O2 costs.
+## Measurements and limits to preserve
 
-`src/opt/stages.rs` proves pure partial-function constructors before inlining.
-It excludes executed computations, resource frames, observable locals, new
-resource-bearing inputs and unused parameters. It renumbers locals and updates
-known callers together. Strict construction/trap tests and cost limits remain
-unchanged. The invalid resource fixture failed before this proof ran; `119439ea` uses
-a real File owner, and both analysis hosts pass all 231 unit checks.
+[Numeric array traversal](measurements/array-list-traversal.md) retains all six
+cases, frozen limits, raw observations and failed results. At `f7f5309c`, eight
+129-coordinate solves remove 208,552 requests and 6,622,720 requested bytes;
+retains and peak managed storage do not change. Run `41258782085` passes all
+correctness/allocation/cleanup limits. AMD64 session 2 fails identical-copy
+variation (2.1023% versus 2%); the combined timing result remains inconclusive.
+Retention/audit `41260368842` passes. Final gradient-list conversion is outside
+the six runtime phase clocks, so these savings are not forward-recording gains.
 
-## Retained measurements
+Earlier `dc0a6407` allocation failures, the `9a2e954e` final-order repair and
+`9d47a5fc` timing rejection remain in that report and immutable source archives.
+A later pass does not erase them. Source tags are
+`roadmap/array-lists-{first,repaired,pure-constructors}-2026-11-01` and
+`roadmap/swift-allocations-2026-11-01`. Historical readers use their recorded
+source adapters. Do not compare old generated C with today's adapter.
 
-[Numeric array traversal](measurements/array-list-traversal.md) defines the six
-solve cases, frozen limits and raw records. Original `dc0a6407` fails twenty
-allocation/byte limits on each host because final reversal copies the list.
-`9a2e954e` builds final-order lists directly only for pure, total callbacks with
-scalar captures; folds and trapping/effectful callbacks keep forward order.
-Both repaired session-2 hosts pass all limits. Session 1 exposed a probe that
-freed a packed slice header without releasing its backing owner; the typed
-array destructor repairs it at `a33c8ba9` without changing runtime behavior.
+[Swift allocation profiles](measurements/swift-allocations.md) pass both hosts
+at `9d47a5fc` (`41256208614`, audit `41257220044`). fwp's directly mapped managed
+heap is outside heaptrack: report its requests/live storage separately from
+native allocator traffic. Do not add independent peaks or invent ARC-operation
+counts. [Swift timings](measurements/swift-peers.md) retain four separate sessions.
 
-At `9d47a5fc`, all four sessions complete. AMD64 session 1 takes 1.023851 times
-the reference time for zero-update history, exceeding 1.02. Preserve this
-rejection; allocation, raw tape, cleanup, phase and copy controls pass everywhere.
-The later `f7f5309c` run also completes four sessions: both ARM64 sessions and
-AMD64 session 1 pass; AMD64 session 2 fails only identical-copy variation
-(2.1023% versus 2%). All cost and cleanup requirements pass. The report states
-C/Rust ratios and separate managed/raw storage. Its source tag is
-`roadmap/array-lists-pure-constructors-2026-11-01`.
-The gradient's final list conversion lies outside the six runtime phase clocks;
-whole-solve savings are not a forward-recording improvement.
-
-Original/repaired raw archives have independent passing audits `41257190382`
-and `41257193865`. Their readers recompute decisions and preserve rejections.
-Immutable `roadmap/array-lists-{first,repaired}-2026-11-01` tags retain their
-source after squash merge. Historical audits load each recorded source adapter;
-they must not compare old generated C with today's adapter.
-
-[Swift allocation profiles](measurements/swift-allocations.md) pass on both
-architectures at `9d47a5fc`, run `41256208614`; retention audit `41257220044`
-passes. The raw archive and `roadmap/swift-allocations-2026-11-01` tag are retained.
-On the same ARM host, system-library heaptrack loses control stack addresses;
-explicitly selected libunwind 1.8.3 passes allocation/omitted-release controls.
-Standalone unwinding passes with both libraries, so it does not isolate the
-integration defect. AMD64 heaptrack passes with both. No fallback is introduced.
-
-fwp's managed heap uses direct mappings outside heaptrack's allocator boundary.
-Report its requests/live storage separately; never add independent peaks or
-call malloc-only totals complete heap use. Swift ARC-operation counts remain
-unmeasured. Four original timing sessions are separately retained in
-`swift-peers-2026-10-31.tar.xz`; see [their report](measurements/swift-peers.md).
-
-## Checks and delivery rules
-
-No full compiler build ran locally. Guarded focused checks pass: Rust formatting,
-documentation links/source anchors, primitive inventory, native target coverage,
-standalone syntax/formatting, tutorial copies and generated library reference.
-Evidence checks pass: array-list reader 5, Swift allocation reader 4, Swift timing
-reader 5, historical callable reader 3. The latest Swift check verifies its tag.
-Final production must cover the [application matrix](application-acceptance.md).
-
-After exact-head gates pass, squash-merge with one explicit subject of at most
-80 characters, empty body and no trailers or attribution; verify the result.
-Keep one active PR. The roadmap is not complete while its open goals remain.
-
-## Maintained guarantees and open limits
-
-Baseline #235's tree `9eda0ac6113d18741d9b0f85c1dcadbba409b2ac` matches verified
-head `adeb9794544cd12deae3f7050fef79cf874a3f55`; production `41229416050` and docs
-`41229416071` pass, with logs audited. GC removal and scoped ARC reductions remain
-verified. Broader ARC minimization, D2 derivative speed and N1/N2 kernel timing
-remain open. The [callable study](measurements/callable-phases.md) retains three
-Xeon construction regressions of 8.6–16.1%; other CPUs do not settle them.
-The [Intel macOS compiler abort](measurements/compiler-abort.md) still has no
-established root cause. Diagnose a recurrence from its input/source path;
-do not resume speculative disassembly-led allocator changes.
+GC removal and scoped ARC reductions remain maintained guarantees. Baseline
+#235's tree `9eda0ac6113d18741d9b0f85c1dcadbba409b2ac` matches verified head
+`adeb9794544cd12deae3f7050fef79cf874a3f55`; production `41229416050` and docs
+`41229416071` pass. Broader ARC minimization, D2 derivative speed and N1/N2 kernel
+timing remain open. The [callable study](measurements/callable-phases.md) retains
+Xeon construction regressions of 8.6–16.1%; another CPU does not settle them.
+The [Intel compiler abort](measurements/compiler-abort.md) has no established
+root cause. Diagnose a recurrence from its input/source path; do not resume
+speculative disassembly-led allocator changes.

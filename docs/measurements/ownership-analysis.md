@@ -1,8 +1,8 @@
 # Cost of the ownership proof
 
 This measures time spent by the compiler checking lifetimes, not the speed of a
-compiled program. The latest focused schedule check is [the State-range
-recheck](#state-range-recheck). Current-source acceptance belongs to
+compiled program. The latest focused check covers [returned functions](#returned-function-recheck).
+Current-source acceptance belongs to
 [PLAN.md](../../PLAN.md) and [the handoff](../development-state.md).
 
 ## What the compiler proves
@@ -101,6 +101,21 @@ FWP_NO_OPT=1 cargo test --locked --lib ownership_analysis_scaling -- --ignored -
 System `time` also records process peak RSS: KiB on Linux, bytes on macOS. That
 includes Cargo, the test harness and frontend work; it does not isolate proof
 memory. Full production correctness gates remain separate.
+
+## Returned-function recheck
+
+Run `41265260150` at `4f1a63a2` passes Linux and Intel macOS: 234 units, lint,
+all original scaling/count/copy limits and both raw startup limits. The proof
+now keeps one outer construction site when a function returns another function;
+it still uses finite source positions, not an accumulating call history.
+Removing the required State handler remains a rejection.
+
+Origins occupy 56 bytes on these hosts, versus the 40-byte representation in the
+older worklist record below. This is a per-origin cost, not total proof memory.
+Forms/entry analysis takes 0.260/0.192 seconds on Linux and 0.593/0.447 seconds
+on Intel macOS, within the unchanged ten-second limits. These separate sessions
+do not establish a speedup over an older compiler. Jobs `124726646393` and
+`124726646304` retain every duration, host identity and diagnostic.
 
 ## State range recheck
 

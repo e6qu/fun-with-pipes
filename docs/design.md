@@ -62,16 +62,25 @@ still decides whether interleaving element work is valid. The eight
 [named/tacit cost pairs](functional-costs.md#local-names-candidate-coverage) pass
 on Linux ARM64/AMD64 and macOS ARM64; this is focused evidence, not final delivery.
 
-A named function's entry may group consecutive `fn` inputs only while no
-computation or observable owner release lies between them. A `let` calculation
+A call stage is the group of inputs one internal function accepts before it
+executes. A function constructor executes a stage and returns another function.
+The compiler may group consecutive `fn` inputs only while no computation or
+observable owner release lies between them. A `let` calculation
 ends that group. A top-level `let` is a cached value entry, even when it returns
 a function; a `match` entry takes one input before evaluating its selected arm.
 Applications subtract supplied inputs from the constructor's current stage,
 following checked aliases and the selected trait implementation. Runtime primitives
 use their declared stage: substituting a function for a generic result does not
-add inputs to that stage. For example, if `make = fn x -> let y = 10 / x in fn z -> y + z`,
-reading `saved = make 0` must fail before a later argument to `saved` is evaluated.
-The returned function's type cannot justify delaying that division. A composed
+add inputs to that stage. For example:
+
+```fwp
+offset : I64 -> I64 -> I64
+offset = fn x -> let y = 10 / x in fn z -> y + z
+```
+
+`offset 2` computes `y = 5` and returns a function that adds five. `offset 0`
+must fail before a later input is evaluated. The returned function's type
+cannot justify delaying that division. A composed
 pipe likewise takes its input before evaluating any returned function's next input.
 The optimizer may combine constructor stages only after proving that construction
 merely captures values: no executed calls, possible traps, observable owners or
@@ -79,8 +88,9 @@ resource frames. It preserves typed local bindings and changes known callers
 together; the source type alone supplies no such proof. This bounded check runs
 before constructors are inlined into their consumers.
 This includes a cached function value whose captures are already constants.
-Small literal F64 splats can become constant vectors within the existing
-inlining-size budget; their signed-zero and NaN bits are copied unchanged.
+`simd.splat` repeats one number across a vector's lanes. Small literal F64 splats
+can become constant vectors within the existing inlining-size budget; their
+signed-zero and NaN bits are copied unchanged.
 Other computed captures retain their original evaluation point.
 Unknown applications remain successive calls; combining them
 could run a later argument before a first-stage failure. REPL results use cached
@@ -91,8 +101,8 @@ CLI, REST, MCP, gRPC and C library argument lists come from the complete public
 function type, not an internal entry's current stage. CLI, gRPC and C libraries
 lower a complete invocation to an entry that follows those stages; the ordinary
 lifetime proof checks it.
-An already saturated entry needs no adapter. REST and MCP generate the
-corresponding source application as before.
+An entry that already accepts all those arguments needs no adapter. REST and MCP
+generate the corresponding source application as before.
 
 The lifetime proof distinguishes calls that construct function values by their
 outer construction site. Nested constructors retain that one source position;
