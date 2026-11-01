@@ -607,7 +607,10 @@ fn check_bash(script: &str, dir: &Path) {
     std::fs::create_dir_all(dir.join("cdir/sub")).unwrap();
     std::fs::write(dir.join("cdir/file.txt"), "").unwrap();
     let cases: &[(&[&str], &str)] = &[
-        (&["features", ""], "render pick search leave check help"),
+        (
+            &["features", ""],
+            "render pick search leave check scaled help",
+        ),
         (&["features", "re"], "render"),
         (&["features", "--c"], "--completions"),
         (&["features", "--completions", ""], "bash zsh fish"),

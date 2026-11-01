@@ -1356,7 +1356,7 @@ mod tests {
                     assert!(matches!(result, Expr::Call(0, _)));
                     continue;
                 }
-                let Expr::Const(crate::value::Value::Record(fields)) = result else {
+                let Expr::Const(crate::value::Value::Record(fields)) = &result else {
                     panic!("splat not folded")
                 };
                 let [crate::value::Value::Array(values)] = fields.as_ref() else {

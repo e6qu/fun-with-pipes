@@ -9490,6 +9490,16 @@ pub fn generate_library(
     lib_name: &str,
     callbacks: &[String],
 ) -> Result<(String, String), String> {
+    let mut entry_program = std::borrow::Cow::Borrowed(prog);
+    for (index, (_, target)) in prog.exports.iter().enumerate() {
+        let function = &prog.funcs[*target];
+        let arity = function.ty.params(usize::MAX).0.len() as u32;
+        if function.arity != arity {
+            let program = entry_program.to_mut();
+            program.exports[index].1 = crate::ir::saturated_entry(program, *target, arity);
+        }
+    }
+    let prog = entry_program.as_ref();
     let sigs = export_sigs(prog)?;
     if sigs.is_empty() {
         return Err("the library exports no functions (mark them with `export`)".into());

@@ -87,11 +87,12 @@ could run a later argument before a first-stage failure. REPL results use cached
 value entries even when their type is a function, so their construction runs once
 and later redefinitions cannot replace their saved code or captures.
 
-CLI, REST and gRPC argument lists come from the complete public function type,
-not an internal entry's current stage. CLI and gRPC lower a complete invocation
-to an entry that follows those stages; the ordinary lifetime proof checks it.
-An already saturated entry needs no adapter. REST generates the corresponding
-source application as before.
+CLI, REST, MCP, gRPC and C library argument lists come from the complete public
+function type, not an internal entry's current stage. CLI, gRPC and C libraries
+lower a complete invocation to an entry that follows those stages; the ordinary
+lifetime proof checks it.
+An already saturated entry needs no adapter. REST and MCP generate the
+corresponding source application as before.
 
 The lifetime proof distinguishes calls that construct function values by their
 outer construction site. Nested constructors retain that one source position;

@@ -2,6 +2,20 @@
 
 **Next:** verify the production-failure repair batch in
 [PR #236](https://github.com/e6qu/fun-with-pipes/pull/236), which remains draft.
+`e95e36b2` restores iterator/vector fusion and iteration allocation probes on
+Linux ARM64/AMD64 and macOS ARM64 (`41264671580`); call cleanup and all earlier
+local-binding cases also pass. The only runtime-test failures are new fixture
+mistakes: command completion omits `scaled`, and raw IR lacks the documentation
+metadata normally added by the driver. Both are corrected in the follow-up.
+Ownership run `41264675358` fails to compile only the new splat assertion, which
+must borrow a `Value` field because `Value` implements Drop; corrected too.
+All five completed logs are audited; docs `41264657908` pass.
+
+The caller audit also found MCP and C-library exports using the internal stage
+count. The follow-up applies the complete public argument type to both and
+tests C exports and retained callbacks at O1/O2. Verify it with `lexical-probes`
+and `ownership-analysis`, then require a new complete final-head matrix.
+
 Continue auditing the still-running jobs from `41261060185`. Both Windows
 resource-test artifacts are now audited: their only failure is vector fusion,
 already included in this batch; later TLS and application steps still run.
@@ -10,7 +24,9 @@ That superseded production source, `20109cf0`, exposes four diagnosed failures:
 CLI prints a function instead of consuming stdin; raw iterator analysis merges
 returned callbacks from two construction sites; vector fusion disappears; and
 the `iter.each` allocation probe loses its fused worker. Both completed macOS
-ARM64 logs and all their individual target results are audited. Each Windows
+ARM64 logs and all their individual target results are audited. Intel macOS's
+regular shard has the same CLI/iterator failures; all 131 target logs are audited.
+Each Windows
 artifact contains 57 logs and 135 test summaries (including aggregate duplicates);
 there are no other failures or compiler warnings. Linux, Intel macOS and later
 Windows steps continue; benchmark and documentation jobs pass.
@@ -19,10 +35,8 @@ The repair batch separates protocol argument lists from internal call stages,
 keeps finite construction-site identities through returned callbacks, admits
 iterator inputs when no observable resource capture exists, and folds small
 literal F64 splats without changing their bits. Added tests cover CLI stdin,
-REST metadata, staged service entries, removed-handler rejection and vector
-constant budgets. Existing fusion/count requirements remain unchanged. Run
-`lexical-probes` (now including CLI, iterator/vector tests and iteration evidence)
-and `ownership-analysis`; then require a new complete final-head matrix.
+REST/MCP metadata, staged service/C entries, removed-handler rejection and vector
+constant budgets. Existing fusion/count requirements remain unchanged.
 
 The earlier generic-primitive/trait stage repair is verified at `7bb57453`:
 `41263005386` passes local bindings, ten call-cleanup tests and returned-function

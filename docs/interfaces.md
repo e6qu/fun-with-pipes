@@ -70,6 +70,26 @@ as several parts that talk gRPC: the function's code does not change
 either way. gRPC is not an interface of its own: it carries the calls
 between the parts of a split program, and nothing else.
 
+Interface arguments follow the complete function type. A calculation between
+two inputs does not remove the second input from a command or schema:
+
+```fwp
+# expose: cli, rest, mcp
+# args: DIVISOR VALUE
+export scaled : I64 -> I64 -> I64
+scaled = fn divisor ->
+    let coefficient = 10 / divisor
+    in fn value -> coefficient * value
+```
+
+Here `fn` names an input and `let` computes an immutable local value; `in`
+starts the expression that uses it. With arguments `2` and `3`, the function
+computes `10 / 2` first, then multiplies by `3`, returning `15`. Every interface
+accepts both arguments. C library exports and served gRPC methods follow the
+same type rule. Inside fwp, `scaled 2` computes the coefficient immediately and
+returns a function waiting for its second input; `scaled 0` fails immediately.
+See [local bindings](reference.md#local-bindings-and-named-functions).
+
 | | Command line | REST | MCP |
 |---|---|---|---|
 | unit | the root file's exported functions | the root file's exported functions | the root file's exported functions |

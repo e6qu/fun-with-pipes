@@ -48,29 +48,30 @@ fn syntax_round_trips_and_rejects_refutable_binders() {
 
 #[test]
 fn protocol_metadata_uses_the_complete_function_type() {
-    let source = r#"# expose: cli, rest
+    let source = r#"# expose: cli, rest, mcp
 
-export read : I64 -> I64
-read = let offset = 3 in add offset
+export shifted : I64 -> I64
+shifted = let offset = 3 in add offset
 # args: DIVISOR VALUE
 export scaled : I64 -> I64 -> I64
 scaled = fn divisor -> let coefficient = 10 / divisor in fn value -> coefficient * value
 "#;
     let checked = check_source("protocol-stages.fwp", source, None)
         .unwrap_or_else(|error| panic!("{}", error.rendered));
-    let program = fwp::mono::Mono::new(&checked.env, &checked.typed)
+    let mut program = fwp::mono::Mono::new(&checked.env, &checked.typed)
         .run(fwp::mono::Roots {
             exports: true,
             ..fwp::mono::Roots::default()
         })
         .unwrap();
+    program.docs = fwp::cli::Docs::from_sources(&checked.sm, checked.root);
     let commands = fwp::cli::commands(&program, Some("stages")).unwrap();
     assert_eq!(
         commands
             .iter()
             .map(|command| (command.export.as_str(), command.params.len()))
             .collect::<Vec<_>>(),
-        [("read", 1), ("scaled", 2)]
+        [("shifted", 1), ("scaled", 2)]
     );
     let endpoints = fwp::rest::endpoints(&program).unwrap();
     assert_eq!(
@@ -78,8 +79,40 @@ scaled = fn divisor -> let coefficient = 10 / divisor in fn value -> coefficient
             .iter()
             .map(|endpoint| (endpoint.function.as_str(), endpoint.params.len()))
             .collect::<Vec<_>>(),
-        [("read", 1), ("scaled", 2)]
+        [("shifted", 1), ("scaled", 2)]
     );
+    let tools = fwp::mcp::tools(&program).unwrap();
+    assert_eq!(
+        tools
+            .iter()
+            .map(|tool| (tool.function.as_str(), tool.arity))
+            .collect::<Vec<_>>(),
+        [("shifted", 1), ("scaled", 2)]
+    );
+    let (code, header) =
+        fwp::cgen::generate_library(&program, "stages", &["scaled".into()]).unwrap();
+    assert!(header.contains("int64_t shifted(int64_t);"));
+    assert!(header.contains("int64_t scaled(int64_t, int64_t);"));
+    let code = format!(
+        "{code}\n{}",
+        r#"
+int main(void) {
+    if (shifted(2) != 5 || scaled(2, 3) != 15) return 1;
+    struct fwp_callback_scaled *registration = fwp_register_scaled(2);
+    int64_t result = 0;
+    int ok = fwp_invoke_scaled(registration, 3, &result);
+    fwp_release_callback_scaled(registration);
+    return ok && result == 15 ? 0 : 2;
+}
+"#
+    );
+    let directory = fwp::cgen::TempDir::new("protocol-stages").unwrap();
+    for optimization in ["-O1", "-O2"] {
+        let binary = directory.join("stages.exe");
+        fwp::cgen::compile_c(&code, &binary, optimization).unwrap();
+        let output = Command::new(binary).output().unwrap();
+        assert!(output.status.success(), "{optimization}: {output:?}");
+    }
     let served = fwp::mono::Mono::new(&checked.env, &checked.typed)
         .run(fwp::mono::Roots {
             service: Some("main".into()),
