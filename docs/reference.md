@@ -10,7 +10,7 @@ a time. `! {IO}` declares an external action. `[T]` supplies a type argument,
 while `where Trait[T]` requires operations available for that type. A lowercase
 identifier in a type is a type variable, not a value parameter name. Definitions
 usually combine functions without naming their input; this is called *tacit*
-style. The [glossary](glossary.md) provides a lookup for other compiler terms.
+style. The [terminology guide](terminology.md) provides a lookup for other compiler terms.
 
 fwp is a tacit, curried, pipe-oriented language with static types, effect
 tracking, and two backends: an interpreter and native code through C. This

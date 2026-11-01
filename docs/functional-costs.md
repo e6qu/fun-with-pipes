@@ -2,7 +2,7 @@
 
 These checks answer two different questions: what runtime work a convenient
 source construct introduces, and whether a recursive computation can use a
-bounded call stack. They supply the baseline for [known-call work](../PLAN.md#3-known-calls-and-captures).
+bounded call stack. They supply the baseline for [known-call work](../PLAN.md).
 F1–F3 are verified in PR #222. [Delivery history](roadmap-history.md#functional-calls-and-recursion-pr-222)
 records all nine platform jobs, documentation and analysis budgets. The accepted
 scope is these fixtures and lifetime rules, not zero overhead for every function.

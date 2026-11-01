@@ -122,7 +122,7 @@ header without releasing its backing owner. The repair calls an exported typed
 neither the cleanup assertion nor the allocation limits are relaxed. At `a33c8ba9`,
 run `41254567543` passes all word/packed cost checks on Linux ARM64/AMD64 and
 macOS ARM64, including offset slices, aliases and cleanup. Whole-solve acceptance
-on the integrated compiler remains pending.
+on the integrated compiler passed in [PR #236](../roadmap-history.md#local-names-and-allocation-optimizations-pr-236).
 
 Both session-2 jobs in run `41253549233` pass for `9a2e954e`: all six whole-solve
 cases meet the frozen time, copy, allocation, tape, peak-memory and code/stack

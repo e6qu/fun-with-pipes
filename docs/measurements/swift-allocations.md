@@ -68,7 +68,7 @@ Dispatch `swift-allocations` in `.github/workflows/numerics.yml`. The runner use
 `scripts/profile-swift-allocations.py collect`, then `audit`. Auditing verifies
 every retained file hash, recomputes totals from stacks, checks both controls and
 compares benchmark sources with the recorded Git commit. It never executes the
-retained binaries. The protocol is part of [plan step 9](../../PLAN.md#9-measurements).
+retained binaries. The protocol is part of [measurement requirements](../../PLAN.md).
 
 ## Profiler verification
 

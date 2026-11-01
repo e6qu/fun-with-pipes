@@ -3,7 +3,7 @@
 This records the original N1 protocol and its still-incomplete timing acceptance.
 ARM sessions pass; AMD measurements retain missing coverage and failed copy
 controls. Later compiler work may proceed using independently verified costs;
-[PLAN.md](../../PLAN.md#7-numerical-loops) owns that work. Neither later allocations
+[PLAN.md](../../PLAN.md) owns that work. Neither later allocations
 removed nor a different CPU settles these original timing requirements.
 
 The protocol below predates its measurement runner and selected no optimization.

@@ -100,7 +100,7 @@ python3 scripts/local-guard.py python3 scripts/check-descent-output-baselines.py
   --archive docs/measurements/descent-output-current-artifacts-2026-10-29.json
 ```
 
-The [plan](../../PLAN.md#8-automatic-differentiation) still requires matched repeated-host
+The [plan](../../PLAN.md) still requires matched repeated-host
 budgets before a D2 candidate is measured. These observations identify work to
 investigate; they are not a substitute for the candidate's correctness and timing
 comparison.

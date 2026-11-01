@@ -17,7 +17,7 @@ pipe: `5 | mul 2`.
 
 Start with [the tutorials](docs/tutorials/README.md). They explain functions,
 data, types and error handling before building larger programs. The
-[glossary](docs/glossary.md) explains terms used in the reference and compiler
+[terminology guide](docs/terminology.md) explains terms used in the reference and compiler
 documentation; you do not need to learn them all before writing a program.
 
 ## What the language offers

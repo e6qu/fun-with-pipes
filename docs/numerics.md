@@ -179,7 +179,9 @@ arithmetic and values still have runtime costs.
 ## Reverse mode
 
 `Rev[T] = { value: T, vertex: I64 }` pairs a value with a reference to its recorded
-operation. A **tape** stores operations and their dependencies. `grad f xs`
+operation. A **tape** stores operations and their dependencies. The
+[worked tape example](terminology.md#tape-and-backward-pass) follows
+`x * x + 2` at `x = 3` through the forward and backward passes to obtain `[6]`. `grad f xs`
 records one forward evaluation, then walks backward to compute the gradient.
 Unlike forward `gradient`, it does not rerun the function once per input.
 It does allocate/store records and do extra backward arithmetic; one forward

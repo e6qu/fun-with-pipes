@@ -73,5 +73,5 @@ prove every external deployment works.
 | 24 | [Subscriptions](24-subscriptions/README.md) | Streaming callbacks, explicit finish/stop, active cancellation and reentry |
 
 Use the [reference](../reference.md) to look up exact syntax and the
-[glossary](../glossary.md) for terminology. Lessons introduce concepts before
+[terminology guide](../terminology.md) for terminology. Lessons introduce concepts before
 using them; those links supplement the explanation.

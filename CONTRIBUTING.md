@@ -3,7 +3,7 @@
 This guide explains how to change the compiler, test it and submit a pull request.
 Learn the source language through the [tutorials](docs/tutorials/README.md); use
 [compiler design](docs/design.md) to find the implementation and
-[the glossary](docs/glossary.md) to look up unfamiliar terms.
+[terminology and examples](docs/terminology.md) to look up unfamiliar terms.
 The [compiler pipeline](docs/compiler-pipeline.md) maps parsing, expansion,
 desugaring and execution to source files. [Design limits](docs/design-limits.md)
 separate measurable goals from promises the compiler cannot make.
@@ -190,7 +190,7 @@ The separate benchmark job runs
 `CC=gcc FWP_LTO=0 cargo test --release --test bench benchmarks -- --ignored --exact --nocapture`.
 It fails on different program results, but currently reports rather than gates
 on timing. [The benchmark guide](docs/benchmarks.md) defines what each comparison
-includes; the [measurement plan](PLAN.md#9-measurements) defines the remaining evidence requirements.
+includes; the [measurement plan](PLAN.md) defines the remaining evidence requirements.
 
 ## Rules the code follows
 

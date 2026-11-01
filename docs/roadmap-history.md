@@ -6,6 +6,34 @@ and complete platform validation are different events. Measurements retain their
 original source and settings; old numbers are not measurements of current main.
 The linked PRs, runs and data records supply the detailed evidence.
 
+## Local names and allocation optimizations (PR #236)
+
+[PR #236](https://github.com/e6qu/fun-with-pipes/pull/236) delivered immutable `let`,
+`fn`, named match patterns, destructuring and field shorthand across inference,
+macros, formatting, editor/debugger support, REPL and notebooks. Selected named
+calls, owner loops, direct records and collection pipelines avoid temporary
+storage/count operations. Numeric array traversal also removes an intermediate
+gradient list. Tutorials and compiler guides explain the semantics and limits.
+
+All nine [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/41272009971)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/41271982217)
+pass on `f89ef8a597d9ba64b0b0de165e7c21cc9f787494`, with complete log audits.
+Merge `658123c7c09aa8991ca69cbb82643e68244edc95` has the same tree
+`3ea5adc038b819c9a6e5b722d0dd41ca4437485f`. The squash message is one 68-character
+line with no body/trailers. This closes the batch's ten integration steps.
+
+CI repairs preserve staged public calls and saved REPL functions, restore eligible
+iterator/vector specialization, target the actual fold leak-control accumulator,
+and explicitly test WASI fixed captures with stack promotion both off and on.
+Both Linux hosts pass all 257 integration targets, including 21 WASI tests;
+macOS and Windows execute natively on both architectures.
+
+[Array traversal measurements](measurements/array-list-traversal.md) retain proven
+allocation savings and the failed 2% identical-copy timing control. Original
+D2/N1/N2 speed goals and Xeon closure regressions remain open. [Swift allocation
+profiles](measurements/swift-allocations.md) preserve their accounting limits.
+No universal zero-cost or C/Rust-parity claim follows from these selected results.
+
 ## Closures and peer measurements (PR #235)
 
 [PR #235](https://github.com/e6qu/fun-with-pipes/pull/235) measures construction,

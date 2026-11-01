@@ -154,7 +154,7 @@ that still needs a new measurement run.
 
 ## Planned ownership comparisons
 
-These comparisons belong to [the measurement plan](../PLAN.md#9-measurements). Compiler improvements and their ownership
+These comparisons belong to [the measurement plan](../PLAN.md). Compiler improvements and their ownership
 checks already exist; the table identifies which peer comparisons still need
 work. The [ownership direction](gc-removal-design.md) explains the lifetime rules.
 

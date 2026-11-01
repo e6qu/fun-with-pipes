@@ -393,11 +393,13 @@ architecture. Full grouped platform checks subsequently pass in
 
 ## Current derivative work
 
-The candidate [array traversal](array-list-traversal.md) removes the temporary
+The delivered [array traversal](array-list-traversal.md) removes the temporary
 list between the adjoint array and its element conversion. Its protocol fixes
 counts, correctness controls and whole-solve measurements before observations.
-The final list lies outside the six runtime phase clocks; no result is accepted
-yet, and a list saving must not be called a recording-time saving.
+The final list lies outside the six runtime phase clocks. Allocation savings and
+full integration passed in PR #236; timing remains inconclusive. A list saving
+must not be called a recording-time saving. The next
+[typed-owner batch](typed-derivative-owners.md) targets F128 and nested derivatives.
 
 Keep the [output diagnostic](descent-output-current.md): full vector formatting
 versus a checksum consumer, with exact result bits checked separately. Its four
@@ -406,7 +408,7 @@ and vector construction, not just output. D3 preserves F64/F128 derivative accur
 nesting and checkpoint controls; it promises neither derivatives at discontinuities
 nor constant storage for arbitrary AD.
 
-[PLAN.md](../../PLAN.md#8-automatic-differentiation) owns acceptance and the
+[PLAN.md](../../PLAN.md) owns acceptance and the
 [handoff](../development-state.md) records current work. PR #226 delivered the
 verified allocation reduction; [eager captures](eager-captures.md) records the
 subsequent optimization. D2's original combined timing requirement stays open.
