@@ -220,6 +220,11 @@ numbers at this selection boundary. Existing numeric selection remains intact.
   arguments. It checks saved process observations, outputs, ownership profiles,
   image/stack sizes and the exact reference-source patch without extracting or
   running the binaries. Failed acceptance limits remain in its summary.
+- Use `record-zip-report` with explicit `evidence_run` and full `source_revision`
+  to perform the large download, audit and compression on GitHub. It verifies
+  artifact digests, retains rejected hosts and failed timing limits, and uploads
+  both the full evidence and compact reports/logs. Audit errors preserve partial
+  evidence and fail the job. No archived executable is run by this audit.
 - `summarize-derivative-forward-costs.py --comparison record-zip --baseline
   docs/measurements/derivative-forward-costs-2026-11-01.json.gz` audits the two
   downloaded count archives. Supply their paths, tested source, run ID and output
@@ -267,3 +272,10 @@ this is not a measurement of total call-stack use.
 Paired timing run `41325932590` uses source `a4cef01b`, whose compiler is unchanged
 from the count run. Timing acceptance and the final nine production jobs remain
 pending. These verified count reductions do not yet establish a speedup.
+
+AMD64 session 2 was rejected before building: its runner had an EPYC 9V45 rather
+than the frozen EPYC 7763. Replacement run `41327509981` requests only that session
+on `844ff77f`; measured source/tool files are unchanged. The rejected host, job
+`124905745487`, and qualification artifact `13092045996` remain evidence, not a
+timing result. The immutable tag `roadmap/derivative-record-zip-sources-2026-11-01`
+retains all these source commits and their preparation ancestors after squash merge.
