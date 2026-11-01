@@ -1,12 +1,12 @@
 # Current work
 
-**Next:** implement the selected direct numeric-record left fold in `src/cgen.rs`
-under the [frozen requirements](measurements/derivative-record-folds.md), then add
-focused semantic/ownership controls before native measurement. No compiler code
-has changed yet.
+**Next:** run and audit the first `record-fold-checks` jobs on GCC Linux
+ARM64/AMD64 and Clang macOS ARM64. Fix every failure, then add the physical-release,
+allocation-failure/cancellation and excluded-shape controls required by the
+[frozen protocol](measurements/derivative-record-folds.md) before measurements.
 
 Branch `derivative-record-callbacks` starts at verified merge `1f358249` in
-`/private/tmp/fwp-returned-callables`. No new PR or compiler change exists yet.
+`/private/tmp/fwp-returned-callables`. The first compiler candidate is implemented; native validation is pending.
 Preserve unrelated edits in the primary checkout. These delivery/status updates
 are local changes for the next substantial PR, not an untested change to #239.
 
@@ -16,7 +16,7 @@ are local changes for the next substantial PR, not an untested change to #239.
 |---|---|---|
 | 1 | Verified | Source/count audit verifies all 96 observations and 48 C hashes; input/pair results escape into lists, addition accumulators stay within the fold |
 | 2 | Verified | Direct numeric-record left-fold boundary and count, cleanup, code/stack and timing requirements published before compiler edits |
-| 3 | Pending | Implement the selected transformation and semantic/cleanup controls |
+| 3 | In progress | Direct numeric-record left fold and initial alias/empty/effect tests implemented; full cleanup controls and native validation remain |
 | 4 | Pending | Audit focused evidence, final nine production jobs and documentation; squash merge |
 
 ## Verified delivery: PR #239
@@ -96,4 +96,6 @@ also passes. Publish these status changes with the next substantial batch.
 
 The callback-box audit passes under the local guard: 96 observations, 48 source
 hashes and both archive digests, 0.24 seconds. Post-merge documentation
-`41351222111` passes. No active PR exists yet.
+`41351222111` passes. Preparation `7b300717` and immutable tag `roadmap/derivative-record-fold-protocol-2026-11-02` precede compiler edits.
+
+Guarded formatting passes (1.88 seconds). Full builds run remotely.

@@ -27,6 +27,68 @@ impl Drop for Scratch {
     }
 }
 #[test]
+fn numeric_record_folds_preserve_aliases_empty_inputs_and_effects() {
+    let dir = Scratch::new("numeric-records");
+    let src = dir.0.join("records.fwp");
+    std::fs::write(
+        &src,
+        r#"
+step : (I64, F64) -> (I64, F64) -> (I64, F64)
+step = fn (count, total) -> fn (n, value) -> (count + n, total + value)
+scalar-step : (I64, F64) -> I64 -> (I64, F64)
+scalar-step = fn (count, total) -> fn n -> (count + n, total + 0.5)
+fail-step : (I64, F64) -> I64 -> (I64, F64) ! {Error[String]}
+fail-step = fn (count, total) -> fn n ->
+    n == 2 | match
+        True -> fail "stop"
+        False -> (count + n, total + 0.5)
+aliases : (I64, F64) -> List[(I64, F64)] -> ((I64, F64), (I64, F64), List[(I64, F64)])
+aliases = fn seed -> fn values -> (fold step seed values, seed, values)
+main =
+    let n = read-all () | string.length
+    in [
+        aliases (n, 0.5) [(1, 1.5), (2, 2.5)] | show,
+        aliases (n, 0.5) [] | show,
+        aliases (n, 0.5) [(3, 1.5)] | show,
+        [1, 2, 3] | fold scalar-step (n, 0.5) | show,
+        [1, 2, 3] | attempt (fold fail-step (n, 0.5)) | show,
+    ] | each print
+"#,
+    )
+    .unwrap();
+    let fwp = env!("CARGO_BIN_EXE_fwp");
+    let reference = checked(
+        Command::new(fwp)
+            .args(["run", "--interp"])
+            .arg(&src)
+            .env("FWP_NO_OPT", "1"),
+    );
+    let optimized = checked(Command::new(fwp).args(["run", "--interp"]).arg(&src));
+    assert_eq!(optimized.stdout, reference.stdout);
+    for stack in ["0", "1"] {
+        let cfile = dir.0.join(format!("records-{stack}.c"));
+        checked(
+            Command::new(fwp)
+                .args(["build", "--memory", "dynamic"])
+                .arg(&src)
+                .args(["--emit-c", "-o"])
+                .arg(&cfile)
+                .env("FWP_STACK", stack),
+        );
+        let code = std::fs::read_to_string(&cfile).unwrap();
+        assert!(code.contains("Numeric record fold: one result box"));
+        for opt in ["-O1", "-O2"] {
+            let exe = dir.0.join(format!("records-{stack}-{opt}.exe"));
+            fwp::cgen::compile_c(&code, &exe, opt).unwrap();
+            let out = checked(Command::new(&exe).env("FWP_ALLOC_STATS", "1"));
+            assert_eq!(out.stdout, reference.stdout, "{stack}/{opt}");
+            let stats =
+                allocation_report::parse(std::str::from_utf8(&out.stderr).unwrap()).unwrap();
+            assert_eq!(stats.live, 0, "{stack}/{opt}: {stats:?}");
+        }
+    }
+}
+#[test]
 fn accumulator_input_and_capture_aliases_preserve_values() {
     let dir = Scratch::new("aliases");
     let src = dir.0.join("aliases.fwp");
