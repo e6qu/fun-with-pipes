@@ -286,7 +286,7 @@ def main():
             profiles[label] = dict(managed=managed, rawDerivativeStorage=raw, expandedRawSha256=raw_hash)
             if label.startswith('fwp-ad'):
                 phase_code = directory / (label + '-phases.c')
-                phase_code.write_text(PHASE.instrument(text))
+                phase_code.write_text(PHASE.instrument(text, PHASE.TIME_OBSERVER))
                 phase_binary = directory / (label + '-phases')
                 build([args.cc, *cflags, '-w', phase_code, '-o', phase_binary, '-lm', '-lpthread', '-ldl'])
                 phase_binaries[label] = phase_binary

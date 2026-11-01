@@ -64,12 +64,12 @@ int main(int argc, char **argv) {
     def test_runtime_sites_are_unique_and_required(self):
         runtime = (PHASES.ROOT / 'runtime/fwp_rt_kernel.c').read_text()
         source = runtime + '\nstatic void *fwp_main_thread(void *arg) {\n    fwp_init_consts();\n}\n'
-        measured = PHASES.instrument(source)
+        measured = PHASES.instrument(source, PHASES.TIME_OBSERVER)
         self.assertIn('descent_phase_step(DESCENT_RETIRE);', measured)
         self.assertEqual(measured.count('    descent_phase_init();'), 1)
         missing = source.replace('    V r = fwp_arr_new((size_t)tp.leaves);', '')
         with self.assertRaisesRegex(ValueError, 'Expected one derivative phase site'):
-            PHASES.instrument(missing)
+            PHASES.instrument(missing, PHASES.TIME_OBSERVER)
 
     def test_changed_counts_or_missing_phase_cannot_pass(self):
         original = json.loads(self.execute('normal').stderr)

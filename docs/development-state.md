@@ -1,7 +1,8 @@
 # Current work
 
-**Next:** publish the [forward-cost protocol](measurements/derivative-forward-costs.md),
-then extend the existing observers with phase accounting and omission controls.
+**Next:** verify the phase/source observer, then run the frozen six-case measurement
+on both native Linux hosts in [PR #239](https://github.com/e6qu/fun-with-pipes/pull/239).
+The [protocol](measurements/derivative-forward-costs.md) was published first at `02d4aa26`.
 [PLAN.md](../PLAN.md) defines this batch's four steps. No new compiler/runtime
 optimization is selected until the measured costs justify a specific candidate.
 
@@ -15,8 +16,8 @@ characters, with no body, trailers or attribution.
 
 | Step | Status | Remaining work |
 |---|---|---|
-| 1 | In progress | Publish the frozen protocol and verified #238 delivery |
-| 2 | Pending | Phase/source accounting and omission controls |
+| 1 | Verified | Preparation `02d4aa26`; documentation run `41318586442` passes |
+| 2 | In progress | Phase/source counters implemented; verify native known-work and omission controls |
 | 3 | Pending | Native six-case measurements and artifact audit |
 | 4 | Pending | Explain results, select a justified candidate, verify and deliver the batch |
 
@@ -53,9 +54,19 @@ The earlier monitor is fixed to #238's head; do not use it for this new branch.
 ## Checks and constraints
 
 The last batch passed focused GCC/Clang O1/O2 checks, artifact/source hash audits,
-all nine native production jobs and documentation. New observer code has not been
-written or tested yet. A stale current-work reference in `descent-costs.md` is
-corrected locally and belongs in this batch.
+all nine native production jobs and documentation. The new Python observer tests
+pass through the local guard (source hooks, exact sums, missing/duplicate rows,
+invalid phase/site IDs). Native controls and measurements are not verified yet.
+Run `derivative-forward-costs` in the numerical evidence workflow after publication;
+full production gates follow the complete batch.
+
+Focused local commands, each through `python3 scripts/local-guard.py`:
+
+- `python3 scripts/test-derivative-ownership-profile.py`: 7 pass, including
+  known-work rejection of valid but swapped phase labels.
+- `python3 scripts/test-descent-phases.py --cc clang`: 4 pass. GCC runs on CI.
+- `python3 scripts/check-roadmap.py`: 197 link sets, 106 preparation pairs and
+  four plan steps pass. No full local compiler build or suite was run.
 
 Use the unchanged local guard serially. Full builds, suites, benchmarks and large
 regeneration use GitHub. Disk remains near the 64 GiB floor; retain the guard's
