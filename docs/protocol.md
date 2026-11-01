@@ -11,7 +11,8 @@ input; the shell pipe connects it to the executable. The function `scale` takes
 the multiplier first, so `./scale 10` multiplies each input line by ten.
 
 Every exported function can be compiled into a standalone executable.
-The examples on this page use `examples/shell/tools.fwp`, which contains:
+The examples on this page use `examples/shell/tools.fwp`. From the repository
+root, run `cd examples/shell` before the commands below. That file contains:
 
 ```
 export scale : I64 -> I64 -> I64

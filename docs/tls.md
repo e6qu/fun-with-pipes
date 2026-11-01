@@ -11,11 +11,9 @@ and run a complete server/client pair. The opening commands below are usage
 sketches: `api.fwp`/`shop.fwp` stand for your programs and the PEM files must
 already exist. PEM is the text encoding used for these keys/certificates.
 
-TLS connections, HTTPS servers and clients, REST APIs over HTTPS and the
-services of split programs over TLS, in both backends, with the system's OpenSSL 3. TLS itself is not
-written from scratch: the cryptography is OpenSSL's, and fwp adds the
-non-blocking glue to its schedulers, the configuration and the error
-messages.
+Both backends use system OpenSSL 3 for TLS cryptography. fwp connects it to task
+scheduling, exposes settings and reports failures. The same connection interface
+supports HTTPS clients/servers, generated REST servers and split services.
 
 ```
 $ fwp serve --rest api.fwp --listen 127.0.0.1:8443 --tls-cert server.pem --tls-key server.key

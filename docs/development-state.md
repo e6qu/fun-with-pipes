@@ -1,8 +1,8 @@
 # Current work
 
-**Next:** publish the documentation/evidence revision in PR #237, mark it ready,
-then audit all nine final-head production jobs and documentation. Fix all failures
-in one repair batch; squash-merge only after every required gate passes.
+**Next:** audit PR #237's exact-head nine production jobs and documentation.
+The PR is ready and published; use its check URLs to follow the current head.
+Fix all failures in one repair batch; squash-merge only after every gate passes.
 
 Worktree `/private/tmp/fwp-returned-callables`, branch `reduce-derivative-ownership`.
 Base `658123c7c09aa8991ca69cbb82643e68244edc95`. The primary checkout has unrelated
@@ -16,7 +16,7 @@ authorized. Commit messages: one line, at most 80 characters, empty body/trailer
 | 1 | Implemented | Broad docs/tutorial revision and local audits complete; final-head docs/native example gates pending |
 | 2 | Implemented | All three focused hosts pass stack-record controls; full final-head matrix pending |
 | 3 | Implemented | All three focused hosts pass adjoint, alias, failure and cancellation checks; full matrix pending |
-| 4 | In progress | Publish final batch, audit nine production jobs plus docs, then squash-merge |
+| 4 | In progress | Audit nine production jobs plus docs, then squash-merge |
 
 ## What changed
 
@@ -53,7 +53,9 @@ Details and distinct negative-control statuses are in the linked report.
 
 Documentation runs `41288414731`, `41289225334` and `41290361065` pass and their
 logs are audited. Deliberate duplicate/unknown/failing/hung runner controls are
-expected, not unresolved failures. Draft production skips do not count as gates.
+expected, not unresolved failures. Draft production skips do not count as gates. Initial ready run `41291903384`
+and docs `41291886572` target `d36dc26a`; the final command-path/handoff correction
+supersedes that head. Follow the newer exact-head checks, not those old statuses.
 
 ## Focused local checks
 
@@ -63,7 +65,7 @@ No resource limit was bypassed. Free disk remains about 65 GiB, near the 64 GiB 
 
 | Check | Command after the guard | Result |
 |---|---|---|
-| Links, preparation records, plan | `python3 scripts/check-roadmap.py` | 195 docs, 106 immutable pairs, four steps pass before final audit |
+| Links, preparation records, plan | `python3 scripts/check-roadmap.py` | 195 docs, 106 immutable pairs, four steps pass |
 | Rust formatting | `cargo fmt --all -- --check` | Pass |
 | Library docs | Standalone O1 `tests/stdlib_doc.rs`; `FWP_BLESS=1` regeneration, then ordinary check | Pass; standard-library-only harness, no compiler rebuild |
 | Tutorial listings/output copies | Standalone O1 `tests/examples.rs`, exact `tutorial_readmes_match_their_programs` | All pass |
