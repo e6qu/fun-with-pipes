@@ -13,6 +13,8 @@
 use crate::ir::*;
 use std::collections::HashSet;
 
+mod stages;
+
 const INLINE_SIZE: usize = 40;
 const MAX_BODY: usize = 4000;
 const ROUNDS: usize = 4;
@@ -877,6 +879,7 @@ fn subst_pat(p: &Pat, local: &dyn Fn(&Local) -> Local) -> Pat {
 
 /// Optimize all function bodies in place.
 pub fn optimize(prog: &mut Program) {
+    stages::flatten(prog);
     for _ in 0..ROUNDS {
         let snapshot = prog.funcs.clone();
         for id in 0..prog.funcs.len() {

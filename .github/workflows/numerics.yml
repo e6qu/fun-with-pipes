@@ -202,7 +202,6 @@ jobs:
           echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
           echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
       - name: Native binary tools for callable probes
-        if: inputs.suite == 'lexical-probes'
         shell: bash
         run: |
           case "$RUNNER_OS" in
@@ -216,7 +215,7 @@ jobs:
         if: ${{ !cancelled() && inputs.suite == 'lexical-bindings' }}
         run: |
           cargo test --lib macros::tests
-          cargo test --lib opt::tests
+          cargo test --lib opt::
           cargo test --lib rc::tests
       - name: Lexical bindings and affected language contracts
         if: ${{ !cancelled() }}
@@ -231,7 +230,7 @@ jobs:
             *) exit 1 ;;
           esac
       - name: Returned callable native stages and cleanup
-        if: ${{ !cancelled() && inputs.suite == 'lexical-probes' }}
+        if: ${{ !cancelled() }}
         run: >-
           python3 scripts/check-returned-callables.py --compiler target/debug/fwp
           --cc "${{ matrix.cc }}" --rustc rustc --c-arch "${{ matrix.c_arch }}"

@@ -1,7 +1,9 @@
 # Current work
 
 **Next:** repair the known-callback regression exposed by strict call stages.
-Retain compiler IR and all O0/O2 cost failures to locate the lost specialization;
+IR run `41257109274` confirms pure constructor scopes hide known callbacks;
+the candidate proves and combines only those stages before consumer inlining.
+Verify the new proof, native costs and constructor trap-order controls together;
 keep the existing limits and constructor trap-order guarantees. Audit remaining
 numerical/allocation jobs and retain their raw evidence. Then finish
 the documentation audit and run the final production matrix for
@@ -37,9 +39,9 @@ source is explicit. Full source IDs are in GitHub run metadata.
 |---|---|---|
 | `41256202095` | `lexical-probes`: Linux ARM64/AMD64 GCC, macOS ARM64 Clang | Fails: each dispatch grows with input; escaped composition constructs three closures |
 | `41256205285` | `array-list-measurements`: two sessions per Linux architecture | Running |
-| `41256208614` | `swift-allocations`: native Linux ARM64/AMD64 | AMD64 passes; ARM64 running |
-| `41256218712` | `array-list-report`: original `dc0a6407`, run `41252379702`, session 2 | Fails: output verifier was nested inside collector; now exported and tested |
-| `41256230139` | `array-list-report`: repaired `9a2e954e`, run `41253549233`, session 2 | Same verifier failure; repair ready |
+| `41256208614` | `swift-allocations`: native Linux ARM64/AMD64 | Both pass; retention audit `41257220044` passes |
+| `41256218712` | `array-list-report`: original `dc0a6407`, run `41252379702`, session 2 | Fails: output verifier was nested inside collector; now exported/tested; audit `41257190382` queued |
+| `41256230139` | `array-list-report`: repaired `9a2e954e`, run `41253549233`, session 2 | Same verifier failure; repair published; audit `41257193865` queued |
 
 Do not repeat the unchanged full language corpus while repairing these probes.
 The final production matrix will cover the integrated source. Completed logs are
@@ -47,7 +49,10 @@ saved under `/private/tmp/fwp-236-*.log`; audit every target and diagnostic, not
 just the first failing step. Known deliberate failure controls are expected only
 inside their passing observer tests.
 
-At `9d47a5fc`, all three probe logs are audited. Other call/cleanup tests pass;
+At `9d47a5fc`, all three probe logs are audited. Diagnostic source `65b80757`
+repeats them with all O0/O2 observations and compiler IR; all three logs are
+audited and show the same each/captured failures only. Docs `41256988435` passes;
+its full log is audited. Other call/cleanup tests pass;
 `each-count` dispatch/allocations grow with input and returned composition uses
 three closures (56 bytes) with per-call retains. This is a compiler regression,
 not permission to relax count requirements. Generated C and native observations
@@ -121,7 +126,10 @@ emitting upstream implementation warnings. All completed logs are audited.
 fwp's managed heap uses direct mappings outside heaptrack's allocator boundary.
 Its requests/live storage are reported separately. Never add independent peaks
 or treat malloc-only totals as complete fwp heap use. Individual Swift ARC-operation
-counts remain unmeasured. Current profiles need a durable raw archive after audit.
+counts remain unmeasured. Both raw profiles are now retained in
+`docs/measurements/swift-allocations-2026-11-01.tar.xz`; audit `41257220044` passes.
+The next documentation gate recomputes them. ARM system-library heaptrack loses
+the control stack on the same host where the explicitly selected library passes.
 
 ## Local checks and delivery
 
@@ -152,3 +160,10 @@ open. The [callable study](measurements/callable-phases.md) retains three Xeon
 construction regressions (8.6–16.1%); noisy/short observations on a different CPU
 do not settle them. Retain the [Intel macOS compiler-abort evidence](measurements/compiler-abort.md);
 its root cause is still unknown. Do not resume speculative disassembly-led fixes.
+
+The candidate in `src/opt/stages.rs` uses the ordinary bounded simplifier to
+recognize pure partial-function constructors before inlining. It excludes
+computations, resource frames, observable locals, new resource-bearing inputs
+and unused parameters. It renumbers locals and updates all known call sites
+together. Proof tests and full lexical/callback checks remain to run on runners;
+no count limit or evaluation-order control has been relaxed.

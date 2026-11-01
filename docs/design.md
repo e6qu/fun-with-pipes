@@ -71,6 +71,11 @@ following checked aliases. For example, if `make = fn x -> let y = 10 / x in fn 
 reading `saved = make 0` must fail before a later argument to `saved` is evaluated.
 The returned function's type cannot justify delaying that division. A composed
 pipe likewise takes its input before evaluating any returned function's next input.
+The optimizer may combine constructor stages only after proving that construction
+merely captures values: no executed calls, possible traps, observable owners or
+resource frames. It preserves typed local bindings and changes known callers
+together; the source type alone supplies no such proof. This bounded check runs
+before constructors are inlined into their consumers.
 Unknown applications remain successive calls; combining them
 could run a later argument before a first-stage failure. REPL results use cached
 value entries even when their type is a function, so their construction runs once

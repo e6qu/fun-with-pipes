@@ -84,11 +84,14 @@ library on the same host. It retains syscall diagnostics and both observations.
 Only the explicitly selected library is used for profiles; no failed profile
 switches automatically to another observer. Both allocation/release controls
 pass. The standalone unwinding probes also pass with the old system library,
-so they do not reproduce heaptrack's missing-frame failure. A same-host comparison
-of the full heaptrack controls is added next to narrow this distinction; the
-evidence does not yet identify a particular upstream defect. Unneeded core-dump,
-remote-process and setjmp observer libraries are excluded from the next build;
-they are unrelated to in-process allocation tracing and emitted implementation warnings.
+so they do not reproduce heaptrack's missing-frame failure. At `9d47a5fc`, run `41256208614` compares full heaptrack controls with both
+libraries on each host. AMD64 passes with both. ARM64 again loses the control
+stack with the system library, while the selected library reports all three
+allocations and the deliberately unfreed 1,048,578 bytes. This reproduces the
+integration problem but does not identify a particular upstream defect. Unneeded
+core-dump, remote-process and setjmp observer libraries are excluded from this
+build; they are unrelated to in-process allocation tracing. Their implementation
+warnings no longer appear.
 
 ## Observed allocations
 
@@ -128,3 +131,15 @@ not measure the cost of one ARC retain/release. Swift's map stores its table in
 a top-level variable; the roughly 8 MB still present at process exit must not be
 called a demonstrated leak. The independent omitted-release control verifies
 the observer's ability to detect a deliberately unreleased allocation.
+
+## Retained evidence
+
+The [raw archive](swift-allocations-2026-11-01.tar.xz) contains both architectures,
+all command/output records, generated sources, binaries, allocation stacks,
+compressed heaptrack traces, managed-heap profiles and both unwinder controls.
+Measured source: `9d47a5fcfb5c9342d9fca9da2a8c162f5ac1d38c`; original run
+`41256208614`, independent retention audit `41257220044`.
+Archive SHA-256: `8690b2516204c1b40a86a9211ae72f77fbd229482db43d61ae76da8c264169e5`.
+The documentation check recomputes both reports from these files without running
+saved executables. It also preserves the failed ARM system-library control;
+selecting a working observer does not erase that observation.
