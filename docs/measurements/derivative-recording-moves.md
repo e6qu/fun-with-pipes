@@ -81,3 +81,22 @@ Run all affected focused targets together after implementation, then one full
 final-head production matrix plus documentation. Fix every encountered issue;
 merge only after all nine production jobs and docs pass. Local checks use the
 unchanged resource guard; full builds and suites run on GitHub.
+
+## Additional regression check
+
+Artifact review of `ea354e13` found that zero recording records can coexist with
+more allocations elsewhere: nested arithmetic callbacks raised cumulative charge
+from 43,056 to 100,576 bytes with stack promotion. That candidate is rejected.
+The source repair preserves complete-operation arithmetic workers. In addition
+to the frozen count/ownership requirements, enforce these #237 whole-fixture
+ceilings on every host, optimization level and workspace setting:
+
+| Weight type | Stack promotion | Cumulative charged bytes | Peak charged bytes |
+|---|---|---:|---:|
+| F128 | Off | 30,608 | 11,056 |
+| F128 | On | 18,320 | 11,056 |
+| Rev[F64] | Off | 96,384 | 31,680 |
+| Rev[F64] | On | 43,056 | 31,664 |
+
+These counters cover the complete 256-operation fixture, including setup and
+backward arithmetic. They measure fwp-managed charge, not process RSS or speed.

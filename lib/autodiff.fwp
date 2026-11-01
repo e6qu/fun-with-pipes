@@ -253,18 +253,18 @@ rev.const = make Rev { value = id, vertex = const -1 }
 # An operation of two operands: `g (a, b)` gives the value of `op a b` and
 # its partial derivatives with respect to a and b.
 rev._op2 : ((t, t) -> (t, t, t)) -> Rev[t] -> Rev[t] -> Rev[t] where ReverseScalar[t], Dup[t]
-rev._op2 = fn g -> fn a -> fn b ->
+rev._op2 = curry3 (fn (g, a, b) ->
     let (value, weight-a, weight-b) = g (a | .value, b | .value)
     in Rev {
         value,
         vertex = rev._push (a | .vertex) weight-a (b | .vertex) weight-b,
-    }
+    })
 
 # An operation of one operand: `g a` gives the value and the derivative.
 rev._op1 : (t -> (t, t)) -> Rev[t] -> Rev[t] where ReverseScalar[t], Dup[t]
-rev._op1 = fn g -> fn a ->
+rev._op1 = curry (fn (g, a) ->
     let (value, weight) = g (a | .value)
-    in Rev { value, vertex = rev._push (a | .vertex) weight -1 zero }
+    in Rev { value, vertex = rev._push (a | .vertex) weight -1 zero })
 
 impl Add[Rev[t]] where ReverseScalar[t], Ring[t], Dup[t] =
     add = rev._op2 (make { 0 = uncurry add, 1 = const one, 2 = const one })

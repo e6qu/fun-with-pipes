@@ -361,6 +361,15 @@ fn typed_recording_moves_direct_weights_without_argument_records() {
         assert_eq!(reference.stdout, b"True\n");
         assert!(reference.stderr.is_empty());
         for (stack, expected_records) in [("0", 0), ("1", 0)] {
+            // Whole-fixture charges from the verified #237 baseline. Counting
+            // recording records alone misses allocations in arithmetic callbacks.
+            let (max_total, max_peak) = match (name, stack) {
+                ("quad", "0") => (30_608, 11_056),
+                ("quad", "1") => (18_320, 11_056),
+                ("nested", "0") => (96_384, 31_680),
+                ("nested", "1") => (43_056, 31_664),
+                _ => unreachable!(),
+            };
             let cfile = scratch.0.join(format!("{name}-{stack}.c"));
             checked(
                 Command::new(compiler)
@@ -398,6 +407,7 @@ fn typed_recording_moves_direct_weights_without_argument_records() {
     fprintf(stderr,"typed recording: %u calls, %u heap records\n",typed_calls,typed_heap_records);
     fprintf(stderr,"typed memory: process peak charged %zu, cumulative charged %.0f, final charged %zu\n",fwp_heap.peak,fwp_heap.total_alloc,fwp_heap.live);
     if (typed_calls != 256 || typed_heap_records != {expected_records}) exit(211);
+    if (fwp_heap.total_alloc > {max_total} || fwp_heap.peak > {max_peak}) exit(214);
     if (fwp_owned_tapes || fwp_heap.live || fwp_heap.rc_wide_len) exit(212);
     for (int64_t i=0;i<fwp_ntapes;i++) if (fwp_tapes[i].live) exit(213);
 "#
