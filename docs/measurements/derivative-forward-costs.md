@@ -289,50 +289,64 @@ remain failures in the [retained index](derivative-record-zip-2026-11-01/origina
 Each cell below gives **current-vector / full-history** candidate/reference
 elapsed-time ratios. Smaller is faster; bold values miss the frozen maximum.
 
-| Coordinates, updates | ARM64 / 1 | ARM64 / 2 | AMD64 / 1 | Maximum |
-|---|---:|---:|---:|---:|
-| 3, 0 | 0.9993 / 1.0037 | 1.0006 / 1.0033 | **1.0254** / 1.0057 | 1.02 |
-| 3, 1 | **0.9901 / 0.9916** | **0.9912 / 0.9942** | **0.9964 / 0.9988** | 0.95 |
-| 3, 199 | 0.9237 / 0.9215 | 0.9200 / 0.9216 | 0.9373 / 0.9192 | 0.95 |
-| 3, 1,999 | 0.9149 / 0.9159 | 0.9159 / 0.9158 | 0.9326 / 0.9140 | 0.95 |
-| 33, 199 | 0.8627 / 0.8615 | 0.8624 / 0.8617 | 0.8682 / 0.8664 | 0.95 |
-| 129, 199 | 0.8508 / 0.8443 | 0.8510 / 0.8447 | 0.8527 / 0.8489 | 0.95 |
+| Coordinates, updates | ARM64 / 1 | ARM64 / 2 | AMD64 / 1 | AMD64 / 2 | Maximum |
+|---|---:|---:|---:|---:|---:|
+| 3, 0 | 0.9993 / 1.0037 | 1.0006 / 1.0033 | **1.0254** / 1.0057 | **1.0272** / 0.9994 | 1.02 |
+| 3, 1 | **0.9901 / 0.9916** | **0.9912 / 0.9942** | **0.9964 / 0.9988** | **0.9930 / 0.9890** | 0.95 |
+| 3, 199 | 0.9237 / 0.9215 | 0.9200 / 0.9216 | 0.9373 / 0.9192 | 0.9464 / 0.9253 | 0.95 |
+| 3, 1,999 | 0.9149 / 0.9159 | 0.9159 / 0.9158 | 0.9326 / 0.9140 | 0.9210 / 0.9236 | 0.95 |
+| 33, 199 | 0.8627 / 0.8615 | 0.8624 / 0.8617 | 0.8682 / 0.8664 | 0.8703 / 0.8624 | 0.95 |
+| 129, 199 | 0.8508 / 0.8443 | 0.8510 / 0.8447 | 0.8527 / 0.8489 | 0.8530 / 0.8458 | 0.95 |
 
 For example, 0.996431 means about 0.36% less elapsed time, below the required
-5% improvement. The zero-update ratio means 2.54% more elapsed time, exceeding
-the allowed 2%. The identical-copy, count, memory, code and stack limits pass in
-all three sessions. Cases with 199 or 1,999 updates record 6.3–15.6% less elapsed
-time. This does not establish all-case acceptance or replace the missing second
-AMD64 session.
+5% improvement. The AMD64 zero-update ratios mean 2.54% and 2.72% more elapsed
+time, exceeding the allowed 2%. The identical-copy, count, memory, code and stack
+limits pass in all four sessions. Cases with 199 or 1,999 updates record
+5.4–15.6% less elapsed time. This does not establish all-case acceptance.
 
 The one-update diagnostic repeats 512 complete solves per process. In the
-reference, the six derivative phases together occupy about 6.35–6.76% of elapsed
-time; forward calculation/recording occupies only 4.41–4.72%. These ranges are
+reference, the six derivative phases together occupy about 6.35–6.96% of elapsed
+time; forward calculation/recording occupies only 4.41–4.93%. These ranges are
 medians of each diagnostic sample's phase time divided by its process time,
-across both forms and the three sessions. The optimization removes only part of
+across both forms and all four sessions. The optimization removes only part of
 forward work. This evidence suggests the 5% whole-process target was too
 aggressive for this selected change; it does not authorize weakening that target.
 
 The clocks perturb execution: diagnostic/ordinary elapsed ratios range from
-0.962 to 1.042 across these one-update observations. Phase shares are therefore
+0.938 to 1.042 across these one-update observations. Phase shares are therefore
 diagnostic evidence, not exact bounds on uninstrumented speed. They also do not
 attribute all outside-phase time to printing. The zero-update regression remains
 unexplained. Its candidate and reference C/image hashes differ even though their
 allocation counts agree; code size alone does not explain the time difference.
+Each zero-update binary and its C source are byte-identical between the two AMD64
+sessions. A changed build does not explain the repeated regression.
+
+Source review of those exact zero-update C files finds the same executed path:
+the outer iterator keeps the input list alive; each callback retains it, passes
+counter zero to the loop, receives the list immediately, prints it and releases
+the temporary owners. The derivative-update branch is not taken. The emitted
+loop-step body is identical in both versions; other functions and generated
+names differ. This establishes neither identical optimized machine code nor the
+cause of the slowdown. Check GCC 15.2's optimization reports next, before making
+a compiler change or attributing the result to code layout.
 
 Full reports and complete measurement logs are retained together:
 [ARM64 / 1](derivative-record-zip-2026-11-01/original/aarch64-1.json.gz),
 [ARM64 / 2](derivative-record-zip-2026-11-01/original/aarch64-2.json.gz),
-[AMD64 / 1](derivative-record-zip-2026-11-01/original/x86_64-1.json.gz).
+[AMD64 / 1](derivative-record-zip-2026-11-01/original/x86_64-1.json.gz),
+[AMD64 / 2](derivative-record-zip-2026-11-01/amd64-2/x86_64-2.json.gz).
 The index identifies every original file hash, job and artifact. The downloaded
 summary's API digest and each decompressed report/log hash were also verified.
 
-AMD64 session 2 is measuring. The original job `124905745487` and replacement
+For AMD64 session 2, the original job `124905745487` and replacement
 run `41327509981` received an EPYC 9V45; run `41328989036` received an EPYC 9V74.
 All three stopped before building because the frozen host is an EPYC 7763.
-Run `41330973213` qualified its host and is measuring the missing session on
-`215db5de`; measured source/tool files remain unchanged. These replacements do
-not rerun completed timings.
+Run `41330973213` completed that session on qualified EPYC 7763/GCC 15.2 at
+`215db5de`; measured source/tool files remain unchanged. Its independent
+[audit](https://github.com/e6qu/fun-with-pipes/actions/runs/41336025525) passes and
+retains all three failed limits in the
+[session index](derivative-record-zip-2026-11-01/amd64-2/index.json.gz).
+These replacements did not rerun completed timings.
 
 Rejected hosts remain evidence, not timing results. Audit `41328986141` passes
 for the first replacement, including its artifact digest and skipped build/timing
