@@ -18,7 +18,6 @@ int main(int argc,char **argv) {
     V parameters=fwp_rc_fresh(fwp_record(4,(V[4]){0,0,0,0}));
     V inputs=fwp_rc_fresh(fwp_cons(0,0));
     V base=fwp_p_ad_tape_owned(parameters,inputs,&identity_element);
-    V tuple=fwp_rc_fresh(fwp_record(4,(V[4]){base,1,(V)(int64_t)-1,0}));
     if(mode==0){
         /* The root has identity zero even before a scheduler exists. */
         size_t before=fwp_heap.live;fwp_tasks_init();
@@ -29,10 +28,10 @@ int main(int argc,char **argv) {
         fwp_cur=fwp_root;fwp_mem_free(worker);
         worker=fwp_task_new();fwp_cur=worker;
     }
-    V result=fwp_p_ad_push_owned(tuple,&identity_element);
+    V result=fwp_p_ad_push_owned(base,1,(V)(int64_t)-1,0,&identity_element);
     if(result!=base+1)return 191;
     fwp_cur=fwp_root;fwp_mem_free(worker);
-    fwp_rc_free_obj(tuple);fwp_rc_free_obj(inputs);fwp_rc_free_obj(parameters);
+    fwp_rc_free_obj(inputs);fwp_rc_free_obj(parameters);
     fwp_cleanup_pop(&cleanup);fwp_tape_scope_release(&scope);fwp_tape_finish();
     if(fwp_cleanups || fwp_owned_tapes || fwp_heap.live!=baseline)return 192;
     return 0;

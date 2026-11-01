@@ -1,6 +1,9 @@
 # Fewer owners in typed reverse derivatives
 
-This protocol is fixed before implementation. The baseline is merged PR #236,
+Historical protocol delivered in PR #237. The requirements below describe that
+source; current recording arguments and fixtures follow the separate
+[weight-transfer protocol](derivative-recording-moves.md). This protocol was fixed
+before its implementation. The baseline is merged PR #236,
 `658123c7c09aa8991ca69cbb82643e68244edc95`; its complete platform gates pass.
 The [tape example](../terminology.md#tape-and-backward-pass) explains the terms.
 The work concerns F128 and nested reverse calculations, whose weights and

@@ -175,21 +175,22 @@ Rev[T] = { value: T, vertex: I64 }
 # Nested Rev scalars evaluate backward arithmetic on the enclosing tape.
 trait ReverseScalar[T] : Field[T], Neg[T], Dup[T] =
     rev._seed : List[T] -> (I64, List[Rev[T]])
-    rev._push : (I64, T, I64, T) -> I64
+    rev._push : I64 -> T -> I64 -> T -> I64
     rev._backward : I64 -> List[I64] -> List[T] -> List[T]
     rev._inactive-zero : T -> Bool
 
 foreign "fwp" ad.tape-owned : (t, t -> t -> t, t -> t -> t, t -> Bool) -> List[t] -> I64 where Dup[t]
-foreign "fwp" ad.push-owned : (I64, t, I64, t) -> I64 where Dup[t]
+# Record two parents and their derivative weights: parent-a, weight-a, parent-b,
+# weight-b. Parent -1 means inactive. For example, `ad.push-owned node 1.0f128
+# -1 0.0f128` records a unit derivative from node, with no second parent.
+# Use within ad.scope; weights transfer to the native tape, while separately
+# owned caller aliases remain valid. Both inactive parents return -1.
+foreign "fwp" ad.push-owned : I64 -> t -> I64 -> t -> I64 where Dup[t]
 foreign "fwp" ad.backward-owned : I64 -> List[I64] -> List[t] -> List[t] where Dup[t]
 
-rev._push-float : (I64, t, I64, t) -> I64 where Float[t]
-rev._push-float = make {
-    0 = .0,
-    1 = .1 | float.convert,
-    2 = .2,
-    3 = .3 | float.convert,
-} | ad.push
+rev._push-float : I64 -> t -> I64 -> t -> I64 where Float[t]
+rev._push-float = fn parent-a -> fn weight-a -> fn parent-b -> fn weight-b ->
+    ad.push parent-a (float.convert weight-a) parent-b (float.convert weight-b)
 
 rev._seed-owned : List[t] -> (I64, List[Rev[t]]) where ReverseScalar[t]
 rev._seed-owned =
@@ -241,7 +242,7 @@ foreign "fwp" ad.scope2 : (a -> b -> c) -> a -> b -> c where Dup[a], Dup[b]
 # internal
 foreign "fwp" ad.tape : I64 -> I64
 # internal
-foreign "fwp" ad.push : (I64, F64, I64, F64) -> I64
+foreign "fwp" ad.push : I64 -> F64 -> I64 -> F64 -> I64
 # internal
 foreign "fwp" ad.backward : I64 -> Array[I64] -> Array[F64] -> Array[F64]
 
@@ -252,30 +253,18 @@ rev.const = make Rev { value = id, vertex = const -1 }
 # An operation of two operands: `g (a, b)` gives the value of `op a b` and
 # its partial derivatives with respect to a and b.
 rev._op2 : ((t, t) -> (t, t, t)) -> Rev[t] -> Rev[t] -> Rev[t] where ReverseScalar[t], Dup[t]
-rev._op2 =
-    curry3
-        (make {
-                0 = both .0 (both (.1 | .value) (.2 | .value)) | uncurry id,
-                1 = .1 | .vertex,
-                2 = .2 | .vertex,
-            }
-            | make Rev {
-                value = .0 | .0,
-                vertex =
-                    make { 0 = .1, 1 = .0 | .1, 2 = .2, 3 = .0 | .2 }
-                    | rev._push,
-            })
+rev._op2 = fn g -> fn a -> fn b ->
+    let (value, weight-a, weight-b) = g (a | .value, b | .value)
+    in Rev {
+        value,
+        vertex = rev._push (a | .vertex) weight-a (b | .vertex) weight-b,
+    }
 
 # An operation of one operand: `g a` gives the value and the derivative.
 rev._op1 : (t -> (t, t)) -> Rev[t] -> Rev[t] where ReverseScalar[t], Dup[t]
-rev._op1 =
-    curry (make { 0 = both .0 (.1 | .value) | uncurry id, 1 = .1 | .vertex }
-        | make Rev {
-            value = .0 | .0,
-            vertex =
-                make { 0 = .1, 1 = .0 | .1, 2 = const -1, 3 = const zero }
-                | rev._push,
-        })
+rev._op1 = fn g -> fn a ->
+    let (value, weight) = g (a | .value)
+    in Rev { value, vertex = rev._push (a | .vertex) weight -1 zero }
 
 impl Add[Rev[t]] where ReverseScalar[t], Ring[t], Dup[t] =
     add = rev._op2 (make { 0 = uncurry add, 1 = const one, 2 = const one })

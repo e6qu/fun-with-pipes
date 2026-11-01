@@ -6540,17 +6540,18 @@ impl<'p> Gen<'p> {
                 "return fwp_p_array_map_list(l0, l1, {descriptor});"
             ));
         }
-        if matches!(sym, "ad.tape-owned" | "ad.push-owned") {
+        if sym == "ad.tape-owned" {
             let MT::Record(fields) = &params[0] else {
-                return Err(format!("{sym} requires a scalar operation tuple"));
+                return Err("ad.tape-owned requires a scalar operation tuple".into());
             };
-            let index = usize::from(sym == "ad.push-owned");
-            let descriptor = self.desc(&fields[index].1);
-            return Ok(if sym == "ad.tape-owned" {
-                format!("return fwp_p_ad_tape_owned(l0, l1, {descriptor});")
-            } else {
-                format!("return fwp_p_ad_push_owned(l0, {descriptor});")
-            });
+            let descriptor = self.desc(&fields[0].1);
+            return Ok(format!("return fwp_p_ad_tape_owned(l0, l1, {descriptor});"));
+        }
+        if sym == "ad.push-owned" {
+            let descriptor = self.desc(&params[1]);
+            return Ok(format!(
+                "return fwp_p_ad_push_owned(l0, l1, l2, l3, {descriptor});"
+            ));
         }
         if sym == "ad.backward-owned" {
             let descriptor = self.desc(&result);
@@ -7293,7 +7294,7 @@ impl<'p> Gen<'p> {
                     ("matrix._valid-f64", "fwp_p_matrix_valid_f64(l0, l1, l2, l3, l4, l5)"),
                     ("matrix._mul-f64", "fwp_p_matrix_mul_f64(l0, l1, l2, l3, l4)"),
                     ("ad.tape", "fwp_p_ad_tape(l0)"),
-                    ("ad.push", "fwp_p_ad_push(l0)"),
+                    ("ad.push", "fwp_p_ad_push(l0, l1, l2, l3)"),
                     ("ad.backward", "fwp_p_ad_backward(l0, l1, l2)"),
                     ("device.run", "fwp_p_device_run(l0, l1, l2, l3, l4)"),
                     ("device.sum", "fwp_p_device_sum(l0, l1, l2, l3, l4)"),

@@ -151,18 +151,7 @@ impl Contract {
 /// display copies numeric text into a fresh string without retaining its input. Synchronous
 /// callbacks may return captured children, but never the callback object itself.
 /// Array reads return a scalar or separately owned element, never the outer array.
-/// Scalar AD recording copies two node indices and two F64 weights before any
-/// buffer growth. It stores no record pointer and returns an immediate node ID.
-/// Typed recording likewise never stores the outer record: it retains the two
-/// weight children independently before publishing them in the tape. Borrowed
-/// field owners must remain alive through buffer growth and both retains.
 pub fn borrows_without_escape(symbol: &str, index: usize) -> bool {
-    if symbol == "ad.push" && index == 0 {
-        return true;
-    }
-    if symbol == "ad.push-owned" && index == 0 {
-        return true;
-    }
     if (matches!(symbol, "hash" | "array._show-list" | "array.length") && index == 0)
         || (symbol == "array.get" && index == 1)
     {
@@ -313,12 +302,13 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         "ptr.read-string" => (&[B], ResultOwnership::FreshLeaf, None, &[]),
         "matrix._valid-f64" => (&[B, B, B, B, B, B], R, None, &[]),
         "matrix._mul-f64" => (&[B, B, B, B, B], ResultOwnership::FreshLeaf, None, &[]),
-        "ad.tape" | "ad.push" => (&[B], ResultOwnership::Shared, None, &[]),
+        "ad.tape" => (&[B], ResultOwnership::Shared, None, &[]),
+        "ad.push" => (&[B, B, B, B], ResultOwnership::Shared, None, &[]),
         "ad.backward" => (&[B, B, B], ResultOwnership::FreshLeaf, None, &[]),
         // The scalar-operation tuple owns embedded callbacks until scoped tape
         // retirement. arc_scope proves these container callbacks explicitly.
         "ad.tape-owned" => (&[B, B], ResultOwnership::Shared, None, &[]),
-        "ad.push-owned" => (&[B], ResultOwnership::Shared, None, &[]),
+        "ad.push-owned" => (&[B, C, B, C], ResultOwnership::Shared, None, &[]),
         "ad.backward-owned" => (&[B, B, B], ResultOwnership::OwnedTree, None, &[]),
         "task.spawn" => (
             &[C],
@@ -772,16 +762,24 @@ mod tests {
         assert!(!borrows_without_escape("hash", 1));
         assert!(borrows_without_escape("array._show-list", 0));
         assert!(!borrows_without_escape("array._show-list", 1));
-        assert!(borrows_without_escape("ad.push", 0));
+        assert!(!borrows_without_escape("ad.push", 0));
         assert!(!borrows_without_escape("ad.push", 1));
-        assert!(borrows_without_escape("ad.push-owned", 0));
+        assert!(!borrows_without_escape("ad.push-owned", 0));
         assert!(!borrows_without_escape("ad.push-owned", 1));
         let recording = primitive("ad.push").unwrap();
-        assert_eq!(recording.arguments, &[Argument::Borrow]);
+        assert_eq!(recording.arguments, &[Argument::Borrow; 4]);
         assert_eq!(recording.result, ResultOwnership::Shared);
         assert!(recording.callback.is_none() && recording.aliases.is_empty());
         let typed_recording = primitive("ad.push-owned").unwrap();
-        assert_eq!(typed_recording.arguments, &[Argument::Borrow]);
+        assert_eq!(
+            typed_recording.arguments,
+            &[
+                Argument::Borrow,
+                Argument::Consume,
+                Argument::Borrow,
+                Argument::Consume
+            ]
+        );
         assert!(typed_recording.callback.is_none() && typed_recording.aliases.is_empty());
         let display = primitive("array._show-list").unwrap();
         assert_eq!(display.arguments, &[Argument::Borrow]);

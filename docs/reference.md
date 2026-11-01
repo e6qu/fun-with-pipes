@@ -269,7 +269,8 @@ match arms, but does not group function arguments.
 projections with computed fields: `make Person { .name, age = .age | add 1 }`.
 The shorthand accepts one named selector. Use `city = .address.city` for a
 nested path and `0 = .0` for a tuple field. Duplicate output names are errors.
-Record literals, `with` and `update` still require explicit field assignments.
+Record literals also support name shorthand, such as `{ x, y }`.
+`with` and `update` require explicit field assignments.
 
 This is a parser expansion, with the same types, ownership and evaluation as
 the explicit `make`. Field functions run in canonical record-label order,

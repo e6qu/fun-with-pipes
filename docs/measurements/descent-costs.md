@@ -304,6 +304,11 @@ output lines, process samples, observers and complete job logs before archiving.
 
 ## Fixed scalar-recording acceptance rules
 
+This historical comparison is reproducible at its recorded source. Its removed
+record-argument reference is no longer a current-source workflow after the
+[direct-argument change](derivative-recording-moves.md); the result checker and
+all original failures remain.
+
 These limits were published at `fde368c8` before implementing or measuring the
 `ad.push` change. All four required matching-host baseline sessions now pass.
 For the candidate, run two independent sessions on each of the same native CPU

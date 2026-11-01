@@ -50,6 +50,21 @@ try:
             stderr=source.with_suffix('.stderr').read_text())
         object_path.unlink()
     assert len(report['probes']) == 10, report['probes'].keys()
+    controls = {}
+    statuses = {'operations': 0, 'padded': 230, 'unprotected': 237,
+                'extra-retain': 243, 'missing-input': 90, 'missing-result': 90}
+    for opt in ['-O1', '-O2']:
+        for case, expected in statuses.items():
+            for cache in [0, 1]:
+                name = f'operations-counted{opt}-{case}-cache{cache}'
+                prefix = root / 'record-ownership/autodiff_workspace' / name
+                assert prefix.with_suffix('.status').read_text().strip() == f'Some({expected})', name
+                controls[name] = dict(expectedStatus=expected,
+                    stdout=prefix.with_suffix('.stdout').read_text(),
+                    stderr=prefix.with_suffix('.stderr').read_text(),
+                    sourceSha256=hashlib.sha256(prefix.with_suffix('.c').read_bytes()).hexdigest(),
+                    executableSha256=hashlib.sha256(prefix.with_suffix('.exe').read_bytes()).hexdigest())
+    report['transferControls'] = controls
     report['complete'] = True
 finally:
     (root / 'typed-derivative-report.json').write_text(json.dumps(report, indent=2) + '\n')

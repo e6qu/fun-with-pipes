@@ -1,8 +1,8 @@
 # Current work
 
-**Next:** implement the direct recording arguments and typed-weight transfer in
-[the protocol](measurements/derivative-recording-moves.md), then update every caller
-and ownership/failure probe before running the combined focused suite.
+**Next:** publish the complete implementation and run the combined focused GCC/Clang
+suite from [the protocol](measurements/derivative-recording-moves.md). Audit all
+results before the full final-head matrix. No native results exist for this batch yet.
 
 Worktree `/private/tmp/fwp-returned-callables`, branch `move-derivative-weights`.
 Base `94abb83cb33cb52bdcafb19c67c855cf9007059f`. Preserve the primary checkout's
@@ -13,9 +13,9 @@ One-line commit subjects, at most 80 characters; no body, trailers or attributio
 
 | Step | Status | Remaining acceptance |
 |---|---|---|
-| 1 | Implemented | Preparation documentation audit and publication |
-| 2 | Pending | Recording API, interpreter, C generation and runtime |
-| 3 | Pending | All callers, inventory, counts and failure/alias controls |
+| 1 | Verified | Protocol published as `238926d0` |
+| 2 | Implemented | Recording API, interpreter, C generation and runtime need runner verification |
+| 3 | Implemented | Caller, inventory, count and failure/alias updates need focused verification |
 | 4 | Pending | Focused native evidence, then full exact-head gates and merge |
 
 ## Verified baseline
@@ -33,7 +33,13 @@ construction regressions and individual Swift ARC counts remain open.
 
 ## Checks for this batch
 
-Preparation only; no new implementation or native checks yet. Use
+Guarded Rust/language formatting and generated library documentation passed.
+The guard first refused checks below 64 GiB; deleting duplicate downloaded #237
+artifacts (retained on GitHub) restored enough space. No limits changed.
+Frozen primitive inventory passed: 394 declarations, 384 symbols, no unresolved
+contracts. Historical timing-budget controls passed (9 tests). The roadmap checker
+rejected the unsupported status word “Complete”; corrected it to “Verified”.
+Native checks are pending. Use
 `python3 scripts/local-guard.py` for focused local work, serially. Full builds,
 suites and measurements stay on runners. Disk has about 64.3 GiB free, close to
 the fixed 64 GiB floor; move refused work to CI instead of bypassing the guard.

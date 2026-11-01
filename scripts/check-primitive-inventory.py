@@ -85,7 +85,7 @@ baseline_rows = {(row['file'], row['declared']): row for row in baseline['rows']
 scope_keys = {('lib/autodiff.fwp', 'ad.scope'), ('lib/autodiff.fwp', 'ad.scope2')}
 owned_tapes = {
     'ad.tape-owned': (2, 'Shared', '(t, t -> t -> t, t -> t -> t, t -> Bool) -> List[t] -> I64 where Dup[t]'),
-    'ad.push-owned': (1, 'Shared', '(I64, t, I64, t) -> I64 where Dup[t]'),
+    'ad.push-owned': (4, 'Shared', 'I64 -> t -> I64 -> t -> I64 where Dup[t]'),
     'ad.backward-owned': (3, 'OwnedTree', 'I64 -> List[I64] -> List[t] -> List[t] where Dup[t]'),
 }
 service_scopes = {
@@ -219,7 +219,8 @@ for row in rows:
         continue
     if row['symbol'] in owned_tapes:
         arity, result, signature = owned_tapes[row['symbol']]
-        arguments = '[' + ', '.join(['Borrow'] * arity) + ']'
+        arguments = ('[Borrow, Consume, Borrow, Consume]' if row['symbol'] == 'ad.push-owned'
+                     else '[' + ', '.join(['Borrow'] * arity) + ']')
         assert row == dict(file='lib/autodiff.fwp', declared=row['symbol'], symbol=row['symbol'],
             aliased=False, bucket='contract', signature=signature,
             contract='Some(Contract { arguments: ' + arguments + ', result: ' + result + ', callback: None, aliases: [] })')
@@ -356,8 +357,13 @@ for row in rows:
         continue
     if row['symbol'] in {'ad.tape', 'ad.push', 'ad.backward'}:
         assert before['contract'] == 'None' and row['bucket'] == 'contract'
-        assert all(row[name] == before[name] for name in fields if name not in {'bucket', 'contract'})
-        arguments = '[Borrow, Borrow, Borrow]' if row['symbol'] == 'ad.backward' else '[Borrow]'
+        assert all(row[name] == before[name] for name in fields if name not in {'bucket', 'contract', 'signature'})
+        if row['symbol'] == 'ad.push':
+            assert row['signature'] == 'I64 -> F64 -> I64 -> F64 -> I64'
+            arguments = '[Borrow, Borrow, Borrow, Borrow]'
+        else:
+            assert row['signature'] == before['signature']
+            arguments = '[Borrow, Borrow, Borrow]' if row['symbol'] == 'ad.backward' else '[Borrow]'
         result = 'FreshLeaf' if row['symbol'] == 'ad.backward' else 'Shared'
         expected = 'Some(Contract { arguments: ' + arguments + ', result: ' + result + ', callback: None, aliases: [] })'
         assert row['contract'] == expected

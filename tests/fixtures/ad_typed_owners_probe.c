@@ -72,10 +72,10 @@ int main(void) {
         V base=fwp_p_ad_tape_owned(PTR(&params),inputs,&typed_element);
         V last=base;
         if (count) {
-            struct {uint32_t tag,n;V fields[4];} operation={0,4,{base,2,base,2}};
-            last=fwp_p_ad_push_owned(PTR(&operation),&typed_element);
-            operation.fields[0]=last; operation.fields[2]=(V)(int64_t)-1;
-            last=fwp_p_ad_push_owned(PTR(&operation),&typed_element);
+            typed_dup(2); typed_dup(2);
+            last=fwp_p_ad_push_owned(base,2,base,2,&typed_element);
+            typed_dup(2); typed_dup(2);
+            last=fwp_p_ad_push_owned(last,2,(V)(int64_t)-1,2,&typed_element);
         }
         V outputs=0,seeds=0;
         if (count && mode!=5) {

@@ -166,8 +166,8 @@ fn public_tape_tokens_agree_with_raw_interpreter() {
     let input = scratch.0.join("tokens.fwp");
     let common = "one-output : I64 -> Array[I64]\none-output = both id (const []) | uncurry Cons | array.from-list\nfinish : I64 -> Array[F64]\nfinish = make { 0 = id, 1 = add 1 | one-output, 2 = const [1.0] | array.from-list } | uncurry3 ad.backward\n";
     let cases = [
-        ("left", "main = 1 | ad.tape | make { 0 = add 1, 1 = const 1.0, 2 = const -1, 3 = const 0.0 } | ad.push | echo\n", true),
-        ("right", "main = 1 | ad.tape | make { 0 = id, 1 = const 1.0, 2 = add 1, 3 = const 1.0 } | ad.push | echo\n", true),
+        ("left", "main = 1 | ad.tape | (fn node -> ad.push (node + 1) 1.0 -1 0.0) | echo\n", true),
+        ("right", "main = 1 | ad.tape | (fn node -> ad.push node 1.0 (node + 1) 1.0) | echo\n", true),
         ("backward", "main = 1 | ad.tape | finish | echo\n", true),
         ("empty", "empty : I64 -> Array[F64]\nempty = make { 0 = id, 1 = const [] | array.from-list, 2 = const [] | array.from-list } | uncurry3 ad.backward\nmain = 0 | ad.tape | empty | echo\n", false),
         ("paired", "paired : I64 -> Array[F64]\npaired = make { 0 = id, 1 = both id (const []) | uncurry Cons | array.from-list, 2 = const [2.0] | array.from-list } | uncurry3 ad.backward\nmain = 1 | ad.tape | paired | echo\n", false),
@@ -265,7 +265,7 @@ fn public_tape_tokens_agree_with_raw_interpreter() {
 }
 
 #[test]
-fn scalar_recording_arguments_use_stack_storage_without_retaining_the_record() {
+fn scalar_recording_passes_direct_arguments_without_heap_records() {
     let scratch = Scratch::new("scalar-recording");
     let input = scratch.0.join("recording.fwp");
     std::fs::write(&input, include_str!("fixtures/ad_scalar_recording.fwp")).unwrap();
@@ -279,7 +279,7 @@ fn scalar_recording_arguments_use_stack_storage_without_retaining_the_record() {
     assert_eq!(reference.stdout, b"1\n");
     assert!(reference.stderr.is_empty());
 
-    for (stack, expected_records) in [("0", 256), ("1", 0)] {
+    for (stack, expected_records) in [("0", 0), ("1", 0)] {
         let cfile = scratch.0.join(format!("recording-stack{stack}.c"));
         checked(
             Command::new(compiler)
@@ -297,8 +297,8 @@ fn scalar_recording_arguments_use_stack_storage_without_retaining_the_record() {
                 "static uint64_t recording_records, recording_calls;\nstatic V fwp_record(uint32_t n, const V *f) {\nif (n == 4) recording_records++;".to_owned(),
             ),
             (
-                "static V fwp_p_ad_push(V tup) {".to_owned(),
-                "static V fwp_p_ad_push(V tup) {\nrecording_calls++;".to_owned(),
+                "static V fwp_p_ad_push(V a, V wa, V b, V wb) {".to_owned(),
+                "static V fwp_p_ad_push(V a, V wa, V b, V wb) {\nrecording_calls++;".to_owned(),
             ),
             (
                 "    /* Ownership observation point: before runtime teardown. */".to_owned(),
@@ -339,7 +339,7 @@ fn scalar_recording_arguments_use_stack_storage_without_retaining_the_record() {
 }
 
 #[test]
-fn typed_recording_borrows_the_outer_record_and_keeps_weight_owners() {
+fn typed_recording_moves_direct_weights_without_argument_records() {
     let scratch = Scratch::new("typed-recording");
     let compiler = env!("CARGO_BIN_EXE_fwp");
     for (name, ty, one, zero) in [
@@ -360,7 +360,7 @@ fn typed_recording_borrows_the_outer_record_and_keeps_weight_owners() {
         );
         assert_eq!(reference.stdout, b"True\n");
         assert!(reference.stderr.is_empty());
-        for (stack, expected_records) in [("0", 256), ("1", 0)] {
+        for (stack, expected_records) in [("0", 0), ("1", 0)] {
             let cfile = scratch.0.join(format!("{name}-{stack}.c"));
             checked(
                 Command::new(compiler)
@@ -372,9 +372,23 @@ fn typed_recording_borrows_the_outer_record_and_keeps_weight_owners() {
                     .arg(&cfile),
             );
             let mut code = std::fs::read_to_string(cfile).unwrap();
-            let entry = "static V fwp_p_ad_push_owned(V tuple, const fwp_desc *elem) {";
+            let entry =
+                "static V fwp_p_ad_push_owned(V a, V da, V b, V db, const fwp_desc *elem) {";
             assert_eq!(code.matches(entry).count(), 1);
-            code = code.replace(entry, &format!("static unsigned typed_calls, typed_heap_records;\n{entry}\n    typed_calls++;\n    size_t chunk;\n    if (fwp_heap_chunk_of((uintptr_t)tuple, &chunk)) typed_heap_records++;"));
+            code = code.replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic unsigned typed_calls, typed_heap_records, typed_recording_started;");
+            code = code.replace(entry, &format!("{entry}\n    typed_calls++;"));
+            let record = "static V fwp_record(uint32_t n, const V *f) {";
+            assert_eq!(code.matches(record).count(), 1);
+            code = code.replace(
+                record,
+                &format!(
+                    "{record}\n    if (typed_recording_started && n == 4) typed_heap_records++;"
+                ),
+            );
+            let setup =
+                "    V base = fwp_ad_tape_new((V)n, owner);\n    fwp_cleanup_pop(&cleanup);";
+            assert_eq!(code.matches(setup).count(), 1);
+            code = code.replace(setup, &format!("{setup}\n    typed_recording_started = 1;"));
             let observation = "    /* Ownership observation point: before runtime teardown. */";
             assert_eq!(code.matches(observation).count(), 1);
             code = code.replace(

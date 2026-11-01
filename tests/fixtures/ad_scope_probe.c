@@ -16,7 +16,7 @@ static void *scope_probe_calloc(size_t n,size_t size) {
 static void scope_record_and_observe(V base,int offset) {
     /* Scope cleanup must own real operation buffers, not input placeholders. */
     struct { uint32_t tag,n; V fields[4]; } tuple={0,4,{base,fwp_from_f64(1),(V)(int64_t)-1,0}};
-    fwp_p_ad_push(PTR(&tuple));
+    fwp_p_ad_push(OBJ(PTR(&tuple))->f[0], OBJ(PTR(&tuple))->f[1], OBJ(PTR(&tuple))->f[2], OBJ(PTR(&tuple))->f[3]);
     fwp_tape *t=fwp_tape_of((int64_t)base>>32);
     scope_tracked[offset]=t->pa;scope_tracked[offset+1]=t->pb;
     scope_tracked[offset+2]=t->da;scope_tracked[offset+3]=t->db;

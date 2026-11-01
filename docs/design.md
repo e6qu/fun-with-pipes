@@ -423,6 +423,12 @@ A numeric derivative tape records two parents and local derivative weights per
 operation. Its backward workspace need only reach the last requested output;
 later forward work and failures still run. Parent buffers share one allocation
 and derivative buffers another; only their base pointers own storage.
+Recording receives four curried arguments: parent A, weight A, parent B, weight B.
+Native typed recording consumes both weight owners. It protects them during
+validation and growth, then stores them before publishing the node. Inactive
+recording releases both; caller aliases keep their separately acquired owners.
+The [transfer protocol](measurements/derivative-recording-moves.md) defines the
+checks required before treating this implementation as verified support.
 
 Growth must
 preserve initialized entries and cleanup. A detached numeric workspace cache is

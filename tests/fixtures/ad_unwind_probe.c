@@ -25,7 +25,7 @@ static int invalid_push(V a, V b) {
     V tuple=PTR(&value);
     OBJ(tuple)->f[0]=a;OBJ(tuple)->f[1]=fwp_from_f64(1);
     OBJ(tuple)->f[2]=b;OBJ(tuple)->f[3]=fwp_from_f64(1);
-    if (!setjmp(recovered)) { fwp_p_ad_push(tuple);return 31; }
+    if (!setjmp(recovered)) { fwp_p_ad_push(OBJ(tuple)->f[0], OBJ(tuple)->f[1], OBJ(tuple)->f[2], OBJ(tuple)->f[3]);return 31; }
     if (strcmp(fwp_trap_msg,FWP_AD_INVALID_NODE)) return 32;
     return 0;
 }
@@ -50,7 +50,7 @@ int main(void) {
         if (t->len!=2 || !t->live) return 33;
         /* Record a real operation so unwind still owns all metadata buffers. */
         struct { uint32_t tag,n; V fields[4]; } value={0,4,{selected_base,fwp_from_f64(1),(V)(int64_t)-1,0}};
-        V recorded=fwp_p_ad_push(PTR(&value));
+        V recorded=fwp_p_ad_push(OBJ(PTR(&value))->f[0], OBJ(PTR(&value))->f[1], OBJ(PTR(&value))->f[2], OBJ(PTR(&value))->f[3]);
         /* The tape must own copied scalars, never the caller's record. Seed
          * the recorded node after overwriting every input field. */
         memset(&value,0,sizeof(value));

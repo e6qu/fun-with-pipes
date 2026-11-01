@@ -85,9 +85,9 @@ fn visit(root: &Path, dir: &Path, lowered: &BTreeSet<&str>) {
 }
 
 fn main() {
-    assert!(ownership::borrows_without_escape("ad.push", 0));
+    assert!(!ownership::borrows_without_escape("ad.push", 0));
     assert!(!ownership::borrows_without_escape("ad.push", 1));
-    assert!(ownership::borrows_without_escape("ad.push-owned", 0));
+    assert!(!ownership::borrows_without_escape("ad.push-owned", 0));
     assert!(!ownership::borrows_without_escape("ad.push-owned", 1));
     let names = std::env::var("FWP_AUDIT_LOWERED").unwrap();
     let lowered = names.split(',').collect::<BTreeSet<_>>();

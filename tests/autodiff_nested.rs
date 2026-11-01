@@ -246,7 +246,7 @@ fn managed_tapes_release_across_recovered_failure_and_task_cancellation() {
                 "    V base = fwp_ad_tape_new((V)n, owner);\n    fwp_cleanup_pop(&cleanup);",
             ),
             (2, "    owner->len = t->len = idx + 1;"),
-            (11, "        fwp_cleanup_push(&weight_cleanup, fwp_value_release, &weight);"),
+            (11, "    owner->weights[2*op] = da; owner->weights[2*op+1] = db;"),
             (
                 3,
                 "    fwp_cleanup_push(&value_cleanup, fwp_owned_tape_release, owner);",
@@ -308,9 +308,10 @@ fn managed_tapes_release_across_recovered_failure_and_task_cancellation() {
             Some(195)
         );
 
-        let registration = "        fwp_cleanup_push(&weight_cleanup, fwp_value_release, &weight);";
+        let registration = "left = {da, elem->drop}";
         assert_eq!(code.matches(registration).count(), 1);
-        let missing_weight = code.replace(registration, "");
+        let missing_weight = code.replace(registration, "left = {da, NULL}");
+        assert_ne!(missing_weight, code);
         fwp::cgen::compile_c(&missing_weight, &binary, opt).unwrap();
         assert_eq!(
             Command::new(&binary)
