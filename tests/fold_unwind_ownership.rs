@@ -62,6 +62,101 @@ fn function_id<'a>(emitted: &'a str, name: &str) -> &'a str {
         .unwrap()
 }
 #[test]
+fn numeric_record_fold_releases_owners_on_trap_box_failure_and_cancellation() {
+    let dir = Scratch::new("numeric-records");
+    let src = dir.0.join("records.fwp");
+    let cfile = dir.0.join("records.c");
+    std::fs::write(&src, r#"
+Point = {index: I64, value: F64}
+step : Point -> Point -> Point
+step = fn a -> fn b -> Point {index = (a | .index) + (b | .index), value = (a | .value) + (b | .value)}
+export transform : Bool -> Point -> List[Point] -> Point ! {Async}
+transform = fn pause -> fn seed -> fn values ->
+    let ready = pause | match
+        True -> task.yield ()
+        False -> ()
+    in fold step seed values
+"#).unwrap();
+    checked(
+        Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .args([
+                "build",
+                "--fn",
+                "transform",
+                "--memory",
+                "dynamic",
+                "--emit-c",
+            ])
+            .arg(&src)
+            .arg("-o")
+            .arg(&cfile),
+    );
+    let emitted = std::fs::read_to_string(cfile).unwrap();
+    assert!(emitted.contains("#define FWP_UNWIND 1"));
+    assert!(emitted.contains("#define FWP_TASK_TICKS 1"));
+    let drop_name = |ty: &str| {
+        let start = emitted
+            .find(&format!("/* {ty} */\nstatic void fwp_drop"))
+            .unwrap();
+        emitted[start..]
+            .split("static void ")
+            .nth(1)
+            .unwrap()
+            .split('(')
+            .next()
+            .unwrap()
+    };
+    let point_drop = drop_name("Point");
+    let probe = include_str!("fixtures/record_fold_unwind.c")
+        .replace(
+            "TRANSFORM",
+            &format!("f{}", function_id(&emitted, "transform")),
+        )
+        .replace("DROP_POINT", point_drop)
+        .replace("DROP_LIST", drop_name("List[Point]"));
+    let start = emitted.find("static V fwp_record_fold").unwrap();
+    let end = start + emitted[start..].find("\n}\n").unwrap() + 3;
+    let helper = &emitted[start..end];
+    assert_eq!(helper.matches("        accumulator = w").count(), 1);
+    let instrumented = helper.replace("        accumulator = w",
+        "        record_fold_visits++;\n        if (record_fold_mode == 0 && record_fold_visits == 2) fwp_trap(\"injected callback failure\");\n        if (record_fold_mode == 2 && record_fold_visits == 2) { fwp_cur->cancelled = 1; fwp_budget = 0; }\n        accumulator = w")
+        .replace("    return fwp_rc_fresh(fwp_record(",
+            "    record_fold_fail_box = record_fold_mode == 1;\n    return fwp_rc_fresh(fwp_record(");
+    let mut code = emitted[..emitted.find("int main(").unwrap()].replace(helper, &instrumented)
+        .replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic int record_fold_mode, record_fold_visits, record_fold_fail_box;\nstatic void fwp_trap(const char *);");
+    let allocation = "static inline void *fwp_alloc_init(size_t n) {";
+    assert_eq!(code.matches(allocation).count(), 1);
+    code = code.replace(allocation, &format!("{allocation}\n    if (record_fold_fail_box) fwp_trap(\"injected result allocation failure\");"));
+    code += &probe;
+    let missing_seed = code.replace(
+        &format!("    {point_drop}(z);\n    while (xs)"),
+        "    while (xs)",
+    );
+    assert_ne!(code, missing_seed);
+    for opt in ["-O1", "-O2"] {
+        for (name, source, expected) in
+            [("ordinary", &code, 0), ("missing-seed", &missing_seed, 90)]
+        {
+            let exe = dir.0.join(format!("{name}-{opt}.exe"));
+            fwp::cgen::compile_c(source, &exe, opt).unwrap();
+            let output = Command::new(&exe).output().unwrap();
+            record_probe::save(
+                "record_fold_unwind",
+                &format!("{name}-{opt}"),
+                source,
+                &exe,
+                &output,
+            );
+            assert_eq!(
+                output.status.code(),
+                Some(expected),
+                "{name}/{opt}: {output:?}"
+            );
+        }
+    }
+}
+
+#[test]
 fn right_fold_releases_accumulator_and_scratch_on_failure() {
     let dir = Scratch::new("failure");
     let src = dir.0.join("fold.fwp");

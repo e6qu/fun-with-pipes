@@ -1,8 +1,9 @@
 # Current work
 
-**Next:** run and audit the first `record-fold-checks` jobs on GCC Linux
-ARM64/AMD64 and Clang macOS ARM64. Fix every failure, then finish the allocation-failure/cancellation controls required by the
-[frozen protocol](measurements/derivative-record-folds.md) before measurements.
+**Next:** audit focused run `41359574645` on GCC Linux ARM64/AMD64 and Clang
+macOS ARM64. Once compilation and focused controls pass, dispatch
+`record-fold-measurements` for the added unwind controls and all six cases on both
+Linux hosts. Finish same-source timing support before final production validation.
 
 Branch `derivative-record-callbacks` starts at verified merge `1f358249` in
 `/private/tmp/fwp-returned-callables`. [Draft PR #240](https://github.com/e6qu/fun-with-pipes/pull/240) contains the first
@@ -100,7 +101,10 @@ hashes and both archive digests, 0.24 seconds. Post-merge documentation
 
 Guarded formatting passes (1.88 seconds). Full builds run remotely.
 
-First focused run `41359119118` at `241024a3` remains queued on all three hosts.
+Superseded focused run `41359119118` at `241024a3` was cancelled while all jobs
+were queued. Replacement `41359574645` tests `0c404719`: ARM64 GCC job
+`125006882519`, macOS Clang `125006882685`, AMD64 GCC `125006882790`; all are
+still queued at the latest poll. Compiler code has not changed since this head.
 Additional probes cover 512 empty/singleton/long-list and alias/reuse combinations,
 exact one-result allocation/no-retain counts, and omitted seed/result releases.
 Seven excluded-shape/calling-convention cases check selection boundaries. These
@@ -108,3 +112,19 @@ new probes are written but not yet natively verified. Source review moved seed
 cleanup registration before destructor emission; direct-only workers cannot rely
 on a generic entry to register their destructor. Batch these changes into the
 next focused run instead of repeating an obsolete queued build.
+
+Additional unwind probes now inject callback traps, final-result allocation failure
+and real task cancellation, including aliased inputs and omitted seed release.
+They are authored, not yet run natively. The existing count measurement/audit now
+accepts the explicit `record-fold` policy against #239; ten observer/control tests
+pass under the guard (13.03 seconds), including every case/mode budget boundary.
+Five corrupt source/count audit controls also fail as intended (0.97 seconds).
+
+All ten fwp fixture sources type-check with the verified #239 macOS ARM64 compiler;
+the raw interpreter prints the expected alias/empty/scalar/error results.
+This checks fixture validity, not the changed compiler. Guarded commands use
+`/private/tmp/fwp-240-check-fixtures.py` (1.66 seconds) and the raw interpreter
+(0.25 seconds). Artifact `13098119213` ZIP SHA-256
+`505952c57b3203075452526493a60c401775c7fa7305013b8658af85a81b305f` and compiler
+SHA-256 `6ae32e315ded657cb8e7b5d9b518fc337d527204bf2164733c9c4c273c6cb3b3`
+match the final #239 manifest. Extracted package: `/private/tmp/fwp-240-baseline-macos/`.
