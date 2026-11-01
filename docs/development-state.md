@@ -1,12 +1,12 @@
 # Current work
 
 **Next:** run and audit the first `record-fold-checks` jobs on GCC Linux
-ARM64/AMD64 and Clang macOS ARM64. Fix every failure, then add the physical-release,
-allocation-failure/cancellation and excluded-shape controls required by the
+ARM64/AMD64 and Clang macOS ARM64. Fix every failure, then finish the allocation-failure/cancellation controls required by the
 [frozen protocol](measurements/derivative-record-folds.md) before measurements.
 
 Branch `derivative-record-callbacks` starts at verified merge `1f358249` in
-`/private/tmp/fwp-returned-callables`. The first compiler candidate is implemented; native validation is pending.
+`/private/tmp/fwp-returned-callables`. [Draft PR #240](https://github.com/e6qu/fun-with-pipes/pull/240) contains the first
+compiler candidate; native validation is pending.
 Preserve unrelated edits in the primary checkout. These delivery/status updates
 are local changes for the next substantial PR, not an untested change to #239.
 
@@ -99,3 +99,12 @@ hashes and both archive digests, 0.24 seconds. Post-merge documentation
 `41351222111` passes. Preparation `7b300717` and immutable tag `roadmap/derivative-record-fold-protocol-2026-11-02` precede compiler edits.
 
 Guarded formatting passes (1.88 seconds). Full builds run remotely.
+
+First focused run `41359119118` at `241024a3` remains queued on all three hosts.
+Additional probes cover 512 empty/singleton/long-list and alias/reuse combinations,
+exact one-result allocation/no-retain counts, and omitted seed/result releases.
+Seven excluded-shape/calling-convention cases check selection boundaries. These
+new probes are written but not yet natively verified. Source review moved seed
+cleanup registration before destructor emission; direct-only workers cannot rely
+on a generic entry to register their destructor. Batch these changes into the
+next focused run instead of repeating an obsolete queued build.

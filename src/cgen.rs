@@ -10653,6 +10653,12 @@ static const fwp_exec_spec exec_spec{i} = {{
             let _ = writeln!(owned_defs, "static void fwp_caps{id}(V v, int duplicate) {{\n{caps}    if (!duplicate) {{ {release} }}\n}}\nstatic V fwp_owned_entry{id}(V *a) {{\n{entry_pre}    V result = f{id}({});\n{entry_post}{cleanup}    return result;\n}}\nstatic void fwp_args{id}(V *a, uint32_t start, uint32_t n) {{\n{arguments}}}\nstatic const fwp_owned_fninfo fwp_owned_info{id} = {{fwp_owned_entry{id}, fwp_caps{id}, fwp_args{id}, {pending_drop}}};", args.join(", "));
         }
     }
+    // Register the seed destructor before emitting descriptors and typed drops.
+    // A direct-only callback need not have an owned entry to register it for us.
+    let mut record_fold_defs = String::new();
+    for id in g.record_folds.clone() {
+        record_fold_defs.push_str(&g.record_fold_def(id));
+    }
     // Each counted CAF owns its cached result. Calls return a separate owner;
     // scalar caches never send machine words through generic RC operations.
     // Prepare typed drops before emitting the helper definitions.
@@ -10936,9 +10942,7 @@ static const fwp_exec_spec exec_spec{i} = {{
             let _ = writeln!(out, "static V fwp_owned_k{id}({params}) {{ V a[] = {{{values}}}; fwp_args{id}(a, 0, {arity}); return fwp_owned_entry{id}(a); }}");
         }
     }
-    for id in g.record_folds.clone() {
-        out.push_str(&g.record_fold_def(id));
-    }
+    out.push_str(&record_fold_defs);
     for id in g.owned_fold_callbacks.clone() {
         let ty = prog.funcs[id].ty.params(2).0[0].clone();
         let drop = g.value_drop(&ty);
