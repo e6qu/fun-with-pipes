@@ -162,5 +162,6 @@ failed both new probes on all hosts. Existing targets passed. Repairs:
 | Heap counter queried mutable-buffer capacity | Use heap membership; immutable records deliberately have no such capacity. |
 
 No runtime change or acceptance relaxation was needed. Counts now print before
-assertions so failed observations remain visible. Full final-head production
-validation remains required; this focused result covers three of the six hosts.
+assertions so failed observations remain visible. Full final-head production and documentation subsequently passed in
+[PR #237](../roadmap-history.md#typed-derivative-owners-and-documentation-pr-237).
+The focused results above retain their own source and three-host scope.

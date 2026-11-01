@@ -1,100 +1,41 @@
 # Implementation plan
 
 Build an ahead-of-time language with simple pipes, immutable values, strong types
-and useful inference. Prefer direct values, moves and borrows; use ARC for sharing
-that needs it. Tracing GC is removed. JIT and backward compatibility are excluded.
-[Terminology](docs/terminology.md) explains these terms with worked examples.
+and useful inference. Prefer direct values, moves and borrows; reserve ARC for
+necessary sharing. GC is removed; JIT and backward compatibility are excluded.
 
-## Current batch: fewer owners in typed derivatives
+## Current batch: move derivative weights into the tape
 
-PR #236 delivered local names/functions, tooling and the selected allocation
-optimizations after all nine production jobs and documentation passed. Its
-[delivery record](docs/roadmap-history.md#local-names-and-allocation-optimizations-pr-236)
-replaces the completed ten-step implementation backlog. The original numerical
-speed requirements remain open; delivery did not convert noisy timings into passes.
-
-The next batch reduces temporary storage and ownership operations in F128 and
-nested reverse-mode derivatives. Their tapes keep language values alive, unlike
-the ordinary floating tape's numeric buffers. The
-[protocol](docs/measurements/typed-derivative-owners.md) fixes selected count and
-cleanup requirements before implementation. No arithmetic, callback order,
-public API or tracing mechanism changes are planned.
+[PR #237](docs/roadmap-history.md#typed-derivative-owners-and-documentation-pr-237)
+passed all nine production jobs and documentation. It removed temporary typed
+recording records and redundant adjoint owners. Recording still retains each
+weight before the caller drops its owner. The next change transfers those owners
+instead, and removes the recording argument record from both scalar and typed APIs.
 
 | Step | Work | Completion requirement |
 |---|---|---|
-| 1 | Revise docs and tutorials; close the merged batch | Explain concepts before use, add worked examples and diagrams, shorten repetition, fix stale claims/links and preserve measured evidence |
-| 2 | Borrow typed recording records | Direct temporary `ad.push-owned` tuples use stack views while retained weight children remain independently owned; counted fixtures and failure controls pass |
-| 3 | Reduce backward-pass owners | Initial adjoints borrow the tape's zero; completed owned input adjoints move into result cells; alias, failure, cancellation and nested-derivative controls pass |
-| 4 | Verify and deliver together | Focused native checks, audited count/cleanup evidence, all nine production jobs and documentation pass on one final head |
+| 1 | Close the merged batch and freeze the recording contract | Preserve #237 evidence; document argument order, ownership, failure and count requirements before implementation |
+| 2 | Pass recording arguments directly and move typed weights | Update library, interpreter, C generation and runtime together; preserve arithmetic, evaluation and trap order |
+| 3 | Verify ownership transfers and update callers/docs | Raw/native results, aliases, inactive nodes, growth, stale/mixed nodes, failure and cancellation pass; inventory and measured owner counts agree |
+| 4 | Verify and deliver the complete batch | Focused GCC/Clang O1/O2 checks, evidence audit, nine exact-head production jobs and documentation pass before squash merge |
 
-## 1. Terms and current status
+The [recording protocol](docs/measurements/derivative-recording-moves.md) defines
+specific acceptance. A 256-operation chain must create no recording argument
+records with stack promotion either enabled or disabled. Typed recording must
+perform zero weight retains: each weight enters with one owner, which moves to
+the tape or is released when no node is recorded. Shared caller aliases keep
+their separate owners. Failure before publication releases both incoming owners.
 
-Use `docs/terminology.md` as the lookup guide; teach concepts in the tutorials
-before linking to it. Cover all tracked documentation, including historical reports
-and generated library documentation through its source comments/generator.
+No new syntax, public optimization switch, compatibility wrapper or implicit
+conversion is needed. Functions remain curried and single-argument. Update
+manual recording examples and frozen-inventory exceptions explicitly. Retire
+the old current-source record-allocation comparison when its representation no
+longer exists; retain its historical results and acceptance checker.
 
-- Explain `let … in …` as one expression. Trace simple and chained bindings,
-  scopes, effects and the manual recording fixture; distinguish it from a pipe.
-- Give tutorials concrete input → calculation → output examples. Use diagrams
-  for flows/lifetimes, tables for comparisons and bullets for parallel rules.
-- Remove repeated introductions and obsolete work instructions. Keep exact syntax,
-  API limitations, parser classification, compilation order and macro behavior.
-- Preserve historical sources, observations, rejected results and frozen limits.
-  Label benchmark peers, inputs, timing boundaries and memory quantities explicitly.
-- Check links, generated docs, source copies and runnable examples. Record which
-  checks actually ran; do not equate a docs audit with native verification.
-
-Record #236's tested head, merge tree and passing runs in history. The handoff
-keeps one next action and current failures instead of a transcript of prior work.
-
-## 2. Typed recording
-
-`ad.push-owned` reads a four-field argument and separately retains its two typed
-weights. It does not retain the outer record. Prove that distinction and allow
-the existing borrowed-record lowering for this primitive. Keep child owners alive
-through buffer growth, both retains and failure cleanup. Do not extend this proof
-to arbitrary primitives or escaping containers.
-
-Require a repeated 256-operation fixture to remove exactly 256 outer heap records
-with stack storage enabled, compared with the explicit stack-disabled control.
-Use F128 and nested reverse weights, plus reused aliases. Preserve raw interpreter
-results and native GCC/Clang O1/O2, stale/mixed/tape-full failures, workspace on/off
-and zero managed/raw live growth. Audit the frozen primitive inventory.
-
-## 3. Backward ownership
-
-Untouched adjoint slots may borrow the tape's existing zero value. Slots holding
-that exact value are borrowed; other slots own their values. Normalize callback
-results that alias the shared zero by dropping only their independently returned
-owner. Numerical equality is not an ownership test: use exact value identity.
-
-Move completed nonzero input owners into result-list cells instead of retaining
-and later releasing them. A result containing the shared zero still needs its
-own owner. Keep the transferred value protected if list allocation fails.
-Test untouched slots, repeated seeds, callbacks returning the shared zero or an
-existing argument, failure while building results and cancellation. Preserve
-all callback calls, including inactive checks; do not prune arbitrary typed
-backward work using the scalar tape's assumptions.
-
-Count initialization retains and result-transfer retains separately. Require zero
-per-slot retains during initialization and zero extra retains when moving distinct
-owned results. Verify that deliberate omitted releases and borrowed-zero overdrops
-fail the observer. Retain emitted C and native images, allocation/byte/count/peak
-and final-storage observations. Counts alone establish no speed improvement.
-
-## 4. Integration and measurements
-
-Use existing integration targets and one focused runner suite for the related
-changes; full builds and suites run on GitHub. Local checks use the unchanged
-resource guard. Audit every failed job and completed target before a repair push.
-Run the full matrix once the batch is complete, then fix any discovered issue.
-Require all nine production jobs and documentation on the exact final head;
-skips and emulation do not establish native support.
-
-Squash-merge only after passing gates. Use one subject of at most 80 characters,
-empty body, no attribution or trailers, and verify the resulting tree and message.
-Keep one active PR. The current user request and standing authorization cover
-implementation, documentation, publication and merge.
+Full builds and suites run on GitHub after the batch is complete. Local checks
+use the unchanged resource guard. Audit every failing job/target before batching
+repairs. Keep one active PR; squash with one subject of at most 80 characters and
+an empty body after every final-head gate passes. Counts alone prove no speedup.
 
 ## Open performance goals
 

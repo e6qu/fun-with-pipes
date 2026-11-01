@@ -6,6 +6,22 @@ and complete platform validation are different events. Measurements retain their
 original source and settings; old numbers are not measurements of current main.
 The linked PRs, runs and data records supply the detailed evidence.
 
+## Typed derivative owners and documentation (PR #237)
+
+Typed F128/nested recording borrows temporary outer records. Adjoint slots borrow
+the tape-owned zero; owned input results move into list cells with failure cleanup.
+The [focused report](measurements/typed-derivative-owners.md) preserves counted
+savings, alias/failure controls, native images and frame reports. No timing gain
+is claimed. All 24 tutorials gained worked traces, all 28 library introductions
+were revised, and the guides explain local bindings, tapes and measurements.
+
+All nine [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/41292025233)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/41292025256)
+pass on `7590f36b770690cc9df730246b4ef614077e2edd`; completed logs were audited.
+Merge `94abb83cb33cb52bdcafb19c67c855cf9007059f` has the same tree
+`7d86145d9038ccea1b07e7ab719cf8490abf6da8`. Its verified squash message is one
+line without body or trailers. Original numerical timing requirements remain open.
+
 ## Local names and allocation optimizations (PR #236)
 
 [PR #236](https://github.com/e6qu/fun-with-pipes/pull/236) delivered immutable `let`,
