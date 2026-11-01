@@ -1,9 +1,9 @@
 # Current work
 
-**Next:** trace the three remaining derivative callback boxes in the retained
-#239 C to their callers and result lifetimes, starting with the known fold path
-in `src/cgen.rs`. Complete step 1 of [PLAN.md](../PLAN.md) before selecting and
-freezing the next compiler change.
+**Next:** implement the selected direct numeric-record left fold in `src/cgen.rs`
+under the [frozen requirements](measurements/derivative-record-folds.md), then add
+focused semantic/ownership controls before native measurement. No compiler code
+has changed yet.
 
 Branch `derivative-record-callbacks` starts at verified merge `1f358249` in
 `/private/tmp/fwp-returned-callables`. No new PR or compiler change exists yet.
@@ -14,8 +14,8 @@ are local changes for the next substantial PR, not an untested change to #239.
 
 | Step | Status | Evidence / remaining work |
 |---|---|---|
-| 1 | In progress | Saved counts identify 76,615 callback result boxes in the largest current-vector case; trace consumers and compare all retained modes |
-| 2 | Pending | Prove eligibility and freeze exact requirements before compiler edits |
+| 1 | Verified | Source/count audit verifies all 96 observations and 48 C hashes; input/pair results escape into lists, addition accumulators stay within the fold |
+| 2 | Verified | Direct numeric-record left-fold boundary and count, cleanup, code/stack and timing requirements published before compiler edits |
 | 3 | Pending | Implement the selected transformation and semantic/cleanup controls |
 | 4 | Pending | Audit focused evidence, final nine production jobs and documentation; squash merge |
 
@@ -93,3 +93,7 @@ current evidence, logs and source worktrees remain.
 The delivery/next-plan update passes the guarded roadmap check: 197 link sets,
 106 preparation pairs/tags and four plan steps, 2.98 seconds. `git diff --check`
 also passes. Publish these status changes with the next substantial batch.
+
+The callback-box audit passes under the local guard: 96 observations, 48 source
+hashes and both archive digests, 0.24 seconds. Post-merge documentation
+`41351222111` passes. No active PR exists yet.

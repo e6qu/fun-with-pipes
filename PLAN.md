@@ -29,8 +29,9 @@ First inspect the known fold caller and existing direct-worker path in
 `src/cgen.rs`. A numeric accumulator may stay direct between callback calls;
 results retained in lists have a different lifetime. Do not assume every box can
 be removed or combine mapping and summation when that changes recording/trap order.
-If the proof does not hold, record the concrete boundary before selecting another
-measured cost. No compiler change or new performance acceptance is claimed yet.
+The [frozen selection](docs/measurements/derivative-record-folds.md) keeps the
+known left-fold accumulator direct and leaves list-stored results alone. All 96
+saved observations agree. No compiler change or new speed result is claimed yet.
 
 Use focused checks during implementation, then one complete final validation
 batch. Reuse saved observations before scheduling measurements. Do not rerun
