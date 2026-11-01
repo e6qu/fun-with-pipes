@@ -330,6 +330,20 @@ names differ. This establishes neither identical optimized machine code nor the
 cause of the slowdown. Check GCC 15.2's optimization reports next, before making
 a compiler change or attributing the result to code layout.
 
+The `record-zip-codegen` diagnostic audits AMD64 session 2's saved evidence, then
+rebuilds its four zero-update programs with the original GCC version, source
+paths and flags. It adds only
+[GCC report options](https://gcc.gnu.org/onlinedocs/gcc/Developer-Options.html):
+`-fopt-info-inline-all` explains inlining decisions, and `-fdump-tree-optimized`
+shows GCC's optimized intermediate program. Each new executable must match the
+measured executable's SHA-256 before execution; output must match its saved
+hash and all 32,768 lines. Reports, build commands and outputs remain artifacts.
+This is a compilation diagnostic, not a new timing session or an acceptance
+exception. It tests whether GCC removes the initially stopped loop and whether
+inlining of iteration, printing or cleanup differs between candidate/reference
+or between current-only/history forms. A difference is a hypothesis to test,
+not proof of timing causality.
+
 Full reports and complete measurement logs are retained together:
 [ARM64 / 1](derivative-record-zip-2026-11-01/original/aarch64-1.json.gz),
 [ARM64 / 2](derivative-record-zip-2026-11-01/original/aarch64-2.json.gz),

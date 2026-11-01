@@ -1,8 +1,9 @@
 # Current work
 
-**Next:** investigate the repeated AMD64 zero-update regression using GCC 15.2
-optimization reports for the exact saved C sources. Source review has not found
-an ownership defect. Resolve the timing acceptance decision before final gates.
+**Next:** dispatch `record-zip-codegen` for completed run `41330973213`, source
+`215db5dea22ebbf1e2052b69660c068959e4a2c7`, then inspect GCC 15.2's reports for the
+four reproduced zero-update programs. Source review has not found an ownership
+defect. Resolve the timing acceptance decision before final gates.
 
 [PR #239](https://github.com/e6qu/fun-with-pipes/pull/239) is draft on branch
 `derivative-forward-costs`, worktree `/private/tmp/fwp-returned-callables`.
@@ -101,6 +102,9 @@ Commands use `python3 scripts/local-guard.py`; temporary readers are
 `/private/tmp/fwp-239-read-retained.py` and `/private/tmp/fwp-239-read-zero-source.py`.
 Streamlining initially changed the handoff's required heading/status labels;
 both were restored to the checker's contract.
+The new compiler-report script passes guarded Python syntax checking; workflow
+actionlint and the roadmap check also pass. Native compilation/hash reproduction
+must run in `record-zip-codegen` on GitHub; no local full build ran.
 
 Disk previously stopped checks below 64 GiB. Cleanup removed only redundant old
 downloads after confirming original GitHub artifacts remain unexpired and their
