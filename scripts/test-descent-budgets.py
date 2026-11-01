@@ -130,6 +130,37 @@ class DescentBudgets(unittest.TestCase):
                     self.assertEqual(old['fwp-packed']['managed']['retains'], 0)
                     self.assertEqual(failures, [])
 
+    def test_record_zip_limits_cover_savings_noise_storage_and_layout(self):
+        rows = {str(updates): self.recording_case(updates) for updates in [0, 1]}
+        for row in rows.values():
+            pairs = (row['dimensions'] - 1) * row['updates'] * row['solvesPerProcess']
+            for label in ['fwp-ad', 'fwp-ad-history']:
+                current = row['fwpProfiles'][label]['managed']
+                old = row['fwpProfiles'][label + '-reference']['managed']
+                for field, factor in [('requests', 2), ('requestedBytes', 48), ('retains', 3)]:
+                    current[field] = old[field] - factor * pairs
+        self.assertEqual(DESCENT.paired_budget_failures(rows, 'record-zip'), [])
+        for field in ['requests', 'requestedBytes', 'retains', 'peakChargedBytes', 'finalChargedBytes']:
+            changed = copy.deepcopy(rows)
+            changed['1']['fwpProfiles']['fwp-ad']['managed'][field] += 1
+            failures = DESCENT.paired_budget_failures(changed, 'record-zip')
+            self.assertEqual([failure['metric'] for failure in failures], [field])
+        for field in ['requests', 'requestedBytes', 'retains', 'peakChargedBytes']:
+            changed = copy.deepcopy(rows)
+            changed['0']['fwpProfiles']['fwp-ad']['managed'][field] -= 1
+            failures = DESCENT.paired_budget_failures(changed, 'record-zip')
+            self.assertEqual([failure['metric'] for failure in failures], ['zero-update counts'])
+        changed = copy.deepcopy(rows)
+        changed['1']['medianNs']['fwp-ad'] = 103
+        changed['1']['fwpProfiles']['fwp-ad']['rawDerivativeStorage']['finalBytes'] = 1
+        changed['1']['fwpProfiles']['fwp-ad']['expandedRawSha256'] = 'changed'
+        changed['1']['binaries']['fwp-ad']['instructionBytes'] += 1025
+        changed['1']['cCompilerStackUsage']['fwp-ad.su']['entries'][0]['bytes'] += 129
+        failures = DESCENT.paired_budget_failures(changed, 'record-zip')
+        self.assertEqual({failure['metric'] for failure in failures}, {
+            'identical median variation', 'candidate/reference time', 'rawDerivativeStorage',
+            'expandedRawSha256', 'instruction bytes', 'largest static stack frame'})
+
     def test_reports_independent_failures_together_without_changing_inputs(self):
         old = BASELINE['hosts'][0]['report']['results']['129-199']['fwpProfiles']
         current = copy.deepcopy(old)

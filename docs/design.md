@@ -372,6 +372,16 @@ matches can expose direct callbacks, but multiple tested fields, whole-value use
 and protected resources retain their required representation. A compiler-generated
 loop is not permission to interleave two trapping eager stages.
 
+Zip/map fusion also selects flat records of immediate numeric fields. For
+example, `Rev[F64]` contains an F64 value and an I64 tape index. In
+`values | zip (drop 1 values) | map pair-calculation`, the generated loop can
+read one element from each input and call `pair-calculation` directly, without
+building the intermediate list of pairs. Both input lists remain alive until
+the loop finishes; the shorter input determines the output length. Record fields
+containing strings, nested records, functions, resources or boxed wide numbers
+do not qualify. The [candidate protocol](measurements/derivative-forward-costs.md#candidate-acceptance-frozen-before-compiler-edits)
+separates this implemented selection from pending native and timing verification.
+
 The generated-array transformation, verified in [PR #232](roadmap-history.md#generated-array-elimination-pr-232),
 extends this rule to `flip array.generate id | array.fold add 0`. With input
 `4`, the generator produces indices `0, 1, 2, 3`, and the fold adds them to get

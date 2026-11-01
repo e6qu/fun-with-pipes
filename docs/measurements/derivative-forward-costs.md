@@ -201,3 +201,25 @@ numbers at this selection boundary. Existing numeric selection remains intact.
   These are supporting cost limits, not a substitute for speed and live memory.
 - Complete the full nine-job production matrix and documentation on the final
   head before merging. A focused measurement pass is not that delivery gate.
+
+### Running the candidate checks
+
+- `record-zip-checks` in the numerical workflow runs the affected compiler tests
+  and all six count workloads on native Linux ARM64/AMD64 with GCC O1/O2.
+  The archived baseline above supplies the count limits. Each job preserves
+  generated C, executables, logs, stack reports and all observations.
+- `record-zip-time`, with `native_runner=all` and `comparison_session=both`,
+  runs the four timing sessions. `prepare-record-zip-reference.py` replaces only
+  the new flat-record eligibility test; it verifies that no other tracked source
+  changes. The reference retains scalar zip/map fusion, which already removes
+  allocation during derivative-input construction.
+- `summarize-derivative-forward-costs.py --comparison record-zip --baseline
+  docs/measurements/derivative-forward-costs-2026-11-01.json.gz` audits the two
+  downloaded count archives. Supply their paths, tested source, run ID and output
+  path through its required arguments. It recalculates saved observations and
+  count limits, checks instruction/stack growth, and writes failures before
+  rejecting them. `--comparison baseline` audits the original measurement alone.
+
+No candidate result is accepted yet. The implementation and measurement controls
+are ready; native correctness, count savings, paired timings and final production
+gates remain to be verified.

@@ -53,11 +53,16 @@ def attributed_sites(archive, root, sites, profiles):
     return result
 
 
-def audit(path, source, machine):
+def audit(path, source, machine, comparison, baseline):
     with zipfile.ZipFile(path) as archive:
         report = json.loads(archive.read('report.json'))
         assert report['source'] == source and report['machine'] == machine
         assert report.get('complete') is True
+        if comparison == 'record-zip':
+            assert report['comparison'] == dict(policy=comparison, baselineSource=baseline['source'])
+            assert report['cc'] == baseline['hosts'][machine]['cc']
+        else:
+            assert comparison == 'baseline' and baseline is None
         verify_manifest(archive, report)
         expected_cases = {f'{dimensions}-{updates}-{form}-{opt}'
             for dimensions, updates in MEASURE.CASES
@@ -132,8 +137,21 @@ def audit(path, source, machine):
                         binaryBytes=len(ordinary), textBytes=text_bytes,
                         frames=archive.read(frames[0]).decode(),
                         binarySha256=report['files'][root + 'ordinary.exe'])
+        failures = []
+        if baseline is not None:
+            failures = MEASURE.comparison_failures(report, baseline)
+            assert failures == report['comparisonFailures']
+            for name, actual in cases.items():
+                previous = baseline['hosts'][machine]['cases'][name]
+                if actual['textBytes'] > previous['textBytes'] + 1024:
+                    failures.append(name + ': instruction section grew by more than 1024 bytes')
+                def largest_frame(frames):
+                    return max(int(line.split('\t')[1]) for line in frames.splitlines())
+                if largest_frame(actual['frames']) > largest_frame(previous['frames']) + 128:
+                    failures.append(name + ': largest static frame grew by more than 128 bytes')
         return dict(source=source, machine=machine, cpu=report['cpu'], cc=report['cc'],
                     compilerSha256=report['compilerSha256'], cases=cases, controls=report['controls'],
+                    comparisonFailures=failures,
                     files=report['files'], archiveSha256=PROFILE.ARC.digest(path),
                     reportSha256=hashlib.sha256(archive.read('report.json')).hexdigest())
 
@@ -145,9 +163,13 @@ def main():
     parser.add_argument('--source', required=True)
     parser.add_argument('--run', required=True)
     parser.add_argument('--output', required=True, type=Path)
+    parser.add_argument('--comparison', required=True, choices=('baseline', 'record-zip'))
+    parser.add_argument('--baseline', type=Path)
     args = parser.parse_args()
     assert re.fullmatch('[0-9a-f]{40}', args.source) and args.run.isdigit()
-    hosts = {machine: audit(path, args.source, machine)
+    assert (args.comparison == 'record-zip') == (args.baseline is not None)
+    baseline = json.loads(gzip.decompress(args.baseline.read_bytes())) if args.baseline else None
+    hosts = {machine: audit(path, args.source, machine, args.comparison, baseline)
              for machine, path in [('aarch64', args.arm64), ('x86_64', args.amd64)]}
     result = dict(source=args.source, run=args.run, hosts=hosts,
         scope='All six inputs, both forms, GCC O1/O2 and workspace modes. '
@@ -157,6 +179,9 @@ def main():
     args.output.write_bytes(gzip.compress((json.dumps(result, indent=2) + '\n').encode(), mtime=0))
     for machine, host in hosts.items():
         print(f'{machine}: {len(host["cases"])} cases, both workspace modes and all controls verified')
+    failures = {machine: host['comparisonFailures'] for machine, host in hosts.items()
+                if host['comparisonFailures']}
+    assert not failures, json.dumps(failures, indent=2)
 
 
 if __name__ == '__main__':

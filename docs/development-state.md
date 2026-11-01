@@ -1,7 +1,7 @@
 # Current work
 
-**Next:** run the focused `record-zip-checks` suite on both native Linux hosts,
-audit every result, and prepare the same-source timing reference for
+**Next:** audit the focused `record-zip-checks` run `41324329567` on both native
+Linux hosts, repair failures together, then run the prepared paired timing suite for
 [PR #239](https://github.com/e6qu/fun-with-pipes/pull/239).
 The [protocol](measurements/derivative-forward-costs.md) was published first at `02d4aa26`.
 [PLAN.md](../PLAN.md) defines this batch's four steps. The compiler candidate
@@ -31,6 +31,10 @@ characters, with no body, trailers or attribution.
   managed fields and boxed wide numbers remain excluded. The count gate requires
   savings of two requests, 48 requested bytes and three effective retains per pair.
   These are acceptance limits, not yet verified candidate results.
+- `record-zip-time` reuses the paired derivative runner with a same-source
+  reference that disables only flat-record zip/map selection. Two sessions per
+  qualified host retain the frozen 5% speed and 2% identical-copy limits. Its
+  reference builder and budget controls pass locally; timing has not run yet.
 - Reuse `measure-iteration.py` for managed requests/bytes, effective retains and
   live charge; `ownership-profile.py` for source-site ownership operations; and
   `descent-phases.py` for the six derivative boundaries.
@@ -71,6 +75,11 @@ and known-work failures. All detailed counts match across architectures. The
 [explanation/requirements](measurements/derivative-forward-costs.md#verified-baseline-and-selected-change)
 retain the result. Full production gates follow the complete batch.
 
+Candidate `b094fdd8` is published. Focused native run `41324329567` and its
+documentation run `41324313889` were queued at the last check. Production draft
+skips are not passing gates. Preserve the focused run while preparing timing;
+the compiler source has not changed since that dispatch.
+
 Documentation run `41322983262` passes on preparation commit `73cec3e5`; the superseded
 queued docs run `41319949124` was cancelled. The library's misleading “about one
 evaluation” claim is corrected and its reference regenerated.
@@ -87,6 +96,17 @@ Focused local commands, each through `python3 scripts/local-guard.py`:
   runs with the verified baseline compiler and Clang O1; all 28 cases release
   storage. Omitting result cleanup exits 238 as required. This verifies the
   observer, not the new compiler selection, which must run on GitHub.
+- `python3 scripts/test-record-zip-reference.py`: 3 pass; only the selected
+  eligibility block changes, and altered/missing/duplicate blocks are rejected.
+- `python3 scripts/test-descent-budgets.py`: 10 pass, including record count,
+  timing/noise, storage, code-size and stack limits.
+- `python3 scripts/test-descent-groups.py`: 12 pass; historical failed sessions
+  remain failed when the archive checker gains the new comparison protocol.
+- `actionlint -shellcheck= -pyflakes= .github/workflows/numerics.yml
+  .github/workflows/roadmap.yml`: workflow syntax and expressions pass.
+- The updated forward-cost archive auditor rechecks both original archives with
+  `--comparison baseline`; all 96 observations pass. The committed baseline
+  artifact is unchanged.
 - `python3 scripts/test-descent-phases.py --cc clang`: 4 pass. GCC runs on CI.
 - `python3 scripts/check-roadmap.py`: 197 link sets, 106 preparation pairs and
   four plan steps pass. No full local compiler build or suite was run.
