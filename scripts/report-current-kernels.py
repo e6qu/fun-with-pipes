@@ -14,10 +14,11 @@ SPEC.loader.exec_module(RETAIN)
 CHECK = RETAIN.CHECK
 
 
-def verified_reports(directory):
+def verified_reports(directory, comparison):
     index = json.loads((directory / 'index.json').read_text())
     selection = json.loads((directory / 'selection.json').read_text())
     assert index['schema'] == selection['schema'] == 1
+    assert 'comparison' not in index or index['comparison'] == comparison
     assert index['complete'] and not index['auditErrors']
     assert sorted(index['measurements']) == sorted(selection['measuredJobs'])
     assert len(index['measurements']) == len(set(index['measurements'])) == 4
@@ -32,7 +33,7 @@ def verified_reports(directory):
         log = gzip.decompress((directory / row['log']).read_bytes())
         assert len(log) == row['logBytes'] and CHECK.digest(log) == row['logSha256']
         measured = job['id'] in index['measurements']
-        decision = RETAIN.outcome(job, row['qualification'], measured)
+        decision = RETAIN.outcome(job, row['qualification'], measured, comparison)
         if not measured:
             assert row['decision'] == decision
             continue
@@ -40,6 +41,9 @@ def verified_reports(directory):
         raw = gzip.decompress((directory / row['report']).read_bytes())
         assert len(raw) == row['reportBytes'] and CHECK.digest(raw) == row['reportSha256']
         report = json.loads(raw)
+        transformation = {'loop-state': 'native floating-point loop-state fields',
+                          'matrix-columns': 'paired matrix columns'}[comparison]
+        assert report['referenceManifest']['disabledTransformation'] == transformation
         failures = CHECK.check_report(report, source, row['machine'], row['session'])
         assert failures == row['failures']
         assert job['conclusion'] == ('failure' if failures else 'success')
@@ -56,11 +60,15 @@ def verified_reports(directory):
         assert files['comparison.json'] == dict(bytes=len(raw), sha256=CHECK.digest(raw))
         for label, sha in report['compilerSha256'].items():
             assert files[label + '-compiler']['sha256'] == sha
+        if comparison == 'matrix-columns':
+            prerequisite = (directory / row['prerequisite']).read_bytes()
+            assert CHECK.digest(prerequisite) == row['prerequisiteSha256']
+            RETAIN.check_prerequisite(json.loads(prerequisite), report)
         reports.append((row, report))
     assert {(row['machine'], row['session']) for row, _ in reports} == {
         (machine, session) for machine in CHECK.HOSTS for session in (1, 2)}
     assert all(report['sourceTrees'] == reports[0][1]['sourceTrees'] for _, report in reports)
-    for field in ('referenceCodegenSha256', 'candidateCodegenSha256'):
+    for field in RETAIN.REFERENCE_FIELDS[comparison]:
         assert len({report['referenceManifest'][field] for _, report in reports}) == 1
     assert index['decision'] == ('performance-limits-remain-open' if any(
         report['failures'] for _, report in reports) else 'all-current-rules-pass')
@@ -77,10 +85,16 @@ def span(values, divisor):
     return f'{low:,.3f}' if low == high else f'{low:,.3f}–{high:,.3f}'
 
 
-def render(index, reports):
-    lines = ['# Current numerical costs', '',
+def render(index, reports, comparison):
+    introduction = {'loop-state': ['# Current numerical costs', '',
         'Generated from all four retained sessions; [protocol and timing boundaries](../current-kernel-costs.md).',
-        'No production compiler change is introduced by this measurement batch.', '',
+        'No production compiler change is introduced by this measurement batch.'],
+        'matrix-columns': ['# Paired matrix columns: time and memory', '',
+        'Generated from all four retained sessions; [protocol and timing boundaries](../matrix-calculation-costs.md).',
+        'fwp computes two adjacent output columns together; reference uses the original scalar loop.',
+        'Both use the same compiler output with only that loop changed. C and Rust do equivalent work.',
+        'Inputs are built by the C driver; inclusive costs do not measure source-compiled array construction.']}[comparison]
+    lines = introduction + ['',
         '## Time', '',
         'Times are milliseconds per calculation: the median complete round total divided by',
         'its number of calculations. Ratios use the same totals. A ratio of 1.30 means 30%',
@@ -108,7 +122,7 @@ def render(index, reports):
         'These columns are different accounting boundaries, not total process memory.', '',
         '| Case | Program | Requests/calculation | Requested KiB/calculation | Peak payload or charge KiB | Effective retains/calculation | Final live bytes |',
         '|---|---|---:|---:|---:|---:|---:|']
-    for case in CHECK.MEASURE.CASES:
+    for case in reports[0][1]['results']:
         for label in ('c', 'rust', 'fwp', 'reference'):
             samples = [sample for _, report in reports for sample in report['results'][case]['profiles'][label]]
             managed = label in ('fwp', 'reference')
@@ -127,7 +141,7 @@ def render(index, reports):
         '| Host | Case | Program | Peak RSS MiB | Code bytes |', '|---|---|---|---:|---:|']
     for machine in CHECK.HOSTS:
         host_reports = [report for metadata, report in reports if metadata['machine'] == machine]
-        for case in CHECK.MEASURE.CASES:
+        for case in reports[0][1]['results']:
             for label in ('c', 'rust', 'fwp', 'reference'):
                 rows = [report['results'][case] for report in host_reports]
                 lines.append('| ' + ' | '.join([machine, case, label,
@@ -155,10 +169,11 @@ def render(index, reports):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--directory', type=Path, required=True)
+    parser.add_argument('--comparison', choices=('loop-state', 'matrix-columns'), required=True)
     parser.add_argument('--mode', choices=('write', 'check'), required=True)
     args = parser.parse_args()
-    index, reports = verified_reports(args.directory)
-    expected = render(index, reports)
+    index, reports = verified_reports(args.directory, args.comparison)
+    expected = render(index, reports, args.comparison)
     output = args.directory / 'README.md'
     if args.mode == 'write':
         output.write_text(expected)

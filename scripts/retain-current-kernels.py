@@ -15,6 +15,10 @@ import zipfile
 SPEC = importlib.util.spec_from_file_location('kernel_check', Path(__file__).with_name('check-current-kernels.py'))
 CHECK = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(CHECK)
+REFERENCE_FIELDS = {
+    'loop-state': ('referenceCodegenSha256', 'candidateCodegenSha256'),
+    'matrix-columns': ('runtimeSha256', 'candidateLoopSha256', 'referenceLoopSha256'),
+}
 
 
 def api(path):
@@ -30,30 +34,52 @@ def save_json(path, value):
     path.write_text(json.dumps(value, indent=2) + '\n')
 
 
-def outcome(job, host, has_measurements):
+def outcome(job, host, has_measurements, comparison):
     assert job['status'] == 'completed'
     failed = [step['name'] for step in job['steps'] if step['conclusion'] == 'failure']
     steps = {step['name']: step['conclusion'] for step in job['steps']}
-    measurement = 'Measure both fwp variants and C/Rust with independent copy controls'
+    measurement = {'loop-state': 'Measure both fwp variants and C/Rust with independent copy controls',
+                   'matrix-columns': 'Measure paired and scalar matrix columns with C/Rust peers'}[comparison]
+    check = {'loop-state': 'Reference results, aliases, failure and cancellation',
+             'matrix-columns': 'Require matching native matrix safety checks'}[comparison]
     if not host['qualified']:
         assert host['failures'] and job['conclusion'] == 'failure'
         assert failed == ['Qualify the kernel host before building']
-        assert steps['Build the current compiler and exact word-state reference'] == 'skipped'
+        builds = [result for name, result in steps.items() if name.startswith('Build ')]
+        assert builds and all(result == 'skipped' for result in builds)
         assert steps[measurement] == 'skipped' and not has_measurements
         return 'host-rejected-before-building-or-timing'
     assert not host['failures']
     if steps[measurement] == 'skipped':
         assert job['conclusion'] == 'failure' and not has_measurements
-        assert failed == ['Reference results, aliases, failure and cancellation']
+        assert failed == [check]
         return 'reference-check-failed-before-timing'
     assert has_measurements
     assert failed in ([], [measurement]), failed
     return 'measured'
 
 
+def check_prerequisite(prerequisite, report):
+    source = prerequisite['run']['head_sha']
+    assert prerequisite['run']['conclusion'] == 'success'
+    jobs = prerequisite['jobs']
+    assert len(jobs) == 3 and all(job['head_sha'] == source and job['conclusion'] == 'success' for job in jobs)
+    assert {job['name'] for job in jobs} == {'matrix_checks (ubuntu-latest, gcc)',
+        'matrix_checks (ubuntu-24.04-arm, gcc)', 'matrix_checks (macos-15, clang)'}
+    paths = {'src', 'runtime', 'lib', 'Cargo.toml', 'Cargo.lock', 'build.rs',
+        'tests/blocked_matrix.rs', 'tests/fixtures/matrix_allocation_probe.c',
+        'tests/fixtures/matrix_unwind_probe.c', 'tests/fixtures/blocked_matrix.fwp'}
+    assert set(prerequisite['trees']) == paths
+    for path, identity in prerequisite['trees'].items():
+        for revision in (source, report['source']):
+            assert subprocess.check_output(['git', 'rev-parse', revision + ':' + path],
+                cwd=CHECK.ROOT, text=True).strip() == identity
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--repository', required=True)
+    parser.add_argument('--comparison', choices=('loop-state', 'matrix-columns'), required=True)
     parser.add_argument('--selection', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
@@ -67,7 +93,7 @@ def main():
     summary.mkdir()
     save_json(summary / 'selection.json', selection)
     repository = 'repos/' + args.repository
-    index = dict(schema=1, auditSource=os.environ['GITHUB_SHA'], jobs=[], measurements=[], auditErrors=[])
+    index = dict(schema=1, comparison=args.comparison, auditSource=os.environ['GITHUB_SHA'], jobs=[], measurements=[], auditErrors=[])
     seen = set()
     for run in selection['runs']:
         assert type(run) is int and run > 0
@@ -115,14 +141,16 @@ def main():
                 name = 'current-kernels-' + runner + '-' + str(session)
                 has_measurements = any(a['name'] == name for a in artifacts)
                 record['qualification'] = host
-                record['decision'] = outcome(job, host, has_measurements)
+                record['decision'] = outcome(job, host, has_measurements, args.comparison)
                 if record['decision'] == 'host-rejected-before-building-or-timing':
                     continue
-                download('loop-state-reference-' + runner + '-' + str(session), folder / 'reference')
+                if args.comparison == 'loop-state':
+                    download('loop-state-reference-' + runner + '-' + str(session), folder / 'reference')
                 if record['decision'] == 'reference-check-failed-before-timing':
-                    record['referenceTestLogs'] = {p.name: p.read_text() for p in
-                        sorted((folder / 'reference/targets').glob('*.log'))}
-                    assert record['referenceTestLogs']
+                    if args.comparison == 'loop-state':
+                        record['referenceTestLogs'] = {p.name: p.read_text() for p in
+                            sorted((folder / 'reference/targets').glob('*.log'))}
+                        assert record['referenceTestLogs']
                     continue
                 assert (machine, session) not in seen, 'duplicate measured session'
                 seen.add((machine, session))
@@ -133,9 +161,20 @@ def main():
                 report = json.loads(raw_report)
                 assert job['conclusion'] == ('failure' if failures else 'success')
                 assert report['qualification'] == host
-                assert report['referenceManifest'] == json.loads((folder / 'reference/manifest.json').read_text())
-                if session == 1:
-                    step, = [s for s in job['steps'] if s['name'] == 'Reference results, aliases, failure and cancellation']
+                if args.comparison == 'loop-state':
+                    assert report['referenceManifest'] == json.loads((folder / 'reference/manifest.json').read_text())
+                else:
+                    assert report['referenceManifest']['disabledTransformation'] == 'paired matrix columns'
+                    download('matrix-prerequisite-' + runner + '-' + str(session), folder / 'prerequisite')
+                    prerequisite_raw = (folder / 'prerequisite/matrix-prerequisite.json').read_bytes()
+                    check_prerequisite(json.loads(prerequisite_raw), report)
+                    prerequisite_path = summary / (label + '-prerequisite.json')
+                    prerequisite_path.write_bytes(prerequisite_raw)
+                    record.update(prerequisite=prerequisite_path.name, prerequisiteSha256=CHECK.digest(prerequisite_raw))
+                if session == 1 or args.comparison == 'matrix-columns':
+                    required = ('Reference results, aliases, failure and cancellation' if args.comparison == 'loop-state'
+                                else 'Require matching native matrix safety checks')
+                    step, = [s for s in job['steps'] if s['name'] == required]
                     assert step['conclusion'] == 'success'
                 saved_report = summary / (label + '.json.gz')
                 saved_report.write_bytes(gzip.compress(raw_report, mtime=0))
@@ -147,9 +186,8 @@ def main():
                 record.update(report=saved_report.name, reportBytes=len(raw_report), reportSha256=CHECK.digest(raw_report),
                     files=files_path.name, filesSha256=CHECK.digest(files_path.read_bytes()),
                     failures=failures, sourceTrees=report['sourceTrees'],
-                    referenceCodegenSha256=report['referenceManifest']['referenceCodegenSha256'],
-                    candidateCodegenSha256=report['referenceManifest']['candidateCodegenSha256'],
                     decision='all-current-rules-pass' if not failures else 'performance-limits-remain-open')
+                record.update({field: report['referenceManifest'][field] for field in REFERENCE_FIELDS[args.comparison]})
                 index['measurements'].append(job['id'])
                 print(label + ': ' + record['decision'], flush=True)
             except Exception as error:
@@ -162,8 +200,8 @@ def main():
     assert sorted(index['measurements']) == sorted(selection['measuredJobs'])
     measured = [row for row in index['jobs'] if row['job']['id'] in index['measurements']]
     assert all(row['sourceTrees'] == measured[0]['sourceTrees'] for row in measured)
-    assert len({row['referenceCodegenSha256'] for row in measured}) == 1
-    assert len({row['candidateCodegenSha256'] for row in measured}) == 1
+    for field in REFERENCE_FIELDS[args.comparison]:
+        assert len({row[field] for row in measured}) == 1
     index['complete'] = True
     index['decision'] = 'all-current-rules-pass' if all(not row['failures'] for row in measured) else 'performance-limits-remain-open'
     save_json(summary / 'index.json', index)
