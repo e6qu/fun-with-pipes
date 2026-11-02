@@ -1,5 +1,10 @@
 # CPU array and matrix baselines
 
+These measurements precede the typed floating-point loop state shipped in #227.
+The AMD64 array ratios below are **historical, not current language overhead**.
+The [current comparison](current-kernel-costs.md) measures today's compiler and
+isolates that representation change with a same-source reference.
+
 This records the original N1 protocol and its still-incomplete timing acceptance.
 ARM sessions pass; AMD measurements retain missing coverage and failed copy
 controls. Later compiler work may proceed using independently verified costs;

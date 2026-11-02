@@ -229,6 +229,9 @@ ordinary return word occurs once after the loop. Both 65,537- and 262,145-elemen
 programs match the exact oracle and finish with zero live storage. This verifies
 the intended representation change on those compilers. PR #227 subsequently
 passed every production gate; the two timing requirements above remain open.
+The [current-kernel experiment](current-kernel-costs.md) measures this implemented
+representation against a same-source word-state reference and C/Rust. Its source
+is newer than the expanded baseline; it does not retry those old binaries.
 
 ## Resource-counter diagnostic, declared before implementation
 

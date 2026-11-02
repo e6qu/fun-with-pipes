@@ -27,9 +27,25 @@ Build two compilers from the same checkout of Rust source:
 - **C and Rust:** unchanged formulas from the existing native benchmark peers.
 - **Two controls:** a byte-identical copy of each fwp executable.
 
+A **value word** is fwp's general 64-bit storage. Here it holds an F64's exact
+bits; it is not an extra heap allocation. Native `double` fields expose the
+floating-point type directly to the C compiler:
+
+```text
+Current:   double accumulator → addition → double accumulator
+Reference: stored bits → double → addition → stored bits
+```
+
+These are bit-preserving copies, not rounding conversions. Whether they cause
+extra machine work or elapsed time is what the comparison tests.
+
 Retain the exact source patch and compiler hashes. Neither build needs an earlier
 fwp compiler. Check that the reference patch changes only its declared field-type
-selection; reject a missing, duplicated or changed match. Verify both compilers'
+selection; reject a missing, duplicated or changed match. Two ownership probes
+also assert the production `double` layout. In the isolated reference checkout,
+change only those expected type strings to `V`; keep every alias, injected-fault,
+cleanup and deliberately broken observer check. Retain the test-source patch and
+hashes alongside the compiler patch. Verify both compilers'
 results and memory behavior before timing.
 
 Use the [same four workloads, inputs and arithmetic order](kernel-baselines.md#work-to-compare):
@@ -105,6 +121,12 @@ Apply these rules to **both sessions on both architectures**:
    retains or peak charge than the reference, with zero final charge in both.
 5. Publish current fwp/C and fwp/Rust ratios and extra-time percentages for every
    case/scope, even when controls fail; clearly label unqualified observations.
+
+The copies do the same work with the same machine instructions. If their times
+differ too much, a similarly small difference between different programs cannot
+be confidently assigned to the compiler change. A ratio of 1.30 means 30% more
+time for the named workload and timing boundary, not 30% overhead for every fwp
+program.
 
 A qualified new result can establish these current costs and the typed-state
 contribution. It cannot rewrite old N1/D2 failures, settle derivative performance
