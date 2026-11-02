@@ -1,0 +1,261 @@
+{
+  "source": "240d889742e2fffc3e6a4375bec8a2b52e4900f3",
+  "run": 41448056587,
+  "records": [
+    {
+      "runner": "macos-15",
+      "job": 125286026052,
+      "artifact": {
+        "id": 13143626431,
+        "node_id": "MDg6QXJ0aWZhY3QxMzE0MzYyNjQzMQ==",
+        "name": "scalar-array-checks-macos-15",
+        "size_in_bytes": 36551498,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13143626431",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13143626431/zip",
+        "expired": false,
+        "digest": "sha256:392f8636ba0eedc3b02f0219387880802a9afa2ecb166dd27444da498f9f9670",
+        "created_at": "2026-11-02T12:57:58Z",
+        "updated_at": "2026-11-02T12:57:58Z",
+        "expires_at": "2027-01-31T12:51:13Z",
+        "workflow_run": {
+          "id": 41448056587,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "array-construction-costs",
+          "head_sha": "240d889742e2fffc3e6a4375bec8a2b52e4900f3"
+        }
+      },
+      "log": "mac.log.gz",
+      "targets": {
+        "argument_preparation_ownership": 2,
+        "array_size_limits": 4,
+        "array_unwind_ownership": 1,
+        "array_element_ownership": 11,
+        "numeric_array_fusion": 4
+      },
+      "probes": {
+        "owned-O1": {
+          "status": 0,
+          "sourceSha256": "55623763e6ffc64dd2ff7813c0318904b27292ebaa742fdf6dcdd93294825f24",
+          "binarySha256": "125216d31a514d381273199d424611a2f9c238a98d8ec7fab513a2dbe8916428"
+        },
+        "extra-callback-check-O1": {
+          "status": 224,
+          "sourceSha256": "96953a781d5b7a476f44bf34efaad7f36db5c9ee4a0822940b2b6e075adbb070",
+          "binarySha256": "e3c2c0a7ec66fbb91124ecc202539ea282bc1c23ae1f1b4563bd33ce3b9effb5"
+        },
+        "extra-dispatch-O1": {
+          "status": 230,
+          "sourceSha256": "d6ce669c36c1b375851751ce2609a67b405a1227ea5591cdf5e81faec74cfb92",
+          "binarySha256": "00d677cefe7d2fee20661e18487c87ea85e679bc8101ae849071c765c0c016b8"
+        },
+        "missing-partial-cleanup-O1": {
+          "status": 225,
+          "sourceSha256": "95a688ebf54738d4a5568c0c9fa457e105786c590af6b95dda635c90619b1ffd",
+          "binarySha256": "3a9037dbec5ba3c16f459e59032a44eaac22514645e4a9fd07cd9f9091c94716"
+        },
+        "missing-cancel-cleanup-O1": {
+          "status": 229,
+          "sourceSha256": "4da36e13e1246db1094da0890c084a0ff7608cf24ce7dbc9b530b9b7fb5b2311",
+          "binarySha256": "0582a76e1273d7a45d4a5a7541ef15e267db36cc4f261d2137f93b69d9ae6edf"
+        },
+        "owned-O2": {
+          "status": 0,
+          "sourceSha256": "55623763e6ffc64dd2ff7813c0318904b27292ebaa742fdf6dcdd93294825f24",
+          "binarySha256": "b409fefdb85c3669e9dd3d205f474ea043390f54f4a8e4d8abb20eeeefca7c5a"
+        },
+        "extra-callback-check-O2": {
+          "status": 224,
+          "sourceSha256": "96953a781d5b7a476f44bf34efaad7f36db5c9ee4a0822940b2b6e075adbb070",
+          "binarySha256": "689a3be8fe0122569f636a8bd27cf2db5315555cb770d2e42988753bef6c7c63"
+        },
+        "extra-dispatch-O2": {
+          "status": 230,
+          "sourceSha256": "d6ce669c36c1b375851751ce2609a67b405a1227ea5591cdf5e81faec74cfb92",
+          "binarySha256": "454792f76dc0bc49cf74ca938883890a03cfd41b4fbb0f70ec26af7fb6c2b58b"
+        },
+        "missing-partial-cleanup-O2": {
+          "status": 225,
+          "sourceSha256": "95a688ebf54738d4a5568c0c9fa457e105786c590af6b95dda635c90619b1ffd",
+          "binarySha256": "7ae7180c708877df15d73f0e57e010c15960219f2ee3fc2f297dea7d06892ec3"
+        },
+        "missing-cancel-cleanup-O2": {
+          "status": 229,
+          "sourceSha256": "4da36e13e1246db1094da0890c084a0ff7608cf24ce7dbc9b530b9b7fb5b2311",
+          "binarySha256": "7c19e1e82ef08434c0acf2367274e1b220e2343dcffe28fc41451890b1636b90"
+        }
+      },
+      "construction": null
+    },
+    {
+      "runner": "ubuntu-24.04-arm",
+      "job": 125286026439,
+      "artifact": {
+        "id": 13144385796,
+        "node_id": "MDg6QXJ0aWZhY3QxMzE0NDM4NTc5Ng==",
+        "name": "scalar-array-checks-ubuntu-24.04-arm",
+        "size_in_bytes": 41016901,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13144385796",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13144385796/zip",
+        "expired": false,
+        "digest": "sha256:30566a8a1f685146981f94b7f653d7e45fda87410148e5525e147a95baa08f6a",
+        "created_at": "2026-11-02T12:58:56Z",
+        "updated_at": "2026-11-02T12:58:56Z",
+        "expires_at": "2027-01-31T12:51:13Z",
+        "workflow_run": {
+          "id": 41448056587,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "array-construction-costs",
+          "head_sha": "240d889742e2fffc3e6a4375bec8a2b52e4900f3"
+        }
+      },
+      "log": "arm.log.gz",
+      "targets": {
+        "argument_preparation_ownership": 2,
+        "array_size_limits": 4,
+        "array_unwind_ownership": 1,
+        "array_element_ownership": 11,
+        "numeric_array_fusion": 4
+      },
+      "probes": {
+        "owned-O1": {
+          "status": 0,
+          "sourceSha256": "55623763e6ffc64dd2ff7813c0318904b27292ebaa742fdf6dcdd93294825f24",
+          "binarySha256": "2cbc41ed3020b0c80cb3baa129f1f27904e58fb447cbcdd7b467563e917282a4"
+        },
+        "extra-callback-check-O1": {
+          "status": 224,
+          "sourceSha256": "96953a781d5b7a476f44bf34efaad7f36db5c9ee4a0822940b2b6e075adbb070",
+          "binarySha256": "85f41549c147fedf1a7a7db9855b4b55c9ca9cb06b41f3837120ff202ed620b4"
+        },
+        "extra-dispatch-O1": {
+          "status": 230,
+          "sourceSha256": "d6ce669c36c1b375851751ce2609a67b405a1227ea5591cdf5e81faec74cfb92",
+          "binarySha256": "8657178086391a166b9c59ada8a63c51651df113da9decde71f8cb8e76a17dbb"
+        },
+        "missing-partial-cleanup-O1": {
+          "status": 225,
+          "sourceSha256": "95a688ebf54738d4a5568c0c9fa457e105786c590af6b95dda635c90619b1ffd",
+          "binarySha256": "a6785a30d15fcf02978b257bb36194ed88c39ef1406cf42244dd9ba20535a5ca"
+        },
+        "missing-cancel-cleanup-O1": {
+          "status": 229,
+          "sourceSha256": "4da36e13e1246db1094da0890c084a0ff7608cf24ce7dbc9b530b9b7fb5b2311",
+          "binarySha256": "d7193603dac064ca773adfbf1dcaca812b57a73afda2909937e1cc1453ceda9c"
+        },
+        "owned-O2": {
+          "status": 0,
+          "sourceSha256": "55623763e6ffc64dd2ff7813c0318904b27292ebaa742fdf6dcdd93294825f24",
+          "binarySha256": "f61bf392f5f4569e06e6dd74643d9862f38cd1455b70a9c0c47162a83edb94ae"
+        },
+        "extra-callback-check-O2": {
+          "status": 224,
+          "sourceSha256": "96953a781d5b7a476f44bf34efaad7f36db5c9ee4a0822940b2b6e075adbb070",
+          "binarySha256": "6e83de41215e74af8f33996ea0406053022146851ef8fc085228004b28430e03"
+        },
+        "extra-dispatch-O2": {
+          "status": 230,
+          "sourceSha256": "d6ce669c36c1b375851751ce2609a67b405a1227ea5591cdf5e81faec74cfb92",
+          "binarySha256": "a31f51b45392aa71e9f4aa758885ea501c3265edcea091fb09cd9757dce764d7"
+        },
+        "missing-partial-cleanup-O2": {
+          "status": 225,
+          "sourceSha256": "95a688ebf54738d4a5568c0c9fa457e105786c590af6b95dda635c90619b1ffd",
+          "binarySha256": "f10bebc68ddb384ea877fc56bdfd9b30d11b5e6b48fd8fcae87cbc8c41fe18f4"
+        },
+        "missing-cancel-cleanup-O2": {
+          "status": 229,
+          "sourceSha256": "4da36e13e1246db1094da0890c084a0ff7608cf24ce7dbc9b530b9b7fb5b2311",
+          "binarySha256": "0420de4ea367e2cd311dc7c5f98351c62f2bb655c517267bbd8dc2b1931e298c"
+        }
+      },
+      "construction": "arm-construction.json.gz"
+    },
+    {
+      "runner": "ubuntu-latest",
+      "job": 125286026473,
+      "artifact": {
+        "id": 13144565684,
+        "node_id": "MDg6QXJ0aWZhY3QxMzE0NDU2NTY4NA==",
+        "name": "scalar-array-checks-ubuntu-latest",
+        "size_in_bytes": 40863822,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13144565684",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13144565684/zip",
+        "expired": false,
+        "digest": "sha256:9054011133d5fb2641da9d8c049172c3f698d0e2a3ad538367630c762cc90d2d",
+        "created_at": "2026-11-02T12:58:24Z",
+        "updated_at": "2026-11-02T12:58:24Z",
+        "expires_at": "2027-01-31T12:51:13Z",
+        "workflow_run": {
+          "id": 41448056587,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "array-construction-costs",
+          "head_sha": "240d889742e2fffc3e6a4375bec8a2b52e4900f3"
+        }
+      },
+      "log": "amd.log.gz",
+      "targets": {
+        "argument_preparation_ownership": 2,
+        "array_size_limits": 4,
+        "array_unwind_ownership": 1,
+        "array_element_ownership": 11,
+        "numeric_array_fusion": 4
+      },
+      "probes": {
+        "owned-O1": {
+          "status": 0,
+          "sourceSha256": "55623763e6ffc64dd2ff7813c0318904b27292ebaa742fdf6dcdd93294825f24",
+          "binarySha256": "c00b91a35b187fdd0acbf69eb00fbaff54214ed8d3eab1bfe074c693669b8fc4"
+        },
+        "extra-callback-check-O1": {
+          "status": 224,
+          "sourceSha256": "96953a781d5b7a476f44bf34efaad7f36db5c9ee4a0822940b2b6e075adbb070",
+          "binarySha256": "2e92c8f907fa63a18d577b07f22bd21ce6d47e1e26c84474cb00957d5f94008c"
+        },
+        "extra-dispatch-O1": {
+          "status": 230,
+          "sourceSha256": "d6ce669c36c1b375851751ce2609a67b405a1227ea5591cdf5e81faec74cfb92",
+          "binarySha256": "0970738c72038f0f2b415a7fdf5901c6bae6b4dda3dc16c13b3bd068071582ca"
+        },
+        "missing-partial-cleanup-O1": {
+          "status": 225,
+          "sourceSha256": "95a688ebf54738d4a5568c0c9fa457e105786c590af6b95dda635c90619b1ffd",
+          "binarySha256": "b6add16b89f88911392b37a14b9a08c5f2b7402621ffd0b29e1655f0e2b39823"
+        },
+        "missing-cancel-cleanup-O1": {
+          "status": 229,
+          "sourceSha256": "4da36e13e1246db1094da0890c084a0ff7608cf24ce7dbc9b530b9b7fb5b2311",
+          "binarySha256": "e432fc8209fc797024f84c4537abf4cb167dc9cd072b6c499a13bcb60b238322"
+        },
+        "owned-O2": {
+          "status": 0,
+          "sourceSha256": "55623763e6ffc64dd2ff7813c0318904b27292ebaa742fdf6dcdd93294825f24",
+          "binarySha256": "0da71b262ce8067648d81069c1fe3a67beb2ff90afd49af4409a15968badc8c1"
+        },
+        "extra-callback-check-O2": {
+          "status": 224,
+          "sourceSha256": "96953a781d5b7a476f44bf34efaad7f36db5c9ee4a0822940b2b6e075adbb070",
+          "binarySha256": "d535bdf32e5fae09ddcd09399a5c87add43f247f4d0016432369a2cde77e42fc"
+        },
+        "extra-dispatch-O2": {
+          "status": 230,
+          "sourceSha256": "d6ce669c36c1b375851751ce2609a67b405a1227ea5591cdf5e81faec74cfb92",
+          "binarySha256": "62ec9ea6e0a3c2ce683e97a5fd7d72d70f13c6e73e47dc5cc5e785e331af4ead"
+        },
+        "missing-partial-cleanup-O2": {
+          "status": 225,
+          "sourceSha256": "95a688ebf54738d4a5568c0c9fa457e105786c590af6b95dda635c90619b1ffd",
+          "binarySha256": "d09ecd756db0e20c8501195c0d65b6cd0b1254b90ff963dd980ba1eff293ccd6"
+        },
+        "missing-cancel-cleanup-O2": {
+          "status": 229,
+          "sourceSha256": "4da36e13e1246db1094da0890c084a0ff7608cf24ce7dbc9b530b9b7fb5b2311",
+          "binarySha256": "2bc127b428f25804d94d304499eeccc4a42c7bfd557a88d54348d8d5d5530a77"
+        }
+      },
+      "construction": "amd-construction.json.gz"
+    }
+  ]
+}

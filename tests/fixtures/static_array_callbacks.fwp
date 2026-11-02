@@ -2,6 +2,27 @@
 export generated : I64 -> Array[I64]
 generated = flip array.generate id
 
+# A scalar capture is a saved number: each index below is added to offset.
+export scalar-generated : I64 -> I64 -> Array[I64]
+scalar-generated = fn offset -> fn count -> array.generate count (add offset)
+
+# Returning a saved floating value must preserve its bits without arithmetic.
+export scalar-bits : F64 -> I64 -> Array[F64]
+scalar-bits = fn value -> fn count -> array.generate count (const value)
+
+export scalar-failed : I64 -> I64 -> Array[I64] ! {Error[String]}
+scalar-failed = fn failure -> fn count ->
+    array.generate count (fn index ->
+        index == failure | match
+            True -> fail "expected captured index failure"
+            False -> index)
+
+export scalar-probe : Bool -> I64 -> I64 -> Array[I64] ! {Error[String]}
+scalar-probe = fn failing -> fn captured -> fn count ->
+    failing | match
+        True -> scalar-failed captured count
+        False -> scalar-generated captured count
+
 checked-index : I64 -> I64 ! {Error[String]}
 checked-index = if (eq 2) (const "expected index failure" | fail) id
 export failed : I64 -> Array[I64] ! {Error[String]}
@@ -39,4 +60,11 @@ main = [
     4 | yielded | echo,
     4 | cancelled | echo,
     3 | dynamic (add 2) | echo,
+    scalar-generated 7 4 | echo,
+    4 | attempt (scalar-failed 2) | echo,
+    # The count prints before the saved offset, then the completed array.
+    array.generate (3 | tap echo) (add (7 | tap echo)) | echo,
+    # One callback is reused by two generators and an ordinary call.
+    let callback = add 7
+    in (array.generate 3 callback, array.generate 0 callback, callback 2) | echo,
 ] | ignore

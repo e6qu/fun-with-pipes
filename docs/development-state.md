@@ -1,87 +1,83 @@
 # Current work
 
-**Next:** publish the completed matrix batch as the only active PR, then audit
-its nine final-head production jobs and documentation before squash merge. Keep
-all six failed timing controls visible; preserve this head while gates run.
+**Next:** publish the completed PR #245 evidence/docs batch, mark ready, and audit
+all nine production jobs plus documentation for that exact head before squash merge.
 
-## PR #243: verified delivery
+## Branch and delivery
 
-Merged `ea9938debef5cc75d53edb8ca427b49f2513bea3` after production `41412228669`
-and docs `41411731331` passed on `ea976b7e19c26c5be0ad9e748e284cc97a269379`.
-All nine full logs and native target archives are audited. The squash tree equals
-the tested tree; the message is one line, 62 characters, without body/trailers.
-Duplicate same-tree main runs `41425026087` and `41425026016` were cancelled.
-[History](roadmap-history.md#current-numerical-costs-pr-243) records the delivery.
-
-## Matrix batch
-
-Branch/worktree: `matrix-calculation-costs`, `/private/tmp/fwp-matrix-calculation`.
-Rebased onto the verified #243 squash tree. All measured sources and the failed
-report-generation source have remote retention tags; preserve them.
+- Worktree `/private/tmp/fwp-array-construction`, branch `array-construction-costs`.
+  [PR #245](https://github.com/e6qu/fun-with-pipes/pull/245) is still a draft.
+  Preserve the primary checkout and other worktrees.
+- [PR #244](roadmap-history.md#paired-matrix-columns-pr-244) passed all nine jobs
+  and documentation. Verified squash merge `e70f0e2d30112df0c7ee0912a77bac251092a539`
+  has the tested tree and one message line, without a body or trailers.
+- Keep one PR. Merge #245 only after the exact final head passes all required
+  gates and every completed target/job log is audited. Use an explicit subject
+  of at most 80 characters and an empty squash body; verify the result.
+- Retain verified reductions with missed timing goals explicitly open, as directed
+  in earlier batches. Do not erase or relax frozen limits, or claim the whole
+  roadmap is complete. [PLAN.md](../PLAN.md) names the next investigation.
 
 ## Roadmap status
 
 | Step | Status | Evidence / remaining work |
 |---|---|---|
-| 1 | Verified | Source protocol `5f235bb0`, published before diagnostics |
-| 2 | Verified | `41412675762` reproduces original binaries on both GCC architectures |
-| 3 | Verified | Paired-loop diagnostic `41416927586`; safety run `41417716203` passes GCC ARM64/AMD64 and Clang ARM64 |
-| 4 | Verified | All four sessions and three host rejections retained; raw audit `41422907313` passes; six timing controls remain open |
-| 5 | In progress | Frame table repaired and regenerated; publish one coherent PR, pass final-head gates, verify squash merge |
+| 1 | Verified | Original construction diagnostic: GCC ARM64/AMD64 O1/O2, exact values/storage/cleanup controls |
+| 2 | Verified | All four baseline sessions audited; both ARM64 and AMD64 session 2 pass, AMD64 session 1 retains six copy failures |
+| 3 | Verified | Repaired focused safety: five targets / 22 tests per host, all three hosts pass; complete logs/probes audited |
+| 4 | Implemented | Four paired sessions audited; ARM64 passes every limit; AMD64 retains four consumption and four copy failures; storage/cleanup pass |
+| 5 | In progress | Final evidence/docs ready for publication; full exact-head production matrix and documentation still required |
 
-The runtime processes two neighboring output columns together, preserving each
-cell's multiplication/addition order, byte-copy access, shared input views,
-polling and cleanup. A first restricted-input candidate produced identical
-binaries and was rejected without timing. The paired loop vectorizes on both GCC
-hosts; twelve O1/O2 allocation/arithmetic cases and four native tests pass per
-host. Missing normal/unwind releases fail their intended observers. No API change.
+## Source and verification identities
 
-## Results and open limits
+- [Construction diagnostic](measurements/array-construction-costs.md#diagnostic-results-november-2-2026):
+  run `41427397530`, source `d3ddc94d6eb8c5c58af74159051670241dd23e5b`, tag
+  `roadmap/array-construction-diagnostics-2026-11-02`. Both materialized paths
+  allocate once; composed source allocates zero. Full raw/source audits pass.
+- [Phase baseline](measurements/array-construction-phases-2026-11-02/README.md):
+  source `f05e25f8730453103f862a354324f1d660a3550d`, tag
+  `roadmap/array-construction-phase-runner-2026-11-02`. Initial run `41437433015`;
+  completed AMD64 session 2: `41445523250` / job `125277535727`. All four archives
+  audited; six AMD64 session-1 failures and five prebuild host rejections retained.
+- Candidate protocol `5cf1c80f`, tag `roadmap/scalar-array-selection-protocol-2026-11-02`,
+  predates the selection-rule change. The source change adds ordinary numeric
+  captures to existing direct-callback eligibility; no runtime change or syntax.
+- [Focused safety](measurements/scalar-array-safety-2026-11-02/README.md):
+  run `41448056587`, source `240d889742e2fffc3e6a4375bec8a2b52e4900f3`.
+  macOS ARM64 job `125286026052`, Linux ARM64 `125286026439`, Linux AMD64
+  `125286026473`; artifacts `13143626431`, `13144385796`, `13144565684` respectively.
+  All 15 target logs, 30 callback probe executions and both Linux construction
+  reports audited. No compiler diagnostic remains. The linked record explains
+  both test-harness repairs from failed run `41442126003`.
+- [Paired timings](measurements/scalar-array-captures-2026-11-02/README.md):
+  source `f8a558daa42fc07930f7a93870b6dcbcf2580bb3`, immutable tag
+  `roadmap/scalar-array-timing-2026-11-02`. Both compilers use the same source;
+  the reference disables only the recorded selection rule. Safety trees match.
 
-[Protocol and results](measurements/matrix-calculation-costs.md) and
-[complete tables](measurements/matrix-columns-2026-11-02/README.md) retain:
+| Paired session | Run / job | Artifact | Outcome |
+|---|---|---|---|
+| ARM64 1 | `41449731209` / `125291685373` | `13143169442` | Pass; raw audit 1.66s |
+| ARM64 2 | `41449731209` / `125291685304` | `13144423532` | Pass; raw audit 1.68s |
+| AMD64 1 | `41451889484` / `125298862465` | `13146010459` | Three failed limits retained; raw audit 1.86s |
+| AMD64 2 | `41449731209` / `125291685261` | `13144686686` | Five failed limits retained; raw audit 1.85s |
 
-- About 33% less calculation time on ARM64; about 31% less for large AMD64.
-  Large AMD64 remains about 14% slower than C and 3.6% faster than Rust.
-- Unchanged managed requests, requested bytes, peak charge and effective retains;
-  zero final workload storage. Five fwp requests versus three C/Rust requests
-  include two input records built by the C driver, not by source `array.generate`.
-- Six small-AMD64 copy failures at 2.6–8.3%, against the unchanged 2% limit.
-  Do not claim a qualified speed result for that case or rerun unchanged timings.
-- The matrix worker (`f0`) gains 48 static frame bytes: 1,408→1,456 ARM64 and
-  1,568→1,616 AMD64. Driver `main` stays 384 static bytes on ARM64 and a 352-byte bounded
-  dynamic estimate on AMD64. Code gains 128/320 bytes.
-  Frame estimates and managed charge are not whole-process memory measurements.
+Three undeclared AMD64 session-1 hosts stopped before building; all qualification
+archives/logs are retained. No completed timing was retried. ARM64 construction
+uses 84.5–84.9% less time, total 81.2–81.6% less; managed storage is unchanged.
+AMD64 large-array copy controls pass, but consumption is 4.93–5.23% slower.
+Generated consumption C is unchanged; this does not explain the time difference.
+The failed goals remain in the plan. Candidate/reference memory profiles pass.
 
-Retain the qualified improvements under the user's earlier preference to keep
-verified gains with unmet timing goals explicit. This does not turn the six noise
-failures into passes or complete those goals. Full production acceptance remains
-mandatory. Analyze retained small-case samples before declaring a changed timing
-protocol; array-construction costs remain the next independent numerical task.
+## Checks and resources
 
-## Sources, runs and reproduction
-
-- Timing protocol `6c7e9cea`: `roadmap/matrix-paired-column-timing-2026-11-02`.
-- Native safety source `a4172afdc045d0ecb98054e068e749a84392136b`:
-  `roadmap/matrix-paired-column-checks-2026-11-02`.
-- Measured source `8b9827521d0546ddd7eaace299492f9bd45b7af5`:
-  `roadmap/matrix-paired-column-measurements-2026-11-02`.
-- Runs `41418956333` and `41420961312` supply four complete sessions.
-  `41419526409` and `41420187469` supplied only rejected hosts. The selection file
-  includes every run/job; rejections were EPYC 9V45, Xeon 8370C and EPYC 9V74.
-- Combined audit `41422907313`, job `125202508959`, source `9f6c8d00`, passes.
-  Artifact `13129819093` and all normalized reports/logs/file manifests are retained
-  in `matrix-columns-2026-11-02/`. Full audit log is clean; source tag retained.
-- Table run `41424485974` at `3ae24c0d` failed: the renderer incorrectly required
-  every GCC estimate to be `static`; AMD64 driver `main` is `dynamic,bounded`.
-  The repair reports the actual qualifier and checks both variants agree, retaining
-  the real 48-byte worker increase. Repair run `41425270814`, job `125210262696`,
-  at `fce7b3cc` passes; artifact `13132131070` supplies the regenerated README.
-  Full log audited clean; no native rebuild or new timing. Docs check both sets.
-
-Local guarded checks pass: six patch controls, eight scheduling/limit controls,
-thirteen evidence controls, six retention/prerequisite controls, two table-unit
-checks; Rust formatting, actionlint and roadmap audit. Historical tables verify
-unchanged (7.46s). Handoff heading/status drift was repaired; documentation audit
-passes (2.88s). Latest actionlint: 5.95s. No local
-compiler build, full suite or benchmark. Free space was 67 GiB at the last check.
+- All raw phase/paired archives audited against source, flags, every saved file,
+  outputs, cleanup controls, samples and summaries. Compact audits reproduce all
+  original failures; documentation CI runs baseline and candidate modes.
+- Focused local checks use `python3 scripts/local-guard.py`, serially: Rust format,
+  selected saved-C Clang probes, source/reference controls, raw-evidence audits,
+  actionlint and roadmap links. These do not replace native runner checks.
+- Latest pre-final documentation run `41449692849` / job `125291542425` passes
+  at `f8a558da`; full log audited, including intentional test-runner failures.
+  It is not a substitute for the final head's documentation gate.
+- No local compiler build, full suite or benchmark. Last free disk: 65 GiB.
+  Preserve the guard's 64 GiB / 1 GiB RSS / 2 GiB target / 180-second limits.

@@ -153,6 +153,12 @@ jobs:
           python3 scripts/test-retain-current-kernels.py
           python3 scripts/test-current-kernel-report.py
           python3 scripts/test-kernel-codegen-input.py
+          python3 scripts/test-array-construction.py
+          python3 scripts/test-array-construction-phases.py
+          python3 scripts/test-scalar-array-reference.py
+          python3 scripts/check-array-phase-records.py --comparison source-paths --directory docs/measurements/array-construction-phases-2026-11-02
+          python3 scripts/check-array-phase-records.py --comparison scalar-captures --directory docs/measurements/scalar-array-captures-2026-11-02
+          python3 scripts/check-array-construction.py --directory docs/measurements/array-construction-2026-11-02
           python3 scripts/report-current-kernels.py --directory docs/measurements/current-kernels-2026-11-02 --comparison loop-state --mode check
           python3 scripts/report-current-kernels.py --directory docs/measurements/matrix-columns-2026-11-02 --comparison matrix-columns --mode check
       - name: Matched-host evidence rejection controls

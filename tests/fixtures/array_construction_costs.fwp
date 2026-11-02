@@ -1,0 +1,10 @@
+export make-input : I64 -> I64 -> Array[F64]
+make-input = fn round -> fn count ->
+    array.generate count (fn index ->
+        (index + round) % 19 - 9 | int.to-float | div 4.0)
+
+export reduce64 : Array[F64] -> F64
+reduce64 = array.map (mul 3.0) | array.map (add 1.0) | array.fold add -0.0
+
+export work : I64 -> I64 -> F64
+work = fn round -> fn count -> make-input round count | reduce64

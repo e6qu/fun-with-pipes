@@ -5364,7 +5364,10 @@ impl<'g, 'p> FnGen<'g, 'p> {
             && (captures == 0
                 || function.locals[..captures]
                     .iter()
-                    .any(|ty| crate::rc::needs_rc(&self.g.prog.shapes, ty)))
+                    .any(|ty| crate::rc::needs_rc(&self.g.prog.shapes, ty))
+                || function.locals[..captures]
+                    .iter()
+                    .all(|ty| scalar(ty).is_some()))
     }
 
     /// Every value read must be a generator/fold's known callback argument.

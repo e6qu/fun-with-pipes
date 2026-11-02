@@ -88,7 +88,18 @@ fn array_size_limits_agree_with_raw_interpreter_and_generic_wrappers() {
     }
     let scratch = Scratch(directory);
     let prefix = "make-array : I64 -> Array[I64]\nmake-array = flip array.make 0\ngenerate-array : I64 -> Array[I64]\ngenerate-array = flip array.generate (const \"callback control\" | prim.trap)\nbad-argument : I64 -> Array[I64]\nbad-argument = fork array.make id (const \"argument control\" | prim.trap)\n";
+    let prefix = format!("{prefix}generate-captured : I64 -> I64 -> Array[I64]\ngenerate-captured = fn offset -> fn count -> array.generate count (add offset)\n");
     let cases = [
+        (
+            "captured-overflow",
+            "add 3 | generate-captured 9223372036854775807",
+            Some("arithmetic overflow in I64"),
+        ),
+        (
+            "captured-size-overflow",
+            "add 2305843009213693952 | generate-captured 1",
+            Some("array too large"),
+        ),
         (
             "make-overflow",
             "add 2305843009213693952 | make-array",

@@ -37,6 +37,13 @@ identities. Do not edit observations to make an old experiment describe new code
 
 ## Numerical applications
 
+- [Materialized array construction](array-construction-phases-2026-11-02/README.md):
+  source generator, C driver, C and Rust with separate construction/consumption
+  timers; repeated ARM64 results, failed AMD64 controls and explicit storage costs.
+- [Direct scalar-capture calls](scalar-array-captures-2026-11-02/README.md): verified
+  safety and lower call costs, 84.5–84.9% less ARM64 construction time, unchanged
+  managed storage, remaining C/Rust gaps and eight failed AMD64 timing limits.
+
 - [Typed derivative owners](typed-derivative-owners.md): current F128/nested-tape
   work; stack-record, initialization and result-transfer counts, plus alias,
   failure and cancellation controls. Counts are not timing evidence.

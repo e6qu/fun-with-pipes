@@ -842,13 +842,50 @@ fn static_array_callbacks_avoid_owner_checks_and_preserve_partial_cleanup() {
         .next()
         .unwrap();
     let entry = format!("f{id}");
+    let scalar_start = probe_code
+        .find("/* scalar-probe :")
+        .expect("explicit scalar capture probe entry");
+    let scalar_id = probe_code[scalar_start..]
+        .split("static V f")
+        .nth(1)
+        .unwrap()
+        .split('(')
+        .next()
+        .unwrap();
+    let scalar_entry = format!("f{scalar_id}");
+    let bits_start = probe_code
+        .find("/* scalar-bits :")
+        .expect("explicit floating capture probe entry");
+    let bits_id = probe_code[bits_start..]
+        .split("static V f")
+        .nth(1)
+        .unwrap()
+        .split('(')
+        .next()
+        .unwrap();
+    let bits_entry = format!("f{bits_id}");
+    for signature in [
+        "typedef uint64_t V;",
+        "static inline void fwp_rc_dup(V v) {\n",
+        "static void fwp_closure_drop(V f) {\n",
+        "static V fwp_apply_borrowed_span(V f, uint32_t n, V *args, uint32_t owned_start, uint32_t owned_len) {",
+    ] {
+        assert_eq!(probe_code.matches(signature).count(), 1, "{signature}");
+    }
+    // Generated loops follow the task declarations; primitive store helpers do not.
+    let generator_step = "    for (size_t index = 0; index < n; index++) {\n        V args[] = {";
+    assert!(probe_code.contains(generator_step));
     let measured = probe_code
-        .replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic int callback_probe_active;\nstatic size_t callback_probe_retains, callback_probe_drops;")
+        .replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic int callback_probe_active, callback_cancel_active;\nstatic size_t callback_probe_retains, callback_probe_drops, callback_probe_dispatches;")
         .replace("static inline void fwp_rc_dup(V v) {\n", "static inline void fwp_rc_dup(V v) {\n    if (callback_probe_active) callback_probe_retains++;\n")
         .replace("static void fwp_closure_drop(V f) {\n", "static void fwp_closure_drop(V f) {\n    if (callback_probe_active) callback_probe_drops++;\n")
+        .replace(generator_step, "    for (size_t index = 0; index < n; index++) {\n        if(callback_cancel_active && index==2) { fwp_cur->cancelled=1; fwp_check_cancel(); }\n        V args[] = {")
+        .replace("static V fwp_apply_borrowed_span(V f, uint32_t n, V *args, uint32_t owned_start, uint32_t owned_len) {", "static V fwp_apply_borrowed_span(V f, uint32_t n, V *args, uint32_t owned_start, uint32_t owned_len) {\n    if(callback_probe_active) callback_probe_dispatches++;")
         .replace("int main(int argc, char **argv)", "int original_main(int argc, char **argv)");
     let probe = format!(
         r#"
+static fwp_task callback_cancel_task;
+static jmp_buf callback_cancel_base;
 int main(void) {{
     fwp_heap_start(); fwp_fns=fwp_fn_table; fwp_init_consts();
     size_t initial=fwp_heap.live;
@@ -859,6 +896,7 @@ int main(void) {{
         V result={entry}(FWP_FALSE,(V)n);
         callback_probe_active=0;
         if(callback_probe_retains || callback_probe_drops) return 224;
+        if(callback_probe_dispatches) return 230;
         if(fwp_array_len(result)!=n) return 226;
         for(size_t i=0;i<n;i++) if((int64_t)fwp_array_load(result,i,NULL)!=(int64_t)i) return 227;
         fwp_rc_free_arr(result);
@@ -869,11 +907,51 @@ int main(void) {{
     if(!setjmp(h.jb)) {{ {entry}(FWP_TRUE,4); return 228; }}
     fwp_handlers=h.prev;
     if(fwp_cleanups!=h.cleanup || fwp_heap.live!=initial) return 225;
+    for(size_t test=0;test<3;test++) {{
+        size_t n=lengths[test];
+        callback_probe_retains=callback_probe_drops=callback_probe_dispatches=0;
+        callback_probe_active=1;
+        V result={scalar_entry}(FWP_FALSE,7,(V)n);
+        callback_probe_active=0;
+        if(callback_probe_retains || callback_probe_drops) return 224;
+        if(callback_probe_dispatches) return 230;
+        if(fwp_array_len(result)!=n) return 226;
+        for(size_t i=0;i<n;i++) if((int64_t)fwp_array_load(result,i,NULL)!=(int64_t)i+7) return 227;
+        fwp_rc_free_arr(result);
+        if(fwp_heap.live!=initial) return 225;
+    }}
+    fwp_handler scalar_handler; scalar_handler.prev=fwp_handlers;
+    scalar_handler.state_depth=fwp_state_len; scalar_handler.cleanup=fwp_cleanups;
+    fwp_handlers=&scalar_handler;
+    if(!setjmp(scalar_handler.jb)) {{ {scalar_entry}(FWP_TRUE,2,4); return 228; }}
+    fwp_handlers=scalar_handler.prev;
+    if(fwp_cleanups!=scalar_handler.cleanup || fwp_heap.live!=initial) return 225;
+    const uint64_t saved_bits[]={{UINT64_C(0x8000000000000000),UINT64_C(0x7ff8123456789abc),UINT64_C(1)}};
+    const fwp_desc floating={{.kind=K_F64}};
+    for(size_t test=0;test<3;test++) {{
+        callback_probe_retains=callback_probe_drops=callback_probe_dispatches=0; callback_probe_active=1;
+        V result={bits_entry}(saved_bits[test],4);
+        callback_probe_active=0;
+        if(callback_probe_retains || callback_probe_drops) return 224;
+        if(callback_probe_dispatches) return 230;
+        if(fwp_array_len(result)!=4) return 226;
+        for(size_t i=0;i<4;i++) if(fwp_array_load(result,i,&floating)!=saved_bits[test]) return 227;
+        fwp_rc_free_arr(result);
+        if(fwp_heap.live!=initial) return 225;
+    }}
+    fwp_task *previous=fwp_cur;
+    callback_cancel_task.base=&callback_cancel_base; fwp_cur=&callback_cancel_task;
+    fwp_budget=1000000; callback_cancel_active=1;
+    if(!setjmp(callback_cancel_base)) {{ {scalar_entry}(FWP_FALSE,7,4); return 228; }}
+    callback_cancel_active=0; fwp_cur=previous; callback_cancel_task.base=NULL;
+    if(!callback_cancel_task.unwinding || fwp_cleanups || fwp_heap.live!=initial) return 229;
     return 0;
 }}
 "#
     );
     let measured = measured + &probe;
+    let cancellation_cleanup = "t->unwinding = 1;\n    fwp_cleanup_unwind(0);";
+    assert_eq!(measured.matches(cancellation_cleanup).count(), 1);
     for optimization in ["-O1", "-O2"] {
         let binary = dir.0.join(format!("semantics{optimization}.exe"));
         fwp::cgen::compile_c(&code, &binary, optimization).unwrap();
@@ -891,12 +969,28 @@ int main(void) {{
                 224,
             ),
             (
+                "extra-dispatch",
+                measured.replace(
+                    "callback_probe_active=1;",
+                    "callback_probe_active=1; callback_probe_dispatches++;",
+                ),
+                230,
+            ),
+            (
                 "missing-partial-cleanup",
                 measured.replace(
                     "fwp_array_builder *owner = arg;",
                     "fwp_array_builder *owner = arg; (void)owner; return;",
                 ),
                 225,
+            ),
+            (
+                "missing-cancel-cleanup",
+                measured.replace(
+                    cancellation_cleanup,
+                    "t->unwinding = 1; /* omitted cleanup */",
+                ),
+                229,
             ),
         ] {
             let binary = dir.0.join(format!("{label}{optimization}.exe"));

@@ -1,0 +1,137 @@
+{
+  "records": [
+    {
+      "machine": "aarch64",
+      "session": 1,
+      "source": "f05e25f8730453103f862a354324f1d660a3550d",
+      "run": 41437433015,
+      "job": 125250653493,
+      "conclusion": "success",
+      "artifact": {
+        "id": 13137632981,
+        "node_id": "MDg6QXJ0aWZhY3QxMzEzNzYzMjk4MQ==",
+        "name": "array-construction-time-ubuntu-24.04-arm-1",
+        "size_in_bytes": 35633754,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13137632981",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13137632981/zip",
+        "expired": false,
+        "digest": "sha256:e71a994a254b6b04157a00a4b0472bc02346d6f6424ae21763605b070fbd200c",
+        "created_at": "2026-11-02T11:46:40Z",
+        "updated_at": "2026-11-02T11:46:40Z",
+        "expires_at": "2027-01-31T11:30:56Z",
+        "workflow_run": {
+          "id": 41437433015,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "array-construction-costs",
+          "head_sha": "f05e25f8730453103f862a354324f1d660a3550d"
+        }
+      },
+      "report": "aarch64-1.json.gz",
+      "files": "aarch64-1-files.json.gz",
+      "log": "aarch64-1.log.gz",
+      "failedCopyLimits": 0,
+      "rawAudit": "Passed: source, commands, every file identity, raw outputs, cleanup and timing summaries"
+    },
+    {
+      "machine": "aarch64",
+      "session": 2,
+      "source": "f05e25f8730453103f862a354324f1d660a3550d",
+      "run": 41437433015,
+      "job": 125250652813,
+      "conclusion": "success",
+      "artifact": {
+        "id": 13136894538,
+        "node_id": "MDg6QXJ0aWZhY3QxMzEzNjg5NDUzOA==",
+        "name": "array-construction-time-ubuntu-24.04-arm-2",
+        "size_in_bytes": 35632918,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13136894538",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13136894538/zip",
+        "expired": false,
+        "digest": "sha256:2059df22e8b491895c8c805859f5a16613ef6d2368f57041afe74638156e0b7d",
+        "created_at": "2026-11-02T11:46:05Z",
+        "updated_at": "2026-11-02T11:46:05Z",
+        "expires_at": "2027-01-31T11:30:56Z",
+        "workflow_run": {
+          "id": 41437433015,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "array-construction-costs",
+          "head_sha": "f05e25f8730453103f862a354324f1d660a3550d"
+        }
+      },
+      "report": "aarch64-2.json.gz",
+      "files": "aarch64-2-files.json.gz",
+      "log": "aarch64-2.log.gz",
+      "failedCopyLimits": 0,
+      "rawAudit": "Passed: source, commands, every file identity, raw outputs, cleanup and timing summaries"
+    },
+    {
+      "machine": "x86_64",
+      "session": 1,
+      "source": "f05e25f8730453103f862a354324f1d660a3550d",
+      "run": 41437433015,
+      "job": 125250653491,
+      "conclusion": "failure",
+      "artifact": {
+        "id": 13138078154,
+        "node_id": "MDg6QXJ0aWZhY3QxMzEzODA3ODE1NA==",
+        "name": "array-construction-time-ubuntu-latest-1",
+        "size_in_bytes": 39553220,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13138078154",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13138078154/zip",
+        "expired": false,
+        "digest": "sha256:373784a71a873f4424bd73bdfdb892c9b3144a05ad95cb338037bd49ab64086d",
+        "created_at": "2026-11-02T11:48:16Z",
+        "updated_at": "2026-11-02T11:48:16Z",
+        "expires_at": "2027-01-31T11:30:56Z",
+        "workflow_run": {
+          "id": 41437433015,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "array-construction-costs",
+          "head_sha": "f05e25f8730453103f862a354324f1d660a3550d"
+        }
+      },
+      "report": "x86_64-1.json.gz",
+      "files": "x86_64-1-files.json.gz",
+      "log": "x86_64-1.log.gz",
+      "failedCopyLimits": 6,
+      "rawAudit": "Passed: source, commands, every file identity, raw outputs, cleanup and timing summaries"
+    },
+    {
+      "machine": "x86_64",
+      "session": 2,
+      "source": "f05e25f8730453103f862a354324f1d660a3550d",
+      "run": 41445523250,
+      "job": 125277535727,
+      "conclusion": "success",
+      "artifact": {
+        "id": 13141323354,
+        "node_id": "MDg6QXJ0aWZhY3QxMzE0MTMyMzM1NA==",
+        "name": "array-construction-time-ubuntu-latest-2",
+        "size_in_bytes": 39553865,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13141323354",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13141323354/zip",
+        "expired": false,
+        "digest": "sha256:55bfd47ca80d732fb084c02656520ac44b2a0a0f7217592e7651a0dcfe7dad57",
+        "created_at": "2026-11-02T12:37:32Z",
+        "updated_at": "2026-11-02T12:37:32Z",
+        "expires_at": "2027-01-31T12:32:23Z",
+        "workflow_run": {
+          "id": 41445523250,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "roadmap/array-construction-phase-runner-2026-11-02",
+          "head_sha": "f05e25f8730453103f862a354324f1d660a3550d"
+        }
+      },
+      "report": "x86_64-2.json.gz",
+      "files": "x86_64-2-files.json.gz",
+      "log": "x86_64-2.log.gz",
+      "failedCopyLimits": 0,
+      "rawAudit": "Passed: source, commands, every file identity, raw outputs, cleanup and timing summaries"
+    }
+  ],
+  "remaining": []
+}
