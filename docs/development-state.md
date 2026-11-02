@@ -1,8 +1,8 @@
 # Current work
 
 **Next:** audit PR #244's remaining production gates, then squash-merge only its
-passing final head. Meanwhile prepare array phase measurements; do not change
-compiler selection rules before measuring the source/driver boundary.
+passing final head. Meanwhile implement the frozen array phase protocol; do not change compiler
+selection rules before measuring the source/driver boundary.
 
 ## Active PR and independent preparation
 
@@ -56,7 +56,10 @@ sources have remote retention tags. Do not repeat completed timings.
 - Both materialized paths allocate once; composed source already allocates zero.
   Exact results, small interpreter cases and missing-release controls pass.
 - Materialized scalar captures retain generic callback dispatch in generated and
-  optimized GCC source. Measure phases before selecting this compiler candidate.
+  optimized GCC source. The phase protocol now fixes six roles, two sizes, two
+  sessions/architecture, construction/consumption/inclusive timers and separate
+  instrumented phase observations. Implement that runner next; baseline comparisons
+  impose noise controls, not a speculative required speedup.
 - Earlier run `41426573182` failed only source formatting on both hosts. The fixture
   was fixed with #243's verified package; failure logs and source tag remain.
 
