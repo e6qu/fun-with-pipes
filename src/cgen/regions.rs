@@ -244,6 +244,8 @@ fn prove_cached(
             | Body::ForeignC { .. }
             | Body::Remote(_)
             | Body::RegionCtor(_)
+            | Body::PackedRecordMap { .. }
+            | Body::PackedRecordFold { .. }
             | Body::RegionEntry { .. } => {
                 return None;
             }

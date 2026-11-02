@@ -3,7 +3,8 @@
 The current compiler still allocates a record and a list cell for each
 adjacent-pair result before summing them. This baseline identifies that remaining
 cost. It measures allocations and ownership, **not elapsed-time improvement**.
-The proposed replacement below is not implemented yet.
+The initial replacement is implemented on the development branch; native
+verification and the dedicated failure controls are still in progress.
 
 ## What the program computes
 

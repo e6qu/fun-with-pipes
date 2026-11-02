@@ -1145,6 +1145,14 @@ impl<'a> Proof<'a> {
                 Ok(self.request(*worker, scoped, None, &arguments, site))
             }
             Body::RegionCtor(_) => Ok(Targets::new()),
+            Body::PackedRecordMap { callback } | Body::PackedRecordFold { callback } => {
+                // Admission excludes resource-bearing fields and captures.
+                // Still visit the callback: its effects require the same scope
+                // (notably derivative recording) as the original map/fold.
+                let arguments = vec![Targets::new(); self.program.funcs[*callback].arity as usize];
+                self.request(*callback, scoped, None, &arguments, site);
+                Ok(Targets::new())
+            }
             Body::Expr(body) => {
                 let mut locals = vec![Targets::new(); function.locals.len()];
                 for (local, value) in locals.iter_mut().zip(args) {

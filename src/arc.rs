@@ -220,9 +220,12 @@ pub(crate) fn check(
             value_type(prog, ty, &mut seen).map_err(reject)?;
         }
         let symbol = match &f.body {
-            Body::Expr(_) | Body::Ctor(_) | Body::RegionCtor(_) | Body::RegionEntry { .. } => {
-                continue
-            }
+            Body::Expr(_)
+            | Body::Ctor(_)
+            | Body::RegionCtor(_)
+            | Body::RegionEntry { .. }
+            | Body::PackedRecordMap { .. }
+            | Body::PackedRecordFold { .. } => continue,
             Body::ForeignC { symbol, .. } => {
                 let (params, result) = crate::ffi::signature(prog, f)
                     .map_err(|e| format!("foreign function `{symbol}`: {e}"))?;
