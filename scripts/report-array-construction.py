@@ -39,7 +39,7 @@ def entry(source, name):
     return match[1]
 
 
-def probe_source(generated, profile):
+def probe_source(generated, profile, probe):
     source = replace_once(generated, 'typedef uint64_t V;',
         'typedef uint64_t V;\nstatic uint64_t construction_calls, construction_bytes, construction_retains;')
     if profile:
@@ -54,7 +54,7 @@ def probe_source(generated, profile):
             source = replace_once(source, before, after)
     source = replace_once(source, 'int main(int argc, char **argv)',
                           'int original_main(int argc, char **argv)')
-    harness = PROBE.read_text()
+    harness = probe
     for marker, name in (('MAKE', 'make-input'), ('REDUCE', 'reduce64'), ('WORK', 'work')):
         harness = harness.replace('fCONSTRUCTION_' + marker, entry(generated, name))
     return source + '\n' + harness
@@ -149,7 +149,7 @@ def main():
         for profile in (False, True):
             label = opt + ('-profile' if profile else '-ordinary')
             cfile, binary = out / (label + '.c'), out / (label + '.exe')
-            cfile.write_text(probe_source(generated, profile))
+            cfile.write_text(probe_source(generated, profile, PROBE.read_text()))
             command = [args.cc, '-' + opt, '-std=gnu11', '-ffp-contract=off', '-march=' + args.c_arch,
                        '-w', '-fstack-usage', '-fopt-info-vec-all=' + str(out / (label + '.vec')),
                        '-fdump-tree-optimized=' + str(out / (label + '.optimized')),

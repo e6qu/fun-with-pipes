@@ -8,11 +8,12 @@ compiler selection rules before measuring the source/driver boundary.
 
 - PR: https://github.com/e6qu/fun-with-pipes/pull/244
 - Final head: `555c4981695f4819586ef0a57114a36c2c9476ef`; preserve it unless CI needs repair.
-- Production `41425537461`: benchmark `125211125775` passes; eight native jobs remain.
+- Production `41425537461`: benchmark `125211125775` and macOS ARM64 ownership
+  `125211126065` pass; seven native jobs remain.
 - Docs `41425537447` / `125211125800` passes. Benchmark/docs full logs audited;
   documentation test-runner failures are intentional negative controls.
 - macOS ARM64 ownership archive `13134110468`: all 126 target logs pass, no
-  unexpected diagnostics. The complete job still needs its final-log audit.
+  unexpected diagnostics; the full completed job log is also audited clean.
 - PR worktree: `/private/tmp/fwp-matrix-calculation`, branch `matrix-calculation-costs`.
 - Independent branch/worktree: `array-construction-costs`, `/private/tmp/fwp-array-construction`.
   It starts at #244's tested head. Open no second PR. After #244 merges, preserve
@@ -71,6 +72,8 @@ Focused checks run serially through `python3 scripts/local-guard.py`:
   pass. Both generated table sets verify; final roadmap audit passes (2.87s).
 - Array: six evidence controls (0.13s), actionlint (5.52s), roadmap audit (2.99s),
   full archive/file/output checks (2.32s), retained-sample reduction (2.67s).
+  Persistent `check-array-construction.py` reproduces source/observer mutations,
+  results, storage and all command outcomes for both archives (2.46s).
 - No local compiler build, full suite or benchmark. #243's downloaded release
   package was used only for formatting/small interpreter preflights, not native
   GCC acceptance. Last free disk: 66 GiB; keep the guard's fixed limits.
