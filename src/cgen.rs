@@ -431,6 +431,9 @@ struct Gen<'p> {
     drops: HashMap<MT, usize>,
     drop_defs: Vec<String>,
     cleanup_defs: Vec<String>,
+    /// Last local mentions in the immutable ownership tree, built lazily once
+    /// per function that has a complete separated-field transfer candidate.
+    field_last_uses: HashMap<FuncId, HashMap<Local, *const Expr>>,
     /// Type-directed ownership of fresh runtime result trees.
     tree_owners: HashMap<MT, usize>,
     tree_owner_defs: Vec<String>,
@@ -10244,6 +10247,7 @@ fn generate_mode(prog: &Program, mut mode: Mode) -> Result<String, String> {
         drops: HashMap::new(),
         drop_defs: Vec::new(),
         cleanup_defs: Vec::new(),
+        field_last_uses: HashMap::new(),
         tree_owners: HashMap::new(),
         tree_owner_defs: Vec::new(),
         vhelpers: HashMap::new(),

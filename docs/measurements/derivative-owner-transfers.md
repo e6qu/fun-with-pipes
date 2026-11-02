@@ -1,6 +1,8 @@
 # Remaining reference counts in derivative callbacks
 
-**Status:** measured source investigation. No compiler change or speedup yet.
+**Status:** the first field-transfer candidate is implemented and awaiting
+[focused verification](https://github.com/e6qu/fun-with-pipes/actions/runs/41533745677).
+No count reduction or speedup is verified yet; callback-input ownership is unchanged.
 Complete [PR #248](https://github.com/e6qu/fun-with-pipes/pull/248)'s platform gates
 before publishing the next grouped PR. [Plan](../../PLAN.md).
 
@@ -52,6 +54,9 @@ or resource frames. Inspect at most the existing direct-call field limit (eight)
 then emit moves to the destination locals. Later call-liveness information stays
 valid because ownership after the complete transfer is unchanged. Prove this on
 the typed ownership expression before emitting C; preserve boxed entry cleanup.
+Index the last local mentions once per eligible function, then check each group
+against that index. Repeated continuation scans would become quadratic; the
+index also checks enclosing continuations beyond the immediate group.
 
 **Keep input elements borrowed through the callback.** Both input lists remain
 alive during the eager map. A callback may use their element boxes without
