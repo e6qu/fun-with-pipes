@@ -58,6 +58,12 @@ one test passes, no diagnostics. Archives
 `/private/tmp/fwp-248-audit-targets.py` pins the current head and checks the exact
 native shard inventory, every test summary and compiler diagnostics.
 
+Windows initial target archives also pass: ARM64 `13181790848`, AMD64
+`13180623483`; each has 57 logs / 135 summaries / 431 passing tests / two ignored,
+with no diagnostics. Native host identities and archive digests match. Files
+`/private/tmp/fwp-248-windows-{arm,amd}.zip`, guarded audits 0.13s / 0.14s.
+Their full jobs still require TLS/executable checks and complete-log audits.
+
 Documentation attempt 1 completed every check and checkout cleanup by 21:04:09Z,
 about 3m20s after its 21:00:49Z start, without a test failure. GitHub nevertheless
 marked it cancelled for the five-minute limit at 21:06:55Z. Preserve that as a
@@ -195,6 +201,13 @@ The saved mapper `w164` only forwards `l1, l0` to `w124`; there is no later
 local read proving continuing ownership. Borrowing must carry the outer list's
 lifetime through that forwarding call. Numeric-leaf passing instead needs both
 calls coordinated, since the current ABI splits one record level only.
+
+The next branch now freezes the first implementation stage in
+[field-owner-transfer-protocol.md](measurements/field-owner-transfer-protocol.md):
+complete bounded transfers of two to eight already-separated counted fields,
+at least `p` fewer retains across the existing 96 observations, mapper input
+ownership unchanged. Publish its immutable tag before compiler edits. This is
+part of the grouped next PR, not an extra small PR or a repeat full matrix.
 
 ## Focused checks and resources
 

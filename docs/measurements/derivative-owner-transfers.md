@@ -45,6 +45,14 @@ Start with complete, uninterrupted transfers. Repeated field reads, borrowed
 parents, partial transfers and observable resources require their own proof;
 do not remove operations just by matching generated C text.
 
+A bounded first selection can inspect consecutive field bindings from the same
+already-separated record: every field exactly once, followed by release of that
+record, with no remaining parent use. Reject intervening calls, branches, traces
+or resource frames. Inspect at most the existing direct-call field limit (eight),
+then emit moves to the destination locals. Later call-liveness information stays
+valid because ownership after the complete transfer is unchanged. Prove this on
+the typed ownership expression before emitting C; preserve boxed entry cleanup.
+
 **Keep input elements borrowed through the callback.** Both input lists remain
 alive during the eager map. A callback may use their element boxes without
 owning them only when every call it forwards to obeys that contract too.
@@ -57,6 +65,10 @@ passing their numeric fields directly. Prefer the smaller sound implementation;
 avoid an extra callable wrapper solely to bypass the ownership analysis.
 
 ## Delivery requirements
+
+The first stage has [frozen field-transfer requirements](field-owner-transfer-protocol.md).
+They require at least `p` fewer retains and leave mapper input ownership unchanged.
+Freeze the separate callback-input contract before changing that second stage.
 
 - Publish selection rules and numerical acceptance limits before compiler edits.
   Separate field-transfer savings (`p`) from input-preparation savings (`2*p`).
