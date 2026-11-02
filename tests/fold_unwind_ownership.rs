@@ -33,15 +33,15 @@ const SOURCE: &str = r#"step : String -> String -> String ! {Error[String]}
 step = curry (if (.0 | eq "stop") (const "expected" | fail) (fork concat .0 .1))
 step-cap : String -> String -> String -> String ! {Error[String]}
 step-cap = curry3 (if (.1 | eq "stop") (const "expected" | fail) (fork concat .0 (fork concat .1 .2)))
-direct : String -> List[String] -> String ! {Error[String]}
+export direct : String -> List[String] -> String ! {Error[String]}
 direct = fold-right step
-captured : String -> String -> List[String] -> String ! {Error[String]}
+export captured : String -> String -> List[String] -> String ! {Error[String]}
 captured = step-cap | fold-right
-dynamic : (String -> String -> String ! {Error[String]}) -> String -> List[String] -> String ! {Error[String]}
+export dynamic : (String -> String -> String ! {Error[String]}) -> String -> List[String] -> String ! {Error[String]}
 dynamic = fold-right
 scalar-step : I64 -> I64 -> I64 ! {Error[String]}
 scalar-step = curry (if (.0 | eq 2) (const "expected" | fail) (.1 | add 1))
-scalar-run : I64 -> List[I64] -> I64 ! {Error[String]}
+export scalar-run : I64 -> List[I64] -> I64 ! {Error[String]}
 scalar-run = fold-right scalar-step
 main = [task.yield (),
     [2, 1] | attempt (scalar-run 0) | echo,
@@ -52,7 +52,9 @@ main = [task.yield (),
 ] | ignore
 "#;
 fn function_id<'a>(emitted: &'a str, name: &str) -> &'a str {
-    let start = emitted.find(&format!("/* {name} :")).unwrap();
+    let start = emitted
+        .find(&format!("/* {name} :"))
+        .unwrap_or_else(|| panic!("missing generated probe entry `{name}`"));
     emitted[start..]
         .split("static V f")
         .nth(1)

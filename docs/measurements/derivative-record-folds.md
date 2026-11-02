@@ -113,6 +113,37 @@ the cost of fwp's automatic differentiation, not just language overhead.
 The [shared measurement description](descent-costs.md) defines the inputs and
 scope. Failed thresholds and noisy identical-copy controls remain in the report.
 
+## Initial native measurements: counts pass, ARM64 size limit fails
+
+Source `a690733e`, before the `attempt` repair, completed count run
+[41369934860](https://github.com/e6qu/fun-with-pipes/actions/runs/41369934860).
+Independent audit [41371028926](https://github.com/e6qu/fun-with-pipes/actions/runs/41371028926)
+verifies all 96 observations, saved-file hashes, analytic outputs, unchanged
+work/tape storage and zero final live storage. The audit fails the unchanged
+code-size requirement in 15 ARM64 cases. It is not a timing result or acceptance.
+
+For 129 coordinates, 199 updates, current-vector form, GCC O2 and workspace off,
+both native hosts report these **whole-solve** totals against #239:
+
+| Metric | #239 | Initial direct folds | Difference |
+|---|---:|---:|---:|
+| Managed allocation requests | 233,359 | 208,086 | 25,273 fewer |
+| Requested managed bytes | 7,214,534 | 6,607,982 | 606,552 fewer |
+| Effective retains | 102,883 | 77,411 | 25,472 fewer |
+| Peak managed charge | 21,888 B | 21,888 B | Unchanged |
+| Final managed storage | 0 B | 0 B | Both released |
+
+Across all 24 programs per host, instruction-section changes range from
+−1,328 to +2,976 bytes on ARM64 and −1,328 to −928 bytes on AMD64.
+All static-frame limits pass. The larger ARM64 images must remain explicit when
+we assess elapsed time and working memory; no limit has been relaxed.
+
+Retained [counts and failures](derivative-record-fold-counts-initial-2026-11-02.json.gz)
+and [download identities](derivative-record-fold-counts-initial-artifacts-2026-11-02.json)
+preserve the audit. Source tag: `roadmap/record-fold-initial-counts-2026-11-02`.
+These measurements do not verify the later optimizer repair. Its own observations
+and passing correctness checks are still required.
+
 ## Reproduce the source/count audit
 
 Run `scripts/summarize-derivative-callback-boxes.py` with explicit `--summary`,

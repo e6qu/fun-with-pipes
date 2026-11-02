@@ -1,10 +1,11 @@
 # Current work
 
-**Next:** publish the `attempt` specialization repair and run the expanded
-`record-fold-checks` suite (now including `call_effects`). Audit count run
-`41369934860` at `a690733e` independently; verify updated-compiler counts before
-paired timings and the final matrix. [PR #241](https://github.com/e6qu/fun-with-pipes/pull/241)
-contains all repairs, measurements and remaining validation.
+**Next:** publish the explicit-export repair for the two older cleanup probes,
+rerun the focused suite, and audit updated count run `41371032477` at `0bca5f91`.
+Keep its complete measurements despite the separate probe failures. Timing will
+assess the measured allocation reduction alongside the retained ARM64 code-size
+failure; do not silently change either acceptance limit. [PR #241](https://github.com/e6qu/fun-with-pipes/pull/241)
+contains this complete batch.
 
 Branch `numeric-fold-validation` starts at merged #240 (`5fbd6bea`) in
 `/private/tmp/fwp-returned-callables`. Preserve unrelated primary-checkout edits.
@@ -84,9 +85,34 @@ raw interpreter (0.24s); formatting passes (1.99s).
 Count run `41369934860` uses the pre-repair compiler at `a690733e`.
 AMD64 job `125038021591` passes all six inputs/forms/O1/O2/workspace observations
 and unwind controls; complete log audit finds no warnings or unexpected failures.
-ARM64 job `125038021895` is still running. Use `record-fold-count-report` with
+ARM64 job `125038021895` also passes; both complete logs were audited without
+unexpected diagnostics. Use `record-fold-count-report` with
 that run and exact source to independently verify archives on GitHub; preserve
 this pre-repair evidence. Do not label it verification of the changed optimizer.
+
+The repaired compiler run `41370956853` at `0bca5f91` passes the numeric fold
+semantic test and all 15 `call_effects` tests on every host, including the new
+handler-order cases. All new numeric unwind probes pass. Two older probes fail
+before execution: `function_id` cannot find names now inlined by specialization.
+Export their four directly called entry points (`direct`, `captured`, `dynamic`,
+`scalar-run`) to make their reachability explicit. This is a fixture-only repair;
+formatting passes (1.86s) and exports type-check with the retained compiler (0.25s).
+All eight target logs/diagnostics were audited: 37 tests pass, two probes fail.
+Logs: `/private/tmp/fwp-241-attempt-{arm,amd,mac}.log`.
+
+Both updated count jobs `125041355637`/`125041355956` finish every measurement
+successfully; their job failures come only from those two cleanup probes.
+All logs are audited at `/private/tmp/fwp-241-updated-count-{arm,amd}.log`.
+No compiler code changes are needed for the probe repair; reuse these count
+observations once the separate correctness checks and independent audit complete.
+
+Initial archive audit `41371028926` verifies all counts/cleanup and finds 15
+ARM64 text-growth failures (maximum +2,976 bytes versus the +1,024 limit).
+AMD64 text shrinks by 928–1,328 bytes. The largest current-only solve removes
+25,273 allocations, 606,552 requested bytes and 25,472 effective retains on both
+hosts, with unchanged 21,888-byte peak and zero final managed storage.
+The [report](measurements/derivative-record-folds.md#initial-native-measurements-counts-pass-arm64-size-limit-fails)
+retains exact limits, sources and archive identities. No timing result yet.
 
 ## Local verification
 
