@@ -868,16 +868,18 @@ fn static_array_callbacks_avoid_owner_checks_and_preserve_partial_cleanup() {
         "typedef uint64_t V;",
         "static inline void fwp_rc_dup(V v) {\n",
         "static void fwp_closure_drop(V f) {\n",
-        "static void fwp_array_store_owned(V a, size_t i, V value, const fwp_desc *elem) {",
         "static V fwp_apply_borrowed_span(V f, uint32_t n, V *args, uint32_t owned_start, uint32_t owned_len) {",
     ] {
         assert_eq!(probe_code.matches(signature).count(), 1, "{signature}");
     }
+    // Generated loops follow the task declarations; primitive store helpers do not.
+    let generator_step = "    for (size_t index = 0; index < n; index++) {\n        V args[] = {";
+    assert!(probe_code.contains(generator_step));
     let measured = probe_code
         .replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic int callback_probe_active, callback_cancel_active;\nstatic size_t callback_probe_retains, callback_probe_drops, callback_probe_dispatches;")
         .replace("static inline void fwp_rc_dup(V v) {\n", "static inline void fwp_rc_dup(V v) {\n    if (callback_probe_active) callback_probe_retains++;\n")
         .replace("static void fwp_closure_drop(V f) {\n", "static void fwp_closure_drop(V f) {\n    if (callback_probe_active) callback_probe_drops++;\n")
-        .replace("static void fwp_array_store_owned(V a, size_t i, V value, const fwp_desc *elem) {", "static void fwp_array_store_owned(V a, size_t i, V value, const fwp_desc *elem) {\n    if(callback_cancel_active && i==2) { fwp_cur->cancelled=1; fwp_check_cancel(); }")
+        .replace(generator_step, "    for (size_t index = 0; index < n; index++) {\n        if(callback_cancel_active && index==2) { fwp_cur->cancelled=1; fwp_check_cancel(); }\n        V args[] = {")
         .replace("static V fwp_apply_borrowed_span(V f, uint32_t n, V *args, uint32_t owned_start, uint32_t owned_len) {", "static V fwp_apply_borrowed_span(V f, uint32_t n, V *args, uint32_t owned_start, uint32_t owned_len) {\n    if(callback_probe_active) callback_probe_dispatches++;")
         .replace("int main(int argc, char **argv)", "int original_main(int argc, char **argv)");
     let probe = format!(

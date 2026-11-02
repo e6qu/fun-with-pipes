@@ -37,6 +37,12 @@ identities. Do not edit observations to make an old experiment describe new code
 
 ## Numerical applications
 
+- [Materialized array construction](array-construction-phases-2026-11-02/README.md):
+  source generator, C driver, C and Rust with separate construction/consumption
+  timers; repeated ARM64 results, failed AMD64 controls and explicit storage costs.
+  The [selected scalar-capture change](array-construction-costs.md#selected-next-change-known-scalar-captures)
+  remains under verification.
+
 - [Typed derivative owners](typed-derivative-owners.md): current F128/nested-tape
   work; stack-record, initialization and result-transfer counts, plus alias,
   failure and cancellation controls. Counts are not timing evidence.

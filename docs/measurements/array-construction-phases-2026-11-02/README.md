@@ -69,17 +69,19 @@ extra timers and counters can alter code and must not replace ordinary timings.
   320/368 bytes (`dynamic,bounded`) on AMD64. These are individual function frame
   estimates, not maximum call-stack measurements. Full reports retain every entry.
 
-## AMD64 limits and remaining session
+## AMD64 results and limits
 
 Session 1 completes exact results, storage and missing-release controls. Six
 copy limits fail: five for 65,537 elements and driver construction for 262,145.
 Mismatches range from 2.11% to 8.94%. Its timings are retained but not accepted as
 qualified performance results. Do not rerun this completed session for a pass.
-Session 2 is still awaiting the declared CPU; rejected hosts stop before building.
+Session 2 passes all exact-result, storage, cleanup and timing-copy checks on the
+declared EPYC 7763. Its five earlier host rejections stopped before building or
+timing. That successful session does not erase session 1’s six failed limits.
 
 [Index](index.json) links jobs, artifact identities and compressed reports/logs.
 The reports retain every warmup and sample; file manifests retain raw file hashes.
 `check-array-construction-time.py` audited the original complete archives against
 source, compiler flags, exact outputs, cleanup controls and reconstructed totals.
 The archives also contain binaries and generated C. [Rejected hosts](rejected-hosts.json)
-remain part of the experiment. No production compiler optimization is included yet.
+remain part of the experiment. These are baseline measurements, taken before the scalar-capture candidate.

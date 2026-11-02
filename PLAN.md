@@ -21,7 +21,7 @@ cost before choosing a compiler change; preserve the composed allocation-free pa
 | Step | Work | Completion requirement |
 |---|---|---|
 | 1 | Verify the three current construction paths | Verified: both GCC architectures at O1/O2, exact values, storage and missing-release controls; retained source and binary evidence |
-| 2 | Separate construction, consumption and filling costs | Two qualified sessions per architecture; compare materialized source, C driver, C and Rust; audit all raw samples and copy limits |
+| 2 | Separate construction, consumption and filling costs | Four sessions audited: both ARM64 and AMD64 session 2 pass; AMD64 session 1 retains six failed copy limits; compare source, driver, C and Rust |
 | 3 | Select and prove a bounded generator change | If phase evidence justifies it, extend direct calls only to known scalar captures; preserve evaluation/trap order, reuse, partial failure, cancellation and composed fusion |
 | 4 | Measure the change against its exact same-source reference | Freeze speed/storage limits before timing; require exact outputs and cleanup, retain all outcomes, report time, allocations, managed memory, RSS, code and stack costs |
 | 5 | Deliver the combined batch | Bundle source, regressions, measurements and clear docs; all nine final-head production jobs plus documentation pass and are audited before squash merge |

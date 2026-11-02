@@ -93,7 +93,7 @@ fn array_size_limits_agree_with_raw_interpreter_and_generic_wrappers() {
         (
             "captured-overflow",
             "add 3 | generate-captured 9223372036854775807",
-            Some("signed integer overflow"),
+            Some("arithmetic overflow in I64"),
         ),
         (
             "captured-size-overflow",

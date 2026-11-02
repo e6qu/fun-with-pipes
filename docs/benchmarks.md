@@ -533,3 +533,12 @@ materialized F64 arrays each make one workload allocation. In the fully composed
 fwp program, existing fusion removes that array: both GCC architectures show zero
 workload requests and retains at O1/O2. No elapsed-time claim follows from this
 count result; the old materialized-input ratio does not measure composed source.
+
+The [later phase baseline](measurements/array-construction-phases-2026-11-02/README.md)
+measures materialized source at `f05e25f8`. In two qualified ARM64 sessions,
+construction takes 7.16–7.48 times the fwp C driver and 10.78–10.95 times C.
+Separate instrumented builds place over 99% of source construction in filling,
+including callback dispatch and checked arithmetic. This is a filling/call cost
+despite zero effective retains. Six AMD64 session-1 timing-copy limits fail;
+keep those timings inconclusive. The subsequent direct-call candidate has no
+verified speed claim yet.

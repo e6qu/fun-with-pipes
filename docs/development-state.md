@@ -1,7 +1,7 @@
 # Current work
 
-**Next:** run and audit the grouped scalar-capture native safety checks, then
-prepare the exact same-source reference for the frozen timing comparison.
+**Next:** publish the two audited test-harness repairs and rerun the grouped
+scalar-capture safety checks on all three hosts before paired timing.
 Keep source, safety checks, timing, docs and final validation in one substantial PR.
 
 ## Branch and last verified delivery
@@ -25,8 +25,8 @@ Keep source, safety checks, timing, docs and final validation in one substantial
 | Step | Status | Evidence / remaining work |
 |---|---|---|
 | 1 | Verified | Construction diagnostic `41427397530`: both production GCC architectures at O1/O2, exact source/storage/control audit |
-| 2 | In progress | Both ARM64 phase sessions pass and audit; AMD64 session 1 has six failed timing-copy limits; session 2 remains pending |
-| 3 | In progress | Protocol `5cf1c80f` predates selection change; grouped native safety `41442126003` queues on `5437f39f` |
+| 2 | In progress | All four sessions audited; both ARM64 and AMD64 session 2 pass; AMD64 session 1 retains six failed timing-copy limits |
+| 3 | In progress | Protocol `5cf1c80f` predates selection change; all three jobs exposed two test-harness defects, now repaired; remote recheck pending |
 | 4 | Pending | Acceptance frozen; paired runner prepared, timing requires all three focused safety jobs first |
 | 5 | Pending | Publish one coherent PR; nine final-head production gates, docs, audit and verified squash merge |
 
@@ -55,12 +55,12 @@ Keep source, safety checks, timing, docs and final validation in one substantial
   construction differs 7.16–7.48 times on qualified ARM64; filling dominates.
   [Results and identities](measurements/array-construction-phases-2026-11-02/README.md)
   retain compressed reports, every file hash and full job logs.
-  AMD64 session 2 received four undeclared CPUs and stopped before building;
-  rejected runs `41437433015`, `41439088789`, `41439785397`, `41440757518` remain recorded.
-  Current exact-source replacement: `41442138747` / job `125266355568`. The source is retained as
-  `roadmap/array-construction-phase-runner-2026-11-02`.
-  `check-array-construction-time.py` reconstructs source, raw samples, summaries,
-  cleanup controls and compiler settings; all three original complete archives pass.
+  AMD64 session 2 rejected five undeclared CPUs before any build/timing; all
+  qualification records and full logs are retained. Run `41445523250`, job
+  `125277535727`, artifact `13141323354` finally used the declared EPYC 7763:
+  all correctness, storage and copy limits pass. Raw archive audit passes (0.85s).
+  The source is retained as `roadmap/array-construction-phase-runner-2026-11-02`.
+  All four complete archives have been audited; session 1's six failures remain.
 - Existing static-callback tests now also cover scalar captures, count-before-capture
   order, callback reuse and partial cleanup. Fixture formatting, raw interpreter
   preflight and Rust formatting pass (0.02s, 0.27s, 0.27s). Native checks remain
@@ -73,14 +73,26 @@ Keep source, safety checks, timing, docs and final validation in one substantial
   Grouped suite: `scalar-array-checks` (GCC ARM64/AMD64 and Clang ARM64), using
   five existing targets plus Linux construction diagnostics. No full CI yet.
 - Safety run `41442126003`, source `5437f39f`: macOS ARM64 job `125266313620`,
-  Linux ARM64 `125266313829`, Linux AMD64 `125266313984`; all queued at last check.
+  Linux ARM64 `125266313829`, Linux AMD64 `125266313984` all failed. Full job logs
+  and all 15 target logs were audited: on each host argument preparation (2),
+  array unwind (1), fusion (4), ten array-element tests and three size tests pass.
+  The only two failures are new test-harness defects:
+  - The overflow expectation used UBSan wording. It now matches the interpreter
+    and runtime's actual `arithmetic overflow in I64` diagnostic.
+  - The cancellation hook referenced task declarations from an earlier primitive
+    helper. It now runs in the generated loop, after two stores and after those
+    declarations. Production runtime code is unchanged.
+  The repaired probe reconstructed from the saved candidate C passes locally at
+  Clang O1/O2; all four negative controls produce their required failures (ten
+  executions total). This does not replace remote Rust/clippy or GCC checks.
+  Raw artifacts: `13142606109` (macOS), `13142741152` (ARM64), `13141209899` (AMD64).
 - Paired timing suite `scalar-array-time` is prepared but not dispatched. It
   requires `evidence_run` naming the successful focused run and compares its exact
   `src/runtime/lib/tests` trees. `prepare-scalar-array-reference.py` changes only
   the recorded selection clause; two patch controls pass (0.12s). The reference
   codegen file exactly matches the baseline. The audit's explicit comparison mode
   still reproduces original ARM64 raw evidence (0.59s); actionlint passes (6.27s).
-  The compact retained-record audit also reconstructs all three sessions and six
+  The compact retained-record audit also reconstructs all four sessions and six
   failed AMD64 limits (0.35s); documentation CI now runs it.
 - Earlier run `41426573182` failed only source formatting on both hosts. The fixture
   was fixed with #243's verified package; failure logs and source tag remain.
