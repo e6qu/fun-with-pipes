@@ -5,6 +5,17 @@ merge `c124d0c8f13373b0ee11c58d685d850b1b9a5a08`. Its
 [recording results](derivative-recording-moves.md) remove argument records and
 transfer typed weights; they do not explain the remaining ordinary F64 costs.
 
+## Verified delivery
+
+[PR #239](https://github.com/e6qu/fun-with-pipes/pull/239) is merged as
+`1f35824928abc2d468a469c03622f095ce2a4742`. All nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/41342124001)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/41342116834)
+pass on `9e326ce8db9ba5d0b404c1d9b77641c9e51fd484`; completed logs were audited.
+The squash tree exactly matches the tested tree. The user approved retaining
+allocation reductions with all ten failed timing limits open. This production
+pass does not change the measurements, their original limits or D2's open status.
+
 ## Question and workload
 
 Which part of a complete gradient-descent solve requests storage or changes

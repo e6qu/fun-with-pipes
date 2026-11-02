@@ -1,0 +1,1897 @@
+{
+  "source": "b094fdd8c1aedde2957d0109a127b0a66efbdc0f",
+  "run": "41324329567",
+  "scope": "Saved callback result-box counts, not timings or a new native execution.",
+  "sources": [
+    {
+      "host": "aarch64",
+      "case": "3-0-current-O1",
+      "sha256": "394216bed6c0ff534275475f1161b1f4b7c36fdb82e36b769d25e49cd870ee8c",
+      "sites": []
+    },
+    {
+      "host": "aarch64",
+      "case": "3-0-current-O2",
+      "sha256": "394216bed6c0ff534275475f1161b1f4b7c36fdb82e36b769d25e49cd870ee8c",
+      "sites": []
+    },
+    {
+      "host": "aarch64",
+      "case": "3-0-history-O1",
+      "sha256": "9eca78c633a3687645c26866870e8eb795edfe1d9901cef001a07f92b692cddf",
+      "sites": []
+    },
+    {
+      "host": "aarch64",
+      "case": "3-0-history-O2",
+      "sha256": "9eca78c633a3687645c26866870e8eb795edfe1d9901cef001a07f92b692cddf",
+      "sites": []
+    },
+    {
+      "host": "aarch64",
+      "case": "3-1-current-O1",
+      "sha256": "271c70dd9e6c0cfe4d7e7f2dbb76d7e4b413b6202adf96294bc818a79bfd9b2a",
+      "sites": [
+        {
+          "role": "sumAccumulator",
+          "caller": "f127",
+          "line": 18209
+        },
+        {
+          "role": "pairResults",
+          "caller": "f164",
+          "line": 18317
+        },
+        {
+          "role": "inputVertices",
+          "caller": "f167",
+          "line": 18343
+        }
+      ]
+    },
+    {
+      "host": "aarch64",
+      "case": "3-1-current-O2",
+      "sha256": "271c70dd9e6c0cfe4d7e7f2dbb76d7e4b413b6202adf96294bc818a79bfd9b2a",
+      "sites": [
+        {
+          "role": "sumAccumulator",
+          "caller": "f127",
+          "line": 18209
+        },
+        {
+          "role": "pairResults",
+          "caller": "f164",
+          "line": 18317
+        },
+        {
+          "role": "inputVertices",
+          "caller": "f167",
+          "line": 18343
+        }
+      ]
+    },
+    {
+      "host": "aarch64",
+      "case": "3-1-history-O1",
+      "sha256": "1c415774a1c97ed7ec2920a34379e38581415543088f603cae7ebe18f616cdee",
+      "sites": [
+        {
+          "role": "sumAccumulator",
+          "caller": "f118",
+          "line": 18275
+        },
+        {
+          "role": "pairResults",
+          "caller": "f159",
+          "line": 18333
+        },
+        {
+          "role": "inputVertices",
+          "caller": "f162",
+          "line": 18359
+        }
+      ]
+    },
+    {
+      "host": "aarch64",
+      "case": "3-1-history-O2",
+      "sha256": "1c415774a1c97ed7ec2920a34379e38581415543088f603cae7ebe18f616cdee",
+      "sites": [
+        {
+          "role": "sumAccumulator",
+          "caller": "f118",
+          "line": 18275
+        },
+        {
+          "role": "pairResults",
+          "caller": "f159",
+          "line": 18333
+        },
+        {
+          "role": "inputVertices",
+          "caller": "f162",
+          "line": 18359
+        }
+      ]
+    },
+    {
+      "host": "aarch64",
+      "case": "3-199-current-O1",
+      "sha256": "128bad9aa57b552c2fb2e825cb12bf8b3fc71418c3b971c8ca2f37a42f45f05b",
+      "sites": [
+        {
+          "role": "sumAccumulator",
+          "caller": "f127",
+          "line": 18209
+        },
+        {
+          "role": "pairResults",
+          "caller": "f164",
+          "line": 18317
+        },
+        {
+          "role": "inputVertices",
+          "caller": "f167",
+          "line": 18343
+        }
+      ]
+    },
+    {
+      "host": "aarch64",
+      "case": "3-199-current-O2",
+      "sha256": "128bad9aa57b552c2fb2e825cb12bf8b3fc71418c3b971c8ca2f37a42f45f05b",
+      "sites": [
+        {
+          "role": "sumAccumulator",
+          "caller": "f127",
+          "line": 18209
+        },
+        {
+          "role": "pairResults",
+          "caller": "f164",
+          "line": 18317
+        },
+        {
+          "role": "inputVertices",
+          "caller": "f167",
+          "line": 18343
+        }
+      ]
+    },
+    {
+      "host": "aarch64",
+      "case": "3-199-history-O1",
+      "sha256": "7642987bad691632c17ee1b4f58c8d8b8d44e5baeb8f9493819895e336fbebd7",
+      "sites": [
+        {
+          "role": "sumAccumulator",
+          "caller": "f118",
+          "line": 18275
+        },
+        {
+          "role": "pairResults",
+          "caller": "f159",
+          "line": 18333
+        },
+        {
+          "role": "inputVertices",
+          "caller": "f162",
+          "line": 18359
+        }
+      ]
+    },
+    {
+      "host": "aarch64",
+      "case": "3-199-history-O2",
+      "sha256": "7642987bad691632c17ee1b4f58c8d8b8d44e5baeb8f9493819895e336fbebd7",
+      "sites": [
+        {
+          "role": "sumAccumulator",
+          "caller": "f118",
+          "line": 18275
+        },
+        {
+          "role": "pairResults",
+          "caller": "f159",
+          "line": 18333
+        },
+        {
+          "role": "inputVertices",
+          "caller": "f162",
+          "line": 18359
+        }
+      ]
+    },
+    {
+      "host": "aarch64",
+      "case": "3-1999-current-O1",
+      "sha256": "db3e007cf50567cd7204f8087b710f92230ee46029811a8a91f0c01d3858db63",
+      "sites": [
+        {
+          "role": "sumAccumulator",
+          "caller": "f127",
+          "line": 18209
+        },
+        {
+          "role": "pairResults",
+          "caller": "f164",
+          "line": 18317
+        },
+        {
+          "role": "inputVertices",
+          "caller": "f167",
+          "line": 18343
+        }
+      ]
+    },
+    {
+      "host": "aarch64",
+      "case": "3-1999-current-O2",
+      "sha256": "db3e007cf50567cd7204f8087b710f92230ee46029811a8a91f0c01d3858db63",
+      "sites": [
+        {
+          "role": "sumAccumulator",
+          "caller": "f127",
+          "line": 18209
+        },
+        {
+          "role": "pairResults",
+          "caller": "f164",
+          "line": 18317
+        },
+        {
+          "role": "inputVertices",
+          "caller": "f167",
+          "line": 18343
+        }
+      ]
+    },
+    {
+      "host": "aarch64",
+      "case": "3-1999-history-O1",
+      "sha256": "f5c8e9d30b4b881e2b12cfd5758bab72fdac4a6aab7d8b07edbef568e2e956e7",
+      "sites": [
+        {
+          "role": "sumAccumulator",
+          "caller": "f118",
+          "line": 18275
+        },
+        {
+          "role": "pairResults",
+          "caller": "f159",
+          "line": 18333
+        },
+        {
+          "role": "inputVertices",
+          "caller": "f162",
+          "line": 18359
+        }
+      ]
+    },
+    {
+      "host": "aarch64",
+      "case": "3-1999-history-O2",
+      "sha256": "f5c8e9d30b4b881e2b12cfd5758bab72fdac4a6aab7d8b07edbef568e2e956e7",
+      "sites": [
+        {
+          "role": "sumAccumulator",
+          "caller": "f118",
+          "line": 18275
+        },
+        {
+          "role": "pairResults",
+          "caller": "f159",
+          "line": 18333
+        },
+        {
+          "role": "inputVertices",
+          "caller": "f162",
+          "line": 18359
+        }
+      ]
+    },
+    {
+      "host": "aarch64",
+      "case": "33-199-current-O1",
+      "sha256": "8457ff9e5257c13bb3621807679cd95b31c3f79666fd048ae47a6ab409f7fdc0",
+      "sites": [
+        {
+          "role": "sumAccumulator",
+          "caller": "f127",
+          "line": 18239
+        },
+        {
+          "role": "pairResults",
+          "caller": "f164",
+          "line": 18347
+        },
+        {
+          "role": "inputVertices",
+          "caller": "f167",
+          "line": 18373
+        }
+      ]
+    },
+    {
+      "host": "aarch64",
+      "case": "33-199-current-O2",
+      "sha256": "8457ff9e5257c13bb3621807679cd95b31c3f79666fd048ae47a6ab409f7fdc0",
+      "sites": [
+        {
+          "role": "sumAccumulator",
+          "caller": "f127",
+          "line": 18239
+        },
+        {
+          "role": "pairResults",
+          "caller": "f164",
+          "line": 18347
+        },
+        {
+          "role": "inputVertices",
+          "caller": "f167",
+          "line": 18373
+        }
+      ]
+    },
+    {
+      "host": "aarch64",
+      "case": "33-199-history-O1",
+      "sha256": "8e429cacbf6a911a17dfaae1161b9b392e34fdcd9fefa7880e0cdac160728a3e",
+      "sites": [
+        {
+          "role": "sumAccumulator",
+          "caller": "f118",
+          "line": 18305
+        },
+        {
+          "role": "pairResults",
+          "caller": "f159",
+          "line": 18363
+        },
+        {
+          "role": "inputVertices",
+          "caller": "f162",
+          "line": 18389
+        }
+      ]
+    },
+    {
+      "host": "aarch64",
+      "case": "33-199-history-O2",
+      "sha256": "8e429cacbf6a911a17dfaae1161b9b392e34fdcd9fefa7880e0cdac160728a3e",
+      "sites": [
+        {
+          "role": "sumAccumulator",
+          "caller": "f118",
+          "line": 18305
+        },
+        {
+          "role": "pairResults",
+          "caller": "f159",
+          "line": 18363
+        },
+        {
+          "role": "inputVertices",
+          "caller": "f162",
+          "line": 18389
+        }
+      ]
+    },
+    {
+      "host": "aarch64",
+      "case": "129-199-current-O1",
+      "sha256": "b820f990003376116f544c3d638688543ad6154519da34c879444e7eb4aa700a",
+      "sites": [
+        {
+          "role": "sumAccumulator",
+          "caller": "f127",
+          "line": 18335
+        },
+        {
+          "role": "pairResults",
+          "caller": "f164",
+          "line": 18443
+        },
+        {
+          "role": "inputVertices",
+          "caller": "f167",
+          "line": 18469
+        }
+      ]
+    },
+    {
+      "host": "aarch64",
+      "case": "129-199-current-O2",
+      "sha256": "b820f990003376116f544c3d638688543ad6154519da34c879444e7eb4aa700a",
+      "sites": [
+        {
+          "role": "sumAccumulator",
+          "caller": "f127",
+          "line": 18335
+        },
+        {
+          "role": "pairResults",
+          "caller": "f164",
+          "line": 18443
+        },
+        {
+          "role": "inputVertices",
+          "caller": "f167",
+          "line": 18469
+        }
+      ]
+    },
+    {
+      "host": "aarch64",
+      "case": "129-199-history-O1",
+      "sha256": "4853eb64413393d1599bd7ffb82de4694915b501e15b10b4a92a5a06c4275515",
+      "sites": [
+        {
+          "role": "sumAccumulator",
+          "caller": "f118",
+          "line": 18401
+        },
+        {
+          "role": "pairResults",
+          "caller": "f159",
+          "line": 18459
+        },
+        {
+          "role": "inputVertices",
+          "caller": "f162",
+          "line": 18485
+        }
+      ]
+    },
+    {
+      "host": "aarch64",
+      "case": "129-199-history-O2",
+      "sha256": "4853eb64413393d1599bd7ffb82de4694915b501e15b10b4a92a5a06c4275515",
+      "sites": [
+        {
+          "role": "sumAccumulator",
+          "caller": "f118",
+          "line": 18401
+        },
+        {
+          "role": "pairResults",
+          "caller": "f159",
+          "line": 18459
+        },
+        {
+          "role": "inputVertices",
+          "caller": "f162",
+          "line": 18485
+        }
+      ]
+    },
+    {
+      "host": "x86_64",
+      "case": "3-0-current-O1",
+      "sha256": "394216bed6c0ff534275475f1161b1f4b7c36fdb82e36b769d25e49cd870ee8c",
+      "sites": []
+    },
+    {
+      "host": "x86_64",
+      "case": "3-0-current-O2",
+      "sha256": "394216bed6c0ff534275475f1161b1f4b7c36fdb82e36b769d25e49cd870ee8c",
+      "sites": []
+    },
+    {
+      "host": "x86_64",
+      "case": "3-0-history-O1",
+      "sha256": "9eca78c633a3687645c26866870e8eb795edfe1d9901cef001a07f92b692cddf",
+      "sites": []
+    },
+    {
+      "host": "x86_64",
+      "case": "3-0-history-O2",
+      "sha256": "9eca78c633a3687645c26866870e8eb795edfe1d9901cef001a07f92b692cddf",
+      "sites": []
+    },
+    {
+      "host": "x86_64",
+      "case": "3-1-current-O1",
+      "sha256": "271c70dd9e6c0cfe4d7e7f2dbb76d7e4b413b6202adf96294bc818a79bfd9b2a",
+      "sites": [
+        {
+          "role": "sumAccumulator",
+          "caller": "f127",
+          "line": 18209
+        },
+        {
+          "role": "pairResults",
+          "caller": "f164",
+          "line": 18317
+        },
+        {
+          "role": "inputVertices",
+          "caller": "f167",
+          "line": 18343
+        }
+      ]
+    },
+    {
+      "host": "x86_64",
+      "case": "3-1-current-O2",
+      "sha256": "271c70dd9e6c0cfe4d7e7f2dbb76d7e4b413b6202adf96294bc818a79bfd9b2a",
+      "sites": [
+        {
+          "role": "sumAccumulator",
+          "caller": "f127",
+          "line": 18209
+        },
+        {
+          "role": "pairResults",
+          "caller": "f164",
+          "line": 18317
+        },
+        {
+          "role": "inputVertices",
+          "caller": "f167",
+          "line": 18343
+        }
+      ]
+    },
+    {
+      "host": "x86_64",
+      "case": "3-1-history-O1",
+      "sha256": "1c415774a1c97ed7ec2920a34379e38581415543088f603cae7ebe18f616cdee",
+      "sites": [
+        {
+          "role": "sumAccumulator",
+          "caller": "f118",
+          "line": 18275
+        },
+        {
+          "role": "pairResults",
+          "caller": "f159",
+          "line": 18333
+        },
+        {
+          "role": "inputVertices",
+          "caller": "f162",
+          "line": 18359
+        }
+      ]
+    },
+    {
+      "host": "x86_64",
+      "case": "3-1-history-O2",
+      "sha256": "1c415774a1c97ed7ec2920a34379e38581415543088f603cae7ebe18f616cdee",
+      "sites": [
+        {
+          "role": "sumAccumulator",
+          "caller": "f118",
+          "line": 18275
+        },
+        {
+          "role": "pairResults",
+          "caller": "f159",
+          "line": 18333
+        },
+        {
+          "role": "inputVertices",
+          "caller": "f162",
+          "line": 18359
+        }
+      ]
+    },
+    {
+      "host": "x86_64",
+      "case": "3-199-current-O1",
+      "sha256": "128bad9aa57b552c2fb2e825cb12bf8b3fc71418c3b971c8ca2f37a42f45f05b",
+      "sites": [
+        {
+          "role": "sumAccumulator",
+          "caller": "f127",
+          "line": 18209
+        },
+        {
+          "role": "pairResults",
+          "caller": "f164",
+          "line": 18317
+        },
+        {
+          "role": "inputVertices",
+          "caller": "f167",
+          "line": 18343
+        }
+      ]
+    },
+    {
+      "host": "x86_64",
+      "case": "3-199-current-O2",
+      "sha256": "128bad9aa57b552c2fb2e825cb12bf8b3fc71418c3b971c8ca2f37a42f45f05b",
+      "sites": [
+        {
+          "role": "sumAccumulator",
+          "caller": "f127",
+          "line": 18209
+        },
+        {
+          "role": "pairResults",
+          "caller": "f164",
+          "line": 18317
+        },
+        {
+          "role": "inputVertices",
+          "caller": "f167",
+          "line": 18343
+        }
+      ]
+    },
+    {
+      "host": "x86_64",
+      "case": "3-199-history-O1",
+      "sha256": "7642987bad691632c17ee1b4f58c8d8b8d44e5baeb8f9493819895e336fbebd7",
+      "sites": [
+        {
+          "role": "sumAccumulator",
+          "caller": "f118",
+          "line": 18275
+        },
+        {
+          "role": "pairResults",
+          "caller": "f159",
+          "line": 18333
+        },
+        {
+          "role": "inputVertices",
+          "caller": "f162",
+          "line": 18359
+        }
+      ]
+    },
+    {
+      "host": "x86_64",
+      "case": "3-199-history-O2",
+      "sha256": "7642987bad691632c17ee1b4f58c8d8b8d44e5baeb8f9493819895e336fbebd7",
+      "sites": [
+        {
+          "role": "sumAccumulator",
+          "caller": "f118",
+          "line": 18275
+        },
+        {
+          "role": "pairResults",
+          "caller": "f159",
+          "line": 18333
+        },
+        {
+          "role": "inputVertices",
+          "caller": "f162",
+          "line": 18359
+        }
+      ]
+    },
+    {
+      "host": "x86_64",
+      "case": "3-1999-current-O1",
+      "sha256": "db3e007cf50567cd7204f8087b710f92230ee46029811a8a91f0c01d3858db63",
+      "sites": [
+        {
+          "role": "sumAccumulator",
+          "caller": "f127",
+          "line": 18209
+        },
+        {
+          "role": "pairResults",
+          "caller": "f164",
+          "line": 18317
+        },
+        {
+          "role": "inputVertices",
+          "caller": "f167",
+          "line": 18343
+        }
+      ]
+    },
+    {
+      "host": "x86_64",
+      "case": "3-1999-current-O2",
+      "sha256": "db3e007cf50567cd7204f8087b710f92230ee46029811a8a91f0c01d3858db63",
+      "sites": [
+        {
+          "role": "sumAccumulator",
+          "caller": "f127",
+          "line": 18209
+        },
+        {
+          "role": "pairResults",
+          "caller": "f164",
+          "line": 18317
+        },
+        {
+          "role": "inputVertices",
+          "caller": "f167",
+          "line": 18343
+        }
+      ]
+    },
+    {
+      "host": "x86_64",
+      "case": "3-1999-history-O1",
+      "sha256": "f5c8e9d30b4b881e2b12cfd5758bab72fdac4a6aab7d8b07edbef568e2e956e7",
+      "sites": [
+        {
+          "role": "sumAccumulator",
+          "caller": "f118",
+          "line": 18275
+        },
+        {
+          "role": "pairResults",
+          "caller": "f159",
+          "line": 18333
+        },
+        {
+          "role": "inputVertices",
+          "caller": "f162",
+          "line": 18359
+        }
+      ]
+    },
+    {
+      "host": "x86_64",
+      "case": "3-1999-history-O2",
+      "sha256": "f5c8e9d30b4b881e2b12cfd5758bab72fdac4a6aab7d8b07edbef568e2e956e7",
+      "sites": [
+        {
+          "role": "sumAccumulator",
+          "caller": "f118",
+          "line": 18275
+        },
+        {
+          "role": "pairResults",
+          "caller": "f159",
+          "line": 18333
+        },
+        {
+          "role": "inputVertices",
+          "caller": "f162",
+          "line": 18359
+        }
+      ]
+    },
+    {
+      "host": "x86_64",
+      "case": "33-199-current-O1",
+      "sha256": "8457ff9e5257c13bb3621807679cd95b31c3f79666fd048ae47a6ab409f7fdc0",
+      "sites": [
+        {
+          "role": "sumAccumulator",
+          "caller": "f127",
+          "line": 18239
+        },
+        {
+          "role": "pairResults",
+          "caller": "f164",
+          "line": 18347
+        },
+        {
+          "role": "inputVertices",
+          "caller": "f167",
+          "line": 18373
+        }
+      ]
+    },
+    {
+      "host": "x86_64",
+      "case": "33-199-current-O2",
+      "sha256": "8457ff9e5257c13bb3621807679cd95b31c3f79666fd048ae47a6ab409f7fdc0",
+      "sites": [
+        {
+          "role": "sumAccumulator",
+          "caller": "f127",
+          "line": 18239
+        },
+        {
+          "role": "pairResults",
+          "caller": "f164",
+          "line": 18347
+        },
+        {
+          "role": "inputVertices",
+          "caller": "f167",
+          "line": 18373
+        }
+      ]
+    },
+    {
+      "host": "x86_64",
+      "case": "33-199-history-O1",
+      "sha256": "8e429cacbf6a911a17dfaae1161b9b392e34fdcd9fefa7880e0cdac160728a3e",
+      "sites": [
+        {
+          "role": "sumAccumulator",
+          "caller": "f118",
+          "line": 18305
+        },
+        {
+          "role": "pairResults",
+          "caller": "f159",
+          "line": 18363
+        },
+        {
+          "role": "inputVertices",
+          "caller": "f162",
+          "line": 18389
+        }
+      ]
+    },
+    {
+      "host": "x86_64",
+      "case": "33-199-history-O2",
+      "sha256": "8e429cacbf6a911a17dfaae1161b9b392e34fdcd9fefa7880e0cdac160728a3e",
+      "sites": [
+        {
+          "role": "sumAccumulator",
+          "caller": "f118",
+          "line": 18305
+        },
+        {
+          "role": "pairResults",
+          "caller": "f159",
+          "line": 18363
+        },
+        {
+          "role": "inputVertices",
+          "caller": "f162",
+          "line": 18389
+        }
+      ]
+    },
+    {
+      "host": "x86_64",
+      "case": "129-199-current-O1",
+      "sha256": "b820f990003376116f544c3d638688543ad6154519da34c879444e7eb4aa700a",
+      "sites": [
+        {
+          "role": "sumAccumulator",
+          "caller": "f127",
+          "line": 18335
+        },
+        {
+          "role": "pairResults",
+          "caller": "f164",
+          "line": 18443
+        },
+        {
+          "role": "inputVertices",
+          "caller": "f167",
+          "line": 18469
+        }
+      ]
+    },
+    {
+      "host": "x86_64",
+      "case": "129-199-current-O2",
+      "sha256": "b820f990003376116f544c3d638688543ad6154519da34c879444e7eb4aa700a",
+      "sites": [
+        {
+          "role": "sumAccumulator",
+          "caller": "f127",
+          "line": 18335
+        },
+        {
+          "role": "pairResults",
+          "caller": "f164",
+          "line": 18443
+        },
+        {
+          "role": "inputVertices",
+          "caller": "f167",
+          "line": 18469
+        }
+      ]
+    },
+    {
+      "host": "x86_64",
+      "case": "129-199-history-O1",
+      "sha256": "4853eb64413393d1599bd7ffb82de4694915b501e15b10b4a92a5a06c4275515",
+      "sites": [
+        {
+          "role": "sumAccumulator",
+          "caller": "f118",
+          "line": 18401
+        },
+        {
+          "role": "pairResults",
+          "caller": "f159",
+          "line": 18459
+        },
+        {
+          "role": "inputVertices",
+          "caller": "f162",
+          "line": 18485
+        }
+      ]
+    },
+    {
+      "host": "x86_64",
+      "case": "129-199-history-O2",
+      "sha256": "4853eb64413393d1599bd7ffb82de4694915b501e15b10b4a92a5a06c4275515",
+      "sites": [
+        {
+          "role": "sumAccumulator",
+          "caller": "f118",
+          "line": 18401
+        },
+        {
+          "role": "pairResults",
+          "caller": "f159",
+          "line": 18459
+        },
+        {
+          "role": "inputVertices",
+          "caller": "f162",
+          "line": 18485
+        }
+      ]
+    }
+  ],
+  "observations": [
+    {
+      "host": "aarch64",
+      "case": "3-0-current-O1",
+      "workspace": "0",
+      "counts": {
+        "sumAccumulator": 0,
+        "pairResults": 0,
+        "inputVertices": 0
+      }
+    },
+    {
+      "host": "aarch64",
+      "case": "3-0-current-O1",
+      "workspace": "1",
+      "counts": {
+        "sumAccumulator": 0,
+        "pairResults": 0,
+        "inputVertices": 0
+      }
+    },
+    {
+      "host": "aarch64",
+      "case": "3-0-current-O2",
+      "workspace": "0",
+      "counts": {
+        "sumAccumulator": 0,
+        "pairResults": 0,
+        "inputVertices": 0
+      }
+    },
+    {
+      "host": "aarch64",
+      "case": "3-0-current-O2",
+      "workspace": "1",
+      "counts": {
+        "sumAccumulator": 0,
+        "pairResults": 0,
+        "inputVertices": 0
+      }
+    },
+    {
+      "host": "aarch64",
+      "case": "3-0-history-O1",
+      "workspace": "0",
+      "counts": {
+        "sumAccumulator": 0,
+        "pairResults": 0,
+        "inputVertices": 0
+      }
+    },
+    {
+      "host": "aarch64",
+      "case": "3-0-history-O1",
+      "workspace": "1",
+      "counts": {
+        "sumAccumulator": 0,
+        "pairResults": 0,
+        "inputVertices": 0
+      }
+    },
+    {
+      "host": "aarch64",
+      "case": "3-0-history-O2",
+      "workspace": "0",
+      "counts": {
+        "sumAccumulator": 0,
+        "pairResults": 0,
+        "inputVertices": 0
+      }
+    },
+    {
+      "host": "aarch64",
+      "case": "3-0-history-O2",
+      "workspace": "1",
+      "counts": {
+        "sumAccumulator": 0,
+        "pairResults": 0,
+        "inputVertices": 0
+      }
+    },
+    {
+      "host": "aarch64",
+      "case": "3-1-current-O1",
+      "workspace": "0",
+      "counts": {
+        "sumAccumulator": 2,
+        "pairResults": 2,
+        "inputVertices": 3
+      }
+    },
+    {
+      "host": "aarch64",
+      "case": "3-1-current-O1",
+      "workspace": "1",
+      "counts": {
+        "sumAccumulator": 2,
+        "pairResults": 2,
+        "inputVertices": 3
+      }
+    },
+    {
+      "host": "aarch64",
+      "case": "3-1-current-O2",
+      "workspace": "0",
+      "counts": {
+        "sumAccumulator": 2,
+        "pairResults": 2,
+        "inputVertices": 3
+      }
+    },
+    {
+      "host": "aarch64",
+      "case": "3-1-current-O2",
+      "workspace": "1",
+      "counts": {
+        "sumAccumulator": 2,
+        "pairResults": 2,
+        "inputVertices": 3
+      }
+    },
+    {
+      "host": "aarch64",
+      "case": "3-1-history-O1",
+      "workspace": "0",
+      "counts": {
+        "sumAccumulator": 2,
+        "pairResults": 2,
+        "inputVertices": 3
+      }
+    },
+    {
+      "host": "aarch64",
+      "case": "3-1-history-O1",
+      "workspace": "1",
+      "counts": {
+        "sumAccumulator": 2,
+        "pairResults": 2,
+        "inputVertices": 3
+      }
+    },
+    {
+      "host": "aarch64",
+      "case": "3-1-history-O2",
+      "workspace": "0",
+      "counts": {
+        "sumAccumulator": 2,
+        "pairResults": 2,
+        "inputVertices": 3
+      }
+    },
+    {
+      "host": "aarch64",
+      "case": "3-1-history-O2",
+      "workspace": "1",
+      "counts": {
+        "sumAccumulator": 2,
+        "pairResults": 2,
+        "inputVertices": 3
+      }
+    },
+    {
+      "host": "aarch64",
+      "case": "3-199-current-O1",
+      "workspace": "0",
+      "counts": {
+        "sumAccumulator": 398,
+        "pairResults": 398,
+        "inputVertices": 597
+      }
+    },
+    {
+      "host": "aarch64",
+      "case": "3-199-current-O1",
+      "workspace": "1",
+      "counts": {
+        "sumAccumulator": 398,
+        "pairResults": 398,
+        "inputVertices": 597
+      }
+    },
+    {
+      "host": "aarch64",
+      "case": "3-199-current-O2",
+      "workspace": "0",
+      "counts": {
+        "sumAccumulator": 398,
+        "pairResults": 398,
+        "inputVertices": 597
+      }
+    },
+    {
+      "host": "aarch64",
+      "case": "3-199-current-O2",
+      "workspace": "1",
+      "counts": {
+        "sumAccumulator": 398,
+        "pairResults": 398,
+        "inputVertices": 597
+      }
+    },
+    {
+      "host": "aarch64",
+      "case": "3-199-history-O1",
+      "workspace": "0",
+      "counts": {
+        "sumAccumulator": 398,
+        "pairResults": 398,
+        "inputVertices": 597
+      }
+    },
+    {
+      "host": "aarch64",
+      "case": "3-199-history-O1",
+      "workspace": "1",
+      "counts": {
+        "sumAccumulator": 398,
+        "pairResults": 398,
+        "inputVertices": 597
+      }
+    },
+    {
+      "host": "aarch64",
+      "case": "3-199-history-O2",
+      "workspace": "0",
+      "counts": {
+        "sumAccumulator": 398,
+        "pairResults": 398,
+        "inputVertices": 597
+      }
+    },
+    {
+      "host": "aarch64",
+      "case": "3-199-history-O2",
+      "workspace": "1",
+      "counts": {
+        "sumAccumulator": 398,
+        "pairResults": 398,
+        "inputVertices": 597
+      }
+    },
+    {
+      "host": "aarch64",
+      "case": "3-1999-current-O1",
+      "workspace": "0",
+      "counts": {
+        "sumAccumulator": 3998,
+        "pairResults": 3998,
+        "inputVertices": 5997
+      }
+    },
+    {
+      "host": "aarch64",
+      "case": "3-1999-current-O1",
+      "workspace": "1",
+      "counts": {
+        "sumAccumulator": 3998,
+        "pairResults": 3998,
+        "inputVertices": 5997
+      }
+    },
+    {
+      "host": "aarch64",
+      "case": "3-1999-current-O2",
+      "workspace": "0",
+      "counts": {
+        "sumAccumulator": 3998,
+        "pairResults": 3998,
+        "inputVertices": 5997
+      }
+    },
+    {
+      "host": "aarch64",
+      "case": "3-1999-current-O2",
+      "workspace": "1",
+      "counts": {
+        "sumAccumulator": 3998,
+        "pairResults": 3998,
+        "inputVertices": 5997
+      }
+    },
+    {
+      "host": "aarch64",
+      "case": "3-1999-history-O1",
+      "workspace": "0",
+      "counts": {
+        "sumAccumulator": 3998,
+        "pairResults": 3998,
+        "inputVertices": 5997
+      }
+    },
+    {
+      "host": "aarch64",
+      "case": "3-1999-history-O1",
+      "workspace": "1",
+      "counts": {
+        "sumAccumulator": 3998,
+        "pairResults": 3998,
+        "inputVertices": 5997
+      }
+    },
+    {
+      "host": "aarch64",
+      "case": "3-1999-history-O2",
+      "workspace": "0",
+      "counts": {
+        "sumAccumulator": 3998,
+        "pairResults": 3998,
+        "inputVertices": 5997
+      }
+    },
+    {
+      "host": "aarch64",
+      "case": "3-1999-history-O2",
+      "workspace": "1",
+      "counts": {
+        "sumAccumulator": 3998,
+        "pairResults": 3998,
+        "inputVertices": 5997
+      }
+    },
+    {
+      "host": "aarch64",
+      "case": "33-199-current-O1",
+      "workspace": "0",
+      "counts": {
+        "sumAccumulator": 6368,
+        "pairResults": 6368,
+        "inputVertices": 6567
+      }
+    },
+    {
+      "host": "aarch64",
+      "case": "33-199-current-O1",
+      "workspace": "1",
+      "counts": {
+        "sumAccumulator": 6368,
+        "pairResults": 6368,
+        "inputVertices": 6567
+      }
+    },
+    {
+      "host": "aarch64",
+      "case": "33-199-current-O2",
+      "workspace": "0",
+      "counts": {
+        "sumAccumulator": 6368,
+        "pairResults": 6368,
+        "inputVertices": 6567
+      }
+    },
+    {
+      "host": "aarch64",
+      "case": "33-199-current-O2",
+      "workspace": "1",
+      "counts": {
+        "sumAccumulator": 6368,
+        "pairResults": 6368,
+        "inputVertices": 6567
+      }
+    },
+    {
+      "host": "aarch64",
+      "case": "33-199-history-O1",
+      "workspace": "0",
+      "counts": {
+        "sumAccumulator": 6368,
+        "pairResults": 6368,
+        "inputVertices": 6567
+      }
+    },
+    {
+      "host": "aarch64",
+      "case": "33-199-history-O1",
+      "workspace": "1",
+      "counts": {
+        "sumAccumulator": 6368,
+        "pairResults": 6368,
+        "inputVertices": 6567
+      }
+    },
+    {
+      "host": "aarch64",
+      "case": "33-199-history-O2",
+      "workspace": "0",
+      "counts": {
+        "sumAccumulator": 6368,
+        "pairResults": 6368,
+        "inputVertices": 6567
+      }
+    },
+    {
+      "host": "aarch64",
+      "case": "33-199-history-O2",
+      "workspace": "1",
+      "counts": {
+        "sumAccumulator": 6368,
+        "pairResults": 6368,
+        "inputVertices": 6567
+      }
+    },
+    {
+      "host": "aarch64",
+      "case": "129-199-current-O1",
+      "workspace": "0",
+      "counts": {
+        "sumAccumulator": 25472,
+        "pairResults": 25472,
+        "inputVertices": 25671
+      }
+    },
+    {
+      "host": "aarch64",
+      "case": "129-199-current-O1",
+      "workspace": "1",
+      "counts": {
+        "sumAccumulator": 25472,
+        "pairResults": 25472,
+        "inputVertices": 25671
+      }
+    },
+    {
+      "host": "aarch64",
+      "case": "129-199-current-O2",
+      "workspace": "0",
+      "counts": {
+        "sumAccumulator": 25472,
+        "pairResults": 25472,
+        "inputVertices": 25671
+      }
+    },
+    {
+      "host": "aarch64",
+      "case": "129-199-current-O2",
+      "workspace": "1",
+      "counts": {
+        "sumAccumulator": 25472,
+        "pairResults": 25472,
+        "inputVertices": 25671
+      }
+    },
+    {
+      "host": "aarch64",
+      "case": "129-199-history-O1",
+      "workspace": "0",
+      "counts": {
+        "sumAccumulator": 25472,
+        "pairResults": 25472,
+        "inputVertices": 25671
+      }
+    },
+    {
+      "host": "aarch64",
+      "case": "129-199-history-O1",
+      "workspace": "1",
+      "counts": {
+        "sumAccumulator": 25472,
+        "pairResults": 25472,
+        "inputVertices": 25671
+      }
+    },
+    {
+      "host": "aarch64",
+      "case": "129-199-history-O2",
+      "workspace": "0",
+      "counts": {
+        "sumAccumulator": 25472,
+        "pairResults": 25472,
+        "inputVertices": 25671
+      }
+    },
+    {
+      "host": "aarch64",
+      "case": "129-199-history-O2",
+      "workspace": "1",
+      "counts": {
+        "sumAccumulator": 25472,
+        "pairResults": 25472,
+        "inputVertices": 25671
+      }
+    },
+    {
+      "host": "x86_64",
+      "case": "3-0-current-O1",
+      "workspace": "0",
+      "counts": {
+        "sumAccumulator": 0,
+        "pairResults": 0,
+        "inputVertices": 0
+      }
+    },
+    {
+      "host": "x86_64",
+      "case": "3-0-current-O1",
+      "workspace": "1",
+      "counts": {
+        "sumAccumulator": 0,
+        "pairResults": 0,
+        "inputVertices": 0
+      }
+    },
+    {
+      "host": "x86_64",
+      "case": "3-0-current-O2",
+      "workspace": "0",
+      "counts": {
+        "sumAccumulator": 0,
+        "pairResults": 0,
+        "inputVertices": 0
+      }
+    },
+    {
+      "host": "x86_64",
+      "case": "3-0-current-O2",
+      "workspace": "1",
+      "counts": {
+        "sumAccumulator": 0,
+        "pairResults": 0,
+        "inputVertices": 0
+      }
+    },
+    {
+      "host": "x86_64",
+      "case": "3-0-history-O1",
+      "workspace": "0",
+      "counts": {
+        "sumAccumulator": 0,
+        "pairResults": 0,
+        "inputVertices": 0
+      }
+    },
+    {
+      "host": "x86_64",
+      "case": "3-0-history-O1",
+      "workspace": "1",
+      "counts": {
+        "sumAccumulator": 0,
+        "pairResults": 0,
+        "inputVertices": 0
+      }
+    },
+    {
+      "host": "x86_64",
+      "case": "3-0-history-O2",
+      "workspace": "0",
+      "counts": {
+        "sumAccumulator": 0,
+        "pairResults": 0,
+        "inputVertices": 0
+      }
+    },
+    {
+      "host": "x86_64",
+      "case": "3-0-history-O2",
+      "workspace": "1",
+      "counts": {
+        "sumAccumulator": 0,
+        "pairResults": 0,
+        "inputVertices": 0
+      }
+    },
+    {
+      "host": "x86_64",
+      "case": "3-1-current-O1",
+      "workspace": "0",
+      "counts": {
+        "sumAccumulator": 2,
+        "pairResults": 2,
+        "inputVertices": 3
+      }
+    },
+    {
+      "host": "x86_64",
+      "case": "3-1-current-O1",
+      "workspace": "1",
+      "counts": {
+        "sumAccumulator": 2,
+        "pairResults": 2,
+        "inputVertices": 3
+      }
+    },
+    {
+      "host": "x86_64",
+      "case": "3-1-current-O2",
+      "workspace": "0",
+      "counts": {
+        "sumAccumulator": 2,
+        "pairResults": 2,
+        "inputVertices": 3
+      }
+    },
+    {
+      "host": "x86_64",
+      "case": "3-1-current-O2",
+      "workspace": "1",
+      "counts": {
+        "sumAccumulator": 2,
+        "pairResults": 2,
+        "inputVertices": 3
+      }
+    },
+    {
+      "host": "x86_64",
+      "case": "3-1-history-O1",
+      "workspace": "0",
+      "counts": {
+        "sumAccumulator": 2,
+        "pairResults": 2,
+        "inputVertices": 3
+      }
+    },
+    {
+      "host": "x86_64",
+      "case": "3-1-history-O1",
+      "workspace": "1",
+      "counts": {
+        "sumAccumulator": 2,
+        "pairResults": 2,
+        "inputVertices": 3
+      }
+    },
+    {
+      "host": "x86_64",
+      "case": "3-1-history-O2",
+      "workspace": "0",
+      "counts": {
+        "sumAccumulator": 2,
+        "pairResults": 2,
+        "inputVertices": 3
+      }
+    },
+    {
+      "host": "x86_64",
+      "case": "3-1-history-O2",
+      "workspace": "1",
+      "counts": {
+        "sumAccumulator": 2,
+        "pairResults": 2,
+        "inputVertices": 3
+      }
+    },
+    {
+      "host": "x86_64",
+      "case": "3-199-current-O1",
+      "workspace": "0",
+      "counts": {
+        "sumAccumulator": 398,
+        "pairResults": 398,
+        "inputVertices": 597
+      }
+    },
+    {
+      "host": "x86_64",
+      "case": "3-199-current-O1",
+      "workspace": "1",
+      "counts": {
+        "sumAccumulator": 398,
+        "pairResults": 398,
+        "inputVertices": 597
+      }
+    },
+    {
+      "host": "x86_64",
+      "case": "3-199-current-O2",
+      "workspace": "0",
+      "counts": {
+        "sumAccumulator": 398,
+        "pairResults": 398,
+        "inputVertices": 597
+      }
+    },
+    {
+      "host": "x86_64",
+      "case": "3-199-current-O2",
+      "workspace": "1",
+      "counts": {
+        "sumAccumulator": 398,
+        "pairResults": 398,
+        "inputVertices": 597
+      }
+    },
+    {
+      "host": "x86_64",
+      "case": "3-199-history-O1",
+      "workspace": "0",
+      "counts": {
+        "sumAccumulator": 398,
+        "pairResults": 398,
+        "inputVertices": 597
+      }
+    },
+    {
+      "host": "x86_64",
+      "case": "3-199-history-O1",
+      "workspace": "1",
+      "counts": {
+        "sumAccumulator": 398,
+        "pairResults": 398,
+        "inputVertices": 597
+      }
+    },
+    {
+      "host": "x86_64",
+      "case": "3-199-history-O2",
+      "workspace": "0",
+      "counts": {
+        "sumAccumulator": 398,
+        "pairResults": 398,
+        "inputVertices": 597
+      }
+    },
+    {
+      "host": "x86_64",
+      "case": "3-199-history-O2",
+      "workspace": "1",
+      "counts": {
+        "sumAccumulator": 398,
+        "pairResults": 398,
+        "inputVertices": 597
+      }
+    },
+    {
+      "host": "x86_64",
+      "case": "3-1999-current-O1",
+      "workspace": "0",
+      "counts": {
+        "sumAccumulator": 3998,
+        "pairResults": 3998,
+        "inputVertices": 5997
+      }
+    },
+    {
+      "host": "x86_64",
+      "case": "3-1999-current-O1",
+      "workspace": "1",
+      "counts": {
+        "sumAccumulator": 3998,
+        "pairResults": 3998,
+        "inputVertices": 5997
+      }
+    },
+    {
+      "host": "x86_64",
+      "case": "3-1999-current-O2",
+      "workspace": "0",
+      "counts": {
+        "sumAccumulator": 3998,
+        "pairResults": 3998,
+        "inputVertices": 5997
+      }
+    },
+    {
+      "host": "x86_64",
+      "case": "3-1999-current-O2",
+      "workspace": "1",
+      "counts": {
+        "sumAccumulator": 3998,
+        "pairResults": 3998,
+        "inputVertices": 5997
+      }
+    },
+    {
+      "host": "x86_64",
+      "case": "3-1999-history-O1",
+      "workspace": "0",
+      "counts": {
+        "sumAccumulator": 3998,
+        "pairResults": 3998,
+        "inputVertices": 5997
+      }
+    },
+    {
+      "host": "x86_64",
+      "case": "3-1999-history-O1",
+      "workspace": "1",
+      "counts": {
+        "sumAccumulator": 3998,
+        "pairResults": 3998,
+        "inputVertices": 5997
+      }
+    },
+    {
+      "host": "x86_64",
+      "case": "3-1999-history-O2",
+      "workspace": "0",
+      "counts": {
+        "sumAccumulator": 3998,
+        "pairResults": 3998,
+        "inputVertices": 5997
+      }
+    },
+    {
+      "host": "x86_64",
+      "case": "3-1999-history-O2",
+      "workspace": "1",
+      "counts": {
+        "sumAccumulator": 3998,
+        "pairResults": 3998,
+        "inputVertices": 5997
+      }
+    },
+    {
+      "host": "x86_64",
+      "case": "33-199-current-O1",
+      "workspace": "0",
+      "counts": {
+        "sumAccumulator": 6368,
+        "pairResults": 6368,
+        "inputVertices": 6567
+      }
+    },
+    {
+      "host": "x86_64",
+      "case": "33-199-current-O1",
+      "workspace": "1",
+      "counts": {
+        "sumAccumulator": 6368,
+        "pairResults": 6368,
+        "inputVertices": 6567
+      }
+    },
+    {
+      "host": "x86_64",
+      "case": "33-199-current-O2",
+      "workspace": "0",
+      "counts": {
+        "sumAccumulator": 6368,
+        "pairResults": 6368,
+        "inputVertices": 6567
+      }
+    },
+    {
+      "host": "x86_64",
+      "case": "33-199-current-O2",
+      "workspace": "1",
+      "counts": {
+        "sumAccumulator": 6368,
+        "pairResults": 6368,
+        "inputVertices": 6567
+      }
+    },
+    {
+      "host": "x86_64",
+      "case": "33-199-history-O1",
+      "workspace": "0",
+      "counts": {
+        "sumAccumulator": 6368,
+        "pairResults": 6368,
+        "inputVertices": 6567
+      }
+    },
+    {
+      "host": "x86_64",
+      "case": "33-199-history-O1",
+      "workspace": "1",
+      "counts": {
+        "sumAccumulator": 6368,
+        "pairResults": 6368,
+        "inputVertices": 6567
+      }
+    },
+    {
+      "host": "x86_64",
+      "case": "33-199-history-O2",
+      "workspace": "0",
+      "counts": {
+        "sumAccumulator": 6368,
+        "pairResults": 6368,
+        "inputVertices": 6567
+      }
+    },
+    {
+      "host": "x86_64",
+      "case": "33-199-history-O2",
+      "workspace": "1",
+      "counts": {
+        "sumAccumulator": 6368,
+        "pairResults": 6368,
+        "inputVertices": 6567
+      }
+    },
+    {
+      "host": "x86_64",
+      "case": "129-199-current-O1",
+      "workspace": "0",
+      "counts": {
+        "sumAccumulator": 25472,
+        "pairResults": 25472,
+        "inputVertices": 25671
+      }
+    },
+    {
+      "host": "x86_64",
+      "case": "129-199-current-O1",
+      "workspace": "1",
+      "counts": {
+        "sumAccumulator": 25472,
+        "pairResults": 25472,
+        "inputVertices": 25671
+      }
+    },
+    {
+      "host": "x86_64",
+      "case": "129-199-current-O2",
+      "workspace": "0",
+      "counts": {
+        "sumAccumulator": 25472,
+        "pairResults": 25472,
+        "inputVertices": 25671
+      }
+    },
+    {
+      "host": "x86_64",
+      "case": "129-199-current-O2",
+      "workspace": "1",
+      "counts": {
+        "sumAccumulator": 25472,
+        "pairResults": 25472,
+        "inputVertices": 25671
+      }
+    },
+    {
+      "host": "x86_64",
+      "case": "129-199-history-O1",
+      "workspace": "0",
+      "counts": {
+        "sumAccumulator": 25472,
+        "pairResults": 25472,
+        "inputVertices": 25671
+      }
+    },
+    {
+      "host": "x86_64",
+      "case": "129-199-history-O1",
+      "workspace": "1",
+      "counts": {
+        "sumAccumulator": 25472,
+        "pairResults": 25472,
+        "inputVertices": 25671
+      }
+    },
+    {
+      "host": "x86_64",
+      "case": "129-199-history-O2",
+      "workspace": "0",
+      "counts": {
+        "sumAccumulator": 25472,
+        "pairResults": 25472,
+        "inputVertices": 25671
+      }
+    },
+    {
+      "host": "x86_64",
+      "case": "129-199-history-O2",
+      "workspace": "1",
+      "counts": {
+        "sumAccumulator": 25472,
+        "pairResults": 25472,
+        "inputVertices": 25671
+      }
+    }
+  ]
+}

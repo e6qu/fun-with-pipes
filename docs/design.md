@@ -352,6 +352,35 @@ prefix owns the saved Strings; merge scratch borrows them. Other callback shapes
 retain ordinary calls and key records. [The protocol](measurements/inline-sort-keys.md)
 defines selection, cleanup, exact budgets and completed validation.
 
+### Numeric record fold accumulators
+
+PR #240 implements a narrower call boundary, pending native verification:
+a known left fold can keep its accumulator's numeric fields in local variables.
+An accumulator is the running result passed to the next iteration. For example:
+
+```fwp
+step : (I64, F64) -> (I64, F64) -> (I64, F64)
+step = fn (count, total) -> fn (n, value) -> (count + n, total + value)
+```
+
+`[(1, 1.5), (2, 2.5)] | fold step (0, 0.5)` computes `(3, 4.5)`:
+
+```text
+seed (0, 0.5) → add (1, 1.5) → (1, 2.0) → add (2, 2.5) → (3, 4.5)
+                                   ↑ local numeric fields           ↑ final box
+```
+
+- Read and release the seed box once; allocate only the final record.
+- Borrow element fields while the caller keeps the input list alive.
+- Return the original seed for an empty list. Preserve any aliases.
+- Use the existing direct worker, which accepts/returns separate numeric fields.
+- Exclude managed/nested fields, boxed wide numbers, captured or runtime-selected
+  callbacks and right folds. Keep callback effects and evaluation order.
+
+The [requirements and measurement protocol](measurements/derivative-record-folds.md)
+cover alias preservation, allocation failure, traps, cancellation and exact counts.
+This does not remove records that must remain stored in a list.
+
 ## Numerical specialization
 
 The optimizer removes work only when doing so preserves observable behavior:
@@ -380,8 +409,10 @@ building the intermediate list of pairs. Both input lists remain alive until
 the loop finishes; the shorter input determines the output length. Record fields
 containing strings, nested records, functions, resources or boxed wide numbers
 do not qualify. The [candidate protocol](measurements/derivative-forward-costs.md#candidate-acceptance-frozen-before-compiler-edits)
-records passing native correctness/ownership checks, unmet timing limits and
-pending full production verification.
+records passing native correctness/ownership checks and unmet timing limits.
+[PR #239](roadmap-history.md#numeric-record-zipmap-fusion-pr-239) passed full
+production verification; the user approved retaining the allocation savings
+while leaving those timing limits open.
 
 The generated-array transformation, verified in [PR #232](roadmap-history.md#generated-array-elimination-pr-232),
 extends this rule to `flip array.generate id | array.fold add 0`. With input

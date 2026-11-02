@@ -130,6 +130,33 @@ class DescentBudgets(unittest.TestCase):
                     self.assertEqual(old['fwp-packed']['managed']['retains'], 0)
                     self.assertEqual(failures, [])
 
+    def test_record_fold_limits_separate_short_and_long_solve_timing(self):
+        rows = {str(updates): self.recording_case(updates) for updates in [0, 1, 199, 1999]}
+        for row in rows.values():
+            updates = row['updates']
+            row['medianNs']['fwp-ad-identical'] = 100 if updates < 199 else 95
+            for label in ['fwp-ad', 'fwp-ad-history']:
+                row['medianNs'][label] = 100 if updates < 199 else 95
+                old = row['fwpProfiles'][label + '-reference']['managed']
+                current = row['fwpProfiles'][label]['managed']
+                old.update(requests=100000, requestedBytes=4000000, retains=100000)
+                current.update(requests=100000-updates, requestedBytes=4000000-24*updates,
+                               retains=100000-2*updates)
+        self.assertEqual(DESCENT.paired_budget_failures(rows, 'record-fold'), [])
+        for name, limit in [('0', 102), ('1', 102), ('199', 95), ('1999', 95)]:
+            changed = copy.deepcopy(rows)
+            changed[name]['medianNs']['fwp-ad-history'] = limit + 0.01
+            failures = DESCENT.paired_budget_failures(changed, 'record-fold')
+            self.assertEqual([f['metric'] for f in failures], ['candidate/reference time'])
+        for name in rows:
+            for field in ('requests', 'requestedBytes', 'retains', 'peakChargedBytes', 'finalChargedBytes'):
+                changed = copy.deepcopy(rows)
+                changed[name]['fwpProfiles']['fwp-ad']['managed'][field] += 1
+                self.assertTrue(DESCENT.paired_budget_failures(changed, 'record-fold'))
+        # Keeping the new short-case rule must not rewrite the previous protocol.
+        self.assertTrue(any(f['metric'] == 'candidate/reference time'
+                            for f in DESCENT.paired_budget_failures(rows, 'record-zip')))
+
     def test_record_zip_limits_cover_savings_noise_storage_and_layout(self):
         rows = {str(updates): self.recording_case(updates) for updates in [0, 1]}
         for row in rows.values():

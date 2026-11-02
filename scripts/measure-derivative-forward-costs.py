@@ -59,14 +59,17 @@ def parse_totals(stderr):
     return managed[0], raw[0]
 
 
-def comparison_failures(report, baseline):
-    """Apply the frozen record-zip count limits to every case and storage mode."""
+def comparison_failures(report, baseline, policy):
+    """Apply the selected frozen count limits to every case and storage mode."""
+    assert policy in ('record-zip', 'record-fold')
     old = baseline['hosts'][report['machine']]['cases']
     assert set(report['cases']) == set(old)
     failures = []
     for name, observations in report['cases'].items():
         dimensions, updates = map(int, name.split('-')[:2])
         pairs = (dimensions - 1) * updates
+        removed = 2 * pairs if policy == 'record-zip' else max(dimensions - 2, 0) * updates
+        retains = 3 * pairs if policy == 'record-zip' else pairs
         assert set(observations) == {'0', '1'}
         for mode, actual in observations.items():
             previous = old[name]['observations'][mode]
@@ -77,8 +80,8 @@ def comparison_failures(report, baseline):
                 if current != before or actual['phases'] != previous['phases']:
                     failures.append(label + ': zero-update counts changed')
             else:
-                for field, saving in [('requests', 2 * pairs), ('requestedBytes', 48 * pairs),
-                                      ('retains', 3 * pairs)]:
+                for field, saving in [('requests', removed), ('requestedBytes', 24 * removed),
+                                      ('retains', retains)]:
                     if current[field] > before[field] - saving:
                         failures.append(f'{label}: {field} saving {before[field] - current[field]} < {saving}')
                 if current['peakChargedBytes'] > before['peakChargedBytes']:
@@ -101,10 +104,10 @@ def main():
     parser.add_argument('--source', required=True)
     parser.add_argument('--timeout', required=True, type=int)
     parser.add_argument('--output', required=True, type=Path)
-    parser.add_argument('--comparison', required=True, choices=('baseline', 'record-zip'))
+    parser.add_argument('--comparison', required=True, choices=('baseline', 'record-zip', 'record-fold'))
     parser.add_argument('--baseline', type=Path)
     args = parser.parse_args()
-    assert (args.comparison == 'record-zip') == (args.baseline is not None)
+    assert (args.comparison != 'baseline') == (args.baseline is not None)
     baseline = json.loads(gzip.decompress(args.baseline.read_bytes())) if args.baseline else None
     assert os.environ.get('GITHUB_ACTIONS') == 'true' and platform.system() == 'Linux'
     assert platform.machine() == args.machine and args.timeout > 0
@@ -253,7 +256,7 @@ def main():
                     print(name + ': ordinary, totals and phase/site observations agree', flush=True)
         report['complete'] = True
         if baseline is not None:
-            report['comparisonFailures'] = comparison_failures(report, baseline)
+            report['comparisonFailures'] = comparison_failures(report, baseline, args.comparison)
             assert not report['comparisonFailures'], '\n'.join(report['comparisonFailures'])
     finally:
         report['files'] = {str(path.relative_to(out)): ARC.digest(path)

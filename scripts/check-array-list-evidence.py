@@ -19,6 +19,9 @@ SPEC.loader.exec_module(GROUPS)
 SPEC = importlib.util.spec_from_file_location('record_reference', ROOT / 'scripts/prepare-record-zip-reference.py')
 REFERENCE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(REFERENCE)
+SPEC = importlib.util.spec_from_file_location('fold_reference', ROOT / 'scripts/prepare-record-fold-reference.py')
+FOLD_REFERENCE = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(FOLD_REFERENCE)
 
 
 def digest(data):
@@ -77,35 +80,42 @@ def check_profiles(folder, row):
         assert row['phaseObservations'][label]['observations'] == phases
 
 
-def check_reference(folder, report, source, architecture):
+def check_reference(folder, report, source, architecture, protocol):
     manifest = json.loads((folder / 'manifest.json').read_text())
     assert manifest == report['referenceCompiler'] and manifest['source'] == source
-    assert manifest['disabledTransformation'] == 'flat numeric record zip/map fusion'
+    assert protocol in ('record-zip', 'record-fold')
+    if protocol == 'record-zip':
+        source_path, field, saved = 'src/fuse.rs', 'Fusion', 'fusion-reference.rs'
+        transform, prepare = 'flat numeric record zip/map fusion', REFERENCE
+    else:
+        source_path, field, saved = 'src/cgen.rs', 'Codegen', 'codegen-reference.rs'
+        transform, prepare = 'direct numeric-record left folds', FOLD_REFERENCE
+    assert manifest['disabledTransformation'] == transform
     compiler = (folder / 'fwp').read_bytes()
     assert digest(compiler) == manifest['compilerSha256']
     instruction_bytes(compiler, architecture)
-    candidate = subprocess.check_output(['git', 'show', source + ':src/fuse.rs'], cwd=ROOT)
+    candidate = subprocess.check_output(['git', 'show', source + ':' + source_path], cwd=ROOT)
     ownership = subprocess.check_output(['git', 'show', source + ':src/ownership.rs'], cwd=ROOT)
-    assert digest(candidate) == manifest['candidateFusionSha256']
+    assert digest(candidate) == manifest['candidate' + field + 'Sha256']
     assert digest(ownership) == manifest['ownershipSha256']
-    reference = (folder / 'fusion-reference.rs').read_bytes()
-    assert digest(reference) == manifest['referenceFusionSha256']
-    assert reference == REFERENCE.reference_source(candidate.decode()).encode()
+    reference = (folder / saved).read_bytes()
+    assert digest(reference) == manifest['reference' + field + 'Sha256']
+    assert reference == prepare.reference_source(candidate.decode()).encode()
     patch = (folder / 'reference.patch').read_bytes()
     assert digest(patch) == manifest['patchSha256']
-    check_reference_patch(patch.decode(), candidate.decode(), reference.decode())
+    check_reference_patch(patch.decode(), candidate.decode(), reference.decode(), source_path)
 
 
-def check_reference_patch(patch, candidate, reference):
+def check_reference_patch(patch, candidate, reference, source_path):
     lines = patch.splitlines(keepends=True)
     assert len(lines) >= 4
-    assert lines[0] == 'diff --git a/src/fuse.rs b/src/fuse.rs\n'
+    assert lines[0] == f'diff --git a/{source_path} b/{source_path}\n'
     assert re.fullmatch(r'index [0-9a-f]+\.\.[0-9a-f]+ 100644\n', lines[1])
     # Git appends a function context to hunk headers; difflib does not.
     actual = [re.sub(r'^(@@ -\d+(?:,\d+)? \+\d+(?:,\d+)? @@)[^\n]*', r'\1', line)
               if line.startswith('@@ ') else line for line in lines[2:]]
     expected = list(difflib.unified_diff(candidate.splitlines(keepends=True),
-                    reference.splitlines(keepends=True), fromfile='a/src/fuse.rs', tofile='b/src/fuse.rs'))
+                    reference.splitlines(keepends=True), fromfile='a/' + source_path, tofile='b/' + source_path))
     assert actual == expected, 'reference patch changes more than the selected eligibility block'
 
 
@@ -140,8 +150,8 @@ def check_zip(archive):
 
 
 def check_directory(folder, source, architecture, session, protocol, reference):
-    assert protocol in ('array-lists', 'record-zip')
-    assert (protocol == 'record-zip') == (reference is not None)
+    assert protocol in ('array-lists', 'record-zip', 'record-fold')
+    assert (protocol in ('record-zip', 'record-fold')) == (reference is not None)
     report = json.loads((folder / 'comparison.json').read_text())
     GROUPS.check_report(report, source, protocol)
     assert report['machine'] == architecture and report['configuration']['session'] == session
@@ -161,7 +171,7 @@ def check_directory(folder, source, architecture, session, protocol, reference):
             expected = '0' if Path(source_path).stem.endswith('-reference') else '1'
             assert command[1] == 'FWP_ARRAY_FUSION=' + expected
     else:
-        check_reference(reference, report, source, architecture)
+        check_reference(reference, report, source, architecture, protocol)
         candidates, references = set(), set()
         for command in emitters:
             assert command[1] == 'build'
@@ -213,11 +223,12 @@ def check_directory(folder, source, architecture, session, protocol, reference):
             assert (case / (name + '.stderr')).read_text() == control['stderr']
         check_profiles(case, row)
     files = file_inventory(folder)
-    if protocol == 'record-zip':
+    if protocol in ('record-zip', 'record-fold'):
         assert len(files) == 1334
     reference_files = file_inventory(reference) if reference is not None else None
     if reference_files is not None:
-        assert set(reference_files) == {'manifest.json', 'fwp', 'fusion-reference.rs', 'reference.patch'}
+        saved = {'record-zip': 'fusion-reference.rs', 'record-fold': 'codegen-reference.rs'}[protocol]
+        assert set(reference_files) == {'manifest.json', 'fwp', saved, 'reference.patch'}
     return dict(source=source, architecture=architecture, session=session, files=files,
                 referenceFiles=reference_files,
                 budgetFailures=failures, decision='not-accepted' if failures else 'accepted')
@@ -227,7 +238,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--input', type=Path, required=True)
     parser.add_argument('--input-format', choices=['directory', 'zip'], required=True)
-    parser.add_argument('--protocol', choices=['array-lists', 'record-zip'], required=True)
+    parser.add_argument('--protocol', choices=['array-lists', 'record-zip', 'record-fold'], required=True)
     parser.add_argument('--reference', type=Path)
     parser.add_argument('--source', required=True)
     parser.add_argument('--arch', choices=['x86_64', 'aarch64'], required=True)

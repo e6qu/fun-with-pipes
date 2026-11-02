@@ -4,59 +4,39 @@ Build an ahead-of-time language with simple pipes, immutable values, strong type
 and useful inference. Prefer direct values, moves and borrows; reserve ARC for
 necessary sharing. GC is removed; JIT and backward compatibility are excluded.
 
-## Current batch: remove temporary zipped numeric records
+## Current batch: reduce derivative callback result boxing
 
-[PR #238](docs/roadmap-history.md#direct-derivative-recording-pr-238) is verified
-and merged. It removes recording argument records and transfers typed weights.
-It does not identify the remaining costs in ordinary F64 gradient calculations.
-Earlier timings place most derivative time in forward work, which includes
-arithmetic, temporary values and recording. Treating all of it as tape overhead
-would select the wrong optimization.
+[PR #239](docs/roadmap-history.md#numeric-record-zipmap-fusion-pr-239) is verified
+and merged. It removes temporary zipped numeric pairs. Larger measured solves
+use 5.4–15.6% less elapsed time, but ten timing limits remain unmet. The user
+approved retaining the allocation savings with those limits and D2 still open.
 
-The phase/source measurements now pass and are audited on both native Linux
-architectures. They identify temporary zipped records as a concrete allocation
-and ARC cost. Extend existing zip/map fusion to flat records of immediate numeric
-fields, including `Rev[F64]`, under the
-[frozen acceptance rules](docs/measurements/derivative-forward-costs.md#candidate-acceptance-frozen-before-compiler-edits).
+The next investigation starts from its [saved candidate counts](docs/measurements/derivative-record-zip-counts-2026-11-01.json.gz).
+For 129 coordinates and 199 updates, current-vector form, GCC O2 and workspace
+off, forward work still requests 155,420 allocations. Three generated callback
+entries box direct numeric results 76,615 times: 25,671 at `f167` and 25,472 each
+at `f127` and `f164` in the saved ARM64 C. These are source-specific identifiers,
+not public APIs. Other costs include result-list construction and vector updates.
 
 | Step | Work | Completion requirement |
 |---|---|---|
-| 1 | Freeze inputs, accounting boundaries and controls | Publish the [protocol](docs/measurements/derivative-forward-costs.md) before changing measurement code; retain #238 delivery evidence |
-| 2 | Extend existing allocation and ownership observers with derivative phases | Six phases plus outside-phase work balance exactly with whole-program counters; retain source locations; missing rows and wrong phases fail |
-| 3 | Measure the six Rosenbrock cases on native Linux ARM64/AMD64 | GCC O1/O2, current/history forms and workspace off/on; raw/ordinary/instrumented results agree, all storage is released, artifacts identify source/toolchains |
-| 4 | Remove temporary zipped flat numeric records and verify the batch | Implement the frozen selection, semantic/ownership controls, six-case count comparison and paired timing; complete nine production jobs and documentation before merging |
+| 1 | Trace remaining callback boxes to source callers and lifetimes | Explain each of the three entries, its consumers and escape boundary; compare all six cases, current/history forms, GCC O1/O2 and both native hosts using retained evidence |
+| 2 | Select a safe transformation and freeze its requirements | Identify removable boxes and necessary result storage; publish exact count, cleanup, code/stack and timing limits before compiler edits; keep previous failed timing limits unchanged |
+| 3 | Keep eligible callback results direct through their consumers | Extend existing worker/caller generation where proved safe; preserve effects, eager stage order, traps, aliases, empty inputs and failure/cancellation cleanup; update examples and docs |
+| 4 | Verify and deliver one substantial batch | Run affected production-compiler checks, then native count/memory and paired timing comparisons; audit all nine final production jobs and documentation before squash merge |
 
-The protocol defines exact inputs and required observations. Reuse the existing
-whole-program, ownership-site and derivative-boundary code; do not add a parallel
-profiler framework. These are count measurements, not a new timing acceptance rule.
-D2 remains open. A measured cost is not proof that it can safely be removed.
+Steps 1–2 are complete: all 96 saved observations agree on the selected boundary.
+[PR #240](https://github.com/e6qu/fun-with-pipes/pull/240) implements the
+[frozen selection](docs/measurements/derivative-record-folds.md): keep a known
+left-fold accumulator in local numeric fields and leave list-stored results alone.
+Step 3 awaits native correctness and cleanup results; step 4 awaits measurements
+and final validation. No new allocation saving or speedup is verified yet.
+Mapping must still finish before summation when interleaving changes recording
+or trap order.
 
-The candidate now passes native Linux ARM64/AMD64 correctness, ownership and all
-96 count observations. Its largest current-only solve saves 51,143 allocation
-requests and 76,416 effective retains, with lower peak managed memory and no
-larger static frame. [Results and limits](docs/measurements/derivative-forward-costs.md#verified-allocation-and-ownership-results)
-are explicit. All four completed timing sessions miss the 5% speed target on the
-one-update case; AMD64 reports 2.54% and 2.72% zero-update regressions, above the 2%
-limit. Every session's saved observations pass independent archive audits.
-Diagnostic clocks place all reference forward work at
-only 4.4–4.9% of process time in the one-update case, suggesting this selected
-change's 5% whole-process target was too aggressive. The clocks perturb execution;
-this is evidence about scope, not permission to weaken the target. The zero-update
-slowdown remains unexplained. GCC diagnostic run `41337215456` reproduces all
-four measured zero-update executables and outputs exactly. Both current-only
-optimized entry bodies already omit the derivative loop and match after
-generated temporary/cleanup names are accounted for. This supplies no justified
-source-level repair and does not establish identical machine code or timings.
-On November 1, after reviewing these results, the user approved retaining the
-reductions while leaving all ten failed timing limits open. This is permission
-to ship the measured improvement, not a timing pass or a change to the saved
-limits. D2 and the zero-update regression remain open. Complete the nine
-production jobs and documentation gate before merging.
-
-Run focused observer controls during implementation. Run native measurements on
-GitHub after the observer is complete, then batch affected checks for any selected
-compiler/runtime change. Run the full nine-job matrix and documentation once the
-whole batch is ready. Audit every failure and completed target before merging.
+Use focused checks during implementation, then one complete final validation
+batch. Reuse saved observations before scheduling measurements. Do not rerun
+unchanged noisy timings to seek a pass, or treat count savings as a speedup.
 
 ## Open performance goals
 

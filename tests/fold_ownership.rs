@@ -4,6 +4,8 @@ use std::process::{Command, Output};
 
 #[path = "support/allocation_report.rs"]
 mod allocation_report;
+#[path = "support/record_probe.rs"]
+mod record_probe;
 fn checked(command: &mut Command) -> Output {
     let out = command.output().unwrap();
     assert!(
@@ -26,6 +28,203 @@ impl Drop for Scratch {
         let _ = std::fs::remove_dir_all(&self.0);
     }
 }
+#[test]
+fn numeric_record_folds_preserve_aliases_empty_inputs_and_effects() {
+    let dir = Scratch::new("numeric-records");
+    let src = dir.0.join("records.fwp");
+    std::fs::write(
+        &src,
+        r#"
+step : (I64, F64) -> (I64, F64) -> (I64, F64)
+step = fn (count, total) -> fn (n, value) -> (count + n, total + value)
+scalar-step : (I64, F64) -> I64 -> (I64, F64)
+scalar-step = fn (count, total) -> fn n -> (count + n, total + 0.5)
+fail-step : (I64, F64) -> I64 -> (I64, F64) ! {Error[String]}
+fail-step = fn (count, total) -> fn n ->
+    n == 2 | match
+        True -> fail "stop"
+        False -> (count + n, total + 0.5)
+aliases : (I64, F64) -> List[(I64, F64)] -> ((I64, F64), (I64, F64), List[(I64, F64)])
+aliases = fn seed -> fn values -> (fold step seed values, seed, values)
+main =
+    let n = read-all () | string.length
+    in [
+        aliases (n, 0.5) [(1, 1.5), (2, 2.5)] | show,
+        aliases (n, 0.5) [] | show,
+        aliases (n, 0.5) [(3, 1.5)] | show,
+        [1, 2, 3] | fold scalar-step (n, 0.5) | show,
+        [1, 2, 3] | attempt (fold fail-step (n, 0.5)) | show,
+    ] | each print
+"#,
+    )
+    .unwrap();
+    let fwp = env!("CARGO_BIN_EXE_fwp");
+    let reference = checked(
+        Command::new(fwp)
+            .args(["run", "--interp"])
+            .arg(&src)
+            .env("FWP_NO_OPT", "1"),
+    );
+    let optimized = checked(Command::new(fwp).args(["run", "--interp"]).arg(&src));
+    assert_eq!(optimized.stdout, reference.stdout);
+    for stack in ["0", "1"] {
+        let cfile = dir.0.join(format!("records-{stack}.c"));
+        checked(
+            Command::new(fwp)
+                .args(["build", "--memory", "dynamic"])
+                .arg(&src)
+                .args(["--emit-c", "-o"])
+                .arg(&cfile)
+                .env("FWP_STACK", stack),
+        );
+        let code = std::fs::read_to_string(&cfile).unwrap();
+        assert!(code.contains("Numeric record fold: one result box"));
+        for opt in ["-O1", "-O2"] {
+            let exe = dir.0.join(format!("records-{stack}-{opt}.exe"));
+            fwp::cgen::compile_c(&code, &exe, opt).unwrap();
+            let out = checked(Command::new(&exe).env("FWP_ALLOC_STATS", "1"));
+            assert_eq!(out.stdout, reference.stdout, "{stack}/{opt}");
+            let stats =
+                allocation_report::parse(std::str::from_utf8(&out.stderr).unwrap()).unwrap();
+            assert_eq!(stats.live, 0, "{stack}/{opt}: {stats:?}");
+        }
+    }
+}
+
+#[test]
+fn numeric_record_folds_allocate_only_the_final_result() {
+    let dir = Scratch::new("record-counts");
+    let input = dir.0.join("point.fwp");
+    let cfile = dir.0.join("point.c");
+    std::fs::write(&input, r#"
+Point = {index: I64, value: F64}
+step : Point -> Point -> Point
+step = fn a -> fn b -> Point {index = (a | .index) + (b | .index), value = (a | .value) + (b | .value)}
+export transform : Point -> List[Point] -> Point
+transform = fold step
+"#).unwrap();
+    checked(
+        Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .args([
+                "build",
+                "--fn",
+                "transform",
+                "--memory",
+                "dynamic",
+                "--emit-c",
+            ])
+            .arg(&input)
+            .arg("-o")
+            .arg(&cfile),
+    );
+    let code = std::fs::read_to_string(cfile).unwrap();
+    let helper_start = code.find("static V fwp_record_fold").unwrap();
+    let helper = code[helper_start..]
+        .split('(')
+        .next()
+        .unwrap()
+        .strip_prefix("static V ")
+        .unwrap();
+    let drop_name = |ty: &str| {
+        let start = code
+            .find(&format!("/* {ty} */\nstatic void fwp_drop"))
+            .unwrap();
+        code[start..]
+            .split("static void ")
+            .nth(1)
+            .unwrap()
+            .split('(')
+            .next()
+            .unwrap()
+    };
+    let point_drop = drop_name("Point");
+    let probe = include_str!("fixtures/record_fold_counts.c")
+        .replace("RECORD_FOLD", helper)
+        .replace("DROP_POINT", point_drop)
+        .replace("DROP_LIST", drop_name("List[Point]"));
+    let mut prefix = code[..code.find("int main(").unwrap()].replace("typedef uint64_t V;",
+        "typedef uint64_t V;\nstatic uint64_t record_fold_allocations, record_fold_bytes, record_fold_retains;");
+    for marker in [
+        "static inline void *fwp_heap_alloc(size_t n, int kind) {",
+        "static inline void *fwp_alloc_init(size_t n) {",
+    ] {
+        assert_eq!(prefix.matches(marker).count(), 1);
+        let condition = if marker.contains("int kind") {
+            "if (kind != 0) "
+        } else {
+            ""
+        };
+        prefix = prefix.replace(
+            marker,
+            &format!("{marker}\n{condition}{{record_fold_allocations++; record_fold_bytes += n;}}"),
+        );
+    }
+    let retain = "static inline void fwp_rc_dup(V v) {\n    uint8_t *c = fwp_rc_slot(v);\n    if (c && *c) {";
+    assert_eq!(prefix.matches(retain).count(), 1);
+    prefix = prefix.replace(retain, &format!("{retain}\nrecord_fold_retains++;"));
+    let normal = format!("{prefix}\n{probe}");
+    let missing_result = normal.replace(&format!("{point_drop}(result);"), ";");
+    let missing_seed = normal.replace(
+        &format!("    {point_drop}(z);\n    while (xs)"),
+        "    while (xs)",
+    );
+    assert_ne!(normal, missing_result);
+    assert_ne!(normal, missing_seed);
+    for opt in ["-O1", "-O2"] {
+        for (name, source, expected) in [
+            ("ordinary", &normal, 0),
+            ("missing-result", &missing_result, 90),
+            ("missing-seed", &missing_seed, 90),
+        ] {
+            let exe = dir.0.join(format!("{name}-{opt}.exe"));
+            fwp::cgen::compile_c(source, &exe, opt).unwrap();
+            let output = Command::new(&exe).output().unwrap();
+            record_probe::save(
+                "record_fold",
+                &format!("{name}-{opt}"),
+                source,
+                &exe,
+                &output,
+            );
+            assert_eq!(
+                output.status.code(),
+                Some(expected),
+                "{name}/{opt}: {output:?}"
+            );
+        }
+    }
+}
+#[test]
+fn record_fold_selection_excludes_owned_fields_and_other_calling_conventions() {
+    let dir = Scratch::new("record-exclusions");
+    let cases = [
+        ("managed", "step : (I64, String) -> I64 -> (I64, String)\nstep = fn (n, text) -> fn value -> (n + value, text)\nexport transform : (I64, String) -> List[I64] -> (I64, String)\ntransform = fold step\n"),
+        ("nested", "step : ((I64, I64), F64) -> I64 -> ((I64, I64), F64)\nstep = fn ((n, count), total) -> fn value -> ((n + value, count + 1), total)\nexport transform : ((I64, I64), F64) -> List[I64] -> ((I64, I64), F64)\ntransform = fold step\n"),
+        ("wide", "step : (F128, I64) -> I64 -> (F128, I64)\nstep = fn (value, count) -> fn n -> (value, count + n)\nexport transform : (F128, I64) -> List[I64] -> (F128, I64)\ntransform = fold step\n"),
+        ("whole-value", "step : (I64, F64) -> I64 -> (I64, F64)\nstep = const\nexport transform : (I64, F64) -> List[I64] -> (I64, F64)\ntransform = fold step\n"),
+        ("right", "step : I64 -> (I64, F64) -> (I64, F64)\nstep = fn n -> fn (count, total) -> (count + n, total + 0.5)\nexport transform : (I64, F64) -> List[I64] -> (I64, F64)\ntransform = fold-right step\n"),
+        ("captured", "step : I64 -> (I64, F64) -> I64 -> (I64, F64)\nstep = fn offset -> fn (count, total) -> fn n -> (count + n + offset, total + 0.5)\nexport transform : I64 -> (I64, F64) -> List[I64] -> (I64, F64)\ntransform = step | fold\n"),
+        ("dynamic", "export transform : ((I64, F64) -> I64 -> (I64, F64)) -> (I64, F64) -> List[I64] -> (I64, F64)\ntransform = fold\n"),
+    ];
+    for (name, source) in cases {
+        let input = dir.0.join(format!("{name}.fwp"));
+        let cfile = dir.0.join(format!("{name}.c"));
+        std::fs::write(&input, source).unwrap();
+        checked(
+            Command::new(env!("CARGO_BIN_EXE_fwp"))
+                .args(["build", "--fn", "transform", "--emit-c"])
+                .arg(&input)
+                .arg("-o")
+                .arg(&cfile),
+        );
+        let code = std::fs::read_to_string(cfile).unwrap();
+        assert!(
+            !code.contains("Numeric record fold: one result box"),
+            "{name}"
+        );
+    }
+}
+
 #[test]
 fn accumulator_input_and_capture_aliases_preserve_values() {
     let dir = Scratch::new("aliases");

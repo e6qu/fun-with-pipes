@@ -155,7 +155,7 @@ static void use(void) { fwp_alloc_init(24); }
         cases = baseline['hosts']['aarch64']['cases']
         report = dict(machine='aarch64', cases={
             name: copy.deepcopy(case['observations']) for name, case in cases.items()})
-        self.assertTrue(MEASURE.comparison_failures(report, baseline))
+        self.assertTrue(MEASURE.comparison_failures(report, baseline, 'record-zip'))
         # This fixture isolates budget checks; native reports must additionally
         # pass the independent phase/site sums and output verification.
         for name, observations in report['cases'].items():
@@ -166,22 +166,46 @@ static void use(void) { fwp_alloc_init(24); }
                 managed['requests'] -= 2 * pairs
                 managed['requestedBytes'] -= 48 * pairs
                 managed['retains'] -= 3 * pairs
-        self.assertEqual(MEASURE.comparison_failures(report, baseline), [])
+        self.assertEqual(MEASURE.comparison_failures(report, baseline, 'record-zip'), [])
         for field in ('requests', 'requestedBytes', 'retains', 'peakChargedBytes', 'finalChargedBytes'):
             changed = copy.deepcopy(report)
             changed['cases']['129-199-current-O2']['0']['totals']['managed'][field] += 1
             with self.subTest(field=field):
-                self.assertTrue(MEASURE.comparison_failures(changed, baseline))
+                self.assertTrue(MEASURE.comparison_failures(changed, baseline, 'record-zip'))
         for field in ('visits', 'raw'):
             changed = copy.deepcopy(report)
             changed['cases']['129-199-current-O2']['1'][field] = {}
-            self.assertTrue(MEASURE.comparison_failures(changed, baseline))
+            self.assertTrue(MEASURE.comparison_failures(changed, baseline, 'record-zip'))
         changed = copy.deepcopy(report)
         changed['cases']['3-0-current-O2']['1']['totals']['managed']['requests'] += 1
-        self.assertTrue(MEASURE.comparison_failures(changed, baseline))
+        self.assertTrue(MEASURE.comparison_failures(changed, baseline, 'record-zip'))
         del changed['cases']['3-0-current-O2']
         with self.assertRaises(AssertionError):
-            MEASURE.comparison_failures(changed, baseline)
+            MEASURE.comparison_failures(changed, baseline, 'record-zip')
+
+    def test_record_fold_limits_require_every_declared_saving(self):
+        baseline = json.loads(gzip.decompress((PROFILE.ARC.ROOT /
+            'docs/measurements/derivative-record-zip-counts-2026-11-01.json.gz').read_bytes()))
+        report = dict(machine='aarch64', cases={name: copy.deepcopy(case['observations'])
+            for name, case in baseline['hosts']['aarch64']['cases'].items()})
+        self.assertTrue(MEASURE.comparison_failures(report, baseline, 'record-fold'))
+        for name, observations in report['cases'].items():
+            dimensions, updates = map(int, name.split('-')[:2])
+            for actual in observations.values():
+                managed = actual['totals']['managed']
+                managed['requests'] -= (dimensions - 2) * updates
+                managed['requestedBytes'] -= 24 * (dimensions - 2) * updates
+                managed['retains'] -= (dimensions - 1) * updates
+        self.assertEqual(MEASURE.comparison_failures(report, baseline, 'record-fold'), [])
+        for name in report['cases']:
+            for mode in ('0', '1'):
+                for field in ('requests', 'requestedBytes', 'retains', 'peakChargedBytes', 'finalChargedBytes'):
+                    changed = copy.deepcopy(report)
+                    changed['cases'][name][mode]['totals']['managed'][field] += 1
+                    with self.subTest(name=name, mode=mode, field=field):
+                        self.assertTrue(MEASURE.comparison_failures(changed, baseline, 'record-fold'))
+        with self.assertRaises(AssertionError):
+            MEASURE.comparison_failures(report, baseline, 'unknown')
 
 
 if __name__ == '__main__':

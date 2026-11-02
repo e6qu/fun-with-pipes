@@ -58,7 +58,7 @@ def audit(path, source, machine, comparison, baseline):
         report = json.loads(archive.read('report.json'))
         assert report['source'] == source and report['machine'] == machine
         assert report.get('complete') is True
-        if comparison == 'record-zip':
+        if comparison in ('record-zip', 'record-fold'):
             assert report['comparison'] == dict(policy=comparison, baselineSource=baseline['source'])
             assert report['cc'] == baseline['hosts'][machine]['cc']
         else:
@@ -139,7 +139,7 @@ def audit(path, source, machine, comparison, baseline):
                         binarySha256=report['files'][root + 'ordinary.exe'])
         failures = []
         if baseline is not None:
-            failures = MEASURE.comparison_failures(report, baseline)
+            failures = MEASURE.comparison_failures(report, baseline, comparison)
             assert failures == report['comparisonFailures']
             for name, actual in cases.items():
                 previous = baseline['hosts'][machine]['cases'][name]
@@ -163,11 +163,11 @@ def main():
     parser.add_argument('--source', required=True)
     parser.add_argument('--run', required=True)
     parser.add_argument('--output', required=True, type=Path)
-    parser.add_argument('--comparison', required=True, choices=('baseline', 'record-zip'))
+    parser.add_argument('--comparison', required=True, choices=('baseline', 'record-zip', 'record-fold'))
     parser.add_argument('--baseline', type=Path)
     args = parser.parse_args()
     assert re.fullmatch('[0-9a-f]{40}', args.source) and args.run.isdigit()
-    assert (args.comparison == 'record-zip') == (args.baseline is not None)
+    assert (args.comparison != 'baseline') == (args.baseline is not None)
     baseline = json.loads(gzip.decompress(args.baseline.read_bytes())) if args.baseline else None
     hosts = {machine: audit(path, args.source, machine, args.comparison, baseline)
              for machine, path in [('aarch64', args.arm64), ('x86_64', args.amd64)]}
