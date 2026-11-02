@@ -24,7 +24,8 @@ opportunity, not a promised reduction or speedup.
 Step 1's first native checks exposed an index tied to the wrong expression tree.
 The repair uses the exact emitted body and passes both native GCC/Clang suites
 and all 96 count audits. It removes exactly one retain per differentiated pair.
-Step 2 is still design work. Run focused checks while
+Step 2 has a frozen numeric-input protocol and a drafted implementation; its
+focused runner checks and count audit are next. Run focused checks while
 implementing; complete the full platform matrix once the related batch is ready.
 
 ## Open performance goals

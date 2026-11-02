@@ -1,8 +1,9 @@
 # Remaining reference counts in derivative callbacks
 
 **Status:** complete-field transfers pass focused Linux ARM64/AMD64 GCC/Clang
-O1/O2 checks and all 96 count observations. Callback-input ownership is next;
-combined timings and the final platform matrix remain. [Plan](../../PLAN.md).
+O1/O2 checks and all 96 count observations. Numeric callback inputs are drafted under the frozen protocol; their build,
+correctness and count checks remain. Combined timings and the final platform
+matrix remain. [Plan](../../PLAN.md).
 
 ## First-stage results
 

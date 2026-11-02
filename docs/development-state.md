@@ -1,7 +1,8 @@
 # Current work
 
-**Next:** implement the [numeric callback-input proof](measurements/numeric-callback-input-protocol.md)
-in the same grouped PR. Complete-field transfers now pass all focused correctness/count audits. [PLAN.md](../PLAN.md) tracks that batch. PR #248 is verified and
+**Next:** publish and run focused checks for the drafted numeric callback-input
+rewrite, then audit every target/count result and batch any repairs. Complete-field
+transfers pass all focused correctness/count audits. [PLAN.md](../PLAN.md) tracks that batch. PR #248 is verified and
 merged; no delivery PR is currently open.
 
 ## Checkout and source identities
@@ -13,15 +14,15 @@ merged; no delivery PR is currently open.
   `ceecb569c6748a226ec6ddebc417dc16351490e9`, tag
   `roadmap/field-owner-emission-checks-2026-11-03`. Rebased compiler checkpoint
   `3c838fad` has identical sources; later `85a01d01` adds independent site auditing.
-- Publish this preparation with an explicit force-with-lease against `ceecb569`,
-  retaining all immutable probe tags. No new full matrix for the preparation.
+- Preparation `9a4129be` is published after the rebase, with immutable protocol tag
+  `roadmap/numeric-callback-input-protocol-2026-11-03`, before second-stage code.
 
 ## Roadmap status
 
 | Step | Status | Evidence / remaining work |
 |---|---|---|
 | 1 | Verified | Both native GCC/Clang controls and all 96 counts independently audited |
-| 2 | Pending | Publish the numeric-input protocol, then implement its bounded rewrite |
+| 2 | Implemented | Numeric-input rewrite drafted; runner build, controls and counts pending |
 | 3 | Pending | Combine exact counts, source attribution, cleanup and compiler-cost checks |
 | 4 | Pending | Two timing sessions per architecture after the grouped implementation is ready |
 | 5 | Pending | One substantial PR, full final gates and verified squash |
@@ -104,7 +105,8 @@ flag or deleting argument preparation is unsafe.
 The [numeric-input protocol](measurements/numeric-callback-input-protocol.md)
 selects a two-level numeric record consumed only through leaf reads, rewrites all
 known direct callers, and lets the forwarding callback pass numeric fields.
-Publish `roadmap/numeric-callback-input-protocol-2026-11-03` before code. It freezes
+Protocol tag `roadmap/numeric-callback-input-protocol-2026-11-03` was published
+at `9a4129be` before code. It freezes
 selection/exclusions, at least another `2*p` retains removed, unchanged storage,
 linear analysis, compiler timing/RSS limits and the final paired timing protocol.
 
@@ -114,6 +116,36 @@ input types; only the internal nested-record callee changes type. Its forwarding
 callback's unchanged flat input types gain the existing numeric-field ABI.
 Packed-map preparation must then pass those fields while retaining normal owning
 preparation for any parameters still requiring it. Read the protocol before edits.
+
+### Drafted numeric-input candidate
+
+`src/cgen/numeric_parameters.rs` selects only internal one-argument functions,
+bounded two-level numeric records, leaf-only uses and pure literal-record direct
+call arguments. It checks all function-value/entry references and uses iterative
+strong-component analysis to reject recursion. Lexical record aliases disappear;
+all direct callers and the internal parameter type change together. Five unit
+groups include signature/caller agreement, exclusions, numeric read reuse and
+32/128/512-function analysis scaling.
+
+The pass mutates the already-owned packed lowering result, before ownership
+insertion and the existing typed-IR check. It adds no whole-program clone.
+Packed mapper emission reads numeric input fields directly; a mixed two-parameter
+ABI has at most one boxed parameter to prepare, so no earlier prepared owner is
+stranded by a later failing retain. Existing fully boxed preparation is unchanged.
+
+New native fixture `numeric_callback_inputs.fwp` covers direct forwarding,
+numeric/boxed mixed parameters, map/fold effect order, empty/unequal/shared inputs,
+aliases and final storage. Existing packed failure/cancellation/physical-release
+controls now also exercise unpacked numeric inputs. The focused suite is
+`numeric-input-checks`: five numeric selection tests plus four field-transfer
+tests, five native target groups under both GCC/Clang, and all 96 counts against
+stage 1 with at least another `2*p` retains removed. No local Rust build or
+candidate runtime result yet. New fixture formatting/interpreter baseline pass
+(0.01s / 0.26s); thirteen count/site tests pass (13.57s).
+
+Remaining before delivery: full exclusion/cleanup audit, independent attribution
+of both removed mapper sites, same-source comparison compiler, compiler time/RSS
+experiment, combined paired runtime timings and the final nine-job matrix.
 
 ## Verified previous delivery
 

@@ -190,12 +190,9 @@ transform = fn pause -> fn seed -> fn values ->
 
 #[test]
 fn packed_record_storage_releases_on_each_stage_failure_and_cancellation() {
-    for boxed in [false, true] {
-        let dir = Scratch::new(if boxed {
-            "packed-boxed-records"
-        } else {
-            "packed-records"
-        });
+    for input in ["scalar", "boxed", "numeric"] {
+        let boxed = input != "scalar";
+        let dir = Scratch::new(&format!("packed-{input}-records"));
         let src = dir.0.join("packed.fwp");
         let cfile = dir.0.join("packed.c");
         let source = r#"
@@ -222,6 +219,13 @@ transform = fn pause -> fn seed -> fn input ->
             .replace("List[I64] -> Point ! {Async}", "List[Point] -> Point ! {Async, IO}")
         } else {
             source.to_owned()
+        };
+        let source = if input == "numeric" {
+            source
+                .replace("    in let printed = point | echo\n", "")
+                .replace("! {Async, IO}", "! {Async}")
+        } else {
+            source
         };
         std::fs::write(&src, source).unwrap();
         checked(
@@ -346,7 +350,7 @@ transform = fn pause -> fn seed -> fn input ->
                 let output = Command::new(&exe).output().unwrap();
                 record_probe::save(
                     "packed_record_unwind",
-                    &format!("boxed-{boxed}-{name}-{opt}"),
+                    &format!("input-{input}-{name}-{opt}"),
                     source,
                     &exe,
                     &output,
@@ -354,7 +358,7 @@ transform = fn pause -> fn seed -> fn input ->
                 assert_eq!(
                     output.status.code(),
                     Some(expected),
-                    "boxed={boxed}, {name}/{opt}: {output:?}"
+                    "input={input}, {name}/{opt}: {output:?}"
                 );
             }
         }

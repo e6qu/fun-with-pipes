@@ -1,0 +1,45 @@
+Point = { index: I64, value: F64 }
+rec combine : (Point, Point) -> Point ! {IO}
+combine = fn (left, right) ->
+    let printed = left | .index | echo
+    in Point {
+        index = (left | .index) + (right | .index),
+        value = (left | .value) + (right | .value),
+    }
+paired : Point -> Point -> Point ! {IO}
+paired = fn right -> fn left -> combine (left, right)
+mixed : Point -> Point -> Point ! {IO}
+mixed = fn right -> fn left ->
+    let printed = right | echo
+    in Point {
+        index = (left | .index) + (right | .index),
+        value = (left | .value) + (right | .value),
+    }
+step : Point -> Point -> Point ! {IO}
+step = fn total -> fn point ->
+    let printed = (point | .index) + 100 | echo
+    in Point {
+        index = (total | .index) + (point | .index),
+        value = (total | .value) + (point | .value),
+    }
+run : List[Point] -> List[Point] -> Point ! {IO}
+run = fn left -> fn right ->
+    let values = zip-with paired left right
+    in fold step Point { index = 0, value = 0.0 } values
+run-mixed : List[Point] -> List[Point] -> Point ! {IO}
+run-mixed = fn left -> fn right ->
+    let values = zip-with mixed left right
+    in fold step Point { index = 0, value = 0.0 } values
+aliases : List[Point] -> (Point, List[Point]) ! {IO}
+aliases = fn points -> (run points points, points)
+main =
+    let point = Point { index = 3, value = 0.5 }
+    in let points = [point, point]
+    in [
+        run [] points | show,
+        run points [] | show,
+        run points [point] | show,
+        run points points | show,
+        run-mixed points points | show,
+        aliases points | show,
+    ] | each print

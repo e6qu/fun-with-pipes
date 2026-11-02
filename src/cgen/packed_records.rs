@@ -25,11 +25,8 @@ fn mapper(prog: &Program, id: FuncId, arity: usize) -> Option<usize> {
         return None;
     }
     let abi = super::abi_of(prog, function)?;
-    // Reuse the existing boxed-input ownership convention. Unpacked record
-    // parameters need a distinct preparation proof and are not selected here.
-    if abi.params.iter().any(Option::is_some) {
-        return None;
-    }
+    // Proved numeric fields need no child owners. Other selected parameters
+    // retain their ordinary boxed-input preparation.
     let (parameters, result) = function.ty.params(arity);
     if parameters
         .iter()
@@ -226,5 +223,6 @@ pub(super) fn lower(program: &Program) -> Program {
         }
     }
     result.funcs.extend(lower.made);
+    super::numeric_parameters::lower(&mut result);
     result
 }

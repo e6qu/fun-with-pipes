@@ -16,6 +16,7 @@ use crate::ownership::ResultOwnership;
 use crate::value::Value;
 
 mod field_transfers;
+mod numeric_parameters;
 mod packed_records;
 mod regions;
 mod scalar_text;
@@ -2577,8 +2578,10 @@ impl Gen<'_> {
             .expect("selected packed mapper")
             .clone();
         let width = abi.ret.expect("packed numeric result fields");
-        assert!((1..=2).contains(&arity) && abi.params.iter().all(Option::is_none));
-        self.used_closures[id] = true;
+        assert!((1..=2).contains(&arity));
+        if abi.params.iter().any(Option::is_none) {
+            self.used_closures[id] = true;
+        }
         let mut out = String::from(
             "    /* Eager packed numeric records: finish mapping before folding. */\n",
         );
@@ -2592,12 +2595,37 @@ impl Gen<'_> {
         let arguments = (0..arity)
             .map(|i| format!("OBJ(l{i})->f[0]"))
             .collect::<Vec<_>>();
-        let _ = writeln!(
-            out,
-            "        V arguments[] = {{{}}};\n        fwp_args{id}(arguments, 0, {arity});",
-            arguments.join(", ")
-        );
-        let prepared = (0..arity).map(|i| format!("arguments[{i}]")).collect();
+        let _ = writeln!(out, "        V arguments[] = {{{}}};", arguments.join(", "));
+        if abi.params.iter().all(Option::is_none) {
+            let _ = writeln!(out, "        fwp_args{id}(arguments, 0, {arity});");
+        } else {
+            // At most two parameters: a mixed ABI has only one boxed owner.
+            // Prepare it once, so no earlier prepared owner can be stranded by
+            // a second failing retain. All other arguments are numeric reads.
+            for (parameter, fields) in abi.params.iter().enumerate() {
+                if fields.is_none() {
+                    let _ = writeln!(
+                        out,
+                        "        fwp_args{id}(arguments + {parameter}, {parameter}, 1);"
+                    );
+                }
+            }
+        }
+        let mut prepared = Vec::new();
+        for (parameter, fields) in abi.params.iter().enumerate() {
+            if let Some(width) = fields {
+                assert!(
+                    record_fields(&self.prog.shapes, &function.locals[parameter])
+                        .is_some_and(|fields| fields.len() == *width
+                            && fields.iter().all(|(_, ty)| scalar(ty).is_some()))
+                );
+                prepared.extend(
+                    (0..*width).map(|field| format!("OBJ(arguments[{parameter}])->f[{field}]")),
+                );
+            } else {
+                prepared.push(format!("arguments[{parameter}]"));
+            }
+        }
         let arguments = abi.args_decode_words(self.prog, id, prepared);
         let _ = writeln!(
             out,
