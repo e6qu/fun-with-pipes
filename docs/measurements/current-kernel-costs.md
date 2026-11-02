@@ -60,8 +60,10 @@ calculation gap. Inspect the runtime loop and matched peers while preserving
 byte-copy alias safety, increasing inner-dimension arithmetic order, shared input
 views, shape guards and cancellation cleanup. The two small input records do not
 explain the calculation-only gap: their construction is outside that timer.
-ARM64 array construction is a separate measured gap, not evidence for adding ARC
-work or changing the already allocation-free reduction loop.
+The broader ARM64 array gap includes the C driver's input construction. It is
+not evidence for adding ARC work or changing the allocation-free reduction loop;
+measure source-compiled fwp input construction separately before assigning that
+cost to a compiler transformation.
 
 ## Six programs and equivalent work
 
@@ -142,6 +144,14 @@ are not independent sessions. Failure makes that session incomplete.
 | Matrix kernel | Ordered multiplication and accumulation | Allocation/zeroing, shape checks outside the loop, cleanup |
 | Allocation-inclusive | Allocate, fill, calculate, checksum, release | Runtime startup, printing and shutdown |
 | Whole process | Startup through shutdown | Compilation; reported as context only |
+
+The fwp functions are exported native entries. Their **C driver** builds inputs
+with fwp runtime helpers (`fwp_array_new_packed`, `fwp_array_store` and, for matrices,
+`fwp_record`). The broader timer therefore measures this embedding path, including
+the driver's fill loops; it does not compile an fwp `array.generate` expression.
+C and Rust build their inputs in their respective peer programs. Calculation-only
+timers compare the kernel work; allocation-inclusive ratios must not be presented
+as the cost of every source-level fwp input builder.
 
 Separate profile executables record allocation requests/bytes, effective
 retains/releases, peak/final managed charge and process RSS. C/Rust payload bytes,

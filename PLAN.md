@@ -53,8 +53,10 @@ make this a computation investigation, not an unspecified ARC-removal task.
    source-level cause; do not ship a speculative optimization as a speed improvement.
 
 ARM64 array allocation-through-cleanup costs 24–31% more than C despite a fast
-reduction loop. Investigate input construction separately after the matrix task;
-first separate filling from allocator/cleanup costs with a declared measurement.
+reduction loop. This includes a C driver's fwp-runtime calls, not source-compiled
+`array.generate`. After the matrix task, compare both input-construction paths
+and separate filling from allocator/cleanup time in a declared measurement before
+selecting any compiler change.
 
 ## Open performance goals
 
