@@ -53,12 +53,39 @@ def attributed_sites(archive, root, sites, profiles):
     return result
 
 
+def field_owner_sites(code, sites, observations, pairs):
+    """Check the removed projection and unchanged input preparation separately."""
+    maps = re.findall(r'/\* Eager packed numeric records:[\s\S]*?fwp_args(\d+)\(arguments, 0, 2\);', code)
+    assert len(maps) == 1, maps
+    callback = 'fwp_args' + maps[0]
+    workers = re.findall(r'/\* fn : \(Rev\[F64\], Rev\[F64\]\) -> Rev\[F64\] \*/\nstatic fwp_wr(\d+) w\1\(V l0_0, V l0_1\) \{([\s\S]*?)\n}', code)
+    selected = [(number, body) for number, body in workers
+                if '/* move complete separated field owners */' in body]
+    assert len(selected) == 1, selected
+    number, body = selected[0]
+    assert 'fwp_rc_dup(' not in body, body
+    assert not re.search(r'fwp_drop\d+\(l0_[01]\)', body), body
+    mapped = {site['id'] for site in sites['ownership']
+              if site['operation'] == 'dup' and site['caller'] == callback}
+    counts = {}
+    for mode, observation in observations.items():
+        total = 0
+        for row in observation['ownership']:
+            if row['site'] in mapped:
+                assert row['phase'] == 'forwardWithRecording', row
+                assert row['calls'] == row['effective'] and row['last'] == 0, row
+                total += row['effective']
+        assert total == 2 * pairs, (mode, total, pairs)
+        counts[mode] = dict(mapperInputs=total, separatedFieldTransfer=0)
+    return dict(callback=callback, projection='w' + number, counts=counts)
+
+
 def audit(path, source, machine, comparison, baseline):
     with zipfile.ZipFile(path) as archive:
         report = json.loads(archive.read('report.json'))
         assert report['source'] == source and report['machine'] == machine
         assert report.get('complete') is True
-        if comparison in ('record-zip', 'record-fold', 'packed-records'):
+        if comparison in ('record-zip', 'record-fold', 'packed-records', 'field-owners'):
             assert report['comparison'] == dict(policy=comparison, baselineSource=baseline['source'])
             assert report['cc'] == baseline['hosts'][machine]['cc']
         else:
@@ -137,13 +164,17 @@ def audit(path, source, machine, comparison, baseline):
                         binaryBytes=len(ordinary), textBytes=text_bytes,
                         frames=archive.read(frames[0]).decode(),
                         binarySha256=report['files'][root + 'ordinary.exe'])
+                    if comparison == 'field-owners':
+                        cases[name]['fieldOwners'] = field_owner_sites(
+                            archive.read(root + 'ownership-base.c').decode(), active_sites,
+                            observations, (dimensions - 1) * updates)
         failures = []
         if baseline is not None:
             failures = MEASURE.comparison_failures(report, baseline, comparison)
             assert failures == report['comparisonFailures']
             for name, actual in cases.items():
                 previous = baseline['hosts'][machine]['cases'][name]
-                if comparison != 'packed-records' and actual['textBytes'] > previous['textBytes'] + 1024:
+                if comparison in ('record-zip', 'record-fold') and actual['textBytes'] > previous['textBytes'] + 1024:
                     failures.append(name + ': instruction section grew by more than 1024 bytes')
                 def largest_frame(frames):
                     return max(int(line.split('\t')[1]) for line in frames.splitlines())
@@ -163,7 +194,7 @@ def main():
     parser.add_argument('--source', required=True)
     parser.add_argument('--run', required=True)
     parser.add_argument('--output', required=True, type=Path)
-    parser.add_argument('--comparison', required=True, choices=('baseline', 'record-zip', 'record-fold', 'packed-records'))
+    parser.add_argument('--comparison', required=True, choices=('baseline', 'record-zip', 'record-fold', 'packed-records', 'field-owners'))
     parser.add_argument('--baseline', type=Path)
     args = parser.parse_args()
     assert re.fullmatch('[0-9a-f]{40}', args.source) and args.run.isdigit()

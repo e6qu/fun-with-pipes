@@ -262,6 +262,37 @@ static void use(void) { fwp_alloc_init(24); }
             changed['cases']['129-199-history-O1']['1'][field] = {}
             self.assertTrue(MEASURE.comparison_failures(changed, baseline, 'field-owners'))
 
+    def test_field_owner_site_audit_rejects_shifted_or_remaining_retains(self):
+        code = '''/* Eager packed numeric records: finish mapping before folding. */
+fwp_args164(arguments, 0, 2);
+/* fn : (Rev[F64], Rev[F64]) -> Rev[F64] */
+static fwp_wr124 w124(V l0_0, V l0_1) {
+    /* move complete separated field owners */
+    l117 = l0_0;
+    l1 = l117;
+    l118 = l0_1;
+    l2 = l118;
+}'''
+        sites = dict(ownership=[dict(id=i, operation='dup', caller='fwp_args164')
+                                for i in range(2)])
+        observations = {'0': dict(ownership=[dict(site=i, phase='forwardWithRecording',
+                                                 calls=7, effective=7, last=0)
+                                            for i in range(2)])}
+        actual = SUMMARY.field_owner_sites(code, sites, observations, 7)
+        self.assertEqual(actual['counts']['0'], dict(mapperInputs=14, separatedFieldTransfer=0))
+        for statement in ('fwp_rc_dup(l117);', 'fwp_drop5(l0_0);'):
+            with self.assertRaises(AssertionError):
+                SUMMARY.field_owner_sites(code.replace('l1 = l117;', statement), sites, observations, 7)
+        for field, value in [('calls', 8), ('effective', 6), ('last', 1), ('phase', 'outside')]:
+            changed = copy.deepcopy(observations)
+            changed['0']['ownership'][0][field] = value
+            with self.subTest(field=field), self.assertRaises(AssertionError):
+                SUMMARY.field_owner_sites(code, sites, changed, 7)
+        with self.assertRaises(AssertionError):
+            SUMMARY.field_owner_sites(code, dict(ownership=[]), observations, 7)
+        zero = SUMMARY.field_owner_sites(code, dict(ownership=[]), {'0': dict(ownership=[])}, 0)
+        self.assertEqual(zero['counts']['0']['mapperInputs'], 0)
+
 
 if __name__ == '__main__':
     unittest.main()
