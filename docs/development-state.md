@@ -1,13 +1,15 @@
 # Current work
 
-**Next:** finish PR #243's documentation audit, mark it ready, then monitor its
-nine final-head production gates. Keep head `ea976b7e19c26c5be0ad9e748e284cc97a269379`
+**Next:** monitor PR #243's nine final-head production gates while the independent
+matrix compiler diagnostic runs. Keep head `ea976b7e19c26c5be0ad9e748e284cc97a269379`
 unchanged. Squash-merge only after all gates pass, with an explicit one-line subject
 at most 80 characters and empty body; verify the merge message and tree.
 
 PR: https://github.com/e6qu/fun-with-pipes/pull/243
-Docs run `41411731331`, job `125166069914`, is running without a failed step.
-Draft production run `41411731289` is skipped; it establishes no platform support.
+Docs run `41411731331`, job `125166069914`, passes and its complete log is audited:
+`/private/tmp/fwp-243-docs.log`. Only deliberate test-runner rejection/panic controls
+appear. Ready production run `41412228669` is queued/running without failed steps.
+Draft run `41411731289` is skipped and establishes no platform support.
 The published worktree is `/private/tmp/fwp-current-kernel-costs`.
 
 This independent preparation is branch `matrix-calculation-costs`, worktree
@@ -19,8 +21,8 @@ The previous full handoff remains at `ea976b7e:docs/development-state.md`.
 
 | Step | Status | Evidence / remaining work |
 |---|---|---|
-| 1 | In progress | Source safety audit and explicit diagnostic protocol written; publish before runner edits |
-| 2 | Pending | Reuse the GCC-report runner for current artifacts and explicit binary paths; inspect both native architectures |
+| 1 | Verified | Protocol `5f235bb0`, tag `roadmap/matrix-calculation-protocol-2026-11-02`, published before runner edits |
+| 2 | In progress | Runner uses explicit current archive/binary identities; four damaged-input controls pass (0.13s); native GCC runs next |
 | 3 | Pending | Select a source-level candidate from evidence; no speculative runtime change |
 | 4 | Pending | Freeze candidate/reference before two-session timing; preserve all failed controls |
 | 5 | Pending | Deliver coherent changes after #243; exact-head full matrix/docs and verified squash merge |
@@ -40,3 +42,11 @@ The previous full handoff remains at `ea976b7e:docs/development-state.md`.
   and unwind cleanup are required. See the [protocol](measurements/matrix-calculation-costs.md).
 - Scratch source audit: `/private/tmp/fwp-matrix-source-audit.md`. No local build,
   benchmark or timing has been run. Use the local guard for focused checks only.
+
+## Diagnostic changes
+
+The existing `kernel-codegen` dispatch now selects current session-2 archives,
+checks their recorded SHA-256 values, and uses each executable's explicit role
+path. It adds only GCC diagnostic options and requires identical binary bytes.
+Compiler commands use the shared child-deadline runner. Historical dispatch
+instructions identify their recorded revisions; no old-format fallback is added.

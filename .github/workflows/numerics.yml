@@ -1262,26 +1262,29 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v7
-      - name: Require the declared input run and session
+      - name: Require the declared current-source session
         env:
-          EVIDENCE_RUN: ${{ inputs.evidence_run }}
           SESSION: ${{ inputs.comparison_session }}
+          SOURCE: ${{ inputs.source_revision }}
         run: |
-          test "$EVIDENCE_RUN" = 40951090783
           test "$SESSION" = 2
-      - name: Retrieve retained kernel sources and binaries
+          test "$SOURCE" = b9da15a1a323ae3f5d3ff247e0b6b4c59ab73528
+      - name: Check archive identity controls
+        run: python3 scripts/test-kernel-codegen-input.py
+      - name: Retrieve the exact current-kernel archive
         env:
           GH_TOKEN: ${{ github.token }}
-          EVIDENCE_RUN: ${{ inputs.evidence_run }}
-          SESSION: ${{ inputs.comparison_session }}
-          NATIVE_RUNNER: ${{ matrix.runner }}
-        run: gh run download "$EVIDENCE_RUN" --repo "$GITHUB_REPOSITORY" --name "kernel-baselines-$NATIVE_RUNNER-$SESSION" --dir kernel-input
+          ARTIFACT: ${{ matrix.runner == 'ubuntu-latest' && '13123941925' || '13123885145' }}
+        run: gh api --allow-escape-sequences "repos/$GITHUB_REPOSITORY/actions/artifacts/$ARTIFACT/zip" > "$RUNNER_TEMP/kernel-input.zip"
       - name: Collect GCC reports without changing the measured binaries
         env:
           C_ARCH: ${{ matrix.runner == 'ubuntu-latest' && 'x86-64' || 'armv8-a' }}
+          SOURCE: ${{ inputs.source_revision }}
+          SESSION: ${{ inputs.comparison_session }}
         run: >-
-          python3 scripts/report-kernel-codegen.py --evidence kernel-input
-          --source 37da74419046eb568d30cc8a96ab11208db7ca91 --cc gcc --c-arch "$C_ARCH"
+          python3 scripts/report-kernel-codegen.py --archive "$RUNNER_TEMP/kernel-input.zip"
+          --index docs/measurements/current-kernels-2026-11-02/index.json
+          --source "$SOURCE" --session "$SESSION" --cc gcc --c-arch "$C_ARCH"
           --timeout 180 --output kernel-codegen
       - name: Retain complete or partial compiler reports
         if: ${{ always() && hashFiles('kernel-codegen/**') != '' }}
