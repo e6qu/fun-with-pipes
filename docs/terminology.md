@@ -216,6 +216,7 @@ prove some uses need only a borrow or move.
 | Cache line / locality | A transferred CPU-cache block / accessing nearby or recently used data. |
 | Pointer chasing / contiguous buffer | Follow separate linked allocations / store elements consecutively. |
 | SIMD / lane | One instruction handles several values / one of those numeric positions. |
+| Vectorization | The compiler combines independent scalar operations into SIMD work. For example, two neighboring matrix cells can be updated together while each cell keeps its own sum order. |
 | Strict aliasing | C rules limiting which pointer types may access an object. |
 
 An owning cycle `A → B → A` can keep both counts nonzero after outside owners
