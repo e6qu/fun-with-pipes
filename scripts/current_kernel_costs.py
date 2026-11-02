@@ -52,7 +52,7 @@ def summarize(observations, processes):
                     for (a, b), n in sorted(adjacency.items())])
 
 
-def decisions(results):
+def decisions(results, speed_cases):
     """Unmet timing rules are observations, never permission to discard a case."""
     failures = []
     for case, row in results.items():
@@ -62,7 +62,7 @@ def decisions(results):
                     failures.append(dict(kind='copy', case=case, label=label,
                                          metric=metric, ratio=ratio, limit=1.02))
         for metric, ratio in row['ratios']['reference'].items():
-            limit = 0.95 if case.startswith('array') and metric == 'kernelNs' else 1.02
+            limit = 0.95 if case in speed_cases and metric == 'kernelNs' else 1.02
             if ratio > limit:
                 failures.append(dict(kind='speed', case=case, metric=metric,
                                      ratio=ratio, limit=limit))

@@ -1,7 +1,7 @@
 # Current work
 
-**Next:** verify the selected paired-column runtime on the three focused native
-hosts while monitoring PR #243. Keep head `ea976b7e19c26c5be0ad9e748e284cc97a269379`
+**Next:** run the frozen paired-column timing experiment after the passing native
+checks, while monitoring PR #243. Keep head `ea976b7e19c26c5be0ad9e748e284cc97a269379`
 unchanged. Squash-merge only after all gates pass, with an explicit one-line subject
 at most 80 characters and empty body; verify the merge message and tree.
 
@@ -26,8 +26,8 @@ The previous full handoff remains at `ea976b7e:docs/development-state.md`.
 |---|---|---|
 | 1 | Verified | Protocol `5f235bb0`, tag `roadmap/matrix-calculation-protocol-2026-11-02`, published before runner edits |
 | 2 | Verified | Run `41412675762` reproduces all original binaries on both architectures; complete compiler reports and logs retained |
-| 3 | In progress | Paired-column diagnostic vectorizes on both GCC hosts; exact runtime candidate and expanded safety probes ready for focused checks |
-| 4 | Pending | Freeze candidate/reference before two-session timing; preserve all failed controls |
+| 3 | Verified | Paired-column diagnostic vectorizes on both GCC hosts; expanded native safety checks pass on GCC ARM64/AMD64 and Clang ARM64 |
+| 4 | In progress | Timing protocol `6c7e9cea` frozen; shared runner uses explicit reference kinds and checks source equality before timing |
 | 5 | Pending | Deliver coherent changes after #243; exact-head full matrix/docs and verified squash merge |
 
 ## Established facts
@@ -87,7 +87,23 @@ the final result release must fail that observer. Native filenames now explicitl
 use `.exe`, and O2 probe binaries are retained. The source fixture also compares
 raw interpretation and native arithmetic order/NaN classification.
 
-Local runtime/diagnostic correspondence checks pass (six tests, 0.13s), Rust
-formatting passes (0.13s), workflow actionlint passes (5.54s). No local build or
-benchmark. Dispatch `matrix-checks` for Linux GCC ARM64/AMD64 and macOS Clang ARM64.
-Freeze timing work counts and reference construction before timing this candidate.
+Run `41417716203` at `a4172afd` passes all three focused native jobs and their full
+logs are audited. Each host passes four tests and twelve cases in each of four
+O1/O2 profiles. Full artifacts are retained under `matrix-checks-2026-11-02/`.
+No unresolved focused failure remains. Tests also enforce the output-only
+allocation count and detect deliberately missing normal/unwind releases.
+
+Timing protocol `6c7e9cea`, tag `roadmap/matrix-paired-column-timing-2026-11-02`,
+precedes runner changes. Matrix reference construction reverses only the declared
+loop in the same compiler output. Only the two affected matrix sizes are timed;
+array binaries already reproduce unchanged. The workflow requires the verified
+three-host run and matching production/probe source identities. Both old and new
+measurement protocols have explicit speed targets and independently audited raw
+data; historical word-state evidence keeps its original rules.
+
+Local checks: six runtime/patch controls (0.13s), eight schedule/limit controls
+(0.13s), thirteen damaged-evidence controls (5.37s), Rust formatting (0.13s),
+actionlint (5.43s), documentation links/identities (3.01s). No local build or timing.
+Dispatch `matrix-columns`, both sessions/all hosts, with prerequisite run
+`41417716203` and its full source `a4172afd`; preserve every rejected host and
+failed timing/control result. Full production acceptance remains separate.

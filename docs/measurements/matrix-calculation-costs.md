@@ -211,3 +211,17 @@ Do not repeat their timing: this runtime edit changes only the matrix loop. The
 two declared matrix sizes cover the small-case overhead and large-case target.
 The C driver still constructs fwp inputs; the inclusive ratio does not measure
 source-compiled `array.generate`. Input records remain outside calculation time.
+
+### Native safety checks
+
+Run `41417716203` at `a4172afd` passes Linux GCC on both architectures and macOS
+ARM64 Clang. [Full logs, sources and probe binaries](matrix-checks-2026-11-02/index.json)
+retain four passing tests per host and twelve allocation/arithmetic cases at O1/O2
+for both ordinary and blocked implementations. Checks include overlapping views,
+NaNs, subnormals, infinities, order-sensitive sums, malformed shapes, traps and
+cancellation. Every case returns to its starting live storage; deliberately
+omitting the final release or unwind guard fails its intended observer.
+
+The timing workflow requires this successful three-host run and exact equality
+of compiler, runtime, library and probe source identities before measurements.
+These focused checks do not replace the final nine-job production matrix.
