@@ -2,6 +2,9 @@
 
 **Next:** monitor PR #246's final production run `41478753238` and documentation
 `41478745298` at exact head `44626348b71bf3af1aa16030aae1e7976cb26c37`.
+Documentation passed; its full log, new raw-data replay and intentional runner
+failures are audited. C/Rust benchmarks passed and their full log is audited.
+All other production jobs are running or queued with no reported failed steps.
 Audit every final-head job and target before squash merge; keep that source unchanged.
 
 ## Branch and delivery
@@ -13,8 +16,12 @@ Audit every final-head job and target before squash merge; keep that source unch
 - The same temporary worktree now checks out `array-observation-diagnostics` for
   independent next-task preparation, avoiding another large worktree. PR #246's
   branch remains at `44626348`; no second PR is open. The
-  [next diagnostic protocol](measurements/array-observation-boundaries.md) is drafted
-  but not implemented or measured. Freeze its source before implementation.
+  [next diagnostic protocol](measurements/array-observation-boundaries.md) was frozen at `c583459b` / `roadmap/array-observation-protocol-2026-11-02`.
+  Its C-only runner, source checks, schedule and independent auditor are now
+  implemented but not dispatched. Three harness tests pass (0.14s); all 48
+  retained C variants pass source/fault-site checks (0.86s); runner/auditor syntax
+  passes (0.13–0.14s), all guarded. A test caught a global clock-call replacement;
+  it now targets only the benchmark helper and proves runtime clocks unchanged.
 - [PR #245](roadmap-history.md#direct-numeric-array-callbacks-pr-245) passed all
   nine production jobs and documentation at `d53fb07a`; full logs/target archives
   were audited. Squash `c43f05c22ed36277b491490b7d9e222dfd0af025` preserves the
