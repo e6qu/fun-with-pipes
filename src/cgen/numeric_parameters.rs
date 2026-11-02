@@ -96,6 +96,16 @@ fn value_functions(value: &Value, visit: &mut impl FnMut(FuncId)) {
     }
 }
 
+fn pattern_functions(pattern: &Pat, visit: &mut impl FnMut(FuncId)) {
+    match pattern {
+        Pat::Lit(value) => value_functions(value, visit),
+        Pat::Construct(_, fields) | Pat::Record(fields) => {
+            fields.iter().for_each(|p| pattern_functions(p, visit));
+        }
+        Pat::Bind(_) | Pat::Wild => {}
+    }
+}
+
 /// Two iterative graph traversals find strongly connected components. Unlike
 /// a reachability search per candidate, each edge is inspected a fixed number
 /// of times even for a long chain of functions.
@@ -152,9 +162,33 @@ fn plain_read(expr: &Expr, depth: usize) -> bool {
     }
 }
 
-fn argument(expr: &Expr, shape: &Shape) -> bool {
-    matches!(expr, Expr::Record(fields)
-        if fields.len() == shape.outer && fields.iter().all(|e| plain_read(e, 0)))
+fn read_type<'a>(expr: &Expr, locals: &'a [MT], shapes: &'a Shapes) -> Option<&'a MT> {
+    match expr {
+        Expr::Local(local) => locals.get(*local as usize),
+        Expr::Field(base, field) => record_fields(shapes, read_type(base, locals, shapes)?)?
+            .get(*field as usize)
+            .map(|(_, ty)| ty),
+        _ => None,
+    }
+}
+
+fn argument(expr: &Expr, shape: &Shape, locals: &[MT], shapes: &Shapes) -> bool {
+    let Expr::Record(fields) = expr else {
+        return false;
+    };
+    fields.len() == shape.outer
+        && fields.iter().all(|e| plain_read(e, 0))
+        && shape.leaves.iter().all(|(path, expected)| {
+            let mut ty = read_type(&fields[path[0] as usize], locals, shapes);
+            for field in &path[1..] {
+                ty = ty.and_then(|ty| {
+                    record_fields(shapes, ty)?
+                        .get(*field as usize)
+                        .map(|(_, ty)| ty)
+                });
+            }
+            ty == Some(expected)
+        })
 }
 
 fn path(expr: &Expr, aliases: &HashMap<Local, Vec<u32>>, depth: usize) -> Option<Vec<u32>> {
@@ -290,7 +324,7 @@ fn callers(expr: &mut Expr, selected: &[Option<Shape>], visits: &mut usize) {
 }
 
 /// Return the number of visited expression nodes for deterministic scaling tests.
-pub(super) fn lower(program: &mut Program) -> usize {
+pub(super) fn lower(program: &mut Program, entries: &[FuncId]) -> usize {
     let mut selected: Vec<_> = program.funcs.iter().map(|f| shape(program, f)).collect();
     if selected.iter().all(Option::is_none) {
         return 0;
@@ -308,7 +342,8 @@ pub(super) fn lower(program: &mut Program) -> usize {
                         graph[caller].push(*id);
                         called[*id] = true;
                         if let Some(shape) = &selected[*id] {
-                            blocked[*id] |= args.len() != 1 || !argument(&args[0], shape);
+                            blocked[*id] |= args.len() != 1
+                                || !argument(&args[0], shape, &function.locals, &program.shapes);
                         }
                     }
                     Expr::Func(id) | Expr::BorrowGlobal(_, id, _) => {
@@ -319,6 +354,14 @@ pub(super) fn lower(program: &mut Program) -> usize {
                         blocked[id] = true;
                         graph[caller].push(id);
                     }),
+                    Expr::Match(_, arms) => {
+                        for (pattern, _) in arms {
+                            pattern_functions(pattern, &mut |id| {
+                                blocked[id] = true;
+                                graph[caller].push(id);
+                            });
+                        }
+                    }
                     _ => {}
                 }
             }),
@@ -346,6 +389,7 @@ pub(super) fn lower(program: &mut Program) -> usize {
         .chain(&program.tests)
         .map(|(_, id)| *id)
         .chain(program.cached_values.iter().copied())
+        .chain(entries.iter().copied())
         .chain(program.main)
         .chain(Some(0))
     {
@@ -420,6 +464,9 @@ pub(super) fn lower(program: &mut Program) -> usize {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::rc::Rc;
+
+    use crate::value::Closure;
 
     fn tuple(fields: Vec<MT>) -> MT {
         MT::Record(
@@ -475,7 +522,7 @@ mod tests {
         let mut second = program.funcs[0].clone();
         second.name = "second-forwarder".into();
         program.funcs.push(second);
-        lower(&mut program);
+        lower(&mut program, &[]);
         crate::ir::check_locals(&program).unwrap();
         assert_eq!(
             record_fields(&program.shapes, &program.funcs[1].locals[0])
@@ -506,7 +553,7 @@ mod tests {
 
     #[test]
     fn exported_dynamic_and_nonliteral_callers_keep_their_signatures() {
-        for mode in 0..4 {
+        for mode in 0..7 {
             let mut program = example();
             match mode {
                 0 => program.exports.push(("leaf".into(), 1)),
@@ -528,13 +575,43 @@ mod tests {
                     };
                 }
                 3 => {
-                    program.cached_values.insert(1);
+                    program.named.push(("leaf".into(), 1));
+                }
+                4 => {}
+                5 | 6 => {
+                    let value = Value::Closure(Rc::new(Closure {
+                        func: 1,
+                        args: vec![],
+                    }));
+                    let body = if mode == 5 {
+                        Expr::Const(value)
+                    } else {
+                        Expr::Match(
+                            Box::new(Expr::Local(0)),
+                            vec![(Pat::Lit(value), Expr::Const(Value::I64(0)))],
+                        )
+                    };
+                    program.funcs.push(Func {
+                        name: "constant-function".into(),
+                        arity: if mode == 5 { 0 } else { 1 },
+                        locals: if mode == 5 {
+                            vec![]
+                        } else {
+                            vec![program.funcs[1].ty.clone()]
+                        },
+                        ty: if mode == 5 {
+                            program.funcs[1].ty.clone()
+                        } else {
+                            arrow(program.funcs[1].ty.clone(), MT::con("std::I64"))
+                        },
+                        body: Body::Expr(body),
+                    });
                 }
                 _ => unreachable!(),
             }
             crate::ir::check_locals(&program).unwrap();
             let original = program.funcs[1].ty.clone();
-            lower(&mut program);
+            lower(&mut program, if mode == 4 { &[1] } else { &[] });
             assert_eq!(program.funcs[1].ty, original);
             crate::ir::check_locals(&program).unwrap();
         }
@@ -595,7 +672,9 @@ mod tests {
         let shape = shape(&program, &program.funcs[1]).unwrap();
         assert!(!argument(
             &Expr::Record(vec![Expr::Call(2, vec![]), Expr::Local(1)]),
-            &shape
+            &shape,
+            &program.funcs[0].locals,
+            &program.shapes,
         ));
         let mut resource = Expr::ResourceRegion {
             parameters: vec![],
@@ -641,7 +720,7 @@ mod tests {
                 *id = callee;
                 program.funcs.push(caller);
             }
-            let visits = lower(&mut program);
+            let visits = lower(&mut program, &[]);
             crate::ir::check_locals(&program).unwrap();
             assert!(visits <= 40 * count + 8, "{count}: {visits}");
             counts.push(visits);

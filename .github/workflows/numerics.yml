@@ -91,9 +91,10 @@ jobs:
           CARGO_NET_OFFLINE=true cargo clippy --locked --lib --bin fwp --test record_conversion_ownership --test field_context_ownership --test worker_preparation_ownership --test fold_ownership --test fold_unwind_ownership -- -D warnings
       - name: Complete-transfer selection and rejection controls
         if: ${{ !cancelled() && steps.compiler_build.outcome == 'success' }}
-        run: |
-          CARGO_NET_OFFLINE=true cargo test --locked --lib cgen::field_transfers -- --nocapture
-          CARGO_NET_OFFLINE=true cargo test --locked --lib cgen::numeric_parameters -- --nocapture
+        run: CARGO_NET_OFFLINE=true cargo test --locked --lib cgen::field_transfers -- --nocapture 2>&1 | tee numeric-owner-checks/field-selection.log
+      - name: Numeric parameter selection, exclusions and linear analysis
+        if: ${{ !cancelled() && steps.compiler_build.outcome == 'success' }}
+        run: CARGO_NET_OFFLINE=true cargo test --locked --lib cgen::numeric_parameters -- --nocapture 2>&1 | tee numeric-owner-checks/numeric-selection.log
       - name: GCC owner, failure and callback regression controls
         if: ${{ !cancelled() && steps.compiler_build.outcome == 'success' }}
         run: >-
@@ -106,12 +107,23 @@ jobs:
           env CC=clang FWP_ARC_ARTIFACTS=numeric-owner-checks/clang CARGO_NET_OFFLINE=true
           python3 scripts/run-native-tests.py --targets record_conversion_ownership field_context_ownership
           worker_preparation_ownership fold_ownership fold_unwind_ownership --idle-timeout 600 --logs numeric-owner-checks/clang/targets
+      - name: Publish completed test diagnostics before count collection
+        if: ${{ !cancelled() && steps.compiler_build.outcome == 'success' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: numeric-owner-diagnostics-${{ runner.arch }}
+          path: |
+            numeric-owner-checks/*selection.log
+            numeric-owner-checks/gcc/targets/*.log
+            numeric-owner-checks/clang/targets/*.log
+          if-no-files-found: error
       - name: Observer controls and all derivative ownership counts
         if: ${{ !cancelled() && steps.compiler_build.outcome == 'success' }}
         env:
           EXPECTED_MACHINE: ${{ matrix.runner == 'ubuntu-24.04-arm' && 'aarch64' || 'x86_64' }}
           C_ARCH: ${{ matrix.runner == 'ubuntu-24.04-arm' && 'armv8-a' || 'x86-64' }}
         run: |
+          python3 scripts/test-numeric-input-reference.py
           python3 scripts/test-derivative-ownership-profile.py
           python3 scripts/test-descent-phases.py --cc gcc
           python3 scripts/measure-derivative-forward-costs.py \

@@ -1,8 +1,8 @@
 # Remaining reference counts in derivative callbacks
 
 **Status:** complete-field transfers pass focused Linux ARM64/AMD64 GCC/Clang
-O1/O2 checks and all 96 count observations. Numeric callback inputs are drafted under the frozen protocol; their build,
-correctness and count checks remain. Combined timings and the final platform
+O1/O2 checks and all 96 count observations. Numeric callback inputs pass their
+96 count audits, but two test fixtures need repair before correctness acceptance. Combined timings and the final platform
 matrix remain. [Plan](../../PLAN.md).
 
 ## First-stage results
@@ -51,6 +51,35 @@ A **retain** increments a reference count so another owner can keep a value
 alive. Removing temporary owners can remove both that increment and its later
 release. The [packed-record change](derivative-temporary-storage-2026-11-02/README.md)
 reduces allocations, but deliberately leaves callback argument ownership alone.
+
+## Initial numeric-input checks
+
+[Run 41542603016](https://github.com/e6qu/fun-with-pipes/actions/runs/41542603016)
+tests `043fcc1cfc1205cb3141f2da5b10b6824f6c7c28`. Both native hosts build and lint
+successfully. Each reports 46 passing checks and three failures: one unit fixture
+and the same native fixture under GCC and Clang. Every full job log and all 20
+target logs were audited before repair; no additional diagnostics were found.
+
+- The unit fixture marks an argument-taking function as a cached value, which
+  requires a zero-argument entry. Use a valid named entry to test exclusion.
+- The native fixture expects a surviving nested-argument function, but its small
+  body is inlined. Use a polynomial large enough to survive ordinary inlining;
+  check the transformed signature without assuming an internal function name.
+  Save the compiled probe before selection assertions so a failure keeps evidence.
+- Review also separates numeric rewriting from packed-record lowering, preserving
+  each comparison switch, and excludes explicit execution entries. Caller checks
+  now verify numeric leaf types; constant function references also exclude selection.
+
+All 96 initial count observations independently pass manifest, actual-image,
+output, storage, work and stack-frame checks. The largest solve uses **995 retains,
+from 51,939** after stage 1: exactly another `2*p` removed. Allocations (156,943),
+requested bytes (5,382,142) and peak managed bytes (17,824) are unchanged; final
+storage is zero. No timing claim or full correctness acceptance follows yet.
+
+Retained evidence: [counts](numeric-input-checks-2026-11-03/initial-counts.json.gz),
+[artifact identities](numeric-input-checks-2026-11-03/initial-artifacts.json), and
+complete logs [ARM64](numeric-input-checks-2026-11-03/arm-initial.log.gz) /
+[AMD64](numeric-input-checks-2026-11-03/amd-initial.log.gz).
 
 ## Where the remaining operations occur
 

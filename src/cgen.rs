@@ -10206,15 +10206,17 @@ fn generate_mode(prog: &Program, mut mode: Mode) -> Result<String, String> {
     let string_maps = string_map::lower(&scalar_text);
     let region_program = regions::lower(&string_maps);
     let packed_program = packed_records::lower(region_program.as_ref());
-    let prog = &packed_program;
-    crate::ir::check_locals(prog)?;
-    let weak_channels = crate::resource::uses_weak_channels(&prog.funcs, &prog.shapes);
-    let tests = matches!(mode, Mode::Tests);
-    let main = prog.main.unwrap_or(0);
     let roots: Vec<_> = match &mode {
         Mode::Exec(commands, _) => commands.iter().map(|c| c.fid).collect(),
         _ => Vec::new(),
     };
+    let mut numeric_program = packed_program;
+    numeric_parameters::lower(&mut numeric_program, &roots);
+    let prog = &numeric_program;
+    crate::ir::check_locals(prog)?;
+    let weak_channels = crate::resource::uses_weak_channels(&prog.funcs, &prog.shapes);
+    let tests = matches!(mode, Mode::Tests);
+    let main = prog.main.unwrap_or(0);
     let live = live_functions(prog, &roots)?;
     // the calling conventions follow the bodies as they are; with counted
     // references, the code is generated from the counted bodies

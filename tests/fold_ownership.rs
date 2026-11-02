@@ -64,22 +64,6 @@ fn numeric_callback_inputs_preserve_order_shared_lists_and_mixed_owners() {
                 .env("FWP_STACK", stack),
         );
         let code = std::fs::read_to_string(&cfile).unwrap();
-        assert!(
-            code.contains("/* combine : (I64, F64, I64, F64) -> Point */"),
-            "nested argument must become four numeric fields"
-        );
-        let maps: Vec<_> = code
-            .split("/* Eager packed numeric records:")
-            .skip(1)
-            .map(|section| section.split("\n}\n").next().unwrap())
-            .collect();
-        assert!(maps.len() >= 2);
-        assert!(maps
-            .iter()
-            .any(|body| !body.contains("fwp_args") && body.contains("OBJ(arguments[0])->f[0]")));
-        assert!(maps.iter().any(|body| body.contains("fwp_args")
-            && body.contains("OBJ(arguments[")
-            && body.contains(", 1);")));
         for opt in ["-O1", "-O2"] {
             let exe = dir.0.join(format!("inputs-{stack}-{opt}.exe"));
             fwp::cgen::compile_c(&code, &exe, opt).unwrap();
@@ -91,6 +75,24 @@ fn numeric_callback_inputs_preserve_order_shared_lists_and_mixed_owners() {
                 &exe,
                 &output,
             );
+            assert!(
+                code.contains(" : (I64, F64, I64, F64) -> Point */"),
+                "nested argument must become four numeric fields"
+            );
+            let maps: Vec<_> = code
+                .split("/* Eager packed numeric records:")
+                .skip(1)
+                .map(|section| section.split("\n}\n").next().unwrap())
+                .collect();
+            assert!(maps.len() >= 2);
+            assert!(
+                maps.iter()
+                    .any(|body| !body.contains("fwp_args")
+                        && body.contains("OBJ(arguments[0])->f[0]"))
+            );
+            assert!(maps.iter().any(|body| body.contains("fwp_args")
+                && body.contains("OBJ(arguments[")
+                && body.contains(", 1);")));
             assert_eq!(output.stdout, reference.stdout);
             let stats =
                 allocation_report::parse(std::str::from_utf8(&output.stderr).unwrap()).unwrap();

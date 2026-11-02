@@ -223,6 +223,5 @@ pub(super) fn lower(program: &Program) -> Program {
         }
     }
     result.funcs.extend(lower.made);
-    super::numeric_parameters::lower(&mut result);
     result
 }
