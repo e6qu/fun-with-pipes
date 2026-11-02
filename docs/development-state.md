@@ -69,5 +69,10 @@ The protocol now declares two adjacent columns per inner-loop iteration, followe
 by a scalar odd-column remainder. Keep byte-copy access, the original pointers,
 per-cell arithmetic order, polling and cleanup. Exposing this fixed pair might
 let GCC combine independent work; compiler diagnostics must establish that first.
-No production runtime or compiler source has changed. Preserve the protocol in a
-pushed commit/tag before implementing its exact source substitution.
+Protocol `9ca36c3c` and tag `roadmap/matrix-paired-column-protocol-2026-11-02`
+precede implementation. The diagnostic runner now requires `matrix_variant`
+(`original`, `restricted`, or `paired-columns`) and substitutes exactly the
+declared loop only in fwp matrix programs. Six C/array controls remain unchanged.
+Six archive/patch tests pass (0.13s); actionlint passes (5.55s); the protocol's
+roadmap audit passes (3.02s). No production runtime/compiler source has changed.
+Dispatch the paired-column diagnostic and audit both complete results next.
