@@ -32,8 +32,8 @@ noisy measurement for a pass or change runtime ownership without a demonstrated
 source-level need. [All four results](docs/measurements/array-consumption-2026-11-02/README.md)
 are now audited: preparation shifts page-fault work outside timing and narrows
 some copy differences, but does not resolve the original consumption regression.
-Next, freeze a comparison of the original driver, observation-only driver and
-zero-preparation driver to separate observer/call-context changes. Do not add
+Next, freeze the [three-driver comparison](docs/measurements/array-observation-boundaries.md)
+to separate observation changes from the complete preparation-capable driver. Do not add
 hidden warming or change runtime ownership. Apply a related matrix investigation
 only after declaring its scope.
 
