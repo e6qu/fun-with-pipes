@@ -12,6 +12,41 @@ existing reduction timer includes the input's final release; subtracting it from
 the inclusive timer does not isolate the allocator. Construction, filling,
 checksum and timer overhead remain mixed.
 
+## Diagnostic results: November 2, 2026
+
+[Both native jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/41427397530)
+pass at `d3ddc94d`: GCC 13.3 ARM64 and GCC 15.2 AMD64, O1 and O2. Each build
+checks 144 count/round/path combinations. Ordinary and profiled results agree,
+small interpreter cases pass, and omitted-release controls exit 219 as intended.
+[The retained index](array-construction-2026-11-02/index.json) includes complete
+logs, exact C, optimized GCC source, binaries, stack estimates and file hashes.
+Both full logs and every recorded file identity were audited.
+
+| Path | Workload allocations | Requested bytes | Effective retains | Final live charge |
+|---|---:|---:|---:|---:|
+| C driver builds an array, then compiled reduction consumes it | 1 | `8 + 8 * count` | 0 | 0 |
+| Compiled `make-input`, then the same reduction consumes it | 1 | `8 + 8 * count` | 0 | 0 |
+| Source `make-input round count` piped directly into `reduce64` | 0 | 0 | 0 | 0 |
+
+This holds for all six counts, including zero, on both compilers/optimization
+levels. The eight extra requested bytes are the materialized fwp array header.
+These workload counters exclude runtime initialization and do not measure total
+process RSS. The composed source is already fused: generated `w2` computes the
+result in a loop without constructing an array. It does less memory work than
+the materialized benchmark; the older inclusive ratio is not its performance.
+
+The materialized source still has a stack closure and generic callback dispatch.
+GCC's optimized source for `w0` retains `fwp_apply_borrowed_span` in its generation
+loop. `Gen::array_callback` currently specializes uncaptured callbacks or captures
+that need reference counting; all-scalar captures do not satisfy that predicate.
+This is a concrete candidate for investigation, not a measured speedup. Preserve
+checked integer operations, capture evaluation, callback effects and cleanup.
+Measure the source/driver boundary before changing that selection rule.
+
+The preceding run `41426573182` stopped on both hosts at source formatting;
+no native result was produced. Redundant parentheses were removed with the
+verified #243 formatter. Its failed logs remain in the retained directory.
+
 ## First step: source and storage diagnostic
 
 Publish this protocol before implementing the runner. Do not change production

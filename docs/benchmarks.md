@@ -524,3 +524,12 @@ into a status page. New budgets and required follow-ups are listed in
 [Generated REST/MCP server memory](measurements/server-entry-memory.md) defines
 the request counts, allocation boundaries, resident-memory limits and omitted-free
 control. It is a cleanup/space check, not a C/Rust timing comparison.
+
+## Source array construction versus benchmark inputs
+
+The [construction diagnostic](measurements/array-construction-costs.md#diagnostic-results-november-2-2026)
+checks the boundary behind the current array timings. C-driver and source-built
+materialized F64 arrays each make one workload allocation. In the fully composed
+fwp program, existing fusion removes that array: both GCC architectures show zero
+workload requests and retains at O1/O2. No elapsed-time claim follows from this
+count result; the old materialized-input ratio does not measure composed source.

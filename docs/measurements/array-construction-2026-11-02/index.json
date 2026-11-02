@@ -1,0 +1,303 @@
+{
+  "source": "d3ddc94d6eb8c5c58af74159051670241dd23e5b",
+  "run": 41427397530,
+  "jobs": [
+    {
+      "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/125217227607",
+      "completed_at": "2026-11-02T10:18:57Z",
+      "conclusion": "success",
+      "created_at": "2026-11-02T10:15:59Z",
+      "head_branch": "array-construction-costs",
+      "head_sha": "d3ddc94d6eb8c5c58af74159051670241dd23e5b",
+      "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41427397530/job/125217227607",
+      "id": 125217227607,
+      "labels": [
+        "ubuntu-latest"
+      ],
+      "name": "array_construction (ubuntu-latest, x86-64)",
+      "node_id": "CR_kwDOU33zxM8AAAAdJ4dDVw",
+      "run_attempt": 1,
+      "run_id": 41427397530,
+      "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/41427397530",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions",
+      "runner_id": 1000396858,
+      "runner_name": "GitHub Actions 1000396858",
+      "started_at": "2026-11-02T10:17:07Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completed_at": "2026-11-02T10:17:09Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "started_at": "2026-11-02T10:17:07Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T10:17:21Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v7",
+          "number": 2,
+          "started_at": "2026-11-02T10:17:09Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T10:17:22Z",
+          "conclusion": "success",
+          "name": "Run dtolnay/rust-toolchain@stable",
+          "number": 3,
+          "started_at": "2026-11-02T10:17:21Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T10:17:24Z",
+          "conclusion": "success",
+          "name": "Run actions/cache@v6",
+          "number": 4,
+          "started_at": "2026-11-02T10:17:22Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T10:18:38Z",
+          "conclusion": "success",
+          "name": "Build the production compiler for source diagnostics",
+          "number": 5,
+          "started_at": "2026-11-02T10:17:24Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T10:18:38Z",
+          "conclusion": "success",
+          "name": "Check construction evidence observers and source formatting",
+          "number": 6,
+          "started_at": "2026-11-02T10:18:38Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T10:18:53Z",
+          "conclusion": "success",
+          "name": "Compare constructed bits, composed work, storage and compiler reports",
+          "number": 7,
+          "started_at": "2026-11-02T10:18:38Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T10:18:55Z",
+          "conclusion": "success",
+          "name": "Retain complete diagnostics and partial failures",
+          "number": 8,
+          "started_at": "2026-11-02T10:18:53Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T10:18:55Z",
+          "conclusion": "success",
+          "name": "Post Run actions/cache@v6",
+          "number": 15,
+          "started_at": "2026-11-02T10:18:55Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T10:18:55Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v7",
+          "number": 16,
+          "started_at": "2026-11-02T10:18:55Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T10:18:55Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 17,
+          "started_at": "2026-11-02T10:18:55Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/125217227607",
+      "workflow_name": "Numerical and ownership evidence"
+    },
+    {
+      "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/125217227733",
+      "completed_at": "2026-11-02T10:21:24Z",
+      "conclusion": "success",
+      "created_at": "2026-11-02T10:15:59Z",
+      "head_branch": "array-construction-costs",
+      "head_sha": "d3ddc94d6eb8c5c58af74159051670241dd23e5b",
+      "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41427397530/job/125217227733",
+      "id": 125217227733,
+      "labels": [
+        "ubuntu-24.04-arm"
+      ],
+      "name": "array_construction (ubuntu-24.04-arm, armv8-a)",
+      "node_id": "CR_kwDOU33zxM8AAAAdJ4dD1Q",
+      "run_attempt": 1,
+      "run_id": 41427397530,
+      "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/41427397530",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions",
+      "runner_id": 1000396862,
+      "runner_name": "GitHub Actions 1000396862",
+      "started_at": "2026-11-02T10:18:59Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completed_at": "2026-11-02T10:19:01Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "started_at": "2026-11-02T10:19:00Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T10:19:13Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v7",
+          "number": 2,
+          "started_at": "2026-11-02T10:19:01Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T10:19:19Z",
+          "conclusion": "success",
+          "name": "Run dtolnay/rust-toolchain@stable",
+          "number": 3,
+          "started_at": "2026-11-02T10:19:13Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T10:19:20Z",
+          "conclusion": "success",
+          "name": "Run actions/cache@v6",
+          "number": 4,
+          "started_at": "2026-11-02T10:19:19Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T10:21:02Z",
+          "conclusion": "success",
+          "name": "Build the production compiler for source diagnostics",
+          "number": 5,
+          "started_at": "2026-11-02T10:19:20Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T10:21:02Z",
+          "conclusion": "success",
+          "name": "Check construction evidence observers and source formatting",
+          "number": 6,
+          "started_at": "2026-11-02T10:21:02Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T10:21:19Z",
+          "conclusion": "success",
+          "name": "Compare constructed bits, composed work, storage and compiler reports",
+          "number": 7,
+          "started_at": "2026-11-02T10:21:02Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T10:21:21Z",
+          "conclusion": "success",
+          "name": "Retain complete diagnostics and partial failures",
+          "number": 8,
+          "started_at": "2026-11-02T10:21:19Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T10:21:21Z",
+          "conclusion": "success",
+          "name": "Post Run actions/cache@v6",
+          "number": 15,
+          "started_at": "2026-11-02T10:21:21Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T10:21:21Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v7",
+          "number": 16,
+          "started_at": "2026-11-02T10:21:21Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T10:21:21Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 17,
+          "started_at": "2026-11-02T10:21:21Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/125217227733",
+      "workflow_name": "Numerical and ownership evidence"
+    }
+  ],
+  "records": [
+    {
+      "artifact": {
+        "id": 13132143987,
+        "node_id": "MDg6QXJ0aWZhY3QxMzEzMjE0Mzk4Nw==",
+        "name": "array-construction-ubuntu-latest",
+        "size_in_bytes": 2131928,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13132143987",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13132143987/zip",
+        "expired": false,
+        "digest": "sha256:e267ef8558572487be54434d28a50d66d2c759333d5c7d004f3cb12a4ae2152d",
+        "created_at": "2026-11-02T10:18:54Z",
+        "updated_at": "2026-11-02T10:18:54Z",
+        "expires_at": "2027-01-31T10:15:58Z",
+        "workflow_run": {
+          "id": 41427397530,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "array-construction-costs",
+          "head_sha": "d3ddc94d6eb8c5c58af74159051670241dd23e5b"
+        }
+      },
+      "report": "amd.json",
+      "archive": "amd.zip",
+      "log": "amd.log.gz"
+    },
+    {
+      "artifact": {
+        "id": 13132374453,
+        "node_id": "MDg6QXJ0aWZhY3QxMzEzMjM3NDQ1Mw==",
+        "name": "array-construction-ubuntu-24.04-arm",
+        "size_in_bytes": 2145358,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13132374453",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13132374453/zip",
+        "expired": false,
+        "digest": "sha256:71f941ebc6f8d1ef2d56513e8870b572ebb61caafb6a03188d2e26e5b06445d9",
+        "created_at": "2026-11-02T10:21:20Z",
+        "updated_at": "2026-11-02T10:21:20Z",
+        "expires_at": "2027-01-31T10:15:58Z",
+        "workflow_run": {
+          "id": 41427397530,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "array-construction-costs",
+          "head_sha": "d3ddc94d6eb8c5c58af74159051670241dd23e5b"
+        }
+      },
+      "report": "arm.json",
+      "archive": "arm.zip",
+      "log": "arm.log.gz"
+    }
+  ],
+  "precedingFailure": {
+    "run": 41426573182,
+    "source": "f97e8520a28e2c2c18249d84fcbc557f5264a7ee",
+    "jobs": [
+      125214520728,
+      125214521216
+    ],
+    "cause": "Redundant grouping rejected by source formatter before native diagnostics",
+    "logs": [
+      "arm-format-failure.log.gz",
+      "amd-format-failure.log.gz"
+    ]
+  }
+}
