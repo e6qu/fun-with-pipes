@@ -1,8 +1,20 @@
 # Current work
 
-**Next:** publish the completed matrix batch as the only active PR, then audit
-its nine final-head production jobs and documentation before squash merge. Keep
-all six failed timing controls visible; preserve this head while gates run.
+**Next:** monitor PR #244's nine final-head production jobs and documentation;
+audit failures and all completed diagnostics. Meanwhile implement the independent
+array-construction diagnostic under its published protocol. Keep #244's head
+unchanged unless a real CI repair is required; one active PR only.
+
+## Active delivery
+
+PR: https://github.com/e6qu/fun-with-pipes/pull/244
+Head: `555c4981695f4819586ef0a57114a36c2c9476ef`.
+Production: `41425537461`; docs: `41425537447`. Native Windows and Intel macOS
+jobs have started; the other jobs were queued at the last check. No failure yet.
+PR worktree: `/private/tmp/fwp-matrix-calculation`.
+Independent preparation: `array-construction-costs`, `/private/tmp/fwp-array-construction`.
+The [construction protocol](measurements/array-construction-costs.md) is frozen
+before its runner; no production change or new timing is selected.
 
 ## PR #243: verified delivery
 
@@ -27,7 +39,7 @@ report-generation source have remote retention tags; preserve them.
 | 2 | Verified | `41412675762` reproduces original binaries on both GCC architectures |
 | 3 | Verified | Paired-loop diagnostic `41416927586`; safety run `41417716203` passes GCC ARM64/AMD64 and Clang ARM64 |
 | 4 | Verified | All four sessions and three host rejections retained; raw audit `41422907313` passes; six timing controls remain open |
-| 5 | In progress | Frame table repaired and regenerated; publish one coherent PR, pass final-head gates, verify squash merge |
+| 5 | In progress | PR #244 published; production/docs running; audit and verify squash merge |
 
 The runtime processes two neighboring output columns together, preserving each
 cell's multiplication/addition order, byte-copy access, shared input views,

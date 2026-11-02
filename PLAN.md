@@ -55,7 +55,8 @@ ARM64 array allocation-through-cleanup costs 24–31% more than C despite a fast
 reduction loop. This includes a C driver's fwp-runtime calls, not source-compiled
 `array.generate`. After the matrix task, compare both input-construction paths
 and separate filling from allocator/cleanup time in a declared measurement before
-selecting any compiler change.
+selecting any compiler change. The [construction protocol](docs/measurements/array-construction-costs.md)
+starts with source/storage diagnostics, including a fully composed fwp program.
 
 ## Open performance goals
 
