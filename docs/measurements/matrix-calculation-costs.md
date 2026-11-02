@@ -161,3 +161,17 @@ Retain all binaries, outputs and compiler remarks. Full compiler/interpreter,
 partial-overlap, floating-edge and unwind probes are required before timing a
 candidate selected for the runtime. The declared 5%/2% speed/noise rules above
 still apply; diagnostic durations do not count toward them.
+
+### Paired-column compiler result
+
+Run `41416927586` at `15e8d0e6` passes both native jobs. Both GCC versions now
+vectorize the paired matrix loop with 16-byte vectors; the odd-column remainder
+remains scalar. This is loop vectorization, not the basic-block route originally
+hypothesized. All eight outputs agree, and the six C/array controls reproduce
+their original binaries. [Archives and full logs](matrix-paired-columns-2026-11-02/index.json)
+retain the source, binaries and compiler decisions.
+
+Select this exact paired loop for correctness/cleanup checks, then measurement.
+Vectorization alone does not establish a speedup. Keep the old single-column
+loop as the same-source comparison; no other runtime/compiler change is allowed
+between the two timed implementations.
