@@ -22,7 +22,7 @@ def observations():
 
 
 def result_row():
-    row = summarize(observations(), 4)
+    row = summarize(observations(), 4, METRICS)
     profile = [dict(requests=8, requestedBytes=1024, retains=0, peakChargedBytes=128) for _ in range(5)]
     row['profiles'] = dict(fwp=copy.deepcopy(profile), reference=copy.deepcopy(profile))
     return row
@@ -48,7 +48,7 @@ class CurrentKernelCosts(unittest.TestCase):
     def test_totals_exclude_warmups_and_use_all_samples(self):
         records = observations()
         records[0]['observations'][0]['samples'][0]['kernelNs'] = 999999
-        row = summarize(records, 4)
+        row = summarize(records, 4, METRICS)
         self.assertEqual(row['totals']['fwp']['kernelNs'], [1600] * 18)
         self.assertEqual(row['totals']['reference']['kernelNs'], [2000] * 18)
         self.assertEqual(row['ratios']['reference']['kernelNs'], 0.8)
@@ -70,7 +70,7 @@ class CurrentKernelCosts(unittest.TestCase):
             else:
                 records[-1]['phase'] = 'warmup'
             with self.subTest(change=change), self.assertRaises(AssertionError):
-                summarize(records, 4)
+                summarize(records, 4, METRICS)
 
     def test_both_noise_controls_and_each_timing_scope_are_required(self):
         for role in ('fwp', 'reference'):

@@ -154,6 +154,7 @@ jobs:
           python3 scripts/test-current-kernel-report.py
           python3 scripts/test-kernel-codegen-input.py
           python3 scripts/test-array-construction.py
+          python3 scripts/test-array-construction-phases.py
           python3 scripts/check-array-construction.py --directory docs/measurements/array-construction-2026-11-02
           python3 scripts/report-current-kernels.py --directory docs/measurements/current-kernels-2026-11-02 --comparison loop-state --mode check
           python3 scripts/report-current-kernels.py --directory docs/measurements/matrix-columns-2026-11-02 --comparison matrix-columns --mode check
