@@ -169,6 +169,7 @@ def check_directory(directory, source, machine, session):
             raw = (case_dir / info['path']).read_bytes()
             assert len(raw) == info['bytes'] and digest(raw) == info['sha256']
             assert 0 < info['instructionBytes'] <= len(raw)
+            assert PATCH.instruction_bytes(raw, machine) == info['instructionBytes']
             label, mode = image.split('-', 1)
             build = commands[f'{case}/{label}-{mode}-build']['command']
             if label == 'rust':

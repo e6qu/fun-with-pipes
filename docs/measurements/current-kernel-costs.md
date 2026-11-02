@@ -101,8 +101,9 @@ retains/releases, peak/final managed charge and process RSS. C/Rust payload byte
 fwp allocator charge and RSS measure different things; report them separately.
 Each program must restore its pre-operation live storage and release owners at
 shutdown. A deliberately missing release must fail the observer. Save code-section
-size, executable identity and static stack reports without using size as a speed
-criterion. Retain actual binaries and inspect collector-symbol absence.
+size, executable identity and GCC static stack reports for C/fwp without using
+size as a speed criterion. These are compiler frame estimates, not measured stack
+high-water usage; Rust frame sizes are not measured here. Retain actual binaries and inspect collector-symbol absence.
 
 ## Decision rules
 
@@ -149,3 +150,11 @@ only three roles. The explicit `(round + block) % 6` rule above fixes that bias.
 Work counts, timing boundaries and decision limits are unchanged. Preparation
 `818731e3` and tag `roadmap/current-kernel-costs-protocol-2026-11-02` retain the
 initial text; this correction is recorded before execution.
+
+Run the measurements with `suite=current-kernels`, explicit `native_runner` and
+`comparison_session` in `numerics.yml`. After the selected jobs finish,
+`suite=current-kernel-report` downloads the exact runs listed in
+[current-kernel-selection.json](current-kernel-selection.json), audits raw streams,
+binaries, source patches and both controls, and preserves all earlier rejected
+hosts and failed reference checks. A performance miss stays in the report; it
+does not cause the audit to discard a session.
