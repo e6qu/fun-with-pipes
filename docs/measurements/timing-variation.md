@@ -150,7 +150,7 @@ implementing this declared count. A further failure stays inconclusive: do not
 increase counts again after seeing those outcomes or discard old results.
 This repair changes measurement precision, not the programs or D2's limits.
 
-## Expanded result and next source investigation
+## Expanded result and original source investigation
 
 The declared four-session run `40951090783` at `37da7441` is fully audited.
 Small-matrix controls pass in all four sessions. AMD session 2 instead fails
@@ -165,11 +165,11 @@ passing controls in both sizes and sessions. Source inspection shows an F64
 accumulator carried through a generic 64-bit loop-state array. That observation
 is a hypothesis about extra register transfers, not a demonstrated cause.
 
-Before selecting an optimization, compile the retained C and fwp timing sources
-for all four cases on native ARM64/AMD64 with the matching GCC version and
-explicit original architecture/O2 settings. Add only GCC's vectorization report and optimized-tree dump options.
-Require the rebuilt executable's hash to match its recorded ordinary binary
-and verify every output hash/live-storage result.
+The original investigation compiled the retained C and fwp timing sources for
+all four cases on native ARM64/AMD64 with matching GCC and the original
+architecture/O2 settings. It added only vectorization and optimized-tree reports,
+requiring each rebuilt executable to match the recorded binary hash and each
+output/live-storage result to agree. The completed reports are below.
 
 Preserve the source, commands,
 compiler reports, binaries and outputs. This is compiler inspection, not another
@@ -208,9 +208,11 @@ Known F32/F64 loop fields now use C `float`/`double` members, with bit-preservin
 conversions at generic boundaries. Other fields keep ordinary value words.
 Field evaluation order, current/next state separation, owner transfers and
 cancellation cleanup are unchanged; arithmetic is not reassociated or fused.
-The results below verify representation and correctness. N2 still needs declared
-timing/code/stack budgets and a qualified allocation-inclusive comparison;
-D2's failed zero-update timing requirement also remains open.
+The results below verify representation and correctness. The later
+[current comparison](current-kernel-costs.md#results-november-2-2026) supplies
+explicit timing rules and memory/code observations: ARM misses its speed target,
+and AMD retains failed copy controls. D2's failed zero-update timing requirement
+also remains open.
 
 ### Typed-state results
 
