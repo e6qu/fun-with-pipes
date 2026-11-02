@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Disable numeric-parameter rewriting and numeric packed-map inputs only."""
+"""Prepare an explicit numeric-input or combined callback-owner comparison."""
 import argparse
 import hashlib
 import json
@@ -20,13 +20,27 @@ CHANGES = {
     ),
 }
 
+COMPLETE_TRANSFER = (
+    '        if let Some(rest) = self.bind_field_transfers(l, v, body) {\n',
+    '        if let Some(rest) = if false { self.bind_field_transfers(l, v, body) } else { None } {\n',
+)
+SCOPES = {
+    'numeric-inputs': 'numeric internal parameters and numeric packed-map input preparation',
+    'callback-owners': 'complete field transfers and numeric callback input owners',
+}
 
-def reference_sources(current):
+
+def reference_sources(current, scope):
+    assert scope in SCOPES
     assert set(current) == set(CHANGES)
     result = {}
     for path, (candidate, reference) in CHANGES.items():
         assert current[path].count(candidate) == 1 and reference not in current[path], path
         result[path] = current[path].replace(candidate, reference)
+    if scope == 'callback-owners':
+        candidate, reference = COMPLETE_TRANSFER
+        assert result['src/cgen.rs'].count(candidate) == 1 and reference not in result['src/cgen.rs']
+        result['src/cgen.rs'] = result['src/cgen.rs'].replace(candidate, reference)
     return result
 
 
@@ -40,13 +54,14 @@ def main():
     stage.add_argument('--checkout', type=Path)
     stage.add_argument('--verify', type=Path)
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--scope', choices=tuple(SCOPES), required=True)
     args = parser.parse_args()
     checkout = (args.checkout or args.verify).resolve()
     subprocess.run(['git', 'diff', '--exit-code', 'HEAD'], cwd=ROOT, check=True)
     source = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
     assert subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=checkout, text=True).strip() == source
     current = {path: (ROOT / path).read_text() for path in CHANGES}
-    expected = reference_sources(current)
+    expected = reference_sources(current, args.scope)
     if args.checkout:
         subprocess.run(['git', 'diff', '--exit-code', 'HEAD'], cwd=checkout, check=True)
         args.output.mkdir(parents=True, exist_ok=False)
@@ -64,7 +79,7 @@ def main():
         assert (checkout / path).read_bytes() == data
         untouched[path] = digest(data)
     manifest = dict(source=source,
-                    disabledTransformation='numeric internal parameters and numeric packed-map input preparation',
+                    disabledTransformation=SCOPES[args.scope], scope=args.scope,
                     files={path: dict(candidateSha256=digest(current[path].encode()),
                                       referenceSha256=digest(expected[path].encode())) for path in CHANGES},
                     unchanged=untouched, patchSha256=digest(patch))

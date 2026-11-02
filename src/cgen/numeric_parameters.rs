@@ -516,6 +516,41 @@ mod tests {
     }
 
     #[test]
+    fn source_fixture_reaches_internal_numeric_parameter_lowering() {
+        crate::driver::with_big_stack(|| {
+            let source = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("tests/fixtures/numeric_callback_inputs.fwp");
+            let (_, mut program) = crate::driver::compile_file(
+                &source,
+                crate::mono::Roots {
+                    main: true,
+                    ..Default::default()
+                },
+            )
+            .unwrap_or_else(|failure| panic!("{}", failure.rendered));
+            let candidates: Vec<_> = program
+                .funcs
+                .iter()
+                .enumerate()
+                .filter(|(_, function)| shape(&program, function).is_some())
+                .map(|(id, function)| (id, function.ty.clone()))
+                .collect();
+            assert!(
+                !candidates.is_empty(),
+                "fixture must keep a nested internal call"
+            );
+            lower(&mut program, &[]);
+            assert!(
+                candidates
+                    .iter()
+                    .any(|(id, ty)| program.funcs[*id].ty != *ty),
+                "fixture must reach numeric parameter rewriting: {program:#?}"
+            );
+            crate::ir::check_locals(&program).unwrap();
+        });
+    }
+
+    #[test]
     fn numeric_aliases_and_all_direct_callers_change_together() {
         let mut program = example();
         crate::ir::check_locals(&program).unwrap();

@@ -81,6 +81,25 @@ Retained evidence: [counts](numeric-input-checks-2026-11-03/initial-counts.json.
 complete logs [ARM64](numeric-input-checks-2026-11-03/arm-initial.log.gz) /
 [AMD64](numeric-input-checks-2026-11-03/amd-initial.log.gz).
 
+### Follow-up selection failure
+
+[Run 41545062127](https://github.com/e6qu/fun-with-pipes/actions/runs/41545062127)
+on `1075628e5032ccf7e4f17afb882fada81088c581` passes all nine unit controls and
+38 native checks per host. The same source fixture still rejects selection under
+both GCC and Clang: its nested callee keeps its boxed signature. Saved C and
+executables confirm that the program runs, but the required transformation is
+absent. Do not treat this as passing coverage.
+
+Both full job logs and all 20 target logs are audited with no additional failures.
+All 96 counts pass again, now with exact map → forwarding worker → numeric callee
+attribution. The fixture is being made local, with a source-to-IR eligibility
+check and a short selection-only runner before repeating broader validation.
+
+Evidence: [counts and sites](numeric-input-checks-2026-11-03/repair-counts.json.gz),
+[artifacts](numeric-input-checks-2026-11-03/repair-artifacts.json), full logs
+[ARM64](numeric-input-checks-2026-11-03/arm-repair.log.gz) /
+[AMD64](numeric-input-checks-2026-11-03/amd-repair.log.gz).
+
 ## Where the remaining operations occur
 
 The retained baseline is compiler `a4f3200c9b97b955c3f3603788eacbfac19fde4e`,

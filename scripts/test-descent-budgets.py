@@ -31,6 +31,26 @@ class DescentBudgets(unittest.TestCase):
                 row['cCompilerStackUsage'][name + '.su'] = dict(entries=[dict(bytes=64)])
         return row
 
+    def test_callback_owner_limits_require_combined_savings_and_original_timing(self):
+        for updates in (0, 1, 199):
+            row = self.recording_case(updates)
+            row['medianNs']['fwp-ad-identical'] = 95 if updates >= 199 else 100
+            for label in ('fwp-ad', 'fwp-ad-history'):
+                row['medianNs'][label] = 95 if updates >= 199 else 100
+                candidate = row['fwpProfiles'][label]['managed']
+                reference = row['fwpProfiles'][label + '-reference']['managed']
+                reference.update(retains=10000, requests=10000, requestedBytes=400000)
+                candidate.update(reference, retains=10000 - 6 * updates)
+            self.assertEqual(DESCENT.paired_budget_failures({'case': row}, 'callback-owners'), [])
+            changed = copy.deepcopy(row)
+            changed['fwpProfiles']['fwp-ad']['managed']['retains'] += 1
+            self.assertIn('retains', [failure['metric'] for failure in
+                DESCENT.paired_budget_failures({'case': changed}, 'callback-owners')])
+            changed = copy.deepcopy(row)
+            changed['medianNs']['fwp-ad-history'] = 96 if updates >= 199 else 103
+            self.assertEqual([failure['metric'] for failure in
+                DESCENT.paired_budget_failures({'case': changed}, 'callback-owners')], ['candidate/reference time'])
+
     def test_recording_limits_accept_boundaries_without_changing_observations(self):
         rows = {str(updates): self.recording_case(updates) for updates in [0, 1]}
         rows['1']['binaries']['fwp-ad']['instructionBytes'] += 1024

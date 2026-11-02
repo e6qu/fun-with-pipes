@@ -1,7 +1,7 @@
 # Current work
 
-**Next:** publish the batched numeric-input repairs and run `numeric-input-checks`,
-then audit all logs and count results. Continue with independent site attribution,
+**Next:** publish and run the short `numeric-input-selection` probe. Read the
+source-to-IR selection result before repeating `numeric-input-checks` on both hosts. Continue with independent site attribution,
 compiler-cost measurements and combined timings in this same substantial batch.
 [PLAN.md](../PLAN.md) is the task list; no delivery PR is open.
 
@@ -9,8 +9,8 @@ compiler-cost measurements and combined timings in this same substantial batch.
 
 - Worktree `/private/tmp/fwp-array-consumption`, branch `numeric-owner-transfers`;
   primary checkout untouched. Base: verified #248 merge `31e4e25b`.
-- Published candidate `043fcc1cfc1205cb3141f2da5b10b6824f6c7c28`, immutable tag
-  `roadmap/numeric-callback-input-checks-2026-11-03`.
+- Published candidate `1075628e5032ccf7e4f17afb882fada81088c581`; initial source
+  `043fcc1c` is retained by `roadmap/numeric-callback-input-checks-2026-11-03`.
 - Numeric protocol `9a4129be`, tag
   `roadmap/numeric-callback-input-protocol-2026-11-03`, published before code.
 - Stage 1 measured source `ceecb569c6748a226ec6ddebc417dc16351490e9`, tag
@@ -22,42 +22,52 @@ compiler-cost measurements and combined timings in this same substantial batch.
 | Step | Status | Remaining work |
 |---|---|---|
 | 1 | Verified | Preserve complete-field transfer regression coverage |
-| 2 | In progress | Two invalid test assumptions; rerun focused correctness checks |
-| 3 | In progress | Independent input-site attribution and compiler time/RSS experiment |
+| 2 | In progress | Native fixture still excludes its nested callee; diagnose in short selection probe |
+| 3 | In progress | Exact input sites audited; compiler experiment runner and controls ready |
 | 4 | Pending | Two qualified runtime sessions per architecture |
 | 5 | Pending | One substantial PR, nine final production gates, docs and verified squash |
 
 ## Current checks and repairs
 
-[Run 41542603016](https://github.com/e6qu/fun-with-pipes/actions/runs/41542603016)
-uses `043fcc1c`: ARM64 job `125610247675`, AMD64 `125610248078`. Both finished
-with failures. Build/lint pass; each host has 46 passing checks and three failures.
-All 20 target logs and both complete job logs are audited. No other warnings or
-failures. [Failure details and retained evidence](measurements/derivative-owner-transfers.md#initial-numeric-input-checks).
+[Run 41545062127](https://github.com/e6qu/fun-with-pipes/actions/runs/41545062127)
+on `1075628e` has completed: ARM64 job `125618544720`, AMD64 `125618545152`.
+All nine unit controls and 38 native tests pass per host. Only the new native
+fixture fails, under both GCC and Clang: its nested callee stays boxed. Both full
+job logs and all 20 target logs are audited; no other diagnostics.
+[Failure history and evidence](measurements/derivative-owner-transfers.md#follow-up-selection-failure).
 
-Repairs in this checkout:
+Saved C confirms that the polynomial survives inlining but is excluded from
+numeric rewriting. The fixture now uses a local callee. A new source-to-IR unit
+check reports the program if it is still excluded; `numeric-input-selection`
+runs on one ARM runner with the unit controls and this native case only. It
+skips unrelated tests and counts. Do not call this repaired until that probe passes.
 
-- Replace the invalid cached-function unit fixture with a named-entry exclusion.
-- Keep the native nested-input callee above the ordinary inlining limit with a
-  polynomial; assert its changed signature without relying on its internal name.
-  Save native evidence before selection assertions.
-- Move numeric rewriting out of packed lowering, without another program clone,
-  so the old packed-storage comparison still disables only its own transformation.
-- Exclude explicit execution entries and constant function references. Check
-  numeric argument leaf types before rewriting all callers.
-- Split unit steps; publish diagnostic logs before counts finish.
-- Add same-source numeric comparison preparation and rejection controls. It disables
-  only numeric rewriting/new packed-input eligibility, preserving stage 1.
+Both repaired-run count archives independently pass all 96 observations and exact
+map → forwarding worker → numeric callee attribution (2.67s ARM / 2.68s AMD).
+Largest solve: 51,939 → 995 retains, unchanged allocations/peak/raw storage, final
+zero. These results do not settle the failed source fixture or elapsed time.
+Archives `/private/tmp/fwp-numeric-input-{counts,checks}-repair-{arm,amd}.zip`;
+full logs `/private/tmp/fwp-numeric-input-repair-{arm,amd}.log`.
+Artifacts: ARM counts `13189336539`, checks `13188243498`; AMD counts `13187853020`,
+checks `13189181407`. Auditor `/private/tmp/fwp-audit-numeric-input-repair.py`.
+All evidence is retained under `docs/measurements/numeric-input-checks-2026-11-03/`.
 
-Both initial count archives independently pass all 96 observations, manifests,
-binary headers, output, storage, work and frame checks (1.94s AMD / 1.93s ARM).
-Largest solve: 51,939 → 995 retains, same allocations/peak/raw storage, final zero.
-These counts do not establish full correctness or elapsed-time acceptance.
-Archives: `/private/tmp/fwp-numeric-input-{counts,checks}-initial-{arm,amd}.zip`.
-Artifacts: ARM counts `13188011073`, checks `13187363969`; AMD counts `13187274104`,
-checks `13187423422`. Full logs `/private/tmp/fwp-numeric-input-initial-{arm,amd}.log`.
-Auditor `/private/tmp/fwp-audit-numeric-input-initial.py`; source evidence retained
-under `docs/measurements/numeric-input-checks-2026-11-03/`.
+The earlier repair separated numeric rewriting from packed lowering without
+another program clone, excluded explicit execution/constant-function entries,
+checked numeric leaf types, fixed the invalid cached-function fixture and saved
+native probes before assertions. These controls now pass.
+
+Measurement preparation in this checkout:
+
+- Exact-site auditor: 14 controls pass (13.43s); both native archives audited.
+- Reference preparation requires explicit `--scope numeric-inputs` (compiler
+  experiment) or `--scope callback-owners` (combined runtime). Four controls pass.
+- `numeric-input-analysis` builds both compilers at production O1 settings after
+  matching-source safety jobs pass. Five cases, two copies each, two warmups,
+  ten balanced rounds; fixed 2% copy and 5% time/RSS limits. Six synthetic controls
+  include complete schedules and retained partial timeout evidence (0.26s).
+- Combined runtime count/time policy is added to the existing driver; 13 budget
+  controls pass (0.14s). Runtime workflow wiring and experiment dispatch remain.
 
 ## Implementation and remaining proof
 
@@ -74,8 +84,8 @@ pair has at most one boxed parameter to prepare, avoiding stranded partial
 preparation. Existing failure, cancellation, allocation-failure and deliberately
 missing physical-release controls now cover numeric inputs too.
 
-Remaining: final exclusion/cleanup review; independently attribute both removed
-mapper input sites; build/verify the same-source comparison; measure compiler
+Remaining: resolve fixture selection and review exclusions/cleanup;
+build/verify the same-source comparison; measure compiler
 elapsed time/RSS under the frozen 5% limits; then paired complete-solve timings
 (two sessions per host, 2% copy/regression and 5% large-case limits). Preserve all
 samples and failures; do not repeat unchanged noisy timings for a pass.
@@ -103,11 +113,11 @@ Large cases use 5.1–14.2% less time; AMD64 zero-update history remains 2.024% 
 
 ## Local checks and resources
 
-Latest repair checks: Rust formatting passes (1.94s), fixture formatting passes
+Latest repair checks: Rust formatting passes (1.92s), fixture formatting passes
 (0.01s); baseline C emission confirms a surviving nested callee (0.26s). These
 baseline-compiler checks do not validate the new lowering. Both reference-control suites pass (three each, 0.14s / 0.13s); workflow lint
-passes (6.24s). The handoff uses the audit’s permitted status labels.
+passes (6.13s). The handoff uses the audit’s permitted status labels.
 
 No local full build, suite or benchmark. Use `python3 scripts/local-guard.py`
-serially. Last free disk: 65 GiB, no local target data. Keep 64 GiB free, workload
+serially. Last free disk: 66 GiB, no local target data. Keep 64 GiB free, workload
 RSS below 1 GiB and the fixed 180-second deadline; move refused work to runners.

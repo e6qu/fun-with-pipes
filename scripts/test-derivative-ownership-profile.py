@@ -296,6 +296,44 @@ static fwp_wr124 w124(V l0_0, V l0_1) {
         zero = SUMMARY.field_owner_sites(code, dict(ownership=[]), {'0': dict(ownership=[])}, 0)
         self.assertEqual(zero['counts']['0']['mapperInputs'], 0)
 
+    def test_numeric_input_sites_require_the_complete_direct_call_chain(self):
+        code = """static V f9(V l0, V l1) {
+    /* Eager packed numeric records: finish mapping before folding. */
+    fwp_wr164 mapped = w164(fwp_f64(OBJ(arguments[0])->f[0]),
+        (int64_t)(OBJ(arguments[0])->f[1]), fwp_f64(OBJ(arguments[1])->f[0]),
+        (int64_t)(OBJ(arguments[1])->f[1]));
+}
+static fwp_wr164 w164(double al0_0, int64_t al0_1, double al1_0, int64_t al1_1) {
+    fwp_wr124 t1 = w124(al1_0, al1_1, al0_0, al0_1);
+}
+/* fn : (F64, I64, F64, I64) -> Rev[F64] */
+static fwp_wr124 w124(double al0_0, int64_t al0_1, double al0_2, int64_t al0_3) {
+    return (fwp_wr124){al0_0, al0_1};
+}
+"""
+        sites = dict(ownership=[])
+        observations = {'0': dict(ownership=[]), '1': dict(ownership=[])}
+        before = dict(counts={mode: dict(mapperInputs=14, separatedFieldTransfer=0)
+                             for mode in observations})
+        result = SUMMARY.numeric_input_sites(code, sites, observations, before, 7)
+        self.assertEqual(result['counts']['0']['removedMapperInputs'], 14)
+        for old, new in [('w164(fwp_f64', 'w165(fwp_f64'),
+                         ('w124(al1_0', 'w125(al1_0'),
+                         ('double al0_2', 'V al0_2'),
+                         ('OBJ(arguments[1])->f[1]', 'OBJ(arguments[0])->f[1]'),
+                         ('    return ', '    fwp_rc_dup(l0); return '),
+                         ('    return ', '    fwp_drop3(l0); return '),
+                         ('    fwp_wr164 mapped', '    fwp_args164(arguments, 0, 2);\n    fwp_wr164 mapped')]:
+            with self.subTest(old=old), self.assertRaises((AssertionError, ValueError)):
+                SUMMARY.numeric_input_sites(code.replace(old, new), sites, observations, before, 7)
+        for caller in ('f9', 'w164', 'w124'):
+            changed = dict(ownership=[dict(operation='dup', caller=caller)])
+            with self.assertRaises(AssertionError):
+                SUMMARY.numeric_input_sites(code, changed, observations, before, 7)
+        before['counts']['1']['mapperInputs'] = 13
+        with self.assertRaises(AssertionError):
+            SUMMARY.numeric_input_sites(code, sites, observations, before, 7)
+
 
 if __name__ == '__main__':
     unittest.main()

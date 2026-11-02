@@ -80,6 +80,43 @@ def field_owner_sites(code, sites, observations, pairs):
     return dict(callback=callback, projection='w' + number, counts=counts)
 
 
+def numeric_input_sites(code, sites, observations, previous, pairs):
+    """Follow map -> forwarding worker -> numeric callee; check removed owners."""
+    marker = '/* Eager packed numeric records: finish mapping before folding. */'
+    assert code.count(marker) == 1
+    start = code.index(marker)
+    end = code.index('\n}\n', start)
+    mapping = code[start:end]
+    assert 'fwp_args' not in mapping and 'fwp_rc_dup(' not in mapping
+    reads = re.findall(r'OBJ\(arguments\[([01])\]\)->f\[([01])\]', mapping)
+    assert reads == [('0', '0'), ('0', '1'), ('1', '0'), ('1', '1')], reads
+    callback, = re.findall(r'fwp_wr(\d+) mapped = w\1\(', mapping)
+    signature = r'double al0_0, int64_t al0_1, double al1_0, int64_t al1_1'
+    forward, = re.findall(r'static fwp_wr' + callback + r' w' + callback
+                         + r'\(' + signature + r'\) \{([\s\S]*?)\n}', code)
+    workers = re.findall(r'/\* fn : \(F64, I64, F64, I64\) -> Rev\[F64\] \*/\n'
+                         r'static fwp_wr(\d+) w\1\(double al0_0, int64_t al0_1, '
+                         r'double al0_2, int64_t al0_3\) \{([\s\S]*?)\n}', code)
+    selected_workers = [(number, body) for number, body in workers
+                        if re.search(r'\bw' + number + r'\(', forward)]
+    assert len(selected_workers) == 1, selected_workers
+    number, body = selected_workers[0]
+    for text in (forward, body):
+        assert 'fwp_rc_dup(' not in text and 'fwp_args' not in text
+        assert not re.search(r'fwp_drop\d+\(', text)
+    line = code[:start].count('\n') + 1
+    mapper, = [name for first, last, name in CALLERS.caller_lines(code) if first <= line <= last]
+    selected = {mapper, 'w' + callback, 'w' + number}
+    assert not [site for site in sites['ownership']
+                if site['operation'] == 'dup' and site['caller'] in selected]
+    assert set(previous['counts']) == set(observations)
+    counts = {}
+    for mode in observations:
+        assert previous['counts'][mode] == dict(mapperInputs=2 * pairs, separatedFieldTransfer=0)
+        counts[mode] = dict(mapperInputs=0, separatedFieldTransfer=0, removedMapperInputs=2 * pairs)
+    return dict(mapper=mapper, callback='w' + callback, callee='w' + number, counts=counts)
+
+
 def audit(path, source, machine, comparison, baseline):
     with zipfile.ZipFile(path) as archive:
         report = json.loads(archive.read('report.json'))
@@ -168,6 +205,11 @@ def audit(path, source, machine, comparison, baseline):
                         cases[name]['fieldOwners'] = field_owner_sites(
                             archive.read(root + 'ownership-base.c').decode(), active_sites,
                             observations, (dimensions - 1) * updates)
+                    if comparison == 'numeric-inputs':
+                        cases[name]['numericInputs'] = numeric_input_sites(
+                            archive.read(root + 'ownership-base.c').decode(), active_sites,
+                            observations, baseline['hosts'][machine]['cases'][name]['fieldOwners'],
+                            (dimensions - 1) * updates)
         failures = []
         if baseline is not None:
             failures = MEASURE.comparison_failures(report, baseline, comparison)

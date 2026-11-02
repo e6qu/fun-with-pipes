@@ -1,25 +1,25 @@
 Point = { index: I64, value: F64 }
-rec combine : (Point, Point) -> Point ! {IO}
-combine = fn (left, right) ->
-    let printed = left | .index | echo
-    # A polynomial keeps this internal call above the ordinary inlining limit.
-    # Both records are still used only through their numeric fields.
-    in let x = left | .value
-    in let coefficient = right | .value
-    in let p1 = coefficient * x + coefficient
-    in let p2 = p1 * x + coefficient
-    in let p3 = p2 * x + coefficient
-    in let p4 = p3 * x + coefficient
-    in let p5 = p4 * x + coefficient
-    in let p6 = p5 * x + coefficient
-    in let p7 = p6 * x + coefficient
-    in let p8 = p7 * x + coefficient
-    in Point {
-        index = (left | .index) + (right | .index),
-        value = p8,
-    }
 paired : Point -> Point -> Point ! {IO}
-paired = fn right -> fn left -> combine (left, right)
+paired = fn right -> fn left ->
+    let combine = fn (xpoint, ypoint) ->
+        let printed = xpoint | .index | echo
+        # A polynomial keeps this internal call above the ordinary inlining limit.
+        # Both records are still used only through their numeric fields.
+        in let x = xpoint | .value
+        in let coefficient = ypoint | .value
+        in let p1 = coefficient * x + coefficient
+        in let p2 = p1 * x + coefficient
+        in let p3 = p2 * x + coefficient
+        in let p4 = p3 * x + coefficient
+        in let p5 = p4 * x + coefficient
+        in let p6 = p5 * x + coefficient
+        in let p7 = p6 * x + coefficient
+        in let p8 = p7 * x + coefficient
+        in Point {
+            index = (xpoint | .index) + (ypoint | .index),
+            value = p8,
+        }
+    in combine (left, right)
 mixed : Point -> Point -> Point ! {IO}
 mixed = fn right -> fn left ->
     let printed = right | echo

@@ -24,8 +24,9 @@ opportunity, not a promised reduction or speedup.
 Step 1's first native checks exposed an index tied to the wrong expression tree.
 The repair uses the exact emitted body and passes both native GCC/Clang suites
 and all 96 count audits. It removes exactly one retain per differentiated pair.
-Step 2 passes all 96 count audits; its first focused run found two incorrect
-test fixtures. Repair and rerun the focused correctness checks before accepting it. Run focused checks while
+Step 2 passes all 96 count and exact-site audits. Its unit controls pass; the
+new native fixture still excludes its nested callee. Diagnose this in the short
+selection probe, then rerun focused correctness checks before accepting it. Run focused checks while
 implementing; complete the full platform matrix once the related batch is ready.
 
 ## Open performance goals
