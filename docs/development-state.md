@@ -1,53 +1,46 @@
 # Current work
 
-**Next:** finish auditing PR #246's exact-head CI and squash merge when all gates
-pass. Production run `41478753238`, documentation `41478745298`, source
-`44626348b71bf3af1aa16030aae1e7976cb26c37`. Do not change that passing head.
+**Next:** publish the completed driver-comparison batch as one PR, then audit all
+nine production jobs and documentation for its exact final head before squash
+merge. No further diagnostic timing is needed; all four declared sessions passed
+native controls and independent full-archive audit. Original timing goals remain open.
 
-## Final PR #246 gates
+## Branch and delivery
 
-| Gate | Status / audit |
-|---|---|
-| Documentation | Passed; full log and intentional runner failures audited |
-| C/Rust benchmarks | Passed; full log audited |
-| macOS ARM64 regular | Passed; full log, 131 targets / 650 tests audited |
-| macOS ARM64 ownership | Passed; full log, 126 targets / 379 tests audited |
-| macOS AMD64 ownership | Passed; full log, 126 targets / 379 tests audited |
-| Windows ARM64 | Passed; full log: 206 passing summaries / 853 tests; native archive: 57 logs / 428 tests |
-| macOS AMD64 regular | Passed; full log, 131 targets / 650 tests audited |
-| Linux ARM64 | Passed; full log, 257 targets / 1,034 tests audited |
-| Linux AMD64 | Running; no reported failed step |
-| Windows AMD64 | Passed; full log: 206 passing summaries / 853 tests; native archive: 57 logs / 428 tests |
+- Worktree `/private/tmp/fwp-array-consumption`, branch
+  `array-observation-diagnostics`, now rebased onto verified main `7e48e438`.
+  The primary checkout remains untouched. Keep one active PR.
+- [PR #246](roadmap-history.md#array-preparation-diagnostic-pr-246) merged as
+  `7e48e438d3b78ea357017a0cd1adae26a85fb0a0`, after all nine production jobs
+  (`41478753238`) and documentation (`41478745298`) passed at `44626348`.
+  Every full job/target log is audited. Tree `dd953092b6d9c0945ef1fc687220efa2a2939326`
+  matches the tested head; the raw squash message is one 61-character line, with
+  no body/trailers. Duplicate main checks `41495751007` / `41495750634` were cancelled.
+- Audit logs, metadata and helpers remain under `/private/tmp/fwp-246-*`.
+  Both Linux archives cover 257 targets / 1,034 tests; each macOS architecture
+  covers 131 regular targets / 650 tests and 126 ownership targets / 379 tests.
+  Each complete Windows job reports 853 passing tests. Existing ignored runner
+  measurements and Windows' two POSIX-PTY SDK skips remain explicit; its eleven
+  applicable SDK tests pass. Reviewed panic messages are deliberate scheduler
+  controls. No unresolved production failure.
 
-Both macOS corpus archives pass 85 distinct programs. Existing ignored runner
-measurements remain explicit. Reviewed diagnostics are Homebrew already-installed
-notices, echoed strict-warning commands and the intentional scheduler entry/child
-panic controls in `src/sched.rs`; their test passes. Windows skips only the two
-POSIX-PTY SDK cases; its eleven applicable SDK tests pass. No unresolved failure.
-Logs and audit helpers are `/private/tmp/fwp-246-*`; artifact identities are in
-`/private/tmp/fwp-246-final-artifacts.json`. Refresh that list before downloads.
-
-## Independent next batch: complete driver comparison
-
-Worktree `/private/tmp/fwp-array-consumption` checks out
-`array-observation-diagnostics`, a child of #246. Its branch has no PR yet. The
-primary checkout remains untouched. Keep one active PR: after #246 merges,
-rebase only the child commits, publish this complete batch and run final gates.
+## Driver-comparison evidence
 
 - Frozen [protocol](measurements/array-observation-boundaries.md): `c583459b`,
   tag `roadmap/array-observation-protocol-2026-11-02`.
 - Measured source: `d1f18ff74727a62cffa85506fc912597a8a3d7e6`, tag
-  `roadmap/array-observation-runner-2026-11-02`. No compiler/runtime change.
+  `roadmap/array-observation-runner-2026-11-02`. These original identities remain
+  retained after rebase. There is no compiler/runtime change.
 - [Complete report](measurements/array-observations-2026-11-02/README.md): four
-  native sessions, complete sources/binaries/commands independently audited;
+  native sessions, all source/binary/command/sample identities audited;
   four CPU-only rejections retained. No completed timing repeated.
-- Added observations alone retain the early large-AMD64 consumption pattern;
-  the complete zero-preparation driver changes it but raises total timed work
-  7.7–9.8%. All ARM64 and large-AMD64 copies pass. Thirteen small-AMD64 copy limits
-  fail and remain explicit. Original performance acceptance remains open.
-- The report includes every version/copy/sample position, managed counts, RSS,
-  instruction size and stack estimates. Absent CPU/fault measurements stay blank.
-  Close this diagnostic without hidden preparation or a speculative ownership fix.
+- Added observations alone retain the early large-AMD64 pattern. The complete
+  zero-preparation driver changes it but raises total timed work 7.7–9.8%.
+  ARM64 consumption instead becomes 4.5–5.4% slower. All ARM64 and large-AMD64
+  copies pass; thirteen small-AMD64 copy limits fail and stay explicit.
+- Every version/copy/sample position, managed count, RSS, instruction size and
+  stack estimate is retained. Absent CPU/fault observations stay blank. Close
+  this diagnostic without hidden preparation or a speculative ownership fix.
 
 | Session | Run / job | Artifact | Full local audit |
 |---|---|---|---|
@@ -60,35 +53,38 @@ rebase only the child commits, publish this complete batch and run final gates.
 
 | Step | Status | Evidence / remaining work |
 |---|---|---|
-| 1 | Verified | Retained sample analysis preserves all earlier failures |
-| 2 | Verified | Native numerical, ownership and deliberate-failure controls pass |
-| 3 | Verified | All four preparation sessions and all four subsequent driver sessions audited |
-| 4 | Verified | Driver effect documented; original limits retained; no runtime change justified |
-| 5 | In progress | Finish #246 gates/merge, then deliver the separate completed driver batch |
+| 1 | Verified | Frozen three-driver boundaries and exact source reconstruction |
+| 2 | Verified | Native numerical, ownership, actual omitted-destruction and clock-failure controls |
+| 3 | Verified | All four full archives audited, every host rejection preserved |
+| 4 | Verified | Complete 96-role table and report preserve all timing limits and failures |
+| 5 | In progress | Publish this combined batch, complete final gates and verified squash merge |
 
 ## Checks, repairs and resources
 
 Guarded checks pass: three source/schedule tests (0.14s), all 48 retained C input
-variants (0.86s), workflow lint (6.33s), all 213 documentation link sets (3.03s), and complete compact write/check replay (2.96s / 3.13s).
-The 96-role CSV reproduces all raw data. Final report/workflow checks pass after
-staging. No local compiler build, full suite or benchmark.
+variants (0.86s), workflow lint (6.33s), 213 documentation link sets (3.00s), and
+complete compact write/check replay (2.96s / 3.13s). All 48 memory profiles have
+identical storage fields across five samples (0.25s). The report's representative
+values also capture their maxima. The final delivery-record link check passes
+(213 link sets, 106 immutable pairs/tags, five roadmap steps; 3.03s).
+No local compiler build, full suite or benchmark.
 
-The source test caught and fixed a global clock-call replacement before publication;
-failure controls now alter only benchmark clocks. One local audit rejected an
-incomplete download; waiting for completion resolved its digest check, with no
-measurement rerun. Stale #243 kernel directions now link completed #244/#245 work;
-the derivative page no longer calls its delivered phase report a next task.
-Array reports now link the completed preparation/driver investigations and #245
-validation instead of calling them pending. All 48 memory profiles have identical
-storage fields across all five samples (guarded check, 0.25s).
+A source test caught and fixed a global clock replacement before publication;
+controls now alter only benchmark clocks. One local audit rejected an unfinished
+download; waiting for completion resolved its digest check without a measurement
+rerun. Stale #243/#245 and derivative/array next-step passages now link completed
+work. The glossary explains drivers, clocks, faults, switches and virtual memory.
 
-PR #245 is verified and merged as `c43f05c22ed36277b491490b7d9e222dfd0af025`,
-with the tested tree and one-line message. Completed #243/#244 temporary checkouts
-were removed only after tree verification. The completed #245 checkout was also
-removed after saving its exact uncommitted handoff and patch under
-`/private/tmp/fwp-245-worktree-handoff-preserved`; commits and evidence remain.
-Free space is about 64.5 GiB. Preserve at least 64 GiB; use the local guard, serially.
+Completed #243/#244 temporary checkouts were removed after tree verification.
+The completed #245 checkout was removed after saving its exact uncommitted handoff
+and patch under `/private/tmp/fwp-245-worktree-handoff-preserved`; commits and
+evidence remain. Preserve at least 64 GiB free; use the local guard serially.
 
-Merge only after all nine production jobs and documentation pass for the exact
-head, with full audits. Supply one subject (at most 80 characters), empty body,
-no trailers/attribution; verify merged tree and message. Then continue PLAN.md.
+After this delivery, [PLAN.md](../PLAN.md#next-compiler-investigation-temporary-derivative-lists)
+names the next source-level opportunity: compact temporary mapped records while
+preserving map-before-fold order. First profile current code; do not assume the
+historical allocation sites survive or interleave stateful derivative operations.
+
+Merge only after all final-head gates and audits pass. Supply one subject of at
+most 80 characters and an empty body, with no trailers/attribution. Verify tree
+and message, then continue PLAN.md.

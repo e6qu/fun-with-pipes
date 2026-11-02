@@ -6,6 +6,26 @@ and complete platform validation are different events. Measurements retain their
 original source and settings; old numbers are not measurements of current main.
 The linked PRs, runs and data records supply the detailed evidence.
 
+## Array preparation diagnostic (PR #246)
+
+[PR #246](https://github.com/e6qu/fun-with-pipes/pull/246) merged November 2 as
+`7e48e438d3b78ea357017a0cd1adae26a85fb0a0`. All nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/41478753238)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/41478745298)
+pass at `44626348b71bf3af1aa16030aae1e7976cb26c37`; full job and target logs were
+audited. The squash preserves tested tree `dd953092b6d9c0945ef1fc687220efa2a2939326`
+and a verified 61-character message with no body/trailers. Duplicate same-tree
+main runs `41495751007` and `41495750634` were cancelled.
+
+[Four audited sessions](measurements/array-consumption-2026-11-02/README.md)
+compare explicit zero/1,024 preparation reductions. Preparation moves page-fault
+work outside timing and narrows some copy differences; it does not resolve the
+original AMD64 consumption regression. All failed limits, seven rejected hosts
+and the repaired pre-timing counter expectation remain recorded. The subsequent
+[three-driver comparison](measurements/array-observations-2026-11-02/README.md)
+separates observations from preparation-driver changes. No production runtime
+change or new timing acceptance follows from either diagnostic.
+
 ## Direct numeric array callbacks (PR #245)
 
 [PR #245](https://github.com/e6qu/fun-with-pipes/pull/245) merged November 2 as
