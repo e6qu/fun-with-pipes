@@ -4,33 +4,33 @@ Build an ahead-of-time language with simple pipes, immutable values, strong type
 and useful inference. Prefer direct values, moves and borrows; reserve ARC for
 necessary sharing. GC is removed; JIT and backward compatibility are excluded.
 
-## Current batch: reduce array construction overhead
+## Current batch: explain early numerical timing differences
 
-[PR #244](https://github.com/e6qu/fun-with-pipes/pull/244) passed all nine production
-jobs and documentation, then merged as `e70f0e2d`. Its paired-column matrix loop
-reduces qualified calculation time by about 33% on ARM64 and 31% for large AMD64.
-[History](docs/roadmap-history.md#paired-matrix-columns-pr-244) records its storage,
-stack and timing limits. The small AMD64 timing goal stays open below.
+[PR #245](docs/roadmap-history.md#direct-numeric-array-callbacks-pr-245) is verified
+and merged. Direct numeric array callbacks reduce qualified ARM64 construction
+time by 84.5–84.9%, with unchanged managed storage. AMD64's original consumption
+and copy limits remain open. [PR #244](docs/roadmap-history.md#paired-matrix-columns-pr-244)
+also leaves small-AMD64 matrix copy limits open.
 
-[Scalar callback selection](docs/measurements/scalar-array-captures-2026-11-02/README.md)
-now removes generic dispatch for known numeric captures. All three focused safety
-jobs pass. Both ARM64 timing sessions meet every limit: 84.5–84.9% less construction
-time and 81.2–81.6% less total time, with unchanged managed storage. All four raw
-sessions are audited. AMD64's four consumption and four copy limits remain open;
-retain verified reductions without calling the combined timing goal complete.
+The [retained samples](docs/measurements/array-sample-positions.md) locate much of
+the array difference in early process samples. The next question is whether
+identical preparation changes that pattern. This is a diagnostic, not a promise
+that warming a process fixes production performance.
 
 | Step | Work | Completion requirement |
 |---|---|---|
-| 1 | Verify the three current construction paths | Verified: both GCC architectures at O1/O2, exact values, storage and missing-release controls; retained source and binary evidence |
-| 2 | Separate construction, consumption and filling costs | Four sessions audited: both ARM64 and AMD64 session 2 pass; AMD64 session 1 retains six failed copy limits; compare source, driver, C and Rust |
-| 3 | Select and prove a bounded generator change | Verified focused GCC ARM64/AMD64 and Clang ARM64 checks: direct scalar captures, evaluation/trap order, reuse, failure/cancellation and composed fusion |
-| 4 | Measure the change against its exact same-source reference | Four sessions audited; ARM64 passes all limits; AMD64 retains eight failed limits. Exact outputs, cleanup and managed-storage limits pass; time/RSS/code/stack costs reported |
-| 5 | Deliver the combined batch | Bundle source, regressions, measurements and clear docs; all nine final-head production jobs plus documentation pass and are audited before squash merge |
+| 1 | Analyze every retained array sample | Replay all four baseline and candidate sessions, keep each position and within-process differences, preserve original failures |
+| 2 | Prove preparation and observation code | Frozen protocol; unchanged numerical work; exact outputs, caller ownership, zero retained storage, omitted-release and failed-clock controls on both GCC architectures |
+| 3 | Run the declared four sessions | Qualified hosts; explicit 0/1,024 preparation counts; balanced process order; every sample, wall/CPU time, faults/switches, storage, RSS, code and stack costs retained and independently audited |
+| 4 | Explain the findings and choose a bounded next action | Compare all settings/copies without dropping early samples; distinguish an observed preparation effect from a CPU/cache explanation; preserve original timing limits and state what remains unproven |
+| 5 | Deliver the combined diagnostic batch | Include tools, regression controls, findings and updated plan; all nine final-head production jobs and documentation pass and their logs are audited before squash merge |
 
-The source and regressions are complete for this batch. Publish the final evidence
-and docs together, then run the nine-job production matrix and documentation once
-on that head. Audit all logs before squash merge. Existing native targets preserve
-capture/reuse/failure coverage; no new syntax, allocator or compatibility layer.
+Use the [declared diagnostic](docs/measurements/array-consumption-setup.md).
+Reuse audited generated C; no compiler rebuild is needed for these measurements.
+Fix all harness/native-control failures before timing. Do not repeat a completed
+noisy measurement for a pass or change runtime ownership without a demonstrated
+source-level need. Apply any justified next investigation to the related small
+matrix discrepancy only after declaring its scope.
 
 ## Open performance goals
 

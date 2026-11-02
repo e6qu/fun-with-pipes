@@ -89,3 +89,24 @@ The process-CPU interval encloses the existing wall-clock pair. Its overhead is
 therefore different from the original timer. The separate empty-clock control
 records both intervals; neither is subtracted. These observations are diagnostic,
 not replacements for the original uninstrumented acceptance measurements.
+
+## Harness repair before timing
+
+[Run 41467873605](https://github.com/e6qu/fun-with-pipes/actions/runs/41467873605)
+stopped both ARM64 sessions before any warmup or timed process. The preparation
+profile correctly reported one allocation, 1,024 retains, 1,024 non-final
+releases and zero remaining storage. Its 1,024 `releaseChecks` disagreed with the
+harness's expected 1,025.
+
+The expectation was wrong: this existing counter instruments
+`fwp_rc_release_last`, called by each reduction. The caller's final
+`fwp_rc_free_arr` uses `fwp_rc_last` and then frees storage; it does not increment
+that counter. The repair expects 1,024 checks and still requires zero live storage
+and the omitted-final-release failure control. No runtime code, work count or
+acceptance limit changed. The regression rejects an extra reported check.
+
+Both full logs and all 28 completed commands were audited. The two queued AMD64
+jobs were cancelled before starting; no completed timing was discarded or retried.
+[Saved logs, profiles and artifact identities](array-consumption-failures-2026-11-02/index.json)
+retain the original failure. Guarded replay of both profiles and the five harness
+tests pass (0.14s each); native reruns must still verify every remaining control.

@@ -1,0 +1,58 @@
+{
+  "run": 41467873605,
+  "source": "275b1514badf544c48109821679b7aee72e272cf",
+  "records": [
+    {
+      "session": 1,
+      "job": 125353433276,
+      "artifact": {
+        "id": 13153628638,
+        "node_id": "MDg6QXJ0aWZhY3QxMzE1MzYyODYzOA==",
+        "name": "array-consumption-ubuntu-24.04-arm-1",
+        "size_in_bytes": 58495838,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13153628638",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13153628638/zip",
+        "expired": false,
+        "digest": "sha256:27f5aa31721b359947f94bcb88a3aaf4fc3c6d63cfd04e73f1d9ba0317915630",
+        "created_at": "2026-11-02T15:21:45Z",
+        "updated_at": "2026-11-02T15:21:45Z",
+        "expires_at": "2027-01-31T15:03:45Z",
+        "workflow_run": {
+          "id": 41467873605,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "array-consumption-diagnostics",
+          "head_sha": "275b1514badf544c48109821679b7aee72e272cf"
+        }
+      }
+    },
+    {
+      "session": 2,
+      "job": 125353433200,
+      "artifact": {
+        "id": 13153659470,
+        "node_id": "MDg6QXJ0aWZhY3QxMzE1MzY1OTQ3MA==",
+        "name": "array-consumption-ubuntu-24.04-arm-2",
+        "size_in_bytes": 58497172,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13153659470",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13153659470/zip",
+        "expired": false,
+        "digest": "sha256:73a89cec502eb3ac8960b8491425c9c666726cbc575003e527cd9190d02d064d",
+        "created_at": "2026-11-02T15:20:25Z",
+        "updated_at": "2026-11-02T15:20:25Z",
+        "expires_at": "2027-01-31T15:03:45Z",
+        "workflow_run": {
+          "id": 41467873605,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "array-consumption-diagnostics",
+          "head_sha": "275b1514badf544c48109821679b7aee72e272cf"
+        }
+      }
+    }
+  ],
+  "cancelledBeforeStart": [
+    125353432836,
+    125353433506
+  ]
+}

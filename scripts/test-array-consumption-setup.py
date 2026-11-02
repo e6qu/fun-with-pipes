@@ -49,7 +49,7 @@ class PreparationControls(unittest.TestCase):
                     peakChargedBytes=524304 if profile and passes else 0,
                     liveChargedBytes=0, retains=passes if profile else 0,
                     nonlastReleases=passes if profile else 0,
-                    releaseChecks=passes + int(passes != 0) if profile else 0)
+                    releaseChecks=passes if profile else 0)
                 sample = dict(hash=SETUP.BASELINE.result_hash(values), liveChargedBytes=0,
                     allocationNs=0, fillNs=0, constructionNs=8, kernelNs=4, kernelCpuNs=5,
                     allocationInclusiveNs=16, minorFaults=0, majorFaults=0,
@@ -61,6 +61,7 @@ class PreparationControls(unittest.TestCase):
                 SETUP.check_output(json.dumps(output).encode(), 65537, passes, profile, False)
                 for scope, key, value in [('preparation', 'liveChargedBytes', 524304),
                         ('preparation', 'hash', 'incorrect'), ('preparation', 'retains', -1),
+                        ('preparation', 'releaseChecks', prep['releaseChecks'] + 1),
                         ('sample', 'liveChargedBytes', 1), ('sample', 'hash', 'incorrect'),
                         ('sample', 'kernelCpuNs', 0), ('sample', 'minorFaults', -1)]:
                     changed = copy.deepcopy(output)

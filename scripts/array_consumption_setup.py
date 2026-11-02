@@ -101,7 +101,10 @@ def check_output(raw, elements, passes, profile, verification):
         assert prep['requests'] == count
         assert prep['requestedBytes'] == prep['peakChargedBytes'] == count * (8 * elements + 8)
         assert prep['retains'] == prep['nonlastReleases'] == passes
-        assert prep['releaseChecks'] == passes + count
+        # This existing counter instruments fwp_rc_release_last in the reduction.
+        # The caller's final fwp_rc_free_arr uses fwp_rc_last instead; live storage
+        # and the omitted-release control verify that separate final destruction.
+        assert prep['releaseChecks'] == passes
     else:
         assert all(prep[key] == 0 for key in ('requests', 'requestedBytes', 'peakChargedBytes',
             'retains', 'nonlastReleases', 'releaseChecks'))
