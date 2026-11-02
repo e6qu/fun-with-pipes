@@ -111,11 +111,11 @@ remain included where applicable; CPU and wall values are not interchangeable.
 **Decision:** retain the diagnostic, with every original failed limit open. No
 compiler/runtime repair is justified by this experiment. The new observations
 and preparation call site also change compilation context even when preparation
-is zero. The next bounded investigation must compare the retained original driver,
-an observation-only driver with no preparation call site, and this driver at zero
-preparation, before assigning the original difference to startup or emitted code.
-Freeze that comparison before running it; do not rerun these completed sessions
-or add hidden warming to production benchmarks.
+is zero. The [subsequent three-driver comparison](../array-observations-2026-11-02/README.md)
+is complete: observations alone retain the early large-AMD64 pattern, while the
+complete zero-preparation driver changes it but raises total timed work. Neither
+experiment identifies a runtime safety defect or resolves original acceptance.
+Do not rerun these completed sessions or add hidden warming to production benchmarks.
 
 The [original regression and copy failures](../scalar-array-captures-2026-11-02/README.md)
 remain the acceptance record. Prepared results do not replace them. The

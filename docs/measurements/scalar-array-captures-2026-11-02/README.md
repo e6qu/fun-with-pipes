@@ -103,7 +103,7 @@ cost separately while preserving the overall gains and every original limit.
   and 272/320 for large ARM64 (`static`); AMD64 is 288/320 (`dynamic,bounded`).
   These are individual-frame estimates, not maximum call-stack measurements.
 
-## Evidence and next work
+## Evidence and delivery
 
 Source `f8a558daa42fc07930f7a93870b6dcbcf2580bb3` is retained as
 `roadmap/scalar-array-timing-2026-11-02`. The reference build changes only the
@@ -117,5 +117,7 @@ retain hashes for every archived file. Original archives also contain generated
 C, both compilers and the measured executables. [Three rejected hosts](rejected-hosts.json)
 stopped before building; completed timings were never rerun for a pass.
 
-Keep the AMD64 consumption/noise goals open. Full final-head production checks and
-documentation still gate delivery of the compiler change.
+All nine final-head production jobs and documentation passed in
+[PR #245](../../roadmap-history.md#direct-numeric-array-callbacks-pr-245). The
+AMD64 consumption/noise goals remain open; the later
+[driver comparison](../array-observations-2026-11-02/README.md) preserves them.

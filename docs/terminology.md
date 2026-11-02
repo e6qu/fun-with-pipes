@@ -340,6 +340,36 @@ If C takes **10 ms** and fwp takes **12 ms**:
 - That is language overhead only to the extent the compared work is equivalent.
   Explicit C derivatives do less work than general reverse-mode AD.
 
+### Why extra measurements can change a benchmark
+
+A **driver**, also called a harness, supplies inputs, calls the operation, checks
+results and reads clocks. It is part of the measured program. A C **translation
+unit** is one source file together with its expanded includes; changing driver
+code in that unit can affect how the compiler optimizes other functions.
+
+For example, building and freeing an array **before** starting a timer can leave
+memory available for the next array. That may reduce the later timed cost without
+reducing the work of a complete application. The
+[array driver comparison](measurements/array-observations-2026-11-02/README.md)
+shows another limit: a driver change can make consumption faster while making
+construction plus consumption slower.
+
+- **Wall time** is elapsed clock time, including time the process waits.
+  **Process CPU time** counts execution on CPUs across its threads. A process
+  using several CPUs can accumulate more CPU time than wall time. Compare clocks
+  only after checking which work each timer surrounds.
+- A **page fault** asks the operating system to resolve a memory access. A Linux
+  **minor fault** needs no storage I/O; a **major fault** needs I/O. A first write
+  to newly mapped memory can cause a minor fault. Fault counts do not count
+  allocations or prove that memory leaked.
+- A **context switch** changes which thread is running. A voluntary switch can
+  occur while waiting; an involuntary switch can occur when the scheduler
+  interrupts execution. Counts alone do not explain a measured slowdown.
+- **Reserved virtual space** is a range of addresses available to the process.
+  **Resident set size (RSS)** measures memory currently resident in RAM. Reserving
+  64 GiB of address space does not mean using 64 GiB of RAM. A peak RSS reading is
+  also different from the sum of all allocations made during the program.
+
 ### Memory: distinguish total from peak
 
 Allocating and freeing 1 MiB **100 times in sequence** means:

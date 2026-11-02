@@ -36,6 +36,8 @@ manifests and retains every original failure. Its explicit inputs are the
 `array-construction-phases-2026-11-02` and `scalar-array-captures-2026-11-02`
 directories and both array cases. Documentation CI reproduces the saved output.
 
-The [next diagnostic](array-consumption-setup.md) tests equal untimed preparation
-before the same numerical work. No runtime change or fresh performance acceptance
-claim follows from this descriptive analysis.
+The [completed preparation diagnostic](array-consumption-2026-11-02/README.md)
+tests equal untimed preparation before the same numerical work. Its subsequent
+[driver comparison](array-observations-2026-11-02/README.md) separates added
+observations from preparation-driver changes. Both retain the original failed
+limits; neither justifies a runtime ownership change.
