@@ -2,6 +2,7 @@
 """Rebuild array phase results from retained raw files without running binaries."""
 import argparse
 import hashlib
+import importlib.util
 import json
 from pathlib import Path
 import re
@@ -13,6 +14,9 @@ from current_kernel_costs import LABELS, summarize
 
 ROOT = Path(__file__).resolve().parent.parent
 CASES = {name: dimensions for name, dimensions in PHASES.MEASURE.CASES.items() if name.startswith('array')}
+SPEC = importlib.util.spec_from_file_location('scalar_reference', ROOT / 'scripts/prepare-scalar-array-reference.py')
+REFERENCE = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(REFERENCE)
 HOSTS = {
     'aarch64': ('Neoverse-N2', 'gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0', 'armv8-a', 'generic'),
     'x86_64': ('AMD EPYC 7763 64-Core Processor', 'gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0', 'x86-64', 'x86-64'),
@@ -23,10 +27,12 @@ def digest(raw):
     return hashlib.sha256(raw).hexdigest()
 
 
-def check(archive, prefix, source, machine, session):
+def check(archive, prefix, source, machine, session, comparison):
     def read(name):
         return archive.read(prefix + name)
 
+    assert comparison in ('source-paths', 'scalar-captures')
+    scalar = comparison == 'scalar-captures'
     report = json.loads(read('comparison.json'))
     assert re.fullmatch('[0-9a-f]{40}', source) and report['source'] == source
     assert machine in HOSTS and session in (1, 2)
@@ -41,7 +47,10 @@ def check(archive, prefix, source, machine, session):
     required = dict(samples=18, warmups=2, processes=4, timeout=180, session=session,
                     c_arch=c_arch, rust_cpu=rust_cpu, case=list(CASES))
     assert {key: config[key] for key in required} == required
-    assert report['constructionPaths'] == {'fwp': 'compiled make-input', 'reference': 'C driver runtime calls'}
+    if scalar or 'comparison' in config:
+        assert config['comparison'] == comparison
+    assert report['constructionPaths'] == {'fwp': 'compiled make-input', 'reference':
+        'compiled make-input with scalar specialization disabled' if scalar else 'C driver runtime calls'}
     assert len(report['allowedCpus']) == len(set(report['allowedCpus'])) == 4
     environment = report['executionEnvironment']
     assert all(environment[key] == value for key, value in dict(
@@ -58,7 +67,8 @@ def check(archive, prefix, source, machine, session):
         'scripts/current_kernel_costs.py', 'scripts/measure-kernel-baselines.py',
         'scripts/numerical-baselines.py', 'tests/fixtures/numerical_bench.c',
         'tests/fixtures/numerical_bench.rs', 'tests/fixtures/numerical_bench_native.c',
-        'tests/fixtures/array_construction_costs.fwp', 'src/cgen.rs'}
+        'tests/fixtures/array_construction_costs.fwp', 'src/cgen.rs'} | (
+        {'scripts/prepare-scalar-array-reference.py'} if scalar else set())
     sources = {}
     for name, sha in report['sourceHashes'].items():
         raw = subprocess.check_output(['git', 'show', source + ':' + name], cwd=ROOT)
@@ -71,9 +81,31 @@ def check(archive, prefix, source, machine, session):
     previous = json.loads(prerequisite)
     assert len(previous['jobs']) == 2 and all(job['conclusion'] == 'success' for job in previous['jobs'])
     for name in (*report['sourceTrees'], 'tests/fixtures/array_construction_costs.fwp'):
+        if scalar and name == 'src':
+            continue
         old = subprocess.check_output(['git', 'rev-parse', previous['source'] + ':' + name], cwd=ROOT)
         current = subprocess.check_output(['git', 'rev-parse', source + ':' + name], cwd=ROOT)
         assert old == current
+    if scalar:
+        manifest = report['referenceManifest']
+        assert json.loads(read('reference-manifest.json')) == manifest
+        assert manifest['source'] == source and manifest['disabledTransformation'] == 'direct scalar array captures'
+        assert digest(read('reference-compiler')) == manifest['compilerSha256']
+        reference_codegen = REFERENCE.reference_source(sources['src/cgen.rs'])
+        assert read('codegen-reference.rs').decode() == reference_codegen
+        assert digest(reference_codegen.encode()) == manifest['referenceCodegenSha256']
+        assert digest(sources['src/cgen.rs'].encode()) == manifest['candidateCodegenSha256']
+        assert digest(read('reference.patch')) == manifest['patchSha256']
+        assert digest(subprocess.check_output(['git', 'show', source + ':src/ownership.rs'], cwd=ROOT)) == manifest['ownershipSha256']
+        safety = report['safety']
+        assert len(safety['jobs']) == 3 and all(job['conclusion'] == 'success' and job['head_sha'] == safety['source'] for job in safety['jobs'])
+        assert {job['name'] for job in safety['jobs']} == {
+            'scalar_array_checks (ubuntu-latest, gcc)', 'scalar_array_checks (ubuntu-24.04-arm, gcc)',
+            'scalar_array_checks (macos-15, clang)'}
+        for name in ('src', 'runtime', 'lib', 'tests', 'Cargo.toml', 'Cargo.lock', 'build.rs'):
+            verified = subprocess.check_output(['git', 'rev-parse', safety['source'] + ':' + name], cwd=ROOT)
+            measured = subprocess.check_output(['git', 'rev-parse', source + ':' + name], cwd=ROOT)
+            assert verified == measured
     commands = {}
     for line in read('commands.jsonl').splitlines():
         command = json.loads(line)
@@ -100,21 +132,27 @@ def check(archive, prefix, source, machine, session):
         assert row['resultHash'] == expected_hash
         assert read(case + '/expected-values.txt') == expected_output
         assert read(case + '/kernel.fwp').decode() == sources['tests/fixtures/array_construction_costs.fwp']
-        generated = read(case + '/generated.c').decode()
-        entries = {}
-        for name in ('make-input', 'reduce64'):
-            marker = generated.index('/* ' + name + ' :')
-            entries[name] = 'f' + generated[marker:].split('static V f', 1)[1].split('(', 1)[0]
+        modules = {}
+        for label in (('fwp', 'reference') if scalar else ('fwp',)):
+            generated = read(case + ('/generated.c' if label == 'fwp' else '/reference-generated.c')).decode()
+            entries = {}
+            for name in ('make-input', 'reduce64'):
+                marker = generated.index('/* ' + name + ' :')
+                entries[name] = 'f' + generated[marker:].split('static V f', 1)[1].split('(', 1)[0]
+            modules[label] = (generated, entries)
         expected_images = {label + '-' + mode for label in ('c', 'rust', 'fwp', 'reference')
-                           for mode in ('timing', 'profile', 'verify')} | {'fwp-phases', 'reference-phases'}
+                           for mode in ('timing', 'profile', 'verify')}
+        if not scalar:
+            expected_images |= {'fwp-phases', 'reference-phases'}
         assert set(row['binaries']) == expected_images
         for image, info in row['binaries'].items():
             label, mode = image.split('-', 1)
             profile, verification = mode in ('profile', 'phases'), mode == 'verify'
             extension = '.rs' if label == 'rust' else '.c'
             if label in ('fwp', 'reference'):
+                generated, entries = modules[label if scalar else 'fwp']
                 expected_source = PHASES.native_source(generated, entries['reduce64'], entries['make-input'],
-                    dimensions, label, profile, verification, mode == 'phases')
+                    dimensions, 'fwp' if scalar else label, profile, verification, mode == 'phases')
             else:
                 expected_source = PHASES.peer_source(sources['tests/fixtures/numerical_bench' + extension], label, dimensions, verification)
             raw_source = read(case + '/' + image + extension)
@@ -154,7 +192,7 @@ def check(archive, prefix, source, machine, session):
                     if label in ('fwp', 'reference'):
                         assert sample['retains'] == sample['nonlastReleases'] == 0
         assert set(row['profiles']) == {'c', 'rust', 'fwp', 'reference'}
-        assert set(row['phaseProfiles']) == {'fwp', 'reference'}
+        assert set(row['phaseProfiles']) == (set() if scalar else {'fwp', 'reference'})
         assert row['rolePaths'] == {label: f'role{index:04d}.exe' for index, label in enumerate(LABELS)}
         for label in ('fwp', 'reference'):
             assert read(case + '/' + row['rolePaths'][label]) == read(case + '/' + row['rolePaths'][label + '-identical'])
@@ -191,13 +229,25 @@ def check(archive, prefix, source, machine, session):
     failures = [dict(kind='copy', case=case, label=label, metric=metric, ratio=ratio, limit=1.02)
         for case, row in report['results'].items() for label, scopes in row['identicalRatios'].items()
         for metric, ratio in scopes.items() if ratio > 1.02]
+    if scalar:
+        for case, row in report['results'].items():
+            for metric, ratio in row['ratios']['reference'].items():
+                limit = 1.02 if metric == 'kernelNs' else 0.95
+                if ratio > limit:
+                    failures.append(dict(kind='speed', case=case, metric=metric, ratio=ratio, limit=limit))
+            for index, (candidate, reference) in enumerate(zip(row['profiles']['fwp'], row['profiles']['reference'])):
+                for metric in ('requests', 'requestedBytes', 'retains', 'peakChargedBytes'):
+                    if candidate[metric] > reference[metric]:
+                        failures.append(dict(kind='memory', case=case, sample=index, metric=metric,
+                            candidate=candidate[metric], reference=reference[metric]))
     assert report['failures'] == failures
-    print(f'{machine} session {session}: raw results, identities, sources and cleanup agree; {len(failures)} unmet copy limits')
+    print(f'{machine} session {session}: raw results, identities, sources and cleanup agree; {len(failures)} unmet limits')
     return report
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--comparison', choices=('source-paths', 'scalar-captures'), required=True)
     parser.add_argument('--archive', type=Path, required=True)
     parser.add_argument('--prefix', required=True)
     parser.add_argument('--source', required=True)
@@ -205,7 +255,7 @@ def main():
     parser.add_argument('--session', type=int, choices=(1, 2), required=True)
     args = parser.parse_args()
     with ZipFile(args.archive) as archive:
-        check(archive, args.prefix, args.source, args.machine, args.session)
+        check(archive, args.prefix, args.source, args.machine, args.session, args.comparison)
 
 
 if __name__ == '__main__':

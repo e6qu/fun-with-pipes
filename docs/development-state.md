@@ -23,8 +23,8 @@ Keep source, safety checks, timing, docs and final validation in one substantial
 |---|---|---|
 | 1 | Verified | Construction diagnostic `41427397530`: both production GCC architectures at O1/O2, exact source/storage/control audit |
 | 2 | In progress | Both ARM64 phase sessions pass and audit; AMD64 session 1 has six failed timing-copy limits; session 2 remains pending |
-| 3 | In progress | Protocol `5cf1c80f` published before selection changed; native GCC/Clang safety checks next |
-| 4 | Pending | Freeze candidate/reference acceptance and measure after focused native safety checks |
+| 3 | In progress | Protocol `5cf1c80f` predates selection change; grouped native safety `41442126003` queues on `5437f39f` |
+| 4 | Pending | Acceptance frozen; paired runner prepared, timing requires all three focused safety jobs first |
 | 5 | Pending | Publish one coherent PR; nine final-head production gates, docs, audit and verified squash merge |
 
 ## Array construction evidence
@@ -52,9 +52,9 @@ Keep source, safety checks, timing, docs and final validation in one substantial
   construction differs 7.16–7.48 times on qualified ARM64; filling dominates.
   [Results and identities](measurements/array-construction-phases-2026-11-02/README.md)
   retain compressed reports, every file hash and full job logs.
-  AMD64 session 2 received three undeclared CPUs and stopped before building;
-  rejected runs `41437433015`, `41439088789`, `41439785397` remain recorded.
-  Current exact-source replacement: `41440757518`. The source is retained as
+  AMD64 session 2 received four undeclared CPUs and stopped before building;
+  rejected runs `41437433015`, `41439088789`, `41439785397`, `41440757518` remain recorded.
+  Current exact-source replacement: `41442138747` / job `125266355568`. The source is retained as
   `roadmap/array-construction-phase-runner-2026-11-02`.
   `check-array-construction-time.py` reconstructs source, raw samples, summaries,
   cleanup controls and compiler settings; all three original complete archives pass.
@@ -69,6 +69,14 @@ Keep source, safety checks, timing, docs and final validation in one substantial
   Protocol tag: `roadmap/scalar-array-selection-protocol-2026-11-02`.
   Grouped suite: `scalar-array-checks` (GCC ARM64/AMD64 and Clang ARM64), using
   five existing targets plus Linux construction diagnostics. No full CI yet.
+- Safety run `41442126003`, source `5437f39f`: macOS ARM64 job `125266313620`,
+  Linux ARM64 `125266313829`, Linux AMD64 `125266313984`; all queued at last check.
+- Paired timing suite `scalar-array-time` is prepared but not dispatched. It
+  requires `evidence_run` naming the successful focused run and compares its exact
+  `src/runtime/lib/tests` trees. `prepare-scalar-array-reference.py` changes only
+  the recorded selection clause; two patch controls pass (0.12s). The reference
+  codegen file exactly matches the baseline. The audit's explicit comparison mode
+  still reproduces original ARM64 raw evidence (0.59s); actionlint passes (6.27s).
 - Earlier run `41426573182` failed only source formatting on both hosts. The fixture
   was fixed with #243's verified package; failure logs and source tag remain.
 

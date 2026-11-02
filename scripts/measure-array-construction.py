@@ -2,6 +2,7 @@
 """Measure current source/driver array construction against materialized C/Rust."""
 import argparse
 import hashlib
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -19,6 +20,9 @@ ROOT = Path(__file__).resolve().parent.parent
 MEASURE = PHASES.MEASURE
 BASELINE = MEASURE.BASELINE
 CASES = {name: dims for name, dims in MEASURE.CASES.items() if name.startswith('array')}
+SPEC = importlib.util.spec_from_file_location('scalar_reference', ROOT / 'scripts/prepare-scalar-array-reference.py')
+REFERENCE = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(REFERENCE)
 
 
 def main():
@@ -27,6 +31,10 @@ def main():
         parser.add_argument('--' + name, required=True)
     for name in ['samples', 'warmups', 'processes', 'timeout', 'session']:
         parser.add_argument('--' + name, type=int, required=True)
+    parser.add_argument('--comparison', choices=('source-paths', 'scalar-captures'), required=True)
+    parser.add_argument('--reference-compiler', type=Path)
+    parser.add_argument('--reference-manifest', type=Path)
+    parser.add_argument('--safety', type=Path)
     parser.add_argument('--case', action='append', choices=list(CASES), required=True)
     parser.add_argument('--qualification', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
@@ -34,6 +42,12 @@ def main():
     assert os.environ.get('GITHUB_ACTIONS') == 'true' and platform.system() == 'Linux'
     assert (args.samples, args.warmups, args.processes) == (18, 2, 4)
     assert args.session in [1, 2] and args.timeout > 0
+    scalar = args.comparison == 'scalar-captures'
+    reference_inputs = (args.reference_compiler, args.reference_manifest, args.safety)
+    if scalar:
+        assert all(value is not None for value in reference_inputs)
+    else:
+        assert all(value is None for value in reference_inputs)
     cases = CASES
     assert args.case == list(cases), 'Every declared case is required in order'
     qualification = json.loads(args.qualification.read_text())
@@ -53,6 +67,8 @@ def main():
     assert len(prerequisite['jobs']) == 2 and all(job['conclusion'] == 'success' for job in prerequisite['jobs'])
     for name in ('src', 'runtime', 'lib', 'Cargo.toml', 'Cargo.lock', 'build.rs',
                  'tests/fixtures/array_construction_costs.fwp'):
+        if scalar and name == 'src':
+            continue  # The paired reference below verifies the one declared codegen difference.
         verified = subprocess.check_output(['git', 'rev-parse', prerequisite['source'] + ':' + name], cwd=ROOT)
         current = subprocess.check_output(['git', 'rev-parse', 'HEAD:' + name], cwd=ROOT)
         assert verified == current, name + ' differs from verified construction diagnostics'
@@ -76,6 +92,37 @@ def main():
         executionEnvironment={key: environment[key] for key in sorted(environment) if key.startswith('FWP_')},
         removedEnvironment=['FWP_NO_OPT', 'FWP_NO_REUSE'],
         allowedCpus=sorted(os.sched_getaffinity(0)))
+    if scalar:
+        manifest = json.loads(args.reference_manifest.read_text())
+        assert manifest['source'] == os.environ['GITHUB_SHA']
+        assert manifest['disabledTransformation'] == 'direct scalar array captures'
+        candidate_codegen = (ROOT / 'src/cgen.rs').read_text()
+        reference_codegen = REFERENCE.reference_source(candidate_codegen)
+        assert manifest['candidateCodegenSha256'] == REFERENCE.digest(candidate_codegen.encode())
+        assert manifest['referenceCodegenSha256'] == REFERENCE.digest(reference_codegen.encode())
+        assert manifest['ownershipSha256'] == REFERENCE.digest((ROOT / 'src/ownership.rs').read_bytes())
+        assert manifest['compilerSha256'] == REFERENCE.digest(args.reference_compiler.read_bytes())
+        source_dir = args.reference_manifest.parent
+        assert (source_dir / 'codegen-reference.rs').read_text() == reference_codegen
+        assert REFERENCE.digest((source_dir / 'reference.patch').read_bytes()) == manifest['patchSha256']
+        for name in ('codegen-reference.rs', 'reference.patch'):
+            shutil.copyfile(source_dir / name, out / name)
+        shutil.copyfile(args.reference_compiler, out / 'reference-compiler')
+        (out / 'reference-manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
+        safety = json.loads(args.safety.read_text())
+        assert len(safety['jobs']) == 3 and all(job['conclusion'] == 'success' for job in safety['jobs'])
+        assert {job['name'] for job in safety['jobs']} == {
+            'scalar_array_checks (ubuntu-latest, gcc)', 'scalar_array_checks (ubuntu-24.04-arm, gcc)',
+            'scalar_array_checks (macos-15, clang)'}
+        assert all(job['head_sha'] == safety['source'] for job in safety['jobs'])
+        for name in ('src', 'runtime', 'lib', 'tests', 'Cargo.toml', 'Cargo.lock', 'build.rs'):
+            verified = subprocess.check_output(['git', 'rev-parse', safety['source'] + ':' + name], cwd=ROOT)
+            current = subprocess.check_output(['git', 'rev-parse', 'HEAD:' + name], cwd=ROOT)
+            assert verified == current, name + ' differs from focused safety checks'
+        identity.update(referenceManifest=manifest, safety=safety)
+        identity['constructionPaths']['reference'] = 'compiled make-input with scalar specialization disabled'
+        identity['sourceHashes']['scripts/prepare-scalar-array-reference.py'] = REFERENCE.digest(
+            (ROOT / 'scripts/prepare-scalar-array-reference.py').read_bytes())
     (out / 'configuration.json').write_text(json.dumps(identity, indent=2) + '\n')
 
     def run(command, destination, expected_status):
@@ -112,17 +159,21 @@ def main():
         (directory / 'expected-values.txt').write_bytes(expected_output)
         program = directory / 'kernel.fwp'
         program.write_text((ROOT / 'tests/fixtures/array_construction_costs.fwp').read_text())
-        emitted = directory / 'generated.c'
-        result, _ = run([compiler, 'build', '--memory', 'dynamic', '--fn', 'reduce64',
-                        '--emit-c', program, '-o', emitted], directory / 'emit', 0)
-        assert not result.stderr
-        generated = emitted.read_text()
-        entries = {}
-        for name in ('reduce64', 'make-input'):
-            marker = generated.index('/* ' + name + ' :')
-            entries[name] = 'f' + generated[marker:].split('static V f', 1)[1].split('(', 1)[0]
+        modules = {}
+        emitters = [('fwp', compiler)] + ([('reference', args.reference_compiler.resolve())] if scalar else [])
+        for label, emitter in emitters:
+            emitted = directory / ('generated.c' if label == 'fwp' else 'reference-generated.c')
+            result, _ = run([emitter, 'build', '--memory', 'dynamic', '--fn', 'reduce64',
+                            '--emit-c', program, '-o', emitted], directory / ('emit' if label == 'fwp' else 'reference-emit'), 0)
+            assert not result.stderr
+            generated = emitted.read_text()
+            entries = {}
+            for name in ('reduce64', 'make-input'):
+                marker = generated.index('/* ' + name + ' :')
+                entries[name] = 'f' + generated[marker:].split('static V f', 1)[1].split('(', 1)[0]
+            modules[label] = (generated, entries)
         binaries, profiles, phase_profiles, images, stack = {}, {}, {}, {}, {}
-        for mode in ['timing', 'profile', 'verify', 'phases']:
+        for mode in (['timing', 'profile', 'verify'] if scalar else ['timing', 'profile', 'verify', 'phases']):
             profile, verification = mode in ('profile', 'phases'), mode == 'verify'
             for language in (['fwp', 'reference'] if mode == 'phases' else ['c', 'rust', 'fwp', 'reference']):
                 extension = '.rs' if language == 'rust' else '.c'
@@ -130,8 +181,9 @@ def main():
                 binary = directory / (f'role{LABELS.index(language):04d}' if mode == 'timing' else language + '-' + mode)
                 binary = binary.with_suffix('.exe')
                 if language in ('fwp', 'reference'):
+                    generated, entries = modules[language if scalar else 'fwp']
                     source = PHASES.native_source(generated, entries['reduce64'], entries['make-input'],
-                        dimensions, language, profile, verification, mode == 'phases')
+                        dimensions, 'fwp' if scalar else language, profile, verification, mode == 'phases')
                 else:
                     source = PHASES.peer_source((ROOT / ('tests/fixtures/numerical_bench' + extension)).read_text(), language, dimensions, verification)
                 source_path.write_text(source)
@@ -230,6 +282,17 @@ def main():
     failures = [dict(kind='copy', case=case, label=label, metric=metric, ratio=ratio, limit=1.02)
         for case, row in results.items() for label, scopes in row['identicalRatios'].items()
         for metric, ratio in scopes.items() if ratio > 1.02]
+    if scalar:
+        for case, row in results.items():
+            for metric, ratio in row['ratios']['reference'].items():
+                limit = 1.02 if metric == 'kernelNs' else 0.95
+                if ratio > limit:
+                    failures.append(dict(kind='speed', case=case, metric=metric, ratio=ratio, limit=limit))
+            for index, (candidate, reference) in enumerate(zip(row['profiles']['fwp'], row['profiles']['reference'])):
+                for metric in ('requests', 'requestedBytes', 'retains', 'peakChargedBytes'):
+                    if candidate[metric] > reference[metric]:
+                        failures.append(dict(kind='memory', case=case, sample=index, metric=metric,
+                            candidate=candidate[metric], reference=reference[metric]))
     report = dict(**identity, results=results, failures=failures)
     (out / 'comparison.json').write_text(json.dumps(report, indent=2) + '\n')
     print(json.dumps({case: dict(ratios=row['ratios'], controls=row['identicalRatios'])
