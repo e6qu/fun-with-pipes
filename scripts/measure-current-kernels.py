@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compare current kernels, word-state reference and C/Rust with both copy controls."""
+"""Compare a declared kernel transformation with its reference and C/Rust peers."""
 import argparse
 import hashlib
 import importlib.util
@@ -19,18 +19,23 @@ ROOT = Path(__file__).resolve().parent.parent
 SPEC = importlib.util.spec_from_file_location('kernel_measurement', ROOT / 'scripts/measure-kernel-baselines.py')
 MEASURE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(MEASURE)
+SPEC = importlib.util.spec_from_file_location('matrix_codegen', ROOT / 'scripts/report-kernel-codegen.py')
+MATRIX = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(MATRIX)
 BASELINE = MEASURE.BASELINE
 CASES = MEASURE.CASES
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    for name in ['compiler', 'reference-compiler', 'cc', 'rustc', 'c-arch', 'rust-cpu', 'objdump', 'nm', 'time']:
+    for name in ['compiler', 'cc', 'rustc', 'c-arch', 'rust-cpu', 'objdump', 'nm', 'time']:
         parser.add_argument('--' + name, required=True)
     for name in ['samples', 'warmups', 'processes', 'small-matrix-processes', 'timeout', 'session']:
         parser.add_argument('--' + name, type=int, required=True)
     parser.add_argument('--case', action='append', choices=list(CASES), required=True)
-    parser.add_argument('--reference-manifest', type=Path, required=True)
+    parser.add_argument('--comparison', choices=('loop-state', 'matrix-columns'), required=True)
+    parser.add_argument('--reference-compiler')
+    parser.add_argument('--reference-manifest', type=Path)
     parser.add_argument('--qualification', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
@@ -38,7 +43,8 @@ def main():
     assert (args.samples, args.warmups, args.processes) == (18, 2, 4)
     assert args.small_matrix_processes == 256
     assert args.session in [1, 2] and args.timeout > 0
-    assert args.case == list(CASES), 'All four declared cases are required in order'
+    cases = CASES if args.comparison == 'loop-state' else {k: v for k, v in CASES.items() if k.startswith('matrix')}
+    assert args.case == list(cases), 'Every declared case is required in order'
     qualification = json.loads(args.qualification.read_text())
     assert qualification['qualified'] and not qualification['failures']
     assert qualification['actual'] == qualification['expected']
@@ -51,23 +57,39 @@ def main():
     out = args.output.resolve()
     out.mkdir(parents=True, exist_ok=False)
     subprocess.run(['git', 'diff', '--exit-code', 'HEAD'], cwd=ROOT, check=True)
-    compilers = {'fwp': Path(args.compiler).resolve(), 'reference': Path(args.reference_compiler).resolve()}
-    reference_manifest = json.loads(args.reference_manifest.read_text())
-    assert reference_manifest['source'] == os.environ['GITHUB_SHA']
-    assert reference_manifest['disabledTransformation'] == 'native floating-point loop-state fields'
-    assert reference_manifest['candidateCodegenSha256'] == hashlib.sha256((ROOT / 'src/cgen.rs').read_bytes()).hexdigest()
-    assert reference_manifest['compilerSha256'] == hashlib.sha256(compilers['reference'].read_bytes()).hexdigest()
+    compilers = {'fwp': Path(args.compiler).resolve()}
+    if args.comparison == 'loop-state':
+        assert args.reference_compiler is not None and args.reference_manifest is not None
+        compilers['reference'] = Path(args.reference_compiler).resolve()
+        reference_manifest = json.loads(args.reference_manifest.read_text())
+        assert reference_manifest['source'] == os.environ['GITHUB_SHA']
+        assert reference_manifest['disabledTransformation'] == 'native floating-point loop-state fields'
+        assert reference_manifest['candidateCodegenSha256'] == hashlib.sha256((ROOT / 'src/cgen.rs').read_bytes()).hexdigest()
+        assert reference_manifest['compilerSha256'] == hashlib.sha256(compilers['reference'].read_bytes()).hexdigest()
+        for name in ('reference.patch', 'codegen-reference.rs'):
+            shutil.copyfile(args.reference_manifest.parent / name, out / name)
+        for name in reference_manifest['testExpectations']:
+            saved = out / name
+            saved.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(args.reference_manifest.parent / name, saved)
+        assert hashlib.sha256((out / 'reference.patch').read_bytes()).hexdigest() == reference_manifest['patchSha256']
+        assert hashlib.sha256((out / 'codegen-reference.rs').read_bytes()).hexdigest() == reference_manifest['referenceCodegenSha256']
+        preparation_sources = ['scripts/prepare-loop-state-reference.py', 'scripts/report-kernel-codegen.py']
+        speed_cases = {'array-65537', 'array-262145'}
+    else:
+        assert args.reference_compiler is None and args.reference_manifest is None
+        runtime = (ROOT / 'runtime/fwp_rt_kernel.c').read_bytes()
+        assert runtime.count(MATRIX.MATRIX_COLUMNS_AFTER) == 1 and MATRIX.MATRIX_COLUMNS_BEFORE not in runtime
+        reference_manifest = dict(source=os.environ['GITHUB_SHA'],
+            disabledTransformation='paired matrix columns',
+            runtimeSha256=hashlib.sha256(runtime).hexdigest(),
+            candidateLoopSha256=hashlib.sha256(MATRIX.MATRIX_COLUMNS_AFTER).hexdigest(),
+            referenceLoopSha256=hashlib.sha256(MATRIX.MATRIX_COLUMNS_BEFORE).hexdigest())
+        preparation_sources = ['scripts/report-kernel-codegen.py', 'runtime/fwp_rt_kernel.c']
+        speed_cases = {'matrix-257-259-255'} if platform.machine() == 'x86_64' else set()
     for label, compiler in compilers.items():
         shutil.copyfile(compiler, out / (label + '-compiler'))
-    shutil.copyfile(args.reference_manifest, out / 'reference-manifest.json')
-    for name in ('reference.patch', 'codegen-reference.rs'):
-        shutil.copyfile(args.reference_manifest.parent / name, out / name)
-    for name in reference_manifest['testExpectations']:
-        saved = out / name
-        saved.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(args.reference_manifest.parent / name, saved)
-    assert hashlib.sha256((out / 'reference.patch').read_bytes()).hexdigest() == reference_manifest['patchSha256']
-    assert hashlib.sha256((out / 'codegen-reference.rs').read_bytes()).hexdigest() == reference_manifest['referenceCodegenSha256']
+    (out / 'reference-manifest.json').write_text(json.dumps(reference_manifest, indent=2) + '\n')
     environment = dict(os.environ, FWP_ARRAY_FUSION='1', FWP_MATRIX_BLOCKING='1', FWP_STACK='1', FWP_LTO='0')
     environment.pop('FWP_NO_OPT', None)
     environment.pop('FWP_NO_REUSE', None)
@@ -80,8 +102,8 @@ def main():
         sourceHashes={name: hashlib.sha256((ROOT / name).read_bytes()).hexdigest() for name in
             ['scripts/measure-current-kernels.py', 'scripts/current_kernel_costs.py',
              'scripts/measure-kernel-baselines.py', 'scripts/numerical-baselines.py',
-             'scripts/prepare-loop-state-reference.py', 'tests/fixtures/numerical_bench.c',
-             'tests/fixtures/numerical_bench.rs', 'tests/fixtures/numerical_bench_native.c', 'src/cgen.rs']},
+             'tests/fixtures/numerical_bench.c', 'tests/fixtures/numerical_bench.rs',
+             'tests/fixtures/numerical_bench_native.c', 'src/cgen.rs'] + preparation_sources},
         executionEnvironment={key: environment[key] for key in sorted(environment) if key.startswith('FWP_')},
         removedEnvironment=['FWP_NO_OPT', 'FWP_NO_REUSE'],
         allowedCpus=sorted(os.sched_getaffinity(0)))
@@ -111,7 +133,7 @@ def main():
         return result, elapsed
 
     results = {}
-    for case, dimensions in CASES.items():
+    for case, dimensions in cases.items():
         directory = out / case
         directory.mkdir()
         elements, rows, inner, columns = dimensions
@@ -138,6 +160,12 @@ def main():
             generated[label] = emitted.read_text()
             marker = generated[label].index('/* ' + entry_name + ' :')
             entries[label] = 'f' + generated[label][marker:].split('static V f', 1)[1].split('(', 1)[0]
+        if args.comparison == 'matrix-columns':
+            candidate, reference = MATRIX.MATRIX_COLUMNS_AFTER.decode(), MATRIX.MATRIX_COLUMNS_BEFORE.decode()
+            generated['reference'] = MEASURE.replace_once(generated['fwp'], candidate, reference)
+            assert MATRIX.paired_columns(generated['reference'].encode()) == generated['fwp'].encode()
+            entries['reference'] = entries['fwp']
+            (directory / 'reference-generated.c').write_text(generated['reference'])
         if not matrix:
             assert re.search(r'typedef struct \{ V v0; V v1; double v2; \} fwp_loop_state\d+;', generated['fwp'])
             assert re.search(r'typedef struct \{ V v0; V v1; V v2; \} fwp_loop_state\d+;', generated['reference'])
@@ -149,7 +177,7 @@ def main():
                 source_path = directory / (language + '-' + mode + extension)
                 binary = directory / (f'role{LABELS.index(language):04d}' if mode == 'timing' else language + '-' + mode)
                 binary = binary.with_suffix('.exe')
-                if language in compilers:
+                if language in generated:
                     source = MEASURE.native_source(generated[language], entries[language], dimensions, matrix, profile, verification)
                 else:
                     source = MEASURE.configured_peer((ROOT / ('tests/fixtures/numerical_bench' + extension)).read_text(), language, dimensions, verification)
@@ -164,7 +192,7 @@ def main():
                                '-DMATRIX_BENCH=' + str(int(matrix)), source_path, '-o', binary, '-lm', '-lpthread']
                 built, _ = run(command, directory / (language + '-' + mode + '-build'), 0)
                 assert not built.stderr
-                invocation = [binary] + ([] if language in compilers else ['matrix' if matrix else 'array'])
+                invocation = [binary] + ([] if language in generated else ['matrix' if matrix else 'array'])
                 if verification:
                     execution, _ = run(invocation, directory / (language + '-verify-output'), 0)
                     values = b'\n'.join(re.findall(rb'^\d+:\d+:[0-9a-f]{16}$', execution.stdout, re.M)) + b'\n'
@@ -183,7 +211,7 @@ def main():
                 assert text_bytes > 0
                 images[language + '-' + mode] = dict(path=binary.name, bytes=len(raw), sha256=hashlib.sha256(raw).hexdigest(), instructionBytes=text_bytes,
                                           sourceSha256=hashlib.sha256(source_path.read_bytes()).hexdigest())
-        for label in compilers:
+        for label in ('fwp', 'reference'):
             copy = directory / f'role{LABELS.index(label + "-identical"):04d}.exe'
             shutil.copyfile(binaries[label][0], copy)
             copy.chmod(0o755)
@@ -232,7 +260,7 @@ def main():
                              rolePaths={label: str(command[0].relative_to(directory)) for label, command in binaries.items()},
                              **summary)
         (out / 'results.json').write_text(json.dumps(results, indent=2) + '\n')
-    failures = decisions(results)
+    failures = decisions(results, speed_cases)
     report = dict(**identity, results=results, failures=failures)
     (out / 'comparison.json').write_text(json.dumps(report, indent=2) + '\n')
     print(json.dumps({case: dict(ratios=row['ratios'], controls=row['identicalRatios'])

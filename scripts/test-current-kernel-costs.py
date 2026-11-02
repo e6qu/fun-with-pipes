@@ -77,7 +77,7 @@ class CurrentKernelCosts(unittest.TestCase):
             for metric in METRICS:
                 row = result_row()
                 row['identicalRatios'][role][metric] = 1.021
-                failures = decisions({'array-65537': row})
+                failures = decisions({'array-65537': row}, {'array-65537', 'array-262145'})
                 self.assertEqual(len(failures), 1)
                 self.assertEqual(failures[0]['kind'], 'copy')
                 self.assertEqual(failures[0]['label'], role)
@@ -85,21 +85,32 @@ class CurrentKernelCosts(unittest.TestCase):
 
     def test_speed_thresholds_and_control_cases_remain_separate(self):
         row = result_row()
-        self.assertEqual(decisions({'array-65537': row}), [])
+        self.assertEqual(decisions({'array-65537': row}, {'array-65537', 'array-262145'}), [])
         row['ratios']['reference']['kernelNs'] = 0.96
-        self.assertEqual(decisions({'array-65537': row})[0]['limit'], 0.95)
-        self.assertEqual(decisions({'matrix-65-67-63': row}), [])
+        self.assertEqual(decisions({'array-65537': row}, {'array-65537', 'array-262145'})[0]['limit'], 0.95)
+        self.assertEqual(decisions({'matrix-65-67-63': row}, {'array-65537', 'array-262145'}), [])
         row['ratios']['reference']['allocationInclusiveNs'] = 1.03
-        self.assertEqual(decisions({'matrix-65-67-63': row})[0]['limit'], 1.02)
+        self.assertEqual(decisions({'matrix-65-67-63': row}, {'array-65537', 'array-262145'})[0]['limit'], 1.02)
 
     def test_every_memory_sample_and_metric_is_checked(self):
         for metric in ('requests', 'requestedBytes', 'retains', 'peakChargedBytes'):
             row = result_row()
             row['profiles']['fwp'][-1][metric] += 1
-            failures = decisions({'array-65537': row})
+            failures = decisions({'array-65537': row}, {'array-65537', 'array-262145'})
             self.assertEqual(len(failures), 1)
             self.assertEqual((failures[0]['kind'], failures[0]['sample'], failures[0]['metric']),
                              ('memory', 4, metric))
+
+    def test_matrix_speed_target_is_explicit_and_scope_specific(self):
+        row = result_row()
+        row['ratios']['reference']['kernelNs'] = 0.96
+        self.assertEqual(decisions({'matrix-257-259-255': row}, set()), [])
+        failures = decisions({'matrix-257-259-255': row}, {'matrix-257-259-255'})
+        self.assertEqual([(f['kind'], f['metric'], f['limit']) for f in failures],
+                         [('speed', 'kernelNs', 0.95)])
+        self.assertEqual(decisions({'matrix-65-67-63': row}, {'matrix-257-259-255'}), [])
+        row['ratios']['reference']['allocationInclusiveNs'] = 1.021
+        self.assertEqual(decisions({'matrix-65-67-63': row}, set())[0]['limit'], 1.02)
 
 
 if __name__ == '__main__':
