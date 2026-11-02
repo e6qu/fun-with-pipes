@@ -1,18 +1,22 @@
 # Current work
 
-**Next:** commit the complete compiler/evidence/docs batch, rebase it onto
-verified main, publish one PR and start the final nine-job production matrix
-plus documentation. All focused checks and all four timing archive audits are
-complete. PR #247 is verified and merged; no PR is currently active.
+**Next:** monitor [PR #248](https://github.com/e6qu/fun-with-pipes/pull/248)'s exact-head
+nine-job production matrix and documentation. Audit every failed job and completed
+target before batching repairs; audit all passing logs before squash merge.
+All focused checks and all four timing archive audits are complete. PR #247 is
+verified and merged; #248 is the sole active PR.
 
 ## Branch and delivery
 
 Worktree `/private/tmp/fwp-array-consumption`, branch `derivative-temporary-storage`.
-Primary checkout untouched. Published checkpoint `71daa4ab` contains the initial timing evidence. Uncommitted
-work completes all four sessions, the report checker, regression tests, workflow
-integration and streamlined tracking.
-After committing that batch, rebase from `bb2e5b29` onto `origin/main` and publish.
-Preserve immutable tags: measured sources must remain available after rebase.
+Primary checkout untouched. The complete batch was rebased onto verified main
+`389337b9`; reviewed checkpoint `44407aff` includes all four sessions, the report
+checker, regression tests, workflow integration and streamlined tracking. The
+final tracking update adds this PR link before production validation starts.
+Compiler and test sources are byte-identical to measured `a4f3200c`; the rebased
+compiler commit is `b08cdf91`. Immutable measurement tags remain unchanged.
+Use `gh pr checks 248` / `gh pr view 248 --json headRefOid,statusCheckRollup` to
+identify the final head and run IDs; do not treat draft/skipped jobs as validation.
 
 [PR #247](roadmap-history.md#benchmark-driver-comparison-pr-247) merged as
 `389337b9495f8fc2c4343339765707c4503b9984`. All nine production jobs and documentation
@@ -32,7 +36,7 @@ are confirmed cancelled. Full final logs and artifacts remain `/private/tmp/fwp-
 | 2 | Verified | Packed storage lowering preserves evaluation order and callback owners |
 | 3 | Verified | Both native Linux GCC/Clang suites; all 96 count observations and broken cleanup controls |
 | 4 | Verified | All four timings and four rejected hosts audited; the failed timing limit remains open |
-| 5 | In progress | Publish this complete batch, run/audit all final gates, then squash-merge |
+| 5 | In progress | PR #248 complete batch; run/audit all final gates, then squash-merge |
 
 ## Compiler and correctness evidence
 

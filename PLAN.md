@@ -10,7 +10,7 @@ necessary sharing. GC is removed; JIT and backward compatibility are excluded.
 and merged. Its benchmark-driver diagnostic is complete; original timing goals
 remain open. No compiler/runtime change followed from that diagnostic.
 
-The next combined PR replaces eligible temporary mapped numeric-record lists with
+[PR #248](https://github.com/e6qu/fun-with-pipes/pull/248) replaces eligible temporary mapped numeric-record lists with
 one owned buffer. Mapping still finishes before folding, and seed evaluation
 stays at its source position. See [design and boundaries](docs/design.md#temporary-mapped-numeric-records)
 and [results](docs/measurements/derivative-temporary-storage-2026-11-02/README.md).
@@ -32,7 +32,7 @@ Both ARM64 sessions and AMD64 session 1 pass. AMD64 session 2 retains a 2.024%
 zero-update history regression against the 2% limit. Every case with at least
 199 updates uses 5.1–14.2% less time; all identical-copy controls pass. Retain the
 verified reductions and leave the failed timing goal open, as in prior deliveries.
-Publish the batch and complete its full final matrix. Fewer allocations do not
+Complete the PR's full final matrix. Fewer allocations do not
 establish C/Rust parity or complete D2.
 
 ## Open performance goals
