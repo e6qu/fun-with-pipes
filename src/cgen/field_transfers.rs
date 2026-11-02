@@ -6,7 +6,7 @@
 
 use std::collections::HashMap;
 
-use crate::ir::{record_fields, Body, Expr, Local};
+use crate::ir::{record_fields, Expr, Local};
 
 struct Projection {
     parent: Local,
@@ -148,7 +148,7 @@ fn complete<'e>(
     None
 }
 
-impl super::FnGen<'_, '_> {
+impl super::FnGen<'_, '_, '_> {
     pub(super) fn bind_field_transfers<'e>(
         &mut self,
         destination: Local,
@@ -181,10 +181,8 @@ impl super::FnGen<'_, '_> {
             return None;
         }
         let transfer = complete(destination, value, body, parent, values.len())?;
-        let Body::Expr(root) = &self.g.prog.funcs[self.me].body else {
-            return None;
-        };
-        let last = self.g.field_last_uses.entry(self.me).or_insert_with(|| {
+        let root = self.root;
+        let last = self.field_last_uses.get_or_insert_with(|| {
             let mut last = HashMap::new();
             last_mentions(root, &mut last);
             last

@@ -1,8 +1,16 @@
 # Remaining reference counts in derivative callbacks
 
-**Status:** the first field-transfer candidate is implemented and awaiting
-[focused verification](https://github.com/e6qu/fun-with-pipes/actions/runs/41533745677).
-No count reduction or speedup is verified yet; callback-input ownership is unchanged.
+**Status:** the first field-transfer candidate is under repair after
+[focused verification](https://github.com/e6qu/fun-with-pipes/actions/runs/41535112048).
+Both compilers on both architectures rejected the new native selection controls:
+the last-use index referred to the stored body, but C generation emits a cloned
+body. The repair ties the lazy index to that exact emission tree. Existing targets
+pass; the new runtime/count checks must pass before claiming a reduction.
+Callback-input ownership is unchanged. Complete initial logs:
+[ARM64](field-owner-transfer-checks-2026-11-03/arm-initial.log.gz),
+[AMD64](field-owner-transfer-checks-2026-11-03/amd-initial.log.gz);
+[artifact identities](field-owner-transfer-checks-2026-11-03/initial-artifacts.json).
+All eight target logs per host were audited before the repair push.
 Complete [PR #248](https://github.com/e6qu/fun-with-pipes/pull/248)'s platform gates
 before publishing the next grouped PR. [Plan](../../PLAN.md).
 
