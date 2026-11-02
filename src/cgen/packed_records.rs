@@ -98,9 +98,6 @@ impl Lower<'_> {
         let Expr::Let(local, value, body) = expr else {
             return None;
         };
-        if crate::opt::uses(body, *local) != 1 {
-            return None;
-        }
         let Expr::Call(producer, inputs) = &**value else {
             return None;
         };
@@ -122,6 +119,10 @@ impl Lower<'_> {
         let (parameters, element) = self.program.funcs[callback].ty.params(arity);
         let (_, mapped) = self.program.funcs[*producer].ty.params(arity + 1);
         if mapped != &MT::Con("std::List".into(), vec![element.clone()]) {
+            return None;
+        }
+        // Unrelated bindings must not scan the rest of the function.
+        if crate::opt::uses(body, *local) != 1 {
             return None;
         }
         let target = consumer(body, *local)?;

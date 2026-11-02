@@ -1,9 +1,10 @@
 # Current work
 
-**Next:** run `packed-record-controls` for the expanded tests: failures inside
-scalar and boxed-input callbacks, selection exclusions and affected autodiff
-regressions. Audit both native jobs before dispatching `packed-records-time` with
-both explicit sessions. The unchanged compiler's 96 count observations are fully
+**Next:** publish the audited repair checkpoint and run `packed-record-checks` plus Clang controls. The new boxed-input
+fixture omitted `fwp_prog_out = stdout`; its first print crashed. The stream
+initialization repair passes a focused local Clang O1 compile/run. Include the
+cheap eligibility-before-use-count compiler repair; confirm all counts again
+before dispatching `packed-records-time` with both explicit sessions. The unchanged compiler's 96 count observations are fully
 audited. Keep monitoring [PR #247](https://github.com/e6qu/fun-with-pipes/pull/247);
 merge only after all nine exact-head production jobs and documentation pass and
 all logs are audited.
@@ -143,3 +144,33 @@ count observations against the frozen current baseline.
 
 New controls checkpoint: guarded formatting passes (1.91s), workflow lint passes
 (6.06s). No local compiler build or native test run.
+
+
+Expanded run `41509110166`, source `76069cfa`: ARM64 `125496023606` fails only
+the new boxed-input probe under GCC and Clang O1. All seven GCC target logs and
+two Clang target logs are audited: exclusion/order tests and related derivative,
+worker-preparation and zip-unwind tests pass. Artifact `13172383078` is hash-checked
+at `/private/tmp/fwp-packed-expanded-arm64.zip`; complete log is
+`/private/tmp/fwp-packed-expanded-arm64.log`. AMD64 `125496023717` has the identical failure under both compilers. Both full
+logs are audited: nine target summaries each, 38 passes and only those two
+probe failures, with no compiler warnings/errors (0.14s). Earlier commentary swapped these two expanded job host labels; these
+identities are authoritative.
+
+The boxed callback's first `echo` reached `fwrite` with null `fwp_prog_out` in the
+standalone fixture, which bypasses normal executable initialization. Fix the
+fixture's explicit stream setup, retaining actual printing and ownership checks.
+A guarded Clang O1 compile of the exact failing generated C with that one-line
+repair passes (0.62s); execution passes (0.73s). This verifies the harness cause
+on local macOS ARM64, not Linux GCC coverage. Also move sole-use counting after
+cheap mapper checks, avoiding body scans for every unrelated `let`. No generated
+representation/evaluation change is intended; verify counts on runners.
+
+PR #247 Windows ARM64 `125455860399` passes; its complete log is
+`/private/tmp/fwp-247-final-windows-arm.log` (206 Rust summaries, 853 passes,
+12 ignored; guarded audit 0.14s). The only diagnostics are echoed warning flags
+and 16 intentional scheduler panic controls, checked against `src/sched.rs`.
+macOS Intel's 85-program corpus and Windows ARM64's 12 reuse tests also pass;
+artifact identities and all outcomes are checked (0.14s). The remaining five
+running production jobs and cancelled ARM64 macOS ownership retry still gate merge.
+
+Combined repair formatting passes (1.95s), workflow lint passes (5.64s).
