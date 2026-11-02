@@ -16,6 +16,53 @@ This experiment measures an existing implementation; it selects no new compiler
 optimization. Preserve earlier failed controls and limits. It is not an unchanged
 retry of the old baseline or proof that every numerical abstraction is free.
 
+## Results: November 2, 2026
+
+[All timings, memory counts, code sizes and failed limits](current-kernels-2026-11-02/README.md)
+are retained for both sessions on each architecture. The
+[independent archive audit](https://github.com/e6qu/fun-with-pipes/actions/runs/41407524129)
+passes. Source `b9da15a1` supplies session 2; `9f6d0f7c` supplies session 1 after
+the isolated reference-test repair. Their compiler/runtime/library trees match.
+All exact results, memory limits and missing-release controls pass.
+
+| Work | Current fwp time compared with peers | Qualification |
+|---|---|---|
+| ARM64 array calculation | 2–7% less than C; about 4% less than Rust | Both sizes and sessions pass copy controls |
+| ARM64 arrays, allocation through cleanup | 24–31% more than C; 61–71% more than Rust | Both sizes and sessions pass copy controls |
+| ARM64 matrix calculation | About 6% more than C; 34–42% more than Rust | Both sizes and sessions pass copy controls |
+| AMD64 large-matrix calculation | 65% more than C; about 40% more than Rust | Both sessions pass copy controls |
+| AMD64 large matrix, allocation through cleanup | 47–48% more than C; 34–35% more than Rust | Both sessions pass copy controls |
+| Other AMD64 cases | Observations retained in the full tables | At least one session misses a copy limit; no combined timing acceptance |
+
+Typed loop state changes ARM64 array time by less than 0.4% in either direction,
+missing the required 5% improvement in all four size/session comparisons. AMD64
+array observations show 66–69% less calculation time than word state, but nine
+copy-control failures across the AMD64 cases prevent combined acceptance. None of these sessions is
+rerun unchanged to seek a pass. The existing typed-state implementation remains;
+this measurement introduces no compiler change.
+
+Storage is the same in current fwp and the word-state reference:
+
+- Arrays use **one allocation per calculation**, the same count as C/Rust, with
+  eight more requested bytes for the fwp array header.
+- Matrices use **five allocations versus three**: the native fwp benchmark creates
+  two input matrix records in addition to the three data buffers. Requested bytes
+  exceed peer payload by 88 bytes per calculation; peak managed charge exceeds
+  peer live payload by 24 bytes. These are different accounting boundaries.
+- Both workloads perform **zero effective retains** and finish with **zero live
+  workload storage**. This does not count all allocator metadata or process pages.
+- Separate process RSS, native code size and raw GCC frame estimates remain in
+  the report. Managed charge is not total process memory, and a frame estimate
+  is not measured maximum stack use.
+
+The next numerical investigation should target the repeatable large-matrix
+calculation gap. Inspect the runtime loop and matched peers while preserving
+byte-copy alias safety, increasing inner-dimension arithmetic order, shared input
+views, shape guards and cancellation cleanup. The two small input records do not
+explain the calculation-only gap: their construction is outside that timer.
+ARM64 array construction is a separate measured gap, not evidence for adding ARC
+work or changing the already allocation-free reduction loop.
+
 ## Six programs and equivalent work
 
 Build two compilers from the same checkout of Rust source:

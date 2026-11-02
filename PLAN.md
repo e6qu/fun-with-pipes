@@ -11,21 +11,50 @@ cleanup changes stay unchanged while the remaining gates run; merge only after
 all nine jobs and documentation pass. This branch prepares the following batch
 without opening a second PR.
 
-The old AMD64 array slowdown predates typed floating-point loop state in #227.
-Establish current costs and isolate that existing transformation with a same-source
-word-state reference. The [protocol](docs/measurements/current-kernel-costs.md)
-fixes workloads, settings, controls and decision rules before measurements.
+The [current comparison](docs/measurements/current-kernel-costs.md#results-november-2-2026)
+is measured and independently audited. All result/memory checks pass; four ARM
+speed limits and nine AMD copy controls remain unmet. The old roughly 3.3-times-C
+AMD array ratio predates typed state and must not describe current overhead.
 
 | Step | Work | Completion requirement |
 |---|---|---|
 | 1 | Freeze current-kernel comparison and finish #242 | Preserve its exact-head CI audit and merge identity; publish the protocol before runner implementation |
-| 2 | Build the paired measurement and evidence checks | Same-source reference, exact results, cleanup failures, six-role schedule and damaged-evidence controls pass |
-| 3 | Measure time, memory and code costs | Both sessions on both qualified architectures retained; audit every result, control and failed threshold |
+| 2 | Built: paired measurement and evidence checks | Same-source reference, exact results, cleanup failures, six-role schedule and damaged-evidence controls pass |
+| 3 | Measured: time, memory and code costs | Four sessions and seven prior host/check failures retained; independent audit `41407524129` passes |
 | 4 | Publish understandable current costs and deliver | Update plan/docs with concrete remaining gaps; all final production jobs and documentation pass before squash merge |
 
 Reuse existing kernel oracles and native harnesses. No new compiler optimization
 is selected. Retain historical failures and make no current-speed claim from old
 sources or representation alone.
+
+## Next numerical task: explain the large-matrix gap
+
+The qualified 257×259 by 259×255 case takes about 65% more calculation time than
+C on AMD64 and 6% more on ARM64. Zero effective retains and near-payload storage
+make this a computation investigation, not an unspecified ARC-removal task.
+
+1. Compare `fwp_p_matrix_mul_f64` in `runtime/fwp_rt_kernel.c` with the exact C/Rust
+   peers. Inspect emitted source, loop bounds, address calculations and scheduler
+   polls. Identify a causal source difference; do not infer a repair from disassembly.
+2. Freeze one bounded candidate and its same-source reference before timing.
+   Preserve increasing inner-index multiplication/addition order, no contraction,
+   legal byte-copy access, input aliasing, shape checks and cancellation cleanup.
+   No new allocator, wrapper, scratch matrix or backend is assumed necessary.
+3. Extend `blocked_matrix` and its existing native probes for that change. Require
+   raw-interpreter/native O1/O2 agreement, empty/odd sizes, shared/sliced inputs,
+   invalid shapes, exceptional floating-point values and deliberate unwind failures.
+4. Measure both matrix sizes and full construction-through-cleanup on both declared
+   architectures, with independent copies and frozen work counts. Require at least
+   5% less large-matrix calculation time on AMD64, no case/scope more than 2% slower,
+   and no allocation/retain/peak-storage increase. Failed controls remain evidence;
+   revise the measurement design explicitly before any new experiment.
+5. Bundle the proven change, regressions and readable costs into one PR. If no safe
+   candidate meets the rules, retain the rejected result and choose a different
+   source-level cause; do not ship a speculative optimization as a speed improvement.
+
+ARM64 array allocation-through-cleanup costs 24–31% more than C despite a fast
+reduction loop. Investigate input construction separately after the matrix task;
+first separate filling from allocator/cleanup costs with a declared measurement.
 
 ## Open performance goals
 
