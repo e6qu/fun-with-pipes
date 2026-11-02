@@ -79,6 +79,11 @@ Session 2 passes all exact-result, storage, cleanup and timing-copy checks on th
 declared EPYC 7763. Its five earlier host rejections stopped before building or
 timing. That successful session does not erase session 1’s six failed limits.
 
+In session 2, source construction takes 7.71–8.52 times the fwp driver,
+12.75–13.17 times C and 13.72–14.16 times Rust. Inclusive source time is
+7.25–7.49 times C and 7.56–7.79 times Rust. The largest copy mismatch is 1.85%.
+These are results from one passing session, not a two-session AMD64 confirmation.
+
 [Index](index.json) links jobs, artifact identities and compressed reports/logs.
 The reports retain every warmup and sample; file manifests retain raw file hashes.
 `check-array-construction-time.py` audited the original complete archives against

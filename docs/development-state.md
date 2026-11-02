@@ -1,7 +1,7 @@
 # Current work
 
-**Next:** publish the two audited test-harness repairs and rerun the grouped
-scalar-capture safety checks on all three hosts before paired timing.
+**Next:** audit repaired safety run `41448056587` on all three hosts, then run
+the frozen same-source timing comparison if every focused gate passes.
 Keep source, safety checks, timing, docs and final validation in one substantial PR.
 
 ## Branch and last verified delivery
@@ -26,7 +26,7 @@ Keep source, safety checks, timing, docs and final validation in one substantial
 |---|---|---|
 | 1 | Verified | Construction diagnostic `41427397530`: both production GCC architectures at O1/O2, exact source/storage/control audit |
 | 2 | In progress | All four sessions audited; both ARM64 and AMD64 session 2 pass; AMD64 session 1 retains six failed timing-copy limits |
-| 3 | In progress | Protocol `5cf1c80f` predates selection change; all three jobs exposed two test-harness defects, now repaired; remote recheck pending |
+| 3 | In progress | Protocol `5cf1c80f` predates selection change; all three jobs exposed two test-harness defects, now repaired; repair `240d8897` runs in `41448056587` |
 | 4 | Pending | Acceptance frozen; paired runner prepared, timing requires all three focused safety jobs first |
 | 5 | Pending | Publish one coherent PR; nine final-head production gates, docs, audit and verified squash merge |
 
@@ -85,7 +85,9 @@ Keep source, safety checks, timing, docs and final validation in one substantial
   The repaired probe reconstructed from the saved candidate C passes locally at
   Clang O1/O2; all four negative controls produce their required failures (ten
   executions total). This does not replace remote Rust/clippy or GCC checks.
-  Raw artifacts: `13142606109` (macOS), `13142741152` (ARM64), `13141209899` (AMD64).
+  Repair run `41448056587` uses `240d8897`: macOS job `125286026052`, Linux ARM64
+  `125286026439`, Linux AMD64 `125286026473`. No candidate timing dispatched yet.
+  Raw failed-run artifacts: `13142606109` (macOS), `13142741152` (ARM64), `13141209899` (AMD64).
 - Paired timing suite `scalar-array-time` is prepared but not dispatched. It
   requires `evidence_run` naming the successful focused run and compares its exact
   `src/runtime/lib/tests` trees. `prepare-scalar-array-reference.py` changes only
@@ -93,7 +95,9 @@ Keep source, safety checks, timing, docs and final validation in one substantial
   codegen file exactly matches the baseline. The audit's explicit comparison mode
   still reproduces original ARM64 raw evidence (0.59s); actionlint passes (6.27s).
   The compact retained-record audit also reconstructs all four sessions and six
-  failed AMD64 limits (0.35s); documentation CI now runs it.
+  failed AMD64 limits (0.49s); documentation CI runs it with explicit comparison
+  selection. Its candidate mode also checks reference/safety identities and
+  reconstructs the frozen speed and storage limits; candidate evidence is pending.
 - Earlier run `41426573182` failed only source formatting on both hosts. The fixture
   was fixed with #243's verified package; failure logs and source tag remain.
 

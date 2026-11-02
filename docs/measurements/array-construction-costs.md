@@ -152,7 +152,8 @@ show repeatable materialized-source overhead. Filling, including callback dispat
 and checks, accounts for over 99% of separately instrumented construction time.
 The optimized GCC source still calls the generic callback path per element.
 That supports testing direct dispatch; it does not prove a speedup in advance.
-AMD64 session 1 has six failed copy limits, and session 2 remains pending.
+AMD64 session 1 retains six failed copy limits. Session 2 subsequently passed;
+that independent result does not settle session 1’s limits.
 
 Freeze this candidate before implementation:
 
