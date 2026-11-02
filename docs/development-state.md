@@ -9,8 +9,9 @@ unchanged unless a real CI repair is required; one active PR only.
 
 PR: https://github.com/e6qu/fun-with-pipes/pull/244
 Head: `555c4981695f4819586ef0a57114a36c2c9476ef`.
-Production: `41425537461`; docs: `41425537447`. Native Windows and Intel macOS
-jobs have started; the other jobs were queued at the last check. No failure yet.
+Production: `41425537461`: benchmark job `125211125775` passes, eight native jobs
+remain. Docs `41425537447` / `125211125800` passes. Both complete logs audited:
+only deliberate documentation test-runner failure controls appear. No CI failure.
 PR worktree: `/private/tmp/fwp-matrix-calculation`.
 Independent preparation: `array-construction-costs`, `/private/tmp/fwp-array-construction`.
 The [construction protocol](measurements/array-construction-costs.md) is frozen
@@ -97,3 +98,10 @@ checks; Rust formatting, actionlint and roadmap audit. Historical tables verify
 unchanged (7.46s). Handoff heading/status drift was repaired; documentation audit
 passes (2.88s). Latest actionlint: 5.95s. No local
 compiler build, full suite or benchmark. Free space was 67 GiB at the last check.
+
+Array diagnostic preparation `afbd14dd` is retained as
+`roadmap/array-construction-protocol-2026-11-02`. The runner compares 144 native
+case/round/path combinations at each O1/O2 setting, ordinary and profiled, plus
+small interpreter cases and deliberately missing-release controls. Six observer
+unit checks pass locally (0.13s), actionlint passes (6.43s). Full compiler builds
+and native diagnostics run only on GitHub. Free space: 66 GiB.
