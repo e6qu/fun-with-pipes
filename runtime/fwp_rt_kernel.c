@@ -889,7 +889,19 @@ static V fwp_p_matrix_mul_f64(V mv,V kv,V nv,V left,V right) {
                 size_t je=n-jb<FWP_MATRIX_TILE?n:jb+FWP_MATRIX_TILE;
                 for(size_t i=ib;i<ie;i++)for(size_t q=kb;q<ke;q++){
                     double x;__builtin_memcpy(&x,a+(i*k+q)*sizeof(double),sizeof x);
-                    for(size_t j=jb;j<je;j++){
+                    size_t j=jb;
+                    for(;je-j>=2;j+=2){
+                        double y0,y1,prior0,prior1;
+                        __builtin_memcpy(&y0,b+(q*n+j)*sizeof(double),sizeof y0);
+                        __builtin_memcpy(&y1,b+(q*n+j+1)*sizeof(double),sizeof y1);
+                        __builtin_memcpy(&prior0,out+(i*n+j)*sizeof(double),sizeof prior0);
+                        __builtin_memcpy(&prior1,out+(i*n+j+1)*sizeof(double),sizeof prior1);
+                        double product0=x*y0,product1=x*y1;
+                        double value0=product0+prior0,value1=product1+prior1;
+                        __builtin_memcpy(out+(i*n+j)*sizeof(double),&value0,sizeof value0);
+                        __builtin_memcpy(out+(i*n+j+1)*sizeof(double),&value1,sizeof value1);
+                    }
+                    for(;j<je;j++){
                         double y,prior;__builtin_memcpy(&y,b+(q*n+j)*sizeof(double),sizeof y);
                         __builtin_memcpy(&prior,out+(i*n+j)*sizeof(double),sizeof prior);
                         double product=x*y,value=product+prior;

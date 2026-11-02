@@ -52,8 +52,11 @@ class KernelCodegenInput(unittest.TestCase):
         self.assertEqual(metadata['workflow_run']['head_sha'], SOURCE)
 
     def test_paired_column_patch_changes_only_the_declared_loop(self):
-        source = (Path(__file__).resolve().parent.parent / 'runtime/fwp_rt_kernel.c').read_bytes()
+        runtime = (Path(__file__).resolve().parent.parent / 'runtime/fwp_rt_kernel.c').read_bytes()
+        self.assertEqual(runtime.count(CODEGEN.MATRIX_COLUMNS_AFTER), 1)
+        source = runtime.replace(CODEGEN.MATRIX_COLUMNS_AFTER, CODEGEN.MATRIX_COLUMNS_BEFORE)
         updated = CODEGEN.paired_columns(source)
+        self.assertEqual(updated, runtime)
         self.assertEqual(updated.replace(CODEGEN.MATRIX_COLUMNS_AFTER, CODEGEN.MATRIX_COLUMNS_BEFORE), source)
         self.assertIn(CODEGEN.MATRIX_INPUTS_BEFORE, updated)
         for damaged in (b'', source + CODEGEN.MATRIX_COLUMNS_BEFORE, updated):

@@ -64,7 +64,7 @@ fn blocked_matrix_preserves_raw_products_and_cast_shape_behavior() {
                 "fwp_budget = 0; /* scheduler probe: no tasks exist */",
             );
         for opt in ["-O1", "-O2"] {
-            let exe = d.join(format!("matrix-{mode}{opt}"));
+            let exe = d.join(format!("matrix-{mode}{opt}.exe"));
             fwp::cgen::compile_c(&code, &exe, opt).unwrap();
             let actual = checked(&mut Command::new(&exe));
             assert_eq!(
@@ -75,7 +75,7 @@ fn blocked_matrix_preserves_raw_products_and_cast_shape_behavior() {
         }
         if mode == "1" {
             let forced = code.replace("#define FWP_TASK_TICKS 0", "#define FWP_TASK_TICKS 1");
-            let exe = d.join("unnecessary-scheduler-tick");
+            let exe = d.join("unnecessary-scheduler-tick.exe");
             fwp::cgen::compile_c(&forced, &exe, "-O2").unwrap();
             let actual = Command::new(exe).output().unwrap();
             assert_eq!(actual.status.code(), Some(214), "{actual:?}");
@@ -119,7 +119,7 @@ fn blocked_matrix_uses_only_output_storage_and_preserves_scalar_order() {
             .replace("int main(int argc, char **argv)","int original_main(int argc, char **argv)");
         let code = format!("{runtime}\n{probe}");
         for opt in ["-O1", "-O2"] {
-            let executable = d.join(format!("profile-{mode}{opt}"));
+            let executable = d.join(format!("profile-{mode}{opt}.exe"));
             fwp::cgen::compile_c(&code, &executable, opt).unwrap();
             let out = checked(&mut Command::new(&executable));
             if let Some(destination) = std::env::var_os("FWP_ARRAY_FUSION_ARTIFACTS") {
@@ -138,8 +138,25 @@ fn blocked_matrix_uses_only_output_storage_and_preserves_scalar_order() {
                     .unwrap();
                     std::fs::write(destination.join(format!("matrix-measured-{mode}.c")), &code)
                         .unwrap();
+                    std::fs::copy(
+                        &executable,
+                        destination.join(format!("matrix-measured-{mode}.exe")),
+                    )
+                    .unwrap();
                 }
             }
+        }
+        if mode == "1" {
+            let release = "fwp_rc_free_arr(result); /* final-result-release control */";
+            assert_eq!(code.matches(release).count(), 1);
+            let omitted = code.replace(release, "/* deliberately retain the result */");
+            let executable = d.join("missing-result-release.exe");
+            fwp::cgen::compile_c(&omitted, &executable, "-O2").unwrap();
+            let out = Command::new(&executable).output().unwrap();
+            assert_eq!(out.status.code(), Some(219), "{out:?}");
+            assert!(
+                String::from_utf8_lossy(&out.stderr).contains("matrix case tile-edges retained")
+            );
         }
     }
     std::fs::remove_dir_all(d).unwrap();
@@ -222,7 +239,7 @@ fn blocked_matrix_releases_output_when_computation_unwinds() {
             "int original_main(int argc, char **argv)",
         );
         for opt in ["-O1", "-O2"] {
-            let exe = d.join(format!("unwind-{omit}{opt}"));
+            let exe = d.join(format!("unwind-{omit}{opt}.exe"));
             fwp::cgen::compile_c(&runtime, &exe, opt).unwrap();
             let output = Command::new(&exe).output().unwrap();
             assert_eq!(
