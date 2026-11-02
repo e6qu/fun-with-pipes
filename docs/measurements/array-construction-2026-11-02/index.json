@@ -257,7 +257,7 @@
           "head_sha": "d3ddc94d6eb8c5c58af74159051670241dd23e5b"
         }
       },
-      "report": "amd.json",
+      "report": "amd.json.gz",
       "archive": "amd.zip",
       "log": "amd.log.gz"
     },
@@ -282,7 +282,7 @@
           "head_sha": "d3ddc94d6eb8c5c58af74159051670241dd23e5b"
         }
       },
-      "report": "arm.json",
+      "report": "arm.json.gz",
       "archive": "arm.zip",
       "log": "arm.log.gz"
     }
