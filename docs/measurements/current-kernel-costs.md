@@ -50,7 +50,8 @@ Neoverse-N2/GCC 13.3.0 and EPYC 7763/GCC 15.2.0, Rust 1.99.1. Reject a different
 host before building or executing and retain the rejection. Replacement dispatches
 name only the unqualified host/session. Never retry a completed noisy session.
 
-Compile generated C and the C peer at O2, `-ffp-contract=off`, explicit `armv8-a`
+Build both Rust compilers at O1 with assertions/overflow checks enabled, matching
+production validation. Compile generated C and the C peer at O2, `-ffp-contract=off`, explicit `armv8-a`
 or `x86-64`, no LTO. Rust uses O2 and its matching architecture. Enable fusion,
 stack storage and unique reuse explicitly. Keep normal allowed CPU affinity and
 address randomization. Record all versions, flags and relevant environment.
@@ -59,8 +60,9 @@ Use two warmup rounds and **18 measured rounds**. In each round each program
 runs four fresh processes, except the small matrix, which uses 256. Six roles
 require a new six-role schedule; the old four-role order cannot include both
 reference controls. Each block runs every role once. Use the six cyclic role
-rotations of `[0, 1, 5, 2, 4, 3]`, advancing one rotation per block across rounds.
-Thus every role occupies every position equally over the measured experiment.
+rotations of `[0, 1, 5, 2, 4, 3]`. Block `b` of round `r` uses rotation
+`(r + b) % 6`. Thus every role occupies every exact process position three times
+over the 18 measured rounds.
 Report actual adjacency counts; do not claim uniform self-pair coverage.
 Use six equal-length executable names and retain the exact role/path map.
 
@@ -118,3 +120,10 @@ Use focused harness checks locally through the resource guard; all compiler buil
 measurements and full validation run on GitHub. Keep #242's passing head unchanged
 while its remaining gates run. Require all final production jobs and documentation
 before squash merge of this batch too.
+
+The scheduling control caught a preparation ambiguity before any measurements:
+advancing continuously by four/256 blocks makes each fixed process position see
+only three roles. The explicit `(round + block) % 6` rule above fixes that bias.
+Work counts, timing boundaries and decision limits are unchanged. Preparation
+`818731e3` and tag `roadmap/current-kernel-costs-protocol-2026-11-02` retain the
+initial text; this correction is recorded before execution.
