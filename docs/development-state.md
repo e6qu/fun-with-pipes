@@ -1,8 +1,18 @@
 # Current work
 
-**Next:** audit production run `41454128868` and documentation `41453962382`
-at exact head `d53fb07a639214739d7648fcd1dd2a022d9b8e10`, then squash merge if all pass.
-Documentation passed and its full log was audited; all nine production gates remain pending.
+**Next:** finish auditing PR #245's final production run `41454128868` at
+`d53fb07a639214739d7648fcd1dd2a022d9b8e10`; squash merge after every gate passes.
+Eight production jobs and documentation `41453962382` pass. Linux AMD64 remains
+in its full native test step. All completed target archives and full job logs
+have been audited, including Windows' intentional panic controls.
+
+Independent follow-up work is on branch `array-consumption-diagnostics` in
+`/private/tmp/fwp-array-consumption`; no second PR is open. Its frozen protocol
+is `roadmap/array-consumption-protocol-2026-11-02` (`5a581248`). The C-only runner,
+raw-data auditor and focused workflow are implemented; five harness tests pass
+(0.14s), Python syntax passes (0.13s), and actionlint passes (6.63s), all guarded.
+Dispatch the four qualified-host sessions, retaining every rejection/failure.
+Do not rerun a completed noisy measurement or change the original limits.
 
 ## Branch and delivery
 
