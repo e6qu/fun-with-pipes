@@ -8,7 +8,7 @@ verified and merged; #248 is the sole active PR.
 
 ## Branch and delivery
 
-Worktree `/private/tmp/fwp-array-consumption`, local preparation branch
+Worktree `/private/tmp/fwp-array-consumption`, next-batch branch
 `numeric-owner-transfers`, based on published PR #248 head `32aae4f7`.
 The PR branch `derivative-temporary-storage` remains unchanged at that head.
 Primary checkout untouched. The complete batch was rebased onto verified main
@@ -243,6 +243,19 @@ and three Clang groups, retaining toolchain/source identities and every probe/lo
 No timings or full matrix in that suite. Workflow lint passes (6.28s), Rust
 format check passes (0.27s). Publish an immutable candidate tag and dispatch
 this focused suite; continue monitoring/auditing PR #248 separately.
+
+Candidate `0d5e852c08080b56b77db75da8686b432f217df2` is now published as
+`roadmap/field-owner-checks-2026-11-03`. Focused run `41533745677` was cancelled
+while both jobs were still queued: `125580257436` / `125580257834`, both with
+empty step lists. Source review found repeated continuation scans could become
+quadratic. The repair lazily indexes last local mentions once per eligible
+function and checks each complete group in constant time; a fourth unit control
+checks enclosing continuations. No source trees are cloned or mutated. Metadata
+of the unstarted run: `/private/tmp/fwp-field-owner-superseded-jobs.json`.
+Publish the combined repair and a new immutable probe tag before dispatching
+the replacement focused suite. Neither this
+branch nor the focused run changes PR #248's exact head `32aae4f7`. Mapper-input
+borrowing, measured count reduction and final timing acceptance remain unproved.
 
 PR #248's ARM64 compiler artifact `13181104014` is verified by archive digest,
 manifest source and binary digest, extracted to `/private/tmp/fwp-248-macos-arm`.

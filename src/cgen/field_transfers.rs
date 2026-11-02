@@ -4,13 +4,15 @@
 //! group with the same owners at its exit, so later call-liveness identities
 //! and ordinary boxed-entry cleanup remain valid.
 
-use crate::ir::{record_fields, Expr, Local};
+use std::collections::HashMap;
+
+use crate::ir::{record_fields, Body, Expr, Local};
 
 struct Projection {
     parent: Local,
     temporary: Local,
     index: usize,
-    releases_parent: bool,
+    release: Option<*const Expr>,
 }
 
 fn projection(value: &Expr) -> Option<Projection> {
@@ -29,21 +31,79 @@ fn projection(value: &Expr) -> Option<Projection> {
     if retained != temporary || parent == temporary {
         return None;
     }
-    let (releases_parent, result) = match &**body {
-        Expr::Drop(released, result) if released == parent => (true, &**result),
-        result => (false, result),
+    let (release, result) = match &**body {
+        Expr::Drop(released, result) if released == parent => {
+            (Some(&**body as *const Expr), &**result)
+        }
+        result => (None, result),
     };
     matches!(result, Expr::Local(local) if local == temporary).then_some(Projection {
         parent: *parent,
         temporary: *temporary,
         index: *index as usize,
-        releases_parent,
+        release,
     })
 }
 
 struct Transfer<'e> {
     bindings: Vec<(Local, Local, usize)>,
     rest: &'e Expr,
+    release: *const Expr,
+}
+
+/// One traversal of the immutable function. A later mention in another branch
+/// conservatively prevents selecting an earlier branch. Pointer identities are
+/// compared only, never dereferenced or carried across ownership-tree changes.
+fn last_mentions(expr: &Expr, last: &mut HashMap<Local, *const Expr>) {
+    match expr {
+        Expr::Local(local) => {
+            last.insert(*local, expr);
+        }
+        Expr::Const(_) | Expr::Func(_) => {}
+        Expr::Call(_, arguments) | Expr::Construct(_, arguments) | Expr::Record(arguments) => {
+            for argument in arguments {
+                last_mentions(argument, last);
+            }
+        }
+        Expr::Apply(function, arguments) => {
+            last_mentions(function, last);
+            for argument in arguments {
+                last_mentions(argument, last);
+            }
+        }
+        Expr::Field(base, _) => last_mentions(base, last),
+        Expr::SetFields(base, fields) => {
+            last_mentions(base, last);
+            for (_, value) in fields {
+                last_mentions(value, last);
+            }
+        }
+        Expr::Let(_, value, body) => {
+            last_mentions(value, last);
+            last_mentions(body, last);
+        }
+        Expr::Match(value, arms) => {
+            last_mentions(value, last);
+            for (_, body) in arms {
+                last_mentions(body, last);
+            }
+        }
+        Expr::Dup(local, body) | Expr::Drop(local, body) => {
+            last.insert(*local, expr);
+            last_mentions(body, last);
+        }
+        Expr::Trace(_, body) | Expr::BorrowGlobal(_, _, body) => last_mentions(body, last),
+        Expr::ResourceRegion {
+            parameters,
+            bindings,
+            body,
+        } => {
+            for local in parameters.iter().chain(bindings) {
+                last.insert(*local, expr);
+            }
+            last_mentions(body, last);
+        }
+    }
 }
 
 fn complete<'e>(
@@ -65,18 +125,17 @@ fn complete<'e>(
             || seen & (1 << field.index) != 0
             || destination == parent
             || bindings.iter().any(|(other, _, _)| *other == destination)
-            || field.releases_parent != (position + 1 == width)
+            || field.release.is_some() != (position + 1 == width)
         {
             return None;
         }
         seen |= 1 << field.index;
         bindings.push((destination, field.temporary, field.index));
         if position + 1 == width {
-            // Only a fully matched candidate scans its continuation. Ordinary
-            // bindings never scan a function suffix looking for a later drop.
-            return (crate::opt::uses(body, parent) == 0).then_some(Transfer {
+            return Some(Transfer {
                 bindings,
                 rest: body,
+                release: field.release.expect("complete group releases its parent"),
             });
         }
         let Expr::Let(next, next_value, next_body) = body else {
@@ -122,6 +181,17 @@ impl super::FnGen<'_, '_> {
             return None;
         }
         let transfer = complete(destination, value, body, parent, values.len())?;
+        let Body::Expr(root) = &self.g.prog.funcs[self.me].body else {
+            return None;
+        };
+        let last = self.g.field_last_uses.entry(self.me).or_insert_with(|| {
+            let mut last = HashMap::new();
+            last_mentions(root, &mut last);
+            last
+        });
+        if last.get(&parent) != Some(&transfer.release) {
+            return None;
+        }
         for (local, temporary, index) in &transfer.bindings {
             if self.resource_slots.contains_key(local)
                 || self.fields.contains_key(local)
@@ -184,7 +254,10 @@ mod tests {
         let Expr::Let(local, value, body) = expr else {
             return None;
         };
-        complete(*local, value, body, 0, width)
+        let transfer = complete(*local, value, body, 0, width)?;
+        let mut last = HashMap::new();
+        last_mentions(expr, &mut last);
+        (last.get(&0) == Some(&transfer.release)).then_some(transfer)
     }
 
     #[test]
@@ -258,5 +331,21 @@ mod tests {
             Box::new(Expr::Dup(21, Box::new(Expr::Local(20)))),
         );
         assert!(projection(&value).is_none());
+    }
+
+    #[test]
+    fn last_use_index_includes_enclosing_continuations() {
+        let root = Expr::Let(
+            50,
+            Box::new(group(&[0, 1], Expr::Local(1))),
+            Box::new(Expr::Local(0)),
+        );
+        let Expr::Let(_, value, _) = &root else {
+            unreachable!()
+        };
+        let inner = select(value, 2).unwrap();
+        let mut last = HashMap::new();
+        last_mentions(&root, &mut last);
+        assert_ne!(last.get(&0), Some(&inner.release));
     }
 }

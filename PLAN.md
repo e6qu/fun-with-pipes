@@ -40,8 +40,9 @@ establish C/Rust parity or complete D2.
 The next grouped compiler batch is the
 [derivative owner-transfer investigation](docs/measurements/derivative-owner-transfers.md).
 Its audited sites account for 98.7% of retains in the largest measured solve.
-Freeze separate field-move and callback-borrowing proofs before implementation;
-then check exact counts, failure cleanup, compiler cost and paired timings.
+The first field-transfer proof is frozen and its candidate is in focused checks.
+Verify its cleanup and exact counts; freeze the separate callback-input proof
+before changing that contract, then measure the combined candidate.
 This preparation does not change PR #248's head or close its remaining gates.
 
 - **AMD64 array consumption.** The original large-array copy controls pass,
