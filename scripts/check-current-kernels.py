@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Audit complete current-kernel evidence, retaining failed performance decisions."""
 import argparse
+import ast
 import hashlib
 import importlib.util
 import json
@@ -27,6 +28,24 @@ def digest(data):
     return hashlib.sha256(data).hexdigest()
 
 
+def recorded_test_expectations(preparation):
+    """Read the measured preparation's literal test changes, without executing it."""
+    declarations = [node.value for node in ast.parse(preparation).body
+                    if isinstance(node, ast.Assign) and any(
+                        isinstance(target, ast.Name) and target.id == 'TEST_EXPECTATIONS'
+                        for target in node.targets)]
+    assert len(declarations) <= 1
+    if not declarations:
+        return {}  # Initial evidence predates the reference assertion repair.
+    changes = ast.literal_eval(declarations[0])
+    assert set(changes) == {'tests/loop_preparation_ownership.rs', 'tests/nested_loop_boxing.rs'}
+    for pair in changes.values():
+        assert isinstance(pair, tuple) and len(pair) == 2
+        assert all(isinstance(value, str) and value for value in pair)
+        assert pair[0].replace('double v3', 'V v3') == pair[1] and pair[0] != pair[1]
+    return changes
+
+
 def check_report(report, source, machine, session):
     assert re.fullmatch('[0-9a-f]{40}', source) and report['source'] == source
     assert machine in HOSTS and session in (1, 2)
@@ -47,6 +66,12 @@ def check_report(report, source, machine, session):
         FWP_ARRAY_FUSION='1', FWP_MATRIX_BLOCKING='1', FWP_STACK='1', FWP_LTO='0').items())
     assert report['removedEnvironment'] == ['FWP_NO_OPT', 'FWP_NO_REUSE']
     assert all(key not in environment for key in report['removedEnvironment'])
+    assert set(report['sourceTrees']) == {'src', 'runtime', 'lib', 'Cargo.toml', 'Cargo.lock', 'build.rs'}
+    assert set(report['sourceHashes']) == {
+        'scripts/measure-current-kernels.py', 'scripts/current_kernel_costs.py',
+        'scripts/measure-kernel-baselines.py', 'scripts/numerical-baselines.py',
+        'scripts/prepare-loop-state-reference.py', 'tests/fixtures/numerical_bench.c',
+        'tests/fixtures/numerical_bench.rs', 'tests/fixtures/numerical_bench_native.c', 'src/cgen.rs'}
     assert set(report['compilerSha256']) == {'fwp', 'reference'}
     manifest = report['referenceManifest']
     assert manifest['source'] == source
@@ -96,7 +121,21 @@ def check_directory(directory, source, machine, session):
     candidate = subprocess.check_output(['git', 'show', source + ':src/cgen.rs'], cwd=ROOT, text=True)
     preparation = subprocess.check_output(['git', 'show', source + ':scripts/prepare-loop-state-reference.py'], cwd=ROOT, text=True)
     reference = PATCH.recorded_reference(candidate, preparation)
+    changes = recorded_test_expectations(preparation)
+    if changes:
+        assert set(manifest['testExpectations']) == set(changes)
+        for name, (before, after) in changes.items():
+            original = subprocess.check_output(['git', 'show', source + ':' + name], cwd=ROOT, text=True)
+            assert original.count(before) == 1 and after not in original
+            updated = original.replace(before, after)
+            assert (directory / name).read_text() == updated
+            assert manifest['testExpectations'][name] == dict(candidateSha256=digest(original.encode()),
+                                                            referenceSha256=digest(updated.encode()))
+    else:
+        assert 'testExpectations' not in manifest
     assert (directory / 'codegen-reference.rs').read_text() == reference
+    ownership = subprocess.check_output(['git', 'show', source + ':src/ownership.rs'], cwd=ROOT)
+    assert digest(ownership) == manifest['ownershipSha256']
     assert digest(candidate.encode()) == manifest['candidateCodegenSha256']
     assert digest(reference.encode()) == manifest['referenceCodegenSha256']
     assert digest((directory / 'reference.patch').read_bytes()) == manifest['patchSha256']
@@ -174,6 +213,12 @@ def check_directory(directory, source, machine, session):
                     ['matrix' if case.startswith('matrix') else 'array'])
                 assert command['elapsedNs'] == observation['processNs']
                 assert json.loads((directory / (key + '.stdout')).read_text())['samples'] == observation['samples']
+        for label in LABELS:
+            raw = (case_dir / (label + '-rss.stdout')).read_bytes()
+            MEASURE.check_samples(raw, row['resultHash'], storage_label(label), False)
+            diagnostic = (case_dir / (label + '-rss.stderr')).read_bytes()
+            observed_rss = int(re.search(rb'Maximum resident set size \(kbytes\):\s*(\d+)', diagnostic)[1]) * 1024
+            assert observed_rss == row['peakProcessRssBytes'][label]
         for name, info in row['stack'].items():
             raw = (case_dir / name).read_bytes()
             assert digest(raw) == info['sha256']

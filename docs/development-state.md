@@ -16,8 +16,8 @@ rebase only this branch's new commits onto the verified merge tree.
 | Step | Status | Evidence / remaining work |
 |---|---|---|
 | 1 | In progress | Published protocol `818731e3` and retained tag; #242 final matrix still running |
-| 2 | Implemented | Paired preparation, runner, raw-evidence audit and workflow; focused local controls pass, runner execution pending |
-| 3 | Pending | Two qualified sessions per architecture; keep every failed host/control |
+| 2 | Implemented | Paired preparation, runner, raw-evidence audit and workflow; focused local controls pass, published runner `b9da15a1`; execution and full evidence audit pending |
+| 3 | In progress | Run `41404044761` at `b9da15a1`: two sessions per architecture dispatched; keep every failed host/control |
 | 4 | Pending | Publish current ratios/memory and exact-head full validation |
 
 ## Source findings
@@ -58,10 +58,34 @@ Guarded local checks: three exact-reference tests (0.13s), seven scheduling/deci
 controls (0.13s), eight corrupted-evidence controls (4.05s), actionlint (5.42s).
 The workflow builds both compilers from Rust with production O1/assertion settings,
 checks reference failure/cancellation in session 1, then measures both sessions.
-Host qualification occurs before building or timing. No measurements yet.
+Host qualification occurs before building or timing. Run `41404044761` is dispatched; no result is accepted yet.
 
 Final #242 macOS ARM logs: `/private/tmp/fwp-242-f411-mac-arm-{regular,ownership}.log`,
 with corresponding `-tests.zip` archives. All 131 regular and 126 ownership targets
 pass. Brew's already-installed message is informational; no compiler warning.
 Preceding Linux AMD: `/private/tmp/fwp-242-linux-amd-final.log` and
 `/private/tmp/fwp-242-linux-amd-tests.zip`. Preserve #242 head `f411df1f`.
+
+## Reference check repair in progress
+
+Run `41404044761`, ARM session 1 job `125141953749`, fails two **layout assertions**:
+`loop_preparation_ownership` and `nested_loop_boxing` demand `double v3`, while the
+word-state reference deliberately emits `V v3`. All four numeric-array tests and
+both loop-unwind tests pass; the complete log has no other failures or warnings.
+Fix the isolated reference preparation to replace only those two expected type
+strings, retaining every real alias/fault/cleanup and broken-observer check.
+Production Rust tests and compiler sources stay unchanged. Reference source/test
+patches and hashes are retained; four focused preparation controls pass (0.13s).
+
+ARM session 2 job `125141953515` is measuring unchanged kernel programs. Preserve
+its result: the repair changes test expectations, not compiler/runtime/library
+source or timed work. Rerun session 1 after the repair because it never timed.
+The initial AMD sessions and three replacements rejected wrong CPUs before any
+build/execution; logs and qualification ZIPs are `/private/tmp/fwp-current-kernels-
+rejected-JOB.{log,zip}` for jobs `125141953680`, `125141953814`, `125142541094`,
+`125143340035`, `125143340076`. Runs: `41404044761`, `41404234063`, `41404489679`.
+Replacement run `41405063750`: AMD session 2 job `125145128971` qualified and builds; session 1 job `125145128805` rejected before execution. Preserve the running second sessions. Only first sessions need dispatch after this test repair.
+
+Final repair controls: four preparation tests (0.13s), ten evidence controls
+(4.28s), including literal-only historical test-patch validation. No benchmark
+program, compiler source, workload, timing boundary or acceptance limit changed.

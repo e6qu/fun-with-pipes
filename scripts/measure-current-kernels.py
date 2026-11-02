@@ -62,6 +62,10 @@ def main():
     shutil.copyfile(args.reference_manifest, out / 'reference-manifest.json')
     for name in ('reference.patch', 'codegen-reference.rs'):
         shutil.copyfile(args.reference_manifest.parent / name, out / name)
+    for name in reference_manifest['testExpectations']:
+        saved = out / name
+        saved.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(args.reference_manifest.parent / name, saved)
     assert hashlib.sha256((out / 'reference.patch').read_bytes()).hexdigest() == reference_manifest['patchSha256']
     assert hashlib.sha256((out / 'codegen-reference.rs').read_bytes()).hexdigest() == reference_manifest['referenceCodegenSha256']
     environment = dict(os.environ, FWP_ARRAY_FUSION='1', FWP_MATRIX_BLOCKING='1', FWP_STACK='1', FWP_LTO='0')

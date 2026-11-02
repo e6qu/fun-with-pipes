@@ -22,6 +22,12 @@ def report_fixture():
         failures=[], actual=host, expected=copy.deepcopy(host)),
         configuration=dict(samples=18, warmups=2, processes=4, small_matrix_processes=256,
             timeout=180, session=1, c_arch=c_arch, rust_cpu=rust_cpu, case=list(CHECK.MEASURE.CASES)),
+        sourceTrees={name: '0' * 40 for name in ('src', 'runtime', 'lib', 'Cargo.toml', 'Cargo.lock', 'build.rs')},
+        sourceHashes={name: '0' * 64 for name in (
+            'scripts/measure-current-kernels.py', 'scripts/current_kernel_costs.py',
+            'scripts/measure-kernel-baselines.py', 'scripts/numerical-baselines.py',
+            'scripts/prepare-loop-state-reference.py', 'tests/fixtures/numerical_bench.c',
+            'tests/fixtures/numerical_bench.rs', 'tests/fixtures/numerical_bench_native.c', 'src/cgen.rs')},
         compilerSha256={'fwp': 'b' * 64, 'reference': 'c' * 64},
         referenceManifest=dict(source=SOURCE, compilerSha256='c' * 64,
             disabledTransformation='native floating-point loop-state fields'),
@@ -69,6 +75,19 @@ class CurrentKernelEvidence(unittest.TestCase):
 
     def check(self):
         return CHECK.check_report(self.report, SOURCE, 'aarch64', 1)
+
+    def test_recorded_test_changes_are_literal_and_narrow(self):
+        source = (ROOT / 'scripts/prepare-loop-state-reference.py').read_text()
+        changes = CHECK.recorded_test_expectations(source)
+        self.assertEqual(len(changes), 2)
+        self.assertEqual(CHECK.recorded_test_expectations('CANDIDATE = "before"\nREFERENCE = "after"\n'), {})
+        for damaged in (source + '\nTEST_EXPECTATIONS = {}\n',
+                        source.replace("'typedef struct {{ V v0; V v1; V v2; V v3; }}", "'typedef struct {{ V v0; V v1; V v2; float v3; }}"),
+                        source.replace("'tests/nested_loop_boxing.rs'", "'tests/another.rs'")):
+            with self.assertRaises(AssertionError):
+                CHECK.recorded_test_expectations(damaged)
+        hostile = source + '\nraise RuntimeError("must not execute")\n'
+        self.assertEqual(CHECK.recorded_test_expectations(hostile), changes)
 
     def test_complete_report_passes(self):
         self.assertEqual(self.check(), [])
@@ -125,6 +144,15 @@ class CurrentKernelEvidence(unittest.TestCase):
         self.report['failures'] = decisions(self.report['results'])
         self.assertEqual(len(self.check()), 1)
         self.report['failures'] = []
+        with self.assertRaises(AssertionError):
+            self.check()
+
+    def test_missing_runtime_or_oracle_identity_fails(self):
+        self.report['sourceTrees'].pop('runtime')
+        with self.assertRaises(AssertionError):
+            self.check()
+        self.report = copy.deepcopy(self.original)
+        self.report['sourceHashes'].pop('scripts/numerical-baselines.py')
         with self.assertRaises(AssertionError):
             self.check()
 

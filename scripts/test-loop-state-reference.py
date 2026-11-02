@@ -19,6 +19,18 @@ class LoopStateReference(unittest.TestCase):
         for boundary in ('fn loop_def(', 'fn invariant_f64_arrays(', 'fn unpack_loop_state('):
             self.assertIn(boundary, restored)
 
+    def test_reference_layout_expectations_preserve_every_ownership_check(self):
+        for name, (before, after) in REFERENCE.TEST_EXPECTATIONS.items():
+            current = (ROOT / name).read_text()
+            updated = REFERENCE.reference_test(current, name)
+            self.assertEqual(updated.count(after), 1)
+            self.assertEqual(updated.replace(after, before), current)
+            self.assertIn('fwp_cleanups', updated)
+            self.assertIn('fwp_trap(', updated)
+            for damaged in (current.replace(before, ''), current + before, updated):
+                with self.subTest(name=name), self.assertRaises(AssertionError):
+                    REFERENCE.reference_test(damaged, name)
+
     def test_unrelated_codegen_is_preserved(self):
         changed = CURRENT.replace('fn string_length(', 'fn updated_string_length(', 1)
         self.assertNotEqual(changed, CURRENT)
