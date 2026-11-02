@@ -1,0 +1,26 @@
+{
+  "run": 41407524129,
+  "job": 125152829956,
+  "artifact": {
+    "id": 13123504113,
+    "node_id": "MDg6QXJ0aWZhY3QxMzEyMzUwNDExMw==",
+    "name": "current-kernel-audit",
+    "size_in_bytes": 15003265,
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13123504113",
+    "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13123504113/zip",
+    "expired": false,
+    "digest": "sha256:01fb541e24a516fa7988e9471128e3f690700fed19d41bbf3b6646a13829e044",
+    "created_at": "2026-11-02T07:41:16Z",
+    "updated_at": "2026-11-02T07:41:16Z",
+    "expires_at": "2027-01-31T07:37:42Z",
+    "workflow_run": {
+      "id": 41407524129,
+      "repository_id": 1400763332,
+      "head_repository_id": 1400763332,
+      "head_branch": "current-kernel-costs",
+      "head_sha": "c3add130fe0c9d6a7fdd39cc68b4f656e4ef30e9"
+    }
+  },
+  "archiveSha256": "01fb541e24a516fa7988e9471128e3f690700fed19d41bbf3b6646a13829e044",
+  "logSha256": "5a35d5efa4bc424bd4f698eb324925e1073a26d2e523bced79d8b8ecc2098579"
+}

@@ -1,126 +1,84 @@
 # Current work
 
-**Next:** monitor the batched CI-repair commit for
-[PR #242](https://github.com/e6qu/fun-with-pipes/pull/242). Require all nine
-production jobs and documentation on that exact commit before squash merge.
-All failures in run `41391756089` at `dbc71914` are diagnosed below; focused
-repairs pass. Linux and Windows AMD64 still run and need their final audits.
-#241 run `41385349559` is fully audited.
+**Next:** deliver `current-kernel-costs`: finish the documentation audit, then run
+all nine production jobs on the final head and squash-merge only after they pass.
+Keep one active PR. Use `gh pr view` from the branch to find its exact head and
+checks. Do not rerun completed numerical sessions or change a passing CI head.
 
-Worktree `/private/tmp/fwp-returned-callables`, branch `numeric-callback-lifetimes`,
-base `81aed37265661c0c79e47ca7223b40be2d1fe225`. Preserve unrelated primary-checkout
-edits. Preparation `e0280ee2` and pushed tag
-`roadmap/numeric-callback-bindings-protocol-2026-11-02` precede compiler changes.
-Keep one active PR. [Scope, proof and examples](measurements/numeric-callback-bindings.md).
+Worktree: `/private/tmp/fwp-current-kernel-costs`. The branch was rebased onto
+verified #242 squash merge `10b9bbff10afd97cb6ce653b1bf9c4aaea5f2531`; measured
+source commits remain available through the tags below. #242's nine production
+jobs and docs pass, all logs are audited, and its merge tree/message are verified.
+[History](roadmap-history.md#numeric-callbacks-and-inline-cleanup-pr-242) holds the
+delivery record. Duplicate merge-tree runs were cancelled after that verification.
 
 ## Roadmap status
 
 | Step | Status | Evidence / remaining work |
 |---|---|---|
-| 1 | Verified | Saved source/IR identifies the blocked call; requirements frozen before implementation |
-| 2 | Implemented | Local flat-record field reads expose direct calls; inline callbacks install caller cleanup before execution |
-| 3 | Verified | Nine optimizer and 72 integration tests pass on GCC ARM64/AMD64 and Clang ARM64, including cleanup and harness repairs |
-| 4 | In progress | Full production audit and final documentation have failures below; merge remains gated |
+| 1 | Verified | Protocol `818731e3` published before implementation; #242 fully verified and merged as `10b9bbff` |
+| 2 | Verified | Paired reference and six-program runner pass correctness/memory audits; damaged-evidence controls pass; no production compiler change |
+| 3 | Verified | Four sessions retained; raw audit `41407524129` passes; four speed and nine copy limits remain open |
+| 4 | In progress | Reproducible current costs and concrete matrix follow-up documented; documentation audit and final production gates remain |
 
-## Current failures and local repairs
+The [protocol](measurements/current-kernel-costs.md) fixes the inputs, hosts,
+timing scopes and rules. The historical AMD64 array slowdown predates typed loop
+state (#227); it is not current overhead. Bounds-proved array increments already
+wrap, and typed double state already exists. Neither fact proves a speedup.
 
-- **Intel macOS process control:** job `125104480914` returned empty bytes in
-  the incomplete-character test at its 0.5s deadline. That test assumed the child
-  had already started and written. Output-dependent tests now wait for an explicit
-  readiness file before starting the same capture deadline; a separate check
-  expires before output and requires empty bytes. The deliberately slow-starting
-  incomplete-character case passes. Production `process_wait.py` is unchanged.
-  All eleven local controls pass (3.02s). Full Intel CI must verify the repair.
-- **Failure diagnostics:** macOS/Windows now upload failed process-check logs
-  immediately. Inventory uploads run only if their generation step ran, avoiding
-  the missing-file warning after a skipped preflight; missing expected artifacts
-  fail explicitly. Workflow validation passes.
-- **Documentation:** job `125104461214` fails three record-fold reference tests.
-  The exact source patch still expects the old unevaluated call expression.
-  Updated patch and altered-cleanup rejection pass all three reference tests and
-  nine dependent array-list evidence tests. Historical audits now read the exact
-  preparation constants from the measured revision, without executing saved
-  Python. Old/current and mismatched-revision controls pass (two tests, 0.25s).
-  Historical reports remain unchanged.
-- Earlier docs `41389582000` failed a stale collection-test count (three versus
-  four after the new overflow regression). Fixed in `dbc71914`; the corrected
-  count and missing-test rejection pass locally and in the current docs run.
-- Five repaired caller probes now use explicit `.exe` paths. The current full
-  matrix verifies those path-only changes after the focused compiler checks.
+## Current measurements
 
-Current production jobs: Linux ARM/AMD `125104481030`/`125104481395`, regular
-macOS ARM/AMD `125104481085`/`125104480914`, ownership macOS ARM/AMD
-`125104480995`/`125104480808`, Windows ARM/AMD `125104481014`/`125104481048`,
-benchmark `125104480950`. Benchmark, both macOS ARM64 jobs, Intel ownership and
-Windows ARM64 pass; complete logs are audited. All 257 macOS shard logs per
-architecture are clean, including Intel regular tests (only its earlier process
-control failed). Both Windows resource/callback groups have 57 clean logs each.
-Windows ARM64's remaining groups and packaging pass; its scheduler panics are
-intentional controls. Linux and Windows AMD64 still run.
-Logs under `/private/tmp`: `fwp-242-bench-final.log`, `fwp-242-mac-{arm,amd}-*.log`,
-`fwp-242-mac-{arm,amd}-*-tests`, `fwp-242-windows-{arm,amd}-tests`,
-`fwp-242-windows-arm-final.log`. Audit every completed target and warning.
+[Selected runs and jobs](measurements/current-kernel-selection.json) retain all
+attempts. Sources `b9da15a1` and `9f6d0f7c` have identical compiler/runtime/library
+trees; the latter changes only the isolated reference's expected layout checks.
 
-## Verified focused checks
+| Architecture/session | Job | Current result |
+|---|---|---|
+| ARM64 / 2 | `125141953515` | Raw audit passes; array ratios 0.99814 and 1.00141 miss the required 0.95 |
+| AMD64 / 2 | `125145128971` | Raw audit passes; small array and small matrix identical-copy controls exceed 2% |
+| ARM64 / 1 | `125147087471` | Reference and raw checks pass; both array speed targets miss |
+| AMD64 / 1 | `125147087334` | Reference and raw checks pass; five array copy limits miss |
 
-| Run / source | Results on GCC ARM64, GCC AMD64 and Clang ARM64 |
-|---|---|
-| `41386463046` / `8677dd0a` | Nine optimizer and 48 integration tests pass; five old caller probes fail on removed entries |
-| `41388066920` / `98bb58fd` | Nine optimizer and 61 integration tests pass; three runtime probes still lack generic callback metadata |
-| `41389582456` / `60971efd` | All nine optimizer and 72 integration tests pass across 16 targets, including all harness and cleanup repairs |
+Six hosts were rejected before building or timing; their logs and qualification
+records remain selected. Initial ARM session 1 (`125141953749`) failed only two
+reference assertions expecting `double v3`, while its declared word-state layout
+uses `V v3`. Repair `9f6d0f7c` changes those expectations only in the isolated
+reference checkout, retaining alias, failure, cancellation and cleanup checks.
+That job never timed; completed sessions are not rerun to seek passing limits.
 
-All three sets of completed logs were audited; no other failure or compiler
-warning. Final focused jobs: Clang `125097795577`, GCC ARM `125097795774`,
-GCC AMD `125097795775`; logs `/private/tmp/fwp-242-cleanup-*.log`.
-Docs `41388066359` passes. Narrower `41387498848`/`41387496768` were cancelled
-while queued when the broader repair replaced them; no passing gate was discarded.
+The independent report job `125152829956`, run `41407524129`, passes at `c3add130`.
+It checks raw streams, actual binaries, compiler patches and every decision.
+Retained summaries/data are in `docs/measurements/current-kernels-2026-11-02/`;
+artifact `13123504113` and full audit log hashes are recorded in `download.json`.
+The docs workflow recomputes the committed tables from retained observations.
 
-## Previous delivery audit
+Qualified large-matrix calculation costs about 65% more time than C on AMD64,
+6% more on ARM64. Both kernels perform zero effective retains; array allocation
+count matches peers, matrices add two input records. PLAN.md now specifies the
+next source-level matrix investigation and its safety/measurement requirements.
+No new compiler optimization is selected in this measurement batch.
 
-The user merged #241 retaining measured benefits with unmet limits open. Merge
-`81aed372` and PR head `45af930e` share tree `a188f53196b53797719ecbc0e89589517ab4959b`.
-Its subject meets the commit rule. Docs `41375291046`/`41385359961` pass;
-duplicate production `41385360274` was cancelled while queued after tree equality.
-[Timing/count evidence](measurements/derivative-record-folds.md) keeps all missed
-limits. Do not repeat unchanged sessions. #239 remains the verified platform baseline.
+## Verification and source retention
 
-Full run `41385349559`: benchmark passes. All eight platform jobs fail only
-seven known targets: caller/runtime/map/filter/zip/reuse
-harness roots and collection-callback cleanup. These are repaired in #242.
-Audited 255 macOS target logs and 257 Linux target logs per architecture,
-plus every complete job log. Windows resource groups (55 targets each) and both
-TLS/executable groups (98 targets each) show the same failures, with no warnings.
-Both Windows jobs' later checks and packaging pass. TLS certificate-rejection and
-scheduler panic messages are intentional controls. All jobs are complete.
-
-Final audited jobs: Linux AMD `125084848907`, Windows AMD `125084849027`.
-Other IDs: Linux ARM `125084848880`, regular macOS ARM/AMD
-`125084848914`/`125084848899`, ownership macOS ARM/AMD
-`125084848670`/`125084848861`, Windows ARM `125084848959`, benchmark `125084848998`.
-Logs under `/private/tmp`: `fwp-241-full-{arm,amd}-logs`,
-`fwp-241-linux-{arm,amd}-tests`, `fwp-241-linux-{arm,amd}-final.log`, `fwp-241-mac-*.log`,
-`fwp-241-windows-{arm,amd}-logs`, `fwp-241-windows-tls-{arm,amd}`,
-`fwp-241-windows-reuse-{arm,amd}`, `fwp-241-windows-{arm,amd}-final.log`.
-
-## Reproductions and local checks
-
-All focused commands use `python3 scripts/local-guard.py`. No local compiler build
-or full suite ran. Preserve 64 GiB free, target data below 2 GiB, RSS below 1 GiB
-and the 180s deadline. Full builds, suites and benchmarks stay on GitHub.
-
-- Original IR reproduction: `FWP_DUMP_IR=1`, `FWP_STACK=0`, dynamic memory/emit-C;
-  `/private/tmp/fwp-242-destructuring.fwp`, `fwp-242-baseline-ir.log`,
-  `fwp-242-baseline.c` (all under `/private/tmp`); 0.25s.
-- Small emitted-C controls isolate the cleanup-order bug; moving cleanup before
-  inline work changes remaining storage from 16–352 bytes to zero. These establish
-  cause; the focused CI above verifies the actual compiler repair. Controls and
-  scripts: `/private/tmp/fwp-242-leak/`, `/private/tmp/fwp-242-*-control.py`.
-- Retained #241 compiler: artifact `compiler-crashes-corpus-macos-15`, SHA-256
-  `9ef9986e260c9594ea5706100a70b56b2017d6acaf52445d0b778f3e159a12c5`.
-  Artifact contains the compiler only; no compiler crash was reported.
-- Guarded checks pass: roadmap (2.77s), Rust formatting (1.87s), collection evidence
-  (eight tests, 0.13s), process waits (ten tests, 1.87s), record-fold reference
-  (three tests, 0.13s), array-list evidence (nine tests, 48.66s), workflow lint (0.26s).
-
-Final repair checks: process waits (eleven tests, 3.02s), workflow lint (0.49s)
-and roadmap audit (2.93s) pass. Compiler/runtime source is unchanged from `60971efd`.
+- Protocol tag: `roadmap/current-kernel-costs-protocol-2026-11-02` (`818731e3`).
+- Initial measured-source tag: `roadmap/current-kernel-initial-measurements-2026-11-02`
+  (`b9da15a1`). Repaired checks retained by
+  `roadmap/current-kernel-reference-checks-2026-11-02` (`9f6d0f7c`);
+  audit by `roadmap/current-kernel-audit-2026-11-02` (`c3add130`).
+- Guarded local checks: reference preparation 4 tests (0.13s); scheduling and
+  decisions 7 (0.13s); damaged evidence 10 (4.28s); job retention 4 (0.13s);
+  report normalization 2 (0.13s); actionlint (6.73s); roadmap/link/commit audit (3.13s). No local full build or timing.
+- #242 final production `41399968432` and docs `41399968400` pass on `f411df1f`.
+  Full logs: `/private/tmp/fwp-242-f411-{linux-arm,linux-amd,windows-arm,windows-amd,
+  mac-arm-regular,mac-arm-ownership,mac-amd-regular,mac-amd-ownership}.log`, plus
+  `/private/tmp/fwp-242-final-bench.log` and `/private/tmp/fwp-242-repaired-docs.log`.
+  Corresponding target ZIPs: 257 logs per Linux, 131 regular/126 ownership per
+  macOS, and 135 passing summaries per Windows native archive. Only intentional
+  scheduler panics/TLS rejections appear; no unresolved diagnostic.
+- Numerical logs: `/private/tmp/fwp-current-kernels-{arm2,amd2}.log` and
+  `/private/tmp/fwp-current-kernels-{arm1,amd1}-repaired.log`. Their only failures
+  are the retained performance decisions. `/private/tmp/fwp-current-kernel-audit.log`
+  is clean; its compressed copy is committed with the data.
+- Initial matrix source audit: `/private/tmp/fwp-matrix-source-audit.md`. Input
+  records are outside the kernel timer; task-free scheduler polls are already
+  eliminated. Preserve byte-copy alias safety. No speculative runtime edit.

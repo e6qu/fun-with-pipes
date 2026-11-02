@@ -4,30 +4,58 @@ Build an ahead-of-time language with simple pipes, immutable values, strong type
 and useful inference. Prefer direct values, moves and borrows; reserve ARC for
 necessary sharing. GC is removed; JIT and backward compatibility are excluded.
 
-## Current batch: direct calls through numeric record bindings
+## Current batch: measure current numerical kernels
 
-#240/#241 implement direct numeric fold accumulators. [Their measured results](docs/measurements/derivative-record-folds.md)
-show allocation reductions and 5.8–7.8% faster larger solves. The user merged #241
-with its missed speed/size limits still open. Its full production matrix exposed missing test roots and a callback-unwind
-leak; repair both in this batch and audit the remaining jobs. A merge alone is not verification.
+PR #242 is verified and squash-merged as `10b9bbff`. This batch publishes the
+current numerical comparison, its reproducible reports and the next concrete
+optimization task. The [handoff](docs/development-state.md) records delivery checks.
 
-The next concrete gap is source-form dependent code generation: tuple
-destructuring hides a known call behind field bindings, while equivalent explicit
-projections allow a direct numeric worker. Fix that local simplification without
-changing function stages or retaining escaping records longer.
-[Scope and requirements](docs/measurements/numeric-callback-bindings.md) define the
-proof, excluded values and exact checks before implementation.
+The [current comparison](docs/measurements/current-kernel-costs.md#results-november-2-2026)
+is measured and independently audited. All result/memory checks pass; four ARM
+speed limits and nine AMD copy controls remain unmet. The old roughly 3.3-times-C
+AMD array ratio predates typed state and must not describe current overhead.
 
 | Step | Work | Completion requirement |
 |---|---|---|
-| 1 | Confirm the source/IR boundary and record requirements | Retain the indirect-call example and freeze the local binding proof before compiler changes; record #241 merge and unresolved limits |
-| 2 | Expose known calls through safe record-field bindings | Preserve binding/argument order and ownership/resource guards; repair cleanup installed after inline callback execution; keep global purity and constructor stages |
-| 3 | Verify semantics, counts and cleanup together | Tuple/named-record cases, aliases, empty inputs, effects, rejected shapes, exact final-box counts, failure/cancellation and omitted-release controls pass on native GCC/Clang |
-| 4 | Complete platform validation and delivery | Audit #241 full CI, repair all encountered issues, update docs and pass all nine final-head production jobs plus documentation before squash merge |
+| 1 | Verified: preparation and #242 delivery | Protocol published before implementation; all #242 production/docs gates pass and merge tree/message are verified |
+| 2 | Built: paired measurement and evidence checks | Same-source reference, exact results, cleanup failures, six-role schedule and damaged-evidence controls pass |
+| 3 | Measured: time, memory and code costs | Four sessions and seven prior host/check failures retained; independent audit `41407524129` passes |
+| 4 | Publish understandable current costs and deliver | Update plan/docs with concrete remaining gaps; all final production jobs and documentation pass before squash merge |
 
-Reuse saved evidence and existing probes. Run focused checks during implementation,
-then one final full matrix for the complete batch. No new timing run is needed for
-an allocation/call-removal claim; earlier noisy or failed timings remain evidence.
+Reuse existing kernel oracles and native harnesses. No new compiler optimization
+is selected. Retain historical failures and make no current-speed claim from old
+sources or representation alone.
+
+## Next numerical task: explain the large-matrix gap
+
+The qualified 257×259 by 259×255 case takes about 65% more calculation time than
+C on AMD64 and 6% more on ARM64. Zero effective retains and near-payload storage
+make this a computation investigation, not an unspecified ARC-removal task.
+
+1. Compare `fwp_p_matrix_mul_f64` in `runtime/fwp_rt_kernel.c` with the exact C/Rust
+   peers. Inspect emitted source, loop bounds, address calculations and scheduler
+   polls. Identify a causal source difference; do not infer a repair from disassembly.
+2. Freeze one bounded candidate and its same-source reference before timing.
+   Preserve increasing inner-index multiplication/addition order, no contraction,
+   legal byte-copy access, input aliasing, shape checks and cancellation cleanup.
+   No new allocator, wrapper, scratch matrix or backend is assumed necessary.
+3. Extend `blocked_matrix` and its existing native probes for that change. Require
+   raw-interpreter/native O1/O2 agreement, empty/odd sizes, shared/sliced inputs,
+   invalid shapes, exceptional floating-point values and deliberate unwind failures.
+4. Measure both matrix sizes and full construction-through-cleanup on both declared
+   architectures, with independent copies and frozen work counts. Require at least
+   5% less large-matrix calculation time on AMD64, no case/scope more than 2% slower,
+   and no allocation/retain/peak-storage increase. Failed controls remain evidence;
+   revise the measurement design explicitly before any new experiment.
+5. Bundle the proven change, regressions and readable costs into one PR. If no safe
+   candidate meets the rules, retain the rejected result and choose a different
+   source-level cause; do not ship a speculative optimization as a speed improvement.
+
+ARM64 array allocation-through-cleanup costs 24–31% more than C despite a fast
+reduction loop. This includes a C driver's fwp-runtime calls, not source-compiled
+`array.generate`. After the matrix task, compare both input-construction paths
+and separate filling from allocator/cleanup time in a declared measurement before
+selecting any compiler change.
 
 ## Open performance goals
 

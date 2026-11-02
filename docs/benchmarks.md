@@ -157,7 +157,7 @@ but three AMD64 construction regressions fail the combined acceptance rule.
 |---|---|---|
 | How long does a complete program take versus C/Rust? | [Seven checked-arithmetic peers](#fwp-compared-with-c-and-rust) | Includes startup, algorithms, storage and output; not isolated compiler overhead |
 | Where do the CPU benchmark gaps occur? | [Calculation, startup and output protocol](measurements/cpu-phases.md) | Diagnostic clocks change code; retain ordinary timings and do not infer a speedup from phase observations |
-| What do numeric kernels cost? | [Current array and matrix protocol](measurements/kernel-baselines.md) | Separates calculation from construction/cleanup; excludes process startup |
+| What do numeric kernels cost? | [Current array and matrix comparison](measurements/current-kernel-costs.md) | Separates calculation from construction/cleanup; excludes process startup |
 | What does differentiation add? | [Current descent comparison](measurements/descent-costs.md) | Compare automatic and explicit fwp derivatives first; C/Rust use explicit formulas |
 | Did an ownership change reduce work? | [Ownership measurements](measurements/README.md#ownership-and-storage) | Paired counts/bytes; a retain saved is not a measured speedup |
 | Does a service release completed work? | [API memory](measurements/http-application-memory.md) | Samples between request groups; final process cleanup alone is insufficient |
@@ -360,13 +360,17 @@ sessions does not isolate an ARC or compiler speedup.
 
 ## Numerical workloads compared with C and Rust
 
-The [current kernel protocol](measurements/kernel-baselines.md) covers map/reduce
-at 65,537/262,145 elements and two matrix products, 65×67 by 67×63 and
-257×259 by 259×255. It records exact input formulas, ordered calculations and
-separate computation and allocation-inclusive timers. One AMD small-array
-identical-copy control differs by 3.08%, above its 2% limit. The overall baseline
-is therefore incomplete. Typed loop-state improvements have correctness evidence,
-but no accepted numerical speed claim. These peers are not optimized BLAS.
+The [current kernel comparison](measurements/current-kernel-costs.md) covers
+map/reduce at 65,537/262,145 elements and matrix products of 65×67 by 67×63 and
+257×259 by 259×255. It compares current fwp, a same-source compiler using generic
+value words for loop state, C and Rust. Calculation and allocation-inclusive
+timing are separate; neither includes process startup. These peers are not BLAS.
+
+The [older baseline](measurements/kernel-baselines.md) predates typed loop state.
+Its roughly 3.3-times-C AMD64 array result is **not current overhead**. Its failed
+3.08% copy control remains part of that historical experiment. Current measurements
+must retain their own controls and missed limits; representation alone establishes
+no speedup.
 
 The [current derivative comparison](measurements/descent-costs.md) uses Rosenbrock
 descent with 3, 33 and 129 coordinates. Automatic differentiation records arithmetic

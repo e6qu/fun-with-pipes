@@ -6,6 +6,28 @@ and complete platform validation are different events. Measurements retain their
 original source and settings; old numbers are not measurements of current main.
 The linked PRs, runs and data records supply the detailed evidence.
 
+## Numeric callbacks and inline cleanup (PR #242)
+
+[PR #242](https://github.com/e6qu/fun-with-pipes/pull/242) merged November 2 as
+`10b9bbff10afd97cb6ce653b1bf9c4aaea5f2531`. All nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/41399968432)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/41399968400)
+pass on `f411df1f402c0f51f3fab8276edd43661f738299`. Every completed target log and
+compiler diagnostic was audited. The merge has the tested tree
+`b78915ffcebb708a25dbd04f563cb29b36ed31bd` and a verified 58-character single-line
+message without body or trailers.
+
+[Numeric record bindings](measurements/numeric-callback-bindings.md) expose known
+callbacks to direct-call/fold optimization while preserving binding and failure
+order. The same PR repairs inline collection/array/state callback cleanup: caller
+owners are protected before work can fail. Captured-data leak controls now return
+to zero. C probe roots, deadline-test startup and historical reference audits were
+also repaired; earlier failures remain documented. No new elapsed-time claim.
+
+The duplicate merge-tree production/documentation runs `41411454983` and
+`41411455244` were cancelled while queued after verifying tree equality.
+This restores a fully verified delivery after #240/#241's early merges.
+
 ## Numeric fold verification and handler specialization (PR #241)
 
 [PR #241](https://github.com/e6qu/fun-with-pipes/pull/241) merged November 2 as
