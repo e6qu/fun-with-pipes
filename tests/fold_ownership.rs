@@ -28,6 +28,96 @@ impl Drop for Scratch {
         let _ = std::fs::remove_dir_all(&self.0);
     }
 }
+
+#[test]
+fn packed_record_maps_finish_before_seed_and_fold_effects() {
+    let dir = Scratch::new("packed-record-order");
+    let src = dir.0.join("packed.fwp");
+    std::fs::write(
+        &src,
+        r#"
+mapped : I64 -> (I64, F64) ! {IO}
+mapped = fn n -> let printed = n | echo in (n, 0.5)
+paired : I64 -> I64 -> (I64, F64) ! {IO}
+paired = fn y -> fn x -> let printed = (x, y) | echo in (x + y, 0.5)
+seed : () -> (I64, F64) ! {IO}
+seed = fn ignored -> let printed = 77 | echo in (0, 1.0)
+step : (I64, F64) -> (I64, F64) -> (I64, F64) ! {IO}
+step = fn (count, total) -> fn (n, value) ->
+    let printed = n + 100 | echo
+    in (count + n, total + value)
+run : List[I64] -> (I64, F64) ! {IO}
+run = fn input -> let values = map mapped input in fold step (seed ()) values
+zip-run : List[I64] -> List[I64] -> (I64, F64) ! {IO}
+zip-run = fn left -> fn right ->
+    let values = zip-with paired left right
+    in fold step (seed ()) values
+input-alias : List[I64] -> ((I64, F64), List[I64]) ! {IO}
+input-alias = fn input -> (run input, input)
+output-alias : List[I64] -> ((I64, F64), List[(I64, F64)]) ! {IO}
+output-alias = fn input ->
+    let values = map mapped input
+    in (fold step (seed ()) values, values)
+main = [
+    run [] | show,
+    run [1] | show,
+    run [1, 2] | show,
+    zip-run [10, 20, 30] [1, 2] | show,
+    zip-run [] [1, 2] | show,
+    zip-run [10, 20] [] | show,
+    input-alias [3, 4] | show,
+    output-alias [5, 6] | show,
+] | each print
+"#,
+    )
+    .unwrap();
+    let fwp = env!("CARGO_BIN_EXE_fwp");
+    let reference = checked(
+        Command::new(fwp)
+            .args(["run", "--interp"])
+            .arg(&src)
+            .env("FWP_NO_OPT", "1"),
+    );
+    assert!(reference
+        .stdout
+        .starts_with(b"77\n1\n77\n101\n1\n2\n77\n101\n102\n"));
+    let optimized = checked(Command::new(fwp).args(["run", "--interp"]).arg(&src));
+    assert_eq!(optimized.stdout, reference.stdout);
+    for stack in ["0", "1"] {
+        let cfile = dir.0.join(format!("packed-{stack}.c"));
+        checked(
+            Command::new(fwp)
+                .args(["build", "--memory", "dynamic", "--emit-c"])
+                .arg(&src)
+                .arg("-o")
+                .arg(&cfile)
+                .env("FWP_STACK", stack),
+        );
+        let code = std::fs::read_to_string(&cfile).unwrap();
+        assert!(
+            code.matches("Eager packed numeric records").count() >= 2,
+            "map and zip-with must both select; stack={stack}"
+        );
+        assert!(code.contains("Fold after the complete packed map"));
+        for opt in ["-O1", "-O2"] {
+            let exe = dir.0.join(format!("packed-{stack}-{opt}.exe"));
+            fwp::cgen::compile_c(&code, &exe, opt).unwrap();
+            let output = checked(Command::new(&exe).env("FWP_ALLOC_STATS", "1"));
+            record_probe::save(
+                "packed_record_order",
+                &format!("stack-{stack}-{opt}"),
+                &code,
+                &exe,
+                &output,
+            );
+            assert_eq!(output.stdout, reference.stdout, "{stack}/{opt}");
+            let stats =
+                allocation_report::parse(std::str::from_utf8(&output.stderr).unwrap()).unwrap();
+            assert_eq!(stats.live, 0, "{stack}/{opt}: {stats:?}");
+        }
+    }
+}
+
 #[test]
 fn numeric_record_folds_preserve_aliases_empty_inputs_and_effects() {
     let dir = Scratch::new("numeric-records");

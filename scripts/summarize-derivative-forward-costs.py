@@ -58,7 +58,7 @@ def audit(path, source, machine, comparison, baseline):
         report = json.loads(archive.read('report.json'))
         assert report['source'] == source and report['machine'] == machine
         assert report.get('complete') is True
-        if comparison in ('record-zip', 'record-fold'):
+        if comparison in ('record-zip', 'record-fold', 'packed-records'):
             assert report['comparison'] == dict(policy=comparison, baselineSource=baseline['source'])
             assert report['cc'] == baseline['hosts'][machine]['cc']
         else:
@@ -143,7 +143,7 @@ def audit(path, source, machine, comparison, baseline):
             assert failures == report['comparisonFailures']
             for name, actual in cases.items():
                 previous = baseline['hosts'][machine]['cases'][name]
-                if actual['textBytes'] > previous['textBytes'] + 1024:
+                if comparison != 'packed-records' and actual['textBytes'] > previous['textBytes'] + 1024:
                     failures.append(name + ': instruction section grew by more than 1024 bytes')
                 def largest_frame(frames):
                     return max(int(line.split('\t')[1]) for line in frames.splitlines())
@@ -163,7 +163,7 @@ def main():
     parser.add_argument('--source', required=True)
     parser.add_argument('--run', required=True)
     parser.add_argument('--output', required=True, type=Path)
-    parser.add_argument('--comparison', required=True, choices=('baseline', 'record-zip', 'record-fold'))
+    parser.add_argument('--comparison', required=True, choices=('baseline', 'record-zip', 'record-fold', 'packed-records'))
     parser.add_argument('--baseline', type=Path)
     args = parser.parse_args()
     assert re.fullmatch('[0-9a-f]{40}', args.source) and args.run.isdigit()

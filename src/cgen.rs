@@ -15,6 +15,7 @@ use crate::ir::*;
 use crate::ownership::ResultOwnership;
 use crate::value::Value;
 
+mod packed_records;
 mod regions;
 mod scalar_text;
 mod sort_keys;
@@ -2563,6 +2564,80 @@ fn hof_sig(i: usize, sym: &str, k: usize) -> String {
 }
 
 impl Gen<'_> {
+    fn packed_record_map(&mut self, id: FuncId) -> String {
+        let function = &self.prog.funcs[id];
+        let arity = function.arity as usize;
+        let abi = self.abis[id]
+            .as_ref()
+            .expect("selected packed mapper")
+            .clone();
+        let width = abi.ret.expect("packed numeric result fields");
+        assert!((1..=2).contains(&arity) && abi.params.iter().all(Option::is_none));
+        self.used_closures[id] = true;
+        let mut out = String::from(
+            "    /* Eager packed numeric records: finish mapping before folding. */\n",
+        );
+        let _ = writeln!(out, "    size_t count = fwp_list_len(l{});", arity - 1);
+        if arity == 2 {
+            out.push_str(
+                "    size_t other = fwp_list_len(l0);\n    if (other < count) count = other;\n",
+            );
+        }
+        let _ = writeln!(out, "    if (count > (SIZE_MAX - sizeof(fwp_arr)) / ({width} * sizeof(V))) fwp_trap(\"map too large\");\n    V buffer = fwp_rc_fresh(fwp_arr_new(count * {width}));\n    fwp_value_owner owner = {{buffer, fwp_rc_free_arr}};\n    fwp_cleanup cleanup; fwp_value_protect(&owner, &cleanup);\n    for (size_t i = 0; i < count; i++) {{");
+        let arguments = (0..arity)
+            .map(|i| format!("OBJ(l{i})->f[0]"))
+            .collect::<Vec<_>>();
+        let _ = writeln!(
+            out,
+            "        V arguments[] = {{{}}};\n        fwp_args{id}(arguments, 0, {arity});",
+            arguments.join(", ")
+        );
+        let prepared = (0..arity).map(|i| format!("arguments[{i}]")).collect();
+        let arguments = abi.args_decode_words(self.prog, id, prepared);
+        let _ = writeln!(
+            out,
+            "        fwp_wr{id} mapped = w{id}({});",
+            arguments.join(", ")
+        );
+        for (field, word) in abi.result_words(self.prog, id, "mapped").iter().enumerate() {
+            let _ = writeln!(
+                out,
+                "        ARR(buffer)->d[i * {width} + {field}] = {word};"
+            );
+        }
+        for i in 0..arity {
+            let _ = writeln!(out, "        l{i} = OBJ(l{i})->f[1];");
+        }
+        out.push_str("    }\n    return fwp_value_finish(&owner, &cleanup);\n");
+        out
+    }
+
+    fn packed_record_fold(&mut self, id: FuncId) -> String {
+        let abi = self
+            .record_fold_abi(id)
+            .expect("selected packed fold")
+            .clone();
+        let width = abi.ret.unwrap();
+        let element_width = abi.params[1].expect("packed record input");
+        let initial = abi
+            .result_numbers(self.prog, id)
+            .into_iter()
+            .enumerate()
+            .map(|(i, number)| {
+                number
+                    .expect("numeric accumulator field")
+                    .decode_word(&format!("OBJ(l0)->f[{i}]"))
+            })
+            .collect::<Vec<_>>();
+        let mut arguments = abi.result_words(self.prog, id, "accumulator");
+        arguments.extend((0..element_width).map(|i| format!("ARR(l1)->d[offset + {i}]")));
+        let arguments = abi.args_decode_words(self.prog, id, arguments);
+        let result = abi.result_words(self.prog, id, "accumulator");
+        let drop = self.value_drop(&self.prog.funcs[id].locals[0].clone());
+        format!("    /* Fold after the complete packed map; input stays borrowed. */\n    size_t words = ARR(l1)->len;\n    if (!words) return l0;\n    fwp_wr{id} accumulator = {{{}}};\n    {drop}(l0);\n    for (size_t offset = 0; offset < words; offset += {element_width}) {{\n        accumulator = w{id}({});\n    }}\n    return fwp_rc_fresh(fwp_record({width}, (V[]){{{}}}));\n",
+            initial.join(", "), arguments.join(", "), result.join(", "))
+    }
+
     fn record_fold_abi(&self, id: FuncId) -> Option<&Abi> {
         let function = &self.prog.funcs[id];
         if function.arity != 2 || !matches!(function.body, Body::Expr(_)) {
@@ -8051,7 +8126,12 @@ static inline __attribute__((always_inline)) int fs{}(fwp_loop_state{step} *st, 
         // their own typed owners, and output-channel delivery finishes in-call.
         if !matches!(
             f.body,
-            Body::Expr(_) | Body::Ctor(_) | Body::RegionCtor(_) | Body::RegionEntry { .. }
+            Body::Expr(_)
+                | Body::Ctor(_)
+                | Body::RegionCtor(_)
+                | Body::RegionEntry { .. }
+                | Body::PackedRecordMap { .. }
+                | Body::PackedRecordFold { .. }
         ) {
             let sym = match &f.body {
                 Body::Prim(s) => s.as_str(),
@@ -8079,6 +8159,12 @@ static inline __attribute__((always_inline)) int fs{}(fwp_loop_state{step} *st, 
             }
         }
         match &f.body {
+            Body::PackedRecordMap { callback } => {
+                out.push_str(&self.packed_record_map(*callback));
+            }
+            Body::PackedRecordFold { callback } => {
+                out.push_str(&self.packed_record_fold(*callback));
+            }
             Body::RegionEntry { worker } => {
                 // The worker takes the ordinary input owners. No operation
                 // between entry and that transfer can suspend or allocate.
@@ -10071,7 +10157,8 @@ fn generate_mode(prog: &Program, mut mode: Mode) -> Result<String, String> {
     let scalar_text = scalar_text::lower(prog, direct_output);
     let string_maps = string_map::lower(&scalar_text);
     let region_program = regions::lower(&string_maps);
-    let prog = region_program.as_ref();
+    let packed_program = packed_records::lower(region_program.as_ref());
+    let prog = &packed_program;
     crate::ir::check_locals(prog)?;
     let weak_channels = crate::resource::uses_weak_channels(&prog.funcs, &prog.shapes);
     let tests = matches!(mode, Mode::Tests);

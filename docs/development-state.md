@@ -1,7 +1,8 @@
 # Current work
 
-**Next:** finish checking and publish the frozen temporary-record requirements on
-`derivative-temporary-storage`, then implement that selection. Keep monitoring
+**Next:** publish the initial packed-record implementation checkpoint and run
+`packed-record-checks` on both native Linux architectures. Audit compiler lint,
+evaluation-order tests and all count observations before expanding the controls. Keep monitoring
 [PR #247](https://github.com/e6qu/fun-with-pipes/pull/247); squash merge only after
 all nine exact-head production jobs and documentation pass and logs are audited.
 
@@ -71,12 +72,20 @@ The largest solve still creates 25,472 pair-result records and 199 final fold
 records. Replace the temporary mapped list only after proving its sole consumer;
 keep all mapping before summation and preserve seed evaluation and caller cleanup.
 The existing observer includes scratch allocations through `fwp_mem_alloc`.
-No compiler change has been made for this candidate.
+Preparation `15aa4c0a` and immutable tag
+`roadmap/derivative-temporary-storage-protocol-2026-11-02` are published.
+The initial compiler change is implemented but not yet built or verified natively.
+It lowers a sole-use mapped collection to an internal word array before ownership
+insertion; mapping and folding remain separate calls with seed evaluation between
+them. Existing typed ownership handles the buffer through failure paths. New
+order tests cover map/seed/fold effects, empty/unequal inputs and aliases. Dedicated
+new failure/cancellation, allocation-failure and omitted-buffer-release controls
+still need implementation; the full final matrix/timings are not ready.
 
 The callback-box auditor now requires an explicit accumulator layout. Current
 counts pass (0.27s). The old #239 report reproduces exactly; both wrong layouts
 and an omitted pair-result count are rejected (0.38s). All 214 document link sets, 106 immutable pairs/tags and five plan steps pass
-(3.02s). Publish the preparation commit/tag before compiler edits. Source-review notes and the
+(3.02s). Preparation was published before compiler edits. Source-review notes and the
 one-off current summary helper remain `/private/tmp/fwp-derivative-storage-notes.md`
 and `/private/tmp/fwp-current-derivative-summary.py`.
 
@@ -98,3 +107,9 @@ No local build, full suite or benchmark. Use the guard serially and preserve
 Merge only after final-head gates and audits pass, with one subject of at most
 80 characters and an empty body, no trailers/attribution. Verify tree and raw
 message, cancel only verified duplicate same-tree main checks, and continue PLAN.md.
+
+Initial implementation checks: guarded formatting passes (1.94s), focused workflow
+lint passes (5.74s), and the new count-limit mutation test passes (0.25s).
+No local Rust build or native compilation. The focused runner suite adds compiler
+lint, existing fold/unwind regressions plus the new order test, and all 96
+count observations against the frozen current baseline.
