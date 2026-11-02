@@ -1,7 +1,7 @@
 # Current work
 
-**Next:** implement the frozen scalar-capture selection change and complete its
-focused native safety checks while the last baseline session waits for its host.
+**Next:** run and audit the grouped scalar-capture native safety checks, then
+prepare the exact same-source reference for the frozen timing comparison.
 Keep source, safety checks, timing, docs and final validation in one substantial PR.
 
 ## Branch and last verified delivery
@@ -23,7 +23,7 @@ Keep source, safety checks, timing, docs and final validation in one substantial
 |---|---|---|
 | 1 | Verified | Construction diagnostic `41427397530`: both production GCC architectures at O1/O2, exact source/storage/control audit |
 | 2 | In progress | Both ARM64 phase sessions pass and audit; AMD64 session 1 has six failed timing-copy limits; session 2 remains pending |
-| 3 | In progress | Candidate/acceptance protocol written from qualified ARM64 evidence; publish its immutable source before editing selection |
+| 3 | In progress | Protocol `5cf1c80f` published before selection changed; native GCC/Clang safety checks next |
 | 4 | Pending | Freeze candidate/reference acceptance and measure after focused native safety checks |
 | 5 | Pending | Publish one coherent PR; nine final-head production gates, docs, audit and verified squash merge |
 
@@ -61,7 +61,14 @@ Keep source, safety checks, timing, docs and final validation in one substantial
 - Existing static-callback tests now also cover scalar captures, count-before-capture
   order, callback reuse and partial cleanup. Fixture formatting, raw interpreter
   preflight and Rust formatting pass (0.02s, 0.27s, 0.27s). Native checks remain
-  for the combined batch; no compiler selection rule has changed.
+  for the combined batch. `array_callback` now also accepts all-plain-scalar
+  captures while retaining existing owned-capture eligibility. The expanded probe
+  counts generic dispatch, preserves signed-zero/NaN/subnormal bits and checks
+  cancellation after two stores, including omitted-cleanup and extra-dispatch
+  controls. Size tests add captured arithmetic overflow and array-size rejection.
+  Protocol tag: `roadmap/scalar-array-selection-protocol-2026-11-02`.
+  Grouped suite: `scalar-array-checks` (GCC ARM64/AMD64 and Clang ARM64), using
+  five existing targets plus Linux construction diagnostics. No full CI yet.
 - Earlier run `41426573182` failed only source formatting on both hosts. The fixture
   was fixed with #243's verified package; failure logs and source tag remain.
 

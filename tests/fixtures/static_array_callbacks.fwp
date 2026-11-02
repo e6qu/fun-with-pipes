@@ -6,6 +6,10 @@ generated = flip array.generate id
 export scalar-generated : I64 -> I64 -> Array[I64]
 scalar-generated = fn offset -> fn count -> array.generate count (add offset)
 
+# Returning a saved floating value must preserve its bits without arithmetic.
+export scalar-bits : F64 -> I64 -> Array[F64]
+scalar-bits = fn value -> fn count -> array.generate count (const value)
+
 export scalar-failed : I64 -> I64 -> Array[I64] ! {Error[String]}
 scalar-failed = fn failure -> fn count ->
     array.generate count (fn index ->
