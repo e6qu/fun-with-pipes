@@ -1,8 +1,11 @@
 //! Live caller owners survive normal calls and release on nonlocal unwind.
 use fwp::ir::*;
 use fwp::value::Value;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::process::{Command, Output};
+
+#[path = "support/exported_probe.rs"]
+mod exported_probe;
 
 #[path = "support/functional_costs.rs"]
 mod functional_costs;
@@ -559,39 +562,6 @@ impl Drop for Scratch {
     }
 }
 
-// These C harnesses call exported functions directly. Main-only compilation may
-// specialize their callers and correctly remove the original entries.
-fn probe_source(path: &Path) -> String {
-    let path = path.to_owned();
-    fwp::driver::with_big_stack(move || {
-        let (compilation, program) = fwp::driver::compile_file(
-            &path,
-            fwp::mono::Roots {
-                main: true,
-                exports: true,
-                ..Default::default()
-            },
-        )
-        .map_err(|error| error.rendered)
-        .unwrap();
-        assert!(
-            compilation.warnings.is_empty(),
-            "{}",
-            compilation.render_warnings()
-        );
-        let emitted = fwp::cgen::generate(&program).unwrap();
-        if let Some(root) = std::env::var_os("FWP_ARC_ARTIFACTS") {
-            let directory = PathBuf::from(root)
-                .join("record-ownership/compiler_call_liveness")
-                .join(path.parent().unwrap().file_name().unwrap());
-            std::fs::create_dir_all(&directory).unwrap();
-            std::fs::copy(&path, directory.join("input.fwp")).unwrap();
-            std::fs::write(directory.join("generated.c"), &emitted).unwrap();
-        }
-        emitted
-    })
-}
-
 fn probe_entry(emitted: &str, name: &str) -> String {
     let start = emitted
         .find(&format!("/* {name} :"))
@@ -625,7 +595,7 @@ fn actual_caller_releases_owned_values_and_preserves_aliases() {
             .args(["run", "--interp"])
             .arg(&src),
     );
-    let emitted = probe_source(&src);
+    let emitted = exported_probe::generate(&src);
     let probe = r#"
 static volatile int fail_call;
 static volatile V input_value;
@@ -728,7 +698,7 @@ main = 2 | attempt (pair guard) | echo
             .args(["run", "--interp"])
             .arg(&src),
     );
-    let emitted = probe_source(&src);
+    let emitted = exported_probe::generate(&src);
     let probe = r#"
 static volatile V first_argument;
 static V argument_entry(V *args) {
@@ -801,7 +771,7 @@ fn boxed_wrapper_and_unboxed_worker_release_separate_owners() {
             .args(["run", "--interp"])
             .arg(&src),
     );
-    let emitted = probe_source(&src);
+    let emitted = exported_probe::generate(&src);
     assert!(emitted.contains("fwp_cleanup_push(&cleanup, fwp_owner_release"));
     let probe = r#"
 static volatile V boxed_input, text_input;
@@ -861,7 +831,7 @@ fn incoming_parameters_release_before_cancelled_entry_tick() {
     let source = SOURCE.replace("main = \"owned\" | concat \" input\" | attempt (hold guard) | echo",
         "main = [task.yield (), \"owned\" | concat \" input\" | attempt (hold guard) | echo] | ignore");
     std::fs::write(&src, source).unwrap();
-    let emitted = probe_source(&src);
+    let emitted = exported_probe::generate(&src);
     let hold = probe_entry(&emitted, "hold");
     let probe = r#"
 static volatile V incoming;
@@ -929,7 +899,7 @@ main = "owned" | concat " input" | attempt (hold guard) | echo
             .args(["run", "--interp"])
             .arg(&src),
     );
-    let emitted = probe_source(&src);
+    let emitted = exported_probe::generate(&src);
     assert!(
         emitted.contains("fwp_u1 v0;"),
         "fixture must exercise a struct variant cleanup owner"

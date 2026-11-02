@@ -1,6 +1,6 @@
 # Current work
 
-**Next:** verify the five repaired caller-ownership probes on native GCC/Clang,
+**Next:** verify the repaired caller/runtime/collection ownership probes on native GCC/Clang,
 then prepare the final full matrix for [PR #242](https://github.com/e6qu/fun-with-pipes/pull/242).
 Also audit #241 production `41385349559` as its remaining jobs finish.
 The [prepared scope](measurements/numeric-callback-bindings.md) remains unchanged.
@@ -98,5 +98,15 @@ Repair: export the harness-called `guard`, `hold` and `pair` functions and compi
 with explicit main+export roots. Preserve ordinary main-only executable versus
 interpreter comparisons and all ownership/cancellation assertions. Retain input
 and generated C before entry lookup, with a named missing-entry diagnostic.
-Guarded Rust formatting passes (2.13s); native repair verification is pending.
+The neighboring runtime-call, map, filter and zip probes have the same implicit
+reachability assumption. Give their harness-called functions explicit roots too;
+share the compile-and-save setup in `tests/support/exported_probe.rs`. Their
+ordinary executable comparisons and all leak/cancellation assertions remain.
+The focused suite now includes these four targets (14 total). No new test target
+or runtime behavior is introduced.
+
+Guarded Rust formatting passes (2.25s), workflow lint passes (5.40s), and roadmap
+audit passes (3.40s). Native repair verification is pending. The first repair
+run `41387498848` at `95f98c01` stayed queued and is superseded by this broader
+batch; do not spend builds on the narrower test set.
 Candidate documentation `41386462403` passes.

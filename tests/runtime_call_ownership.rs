@@ -2,6 +2,9 @@
 use std::path::PathBuf;
 use std::process::{Command, Output};
 
+#[path = "support/exported_probe.rs"]
+mod exported_probe;
+
 #[path = "support/record_probe.rs"]
 mod record_probe;
 
@@ -30,7 +33,7 @@ impl Drop for Scratch {
     }
 }
 
-const SOURCE: &str = r#"cap-error : String -> I64 -> I64 ! {Error[String]}
+const SOURCE: &str = r#"export cap-error : String -> I64 -> I64 ! {Error[String]}
 cap-error = curry (both (.0 | string.length) (.1 | if (eq 0) (const "expected" | fail) (add 1)) | .1)
 main = 0 | attempt (cap-error ("owned" | concat " capture")) | echo
 "#;
@@ -39,21 +42,12 @@ main = 0 | attempt (cap-error ("owned" | concat " capture")) | echo
 fn failed_calls_reclaim_function_storage_without_collection() {
     let dir = Scratch::new("counts");
     let src = dir.0.join("counts.fwp");
-    let cfile = dir.0.join("counts.c");
-    let fwp = env!("CARGO_BIN_EXE_fwp");
     std::fs::write(&src, SOURCE).unwrap();
 
-    checked(
-        Command::new(fwp)
-            .env_remove("FWP_NO_OPT")
-            .env("FWP_STACK", "1")
-            .args(["build", "--memory", "dynamic", "-O2"])
-            .arg(&src)
-            .args(["--emit-c", "-o"])
-            .arg(&cfile),
-    );
-    let emitted = std::fs::read_to_string(&cfile).unwrap();
-    let start = emitted.find("/* cap-error :").unwrap();
+    let emitted = exported_probe::generate(&src);
+    let start = emitted
+        .find("/* cap-error :")
+        .expect("missing exported probe entry `cap-error`");
     let id = emitted[start..]
         .split("static V f")
         .nth(1)
@@ -129,7 +123,6 @@ int main(void) {
 fn consumed_function_releases_captures_when_its_entry_fails() {
     let dir = Scratch::new("captures");
     let src = dir.0.join("capture.fwp");
-    let cfile = dir.0.join("capture.c");
     let exe = dir.0.join("capture.exe");
     let fwp = env!("CARGO_BIN_EXE_fwp");
     std::fs::write(&src, SOURCE).unwrap();
@@ -140,17 +133,10 @@ fn consumed_function_releases_captures_when_its_entry_fails() {
             .arg(&src),
     );
 
-    checked(
-        Command::new(fwp)
-            .env_remove("FWP_NO_OPT")
-            .env("FWP_STACK", "1")
-            .args(["build", "--memory", "dynamic", "-O2"])
-            .arg(&src)
-            .args(["--emit-c", "-o"])
-            .arg(&cfile),
-    );
-    let emitted = std::fs::read_to_string(&cfile).unwrap();
-    let start = emitted.find("/* cap-error :").unwrap();
+    let emitted = exported_probe::generate(&src);
+    let start = emitted
+        .find("/* cap-error :")
+        .expect("missing exported probe entry `cap-error`");
     let id = emitted[start..]
         .split("static V f")
         .nth(1)
@@ -552,24 +538,15 @@ int main(void) {
 fn cancelled_entry_releases_runtime_function_and_callee_parameters() {
     let dir = Scratch::new("cancelled-call");
     let src = dir.0.join("cancelled.fwp");
-    let cfile = dir.0.join("cancelled.c");
     let exe = dir.0.join("cancelled.exe");
-    let fwp = env!("CARGO_BIN_EXE_fwp");
     let source = SOURCE.replace("main = 0 | attempt (cap-error (\"owned\" | concat \" capture\")) | echo",
         "main = [task.yield (), 0 | attempt (cap-error (\"owned\" | concat \" capture\")) | echo] | ignore");
     std::fs::write(&src, source).unwrap();
 
-    checked(
-        Command::new(fwp)
-            .env_remove("FWP_NO_OPT")
-            .env("FWP_STACK", "1")
-            .args(["build", "--memory", "dynamic", "-O2"])
-            .arg(&src)
-            .args(["--emit-c", "-o"])
-            .arg(&cfile),
-    );
-    let emitted = std::fs::read_to_string(&cfile).unwrap();
-    let start = emitted.find("/* cap-error :").unwrap();
+    let emitted = exported_probe::generate(&src);
+    let start = emitted
+        .find("/* cap-error :")
+        .expect("missing exported probe entry `cap-error`");
     let id = emitted[start..]
         .split("static V f")
         .nth(1)
