@@ -8,14 +8,18 @@ at most 80 characters and empty body; verify the merge message and tree.
 PR: https://github.com/e6qu/fun-with-pipes/pull/243
 Docs run `41411731331`, job `125166069914`, passes and its complete log is audited:
 `/private/tmp/fwp-243-docs.log`. Only deliberate test-runner rejection/panic controls
-appear. Production run `41412228669` has passing benchmarks, both ARM macOS jobs
-and Intel macOS ownership; five platform jobs remain running without failed steps.
+appear. Production run `41412228669` has six passing jobs: benchmarks, Linux AMD64,
+Windows ARM64, both ARM macOS jobs and Intel macOS ownership. Linux ARM64, Windows
+AMD64 and Intel macOS regular remain running without failed steps.
 Complete passing logs are audited (`/private/tmp/fwp-243-bench.log` and
 `fwp-243-mac-{arm,amd}-{regular,ownership}.log` for those completed jobs).
 The echoed ResourceWarning option is not a warning. Completed target archives:
 ARM regular 131 logs, both ownership jobs 126 each, both Windows native archives
-57 logs/135 summaries each; all pass without diagnostics. Windows jobs still have
-later steps to finish, so these archives alone do not complete their gates.
+57 logs/135 summaries each; all pass without diagnostics. Linux AMD64's 257 target
+logs and full job log are clean. Windows ARM64's complete log contains only the
+expected `sched.rs:683/696` panic controls and echoed ResourceWarning option.
+Windows AMD64 still has later steps to finish, so its native archive alone does
+not complete that gate.
 Draft run `41411731289` is skipped and establishes no platform support.
 The published worktree is `/private/tmp/fwp-current-kernel-costs`.
 
@@ -31,7 +35,7 @@ The previous full handoff remains at `ea976b7e:docs/development-state.md`.
 | 1 | Verified | Protocol `5f235bb0`, tag `roadmap/matrix-calculation-protocol-2026-11-02`, published before runner edits |
 | 2 | Verified | Run `41412675762` reproduces all original binaries on both architectures; complete compiler reports and logs retained |
 | 3 | Verified | Paired-column diagnostic vectorizes on both GCC hosts; expanded native safety checks pass on GCC ARM64/AMD64 and Clang ARM64 |
-| 4 | In progress | Both ARM sessions pass; AMD2 retains four small-case noise failures; AMD1 still unmeasured after three host rejections; replacement `41420961312` |
+| 4 | In progress | Both ARM sessions pass; AMD2 retains four small-case noise failures; replacement AMD1 in `41420961312` has qualified and is building |
 | 5 | Pending | Deliver coherent changes after #243; exact-head full matrix/docs and verified squash merge |
 
 ## Established facts
@@ -119,6 +123,10 @@ Replacement run `41420187469`, job `125193609921`, again selects only AMD1 at
 the same immutable tag. Keep both prior rejection logs and qualification records.
 That third AMD1 host was also rejected before timing: EPYC 9V74. Replacement
 run `41420961312` again requests only the missing session at the same source.
+Its job `125196124849` has passed host and native-prerequisite checks and is
+building. The selection file records all four runs, including all three rejected
+hosts, and the four declared measurement jobs. Dispatch the report only after
+this last job completes; any additional failure must be audited first.
 Do not repeat any completed timing to seek a passing copy/speed result.
 
 Both ARM sessions finish successfully and their independent raw audits pass:
@@ -134,6 +142,5 @@ both retain every failed limit. Six retention/prerequisite controls and two
 normalization tests pass (0.13s each). The four previously published reports and
 tables still verify unchanged (7.46s); actionlint passes (5.83s). Stale design
 claims that #225/#242 still awaited full validation are corrected. Once all four
-matrix measurements finish, record their IDs and every rejected run in
-`docs/measurements/matrix-column-selection.json`, then dispatch
+matrix measurements finish, verify `docs/measurements/matrix-column-selection.json`, then dispatch
 `matrix-columns-report` for the full raw audit and table generation on GitHub.
