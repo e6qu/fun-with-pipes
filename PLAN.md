@@ -12,28 +12,36 @@ reduces qualified calculation time by about 33% on ARM64 and 31% for large AMD64
 [History](docs/roadmap-history.md#paired-matrix-columns-pr-244) records its storage,
 stack and timing limits. The small AMD64 timing goal stays open below.
 
-The [array construction protocol](docs/measurements/array-construction-costs.md)
-now guides one coherent batch. Current materialized source and C-driver paths
-allocate once; a fully composed generator/map/fold already allocates zero.
-Materialized scalar captures still use generic callback dispatch. Measure its
-cost before choosing a compiler change; preserve the composed allocation-free path.
+[Scalar callback selection](docs/measurements/scalar-array-captures-2026-11-02/README.md)
+now removes generic dispatch for known numeric captures. All three focused safety
+jobs pass. Both ARM64 timing sessions meet every limit: 84.5–84.9% less construction
+time and 81.2–81.6% less total time, with unchanged managed storage. All four raw
+sessions are audited. AMD64's four consumption and four copy limits remain open;
+retain verified reductions without calling the combined timing goal complete.
 
 | Step | Work | Completion requirement |
 |---|---|---|
 | 1 | Verify the three current construction paths | Verified: both GCC architectures at O1/O2, exact values, storage and missing-release controls; retained source and binary evidence |
 | 2 | Separate construction, consumption and filling costs | Four sessions audited: both ARM64 and AMD64 session 2 pass; AMD64 session 1 retains six failed copy limits; compare source, driver, C and Rust |
-| 3 | Select and prove a bounded generator change | If phase evidence justifies it, extend direct calls only to known scalar captures; preserve evaluation/trap order, reuse, partial failure, cancellation and composed fusion |
-| 4 | Measure the change against its exact same-source reference | Freeze speed/storage limits before timing; require exact outputs and cleanup, retain all outcomes, report time, allocations, managed memory, RSS, code and stack costs |
+| 3 | Select and prove a bounded generator change | Verified focused GCC ARM64/AMD64 and Clang ARM64 checks: direct scalar captures, evaluation/trap order, reuse, failure/cancellation and composed fusion |
+| 4 | Measure the change against its exact same-source reference | Four sessions audited; ARM64 passes all limits; AMD64 retains eight failed limits. Exact outputs, cleanup and managed-storage limits pass; time/RSS/code/stack costs reported |
 | 5 | Deliver the combined batch | Bundle source, regressions, measurements and clear docs; all nine final-head production jobs plus documentation pass and are audited before squash merge |
 
-Use the existing array ownership tests for capture/reuse/failure cases. Focused
-production-compiler checks precede timing; run the full platform matrix after the
-batch is ready. Avoid adding syntax, new allocation paths or compatibility layers.
-If the measurement does not justify specialization, retain that finding and
-choose the next source-level cost explicitly, without claiming an unproved gain.
+The source and regressions are complete for this batch. Publish the final evidence
+and docs together, then run the nine-job production matrix and documentation once
+on that head. Audit all logs before squash merge. Existing native targets preserve
+capture/reuse/failure coverage; no new syntax, allocator or compatibility layer.
 
 ## Open performance goals
 
+- **Next investigation: AMD64 array consumption.** Both sessions pass the large
+  array's copy controls, yet consumption is 4.93–5.23% slower; the small array also
+  misses copy limits. Generated consumption C is unchanged. First analyze retained
+  per-process samples and role order. Then freeze a setup/sample-progression
+  diagnostic comparing equal untimed preparation before the same consumption
+  work, retaining wall/CPU times and storage. Do not repeat unchanged timings,
+  erase the original 2% limits or infer a source safety bug from elapsed time.
+  Check whether the same diagnostic can explain the small-matrix limits below.
 - [Small AMD64 matrix timing](docs/measurements/matrix-columns-2026-11-02/README.md):
   six identical-copy failures remain at 2.6–8.3% against the frozen 2% limit.
   [Retained-sample analysis](docs/measurements/matrix-sample-positions.md) locates

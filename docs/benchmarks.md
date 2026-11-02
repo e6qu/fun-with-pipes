@@ -540,5 +540,12 @@ construction takes 7.16–7.48 times the fwp C driver and 10.78–10.95 times C.
 Separate instrumented builds place over 99% of source construction in filling,
 including callback dispatch and checked arithmetic. This is a filling/call cost
 despite zero effective retains. Six AMD64 session-1 timing-copy limits fail;
-keep those timings inconclusive. The subsequent direct-call candidate has no
-verified speed claim yet.
+keep those timings inconclusive.
+
+The [direct-call comparison](measurements/scalar-array-captures-2026-11-02/README.md)
+now passes both ARM64 sessions: construction takes 84.5–84.9% less time and total
+work takes 81.2–81.6% less than the same compiler with scalar selection disabled.
+Managed storage is unchanged. Candidate total time still takes 1.44–1.46 times C
+and 1.87–1.90 times Rust. AMD64 retains four failed consumption-speed limits and
+four failed copy controls; its combined goal remains open. The report includes
+absolute times, exact workloads, memory/RSS, code and stack observations.

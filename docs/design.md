@@ -322,22 +322,26 @@ shifted = fn offset -> fn count -> array.generate count (add offset)
 ```
 
 `shifted 7 3` produces `array[7, 8, 9]`: add 7 to indices 0, 1 and 2.
-The scalar-capture candidate lets the existing generator call a known callback
+The generator can call a known callback
 directly when its saved values use ordinary C integer/floating representations
 and its result is also scalar. Selection checks existing local types; it adds
 no whole-program inference pass or language syntax.
 
-Evaluation and ownership still follow the existing sequence:
+For an inline callback expression such as `(add offset)`, evaluation and ownership
+still follow the existing sequence:
 
 1. Evaluate the count expression, then the captured values.
 2. Check the count and allocate the array; protect its partial contents.
 3. Call the known function for each index and store the result.
 4. Return the array on success; unwind its storage on failure or cancellation.
 
-The compiler must keep a closure when other uses store or call that function.
+An already-bound callback keeps the values captured when it was defined; the
+generator does not evaluate its capture expressions again. The compiler must keep
+a closure when other uses store or call that function.
 Direct dispatch at one known generator call does not permit discarding those
-uses. [The construction protocol](measurements/array-construction-costs.md)
-separates the verified baseline from this candidate's pending native/timing checks.
+uses. [Safety checks](measurements/scalar-array-safety-2026-11-02/README.md) verify
+these cases on GCC ARM64/AMD64 and Clang ARM64. [Paired timings](measurements/scalar-array-captures-2026-11-02/README.md)
+record ARM64 gains, unchanged storage and the still-open AMD64 timing limits.
 
 ### Proving a local array has one owner
 

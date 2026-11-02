@@ -189,3 +189,9 @@ three declared hosts, including semantic, cleanup, exact-output and profiling ch
 These checks are required before any candidate timing. Keep the original baselines, rejected hosts and unmet goals.
 The full nine-job production matrix and documentation run once the combined
 implementation, evidence and documentation batch is ready.
+
+[Paired results](scalar-array-captures-2026-11-02/README.md) now retain all four
+sessions: ARM64 passes every limit; AMD64 misses four consumption-speed and four
+copy limits. Exact results, cleanup and managed-storage limits pass everywhere.
+Keep the verified reductions and ARM64 gains while leaving the original AMD64
+limits open; full production verification still gates delivery.

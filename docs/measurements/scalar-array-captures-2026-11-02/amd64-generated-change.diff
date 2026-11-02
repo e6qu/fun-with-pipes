@@ -1,0 +1,28 @@
+--- array-65537/reference-generated.c
++++ array-65537/generated.c
+@@ -16926,0 +16927 @@
++static V fwp_hof0(V c0, V count);
+@@ -17010,4 +17011,4 @@
+-    struct { uint32_t fn; uint32_t n; V a[1]; } t1 = {15, 1, {l0}};
+-    V t2 = PTR(&t1);
+-    l2 = t2;
+-    V t3 = f14(l1, l2);
++    V t1 = l0;
++    /* direct callback captures without a closure */
++    V t2 = l1;
++    V t3 = fwp_hof0(t1, t2);
+@@ -17281,0 +17283,14 @@
++static V fwp_hof0(V c0, V count) {
++    size_t n = fwp_count_arg(count);
++    fwp_array_builder result = {fwp_array_typed_new(n, &d0), 0, &d0};
++    fwp_cleanup cleanup; fwp_array_builder_protect(&result, &cleanup);
++    for (size_t index = 0; index < n; index++) {
++        V args[] = {c0, (V)index};
++        fwp_args15(args, 0, 1);
++        V value = fwp_owned_entry15(args);
++        fwp_array_store_owned(result.value, index, value, &d0);
++        result.filled++;
++    }
++    return fwp_array_builder_finish(&result, &cleanup);
++}
++

@@ -1,0 +1,137 @@
+{
+  "records": [
+    {
+      "machine": "aarch64",
+      "session": 1,
+      "source": "f8a558daa42fc07930f7a93870b6dcbcf2580bb3",
+      "run": 41449731209,
+      "job": 125291685373,
+      "conclusion": "success",
+      "artifact": {
+        "id": 13143169442,
+        "node_id": "MDg6QXJ0aWZhY3QxMzE0MzE2OTQ0Mg==",
+        "name": "scalar-array-time-ubuntu-24.04-arm-1",
+        "size_in_bytes": 58795608,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13143169442",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13143169442/zip",
+        "expired": false,
+        "digest": "sha256:ce4803f80b73f35e562366665050185e6752e4ab4f0061a668c6e3122b15d379",
+        "created_at": "2026-11-02T13:14:52Z",
+        "updated_at": "2026-11-02T13:14:52Z",
+        "expires_at": "2027-01-31T13:03:45Z",
+        "workflow_run": {
+          "id": 41449731209,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "array-construction-costs",
+          "head_sha": "f8a558daa42fc07930f7a93870b6dcbcf2580bb3"
+        }
+      },
+      "report": "aarch64-1.json.gz",
+      "files": "aarch64-1-files.json.gz",
+      "log": "aarch64-1.log.gz",
+      "failedCopyLimits": 0,
+      "rawAudit": "Passed: source, reference, safety, commands, every file identity, raw outputs, cleanup and timing summaries"
+    },
+    {
+      "machine": "aarch64",
+      "session": 2,
+      "source": "f8a558daa42fc07930f7a93870b6dcbcf2580bb3",
+      "run": 41449731209,
+      "job": 125291685304,
+      "conclusion": "success",
+      "artifact": {
+        "id": 13144423532,
+        "node_id": "MDg6QXJ0aWZhY3QxMzE0NDQyMzUzMg==",
+        "name": "scalar-array-time-ubuntu-24.04-arm-2",
+        "size_in_bytes": 58795083,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13144423532",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13144423532/zip",
+        "expired": false,
+        "digest": "sha256:ddc6fa504e5b7413e63e510ffad1c01ca3121c4d236b83d56cd7c56e824d607d",
+        "created_at": "2026-11-02T13:13:40Z",
+        "updated_at": "2026-11-02T13:13:40Z",
+        "expires_at": "2027-01-31T13:03:45Z",
+        "workflow_run": {
+          "id": 41449731209,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "array-construction-costs",
+          "head_sha": "f8a558daa42fc07930f7a93870b6dcbcf2580bb3"
+        }
+      },
+      "report": "aarch64-2.json.gz",
+      "files": "aarch64-2-files.json.gz",
+      "log": "aarch64-2.log.gz",
+      "failedCopyLimits": 0,
+      "rawAudit": "Passed: source, reference, safety, commands, every file identity, raw outputs, cleanup and timing summaries"
+    },
+    {
+      "machine": "x86_64",
+      "session": 1,
+      "source": "f8a558daa42fc07930f7a93870b6dcbcf2580bb3",
+      "run": 41451889484,
+      "job": 125298862465,
+      "conclusion": "failure",
+      "artifact": {
+        "id": 13146010459,
+        "node_id": "MDg6QXJ0aWZhY3QxMzE0NjAxMDQ1OQ==",
+        "name": "scalar-array-time-ubuntu-latest-1",
+        "size_in_bytes": 65443466,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13146010459",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13146010459/zip",
+        "expired": false,
+        "digest": "sha256:c58790246fee03445d60693243ff68eb38333125692e57dbb5c1e010cd258100",
+        "created_at": "2026-11-02T13:23:50Z",
+        "updated_at": "2026-11-02T13:23:50Z",
+        "expires_at": "2027-01-31T13:18:49Z",
+        "workflow_run": {
+          "id": 41451889484,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "roadmap/scalar-array-timing-2026-11-02",
+          "head_sha": "f8a558daa42fc07930f7a93870b6dcbcf2580bb3"
+        }
+      },
+      "report": "x86_64-1.json.gz",
+      "files": "x86_64-1-files.json.gz",
+      "log": "x86_64-1.log.gz",
+      "failedCopyLimits": 1,
+      "rawAudit": "Passed: source, reference, safety, commands, every file identity, raw outputs, cleanup and timing summaries"
+    },
+    {
+      "machine": "x86_64",
+      "session": 2,
+      "source": "f8a558daa42fc07930f7a93870b6dcbcf2580bb3",
+      "run": 41449731209,
+      "job": 125291685261,
+      "conclusion": "failure",
+      "artifact": {
+        "id": 13144686686,
+        "node_id": "MDg6QXJ0aWZhY3QxMzE0NDY4NjY4Ng==",
+        "name": "scalar-array-time-ubuntu-latest-2",
+        "size_in_bytes": 65445728,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13144686686",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13144686686/zip",
+        "expired": false,
+        "digest": "sha256:a5523e3873afb48aa4922c3ca8efd74ae96498b5abae3e40837cd7a073f99ed1",
+        "created_at": "2026-11-02T13:15:39Z",
+        "updated_at": "2026-11-02T13:15:39Z",
+        "expires_at": "2027-01-31T13:03:45Z",
+        "workflow_run": {
+          "id": 41449731209,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "array-construction-costs",
+          "head_sha": "f8a558daa42fc07930f7a93870b6dcbcf2580bb3"
+        }
+      },
+      "report": "x86_64-2.json.gz",
+      "files": "x86_64-2-files.json.gz",
+      "log": "x86_64-2.log.gz",
+      "failedCopyLimits": 3,
+      "rawAudit": "Passed: source, reference, safety, commands, every file identity, raw outputs, cleanup and timing summaries"
+    }
+  ],
+  "remaining": []
+}
