@@ -8,10 +8,14 @@ at most 80 characters and empty body; verify the merge message and tree.
 PR: https://github.com/e6qu/fun-with-pipes/pull/243
 Docs run `41411731331`, job `125166069914`, passes and its complete log is audited:
 `/private/tmp/fwp-243-docs.log`. Only deliberate test-runner rejection/panic controls
-appear. Production run `41412228669` has passing benchmarks and both ARM macOS
-jobs; six platform jobs remain running without failed steps. Complete passing logs
-are audited (`/private/tmp/fwp-243-bench.log`, `fwp-243-mac-arm-regular.log` and
-`fwp-243-mac-arm-ownership.log`); the echoed ResourceWarning option is not a warning.
+appear. Production run `41412228669` has passing benchmarks, both ARM macOS jobs
+and Intel macOS ownership; five platform jobs remain running without failed steps.
+Complete passing logs are audited (`/private/tmp/fwp-243-bench.log` and
+`fwp-243-mac-{arm,amd}-{regular,ownership}.log` for those completed jobs).
+The echoed ResourceWarning option is not a warning. Completed target archives:
+ARM regular 131 logs, both ownership jobs 126 each, both Windows native archives
+57 logs/135 summaries each; all pass without diagnostics. Windows jobs still have
+later steps to finish, so these archives alone do not complete their gates.
 Draft run `41411731289` is skipped and establishes no platform support.
 The published worktree is `/private/tmp/fwp-current-kernel-costs`.
 
@@ -27,7 +31,7 @@ The previous full handoff remains at `ea976b7e:docs/development-state.md`.
 | 1 | Verified | Protocol `5f235bb0`, tag `roadmap/matrix-calculation-protocol-2026-11-02`, published before runner edits |
 | 2 | Verified | Run `41412675762` reproduces all original binaries on both architectures; complete compiler reports and logs retained |
 | 3 | Verified | Paired-column diagnostic vectorizes on both GCC hosts; expanded native safety checks pass on GCC ARM64/AMD64 and Clang ARM64 |
-| 4 | In progress | Timing run `41418956333` at `8b982752`; replace only its rejected AMD session 1 in `41419526409`; retain all outcomes |
+| 4 | In progress | Both ARM sessions pass; AMD2 retains four small-case noise failures; AMD1 still unmeasured after three host rejections; replacement `41420961312` |
 | 5 | Pending | Deliver coherent changes after #243; exact-head full matrix/docs and verified squash merge |
 
 ## Established facts
@@ -110,7 +114,20 @@ jobs `125189610999` (AMD2), `125189611110` (ARM1), `125189611219` (ARM2).
 AMD1 job `125189611052` was rejected before building/timing: EPYC 9V45 instead
 of the required EPYC 7763. Full log `/private/tmp/fwp-matrix-time-amd1-rejected.log`.
 Replacement run `41419526409` selects only AMD1 at the exact retained source.
+Its job `125191464720` was also rejected before building/timing: Xeon 8370C.
+Replacement run `41420187469`, job `125193609921`, again selects only AMD1 at
+the same immutable tag. Keep both prior rejection logs and qualification records.
+That third AMD1 host was also rejected before timing: EPYC 9V74. Replacement
+run `41420961312` again requests only the missing session at the same source.
 Do not repeat any completed timing to seek a passing copy/speed result.
+
+Both ARM sessions finish successfully and their independent raw audits pass:
+calculation takes about 33% less time than the scalar reference. AMD2's large case
+also passes, at 30.8% less calculation time, but its small-case identical copies
+differ by 6.1–8.3%. All four failed copy limits remain recorded; the independent
+audit passes and no other step fails. The complete three-job logs are
+`/private/tmp/fwp-matrix-time-{arm1,arm2,amd2}.log`. Full timing acceptance remains
+unmet; finish AMD1 and the combined audit before deciding the candidate's delivery.
 
 Report tools now accept explicit `loop-state` or `matrix-columns` comparisons;
 both retain every failed limit. Six retention/prerequisite controls and two

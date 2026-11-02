@@ -6,7 +6,8 @@ The [current comparison](current-kernel-costs.md#results-november-2-2026) finds 
 repeatable calculation-only gap for 257×259 by 259×255 products: current fwp takes
 about 65% more time than the matched C peer on AMD64, and 6% more on ARM64.
 Both sessions pass their identical-copy controls for this case. The runtime uses
-zero effective retains during this workload. No new candidate is selected yet.
+zero effective retains during this workload. The paired-column candidate below
+passes focused safety checks; performance acceptance is still open.
 
 The computation multiplies each left row by each right column. For example,
 `[1, 2]` dotted with `[3, 4]` gives `1*3 + 2*4 = 11`. Each output cell must keep
@@ -194,7 +195,9 @@ and keep every other generated-source byte identical. Save both sources and hash
 | Rounds | Two retained warmup rounds, then 18 measured rounds |
 | Order | Role indices `[0,1,5,2,4,3]`, rotated by `(round + block) % 6`; use every observation |
 | Compilation | Generated C and C peer: O2, `-ffp-contract=off`, `armv8-a` / `x86-64`, no LTO; Rust 1.99.1 at O2 and `generic` / `x86-64` |
-| Scope | Separately time calculation and C-driver construction through final cleanup; report median round totals and fwp/peer ratios |
+| Calculation timer | Multiplication/accumulation loops only; excludes allocation, output zeroing, shape checks and cleanup |
+| Inclusive timer | C-driver allocation/filling, calculation, output checksum and final release; excludes runtime startup, printing and shutdown |
+| Reported time | Median round totals divided by calculations per round; fwp/peer ratios use those same totals |
 | Correctness | Exact integer-derived outputs; matching profile samples; zero final live workload storage; deliberate retained-owner control must fail |
 | Timing limits | Both identical-copy ratios ≤1.02 in each case/scope/session; paired/reference ≤0.95 for large AMD64 calculation, ≤1.02 everywhere else |
 | Memory limits | No increase in requests, requested bytes, effective retains or peak charged storage in any profile sample |
