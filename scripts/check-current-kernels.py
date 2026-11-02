@@ -9,7 +9,7 @@ from pathlib import Path
 import re
 import subprocess
 
-from current_kernel_costs import LABELS, decisions, storage_label, summarize
+from current_kernel_costs import LABELS, METRICS, decisions, storage_label, summarize
 
 ROOT = Path(__file__).resolve().parent.parent
 SPEC = importlib.util.spec_from_file_location('kernel_measurement', ROOT / 'scripts/measure-kernel-baselines.py')
@@ -111,7 +111,7 @@ def check_report(report, source, machine, session):
                 assert type(observation['processNs']) is int and observation['processNs'] > 0
                 MEASURE.check_samples(json.dumps(dict(samples=observation['samples'])).encode(),
                                       expected_hash, storage_label(observation['label']), False)
-        summary = summarize(row['observations'], processes)
+        summary = summarize(row['observations'], processes, METRICS)
         assert all(row[key] == value for key, value in summary.items())
         assert set(row['profiles']) == {'c', 'rust', 'fwp', 'reference'}
         for label, samples in row['profiles'].items():

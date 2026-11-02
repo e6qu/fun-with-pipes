@@ -13,7 +13,7 @@ import subprocess
 import time
 
 from process_wait import run_capture
-from current_kernel_costs import LABELS, decisions, execution_order, storage_label, summarize
+from current_kernel_costs import LABELS, METRICS, decisions, execution_order, storage_label, summarize
 
 ROOT = Path(__file__).resolve().parent.parent
 SPEC = importlib.util.spec_from_file_location('kernel_measurement', ROOT / 'scripts/measure-kernel-baselines.py')
@@ -254,7 +254,7 @@ def main():
             stack[path.name] = dict(sha256=hashlib.sha256(path.read_bytes()).hexdigest(),
                                    entries=[dict(location=p, bytes=int(size), qualifier=q) for p, size, q in
                                             (line.split('\t') for line in path.read_text().splitlines())])
-        summary = summarize(observations, processes)
+        summary = summarize(observations, processes, METRICS)
         results[case] = dict(dimensions=dimensions, resultHash=expected_hash, observations=observations,
                              profiles=profiles, binaries=images, stack=stack, peakProcessRssBytes=rss,
                              rolePaths={label: str(command[0].relative_to(directory)) for label, command in binaries.items()},

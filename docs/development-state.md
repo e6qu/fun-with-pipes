@@ -1,15 +1,15 @@
 # Current work
 
 **Next:** audit PR #244's remaining production gates, then squash-merge only its
-passing final head. Meanwhile implement the frozen array phase protocol; do not change compiler
-selection rules before measuring the source/driver boundary.
+passing final head. Meanwhile run the frozen array phase comparison; do not change
+compiler selection rules before measuring the source/driver boundary.
 
 ## Active PR and independent preparation
 
 - PR: https://github.com/e6qu/fun-with-pipes/pull/244
 - Final head: `555c4981695f4819586ef0a57114a36c2c9476ef`; preserve it unless CI needs repair.
-- Production `41425537461`: benchmark `125211125775` and macOS ARM64 ownership
-  `125211126065` pass; seven native jobs remain.
+- Production `41425537461`: benchmark, both macOS ARM64 jobs, Intel ownership,
+  Linux ARM64 and Windows ARM64 pass; Linux AMD64, Intel regular and Windows AMD64 remain.
 - Docs `41425537447` / `125211125800` passes. Benchmark/docs full logs audited;
   documentation test-runner failures are intentional negative controls.
 - macOS ARM64 ownership archive `13134110468`: all 126 target logs pass, no
@@ -58,8 +58,10 @@ sources have remote retention tags. Do not repeat completed timings.
 - Materialized scalar captures retain generic callback dispatch in generated and
   optimized GCC source. The phase protocol now fixes six roles, two sizes, two
   sessions/architecture, construction/consumption/inclusive timers and separate
-  instrumented phase observations. Implement that runner next; baseline comparisons
-  impose noise controls, not a speculative required speedup.
+  instrumented phase observations. The runner completes both sizes' builds,
+  exact-output/storage checks and missing-release controls before any timing.
+  Baseline comparisons impose noise controls, not a speculative required speedup.
+  Ordinary profiles and instrumented phases have separate raw artifacts.
 - Earlier run `41426573182` failed only source formatting on both hosts. The fixture
   was fixed with #243's verified package; failure logs and source tag remain.
 
@@ -77,6 +79,9 @@ Focused checks run serially through `python3 scripts/local-guard.py`:
   full archive/file/output checks (2.32s), retained-sample reduction (2.67s).
   Persistent `check-array-construction.py` reproduces source/observer mutations,
   results, storage and all command outcomes for both archives (2.46s).
+- Phase runner: six timer-boundary controls pass (0.13s); 13 shared-evidence
+  controls pass (5.34s). Actionlint passes (6.29s); both historical table sets
+  reproduce with explicit metric selection (7.08s and 7.36s).
 - No local compiler build, full suite or benchmark. #243's downloaded release
   package was used only for formatting/small interpreter preflights, not native
   GCC acceptance. Last free disk: 66 GiB; keep the guard's fixed limits.

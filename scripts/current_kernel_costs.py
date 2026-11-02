@@ -19,10 +19,11 @@ def storage_label(label):
     return 'fwp' if label.startswith('reference') else label
 
 
-def summarize(observations, processes):
+def summarize(observations, processes, metrics):
     """Rebuild complete round totals; retain warmups but exclude them from medians."""
+    assert metrics and len(set(metrics)) == len(metrics)
     assert len(observations) == 20
-    totals = {label: {metric: [] for metric in METRICS} for label in LABELS}
+    totals = {label: {metric: [] for metric in metrics} for label in LABELS}
     adjacency = Counter()
     for position, record in enumerate(observations):
         phase, index = ('warmup', position) if position < 2 else ('sample', position - 2)
@@ -34,7 +35,7 @@ def summarize(observations, processes):
         if phase == 'sample':
             adjacency.update(zip(order, order[1:]))
             for label in LABELS:
-                for metric in METRICS:
+                for metric in metrics:
                     totals[label][metric].append(sum(sample[metric]
                         for row in record['observations'] if row['label'] == label
                         for sample in row['samples']))
@@ -44,9 +45,9 @@ def summarize(observations, processes):
     controls = {label: {metric:
         max(medians[label][metric], medians[label + '-identical'][metric]) /
         min(medians[label][metric], medians[label + '-identical'][metric])
-        for metric in METRICS} for label in ('fwp', 'reference')}
+        for metric in metrics} for label in ('fwp', 'reference')}
     ratios = {peer: {metric: medians['fwp'][metric] / medians[peer][metric]
-                    for metric in METRICS} for peer in ('c', 'rust', 'reference')}
+                    for metric in metrics} for peer in ('c', 'rust', 'reference')}
     return dict(totals=totals, medians=medians, identicalRatios=controls, ratios=ratios,
                 withinRoundAdjacency=[dict(before=a, after=b, count=n)
                     for (a, b), n in sorted(adjacency.items())])

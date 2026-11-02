@@ -8,7 +8,7 @@ import tempfile
 import unittest
 from unittest import mock
 
-from current_kernel_costs import LABELS, decisions, execution_order, summarize
+from current_kernel_costs import LABELS, METRICS, decisions, execution_order, summarize
 
 ROOT = Path(__file__).resolve().parent.parent
 SPEC = importlib.util.spec_from_file_location('checker', ROOT / 'scripts/check-current-kernels.py')
@@ -62,7 +62,7 @@ def report_fixture():
             binaries={f'{label}-{mode}': {} for label in ('c', 'rust', 'fwp', 'reference')
                       for mode in ('timing', 'profile', 'verify')},
             stack={'probe.su': dict(entries=[dict(location='kernel', bytes=32, qualifier='static')])},
-            **summarize(records, processes))
+            **summarize(records, processes, METRICS))
         result['results'][case] = row
     result['failures'] = decisions(result['results'], {'array-65537', 'array-262145'})
     return result
@@ -199,7 +199,7 @@ class CurrentKernelEvidence(unittest.TestCase):
             for observation in record['observations']:
                 if observation['label'] == 'reference-identical':
                     observation['samples'] = [dict(s, kernelNs=120) for s in observation['samples']]
-        row.update(summarize(row['observations'], 4))
+        row.update(summarize(row['observations'], 4, METRICS))
         self.report['failures'] = decisions(self.report['results'], {'array-65537', 'array-262145'})
         self.assertEqual(len(self.check()), 1)
         self.report['failures'] = []
