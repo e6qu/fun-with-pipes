@@ -4,29 +4,25 @@ Build an ahead-of-time language with simple pipes, immutable values, strong type
 and useful inference. Prefer direct values, moves and borrows; reserve ARC for
 necessary sharing. GC is removed; JIT and backward compatibility are excluded.
 
-## Current batch: measure current numerical kernels
+## Current batch: investigate matrix calculation costs
 
-PR #242 is verified and squash-merged as `10b9bbff`. This batch publishes the
-current numerical comparison, its reproducible reports and the next concrete
-optimization task. The [handoff](docs/development-state.md) records delivery checks.
+[PR #243](https://github.com/e6qu/fun-with-pipes/pull/243) publishes the completed
+current-kernel comparison. Keep its final head unchanged during production
+validation and merge only after all nine jobs and documentation pass. This
+independent branch prepares the matrix work; do not open a second PR.
 
-The [current comparison](docs/measurements/current-kernel-costs.md#results-november-2-2026)
-is measured and independently audited. All result/memory checks pass; four ARM
-speed limits and nine AMD copy controls remain unmet. The old roughly 3.3-times-C
-AMD array ratio predates typed state and must not describe current overhead.
+The [matrix protocol](docs/measurements/matrix-calculation-costs.md) fixes a first
+source/compiler diagnostic before implementation. No runtime candidate is selected.
 
 | Step | Work | Completion requirement |
 |---|---|---|
-| 1 | Verified: preparation and #242 delivery | Protocol published before implementation; all #242 production/docs gates pass and merge tree/message are verified |
-| 2 | Built: paired measurement and evidence checks | Same-source reference, exact results, cleanup failures, six-role schedule and damaged-evidence controls pass |
-| 3 | Measured: time, memory and code costs | Four sessions and seven prior host/check failures retained; independent audit `41407524129` passes |
-| 4 | Publish understandable current costs and deliver | Update plan/docs with concrete remaining gaps; all final production jobs and documentation pass before squash merge |
+| 1 | Publish source findings and diagnostic protocol | Retain the preparation before runner edits; preserve #243's final-head checks |
+| 2 | Inspect current generated C with production GCC | Original binaries reproduce byte for byte; all outputs/cleanup agree; both architectures and all compiler diagnostics audited |
+| 3 | Select and prove one bounded source change | Freeze exact reference and timing scope; pass alias, arithmetic, shape, failure and cancellation probes |
+| 4 | Measure both matrix sizes and retain every outcome | Two sessions per declared architecture, independent copy controls, time/memory/code/frame costs and all failed limits |
+| 5 | Publish the coherent batch and verify delivery | Readable results and plan updates; full final-head matrix/docs pass before squash merge |
 
-Reuse existing kernel oracles and native harnesses. No new compiler optimization
-is selected. Retain historical failures and make no current-speed claim from old
-sources or representation alone.
-
-## Next numerical task: explain the large-matrix gap
+## Matrix acceptance
 
 The qualified 257×259 by 259×255 case takes about 65% more calculation time than
 C on AMD64 and 6% more on ARM64. Zero effective retains and near-payload storage
