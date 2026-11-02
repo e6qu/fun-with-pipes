@@ -8,7 +8,9 @@ verified and merged; #248 is the sole active PR.
 
 ## Branch and delivery
 
-Worktree `/private/tmp/fwp-array-consumption`, branch `derivative-temporary-storage`.
+Worktree `/private/tmp/fwp-array-consumption`, local preparation branch
+`numeric-owner-transfers`, based on published PR #248 head `32aae4f7`.
+The PR branch `derivative-temporary-storage` remains unchanged at that head.
 Primary checkout untouched. The complete batch was rebased onto verified main
 `389337b9`; reviewed checkpoint `44407aff` includes all four sessions, the report
 checker, regression tests, workflow integration and streamlined tracking. The
@@ -34,6 +36,34 @@ repair rather than let two complete matrices consume runners. No production
 compiler or native test source changes. Identify the new final run IDs through
 PR #248; keep a local status update while gates run rather than restart CI solely
 to publish their IDs. Draft/skipped jobs are not validation.
+
+Local live status: repaired head `32aae4f79b66f5e88e9aded39d6df794439b7430` runs
+production `41524286630`. Benchmark job `125547928770` passes both tests; its
+full log has no diagnostics. Other production jobs are running or queued with
+no reported failed steps. Documentation `41524286169` passes on attempt 2,
+job `125552574269`: 75 Python groups / 477 tests, tutorial copy, 218 doc link
+sets, 106 immutable pairs and the complete four-session timing replay.
+Full logs: `/private/tmp/fwp-248-final-{docs,bench}.log`; guarded audits pass
+(0.13s / 0.14s). The docs log's duplicate/unknown-target errors and deliberate
+Rust failure are native-runner rejection/propagation controls, verified against
+`scripts/test-native-test-runner.py`; no unexpected diagnostics. The superseded
+production run `41522419557` is confirmed stopped. This status paragraph is
+intentionally unpushed while the final gates run.
+
+Both macOS corpus artifacts (`13180805582` Intel, `13180378374` ARM64) pass
+independent digest/head checks: each has 85 unique programs start and finish,
+one test passes, no diagnostics. Archives
+`/private/tmp/fwp-248-macos-{amd,arm}-corpus.zip`, audit helper
+`/private/tmp/fwp-248-audit-corpus.py` (0.14s). Production target-archive helper
+`/private/tmp/fwp-248-audit-targets.py` pins the current head and checks the exact
+native shard inventory, every test summary and compiler diagnostics.
+
+Documentation attempt 1 completed every check and checkout cleanup by 21:04:09Z,
+about 3m20s after its 21:00:49Z start, without a test failure. GitHub nevertheless
+marked it cancelled for the five-minute limit at 21:06:55Z. Preserve that as a
+non-passing attempt; the same-head targeted rerun now passes. Evidence:
+`/private/tmp/fwp-248-docs-final.log` and `/private/tmp/fwp-248-docs-timeout-*.json`.
+Do not change compiler code or widen limits based on this runner-finalization delay.
 
 [PR #247](roadmap-history.md#benchmark-driver-comparison-pr-247) merged as
 `389337b9495f8fc2c4343339765707c4503b9984`. All nine production jobs and documentation
@@ -122,6 +152,49 @@ artifact `13178215928` is digest-verified. Full final retained archive is
 `report-artifacts.json`. Full native archives were independently audited on
 GitHub; only compact results were downloaded locally. Final local replay and
 render pass (0.26s / 0.74s); no unexpected job diagnostics.
+
+## Next source investigation after this delivery
+
+[The next-batch investigation](measurements/derivative-owner-transfers.md) now
+retains the proof requirements and all source-attributed observations in the
+repository. `scripts/check-derivative-owner-sites.py` replays both native count
+archives with explicit paths/source; 48 sources / 96 observations pass (0.50s).
+Its output equals the independent temporary audit exactly (0.14s). No compiler
+source or production test changes, no new measurement run, no second PR.
+
+The retained `a4f3200c` largest current-only O2 profile has 77,411 effective
+retains. Two mapper-argument preparations contribute 25,472 each; a tuple-field
+projection contributes another 25,472. Together they account for 76,416 retains
+(98.7%). These are source-attributed counts, not a proven optimization or speedup.
+
+In saved `129-199-current-O2/ownership-base.c`, the mapper sites are
+`fwp_args164` lines 17284–17285. The other site is `w124`, an ordinary function
+from `(Rev[F64], Rev[F64])` to `Rev[F64]`: it copies field 0 into `l117`, retains
+it, copies field 1, then drops the original field-0 owner before arithmetic.
+No disassembly inference was used. IDs apply only to that saved source.
+
+The source audit now verifies all 48 saved C sources and 96 observations:
+mapper inputs contribute `2*p` retains and the separated-field transfer `p`,
+where `p=(coordinates-1)*updates`. Guarded replay passes (0.38s); helper
+`/private/tmp/fwp-audit-next-arc-sites.py`, output `/private/tmp/fwp-next-arc-sites.json`.
+Next preparation should examine two separate proofs: transferring already separated field owners
+without a retain/release pair; and borrowing mapper inputs while their input
+lists remain owned. Preserve boxed/function-value entries, aliases, failure and
+cancellation cleanup. Existing selection deliberately keeps owning callback
+entries; removing `fwp_args` alone would be unsafe. Freeze selection and counts
+before changing either contract. Do not claim all three sites can be removed.
+
+Source review confirms `parameter_type` and `continuing_owners` currently reject
+nested records, while packed-map callbacks explicitly retain owning entries.
+Thus removing their argument retains requires more than enabling a flag. Draft
+proofs, exclusions, cleanup tests and compiler-cost checks are saved in
+`/private/tmp/fwp-next-arc-protocol.md`. It is preparation, not a frozen protocol;
+publish numerical requirements before any next-batch compiler edits. Consider
+passing proved numeric leaves directly as well as borrowing element boxes.
+The saved mapper `w164` only forwards `l1, l0` to `w124`; there is no later
+local read proving continuing ownership. Borrowing must carry the outer list's
+lifetime through that forwarding call. Numeric-leaf passing instead needs both
+calls coordinated, since the current ABI splits one record level only.
 
 ## Focused checks and resources
 
