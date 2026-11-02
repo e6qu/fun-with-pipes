@@ -154,6 +154,7 @@ jobs:
           python3 scripts/test-current-kernel-report.py
           python3 scripts/test-kernel-codegen-input.py
           python3 scripts/report-current-kernels.py --directory docs/measurements/current-kernels-2026-11-02 --comparison loop-state --mode check
+          python3 scripts/report-current-kernels.py --directory docs/measurements/matrix-columns-2026-11-02 --comparison matrix-columns --mode check
       - name: Matched-host evidence rejection controls
         run: python3 scripts/test-descent-groups.py
       - name: Numeric array comparison evidence controls

@@ -366,6 +366,12 @@ map/reduce at 65,537/262,145 elements and matrix products of 65×67 by 67×63 an
 value words for loop state, C and Rust. Calculation and allocation-inclusive
 timing are separate; neither includes process startup. These peers are not BLAS.
 
+The [paired-column experiment](measurements/matrix-calculation-costs.md#results-november-2-2026)
+changes only the matrix loop: two neighboring outputs are calculated together
+without rearranging either sum. Qualified cases use about one-third less time
+than scalar fwp, with unchanged managed storage. Small AMD64 copy controls fail;
+that case has no accepted speed claim. Its complete data remains in the report.
+
 The [older baseline](measurements/kernel-baselines.md) predates typed loop state.
 Its roughly 3.3-times-C AMD64 array result is **not current overhead**. Its failed
 3.08% copy control remains part of that historical experiment. Current measurements

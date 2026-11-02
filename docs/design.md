@@ -495,8 +495,10 @@ The current candidate computes two adjacent columns together, then one scalar
 column if the tile width is odd. It preserves each cell's arithmetic order and
 uses fixed-size byte copies, including for overlapping read-only input views.
 Both GCC targets vectorize the pair; focused GCC/Clang safety checks pass.
-[The matrix protocol](measurements/matrix-calculation-costs.md) keeps timing and
-final production acceptance open until their separate checks finish.
+[The matrix results](measurements/matrix-calculation-costs.md#results-november-2-2026)
+show about 33% less calculation time on ARM64 and 31% less for large AMD64
+products, with unchanged managed storage. Small AMD64 timings remain inconclusive;
+final production acceptance is still pending.
 
 A numeric derivative tape records two parents and local derivative weights per
 operation. Its backward workspace need only reach the last requested output;
