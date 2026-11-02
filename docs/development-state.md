@@ -1,7 +1,7 @@
 # Current work
 
-**Next:** run the frozen paired-column timing experiment after the passing native
-checks, while monitoring PR #243. Keep head `ea976b7e19c26c5be0ad9e748e284cc97a269379`
+**Next:** audit the four paired-column timing sessions and their raw evidence,
+while monitoring PR #243. Keep head `ea976b7e19c26c5be0ad9e748e284cc97a269379`
 unchanged. Squash-merge only after all gates pass, with an explicit one-line subject
 at most 80 characters and empty body; verify the merge message and tree.
 
@@ -27,7 +27,7 @@ The previous full handoff remains at `ea976b7e:docs/development-state.md`.
 | 1 | Verified | Protocol `5f235bb0`, tag `roadmap/matrix-calculation-protocol-2026-11-02`, published before runner edits |
 | 2 | Verified | Run `41412675762` reproduces all original binaries on both architectures; complete compiler reports and logs retained |
 | 3 | Verified | Paired-column diagnostic vectorizes on both GCC hosts; expanded native safety checks pass on GCC ARM64/AMD64 and Clang ARM64 |
-| 4 | In progress | Timing protocol `6c7e9cea` frozen; shared runner uses explicit reference kinds and checks source equality before timing |
+| 4 | In progress | Timing run `41418956333` at `8b982752`; replace only its rejected AMD session 1 in `41419526409`; retain all outcomes |
 | 5 | Pending | Deliver coherent changes after #243; exact-head full matrix/docs and verified squash merge |
 
 ## Established facts
@@ -104,6 +104,19 @@ data; historical word-state evidence keeps its original rules.
 Local checks: six runtime/patch controls (0.13s), eight schedule/limit controls
 (0.13s), thirteen damaged-evidence controls (5.37s), Rust formatting (0.13s),
 actionlint (5.43s), documentation links/identities (3.01s). No local build or timing.
-Dispatch `matrix-columns`, both sessions/all hosts, with prerequisite run
-`41417716203` and its full source `a4172afd`; preserve every rejected host and
-failed timing/control result. Full production acceptance remains separate.
+Timing run `41418956333` uses source `8b982752`, retained by tag
+`roadmap/matrix-paired-column-measurements-2026-11-02`. Three hosts qualified:
+jobs `125189610999` (AMD2), `125189611110` (ARM1), `125189611219` (ARM2).
+AMD1 job `125189611052` was rejected before building/timing: EPYC 9V45 instead
+of the required EPYC 7763. Full log `/private/tmp/fwp-matrix-time-amd1-rejected.log`.
+Replacement run `41419526409` selects only AMD1 at the exact retained source.
+Do not repeat any completed timing to seek a passing copy/speed result.
+
+Report tools now accept explicit `loop-state` or `matrix-columns` comparisons;
+both retain every failed limit. Six retention/prerequisite controls and two
+normalization tests pass (0.13s each). The four previously published reports and
+tables still verify unchanged (7.46s); actionlint passes (5.83s). Stale design
+claims that #225/#242 still awaited full validation are corrected. Once all four
+matrix measurements finish, record their IDs and every rejected run in
+`docs/measurements/matrix-column-selection.json`, then dispatch
+`matrix-columns-report` for the full raw audit and table generation on GitHub.
