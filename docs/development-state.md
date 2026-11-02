@@ -1,8 +1,9 @@
 # Current work
 
-**Next:** publish the initial packed-record implementation checkpoint and run
-`packed-record-checks` on both native Linux architectures. Audit compiler lint,
-evaluation-order tests and all count observations before expanding the controls. Keep monitoring
+**Next:** publish and run `packed-record-controls` for the added failure,
+cancellation and missing-buffer-release probes under GCC and Clang on native
+Linux ARM64/AMD64. The first compiler/count run `41505591902` passes both hosts
+at `229ea441`; independently audit its archives before timing. Keep monitoring
 [PR #247](https://github.com/e6qu/fun-with-pipes/pull/247); squash merge only after
 all nine exact-head production jobs and documentation pass and logs are audited.
 
@@ -74,13 +75,21 @@ keep all mapping before summation and preserve seed evaluation and caller cleanu
 The existing observer includes scratch allocations through `fwp_mem_alloc`.
 Preparation `15aa4c0a` and immutable tag
 `roadmap/derivative-temporary-storage-protocol-2026-11-02` are published.
-The initial compiler change is implemented but not yet built or verified natively.
+The initial compiler change at `229ea441` passes focused native jobs
+`125483983930` (ARM64) and `125483984472` (AMD64), run `41505591902`.
+Both compile/lint the compiler and affected tests, pass the fold/order/unwind
+regressions, and meet all 96 frozen allocation observations. Full archives and
+job logs are `/private/tmp/fwp-packed-record-{arm64,amd64}.{zip,log}`; identities
+are in `/private/tmp/fwp-packed-record-artifacts.json`. Independent audit follows.
 It lowers a sole-use mapped collection to an internal word array before ownership
 insertion; mapping and folding remain separate calls with seed evaluation between
 them. Existing typed ownership handles the buffer through failure paths. New
-order tests cover map/seed/fold effects, empty/unequal inputs and aliases. Dedicated
-new failure/cancellation, allocation-failure and omitted-buffer-release controls
-still need implementation; the full final matrix/timings are not ready.
+order tests cover map/seed/fold effects, empty/unequal inputs and aliases. Dedicated failure/cancellation, allocation-failure and omitted-buffer-release
+controls are now implemented but not yet run. They cover map, between-stage and
+fold failure, cancellation in each callback stage, buffer/final-result allocation
+failure, retained input aliases and actual buffer release. A controls-only suite
+runs GCC and Clang without repeating the unchanged allocation experiment.
+The full final matrix and timings are not ready.
 
 The callback-box auditor now requires an explicit accumulator layout. Current
 counts pass (0.27s). The old #239 report reproduces exactly; both wrong layouts
@@ -113,3 +122,6 @@ lint passes (5.74s), and the new count-limit mutation test passes (0.25s).
 No local Rust build or native compilation. The focused runner suite adds compiler
 lint, existing fold/unwind regressions plus the new order test, and all 96
 count observations against the frozen current baseline.
+
+New controls checkpoint: guarded formatting passes (1.91s), workflow lint passes
+(6.06s). No local compiler build or native test run.
