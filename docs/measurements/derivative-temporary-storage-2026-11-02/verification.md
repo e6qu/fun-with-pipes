@@ -76,6 +76,19 @@ GitHub without executing saved binaries. Its compact output is digest-checked
 locally; report medians, balanced orders, counts and timing limits are recomputed.
 These audits preserve a failed performance limit as failed.
 
+All four sessions are retained. Reproduce the published tables with:
+
+```sh
+python3 scripts/report-packed-records.py \
+  --directory docs/measurements/derivative-temporary-storage-2026-11-02 \
+  --source a4f3200c9b97b955c3f3603788eacbfac19fde4e --mode check
+```
+
+Use `--mode write` to regenerate them. The documentation gate checks this exact
+output and rejects missing/duplicate sessions, changed payloads, source/binary
+identity mismatches and erased failures. Five regression tests exercise those
+checks' payload, timing-decision and artifact-identity failures.
+
 Download the archives identified by `verified-artifacts.json` and verify their
 SHA-256 digests. Recompute all observations and acceptance limits with:
 

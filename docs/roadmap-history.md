@@ -6,6 +6,27 @@ and complete platform validation are different events. Measurements retain their
 original source and settings; old numbers are not measurements of current main.
 The linked PRs, runs and data records supply the detailed evidence.
 
+## Benchmark driver comparison (PR #247)
+
+[PR #247](https://github.com/e6qu/fun-with-pipes/pull/247) merged November 2 as
+`389337b9495f8fc2c4343339765707c4503b9984`. All nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/41497408964)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/41497408857)
+pass at `bb2e5b29fa6f53b3f187c3fba3fd15d38ff4085b`; every job and target log was
+audited. The last ARM64 ownership job passed all 126 targets and 85 corpus
+programs after two attempts received no hosted runner. Its only diagnostic was
+an already-installed OpenSSL notice. The squash preserves tested tree
+`67b81e49e36d5390d54c70425ff9f709569f0506` and an exact 50-character single-line
+message without body/trailers. Duplicate same-tree main runs `41521347856` and
+`41521347736` were cancelled.
+
+The [three-driver comparison](measurements/array-observations-2026-11-02/README.md)
+separates extra observations from the complete preparation-capable driver. It
+retains all 96 measured combinations, thirteen small-AMD64 copy failures and
+four rejected hosts. The zero-preparation driver improves large-AMD64 consumption
+by 3.3–4.4% while increasing total work by 7.7–9.8%; this does not justify a runtime
+change. The diagnostic is complete; original timing goals remain open.
+
 ## Array preparation diagnostic (PR #246)
 
 [PR #246](https://github.com/e6qu/fun-with-pipes/pull/246) merged November 2 as

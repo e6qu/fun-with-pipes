@@ -42,7 +42,7 @@ For example, 10× means ten times the elapsed time, or 900% extra time.
 RSS is a separate process high-water observation in KiB, not managed live
 bytes or allocation traffic. Do not add these measures. A single RSS result
 includes runtime/library/allocator pages and does not establish a memory
-regression or saving by itself. Static frames are compiler-reported maxima,
+regression or saving by itself. Frame sizes are compiler-reported maxima,
 not total stack high-water marks. Full commands, samples, profiles, source
 and binary identities are in the linked compressed reports.
 
@@ -61,7 +61,7 @@ CPU: Neoverse-N2. C: gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0. Rust: rustc 1.
 | 33 / 199 | 335.535 | 342.784 | 0.87577 | 0.86929 | 0.063% | 28.40× | 26.61× |
 | 129 / 199 | 321.421 | 335.471 | 0.86957 | 0.85805 | 0.025% | 26.35× | 26.30× |
 
-| Coordinates / updates | Current/reference RSS KiB | History/reference RSS KiB | C/Rust RSS KiB | Current/reference instruction bytes | Current/reference largest static frame bytes |
+| Coordinates / updates | Current/reference RSS KiB | History/reference RSS KiB | C/Rust RSS KiB | Current/reference instruction bytes | Current/reference largest reported frame bytes |
 |---|---|---|---|---|---|
 | 3 / 0 | 2848 / 2784 | 2852 / 2852 | 1372 / 1636 | 37692 / 37660 | 704 / 704 |
 | 3 / 1 | 1376 / 1440 | 1380 / 1444 | 1384 / 1748 | 38780 / 38748 | 704 / 704 |
@@ -87,7 +87,7 @@ CPU: Neoverse-N2. C: gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0. Rust: rustc 1.
 | 33 / 199 | 335.460 | 342.565 | 0.87583 | 0.86888 | 0.025% | 28.43× | 26.40× |
 | 129 / 199 | 321.740 | 335.992 | 0.86955 | 0.85805 | 0.052% | 26.10× | 25.89× |
 
-| Coordinates / updates | Current/reference RSS KiB | History/reference RSS KiB | C/Rust RSS KiB | Current/reference instruction bytes | Current/reference largest static frame bytes |
+| Coordinates / updates | Current/reference RSS KiB | History/reference RSS KiB | C/Rust RSS KiB | Current/reference instruction bytes | Current/reference largest reported frame bytes |
 |---|---|---|---|---|---|
 | 3 / 0 | 2848 / 2912 | 2980 / 2788 | 1384 / 1636 | 37692 / 37660 | 704 / 704 |
 | 3 / 1 | 1440 / 1440 | 1380 / 1428 | 1384 / 1760 | 38780 / 38748 | 704 / 704 |
@@ -95,6 +95,32 @@ CPU: Neoverse-N2. C: gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0. Rust: rustc 1.
 | 3 / 1999 | 1376 / 1372 | 1828 / 1756 | 1384 / 1636 | 38812 / 38780 | 704 / 704 |
 | 33 / 199 | 1828 / 1828 | 2212 / 2084 | 1376 / 1632 | 43676 / 43628 | 848 / 848 |
 | 129 / 199 | 1896 / 1892 | 2796 / 2660 | 1384 / 1636 | 47084 / 47068 | 2240 / 2240 |
+
+All frozen limits pass in this session.
+
+## AMD64, session 1
+
+Run [41518220615](https://github.com/e6qu/fun-with-pipes/actions/runs/41518220615); [report](timing/41518220615/x86_64-1.json.gz); [audit and identities](timing/41518220615/index.json.gz).
+
+CPU: AMD EPYC 7763 64-Core Processor. C: gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0. Rust: rustc 1.99.1 (58cf8f9c3 2026-10-13).
+
+| Coordinates / updates | Current ms | History ms | Current/ref | History/ref | Copy difference | Current/C | Current/Rust |
+|---|---|---|---|---|---|---|---|
+| 3 / 0 | 334.988 | 348.707 | 1.01759 | 1.01815 | 0.044% | 2.40× | 1.53× |
+| 3 / 1 | 71.160 | 71.022 | 1.00031 | 0.99199 | 0.741% | 7.84× | 5.59× |
+| 3 / 199 | 61.783 | 63.865 | 0.94887 | 0.91923 | 0.440% | 8.50× | 7.00× |
+| 3 / 1999 | 70.026 | 74.107 | 0.94513 | 0.92220 | 0.029% | 9.69× | 8.27× |
+| 33 / 199 | 371.646 | 391.358 | 0.89460 | 0.90248 | 0.091% | 33.32× | 31.34× |
+| 129 / 199 | 362.616 | 378.104 | 0.88485 | 0.87696 | 0.125% | 33.59× | 31.57× |
+
+| Coordinates / updates | Current/reference RSS KiB | History/reference RSS KiB | C/Rust RSS KiB | Current/reference instruction bytes | Current/reference largest reported frame bytes |
+|---|---|---|---|---|---|
+| 3 / 0 | 3324 / 3428 | 3136 / 3200 | 1544 / 2152 | 39378 / 38770 | 720 / 720 |
+| 3 / 1 | 2104 / 1832 | 2112 / 2176 | 1544 / 2188 | 40722 / 40114 | 720 / 720 |
+| 3 / 199 | 2300 / 2172 | 2176 / 2108 | 1544 / 2136 | 40754 / 40146 | 720 / 720 |
+| 3 / 1999 | 2172 / 2104 | 2560 / 2496 | 1544 / 2276 | 40754 / 40146 | 720 / 720 |
+| 33 / 199 | 2304 / 2108 | 2568 / 2432 | 1544 / 2288 | 45442 / 44802 | 768 / 768 |
+| 129 / 199 | 2184 / 2352 | 3084 / 3212 | 1544 / 2192 | 50354 / 49730 | 2208 / 2208 |
 
 All frozen limits pass in this session.
 
@@ -113,7 +139,7 @@ CPU: AMD EPYC 7763 64-Core Processor. C: gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0. R
 | 33 / 199 | 369.968 | 389.591 | 0.89355 | 0.89645 | 0.135% | 31.41× | 30.04× |
 | 129 / 199 | 361.073 | 380.191 | 0.88111 | 0.87680 | 0.391% | 32.12× | 30.38× |
 
-| Coordinates / updates | Current/reference RSS KiB | History/reference RSS KiB | C/Rust RSS KiB | Current/reference instruction bytes | Current/reference largest static frame bytes |
+| Coordinates / updates | Current/reference RSS KiB | History/reference RSS KiB | C/Rust RSS KiB | Current/reference instruction bytes | Current/reference largest reported frame bytes |
 |---|---|---|---|---|---|
 | 3 / 0 | 3128 / 3428 | 3200 / 3200 | 1540 / 2152 | 39378 / 38770 | 720 / 720 |
 | 3 / 1 | 2172 / 2172 | 2176 / 1960 | 1540 / 2156 | 40722 / 40114 | 720 / 720 |
@@ -138,5 +164,5 @@ from the frozen AMD EPYC 7763. They are not measured sessions.
 | [41515994738](https://github.com/e6qu/fun-with-pipes/actions/runs/41515994738) | AMD EPYC 9V74 80-Core Processor | [Index/log identity](timing/41515994738/index.json.gz) |
 | [41517608442](https://github.com/e6qu/fun-with-pipes/actions/runs/41517608442) | AMD EPYC 9V45 96-Core Processor | [Index/log identity](timing/41517608442/index.json.gz) |
 
-3 of four required sessions are complete. No completed session is repeated to seek a pass. The full production matrix
+All four required sessions are complete. No completed session is repeated to seek a pass. The full production matrix
 and the separate D2 requirements remain; fewer allocations do not close them.

@@ -5,7 +5,8 @@ from a **seed** value. When only the fold uses a mapped list of numeric records,
 the compiler can store those records in one contiguous buffer. It finishes every
 map call before folding the results.
 Focused correctness, cleanup and allocation checks pass on native Linux
-ARM64/AMD64. Paired timings are running; the full final platform matrix remains.
+ARM64/AMD64. All four paired timings are audited; one limit remains unmet.
+The full final platform matrix remains.
 
 [Baseline](baseline.md) · [Frozen requirements](protocol.md) · [Verification](verification.md) · [Timing tables](timing.md)
 
@@ -107,12 +108,15 @@ until its separate requirements pass.
 
 Three qualified sessions completed in
 [41514265188](https://github.com/e6qu/fun-with-pipes/actions/runs/41514265188).
-Both ARM64 sessions pass their timing limits. AMD64 session 2 misses one limit:
+The fourth completed in
+[41518220615](https://github.com/e6qu/fun-with-pipes/actions/runs/41518220615).
+Both ARM64 sessions and AMD64 session 1 pass their timing limits. AMD64 session 2 misses one limit:
 zero-update history is 2.024% slower, against a maximum 2% regression. Independent
 archive audits pass, preserving that failure. Cases with at least 199 updates
-use 5.1–14.2% less elapsed time. All identical-copy controls pass so far.
+use 5.1–14.2% less elapsed time. All identical-copy controls pass.
 [Timing tables](timing.md) show every case, C/Rust ratios, RSS and code/stack costs.
 
 Four assigned CPUs failed AMD64 session 1's qualification before building/timing.
-The fifth attempt has obtained the required EPYC 7763 and is preparing its
-measurement. No completed timing session is repeated to seek a passing result.
+The fifth attempt obtained the required EPYC 7763. No completed timing session
+was repeated to seek a passing result. Retain the verified reductions while
+leaving the failed timing limit open; the combined frozen timing rule is not met.

@@ -469,8 +469,9 @@ That distinction matters when callbacks print, fail or record derivative work.
 - Insert the representation change after region analysis and before ownership
   insertion. The internal `Array[I64]` holds numeric bits, not public array values.
 
-Native Linux GCC/Clang O1/O2 controls and exact allocation counts pass. The full
-platform matrix and complete timing assessment remain. See the
+Native Linux GCC/Clang O1/O2 controls and exact allocation counts pass. All four
+timing sessions are audited; one AMD64 zero-update limit remains unmet. The full
+platform matrix remains. See the
 [measurement report](measurements/derivative-temporary-storage-2026-11-02/README.md)
 for selection limits, deliberate missing-destruction tests and open timing goals.
 

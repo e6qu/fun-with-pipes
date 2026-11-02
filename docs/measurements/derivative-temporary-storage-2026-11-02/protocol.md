@@ -4,9 +4,6 @@ These requirements precede compiler edits. The original text is retained by
 `roadmap/derivative-temporary-storage-protocol-2026-11-02`; see the
 [baseline](baseline.md) and [current results](README.md).
 
-Preparation tag `roadmap/derivative-temporary-storage-protocol-2026-11-02`
-freezes this baseline and these requirements before implementation.
-
 - Select a known, uncaptured map or zip-with callback returning a flat record of
   immediate numeric fields, followed by a known left fold with a direct numeric
   worker. Prove the mapped collection has one consuming use and no escaping alias.

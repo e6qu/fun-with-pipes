@@ -1,0 +1,45 @@
+{
+  "total_count": 2,
+  "artifacts": [
+    {
+      "id": 13178215928,
+      "node_id": "MDg6QXJ0aWZhY3QxMzE3ODIxNTkyOA==",
+      "name": "packed-records-report-summary",
+      "size_in_bytes": 245705,
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13178215928",
+      "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13178215928/zip",
+      "expired": false,
+      "digest": "sha256:30f436357297a8ce3ec0ac49dd5d4a66955aed9c4cf3c787f25ce3bcc7add27e",
+      "created_at": "2026-11-02T20:42:37Z",
+      "updated_at": "2026-11-02T20:42:37Z",
+      "expires_at": "2027-01-31T20:40:50Z",
+      "workflow_run": {
+        "id": 41521413075,
+        "repository_id": 1400763332,
+        "head_repository_id": 1400763332,
+        "head_branch": "roadmap/derivative-temporary-storage-runner-2026-11-02",
+        "head_sha": "a4f3200c9b97b955c3f3603788eacbfac19fde4e"
+      }
+    },
+    {
+      "id": 13177398568,
+      "node_id": "MDg6QXJ0aWZhY3QxMzE3NzM5ODU2OA==",
+      "name": "packed-records-report-retained",
+      "size_in_bytes": 15033894,
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13177398568",
+      "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13177398568/zip",
+      "expired": false,
+      "digest": "sha256:4adc69dc64bbfbf4682c06f0c66a134f50b11f832c19a0838ed31bbfd7e1897e",
+      "created_at": "2026-11-02T20:43:35Z",
+      "updated_at": "2026-11-02T20:43:35Z",
+      "expires_at": "2027-01-31T20:40:50Z",
+      "workflow_run": {
+        "id": 41521413075,
+        "repository_id": 1400763332,
+        "head_repository_id": 1400763332,
+        "head_branch": "roadmap/derivative-temporary-storage-runner-2026-11-02",
+        "head_sha": "a4f3200c9b97b955c3f3603788eacbfac19fde4e"
+      }
+    }
+  ]
+}
