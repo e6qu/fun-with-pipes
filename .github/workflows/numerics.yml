@@ -790,7 +790,7 @@ jobs:
           ad_tape_scopes worker_preparation_ownership zip_unwind_ownership --idle-timeout 600
           --logs record-fold-checks/targets
       - name: Packed record controls with Clang
-        if: ${{ !cancelled() && steps.compiler_build.outcome == 'success' && inputs.suite == 'packed-record-controls' }}
+        if: ${{ !cancelled() && steps.compiler_build.outcome == 'success' && (inputs.suite == 'packed-record-controls' || inputs.suite == 'packed-record-checks') }}
         run: >-
           env CC=clang FWP_ARC_ARTIFACTS=record-fold-checks/clang CARGO_NET_OFFLINE=true
           python3 scripts/run-native-tests.py

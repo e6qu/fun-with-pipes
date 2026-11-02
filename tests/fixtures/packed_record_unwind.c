@@ -1,6 +1,7 @@
 static int packed_recover(void) { return 1; }
 static fwp_task packed_task;
 int main(void) {
+    fwp_prog_out = stdout;
     fwp_heap_start(); fwp_fns = fwp_fn_table; fwp_init_consts();
     for (int round = 0; round < 16; round++) {
         for (volatile int mode = 0; mode < 8; mode++) for (unsigned aliases = 0; aliases < 4; aliases++) {

@@ -212,7 +212,7 @@ pub enum Body {
     /// Native-only constructor; the final parameter is its explicit region.
     RegionCtor(u32),
     /// Native-only eager numeric mapper. Borrows input lists and returns an
-    /// owned Array[I64] of record-field bits; only PackedRecordFold consumes it.
+    /// owned Array[I64] of record-field bits; only PackedRecordFold reads it.
     PackedRecordMap {
         callback: FuncId,
     },

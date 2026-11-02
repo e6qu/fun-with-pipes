@@ -354,7 +354,7 @@ transform = fn pause -> fn seed -> fn input ->
                 assert_eq!(
                     output.status.code(),
                     Some(expected),
-                    "{name}/{opt}: {output:?}"
+                    "boxed={boxed}, {name}/{opt}: {output:?}"
                 );
             }
         }

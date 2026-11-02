@@ -75,6 +75,13 @@ It preserves the scalar
 inputs and their evaluation order; [the text lowering rules](design.md#measuring-integer-text-without-building-it)
 explain which expressions qualify.
 
+Native lowering also recognizes a private mapped list of numeric records whose
+only consumer is a known left fold. It can store the records in one flat buffer,
+finish **all** map calls before the first fold call, and keep seed evaluation
+at its original position. It does not interleave mapping with folding. Ordinary
+ownership insertion keeps the buffer alive through intermediate calls and releases it on return or failure.
+See the [selection rules and verification status](measurements/derivative-temporary-storage-2026-11-02/README.md).
+
 ## What kind of parser is this?
 
 fwp has a **hand-written, top-down recursive-descent parser** with a separate
