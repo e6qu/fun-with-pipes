@@ -55,6 +55,9 @@ separate summaries; subtracting two medians is not a paired measurement.
 
 ## Timing boundaries and memory
 
+[Clock, page-fault and memory terms](../../terminology.md#why-extra-measurements-can-change-a-benchmark)
+explain why these observations measure different things.
+
 | Quantity | Included work |
 |---|---|
 | Construction wall time | Allocation, filling and the existing construction barrier |
