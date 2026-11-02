@@ -5,8 +5,10 @@
 These callbacks compute the same running sum:
 
 ```fwp
+projected : (I64, F64) -> (I64, F64) -> (I64, F64)
 projected = fn acc -> fn item ->
     ((acc | .0) + (item | .0), (acc | .1) + (item | .1))
+destructured : (I64, F64) -> (I64, F64) -> (I64, F64)
 destructured = fn (count, total) -> fn (n, value) ->
     (count + n, total + value)
 ```

@@ -1,7 +1,7 @@
 //! Live caller owners survive normal calls and release on nonlocal unwind.
 use fwp::ir::*;
 use fwp::value::Value;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
 #[path = "support/functional_costs.rs"]
@@ -559,9 +559,56 @@ impl Drop for Scratch {
     }
 }
 
-const SOURCE: &str = r#"guard : I64 -> I64 ! {Error[String]}
+// These C harnesses call exported functions directly. Main-only compilation may
+// specialize their callers and correctly remove the original entries.
+fn probe_source(path: &Path) -> String {
+    let path = path.to_owned();
+    fwp::driver::with_big_stack(move || {
+        let (compilation, program) = fwp::driver::compile_file(
+            &path,
+            fwp::mono::Roots {
+                main: true,
+                exports: true,
+                ..Default::default()
+            },
+        )
+        .map_err(|error| error.rendered)
+        .unwrap();
+        assert!(
+            compilation.warnings.is_empty(),
+            "{}",
+            compilation.render_warnings()
+        );
+        let emitted = fwp::cgen::generate(&program).unwrap();
+        if let Some(root) = std::env::var_os("FWP_ARC_ARTIFACTS") {
+            let directory = PathBuf::from(root)
+                .join("record-ownership/compiler_call_liveness")
+                .join(path.parent().unwrap().file_name().unwrap());
+            std::fs::create_dir_all(&directory).unwrap();
+            std::fs::copy(&path, directory.join("input.fwp")).unwrap();
+            std::fs::write(directory.join("generated.c"), &emitted).unwrap();
+        }
+        emitted
+    })
+}
+
+fn probe_entry(emitted: &str, name: &str) -> String {
+    let start = emitted
+        .find(&format!("/* {name} :"))
+        .unwrap_or_else(|| panic!("missing exported probe entry `{name}`"));
+    let suffix = emitted[start..]
+        .split("static V f")
+        .nth(1)
+        .unwrap()
+        .split('(')
+        .next()
+        .unwrap();
+    format!("f{suffix}")
+}
+
+const SOURCE: &str = r#"export guard : I64 -> I64 ! {Error[String]}
 guard = if (eq 0) (const "expected" | fail) (add 1)
-hold : (I64 -> I64 ! {Error[String]}) -> String -> String ! {Error[String]}
+export hold : (I64 -> I64 ! {Error[String]}) -> String -> String ! {Error[String]}
 hold = curry (both (.0 | apply 0) .1 | .1)
 main = "owned" | concat " input" | attempt (hold guard) | echo
 "#;
@@ -569,7 +616,6 @@ main = "owned" | concat " input" | attempt (hold guard) | echo
 fn actual_caller_releases_owned_values_and_preserves_aliases() {
     let dir = Scratch::new("caller");
     let src = dir.0.join("caller.fwp");
-    let cfile = dir.0.join("caller.c");
     let exe = dir.0.join("caller");
     let fwp = env!("CARGO_BIN_EXE_fwp");
     std::fs::write(&src, SOURCE).unwrap();
@@ -579,25 +625,7 @@ fn actual_caller_releases_owned_values_and_preserves_aliases() {
             .args(["run", "--interp"])
             .arg(&src),
     );
-    checked(
-        Command::new(fwp)
-            .args(["build"])
-            .arg(&src)
-            .args(["--emit-c", "-o"])
-            .arg(&cfile),
-    );
-    let emitted = std::fs::read_to_string(cfile).unwrap();
-    let wrapper = |name: &str| {
-        let start = emitted.find(&format!("/* {name} :")).unwrap();
-        let suffix = emitted[start..]
-            .split("static V f")
-            .nth(1)
-            .unwrap()
-            .split('(')
-            .next()
-            .unwrap();
-        format!("f{suffix}")
-    };
+    let emitted = probe_source(&src);
     let probe = r#"
 static volatile int fail_call;
 static volatile V input_value;
@@ -639,8 +667,8 @@ int main(void) {
     return 0;
 }
 "#
-    .replace("GUARD", &wrapper("guard"))
-    .replace("HOLD", &wrapper("hold"));
+    .replace("GUARD", &probe_entry(&emitted, "guard"))
+    .replace("HOLD", &probe_entry(&emitted, "hold"));
     let runtime = emitted.replace(
         "int main(int argc, char **argv)",
         "int original_main(int argc, char **argv)",
@@ -677,12 +705,11 @@ fn check_later_argument_failure(scalar: bool) {
         "arguments"
     });
     let src = dir.0.join("arguments.fwp");
-    let cfile = dir.0.join("arguments.c");
     let exe = dir.0.join("arguments");
     let fwp = env!("CARGO_BIN_EXE_fwp");
-    let source = r#"guard : I64 -> String ! {Error[String]}
+    let source = r#"export guard : I64 -> String ! {Error[String]}
 guard = if (eq 0) (const "expected" | fail) show
-pair : (I64 -> String ! {Error[String]}) -> I64 -> (String, String) ! {Error[String]}
+export pair : (I64 -> String ! {Error[String]}) -> I64 -> (String, String) ! {Error[String]}
 pair = curry (both (fork apply .1 .0) (fork apply (const 0) .0))
 main = 2 | attempt (pair guard) | echo
 "#;
@@ -701,25 +728,7 @@ main = 2 | attempt (pair guard) | echo
             .args(["run", "--interp"])
             .arg(&src),
     );
-    checked(
-        Command::new(fwp)
-            .args(["build"])
-            .arg(&src)
-            .args(["--emit-c", "-o"])
-            .arg(&cfile),
-    );
-    let emitted = std::fs::read_to_string(cfile).unwrap();
-    let wrapper = |name: &str| {
-        let start = emitted.find(&format!("/* {name} :")).unwrap();
-        let suffix = emitted[start..]
-            .split("static V f")
-            .nth(1)
-            .unwrap()
-            .split('(')
-            .next()
-            .unwrap();
-        format!("f{suffix}")
-    };
+    let emitted = probe_source(&src);
     let probe = r#"
 static volatile V first_argument;
 static V argument_entry(V *args) {
@@ -745,8 +754,8 @@ int main(void) {
     return 0;
 }
 "#
-    .replace("GUARD", &wrapper("guard"))
-    .replace("PAIR", &wrapper("pair"));
+    .replace("GUARD", &probe_entry(&emitted, "guard"))
+    .replace("PAIR", &probe_entry(&emitted, "pair"));
     let runtime = emitted.replace(
         "int main(int argc, char **argv)",
         "int original_main(int argc, char **argv)",
@@ -773,7 +782,6 @@ int main(void) {
 fn boxed_wrapper_and_unboxed_worker_release_separate_owners() {
     let dir = Scratch::new("worker");
     let src = dir.0.join("worker.fwp");
-    let cfile = dir.0.join("worker.c");
     let exe = dir.0.join("worker");
     let fwp = env!("CARGO_BIN_EXE_fwp");
     let source = format!(
@@ -793,25 +801,7 @@ fn boxed_wrapper_and_unboxed_worker_release_separate_owners() {
             .args(["run", "--interp"])
             .arg(&src),
     );
-    checked(
-        Command::new(fwp)
-            .args(["build"])
-            .arg(&src)
-            .args(["--emit-c", "-o"])
-            .arg(&cfile),
-    );
-    let emitted = std::fs::read_to_string(cfile).unwrap();
-    let wrapper = |name: &str| {
-        let start = emitted.find(&format!("/* {name} :")).unwrap();
-        let suffix = emitted[start..]
-            .split("static V f")
-            .nth(1)
-            .unwrap()
-            .split('(')
-            .next()
-            .unwrap();
-        format!("f{suffix}")
-    };
+    let emitted = probe_source(&src);
     assert!(emitted.contains("fwp_cleanup_push(&cleanup, fwp_owner_release"));
     let probe = r#"
 static volatile V boxed_input, text_input;
@@ -836,8 +826,8 @@ int main(void) {
     return 0;
 }
 "#
-    .replace("GUARD", &wrapper("guard"))
-    .replace("HOLD", &wrapper("hold"));
+    .replace("GUARD", &probe_entry(&emitted, "guard"))
+    .replace("HOLD", &probe_entry(&emitted, "hold"));
     let runtime = emitted.replace(
         "int main(int argc, char **argv)",
         "int original_main(int argc, char **argv)",
@@ -867,31 +857,12 @@ int main(void) {
 fn incoming_parameters_release_before_cancelled_entry_tick() {
     let dir = Scratch::new("cancel-entry");
     let src = dir.0.join("entry.fwp");
-    let cfile = dir.0.join("entry.c");
     let exe = dir.0.join("entry");
-    let fwp = env!("CARGO_BIN_EXE_fwp");
     let source = SOURCE.replace("main = \"owned\" | concat \" input\" | attempt (hold guard) | echo",
         "main = [task.yield (), \"owned\" | concat \" input\" | attempt (hold guard) | echo] | ignore");
     std::fs::write(&src, source).unwrap();
-    checked(
-        Command::new(fwp)
-            .args(["build"])
-            .arg(&src)
-            .args(["--emit-c", "-o"])
-            .arg(&cfile),
-    );
-    let emitted = std::fs::read_to_string(cfile).unwrap();
-    let start = emitted.find("/* hold :").unwrap();
-    let hold = format!(
-        "f{}",
-        emitted[start..]
-            .split("static V f")
-            .nth(1)
-            .unwrap()
-            .split('(')
-            .next()
-            .unwrap()
-    );
+    let emitted = probe_source(&src);
+    let hold = probe_entry(&emitted, "hold");
     let probe = r#"
 static volatile V incoming;
 static volatile int entered_callback;
@@ -935,17 +906,16 @@ int main(void) {
 fn struct_variant_owner_releases_its_typed_payload() {
     let dir = Scratch::new("variant");
     let src = dir.0.join("variant.fwp");
-    let cfile = dir.0.join("variant.c");
     let exe = dir.0.join("variant");
     let fwp = env!("CARGO_BIN_EXE_fwp");
     std::fs::write(
         &src,
         r#"Wrapped = | Empty | Wrapped String
-guard : I64 -> I64 ! {Error[String]}
+export guard : I64 -> I64 ! {Error[String]}
 guard = if (eq 0) (const "expected" | fail) (add 1)
 choose : String -> Wrapped
 choose = if (string.length | eq 0) (const Empty) Wrapped
-hold : (I64 -> I64 ! {Error[String]}) -> String -> String ! {Error[String]}
+export hold : (I64 -> I64 ! {Error[String]}) -> String -> String ! {Error[String]}
 hold = curry (both (.1 | choose) (.0 | apply 0) | .0 | match
     Empty -> ""
     Wrapped _ -> id)
@@ -959,27 +929,7 @@ main = "owned" | concat " input" | attempt (hold guard) | echo
             .args(["run", "--interp"])
             .arg(&src),
     );
-    checked(
-        Command::new(fwp)
-            .args(["build"])
-            .arg(&src)
-            .args(["--emit-c", "-o"])
-            .arg(&cfile),
-    );
-    let emitted = std::fs::read_to_string(cfile).unwrap();
-    let wrapper = |name: &str| {
-        let start = emitted.find(&format!("/* {name} :")).unwrap();
-        format!(
-            "f{}",
-            emitted[start..]
-                .split("static V f")
-                .nth(1)
-                .unwrap()
-                .split('(')
-                .next()
-                .unwrap()
-        )
-    };
+    let emitted = probe_source(&src);
     assert!(
         emitted.contains("fwp_u1 v0;"),
         "fixture must exercise a struct variant cleanup owner"
@@ -1006,8 +956,8 @@ int main(void) {
     return 0;
 }
 "#
-    .replace("GUARD", &wrapper("guard"))
-    .replace("HOLD", &wrapper("hold"));
+    .replace("GUARD", &probe_entry(&emitted, "guard"))
+    .replace("HOLD", &probe_entry(&emitted, "hold"));
     let runtime = emitted.replace(
         "int main(int argc, char **argv)",
         "int original_main(int argc, char **argv)",

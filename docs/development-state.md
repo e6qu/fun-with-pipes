@@ -1,9 +1,9 @@
 # Current work
 
-**Next:** publish the implementation and run the expanded `record-fold-checks`
-suite on GitHub; audit all results and monitor #241's full production run
-`41385349559`. The [prepared scope](measurements/numeric-callback-bindings.md)
-remains unchanged.
+**Next:** verify the five repaired caller-ownership probes on native GCC/Clang,
+then prepare the final full matrix for [PR #242](https://github.com/e6qu/fun-with-pipes/pull/242).
+Also audit #241 production `41385349559` as its remaining jobs finish.
+The [prepared scope](measurements/numeric-callback-bindings.md) remains unchanged.
 
 Worktree `/private/tmp/fwp-returned-callables`, branch `numeric-callback-lifetimes`,
 base `81aed37265661c0c79e47ca7223b40be2d1fe225`. Preserve unrelated primary-checkout
@@ -16,7 +16,7 @@ Keep one active PR for this batch.
 |---|---|---|
 | 1 | Verified | Saved C and reproduced IR identify an application outside numeric field bindings; local proof and checks documented before code edits |
 | 2 | Implemented | `Opt::apply` accepts proved local flat-record reads; global purity and constructor-stage pass unchanged |
-| 3 | In progress | Boundary and escaping-stage unit controls, tuple/named-record allocation/unwind probes and first-stage trap fixture added; native checks pending |
+| 3 | In progress | Boundary and escaping-stage unit controls, tuple/named-record allocation/unwind probes and first-stage trap fixture added; new native checks pass on GCC/Clang; five older harnesses need explicit export roots |
 | 4 | In progress | #241 full matrix running; next batch needs its own final exact-head matrix and documentation |
 
 ## Baseline delivery and CI
@@ -34,7 +34,7 @@ Linux ARM/AMD `125084848880`/`125084848907`, regular macOS ARM/AMD
 `125084848670`/`125084848861`, Windows ARM/AMD `125084848959`/`125084849027`,
 benchmark `125084848998`. Audit every completed target and warning.
 Duplicate merge run `41385360274` was cancelled while queued after verifying tree
-identity and no failed jobs. Post-merge docs `41385359961` remains enabled.
+identity and no failed jobs. Post-merge docs `41385359961` passes.
 
 #241's focused suite `41372899452` passes all 39 tests on each of Linux ARM64/AMD64
 and macOS ARM64. [The report](measurements/derivative-record-folds.md) retains both
@@ -85,3 +85,18 @@ Candidate verification so far:
 The focused workflow now runs optimizer unit tests and adds existing
 `closure_ownership` and `compiler_call_liveness` targets to the previous eight.
 No new integration-test target or primitive contract was introduced.
+
+Focused run `41386463046` at `8677dd0a` finished on GCC ARM64
+`125088289043`, GCC AMD64 `125088289194` and Clang macOS ARM64
+`125088288963`. Each passes all nine optimizer unit tests and 48 integration
+tests, including every new semantic/count/unwind check. Five older
+`compiler_call_liveness` probes fail before execution: main-only compilation
+removes entries that their C harnesses call directly after `attempt` specialization.
+All three logs audited; no other failure or compiler warning was found.
+
+Repair: export the harness-called `guard`, `hold` and `pair` functions and compile
+with explicit main+export roots. Preserve ordinary main-only executable versus
+interpreter comparisons and all ownership/cancellation assertions. Retain input
+and generated C before entry lookup, with a named missing-entry diagnostic.
+Guarded Rust formatting passes (2.13s); native repair verification is pending.
+Candidate documentation `41386462403` passes.
