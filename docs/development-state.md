@@ -1,8 +1,8 @@
 # Current work
 
-**Next:** publish PR #246's complete diagnostic evidence and mark it ready for
-one final production/documentation run. Audit every final-head job and target
-before squash merge; keep the source unchanged while those gates run.
+**Next:** monitor PR #246's final production run `41478753238` and documentation
+`41478745298` at exact head `44626348b71bf3af1aa16030aae1e7976cb26c37`.
+Audit every final-head job and target before squash merge; keep that source unchanged.
 
 ## Branch and delivery
 
@@ -10,6 +10,11 @@ before squash merge; keep the source unchanged while those gates run.
   `array-consumption-diagnostics`, worktree `/private/tmp/fwp-array-consumption`.
   It contains the diagnostic, regression controls, findings and plan updates.
   No compiler/runtime code changes. Preserve the primary checkout.
+- The same temporary worktree now checks out `array-observation-diagnostics` for
+  independent next-task preparation, avoiding another large worktree. PR #246's
+  branch remains at `44626348`; no second PR is open. The
+  [next diagnostic protocol](measurements/array-observation-boundaries.md) is drafted
+  but not implemented or measured. Freeze its source before implementation.
 - [PR #245](roadmap-history.md#direct-numeric-array-callbacks-pr-245) passed all
   nine production jobs and documentation at `d53fb07a`; full logs/target archives
   were audited. Squash `c43f05c22ed36277b491490b7d9e222dfd0af025` preserves the
