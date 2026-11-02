@@ -7,13 +7,16 @@ Keep source, safety checks, timing, docs and final validation in one substantial
 ## Branch and last verified delivery
 
 - Worktree: `/private/tmp/fwp-array-construction`; branch `array-construction-costs`.
+- Draft PR: https://github.com/e6qu/fun-with-pipes/pull/245. Draft status skips the
+  full production matrix; mark ready only after focused safety, timings and docs
+  are complete. Final-head nine production gates and documentation still gate merge.
 - [PR #244](roadmap-history.md#paired-matrix-columns-pr-244) passed all nine production
   jobs plus documentation; every completed target/job log was audited. Squash merge
   `e70f0e2d30112df0c7ee0912a77bac251092a539` has the tested tree and exactly one
   message line with no body/trailers. Identical-tree main runs were cancelled.
 - The array branch rebases only its ten new commits onto that verified merge.
   Original protocol/diagnostic/measurement sources have remote retention tags.
-  No second PR was opened while #244 ran. Publish the next PR when the batch is ready.
+  No second PR was opened while #244 ran. Finish the current batch in #245.
 - Preserve the primary checkout and existing worktrees. No local compiler build,
   full suite or benchmark; use runners for those workloads.
 
@@ -77,6 +80,8 @@ Keep source, safety checks, timing, docs and final validation in one substantial
   the recorded selection clause; two patch controls pass (0.12s). The reference
   codegen file exactly matches the baseline. The audit's explicit comparison mode
   still reproduces original ARM64 raw evidence (0.59s); actionlint passes (6.27s).
+  The compact retained-record audit also reconstructs all three sessions and six
+  failed AMD64 limits (0.35s); documentation CI now runs it.
 - Earlier run `41426573182` failed only source formatting on both hosts. The fixture
   was fixed with #243's verified package; failure logs and source tag remain.
 
