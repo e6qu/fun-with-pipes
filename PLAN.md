@@ -4,30 +4,28 @@ Build an ahead-of-time language with simple pipes, immutable values, strong type
 and useful inference. Prefer direct values, moves and borrows; reserve ARC for
 necessary sharing. GC is removed; JIT and backward compatibility are excluded.
 
-## Current batch: direct calls through numeric record bindings
+## Current batch: measure current numerical kernels
 
-#240/#241 implement direct numeric fold accumulators. [Their measured results](docs/measurements/derivative-record-folds.md)
-show allocation reductions and 5.8–7.8% faster larger solves. The user merged #241
-with its missed speed/size limits still open. Its full production matrix exposed missing test roots and a callback-unwind
-leak; repair both in this batch and audit the remaining jobs. A merge alone is not verification.
+PR #242 is completing final production validation. Its numeric callback and
+cleanup changes stay unchanged while the remaining gates run; merge only after
+all nine jobs and documentation pass. This branch prepares the following batch
+without opening a second PR.
 
-The next concrete gap is source-form dependent code generation: tuple
-destructuring hides a known call behind field bindings, while equivalent explicit
-projections allow a direct numeric worker. Fix that local simplification without
-changing function stages or retaining escaping records longer.
-[Scope and requirements](docs/measurements/numeric-callback-bindings.md) define the
-proof, excluded values and exact checks before implementation.
+The old AMD64 array slowdown predates typed floating-point loop state in #227.
+Establish current costs and isolate that existing transformation with a same-source
+word-state reference. The [protocol](docs/measurements/current-kernel-costs.md)
+fixes workloads, settings, controls and decision rules before measurements.
 
 | Step | Work | Completion requirement |
 |---|---|---|
-| 1 | Confirm the source/IR boundary and record requirements | Retain the indirect-call example and freeze the local binding proof before compiler changes; record #241 merge and unresolved limits |
-| 2 | Expose known calls through safe record-field bindings | Preserve binding/argument order and ownership/resource guards; repair cleanup installed after inline callback execution; keep global purity and constructor stages |
-| 3 | Verify semantics, counts and cleanup together | Tuple/named-record cases, aliases, empty inputs, effects, rejected shapes, exact final-box counts, failure/cancellation and omitted-release controls pass on native GCC/Clang |
-| 4 | Complete platform validation and delivery | Audit #241 full CI, repair all encountered issues, update docs and pass all nine final-head production jobs plus documentation before squash merge |
+| 1 | Freeze current-kernel comparison and finish #242 | Preserve its exact-head CI audit and merge identity; publish the protocol before runner implementation |
+| 2 | Build the paired measurement and evidence checks | Same-source reference, exact results, cleanup failures, six-role schedule and damaged-evidence controls pass |
+| 3 | Measure time, memory and code costs | Both sessions on both qualified architectures retained; audit every result, control and failed threshold |
+| 4 | Publish understandable current costs and deliver | Update plan/docs with concrete remaining gaps; all final production jobs and documentation pass before squash merge |
 
-Reuse saved evidence and existing probes. Run focused checks during implementation,
-then one final full matrix for the complete batch. No new timing run is needed for
-an allocation/call-removal claim; earlier noisy or failed timings remain evidence.
+Reuse existing kernel oracles and native harnesses. No new compiler optimization
+is selected. Retain historical failures and make no current-speed claim from old
+sources or representation alone.
 
 ## Open performance goals
 
