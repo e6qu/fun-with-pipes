@@ -1,0 +1,8 @@
+shift : String -> I64 -> I64
+shift = fn text -> fn value -> value + string.length text
+main =
+    ()
+    | run-state
+        9223372036854775807
+        (fn () -> modify (shift (read-all () | concat "x")))
+    | echo

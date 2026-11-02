@@ -42,10 +42,10 @@ destructured-step = fn (count, total) -> fn (n, value) -> (count + n, total + va
 scalar-step : (I64, F64) -> I64 -> (I64, F64)
 scalar-step = fn acc -> fn n -> ((acc | .0) + n, (acc | .1) + 0.5)
 fail-step : (I64, F64) -> I64 -> (I64, F64) ! {Error[String]}
-fail-step = fn acc -> fn n ->
+fail-step = fn (count, total) -> fn n ->
     n == 2 | match
         True -> fail "stop"
-        False -> ((acc | .0) + n, (acc | .1) + 0.5)
+        False -> (count + n, total + 0.5)
 aliases : (I64, F64) -> List[(I64, F64)] -> ((I64, F64), (I64, F64), List[(I64, F64)])
 aliases = fn seed -> fn values -> (fold step seed values, seed, values)
 main =
@@ -89,11 +89,11 @@ main =
             std::fs::copy(&src, evidence.join("input.fwp")).unwrap();
             std::fs::write(evidence.join(format!("stack-{stack}.c")), &code).unwrap();
         }
-        // Destructuring before the next `fn` can leave a returned closure;
-        // the projection-based callbacks above must exercise direct workers.
+        // Both equivalent source forms must expose direct numeric workers.
+        // Counting only the projection form would miss a destructuring regression.
         assert!(
-            code.matches("Numeric record fold: one result box").count() >= 3,
-            "tuple-element, scalar-element and effectful workers must be selected; stack={stack}"
+            code.matches("Numeric record fold: one result box").count() >= 4,
+            "projected/destructured tuples, scalar elements and effects need direct workers; stack={stack}"
         );
         for opt in ["-O1", "-O2"] {
             let exe = dir.0.join(format!("records-{stack}-{opt}.exe"));
@@ -122,7 +122,7 @@ fn numeric_record_folds_allocate_only_the_final_result() {
     std::fs::write(&input, r#"
 Point = {index: I64, value: F64}
 step : Point -> Point -> Point
-step = fn a -> fn b -> Point {index = (a | .index) + (b | .index), value = (a | .value) + (b | .value)}
+step = fn {index = count, value = total} -> fn {index = n, value = amount} -> Point {index = count + n, value = total + amount}
 export transform : Point -> List[Point] -> Point
 transform = fold step
 "#).unwrap();

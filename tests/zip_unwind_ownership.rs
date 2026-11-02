@@ -2,6 +2,9 @@
 use std::path::PathBuf;
 use std::process::{Command, Output};
 
+#[path = "support/exported_probe.rs"]
+mod exported_probe;
+
 #[path = "support/record_probe.rs"]
 mod record_probe;
 
@@ -29,22 +32,22 @@ impl Drop for Scratch {
     }
 }
 
-const SOURCE: &str = r#"transform : String -> String -> String ! {Error[String]}
+const SOURCE: &str = r#"export transform : String -> String -> String ! {Error[String]}
 transform = curry (if (.1 | eq "stop") (const "expected" | fail) (fork concat .0 .1))
 transform-cap : String -> String -> String -> String ! {Error[String]}
 transform-cap = curry (curry (if (.1 | eq "stop") (const "expected" | fail) (fork concat (.0 | .0) .1)))
-scalar : I64 -> I64 -> I64 ! {Error[String]}
+export scalar : I64 -> I64 -> I64 ! {Error[String]}
 scalar = curry (if (.1 | eq 2) (const "expected" | fail) .0)
 scalars : List[I64] -> List[I64] ! {Error[String]}
 scalars = zip-with scalar [3, 4]
-direct : List[String] -> List[String] ! {Error[String]}
+export direct : List[String] -> List[String] ! {Error[String]}
 direct = zip-with transform ["L", "R"]
-captured : List[String] -> List[String] ! {Error[String]}
+export captured : List[String] -> List[String] ! {Error[String]}
 captured = zip-with (transform-cap "suffix") ["L", "R"]
-dynamic : (String -> String -> String ! {Error[String]}) -> List[String] -> List[String] ! {Error[String]}
+export dynamic : (String -> String -> String ! {Error[String]}) -> List[String] -> List[String] ! {Error[String]}
 dynamic = flip zip-with ["L", "R"]
 Point = {index: I64, value: F64}
-records : List[Point] -> List[String] ! {Error[String]}
+export records : List[Point] -> List[String] ! {Error[String]}
 records = zip [Point {index = 10, value = 10.5}, Point {index = 20, value = 20.5}]
     | map (fn (a, b) -> (a | .index) == 2 | match
         True -> "expected" | fail
@@ -61,7 +64,9 @@ main = [
 "#;
 
 fn function_id<'a>(emitted: &'a str, name: &str) -> &'a str {
-    let start = emitted.find(&format!("/* {name} :")).unwrap();
+    let start = emitted
+        .find(&format!("/* {name} :"))
+        .unwrap_or_else(|| panic!("missing exported probe entry `{name}`"));
     emitted[start..]
         .split("static V f")
         .nth(1)
@@ -75,7 +80,6 @@ fn function_id<'a>(emitted: &'a str, name: &str) -> &'a str {
 fn zip_callbacks_partial_spines_and_allocation_failure_release_owners() {
     let dir = Scratch::new("callbacks");
     let src = dir.0.join("callbacks.fwp");
-    let cfile = dir.0.join("callbacks.c");
     let exe = dir.0.join("callbacks.exe");
     let fwp = env!("CARGO_BIN_EXE_fwp");
     std::fs::write(&src, SOURCE).unwrap();
@@ -86,15 +90,7 @@ fn zip_callbacks_partial_spines_and_allocation_failure_release_owners() {
             .arg(&src),
     );
     {
-        checked(
-            Command::new(fwp)
-                .args(["build", "--memory", "dynamic"])
-                .env("FWP_STACK", "1")
-                .arg(&src)
-                .args(["--emit-c", "-O2", "-o"])
-                .arg(&cfile),
-        );
-        let emitted = std::fs::read_to_string(&cfile).unwrap();
+        let emitted = exported_probe::generate(&src);
         let direct = function_id(&emitted, "direct");
         let captured = function_id(&emitted, "captured");
         let dynamic = function_id(&emitted, "dynamic");
@@ -260,20 +256,10 @@ int main(void) {
 fn scalar_address_bits_survive_zip_cleanup() {
     let dir = Scratch::new("scalar-bits");
     let src = dir.0.join("scalar.fwp");
-    let cfile = dir.0.join("scalar.c");
     let exe = dir.0.join("scalar.exe");
-    let fwp = env!("CARGO_BIN_EXE_fwp");
     std::fs::write(&src, SOURCE).unwrap();
     {
-        checked(
-            Command::new(fwp)
-                .args(["build", "--memory", "dynamic"])
-                .env("FWP_STACK", "1")
-                .arg(&src)
-                .args(["--emit-c", "-O2", "-o"])
-                .arg(&cfile),
-        );
-        let emitted = std::fs::read_to_string(&cfile).unwrap();
+        let emitted = exported_probe::generate(&src);
         let scalar = function_id(&emitted, "scalar");
         let call = format!("fwp_k_zip_with_owned(fwp_owned_k{scalar},");
         let start = emitted.find(&call).unwrap();
