@@ -4,46 +4,30 @@ Build an ahead-of-time language with simple pipes, immutable values, strong type
 and useful inference. Prefer direct values, moves and borrows; reserve ARC for
 necessary sharing. GC is removed; JIT and backward compatibility are excluded.
 
-## Current batch: reduce temporary derivative allocations
+## Current batch: remove temporary derivative owners
 
-[PR #247](docs/roadmap-history.md#benchmark-driver-comparison-pr-247) is verified
-and merged. Its benchmark-driver diagnostic is complete; original timing goals
-remain open. No compiler/runtime change followed from that diagnostic.
-
-[PR #248](https://github.com/e6qu/fun-with-pipes/pull/248) replaces eligible temporary mapped numeric-record lists with
-one owned buffer. Mapping still finishes before folding, and seed evaluation
-stays at its source position. See [design and boundaries](docs/design.md#temporary-mapped-numeric-records)
-and [results](docs/measurements/derivative-temporary-storage-2026-11-02/README.md).
+[PR #248](docs/roadmap-history.md#packed-temporary-numeric-records-pr-248) is verified
+and merged. It reduces temporary allocations; its failed zero-update timing goal
+remains open. The next grouped batch targets reference-count operations left in
+those callbacks. [Measured sites](docs/measurements/derivative-owner-transfers.md)
+account for 76,416 of 77,411 retains in the largest saved solve; that is an
+opportunity, not a promised reduction or speedup.
 
 | Step | Work | Completion requirement |
 |---|---|---|
-| 1 | Freeze the source baseline, selection and acceptance rules | Fresh counts; published protocol before compiler edits; same-source reference disables only the selected lowering |
-| 2 | Implement packed temporary storage | Prove one consuming use; preserve map/seed/fold order, callback owners, effects, arithmetic and traps |
-| 3 | Verify semantics, cleanup and measured storage | Interpreter/native comparisons; GCC/Clang O1/O2; empty/unequal inputs, aliases, excluded cases, traps, cancellation, allocation failures and deliberately missing destruction; all 96 count observations |
-| 4 | Complete and audit the paired measurements | Two native sessions per architecture; unchanged drivers; all samples, rejected hosts, failures, C/Rust comparisons, RSS and code/stack costs retained |
-| 5 | Deliver implementation, controls, evidence and docs together | One PR; all nine exact-head production jobs and documentation pass; audit every log, then verify the one-line squash merge |
+| 1 | Move complete groups of already-separated field owners | Published selection/protocol; GCC/Clang O1/O2 direct/boxed/shared, failure/cancellation and broken-cleanup controls; remove at least one retain per differentiated pair |
+| 2 | Remove unnecessary callback input owners | Freeze the numeric-leaf or borrowed-call proof before implementation; preserve input lifetime, callback order and owning entries that still need owners |
+| 3 | Verify the combined costs and compiler work | All 96 count observations; attribute savings to exact sites; no managed/raw storage growth, zero final storage; bounded analysis and measured compilation costs |
+| 4 | Measure whole-solve performance | Same-source reference, fixed drivers, two qualified sessions per architecture; preserve 2% copy/regression and 5% large-case limits, all samples and failures |
+| 5 | Deliver the complete batch | One substantial PR with code, controls, evidence and clear docs; all nine exact-head production gates and documentation; audited logs and verified one-line squash |
 
-Steps 1–3 pass focused native Linux verification. Each architecture passes 40
-GCC/Clang tests. The largest current-only solve uses 51,143 fewer managed requests
-and 4,064 fewer peak managed bytes; reference-count increments do not increase.
-
-Step 4 is fully audited: all four sessions and four rejected hosts are retained.
-Both ARM64 sessions and AMD64 session 1 pass. AMD64 session 2 retains a 2.024%
-zero-update history regression against the 2% limit. Every case with at least
-199 updates uses 5.1–14.2% less time; all identical-copy controls pass. Retain the
-verified reductions and leave the failed timing goal open, as in prior deliveries.
-Complete the PR's full final matrix. Fewer allocations do not
-establish C/Rust parity or complete D2.
+Step 1's first native checks exposed an index tied to the wrong expression tree.
+The repair uses the exact emitted body and passes both native GCC/Clang suites
+and all 96 count audits. It removes exactly one retain per differentiated pair.
+Step 2 is still design work. Run focused checks while
+implementing; complete the full platform matrix once the related batch is ready.
 
 ## Open performance goals
-
-The next grouped compiler batch is the
-[derivative owner-transfer investigation](docs/measurements/derivative-owner-transfers.md).
-Its audited sites account for 98.7% of retains in the largest measured solve.
-The first field-transfer proof is frozen and its candidate is in focused checks.
-Verify its cleanup and exact counts; freeze the separate callback-input proof
-before changing that contract, then measure the combined candidate.
-This preparation does not change PR #248's head or close its remaining gates.
 
 - **AMD64 array consumption.** The original large-array copy controls pass,
   but consumption is 4.93–5.23% slower; small-array copy limits also fail.

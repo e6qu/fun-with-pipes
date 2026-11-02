@@ -444,7 +444,7 @@ caught by `attempt`. The handler itself remains in place.
 
 ### Temporary mapped numeric records
 
-The next compiler batch extends the storage choice to a mapped list used only
+The compiler extends the storage choice to a mapped list used only
 by one known left fold. For example, mapping `(x, x*x)` over `[1, 2]` produces
 `[(1, 1), (2, 4)]`; summing both fields gives `(3, 5)`. The compiler can keep those
 four numbers consecutively in one buffer:
@@ -470,8 +470,8 @@ That distinction matters when callbacks print, fail or record derivative work.
   insertion. The internal `Array[I64]` holds numeric bits, not public array values.
 
 Native Linux GCC/Clang O1/O2 controls and exact allocation counts pass. All four
-timing sessions are audited; one AMD64 zero-update limit remains unmet. The full
-platform matrix remains. See the
+timing sessions are audited; one AMD64 zero-update limit remains unmet. All nine
+final production jobs and documentation pass for PR #248. See the
 [measurement report](measurements/derivative-temporary-storage-2026-11-02/README.md)
 for selection limits, deliberate missing-destruction tests and open timing goals.
 

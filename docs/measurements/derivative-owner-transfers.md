@@ -1,18 +1,50 @@
 # Remaining reference counts in derivative callbacks
 
-**Status:** the first field-transfer candidate is under repair after
-[focused verification](https://github.com/e6qu/fun-with-pipes/actions/runs/41535112048).
-Both compilers on both architectures rejected the new native selection controls:
-the last-use index referred to the stored body, but C generation emits a cloned
-body. The repair ties the lazy index to that exact emission tree. Existing targets
-pass; the new runtime/count checks must pass before claiming a reduction.
-Callback-input ownership is unchanged. Complete initial logs:
-[ARM64](field-owner-transfer-checks-2026-11-03/arm-initial.log.gz),
+**Status:** complete-field transfers pass focused Linux ARM64/AMD64 GCC/Clang
+O1/O2 checks and all 96 count observations. Callback-input ownership is next;
+combined timings and the final platform matrix remain. [Plan](../../PLAN.md).
+
+## First-stage results
+
+[Run 41538264130](https://github.com/e6qu/fun-with-pipes/actions/runs/41538264130)
+uses source `ceecb569c6748a226ec6ddebc417dc16351490e9`. Both architectures pass
+30 tests: four selection controls and 26 native cases across GCC/Clang. All
+16 target logs and both full job logs are audited, without diagnostics.
+
+The largest current-only O2 solve changes:
+
+| Measurement | Packed-record baseline | Complete-field transfers |
+|---|---:|---:|
+| Retains | 77,411 | 51,939 |
+| Managed allocations | 156,943 | 156,943 |
+| Requested bytes | 5,382,142 | 5,382,142 |
+| Peak managed bytes | 17,824 | 17,824 |
+| Final managed/raw storage | 0 | 0 |
+
+Each of the 96 observations removes exactly `p=(coordinates-1)*updates` retains.
+The projection site disappears; the mapper-input sites remain exactly `2*p`.
+Raw tape/workspace storage, derivative work and output agree. Both zero-update
+forms are unchanged. Largest O2 instruction bytes fall by 80 on ARM64 and 160 on
+AMD64; all 128-byte frame-growth limits pass. This is no elapsed-time claim.
+
+All 40 saved native probes have verified architecture and observed exit status:
+16 normal probes pass; 24 deliberately broken retain/release controls fail as
+required. Checks cover two/eight fields, shared/repeated children, direct/boxed
+entries, traps, real cancellation and result-boxing failure.
+
+- [Verified counts, sources and image identities](field-owner-transfer-checks-2026-11-03/verified-counts.json.gz)
+- [Archive identities](field-owner-transfer-checks-2026-11-03/verified-artifacts.json)
+  and [actual probe results](field-owner-transfer-checks-2026-11-03/verified-probes.json)
+- Full passing logs: [ARM64](field-owner-transfer-checks-2026-11-03/arm-verified.log.gz),
+  [AMD64](field-owner-transfer-checks-2026-11-03/amd-verified.log.gz)
+
+The initial candidate indexed a stored function body, while C generation emitted
+a clone. Both new native controls rejected the absent selection under both C
+compilers on both hosts. The repaired lazy index belongs to the exact emission
+body, as does call liveness. All failures and completed targets were audited
+before repair. Initial logs: [ARM64](field-owner-transfer-checks-2026-11-03/arm-initial.log.gz),
 [AMD64](field-owner-transfer-checks-2026-11-03/amd-initial.log.gz);
 [artifact identities](field-owner-transfer-checks-2026-11-03/initial-artifacts.json).
-All eight target logs per host were audited before the repair push.
-Complete [PR #248](https://github.com/e6qu/fun-with-pipes/pull/248)'s platform gates
-before publishing the next grouped PR. [Plan](../../PLAN.md).
 
 A **retain** increments a reference count so another owner can keep a value
 alive. Removing temporary owners can remove both that increment and its later
@@ -81,7 +113,8 @@ avoid an extra callable wrapper solely to bypass the ownership analysis.
 
 The first stage has [frozen field-transfer requirements](field-owner-transfer-protocol.md).
 They require at least `p` fewer retains and leave mapper input ownership unchanged.
-Freeze the separate callback-input contract before changing that second stage.
+The separate [numeric-input protocol](numeric-callback-input-protocol.md) selects
+passing numeric leaves and freezes its acceptance rules before second-stage code.
 
 - Publish selection rules and numerical acceptance limits before compiler edits.
   Separate field-transfer savings (`p`) from input-preparation savings (`2*p`).

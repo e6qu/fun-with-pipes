@@ -1,0 +1,80 @@
+{
+  "head": "32aae4f79b66f5e88e9aded39d6df794439b7430",
+  "merge": "31e4e25b9a0494a2ce3d75a189fe1b1b7c177247",
+  "testedTree": "8213af3a5722c84c8730bad5071f24e5f6579ed3",
+  "mergeMessage": "Keep mapped numeric records in one temporary buffer",
+  "productionRun": 41524286630,
+  "documentationRun": 41524286169,
+  "jobs": [
+    {
+      "name": "macos_ownership (macos-15)",
+      "job": 125547928273,
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41524286630/job/125547928273",
+      "conclusion": "success",
+      "fullLogAudited": true
+    },
+    {
+      "name": "macos_ownership (macos-15-intel)",
+      "job": 125547928688,
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41524286630/job/125547928688",
+      "conclusion": "success",
+      "fullLogAudited": true
+    },
+    {
+      "name": "test (ubuntu-24.04-arm)",
+      "job": 125547928713,
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41524286630/job/125547928713",
+      "conclusion": "success",
+      "fullLogAudited": true
+    },
+    {
+      "name": "macos (macos-15)",
+      "job": 125547928724,
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41524286630/job/125547928724",
+      "conclusion": "success",
+      "fullLogAudited": true
+    },
+    {
+      "name": "macos (macos-15-intel)",
+      "job": 125547928730,
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41524286630/job/125547928730",
+      "conclusion": "success",
+      "fullLogAudited": true
+    },
+    {
+      "name": "bench",
+      "job": 125547928770,
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41524286630/job/125547928770",
+      "conclusion": "success",
+      "fullLogAudited": true
+    },
+    {
+      "name": "test (ubuntu-latest)",
+      "job": 125547928815,
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41524286630/job/125547928815",
+      "conclusion": "success",
+      "fullLogAudited": true
+    },
+    {
+      "name": "windows / native (windows-2025)",
+      "job": 125547928872,
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41524286630/job/125547928872",
+      "conclusion": "success",
+      "fullLogAudited": true
+    },
+    {
+      "name": "windows / native (windows-11-arm)",
+      "job": 125547930919,
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41524286630/job/125547930919",
+      "conclusion": "success",
+      "fullLogAudited": true
+    },
+    {
+      "name": "roadmap_docs",
+      "job": 125552574269,
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41524286169/job/125552574269",
+      "conclusion": "success",
+      "fullLogAudited": true
+    }
+  ]
+}

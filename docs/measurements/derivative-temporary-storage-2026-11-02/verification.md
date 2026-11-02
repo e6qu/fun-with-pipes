@@ -2,6 +2,20 @@
 
 Return to [results](README.md), [baseline](baseline.md) or [frozen requirements](protocol.md).
 
+## Final platform delivery
+
+[PR #248](https://github.com/e6qu/fun-with-pipes/pull/248) passes all nine production
+jobs and documentation on `32aae4f79b66f5e88e9aded39d6df794439b7430`. Every full job
+and target log was audited. Both Linux hosts pass 257 targets / 1,037 tests; the
+full job adds the golden-corpus test. macOS regular and ownership shards jointly
+cover each architecture; both Windows hosts complete their native, TLS and reuse
+checks. [Exact jobs and verified squash](final-gates.json).
+
+Documentation attempt 1 completed its checks and checkout cleanup, then exceeded
+the five-minute limit during runner finalization. Attempt 2 passes on the same
+head; no deadline increase. The initial source-reference failure and repair are
+retained below. A completed PR does not close the failed timing limit.
+
 ## Checkpoints
 
 | Source / run | Result |
