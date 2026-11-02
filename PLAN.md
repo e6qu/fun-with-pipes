@@ -26,11 +26,22 @@ not public APIs. Other costs include result-list construction and vector updates
 | 4 | Verify and deliver one substantial batch | Run affected production-compiler checks, then native count/memory and paired timing comparisons; audit all nine final production jobs and documentation before squash merge |
 
 Steps 1–2 are complete: all 96 saved observations agree on the selected boundary.
-[PR #240](https://github.com/e6qu/fun-with-pipes/pull/240) implements the
+[PR #240](https://github.com/e6qu/fun-with-pipes/pull/240) merged the implementation of the
 [frozen selection](docs/measurements/derivative-record-folds.md): keep a known
 left-fold accumulator in local numeric fields and leave list-stored results alone.
-Step 3 awaits native correctness and cleanup results; step 4 awaits measurements
-and final validation. No new allocation saving or speedup is verified yet.
+Step 3 now passes numeric-fold semantics, aliases, exact allocation/release,
+failure/cancellation and handler-order checks on GCC Linux ARM64/AMD64 and Clang
+macOS ARM64. The follow-up specializes known callbacks passed to `attempt` without
+moving capture evaluation into the handler. Two older cleanup probes now use explicit
+compiler roots because their C harness calls functions that an ordinary executable
+can optimize away. All 39 focused tests pass on each of the three native hosts.
+
+Both native count archives verify the planned savings: the largest measured solve
+removes 25,273 allocations and 25,472 effective retains with unchanged peak managed
+storage and zero final live storage. Fifteen ARM64 cases exceed the frozen 1,024-byte
+code-growth limit; AMD64 images shrink. Paired timings show 5.8–7.8% faster larger solves, but three-coordinate cases miss
+5%, and one AMD64 timing-noise check fails. Retain every result; resolve delivery
+acceptance before the final full matrix.
 Mapping must still finish before summation when interleaving changes recording
 or trap order.
 

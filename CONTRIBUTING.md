@@ -125,7 +125,7 @@ Functional probes run on two Linux hosts; analysis runs on Linux and Intel macOS
 The `kernels` and `queued-sockets` suites also include their declared WebAssembly
 jobs. None of these selections replaces the nine production acceptance jobs.
 Derivative timing suites (`descent-peers`,
-`eager-capture-time`, `record-zip-time`) require explicit
+`eager-capture-time`, `record-zip-time`, `record-fold-time`) require explicit
 `comparison_session=both`, `1` or `2`.
 
 Use `both` for the declared experiment; select one session only to replace a host

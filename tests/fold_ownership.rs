@@ -36,22 +36,27 @@ fn numeric_record_folds_preserve_aliases_empty_inputs_and_effects() {
         &src,
         r#"
 step : (I64, F64) -> (I64, F64) -> (I64, F64)
-step = fn (count, total) -> fn (n, value) -> (count + n, total + value)
+step = fn acc -> fn item -> ((acc | .0) + (item | .0), (acc | .1) + (item | .1))
+destructured-step : (I64, F64) -> (I64, F64) -> (I64, F64)
+destructured-step = fn (count, total) -> fn (n, value) -> (count + n, total + value)
 scalar-step : (I64, F64) -> I64 -> (I64, F64)
-scalar-step = fn (count, total) -> fn n -> (count + n, total + 0.5)
+scalar-step = fn acc -> fn n -> ((acc | .0) + n, (acc | .1) + 0.5)
 fail-step : (I64, F64) -> I64 -> (I64, F64) ! {Error[String]}
-fail-step = fn (count, total) -> fn n ->
+fail-step = fn acc -> fn n ->
     n == 2 | match
         True -> fail "stop"
-        False -> (count + n, total + 0.5)
+        False -> ((acc | .0) + n, (acc | .1) + 0.5)
 aliases : (I64, F64) -> List[(I64, F64)] -> ((I64, F64), (I64, F64), List[(I64, F64)])
 aliases = fn seed -> fn values -> (fold step seed values, seed, values)
 main =
     let n = read-all () | string.length
+    in let seed = (n, 0.5)
     in [
         aliases (n, 0.5) [(1, 1.5), (2, 2.5)] | show,
         aliases (n, 0.5) [] | show,
         aliases (n, 0.5) [(3, 1.5)] | show,
+        aliases seed [seed, seed] | show,
+        [(1, 1.5), (2, 2.5)] | fold destructured-step (n, 0.5) | show,
         [1, 2, 3] | fold scalar-step (n, 0.5) | show,
         [1, 2, 3] | attempt (fold fail-step (n, 0.5)) | show,
     ] | each print
@@ -78,11 +83,29 @@ main =
                 .env("FWP_STACK", stack),
         );
         let code = std::fs::read_to_string(&cfile).unwrap();
-        assert!(code.contains("Numeric record fold: one result box"));
+        if let Some(root) = std::env::var_os("FWP_ARC_ARTIFACTS") {
+            let evidence = PathBuf::from(root).join("record-ownership/record_fold_values");
+            std::fs::create_dir_all(&evidence).unwrap();
+            std::fs::copy(&src, evidence.join("input.fwp")).unwrap();
+            std::fs::write(evidence.join(format!("stack-{stack}.c")), &code).unwrap();
+        }
+        // Destructuring before the next `fn` can leave a returned closure;
+        // the projection-based callbacks above must exercise direct workers.
+        assert!(
+            code.matches("Numeric record fold: one result box").count() >= 3,
+            "tuple-element, scalar-element and effectful workers must be selected; stack={stack}"
+        );
         for opt in ["-O1", "-O2"] {
             let exe = dir.0.join(format!("records-{stack}-{opt}.exe"));
             fwp::cgen::compile_c(&code, &exe, opt).unwrap();
             let out = checked(Command::new(&exe).env("FWP_ALLOC_STATS", "1"));
+            record_probe::save(
+                "record_fold_values",
+                &format!("stack-{stack}-{opt}"),
+                &code,
+                &exe,
+                &out,
+            );
             assert_eq!(out.stdout, reference.stdout, "{stack}/{opt}");
             let stats =
                 allocation_report::parse(std::str::from_utf8(&out.stderr).unwrap()).unwrap();
@@ -198,12 +221,12 @@ transform = fold step
 fn record_fold_selection_excludes_owned_fields_and_other_calling_conventions() {
     let dir = Scratch::new("record-exclusions");
     let cases = [
-        ("managed", "step : (I64, String) -> I64 -> (I64, String)\nstep = fn (n, text) -> fn value -> (n + value, text)\nexport transform : (I64, String) -> List[I64] -> (I64, String)\ntransform = fold step\n"),
-        ("nested", "step : ((I64, I64), F64) -> I64 -> ((I64, I64), F64)\nstep = fn ((n, count), total) -> fn value -> ((n + value, count + 1), total)\nexport transform : ((I64, I64), F64) -> List[I64] -> ((I64, I64), F64)\ntransform = fold step\n"),
-        ("wide", "step : (F128, I64) -> I64 -> (F128, I64)\nstep = fn (value, count) -> fn n -> (value, count + n)\nexport transform : (F128, I64) -> List[I64] -> (F128, I64)\ntransform = fold step\n"),
+        ("managed", "step : (I64, String) -> I64 -> (I64, String)\nstep = fn acc -> fn value -> ((acc | .0) + value, acc | .1)\nexport transform : (I64, String) -> List[I64] -> (I64, String)\ntransform = fold step\n"),
+        ("nested", "step : ((I64, I64), F64) -> I64 -> ((I64, I64), F64)\nstep = fn acc -> fn value -> (((acc | .0 | .0) + value, (acc | .0 | .1) + 1), acc | .1)\nexport transform : ((I64, I64), F64) -> List[I64] -> ((I64, I64), F64)\ntransform = fold step\n"),
+        ("wide", "step : (F128, I64) -> I64 -> (F128, I64)\nstep = fn acc -> fn n -> (acc | .0, (acc | .1) + n)\nexport transform : (F128, I64) -> List[I64] -> (F128, I64)\ntransform = fold step\n"),
         ("whole-value", "step : (I64, F64) -> I64 -> (I64, F64)\nstep = const\nexport transform : (I64, F64) -> List[I64] -> (I64, F64)\ntransform = fold step\n"),
-        ("right", "step : I64 -> (I64, F64) -> (I64, F64)\nstep = fn n -> fn (count, total) -> (count + n, total + 0.5)\nexport transform : (I64, F64) -> List[I64] -> (I64, F64)\ntransform = fold-right step\n"),
-        ("captured", "step : I64 -> (I64, F64) -> I64 -> (I64, F64)\nstep = fn offset -> fn (count, total) -> fn n -> (count + n + offset, total + 0.5)\nexport transform : I64 -> (I64, F64) -> List[I64] -> (I64, F64)\ntransform = step | fold\n"),
+        ("right", "step : I64 -> (I64, F64) -> (I64, F64)\nstep = fn n -> fn acc -> ((acc | .0) + n, (acc | .1) + 0.5)\nexport transform : (I64, F64) -> List[I64] -> (I64, F64)\ntransform = fold-right step\n"),
+        ("captured", "step : I64 -> (I64, F64) -> I64 -> (I64, F64)\nstep = fn offset -> fn acc -> fn n -> ((acc | .0) + n + offset, (acc | .1) + 0.5)\nexport transform : I64 -> (I64, F64) -> List[I64] -> (I64, F64)\ntransform = step | fold\n"),
         ("dynamic", "export transform : ((I64, F64) -> I64 -> (I64, F64)) -> (I64, F64) -> List[I64] -> (I64, F64)\ntransform = fold\n"),
     ];
     for (name, source) in cases {

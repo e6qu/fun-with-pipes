@@ -354,13 +354,15 @@ defines selection, cleanup, exact budgets and completed validation.
 
 ### Numeric record fold accumulators
 
-PR #240 implements a narrower call boundary, pending native verification:
+PR #240 implements a narrower call boundary, with focused native checks in #241:
 a known left fold can keep its accumulator's numeric fields in local variables.
-An accumulator is the running result passed to the next iteration. For example:
+An accumulator is the running result passed to the next iteration. `.0` selects
+the first tuple field and `.1` the second. For example:
 
 ```fwp
 step : (I64, F64) -> (I64, F64) -> (I64, F64)
-step = fn (count, total) -> fn (n, value) -> (count + n, total + value)
+step = fn acc -> fn item ->
+    ((acc | .0) + (item | .0), (acc | .1) + (item | .1))
 ```
 
 `[(1, 1.5), (2, 2.5)] | fold step (0, 0.5)` computes `(3, 4.5)`:
@@ -379,7 +381,16 @@ seed (0, 0.5) → add (1, 1.5) → (1, 2.0) → add (2, 2.5) → (3, 4.5)
 
 The [requirements and measurement protocol](measurements/derivative-record-folds.md)
 cover alias preservation, allocation failure, traps, cancellation and exact counts.
-This does not remove records that must remain stored in a list.
+This does not remove records that must remain stored in a list. Selection depends
+on the generated worker, not just the source type. Destructuring an argument before
+the next `fn` can currently leave a returned closure and a boxed result; that path
+is semantically equivalent but does not qualify for this optimization.
+
+Known partial callbacks passed to `attempt` now use the same specialization pass
+as other synchronous handlers (PR #241, focused GCC/Clang checks pass). For
+`attempt (fold step seed) values`, the pass exposes the fold inside the callback.
+It evaluates `seed` before entering the handler; failures during the callback are
+caught by `attempt`. The handler itself remains in place.
 
 ## Numerical specialization
 

@@ -33,15 +33,15 @@ const SOURCE: &str = r#"step : String -> String -> String ! {Error[String]}
 step = curry (if (.0 | eq "stop") (const "expected" | fail) (fork concat .0 .1))
 step-cap : String -> String -> String -> String ! {Error[String]}
 step-cap = curry3 (if (.1 | eq "stop") (const "expected" | fail) (fork concat .0 (fork concat .1 .2)))
-direct : String -> List[String] -> String ! {Error[String]}
+export direct : String -> List[String] -> String ! {Error[String]}
 direct = fold-right step
-captured : String -> String -> List[String] -> String ! {Error[String]}
+export captured : String -> String -> List[String] -> String ! {Error[String]}
 captured = step-cap | fold-right
-dynamic : (String -> String -> String ! {Error[String]}) -> String -> List[String] -> String ! {Error[String]}
+export dynamic : (String -> String -> String ! {Error[String]}) -> String -> List[String] -> String ! {Error[String]}
 dynamic = fold-right
 scalar-step : I64 -> I64 -> I64 ! {Error[String]}
 scalar-step = curry (if (.0 | eq 2) (const "expected" | fail) (.1 | add 1))
-scalar-run : I64 -> List[I64] -> I64 ! {Error[String]}
+export scalar-run : I64 -> List[I64] -> I64 ! {Error[String]}
 scalar-run = fold-right scalar-step
 main = [task.yield (),
     [2, 1] | attempt (scalar-run 0) | echo,
@@ -51,8 +51,40 @@ main = [task.yield (),
     ["a", "b"] | direct "seed" | echo,
 ] | ignore
 "#;
+// The C probes call these exports directly. An ordinary executable roots only
+// main, so optimization may correctly remove the entry points they need.
+fn probe_source() -> String {
+    fwp::driver::with_big_stack(|| {
+        let (compilation, program) = fwp::driver::compile_source(
+            "fold-unwind.fwp",
+            SOURCE,
+            fwp::mono::Roots {
+                main: true,
+                exports: true,
+                ..Default::default()
+            },
+        )
+        .map_err(|error| error.rendered)
+        .unwrap();
+        assert!(
+            compilation.warnings.is_empty(),
+            "{}",
+            compilation.render_warnings()
+        );
+        let emitted = fwp::cgen::generate(&program).unwrap();
+        if let Some(root) = std::env::var_os("FWP_ARC_ARTIFACTS") {
+            let directory = PathBuf::from(root).join("record-ownership/fold_unwind_source");
+            std::fs::create_dir_all(&directory).unwrap();
+            std::fs::write(directory.join("input.fwp"), SOURCE).unwrap();
+            std::fs::write(directory.join("generated.c"), &emitted).unwrap();
+        }
+        emitted
+    })
+}
 fn function_id<'a>(emitted: &'a str, name: &str) -> &'a str {
-    let start = emitted.find(&format!("/* {name} :")).unwrap();
+    let start = emitted
+        .find(&format!("/* {name} :"))
+        .unwrap_or_else(|| panic!("missing generated probe entry `{name}`"));
     emitted[start..]
         .split("static V f")
         .nth(1)
@@ -160,7 +192,6 @@ transform = fn pause -> fn seed -> fn values ->
 fn right_fold_releases_accumulator_and_scratch_on_failure() {
     let dir = Scratch::new("failure");
     let src = dir.0.join("fold.fwp");
-    let cfile = dir.0.join("fold.c");
     let exe = dir.0.join("fold.exe");
     let fwp = env!("CARGO_BIN_EXE_fwp");
     std::fs::write(&src, SOURCE).unwrap();
@@ -171,15 +202,7 @@ fn right_fold_releases_accumulator_and_scratch_on_failure() {
             .arg(&src),
     );
     {
-        checked(
-            Command::new(fwp)
-                .env("FWP_STACK", "1")
-                .args(["build", "--memory", "dynamic"])
-                .arg(&src)
-                .args(["--emit-c", "-O2", "-o"])
-                .arg(&cfile),
-        );
-        let emitted = std::fs::read_to_string(&cfile).unwrap();
+        let emitted = probe_source();
         let probe = r#"
 static volatile V input_seed, source_list, input_capture;
 static int recover_fold(void) { return 1; }
@@ -407,21 +430,9 @@ int main(void) {
 #[test]
 fn borrowed_prefix_duplicates_and_scalar_words_release_precisely() {
     let dir = Scratch::new("preparation");
-    let src = dir.0.join("preparation.fwp");
-    let cfile = dir.0.join("preparation.c");
     let exe = dir.0.join("preparation.exe");
-    let fwp = env!("CARGO_BIN_EXE_fwp");
-    std::fs::write(&src, SOURCE).unwrap();
     {
-        checked(
-            Command::new(fwp)
-                .env("FWP_STACK", "1")
-                .args(["build", "--memory", "dynamic"])
-                .arg(&src)
-                .args(["--emit-c", "-O2", "-o"])
-                .arg(&cfile),
-        );
-        let emitted = std::fs::read_to_string(&cfile).unwrap();
+        let emitted = probe_source();
         let probe = r#"
 static volatile V first, second, function_value, scalar_word;
 static jmp_buf prepare_trap;

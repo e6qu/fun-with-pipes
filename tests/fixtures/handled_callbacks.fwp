@@ -20,6 +20,26 @@ fail-now : () -> () ! {Error[String]}
 fail-now = const "expected" | fail
 print-fail : () -> () ! {IO, Error[String]}
 print-fail = tap (const "before" | print) | fail-now
+# Captures are evaluated before attempt enters its handler. Only the callback
+# itself runs inside that handler; a capture failure belongs to the outer one.
+append-fail : String -> String -> String ! {IO, Error[String]}
+append-fail = fn prefix -> fn value ->
+    let ready = print (prefix | concat value)
+    in fail "callback"
+make-prefix : () -> String ! {IO}
+make-prefix = fn unit ->
+    let ready = print "capture"
+    in "prefix:"
+make-input : () -> String ! {IO}
+make-input = fn unit ->
+    let ready = print "input"
+    in "value"
+failed-prefix : () -> String ! {IO, Error[String]}
+failed-prefix = fn unit ->
+    let ready = print "capture failure"
+    in fail "capture"
+inside-capture : () -> Result[String, String] ! {IO, Error[String]}
+inside-capture = fn unit -> attempt (append-fail (failed-prefix ())) "unused"
 main = [
     checked fail-now | echo,
     checked (const ()) | echo,
@@ -28,4 +48,6 @@ main = [
     apply fail-now (deferred | .run) | echo,
     read-state get | echo,
     checked-io print-fail | echo,
+    attempt (append-fail (make-prefix ())) (make-input ()) | echo,
+    () | attempt inside-capture | echo,
 ] | ignore

@@ -1,0 +1,50 @@
+{
+  "source": "0bca5f914bd9b38494eba90157298da7b350a188",
+  "run": 41371032477,
+  "auditRun": 41372228352,
+  "auditArtifact": 13109861910,
+  "auditArchiveSha256": "245d5bcf9f30e9f623e8ba1481399a38100b534f93480ba5d5b4c82b8b638199",
+  "decision": "count-and-cleanup-pass; ARM64-code-size-limit-failed",
+  "archives": {
+    "aarch64": {
+      "id": 13109615558,
+      "node_id": "MDg6QXJ0aWZhY3QxMzEwOTYxNTU1OA==",
+      "name": "derivative-forward-evidence-aarch64",
+      "size_in_bytes": 25651824,
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13109615558",
+      "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13109615558/zip",
+      "expired": false,
+      "digest": "sha256:bf8d92b887405ac990ea07eeed3492499a74918ea09093188dfb7c9d9aac250a",
+      "created_at": "2026-11-02T01:17:13Z",
+      "updated_at": "2026-11-02T01:17:13Z",
+      "expires_at": "2027-01-31T01:10:16Z",
+      "workflow_run": {
+        "id": 41371032477,
+        "repository_id": 1400763332,
+        "head_repository_id": 1400763332,
+        "head_branch": "numeric-fold-validation",
+        "head_sha": "0bca5f914bd9b38494eba90157298da7b350a188"
+      }
+    },
+    "x86_64": {
+      "id": 13109283458,
+      "node_id": "MDg6QXJ0aWZhY3QxMzEwOTI4MzQ1OA==",
+      "name": "derivative-forward-evidence-x86_64",
+      "size_in_bytes": 25565694,
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13109283458",
+      "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13109283458/zip",
+      "expired": false,
+      "digest": "sha256:6854dd8d21df12d778d790b00f036240f307716afea190f987e6b16a524a142e",
+      "created_at": "2026-11-02T01:17:04Z",
+      "updated_at": "2026-11-02T01:17:04Z",
+      "expires_at": "2027-01-31T01:10:16Z",
+      "workflow_run": {
+        "id": 41371032477,
+        "repository_id": 1400763332,
+        "head_repository_id": 1400763332,
+        "head_branch": "numeric-fold-validation",
+        "head_sha": "0bca5f914bd9b38494eba90157298da7b350a188"
+      }
+    }
+  }
+}
