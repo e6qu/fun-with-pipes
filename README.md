@@ -52,8 +52,9 @@ comparisons with Swift, C and Rust and the limits of the evidence.
 ## Project direction
 
 Tracing GC removal and the local `let`/`fn` syntax are delivered. The current
-[plan](PLAN.md) passes derivative recording arguments directly and moves their
-weights into the tape, avoiding temporary records and redundant ARC operations.
+[plan](PLAN.md) measures current array and matrix costs against C and Rust,
+including the contribution of native floating-point loop state. Timing, memory
+and identical-program noise controls determine the next optimization priorities.
 
 - Prefer moves, borrows, direct values and storage reuse; count necessary sharing.
 - Preserve simple pipes, immutable values, checked arithmetic and effect order.
