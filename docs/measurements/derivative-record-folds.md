@@ -233,7 +233,7 @@ Evidence:
 ## Reproduce the source/count audit
 
 Run `scripts/summarize-derivative-callback-boxes.py` with explicit `--summary`,
-`--arm64`, `--amd64` and `--output`. The summary is
+`--arm64`, `--amd64`, `--output` and `--accumulator boxed-each-step`. The summary is
 `derivative-record-zip-counts-2026-11-01.json.gz`; the input archives come from
 candidate run `41324329567`. The audit reads saved source/counts and executes no
 saved image. The [previous report](derivative-forward-costs.md) retains download

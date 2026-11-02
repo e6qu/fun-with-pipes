@@ -79,10 +79,11 @@ and only a following known fold uses the mapped list. A private packed temporary
 buffer could retain all mapped values without a separate record/list allocation
 for each element, while still finishing every map call before any fold call.
 
-- First compile/profile the current six Rosenbrock inputs, both current/history
-  forms, GCC O1/O2 and workspace off/on on native ARM64/AMD64. Use the existing
-  phase/source observer; identify the exact surviving allocation sites and uses.
-  Do not assume historical function numbers or counts still describe current code.
+- The [fresh baseline and candidate requirements](docs/measurements/derivative-temporary-storage-2026-11-02/README.md)
+  verify all six inputs, both forms, GCC O1/O2 and workspace modes on native
+  ARM64/AMD64. All 96 observations agree. The largest solve still creates 25,472
+  pair-result records; its final fold creates only 199 accumulator records.
+  These current source/count facts justify the temporary-storage candidate.
 - Prove the intermediate list does not escape, has no observable aliases, and
   contains only immediate numeric fields. Keep dynamic callbacks, resource-bearing
   records and escaping/shared lists outside the initial selection.
