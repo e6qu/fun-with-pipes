@@ -1,6 +1,6 @@
 # Current work
 
-**Next:** compile the declared two-column matrix candidate on both native GCC
+**Next:** verify the selected paired-column runtime on the three focused native
 hosts while monitoring PR #243. Keep head `ea976b7e19c26c5be0ad9e748e284cc97a269379`
 unchanged. Squash-merge only after all gates pass, with an explicit one-line subject
 at most 80 characters and empty body; verify the merge message and tree.
@@ -26,7 +26,7 @@ The previous full handoff remains at `ea976b7e:docs/development-state.md`.
 |---|---|---|
 | 1 | Verified | Protocol `5f235bb0`, tag `roadmap/matrix-calculation-protocol-2026-11-02`, published before runner edits |
 | 2 | Verified | Run `41412675762` reproduces all original binaries on both architectures; complete compiler reports and logs retained |
-| 3 | In progress | Restricted-input candidate rejected: identical binaries; two-column diagnostic declared before implementation |
+| 3 | In progress | Paired-column diagnostic vectorizes on both GCC hosts; exact runtime candidate and expanded safety probes ready for focused checks |
 | 4 | Pending | Freeze candidate/reference before two-session timing; preserve all failed controls |
 | 5 | Pending | Deliver coherent changes after #243; exact-head full matrix/docs and verified squash merge |
 
@@ -74,5 +74,20 @@ precede implementation. The diagnostic runner now requires `matrix_variant`
 (`original`, `restricted`, or `paired-columns`) and substitutes exactly the
 declared loop only in fwp matrix programs. Six C/array controls remain unchanged.
 Six archive/patch tests pass (0.13s); actionlint passes (5.55s); the protocol's
-roadmap audit passes (3.02s). No production runtime/compiler source has changed.
-Dispatch the paired-column diagnostic and audit both complete results next.
+roadmap audit passes (3.02s).
+
+Run `41416927586` at `15e8d0e6` passes both native jobs, with complete logs and
+archives retained under `docs/measurements/matrix-paired-columns-2026-11-02/`.
+Both GCC versions vectorize the paired loop with 16-byte vectors; outputs agree
+and all six controls reproduce original binaries. This establishes no speedup.
+The runtime now uses exactly that loop. Expanded `blocked_matrix` checks cover
+partially overlapping views, NaN classification, finite/subnormal/infinite values,
+order-sensitive sums and return to each case's starting live storage. Omitting
+the final result release must fail that observer. Native filenames now explicitly
+use `.exe`, and O2 probe binaries are retained. The source fixture also compares
+raw interpretation and native arithmetic order/NaN classification.
+
+Local runtime/diagnostic correspondence checks pass (six tests, 0.13s), Rust
+formatting passes (0.13s), workflow actionlint passes (5.54s). No local build or
+benchmark. Dispatch `matrix-checks` for Linux GCC ARM64/AMD64 and macOS Clang ARM64.
+Freeze timing work counts and reference construction before timing this candidate.
