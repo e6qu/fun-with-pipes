@@ -96,6 +96,7 @@ Use the `Numerical and ownership evidence` workflow with explicit inputs:
 |---|---|---|
 | `record-fold-checks` | GCC Linux ARM64/AMD64 and Clang macOS ARM64; semantic, alias, ownership and derivative regressions | None |
 | `record-fold-measurements` | Both native Linux hosts; six-case allocation/memory observations and cleanup controls | None |
+| `record-fold-count-report` | Independently recompute both native count archives on a runner; verify every file and preserve failed limits | `evidence_run`, exact `source_revision` |
 | `record-fold-time` | Candidate versus a compiler with only direct record-fold selection disabled; C/Rust comparisons | `native_runner=all`, `comparison_session=both` |
 | `record-fold-report` | Download and independently audit every timing outcome without executing saved binaries | `evidence_run`, exact `source_revision` |
 

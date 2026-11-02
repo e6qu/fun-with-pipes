@@ -1,8 +1,10 @@
 # Current work
 
-**Next:** publish the semantic-fixture repair and run `record-fold-checks` on the
-follow-up branch. Audit all failures and completed targets, then run
-`record-fold-measurements`, paired `record-fold-time`, and final production CI.
+**Next:** audit focused run `41369894377` and count run `41369934860`, both at
+`a690733e88790c20261f21dcf24f601aefe5e73c`, for [PR #241](https://github.com/e6qu/fun-with-pipes/pull/241).
+The unchanged compiler allows count/cleanup checks alongside the fixture repair.
+Once complete, use `record-fold-count-report` to audit both archives on GitHub;
+then run paired `record-fold-time` and final production CI.
 Keep the frozen requirements and earlier failed timings unchanged.
 
 Branch `numeric-fold-validation` starts at merged #240 (`5fbd6bea`) in
@@ -25,7 +27,11 @@ The user merged #240 as `5fbd6beab2087f003eb8a1f45461e1fbaba71fd2`.
 Its tree `5d460780aecbb876360dc42cc1b8e4a81fad5da7` matches final PR head
 `20deddfdcdba4ca1087637997ee1a0cee31c3dc6`; the squash message is one line,
 under 80 characters, with no body/trailers. Documentation `41361067737` passes.
-Full production run `41369348762` started at merge time and remains active.
+Full production run `41369348762` started at merge time. Its benchmark job
+passed and was audited; remaining jobs were cancelled before completion because
+the head contains the known failing semantic fixture. No other failed step or
+completed job was reported at cancellation. Run one final matrix for #241 after
+focused repair checks and measurements finish; cancelled jobs establish no coverage.
 Duplicate post-merge production `41369360785` was cancelled after verifying tree
 identity and no failed jobs. Post-merge documentation `41369360748` remains enabled.
 
@@ -59,7 +65,9 @@ unverified. Do not repeat unchanged noisy timing runs to seek a pass.
 
 ## Local verification
 
-Follow-up checks: all ten revised fixture sources type-check (1.86s); the retained
+Follow-up checks: count-audit workflow lint passes (5.34s), embedded Python
+parses (0.13s), and refreshed roadmap audit passes (3.13s).
+All ten revised fixture sources type-check (1.86s); the retained
 compiler emits direct record-returning workers for all three selected callbacks
 and prints expected values (0.36s). These verify the fixture repair, not the new
 fold helper. Formatting passes (1.98s); roadmap links/status pass (3.13s).
