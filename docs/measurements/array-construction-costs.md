@@ -21,6 +21,8 @@ small interpreter cases pass, and omitted-release controls exit 219 as intended.
 [The retained index](array-construction-2026-11-02/index.json) includes complete
 logs, exact C, optimized GCC source, binaries, stack estimates and file hashes.
 Both full logs and every recorded file identity were audited.
+`check-array-construction.py` rechecks source, outputs and the deliberate missing
+release from these archives in the documentation workflow.
 
 | Path | Workload allocations | Requested bytes | Effective retains | Final live charge |
 |---|---:|---:|---:|---:|
