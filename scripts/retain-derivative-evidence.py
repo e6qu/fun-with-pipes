@@ -51,7 +51,7 @@ def rejected_host(job, host):
 
 
 def retain_session(repository, run, source, job, artifacts, output, summary, protocol):
-    assert protocol in ('record-zip', 'record-fold', 'packed-records')
+    assert protocol in ('record-zip', 'record-fold', 'packed-records', 'callback-owners')
     match = re.fullmatch(r'descent_peers \(([12]), (ubuntu-latest|ubuntu-24\.04-arm)\)', job['name'])
     assert match, job['name']
     session, runner = int(match[1]), match[2]
@@ -85,7 +85,8 @@ def retain_session(repository, run, source, job, artifacts, output, summary, pro
         return label, record
     assert not host['failures']
     download('descent-peers-' + runner + '-' + str(session), folder / 'measurements')
-    download(protocol + '-reference-' + runner + '-' + str(session), folder / 'reference')
+    reference_kind = 'numeric-input' if protocol == 'callback-owners' else protocol
+    download(reference_kind + '-reference-' + runner + '-' + str(session), folder / 'reference')
     audit = CHECK.check_directory(folder / 'measurements', source, architecture, session,
                                  protocol, folder / 'reference')
     failures = audit['budgetFailures']
@@ -103,7 +104,7 @@ def retain_session(repository, run, source, job, artifacts, output, summary, pro
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--protocol', choices=['record-zip', 'record-fold', 'packed-records'], required=True)
+    parser.add_argument('--protocol', choices=['record-zip', 'record-fold', 'packed-records', 'callback-owners'], required=True)
     parser.add_argument('--repository', required=True)
     parser.add_argument('--run', type=int, required=True)
     parser.add_argument('--source', required=True)

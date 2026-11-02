@@ -188,6 +188,8 @@ def main():
         assert reference_manifest['source'] == os.environ['GITHUB_SHA']
         assert digest(args.reference_compiler.read_bytes()) == reference_manifest['compilerSha256']
         if args.comparison == 'callback-owners':
+            assert set(reference_manifest['files']) == {'src/cgen.rs', 'src/cgen/packed_records.rs'}
+            assert set(reference_manifest['unchanged']) == {'src/ownership.rs', 'src/cgen/field_transfers.rs', 'src/cgen/numeric_parameters.rs'}
             assert reference_manifest['scope'] == 'callback-owners'
             assert reference_manifest['disabledTransformation'] == 'complete field transfers and numeric callback input owners'
             for path, hashes in reference_manifest['files'].items():

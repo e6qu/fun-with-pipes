@@ -95,9 +95,61 @@ def recorded_reference(candidate, preparation):
     return candidate.replace(before, after)
 
 
+def recorded_numeric_reference(candidates, preparation):
+    """Rebuild both reference files from saved literals, never saved Python code."""
+    constants = {}
+    for node in ast.parse(preparation).body:
+        if isinstance(node, ast.Assign):
+            for target in node.targets:
+                if isinstance(target, ast.Name) and target.id in ('CHANGES', 'COMPLETE_TRANSFER'):
+                    assert target.id not in constants
+                    constants[target.id] = ast.literal_eval(node.value)
+    assert set(constants) == {'CHANGES', 'COMPLETE_TRANSFER'}
+    assert set(candidates) == set(constants['CHANGES']) == {'src/cgen.rs', 'src/cgen/packed_records.rs'}
+    result = {}
+    for path, (before, after) in constants['CHANGES'].items():
+        assert isinstance(before, str) and isinstance(after, str) and before and after
+        assert candidates[path].count(before) == 1 and after not in candidates[path]
+        result[path] = candidates[path].replace(before, after)
+    before, after = constants['COMPLETE_TRANSFER']
+    assert isinstance(before, str) and isinstance(after, str) and before and after
+    assert result['src/cgen.rs'].count(before) == 1 and after not in result['src/cgen.rs']
+    result['src/cgen.rs'] = result['src/cgen.rs'].replace(before, after)
+    return result
+
+
+def check_numeric_reference(folder, manifest, source, architecture):
+    assert manifest['scope'] == 'callback-owners'
+    assert manifest['disabledTransformation'] == 'complete field transfers and numeric callback input owners'
+    assert set(manifest['files']) == {'src/cgen.rs', 'src/cgen/packed_records.rs'}
+    assert set(manifest['unchanged']) == {'src/ownership.rs', 'src/cgen/field_transfers.rs', 'src/cgen/numeric_parameters.rs'}
+    compiler = (folder / 'fwp').read_bytes()
+    assert digest(compiler) == manifest['compilerSha256']
+    instruction_bytes(compiler, architecture)
+    candidates = {path: subprocess.check_output(['git', 'show', source + ':' + path], cwd=ROOT).decode()
+                  for path in manifest['files']}
+    preparation = subprocess.check_output(['git', 'show', source + ':scripts/prepare-numeric-input-reference.py'],
+                                          cwd=ROOT, text=True)
+    expected = recorded_numeric_reference(candidates, preparation)
+    patch = (folder / 'reference.patch').read_bytes()
+    assert digest(patch) == manifest['patchSha256']
+    patches = re.split(r'(?=^diff --git )', patch.decode(), flags=re.MULTILINE)
+    assert patches[0] == '' and len(patches) == 3
+    for (path, reference), difference in zip(sorted(expected.items()), patches[1:]):
+        assert digest(candidates[path].encode()) == manifest['files'][path]['candidateSha256']
+        saved = (folder / ('reference-' + Path(path).name)).read_bytes()
+        assert saved == reference.encode() and digest(saved) == manifest['files'][path]['referenceSha256']
+        check_reference_patch(difference, candidates[path], reference, path)
+    for path, expected_hash in manifest['unchanged'].items():
+        assert digest(subprocess.check_output(['git', 'show', source + ':' + path], cwd=ROOT)) == expected_hash
+
+
 def check_reference(folder, report, source, architecture, protocol):
     manifest = json.loads((folder / 'manifest.json').read_text())
     assert manifest == report['referenceCompiler'] and manifest['source'] == source
+    if protocol == 'callback-owners':
+        check_numeric_reference(folder, manifest, source, architecture)
+        return
     assert protocol in ('record-zip', 'record-fold', 'packed-records')
     if protocol == 'record-zip':
         source_path, field, saved = 'src/fuse.rs', 'Fusion', 'fusion-reference.rs'
@@ -169,8 +221,8 @@ def check_zip(archive):
 
 
 def check_directory(folder, source, architecture, session, protocol, reference):
-    assert protocol in ('array-lists', 'record-zip', 'record-fold', 'packed-records')
-    assert (protocol in ('record-zip', 'record-fold', 'packed-records')) == (reference is not None)
+    assert protocol in ('array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners')
+    assert (protocol in ('record-zip', 'record-fold', 'packed-records', 'callback-owners')) == (reference is not None)
     report = json.loads((folder / 'comparison.json').read_text())
     GROUPS.check_report(report, source, protocol)
     assert report['machine'] == architecture and report['configuration']['session'] == session
@@ -242,10 +294,12 @@ def check_directory(folder, source, architecture, session, protocol, reference):
             assert (case / (name + '.stderr')).read_text() == control['stderr']
         check_profiles(case, row)
     files = file_inventory(folder)
-    if protocol in ('record-zip', 'record-fold', 'packed-records'):
+    if protocol in ('record-zip', 'record-fold', 'packed-records', 'callback-owners'):
         assert len(files) == 1334
     reference_files = file_inventory(reference) if reference is not None else None
-    if reference_files is not None:
+    if protocol == 'callback-owners':
+        assert set(reference_files) == {'manifest.json', 'fwp', 'reference-cgen.rs', 'reference-packed_records.rs', 'reference.patch'}
+    elif reference_files is not None:
         saved = {'record-zip': 'fusion-reference.rs', 'record-fold': 'codegen-reference.rs', 'packed-records': 'codegen-reference.rs'}[protocol]
         assert set(reference_files) == {'manifest.json', 'fwp', saved, 'reference.patch'}
     return dict(source=source, architecture=architecture, session=session, files=files,
@@ -257,7 +311,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--input', type=Path, required=True)
     parser.add_argument('--input-format', choices=['directory', 'zip'], required=True)
-    parser.add_argument('--protocol', choices=['array-lists', 'record-zip', 'record-fold', 'packed-records'], required=True)
+    parser.add_argument('--protocol', choices=['array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners'], required=True)
     parser.add_argument('--reference', type=Path)
     parser.add_argument('--source', required=True)
     parser.add_argument('--arch', choices=['x86_64', 'aarch64'], required=True)

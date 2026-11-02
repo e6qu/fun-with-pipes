@@ -2,7 +2,8 @@
 
 **Status:** complete-field transfers pass focused Linux ARM64/AMD64 GCC/Clang
 O1/O2 checks and all 96 count observations. Numeric callback inputs pass their
-96 count audits, but two test fixtures need repair before correctness acceptance. Combined timings and the final platform
+96 count audits and the repaired source-selection probe; complete focused
+correctness checks for the repaired fixture remain. Combined timings and the final platform
 matrix remain. [Plan](../../PLAN.md).
 
 ## First-stage results
@@ -99,6 +100,40 @@ Evidence: [counts and sites](numeric-input-checks-2026-11-03/repair-counts.json.
 [artifacts](numeric-input-checks-2026-11-03/repair-artifacts.json), full logs
 [ARM64](numeric-input-checks-2026-11-03/arm-repair.log.gz) /
 [AMD64](numeric-input-checks-2026-11-03/amd-repair.log.gz).
+
+### Local callee selection verified
+
+The short [run 41547177941](https://github.com/e6qu/fun-with-pipes/actions/runs/41547177941)
+on `ea5deea50bd4447b3864f09f25db780bd8d37518` passes ten unit controls and the
+native fixture. The former top-level function-value binding is replaced by a
+local callee, matching the pass's internal-call requirement. The source-to-IR
+control proves that its parameter changes; the native control checks the actual
+emitted signature and mixed-input preparation, output order, aliases and cleanup.
+
+All four saved ARM64 GCC images (O1/O2, stack off/on) are verified. They return
+normally with all 1,344 allocated bytes released. Full logs have no diagnostics.
+[Log](numeric-input-checks-2026-11-03/selection.log.gz) and
+[artifact/image identities](numeric-input-checks-2026-11-03/selection-artifacts.json).
+Repeat the complete focused GCC/Clang controls on both hosts before timing.
+
+### Prepared performance experiments
+
+- `numeric-input-analysis` compares compiler commands through C emission on five
+  fixed programs. Its reference disables numeric rewriting/input preparation only,
+  retaining field-owner moves. The [protocol](numeric-callback-input-protocol.md)
+  fixes two copies per compiler, two warmups, ten balanced rounds, 2% copy limits
+  and at most 5% extra elapsed time or peak RSS. Failed and partial runs are saved.
+- `callback-owners-time` uses the existing whole-solve driver, two qualified
+  sessions per architecture, with the complete batch disabled in its reference.
+  Packed storage remains enabled in both compilers. It requires at least `3*p`
+  fewer retains, unchanged storage/work, at most 2% regression/noise and at least
+  5% improvement for cases with 199 or more updates. This is fwp versus same-source
+  fwp; C/Rust peers remain separately identified in the report.
+- Both workflows require passing focused jobs with matching compiler, runtime,
+  library and test sources. `callback-owners-report` independently audits all
+  samples, original outcomes, source patches and actual image identities.
+
+These are prepared checks, not measured results.
 
 ## Where the remaining operations occur
 

@@ -1,7 +1,8 @@
 # Current work
 
-**Next:** publish and run the short `numeric-input-selection` probe. Read the
-source-to-IR selection result before repeating `numeric-input-checks` on both hosts. Continue with independent site attribution,
+**Next:** publish the completed timing/audit wiring and run `numeric-input-checks`
+on both hosts. After all focused jobs pass, dispatch `numeric-input-analysis` and
+`callback-owners-time` with that run as `evidence_run` (timings: `comparison_session=both`). Continue with independent site attribution,
 compiler-cost measurements and combined timings in this same substantial batch.
 [PLAN.md](../PLAN.md) is the task list; no delivery PR is open.
 
@@ -9,7 +10,8 @@ compiler-cost measurements and combined timings in this same substantial batch.
 
 - Worktree `/private/tmp/fwp-array-consumption`, branch `numeric-owner-transfers`;
   primary checkout untouched. Base: verified #248 merge `31e4e25b`.
-- Published candidate `1075628e5032ccf7e4f17afb882fada81088c581`; initial source
+- Published selection candidate `ea5deea50bd4447b3864f09f25db780bd8d37518`; prior
+  `1075628e` is retained by `roadmap/numeric-input-guard-checks-2026-11-03`. Initial source
   `043fcc1c` is retained by `roadmap/numeric-callback-input-checks-2026-11-03`.
 - Numeric protocol `9a4129be`, tag
   `roadmap/numeric-callback-input-protocol-2026-11-03`, published before code.
@@ -22,12 +24,20 @@ compiler-cost measurements and combined timings in this same substantial batch.
 | Step | Status | Remaining work |
 |---|---|---|
 | 1 | Verified | Preserve complete-field transfer regression coverage |
-| 2 | In progress | Native fixture still excludes its nested callee; diagnose in short selection probe |
+| 2 | In progress | Repaired source/IR/native selection passes; complete focused checks on both hosts |
 | 3 | In progress | Exact input sites audited; compiler experiment runner and controls ready |
-| 4 | Pending | Two qualified runtime sessions per architecture |
+| 4 | Pending | Workflow and audits prepared; two qualified runtime sessions per architecture |
 | 5 | Pending | One substantial PR, nine final production gates, docs and verified squash |
 
 ## Current checks and repairs
+
+Short run `41547177941`, ARM64 job `125625516487`, passes on `ea5deea5`:
+ten unit controls plus the native case. The local-callee fixture now reaches the
+intended numeric rewriting. All four saved GCC O1/O2 stack-off/on images return
+normally and release all 1,344 allocated bytes. Complete job log, source signature,
+archive digests and native headers are audited (0.13s), no diagnostics.
+[Retained selection proof](measurements/derivative-owner-transfers.md#local-callee-selection-verified).
+
 
 [Run 41545062127](https://github.com/e6qu/fun-with-pipes/actions/runs/41545062127)
 on `1075628e` has completed: ARM64 job `125618544720`, AMD64 `125618545152`.
@@ -36,11 +46,9 @@ fixture fails, under both GCC and Clang: its nested callee stays boxed. Both ful
 job logs and all 20 target logs are audited; no other diagnostics.
 [Failure history and evidence](measurements/derivative-owner-transfers.md#follow-up-selection-failure).
 
-Saved C confirms that the polynomial survives inlining but is excluded from
-numeric rewriting. The fixture now uses a local callee. A new source-to-IR unit
-check reports the program if it is still excluded; `numeric-input-selection`
-runs on one ARM runner with the unit controls and this native case only. It
-skips unrelated tests and counts. Do not call this repaired until that probe passes.
+The old top-level fixture kept a function-value boundary and was excluded. A
+local callee fixes the fixture; the source-to-IR unit control and short native
+probe now prove selection. The complete focused matrix still needs this fixture.
 
 Both repaired-run count archives independently pass all 96 observations and exact
 map → forwarding worker → numeric callee attribution (2.67s ARM / 2.68s AMD).
@@ -67,7 +75,10 @@ Measurement preparation in this checkout:
   ten balanced rounds; fixed 2% copy and 5% time/RSS limits. Six synthetic controls
   include complete schedules and retained partial timeout evidence (0.26s).
 - Combined runtime count/time policy is added to the existing driver; 13 budget
-  controls pass (0.14s). Runtime workflow wiring and experiment dispatch remain.
+  controls pass (0.14s). Runtime workflow, literal-only reference reconstruction and retained-report
+  auditing are wired. Twelve archive controls pass (50.79s), twelve grouped-report
+  controls pass (5.90s) and three download/rejected-host controls pass (0.14s).
+  Latest workflow lint passes (5.86s). Dispatch waits for passing focused jobs.
 
 ## Implementation and remaining proof
 
@@ -84,7 +95,7 @@ pair has at most one boxed parameter to prepare, avoiding stranded partial
 preparation. Existing failure, cancellation, allocation-failure and deliberately
 missing physical-release controls now cover numeric inputs too.
 
-Remaining: resolve fixture selection and review exclusions/cleanup;
+Remaining: finish focused exclusion/cleanup verification;
 build/verify the same-source comparison; measure compiler
 elapsed time/RSS under the frozen 5% limits; then paired complete-solve timings
 (two sessions per host, 2% copy/regression and 5% large-case limits). Preserve all

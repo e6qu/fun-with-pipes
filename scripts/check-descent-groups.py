@@ -26,8 +26,8 @@ SOLVES = {'3-0': 32768, '3-1': 512, '3-199': 32, '3-1999': 4, '33-199': 32, '129
 
 
 def check_report(report, source, protocol):
-    assert protocol in {'grouped', 'repeated', 'recording', 'eager-captures', 'array-lists', 'record-zip', 'record-fold', 'packed-records'}
-    paired = protocol in {'recording', 'eager-captures', 'array-lists', 'record-zip', 'record-fold', 'packed-records'}
+    assert protocol in {'grouped', 'repeated', 'recording', 'eager-captures', 'array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners'}
+    paired = protocol in {'recording', 'eager-captures', 'array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners'}
     samples, seed = (49, 20261101) if protocol == 'array-lists' else (98, 20261029)
     labels = (['fwp-ad-history', 'fwp-ad', 'fwp-ad-history-reference', 'fwp-ad-reference',
                'c-explicit', 'rust-explicit', 'fwp-ad-identical'] if paired else LABELS)
@@ -74,12 +74,12 @@ def check_report(report, source, protocol):
         for label, ratios in row['ratios'].items():
             for peer, value in ratios.items():
                 assert value == row['medianNs'][label] / row['medianNs'][peer]
-        if protocol not in {'grouped', 'array-lists', 'record-zip', 'record-fold', 'packed-records'}:
+        if protocol not in {'grouped', 'array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners'}:
             ratio = row['medianNs']['fwp-ad'] / row['medianNs']['fwp-ad-identical']
             assert max(ratio, 1 / ratio) <= 1.02, (name, ratio)
         CHECK.check_observations(name, row, updates * solves,
                                  "recording" if paired else "baseline")
-    if protocol in {'eager-captures', 'record-zip', 'record-fold', 'packed-records'}:
+    if protocol in {'eager-captures', 'record-zip', 'record-fold', 'packed-records', 'callback-owners'}:
         assert config['comparison'] == protocol
 
 
@@ -101,15 +101,15 @@ def check_archive(path, protocol):
     source_hashes = None
     failed_sessions = 0
     for label, session in archive['sessions'].items():
-        source = session['source'] if protocol in {'eager-captures', 'record-zip', 'record-fold', 'packed-records'} else archive['source']
-        run = session['run'] if protocol in {'eager-captures', 'record-zip', 'record-fold', 'packed-records'} else archive['run']
+        source = session['source'] if protocol in {'eager-captures', 'record-zip', 'record-fold', 'packed-records', 'callback-owners'} else archive['source']
+        run = session['run'] if protocol in {'eager-captures', 'record-zip', 'record-fold', 'packed-records', 'callback-owners'} else archive['run']
         job = session['job']
         identity = (job['runner_id'], job['started_at'], job['completed_at'])
         assert identity not in identities
         identities.add(identity)
         assert job['run_id'] == run and job['head_sha'] == source
         assert job['status'] == 'completed'
-        failed = protocol == 'recording' or (protocol in {'eager-captures', 'record-zip', 'record-fold', 'packed-records'} and bool(session['budgetFailures']))
+        failed = protocol == 'recording' or (protocol in {'eager-captures', 'record-zip', 'record-fold', 'packed-records', 'callback-owners'} and bool(session['budgetFailures']))
         assert job['conclusion'] == ('failure' if failed else 'success')
         for kind in ['report', 'log']:
             raw = gzip.decompress((path.parent / session[kind]).read_bytes())
@@ -120,7 +120,7 @@ def check_archive(path, protocol):
         check_report(report, source, protocol)
         assert report['machine'] == ('aarch64' if label.startswith('arm') else 'x86_64')
         assert report['configuration']['session'] == int(label[-1])
-        assert len(session['files']) == (1334 if protocol in {'recording', 'eager-captures', 'record-zip', 'record-fold', 'packed-records'} else 1157)
+        assert len(session['files']) == (1334 if protocol in {'recording', 'eager-captures', 'record-zip', 'record-fold', 'packed-records', 'callback-owners'} else 1157)
         if protocol == 'recording':
             assert archive['decision'] == 'not-accepted'
             assert report['configuration']['comparison'] == 'scalar-recording'
@@ -133,29 +133,43 @@ def check_archive(path, protocol):
                                 ('reference.patch', 'patchSha256')]:
                 assert session['referenceFiles'][file]['sha256'] == reference[field]
             assert hashlib.sha256(session['referencePatch'].encode()).hexdigest() == reference['patchSha256']
-        if protocol in {'eager-captures', 'record-zip', 'record-fold', 'packed-records'}:
+        if protocol in {'eager-captures', 'record-zip', 'record-fold', 'packed-records', 'callback-owners'}:
             failures = DESCENT.paired_budget_failures(report['results'], protocol)
             assert session['budgetFailures'] == failures
             failed_sessions += bool(failures)
             reference = report['referenceCompiler']
             assert reference['source'] == source
-            if protocol == 'eager-captures':
-                assert reference['disabledTransformation'] == 'once-used eager capture bindings'
-                assert reference['candidateOptimizerSha256'] == report['sourceHashes']['src/opt.rs']
-                reference_source = ('optimizer-reference.rs', 'referenceOptimizerSha256')
-            elif protocol == 'record-zip':
-                assert reference['disabledTransformation'] == 'flat numeric record zip/map fusion'
-                assert reference['candidateFusionSha256'] == report['sourceHashes']['src/fuse.rs']
-                reference_source = ('fusion-reference.rs', 'referenceFusionSha256')
+            if protocol == 'callback-owners':
+                assert reference['scope'] == 'callback-owners'
+                assert reference['disabledTransformation'] == 'complete field transfers and numeric callback input owners'
+                assert set(reference['files']) == {'src/cgen.rs', 'src/cgen/packed_records.rs'}
+                assert set(reference['unchanged']) == {'src/ownership.rs', 'src/cgen/field_transfers.rs', 'src/cgen/numeric_parameters.rs'}
+                expected_files = {'fwp': reference['compilerSha256'], 'reference.patch': reference['patchSha256']}
+                for path, hashes in reference['files'].items():
+                    assert hashes['candidateSha256'] == report['sourceHashes'][path]
+                    expected_files['reference-' + Path(path).name] = hashes['referenceSha256']
+                for path, expected_hash in reference['unchanged'].items():
+                    assert report['sourceHashes'][path] == expected_hash
             else:
-                expected = ('packed temporary numeric-record storage' if protocol == 'packed-records'
-                            else 'direct numeric-record left folds')
-                assert reference['disabledTransformation'] == expected
-                assert reference['candidateCodegenSha256'] == report['sourceHashes']['src/cgen.rs']
-                reference_source = ('codegen-reference.rs', 'referenceCodegenSha256')
-            assert reference['ownershipSha256'] == report['sourceHashes']['src/ownership.rs']
-            for file, field in [('fwp', 'compilerSha256'), reference_source, ('reference.patch', 'patchSha256')]:
-                assert session['referenceFiles'][file]['sha256'] == reference[field]
+                if protocol == 'eager-captures':
+                    assert reference['disabledTransformation'] == 'once-used eager capture bindings'
+                    assert reference['candidateOptimizerSha256'] == report['sourceHashes']['src/opt.rs']
+                    reference_source = ('optimizer-reference.rs', 'referenceOptimizerSha256')
+                elif protocol == 'record-zip':
+                    assert reference['disabledTransformation'] == 'flat numeric record zip/map fusion'
+                    assert reference['candidateFusionSha256'] == report['sourceHashes']['src/fuse.rs']
+                    reference_source = ('fusion-reference.rs', 'referenceFusionSha256')
+                else:
+                    expected = ('packed temporary numeric-record storage' if protocol == 'packed-records'
+                                else 'direct numeric-record left folds')
+                    assert reference['disabledTransformation'] == expected
+                    assert reference['candidateCodegenSha256'] == report['sourceHashes']['src/cgen.rs']
+                    reference_source = ('codegen-reference.rs', 'referenceCodegenSha256')
+                assert reference['ownershipSha256'] == report['sourceHashes']['src/ownership.rs']
+                expected_files = {file: reference[field] for file, field in
+                                  [('fwp', 'compilerSha256'), reference_source, ('reference.patch', 'patchSha256')]}
+            for file, expected_hash in expected_files.items():
+                assert session['referenceFiles'][file]['sha256'] == expected_hash
             assert hashlib.sha256(session['referencePatch'].encode()).hexdigest() == reference['patchSha256']
             assert session['files']['comparison.json']['sha256'] == session['reportSha256']
             # A replacement host may run a later workflow-only commit. Every
@@ -176,7 +190,7 @@ def check_archive(path, protocol):
             ratios = [a / b for a, b in zip(row['samplesNs']['fwp-ad'], row['samplesNs']['fwp-ad-identical'])]
             paired = [max(ratio, 1 / ratio) for ratio in ratios]
             assert derived['identicalPairedP95'] == sorted(paired)[math.ceil(.95 * len(paired)) - 1]
-    if protocol in {'eager-captures', 'record-zip', 'record-fold', 'packed-records'}:
+    if protocol in {'eager-captures', 'record-zip', 'record-fold', 'packed-records', 'callback-owners'}:
         assert archive['decision'] == ('not-accepted' if failed_sessions else 'accepted')
         print(f'Four {protocol} sessions audited; {failed_sessions} failed sessions retained')
     else:
@@ -186,6 +200,6 @@ def check_archive(path, protocol):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--archive', type=Path, required=True)
-    parser.add_argument('--protocol', choices=['grouped', 'repeated', 'recording', 'eager-captures', 'record-zip', 'record-fold', 'packed-records'], required=True)
+    parser.add_argument('--protocol', choices=['grouped', 'repeated', 'recording', 'eager-captures', 'record-zip', 'record-fold', 'packed-records', 'callback-owners'], required=True)
     args = parser.parse_args()
     check_archive(args.archive, args.protocol)
