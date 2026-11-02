@@ -382,9 +382,19 @@ seed (0, 0.5) → add (1, 1.5) → (1, 2.0) → add (2, 2.5) → (3, 4.5)
 The [requirements and measurement protocol](measurements/derivative-record-folds.md)
 cover alias preservation, allocation failure, traps, cancellation and exact counts.
 This does not remove records that must remain stored in a list. Selection depends
-on the generated worker, not just the source type. Destructuring an argument before
-the next `fn` can currently leave a returned closure and a boxed result; that path
-is semantically equivalent but does not qualify for this optimization.
+on the generated worker, not just the source type. The next batch extends direct
+calls through local field bindings, so this equivalent spelling can use the same
+numeric worker:
+
+```fwp
+step = fn (count, total) -> fn (n, amount) -> (count + n, total + amount)
+```
+
+The proof accepts only valid reads of local flat records with fields that need no
+reference counting. Bindings remain before later argument evaluation. Managed or
+nested fields retain their existing path; escaping partial functions keep their
+original constructor stages. [The prepared scope](measurements/numeric-callback-bindings.md)
+records the implementation and verification requirements; native checks are pending.
 
 Known partial callbacks passed to `attempt` now use the same specialization pass
 as other synchronous handlers (PR #241, focused GCC/Clang checks pass). For

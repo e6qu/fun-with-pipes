@@ -1,20 +1,22 @@
 # Current work
 
-**Next:** implement the bounded application-through-field-binding simplification
-from the [prepared scope](measurements/numeric-callback-bindings.md), add semantic
-and ownership coverage, and monitor #241's full production run `41385349559`.
+**Next:** publish the implementation and run the expanded `record-fold-checks`
+suite on GitHub; audit all results and monitor #241's full production run
+`41385349559`. The [prepared scope](measurements/numeric-callback-bindings.md)
+remains unchanged.
 
 Worktree `/private/tmp/fwp-returned-callables`, branch `numeric-callback-lifetimes`,
 base `81aed37265661c0c79e47ca7223b40be2d1fe225`. Preserve unrelated primary-checkout
-edits. No compiler change in this preparation. Keep one active PR for this batch.
+edits. Preparation `e0280ee2` and its pushed protocol tag precede compiler changes.
+Keep one active PR for this batch.
 
 ## Roadmap status
 
 | Step | Status | Evidence / remaining work |
 |---|---|---|
 | 1 | Verified | Saved C and reproduced IR identify an application outside numeric field bindings; local proof and checks documented before code edits |
-| 2 | Pending | Extend only `Opt::apply`; preserve stages, binding order and resource guards |
-| 3 | Pending | Add tuple/named-record selection, semantic/count/cleanup and rejected-shape controls; native GCC/Clang focused run |
+| 2 | Implemented | `Opt::apply` accepts proved local flat-record reads; global purity and constructor-stage pass unchanged |
+| 3 | In progress | Boundary and escaping-stage unit controls, tuple/named-record allocation/unwind probes and first-stage trap fixture added; native checks pending |
 | 4 | In progress | #241 full matrix running; next batch needs its own final exact-head matrix and documentation |
 
 ## Baseline delivery and CI
@@ -26,7 +28,7 @@ the original thresholds. Merge `81aed372` and PR head `45af930e` share tree
 80-character/no-trailer rule. Documentation `41375291046` passes; log
 `/private/tmp/fwp-241-docs-final.log` has only deliberate runner-control failures.
 
-Full run `41385349559` has all nine jobs running, no reported failed step yet:
+Full run `41385349559`: benchmark passes; eight jobs still run, no reported failed step yet:
 Linux ARM/AMD `125084848880`/`125084848907`, regular macOS ARM/AMD
 `125084848914`/`125084848899`, ownership macOS ARM/AMD
 `125084848670`/`125084848861`, Windows ARM/AMD `125084848959`/`125084849027`,
@@ -63,3 +65,23 @@ suites and measurements run on GitHub. No local compiler build or native suite.
 Keep 64 GiB free disk, target data under 2 GiB, RSS under 1 GiB and the 180s guard.
 Retained baseline compiler: `/private/tmp/fwp-240-baseline-macos/fwp-macos-arm64/fwp`.
 Its identity and earlier validation are recorded in #241's history and reports.
+
+Candidate verification so far:
+
+- Rust formatting passes (1.93s), workflow lint passes (4.94s), roadmap audit
+  passes (3.15s; 199 link sets, 106 preparation pairs, four steps).
+- Named-record fixtures type-check (0.35s). The first spelling incorrectly used
+  the nominal constructor in a binding pattern; corrected to field patterns
+  under their declared `Point` parameter type before publication.
+- `record_binding_stages.fwp` passes raw/optimized retained interpretation
+  (0.36s): outputs `argument`, `12`, `(13, 14, (0, 10))`, then overflow exit 101
+  without executing the later argument. Removed an invalid first-arrow effect
+  annotation during fixture construction; the language permits effects only on
+  the final arrow, so first-stage failure is tested with checked overflow.
+- Fixture formatting passes (0.01s). Candidate native behavior is not yet claimed.
+- Production benchmark log `/private/tmp/fwp-241-production-bench-final.log`
+  audited without unexpected diagnostics; release/allocation controls pass.
+
+The focused workflow now runs optimizer unit tests and adds existing
+`closure_ownership` and `compiler_call_liveness` targets to the previous eight.
+No new integration-test target or primitive contract was introduced.

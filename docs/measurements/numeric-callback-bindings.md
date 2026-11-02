@@ -60,3 +60,10 @@ The existing direct-worker and fold rules still decide native representation.
 This is an existing direct-call optimization extended across a proved binding,
 not a change to when a partially applied source function executes. Broader record
 storage and heap-lifetime transformations require their own proof and evidence.
+
+Preparation commit `e0280ee2` and tag
+`roadmap/numeric-callback-bindings-protocol-2026-11-02` precede compiler edits.
+The implementation extends `Opt::apply` only. Unit controls protect field/type
+boundaries and constructor stages. Existing native probes now exercise tuple and
+named-record destructuring, exact allocation/release counts, first-stage overflow
+before a later effect, escaping aliases and cancellation. Native results pending.
