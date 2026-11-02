@@ -1,9 +1,8 @@
 # Current work
 
-**Next:** repair and regenerate the matrix stack table, publish the completed
-matrix batch as the only active PR, then audit its nine final-head production
-jobs and documentation before squash merge. Keep all six failed timing controls
-visible; no new timing is needed to repair the report.
+**Next:** publish the completed matrix batch as the only active PR, then audit
+its nine final-head production jobs and documentation before squash merge. Keep
+all six failed timing controls visible; preserve this head while gates run.
 
 ## PR #243: verified delivery
 
@@ -20,13 +19,15 @@ Branch/worktree: `matrix-calculation-costs`, `/private/tmp/fwp-matrix-calculatio
 Rebased onto the verified #243 squash tree. All measured sources and the failed
 report-generation source have remote retention tags; preserve them.
 
+## Roadmap status
+
 | Step | Status | Evidence / remaining work |
 |---|---|---|
 | 1 | Verified | Source protocol `5f235bb0`, published before diagnostics |
 | 2 | Verified | `41412675762` reproduces original binaries on both GCC architectures |
 | 3 | Verified | Paired-loop diagnostic `41416927586`; safety run `41417716203` passes GCC ARM64/AMD64 and Clang ARM64 |
-| 4 | Evidence complete; six limits open | Four measured sessions and three host rejections; combined raw audit `41422907313` passes |
-| 5 | Pending | Regenerate the frame table, publish one coherent PR, pass full final-head gates, verify squash merge |
+| 4 | Verified | All four sessions and three host rejections retained; raw audit `41422907313` passes; six timing controls remain open |
+| 5 | In progress | Frame table repaired and regenerated; publish one coherent PR, pass final-head gates, verify squash merge |
 
 The runtime processes two neighboring output columns together, preserving each
 cell's multiplication/addition order, byte-copy access, shared input views,
@@ -74,11 +75,13 @@ protocol; array-construction costs remain the next independent numerical task.
 - Table run `41424485974` at `3ae24c0d` failed: the renderer incorrectly required
   every GCC estimate to be `static`; AMD64 driver `main` is `dynamic,bounded`.
   The repair reports the actual qualifier and checks both variants agree, retaining
-  the real 48-byte worker increase. Regenerate README from retained reports with
-  `matrix-tables`; no native rebuild or new timing. Docs check both table sets.
+  the real 48-byte worker increase. Repair run `41425270814`, job `125210262696`,
+  at `fce7b3cc` passes; artifact `13132131070` supplies the regenerated README.
+  Full log audited clean; no native rebuild or new timing. Docs check both sets.
 
 Local guarded checks pass: six patch controls, eight scheduling/limit controls,
 thirteen evidence controls, six retention/prerequisite controls, two table-unit
 checks; Rust formatting, actionlint and roadmap audit. Historical tables verify
-unchanged (7.46s). Latest actionlint: 5.95s; documentation audit: 3.25s. No local
+unchanged (7.46s). Handoff heading/status drift was repaired; documentation audit
+passes (2.88s). Latest actionlint: 5.95s. No local
 compiler build, full suite or benchmark. Free space was 67 GiB at the last check.

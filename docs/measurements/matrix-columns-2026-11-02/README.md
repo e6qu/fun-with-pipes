@@ -83,6 +83,20 @@ stack high-water usage. Rust frame sizes are not measured.
 | x86_64 | matrix-257-259-255 | fwp | 3.742–3.809 | 91,618.000 |
 | x86_64 | matrix-257-259-255 | reference | 3.738–3.742 | 91,298.000 |
 
+## Generated C stack frames
+
+GCC estimates for the generated `product-data` worker (`f0`) and benchmark
+driver (`main`). `static` is a fixed frame; `dynamic,bounded` includes stack
+adjustments whose maximum GCC can determine. Neither is a whole-program stack peak.
+See [GCC stack-usage qualifiers](https://gcc.gnu.org/onlinedocs/gcc-13.3.0/gcc/Developer-Options.html).
+
+| Host | Function | Paired bytes | Scalar bytes | GCC qualifier (both) |
+|---|---|---:|---:|---|
+| aarch64 | f0 | 1,456.000 | 1,408.000 | static |
+| aarch64 | main | 384.000 | 384.000 | static |
+| x86_64 | f0 | 1,616.000 | 1,568.000 | static |
+| x86_64 | main | 352.000 | 352.000 | dynamic,bounded |
+
 ## Every missed limit
 
 [aarch64, session 1](https://github.com/e6qu/fun-with-pipes/actions/runs/41418956333/job/125189611110), source `8b9827521d0546ddd7eaace299492f9bd45b7af5`:
