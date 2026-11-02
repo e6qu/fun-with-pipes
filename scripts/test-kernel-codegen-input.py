@@ -37,6 +37,15 @@ class KernelCodegenInput(unittest.TestCase):
         archive.close()
         return report, metadata
 
+    def test_restricted_input_patch_is_exact_and_keeps_byte_access(self):
+        source = (Path(__file__).resolve().parent.parent / 'runtime/fwp_rt_kernel.c').read_bytes()
+        updated = CODEGEN.restricted_inputs(source)
+        self.assertEqual(updated.replace(CODEGEN.MATRIX_INPUTS_AFTER, CODEGEN.MATRIX_INPUTS_BEFORE), source)
+        self.assertEqual(updated.count(b'__builtin_memcpy'), source.count(b'__builtin_memcpy'))
+        for damaged in (b'', source + CODEGEN.MATRIX_INPUTS_BEFORE, updated):
+            with self.assertRaises(AssertionError):
+                CODEGEN.restricted_inputs(damaged)
+
     def test_complete_input_retains_failed_performance_decisions(self):
         report, metadata = self.read()
         self.assertEqual(report['failures'], self.row['failures'])
