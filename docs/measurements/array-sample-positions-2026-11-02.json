@@ -1,0 +1,4421 @@
+{
+  "schema": 1,
+  "scope": "All 18 measured rounds, 72 processes per role and all five samples; each sample contains eight arrays",
+  "timingAcceptance": "Unchanged; descriptive analysis only",
+  "results": [
+    {
+      "experiment": "array-construction-phases-2026-11-02",
+      "machine": "aarch64",
+      "session": 1,
+      "case": "array-65537",
+      "source": "f05e25f8730453103f862a354324f1d660a3550d",
+      "job": 125250653493,
+      "reportSha256": "c388cbec6d4bb1c47725e78677361f02adb643ec408874da75ade80b4e1c1013",
+      "constructionPaths": {
+        "fwp": "compiled make-input",
+        "reference": "C driver runtime calls"
+      },
+      "labels": {
+        "c": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                907269.5,
+                648323.5,
+                646382.0,
+                645224.5,
+                645083.0
+              ],
+              "firstMinusLastMedianNs": 258025.0,
+              "firstMinusLastP10Ns": 222797.5,
+              "firstMinusLastP90Ns": 285288.4
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                353852.0,
+                312495.0,
+                311914.0,
+                312304.0,
+                313602.5
+              ],
+              "firstMinusLastMedianNs": 39978.5,
+              "firstMinusLastP10Ns": 30669.3,
+              "firstMinusLastP90Ns": 60985.8
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                1263473.5,
+                961902.5,
+                961186.0,
+                960680.5,
+                960821.0
+              ],
+              "firstMinusLastMedianNs": 299116.0,
+              "firstMinusLastP10Ns": 258093.0,
+              "firstMinusLastP90Ns": 334568.3
+            }
+          }
+        },
+        "rust": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                669164.5,
+                406445.0,
+                407113.0,
+                405476.5,
+                404828.0
+              ],
+              "firstMinusLastMedianNs": 264513.0,
+              "firstMinusLastP10Ns": 232644.4,
+              "firstMinusLastP90Ns": 287432.9
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                359533.5,
+                314229.0,
+                314183.0,
+                314211.0,
+                314277.5
+              ],
+              "firstMinusLastMedianNs": 42492.0,
+              "firstMinusLastP10Ns": 30997.8,
+              "firstMinusLastP90Ns": 68654.9
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                1028542.0,
+                726522.5,
+                724535.5,
+                723739.0,
+                723339.5
+              ],
+              "firstMinusLastMedianNs": 305726.5,
+              "firstMinusLastP10Ns": 272913.2,
+              "firstMinusLastP90Ns": 342137.0
+            }
+          }
+        },
+        "fwp": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                7836872.5,
+                7620233.0,
+                7616343.0,
+                7613586.0,
+                7607877.0
+              ],
+              "firstMinusLastMedianNs": 224464.5,
+              "firstMinusLastP10Ns": 188626.8,
+              "firstMinusLastP90Ns": 263874.4
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                328567.0,
+                326510.0,
+                326532.5,
+                326563.0,
+                326412.0
+              ],
+              "firstMinusLastMedianNs": 1458.0,
+              "firstMinusLastP10Ns": 517.5,
+              "firstMinusLastP90Ns": 8881.0
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                8166935.0,
+                7947839.0,
+                7942723.5,
+                7939923.5,
+                7934240.0
+              ],
+              "firstMinusLastMedianNs": 227535.5,
+              "firstMinusLastP10Ns": 193285.0,
+              "firstMinusLastP90Ns": 265874.2
+            }
+          }
+        },
+        "fwp-identical": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                7807847.0,
+                7608699.5,
+                7603237.5,
+                7603063.5,
+                7593979.0
+              ],
+              "firstMinusLastMedianNs": 221475.5,
+              "firstMinusLastP10Ns": 189976.5,
+              "firstMinusLastP90Ns": 262631.4
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                328032.5,
+                326720.5,
+                326341.0,
+                326421.5,
+                326425.5
+              ],
+              "firstMinusLastMedianNs": 1286.0,
+              "firstMinusLastP10Ns": -1746.6,
+              "firstMinusLastP90Ns": 6970.4
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                8142225.0,
+                7937413.0,
+                7932993.0,
+                7930497.0,
+                7925618.0
+              ],
+              "firstMinusLastMedianNs": 221903.0,
+              "firstMinusLastP10Ns": 194939.4,
+              "firstMinusLastP90Ns": 262874.9
+            }
+          }
+        },
+        "reference": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                1204248.5,
+                1032517.0,
+                1028819.0,
+                1029591.5,
+                1029882.0
+              ],
+              "firstMinusLastMedianNs": 174178.0,
+              "firstMinusLastP10Ns": 151388.9,
+              "firstMinusLastP90Ns": 200548.3
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                310842.0,
+                309994.5,
+                309893.0,
+                309999.0,
+                309982.0
+              ],
+              "firstMinusLastMedianNs": 676.0,
+              "firstMinusLastP10Ns": -8142.1,
+              "firstMinusLastP90Ns": 23454.7
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                1523256.5,
+                1344905.0,
+                1341669.0,
+                1343283.0,
+                1343917.0
+              ],
+              "firstMinusLastMedianNs": 180529.5,
+              "firstMinusLastP10Ns": 151979.0,
+              "firstMinusLastP90Ns": 207411.2
+            }
+          }
+        },
+        "reference-identical": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                1205332.5,
+                1031091.5,
+                1032271.0,
+                1031961.0,
+                1028816.5
+              ],
+              "firstMinusLastMedianNs": 174857.5,
+              "firstMinusLastP10Ns": 149717.6,
+              "firstMinusLastP90Ns": 205995.8
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                310390.5,
+                309836.0,
+                309759.0,
+                309707.0,
+                309595.0
+              ],
+              "firstMinusLastMedianNs": 739.0,
+              "firstMinusLastP10Ns": -3510.9,
+              "firstMinusLastP90Ns": 22497.5
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                1520475.0,
+                1344812.5,
+                1345031.0,
+                1343685.0,
+                1339813.0
+              ],
+              "firstMinusLastMedianNs": 180302.0,
+              "firstMinusLastP10Ns": 155238.1,
+              "firstMinusLastP90Ns": 209925.5
+            }
+          }
+        }
+      },
+      "originalFailures": []
+    },
+    {
+      "experiment": "array-construction-phases-2026-11-02",
+      "machine": "aarch64",
+      "session": 1,
+      "case": "array-262145",
+      "source": "f05e25f8730453103f862a354324f1d660a3550d",
+      "job": 125250653493,
+      "reportSha256": "c388cbec6d4bb1c47725e78677361f02adb643ec408874da75ade80b4e1c1013",
+      "constructionPaths": {
+        "fwp": "compiled make-input",
+        "reference": "C driver runtime calls"
+      },
+      "labels": {
+        "c": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                3698117.0,
+                2640276.0,
+                2619667.5,
+                2627046.0,
+                2626951.0
+              ],
+              "firstMinusLastMedianNs": 1083194.5,
+              "firstMinusLastP10Ns": 983162.1,
+              "firstMinusLastP90Ns": 1165421.7
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                1400424.5,
+                1243300.5,
+                1257199.5,
+                1250973.5,
+                1250549.5
+              ],
+              "firstMinusLastMedianNs": 150139.5,
+              "firstMinusLastP10Ns": 114344.7,
+              "firstMinusLastP90Ns": 214844.3
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                5111497.5,
+                3893415.5,
+                3881753.0,
+                3876957.0,
+                3878219.5
+              ],
+              "firstMinusLastMedianNs": 1233310.5,
+              "firstMinusLastP10Ns": 1153945.8,
+              "firstMinusLastP90Ns": 1314371.3
+            }
+          }
+        },
+        "rust": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                2683205.5,
+                1648590.5,
+                1649117.5,
+                1638726.5,
+                1643595.0
+              ],
+              "firstMinusLastMedianNs": 1041675.5,
+              "firstMinusLastP10Ns": 981783.4,
+              "firstMinusLastP90Ns": 1150205.2
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                1442406.0,
+                1278648.0,
+                1277231.5,
+                1278192.5,
+                1275840.5
+              ],
+              "firstMinusLastMedianNs": 168218.0,
+              "firstMinusLastP10Ns": 134954.3,
+              "firstMinusLastP90Ns": 216792.3
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                4135093.0,
+                2932152.0,
+                2930141.0,
+                2919925.0,
+                2921540.5
+              ],
+              "firstMinusLastMedianNs": 1215874.5,
+              "firstMinusLastP10Ns": 1139764.1,
+              "firstMinusLastP90Ns": 1321972.5
+            }
+          }
+        },
+        "fwp": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                30598634.5,
+                29868590.5,
+                29983425.0,
+                29883396.0,
+                29854522.0
+              ],
+              "firstMinusLastMedianNs": 729149.5,
+              "firstMinusLastP10Ns": 614439.9,
+              "firstMinusLastP90Ns": 837894.2
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                1334741.5,
+                1325411.5,
+                1326790.0,
+                1325904.5,
+                1325649.5
+              ],
+              "firstMinusLastMedianNs": 8793.5,
+              "firstMinusLastP10Ns": -9149.1,
+              "firstMinusLastP90Ns": 33584.3
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                31944727.5,
+                31219436.0,
+                31334967.0,
+                31210388.5,
+                31191697.0
+              ],
+              "firstMinusLastMedianNs": 742222.0,
+              "firstMinusLastP10Ns": 612040.1,
+              "firstMinusLastP90Ns": 863132.3
+            }
+          }
+        },
+        "fwp-identical": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                30538355.5,
+                29895922.5,
+                29825234.5,
+                29819503.0,
+                29816737.0
+              ],
+              "firstMinusLastMedianNs": 710098.5,
+              "firstMinusLastP10Ns": 599315.3,
+              "firstMinusLastP90Ns": 856360.6
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                1334357.0,
+                1324440.0,
+                1326552.5,
+                1324542.0,
+                1322943.5
+              ],
+              "firstMinusLastMedianNs": 9874.5,
+              "firstMinusLastP10Ns": -4522.4,
+              "firstMinusLastP90Ns": 30232.7
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                31889751.5,
+                31256869.5,
+                31171433.5,
+                31163984.5,
+                31159212.0
+              ],
+              "firstMinusLastMedianNs": 709131.5,
+              "firstMinusLastP10Ns": 594292.4,
+              "firstMinusLastP90Ns": 857432.5
+            }
+          }
+        },
+        "reference": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                4611006.0,
+                3976302.0,
+                3978586.0,
+                3966688.0,
+                3970418.5
+              ],
+              "firstMinusLastMedianNs": 638567.5,
+              "firstMinusLastP10Ns": 562690.5,
+              "firstMinusLastP90Ns": 715121.9
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                1259638.0,
+                1258566.5,
+                1261691.5,
+                1255101.0,
+                1258996.5
+              ],
+              "firstMinusLastMedianNs": 2612.0,
+              "firstMinusLastP10Ns": -32484.5,
+              "firstMinusLastP90Ns": 47407.7
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                5868164.0,
+                5239528.0,
+                5235885.5,
+                5229236.0,
+                5229538.0
+              ],
+              "firstMinusLastMedianNs": 641263.0,
+              "firstMinusLastP10Ns": 573770.9,
+              "firstMinusLastP90Ns": 716118.1
+            }
+          }
+        },
+        "reference-identical": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                4598438.5,
+                3969604.5,
+                3969638.0,
+                3965636.0,
+                3958367.5
+              ],
+              "firstMinusLastMedianNs": 636525.5,
+              "firstMinusLastP10Ns": 543221.6,
+              "firstMinusLastP90Ns": 737706.8
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                1258278.5,
+                1265420.5,
+                1255936.0,
+                1254825.0,
+                1262967.0
+              ],
+              "firstMinusLastMedianNs": 878.0,
+              "firstMinusLastP10Ns": -25567.4,
+              "firstMinusLastP90Ns": 51478.8
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                5865529.0,
+                5232562.0,
+                5228077.5,
+                5226914.0,
+                5221961.0
+              ],
+              "firstMinusLastMedianNs": 640454.5,
+              "firstMinusLastP10Ns": 547403.4,
+              "firstMinusLastP90Ns": 726531.0
+            }
+          }
+        }
+      },
+      "originalFailures": []
+    },
+    {
+      "experiment": "array-construction-phases-2026-11-02",
+      "machine": "aarch64",
+      "session": 2,
+      "case": "array-65537",
+      "source": "f05e25f8730453103f862a354324f1d660a3550d",
+      "job": 125250652813,
+      "reportSha256": "1da1d8e66ae2df2ba5ca0e990abbe5aae5f80a20c79a37052101df9c4a0ebb02",
+      "constructionPaths": {
+        "fwp": "compiled make-input",
+        "reference": "C driver runtime calls"
+      },
+      "labels": {
+        "c": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                913108.0,
+                647194.5,
+                645599.5,
+                645047.0,
+                645072.0
+              ],
+              "firstMinusLastMedianNs": 265181.0,
+              "firstMinusLastP10Ns": 240042.7,
+              "firstMinusLastP90Ns": 291533.5
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                351973.0,
+                312200.5,
+                312300.0,
+                312524.5,
+                313040.5
+              ],
+              "firstMinusLastMedianNs": 39190.0,
+              "firstMinusLastP10Ns": 31380.4,
+              "firstMinusLastP90Ns": 61500.7
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                1272417.0,
+                961124.5,
+                959504.0,
+                959192.0,
+                959912.5
+              ],
+              "firstMinusLastMedianNs": 310244.5,
+              "firstMinusLastP10Ns": 278783.2,
+              "firstMinusLastP90Ns": 333124.4
+            }
+          }
+        },
+        "rust": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                666583.0,
+                407679.0,
+                407032.5,
+                406320.0,
+                404739.0
+              ],
+              "firstMinusLastMedianNs": 262169.5,
+              "firstMinusLastP10Ns": 228427.7,
+              "firstMinusLastP90Ns": 287977.2
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                355838.5,
+                314260.5,
+                314237.5,
+                314404.5,
+                314245.5
+              ],
+              "firstMinusLastMedianNs": 41405.5,
+              "firstMinusLastP10Ns": 27618.0,
+              "firstMinusLastP90Ns": 62847.8
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                1027518.5,
+                727957.0,
+                724349.0,
+                726205.0,
+                722305.0
+              ],
+              "firstMinusLastMedianNs": 302088.0,
+              "firstMinusLastP10Ns": 269606.5,
+              "firstMinusLastP90Ns": 333279.4
+            }
+          }
+        },
+        "fwp": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                7821794.0,
+                7613511.5,
+                7609087.5,
+                7606427.0,
+                7598093.5
+              ],
+              "firstMinusLastMedianNs": 225169.0,
+              "firstMinusLastP10Ns": 190262.4,
+              "firstMinusLastP90Ns": 257359.2
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                327874.0,
+                326839.5,
+                326429.0,
+                326512.0,
+                326082.5
+              ],
+              "firstMinusLastMedianNs": 1784.5,
+              "firstMinusLastP10Ns": -1986.5,
+              "firstMinusLastP90Ns": 10213.7
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                8155435.0,
+                7943701.0,
+                7936408.5,
+                7934195.5,
+                7926347.0
+              ],
+              "firstMinusLastMedianNs": 227251.0,
+              "firstMinusLastP10Ns": 201772.8,
+              "firstMinusLastP90Ns": 255772.8
+            }
+          }
+        },
+        "fwp-identical": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                7820084.5,
+                7609103.5,
+                7597418.0,
+                7593515.0,
+                7593749.0
+              ],
+              "firstMinusLastMedianNs": 214789.0,
+              "firstMinusLastP10Ns": 180497.1,
+              "firstMinusLastP90Ns": 258182.2
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                327561.5,
+                326278.0,
+                326694.0,
+                326441.0,
+                326124.5
+              ],
+              "firstMinusLastMedianNs": 1251.5,
+              "firstMinusLastP10Ns": -1041.0,
+              "firstMinusLastP90Ns": 8444.1
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                8153487.5,
+                7939740.5,
+                7936893.0,
+                7933100.5,
+                7926751.5
+              ],
+              "firstMinusLastMedianNs": 218522.5,
+              "firstMinusLastP10Ns": 188295.3,
+              "firstMinusLastP90Ns": 255762.1
+            }
+          }
+        },
+        "reference": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                1201551.5,
+                1030290.5,
+                1030434.0,
+                1028216.0,
+                1028049.5
+              ],
+              "firstMinusLastMedianNs": 174181.0,
+              "firstMinusLastP10Ns": 149110.0,
+              "firstMinusLastP90Ns": 207381.3
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                310312.5,
+                309760.5,
+                309684.5,
+                309644.5,
+                309616.5
+              ],
+              "firstMinusLastMedianNs": 556.5,
+              "firstMinusLastP10Ns": -9587.0,
+              "firstMinusLastP90Ns": 23490.2
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                1517816.0,
+                1344511.0,
+                1344819.0,
+                1341819.5,
+                1340419.5
+              ],
+              "firstMinusLastMedianNs": 177494.0,
+              "firstMinusLastP10Ns": 156542.7,
+              "firstMinusLastP90Ns": 207520.6
+            }
+          }
+        },
+        "reference-identical": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                1201371.5,
+                1031483.5,
+                1029603.0,
+                1028926.0,
+                1028529.5
+              ],
+              "firstMinusLastMedianNs": 172554.0,
+              "firstMinusLastP10Ns": 144487.0,
+              "firstMinusLastP90Ns": 199421.1
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                310172.5,
+                309769.5,
+                309688.0,
+                309564.5,
+                309588.5
+              ],
+              "firstMinusLastMedianNs": 441.5,
+              "firstMinusLastP10Ns": -8265.8,
+              "firstMinusLastP90Ns": 25773.0
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                1517152.0,
+                1347583.0,
+                1341599.5,
+                1340383.0,
+                1340063.0
+              ],
+              "firstMinusLastMedianNs": 178400.5,
+              "firstMinusLastP10Ns": 144915.3,
+              "firstMinusLastP90Ns": 204351.6
+            }
+          }
+        }
+      },
+      "originalFailures": []
+    },
+    {
+      "experiment": "array-construction-phases-2026-11-02",
+      "machine": "aarch64",
+      "session": 2,
+      "case": "array-262145",
+      "source": "f05e25f8730453103f862a354324f1d660a3550d",
+      "job": 125250652813,
+      "reportSha256": "1da1d8e66ae2df2ba5ca0e990abbe5aae5f80a20c79a37052101df9c4a0ebb02",
+      "constructionPaths": {
+        "fwp": "compiled make-input",
+        "reference": "C driver runtime calls"
+      },
+      "labels": {
+        "c": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                3709300.5,
+                2651760.0,
+                2636608.5,
+                2625608.5,
+                2623257.0
+              ],
+              "firstMinusLastMedianNs": 1101796.0,
+              "firstMinusLastP10Ns": 982042.1,
+              "firstMinusLastP90Ns": 1193782.3
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                1401070.0,
+                1243210.0,
+                1249767.0,
+                1255748.5,
+                1254343.5
+              ],
+              "firstMinusLastMedianNs": 150276.5,
+              "firstMinusLastP10Ns": 92793.6,
+              "firstMinusLastP90Ns": 235250.8
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                5116913.5,
+                3901645.5,
+                3889986.0,
+                3884705.0,
+                3880440.5
+              ],
+              "firstMinusLastMedianNs": 1236060.5,
+              "firstMinusLastP10Ns": 1176246.2,
+              "firstMinusLastP90Ns": 1353644.2
+            }
+          }
+        },
+        "rust": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                2695867.0,
+                1645288.0,
+                1651007.5,
+                1642475.5,
+                1644312.5
+              ],
+              "firstMinusLastMedianNs": 1050446.5,
+              "firstMinusLastP10Ns": 991487.3,
+              "firstMinusLastP90Ns": 1156500.1
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                1455638.5,
+                1282422.5,
+                1284094.0,
+                1282334.5,
+                1276588.5
+              ],
+              "firstMinusLastMedianNs": 175314.0,
+              "firstMinusLastP10Ns": 125953.0,
+              "firstMinusLastP90Ns": 232220.1
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                4160005.5,
+                2932257.0,
+                2939181.5,
+                2926889.0,
+                2926205.0
+              ],
+              "firstMinusLastMedianNs": 1230703.5,
+              "firstMinusLastP10Ns": 1163313.5,
+              "firstMinusLastP90Ns": 1316407.1
+            }
+          }
+        },
+        "fwp": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                30604733.5,
+                29805233.0,
+                29836516.5,
+                29850768.5,
+                29826797.5
+              ],
+              "firstMinusLastMedianNs": 721070.5,
+              "firstMinusLastP10Ns": 610003.4,
+              "firstMinusLastP90Ns": 857431.8
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                1348611.5,
+                1341095.5,
+                1342871.5,
+                1343971.0,
+                1341699.0
+              ],
+              "firstMinusLastMedianNs": 3888.0,
+              "firstMinusLastP10Ns": -15562.0,
+              "firstMinusLastP90Ns": 32323.9
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                32062639.5,
+                31268910.0,
+                31201651.5,
+                31289754.0,
+                31198535.0
+              ],
+              "firstMinusLastMedianNs": 717953.0,
+              "firstMinusLastP10Ns": 615642.0,
+              "firstMinusLastP90Ns": 850703.3
+            }
+          }
+        },
+        "fwp-identical": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                31321284.0,
+                30588395.0,
+                30577001.5,
+                30579421.5,
+                30571127.0
+              ],
+              "firstMinusLastMedianNs": 703680.5,
+              "firstMinusLastP10Ns": 618398.6,
+              "firstMinusLastP90Ns": 803306.9
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                1348148.0,
+                1344303.0,
+                1343948.5,
+                1342443.0,
+                1339576.0
+              ],
+              "firstMinusLastMedianNs": 8617.5,
+              "firstMinusLastP10Ns": -17414.3,
+              "firstMinusLastP90Ns": 42479.7
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                32659614.0,
+                31920424.5,
+                31905535.5,
+                31912840.5,
+                31908229.0
+              ],
+              "firstMinusLastMedianNs": 697676.5,
+              "firstMinusLastP10Ns": 627461.1,
+              "firstMinusLastP90Ns": 829526.4
+            }
+          }
+        },
+        "reference": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                4608810.0,
+                3974608.0,
+                3972575.5,
+                3969577.0,
+                3962388.5
+              ],
+              "firstMinusLastMedianNs": 637922.5,
+              "firstMinusLastP10Ns": 560404.2,
+              "firstMinusLastP90Ns": 731036.9
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                1277527.5,
+                1274325.0,
+                1259653.5,
+                1255737.0,
+                1262220.0
+              ],
+              "firstMinusLastMedianNs": 13905.0,
+              "firstMinusLastP10Ns": -25000.2,
+              "firstMinusLastP90Ns": 67709.4
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                5891099.5,
+                5252889.5,
+                5235276.0,
+                5229621.0,
+                5226600.5
+              ],
+              "firstMinusLastMedianNs": 665075.0,
+              "firstMinusLastP10Ns": 583142.6,
+              "firstMinusLastP90Ns": 724222.6
+            }
+          }
+        },
+        "reference-identical": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                4613711.0,
+                3993440.0,
+                3969782.5,
+                3967772.5,
+                3971377.5
+              ],
+              "firstMinusLastMedianNs": 642206.0,
+              "firstMinusLastP10Ns": 575673.3,
+              "firstMinusLastP90Ns": 703019.6
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                1252181.0,
+                1257716.5,
+                1265444.0,
+                1266612.0,
+                1256166.0
+              ],
+              "firstMinusLastMedianNs": 1461.5,
+              "firstMinusLastP10Ns": -27593.0,
+              "firstMinusLastP90Ns": 63281.5
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                5881475.0,
+                5263753.5,
+                5235184.0,
+                5240989.0,
+                5226752.5
+              ],
+              "firstMinusLastMedianNs": 651334.5,
+              "firstMinusLastP10Ns": 581987.4,
+              "firstMinusLastP90Ns": 707790.4
+            }
+          }
+        }
+      },
+      "originalFailures": []
+    },
+    {
+      "experiment": "array-construction-phases-2026-11-02",
+      "machine": "x86_64",
+      "session": 1,
+      "case": "array-65537",
+      "source": "f05e25f8730453103f862a354324f1d660a3550d",
+      "job": 125250653491,
+      "reportSha256": "087d8b7c85369cc683cb347b80fea33a2bfc6632df577ecea98bcee8b3bc9832",
+      "constructionPaths": {
+        "fwp": "compiled make-input",
+        "reference": "C driver runtime calls"
+      },
+      "labels": {
+        "c": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                904418.0,
+                499220.5,
+                501369.0,
+                502578.0,
+                498138.5
+              ],
+              "firstMinusLastMedianNs": 404469.5,
+              "firstMinusLastP10Ns": 373682.7,
+              "firstMinusLastP90Ns": 454838.1
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                538189.0,
+                493655.5,
+                489328.5,
+                491001.0,
+                489584.5
+              ],
+              "firstMinusLastMedianNs": 40308.5,
+              "firstMinusLastP10Ns": 20015.5,
+              "firstMinusLastP90Ns": 70319.4
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                1447559.5,
+                993614.0,
+                997806.0,
+                997130.5,
+                995833.0
+              ],
+              "firstMinusLastMedianNs": 448146.0,
+              "firstMinusLastP10Ns": 417223.3,
+              "firstMinusLastP90Ns": 507616.8
+            }
+          }
+        },
+        "rust": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                867313.5,
+                457649.0,
+                458479.5,
+                455530.0,
+                456927.0
+              ],
+              "firstMinusLastMedianNs": 410509.5,
+              "firstMinusLastP10Ns": 366876.5,
+              "firstMinusLastP90Ns": 440762.6
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                533165.0,
+                487464.0,
+                489603.0,
+                494297.5,
+                495650.5
+              ],
+              "firstMinusLastMedianNs": 43006.5,
+              "firstMinusLastP10Ns": 23945.6,
+              "firstMinusLastP90Ns": 64064.3
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                1404829.5,
+                953263.0,
+                954559.5,
+                957050.0,
+                953219.0
+              ],
+              "firstMinusLastMedianNs": 452264.5,
+              "firstMinusLastP10Ns": 421772.6,
+              "firstMinusLastP90Ns": 489093.9
+            }
+          }
+        },
+        "fwp": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                8529778.0,
+                7319496.5,
+                7215517.5,
+                7181090.0,
+                7167953.0
+              ],
+              "firstMinusLastMedianNs": 1357074.0,
+              "firstMinusLastP10Ns": 368502.2,
+              "firstMinusLastP90Ns": 5577612.3
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                493194.0,
+                488095.0,
+                487598.0,
+                487521.5,
+                487729.5
+              ],
+              "firstMinusLastMedianNs": 4750.0,
+              "firstMinusLastP10Ns": -6981.9,
+              "firstMinusLastP90Ns": 23438.4
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                9044453.5,
+                7806880.5,
+                7707711.0,
+                7670972.5,
+                7657016.0
+              ],
+              "firstMinusLastMedianNs": 1361250.0,
+              "firstMinusLastP10Ns": 384151.9,
+              "firstMinusLastP90Ns": 5577745.3
+            }
+          }
+        },
+        "fwp-identical": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                7578979.5,
+                7313010.5,
+                7224774.5,
+                7184063.5,
+                7169926.5
+              ],
+              "firstMinusLastMedianNs": 407817.5,
+              "firstMinusLastP10Ns": 315740.0,
+              "firstMinusLastP90Ns": 5221084.2
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                490976.0,
+                488206.5,
+                487337.5,
+                487440.0,
+                488080.5
+              ],
+              "firstMinusLastMedianNs": 3006.5,
+              "firstMinusLastP10Ns": -9350.6,
+              "firstMinusLastP90Ns": 34423.5
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                8074961.5,
+                7815732.5,
+                7723415.5,
+                7678587.5,
+                7660768.0
+              ],
+              "firstMinusLastMedianNs": 411312.5,
+              "firstMinusLastP10Ns": 319668.8,
+              "firstMinusLastP90Ns": 5215655.3
+            }
+          }
+        },
+        "reference": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                1010810.0,
+                763300.5,
+                763727.0,
+                739615.0,
+                749763.0
+              ],
+              "firstMinusLastMedianNs": 249183.0,
+              "firstMinusLastP10Ns": 174120.4,
+              "firstMinusLastP90Ns": 491353.8
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                516434.5,
+                511604.5,
+                513921.5,
+                512311.0,
+                508755.5
+              ],
+              "firstMinusLastMedianNs": 1922.0,
+              "firstMinusLastP10Ns": -28218.4,
+              "firstMinusLastP90Ns": 103951.4
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                1515374.5,
+                1262574.5,
+                1267114.5,
+                1241461.5,
+                1243951.5
+              ],
+              "firstMinusLastMedianNs": 252972.5,
+              "firstMinusLastP10Ns": 156992.1,
+              "firstMinusLastP90Ns": 604028.1
+            }
+          }
+        },
+        "reference-identical": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                1232769.0,
+                1032165.0,
+                767612.0,
+                740154.5,
+                747120.0
+              ],
+              "firstMinusLastMedianNs": 312803.0,
+              "firstMinusLastP10Ns": 160871.0,
+              "firstMinusLastP90Ns": 614201.6
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                633357.0,
+                609331.5,
+                523125.5,
+                511854.5,
+                507732.5
+              ],
+              "firstMinusLastMedianNs": 30526.0,
+              "firstMinusLastP10Ns": -36171.4,
+              "firstMinusLastP90Ns": 170538.4
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                1868113.0,
+                1655352.0,
+                1286976.0,
+                1246075.0,
+                1243795.0
+              ],
+              "firstMinusLastMedianNs": 331583.5,
+              "firstMinusLastP10Ns": 145577.5,
+              "firstMinusLastP90Ns": 759493.1
+            }
+          }
+        }
+      },
+      "originalFailures": [
+        {
+          "kind": "copy",
+          "case": "array-65537",
+          "label": "fwp",
+          "metric": "constructionNs",
+          "ratio": 1.0222583267573293,
+          "limit": 1.02
+        },
+        {
+          "kind": "copy",
+          "case": "array-65537",
+          "label": "fwp",
+          "metric": "allocationInclusiveNs",
+          "ratio": 1.0211151159612422,
+          "limit": 1.02
+        },
+        {
+          "kind": "copy",
+          "case": "array-65537",
+          "label": "reference",
+          "metric": "constructionNs",
+          "ratio": 1.089440706851229,
+          "limit": 1.02
+        },
+        {
+          "kind": "copy",
+          "case": "array-65537",
+          "label": "reference",
+          "metric": "kernelNs",
+          "ratio": 1.0461824983249,
+          "limit": 1.02
+        },
+        {
+          "kind": "copy",
+          "case": "array-65537",
+          "label": "reference",
+          "metric": "allocationInclusiveNs",
+          "ratio": 1.0726023938112692,
+          "limit": 1.02
+        },
+        {
+          "kind": "copy",
+          "case": "array-262145",
+          "label": "reference",
+          "metric": "constructionNs",
+          "ratio": 1.0258385513194372,
+          "limit": 1.02
+        }
+      ]
+    },
+    {
+      "experiment": "array-construction-phases-2026-11-02",
+      "machine": "x86_64",
+      "session": 1,
+      "case": "array-262145",
+      "source": "f05e25f8730453103f862a354324f1d660a3550d",
+      "job": 125250653491,
+      "reportSha256": "087d8b7c85369cc683cb347b80fea33a2bfc6632df577ecea98bcee8b3bc9832",
+      "constructionPaths": {
+        "fwp": "compiled make-input",
+        "reference": "C driver runtime calls"
+      },
+      "labels": {
+        "c": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                3599254.5,
+                1967228.0,
+                1962829.0,
+                1978270.0,
+                1990631.5
+              ],
+              "firstMinusLastMedianNs": 1607853.5,
+              "firstMinusLastP10Ns": 1523086.8,
+              "firstMinusLastP90Ns": 1709994.4
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                2144584.0,
+                2002668.5,
+                1995204.5,
+                1981370.0,
+                1965911.0
+              ],
+              "firstMinusLastMedianNs": 154835.0,
+              "firstMinusLastP10Ns": 117845.5,
+              "firstMinusLastP90Ns": 224910.5
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                5735448.5,
+                3978322.5,
+                3961236.0,
+                3958997.0,
+                3957012.5
+              ],
+              "firstMinusLastMedianNs": 1773130.0,
+              "firstMinusLastP10Ns": 1704813.5,
+              "firstMinusLastP90Ns": 1868414.0
+            }
+          }
+        },
+        "rust": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                3426459.0,
+                1815997.5,
+                1830424.0,
+                1824232.0,
+                1820950.5
+              ],
+              "firstMinusLastMedianNs": 1609033.5,
+              "firstMinusLastP10Ns": 1516289.6,
+              "firstMinusLastP90Ns": 1720909.3
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                2127187.5,
+                1980672.5,
+                1969289.5,
+                1978613.0,
+                1972546.0
+              ],
+              "firstMinusLastMedianNs": 153911.0,
+              "firstMinusLastP10Ns": 93638.2,
+              "firstMinusLastP90Ns": 221507.2
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                5560312.0,
+                3803556.5,
+                3795362.0,
+                3796398.5,
+                3795286.0
+              ],
+              "firstMinusLastMedianNs": 1763027.0,
+              "firstMinusLastP10Ns": 1692755.6,
+              "firstMinusLastP90Ns": 1846239.1
+            }
+          }
+        },
+        "fwp": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                31214316.5,
+                28868285.5,
+                28868861.0,
+                28884785.0,
+                28868394.5
+              ],
+              "firstMinusLastMedianNs": 2314085.5,
+              "firstMinusLastP10Ns": 1069751.0,
+              "firstMinusLastP90Ns": 6986464.5
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                1995504.0,
+                1979440.0,
+                1976434.5,
+                1977162.5,
+                1979234.5
+              ],
+              "firstMinusLastMedianNs": 17723.5,
+              "firstMinusLastP10Ns": -13011.7,
+              "firstMinusLastP90Ns": 53752.8
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                33208230.0,
+                30847917.0,
+                30849763.5,
+                30866605.0,
+                30851491.5
+              ],
+              "firstMinusLastMedianNs": 2348614.0,
+              "firstMinusLastP10Ns": 1092651.1,
+              "firstMinusLastP90Ns": 6998325.0
+            }
+          }
+        },
+        "fwp-identical": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                30642280.5,
+                28891450.0,
+                28858618.0,
+                28874647.5,
+                28877486.0
+              ],
+              "firstMinusLastMedianNs": 1800160.5,
+              "firstMinusLastP10Ns": 1034149.2,
+              "firstMinusLastP90Ns": 6860515.1
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                1995315.0,
+                1976779.5,
+                1981910.5,
+                1981819.0,
+                1978467.0
+              ],
+              "firstMinusLastMedianNs": 12878.0,
+              "firstMinusLastP10Ns": -10337.8,
+              "firstMinusLastP90Ns": 50738.5
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                32651697.0,
+                30867415.5,
+                30845218.5,
+                30859619.5,
+                30855649.5
+              ],
+              "firstMinusLastMedianNs": 1832896.5,
+              "firstMinusLastP10Ns": 1065106.3,
+              "firstMinusLastP90Ns": 6861766.0
+            }
+          }
+        },
+        "reference": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                4195372.5,
+                3114306.5,
+                3018889.5,
+                3017215.5,
+                2999613.5
+              ],
+              "firstMinusLastMedianNs": 1209430.0,
+              "firstMinusLastP10Ns": 891973.4,
+              "firstMinusLastP90Ns": 3411782.6
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                2179072.0,
+                2099550.0,
+                1983022.0,
+                1977627.0,
+                1975322.5
+              ],
+              "firstMinusLastMedianNs": 199201.0,
+              "firstMinusLastP10Ns": 10332.3,
+              "firstMinusLastP90Ns": 916615.5
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                6364737.0,
+                5222427.5,
+                5005663.0,
+                4999366.0,
+                4976101.5
+              ],
+              "firstMinusLastMedianNs": 1401734.5,
+              "firstMinusLastP10Ns": 915887.8,
+              "firstMinusLastP90Ns": 4321665.9
+            }
+          }
+        },
+        "reference-identical": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                4276539.5,
+                3169829.0,
+                3019099.0,
+                3010529.0,
+                3001666.0
+              ],
+              "firstMinusLastMedianNs": 1300173.0,
+              "firstMinusLastP10Ns": 882470.2,
+              "firstMinusLastP90Ns": 3398313.2
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                2186772.0,
+                2114818.0,
+                1988619.5,
+                1978979.0,
+                1972812.0
+              ],
+              "firstMinusLastMedianNs": 208443.5,
+              "firstMinusLastP10Ns": 10630.2,
+              "firstMinusLastP90Ns": 903308.5
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                6472162.5,
+                5272411.5,
+                5012430.0,
+                4992569.0,
+                4974100.0
+              ],
+              "firstMinusLastMedianNs": 1501404.5,
+              "firstMinusLastP10Ns": 905719.2,
+              "firstMinusLastP90Ns": 4331258.9
+            }
+          }
+        }
+      },
+      "originalFailures": [
+        {
+          "kind": "copy",
+          "case": "array-65537",
+          "label": "fwp",
+          "metric": "constructionNs",
+          "ratio": 1.0222583267573293,
+          "limit": 1.02
+        },
+        {
+          "kind": "copy",
+          "case": "array-65537",
+          "label": "fwp",
+          "metric": "allocationInclusiveNs",
+          "ratio": 1.0211151159612422,
+          "limit": 1.02
+        },
+        {
+          "kind": "copy",
+          "case": "array-65537",
+          "label": "reference",
+          "metric": "constructionNs",
+          "ratio": 1.089440706851229,
+          "limit": 1.02
+        },
+        {
+          "kind": "copy",
+          "case": "array-65537",
+          "label": "reference",
+          "metric": "kernelNs",
+          "ratio": 1.0461824983249,
+          "limit": 1.02
+        },
+        {
+          "kind": "copy",
+          "case": "array-65537",
+          "label": "reference",
+          "metric": "allocationInclusiveNs",
+          "ratio": 1.0726023938112692,
+          "limit": 1.02
+        },
+        {
+          "kind": "copy",
+          "case": "array-262145",
+          "label": "reference",
+          "metric": "constructionNs",
+          "ratio": 1.0258385513194372,
+          "limit": 1.02
+        }
+      ]
+    },
+    {
+      "experiment": "array-construction-phases-2026-11-02",
+      "machine": "x86_64",
+      "session": 2,
+      "case": "array-65537",
+      "source": "f05e25f8730453103f862a354324f1d660a3550d",
+      "job": 125277535727,
+      "reportSha256": "e356fef34693ad3f18f2c34eaab580b5343ac8e0a70ef682efa882ec82c4e718",
+      "constructionPaths": {
+        "fwp": "compiled make-input",
+        "reference": "C driver runtime calls"
+      },
+      "labels": {
+        "c": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                904098.0,
+                492252.0,
+                497299.0,
+                495361.0,
+                497249.0
+              ],
+              "firstMinusLastMedianNs": 406249.0,
+              "firstMinusLastP10Ns": 375335.1,
+              "firstMinusLastP90Ns": 445425.4
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                541566.5,
+                498516.0,
+                497007.5,
+                496492.5,
+                497314.0
+              ],
+              "firstMinusLastMedianNs": 42969.5,
+              "firstMinusLastP10Ns": 18743.8,
+              "firstMinusLastP90Ns": 70676.8
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                1445210.0,
+                996221.0,
+                995540.0,
+                998546.0,
+                996267.0
+              ],
+              "firstMinusLastMedianNs": 448938.5,
+              "firstMinusLastP10Ns": 415702.9,
+              "firstMinusLastP90Ns": 498542.8
+            }
+          }
+        },
+        "rust": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                869409.5,
+                457886.0,
+                456727.5,
+                458633.0,
+                457485.0
+              ],
+              "firstMinusLastMedianNs": 411027.5,
+              "firstMinusLastP10Ns": 371294.2,
+              "firstMinusLastP90Ns": 435432.7
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                534886.0,
+                496838.5,
+                496062.5,
+                497018.5,
+                497083.0
+              ],
+              "firstMinusLastMedianNs": 44908.0,
+              "firstMinusLastP10Ns": 21122.3,
+              "firstMinusLastP90Ns": 67483.8
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                1407915.5,
+                952970.5,
+                954844.0,
+                955886.0,
+                953973.0
+              ],
+              "firstMinusLastMedianNs": 453092.0,
+              "firstMinusLastP10Ns": 424462.2,
+              "firstMinusLastP90Ns": 483290.4
+            }
+          }
+        },
+        "fwp": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                8629648.0,
+                7394079.0,
+                7209874.5,
+                7175786.5,
+                7154314.0
+              ],
+              "firstMinusLastMedianNs": 1473837.5,
+              "firstMinusLastP10Ns": 356971.1,
+              "firstMinusLastP90Ns": 5597264.7
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                498847.0,
+                487616.0,
+                486561.0,
+                488633.5,
+                492834.5
+              ],
+              "firstMinusLastMedianNs": 5654.0,
+              "firstMinusLastP10Ns": -9660.1,
+              "firstMinusLastP90Ns": 39164.6
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                9145091.5,
+                7906642.5,
+                7705471.5,
+                7675721.0,
+                7645920.5
+              ],
+              "firstMinusLastMedianNs": 1486888.0,
+              "firstMinusLastP10Ns": 367157.6,
+              "firstMinusLastP90Ns": 5602254.5
+            }
+          }
+        },
+        "fwp-identical": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                7604639.0,
+                7336768.5,
+                7225292.0,
+                7179028.0,
+                7155824.0
+              ],
+              "firstMinusLastMedianNs": 446739.5,
+              "firstMinusLastP10Ns": 338529.5,
+              "firstMinusLastP90Ns": 5634826.1
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                492640.5,
+                487821.5,
+                486548.5,
+                487431.0,
+                489087.5
+              ],
+              "firstMinusLastMedianNs": 3465.5,
+              "firstMinusLastP10Ns": -7842.3,
+              "firstMinusLastP90Ns": 23007.9
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                8099197.5,
+                7838039.5,
+                7722774.0,
+                7672585.0,
+                7647357.5
+              ],
+              "firstMinusLastMedianNs": 456297.5,
+              "firstMinusLastP10Ns": 335342.9,
+              "firstMinusLastP90Ns": 5645592.7
+            }
+          }
+        },
+        "reference": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                1037775.5,
+                812218.0,
+                772649.0,
+                763011.0,
+                756993.5
+              ],
+              "firstMinusLastMedianNs": 246940.5,
+              "firstMinusLastP10Ns": 175326.0,
+              "firstMinusLastP90Ns": 423865.0
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                529950.0,
+                539400.0,
+                531908.5,
+                526444.0,
+                514887.5
+              ],
+              "firstMinusLastMedianNs": 3817.5,
+              "firstMinusLastP10Ns": -38640.8,
+              "firstMinusLastP90Ns": 121976.0
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                1531085.0,
+                1347923.5,
+                1295094.5,
+                1268249.5,
+                1265664.5
+              ],
+              "firstMinusLastMedianNs": 256283.0,
+              "firstMinusLastP10Ns": 166570.7,
+              "firstMinusLastP90Ns": 551889.3
+            }
+          }
+        },
+        "reference-identical": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                1235670.5,
+                987769.0,
+                824713.5,
+                765619.0,
+                771301.5
+              ],
+              "firstMinusLastMedianNs": 297850.5,
+              "firstMinusLastP10Ns": 174319.6,
+              "firstMinusLastP90Ns": 594553.3
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                622498.0,
+                600912.5,
+                545961.5,
+                527125.0,
+                516415.5
+              ],
+              "firstMinusLastMedianNs": 33146.5,
+              "firstMinusLastP10Ns": -25409.1,
+              "firstMinusLastP90Ns": 173473.7
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                1866928.5,
+                1588563.5,
+                1375490.5,
+                1284179.5,
+                1288082.0
+              ],
+              "firstMinusLastMedianNs": 310935.5,
+              "firstMinusLastP10Ns": 150428.5,
+              "firstMinusLastP90Ns": 758665.4
+            }
+          }
+        }
+      },
+      "originalFailures": []
+    },
+    {
+      "experiment": "array-construction-phases-2026-11-02",
+      "machine": "x86_64",
+      "session": 2,
+      "case": "array-262145",
+      "source": "f05e25f8730453103f862a354324f1d660a3550d",
+      "job": 125277535727,
+      "reportSha256": "e356fef34693ad3f18f2c34eaab580b5343ac8e0a70ef682efa882ec82c4e718",
+      "constructionPaths": {
+        "fwp": "compiled make-input",
+        "reference": "C driver runtime calls"
+      },
+      "labels": {
+        "c": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                3589561.5,
+                1959862.0,
+                1987789.5,
+                1980021.5,
+                1996006.5
+              ],
+              "firstMinusLastMedianNs": 1597204.5,
+              "firstMinusLastP10Ns": 1497903.8,
+              "firstMinusLastP90Ns": 1723475.5
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                2151086.0,
+                2005761.0,
+                1996759.5,
+                1994866.5,
+                1985462.5
+              ],
+              "firstMinusLastMedianNs": 155043.5,
+              "firstMinusLastP10Ns": 86949.1,
+              "firstMinusLastP90Ns": 226418.5
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                5738546.0,
+                3978302.0,
+                3969792.0,
+                3965544.5,
+                3970857.5
+              ],
+              "firstMinusLastMedianNs": 1748545.0,
+              "firstMinusLastP10Ns": 1636911.7,
+              "firstMinusLastP90Ns": 1908974.0
+            }
+          }
+        },
+        "rust": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                3389546.5,
+                1815529.0,
+                1833859.0,
+                1819988.5,
+                1830086.0
+              ],
+              "firstMinusLastMedianNs": 1574140.5,
+              "firstMinusLastP10Ns": 1481155.3,
+              "firstMinusLastP90Ns": 1689738.4
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                2127045.0,
+                2000188.0,
+                1966263.0,
+                1978949.5,
+                1976708.5
+              ],
+              "firstMinusLastMedianNs": 150106.0,
+              "firstMinusLastP10Ns": 99793.0,
+              "firstMinusLastP90Ns": 215792.3
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                5507785.0,
+                3813161.5,
+                3804735.0,
+                3805806.0,
+                3802777.5
+              ],
+              "firstMinusLastMedianNs": 1712781.5,
+              "firstMinusLastP10Ns": 1649804.7,
+              "firstMinusLastP90Ns": 1842381.1
+            }
+          }
+        },
+        "fwp": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                31437897.0,
+                28768334.0,
+                28755489.0,
+                28759242.0,
+                28740734.5
+              ],
+              "firstMinusLastMedianNs": 2624785.0,
+              "firstMinusLastP10Ns": 1208594.9,
+              "firstMinusLastP90Ns": 6837625.0
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                1985186.0,
+                1966393.0,
+                1968886.0,
+                1972563.5,
+                1969131.5
+              ],
+              "firstMinusLastMedianNs": 14066.0,
+              "firstMinusLastP10Ns": -11784.9,
+              "firstMinusLastP90Ns": 50370.8
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                33421295.0,
+                30738760.0,
+                30724237.5,
+                30741457.0,
+                30709480.5
+              ],
+              "firstMinusLastMedianNs": 2656503.5,
+              "firstMinusLastP10Ns": 1221987.8,
+              "firstMinusLastP90Ns": 6862835.9
+            }
+          }
+        },
+        "fwp-identical": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                30592776.0,
+                28765868.5,
+                28779650.0,
+                28777272.0,
+                28773909.5
+              ],
+              "firstMinusLastMedianNs": 1761507.5,
+              "firstMinusLastP10Ns": 1034892.7,
+              "firstMinusLastP90Ns": 6837576.1
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                1988823.0,
+                1967306.5,
+                1971417.0,
+                1969574.0,
+                1968749.0
+              ],
+              "firstMinusLastMedianNs": 18864.5,
+              "firstMinusLastP10Ns": -10884.2,
+              "firstMinusLastP90Ns": 62932.9
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                32586009.5,
+                30735447.5,
+                30753047.0,
+                30757470.0,
+                30748198.0
+              ],
+              "firstMinusLastMedianNs": 1787798.5,
+              "firstMinusLastP10Ns": 1065347.0,
+              "firstMinusLastP90Ns": 6833265.1
+            }
+          }
+        },
+        "reference": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                4261745.5,
+                3118850.0,
+                3011527.5,
+                2999795.5,
+                2976449.0
+              ],
+              "firstMinusLastMedianNs": 1271709.5,
+              "firstMinusLastP10Ns": 931760.5,
+              "firstMinusLastP90Ns": 3367448.4
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                2213845.0,
+                2074509.0,
+                1991113.0,
+                1984390.5,
+                1970600.0
+              ],
+              "firstMinusLastMedianNs": 233736.0,
+              "firstMinusLastP10Ns": 3469.5,
+              "firstMinusLastP90Ns": 945919.5
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                6496518.5,
+                5205647.5,
+                5010489.5,
+                4984844.0,
+                4959128.5
+              ],
+              "firstMinusLastMedianNs": 1530371.5,
+              "firstMinusLastP10Ns": 969541.3,
+              "firstMinusLastP90Ns": 4346594.4
+            }
+          }
+        },
+        "reference-identical": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                4681619.5,
+                3126519.0,
+                3015550.0,
+                2995067.5,
+                2980473.5
+              ],
+              "firstMinusLastMedianNs": 1691976.0,
+              "firstMinusLastP10Ns": 979001.1,
+              "firstMinusLastP90Ns": 3390871.0
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                2305503.0,
+                2068962.5,
+                1992226.0,
+                1979359.0,
+                1971300.0
+              ],
+              "firstMinusLastMedianNs": 321334.5,
+              "firstMinusLastP10Ns": 20009.3,
+              "firstMinusLastP90Ns": 943391.2
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                7099350.5,
+                5220011.5,
+                5009639.5,
+                4976937.0,
+                4953295.0
+              ],
+              "firstMinusLastMedianNs": 2160927.5,
+              "firstMinusLastP10Ns": 1011694.5,
+              "firstMinusLastP90Ns": 4334013.6
+            }
+          }
+        }
+      },
+      "originalFailures": []
+    },
+    {
+      "experiment": "scalar-array-captures-2026-11-02",
+      "machine": "aarch64",
+      "session": 1,
+      "case": "array-65537",
+      "source": "f8a558daa42fc07930f7a93870b6dcbcf2580bb3",
+      "job": 125291685373,
+      "reportSha256": "dffc960b0ce65d723309ff052dd2494d82260d6f529db077280605bd500dd211",
+      "constructionPaths": {
+        "fwp": "compiled make-input",
+        "reference": "compiled make-input with scalar specialization disabled"
+      },
+      "labels": {
+        "c": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                915402.5,
+                647131.0,
+                646859.5,
+                645711.5,
+                645207.5
+              ],
+              "firstMinusLastMedianNs": 270887.5,
+              "firstMinusLastP10Ns": 227634.1,
+              "firstMinusLastP90Ns": 292613.6
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                354550.0,
+                313741.0,
+                312132.0,
+                312468.5,
+                313428.0
+              ],
+              "firstMinusLastMedianNs": 41501.5,
+              "firstMinusLastP10Ns": 30050.8,
+              "firstMinusLastP90Ns": 66822.4
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                1274423.5,
+                961539.5,
+                963055.5,
+                963096.0,
+                959771.0
+              ],
+              "firstMinusLastMedianNs": 312408.0,
+              "firstMinusLastP10Ns": 277994.4,
+              "firstMinusLastP90Ns": 341160.9
+            }
+          }
+        },
+        "rust": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                668027.0,
+                406862.0,
+                405882.0,
+                406474.5,
+                404631.0
+              ],
+              "firstMinusLastMedianNs": 263792.0,
+              "firstMinusLastP10Ns": 221515.1,
+              "firstMinusLastP90Ns": 292496.8
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                358609.5,
+                314751.5,
+                314525.0,
+                314676.5,
+                314409.0
+              ],
+              "firstMinusLastMedianNs": 42805.0,
+              "firstMinusLastP10Ns": 30149.4,
+              "firstMinusLastP90Ns": 64672.3
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                1031291.0,
+                728934.5,
+                725078.5,
+                727234.5,
+                722591.0
+              ],
+              "firstMinusLastMedianNs": 306040.5,
+              "firstMinusLastP10Ns": 273346.2,
+              "firstMinusLastP90Ns": 336071.8
+            }
+          }
+        },
+        "fwp": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                1302834.5,
+                1118665.5,
+                1117866.0,
+                1119953.0,
+                1120270.0
+              ],
+              "firstMinusLastMedianNs": 179775.0,
+              "firstMinusLastP10Ns": 149611.3,
+              "firstMinusLastP90Ns": 216475.5
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                312380.0,
+                310552.5,
+                311137.0,
+                310288.0,
+                310461.0
+              ],
+              "firstMinusLastMedianNs": 1306.0,
+              "firstMinusLastP10Ns": -10187.8,
+              "firstMinusLastP90Ns": 22270.7
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                1620646.0,
+                1437226.0,
+                1434753.0,
+                1432834.0,
+                1437433.0
+              ],
+              "firstMinusLastMedianNs": 186916.0,
+              "firstMinusLastP10Ns": 153829.9,
+              "firstMinusLastP90Ns": 220151.6
+            }
+          }
+        },
+        "fwp-identical": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                1309409.0,
+                1122154.0,
+                1120841.0,
+                1118521.0,
+                1122573.5
+              ],
+              "firstMinusLastMedianNs": 184049.5,
+              "firstMinusLastP10Ns": 151129.3,
+              "firstMinusLastP90Ns": 209409.4
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                311061.0,
+                310605.0,
+                310789.5,
+                310146.0,
+                310359.5
+              ],
+              "firstMinusLastMedianNs": 633.0,
+              "firstMinusLastP10Ns": -7624.9,
+              "firstMinusLastP90Ns": 15425.6
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                1622706.0,
+                1436462.0,
+                1434269.5,
+                1432621.5,
+                1436117.5
+              ],
+              "firstMinusLastMedianNs": 185565.0,
+              "firstMinusLastP10Ns": 152222.0,
+              "firstMinusLastP90Ns": 213676.3
+            }
+          }
+        },
+        "reference": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                7750319.0,
+                7521671.0,
+                7518934.0,
+                7502486.0,
+                7571551.5
+              ],
+              "firstMinusLastMedianNs": 241117.5,
+              "firstMinusLastP10Ns": 182502.0,
+              "firstMinusLastP90Ns": 275877.0
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                328861.5,
+                327419.5,
+                326998.5,
+                326891.5,
+                327027.5
+              ],
+              "firstMinusLastMedianNs": 1924.5,
+              "firstMinusLastP10Ns": -3205.1,
+              "firstMinusLastP90Ns": 8830.3
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                8079187.5,
+                7848658.0,
+                7845518.5,
+                7836435.5,
+                7903651.0
+              ],
+              "firstMinusLastMedianNs": 245344.5,
+              "firstMinusLastP10Ns": 192636.8,
+              "firstMinusLastP90Ns": 274697.1
+            }
+          }
+        },
+        "reference-identical": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                7841130.0,
+                7623367.0,
+                7614785.0,
+                7612417.5,
+                7607836.5
+              ],
+              "firstMinusLastMedianNs": 237372.5,
+              "firstMinusLastP10Ns": 197579.0,
+              "firstMinusLastP90Ns": 275545.0
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                328827.5,
+                327214.5,
+                326954.0,
+                326937.5,
+                326916.0
+              ],
+              "firstMinusLastMedianNs": 1924.5,
+              "firstMinusLastP10Ns": -993.6,
+              "firstMinusLastP90Ns": 10258.4
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                8173710.0,
+                7949776.0,
+                7941508.5,
+                7939889.0,
+                7935692.5
+              ],
+              "firstMinusLastMedianNs": 238837.0,
+              "firstMinusLastP10Ns": 204494.2,
+              "firstMinusLastP90Ns": 278733.2
+            }
+          }
+        }
+      },
+      "originalFailures": []
+    },
+    {
+      "experiment": "scalar-array-captures-2026-11-02",
+      "machine": "aarch64",
+      "session": 1,
+      "case": "array-262145",
+      "source": "f8a558daa42fc07930f7a93870b6dcbcf2580bb3",
+      "job": 125291685373,
+      "reportSha256": "dffc960b0ce65d723309ff052dd2494d82260d6f529db077280605bd500dd211",
+      "constructionPaths": {
+        "fwp": "compiled make-input",
+        "reference": "compiled make-input with scalar specialization disabled"
+      },
+      "labels": {
+        "c": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                3689343.5,
+                2650850.5,
+                2632061.0,
+                2632951.5,
+                2622422.0
+              ],
+              "firstMinusLastMedianNs": 1065693.0,
+              "firstMinusLastP10Ns": 984490.0,
+              "firstMinusLastP90Ns": 1192427.5
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                1419200.5,
+                1245312.0,
+                1252252.5,
+                1247097.0,
+                1254552.5
+              ],
+              "firstMinusLastMedianNs": 165652.5,
+              "firstMinusLastP10Ns": 99781.5,
+              "firstMinusLastP90Ns": 226008.8
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                5118654.0,
+                3907462.5,
+                3885012.0,
+                3885212.0,
+                3878760.0
+              ],
+              "firstMinusLastMedianNs": 1240554.0,
+              "firstMinusLastP10Ns": 1154535.8,
+              "firstMinusLastP90Ns": 1329244.5
+            }
+          }
+        },
+        "rust": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                2695080.5,
+                1642844.5,
+                1645567.0,
+                1647151.5,
+                1646804.5
+              ],
+              "firstMinusLastMedianNs": 1049193.5,
+              "firstMinusLastP10Ns": 958161.9,
+              "firstMinusLastP90Ns": 1137509.7
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                1458146.0,
+                1291010.5,
+                1283756.5,
+                1278915.5,
+                1275655.5
+              ],
+              "firstMinusLastMedianNs": 179304.0,
+              "firstMinusLastP10Ns": 150525.0,
+              "firstMinusLastP90Ns": 227858.0
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                4157846.5,
+                2938495.0,
+                2933691.5,
+                2928208.0,
+                2925380.0
+              ],
+              "firstMinusLastMedianNs": 1235349.5,
+              "firstMinusLastP10Ns": 1134538.3,
+              "firstMinusLastP90Ns": 1303046.8
+            }
+          }
+        },
+        "fwp": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                5289411.0,
+                4656147.0,
+                4641712.0,
+                4632564.0,
+                4633335.0
+              ],
+              "firstMinusLastMedianNs": 658974.5,
+              "firstMinusLastP10Ns": 568510.0,
+              "firstMinusLastP90Ns": 725649.6
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                1275125.0,
+                1264531.0,
+                1260033.0,
+                1267031.5,
+                1259766.0
+              ],
+              "firstMinusLastMedianNs": 14735.5,
+              "firstMinusLastP10Ns": -20720.6,
+              "firstMinusLastP90Ns": 57697.7
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                6562955.0,
+                5919032.0,
+                5909956.5,
+                5899537.0,
+                5894422.0
+              ],
+              "firstMinusLastMedianNs": 668317.5,
+              "firstMinusLastP10Ns": 591274.2,
+              "firstMinusLastP90Ns": 748718.4
+            }
+          }
+        },
+        "fwp-identical": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                5279178.5,
+                4657123.5,
+                4647104.5,
+                4641329.5,
+                4638928.5
+              ],
+              "firstMinusLastMedianNs": 639923.5,
+              "firstMinusLastP10Ns": 574581.3,
+              "firstMinusLastP90Ns": 711395.8
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                1274535.5,
+                1261040.5,
+                1264324.5,
+                1260317.5,
+                1256688.5
+              ],
+              "firstMinusLastMedianNs": 10171.5,
+              "firstMinusLastP10Ns": -25740.7,
+              "firstMinusLastP90Ns": 46968.2
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                6556816.0,
+                5917675.5,
+                5912468.0,
+                5908884.5,
+                5894945.0
+              ],
+              "firstMinusLastMedianNs": 649903.0,
+              "firstMinusLastP10Ns": 586551.8,
+              "firstMinusLastP90Ns": 710409.3
+            }
+          }
+        },
+        "reference": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                30961435.5,
+                30202404.5,
+                30189355.0,
+                30222658.0,
+                30194581.5
+              ],
+              "firstMinusLastMedianNs": 691577.5,
+              "firstMinusLastP10Ns": 588491.3,
+              "firstMinusLastP90Ns": 830348.2
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                1350395.5,
+                1344524.5,
+                1346404.5,
+                1343555.5,
+                1345104.0
+              ],
+              "firstMinusLastMedianNs": 4060.5,
+              "firstMinusLastP10Ns": -20384.8,
+              "firstMinusLastP90Ns": 17142.8
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                32330302.0,
+                31577281.5,
+                31553103.0,
+                31560166.5,
+                31542132.0
+              ],
+              "firstMinusLastMedianNs": 695088.0,
+              "firstMinusLastP10Ns": 592525.1,
+              "firstMinusLastP90Ns": 826287.5
+            }
+          }
+        },
+        "reference-identical": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                30549533.5,
+                29835008.0,
+                29811501.5,
+                29838474.0,
+                29837993.0
+              ],
+              "firstMinusLastMedianNs": 701300.0,
+              "firstMinusLastP10Ns": 584297.0,
+              "firstMinusLastP90Ns": 809415.1
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                1346266.5,
+                1346289.0,
+                1346161.0,
+                1345260.0,
+                1346816.5
+              ],
+              "firstMinusLastMedianNs": 1374.0,
+              "firstMinusLastP10Ns": -21405.2,
+              "firstMinusLastP90Ns": 14817.6
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                31898901.0,
+                31188806.0,
+                31161804.0,
+                31192805.5,
+                31193889.0
+              ],
+              "firstMinusLastMedianNs": 704371.5,
+              "firstMinusLastP10Ns": 580827.8,
+              "firstMinusLastP90Ns": 810607.5
+            }
+          }
+        }
+      },
+      "originalFailures": []
+    },
+    {
+      "experiment": "scalar-array-captures-2026-11-02",
+      "machine": "aarch64",
+      "session": 2,
+      "case": "array-65537",
+      "source": "f8a558daa42fc07930f7a93870b6dcbcf2580bb3",
+      "job": 125291685304,
+      "reportSha256": "3673ea5eb71b632185187524685f91643b0141b72e464365da6cdb7c219a3a48",
+      "constructionPaths": {
+        "fwp": "compiled make-input",
+        "reference": "compiled make-input with scalar specialization disabled"
+      },
+      "labels": {
+        "c": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                905403.0,
+                646654.5,
+                645806.5,
+                644795.5,
+                645132.0
+              ],
+              "firstMinusLastMedianNs": 258453.5,
+              "firstMinusLastP10Ns": 233717.3,
+              "firstMinusLastP90Ns": 288900.1
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                352710.5,
+                311665.5,
+                312056.5,
+                311814.0,
+                312217.0
+              ],
+              "firstMinusLastMedianNs": 40540.5,
+              "firstMinusLastP10Ns": 33841.6,
+              "firstMinusLastP90Ns": 69079.6
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                1267278.0,
+                959822.0,
+                959389.0,
+                958373.5,
+                957965.0
+              ],
+              "firstMinusLastMedianNs": 302381.5,
+              "firstMinusLastP10Ns": 280801.0,
+              "firstMinusLastP90Ns": 333380.4
+            }
+          }
+        },
+        "rust": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                665647.5,
+                408400.5,
+                406192.5,
+                406768.0,
+                405564.0
+              ],
+              "firstMinusLastMedianNs": 258520.0,
+              "firstMinusLastP10Ns": 229053.3,
+              "firstMinusLastP90Ns": 286649.8
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                357030.5,
+                314174.0,
+                314266.0,
+                314212.5,
+                314125.5
+              ],
+              "firstMinusLastMedianNs": 40989.5,
+              "firstMinusLastP10Ns": 33641.6,
+              "firstMinusLastP90Ns": 64987.2
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                1028748.0,
+                726722.0,
+                723875.0,
+                725590.0,
+                723290.0
+              ],
+              "firstMinusLastMedianNs": 302457.5,
+              "firstMinusLastP10Ns": 274276.8,
+              "firstMinusLastP90Ns": 334005.1
+            }
+          }
+        },
+        "fwp": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                1300551.0,
+                1122258.5,
+                1118878.0,
+                1122342.5,
+                1121107.5
+              ],
+              "firstMinusLastMedianNs": 180037.5,
+              "firstMinusLastP10Ns": 133182.2,
+              "firstMinusLastP90Ns": 211038.6
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                310690.0,
+                310377.5,
+                310350.0,
+                310342.0,
+                309849.0
+              ],
+              "firstMinusLastMedianNs": 565.0,
+              "firstMinusLastP10Ns": -6721.3,
+              "firstMinusLastP90Ns": 16967.4
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                1616250.0,
+                1436172.0,
+                1431352.0,
+                1435000.0,
+                1433360.0
+              ],
+              "firstMinusLastMedianNs": 184130.0,
+              "firstMinusLastP10Ns": 148026.5,
+              "firstMinusLastP90Ns": 215427.1
+            }
+          }
+        },
+        "fwp-identical": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                1302418.5,
+                1119698.5,
+                1119019.0,
+                1117630.5,
+                1118785.5
+              ],
+              "firstMinusLastMedianNs": 181609.0,
+              "firstMinusLastP10Ns": 158864.3,
+              "firstMinusLastP90Ns": 206363.4
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                310405.0,
+                309816.5,
+                310140.0,
+                309689.5,
+                309709.0
+              ],
+              "firstMinusLastMedianNs": 524.0,
+              "firstMinusLastP10Ns": -9162.7,
+              "firstMinusLastP90Ns": 10430.5
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                1616737.0,
+                1433284.0,
+                1433096.0,
+                1430023.0,
+                1432480.0
+              ],
+              "firstMinusLastMedianNs": 182734.0,
+              "firstMinusLastP10Ns": 160021.1,
+              "firstMinusLastP90Ns": 208667.5
+            }
+          }
+        },
+        "reference": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                7637390.0,
+                7427470.0,
+                7430202.5,
+                7406770.0,
+                7417870.5
+              ],
+              "firstMinusLastMedianNs": 226223.5,
+              "firstMinusLastP10Ns": 193387.5,
+              "firstMinusLastP90Ns": 255782.7
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                328359.5,
+                326651.0,
+                326226.5,
+                326204.5,
+                326277.5
+              ],
+              "firstMinusLastMedianNs": 1560.0,
+              "firstMinusLastP10Ns": -1882.7,
+              "firstMinusLastP90Ns": 10108.5
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                7966135.5,
+                7756149.0,
+                7756885.0,
+                7733664.5,
+                7745481.0
+              ],
+              "firstMinusLastMedianNs": 229311.0,
+              "firstMinusLastP10Ns": 196214.1,
+              "firstMinusLastP90Ns": 257757.3
+            }
+          }
+        },
+        "reference-identical": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                7616694.0,
+                7406986.5,
+                7402118.5,
+                7402689.0,
+                7394491.5
+              ],
+              "firstMinusLastMedianNs": 218106.0,
+              "firstMinusLastP10Ns": 182423.3,
+              "firstMinusLastP90Ns": 256814.7
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                327994.5,
+                326198.0,
+                326250.0,
+                326170.0,
+                326270.5
+              ],
+              "firstMinusLastMedianNs": 1443.0,
+              "firstMinusLastP10Ns": -2268.8,
+              "firstMinusLastP90Ns": 21036.4
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                7958611.5,
+                7735421.0,
+                7729001.0,
+                7728900.0,
+                7721632.0
+              ],
+              "firstMinusLastMedianNs": 222926.5,
+              "firstMinusLastP10Ns": 193307.7,
+              "firstMinusLastP90Ns": 258549.3
+            }
+          }
+        }
+      },
+      "originalFailures": []
+    },
+    {
+      "experiment": "scalar-array-captures-2026-11-02",
+      "machine": "aarch64",
+      "session": 2,
+      "case": "array-262145",
+      "source": "f8a558daa42fc07930f7a93870b6dcbcf2580bb3",
+      "job": 125291685304,
+      "reportSha256": "3673ea5eb71b632185187524685f91643b0141b72e464365da6cdb7c219a3a48",
+      "constructionPaths": {
+        "fwp": "compiled make-input",
+        "reference": "compiled make-input with scalar specialization disabled"
+      },
+      "labels": {
+        "c": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                3677002.0,
+                2654745.0,
+                2636374.0,
+                2618156.5,
+                2613944.0
+              ],
+              "firstMinusLastMedianNs": 1059947.5,
+              "firstMinusLastP10Ns": 982134.7,
+              "firstMinusLastP90Ns": 1142110.6
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                1401101.5,
+                1243559.0,
+                1245902.0,
+                1257119.5,
+                1256003.0
+              ],
+              "firstMinusLastMedianNs": 140932.0,
+              "firstMinusLastP10Ns": 99529.0,
+              "firstMinusLastP90Ns": 250875.3
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                5088589.5,
+                3902648.0,
+                3886391.0,
+                3883342.5,
+                3877375.5
+              ],
+              "firstMinusLastMedianNs": 1212565.5,
+              "firstMinusLastP10Ns": 1165234.5,
+              "firstMinusLastP90Ns": 1303999.7
+            }
+          }
+        },
+        "rust": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                2674060.5,
+                1647107.0,
+                1650999.0,
+                1642769.0,
+                1642864.5
+              ],
+              "firstMinusLastMedianNs": 1031285.0,
+              "firstMinusLastP10Ns": 980618.4,
+              "firstMinusLastP90Ns": 1111144.7
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                1443239.5,
+                1281360.5,
+                1280671.5,
+                1279495.5,
+                1278642.0
+              ],
+              "firstMinusLastMedianNs": 160917.5,
+              "firstMinusLastP10Ns": 136594.3,
+              "firstMinusLastP90Ns": 200334.0
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                4122739.5,
+                2933182.5,
+                2934198.0,
+                2927369.5,
+                2925298.0
+              ],
+              "firstMinusLastMedianNs": 1203137.5,
+              "firstMinusLastP10Ns": 1148044.1,
+              "firstMinusLastP90Ns": 1274812.8
+            }
+          }
+        },
+        "fwp": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                5270803.0,
+                4653155.0,
+                4630751.5,
+                4630622.0,
+                4632347.5
+              ],
+              "firstMinusLastMedianNs": 636438.5,
+              "firstMinusLastP10Ns": 562042.3,
+              "firstMinusLastP90Ns": 716034.4
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                1273003.0,
+                1256487.0,
+                1260156.0,
+                1262059.0,
+                1260613.5
+              ],
+              "firstMinusLastMedianNs": 12536.5,
+              "firstMinusLastP10Ns": -25560.6,
+              "firstMinusLastP90Ns": 60045.4
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                6539396.0,
+                5911357.0,
+                5898229.0,
+                5891976.5,
+                5889777.0
+              ],
+              "firstMinusLastMedianNs": 653676.0,
+              "firstMinusLastP10Ns": 576630.8,
+              "firstMinusLastP90Ns": 725920.7
+            }
+          }
+        },
+        "fwp-identical": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                5258921.5,
+                4646567.0,
+                4643753.5,
+                4627278.0,
+                4630079.5
+              ],
+              "firstMinusLastMedianNs": 619939.5,
+              "firstMinusLastP10Ns": 546036.3,
+              "firstMinusLastP90Ns": 705426.5
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                1273291.5,
+                1260479.0,
+                1265604.0,
+                1264322.0,
+                1261842.5
+              ],
+              "firstMinusLastMedianNs": 12025.5,
+              "firstMinusLastP10Ns": -26521.7,
+              "firstMinusLastP90Ns": 59416.9
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                6525717.5,
+                5918214.5,
+                5907173.0,
+                5892376.5,
+                5891148.5
+              ],
+              "firstMinusLastMedianNs": 630083.0,
+              "firstMinusLastP10Ns": 567295.7,
+              "firstMinusLastP90Ns": 715192.9
+            }
+          }
+        },
+        "reference": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                30979853.0,
+                30222914.5,
+                30224150.0,
+                30209062.5,
+                30193872.5
+              ],
+              "firstMinusLastMedianNs": 716106.0,
+              "firstMinusLastP10Ns": 621222.8,
+              "firstMinusLastP90Ns": 840010.7
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                1354821.0,
+                1354008.5,
+                1356100.5,
+                1354405.5,
+                1353733.0
+              ],
+              "firstMinusLastMedianNs": 2164.5,
+              "firstMinusLastP10Ns": -15796.4,
+              "firstMinusLastP90Ns": 23589.2
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                32323797.5,
+                31559591.5,
+                31584392.0,
+                31579544.5,
+                31560603.0
+              ],
+              "firstMinusLastMedianNs": 721930.0,
+              "firstMinusLastP10Ns": 628943.6,
+              "firstMinusLastP90Ns": 839329.0
+            }
+          }
+        },
+        "reference-identical": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                31356792.5,
+                30603593.5,
+                30591288.0,
+                30564843.5,
+                30552535.0
+              ],
+              "firstMinusLastMedianNs": 722912.0,
+              "firstMinusLastP10Ns": 579062.9,
+              "firstMinusLastP90Ns": 826382.9
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                1357977.5,
+                1352385.0,
+                1350876.5,
+                1351965.5,
+                1354853.5
+              ],
+              "firstMinusLastMedianNs": 4560.0,
+              "firstMinusLastP10Ns": -14830.4,
+              "firstMinusLastP90Ns": 26592.2
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                32712274.0,
+                31955939.0,
+                31955695.0,
+                31920053.0,
+                31904525.5
+              ],
+              "firstMinusLastMedianNs": 725878.0,
+              "firstMinusLastP10Ns": 581217.2,
+              "firstMinusLastP90Ns": 826097.0
+            }
+          }
+        }
+      },
+      "originalFailures": []
+    },
+    {
+      "experiment": "scalar-array-captures-2026-11-02",
+      "machine": "x86_64",
+      "session": 1,
+      "case": "array-65537",
+      "source": "f8a558daa42fc07930f7a93870b6dcbcf2580bb3",
+      "job": 125298862465,
+      "reportSha256": "518a0830e8a6caa33c1e3c8f73f2247d9ea1e95d0e98620747dfb681d6d1324b",
+      "constructionPaths": {
+        "fwp": "compiled make-input",
+        "reference": "compiled make-input with scalar specialization disabled"
+      },
+      "labels": {
+        "c": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                903262.5,
+                497157.0,
+                490284.5,
+                493295.0,
+                491560.5
+              ],
+              "firstMinusLastMedianNs": 403317.5,
+              "firstMinusLastP10Ns": 370732.1,
+              "firstMinusLastP90Ns": 442775.2
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                528927.0,
+                497294.0,
+                497614.5,
+                496962.0,
+                497467.0
+              ],
+              "firstMinusLastMedianNs": 37920.0,
+              "firstMinusLastP10Ns": 17390.6,
+              "firstMinusLastP90Ns": 56805.6
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                1436102.5,
+                994468.5,
+                995145.5,
+                995556.5,
+                995596.0
+              ],
+              "firstMinusLastMedianNs": 443752.5,
+              "firstMinusLastP10Ns": 409164.7,
+              "firstMinusLastP90Ns": 469497.7
+            }
+          }
+        },
+        "rust": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                864470.5,
+                458554.5,
+                448116.0,
+                456705.5,
+                458680.5
+              ],
+              "firstMinusLastMedianNs": 404685.5,
+              "firstMinusLastP10Ns": 367844.5,
+              "firstMinusLastP90Ns": 441271.0
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                543192.5,
+                488747.5,
+                498043.5,
+                487504.5,
+                489318.0
+              ],
+              "firstMinusLastMedianNs": 43091.0,
+              "firstMinusLastP10Ns": 23345.7,
+              "firstMinusLastP90Ns": 64909.3
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                1402850.5,
+                952030.0,
+                953718.5,
+                953478.0,
+                955110.5
+              ],
+              "firstMinusLastMedianNs": 447073.5,
+              "firstMinusLastP10Ns": 420006.3,
+              "firstMinusLastP90Ns": 480985.1
+            }
+          }
+        },
+        "fwp": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                1888057.5,
+                1335314.0,
+                1173243.0,
+                1177951.5,
+                1235238.5
+              ],
+              "firstMinusLastMedianNs": 398917.5,
+              "firstMinusLastP10Ns": 177377.9,
+              "firstMinusLastP90Ns": 884569.5
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                623426.5,
+                571625.0,
+                514079.0,
+                519824.0,
+                538554.0
+              ],
+              "firstMinusLastMedianNs": 42537.5,
+              "firstMinusLastP10Ns": -57996.9,
+              "firstMinusLastP90Ns": 172241.4
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                2566355.5,
+                1900664.0,
+                1683033.0,
+                1684135.5,
+                1788580.0
+              ],
+              "firstMinusLastMedianNs": 434129.5,
+              "firstMinusLastP10Ns": 129370.8,
+              "firstMinusLastP90Ns": 1058691.3
+            }
+          }
+        },
+        "fwp-identical": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                1939036.0,
+                1428363.5,
+                1204369.5,
+                1200494.0,
+                1245942.5
+              ],
+              "firstMinusLastMedianNs": 560935.5,
+              "firstMinusLastP10Ns": 210235.5,
+              "firstMinusLastP90Ns": 845880.1
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                669474.5,
+                599127.5,
+                524142.0,
+                527863.0,
+                539796.5
+              ],
+              "firstMinusLastMedianNs": 83153.0,
+              "firstMinusLastP10Ns": -35752.9,
+              "firstMinusLastP90Ns": 199262.2
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                2609378.5,
+                2031813.0,
+                1724284.5,
+                1713811.0,
+                1772129.5
+              ],
+              "firstMinusLastMedianNs": 665811.5,
+              "firstMinusLastP10Ns": 179749.9,
+              "firstMinusLastP90Ns": 1001382.0
+            }
+          }
+        },
+        "reference": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                8655062.5,
+                7288699.5,
+                7220655.0,
+                7167618.0,
+                7155829.0
+              ],
+              "firstMinusLastMedianNs": 1493522.0,
+              "firstMinusLastP10Ns": 356374.9,
+              "firstMinusLastP90Ns": 5496362.2
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                495128.5,
+                487995.0,
+                487439.5,
+                486896.5,
+                487148.5
+              ],
+              "firstMinusLastMedianNs": 4763.5,
+              "firstMinusLastP10Ns": -5605.9,
+              "firstMinusLastP90Ns": 34825.0
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                9147088.5,
+                7777265.0,
+                7714147.5,
+                7658691.0,
+                7644775.0
+              ],
+              "firstMinusLastMedianNs": 1498293.0,
+              "firstMinusLastP10Ns": 367167.9,
+              "firstMinusLastP90Ns": 5506319.3
+            }
+          }
+        },
+        "reference-identical": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                8628090.0,
+                7268532.0,
+                7199812.5,
+                7165762.5,
+                7155391.5
+              ],
+              "firstMinusLastMedianNs": 1404271.5,
+              "firstMinusLastP10Ns": 376730.6,
+              "firstMinusLastP90Ns": 5536560.8
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                497544.0,
+                487419.5,
+                487580.0,
+                486959.5,
+                486902.5
+              ],
+              "firstMinusLastMedianNs": 7509.0,
+              "firstMinusLastP10Ns": -5788.4,
+              "firstMinusLastP90Ns": 35056.7
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                9130828.0,
+                7764307.0,
+                7695439.5,
+                7655962.0,
+                7643233.0
+              ],
+              "firstMinusLastMedianNs": 1411312.5,
+              "firstMinusLastP10Ns": 376701.3,
+              "firstMinusLastP90Ns": 5547231.4
+            }
+          }
+        }
+      },
+      "originalFailures": [
+        {
+          "kind": "copy",
+          "case": "array-65537",
+          "label": "fwp",
+          "metric": "kernelNs",
+          "ratio": 1.045027459426448,
+          "limit": 1.02
+        },
+        {
+          "kind": "speed",
+          "case": "array-65537",
+          "metric": "kernelNs",
+          "ratio": 1.149901383758852,
+          "limit": 1.02
+        },
+        {
+          "kind": "speed",
+          "case": "array-262145",
+          "metric": "kernelNs",
+          "ratio": 1.0493112051976958,
+          "limit": 1.02
+        }
+      ]
+    },
+    {
+      "experiment": "scalar-array-captures-2026-11-02",
+      "machine": "x86_64",
+      "session": 1,
+      "case": "array-262145",
+      "source": "f8a558daa42fc07930f7a93870b6dcbcf2580bb3",
+      "job": 125298862465,
+      "reportSha256": "518a0830e8a6caa33c1e3c8f73f2247d9ea1e95d0e98620747dfb681d6d1324b",
+      "constructionPaths": {
+        "fwp": "compiled make-input",
+        "reference": "compiled make-input with scalar specialization disabled"
+      },
+      "labels": {
+        "c": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                3556988.0,
+                1976205.5,
+                1976023.0,
+                1969323.0,
+                1979752.0
+              ],
+              "firstMinusLastMedianNs": 1582483.5,
+              "firstMinusLastP10Ns": 1495058.8,
+              "firstMinusLastP90Ns": 1692755.6
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                2128821.0,
+                1990365.5,
+                1992276.0,
+                1985139.5,
+                1971959.5
+              ],
+              "firstMinusLastMedianNs": 159297.5,
+              "firstMinusLastP10Ns": 69241.3,
+              "firstMinusLastP90Ns": 220748.4
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                5675254.5,
+                3966681.0,
+                3960007.5,
+                3953978.0,
+                3950685.0
+              ],
+              "firstMinusLastMedianNs": 1718681.5,
+              "firstMinusLastP10Ns": 1655633.7,
+              "firstMinusLastP90Ns": 1894129.6
+            }
+          }
+        },
+        "rust": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                3382105.0,
+                1828976.5,
+                1814861.5,
+                1809201.0,
+                1823934.0
+              ],
+              "firstMinusLastMedianNs": 1563169.0,
+              "firstMinusLastP10Ns": 1480806.3,
+              "firstMinusLastP90Ns": 1685867.4
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                2129560.0,
+                1969061.0,
+                1973753.5,
+                1979072.5,
+                1956404.0
+              ],
+              "firstMinusLastMedianNs": 173367.0,
+              "firstMinusLastP10Ns": 104821.4,
+              "firstMinusLastP90Ns": 219293.7
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                5511761.0,
+                3806062.0,
+                3788197.5,
+                3787586.5,
+                3787761.5
+              ],
+              "firstMinusLastMedianNs": 1725897.5,
+              "firstMinusLastP10Ns": 1664506.6,
+              "firstMinusLastP90Ns": 1880488.7
+            }
+          }
+        },
+        "fwp": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                6177623.0,
+                4833726.0,
+                4631172.5,
+                4613427.0,
+                4615834.5
+              ],
+              "firstMinusLastMedianNs": 1566649.0,
+              "firstMinusLastP10Ns": 939943.6,
+              "firstMinusLastP90Ns": 4044431.5
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                2204368.0,
+                2035688.5,
+                1981081.5,
+                1974578.5,
+                1968057.0
+              ],
+              "firstMinusLastMedianNs": 227802.5,
+              "firstMinusLastP10Ns": 24587.1,
+              "firstMinusLastP90Ns": 889110.1
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                8324951.5,
+                6845919.5,
+                6616103.5,
+                6595809.0,
+                6584042.5
+              ],
+              "firstMinusLastMedianNs": 1739956.5,
+              "firstMinusLastP10Ns": 984787.8,
+              "firstMinusLastP90Ns": 5008343.8
+            }
+          }
+        },
+        "fwp-identical": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                6127410.5,
+                4775538.5,
+                4629267.5,
+                4620103.0,
+                4616438.5
+              ],
+              "firstMinusLastMedianNs": 1480033.0,
+              "firstMinusLastP10Ns": 1021237.9,
+              "firstMinusLastP90Ns": 3986872.5
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                2195595.5,
+                2027803.5,
+                1980483.0,
+                1969578.5,
+                1968026.5
+              ],
+              "firstMinusLastMedianNs": 227176.5,
+              "firstMinusLastP10Ns": 35847.4,
+              "firstMinusLastP90Ns": 893116.6
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                8285943.0,
+                6837168.5,
+                6611563.0,
+                6594998.5,
+                6580788.5
+              ],
+              "firstMinusLastMedianNs": 1690383.5,
+              "firstMinusLastP10Ns": 1058071.2,
+              "firstMinusLastP90Ns": 4963654.2
+            }
+          }
+        },
+        "reference": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                30815958.0,
+                28773870.0,
+                28759534.5,
+                28768559.0,
+                28764213.5
+              ],
+              "firstMinusLastMedianNs": 1973273.5,
+              "firstMinusLastP10Ns": 1206426.8,
+              "firstMinusLastP90Ns": 6821328.0
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                1983408.5,
+                1967391.5,
+                1966955.5,
+                1966889.0,
+                1965241.5
+              ],
+              "firstMinusLastMedianNs": 19022.0,
+              "firstMinusLastP10Ns": -10068.7,
+              "firstMinusLastP90Ns": 63464.7
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                32809161.5,
+                30743134.0,
+                30724813.0,
+                30728446.0,
+                30732090.5
+              ],
+              "firstMinusLastMedianNs": 2013825.5,
+              "firstMinusLastP10Ns": 1223010.0,
+              "firstMinusLastP90Ns": 6817780.4
+            }
+          }
+        },
+        "reference-identical": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                30692459.0,
+                28779649.5,
+                28792153.0,
+                28755050.5,
+                28750991.5
+              ],
+              "firstMinusLastMedianNs": 1921924.5,
+              "firstMinusLastP10Ns": 1192523.5,
+              "firstMinusLastP90Ns": 5984588.7
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                1977866.5,
+                1964857.5,
+                1966830.5,
+                1965830.0,
+                1968608.0
+              ],
+              "firstMinusLastMedianNs": 10177.5,
+              "firstMinusLastP10Ns": -14421.4,
+              "firstMinusLastP90Ns": 46591.2
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                32661162.0,
+                30739374.5,
+                30761492.0,
+                30726287.0,
+                30725788.5
+              ],
+              "firstMinusLastMedianNs": 1942316.0,
+              "firstMinusLastP10Ns": 1205028.3,
+              "firstMinusLastP90Ns": 5969397.9
+            }
+          }
+        }
+      },
+      "originalFailures": [
+        {
+          "kind": "copy",
+          "case": "array-65537",
+          "label": "fwp",
+          "metric": "kernelNs",
+          "ratio": 1.045027459426448,
+          "limit": 1.02
+        },
+        {
+          "kind": "speed",
+          "case": "array-65537",
+          "metric": "kernelNs",
+          "ratio": 1.149901383758852,
+          "limit": 1.02
+        },
+        {
+          "kind": "speed",
+          "case": "array-262145",
+          "metric": "kernelNs",
+          "ratio": 1.0493112051976958,
+          "limit": 1.02
+        }
+      ]
+    },
+    {
+      "experiment": "scalar-array-captures-2026-11-02",
+      "machine": "x86_64",
+      "session": 2,
+      "case": "array-65537",
+      "source": "f8a558daa42fc07930f7a93870b6dcbcf2580bb3",
+      "job": 125291685261,
+      "reportSha256": "a38a965da0df18eba95ad5bf3d4618edcdb447ad12481f56f5c7a757e0800343",
+      "constructionPaths": {
+        "fwp": "compiled make-input",
+        "reference": "compiled make-input with scalar specialization disabled"
+      },
+      "labels": {
+        "c": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                914974.0,
+                493090.0,
+                497533.5,
+                497533.0,
+                496266.5
+              ],
+              "firstMinusLastMedianNs": 414425.0,
+              "firstMinusLastP10Ns": 378780.9,
+              "firstMinusLastP90Ns": 445279.5
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                539507.5,
+                499172.0,
+                498012.5,
+                499206.0,
+                498292.5
+              ],
+              "firstMinusLastMedianNs": 42761.0,
+              "firstMinusLastP10Ns": 16446.2,
+              "firstMinusLastP90Ns": 63833.8
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                1452802.5,
+                994588.0,
+                999527.0,
+                999865.0,
+                996924.5
+              ],
+              "firstMinusLastMedianNs": 449025.5,
+              "firstMinusLastP10Ns": 430017.0,
+              "firstMinusLastP90Ns": 488040.4
+            }
+          }
+        },
+        "rust": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                864435.5,
+                452519.0,
+                460918.0,
+                455669.0,
+                453490.5
+              ],
+              "firstMinusLastMedianNs": 409085.5,
+              "firstMinusLastP10Ns": 377498.8,
+              "firstMinusLastP90Ns": 445291.2
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                537769.5,
+                498090.0,
+                492282.0,
+                497261.5,
+                499369.0
+              ],
+              "firstMinusLastMedianNs": 42121.0,
+              "firstMinusLastP10Ns": 20291.9,
+              "firstMinusLastP90Ns": 64657.5
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                1404696.5,
+                954214.0,
+                958186.5,
+                956749.0,
+                953882.5
+              ],
+              "firstMinusLastMedianNs": 446676.5,
+              "firstMinusLastP10Ns": 425130.6,
+              "firstMinusLastP90Ns": 484993.4
+            }
+          }
+        },
+        "fwp": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                1436879.5,
+                1199814.0,
+                1166947.0,
+                1174810.5,
+                1170415.0
+              ],
+              "firstMinusLastMedianNs": 282645.0,
+              "firstMinusLastP10Ns": 214688.8,
+              "firstMinusLastP90Ns": 537937.5
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                511578.0,
+                520585.5,
+                518048.0,
+                514659.5,
+                510695.5
+              ],
+              "firstMinusLastMedianNs": 6539.5,
+              "firstMinusLastP10Ns": -40257.4,
+              "firstMinusLastP90Ns": 106192.9
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                1934246.5,
+                1709623.5,
+                1673698.0,
+                1678557.0,
+                1670533.0
+              ],
+              "firstMinusLastMedianNs": 284135.0,
+              "firstMinusLastP10Ns": 230892.9,
+              "firstMinusLastP90Ns": 622041.9
+            }
+          }
+        },
+        "fwp-identical": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                1977682.5,
+                1464355.0,
+                1207053.0,
+                1192918.0,
+                1203990.0
+              ],
+              "firstMinusLastMedianNs": 581934.5,
+              "firstMinusLastP10Ns": 196477.0,
+              "firstMinusLastP90Ns": 927577.6
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                659859.0,
+                599113.0,
+                527077.5,
+                521909.5,
+                522495.5
+              ],
+              "firstMinusLastMedianNs": 102098.5,
+              "firstMinusLastP10Ns": -28261.3,
+              "firstMinusLastP90Ns": 183013.6
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                2641731.0,
+                2073104.0,
+                1714049.5,
+                1691602.5,
+                1707703.0
+              ],
+              "firstMinusLastMedianNs": 649639.5,
+              "firstMinusLastP10Ns": 201455.2,
+              "firstMinusLastP90Ns": 1136982.6
+            }
+          }
+        },
+        "reference": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                7863160.5,
+                7333276.0,
+                7216460.0,
+                7177549.5,
+                7164673.0
+              ],
+              "firstMinusLastMedianNs": 711442.5,
+              "firstMinusLastP10Ns": 335259.3,
+              "firstMinusLastP90Ns": 5570893.1
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                495339.5,
+                489287.0,
+                494680.0,
+                487971.0,
+                487964.5
+              ],
+              "firstMinusLastMedianNs": 5774.5,
+              "firstMinusLastP10Ns": -7045.8,
+              "firstMinusLastP90Ns": 37876.7
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                8380304.0,
+                7829130.0,
+                7712073.5,
+                7674067.0,
+                7655709.5
+              ],
+              "firstMinusLastMedianNs": 728810.5,
+              "firstMinusLastP10Ns": 345034.7,
+              "firstMinusLastP90Ns": 5581629.3
+            }
+          }
+        },
+        "reference-identical": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                8319461.0,
+                7303954.5,
+                7210290.0,
+                7175217.5,
+                7163154.5
+              ],
+              "firstMinusLastMedianNs": 1155541.0,
+              "firstMinusLastP10Ns": 347702.0,
+              "firstMinusLastP90Ns": 5638758.9
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                501649.0,
+                488392.0,
+                487294.0,
+                487840.0,
+                490349.0
+              ],
+              "firstMinusLastMedianNs": 7509.0,
+              "firstMinusLastP10Ns": -7078.1,
+              "firstMinusLastP90Ns": 31568.8
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                8818797.0,
+                7793693.0,
+                7705270.5,
+                7676741.5,
+                7657287.5
+              ],
+              "firstMinusLastMedianNs": 1156859.5,
+              "firstMinusLastP10Ns": 355477.8,
+              "firstMinusLastP90Ns": 5645991.5
+            }
+          }
+        }
+      },
+      "originalFailures": [
+        {
+          "kind": "copy",
+          "case": "array-65537",
+          "label": "fwp",
+          "metric": "constructionNs",
+          "ratio": 1.0725285226198567,
+          "limit": 1.02
+        },
+        {
+          "kind": "copy",
+          "case": "array-65537",
+          "label": "fwp",
+          "metric": "kernelNs",
+          "ratio": 1.0564235779000675,
+          "limit": 1.02
+        },
+        {
+          "kind": "copy",
+          "case": "array-65537",
+          "label": "fwp",
+          "metric": "allocationInclusiveNs",
+          "ratio": 1.0660553513731899,
+          "limit": 1.02
+        },
+        {
+          "kind": "speed",
+          "case": "array-65537",
+          "metric": "kernelNs",
+          "ratio": 1.1151213574407826,
+          "limit": 1.02
+        },
+        {
+          "kind": "speed",
+          "case": "array-262145",
+          "metric": "kernelNs",
+          "ratio": 1.0522589419588497,
+          "limit": 1.02
+        }
+      ]
+    },
+    {
+      "experiment": "scalar-array-captures-2026-11-02",
+      "machine": "x86_64",
+      "session": 2,
+      "case": "array-262145",
+      "source": "f8a558daa42fc07930f7a93870b6dcbcf2580bb3",
+      "job": 125291685261,
+      "reportSha256": "a38a965da0df18eba95ad5bf3d4618edcdb447ad12481f56f5c7a757e0800343",
+      "constructionPaths": {
+        "fwp": "compiled make-input",
+        "reference": "compiled make-input with scalar specialization disabled"
+      },
+      "labels": {
+        "c": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                3579016.5,
+                2002958.5,
+                1998879.5,
+                1983222.0,
+                1982825.0
+              ],
+              "firstMinusLastMedianNs": 1581642.0,
+              "firstMinusLastP10Ns": 1517754.3,
+              "firstMinusLastP90Ns": 1718846.2
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                2130737.5,
+                2001127.0,
+                1996974.0,
+                1993023.0,
+                1997879.0
+              ],
+              "firstMinusLastMedianNs": 147670.0,
+              "firstMinusLastP10Ns": 77455.9,
+              "firstMinusLastP90Ns": 189556.7
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                5706486.0,
+                4002263.0,
+                3980508.5,
+                3974385.5,
+                3970904.0
+              ],
+              "firstMinusLastMedianNs": 1725254.5,
+              "firstMinusLastP10Ns": 1659274.5,
+              "firstMinusLastP90Ns": 1879441.3
+            }
+          }
+        },
+        "rust": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                3434476.5,
+                1827233.5,
+                1837893.0,
+                1826269.5,
+                1827272.0
+              ],
+              "firstMinusLastMedianNs": 1602038.0,
+              "firstMinusLastP10Ns": 1500862.8,
+              "firstMinusLastP90Ns": 1692444.7
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                2143863.5,
+                1991918.0,
+                1978973.5,
+                1979585.0,
+                1981961.5
+              ],
+              "firstMinusLastMedianNs": 165006.0,
+              "firstMinusLastP10Ns": 85459.7,
+              "firstMinusLastP90Ns": 222864.8
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                5553158.5,
+                3820803.5,
+                3814130.0,
+                3810297.0,
+                3810129.5
+              ],
+              "firstMinusLastMedianNs": 1740687.0,
+              "firstMinusLastP10Ns": 1688528.6,
+              "firstMinusLastP90Ns": 1874214.5
+            }
+          }
+        },
+        "fwp": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                5890801.0,
+                4979762.0,
+                4735043.5,
+                4714790.5,
+                4698330.0
+              ],
+              "firstMinusLastMedianNs": 1154830.0,
+              "firstMinusLastP10Ns": 881386.3,
+              "firstMinusLastP90Ns": 4032172.1
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                2155893.0,
+                2092729.5,
+                1989717.0,
+                1976660.5,
+                1975716.0
+              ],
+              "firstMinusLastMedianNs": 172075.0,
+              "firstMinusLastP10Ns": 22721.6,
+              "firstMinusLastP90Ns": 932858.1
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                7974562.5,
+                7018129.5,
+                6721494.0,
+                6690678.0,
+                6673227.5
+              ],
+              "firstMinusLastMedianNs": 1300959.0,
+              "firstMinusLastP10Ns": 936779.6,
+              "firstMinusLastP90Ns": 4975214.9
+            }
+          }
+        },
+        "fwp-identical": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                6452129.0,
+                5258376.0,
+                4729221.0,
+                4700835.5,
+                4689310.5
+              ],
+              "firstMinusLastMedianNs": 1757075.5,
+              "firstMinusLastP10Ns": 936054.9,
+              "firstMinusLastP90Ns": 4079471.2
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                2266662.0,
+                2119967.5,
+                1986410.0,
+                1976801.5,
+                1971287.5
+              ],
+              "firstMinusLastMedianNs": 300788.0,
+              "firstMinusLastP10Ns": 30201.1,
+              "firstMinusLastP90Ns": 931067.2
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                8862719.0,
+                7365048.5,
+                6714628.0,
+                6683928.5,
+                6665466.5
+              ],
+              "firstMinusLastMedianNs": 2186991.0,
+              "firstMinusLastP10Ns": 997597.7,
+              "firstMinusLastP90Ns": 5002594.0
+            }
+          }
+        },
+        "reference": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                31149529.0,
+                28887910.0,
+                28881700.5,
+                28882476.0,
+                28865310.0
+              ],
+              "firstMinusLastMedianNs": 2251888.0,
+              "firstMinusLastP10Ns": 1142875.5,
+              "firstMinusLastP90Ns": 6902728.7
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                1986173.0,
+                1974431.5,
+                1976510.5,
+                1975567.5,
+                1973838.0
+              ],
+              "firstMinusLastMedianNs": 8487.0,
+              "firstMinusLastP10Ns": -13914.6,
+              "firstMinusLastP90Ns": 52562.3
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                33143014.0,
+                30868193.5,
+                30851334.0,
+                30855124.0,
+                30850414.0
+              ],
+              "firstMinusLastMedianNs": 2248826.0,
+              "firstMinusLastP10Ns": 1132854.1,
+              "firstMinusLastP90Ns": 6930484.3
+            }
+          }
+        },
+        "reference-identical": {
+          "processes": 72,
+          "metrics": {
+            "constructionNs": {
+              "samplePositionMedianNs": [
+                31241329.5,
+                28863504.0,
+                28879371.5,
+                28886917.0,
+                28885044.0
+              ],
+              "firstMinusLastMedianNs": 2345430.0,
+              "firstMinusLastP10Ns": 1108801.6,
+              "firstMinusLastP90Ns": 6811961.7
+            },
+            "kernelNs": {
+              "samplePositionMedianNs": [
+                1986113.0,
+                1977093.5,
+                1976183.5,
+                1973864.0,
+                1974147.0
+              ],
+              "firstMinusLastMedianNs": 17573.5,
+              "firstMinusLastP10Ns": -24347.7,
+              "firstMinusLastP90Ns": 62100.5
+            },
+            "allocationInclusiveNs": {
+              "samplePositionMedianNs": [
+                33228831.5,
+                30847072.0,
+                30859039.0,
+                30865827.0,
+                30858692.5
+              ],
+              "firstMinusLastMedianNs": 2361836.0,
+              "firstMinusLastP10Ns": 1150199.6,
+              "firstMinusLastP90Ns": 6782950.0
+            }
+          }
+        }
+      },
+      "originalFailures": [
+        {
+          "kind": "copy",
+          "case": "array-65537",
+          "label": "fwp",
+          "metric": "constructionNs",
+          "ratio": 1.0725285226198567,
+          "limit": 1.02
+        },
+        {
+          "kind": "copy",
+          "case": "array-65537",
+          "label": "fwp",
+          "metric": "kernelNs",
+          "ratio": 1.0564235779000675,
+          "limit": 1.02
+        },
+        {
+          "kind": "copy",
+          "case": "array-65537",
+          "label": "fwp",
+          "metric": "allocationInclusiveNs",
+          "ratio": 1.0660553513731899,
+          "limit": 1.02
+        },
+        {
+          "kind": "speed",
+          "case": "array-65537",
+          "metric": "kernelNs",
+          "ratio": 1.1151213574407826,
+          "limit": 1.02
+        },
+        {
+          "kind": "speed",
+          "case": "array-262145",
+          "metric": "kernelNs",
+          "ratio": 1.0522589419588497,
+          "limit": 1.02
+        }
+      ]
+    }
+  ]
+}

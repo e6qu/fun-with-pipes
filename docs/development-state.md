@@ -1,83 +1,72 @@
 # Current work
 
-**Next:** publish the completed PR #245 evidence/docs batch, mark ready, and audit
-all nine production jobs plus documentation for that exact head before squash merge.
+**Next:** publish PR #246's complete diagnostic evidence and mark it ready for
+one final production/documentation run. Audit every final-head job and target
+before squash merge; keep the source unchanged while those gates run.
 
 ## Branch and delivery
 
-- Worktree `/private/tmp/fwp-array-construction`, branch `array-construction-costs`.
-  [PR #245](https://github.com/e6qu/fun-with-pipes/pull/245) is still a draft.
-  Preserve the primary checkout and other worktrees.
-- [PR #244](roadmap-history.md#paired-matrix-columns-pr-244) passed all nine jobs
-  and documentation. Verified squash merge `e70f0e2d30112df0c7ee0912a77bac251092a539`
-  has the tested tree and one message line, without a body or trailers.
-- Keep one PR. Merge #245 only after the exact final head passes all required
-  gates and every completed target/job log is audited. Use an explicit subject
-  of at most 80 characters and an empty squash body; verify the result.
-- Retain verified reductions with missed timing goals explicitly open, as directed
-  in earlier batches. Do not erase or relax frozen limits, or claim the whole
-  roadmap is complete. [PLAN.md](../PLAN.md) names the next investigation.
+- [PR #246](https://github.com/e6qu/fun-with-pipes/pull/246): branch
+  `array-consumption-diagnostics`, worktree `/private/tmp/fwp-array-consumption`.
+  It contains the diagnostic, regression controls, findings and plan updates.
+  No compiler/runtime code changes. Preserve the primary checkout.
+- [PR #245](roadmap-history.md#direct-numeric-array-callbacks-pr-245) passed all
+  nine production jobs and documentation at `d53fb07a`; full logs/target archives
+  were audited. Squash `c43f05c22ed36277b491490b7d9e222dfd0af025` preserves the
+  tested tree and one-line message, with no body/trailers. Duplicate same-tree
+  main runs `41471361931` / `41471361814` were cancelled.
+- Final merge requires nine exact-head production jobs plus documentation,
+  all log audits, an explicit subject of at most 80 characters and an empty
+  squash body. Verify the message and tree. Keep one active PR.
 
 ## Roadmap status
 
 | Step | Status | Evidence / remaining work |
 |---|---|---|
-| 1 | Verified | Original construction diagnostic: GCC ARM64/AMD64 O1/O2, exact values/storage/cleanup controls |
-| 2 | Verified | All four baseline sessions audited; both ARM64 and AMD64 session 2 pass, AMD64 session 1 retains six copy failures |
-| 3 | Verified | Repaired focused safety: five targets / 22 tests per host, all three hosts pass; complete logs/probes audited |
-| 4 | Implemented | Four paired sessions audited; ARM64 passes every limit; AMD64 retains four consumption and four copy failures; storage/cleanup pass |
-| 5 | In progress | Final evidence/docs ready for publication; full exact-head production matrix and documentation still required |
+| 1 | Verified | [Retained sample analysis](measurements/array-sample-positions.md) replays both four-session datasets without dropping failures |
+| 2 | Verified | Native exact-result, ownership, omitted-release and failed-clock controls pass on both GCC architectures |
+| 3 | Verified | [All four sessions](measurements/array-consumption-2026-11-02/README.md) and complete archives independently audited; seven pre-build CPU rejections retained |
+| 4 | Verified | Preparation changes page-fault/copy observations; original consumption limits remain open. Next: freeze original/observer-only/zero-preparation driver comparison |
+| 5 | In progress | Publish full evidence, run final gates once, audit and squash merge |
 
-## Source and verification identities
+## Evidence identities
 
-- [Construction diagnostic](measurements/array-construction-costs.md#diagnostic-results-november-2-2026):
-  run `41427397530`, source `d3ddc94d6eb8c5c58af74159051670241dd23e5b`, tag
-  `roadmap/array-construction-diagnostics-2026-11-02`. Both materialized paths
-  allocate once; composed source allocates zero. Full raw/source audits pass.
-- [Phase baseline](measurements/array-construction-phases-2026-11-02/README.md):
-  source `f05e25f8730453103f862a354324f1d660a3550d`, tag
-  `roadmap/array-construction-phase-runner-2026-11-02`. Initial run `41437433015`;
-  completed AMD64 session 2: `41445523250` / job `125277535727`. All four archives
-  audited; six AMD64 session-1 failures and five prebuild host rejections retained.
-- Candidate protocol `5cf1c80f`, tag `roadmap/scalar-array-selection-protocol-2026-11-02`,
-  predates the selection-rule change. The source change adds ordinary numeric
-  captures to existing direct-callback eligibility; no runtime change or syntax.
-- [Focused safety](measurements/scalar-array-safety-2026-11-02/README.md):
-  run `41448056587`, source `240d889742e2fffc3e6a4375bec8a2b52e4900f3`.
-  macOS ARM64 job `125286026052`, Linux ARM64 `125286026439`, Linux AMD64
-  `125286026473`; artifacts `13143626431`, `13144385796`, `13144565684` respectively.
-  All 15 target logs, 30 callback probe executions and both Linux construction
-  reports audited. No compiler diagnostic remains. The linked record explains
-  both test-harness repairs from failed run `41442126003`.
-- [Paired timings](measurements/scalar-array-captures-2026-11-02/README.md):
-  source `f8a558daa42fc07930f7a93870b6dcbcf2580bb3`, immutable tag
-  `roadmap/scalar-array-timing-2026-11-02`. Both compilers use the same source;
-  the reference disables only the recorded selection rule. Safety trees match.
+- Frozen protocol: `5a581248`, tag `roadmap/array-consumption-protocol-2026-11-02`.
+- Measured source: `87d4f6b099b755a52cd091b6c07cb57bb456af77`, tag
+  `roadmap/array-consumption-control-repair-2026-11-02`.
+- [The initial harness failure](measurements/array-consumption-setup.md#harness-repair-before-timing)
+  expected an extra instrumented release check. Both full ARM logs and all 28
+  completed commands were audited; no timing started. The corrected expectation
+  preserves zero-live-storage and omitted-final-release controls. Two queued
+  AMD64 copies were cancelled before starting.
 
-| Paired session | Run / job | Artifact | Outcome |
+| Session | Run / job | Artifact | Full archive audit |
 |---|---|---|---|
-| ARM64 1 | `41449731209` / `125291685373` | `13143169442` | Pass; raw audit 1.66s |
-| ARM64 2 | `41449731209` / `125291685304` | `13144423532` | Pass; raw audit 1.68s |
-| AMD64 1 | `41451889484` / `125298862465` | `13146010459` | Three failed limits retained; raw audit 1.86s |
-| AMD64 2 | `41449731209` / `125291685261` | `13144686686` | Five failed limits retained; raw audit 1.85s |
+| ARM64 1 | `41472025679` / `125367826083` | `13154414998` | Pass, 1.93s |
+| ARM64 2 | `41472025679` / `125367826052` | `13155741912` | Pass, 1.88s |
+| AMD64 1 | `41472493298` / `125369442114` | `13157230350` | Pass, 1.76s |
+| AMD64 2 | `41475998964` / `125381620085` | `13156803999` | Pass, 1.89s |
 
-Three undeclared AMD64 session-1 hosts stopped before building; all qualification
-archives/logs are retained. No completed timing was retried. ARM64 construction
-uses 84.5–84.9% less time, total 81.2–81.6% less; managed storage is unchanged.
-AMD64 large-array copy controls pass, but consumption is 4.93–5.23% slower.
-Generated consumption C is unchanged; this does not explain the time difference.
-The failed goals remain in the plan. Candidate/reference memory profiles pass.
+Every source, command, binary identity, profile, failure control and raw sample
+was replayed independently. Full job logs contain no unresolved diagnostic.
+No completed timing was repeated. [The report](measurements/array-consumption-2026-11-02/README.md)
+explains timer boundaries, all copies/settings, memory, instruction and stack costs.
+Its compact replay checks all raw outputs and the 64-role CSV; it does not replace
+the full native-archive audit.
 
 ## Checks and resources
 
-- All raw phase/paired archives audited against source, flags, every saved file,
-  outputs, cleanup controls, samples and summaries. Compact audits reproduce all
-  original failures; documentation CI runs baseline and candidate modes.
-- Focused local checks use `python3 scripts/local-guard.py`, serially: Rust format,
-  selected saved-C Clang probes, source/reference controls, raw-evidence audits,
-  actionlint and roadmap links. These do not replace native runner checks.
-- Latest pre-final documentation run `41449692849` / job `125291542425` passes
-  at `f8a558da`; full log audited, including intentional test-runner failures.
-  It is not a substitute for the final head's documentation gate.
-- No local compiler build, full suite or benchmark. Last free disk: 65 GiB.
-  Preserve the guard's 64 GiB / 1 GiB RSS / 2 GiB target / 180-second limits.
+Guarded checks pass: five harness tests (0.14s), both failed-profile/command
+replays (0.14s), all 48 retained C variants (0.38s), and complete compact replay in
+write/check modes (2.33s each). The report writer's local variable-shadowing bug
+was fixed before publication; both modes now pass. The stale derivative-fold
+validation paragraph now records its completed #242 verification and open limits.
+No local compiler build, full suite or benchmark.
+
+The guard stopped at 63.9 GiB free disk. Removed only two clean temporary worktrees
+whose trees matched verified merged #243/#244, preserving commits and evidence;
+primary/active checkouts remain. Duplicate nested failure-archive inputs were
+hash-checked against retained originals before removal; every unique file remains.
+Free space recovered to about 64.7 GiB. Keep at least 64 GiB free, sampled workload
+RSS below 1 GiB, target data below 2 GiB and the 180-second guard deadline.
+Use `python3 scripts/local-guard.py` for focused work; full gates stay on GitHub.

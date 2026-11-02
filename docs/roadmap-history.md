@@ -6,6 +6,27 @@ and complete platform validation are different events. Measurements retain their
 original source and settings; old numbers are not measurements of current main.
 The linked PRs, runs and data records supply the detailed evidence.
 
+## Direct numeric array callbacks (PR #245)
+
+[PR #245](https://github.com/e6qu/fun-with-pipes/pull/245) merged November 2 as
+`c43f05c22ed36277b491490b7d9e222dfd0af025`. All nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/41454128868)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/41453962382)
+pass on `d53fb07a639214739d7648fcd1dd2a022d9b8e10`; every completed job and target
+log was audited. The squash preserves tested tree
+`8afd90bbf1d2ef120262428b8c23257653df988b` and a verified one-line message with
+no body/trailers. Duplicate main runs `41471361931` and `41471361814` were cancelled.
+
+Known numeric captures now use the existing direct array-callback path. Capture
+evaluation, checked failures, reuse and partial-array cleanup remain covered.
+[Paired measurements](measurements/scalar-array-captures-2026-11-02/README.md)
+show 84.5–84.9% less construction time and 81.2–81.6% less total time on ARM64,
+with unchanged managed storage. AMD64 retains four consumption and four copy
+failures. The accepted delivery keeps verified reductions and ARM64 gains while
+leaving those original goals open. [Sample analysis](measurements/array-sample-positions.md)
+and the [preparation diagnostic](measurements/array-consumption-setup.md) address
+that next question; they do not retroactively change acceptance.
+
 ## Paired matrix columns (PR #244)
 
 [PR #244](https://github.com/e6qu/fun-with-pipes/pull/244) merged November 2 as
