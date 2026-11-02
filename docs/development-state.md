@@ -1,16 +1,14 @@
 # Current work
 
-**Next:** audit focused run `41359574645` on GCC Linux ARM64/AMD64 and Clang
-macOS ARM64. If compilation and focused controls pass, dispatch
-`record-fold-measurements` for all six count/memory cases and the added unwind
-controls. Audit those results before dispatching `record-fold-time`, then run the
-complete final matrix. Fix all observed failures together before another push.
+**Next:** publish the semantic-fixture repair and run `record-fold-checks` on the
+follow-up branch. Audit all failures and completed targets, then run
+`record-fold-measurements`, paired `record-fold-time`, and final production CI.
+Keep the frozen requirements and earlier failed timings unchanged.
 
-[Draft PR #240](https://github.com/e6qu/fun-with-pipes/pull/240) uses branch
-`derivative-record-callbacks` in `/private/tmp/fwp-returned-callables`.
-Preserve unrelated edits in the primary checkout. Compiler source is unchanged
-since `0c404719`; `dbe3d39f` adds unwind controls and count requirements.
-This batch adds same-source timing/audit support and clearer design examples.
+Branch `numeric-fold-validation` starts at merged #240 (`5fbd6bea`) in
+`/private/tmp/fwp-returned-callables`. Preserve unrelated primary-checkout edits.
+No compiler change has been made since `0c404719`; this batch fixes coverage,
+clarifies the selection boundary and completes the outstanding validation.
 
 ## Roadmap status
 
@@ -18,37 +16,57 @@ This batch adds same-source timing/audit support and clearer design examples.
 |---|---|---|
 | 1 | Verified | Source/count audit verifies all 96 observations and 48 C hashes; input/pair results escape into lists, addition accumulators stay within the fold |
 | 2 | Verified | Preparation `7b300717` and tag `roadmap/derivative-record-fold-protocol-2026-11-02` freeze selection and requirements before compiler edits |
-| 3 | In progress | Direct numeric-record left fold, alias/empty/effect tests, physical-release controls, traps, allocation failure and cancellation implemented; native results pending |
+| 3 | In progress | Native allocation/release controls pass; repair semantic fixture selection and verify added failure/cancellation probes |
 | 4 | Pending | Native counts and paired timing evidence, all nine final production jobs and documentation; squash merge |
 
-## Candidate and CI
+## Merged implementation and active CI
 
-The [protocol](measurements/derivative-record-folds.md) defines selection, exact
-budgets, reference compiler, workflows and acceptance. [Design](design.md#numeric-record-fold-accumulators)
-explains the transformation with an example. No new savings or speedup is verified.
+The user merged #240 as `5fbd6beab2087f003eb8a1f45461e1fbaba71fd2`.
+Its tree `5d460780aecbb876360dc42cc1b8e4a81fad5da7` matches final PR head
+`20deddfdcdba4ca1087637997ee1a0cee31c3dc6`; the squash message is one line,
+under 80 characters, with no body/trailers. Documentation `41361067737` passes.
+Full production run `41369348762` started at merge time and remains active.
+Duplicate post-merge production `41369360785` was cancelled after verifying tree
+identity and no failed jobs. Post-merge documentation `41369360748` remains enabled.
 
-Focused run `41359574645` tests source
-`0c404719ce7e339440cea6c1ed2e0b124cc02b26`. At 23:11 UTC November 1 all three
-jobs remain queued, with no executed steps or failures:
+Focused run `41359574645` at `0c404719` completed with the same sole failing
+test on all three hosts:
 
-| Native host/compiler | Job |
-|---|---|
-| Linux ARM64/GCC | `125006882519` |
-| Linux AMD64/GCC | `125006882790` |
-| macOS ARM64/Clang | `125006882685` |
+| Host/compiler | Job | Result |
+|---|---|---|
+| Linux ARM64/GCC | `125006882519` | 22 passed, one semantic selection assertion failed |
+| Linux AMD64/GCC | `125006882790` | Same |
+| macOS ARM64/Clang | `125006882685` | Same |
 
-Do not restart this queued run for documentation/tool changes: its compiler is
-current. Superseded run `41359119118` was cancelled before execution. New unwind
-probes in `dbe3d39f` will run in count measurements and final production CI.
-Draft PR production jobs are skipped intentionally; skips do not count as support.
+All seven target logs and compiler diagnostics were audited. Formatting/lint,
+512 count/alias/size combinations per image, omitted-release controls, exclusions,
+worker preparation/boxing and derivative precision/nesting/scope tests pass.
+The new record-fold unwind test in `dbe3d39f` was not part of this older run.
+Logs: `/private/tmp/fwp-240-focused-{arm,amd,mac}.log`.
 
-Candidate checks cover 512 count/alias/size combinations per native image,
-384 unwind combinations per image, and seven excluded shapes/calling conventions.
-Deliberately omitted seed/result releases must fail. Seed destructor registration
-now precedes destructor emission, including callbacks without generic entries.
-The caller retains list owners and existing exceptional-exit cleanup.
+Root cause: the semantic fixture destructured an accumulator before its next
+`fn`, leaving a returned closure and boxed worker result. That is excluded by
+the direct-worker contract. Generated C from the retained compiler confirms the
+call path. The repaired fixture uses field projections for all three selected
+callbacks, retains a destructured semantic comparison and shares the seed within
+its input list. Managed/nested/wide and other excluded cases now isolate their
+intended boundary. Source/C and native outputs are retained for future failures.
+The design example now states this limitation. No compiler repair is yet indicated.
+
+The [protocol](measurements/derivative-record-folds.md) defines exact count,
+cleanup, code/stack and timing budgets. Whole-solve savings and speed remain
+unverified. Do not repeat unchanged noisy timing runs to seek a pass.
 
 ## Local verification
+
+Follow-up checks: all ten revised fixture sources type-check (1.86s); the retained
+compiler emits direct record-returning workers for all three selected callbacks
+and prints expected values (0.36s). These verify the fixture repair, not the new
+fold helper. Formatting passes (1.98s); roadmap links/status pass (3.13s).
+Production benchmark job `125036266818` passes with no unexpected diagnostics;
+its allocation-failure and deliberately omitted-release controls pass. Log:
+`/private/tmp/fwp-240-production-bench.log`.
+
 
 All commands use `python3 scripts/local-guard.py`; no candidate compiler build,
 full native suite or benchmark has run locally. Keep those workloads on GitHub.

@@ -6,6 +6,17 @@ and complete platform validation are different events. Measurements retain their
 original source and settings; old numbers are not measurements of current main.
 The linked PRs, runs and data records supply the detailed evidence.
 
+## Numeric record fold implementation (PR #240)
+
+[PR #240](https://github.com/e6qu/fun-with-pipes/pull/240) merged November 2 as
+`5fbd6bea`, before full validation. It keeps eligible left-fold accumulators in
+local numeric fields and supplies exact-reference measurement tools. Initial
+GCC ARM64/AMD64 and Clang ARM64 runs pass allocation/release controls, but the
+semantic fixture did not exercise the selected worker shape. The follow-up
+repairs that coverage and completes unwind, performance and production checks.
+This is an implementation record, not a verified performance result; see the
+[requirements](measurements/derivative-record-folds.md) and [current handoff](development-state.md).
+
 ## Numeric record zip/map fusion (PR #239)
 
 [PR #239](https://github.com/e6qu/fun-with-pipes/pull/239) removes temporary zipped

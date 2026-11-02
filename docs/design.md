@@ -356,11 +356,13 @@ defines selection, cleanup, exact budgets and completed validation.
 
 PR #240 implements a narrower call boundary, pending native verification:
 a known left fold can keep its accumulator's numeric fields in local variables.
-An accumulator is the running result passed to the next iteration. For example:
+An accumulator is the running result passed to the next iteration. `.0` selects
+the first tuple field and `.1` the second. For example:
 
 ```fwp
 step : (I64, F64) -> (I64, F64) -> (I64, F64)
-step = fn (count, total) -> fn (n, value) -> (count + n, total + value)
+step = fn acc -> fn item ->
+    ((acc | .0) + (item | .0), (acc | .1) + (item | .1))
 ```
 
 `[(1, 1.5), (2, 2.5)] | fold step (0, 0.5)` computes `(3, 4.5)`:
@@ -379,7 +381,10 @@ seed (0, 0.5) → add (1, 1.5) → (1, 2.0) → add (2, 2.5) → (3, 4.5)
 
 The [requirements and measurement protocol](measurements/derivative-record-folds.md)
 cover alias preservation, allocation failure, traps, cancellation and exact counts.
-This does not remove records that must remain stored in a list.
+This does not remove records that must remain stored in a list. Selection depends
+on the generated worker, not just the source type. Destructuring an argument before
+the next `fn` can currently leave a returned closure and a boxed result; that path
+is semantically equivalent but does not qualify for this optimization.
 
 ## Numerical specialization
 
