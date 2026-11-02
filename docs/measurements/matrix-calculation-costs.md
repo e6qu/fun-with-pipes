@@ -142,6 +142,17 @@ value[j+1] = x*y[j+1] + prior[j+1]
 store both values
 ```
 
+For left row `[2, 3]` and right matrix `[[5, 7], [11, 13]]`, the pair develops as:
+
+```text
+start:        [0, 0]
+first entry:  [2*5 + 0,  2*7 + 0 ] = [10, 14]
+second entry: [3*11 + 10, 3*13 + 14] = [43, 53]
+```
+
+Each output keeps its original sum order. Only independent neighboring outputs
+are calculated together.
+
 Advance by two only while `je - j >= 2`, then use the original scalar operation
 for a remaining odd column. Each cell keeps its increasing inner index and the
 same multiplication/addition operands. The two cells are independent: the output
@@ -167,7 +178,8 @@ still apply; diagnostic durations do not count toward them.
 
 Run `41416927586` at `15e8d0e6` passes both native jobs. Both GCC versions now
 vectorize the paired matrix loop with 16-byte vectors; the odd-column remainder
-remains scalar. This is loop vectorization, not the basic-block route originally
+remains scalar. Vectorization combines independent operations: a 16-byte vector
+holds two eight-byte F64 values. This is loop vectorization, not the basic-block route originally
 hypothesized. All eight outputs agree, and the six C/array controls reproduce
 their original binaries. [Archives and full logs](matrix-paired-columns-2026-11-02/index.json)
 retain the source, binaries and compiler decisions.
