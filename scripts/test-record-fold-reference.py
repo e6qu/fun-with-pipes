@@ -30,6 +30,8 @@ class RecordFoldReference(unittest.TestCase):
         for changed in [CURRENT.replace(REFERENCE.CANDIDATE, ''),
                         CURRENT + REFERENCE.CANDIDATE,
                         CURRENT.replace('&& self.g.record_fold_abi(g).is_some()', '&& true'),
+                        CURRENT.replace(REFERENCE.CANDIDATE, REFERENCE.CANDIDATE.replace(
+                            'self.bind_call(call_key, ', 'self.bind(')),
                         REFERENCE.reference_source(CURRENT)]:
             with self.assertRaises(AssertionError):
                 REFERENCE.reference_source(changed)

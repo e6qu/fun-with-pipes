@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Recompute paired derivative evidence without executing saved binaries."""
 import argparse
+import ast
 from contextlib import ExitStack
 import difflib
 import hashlib
@@ -16,12 +17,6 @@ ROOT = Path(__file__).resolve().parent.parent
 SPEC = importlib.util.spec_from_file_location('descent_groups', ROOT / 'scripts/check-descent-groups.py')
 GROUPS = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(GROUPS)
-SPEC = importlib.util.spec_from_file_location('record_reference', ROOT / 'scripts/prepare-record-zip-reference.py')
-REFERENCE = importlib.util.module_from_spec(SPEC)
-SPEC.loader.exec_module(REFERENCE)
-SPEC = importlib.util.spec_from_file_location('fold_reference', ROOT / 'scripts/prepare-record-fold-reference.py')
-FOLD_REFERENCE = importlib.util.module_from_spec(SPEC)
-SPEC.loader.exec_module(FOLD_REFERENCE)
 
 
 def digest(data):
@@ -80,16 +75,36 @@ def check_profiles(folder, row):
         assert row['phaseObservations'][label]['observations'] == phases
 
 
+def recorded_reference(candidate, preparation):
+    """Apply the exact literal replacement recorded with the measured source.
+
+    Parse constants only: auditing evidence never executes its saved Python.
+    """
+    constants = {}
+    for node in ast.parse(preparation).body:
+        if isinstance(node, ast.Assign):
+            for target in node.targets:
+                if isinstance(target, ast.Name) and target.id in ('CANDIDATE', 'REFERENCE'):
+                    assert target.id not in constants, 'duplicate reference preparation constant'
+                    value = ast.literal_eval(node.value)
+                    assert isinstance(value, str) and value
+                    constants[target.id] = value
+    assert set(constants) == {'CANDIDATE', 'REFERENCE'}
+    before, after = constants['CANDIDATE'], constants['REFERENCE']
+    assert candidate.count(before) == 1 and after not in candidate
+    return candidate.replace(before, after)
+
+
 def check_reference(folder, report, source, architecture, protocol):
     manifest = json.loads((folder / 'manifest.json').read_text())
     assert manifest == report['referenceCompiler'] and manifest['source'] == source
     assert protocol in ('record-zip', 'record-fold')
     if protocol == 'record-zip':
         source_path, field, saved = 'src/fuse.rs', 'Fusion', 'fusion-reference.rs'
-        transform, prepare = 'flat numeric record zip/map fusion', REFERENCE
+        transform = 'flat numeric record zip/map fusion'
     else:
         source_path, field, saved = 'src/cgen.rs', 'Codegen', 'codegen-reference.rs'
-        transform, prepare = 'direct numeric-record left folds', FOLD_REFERENCE
+        transform = 'direct numeric-record left folds'
     assert manifest['disabledTransformation'] == transform
     compiler = (folder / 'fwp').read_bytes()
     assert digest(compiler) == manifest['compilerSha256']
@@ -100,7 +115,10 @@ def check_reference(folder, report, source, architecture, protocol):
     assert digest(ownership) == manifest['ownershipSha256']
     reference = (folder / saved).read_bytes()
     assert digest(reference) == manifest['reference' + field + 'Sha256']
-    assert reference == prepare.reference_source(candidate.decode()).encode()
+    preparation = subprocess.check_output(
+        ['git', 'show', source + ':scripts/prepare-' + protocol + '-reference.py'],
+        cwd=ROOT, text=True)
+    assert reference == recorded_reference(candidate.decode(), preparation).encode()
     patch = (folder / 'reference.patch').read_bytes()
     assert digest(patch) == manifest['patchSha256']
     check_reference_patch(patch.decode(), candidate.decode(), reference.decode(), source_path)

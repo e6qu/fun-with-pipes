@@ -118,3 +118,9 @@ Full CI also found C harnesses relying on entries remaining reachable through
 application probes additionally expose an actual function value so generic entry
 metadata remains present. Ordinary executable/interpreter comparisons, alias
 checks and deliberate omitted-release failures remain enabled.
+
+The cleanup change also updates the exact source snippet used to build a paired
+reference compiler. Historical audits read the preparation constants from each
+measurement's recorded Git revision, without executing that saved Python. This
+keeps old comparisons reproducible while current source evolves. Controls reject
+changed or duplicated snippets and mismatched preparation revisions.
