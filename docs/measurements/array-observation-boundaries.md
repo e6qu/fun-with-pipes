@@ -97,3 +97,20 @@ that an unchanged C function guarantees unchanged machine code, infer a safety
 bug from elapsed time, add hidden warming, or change runtime ownership without
 an independently demonstrated need. Any production optimization needs its own
 predeclared semantic, memory and performance requirements.
+
+## Implementation and replay
+
+Tag `roadmap/array-observation-protocol-2026-11-02` (`c583459b`) freezes the choices
+above. [Source transformations and schedule](../../scripts/array_observation_boundaries.py)
+keep missing original CPU observations distinct from zero. The measured-array
+fault control omits the actual array destructor; it does not inject a separate
+unreleased allocation. Clock controls target the diagnostic helper, leaving
+unrelated runtime clocks intact.
+
+The [C-only runner](../../scripts/diagnose-array-observations.py) and
+[independent full auditor](../../scripts/check-array-observations.py) use the
+`array-observations` suite in [the evidence workflow](../../.github/workflows/numerics.yml).
+Every profile, exact result and deliberate failure must pass before the first
+warmup. [Focused harness tests](../../scripts/test-array-observation-boundaries.py)
+cover source boundaries, missing observations and complete balanced rounds.
+No native execution or timing is claimed until the dispatched jobs pass.
