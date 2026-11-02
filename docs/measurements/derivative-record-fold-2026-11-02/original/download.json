@@ -1,0 +1,20 @@
+{
+  "id": 13111090485,
+  "node_id": "MDg6QXJ0aWZhY3QxMzExMTA5MDQ4NQ==",
+  "name": "record-fold-report-summary",
+  "size_in_bytes": 739298,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13111090485",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13111090485/zip",
+  "expired": false,
+  "digest": "sha256:fd10c132937db81dfb17e8edbfa0205a01f9d06016d99dda747d10ebd56be2a4",
+  "created_at": "2026-11-02T01:53:04Z",
+  "updated_at": "2026-11-02T01:53:04Z",
+  "expires_at": "2027-01-31T01:52:21Z",
+  "workflow_run": {
+    "id": 41374711502,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "numeric-fold-validation",
+    "head_sha": "55d46cd57425fe9f5bb65a1b83a7d12821445711"
+  }
+}

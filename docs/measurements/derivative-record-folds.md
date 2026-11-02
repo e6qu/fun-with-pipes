@@ -17,13 +17,13 @@ O1/O2, current/history forms, six inputs and workspace off/on.
 
 These names identify saved generated functions, not language APIs. The last is
 `Add[Rev[t]].add`: its worker already accepts and returns the numeric value and
-tape index directly. The fold currently calls an entry that boxes that result.
+tape index directly. The #239 fold calls an entry that boxes that result.
 Its next invocation unpacks and releases the preceding accumulator. The list
 element also receives a temporary retain even though the worker only reads its
 two immediate fields. The surrounding caller keeps the input list alive.
 
 ```text
-Current:  boxed seed → add → boxed accumulator → add → boxed result
+Baseline: boxed seed → add → boxed accumulator → add → boxed result
 Selected: read seed fields → add → local fields → add → box final result
 ```
 
@@ -88,7 +88,8 @@ requirements above before compiler edits.
 
 [PR #240](https://github.com/e6qu/fun-with-pipes/pull/240) implements the selected
 fold in `src/cgen.rs`. Focused numeric-fold checks and both native count audits
-pass; older cleanup probes, timing and final production validation remain.
+pass, including repaired older cleanup probes. Timing and final production
+validation remain.
 The [handoff](../development-state.md) tracks current source and job identities.
 
 Use the `Numerical and ownership evidence` workflow with explicit inputs:
@@ -150,8 +151,8 @@ and passing correctness checks are still required.
 Source `0bca5f91` adds known-callback specialization for `attempt`. Count run
 [41371032477](https://github.com/e6qu/fun-with-pipes/actions/runs/41371032477)
 completed every measurement. Its two jobs fail separately because older cleanup
-probes look up entry points removed by optimization. Those probes are being
-repaired; this report does not claim that their checks passed.
+probes look up entry points removed by optimization. Those probes were
+repaired separately; their later passing checks do not change this failed run.
 
 Independent audit [41372228352](https://github.com/e6qu/fun-with-pipes/actions/runs/41372228352)
 verifies all 96 count/memory observations and retains the same 15 ARM64 size-limit
@@ -161,9 +162,69 @@ failures. The largest solve has the same totals shown above. Keep the
 separate from the earlier compiler. Source tag:
 `roadmap/record-fold-attempt-2026-11-02`.
 
+Focused run `41372899452` at `55d46cd5` passes all 39 tests on GCC Linux
+ARM64/AMD64 and Clang macOS ARM64, including the repaired cleanup probes.
 The fixture repair changes no compiler or measurement source, so these count
-observations can be reused once the cleanup checks pass. Elapsed time is still
-unmeasured; allocation savings establish no speedup.
+observations are reused. Paired timings below measure elapsed time separately from those counts.
+
+## Paired timings: larger solves improve; acceptance remains open
+
+Source `55d46cd57425fe9f5bb65a1b83a7d12821445711`, retained by tag
+`roadmap/record-fold-timing-2026-11-02`, differs from the count compiler only in
+fixtures/docs. Timing compares **same-source compilers**, with direct numeric
+record-fold selection disabled in the reference. It does not compare against an
+older fwp release. Each program repeats the same solve, including its output;
+the [shared protocol](descent-costs.md) specifies repetition and timing scope.
+
+The table shows the range of **elapsed-time changes**, across both independent
+sessions and both current/history forms. Negative means faster. Zero/one-update
+cases allow up to 2% slower; cases with at least 199 updates require at least
+5% faster. No threshold was changed after measurement.
+
+| Coordinates / updates | ARM64 change | AMD64 change | Result |
+|---|---:|---:|---|
+| 3 / 0 | −0.20% to +0.21% | −1.82% to −0.25% | Non-regression passes |
+| 3 / 1 | −0.52% to −0.12% | −0.42% to +0.72% | Non-regression passes |
+| 3 / 199 | −2.53% to −2.29% | −3.10% to −1.61% | Misses 5% |
+| 3 / 1,999 | −2.54% to −2.34% | −2.50% to −1.01%* | Misses 5%; one noisy AMD64 case |
+| 33 / 199 | −7.78% to −7.17% | −6.79% to −5.78% | Passes 5% |
+| 129 / 199 | −7.61% to −7.36% | −6.51% to −5.80% | Passes 5% |
+
+*AMD64 session 1's 3/1,999 identical-copy medians differ by 3.224%, above the 2%
+limit. Its numbers remain recorded but are inconclusive; a second session does
+not repair that control. No completed session was rerun to seek a pass.
+
+All four sessions pass output, allocation/release, raw-storage, peak-managed-memory,
+static-frame and repeated-program code-size checks. They record 16 missed speed
+limits and one failed identical-copy limit. The separate single-solve count audit
+still fails 15 ARM64 code-growth limits; the repeated timing programs are different
+binaries and do not replace that evidence. D2 and #239's earlier limits stay open.
+
+C/Rust comparisons use **handwritten derivatives**, while fwp records operations
+and computes derivatives automatically. For the largest current-vector case,
+fwp/C elapsed ratios are 29.96–30.50 on ARM64 and 36.90–37.63 on AMD64;
+fwp/Rust ratios are 29.72–30.36 and 35.08–35.20. These include the difference in
+method, runtime storage and call overhead: they are not isolated language overhead
+or evidence of C/Rust parity. No new Swift measurement was made in this batch.
+
+Evidence:
+
+- [Original run](https://github.com/e6qu/fun-with-pipes/actions/runs/41372905207)
+  contains both ARM64 sessions and AMD64 session 2. Its AMD64 session 1 rejected
+  an EPYC 9V74 before building/timing; the protocol requires EPYC 7763.
+- [Replacement AMD64 session 1](https://github.com/e6qu/fun-with-pipes/actions/runs/41373123684)
+  qualified on EPYC 7763. Both ARM64 sessions used Neoverse-N2. Compiler versions,
+  flags, exact reference patches, source hashes and full logs are retained in the
+  [original index](derivative-record-fold-2026-11-02/original/index.json.gz) and
+  [replacement index](derivative-record-fold-2026-11-02/amd64-1/index.json.gz).
+- Independent audits [41374711502](https://github.com/e6qu/fun-with-pipes/actions/runs/41374711502)
+  and [41374854968](https://github.com/e6qu/fun-with-pipes/actions/runs/41374854968)
+  pass. They verify recorded files and outcomes, including failures; their green
+  status does not mean the candidate meets its performance requirements.
+- Compact reports, logs and download identities are retained beside each index.
+  All four measured source-hash sets agree. The candidate remains `not-accepted`
+  under its frozen requirements; delivery needs an explicit decision about
+  retaining the benefits with these unmet limits still open.
 
 ## Reproduce the source/count audit
 

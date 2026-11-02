@@ -1,10 +1,10 @@
 # Current work
 
-**Next:** publish and verify the explicit compiler-root repair for the two older
-cleanup probes, then run both paired timing sessions on both native Linux hosts.
-Keep the failed ARM64 size limits explicit. Finish the combined batch in
-[PR #241](https://github.com/e6qu/fun-with-pipes/pull/241), then run all nine final
-production jobs and documentation before squash merge.
+**Next:** resolve whether to retain the verified benefits with the frozen size and
+speed limits still open, then finalize [PR #241](https://github.com/e6qu/fun-with-pipes/pull/241)
+and run all nine final production jobs plus documentation before squash merge.
+The [complete measurement report](measurements/derivative-record-folds.md#paired-timings-larger-solves-improve-acceptance-remains-open)
+contains the concrete results. No performance requirement has been waived.
 
 Worktree `/private/tmp/fwp-returned-callables`, branch `numeric-fold-validation`.
 Preserve unrelated primary-checkout edits. Compiler source is `0bca5f91`; subsequent
@@ -17,25 +17,29 @@ these fixture-only changes or repeat unchanged noisy timings to seek a pass.
 |---|---|---|
 | 1 | Verified | All 96 source/count observations identify addition accumulators as removable; input/pair results escape into lists |
 | 2 | Verified | Preparation `7b300717`, tag `roadmap/derivative-record-fold-protocol-2026-11-02`, freezes requirements before compiler edits |
-| 3 | In progress | New numeric-fold and handler checks pass on three native hosts; verify older cleanup probes with explicit roots |
-| 4 | In progress | Both count audits complete; ARM64 size limits fail; paired timing, nine final production jobs and documentation remain |
+| 3 | Verified | All 39 focused tests pass on each native host, including repaired cleanup probes and handler-order checks |
+| 4 | In progress | Counts/timings independently audited; size/speed/noise limits remain unmet; acceptance decision and final full matrix remain |
 
 ## Current results
 
 | Check | Source / run | Result |
 |---|---|---|
-| Focused native suite | `770c4002`, `41372225789` | Each host: 37 pass, two older cleanup probes fail before execution |
+| Focused native suite | `55d46cd5`, `41372899452` | Each host: all 39 tests pass |
+| Documentation | `55d46cd5`, `41372902366` | Pass |
 | Updated count measurements | `0bca5f91`, `41371032477` | All observations complete; job failures are those same two probe lookups |
 | Independent updated count audit | `41372228352` | All 96 count/memory observations pass; 15 ARM64 code-size limits fail |
 | Initial count audit | `a690733e`, `41371028926` | Same savings and size failures, retained separately |
+| Paired timings | `55d46cd5`, `41372905207` and `41373123684` | Four measured sessions; 16 missed speed limits and one noise limit |
+| Timing archive audits | `41374711502`, `41374854968` | Pass, including validation of all failed outcomes |
 
 All eight target logs and compiler diagnostics were audited on GCC Linux
 ARM64/AMD64 and Clang macOS ARM64. Numeric-fold semantics, exact owner counts,
 empty/shared inputs, exclusions, injected traps, allocation failure and actual
 cancellation pass. Worker boxing/preparation, derivative precision/nesting/scopes
 and all 15 effect tests pass. No unexpected compiler warnings were found.
-Latest focused jobs: ARM64 `125044938788`, AMD64 `125044939256`, macOS `125044938472`.
-Logs: `/private/tmp/fwp-241-export-{arm,amd,mac,audit}.log`.
+Latest focused jobs: ARM64 `125046966341`, AMD64 `125046966337`, macOS `125046966148`.
+Logs: `/private/tmp/fwp-241-roots-{arm,amd,mac}.log`. The updated count audit log
+is `/private/tmp/fwp-241-export-audit.log`.
 
 The [measurement report](measurements/derivative-record-folds.md) retains both
 compiler sources, archive digests and failed limits. At 129 coordinates/199 updates,
@@ -43,7 +47,20 @@ current-vector form, GCC O2/workspace off, the whole solve removes 25,273 alloca
 requests, 606,552 requested bytes and 25,472 effective retains on both hosts.
 Peak managed charge stays 21,888 bytes; final managed/raw storage is zero.
 ARM64 instruction growth reaches 2,976 bytes against a 1,024-byte limit; AMD64
-shrinks by 928–1,328 bytes. Static-frame limits pass. No timing claim yet.
+shrinks by 928–1,328 bytes. Static-frame limits pass.
+
+The 33/129-coordinate timings improve 5.8–7.8% across both forms and all sessions.
+Three-coordinate solves improve less than the required 5%; one AMD64 3/1,999 case
+has 3.224% identical-copy variation and is inconclusive. Zero/one-update cases
+pass non-regression. All output/count/cleanup checks pass. Repeated timing binaries
+pass their code/frame limits but do not erase single-solve size failures.
+
+Original AMD64 session 1 rejected an EPYC 9V74 before building/timing; its qualified
+EPYC 7763 replacement is retained separately. No completed timing was repeated.
+Timing jobs: ARM64 `125046983749`/`125046983860`, AMD64 `125047629643`/`125046983741`.
+Logs: `/private/tmp/fwp-241-time-{arm1,arm2,amd1,amd2}.log`; independent audits:
+`/private/tmp/fwp-241-audit-{original,replacement}.log`.
+Source tag: `roadmap/record-fold-timing-2026-11-02`.
 
 ## Repairs and their evidence
 
@@ -58,9 +75,11 @@ shrinks by 928–1,328 bytes. Static-frame limits pass. No timing claim yet.
   Merely adding `export` did not fix executable rooting: CLI builds still select
   only `main`. The repair uses `compile_source` with both `main` and `exports`
   rooted, then ordinary C generation. It saves source/C before probe assertions.
-  Production code and the measurement compiler remain unchanged.
+  Production code and the measurement compiler remain unchanged. The repaired
+  probes pass on all three hosts, including their deliberate missing-release controls.
 
-Earlier focused runs `41359574645`, `41369894377` and `41370956853` retain the
+Earlier focused runs `41359574645`, `41369894377`, `41370956853` and
+`41372225789` retain the
 selection/probe failures. Their logs are `/private/tmp/fwp-240-focused-*.log`,
 `/private/tmp/fwp-241-focused-*.log` and `/private/tmp/fwp-241-attempt-*.log`.
 No passing rerun is presented as a repair without its source change.
@@ -73,6 +92,11 @@ disk reading was about 69 GiB. Stop if the guard refuses work.
 
 - Current probe-root repair: `cargo fmt --all` passes (1.87s).
 - Updated audit archive digest verified and report retained (0.13s).
+- Roadmap audit initially caught a renamed required heading; restored
+  `Roadmap status`, then all 198 link sets/106 preparation pairs/four steps pass
+  (3.66s). No audit requirement was relaxed.
+- Timing summary ZIP/file digests pass (0.49s/0.26s); all four measured source-hash
+  sets agree (0.26s). Large archive audits ran on GitHub.
 - Earlier checks: all ten fwp fixtures type-check; raw handled-callback output
   matches its oracle; reference patch controls, count/timing/layout validators,
   evidence-retention tests, workflow lint and roadmap audit pass.

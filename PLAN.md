@@ -32,14 +32,16 @@ left-fold accumulator in local numeric fields and leave list-stored results alon
 Step 3 now passes numeric-fold semantics, aliases, exact allocation/release,
 failure/cancellation and handler-order checks on GCC Linux ARM64/AMD64 and Clang
 macOS ARM64. The follow-up specializes known callbacks passed to `attempt` without
-moving capture evaluation into the handler. Two older cleanup probes need explicit
+moving capture evaluation into the handler. Two older cleanup probes now use explicit
 compiler roots because their C harness calls functions that an ordinary executable
-can optimize away; their repair is still under verification.
+can optimize away. All 39 focused tests pass on each of the three native hosts.
 
 Both native count archives verify the planned savings: the largest measured solve
 removes 25,273 allocations and 25,472 effective retains with unchanged peak managed
 storage and zero final live storage. Fifteen ARM64 cases exceed the frozen 1,024-byte
-code-growth limit; AMD64 images shrink. Timing and the final full matrix remain.
+code-growth limit; AMD64 images shrink. Paired timings show 5.8–7.8% faster larger solves, but three-coordinate cases miss
+5%, and one AMD64 timing-noise check fails. Retain every result; resolve delivery
+acceptance before the final full matrix.
 Mapping must still finish before summation when interleaving changes recording
 or trap order.
 
