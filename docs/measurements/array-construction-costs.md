@@ -144,3 +144,46 @@ types already have plain scalar representations. Do not equate “needs no ARC�
 with “scalar”: records and other representations need their own proof. Cover
 scalar capture evaluation, reused/stored callbacks, empty input, checked overflow,
 partial failure and cancellation through the existing array ownership tests.
+
+## Selected next change: known scalar captures
+
+The [audited ARM64 phase results](array-construction-phases-2026-11-02/README.md)
+show repeatable materialized-source overhead. Filling, including callback dispatch
+and checks, accounts for over 99% of separately instrumented construction time.
+The optimized GCC source still calls the generic callback path per element.
+That supports testing direct dispatch; it does not prove a speedup in advance.
+AMD64 session 1 has six failed copy limits, and session 2 remains pending.
+
+Freeze this candidate before implementation:
+
+- Extend `Gen::array_callback` to known, exactly saturated callbacks whose saved
+  parameters all have existing plain scalar representations. Keep the current
+  scalar-result requirement and existing eligible owned-capture cases.
+- Reuse `owned_hof`, its caller protection and array builder cleanup. Preserve
+  count-before-capture evaluation, checked arithmetic, callback effects, reuse,
+  ordinary calls and cancellation. Do not add an allocator or a runtime mode.
+- Keep dynamic/escaping callbacks on their existing supported implementation.
+  Prove selected source no longer dispatches generically per element; do not infer
+  this solely from elapsed time. Preserve the composed program's zero allocations.
+
+Use the same compiler source for candidate and reference. Build the reference by
+reverting only this recorded selection-rule extension in an isolated runner
+checkout. Record the exact patch, both compiler identities and generated programs.
+Both timing paths call compiled `make-input` and `reduce64`; the C-driver path is
+no longer the candidate's reference. C/Rust remain materialized peers.
+
+| Check | Required result |
+|---|---|
+| Semantics and lifetimes | Existing array ownership, capture/reuse, size, failure/cancellation and fusion cases pass; raw interpreter agrees with native O1/O2 on production GCC ARM64/AMD64 and Clang ARM64 |
+| Native costs | Direct selected generator has no per-element generic callback dispatch; one materialized allocation, no extra effective retains/peak storage; composed control remains allocation-free |
+| Timing setup | Same two sizes, six-role order, two sessions/architecture, hosts, compiler flags, 2 warmups/18 rounds/4 processes/5 samples/8 calculations as the phase baseline |
+| Reference roles | Candidate, identical candidate, same-source reference, identical reference, C and Rust |
+| Timers | Ordinary construction, consumption and inclusive timers only; separate allocation/count profiles, without phase-clock instrumentation |
+| Speed goal | At least 5% less construction and inclusive time than reference for every size/session; consumption no more than 2% slower |
+| Measurement validity | Both independent copies stay within 2% for every timer/size/session; preserve all failed limits and never rerun completed timings for a pass |
+| Other costs | Report requested/peak/final storage, ARC operations, RSS, code and qualified stack estimates; code size is not a substitute for elapsed-time improvement |
+
+Complete focused semantic, cleanup, exact-output and profiling checks before any
+candidate timing. Keep the original baselines, rejected hosts and unmet goals.
+The full nine-job production matrix and documentation run once the combined
+implementation, evidence and documentation batch is ready.

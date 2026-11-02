@@ -6,6 +6,24 @@ and complete platform validation are different events. Measurements retain their
 original source and settings; old numbers are not measurements of current main.
 The linked PRs, runs and data records supply the detailed evidence.
 
+## Paired matrix columns (PR #244)
+
+[PR #244](https://github.com/e6qu/fun-with-pipes/pull/244) merged November 2 as
+`e70f0e2d30112df0c7ee0912a77bac251092a539`. All nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/41425537461)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/41425537447)
+pass on `555c4981695f4819586ef0a57114a36c2c9476ef`; every completed job and target
+log was audited. The merge preserves the tested tree
+`286c84de162f156d12f0a3a1c06feb27c3d0f9be` and a single-line message with no body
+or trailers. Identical-tree main runs `41439408420` and `41439408188` were cancelled.
+
+The [paired-column loop](measurements/matrix-calculation-costs.md) preserves
+arithmetic order, aliasing, shapes and cancellation cleanup. Qualified cases take
+about 33% less calculation time on ARM64 and 31% less for large AMD64. Managed
+storage is unchanged; the worker uses 48 extra stack bytes and 128/320 extra code
+bytes on ARM64/AMD64. Six small-AMD64 copy limits remain unmet. Source/diagnostic,
+safety and timing evidence—including rejected hosts—remain linked in the report.
+
 ## Current numerical costs (PR #243)
 
 [PR #243](https://github.com/e6qu/fun-with-pipes/pull/243) merged November 2 as

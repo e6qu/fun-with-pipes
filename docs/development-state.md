@@ -1,56 +1,33 @@
 # Current work
 
-**Next:** audit PR #244's remaining production gates, then squash-merge only its
-passing final head. Meanwhile run the frozen array phase comparison; do not change
-compiler selection rules before measuring the source/driver boundary.
+**Next:** implement the frozen scalar-capture selection change and complete its
+focused native safety checks while the last baseline session waits for its host.
+Keep source, safety checks, timing, docs and final validation in one substantial PR.
 
-## Active PR and independent preparation
+## Branch and last verified delivery
 
-- PR: https://github.com/e6qu/fun-with-pipes/pull/244
-- Final head: `555c4981695f4819586ef0a57114a36c2c9476ef`; preserve it unless CI needs repair.
-- Production `41425537461`: eight jobs pass; Linux AMD64's evidence/packaging remains.
-- Docs `41425537447` / `125211125800` passes. Benchmark/docs full logs audited;
-  documentation test-runner failures are intentional negative controls.
-- macOS ARM64 ownership archive `13134110468`: all 126 target logs pass, no
-  unexpected diagnostics; the full completed job log is also audited clean.
-- Further audited archives: ARM64 regular `13134490646` (131 logs), Intel ownership
-  `13136811199` (126), Intel regular `13136777358` (131), Linux ARM64 `13135074418`
-  (257), Windows ARM64 `13133588507` and AMD64 `13134665657` (57 each, 135 passing
-  summaries each). No unexpected target diagnostics. Windows full logs contain
-  exactly the expected eight entry/eight child panic controls, all passing.
-  Intel ownership's setup notice only says OpenSSL is already installed.
-  Intel regular's full log is audited; Linux AMD64 archive `13136824942` has
-  257 passing target logs without diagnostics.
-- PR worktree: `/private/tmp/fwp-matrix-calculation`, branch `matrix-calculation-costs`.
-- Independent branch/worktree: `array-construction-costs`, `/private/tmp/fwp-array-construction`.
-  It starts at #244's tested head. Open no second PR. After #244 merges, preserve
-  measured-source tags and rebase only the new commits onto its verified squash tree.
-
-[PR #243](roadmap-history.md#current-numerical-costs-pr-243) is fully verified and
-merged as `ea9938de`; its identical-tree duplicate main checks were cancelled.
+- Worktree: `/private/tmp/fwp-array-construction`; branch `array-construction-costs`.
+- [PR #244](roadmap-history.md#paired-matrix-columns-pr-244) passed all nine production
+  jobs plus documentation; every completed target/job log was audited. Squash merge
+  `e70f0e2d30112df0c7ee0912a77bac251092a539` has the tested tree and exactly one
+  message line with no body/trailers. Identical-tree main runs were cancelled.
+- The array branch rebases only its ten new commits onto that verified merge.
+  Original protocol/diagnostic/measurement sources have remote retention tags.
+  No second PR was opened while #244 ran. Publish the next PR when the batch is ready.
+- Preserve the primary checkout and existing worktrees. No local compiler build,
+  full suite or benchmark; use runners for those workloads.
 
 ## Roadmap status
 
 | Step | Status | Evidence / remaining work |
 |---|---|---|
-| 1 | Verified | Matrix protocol published before diagnostics |
-| 2 | Verified | `41412675762` reproduces original binaries on both GCC architectures |
-| 3 | Verified | Paired-loop diagnostic `41416927586`; safety `41417716203` passes both GCC hosts and Clang ARM64 |
-| 4 | Verified | Four sessions/three host rejections retained; audit `41422907313` passes; six timing controls remain open |
-| 5 | In progress | #244 final production gates, full-log audits and verified squash merge |
+| 1 | Verified | Construction diagnostic `41427397530`: both production GCC architectures at O1/O2, exact source/storage/control audit |
+| 2 | In progress | Both ARM64 phase sessions pass and audit; AMD64 session 1 has six failed timing-copy limits; session 2 remains pending |
+| 3 | In progress | Candidate/acceptance protocol written from qualified ARM64 evidence; publish its immutable source before editing selection |
+| 4 | Pending | Freeze candidate/reference acceptance and measure after focused native safety checks |
+| 5 | Pending | Publish one coherent PR; nine final-head production gates, docs, audit and verified squash merge |
 
-[Matrix results and source IDs](measurements/matrix-calculation-costs.md) retain
-about 33% less calculation time on ARM64 and 31% less for large AMD64, unchanged
-managed storage, 48 extra worker-frame bytes and 128/320 extra code bytes.
-Six small-AMD64 copy limits remain open. Keep the qualified gains under the user's
-standing preference; do not turn those failed controls into passes.
-
-The stack-table renderer incorrectly required a fixed frame for AMD64 driver
-`main`; GCC reports `dynamic,bounded`. Repair run `41425270814` at `fce7b3cc`
-passes and the regenerated tables verify. All preparation/measurement/audit
-sources have remote retention tags. Do not repeat completed timings.
-
-## Next batch: array construction
+## Array construction evidence
 
 [Protocol and results](measurements/array-construction-costs.md):
 
@@ -70,13 +47,17 @@ sources have remote retention tags. Do not repeat completed timings.
   Baseline comparisons impose noise controls, not a speculative required speedup.
   Ordinary profiles and instrumented phases have separate raw artifacts.
 - Phase measurement `41437433015` at `f05e25f8730453103f862a354324f1d660a3550d`:
-  both ARM64 sessions build; AMD64 session 1 queues. AMD64 session 2 received
-  EPYC 9V45 instead of 7763 and stopped before building/timing; its qualification
-  and full log are retained in `measurements/array-construction-phases-2026-11-02/`.
-  Exact-source replacement: `41439088789`. The source is retained as
+  both ARM64 sessions pass and independently audit (0.59s/0.60s). AMD64 session 1
+  audits (0.83s) with six failed copy limits retained, never retried. Source/driver
+  construction differs 7.16–7.48 times on qualified ARM64; filling dominates.
+  [Results and identities](measurements/array-construction-phases-2026-11-02/README.md)
+  retain compressed reports, every file hash and full job logs.
+  AMD64 session 2 received three undeclared CPUs and stopped before building;
+  rejected runs `41437433015`, `41439088789`, `41439785397` remain recorded.
+  Current exact-source replacement: `41440757518`. The source is retained as
   `roadmap/array-construction-phase-runner-2026-11-02`.
   `check-array-construction-time.py` reconstructs source, raw samples, summaries,
-  cleanup controls and compiler settings; syntax checked, awaiting actual archives.
+  cleanup controls and compiler settings; all three original complete archives pass.
 - Existing static-callback tests now also cover scalar captures, count-before-capture
   order, callback reuse and partial cleanup. Fixture formatting, raw interpreter
   preflight and Rust formatting pass (0.02s, 0.27s, 0.27s). Native checks remain

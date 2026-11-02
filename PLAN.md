@@ -4,59 +4,33 @@ Build an ahead-of-time language with simple pipes, immutable values, strong type
 and useful inference. Prefer direct values, moves and borrows; reserve ARC for
 necessary sharing. GC is removed; JIT and backward compatibility are excluded.
 
-## Current batch: investigate matrix calculation costs
+## Current batch: reduce array construction overhead
 
-[PR #243](https://github.com/e6qu/fun-with-pipes/pull/243) passed all nine production
-jobs and documentation and merged as `ea9938de`. The paired-column implementation,
-safety tests and measurements are complete. Publish them together and verify the
-full final-head production matrix before merging.
+[PR #244](https://github.com/e6qu/fun-with-pipes/pull/244) passed all nine production
+jobs and documentation, then merged as `e70f0e2d`. Its paired-column matrix loop
+reduces qualified calculation time by about 33% on ARM64 and 31% for large AMD64.
+[History](docs/roadmap-history.md#paired-matrix-columns-pr-244) records its storage,
+stack and timing limits. The small AMD64 timing goal stays open below.
 
-The [matrix protocol](docs/measurements/matrix-calculation-costs.md) selects the
-paired-column loop after exact GCC diagnostics. Focused safety checks precede
-timing. Both ARM64 sizes and the large AMD64 case show qualified improvements;
-six small-AMD64 noise limits remain open. Retain the verified gains under the
-standing preference for keeping improvements with unmet goals explicit; do not
-declare the whole timing experiment accepted.
+The [array construction protocol](docs/measurements/array-construction-costs.md)
+now guides one coherent batch. Current materialized source and C-driver paths
+allocate once; a fully composed generator/map/fold already allocates zero.
+Materialized scalar captures still use generic callback dispatch. Measure its
+cost before choosing a compiler change; preserve the composed allocation-free path.
 
 | Step | Work | Completion requirement |
 |---|---|---|
-| 1 | Publish source findings and diagnostic protocol | Complete: preparation retained before runner edits |
-| 2 | Inspect current generated C with production GCC | Original binaries reproduce byte for byte; all outputs/cleanup agree; both architectures and all compiler diagnostics audited |
-| 3 | Select and prove one bounded source change | Freeze exact reference and timing scope; pass alias, arithmetic, shape, failure and cancellation probes |
-| 4 | Measure both matrix sizes and retain every outcome | Two sessions per declared architecture, independent copy controls, time/memory/code/frame costs and all failed limits |
-| 5 | Publish the coherent batch and verify delivery | Readable results and plan updates; full final-head matrix/docs pass before squash merge |
+| 1 | Verify the three current construction paths | Verified: both GCC architectures at O1/O2, exact values, storage and missing-release controls; retained source and binary evidence |
+| 2 | Separate construction, consumption and filling costs | Two qualified sessions per architecture; compare materialized source, C driver, C and Rust; audit all raw samples and copy limits |
+| 3 | Select and prove a bounded generator change | If phase evidence justifies it, extend direct calls only to known scalar captures; preserve evaluation/trap order, reuse, partial failure, cancellation and composed fusion |
+| 4 | Measure the change against its exact same-source reference | Freeze speed/storage limits before timing; require exact outputs and cleanup, retain all outcomes, report time, allocations, managed memory, RSS, code and stack costs |
+| 5 | Deliver the combined batch | Bundle source, regressions, measurements and clear docs; all nine final-head production jobs plus documentation pass and are audited before squash merge |
 
-## Matrix acceptance
-
-The qualified 257×259 by 259×255 case takes about 65% more calculation time than
-C on AMD64 and 6% more on ARM64. Zero effective retains and near-payload storage
-make this a computation investigation, not an unspecified ARC-removal task.
-
-1. Compare `fwp_p_matrix_mul_f64` in `runtime/fwp_rt_kernel.c` with the exact C/Rust
-   peers. Inspect emitted source, loop bounds, address calculations and scheduler
-   polls. Identify a causal source difference; do not infer a repair from disassembly.
-2. Freeze one bounded candidate and its same-source reference before timing.
-   Preserve increasing inner-index multiplication/addition order, no contraction,
-   legal byte-copy access, input aliasing, shape checks and cancellation cleanup.
-   No new allocator, wrapper, scratch matrix or backend is assumed necessary.
-3. Extend `blocked_matrix` and its existing native probes for that change. Require
-   raw-interpreter/native O1/O2 agreement, empty/odd sizes, shared/sliced inputs,
-   invalid shapes, exceptional floating-point values and deliberate unwind failures.
-4. Measure both matrix sizes and full construction-through-cleanup on both declared
-   architectures, with independent copies and frozen work counts. Require at least
-   5% less large-matrix calculation time on AMD64, no case/scope more than 2% slower,
-   and no allocation/retain/peak-storage increase. Failed controls remain evidence;
-   revise the measurement design explicitly before any new experiment.
-5. Bundle the proven change, regressions and readable costs into one PR. If no safe
-   candidate meets the rules, retain the rejected result and choose a different
-   source-level cause; do not ship a speculative optimization as a speed improvement.
-
-ARM64 array allocation-through-cleanup costs 24–31% more than C despite a fast
-reduction loop. This includes a C driver's fwp-runtime calls, not source-compiled
-`array.generate`. After the matrix task, compare both input-construction paths
-and separate filling from allocator/cleanup time in a declared measurement before
-selecting any compiler change. The [construction protocol](docs/measurements/array-construction-costs.md)
-starts with source/storage diagnostics, including a fully composed fwp program.
+Use the existing array ownership tests for capture/reuse/failure cases. Focused
+production-compiler checks precede timing; run the full platform matrix after the
+batch is ready. Avoid adding syntax, new allocation paths or compatibility layers.
+If the measurement does not justify specialization, retain that finding and
+choose the next source-level cost explicitly, without claiming an unproved gain.
 
 ## Open performance goals
 
