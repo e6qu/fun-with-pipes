@@ -196,10 +196,10 @@ introduces no production compiler change to accept or revert.
 
 Group the paired compiler preparation, runner, corrupted-evidence controls,
 current results and plain-language plan/docs updates in one PR after #242.
+#242 is fully verified and merged as `10b9bbff`; its tested tree is unchanged.
 Use focused harness checks locally through the resource guard; all compiler builds,
-measurements and full validation run on GitHub. Keep #242's passing head unchanged
-while its remaining gates run. Require all final production jobs and documentation
-before squash merge of this batch too.
+measurements and full validation run on GitHub. Require all final production jobs
+and documentation before squash merge of this batch too.
 
 The scheduling control caught a preparation ambiguity before any measurements:
 advancing continuously by four/256 blocks makes each fixed process position see

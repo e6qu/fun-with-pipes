@@ -1,24 +1,25 @@
 # Current work
 
-**Next:** audit the remaining PR #242 production jobs at
-`f411df1f402c0f51f3fab8276edd43661f738299`, then squash-merge only after all nine
-jobs and documentation pass. Production `41399968432` has benchmark, all four
-macOS jobs and Windows ARM passing. Linux ARM/AMD and Windows AMD still run with
-no failed steps. Docs `41399968400` passes. Preserve this head.
+**Next:** deliver `current-kernel-costs`: finish the documentation audit, then run
+all nine production jobs on the final head and squash-merge only after they pass.
+Keep one active PR. Use `gh pr view` from the branch to find its exact head and
+checks. Do not rerun completed numerical sessions or change a passing CI head.
 
-This preparation branch is `current-kernel-costs`, worktree
-`/private/tmp/fwp-current-kernel-costs`, based on that #242 head. Do not open a
-second PR. After its squash merge, retain measured source tags and rebase only
-this branch's new commits onto the verified merge tree.
+Worktree: `/private/tmp/fwp-current-kernel-costs`. The branch was rebased onto
+verified #242 squash merge `10b9bbff10afd97cb6ce653b1bf9c4aaea5f2531`; measured
+source commits remain available through the tags below. #242's nine production
+jobs and docs pass, all logs are audited, and its merge tree/message are verified.
+[History](roadmap-history.md#numeric-callbacks-and-inline-cleanup-pr-242) holds the
+delivery record. Duplicate merge-tree runs were cancelled after that verification.
 
 ## Roadmap status
 
 | Step | Status | Evidence / remaining work |
 |---|---|---|
-| 1 | In progress | Protocol `818731e3` published before implementation; #242 final matrix running |
-| 2 | Implemented | Paired reference, six-program runner, raw audit and damaged-evidence controls; no production compiler change |
+| 1 | Verified | Protocol `818731e3` published before implementation; #242 fully verified and merged as `10b9bbff` |
+| 2 | Verified | Paired reference and six-program runner pass correctness/memory audits; damaged-evidence controls pass; no production compiler change |
 | 3 | Verified | Four sessions retained; raw audit `41407524129` passes; four speed and nine copy limits remain open |
-| 4 | In progress | Reproducible current costs and concrete matrix follow-up documented; publish the next PR after #242 merges, then final production gates |
+| 4 | In progress | Reproducible current costs and concrete matrix follow-up documented; documentation audit and final production gates remain |
 
 The [protocol](measurements/current-kernel-costs.md) fixes the inputs, hosts,
 timing scopes and rules. The historical AMD64 array slowdown predates typed loop
@@ -67,18 +68,17 @@ No new compiler optimization is selected in this measurement batch.
 - Guarded local checks: reference preparation 4 tests (0.13s); scheduling and
   decisions 7 (0.13s); damaged evidence 10 (4.28s); job retention 4 (0.13s);
   report normalization 2 (0.13s); actionlint (6.73s); roadmap/link/commit audit (3.13s). No local full build or timing.
-- #242 prior production `41391756089` is fully audited. All compiler/runtime
-  targets pass; Intel deadline-control and docs-reference failures are repaired
-  in `f411df1f`. The full preceding handoff is in that revision.
-- Final-head passing logs: `/private/tmp/fwp-242-final-bench.log`,
-  `/private/tmp/fwp-242-repaired-docs.log`, and
-  `/private/tmp/fwp-242-f411-mac-{arm-regular,arm-ownership,amd-ownership}.log`.
-  Intel regular log `/private/tmp/fwp-242-f411-mac-amd-regular.log` also passes.
-  All four macOS target archives are clean (131 regular / 126 ownership each).
-  Windows ARM full log `/private/tmp/fwp-242-f411-windows-arm.log` is clean except
-  deliberate scheduler panic and TLS rejection controls. Both Windows native ZIPs
-  have 135 clean summaries; AMD's later checks still run.
-- Numerical complete logs: `/private/tmp/fwp-current-kernels-{arm2,amd2}.log`.
-  First-session logs: `/private/tmp/fwp-current-kernels-{arm1,amd1}-repaired.log`.
-  Their only failures are the retained performance decisions above. The full audit
-  log `/private/tmp/fwp-current-kernel-audit.log` has no warnings or errors.
+- #242 final production `41399968432` and docs `41399968400` pass on `f411df1f`.
+  Full logs: `/private/tmp/fwp-242-f411-{linux-arm,linux-amd,windows-arm,windows-amd,
+  mac-arm-regular,mac-arm-ownership,mac-amd-regular,mac-amd-ownership}.log`, plus
+  `/private/tmp/fwp-242-final-bench.log` and `/private/tmp/fwp-242-repaired-docs.log`.
+  Corresponding target ZIPs: 257 logs per Linux, 131 regular/126 ownership per
+  macOS, and 135 passing summaries per Windows native archive. Only intentional
+  scheduler panics/TLS rejections appear; no unresolved diagnostic.
+- Numerical logs: `/private/tmp/fwp-current-kernels-{arm2,amd2}.log` and
+  `/private/tmp/fwp-current-kernels-{arm1,amd1}-repaired.log`. Their only failures
+  are the retained performance decisions. `/private/tmp/fwp-current-kernel-audit.log`
+  is clean; its compressed copy is committed with the data.
+- Initial matrix source audit: `/private/tmp/fwp-matrix-source-audit.md`. Input
+  records are outside the kernel timer; task-free scheduler polls are already
+  eliminated. Preserve byte-copy alias safety. No speculative runtime edit.

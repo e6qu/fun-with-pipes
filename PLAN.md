@@ -6,10 +6,9 @@ necessary sharing. GC is removed; JIT and backward compatibility are excluded.
 
 ## Current batch: measure current numerical kernels
 
-PR #242 is completing final production validation. Its numeric callback and
-cleanup changes stay unchanged while the remaining gates run; merge only after
-all nine jobs and documentation pass. This branch prepares the following batch
-without opening a second PR.
+PR #242 is verified and squash-merged as `10b9bbff`. This batch publishes the
+current numerical comparison, its reproducible reports and the next concrete
+optimization task. The [handoff](docs/development-state.md) records delivery checks.
 
 The [current comparison](docs/measurements/current-kernel-costs.md#results-november-2-2026)
 is measured and independently audited. All result/memory checks pass; four ARM
@@ -18,7 +17,7 @@ AMD array ratio predates typed state and must not describe current overhead.
 
 | Step | Work | Completion requirement |
 |---|---|---|
-| 1 | Freeze current-kernel comparison and finish #242 | Preserve its exact-head CI audit and merge identity; publish the protocol before runner implementation |
+| 1 | Verified: preparation and #242 delivery | Protocol published before implementation; all #242 production/docs gates pass and merge tree/message are verified |
 | 2 | Built: paired measurement and evidence checks | Same-source reference, exact results, cleanup failures, six-role schedule and damaged-evidence controls pass |
 | 3 | Measured: time, memory and code costs | Four sessions and seven prior host/check failures retained; independent audit `41407524129` passes |
 | 4 | Publish understandable current costs and deliver | Update plan/docs with concrete remaining gaps; all final production jobs and documentation pass before squash merge |

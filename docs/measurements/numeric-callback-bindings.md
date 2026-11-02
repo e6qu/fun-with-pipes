@@ -74,8 +74,13 @@ boundaries and constructor stages. Existing native probes now exercise tuple and
 named-record destructuring, exact allocation/release counts, first-stage overflow
 before a later effect, escaping aliases and cancellation. Run `41389582456` at
 `60971efd` passes all nine optimizer and 72 integration tests on GCC ARM64/AMD64
-and Clang ARM64, including the repairs below. All nine final production jobs and
-documentation are still required for full platform verification.
+and Clang ARM64, including the repairs below. Final head
+`f411df1f402c0f51f3fab8276edd43661f738299` subsequently passes all nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/41399968432)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/41399968400).
+Complete logs and every target archive are audited. #242's squash merge
+`10b9bbff` has the same tree; [delivery details](../roadmap-history.md#numeric-callbacks-and-inline-cleanup-pr-242)
+retain the source and message verification.
 
 ## Cleanup repair found by full CI
 
