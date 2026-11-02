@@ -98,9 +98,12 @@ for each element, while still finishing every map call before any fold call.
   unchanged drivers and original cases. Report all regressions and copy failures;
   fewer allocations alone do not complete D2 or prove C/Rust parity.
 
-This names a candidate to prove, not an implemented optimization or a promise to
-eliminate arbitrary lists. Bundle its source analysis, any justified implementation,
-regression controls and measured results into one PR after the current delivery.
+The initial implementation passes all 96 frozen count observations and the first
+GCC/Clang cleanup controls on native Linux ARM64/AMD64. Its largest current-only
+solve uses 51,143 fewer managed allocations and 4,064 fewer peak managed bytes.
+Callback-owner/exclusion tests, paired timing acceptance and the full final matrix
+remain. Bundle implementation, controls and measured results into one PR after
+the current delivery; this does not eliminate arbitrary lists or complete D2.
 
 ## Maintained guarantees and evidence
 

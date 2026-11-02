@@ -145,6 +145,7 @@ jobs:
           python3 scripts/test-capture-reference.py
           python3 scripts/test-record-zip-reference.py
           python3 scripts/test-record-fold-reference.py
+          python3 scripts/test-packed-records-reference.py
       - name: Current kernel comparison reference, schedule and evidence controls
         run: |
           python3 scripts/test-loop-state-reference.py

@@ -25,6 +25,9 @@ SPEC.loader.exec_module(ZIP_REFERENCE)
 SPEC = importlib.util.spec_from_file_location('fold_reference', ROOT / 'scripts/prepare-record-fold-reference.py')
 FOLD_REFERENCE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(FOLD_REFERENCE)
+SPEC = importlib.util.spec_from_file_location('packed_reference', ROOT / 'scripts/prepare-packed-records-reference.py')
+PACKED_REFERENCE = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(PACKED_REFERENCE)
 SOURCE = 'dc0a6407b5e5aa23517a86db71a3221a418cc7d6'
 REPORT = json.loads(gzip.decompress((ROOT / 'docs/measurements/array-list-first-2026-10-31-amd-2.json.gz').read_bytes()))
 
@@ -86,6 +89,19 @@ class Evidence(unittest.TestCase):
             self.assertNotEqual(changed, patch)
             with self.assertRaises(AssertionError):
                 CHECK.check_reference_patch(changed, candidate, reference, 'src/cgen.rs')
+
+    def test_packed_reference_patch_and_recorded_preparation_are_exact(self):
+        candidate = (ROOT / 'src/cgen.rs').read_text()
+        preparation = (ROOT / 'scripts/prepare-packed-records-reference.py').read_text()
+        reference = PACKED_REFERENCE.reference_source(candidate)
+        self.assertEqual(CHECK.recorded_reference(candidate, preparation), reference)
+        header = 'diff --git a/src/cgen.rs b/src/cgen.rs\nindex 1234567..2345678 100644\n'
+        patch = header + ''.join(difflib.unified_diff(candidate.splitlines(keepends=True),
+                    reference.splitlines(keepends=True), fromfile='a/src/cgen.rs', tofile='b/src/cgen.rs'))
+        CHECK.check_reference_patch(patch, candidate, reference, 'src/cgen.rs')
+        with self.assertRaises(AssertionError):
+            CHECK.check_reference_patch(patch.replace('+    let packed_program = if false',
+                '+    let packed_program = if true'), candidate, reference, 'src/cgen.rs')
 
     def test_recorded_fold_preparation_is_independent_of_current_codegen(self):
         revision = '55d46cd57425fe9f5bb65a1b83a7d12821445711'

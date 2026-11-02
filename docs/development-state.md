@@ -1,11 +1,12 @@
 # Current work
 
-**Next:** publish and run `packed-record-controls` for the added failure,
-cancellation and missing-buffer-release probes under GCC and Clang on native
-Linux ARM64/AMD64. The first compiler/count run `41505591902` passes both hosts
-at `229ea441`; independently audit its archives before timing. Keep monitoring
-[PR #247](https://github.com/e6qu/fun-with-pipes/pull/247); squash merge only after
-all nine exact-head production jobs and documentation pass and logs are audited.
+**Next:** run `packed-record-controls` for the expanded tests: failures inside
+scalar and boxed-input callbacks, selection exclusions and affected autodiff
+regressions. Audit both native jobs before dispatching `packed-records-time` with
+both explicit sessions. The unchanged compiler's 96 count observations are fully
+audited. Keep monitoring [PR #247](https://github.com/e6qu/fun-with-pipes/pull/247);
+merge only after all nine exact-head production jobs and documentation pass and
+all logs are audited.
 
 ## Branch and delivery
 
@@ -80,16 +81,33 @@ The initial compiler change at `229ea441` passes focused native jobs
 Both compile/lint the compiler and affected tests, pass the fold/order/unwind
 regressions, and meet all 96 frozen allocation observations. Full archives and
 job logs are `/private/tmp/fwp-packed-record-{arm64,amd64}.{zip,log}`; identities
-are in `/private/tmp/fwp-packed-record-artifacts.json`. Independent audit follows.
+are in `/private/tmp/fwp-packed-record-artifacts.json`. Independent archive audit passes (4.11s); digests/source identities pass (0.26s).
+Both full logs have ten passing Rust tests, no diagnostics (0.14s).
 It lowers a sole-use mapped collection to an internal word array before ownership
 insertion; mapping and folding remain separate calls with seed evaluation between
 them. Existing typed ownership handles the buffer through failure paths. New
-order tests cover map/seed/fold effects, empty/unequal inputs and aliases. Dedicated failure/cancellation, allocation-failure and omitted-buffer-release
-controls are now implemented but not yet run. They cover map, between-stage and
-fold failure, cancellation in each callback stage, buffer/final-result allocation
-failure, retained input aliases and actual buffer release. A controls-only suite
-runs GCC and Clang without repeating the unchanged allocation experiment.
-The full final matrix and timings are not ready.
+order tests cover map/seed/fold effects, empty/unequal inputs and aliases. First dedicated cleanup controls at `0c5b9827` pass run `41507658382`:
+ARM64 `125490975035`, AMD64 `125490974569`, both GCC and Clang O1/O2. Complete
+logs `/private/tmp/fwp-packed-controls-{arm64,amd64}.log` each contain 22 passing
+Rust tests and no diagnostics (guarded audit 0.14s). Identities are in
+`/private/tmp/fwp-packed-controls-artifacts.json`.
+
+Expanded controls now inject failures inside real callback frames while scalar
+or boxed numeric input owners are protected. Ordinary task yields are suppressed
+only in the synchronous injected C fixture; cancellation invokes the actual
+runtime cancellation check and cleanup chain. The missing-buffer-release control
+must still fail. Nine selection exclusions cover aliases, escape, right fold,
+dynamic/captured callbacks, managed/nested/wide fields. These additions and
+nearby autodiff regressions need the next focused run; do not repeat unchanged
+allocation measurements.
+
+The same-source timing reference and audit tools are implemented. Three reference
+mutation tests pass (0.13s), twelve timing/memory policy tests pass (0.13s), eleven
+archive controls including historical reports pass (50.92s), and three retention
+controls pass (0.13s). Workflow lint passes (6.46s); formatting passes (1.82s).
+No timing session has run yet. Timing runs require explicit `native_runner=all`
+and `comparison_session=both`; preserve every completed/rejected observation.
+The full final matrix is still pending.
 
 The callback-box auditor now requires an explicit accumulator layout. Current
 counts pass (0.27s). The old #239 report reproduces exactly; both wrong layouts
