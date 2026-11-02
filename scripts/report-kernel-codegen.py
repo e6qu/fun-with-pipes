@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Collect GCC explanations for exact retained kernel binaries; do not benchmark."""
+"""Collect GCC reports for retained kernels and declared candidates; no timing acceptance."""
 import argparse
 import hashlib
 import importlib.util
@@ -26,11 +26,40 @@ MATRIX_INPUTS_BEFORE = b"""     * The shape predicate bounds every copy. Only th
 MATRIX_INPUTS_AFTER = b"""     * The shape predicate bounds every copy. Both inputs stay read-only,
      * so their restrict qualifiers still permit shared backing. */
     const unsigned char *restrict a=fwp_array_data(left),*restrict b=fwp_array_data(right);"""
+MATRIX_COLUMNS_BEFORE = b"""                    for(size_t j=jb;j<je;j++){
+                        double y,prior;__builtin_memcpy(&y,b+(q*n+j)*sizeof(double),sizeof y);
+                        __builtin_memcpy(&prior,out+(i*n+j)*sizeof(double),sizeof prior);
+                        double product=x*y,value=product+prior;
+                        __builtin_memcpy(out+(i*n+j)*sizeof(double),&value,sizeof value);
+                    }"""
+MATRIX_COLUMNS_AFTER = b"""                    size_t j=jb;
+                    for(;je-j>=2;j+=2){
+                        double y0,y1,prior0,prior1;
+                        __builtin_memcpy(&y0,b+(q*n+j)*sizeof(double),sizeof y0);
+                        __builtin_memcpy(&y1,b+(q*n+j+1)*sizeof(double),sizeof y1);
+                        __builtin_memcpy(&prior0,out+(i*n+j)*sizeof(double),sizeof prior0);
+                        __builtin_memcpy(&prior1,out+(i*n+j+1)*sizeof(double),sizeof prior1);
+                        double product0=x*y0,product1=x*y1;
+                        double value0=product0+prior0,value1=product1+prior1;
+                        __builtin_memcpy(out+(i*n+j)*sizeof(double),&value0,sizeof value0);
+                        __builtin_memcpy(out+(i*n+j+1)*sizeof(double),&value1,sizeof value1);
+                    }
+                    for(;j<je;j++){
+                        double y,prior;__builtin_memcpy(&y,b+(q*n+j)*sizeof(double),sizeof y);
+                        __builtin_memcpy(&prior,out+(i*n+j)*sizeof(double),sizeof prior);
+                        double product=x*y,value=product+prior;
+                        __builtin_memcpy(out+(i*n+j)*sizeof(double),&value,sizeof value);
+                    }"""
 
 
 def restricted_inputs(source):
     assert source.count(MATRIX_INPUTS_BEFORE) == 1 and MATRIX_INPUTS_AFTER not in source
     return source.replace(MATRIX_INPUTS_BEFORE, MATRIX_INPUTS_AFTER)
+
+
+def paired_columns(source):
+    assert source.count(MATRIX_COLUMNS_BEFORE) == 1 and MATRIX_COLUMNS_AFTER not in source
+    return source.replace(MATRIX_COLUMNS_BEFORE, MATRIX_COLUMNS_AFTER)
 
 
 def digest(data):
@@ -75,7 +104,7 @@ def main():
         parser.add_argument('--' + name, required=True)
     parser.add_argument('--timeout', type=int, required=True)
     parser.add_argument('--session', type=int, choices=(1, 2), required=True)
-    parser.add_argument('--matrix-inputs', choices=('original', 'restricted'), required=True)
+    parser.add_argument('--matrix-variant', choices=('original', 'restricted', 'paired-columns'), required=True)
     args = parser.parse_args()
     assert os.environ.get('GITHUB_ACTIONS') == 'true' and platform.system() == 'Linux'
     assert args.timeout == 180
@@ -129,9 +158,9 @@ def main():
             assert Path(info['path']).name == info['path']
             original = archive.read(case + '/' + info['path'])
             assert digest(original) == info['sha256']
-            modified = args.matrix_inputs == 'restricted' and language == 'fwp' and case.startswith('matrix')
+            modified = args.matrix_variant != 'original' and language == 'fwp' and case.startswith('matrix')
             if modified:
-                source = restricted_inputs(source)
+                source = {'restricted': restricted_inputs, 'paired-columns': paired_columns}[args.matrix_variant](source)
             path = directory / (name + '.c')
             path.write_bytes(source)
             binary = directory / info['path']
@@ -158,7 +187,7 @@ def main():
                                            stdoutSha256=digest(raw), expectedResultHash=row['resultHash'])
             (output / 'results.json').write_text(json.dumps(results, indent=2) + '\n')
     archive.close()
-    assert reproduced == (8 if args.matrix_inputs == 'original' else 6)
+    assert reproduced == (8 if args.matrix_variant == 'original' else 6)
     print(f'{reproduced} unchanged binaries reproduce exactly; all eight outputs match; diagnostic only')
 
 
