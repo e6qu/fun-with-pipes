@@ -61,7 +61,7 @@ def parse_totals(stderr):
 
 def comparison_failures(report, baseline, policy):
     """Apply the selected frozen count limits to every case and storage mode."""
-    assert policy in ('record-zip', 'record-fold')
+    assert policy in ('record-zip', 'record-fold', 'packed-records')
     old = baseline['hosts'][report['machine']]['cases']
     assert set(report['cases']) == set(old)
     failures = []
@@ -70,6 +70,11 @@ def comparison_failures(report, baseline, policy):
         pairs = (dimensions - 1) * updates
         removed = 2 * pairs if policy == 'record-zip' else max(dimensions - 2, 0) * updates
         retains = 3 * pairs if policy == 'record-zip' else pairs
+        bytes_removed = 24 * removed
+        if policy == 'packed-records':
+            removed = 2 * pairs - updates
+            bytes_removed = 32 * pairs - 8 * updates
+            retains = 0
         assert set(observations) == {'0', '1'}
         for mode, actual in observations.items():
             previous = old[name]['observations'][mode]
@@ -80,7 +85,7 @@ def comparison_failures(report, baseline, policy):
                 if current != before or actual['phases'] != previous['phases']:
                     failures.append(label + ': zero-update counts changed')
             else:
-                for field, saving in [('requests', removed), ('requestedBytes', 24 * removed),
+                for field, saving in [('requests', removed), ('requestedBytes', bytes_removed),
                                       ('retains', retains)]:
                     if current[field] > before[field] - saving:
                         failures.append(f'{label}: {field} saving {before[field] - current[field]} < {saving}')
@@ -104,7 +109,7 @@ def main():
     parser.add_argument('--source', required=True)
     parser.add_argument('--timeout', required=True, type=int)
     parser.add_argument('--output', required=True, type=Path)
-    parser.add_argument('--comparison', required=True, choices=('baseline', 'record-zip', 'record-fold'))
+    parser.add_argument('--comparison', required=True, choices=('baseline', 'record-zip', 'record-fold', 'packed-records'))
     parser.add_argument('--baseline', type=Path)
     args = parser.parse_args()
     assert (args.comparison != 'baseline') == (args.baseline is not None)

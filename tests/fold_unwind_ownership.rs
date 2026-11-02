@@ -189,6 +189,179 @@ transform = fn pause -> fn seed -> fn values ->
 }
 
 #[test]
+fn packed_record_storage_releases_on_each_stage_failure_and_cancellation() {
+    for boxed in [false, true] {
+        let dir = Scratch::new(if boxed {
+            "packed-boxed-records"
+        } else {
+            "packed-records"
+        });
+        let src = dir.0.join("packed.fwp");
+        let cfile = dir.0.join("packed.c");
+        let source = r#"
+Point = {index: I64, value: F64}
+mapped : I64 -> Point ! {Async}
+mapped = fn n ->
+    let ready = task.yield ()
+    in Point {index = n, value = 0.5}
+step : Point -> Point -> Point ! {Async}
+step = fn {index = count, value = total} -> fn {index = n, value = amount} ->
+    let ready = task.yield ()
+    in Point {index = count + n, value = total + amount}
+export transform : Bool -> Point -> List[I64] -> Point ! {Async}
+transform = fn pause -> fn seed -> fn input ->
+    let values = map mapped input
+    in let ready = pause | match
+        True -> task.yield ()
+        False -> ()
+    in fold step seed values
+"#;
+        let source = if boxed {
+            source.replace("mapped : I64 -> Point ! {Async}\nmapped = fn n ->\n    let ready = task.yield ()\n    in Point {index = n, value = 0.5}",
+            "mapped : Point -> Point ! {Async, IO}\nmapped = fn point ->\n    let ready = task.yield ()\n    in let printed = point | echo\n    in Point {index = (point | .index), value = 0.5}")
+            .replace("List[I64] -> Point ! {Async}", "List[Point] -> Point ! {Async, IO}")
+        } else {
+            source.to_owned()
+        };
+        std::fs::write(&src, source).unwrap();
+        checked(
+            Command::new(env!("CARGO_BIN_EXE_fwp"))
+                .args([
+                    "build",
+                    "--fn",
+                    "transform",
+                    "--memory",
+                    "dynamic",
+                    "--emit-c",
+                ])
+                .arg(&src)
+                .arg("-o")
+                .arg(&cfile),
+        );
+        let emitted = std::fs::read_to_string(cfile).unwrap();
+        assert!(emitted.contains("#define FWP_UNWIND 1"));
+        assert!(emitted.contains("#define FWP_TASK_TICKS 1"));
+        let section = |marker: &str| {
+            assert_eq!(emitted.matches(marker).count(), 1);
+            let start = emitted.find(marker).unwrap();
+            let end = start + emitted[start..].find("\n}\n").unwrap() + 3;
+            &emitted[start..end]
+        };
+        let map = section("    /* Eager packed numeric records:");
+        let fold = section("    /* Fold after the complete packed map;");
+        let map_control = map
+            .replace(
+                "    V buffer =",
+                "    packed_fail_allocation = packed_mode == 5;\n    V buffer =",
+            )
+            .replace(
+                "        V arguments[] =",
+                "        packed_stage = 1; packed_map_visits++;\n        V arguments[] =",
+            )
+            .replace(
+                "    return fwp_value_finish",
+                "    packed_stage = 0;\n    return fwp_value_finish",
+            );
+        let fold_control = fold.replace("        accumulator = w", "        packed_stage = 2; packed_fold_visits++;\n        accumulator = w")
+        .replace("    return fwp_rc_fresh(fwp_record(", "    packed_fail_allocation = packed_mode == 6;\n    return fwp_rc_fresh(fwp_record(");
+        assert_ne!(map, map_control);
+        assert_ne!(fold, fold_control);
+        let mut code = emitted[..emitted.find("int main(").unwrap()]
+        .replace(map, &map_control).replace(fold, &fold_control)
+        .replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic int packed_mode, packed_map_visits, packed_fold_visits, packed_fail_allocation, packed_stage;\nstatic void fwp_trap(const char *);");
+        for signature in [
+            "static inline void *fwp_heap_alloc(size_t n, int kind) {",
+            "static inline void *fwp_alloc_init(size_t n) {",
+        ] {
+            assert_eq!(code.matches(signature).count(), 1);
+            code = code.replace(signature, &format!("{signature}\n    if (packed_fail_allocation) {{ packed_fail_allocation = 0; fwp_trap(\"injected packed allocation failure\"); }}"));
+        }
+        let yielding = "static V fwp_p_task_yield(void) {";
+        assert_eq!(code.matches(yielding).count(), 1);
+        let begin = code.find(yielding).unwrap();
+        let end = begin + code[begin..].find("\n}\n").unwrap() + 3;
+        // Inject inside actual callbacks, after their argument owners are protected.
+        // Ordinary yields are no-ops in this synchronous fixture; cancellation uses
+        // the real runtime cancellation check and cleanup chain.
+        code.replace_range(
+            begin..end,
+            r#"static V fwp_p_task_yield(void) {
+    if (packed_stage == 0 && packed_mode == 1) fwp_trap("injected between-stage failure");
+    if (packed_stage == 1 && packed_map_visits == 2) {
+        if (packed_mode == 0) fwp_trap("injected map callback failure");
+        if (packed_mode == 3) { fwp_cur->cancelled = 1; fwp_check_cancel(); }
+    }
+    if (packed_stage == 2 && packed_fold_visits == 2) {
+        if (packed_mode == 2) fwp_trap("injected fold callback failure");
+        if (packed_mode == 4) { fwp_cur->cancelled = 1; fwp_check_cancel(); }
+    }
+    return FWP_UNIT;
+}
+"#,
+        );
+        let drop_name = |ty: &str| {
+            let start = emitted
+                .find(&format!("/* {ty} */\nstatic void fwp_drop"))
+                .unwrap();
+            emitted[start..]
+                .split("static void ")
+                .nth(1)
+                .unwrap()
+                .split('(')
+                .next()
+                .unwrap()
+        };
+        let probe = include_str!("fixtures/packed_record_unwind.c");
+        let probe = if boxed {
+            probe
+                .replace(
+                    "fwp_cons((V)i, xs)",
+                    "fwp_cons(fwp_rc_fresh(fwp_record(2, (V[]){(V)i, fwp_from_f64(0.5)})), xs)",
+                )
+                .replace("OBJ(xs)->f[0] != 1", "OBJ(OBJ(xs)->f[0])->f[0] != 1")
+        } else {
+            probe.to_owned()
+        };
+        code += &probe
+            .replace(
+                "TRANSFORM",
+                &format!("f{}", function_id(&emitted, "transform")),
+            )
+            .replace("DROP_POINT", drop_name("Point"))
+            .replace(
+                "DROP_LIST",
+                drop_name(if boxed { "List[Point]" } else { "List[I64]" }),
+            );
+        let destroy = "static void fwp_rc_free_arr(V v) {\n    if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);\n}";
+        assert_eq!(code.matches(destroy).count(), 1);
+        let missing_release = code.replace(destroy,
+        "static void fwp_rc_free_arr(V v) { (void)v; /* deliberate missing packed buffer destruction */ }");
+        for opt in ["-O1", "-O2"] {
+            for (name, source, expected) in [
+                ("ordinary", &code, 0),
+                ("missing-buffer", &missing_release, 90),
+            ] {
+                let exe = dir.0.join(format!("packed-{name}-{opt}.exe"));
+                fwp::cgen::compile_c(source, &exe, opt).unwrap();
+                let output = Command::new(&exe).output().unwrap();
+                record_probe::save(
+                    "packed_record_unwind",
+                    &format!("boxed-{boxed}-{name}-{opt}"),
+                    source,
+                    &exe,
+                    &output,
+                );
+                assert_eq!(
+                    output.status.code(),
+                    Some(expected),
+                    "boxed={boxed}, {name}/{opt}: {output:?}"
+                );
+            }
+        }
+    }
+}
+
+#[test]
 fn right_fold_releases_accumulator_and_scratch_on_failure() {
     let dir = Scratch::new("failure");
     let src = dir.0.join("fold.fwp");

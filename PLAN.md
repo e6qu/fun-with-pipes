@@ -4,32 +4,36 @@ Build an ahead-of-time language with simple pipes, immutable values, strong type
 and useful inference. Prefer direct values, moves and borrows; reserve ARC for
 necessary sharing. GC is removed; JIT and backward compatibility are excluded.
 
-## Current batch: complete the benchmark driver comparison
+## Current batch: reduce temporary derivative allocations
 
-[PR #246](docs/roadmap-history.md#array-preparation-diagnostic-pr-246) is verified
-and merged. Its preparation experiment changes faults and early timings without
-resolving the original consumption limits. The separate
-[three-driver comparison](docs/measurements/array-observations-2026-11-02/README.md)
-is implemented and fully audited; deliver its tools, evidence and documentation
-as the next substantial PR. No production compiler/runtime change is selected.
+[PR #247](docs/roadmap-history.md#benchmark-driver-comparison-pr-247) is verified
+and merged. Its benchmark-driver diagnostic is complete; original timing goals
+remain open. No compiler/runtime change followed from that diagnostic.
+
+[PR #248](https://github.com/e6qu/fun-with-pipes/pull/248) replaces eligible temporary mapped numeric-record lists with
+one owned buffer. Mapping still finishes before folding, and seed evaluation
+stays at its source position. See [design and boundaries](docs/design.md#temporary-mapped-numeric-records)
+and [results](docs/measurements/derivative-temporary-storage-2026-11-02/README.md).
 
 | Step | Work | Completion requirement |
 |---|---|---|
-| 1 | Freeze original, observation-only and zero-preparation drivers | Exact retained sources; unchanged numerical work; no preparation code in observation-only driver |
-| 2 | Prove every version before timing | Exact outputs, ownership profiles, actual omitted-array-destruction controls and failed clocks on both GCC architectures |
-| 3 | Collect and independently audit four native sessions | All raw samples, commands, source/binary identities, copies, memory and stack costs retained; every rejected host preserved |
-| 4 | Explain driver effects and preserve failed goals | Complete 96-role table; distinguish consumption from total work; keep all original limits and 13 new small-AMD64 copy failures open |
-| 5 | Deliver the combined tools/evidence/docs batch | One PR; all nine exact-head production jobs and documentation pass, all logs audited, then verified one-line squash merge |
+| 1 | Freeze the source baseline, selection and acceptance rules | Fresh counts; published protocol before compiler edits; same-source reference disables only the selected lowering |
+| 2 | Implement packed temporary storage | Prove one consuming use; preserve map/seed/fold order, callback owners, effects, arithmetic and traps |
+| 3 | Verify semantics, cleanup and measured storage | Interpreter/native comparisons; GCC/Clang O1/O2; empty/unequal inputs, aliases, excluded cases, traps, cancellation, allocation failures and deliberately missing destruction; all 96 count observations |
+| 4 | Complete and audit the paired measurements | Two native sessions per architecture; unchanged drivers; all samples, rejected hosts, failures, C/Rust comparisons, RSS and code/stack costs retained |
+| 5 | Deliver implementation, controls, evidence and docs together | One PR; all nine exact-head production jobs and documentation pass; audit every log, then verify the one-line squash merge |
 
-Steps 1–4 are verified. Added observations alone retain the early large-AMD64
-pattern. The complete zero-preparation driver changes it, but raises total timed
-work by 7.7–9.8%. Close this diagnostic without hidden warming or an ownership
-change. Keep the entire driver fixed in future candidate/reference comparisons;
-report construction, consumption and enclosing work together.
+Steps 1–3 pass focused native Linux verification. Each architecture passes 40
+GCC/Clang tests. The largest current-only solve uses 51,143 fewer managed requests
+and 4,064 fewer peak managed bytes; reference-count increments do not increase.
 
-After this delivery, return to a source-level allocation opportunity in derivative
-work, described below. Do not extend the driver investigation merely to chase a
-passing old timing limit. Matrix timing needs a separately declared experiment.
+Step 4 is fully audited: all four sessions and four rejected hosts are retained.
+Both ARM64 sessions and AMD64 session 1 pass. AMD64 session 2 retains a 2.024%
+zero-update history regression against the 2% limit. Every case with at least
+199 updates uses 5.1–14.2% less time; all identical-copy controls pass. Retain the
+verified reductions and leave the failed timing goal open, as in prior deliveries.
+Complete the PR's full final matrix. Fewer allocations do not
+establish C/Rust parity or complete D2.
 
 ## Open performance goals
 
@@ -66,40 +70,6 @@ passing old timing limit. Matrix timing needs a separately declared experiment.
 - [Swift comparisons](docs/measurements/swift-allocations.md) measure allocator
   traffic and selected fwp-managed storage separately. Individual Swift ARC
   operations remain unmeasured. Do not infer them from RSS or elapsed time.
-
-## Next compiler investigation: temporary derivative lists
-
-The [record-fold work](docs/measurements/derivative-record-folds.md) removes boxes
-between addition callbacks. Its adjacent-pair results still form a list before
-summation. Preserve that order: ordinary map/fold fusion could interleave recording
-and addition, changing effects and derivatives.
-
-Investigate one narrower boundary: a known mapper returns a flat numeric record,
-and only a following known fold uses the mapped list. A private packed temporary
-buffer could retain all mapped values without a separate record/list allocation
-for each element, while still finishing every map call before any fold call.
-
-- First compile/profile the current six Rosenbrock inputs, both current/history
-  forms, GCC O1/O2 and workspace off/on on native ARM64/AMD64. Use the existing
-  phase/source observer; identify the exact surviving allocation sites and uses.
-  Do not assume historical function numbers or counts still describe current code.
-- Prove the intermediate list does not escape, has no observable aliases, and
-  contains only immediate numeric fields. Keep dynamic callbacks, resource-bearing
-  records and escaping/shared lists outside the initial selection.
-- Before compiler edits, freeze the selection, expected counts, timing limits and
-  storage accounting. Include any length traversal, capacity growth, raw-buffer
-  requests and stack/code costs; moving allocations to an uncounted buffer is no
-  saving. If current code already removes the boundary, record that result.
-- Preserve map-before-fold order, seed evaluation, callback counts, arithmetic,
-  traps and effects. Verify empty inputs, aliases, callback failure/cancellation,
-  allocation failure and physical buffer release with deliberate broken controls.
-- Only after correctness/count checks pass, run the declared paired timings with
-  unchanged drivers and original cases. Report all regressions and copy failures;
-  fewer allocations alone do not complete D2 or prove C/Rust parity.
-
-This names a candidate to prove, not an implemented optimization or a promise to
-eliminate arbitrary lists. Bundle its source analysis, any justified implementation,
-regression controls and measured results into one PR after the current delivery.
 
 ## Maintained guarantees and evidence
 

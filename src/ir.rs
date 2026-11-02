@@ -211,6 +211,16 @@ pub enum Body {
     },
     /// Native-only constructor; the final parameter is its explicit region.
     RegionCtor(u32),
+    /// Native-only eager numeric mapper. Borrows input lists and returns an
+    /// owned Array[I64] of record-field bits; only PackedRecordFold reads it.
+    PackedRecordMap {
+        callback: FuncId,
+    },
+    /// Native-only fold over packed numeric fields. Owns its seed and borrows
+    /// the word buffer; keeps the original callback and arithmetic order.
+    PackedRecordFold {
+        callback: FuncId,
+    },
     /// A C function (`foreign "C"`), called through the C ABI.
     ForeignC {
         symbol: String,
@@ -686,6 +696,9 @@ pub(crate) fn reachable_functions(prog: &Program, entries: &[FuncId]) -> Result<
             Body::Expr(e) => refs(e, &mut work),
             Body::Remote(r) => work.extend(r.iter_fn),
             Body::RegionEntry { worker } => work.push(*worker),
+            Body::PackedRecordMap { callback } | Body::PackedRecordFold { callback } => {
+                work.push(*callback);
+            }
             _ => {}
         }
     }

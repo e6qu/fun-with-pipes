@@ -145,6 +145,7 @@ jobs:
           python3 scripts/test-capture-reference.py
           python3 scripts/test-record-zip-reference.py
           python3 scripts/test-record-fold-reference.py
+          python3 scripts/test-packed-records-reference.py
       - name: Current kernel comparison reference, schedule and evidence controls
         run: |
           python3 scripts/test-loop-state-reference.py
@@ -172,6 +173,10 @@ jobs:
         run: python3 scripts/test-array-list-evidence.py
       - name: Derivative evidence downloads and host-rejection controls
         run: python3 scripts/test-retain-derivative-evidence.py
+      - name: Packed temporary records and retained timing decisions
+        run: |
+          python3 scripts/test-packed-record-reports.py
+          python3 scripts/report-packed-records.py --directory docs/measurements/derivative-temporary-storage-2026-11-02 --source a4f3200c9b97b955c3f3603788eacbfac19fde4e --mode check
       - name: Matched grouped-process baselines and noisy controls
         run: python3 scripts/check-descent-groups.py --archive docs/measurements/descent-groups-artifacts-2026-10-29.json --protocol grouped
       - name: Repeated-solve baselines and fixed noise qualification

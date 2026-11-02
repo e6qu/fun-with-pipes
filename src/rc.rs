@@ -96,6 +96,8 @@ pub fn consumes_arg(prog: &Program, id: FuncId, j: usize) -> bool {
             .get(&id)
             .is_some_and(|ps| ps.contains(&(j as Local))),
         Body::Ctor(_) | Body::RegionEntry { .. } => true,
+        Body::PackedRecordFold { .. } => j == 0,
+        Body::PackedRecordMap { .. } => false,
         Body::Prim(s) => prim_consumes(s, j),
         _ => false,
     }

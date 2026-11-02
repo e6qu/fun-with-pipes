@@ -342,6 +342,11 @@ pub(crate) fn infer(
         match &f.body {
             Body::Expr(body) => references(body, &mut graph[id], &mut values),
             Body::Remote(remote) => values.extend(remote.iter_fn),
+            Body::PackedRecordMap { callback } | Body::PackedRecordFold { callback } => {
+                graph[id].insert(*callback);
+                // Generated calls preserve the callback's original owning ABI.
+                values.insert(*callback);
+            }
             Body::RegionEntry { worker } => {
                 graph[id].insert(*worker);
                 // Region entries call the ordinary owning entry, not a

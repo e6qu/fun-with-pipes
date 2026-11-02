@@ -98,13 +98,14 @@ def recorded_reference(candidate, preparation):
 def check_reference(folder, report, source, architecture, protocol):
     manifest = json.loads((folder / 'manifest.json').read_text())
     assert manifest == report['referenceCompiler'] and manifest['source'] == source
-    assert protocol in ('record-zip', 'record-fold')
+    assert protocol in ('record-zip', 'record-fold', 'packed-records')
     if protocol == 'record-zip':
         source_path, field, saved = 'src/fuse.rs', 'Fusion', 'fusion-reference.rs'
         transform = 'flat numeric record zip/map fusion'
     else:
         source_path, field, saved = 'src/cgen.rs', 'Codegen', 'codegen-reference.rs'
-        transform = 'direct numeric-record left folds'
+        transform = ('packed temporary numeric-record storage' if protocol == 'packed-records'
+                     else 'direct numeric-record left folds')
     assert manifest['disabledTransformation'] == transform
     compiler = (folder / 'fwp').read_bytes()
     assert digest(compiler) == manifest['compilerSha256']
@@ -168,8 +169,8 @@ def check_zip(archive):
 
 
 def check_directory(folder, source, architecture, session, protocol, reference):
-    assert protocol in ('array-lists', 'record-zip', 'record-fold')
-    assert (protocol in ('record-zip', 'record-fold')) == (reference is not None)
+    assert protocol in ('array-lists', 'record-zip', 'record-fold', 'packed-records')
+    assert (protocol in ('record-zip', 'record-fold', 'packed-records')) == (reference is not None)
     report = json.loads((folder / 'comparison.json').read_text())
     GROUPS.check_report(report, source, protocol)
     assert report['machine'] == architecture and report['configuration']['session'] == session
@@ -241,11 +242,11 @@ def check_directory(folder, source, architecture, session, protocol, reference):
             assert (case / (name + '.stderr')).read_text() == control['stderr']
         check_profiles(case, row)
     files = file_inventory(folder)
-    if protocol in ('record-zip', 'record-fold'):
+    if protocol in ('record-zip', 'record-fold', 'packed-records'):
         assert len(files) == 1334
     reference_files = file_inventory(reference) if reference is not None else None
     if reference_files is not None:
-        saved = {'record-zip': 'fusion-reference.rs', 'record-fold': 'codegen-reference.rs'}[protocol]
+        saved = {'record-zip': 'fusion-reference.rs', 'record-fold': 'codegen-reference.rs', 'packed-records': 'codegen-reference.rs'}[protocol]
         assert set(reference_files) == {'manifest.json', 'fwp', saved, 'reference.patch'}
     return dict(source=source, architecture=architecture, session=session, files=files,
                 referenceFiles=reference_files,
@@ -256,7 +257,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--input', type=Path, required=True)
     parser.add_argument('--input-format', choices=['directory', 'zip'], required=True)
-    parser.add_argument('--protocol', choices=['array-lists', 'record-zip', 'record-fold'], required=True)
+    parser.add_argument('--protocol', choices=['array-lists', 'record-zip', 'record-fold', 'packed-records'], required=True)
     parser.add_argument('--reference', type=Path)
     parser.add_argument('--source', required=True)
     parser.add_argument('--arch', choices=['x86_64', 'aarch64'], required=True)

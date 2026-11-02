@@ -1,90 +1,144 @@
 # Current work
 
-**Next:** publish the completed driver-comparison batch as one PR, then audit all
-nine production jobs and documentation for its exact final head before squash
-merge. No further diagnostic timing is needed; all four declared sessions passed
-native controls and independent full-archive audit. Original timing goals remain open.
+**Next:** monitor [PR #248](https://github.com/e6qu/fun-with-pipes/pull/248)'s exact-head
+nine-job production matrix and documentation. Audit every failed job and completed
+target before batching repairs; audit all passing logs before squash merge.
+All focused checks and all four timing archive audits are complete. PR #247 is
+verified and merged; #248 is the sole active PR.
 
 ## Branch and delivery
 
-- Worktree `/private/tmp/fwp-array-consumption`, branch
-  `array-observation-diagnostics`, now rebased onto verified main `7e48e438`.
-  The primary checkout remains untouched. Keep one active PR.
-- [PR #246](roadmap-history.md#array-preparation-diagnostic-pr-246) merged as
-  `7e48e438d3b78ea357017a0cd1adae26a85fb0a0`, after all nine production jobs
-  (`41478753238`) and documentation (`41478745298`) passed at `44626348`.
-  Every full job/target log is audited. Tree `dd953092b6d9c0945ef1fc687220efa2a2939326`
-  matches the tested head; the raw squash message is one 61-character line, with
-  no body/trailers. Duplicate main checks `41495751007` / `41495750634` were cancelled.
-- Audit logs, metadata and helpers remain under `/private/tmp/fwp-246-*`.
-  Both Linux archives cover 257 targets / 1,034 tests; each macOS architecture
-  covers 131 regular targets / 650 tests and 126 ownership targets / 379 tests.
-  Each complete Windows job reports 853 passing tests. Existing ignored runner
-  measurements and Windows' two POSIX-PTY SDK skips remain explicit; its eleven
-  applicable SDK tests pass. Reviewed panic messages are deliberate scheduler
-  controls. No unresolved production failure.
+Worktree `/private/tmp/fwp-array-consumption`, branch `derivative-temporary-storage`.
+Primary checkout untouched. The complete batch was rebased onto verified main
+`389337b9`; reviewed checkpoint `44407aff` includes all four sessions, the report
+checker, regression tests, workflow integration and streamlined tracking. The
+final tracking update adds this PR link before production validation starts.
+Compiler and test sources are byte-identical to measured `a4f3200c`; the rebased
+compiler commit is `b08cdf91`. Immutable measurement tags remain unchanged.
+Use `gh pr checks 248` / `gh pr view 248 --json headRefOid,statusCheckRollup` to
+identify the final head and run IDs; do not treat draft/skipped jobs as validation.
 
-## Driver-comparison evidence
+Initial head `b06a36baa4bc71d56a5a5b4ab821a047f5602196` ran production
+`41522419557` and documentation `41522418627`. The documentation failure is a
+stale scalar-array reference test comparing current entire C generation against
+an old baseline. Repair pins both sides of that historical comparison and adds
+a current-source round-trip check preserving unrelated changes; all three tests
+pass (0.14s). The complete failed documentation log is retained in verification.
+All other completed documentation controls are audited; the apparent earlier
+Rust failure is the intentional native-runner propagation control.
 
-- Frozen [protocol](measurements/array-observation-boundaries.md): `c583459b`,
-  tag `roadmap/array-observation-protocol-2026-11-02`.
-- Measured source: `d1f18ff74727a62cffa85506fc912597a8a3d7e6`, tag
-  `roadmap/array-observation-runner-2026-11-02`. These original identities remain
-  retained after rebase. There is no compiler/runtime change.
-- [Complete report](measurements/array-observations-2026-11-02/README.md): four
-  native sessions, all source/binary/command/sample identities audited;
-  four CPU-only rejections retained. No completed timing repeated.
-- Added observations alone retain the early large-AMD64 pattern. The complete
-  zero-preparation driver changes it but raises total timed work 7.7–9.8%.
-  ARM64 consumption instead becomes 4.5–5.4% slower. All ARM64 and large-AMD64
-  copies pass; thirteen small-AMD64 copy limits fail and stay explicit.
-- Every version/copy/sample position, managed count, RSS, instruction size and
-  stack estimate is retained. Absent CPU/fault observations stay blank. Close
-  this diagnostic without hidden preparation or a speculative ownership fix.
+The benchmark job `125541517034` passes both tests with no diagnostics. Every
+production job was checked before the repair push; no production failure was
+reported. Supersede the unfinished initial run when publishing this test/docs-only
+repair rather than let two complete matrices consume runners. No production
+compiler or native test source changes. Identify the new final run IDs through
+PR #248; keep a local status update while gates run rather than restart CI solely
+to publish their IDs. Draft/skipped jobs are not validation.
 
-| Session | Run / job | Artifact | Full local audit |
-|---|---|---|---|
-| ARM64 1 | `41483622413` / `125408109437` | `13160584315` | Pass, 4.51s |
-| ARM64 2 | `41483622413` / `125408109314` | `13162246109` | Pass, 4.56s |
-| AMD64 1 | `41483622413` / `125408109605` | `13162735018` | Pass, 4.63s |
-| AMD64 2 | `41487610457` / `125421960114` | `13163836448` | Pass, 4.82s |
+[PR #247](roadmap-history.md#benchmark-driver-comparison-pr-247) merged as
+`389337b9495f8fc2c4343339765707c4503b9984`. All nine production jobs and documentation
+pass on `bb2e5b29fa6f53b3f187c3fba3fd15d38ff4085b`; every job/target log is audited.
+The final macOS ARM64 job `125524990804` passes 126 targets / 379 tests and all
+85 corpus programs; full log: 128 summaries / 381 passes / 20 ignored. Its only
+diagnostic is an already-installed OpenSSL notice. Two earlier attempts had no
+runner. The squash has the identical tested tree and a verified 50-character
+single-line message. Duplicate same-tree main runs `41521347856` and `41521347736`
+are confirmed cancelled. Full final logs and artifacts remain `/private/tmp/fwp-247-*`.
 
 ## Roadmap status
 
 | Step | Status | Evidence / remaining work |
 |---|---|---|
-| 1 | Verified | Frozen three-driver boundaries and exact source reconstruction |
-| 2 | Verified | Native numerical, ownership, actual omitted-destruction and clock-failure controls |
-| 3 | Verified | All four full archives audited, every host rejection preserved |
-| 4 | Verified | Complete 96-role table and report preserve all timing limits and failures |
-| 5 | In progress | Publish this combined batch, complete final gates and verified squash merge |
+| 1 | Verified | Fresh baseline and protocol frozen before compiler edits |
+| 2 | Verified | Packed storage lowering preserves evaluation order and callback owners |
+| 3 | Verified | Both native Linux GCC/Clang suites; all 96 count observations and broken cleanup controls |
+| 4 | Verified | All four timings and four rejected hosts audited; the failed timing limit remains open |
+| 5 | In progress | PR #248 complete batch; run/audit all final gates, then squash-merge |
 
-## Checks, repairs and resources
+## Compiler and correctness evidence
 
-Guarded checks pass: three source/schedule tests (0.14s), all 48 retained C input
-variants (0.86s), workflow lint (6.33s), 213 documentation link sets (3.00s), and
-complete compact write/check replay (2.96s / 3.13s). All 48 memory profiles have
-identical storage fields across five samples (0.25s). The report's representative
-values also capture their maxima. The final delivery-record link check passes
-(213 link sets, 106 immutable pairs/tags, five roadmap steps; 3.03s).
-No local compiler build, full suite or benchmark.
+[Report, protocol and verification](measurements/derivative-temporary-storage-2026-11-02/README.md).
+A sole-use mapped numeric-record collection becomes one owned word buffer.
+All map calls finish before folding; seed evaluation stays at its source position.
+Numeric bits own no children. Existing typed cleanup releases the buffer on failure.
 
-A source test caught and fixed a global clock replacement before publication;
-controls now alter only benchmark clocks. One local audit rejected an unfinished
-download; waiting for completion resolved its digest check without a measurement
-rerun. Stale #243/#245 and derivative/array next-step passages now link completed
-work. The glossary explains drivers, clocks, faults, switches and virtual memory.
+| Checkpoint | Source / run | Result |
+|---|---|---|
+| Baseline | `bb2e5b29` / `41497441785` | Both GCC hosts; all 96 observations audited |
+| Frozen protocol | `15aa4c0a` | Published before compiler edits |
+| Initial compiler/counts | `229ea441` / `41505591902` | All 96 limits pass; full archives and logs audited |
+| First cleanup controls | `0c5b9827` / `41507658382` | GCC/Clang O1/O2; 22 passes per host |
+| Expanded callback controls | `76069cfa` / `41509110166` | Boxed fixture omitted stdout initialization; both failures retained |
+| Combined repair | `a4f3200c` / `41511493637` | Both native jobs pass 40 tests; counts and actual probes fully audited |
 
-Completed #243/#244 temporary checkouts were removed after tree verification.
-The completed #245 checkout was removed after saving its exact uncommitted handoff
-and patch under `/private/tmp/fwp-245-worktree-handoff-preserved`; commits and
-evidence remain. Preserve at least 64 GiB free; use the local guard serially.
+Immutable tags: `roadmap/derivative-temporary-storage-protocol-2026-11-02`,
+`roadmap/derivative-temporary-storage-counts-2026-11-02` and
+`roadmap/derivative-temporary-storage-runner-2026-11-02`.
+Full measured source: `a4f3200c9b97b955c3f3603788eacbfac19fde4e`.
 
-After this delivery, [PLAN.md](../PLAN.md#next-compiler-investigation-temporary-derivative-lists)
-names the next source-level opportunity: compact temporary mapped records while
-preserving map-before-fold order. First profile current code; do not assume the
-historical allocation sites survive or interleave stateful derivative operations.
+Largest current-only O2 solve: 208,086 → 156,943 managed requests;
+21,888 → 17,824 peak managed bytes. Retains, raw tape/workspace storage and
+operation counts are unchanged; final storage is zero. All 96 observations match
+`2*n+1` fewer requests / `48*n+16` fewer requested bytes per update,
+where `n=coordinates-1`. All 52 generated case/control C sources match the initial
+implementation; the later compiler repair skips use scans for unrelated bindings.
 
-Merge only after all final-head gates and audits pass. Supply one subject of at
-most 80 characters and an empty body, with no trailers/attribution. Verify tree
-and message, then continue PLAN.md.
+Coverage includes scalar/boxed callback owners; map/between-stage/fold traps;
+cancellation; buffer/final allocation failure; aliases; nine selection exclusions;
+and deliberately omitted physical destruction. Eight ordinary probes per host
+return zero; eight missing-release probes return 90. Related autodiff, worker
+preparation and zip-unwind tests pass. Final archives and independent audits are
+`/private/tmp/fwp-packed-final-*`; failed expanded evidence is
+`/private/tmp/fwp-packed-expanded-*`. See verification for retained identities.
+
+## Paired timing evidence
+
+All sessions use the immutable `a4f3200c` runner tag and an exact same-source
+reference disabling only packed-record lowering. No completed measurement is
+repeated. The frozen identical-copy and regression limits are unchanged.
+
+| Measured run / jobs | Result | Independent report |
+|---|---|---|
+| `41514265188`: ARM1 `125513671132`, ARM2 `125513671731` | Both pass | `41517598393` passes |
+| `41514265188`: AMD2 `125513671211` | Zero-update history 2.024% slower, limit 2%; all other limits pass | Same report preserves failure |
+| `41518220615`: AMD1 `125527179997` | Pass; complete log has no diagnostics | `41521413075` passes |
+
+Four session-1 CPU rejections stopped before building/timing: runs `41514265188`
+(EPYC 9V74), `41514783218` (9V45), `41515994738` (9V74), `41517608442` (9V45).
+Their independent reports `41517598393`, `41517734538`, `41517746039`,
+`41518209544` all pass. The fifth host had the required EPYC 7763.
+
+Compact reports, complete compressed logs, source/binary identities and full
+archive metadata are retained in
+`docs/measurements/derivative-temporary-storage-2026-11-02/timing/`.
+[Readable tables](measurements/derivative-temporary-storage-2026-11-02/timing.md)
+show all 24 cases. Across all four sessions, cases with at least 199 updates use 5.1–14.2% less time. All copy controls pass;
+the failed AMD64 zero-update limit and separate D2 goals remain open.
+
+Use `scripts/report-packed-records.py` to regenerate/check the final tables.
+The final compact archive and metadata are `/private/tmp/fwp-packed-final-report*`;
+artifact `13178215928` is digest-verified. Full final retained archive is
+`13177398568`; full original retained archives are identified in each run's
+`report-artifacts.json`. Full native archives were independently audited on
+GitHub; only compact results were downloaded locally. Final local replay and
+render pass (0.26s / 0.74s); no unexpected job diagnostics.
+
+## Focused checks and resources
+
+- Count/archive replay: pass (4.10s). Actual-probe/binary audits: pass (0.13/0.14s).
+  Source/count equivalence: pass (0.26s). Full logs have no unexpected diagnostics.
+- Reference mutation checks: three pass; timing budgets: twelve; historical
+  archive checks: eleven; evidence retention: three. Longest guard run: 50.92s.
+- New compact-report checks: five pass (1.93s), rejecting changed medians,
+  erased failures and damaged payload/binary/reference identities. Workflow lint
+  passes (0.26s). Four-session report replay/render passes (0.74s).
+- Last published docs: 218 link sets, 106 immutable pairs and five plan steps
+  pass (2.89s). Run the link check after the final docs/plan changes.
+
+No local full Rust build, suite or benchmark. One saved-C fixture repair was
+compiled/run under the guard earlier; full work remains on GitHub. Last free
+space: 65.4 GiB; no generated local target data. Keep focused checks serial with
+`python3 scripts/local-guard.py`; do not raise or bypass resource limits.
+
+Merge only after all exact-head gates and audits pass. Supply a single-line
+subject of at most 80 characters and an empty body; verify raw message and tree.

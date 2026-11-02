@@ -442,6 +442,39 @@ as other synchronous handlers (implemented in #241, verified in #242). For
 It evaluates `seed` before entering the handler; failures during the callback are
 caught by `attempt`. The handler itself remains in place.
 
+### Temporary mapped numeric records
+
+The next compiler batch extends the storage choice to a mapped list used only
+by one known left fold. For example, mapping `(x, x*x)` over `[1, 2]` produces
+`[(1, 1), (2, 4)]`; summing both fields gives `(3, 5)`. The compiler can keep those
+four numbers consecutively in one buffer:
+
+```text
+Before: list cell → record (1, 1); list cell → record (2, 4)
+After:  one owned buffer [1, 1, 2, 4] → fold → final record (3, 5)
+Order:  map all inputs → evaluate the original seed expression → fold
+```
+
+The seed stays at its actual source position; the diagram shows a seed written
+after the map. This is a storage change, not interleaving map and fold callbacks.
+That distinction matters when callbacks print, fail or record derivative work.
+
+- Prove a sole use along straight-line bindings. Shared or escaping lists are
+  not selected, even if their elements have numeric fields.
+- Require known callbacks without captured values, flat machine-sized numeric
+  results, and a fold worker that accepts separate numeric fields.
+- Check buffer size before allocating. Its numeric bits own no child values.
+- Keep input owners and the buffer protected through callbacks; release the
+  buffer on ordinary return, traps, cancellation and allocation failure.
+- Insert the representation change after region analysis and before ownership
+  insertion. The internal `Array[I64]` holds numeric bits, not public array values.
+
+Native Linux GCC/Clang O1/O2 controls and exact allocation counts pass. All four
+timing sessions are audited; one AMD64 zero-update limit remains unmet. The full
+platform matrix remains. See the
+[measurement report](measurements/derivative-temporary-storage-2026-11-02/README.md)
+for selection limits, deliberate missing-destruction tests and open timing goals.
+
 ## Numerical specialization
 
 The optimizer removes work only when doing so preserves observable behavior:

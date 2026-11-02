@@ -51,7 +51,7 @@ def rejected_host(job, host):
 
 
 def retain_session(repository, run, source, job, artifacts, output, summary, protocol):
-    assert protocol in ('record-zip', 'record-fold')
+    assert protocol in ('record-zip', 'record-fold', 'packed-records')
     match = re.fullmatch(r'descent_peers \(([12]), (ubuntu-latest|ubuntu-24\.04-arm)\)', job['name'])
     assert match, job['name']
     session, runner = int(match[1]), match[2]
@@ -103,7 +103,7 @@ def retain_session(repository, run, source, job, artifacts, output, summary, pro
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--protocol', choices=['record-zip', 'record-fold'], required=True)
+    parser.add_argument('--protocol', choices=['record-zip', 'record-fold', 'packed-records'], required=True)
     parser.add_argument('--repository', required=True)
     parser.add_argument('--run', type=int, required=True)
     parser.add_argument('--source', required=True)
