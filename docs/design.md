@@ -386,6 +386,12 @@ on the generated worker, not just the source type. Destructuring an argument bef
 the next `fn` can currently leave a returned closure and a boxed result; that path
 is semantically equivalent but does not qualify for this optimization.
 
+Known partial callbacks passed to `attempt` now use the same specialization pass
+as other synchronous handlers (PR #241, native verification pending). For
+`attempt (fold step seed) values`, the pass exposes the fold inside the callback.
+It evaluates `seed` before entering the handler; failures during the callback are
+caught by `attempt`. The handler itself remains in place.
+
 ## Numerical specialization
 
 The optimizer removes work only when doing so preserves observable behavior:

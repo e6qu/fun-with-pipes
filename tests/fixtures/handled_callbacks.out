@@ -6,3 +6,9 @@ Err "expected"
 (7, 7)
 before
 Err "expected"
+capture
+input
+prefix:value
+Err "callback"
+capture failure
+Err "capture"

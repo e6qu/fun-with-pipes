@@ -1,16 +1,16 @@
 # Current work
 
-**Next:** audit focused run `41369894377` and count run `41369934860`, both at
-`a690733e88790c20261f21dcf24f601aefe5e73c`, for [PR #241](https://github.com/e6qu/fun-with-pipes/pull/241).
-The unchanged compiler allows count/cleanup checks alongside the fixture repair.
-Once complete, use `record-fold-count-report` to audit both archives on GitHub;
-then run paired `record-fold-time` and final production CI.
-Keep the frozen requirements and earlier failed timings unchanged.
+**Next:** publish the `attempt` specialization repair and run the expanded
+`record-fold-checks` suite (now including `call_effects`). Audit count run
+`41369934860` at `a690733e` independently; verify updated-compiler counts before
+paired timings and the final matrix. [PR #241](https://github.com/e6qu/fun-with-pipes/pull/241)
+contains all repairs, measurements and remaining validation.
 
 Branch `numeric-fold-validation` starts at merged #240 (`5fbd6bea`) in
 `/private/tmp/fwp-returned-callables`. Preserve unrelated primary-checkout edits.
-No compiler change has been made since `0c404719`; this batch fixes coverage,
-clarifies the selection boundary and completes the outstanding validation.
+The fold codegen is unchanged since `0c404719`. This batch repairs its fixtures
+and extends the existing known-callback specializer to `attempt`, keeping captures
+outside and callback execution inside the handler. Native repair checks are pending.
 
 ## Roadmap status
 
@@ -57,11 +57,36 @@ call path. The repaired fixture uses field projections for all three selected
 callbacks, retains a destructured semantic comparison and shares the seed within
 its input list. Managed/nested/wide and other excluded cases now isolate their
 intended boundary. Source/C and native outputs are retained for future failures.
-The design example now states this limitation. No compiler repair is yet indicated.
+The design example now states this limitation. The first repair exposed a second missing boundary, described below.
 
 The [protocol](measurements/derivative-record-folds.md) defines exact count,
 cleanup, code/stack and timing budgets. Whole-solve savings and speed remain
 unverified. Do not repeat unchanged noisy timing runs to seek a pass.
+
+## Follow-up results and compiler repair
+
+Focused run `41369894377` at `a690733e` completes on all three native hosts with
+23 passed tests and one failed assertion: only two of the three expected fold
+helpers were selected. Exact counts, reuse, traps, allocation failure and real
+cancellation pass. Logs: `/private/tmp/fwp-241-focused-{arm,amd,mac}.log`.
+AMD64 artifact `13108972861` SHA-256
+`41628f3ca84c555d603f64e701cef1eb660852d6f1faf967254d3f7626624b75` retains the
+failed generated source at `record_fold_values/stack-0.c`.
+
+That C shows `attempt (fold fail-step seed)` using the generic fold entry.
+`attempt` was missing from `rewrite_hofs`' existing synchronous-handler selection.
+The repair adds it there, preserving handler creation and capture evaluation.
+Keep the stronger three-helper assertion. `call_effects` now compares raw and
+optimized interpretation with native O0/O1/O2, including capture/input order and
+capture failure caught by an outer handler. New fixture outputs match the retained
+raw interpreter (0.24s); formatting passes (1.99s).
+
+Count run `41369934860` uses the pre-repair compiler at `a690733e`.
+AMD64 job `125038021591` passes all six inputs/forms/O1/O2/workspace observations
+and unwind controls; complete log audit finds no warnings or unexpected failures.
+ARM64 job `125038021895` is still running. Use `record-fold-count-report` with
+that run and exact source to independently verify archives on GitHub; preserve
+this pre-repair evidence. Do not label it verification of the changed optimizer.
 
 ## Local verification
 

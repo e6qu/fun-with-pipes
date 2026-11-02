@@ -109,6 +109,15 @@ fn handled_callback_application_matches_interpretation_and_native_execution() {
         include_bytes!("fixtures/handled_callbacks.out")
     );
     assert!(reference.stderr.is_empty(), "{reference:?}");
+    let optimized = Command::new(compiler)
+        .env_remove("FWP_NO_OPT")
+        .args(["run", "--interp"])
+        .arg(&source)
+        .output()
+        .unwrap();
+    assert_eq!(optimized.status.code(), reference.status.code());
+    assert_eq!(optimized.stdout, reference.stdout);
+    assert_eq!(optimized.stderr, reference.stderr);
     {
         let cfile = dir.join("main.c");
         let emitted = Command::new(compiler)
@@ -121,7 +130,7 @@ fn handled_callback_application_matches_interpretation_and_native_execution() {
             .unwrap();
         assert!(emitted.status.success(), "{emitted:?}");
         let code = std::fs::read_to_string(cfile).unwrap();
-        for opt in ["-O0", "-O2"] {
+        for opt in ["-O0", "-O1", "-O2"] {
             let binary = dir.join("main.exe");
             fwp::cgen::compile_c(&code, &binary, opt).unwrap();
 

@@ -1181,7 +1181,7 @@ fn rewrite_hofs(
     // body avoids rebuilding nested partial applications on every invocation.
     let (callback, n) = match sym.as_str() {
         "run-state" | "grpc.with-tls" | "grpc.with-metadata" | "grpc.with-deadline" => (1, 1),
-        "grpc.with-gzip" | "grpc.with-response-metadata" => (0, 1),
+        "attempt" | "grpc.with-gzip" | "grpc.with-response-metadata" => (0, 1),
         _ => {
             let Some(n) = hof_arity(sym) else { return };
             (0, n)

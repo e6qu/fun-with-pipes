@@ -33,6 +33,8 @@ Step 3's first native run passed allocation/release controls on both GCC hosts
 and Clang, but its semantic fixture failed selection: destructuring before the
 next `fn` left a returned closure. The follow-up uses direct-field callbacks,
 retains semantic comparisons with destructuring, and tightens exclusion coverage.
+That repair exposed missing known-callback specialization in `attempt`; extend
+the existing pass and verify capture order and handler boundaries.
 It must finish the added unwind controls, measurements and final validation.
 No whole-solve allocation saving or speedup is verified yet.
 Mapping must still finish before summation when interleaving changes recording
