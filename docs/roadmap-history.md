@@ -21,9 +21,12 @@ unchanged peak managed storage, and 5.8–7.8% faster larger solves. Sixteen spe
 limits, one timing-noise limit and 15 ARM64 code-growth limits remain unmet.
 No completed noisy timing was repeated. D2 and prior limits remain open.
 
-Full production run `41385349559` was started before merge and remains pending.
-Duplicate merge-tree run `41385360274` was cancelled after tree equality and no
-failed jobs were confirmed. This is not yet a fully verified platform delivery.
+Full production run `41385349559` subsequently exposed missing C-harness roots
+and a callback-unwind leak: inline work ran before caller cleanup was installed.
+[PR #242's repair](measurements/numeric-callback-bindings.md#cleanup-repair-found-by-full-ci)
+keeps the original failures and adds collection/array/state regression coverage.
+Duplicate merge-tree run `41385360274` was cancelled while queued after checking
+tree equality. #241 is not a fully verified platform delivery.
 
 ## Numeric record fold implementation (PR #240)
 

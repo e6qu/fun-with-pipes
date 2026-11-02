@@ -53,7 +53,7 @@ def audit_tests(log):
     """Require every named target to finish, with its complete expected tests."""
     log = re.sub(r'\x1b\[[0-9;]*[A-Za-z]', '', log)
     expected = {'cached_map_borrows': 3, 'caf_ownership': 3,
-                'collection_construction': 3, 'decoder_partial': 1,
+                'collection_construction': 4, 'decoder_partial': 1,
                 'inline_caf_ownership': 7, 'map_set_ownership': 7,
                 'mapped_array_construction': 3, 'numeric_array_fusion': 4,
                 'protocol': 11, 'range_set': 3, 'repl': 11, 'static_constants': 1}

@@ -586,7 +586,7 @@ main = "owned" | concat " input" | attempt (hold guard) | echo
 fn actual_caller_releases_owned_values_and_preserves_aliases() {
     let dir = Scratch::new("caller");
     let src = dir.0.join("caller.fwp");
-    let exe = dir.0.join("caller");
+    let exe = dir.0.join("caller.exe");
     let fwp = env!("CARGO_BIN_EXE_fwp");
     std::fs::write(&src, SOURCE).unwrap();
     let reference = checked(
@@ -675,7 +675,7 @@ fn check_later_argument_failure(scalar: bool) {
         "arguments"
     });
     let src = dir.0.join("arguments.fwp");
-    let exe = dir.0.join("arguments");
+    let exe = dir.0.join("arguments.exe");
     let fwp = env!("CARGO_BIN_EXE_fwp");
     let source = r#"export guard : I64 -> String ! {Error[String]}
 guard = if (eq 0) (const "expected" | fail) show
@@ -752,7 +752,7 @@ int main(void) {
 fn boxed_wrapper_and_unboxed_worker_release_separate_owners() {
     let dir = Scratch::new("worker");
     let src = dir.0.join("worker.fwp");
-    let exe = dir.0.join("worker");
+    let exe = dir.0.join("worker.exe");
     let fwp = env!("CARGO_BIN_EXE_fwp");
     let source = format!(
         "Box = {{ text: String }}\n{}",
@@ -827,7 +827,7 @@ int main(void) {
 fn incoming_parameters_release_before_cancelled_entry_tick() {
     let dir = Scratch::new("cancel-entry");
     let src = dir.0.join("entry.fwp");
-    let exe = dir.0.join("entry");
+    let exe = dir.0.join("entry.exe");
     let source = SOURCE.replace("main = \"owned\" | concat \" input\" | attempt (hold guard) | echo",
         "main = [task.yield (), \"owned\" | concat \" input\" | attempt (hold guard) | echo] | ignore");
     std::fs::write(&src, source).unwrap();
@@ -876,7 +876,7 @@ int main(void) {
 fn struct_variant_owner_releases_its_typed_payload() {
     let dir = Scratch::new("variant");
     let src = dir.0.join("variant.fwp");
-    let exe = dir.0.join("variant");
+    let exe = dir.0.join("variant.exe");
     let fwp = env!("CARGO_BIN_EXE_fwp");
     std::fs::write(
         &src,

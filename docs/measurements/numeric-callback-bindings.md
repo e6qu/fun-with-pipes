@@ -2,7 +2,10 @@
 
 ## Problem and selected change
 
-These callbacks compute the same running sum:
+A fold updates an accumulator once per list item, starting from a seed. These
+callbacks both add an integer count and a floating-point total. The first reads
+tuple fields by index (`.0`, `.1`); the second names them in its parameters
+(*destructuring*):
 
 ```fwp
 projected : (I64, F64) -> (I64, F64) -> (I64, F64)
@@ -14,8 +17,8 @@ destructured = fn (count, total) -> fn (n, value) ->
 ```
 
 For seed `(0, 0.5)` and input `[(1, 1.5), (2, 2.5)]`, both produce `(3, 4.5)`.
-The second form currently leaves an indirect call in its worker and misses the
-numeric fold optimization. Saved #241 C shows that boundary; a retained verified
+Before this change, the second form leaves an indirect call in its worker and
+misses the numeric fold optimization. Saved #241 C shows that boundary; a retained verified
 #239 compiler reproduces its source IR:
 
 ```text
@@ -65,12 +68,14 @@ storage and heap-lifetime transformations require their own proof and evidence.
 
 Preparation commit `e0280ee2` and tag
 `roadmap/numeric-callback-bindings-protocol-2026-11-02` precede compiler edits.
-The implementation extends `Opt::apply` only. Unit controls protect field/type
+The selected optimization extends `Opt::apply` only; the CI repair below fixes
+a separate cleanup-order bug. Unit controls protect field/type
 boundaries and constructor stages. Existing native probes now exercise tuple and
 named-record destructuring, exact allocation/release counts, first-stage overflow
-before a later effect, escaping aliases and cancellation. These new checks pass
-on GCC ARM64/AMD64 and Clang ARM64 in run `41386463046`; complete validation
-including the following repairs is still required.
+before a later effect, escaping aliases and cancellation. Run `41389582456` at
+`60971efd` passes all nine optimizer and 72 integration tests on GCC ARM64/AMD64
+and Clang ARM64, including the repairs below. All nine final production jobs and
+documentation are still required for full platform verification.
 
 ## Cleanup repair found by full CI
 
@@ -96,7 +101,10 @@ Small Clang O1 controls using #241's emitted C isolate the order change:
 | Captured map callback over a range | 32 | 0 |
 | Captured set callback over a range | 32 | 0 |
 | Captured set callback over a list | 160 | 0 |
-| Captured state callback overflowing I64 | 16 | 0 |
+| Captured state callback overflowing I64, stack closure | 16 | 0 |
+| Same state callback, heap closure | 32 | 0 |
+| Two captured mapped-array failures, stack closures | 320 | 0 |
+| Same mapped-array failures, heap closures | 352 | 0 |
 
 These are causal generated-C controls, not validation of the new Rust compiler.
 The unfused collection controls already return to zero. Existing collection
