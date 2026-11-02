@@ -1,0 +1,23 @@
+export reverse-two : (String, String) -> (String, String)
+reverse-two = fn (a, b) -> (b, a)
+
+export reverse-eight : (String, String, String, String, String, String, String, String) -> (String, String, String, String, String, String, String, String)
+reverse-eight = fn (a, b, c, d, e, f, g, h) -> (h, g, f, e, d, c, b, a)
+
+export yield-two : (String, String) -> (String, String) ! {Async}
+yield-two = fn (a, b) -> let resumed = task.yield () in (b, a)
+
+export yield-eight : (String, String, String, String, String, String, String, String) -> (String, String, String, String, String, String, String, String) ! {Async}
+yield-eight = fn (a, b, c, d, e, f, g, h) ->
+    let resumed = task.yield () in (h, g, f, e, d, c, b, a)
+
+# Keep entry ticks and their ownership cleanup available to the native probe.
+export probe : () -> () ! {Async}
+probe = task.yield
+
+main = [
+    ("left", "right") | reverse-two | show | print,
+    ("a", "b", "c", "d", "e", "f", "g", "h") | reverse-eight | show | print,
+    ("same", "same") | reverse-two | show | print,
+    probe (),
+] | ignore

@@ -15,6 +15,7 @@ use crate::ir::*;
 use crate::ownership::ResultOwnership;
 use crate::value::Value;
 
+mod field_transfers;
 mod packed_records;
 mod regions;
 mod scalar_text;
@@ -4314,7 +4315,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
         true
     }
 
-    fn bind_local<'e>(&mut self, l: Local, v: &Expr, body: &'e Expr) -> &'e Expr {
+    fn bind_local<'e>(&mut self, l: Local, v: &'e Expr, body: &'e Expr) -> &'e Expr {
         if self.resource_slots.contains_key(&l) {
             if let Some(ResourceSlot::Variant(_, m)) = self.resource_slots.get(&l).cloned() {
                 let ty = self.locals[l as usize].clone();
@@ -4342,6 +4343,9 @@ impl<'g, 'p> FnGen<'g, 'p> {
             self.line(&format!("l{l} = {value};"));
             self.anchor_resource_binding(l, !matches!(v, Expr::Field(..)));
             return body;
+        }
+        if let Some(rest) = self.bind_field_transfers(l, v, body) {
+            return rest;
         }
         if self.bind_unique_array(l, v, body) {
             return body;

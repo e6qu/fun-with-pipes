@@ -64,6 +64,20 @@ with no diagnostics. Native host identities and archive digests match. Files
 `/private/tmp/fwp-248-windows-{arm,amd}.zip`, guarded audits 0.13s / 0.14s.
 Their full jobs still require TLS/executable checks and complete-log audits.
 
+Apple Silicon regular artifact `13181552842` passes: 131 targets / 650 tests /
+four ignored, no diagnostics, correct digest/head/shard inventory. Archive
+`/private/tmp/fwp-248-macos-arm-regular.zip`; audit 0.14s. The complete job
+`125547928724` now passes and is audited: 132 Rust summaries / 651 passes / four
+ignored, plus 11 process and 13 SDK tests. Diagnostics are the already-installed
+OpenSSL notice and the echoed `-W error::ResourceWarning` command, not a warning.
+Full log `/private/tmp/fwp-248-final-macos-arm-regular.log`.
+
+Apple Silicon ownership job `125547928273` also passes and is fully audited:
+128 Rust summaries / 384 passes / 20 ignored, only the OpenSSL notice. Target
+artifact `13181114405`: 126 targets / 382 passes / 20 ignored, no diagnostics.
+Full log `/private/tmp/fwp-248-final-macos-arm-ownership.log`, target archive
+`/private/tmp/fwp-248-macos-arm-ownership.zip`; both audits 0.14s.
+
 Documentation attempt 1 completed every check and checkout cleanup by 21:04:09Z,
 about 3m20s after its 21:00:49Z start, without a test failure. GitHub nevertheless
 marked it cancelled for the five-minute limit at 21:06:55Z. Preserve that as a
@@ -208,6 +222,35 @@ complete bounded transfers of two to eight already-separated counted fields,
 at least `p` fewer retains across the existing 96 observations, mapper input
 ownership unchanged. Publish its immutable tag before compiler edits. This is
 part of the grouped next PR, not an extra small PR or a repeat full matrix.
+
+Protocol published at `5cf8813a` under the immutable tag above, before edits.
+Next-stage candidate code: `src/cgen/field_transfers.rs` and its call from
+`bind_local`. The matcher recognizes the exact complete projection group and
+retains original IR/call-liveness pointers; three unit controls cover reordered
+and eight-field transfers, interrupted/repeated/partial/live-parent rejection.
+Rustfmt passes (0.14s); an initial missing `fn` in a test name was corrected.
+No Rust build or candidate runtime verification yet. Native direct/boxed/shared
+owner controls, two/eight fields, repeated child aliases and deliberate extra
+retain / omitted physical release are drafted in `record_conversion_ownership`
+and `tests/fixtures/field_owner_transfer*`. `field_owner_unwind_probe.c` covers
+entry/post-transfer traps and real cancellation, result-boxing allocation failure,
+retained aliases and deliberately missing physical release. All controls still
+require compiled runner verification. This is not verified support and not PR #248 code.
+
+Focused suite `field-owner-checks` in `numerics.yml` runs both native Linux hosts:
+build/lint, three selection tests, primitive inventory, five GCC target groups
+and three Clang groups, retaining toolchain/source identities and every probe/log.
+No timings or full matrix in that suite. Workflow lint passes (6.28s), Rust
+format check passes (0.27s). Publish an immutable candidate tag and dispatch
+this focused suite; continue monitoring/auditing PR #248 separately.
+
+PR #248's ARM64 compiler artifact `13181104014` is verified by archive digest,
+manifest source and binary digest, extracted to `/private/tmp/fwp-248-macos-arm`.
+It formats the new fwp fixture (0.01s), interprets the expected reversed tuples
+(0.26s), and emits baseline C (0.26s) to `/private/tmp/fwp-field-transfer-baseline.c`.
+These are fixture/baseline checks, not verification of the candidate. The package
+contains a tarball plus manifest (not a bare binary); only its regular executable
+was extracted. `fmt --help` is not supported; the documented `fmt PATH` was used.
 
 ## Focused checks and resources
 

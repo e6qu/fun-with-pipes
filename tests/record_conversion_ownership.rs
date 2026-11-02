@@ -12,6 +12,285 @@ fn checked(command: &mut Command) -> std::process::Output {
     );
     out
 }
+
+#[test]
+fn complete_field_moves_preserve_direct_boxed_and_shared_owners() {
+    let dir = std::env::temp_dir().join(format!("fwp-field-transfers-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let source = dir.join("transfers.fwp");
+    let cfile = dir.join("transfers.c");
+    std::fs::write(&source, include_str!("fixtures/field_owner_transfer.fwp")).unwrap();
+    let fwp = env!("CARGO_BIN_EXE_fwp");
+    let reference = checked(
+        Command::new(fwp)
+            .args(["run", "--interp"])
+            .arg(&source)
+            .env("FWP_NO_OPT", "1"),
+    );
+    let interpreted = checked(
+        Command::new(fwp)
+            .args(["run", "--interp"])
+            .arg(&source)
+            .env_remove("FWP_NO_OPT"),
+    );
+    assert_eq!(interpreted.stdout, reference.stdout);
+    assert_eq!(interpreted.stderr, reference.stderr);
+    checked(
+        Command::new(fwp)
+            .args(["build", "--memory", "dynamic", "--emit-c", "-O2"])
+            .arg(&source)
+            .arg("-o")
+            .arg(&cfile)
+            .env_remove("FWP_NO_OPT"),
+    );
+    let main_code = std::fs::read_to_string(&cfile).unwrap();
+    checked(
+        Command::new(fwp)
+            .args([
+                "build", "--fn", "probe", "--memory", "dynamic", "--emit-c", "-O2",
+            ])
+            .arg(&source)
+            .arg("-o")
+            .arg(&cfile)
+            .env_remove("FWP_NO_OPT"),
+    );
+    let emitted = std::fs::read_to_string(&cfile).unwrap();
+    let mut probe = String::from("\nstatic void field_release(V value) { if (fwp_rc_release_last(value)) { /* physical-field-release */ fwp_mem_free((void *)(uintptr_t)value); } }\n");
+    for (name, width) in [("reverse-two", 2), ("reverse-eight", 8)] {
+        let start = emitted.find(&format!("/* {name} :")).unwrap();
+        let definition = &emitted[start..];
+        let id = definition
+            .split("static fwp_wr")
+            .nth(1)
+            .unwrap()
+            .split_whitespace()
+            .next()
+            .unwrap();
+        let entry = format!("static V f{id}(");
+        let worker = &definition[..definition.find(&entry).unwrap()];
+        assert!(
+            worker.contains("/* move complete separated field owners */"),
+            "{name}: {worker}"
+        );
+        let arguments = (0..width)
+            .map(|i| format!("children[{i}]"))
+            .collect::<Vec<_>>()
+            .join(", ");
+        let fields = (0..width)
+            .map(|i| format!("fields[{i}] = value.f{i};"))
+            .collect::<Vec<_>>()
+            .join(" ");
+        probe.push_str(
+            &include_str!("fixtures/field_owner_transfer_probe.c")
+                .replace("@width@", &width.to_string())
+                .replace("@result_type@", &format!("fwp_wr{id}"))
+                .replace("@worker@", &format!("w{id}"))
+                .replace("@entry@", &format!("f{id}"))
+                .replace("@arguments@", &arguments)
+                .replace("@copy_fields@", &fields),
+        );
+    }
+    probe.push_str("\nint main(void) { fwp_heap_start(); fwp_fns = fwp_fn_table; fwp_prog_out = stdout; fwp_init_consts(); fwp_budget = INT32_MAX; for (int round = 0; round < 16; round++) for (int direct = 0; direct < 2; direct++) for (int shared = 0; shared < 2; shared++) for (int same = 0; same < 2; same++) { field_case_2(direct, shared, same); field_case_8(direct, shared, same); } return 0; }\n");
+    let measured = emitted
+        .replace(
+            "typedef uint64_t V;",
+            "typedef uint64_t V;\nstatic int field_active; static size_t field_dups;",
+        )
+        .replace(
+            "static inline void fwp_rc_dup(V v) {",
+            "static inline void fwp_rc_dup(V v) { if (field_active) field_dups++;",
+        )
+        .replace(
+            "int main(int argc, char **argv)",
+            "int original_main(int argc, char **argv)",
+        )
+        + &probe;
+    let mut failures = Vec::new();
+    for opt in ["-O1", "-O2"] {
+        let executable = dir.join(format!("main{opt}.exe"));
+        fwp::cgen::compile_c(&main_code, &executable, opt).unwrap();
+        let actual = Command::new(&executable).output().unwrap();
+        if !actual.status.success()
+            || actual.stdout != reference.stdout
+            || actual.stderr != reference.stderr
+        {
+            failures.push(format!("main/{opt}: {actual:?}"));
+        }
+        for (label, code, expected) in [
+            ("owners", measured.clone(), 0),
+            (
+                "extra-owner",
+                measured.replace(
+                    "/* extra-field-owner-control */",
+                    "if (direct) { fwp_rc_dup(fields[0]); fwp_rc_drop(fields[0]); }",
+                ),
+                251,
+            ),
+            (
+                "missing-free",
+                measured.replace(
+                    "/* physical-field-release */ fwp_mem_free((void *)(uintptr_t)value);",
+                    "/* omitted physical release */",
+                ),
+                253,
+            ),
+        ] {
+            let executable = dir.join(format!("{label}{opt}.exe"));
+            fwp::cgen::compile_c(&code, &executable, opt).unwrap();
+            let actual = Command::new(&executable).output().unwrap();
+            record_probe::save(
+                "complete-field-transfers",
+                &format!("{label}{opt}"),
+                &code,
+                &executable,
+                &actual,
+            );
+            if actual.status.code() != Some(expected)
+                || !actual.stdout.is_empty()
+                || !actual.stderr.is_empty()
+            {
+                failures.push(format!(
+                    "{label}/{opt}: expected {expected}, got {actual:?}"
+                ));
+            }
+        }
+    }
+    assert!(failures.is_empty(), "{}", failures.join("\n"));
+    std::fs::remove_dir_all(dir).unwrap();
+}
+#[test]
+fn complete_field_moves_preserve_unwind_and_result_boxing_cleanup() {
+    let dir = std::env::temp_dir().join(format!("fwp-field-unwind-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let source = dir.join("transfers.fwp");
+    let cfile = dir.join("transfers.c");
+    std::fs::write(&source, include_str!("fixtures/field_owner_transfer.fwp")).unwrap();
+    checked(
+        Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .args([
+                "build", "--fn", "probe", "--memory", "dynamic", "--emit-c", "-O2",
+            ])
+            .arg(&source)
+            .arg("-o")
+            .arg(&cfile)
+            .env_remove("FWP_NO_OPT"),
+    );
+    let emitted = std::fs::read_to_string(&cfile).unwrap();
+    let mut code = emitted.clone();
+    let mut probe = String::from(
+        r#"
+static fwp_task field_task;
+static int field_recover(void) { return 1; }
+static void field_enter(void) {
+    field_entries++;
+    if (field_mode == 1) fwp_trap("injected field entry failure");
+    if (field_mode == 2) { fwp_cur->cancelled = 1; fwp_check_cancel(); }
+}
+static V field_yield(void) {
+    field_yields++;
+    if (field_mode == 3) fwp_trap("injected field continuation failure");
+    if (field_mode == 4) { fwp_cur->cancelled = 1; fwp_check_cancel(); }
+    return 0;
+}
+"#,
+    );
+    for (name, width) in [("yield-two", 2), ("yield-eight", 8)] {
+        let start = emitted.find(&format!("/* {name} :")).unwrap();
+        let definition = &emitted[start..];
+        let id = definition
+            .split("static fwp_wr")
+            .nth(1)
+            .unwrap()
+            .split_whitespace()
+            .next()
+            .unwrap();
+        let entry_start = definition.find(&format!("static V f{id}(")).unwrap();
+        let worker = &definition[..entry_start];
+        assert!(
+            worker.contains("/* move complete separated field owners */"),
+            "{name}: {worker}"
+        );
+        assert_eq!(worker.matches("FWP_TICK();").count(), 1);
+        code = code.replace(
+            worker,
+            &worker.replace("FWP_TICK();", "field_enter(); FWP_TICK();"),
+        );
+        let entry = definition[entry_start..].lines().next().unwrap();
+        let boxing = "V result = fwp_rc_fresh(fwp_record(";
+        assert_eq!(entry.matches(boxing).count(), 1);
+        code = code.replace(
+            entry,
+            &entry.replace(
+                boxing,
+                &format!("field_fail_allocation = field_mode == 5; {boxing}"),
+            ),
+        );
+        let arguments = (0..width)
+            .map(|i| format!("children[{i}]"))
+            .collect::<Vec<_>>()
+            .join(", ");
+        probe.push_str(
+            &include_str!("fixtures/field_owner_unwind_probe.c")
+                .replace("@width@", &width.to_string())
+                .replace("@result_type@", &format!("fwp_wr{id}"))
+                .replace("@worker@", &format!("w{id}"))
+                .replace("@entry@", &format!("f{id}"))
+                .replace("@arguments@", &arguments),
+        );
+    }
+    code = code.replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic int field_mode, field_entries, field_yields, field_fail_allocation;\nstatic void field_enter(void); static V field_yield(void); static void fwp_trap(const char *);");
+    for signature in [
+        "static inline void *fwp_heap_alloc(size_t n, int kind) {",
+        "static inline void *fwp_alloc_init(size_t n) {",
+    ] {
+        assert_eq!(code.matches(signature).count(), 1);
+        code = code.replace(signature, &format!("{signature}\n    if (field_fail_allocation) {{ field_fail_allocation = 0; fwp_trap(\"injected field result allocation failure\"); }}"));
+    }
+    let yielding = "static V fwp_p_task_yield(void) {";
+    let start = code.find(yielding).unwrap();
+    let end = start + code[start..].find("\n}\n").unwrap() + 3;
+    code.replace_range(
+        start..end,
+        "static V fwp_p_task_yield(void) { return field_yield(); }\n",
+    );
+    probe.push_str("\nint main(void) { fwp_heap_start(); fwp_fns = fwp_fn_table; fwp_prog_out = stdout; fwp_init_consts(); for (int round = 0; round < 16; round++) for (int direct = 0; direct < 2; direct++) for (int shared = 0; shared < 2; shared++) for (int same = 0; same < 2; same++) for (int mode = 1; mode <= 5; mode++) { if (direct && mode == 5) continue; field_unwind_2(direct, shared, same, mode); field_unwind_8(direct, shared, same, mode); } return 0; }\n");
+    code = code.replace(
+        "int main(int argc, char **argv)",
+        "int original_main(int argc, char **argv)",
+    ) + &probe;
+    let physical = "static void fwp_rc_free_obj(V v) {\n    if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);\n}";
+    assert_eq!(code.matches(physical).count(), 1);
+    let broken = code.replace(
+        physical,
+        "static void fwp_rc_free_obj(V v) { (void)v; /* omitted physical release */ }",
+    );
+    let mut failures = Vec::new();
+    for opt in ["-O1", "-O2"] {
+        for (label, source, expected) in [("unwind", &code, 0), ("missing-free", &broken, 245)] {
+            let executable = dir.join(format!("{label}{opt}.exe"));
+            fwp::cgen::compile_c(source, &executable, opt).unwrap();
+            let output = Command::new(&executable).output().unwrap();
+            record_probe::save(
+                "complete-field-unwind",
+                &format!("{label}{opt}"),
+                source,
+                &executable,
+                &output,
+            );
+            if output.status.code() != Some(expected)
+                || !output.stdout.is_empty()
+                || !output.stderr.is_empty()
+            {
+                failures.push(format!(
+                    "{label}/{opt}: expected {expected}, got {output:?}"
+                ));
+            }
+        }
+    }
+    assert!(failures.is_empty(), "{}", failures.join("\n"));
+    std::fs::remove_dir_all(dir).unwrap();
+}
+
 #[test]
 fn record_conversion_overflow_releases_box_and_remaining_callers() {
     let dir = std::env::temp_dir().join(format!("fwp-record-conversion-{}", std::process::id()));
