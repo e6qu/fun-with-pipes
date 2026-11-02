@@ -8,8 +8,8 @@ necessary sharing. GC is removed; JIT and backward compatibility are excluded.
 
 #240/#241 implement direct numeric fold accumulators. [Their measured results](docs/measurements/derivative-record-folds.md)
 show allocation reductions and 5.8–7.8% faster larger solves. The user merged #241
-with its missed speed/size limits still open. Its full production matrix is
-running; fix any failures in this next batch. A merge alone is not verification.
+with its missed speed/size limits still open. Its full production matrix exposed missing test roots and a callback-unwind
+leak; repair both in this batch and audit the remaining jobs. A merge alone is not verification.
 
 The next concrete gap is source-form dependent code generation: tuple
 destructuring hides a known call behind field bindings, while equivalent explicit
@@ -21,7 +21,7 @@ proof, excluded values and exact checks before implementation.
 | Step | Work | Completion requirement |
 |---|---|---|
 | 1 | Confirm the source/IR boundary and record requirements | Retain the indirect-call example and freeze the local binding proof before compiler changes; record #241 merge and unresolved limits |
-| 2 | Expose known calls through safe record-field bindings | Preserve binding/argument order and existing ownership/resource guards; do not change global purity or constructor stages |
+| 2 | Expose known calls through safe record-field bindings | Preserve binding/argument order and ownership/resource guards; repair cleanup installed after inline callback execution; keep global purity and constructor stages |
 | 3 | Verify semantics, counts and cleanup together | Tuple/named-record cases, aliases, empty inputs, effects, rejected shapes, exact final-box counts, failure/cancellation and omitted-release controls pass on native GCC/Clang |
 | 4 | Complete platform validation and delivery | Audit #241 full CI, repair all encountered issues, update docs and pass all nine final-head production jobs plus documentation before squash merge |
 

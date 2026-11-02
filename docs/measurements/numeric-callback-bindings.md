@@ -68,4 +68,45 @@ Preparation commit `e0280ee2` and tag
 The implementation extends `Opt::apply` only. Unit controls protect field/type
 boundaries and constructor stages. Existing native probes now exercise tuple and
 named-record destructuring, exact allocation/release counts, first-stage overflow
-before a later effect, escaping aliases and cancellation. Native results pending.
+before a later effect, escaping aliases and cancellation. These new checks pass
+on GCC ARM64/AMD64 and Clang ARM64 in run `41386463046`; complete validation
+including the following repairs is still required.
+
+## Cleanup repair found by full CI
+
+#241 full run `41385349559` exposed a leak when a fused collection callback
+fails. The generated loop executed before the caller's cleanup record was
+installed. That record therefore could not release the original captured string
+or input list during error recovery:
+
+```text
+Before: evaluate arguments → run inline loop → install cleanup → bind result
+After:  evaluate arguments → install cleanup → run inline loop → remove cleanup
+```
+
+`FnGen::owned_hof` now returns an evaluated value. Ordinary calls install cleanup
+when binding their call expression; inline map/set construction, mapped arrays
+and `modify` install it before emitting the work. Argument evaluation order and
+typed owner accounting stay intact. No collector or extra retention is added.
+
+Small Clang O1 controls using #241's emitted C isolate the order change:
+
+| Case | Live bytes after recovery, before repair | After moving cleanup before work |
+|---|---:|---:|
+| Captured map callback over a range | 32 | 0 |
+| Captured set callback over a range | 32 | 0 |
+| Captured set callback over a list | 160 | 0 |
+| Captured state callback overflowing I64 | 16 | 0 |
+
+These are causal generated-C controls, not validation of the new Rust compiler.
+The unfused collection controls already return to zero. Existing collection
+failure tests now include captured mapped arrays. A state-overflow test checks
+raw interpretation, native O1/O2 with stack storage enabled/disabled, the exact
+trap, typed cleanup and zero final live storage. It restores the observer's State
+depth after unwinding so normal runtime scratch cleanup can finish.
+
+Full CI also found C harnesses relying on entries remaining reachable through
+`main`. Their directly called definitions now have explicit export roots. Runtime
+application probes additionally expose an actual function value so generic entry
+metadata remains present. Ordinary executable/interpreter comparisons, alias
+checks and deliberate omitted-release failures remain enabled.

@@ -1,7 +1,7 @@
 # Current work
 
-**Next:** verify the repaired caller/runtime/collection ownership probes on native GCC/Clang,
-then prepare the final full matrix for [PR #242](https://github.com/e6qu/fun-with-pipes/pull/242).
+**Next:** finish auditing the running focused jobs, publish the cleanup-order and
+remaining probe repairs together, then prepare the final full matrix for [PR #242](https://github.com/e6qu/fun-with-pipes/pull/242).
 Also audit #241 production `41385349559` as its remaining jobs finish.
 The [prepared scope](measurements/numeric-callback-bindings.md) remains unchanged.
 
@@ -16,32 +16,32 @@ Keep one active PR for this batch.
 |---|---|---|
 | 1 | Verified | Saved C and reproduced IR identify an application outside numeric field bindings; local proof and checks documented before code edits |
 | 2 | Implemented | `Opt::apply` accepts proved local flat-record reads; global purity and constructor-stage pass unchanged |
-| 3 | In progress | Boundary and escaping-stage unit controls, tuple/named-record allocation/unwind probes and first-stage trap fixture added; new native checks pass on GCC/Clang; five older harnesses need explicit export roots |
+| 3 | In progress | Boundary and escaping-stage unit controls, tuple/named-record allocation/unwind probes and first-stage trap fixture added; new native checks pass on GCC/Clang; full CI repairs need verification |
 | 4 | In progress | #241 full matrix running; next batch needs its own final exact-head matrix and documentation |
 
 ## Baseline delivery and CI
 
-The user merged #241 after the retention choice was presented, directing continued
-work. Treat that as retaining the benefits with unmet limits open, not as passing
-the original thresholds. Merge `81aed372` and PR head `45af930e` share tree
-`a188f53196b53797719ecbc0e89589517ab4959b`; the squash subject meets the one-line,
-80-character/no-trailer rule. Documentation `41375291046` passes; log
-`/private/tmp/fwp-241-docs-final.log` has only deliberate runner-control failures.
+The user merged #241 retaining measured benefits with unmet limits open. Merge
+`81aed372` and PR head `45af930e` share tree `a188f53196b53797719ecbc0e89589517ab4959b`.
+Its subject meets the commit rule. Docs `41375291046`/`41385359961` pass; audited
+logs contain only deliberate runner-control failures. Duplicate production
+`41385360274` was cancelled while queued after checking tree identity.
 
-Full run `41385349559`: benchmark passes; eight jobs still run, no reported failed step yet:
-Linux ARM/AMD `125084848880`/`125084848907`, regular macOS ARM/AMD
+Full run `41385349559`: benchmark passes; both ARM64 macOS shards fail. Audited
+255 target logs: missing entries in caller/runtime/map/filter/zip/reuse probes,
+and a 128-byte collection-callback leak. No compiler warnings or other failure.
+Windows ARM64's 55 resource/callback logs show the same map/filter/zip roots and
+collection leak. Remaining jobs still run; audit their later steps too.
+
+Jobs: Linux ARM/AMD `125084848880`/`125084848907`, regular macOS ARM/AMD
 `125084848914`/`125084848899`, ownership macOS ARM/AMD
 `125084848670`/`125084848861`, Windows ARM/AMD `125084848959`/`125084849027`,
-benchmark `125084848998`. Audit every completed target and warning.
-Duplicate merge run `41385360274` was cancelled while queued after verifying tree
-identity and no failed jobs. Post-merge docs `41385359961` passes.
+benchmark `125084848998`. Logs: `/private/tmp/fwp-241-full-arm-logs`,
+`/private/tmp/fwp-241-windows-arm-logs`, `/private/tmp/fwp-241-mac-arm-*.log`.
 
-#241's focused suite `41372899452` passes all 39 tests on each of Linux ARM64/AMD64
-and macOS ARM64. [The report](measurements/derivative-record-folds.md) retains both
-count audits and all four timing sessions, including 16 missed speed limits,
-one noisy AMD64 case and 15 ARM64 single-solve size failures. No count/timing
-rerun is needed for this next investigation. #239 remains the last fully verified
-platform baseline until the running matrix completes.
+[Measured results](measurements/derivative-record-folds.md) retain all original
+count/timing evidence and missed limits; do not rerun unchanged timing sessions.
+#239 remains the last fully verified platform baseline.
 
 ## Source investigation
 
@@ -58,55 +58,47 @@ Guarded command completed in 0.25s. This is compiler IR/source inspection, not a
 machine-code inference. Do not globally flatten constructors: that could retain
 an escaping record longer. Preserve the field bindings at their original point.
 
-## Local verification
+## Verification and repairs
 
-All focused commands use `python3 scripts/local-guard.py`, serially; full builds,
-suites and measurements run on GitHub. No local compiler build or native suite.
-Keep 64 GiB free disk, target data under 2 GiB, RSS under 1 GiB and the 180s guard.
-Retained baseline compiler: `/private/tmp/fwp-240-baseline-macos/fwp-macos-arm64/fwp`.
-Its identity and earlier validation are recorded in #241's history and reports.
+Use `python3 scripts/local-guard.py` for serial focused commands. Full compiler
+builds/suites stay on GitHub. No local compiler build was run. Keep 64 GiB free,
+target data under 2 GiB, RSS under 1 GiB and the 180s guard.
 
-Candidate verification so far:
+- Initial run `41386463046`, source `8677dd0a`: all nine optimizer tests and 48
+  integration tests pass on GCC ARM/AMD and Clang ARM; five old caller probes
+  fail before execution because their entries were removed. Logs fully audited.
+- Repair run `41388066920`, source `98bb58fd`: 14 targets. GCC ARM `125093213724` and Clang ARM `125093213792` confirm caller/map/filter/zip
+  repairs: 61 integration tests and all nine optimizer tests pass on each. Three runtime probes
+  still fail: direct export roots do not require runtime function-value entries.
+  Fix the fixture with an exported record containing the callback and assert
+  its owned entry metadata. GCC AMD `125093213562` still runs; audit its completed log too. Docs `41388066359` passes.
+- Narrower `41387498848` and docs `41387496768` were cancelled while queued;
+  the broader repair replaces them. No passing gate was discarded.
+- Reuse probe now roots its direct calls too. A child test process isolates its
+  explicit `FWP_STACK=0`/`FWP_VRET=0` settings without global environment mutation.
+- Full CI's collection leak is reproduced from #241's retained compiler and
+  emitted C. `owned_hof` emitted inline loops before `bind_call` installed live
+  caller cleanup. Install it before inline map/set, array and state work;
+  ordinary call expressions bind under the same cleanup at their execution point.
+- Add captured-array failure cases and an I64 state-overflow cleanup probe.
+  Keep exact trap/output, stack on/off, O1/O2 and zero final live storage checks.
+  Save C/executables/results before assertions. Focused suite expands to 16 targets.
 
-- Rust formatting passes (1.93s), workflow lint passes (4.94s), roadmap audit
-  passes (3.15s; 199 link sets, 106 preparation pairs, four steps).
-- Named-record fixtures type-check (0.35s). The first spelling incorrectly used
-  the nominal constructor in a binding pattern; corrected to field patterns
-  under their declared `Point` parameter type before publication.
-- `record_binding_stages.fwp` passes raw/optimized retained interpretation
-  (0.36s): outputs `argument`, `12`, `(13, 14, (0, 10))`, then overflow exit 101
-  without executing the later argument. Removed an invalid first-arrow effect
-  annotation during fixture construction; the language permits effects only on
-  the final arrow, so first-stage failure is tested with checked overflow.
-- Fixture formatting passes (0.01s). Candidate native behavior is not yet claimed.
-- Production benchmark log `/private/tmp/fwp-241-production-bench-final.log`
-  audited without unexpected diagnostics; release/allocation controls pass.
+Local controls: `/private/tmp/fwp-242-leak/`, scripts
+`/private/tmp/fwp-242-leak-probe.py`, `fwp-242-cleanup-control.py`,
+`fwp-242-state-probe.py`, `fwp-242-state-control.py` (all under `/private/tmp`).
+Guarded Clang O1 reproductions: fused map/range, set/range and set/list leak
+32/32/160 bytes; moving cleanup before execution gives zero. State overflow
+leaks 16 bytes after restoring State depth; the same correction gives zero.
+These source controls establish cause, not candidate compiler validation.
+Commands finish in 0.71–4.41s. Array-error and callback-export fixtures type-check;
+raw state overflow gives exit 101 and the expected arithmetic message.
+The initial state fixture incorrectly used an Error-effect callback for `modify`;
+corrected to a pure overflowing callback inside `fn () -> ...` before publication.
 
-The focused workflow now runs optimizer unit tests and adds existing
-`closure_ownership` and `compiler_call_liveness` targets to the previous eight.
-No new integration-test target or primitive contract was introduced.
-
-Focused run `41386463046` at `8677dd0a` finished on GCC ARM64
-`125088289043`, GCC AMD64 `125088289194` and Clang macOS ARM64
-`125088288963`. Each passes all nine optimizer unit tests and 48 integration
-tests, including every new semantic/count/unwind check. Five older
-`compiler_call_liveness` probes fail before execution: main-only compilation
-removes entries that their C harnesses call directly after `attempt` specialization.
-All three logs audited; no other failure or compiler warning was found.
-
-Repair: export the harness-called `guard`, `hold` and `pair` functions and compile
-with explicit main+export roots. Preserve ordinary main-only executable versus
-interpreter comparisons and all ownership/cancellation assertions. Retain input
-and generated C before entry lookup, with a named missing-entry diagnostic.
-The neighboring runtime-call, map, filter and zip probes have the same implicit
-reachability assumption. Give their harness-called functions explicit roots too;
-share the compile-and-save setup in `tests/support/exported_probe.rs`. Their
-ordinary executable comparisons and all leak/cancellation assertions remain.
-The focused suite now includes these four targets (14 total). No new test target
-or runtime behavior is introduced.
-
-Guarded Rust formatting passes (2.25s), workflow lint passes (5.40s), and roadmap
-audit passes (3.40s). Native repair verification is pending. The first repair
-run `41387498848` at `95f98c01` stayed queued and is superseded by this broader
-batch; do not spend builds on the narrower test set.
-Candidate documentation `41386462403` passes.
+Retained compiler: artifact `compiler-crashes-corpus-macos-15` from #241's run,
+path `/private/tmp/fwp-241-full-arm-logs/compiler-crashes-corpus-macos-15/work/fun-with-pipes/fun-with-pipes/target/debug/fwp`,
+SHA-256 `9ef9986e260c9594ea5706100a70b56b2017d6acaf52445d0b778f3e159a12c5`.
+The artifact contains the compiler only; no compiler crash is reported.
+Guarded Rust formatting (2.05s), workflow lint (5.46s) and fixture formatting
+(0.01s) pass. Roadmap audit passes (3.54s; 199 link sets, 106 preparation pairs, four steps).

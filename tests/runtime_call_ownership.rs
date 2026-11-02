@@ -35,6 +35,10 @@ impl Drop for Scratch {
 
 const SOURCE: &str = r#"export cap-error : String -> I64 -> I64 ! {Error[String]}
 cap-error = curry (both (.0 | string.length) (.1 | if (eq 0) (const "expected" | fail) (add 1)) | .1)
+# The C probes construct a runtime partial application of this function.
+# Keep an actual function-value use as well as the direct exported entry.
+export expose : () -> {callback: String -> I64 -> I64 ! {Error[String]}}
+expose = make {callback = const cap-error}
 main = 0 | attempt (cap-error ("owned" | concat " capture")) | echo
 "#;
 
@@ -55,6 +59,10 @@ fn failed_calls_reclaim_function_storage_without_collection() {
         .split('(')
         .next()
         .unwrap();
+    assert!(
+        emitted.contains(&format!("static const fwp_owned_fninfo fwp_owned_info{id}")),
+        "runtime application needs the callback's owned entry metadata"
+    );
     let probe = r#"
 static volatile V captured, function_value;
 int main(void) {
@@ -144,6 +152,10 @@ fn consumed_function_releases_captures_when_its_entry_fails() {
         .split('(')
         .next()
         .unwrap();
+    assert!(
+        emitted.contains(&format!("static const fwp_owned_fninfo fwp_owned_info{id}")),
+        "runtime application needs the callback's owned entry metadata"
+    );
     let probe = r#"
 static volatile V captured, function_value;
 /* Read the live allocator metadata, never the freed payload. */
@@ -554,6 +566,10 @@ fn cancelled_entry_releases_runtime_function_and_callee_parameters() {
         .split('(')
         .next()
         .unwrap();
+    assert!(
+        emitted.contains(&format!("static const fwp_owned_fninfo fwp_owned_info{id}")),
+        "runtime application needs the callback's owned entry metadata"
+    );
     let probe = r#"
 static volatile V captured, function_value;
 static fwp_task cancelled_call;

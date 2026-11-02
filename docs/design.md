@@ -396,6 +396,12 @@ nested fields retain their existing path; escaping partial functions keep their
 original constructor stages. [The prepared scope](measurements/numeric-callback-bindings.md)
 records the implementation and verification requirements; native checks are pending.
 
+Inline collection loops, mapped arrays and state updates need the same caller
+cleanup as an ordinary function call. Install that cleanup before their first
+allocation or callback: installing it around the final result is too late when
+a callback fails. [The repair evidence](measurements/numeric-callback-bindings.md#cleanup-repair-found-by-full-ci)
+records the exposed leak and its regression checks.
+
 Known partial callbacks passed to `attempt` now use the same specialization pass
 as other synchronous handlers (PR #241, focused GCC/Clang checks pass). For
 `attempt (fold step seed) values`, the pass exposes the fold inside the callback.
