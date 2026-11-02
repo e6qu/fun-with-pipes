@@ -14,14 +14,16 @@ pass. Production run `41478753238`, documentation `41478745298`, source
 | macOS ARM64 ownership | Passed; full log, 126 targets / 379 tests audited |
 | macOS AMD64 ownership | Passed; full log, 126 targets / 379 tests audited |
 | Windows ARM64 | Passed; full log: 206 passing summaries / 853 tests; native archive: 57 logs / 428 tests |
-| macOS AMD64 regular | Running; no reported failed step |
-| Linux ARM64 / AMD64 | Running; no reported failed step |
-| Windows AMD64 | Running; native archive passes 57 logs / 428 tests; full job audit pending |
+| macOS AMD64 regular | Passed; full log, 131 targets / 650 tests audited |
+| Linux ARM64 | Passed; full log, 257 targets / 1,034 tests audited |
+| Linux AMD64 | Running; no reported failed step |
+| Windows AMD64 | Passed; full log: 206 passing summaries / 853 tests; native archive: 57 logs / 428 tests |
 
 Both macOS corpus archives pass 85 distinct programs. Existing ignored runner
 measurements remain explicit. Reviewed diagnostics are Homebrew already-installed
 notices, echoed strict-warning commands and the intentional scheduler entry/child
-panic controls in `src/sched.rs`; their test passes. No unresolved failure.
+panic controls in `src/sched.rs`; their test passes. Windows skips only the two
+POSIX-PTY SDK cases; its eleven applicable SDK tests pass. No unresolved failure.
 Logs and audit helpers are `/private/tmp/fwp-246-*`; artifact identities are in
 `/private/tmp/fwp-246-final-artifacts.json`. Refresh that list before downloads.
 
@@ -76,6 +78,9 @@ failure controls now alter only benchmark clocks. One local audit rejected an
 incomplete download; waiting for completion resolved its digest check, with no
 measurement rerun. Stale #243 kernel directions now link completed #244/#245 work;
 the derivative page no longer calls its delivered phase report a next task.
+Array reports now link the completed preparation/driver investigations and #245
+validation instead of calling them pending. All 48 memory profiles have identical
+storage fields across all five samples (guarded check, 0.25s).
 
 PR #245 is verified and merged as `c43f05c22ed36277b491490b7d9e222dfd0af025`,
 with the tested tree and one-line message. Completed #243/#244 temporary checkouts
