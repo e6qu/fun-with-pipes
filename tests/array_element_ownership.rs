@@ -842,6 +842,17 @@ fn static_array_callbacks_avoid_owner_checks_and_preserve_partial_cleanup() {
         .next()
         .unwrap();
     let entry = format!("f{id}");
+    let scalar_start = probe_code
+        .find("/* scalar-probe :")
+        .expect("explicit scalar capture probe entry");
+    let scalar_id = probe_code[scalar_start..]
+        .split("static V f")
+        .nth(1)
+        .unwrap()
+        .split('(')
+        .next()
+        .unwrap();
+    let scalar_entry = format!("f{scalar_id}");
     let measured = probe_code
         .replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic int callback_probe_active;\nstatic size_t callback_probe_retains, callback_probe_drops;")
         .replace("static inline void fwp_rc_dup(V v) {\n", "static inline void fwp_rc_dup(V v) {\n    if (callback_probe_active) callback_probe_retains++;\n")
@@ -869,6 +880,20 @@ int main(void) {{
     if(!setjmp(h.jb)) {{ {entry}(FWP_TRUE,4); return 228; }}
     fwp_handlers=h.prev;
     if(fwp_cleanups!=h.cleanup || fwp_heap.live!=initial) return 225;
+    for(size_t test=0;test<3;test++) {{
+        size_t n=lengths[test];
+        V result={scalar_entry}(FWP_FALSE,7,(V)n);
+        if(fwp_array_len(result)!=n) return 226;
+        for(size_t i=0;i<n;i++) if((int64_t)fwp_array_load(result,i,NULL)!=(int64_t)i+7) return 227;
+        fwp_rc_free_arr(result);
+        if(fwp_heap.live!=initial) return 225;
+    }}
+    fwp_handler scalar_handler; scalar_handler.prev=fwp_handlers;
+    scalar_handler.state_depth=fwp_state_len; scalar_handler.cleanup=fwp_cleanups;
+    fwp_handlers=&scalar_handler;
+    if(!setjmp(scalar_handler.jb)) {{ {scalar_entry}(FWP_TRUE,2,4); return 228; }}
+    fwp_handlers=scalar_handler.prev;
+    if(fwp_cleanups!=scalar_handler.cleanup || fwp_heap.live!=initial) return 225;
     return 0;
 }}
 "#

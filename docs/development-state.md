@@ -8,7 +8,7 @@ compiler selection rules before measuring the source/driver boundary.
 
 - PR: https://github.com/e6qu/fun-with-pipes/pull/244
 - Final head: `555c4981695f4819586ef0a57114a36c2c9476ef`; preserve it unless CI needs repair.
-- Production `41425537461`: seven jobs pass; Linux AMD64 and Intel regular remain.
+- Production `41425537461`: eight jobs pass; Linux AMD64's evidence/packaging remains.
 - Docs `41425537447` / `125211125800` passes. Benchmark/docs full logs audited;
   documentation test-runner failures are intentional negative controls.
 - macOS ARM64 ownership archive `13134110468`: all 126 target logs pass, no
@@ -19,6 +19,8 @@ compiler selection rules before measuring the source/driver boundary.
   summaries each). No unexpected target diagnostics. Windows full logs contain
   exactly the expected eight entry/eight child panic controls, all passing.
   Intel ownership's setup notice only says OpenSSL is already installed.
+  Intel regular's full log is audited; Linux AMD64 archive `13136824942` has
+  257 passing target logs without diagnostics.
 - PR worktree: `/private/tmp/fwp-matrix-calculation`, branch `matrix-calculation-costs`.
 - Independent branch/worktree: `array-construction-costs`, `/private/tmp/fwp-array-construction`.
   It starts at #244's tested head. Open no second PR. After #244 merges, preserve
@@ -68,10 +70,17 @@ sources have remote retention tags. Do not repeat completed timings.
   Baseline comparisons impose noise controls, not a speculative required speedup.
   Ordinary profiles and instrumented phases have separate raw artifacts.
 - Phase measurement `41437433015` at `f05e25f8730453103f862a354324f1d660a3550d`:
-  four jobs queued. The source is retained as
-  `roadmap/array-construction-phase-runner-2026-11-02`. No timings have run yet.
+  both ARM64 sessions build; AMD64 session 1 queues. AMD64 session 2 received
+  EPYC 9V45 instead of 7763 and stopped before building/timing; its qualification
+  and full log are retained in `measurements/array-construction-phases-2026-11-02/`.
+  Exact-source replacement: `41439088789`. The source is retained as
+  `roadmap/array-construction-phase-runner-2026-11-02`.
   `check-array-construction-time.py` reconstructs source, raw samples, summaries,
   cleanup controls and compiler settings; syntax checked, awaiting actual archives.
+- Existing static-callback tests now also cover scalar captures, count-before-capture
+  order, callback reuse and partial cleanup. Fixture formatting, raw interpreter
+  preflight and Rust formatting pass (0.02s, 0.27s, 0.27s). Native checks remain
+  for the combined batch; no compiler selection rule has changed.
 - Earlier run `41426573182` failed only source formatting on both hosts. The fixture
   was fixed with #243's verified package; failure logs and source tag remain.
 
