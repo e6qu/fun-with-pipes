@@ -259,6 +259,23 @@ mod tests {
     }
 
     #[test]
+    fn escaping_record_projection_keeps_its_constructor_stage() {
+        let integer = MT::con("std::I64");
+        let mut program = program(
+            MT::Record(vec![("value".into(), integer)]),
+            Expr::Let(
+                1,
+                Box::new(Expr::Field(Box::new(Expr::Local(0)), 0)),
+                Box::new(partial(Expr::Local(1))),
+            ),
+        );
+        crate::ir::check_locals(&program).unwrap();
+        let before = format!("{program:?}");
+        flatten(&mut program);
+        assert_eq!(format!("{program:?}"), before);
+    }
+
+    #[test]
     fn computations_resource_frames_and_unused_owners_keep_their_stage() {
         for (input, body) in [
             (

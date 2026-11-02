@@ -6,10 +6,11 @@ import signal
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from unittest.mock import patch
 
-from process_wait import run_capture
+from process_wait import communicate, run_capture
 
 
 class ProcessWait(unittest.TestCase):
@@ -38,23 +39,50 @@ class ProcessWait(unittest.TestCase):
                         input_stream=stream if streamed else None, text=True, encoding='utf-8', timeout=5, check=True)
                 self.assertEqual(result.stdout, 'λ\nλ\n')
 
+    def deadline_after_ready(self, setup, *, text, startup_delay):
+        # These checks concern output already written (or descriptors already
+        # closed), not how quickly a loaded runner starts its Python child.
+        with tempfile.TemporaryDirectory() as directory:
+            ready = Path(directory) / 'ready'
+            source = ('import os, time\nfrom pathlib import Path\n'
+                      f'time.sleep({startup_delay!r})\n{setup}\n'
+                      f'Path({str(ready)!r}).write_text("ready")\ntime.sleep(60)\n')
+
+            def capture_ready_child(child, timeout, input_data):
+                startup_deadline = time.monotonic() + 5
+                while not ready.is_file():
+                    self.assertLess(time.monotonic(), startup_deadline,
+                                    'child did not signal readiness')
+                    time.sleep(0.001)
+                return communicate(child, timeout, input_data)
+
+            with patch('process_wait.communicate', capture_ready_child):
+                with self.assertRaises(subprocess.TimeoutExpired) as caught:
+                    run_capture([sys.executable, '-c', source], env=dict(os.environ), cwd=None,
+                        input_data=None, input_stream=None, text=text, encoding='utf-8',
+                        timeout=0.5, check=False)
+            return caught.exception
+
     def test_deadline_retains_partial_output(self):
-        with self.assertRaises(subprocess.TimeoutExpired) as caught:
-            self.run_child('import os, time; os.write(1, b"started\\n"); time.sleep(60)', 0.5)
-        self.assertEqual(caught.exception.stdout, b'started\n')
+        error = self.deadline_after_ready('os.write(1, b"started\\n")',
+                                          text=False, startup_delay=0)
+        self.assertEqual(error.stdout, b'started\n')
 
     def test_deadline_after_output_closes_still_reaps(self):
-        with self.assertRaises(subprocess.TimeoutExpired) as caught:
-            self.run_child('import os, time; os.close(1); os.close(2); time.sleep(60)', 0.5)
-        self.assertEqual(caught.exception.stdout, b'')
+        error = self.deadline_after_ready('os.close(1); os.close(2)',
+                                          text=False, startup_delay=0)
+        self.assertEqual(error.stdout, b'')
 
     def test_text_deadline_keeps_raw_incomplete_characters(self):
+        # Deliberately take longer than the capture deadline to become ready.
+        error = self.deadline_after_ready('os.write(1, bytes([13, 10, 206]))',
+                                          text=True, startup_delay=1)
+        self.assertEqual(error.stdout, b'\r\n\xce')
+
+    def test_deadline_before_first_output_keeps_empty_streams(self):
         with self.assertRaises(subprocess.TimeoutExpired) as caught:
-            run_capture([sys.executable, '-c',
-                'import os, time; os.write(1, bytes([13, 10, 206])); time.sleep(60)'],
-                env=dict(os.environ), cwd=None, input_data=None, input_stream=None,
-                text=True, encoding='utf-8', timeout=0.5, check=False)
-        self.assertEqual(caught.exception.stdout, b'\r\n\xce')
+            self.run_child('import os, time; time.sleep(60); os.write(1, b"late")', 0.1)
+        self.assertEqual((caught.exception.stdout, caught.exception.stderr), (b'', b''))
 
     def test_cancellation_reaps_the_child(self):
         communicate = subprocess.Popen.communicate

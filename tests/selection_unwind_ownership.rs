@@ -2,6 +2,9 @@
 use std::path::PathBuf;
 use std::process::{Command, Output};
 
+#[path = "support/exported_probe.rs"]
+mod exported_probe;
+
 #[path = "support/record_probe.rs"]
 mod record_probe;
 
@@ -32,25 +35,25 @@ impl Drop for Scratch {
     }
 }
 
-const SOURCE: &str = r#"transform : String -> Bool ! {Error[String]}
+const SOURCE: &str = r#"export transform : String -> Bool ! {Error[String]}
 transform = if (eq "stop") (const "expected" | fail) (const True)
 transform-cap : String -> String -> Bool ! {Error[String]}
 transform-cap = curry (if (.1 | eq "stop") (const "expected" | fail) (.0 | string.length | gt 0))
-scalar : I64 -> Bool ! {Error[String]}
+export scalar : I64 -> Bool ! {Error[String]}
 scalar = if (eq 2) (const "expected" | fail) (const True)
 scalars : List[I64] -> List[I64] ! {Error[String]}
 scalars = filter scalar
-direct : List[String] -> List[String] ! {Error[String]}
+export direct : List[String] -> List[String] ! {Error[String]}
 direct = filter transform
-captured : List[String] -> List[String] ! {Error[String]}
+export captured : List[String] -> List[String] ! {Error[String]}
 captured = filter (transform-cap "suffix")
-prefix : List[String] -> List[String] ! {Error[String]}
+export prefix : List[String] -> List[String] ! {Error[String]}
 prefix = take-while transform
-prefix-cap : List[String] -> List[String] ! {Error[String]}
+export prefix-cap : List[String] -> List[String] ! {Error[String]}
 prefix-cap = take-while (transform-cap "suffix")
-prefix-dynamic : (String -> Bool ! {Error[String]}) -> List[String] -> List[String] ! {Error[String]}
+export prefix-dynamic : (String -> Bool ! {Error[String]}) -> List[String] -> List[String] ! {Error[String]}
 prefix-dynamic = take-while
-dynamic : (String -> Bool ! {Error[String]}) -> List[String] -> List[String] ! {Error[String]}
+export dynamic : (String -> Bool ! {Error[String]}) -> List[String] -> List[String] ! {Error[String]}
 dynamic = filter
 main = [
     task.yield (),
@@ -66,7 +69,9 @@ main = [
 "#;
 
 fn function_id<'a>(emitted: &'a str, name: &str) -> &'a str {
-    let start = emitted.find(&format!("/* {name} :")).unwrap();
+    let start = emitted
+        .find(&format!("/* {name} :"))
+        .unwrap_or_else(|| panic!("missing exported probe entry `{name}`"));
     emitted[start..]
         .split("static V f")
         .nth(1)
@@ -80,7 +85,6 @@ fn function_id<'a>(emitted: &'a str, name: &str) -> &'a str {
 fn predicates_and_partial_spines_release_selected_aliases_and_scratch() {
     let dir = Scratch::new("callbacks");
     let src = dir.0.join("callbacks.fwp");
-    let cfile = dir.0.join("callbacks.c");
     let exe = dir.0.join("callbacks.exe");
     let fwp = env!("CARGO_BIN_EXE_fwp");
     std::fs::write(&src, SOURCE).unwrap();
@@ -91,15 +95,7 @@ fn predicates_and_partial_spines_release_selected_aliases_and_scratch() {
             .arg(&src),
     );
     {
-        checked(
-            Command::new(fwp)
-                .args(["build", "--memory", "dynamic"])
-                .env("FWP_STACK", "1")
-                .arg(&src)
-                .args(["--emit-c", "-O2", "-o"])
-                .arg(&cfile),
-        );
-        let emitted = std::fs::read_to_string(&cfile).unwrap();
+        let emitted = exported_probe::generate(&src);
         let direct = function_id(&emitted, "direct");
         let captured = function_id(&emitted, "captured");
         let dynamic = function_id(&emitted, "dynamic");
@@ -261,20 +257,10 @@ int main(void) {
 fn scalar_address_bits_survive_selection_cleanup() {
     let dir = Scratch::new("scalar-bits");
     let src = dir.0.join("scalar.fwp");
-    let cfile = dir.0.join("scalar.c");
     let exe = dir.0.join("scalar.exe");
-    let fwp = env!("CARGO_BIN_EXE_fwp");
     std::fs::write(&src, SOURCE).unwrap();
     {
-        checked(
-            Command::new(fwp)
-                .args(["build", "--memory", "dynamic"])
-                .env("FWP_STACK", "1")
-                .arg(&src)
-                .args(["--emit-c", "-O2", "-o"])
-                .arg(&cfile),
-        );
-        let emitted = std::fs::read_to_string(&cfile).unwrap();
+        let emitted = exported_probe::generate(&src);
         let scalar = function_id(&emitted, "scalar");
         let call = format!("fwp_k_filter_owned(fwp_owned_k{scalar},");
         let start = emitted.find(&call).unwrap();

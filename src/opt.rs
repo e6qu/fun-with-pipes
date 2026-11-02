@@ -133,6 +133,28 @@ impl<'p> Opt<'p> {
         }
     }
 
+    // A typed read of a local flat record cannot execute code or trap. Restrict
+    // this proof to fields without owners: moving a later application through
+    // the binding must not extend a managed field's lifetime. This is not the
+    // global purity predicate used to duplicate or delay computations.
+    fn unowned_record_field(&self, expression: &Expr) -> bool {
+        let Expr::Field(base, index) = expression else {
+            return false;
+        };
+        let Expr::Local(local) = &**base else {
+            return false;
+        };
+        self.locals
+            .get(*local as usize)
+            .and_then(|ty| record_fields(self.shapes, ty))
+            .is_some_and(|fields| {
+                (*index as usize) < fields.len()
+                    && fields
+                        .iter()
+                        .all(|(_, ty)| !crate::rc::needs_rc(self.shapes, ty))
+            })
+    }
+
     fn fresh(&mut self, ty: &MT) -> Local {
         self.locals.push(ty.clone());
         self.locals.len() as Local - 1
@@ -581,11 +603,12 @@ impl<'p> Opt<'p> {
                 a1.extend(args);
                 self.apply(*g, a1, depth)
             }
-            // Applying a function returned through a pure binding keeps that
-            // binding first, then exposes the call in its body. Do not extend
+            // Applying a function returned through a pure binding or a proved
+            // unowned field read keeps the binding before every later argument,
+            // then exposes the call in its body. Do not extend
             // resource lifetimes or move an application into a resource frame.
             Expr::Let(l, v, b)
-                if self.pure(&v)
+                if (self.pure(&v) || self.unowned_record_field(&v))
                     && !self.resource_locals.contains(&l)
                     && !crate::resource::anchored(&b, l)
                     && !crate::resource::may_hold_resource(
@@ -1328,6 +1351,75 @@ fn rename_locals(e: &Expr, caps: &[Local]) -> Expr {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn applied_record_bindings_preserve_argument_order_and_reject_owned_fields() {
+        let integer = MT::con("std::I64");
+        let unary = MT::Fun(Box::new(integer.clone()), Box::new(integer.clone()));
+        let funcs = vec![
+            Func {
+                name: "add".into(),
+                arity: 2,
+                ty: MT::Fun(Box::new(integer.clone()), Box::new(unary.clone())),
+                locals: vec![integer.clone(), integer.clone()],
+                body: Body::Prim("prim.add".into()),
+            },
+            Func {
+                name: "later-effect".into(),
+                arity: 1,
+                ty: unary,
+                locals: vec![integer.clone()],
+                body: Body::Prim("test.effect".into()),
+            },
+        ];
+        let shapes = Shapes::default();
+        for (other_field, plain) in [
+            (MT::con("std::F64"), true),
+            (MT::con("std::String"), false),
+            (MT::con("std::F128"), false),
+            (MT::Record(vec![("value".into(), integer.clone())]), false),
+        ] {
+            for anchored in [false, true] {
+                let record = MT::Record(vec![
+                    ("first".into(), integer.clone()),
+                    ("second".into(), other_field.clone()),
+                ]);
+                let mut opt = Opt {
+                    funcs: &funcs,
+                    shapes: &shapes,
+                    current: usize::MAX,
+                    locals: vec![record, integer.clone(), integer.clone()],
+                    budget: 600,
+                    resource_locals: if anchored { vec![1] } else { vec![] },
+                };
+                let read = Expr::Field(Box::new(Expr::Local(0)), 0);
+                assert!(
+                    !opt.pure(&read),
+                    "global movement/duplication proof must not change"
+                );
+                assert!(!opt.unowned_record_field(&Expr::Field(Box::new(Expr::Local(0)), 2)));
+                assert!(!opt.unowned_record_field(&Expr::Field(Box::new(Expr::Local(2)), 0)));
+                let constructor = Expr::Let(
+                    1,
+                    Box::new(read),
+                    Box::new(Expr::Apply(Box::new(Expr::Func(0)), vec![Expr::Local(1)])),
+                );
+                let later = Expr::Call(1, vec![Expr::Local(2)]);
+                let result = opt.apply(constructor, vec![later], 0);
+                if plain && !anchored {
+                    let Expr::Let(1, read, body) = result else {
+                        panic!("field binding must stay before the later argument");
+                    };
+                    assert!(matches!(*read, Expr::Field(_, 0)));
+                    assert!(matches!(*body, Expr::Call(0, ref args)
+                        if matches!(&args[..], [Expr::Local(1), Expr::Call(1, _)])));
+                } else {
+                    assert!(matches!(result, Expr::Apply(ref constructor, _)
+                        if matches!(**constructor, Expr::Let(1, _, _))));
+                }
+            }
+        }
+    }
 
     #[test]
     fn literal_splats_preserve_bits_and_respect_the_size_budget() {

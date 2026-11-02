@@ -41,8 +41,19 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - name: Captured process deadlines
+        id: process_wait_controls
         timeout-minutes: 2
-        run: python scripts/test-process-wait.py -v
+        shell: pwsh
+        run: |
+          python scripts/test-process-wait.py -v 2>&1 | Tee-Object "$env:RUNNER_TEMP/fwp-process-wait.log"
+          exit $LASTEXITCODE
+      - name: Publish failed process controls before long tests
+        if: ${{ !cancelled() && steps.process_wait_controls.outcome == 'failure' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: process-wait-${{ runner.os }}-${{ runner.arch }}
+          path: ${{ runner.temp }}/fwp-process-wait.log
+          if-no-files-found: error
       - uses: dtolnay/rust-toolchain@stable
       - name: Cache locked Rust dependencies
         uses: actions/cache@v6

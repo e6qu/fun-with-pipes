@@ -11,6 +11,62 @@ use std::rc::Rc;
 mod record_probe;
 
 #[test]
+fn record_bindings_preserve_escaping_captures_and_first_stage_traps() {
+    let directory = fwp::cgen::TempDir::new("record-binding-stages").unwrap();
+    let source = directory.join("main.fwp");
+    std::fs::write(&source, include_str!("fixtures/record_binding_stages.fwp")).unwrap();
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    let reference = Command::new(compiler)
+        .env("FWP_NO_OPT", "1")
+        .args(["run", "--interp"])
+        .arg(&source)
+        .output()
+        .unwrap();
+    assert_eq!(reference.status.code(), Some(101));
+    assert_eq!(reference.stdout, b"argument\n12\n(13, 14, (0, 10))\n");
+    assert_eq!(reference.stderr, b"fwp: trap: arithmetic overflow in I64\n");
+    let interpreted = Command::new(compiler)
+        .env_remove("FWP_NO_OPT")
+        .args(["run", "--interp"])
+        .arg(&source)
+        .output()
+        .unwrap();
+    assert_eq!(interpreted.status.code(), reference.status.code());
+    assert_eq!(interpreted.stdout, reference.stdout);
+    assert_eq!(interpreted.stderr, reference.stderr);
+    for stack in ["0", "1"] {
+        let cfile = directory.join(format!("main-{stack}.c"));
+        let generated = Command::new(compiler)
+            .env_remove("FWP_NO_OPT")
+            .env("FWP_STACK", stack)
+            .args(["build", "--memory", "dynamic", "--emit-c"])
+            .arg(&source)
+            .arg("-o")
+            .arg(&cfile)
+            .output()
+            .unwrap();
+        assert!(generated.status.success(), "{generated:?}");
+        assert!(generated.stderr.is_empty(), "{generated:?}");
+        let code = std::fs::read_to_string(cfile).unwrap();
+        for opt in ["-O1", "-O2"] {
+            let executable = directory.join(format!("main-{stack}-{opt}.exe"));
+            fwp::cgen::compile_c(&code, &executable, opt).unwrap();
+            let output = Command::new(&executable).output().unwrap();
+            record_probe::save(
+                "record_binding_stages",
+                &format!("stack-{stack}-{opt}"),
+                &code,
+                &executable,
+                &output,
+            );
+            assert_eq!(output.status.code(), reference.status.code());
+            assert_eq!(output.stdout, reference.stdout);
+            assert_eq!(output.stderr, reference.stderr);
+        }
+    }
+}
+
+#[test]
 fn nominal_loop_state_display_and_overflow_match_native_execution() {
     let directory = fwp::cgen::TempDir::new("nominal-loop-state").unwrap();
     let source = directory.join("main.fwp");

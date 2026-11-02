@@ -206,6 +206,14 @@ Give native probe executables an explicit `.exe` suffix on every platform and
 use that same path for compilation, execution, inspection and copying. Windows
 can infer the suffix when launching a program; symbol readers and file APIs cannot.
 
+C harnesses that call generated functions directly must root those definitions
+explicitly; optimization may remove entries reached only through `main`.
+[The exported-probe helper](tests/support/exported_probe.rs) keeps both main and
+export roots. A runtime partial application also needs an actual function-value
+use, such as an exported record containing the callback; a direct export alone
+does not require generic entry metadata. Keep the ordinary executable versus
+interpreter comparison alongside these harnesses.
+
 - **Leave encountered code healthier.** Fix discovered bugs and issues even
   when they are outside the current roadmap item. Preserve semantic regression
   controls and record validation in the handoff. Group coherent fixes without

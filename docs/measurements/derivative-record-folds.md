@@ -223,8 +223,9 @@ Evidence:
   status does not mean the candidate meets its performance requirements.
 - Compact reports, logs and download identities are retained beside each index.
   All four measured source-hash sets agree. The candidate remains `not-accepted`
-  under its frozen requirements; delivery needs an explicit decision about
-  retaining the benefits with these unmet limits still open.
+  under its frozen requirements. On November 2 the user merged #241 and directed
+  continued work after the retention choice was presented. Retain the benefits
+  with these limits open; this does not turn failed measurements into passes.
 
 ## Reproduce the source/count audit
 

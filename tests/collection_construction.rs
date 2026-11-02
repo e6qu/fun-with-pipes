@@ -1,6 +1,9 @@
 //! Numeric collection construction preserves values and callback order.
 use std::process::{Command, Output};
 
+#[path = "support/record_probe.rs"]
+mod record_probe;
+
 fn checked(command: &mut Command) -> Output {
     let output = command.output().unwrap();
     assert!(output.status.success(), "{command:?}: {output:?}");
@@ -148,6 +151,7 @@ fn failed_numeric_collection_callbacks_release_storage() {
         cases.push("4 | attempt (range 0 | map (captured (read-all () | concat \"callback failure\")) | map.from-list) | echo".into());
         for producer in ["range 0", "const [0, 1, 2, 3]"] {
             cases.push(format!("4 | attempt ({producer} | map (captured-key (read-all () | concat \"callback failure\")) | set.from-list) | echo"));
+            cases.push(format!("4 | attempt ({producer} | map (captured-key (read-all () | concat \"callback failure\")) | array.from-list) | echo"));
         }
     }
     source.push_str(&format!("main = [{}] | ignore\n", cases.join(",\n")));
@@ -191,7 +195,18 @@ fn failed_numeric_collection_callbacks_release_storage() {
                 .join("failures")
                 .with_extension(std::env::consts::EXE_EXTENSION);
             fwp::cgen::compile_c(&code, &executable, optimization).unwrap();
-            let output = checked(&mut Command::new(&executable));
+            let output = Command::new(&executable).output().unwrap();
+            record_probe::save(
+                "collection_callback_cleanup",
+                &format!("{optimization}-fused-{fused}"),
+                &code,
+                &executable,
+                &output,
+            );
+            assert!(
+                output.status.success(),
+                "{optimization} fused={fused}: {output:?}"
+            );
             assert_eq!(
                 output.stdout, reference.stdout,
                 "counted {optimization} fused={fused}"
@@ -200,6 +215,69 @@ fn failed_numeric_collection_callbacks_release_storage() {
                 output.stderr, reference.stderr,
                 "counted {optimization} fused={fused}"
             );
+        }
+    }
+}
+
+#[test]
+fn inlined_state_callback_releases_captured_owners_on_overflow() {
+    let directory = fwp::cgen::TempDir::new("inline-state-overflow").unwrap();
+    let input = directory.join("overflow.fwp");
+    let cfile = directory.join("overflow.c");
+    std::fs::write(&input, include_str!("fixtures/inline_state_overflow.fwp")).unwrap();
+    let reference = Command::new(env!("CARGO_BIN_EXE_fwp"))
+        .env("FWP_NO_OPT", "1")
+        .args(["run", "--interp"])
+        .arg(&input)
+        .output()
+        .unwrap();
+    assert_eq!(reference.status.code(), Some(101));
+    assert!(reference.stdout.is_empty());
+    assert_eq!(reference.stderr, b"fwp: trap: arithmetic overflow in I64\n");
+    for stack in ["0", "1"] {
+        checked(
+            Command::new(env!("CARGO_BIN_EXE_fwp"))
+                .env_remove("FWP_NO_OPT")
+                .env("FWP_STACK", stack)
+                .args(["build", "--memory", "dynamic", "--emit-c", "-o"])
+                .arg(&cfile)
+                .arg(&input),
+        );
+        let code = std::fs::read_to_string(&cfile).unwrap();
+        let declaration = "static jmp_buf *fwp_trap_jb = 0;";
+        assert_eq!(code.matches(declaration).count(), 1);
+        let code = code.replace(declaration, &format!("{declaration}\nstatic jmp_buf probe_trap;\nstatic int recover_probe(void) {{ return 1; }}"));
+        let entry = "    V r = caf0();";
+        assert_eq!(code.matches(entry).count(), 1);
+        let code = code.replace(entry, r#"    V r = 0;
+    fwp_trap_recover = recover_probe;
+    fwp_trap_jb = &probe_trap; fwp_trap_cleanup = fwp_cleanups;
+    if (!setjmp(probe_trap)) { (void)caf0(); exit(232); }
+    if (strcmp(fwp_trap_msg, "arithmetic overflow in I64") || fwp_cleanups || fwp_state_owners) exit(233);
+    /* The trap observer restores its original State depth after typed unwind. */
+    fwp_state_restore(0);
+    fwp_trap_recover = 0; fwp_trap_jb = 0; fwp_trap_cleanup = 0;
+"#);
+        let finish = "\n    /* Ownership observation point: before runtime teardown. */\n";
+        assert_eq!(code.matches(finish).count(), 1);
+        let code = code.replace(
+            finish,
+            &format!("{finish}if (fwp_heap.live || fwp_heap.rc_wide_len) exit(231);\n"),
+        );
+        for level in ["-O1", "-O2"] {
+            let executable = directory.join(format!("overflow-{stack}{level}.exe"));
+            fwp::cgen::compile_c(&code, &executable, level).unwrap();
+            let output = Command::new(&executable).output().unwrap();
+            record_probe::save(
+                "inline_state_overflow",
+                &format!("stack-{stack}{level}"),
+                &code,
+                &executable,
+                &output,
+            );
+            assert!(output.status.success(), "stack={stack} {level}: {output:?}");
+            assert!(output.stdout.is_empty());
+            assert!(output.stderr.is_empty());
         }
     }
 }

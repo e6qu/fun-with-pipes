@@ -1,0 +1,15 @@
+sum-pair : (I64, I64) -> I64 -> I64
+sum-pair = fn (a, b) -> fn c -> a + b + c
+later : I64 -> I64 ! {IO}
+later = fn value -> let ready = print "argument" in value
+overflow-stage : (I64, I64) -> I64 -> I64
+overflow-stage = fn (a, b) -> let saved = a + b in fn c -> saved + c
+main =
+    let n = read-all () | string.length
+    in let pair = (n, 10)
+    in let escaped = sum-pair pair
+    in [
+        sum-pair pair (later 2) | echo,
+        (escaped 3, escaped 4, pair) | echo,
+        overflow-stage (9223372036854775807, n + 1) (later 9) | echo,
+    ] | ignore

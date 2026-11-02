@@ -79,11 +79,12 @@ jobs:
       - name: Check formatting and affected targets
         run: |
           cargo fmt --all -- --check
-          CARGO_NET_OFFLINE=true cargo clippy --locked --lib --bin fwp --test fold_ownership --test fold_unwind_ownership --test worker_boxing_ownership --test worker_preparation_ownership --test autodiff_nested --test autodiff_precision --test ad_tape_scopes --test call_effects -- -D warnings
+          CARGO_NET_OFFLINE=true cargo clippy --locked --lib --bin fwp --test fold_ownership --test fold_unwind_ownership --test worker_boxing_ownership --test worker_preparation_ownership --test autodiff_nested --test autodiff_precision --test ad_tape_scopes --test call_effects --test closure_ownership --test compiler_call_liveness --test runtime_call_ownership --test map_unwind_ownership --test selection_unwind_ownership --test zip_unwind_ownership --test reuse_token_ownership --test collection_construction -- -D warnings
       - name: Build compiler and check affected native targets
         run: |
+          CARGO_NET_OFFLINE=true cargo test --locked --lib opt:: -- --nocapture
           CARGO_NET_OFFLINE=true cargo build --locked --bin fwp
-          CARGO_NET_OFFLINE=true python3 scripts/run-native-tests.py --targets fold_ownership fold_unwind_ownership worker_boxing_ownership worker_preparation_ownership autodiff_nested autodiff_precision ad_tape_scopes call_effects --idle-timeout 600 --logs record-fold-checks/targets
+          CARGO_NET_OFFLINE=true python3 scripts/run-native-tests.py --targets fold_ownership fold_unwind_ownership worker_boxing_ownership worker_preparation_ownership autodiff_nested autodiff_precision ad_tape_scopes call_effects closure_ownership compiler_call_liveness runtime_call_ownership map_unwind_ownership selection_unwind_ownership zip_unwind_ownership reuse_token_ownership collection_construction --idle-timeout 600 --logs record-fold-checks/targets
       - name: Preserve complete target logs and ownership probes
         if: always()
         uses: actions/upload-artifact@v7

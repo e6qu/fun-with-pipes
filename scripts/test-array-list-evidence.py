@@ -19,6 +19,12 @@ ROOT = Path(__file__).resolve().parent.parent
 SPEC = importlib.util.spec_from_file_location('array_evidence', ROOT / 'scripts/check-array-list-evidence.py')
 CHECK = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(CHECK)
+SPEC = importlib.util.spec_from_file_location('zip_reference', ROOT / 'scripts/prepare-record-zip-reference.py')
+ZIP_REFERENCE = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(ZIP_REFERENCE)
+SPEC = importlib.util.spec_from_file_location('fold_reference', ROOT / 'scripts/prepare-record-fold-reference.py')
+FOLD_REFERENCE = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(FOLD_REFERENCE)
 SOURCE = 'dc0a6407b5e5aa23517a86db71a3221a418cc7d6'
 REPORT = json.loads(gzip.decompress((ROOT / 'docs/measurements/array-list-first-2026-10-31-amd-2.json.gz').read_bytes()))
 
@@ -54,7 +60,7 @@ class Evidence(unittest.TestCase):
 
     def test_reference_patch_is_exact_and_preserves_other_source(self):
         candidate = (ROOT / 'src/fuse.rs').read_text()
-        reference = CHECK.REFERENCE.reference_source(candidate)
+        reference = ZIP_REFERENCE.reference_source(candidate)
         header = 'diff --git a/src/fuse.rs b/src/fuse.rs\nindex 1234567..2345678 100644\n'
         body = ''.join(difflib.unified_diff(candidate.splitlines(keepends=True),
                        reference.splitlines(keepends=True), fromfile='a/src/fuse.rs', tofile='b/src/fuse.rs'))
@@ -70,7 +76,7 @@ class Evidence(unittest.TestCase):
 
     def test_fold_reference_patch_changes_only_the_selected_call(self):
         candidate = (ROOT / 'src/cgen.rs').read_text()
-        reference = CHECK.FOLD_REFERENCE.reference_source(candidate)
+        reference = FOLD_REFERENCE.reference_source(candidate)
         header = 'diff --git a/src/cgen.rs b/src/cgen.rs\nindex 1234567..2345678 100644\n'
         patch = header + ''.join(difflib.unified_diff(candidate.splitlines(keepends=True),
                     reference.splitlines(keepends=True), fromfile='a/src/cgen.rs', tofile='b/src/cgen.rs'))
@@ -80,6 +86,32 @@ class Evidence(unittest.TestCase):
             self.assertNotEqual(changed, patch)
             with self.assertRaises(AssertionError):
                 CHECK.check_reference_patch(changed, candidate, reference, 'src/cgen.rs')
+
+    def test_recorded_fold_preparation_is_independent_of_current_codegen(self):
+        revision = '55d46cd57425fe9f5bb65a1b83a7d12821445711'
+        old = subprocess.check_output(['git', 'show', revision + ':src/cgen.rs'],
+                                      cwd=ROOT, text=True)
+        prepared = subprocess.check_output(
+            ['git', 'show', revision + ':scripts/prepare-record-fold-reference.py'],
+            cwd=ROOT, text=True)
+        current = (ROOT / 'src/cgen.rs').read_text()
+        current_preparation = (ROOT / 'scripts/prepare-record-fold-reference.py').read_text()
+        self.assertNotEqual(prepared, current_preparation)
+        restored = CHECK.recorded_reference(old, prepared)
+        self.assertIn('direct record folds disabled', restored)
+        self.assertNotIn('return Some(format!("fwp_record_fold{g}({z}, {xs})"));', restored)
+        self.assertEqual(CHECK.recorded_reference(current, current_preparation),
+                         FOLD_REFERENCE.reference_source(current))
+        with self.assertRaises(AssertionError):
+            CHECK.recorded_reference(old, current_preparation)
+        with self.assertRaises(AssertionError):
+            CHECK.recorded_reference(current, prepared)
+        # Saved code is read as data, never imported or executed.
+        self.assertEqual(CHECK.recorded_reference(old, 'raise RuntimeError("not executed")\n' + prepared), restored)
+        for damaged in (prepared + '\nCANDIDATE = "duplicate"\n',
+                        prepared.replace('REFERENCE = ', 'OTHER = ', 1)):
+            with self.assertRaises(AssertionError):
+                CHECK.recorded_reference(old, damaged)
 
     def test_retained_reports_preserve_both_failed_and_repaired_decisions(self):
         archives = [

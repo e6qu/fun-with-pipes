@@ -101,7 +101,7 @@ fn numeric_record_fold_releases_owners_on_trap_box_failure_and_cancellation() {
     std::fs::write(&src, r#"
 Point = {index: I64, value: F64}
 step : Point -> Point -> Point
-step = fn a -> fn b -> Point {index = (a | .index) + (b | .index), value = (a | .value) + (b | .value)}
+step = fn {index = count, value = total} -> fn {index = n, value = amount} -> Point {index = count + n, value = total + amount}
 export transform : Bool -> Point -> List[Point] -> Point ! {Async}
 transform = fn pause -> fn seed -> fn values ->
     let ready = pause | match

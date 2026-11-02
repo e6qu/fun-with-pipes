@@ -4,50 +4,30 @@ Build an ahead-of-time language with simple pipes, immutable values, strong type
 and useful inference. Prefer direct values, moves and borrows; reserve ARC for
 necessary sharing. GC is removed; JIT and backward compatibility are excluded.
 
-## Current batch: reduce derivative callback result boxing
+## Current batch: direct calls through numeric record bindings
 
-[PR #239](docs/roadmap-history.md#numeric-record-zipmap-fusion-pr-239) is verified
-and merged. It removes temporary zipped numeric pairs. Larger measured solves
-use 5.4–15.6% less elapsed time, but ten timing limits remain unmet. The user
-approved retaining the allocation savings with those limits and D2 still open.
+#240/#241 implement direct numeric fold accumulators. [Their measured results](docs/measurements/derivative-record-folds.md)
+show allocation reductions and 5.8–7.8% faster larger solves. The user merged #241
+with its missed speed/size limits still open. Its full production matrix exposed missing test roots and a callback-unwind
+leak; repair both in this batch and audit the remaining jobs. A merge alone is not verification.
 
-The next investigation starts from its [saved candidate counts](docs/measurements/derivative-record-zip-counts-2026-11-01.json.gz).
-For 129 coordinates and 199 updates, current-vector form, GCC O2 and workspace
-off, forward work still requests 155,420 allocations. Three generated callback
-entries box direct numeric results 76,615 times: 25,671 at `f167` and 25,472 each
-at `f127` and `f164` in the saved ARM64 C. These are source-specific identifiers,
-not public APIs. Other costs include result-list construction and vector updates.
+The next concrete gap is source-form dependent code generation: tuple
+destructuring hides a known call behind field bindings, while equivalent explicit
+projections allow a direct numeric worker. Fix that local simplification without
+changing function stages or retaining escaping records longer.
+[Scope and requirements](docs/measurements/numeric-callback-bindings.md) define the
+proof, excluded values and exact checks before implementation.
 
 | Step | Work | Completion requirement |
 |---|---|---|
-| 1 | Trace remaining callback boxes to source callers and lifetimes | Explain each of the three entries, its consumers and escape boundary; compare all six cases, current/history forms, GCC O1/O2 and both native hosts using retained evidence |
-| 2 | Select a safe transformation and freeze its requirements | Identify removable boxes and necessary result storage; publish exact count, cleanup, code/stack and timing limits before compiler edits; keep previous failed timing limits unchanged |
-| 3 | Keep eligible callback results direct through their consumers | Extend existing worker/caller generation where proved safe; preserve effects, eager stage order, traps, aliases, empty inputs and failure/cancellation cleanup; update examples and docs |
-| 4 | Verify and deliver one substantial batch | Run affected production-compiler checks, then native count/memory and paired timing comparisons; audit all nine final production jobs and documentation before squash merge |
+| 1 | Confirm the source/IR boundary and record requirements | Retain the indirect-call example and freeze the local binding proof before compiler changes; record #241 merge and unresolved limits |
+| 2 | Expose known calls through safe record-field bindings | Preserve binding/argument order and ownership/resource guards; repair cleanup installed after inline callback execution; keep global purity and constructor stages |
+| 3 | Verify semantics, counts and cleanup together | Tuple/named-record cases, aliases, empty inputs, effects, rejected shapes, exact final-box counts, failure/cancellation and omitted-release controls pass on native GCC/Clang |
+| 4 | Complete platform validation and delivery | Audit #241 full CI, repair all encountered issues, update docs and pass all nine final-head production jobs plus documentation before squash merge |
 
-Steps 1–2 are complete: all 96 saved observations agree on the selected boundary.
-[PR #240](https://github.com/e6qu/fun-with-pipes/pull/240) merged the implementation of the
-[frozen selection](docs/measurements/derivative-record-folds.md): keep a known
-left-fold accumulator in local numeric fields and leave list-stored results alone.
-Step 3 now passes numeric-fold semantics, aliases, exact allocation/release,
-failure/cancellation and handler-order checks on GCC Linux ARM64/AMD64 and Clang
-macOS ARM64. The follow-up specializes known callbacks passed to `attempt` without
-moving capture evaluation into the handler. Two older cleanup probes now use explicit
-compiler roots because their C harness calls functions that an ordinary executable
-can optimize away. All 39 focused tests pass on each of the three native hosts.
-
-Both native count archives verify the planned savings: the largest measured solve
-removes 25,273 allocations and 25,472 effective retains with unchanged peak managed
-storage and zero final live storage. Fifteen ARM64 cases exceed the frozen 1,024-byte
-code-growth limit; AMD64 images shrink. Paired timings show 5.8–7.8% faster larger solves, but three-coordinate cases miss
-5%, and one AMD64 timing-noise check fails. Retain every result; resolve delivery
-acceptance before the final full matrix.
-Mapping must still finish before summation when interleaving changes recording
-or trap order.
-
-Use focused checks during implementation, then one complete final validation
-batch. Reuse saved observations before scheduling measurements. Do not rerun
-unchanged noisy timings to seek a pass, or treat count savings as a speedup.
+Reuse saved evidence and existing probes. Run focused checks during implementation,
+then one final full matrix for the complete batch. No new timing run is needed for
+an allocation/call-removal claim; earlier noisy or failed timings remain evidence.
 
 ## Open performance goals
 

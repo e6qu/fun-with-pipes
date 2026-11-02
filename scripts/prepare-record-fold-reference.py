@@ -13,7 +13,8 @@ CANDIDATE = '''        if sym == "fold" && n == 0 && self.g.record_fold_abi(g).i
             }
             let z = self.expr(&args[1]);
             let xs = self.expr(&args[2]);
-            return Some(format!("fwp_record_fold{g}({z}, {xs})"));
+            self.tail_tokens(tail);
+            return Some(self.bind_call(call_key, format!("fwp_record_fold{g}({z}, {xs})")));
         }
 '''
 REFERENCE = '        // Paired reference: direct record folds disabled.\n'

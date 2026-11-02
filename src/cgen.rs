@@ -5415,9 +5415,18 @@ impl<'g, 'p> FnGen<'g, 'p> {
         }
     }
 
-    fn owned_hof(&mut self, id: FuncId, args: &[Expr]) -> Option<String> {
+    // Return an evaluated value. Inline loops must protect caller owners before
+    // emitting their work, just as ordinary call expressions do at bind_call.
+    fn owned_hof(
+        &mut self,
+        id: FuncId,
+        args: &[Expr],
+        tail: bool,
+        call_key: *const Expr,
+    ) -> Option<String> {
         if let Some(call) = self.inline_sort_keys(id, args) {
-            return Some(call);
+            self.tail_tokens(tail);
+            return Some(self.bind_call(call_key, call));
         }
         if matches!(&self.g.prog.funcs[id].body, Body::Prim(s) if s == "array.fold") {
             let [Expr::Func(callback), initial, input] = args else {
@@ -5445,7 +5454,8 @@ impl<'g, 'p> FnGen<'g, 'p> {
             let initial = self.bind(initial);
             let input = self.expr(input);
             let input = self.bind(input);
-            return Some(format!("fwp_hof{index}({initial}, {input})"));
+            self.tail_tokens(tail);
+            return Some(self.bind_call(call_key, format!("fwp_hof{index}({initial}, {input})")));
         }
         if matches!(&self.g.prog.funcs[id].body, Body::Prim(s) if s == "array.generate") {
             let [count, callback] = args else { return None };
@@ -5480,7 +5490,8 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 }
             };
             values.push(count_value);
-            return Some(format!("fwp_hof{i}({})", values.join(", ")));
+            self.tail_tokens(tail);
+            return Some(self.bind_call(call_key, format!("fwp_hof{i}({})", values.join(", "))));
         }
         if matches!(&self.g.prog.funcs[id].body, Body::Prim(s) if s == "list._map-strings") {
             let [Expr::Func(callback), source] = args else {
@@ -5490,8 +5501,10 @@ impl<'g, 'p> FnGen<'g, 'p> {
             self.g.used_closures[callback] = true;
             let xs = self.expr(source);
             let ops = self.g.map_ops(&MT::con("std::String"));
-            return Some(format!(
-                "fwp_k_map_strings_owned(fwp_owned_entry{callback}, {xs}, {ops})"
+            self.tail_tokens(tail);
+            return Some(self.bind_call(
+                call_key,
+                format!("fwp_k_map_strings_owned(fwp_owned_entry{callback}, {xs}, {ops})"),
             ));
         }
         let sym = match &self.g.prog.funcs[id].body {
@@ -5542,7 +5555,8 @@ impl<'g, 'p> FnGen<'g, 'p> {
             }
             let z = self.expr(&args[1]);
             let xs = self.expr(&args[2]);
-            return Some(format!("fwp_record_fold{g}({z}, {xs})"));
+            self.tail_tokens(tail);
+            return Some(self.bind_call(call_key, format!("fwp_record_fold{g}({z}, {xs})")));
         }
         if !direct_loop && (n == 0 || !matches!(sym.as_str(), "fold" | "fold-right")) {
             // A specialized loop executes its step body directly. Keep a
@@ -5631,6 +5645,8 @@ impl<'g, 'p> FnGen<'g, 'p> {
                     format!("{prepare}\n            keys[i] = fwp_owned_entry{g}(arguments);"),
                 )
             };
+            self.tail_tokens(tail);
+            let owner_cleanup = self.begin_call(call_key);
             let result = self.fresh();
             self.line(&format!("V {result};\n{{ /* {marker} */"));
             self.line(&numeric_collection_body(
@@ -5642,6 +5658,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 paired,
             ));
             self.line(&format!("{result} = result;\n}}"));
+            self.end_call(owner_cleanup);
             return Some(result);
         }
         if sym == "array._map-list" {
@@ -5666,6 +5683,8 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 .chain([format!("{items}[{index}]")])
                 .collect::<Vec<_>>()
                 .join(", ");
+            self.tail_tokens(tail);
+            let owner_cleanup = self.begin_call(call_key);
             self.line("/* numeric mapped array: direct callback */");
             self.line(&format!(
                 "size_t {count}; V *{items} = fwp_map_items({xs}, &{count});"
@@ -5685,6 +5704,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
             let result = self.bind(format!("fwp_array_typed_new({count}, {descriptor})"));
             self.line(&format!("for (size_t {index} = 0; {index} < {count}; {index}++) fwp_array_store({result}, {index}, {items}[{index}], {descriptor});"));
             self.line(&format!("fwp_scratch_finish(&{items}, &{cleanup});"));
+            self.end_call(owner_cleanup);
             return Some(result);
         }
         if sym == "modify" {
@@ -5694,6 +5714,8 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 Expr::Apply(_, captures) => self.args(captures),
                 _ => return None,
             };
+            self.tail_tokens(tail);
+            let owner_cleanup = self.begin_call(call_key);
             values.push("fwp_p_get()".into());
             let arguments = self.fresh();
             self.line(&format!("V {arguments}[] = {{{}}};", values.join(", ")));
@@ -5706,9 +5728,11 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 "NULL"
             };
             let drop = self.g.value_drop(&state);
-            return Some(format!(
+            let result = self.bind(format!(
                 "fwp_state_modify_result({value}, {duplicate}, {drop})"
             ));
+            self.end_call(owner_cleanup);
+            return Some(result);
         }
         if sym == "loop" && n == 0 {
             if let Some(Some(width)) = loop_shape(&self.g.prog.funcs[g]) {
@@ -5726,7 +5750,11 @@ impl<'g, 'p> FnGen<'g, 'p> {
                         self.g.loops.push((g, Some(width)));
                     }
                     let fields = self.expr_fields(&args[1], width);
-                    return Some(format!("fwp_loop_fields{g}({})", fields.join(", ")));
+                    self.tail_tokens(tail);
+                    return Some(self.bind_call(
+                        call_key,
+                        format!("fwp_loop_fields{g}({})", fields.join(", ")),
+                    ));
                 }
             }
             let s = self.expr(&args[1]);
@@ -5734,11 +5762,16 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 if !self.g.loops.iter().any(|(step, _)| *step == g) {
                     self.g.loops.push((g, shape));
                 }
-                return Some(format!("fwp_loop{g}({s})"));
+                self.tail_tokens(tail);
+                return Some(self.bind_call(call_key, format!("fwp_loop{g}({s})")));
             }
             let step = self.g.prog.funcs[g].ty.params(1).1.clone();
             let ops = self.g.loop_owned_ops(&step).expect("typed loop Step");
-            return Some(format!("fwp_k_loop_owned(fwp_owned_entry{g}, {s}, {ops})"));
+            self.tail_tokens(tail);
+            return Some(self.bind_call(
+                call_key,
+                format!("fwp_k_loop_owned(fwp_owned_entry{g}, {s}, {ops})"),
+            ));
         }
         if n == 0 {
             if sym == "fold-right" {
@@ -5749,8 +5782,10 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 let xs = self.expr(&args[2]);
                 let ty = self.g.prog.funcs[g].ty.params(2).1.clone();
                 let drop = self.g.value_drop(&ty);
-                return Some(format!(
-                    "fwp_k_fold_right_owned(fwp_owned_right_fold_k{g}, {z}, {xs}, {drop})"
+                self.tail_tokens(tail);
+                return Some(self.bind_call(
+                    call_key,
+                    format!("fwp_k_fold_right_owned(fwp_owned_right_fold_k{g}, {z}, {xs}, {drop})"),
                 ));
             }
             if sym == "fold" {
@@ -5759,7 +5794,11 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 }
                 let z = self.expr(&args[1]);
                 let xs = self.expr(&args[2]);
-                return Some(format!("fwp_k_fold_owned(fwp_owned_fold_k{g}, {z}, {xs})"));
+                self.tail_tokens(tail);
+                return Some(self.bind_call(
+                    call_key,
+                    format!("fwp_k_fold_owned(fwp_owned_fold_k{g}, {z}, {xs})"),
+                ));
             }
             if !self.g.owned_callbacks.contains(&g) {
                 self.g.owned_callbacks.push(g);
@@ -5769,12 +5808,14 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 let xs = self.expr(&args[2]);
                 let result = self.g.prog.funcs[g].ty.params(2).1.clone();
                 let ops = self.g.map_ops(&result);
-                return Some(format!(
-                    "fwp_k_zip_with_owned(fwp_owned_k{g}, {ys}, {xs}, {ops})"
+                self.tail_tokens(tail);
+                return Some(self.bind_call(
+                    call_key,
+                    format!("fwp_k_zip_with_owned(fwp_owned_k{g}, {ys}, {xs}, {ops})"),
                 ));
             }
             let xs = self.expr(&args[1]);
-            return Some(if sym == "map" {
+            let call = if sym == "map" {
                 let result = self.g.prog.funcs[g].ty.params(1).1.clone();
                 let ops = self.g.map_ops(&result);
                 format!("fwp_k_map_owned(fwp_owned_k{g}, {xs}, {ops})")
@@ -5793,7 +5834,9 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 } else {
                     format!("fwp_k_{runtime}_owned(fwp_owned_k{g}, fwp_args{g}, {xs})")
                 }
-            });
+            };
+            self.tail_tokens(tail);
+            return Some(self.bind_call(call_key, call));
         }
         let mut caps = match &args[0] {
             Expr::Local(l) => match self.callback_captures.get(l) {
@@ -5814,7 +5857,8 @@ impl<'g, 'p> FnGen<'g, 'p> {
         for arg in &args[1..] {
             caps.push(self.expr(arg));
         }
-        Some(format!("fwp_hof{i}({})", caps.join(", ")))
+        self.tail_tokens(tail);
+        Some(self.bind_call(call_key, format!("fwp_hof{i}({})", caps.join(", "))))
     }
 
     /// A call of a higher-order primitive whose function argument is a
@@ -5903,9 +5947,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
         if self.self_jump(id, args, tail) {
             return "0".into();
         }
-        if let Some(call) = self.owned_hof(id, args) {
-            self.tail_tokens(tail);
-            let result = self.bind_call(key, call);
+        if let Some(result) = self.owned_hof(id, args, tail, key) {
             return result;
         }
         if let Some(call) = self.known_hof(id, args) {

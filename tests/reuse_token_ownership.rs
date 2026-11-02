@@ -2,6 +2,9 @@
 use std::path::PathBuf;
 use std::process::{Command, Output};
 
+#[path = "support/exported_probe.rs"]
+mod exported_probe;
+
 #[path = "support/ownership_ledger.rs"]
 mod ownership_ledger;
 
@@ -33,9 +36,9 @@ impl Drop for Scratch {
 }
 
 const SOURCE: &str = r#"Box = | Empty | Box I64
-guard : I64 -> I64 ! {Error[String]}
+export guard : I64 -> I64 ! {Error[String]}
 guard = if (eq 0) (const "expected" | fail) (add 1)
-build : (I64 -> I64 ! {Error[String]}) -> Box -> Box ! {Error[String]}
+export build : (I64 -> I64 ! {Error[String]}) -> Box -> Box ! {Error[String]}
 build = curry (match
     (_, Empty) -> const Empty
     (_, Box _) -> curry (fork apply .1 .0 | if (lt 0) (const Empty) Box))
@@ -43,9 +46,25 @@ main = Box 2 | attempt (build guard) | echo
 "#;
 #[test]
 fn compiler_tokens_transfer_release_and_unwind() {
+    // Isolate process-wide comparison switches from the other tests in this
+    // binary. The rooted generator and ordinary CLI builds use the same policy.
+    if std::env::var_os("FWP_REUSE_TOKEN_CHILD").is_none() {
+        let output = Command::new(std::env::current_exe().unwrap())
+            .args([
+                "--exact",
+                "compiler_tokens_transfer_release_and_unwind",
+                "--nocapture",
+            ])
+            .env("FWP_REUSE_TOKEN_CHILD", "1")
+            .env("FWP_STACK", "0")
+            .env("FWP_VRET", "0")
+            .output()
+            .unwrap();
+        assert!(output.status.success(), "{output:?}");
+        return;
+    }
     let dir = Scratch::new("lifetime");
     let src = dir.0.join("token.fwp");
-    let cfile = dir.0.join("token.c");
     std::fs::write(&src, SOURCE).unwrap();
     let fwp = env!("CARGO_BIN_EXE_fwp");
     let reference = checked(
@@ -55,20 +74,13 @@ fn compiler_tokens_transfer_release_and_unwind() {
             .arg(&src),
     );
     {
-        checked(
-            Command::new(fwp)
-                .args(["build", "--memory", "dynamic"])
-                .arg(&src)
-                .args(["--emit-c", "-O2", "-o"])
-                .arg(&cfile)
-                .env("FWP_STACK", "0")
-                .env("FWP_VRET", "0"),
-        );
-        let emitted = std::fs::read_to_string(&cfile).unwrap();
+        let emitted = exported_probe::generate(&src);
         let emitted = ownership_ledger::instrument_native(&emitted, 1 << 16);
         assert!(emitted.contains("fwp_cleanup_push(&t"));
         let wrapper = |name: &str| {
-            let start = emitted.find(&format!("/* {name} :")).unwrap();
+            let start = emitted
+                .find(&format!("/* {name} :"))
+                .unwrap_or_else(|| panic!("missing exported probe entry `{name}`"));
             emitted[start..]
                 .split("static V ")
                 .nth(1)

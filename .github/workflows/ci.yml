@@ -82,8 +82,18 @@ jobs:
           set -o pipefail
           python3 scripts/check-measurement-clocks.py --cc clang 2>&1 | tee "$RUNNER_TEMP/fwp-clock-controls.log"
       - name: Captured process deadlines and polling controls
+        id: process_wait_controls
         timeout-minutes: 2
-        run: python3 scripts/test-process-wait.py -v
+        run: |
+          set -o pipefail
+          python3 scripts/test-process-wait.py -v 2>&1 | tee "$RUNNER_TEMP/fwp-process-wait.log"
+      - name: Publish failed process controls before long tests
+        if: ${{ !cancelled() && steps.process_wait_controls.outcome == 'failure' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: process-wait-${{ runner.os }}-${{ runner.arch }}
+          path: ${{ runner.temp }}/fwp-process-wait.log
+          if-no-files-found: error
       - name: Publish failed clock controls before long tests
         if: ${{ !cancelled() && steps.clock_controls.outcome == 'failure' }}
         uses: actions/upload-artifact@v7
@@ -96,6 +106,7 @@ jobs:
           CARGO_MANIFEST_DIR="$PWD" rustc --test tests/stdlib_doc.rs -o "$RUNNER_TEMP/fwp-stdlib-doc-check"
           env -u FWP_BLESS "$RUNNER_TEMP/fwp-stdlib-doc-check" --exact stdlib_doc_is_current
       - name: Exact-head primitive contract inventory
+        id: ownership_inventory
         env:
           FWP_INVENTORY_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
@@ -104,11 +115,13 @@ jobs:
           rustc --version > "$RUNNER_TEMP/ownership-inventory/rustc.txt"
           python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output "$RUNNER_TEMP/ownership-inventory/candidate.json" 2>&1 | tee "$RUNNER_TEMP/ownership-inventory/audit.log"
           python3 scripts/inventory-memory-diagnostics.py --source "$FWP_INVENTORY_EXPECTED_HEAD" --output "$RUNNER_TEMP/ownership-inventory/memory-diagnostics.json"
-      - uses: actions/upload-artifact@v7
-        if: always()
+      - name: Publish primitive contract inventory
+        uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() && (steps.ownership_inventory.outcome == 'success' || steps.ownership_inventory.outcome == 'failure') }}
         with:
           name: ownership-inventory-${{ runner.os }}-${{ runner.arch }}
           path: ${{ runner.temp }}/ownership-inventory/
+          if-no-files-found: error
       - name: fmt
         run: cargo fmt --all -- --check
       - name: clippy
@@ -438,6 +451,7 @@ jobs:
           CARGO_MANIFEST_DIR="$PWD" rustc --test tests/stdlib_doc.rs -o "$RUNNER_TEMP/fwp-stdlib-doc-check"
           env -u FWP_BLESS "$RUNNER_TEMP/fwp-stdlib-doc-check" --exact stdlib_doc_is_current
       - name: Exact-head primitive contract inventory
+        id: ownership_inventory
         env:
           FWP_INVENTORY_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
@@ -446,11 +460,13 @@ jobs:
           rustc --version > "$RUNNER_TEMP/ownership-inventory/rustc.txt"
           python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output "$RUNNER_TEMP/ownership-inventory/candidate.json" 2>&1 | tee "$RUNNER_TEMP/ownership-inventory/audit.log"
           python3 scripts/inventory-memory-diagnostics.py --source "$FWP_INVENTORY_EXPECTED_HEAD" --output "$RUNNER_TEMP/ownership-inventory/memory-diagnostics.json"
-      - uses: actions/upload-artifact@v7
-        if: always()
+      - name: Publish primitive contract inventory
+        uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() && (steps.ownership_inventory.outcome == 'success' || steps.ownership_inventory.outcome == 'failure') }}
         with:
           name: ownership-inventory-${{ runner.os }}-${{ runner.arch }}
           path: ${{ runner.temp }}/ownership-inventory/
+          if-no-files-found: error
       - name: fmt
         run: cargo fmt --all -- --check
       - name: clippy
