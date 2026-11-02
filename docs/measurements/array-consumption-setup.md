@@ -65,3 +65,27 @@ A reduced early penalty supports investigating process preparation; it does not
 prove a compiler optimization or settle the original 2% limits. An unchanged
 penalty rejects preparation as a sufficient explanation. Do not alter runtime
 ownership or add special-case workarounds without a demonstrated source-level need.
+
+## Running and auditing
+
+The immutable tag `roadmap/array-consumption-protocol-2026-11-02` freezes the
+choices above before implementation. The `array-consumption` suite in
+[the evidence workflow](../../.github/workflows/numerics.yml) uses the matching
+original archive for each architecture/session. It qualifies the C toolchain
+without installing Rust or rebuilding fwp.
+
+- [Generator and output checks](../../scripts/array_consumption_setup.py): keep
+  timed construction/reduction code intact and require preparation to release its
+  owner. The caller retains an array alias before each consuming reduction.
+- [Runner](../../scripts/diagnose-array-consumption.py): validate both sizes and
+  settings, then collect every scheduled process. Save partial failures too.
+- [Independent audit](../../scripts/check-array-consumption.py): reconstruct each
+  generated C file from the original archive; verify build flags, binary copies,
+  result bits, allocation budgets, negative controls and every raw sample.
+- [Harness tests](../../scripts/test-array-consumption-setup.py): reject changed
+  source boundaries, retained storage, incorrect results and incomplete rounds.
+
+The process-CPU interval encloses the existing wall-clock pair. Its overhead is
+therefore different from the original timer. The separate empty-clock control
+records both intervals; neither is subtracted. These observations are diagnostic,
+not replacements for the original uninstrumented acceptance measurements.
