@@ -1,0 +1,2034 @@
+{
+  "schema": 1,
+  "comparison": "matrix-columns",
+  "auditSource": "9f6c8d0084ee3728f61917189b92613caf7da56e",
+  "jobs": [
+    {
+      "run": 41418956333,
+      "source": "8b9827521d0546ddd7eaace299492f9bd45b7af5",
+      "job": {
+        "id": 125189610999,
+        "run_id": 41418956333,
+        "workflow_name": "Numerical and ownership evidence",
+        "head_branch": "matrix-calculation-costs",
+        "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/41418956333",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOU33zxM8AAAAdJeHd9w",
+        "head_sha": "8b9827521d0546ddd7eaace299492f9bd45b7af5",
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/125189610999",
+        "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41418956333/job/125189610999",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-11-02T09:14:02Z",
+        "started_at": "2026-11-02T09:15:48Z",
+        "completed_at": "2026-11-02T09:26:13Z",
+        "name": "current_kernels (2, ubuntu-latest)",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-02T09:15:49Z",
+            "completed_at": "2026-11-02T09:15:50Z"
+          },
+          {
+            "name": "Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-02T09:15:50Z",
+            "completed_at": "2026-11-02T09:16:00Z"
+          },
+          {
+            "name": "Run dtolnay/rust-toolchain@master",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-02T09:16:00Z",
+            "completed_at": "2026-11-02T09:16:08Z"
+          },
+          {
+            "name": "Qualify the kernel host before building",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-11-02T09:16:08Z",
+            "completed_at": "2026-11-02T09:16:09Z"
+          },
+          {
+            "name": "Retain host qualification and any rejection",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-02T09:16:09Z",
+            "completed_at": "2026-11-02T09:16:10Z"
+          },
+          {
+            "name": "Run actions/cache@v6",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-11-02T09:16:10Z",
+            "completed_at": "2026-11-02T09:16:12Z"
+          },
+          {
+            "name": "Fetch locked Rust dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-11-02T09:16:12Z",
+            "completed_at": "2026-11-02T09:16:12Z"
+          },
+          {
+            "name": "Reference, scheduling and damaged-evidence controls",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-11-02T09:16:12Z",
+            "completed_at": "2026-11-02T09:16:17Z"
+          },
+          {
+            "name": "Require matching native matrix safety checks",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9,
+            "started_at": "2026-11-02T09:16:17Z",
+            "completed_at": "2026-11-02T09:16:19Z"
+          },
+          {
+            "name": "Retain the verified matrix prerequisite",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10,
+            "started_at": "2026-11-02T09:16:19Z",
+            "completed_at": "2026-11-02T09:16:20Z"
+          },
+          {
+            "name": "Build the current compiler",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 11,
+            "started_at": "2026-11-02T09:16:20Z",
+            "completed_at": "2026-11-02T09:17:44Z"
+          },
+          {
+            "name": "Build the exact word-state reference",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 12,
+            "started_at": "2026-11-02T09:17:44Z",
+            "completed_at": "2026-11-02T09:17:44Z"
+          },
+          {
+            "name": "Reference results, aliases, failure and cancellation",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 13,
+            "started_at": "2026-11-02T09:17:44Z",
+            "completed_at": "2026-11-02T09:17:44Z"
+          },
+          {
+            "name": "Measure both fwp variants and C/Rust with independent copy controls",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 14,
+            "started_at": "2026-11-02T09:17:44Z",
+            "completed_at": "2026-11-02T09:17:44Z"
+          },
+          {
+            "name": "Measure paired and scalar matrix columns with C/Rust peers",
+            "status": "completed",
+            "conclusion": "failure",
+            "number": 15,
+            "started_at": "2026-11-02T09:17:44Z",
+            "completed_at": "2026-11-02T09:24:56Z"
+          },
+          {
+            "name": "Independently audit raw evidence including failed timing rules",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 16,
+            "started_at": "2026-11-02T09:24:56Z",
+            "completed_at": "2026-11-02T09:25:02Z"
+          },
+          {
+            "name": "Preserve the reference source, compiler and focused checks",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 17,
+            "started_at": "2026-11-02T09:25:02Z",
+            "completed_at": "2026-11-02T09:25:02Z"
+          },
+          {
+            "name": "Retain complete measurements and partial failed observations",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 18,
+            "started_at": "2026-11-02T09:25:02Z",
+            "completed_at": "2026-11-02T09:26:11Z"
+          },
+          {
+            "name": "Post Run actions/cache@v6",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 35,
+            "started_at": "2026-11-02T09:26:11Z",
+            "completed_at": "2026-11-02T09:26:11Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 36,
+            "started_at": "2026-11-02T09:26:11Z",
+            "completed_at": "2026-11-02T09:26:11Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 37,
+            "started_at": "2026-11-02T09:26:11Z",
+            "completed_at": "2026-11-02T09:26:11Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/125189610999",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "runner_id": 1000396595,
+        "runner_name": "GitHub Actions 1000396595",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      },
+      "artifacts": {
+        "current-kernel-host-ubuntu-latest-2": {
+          "id": 13128528335,
+          "node_id": "MDg6QXJ0aWZhY3QxMzEyODUyODMzNQ==",
+          "name": "current-kernel-host-ubuntu-latest-2",
+          "size_in_bytes": 1512,
+          "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13128528335",
+          "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13128528335/zip",
+          "expired": false,
+          "digest": "sha256:ee00dd74f2f5c4c4070849ede80b235216fbeac53cc7544edcc5b806a5f0e86f",
+          "created_at": "2026-11-02T09:16:10Z",
+          "updated_at": "2026-11-02T09:16:10Z",
+          "expires_at": "2027-01-31T09:14:02Z",
+          "workflow_run": {
+            "id": 41418956333,
+            "repository_id": 1400763332,
+            "head_repository_id": 1400763332,
+            "head_branch": "matrix-calculation-costs",
+            "head_sha": "8b9827521d0546ddd7eaace299492f9bd45b7af5"
+          }
+        },
+        "current-kernels-ubuntu-latest-2": {
+          "id": 13129642131,
+          "node_id": "MDg6QXJ0aWZhY3QxMzEyOTY0MjEzMQ==",
+          "name": "current-kernels-ubuntu-latest-2",
+          "size_in_bytes": 74786809,
+          "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13129642131",
+          "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13129642131/zip",
+          "expired": false,
+          "digest": "sha256:51278682daa7c817f348ae5b7accfb54e39747b7875404ed5c8280853248985d",
+          "created_at": "2026-11-02T09:26:10Z",
+          "updated_at": "2026-11-02T09:26:10Z",
+          "expires_at": "2027-01-31T09:14:02Z",
+          "workflow_run": {
+            "id": 41418956333,
+            "repository_id": 1400763332,
+            "head_repository_id": 1400763332,
+            "head_branch": "matrix-calculation-costs",
+            "head_sha": "8b9827521d0546ddd7eaace299492f9bd45b7af5"
+          }
+        },
+        "matrix-prerequisite-ubuntu-latest-2": {
+          "id": 13129525385,
+          "node_id": "MDg6QXJ0aWZhY3QxMzEyOTUyNTM4NQ==",
+          "name": "matrix-prerequisite-ubuntu-latest-2",
+          "size_in_bytes": 3235,
+          "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13129525385",
+          "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13129525385/zip",
+          "expired": false,
+          "digest": "sha256:8c4e45ec91006b1c91405761f32215e2452db87fd7a6c46bea588f0d4c920fe1",
+          "created_at": "2026-11-02T09:16:20Z",
+          "updated_at": "2026-11-02T09:16:20Z",
+          "expires_at": "2027-01-31T09:14:02Z",
+          "workflow_run": {
+            "id": 41418956333,
+            "repository_id": 1400763332,
+            "head_repository_id": 1400763332,
+            "head_branch": "matrix-calculation-costs",
+            "head_sha": "8b9827521d0546ddd7eaace299492f9bd45b7af5"
+          }
+        }
+      },
+      "machine": "x86_64",
+      "session": 2,
+      "log": "x86_64-2-125189610999.log.gz",
+      "logBytes": 239607,
+      "logSha256": "ea32edfc8b2bc56edf807f80a1e4b0fbf4d87fb6cae7091132e12d1e0df05118",
+      "qualification": {
+        "source": "8b9827521d0546ddd7eaace299492f9bd45b7af5",
+        "actual": {
+          "system": "Linux",
+          "machine": "x86_64",
+          "cpu": "AMD EPYC 7763 64-Core Processor",
+          "processors": 4,
+          "cVersion": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+          "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+        },
+        "expected": {
+          "system": "Linux",
+          "machine": "x86_64",
+          "cpu": "AMD EPYC 7763 64-Core Processor",
+          "processors": 4,
+          "cVersion": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+          "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+        },
+        "lscpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 7763 64-Core Processor\nCPU family:                              25\nModel:                                   1\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                4890.85\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves user_shstk clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload umip vaes vpclmulqdq rdpid fsrm\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               64 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                1 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Vulnerable: No microcode\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+        "failures": [],
+        "qualified": true
+      },
+      "decision": "performance-limits-remain-open",
+      "prerequisite": "x86_64-2-125189610999-prerequisite.json",
+      "prerequisiteSha256": "f7f93a0a26228d4a01600dbe325b3ef59d6fafefff5126be837e50b4a884ef33",
+      "report": "x86_64-2-125189610999.json.gz",
+      "reportBytes": 78852696,
+      "reportSha256": "a4934ce249a53726a673e4448527a4cba55769c3e2d6ac73fa8e0b2e3e2aa348",
+      "files": "x86_64-2-125189610999-files.json.gz",
+      "filesSha256": "2f6e007a1dc18f3f7a67b928478baf853dce515504a6315416e4554c94b671a5",
+      "failures": [
+        {
+          "kind": "copy",
+          "case": "matrix-65-67-63",
+          "label": "fwp",
+          "metric": "kernelNs",
+          "ratio": 1.0624293529352247,
+          "limit": 1.02
+        },
+        {
+          "kind": "copy",
+          "case": "matrix-65-67-63",
+          "label": "fwp",
+          "metric": "allocationInclusiveNs",
+          "ratio": 1.0610512214040493,
+          "limit": 1.02
+        },
+        {
+          "kind": "copy",
+          "case": "matrix-65-67-63",
+          "label": "reference",
+          "metric": "kernelNs",
+          "ratio": 1.08295124785533,
+          "limit": 1.02
+        },
+        {
+          "kind": "copy",
+          "case": "matrix-65-67-63",
+          "label": "reference",
+          "metric": "allocationInclusiveNs",
+          "ratio": 1.0802251758391017,
+          "limit": 1.02
+        }
+      ],
+      "sourceTrees": {
+        "src": "8bb74db0d05fa51350fe4cdcbf22d5e5f9bf2f2d",
+        "runtime": "0a670b0d301edfdabc821b703581d3a3c33c7e71",
+        "lib": "6ebae9a727e01dbbc935e069263b496e1dda9e3f",
+        "Cargo.toml": "5c3e7020b063ed5305669e5076f4b270a9239afa",
+        "Cargo.lock": "3aba3265112a1da0ccf0043cb89fbff2aff7e8ce",
+        "build.rs": "ad434d41a91d366690f273b40c96cdb7631918e8"
+      },
+      "runtimeSha256": "aef3b35009988f811f3d0725fecc73057ae47e1206c56c374b94be8b6acae12c",
+      "candidateLoopSha256": "4f7e5f4145c86124bb136cc6cd94f79a282a53f0473d185f35f1d4578909c19c",
+      "referenceLoopSha256": "31a118287ad8d25be7b9099345b1bc601d239714bd4326aba443feb582252eec"
+    },
+    {
+      "run": 41418956333,
+      "source": "8b9827521d0546ddd7eaace299492f9bd45b7af5",
+      "job": {
+        "id": 125189611052,
+        "run_id": 41418956333,
+        "workflow_name": "Numerical and ownership evidence",
+        "head_branch": "matrix-calculation-costs",
+        "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/41418956333",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOU33zxM8AAAAdJeHeLA",
+        "head_sha": "8b9827521d0546ddd7eaace299492f9bd45b7af5",
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/125189611052",
+        "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41418956333/job/125189611052",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-11-02T09:14:02Z",
+        "started_at": "2026-11-02T09:16:41Z",
+        "completed_at": "2026-11-02T09:17:02Z",
+        "name": "current_kernels (1, ubuntu-latest)",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-02T09:16:42Z",
+            "completed_at": "2026-11-02T09:16:43Z"
+          },
+          {
+            "name": "Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-02T09:16:43Z",
+            "completed_at": "2026-11-02T09:16:51Z"
+          },
+          {
+            "name": "Run dtolnay/rust-toolchain@master",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-02T09:16:51Z",
+            "completed_at": "2026-11-02T09:16:58Z"
+          },
+          {
+            "name": "Qualify the kernel host before building",
+            "status": "completed",
+            "conclusion": "failure",
+            "number": 4,
+            "started_at": "2026-11-02T09:16:58Z",
+            "completed_at": "2026-11-02T09:16:58Z"
+          },
+          {
+            "name": "Retain host qualification and any rejection",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-02T09:16:58Z",
+            "completed_at": "2026-11-02T09:16:59Z"
+          },
+          {
+            "name": "Run actions/cache@v6",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 6,
+            "started_at": "2026-11-02T09:16:59Z",
+            "completed_at": "2026-11-02T09:16:59Z"
+          },
+          {
+            "name": "Fetch locked Rust dependencies",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 7,
+            "started_at": "2026-11-02T09:16:59Z",
+            "completed_at": "2026-11-02T09:16:59Z"
+          },
+          {
+            "name": "Reference, scheduling and damaged-evidence controls",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 8,
+            "started_at": "2026-11-02T09:16:59Z",
+            "completed_at": "2026-11-02T09:16:59Z"
+          },
+          {
+            "name": "Require matching native matrix safety checks",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 9,
+            "started_at": "2026-11-02T09:16:59Z",
+            "completed_at": "2026-11-02T09:16:59Z"
+          },
+          {
+            "name": "Retain the verified matrix prerequisite",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 10,
+            "started_at": "2026-11-02T09:16:59Z",
+            "completed_at": "2026-11-02T09:16:59Z"
+          },
+          {
+            "name": "Build the current compiler",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 11,
+            "started_at": "2026-11-02T09:16:59Z",
+            "completed_at": "2026-11-02T09:16:59Z"
+          },
+          {
+            "name": "Build the exact word-state reference",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 12,
+            "started_at": "2026-11-02T09:16:59Z",
+            "completed_at": "2026-11-02T09:16:59Z"
+          },
+          {
+            "name": "Reference results, aliases, failure and cancellation",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 13,
+            "started_at": "2026-11-02T09:16:59Z",
+            "completed_at": "2026-11-02T09:16:59Z"
+          },
+          {
+            "name": "Measure both fwp variants and C/Rust with independent copy controls",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 14,
+            "started_at": "2026-11-02T09:16:59Z",
+            "completed_at": "2026-11-02T09:16:59Z"
+          },
+          {
+            "name": "Measure paired and scalar matrix columns with C/Rust peers",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 15,
+            "started_at": "2026-11-02T09:16:59Z",
+            "completed_at": "2026-11-02T09:16:59Z"
+          },
+          {
+            "name": "Independently audit raw evidence including failed timing rules",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 16,
+            "started_at": "2026-11-02T09:16:59Z",
+            "completed_at": "2026-11-02T09:16:59Z"
+          },
+          {
+            "name": "Preserve the reference source, compiler and focused checks",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 17,
+            "started_at": "2026-11-02T09:16:59Z",
+            "completed_at": "2026-11-02T09:16:59Z"
+          },
+          {
+            "name": "Retain complete measurements and partial failed observations",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 18,
+            "started_at": "2026-11-02T09:16:59Z",
+            "completed_at": "2026-11-02T09:16:59Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 36,
+            "started_at": "2026-11-02T09:16:59Z",
+            "completed_at": "2026-11-02T09:17:00Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 37,
+            "started_at": "2026-11-02T09:17:00Z",
+            "completed_at": "2026-11-02T09:17:00Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/125189611052",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "runner_id": 1000396599,
+        "runner_name": "GitHub Actions 1000396599",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      },
+      "artifacts": {
+        "current-kernel-host-ubuntu-latest-1": {
+          "id": 13128618234,
+          "node_id": "MDg6QXJ0aWZhY3QxMzEyODYxODIzNA==",
+          "name": "current-kernel-host-ubuntu-latest-1",
+          "size_in_bytes": 1624,
+          "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13128618234",
+          "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13128618234/zip",
+          "expired": false,
+          "digest": "sha256:db44d694e00150b7b4748d6d4385ff380aa6339a2898c28696c1cbe7b74ae2cc",
+          "created_at": "2026-11-02T09:16:59Z",
+          "updated_at": "2026-11-02T09:16:59Z",
+          "expires_at": "2027-01-31T09:14:02Z",
+          "workflow_run": {
+            "id": 41418956333,
+            "repository_id": 1400763332,
+            "head_repository_id": 1400763332,
+            "head_branch": "matrix-calculation-costs",
+            "head_sha": "8b9827521d0546ddd7eaace299492f9bd45b7af5"
+          }
+        }
+      },
+      "machine": "x86_64",
+      "session": 1,
+      "log": "x86_64-1-125189611052.log.gz",
+      "logBytes": 214400,
+      "logSha256": "1515060f5b3a47489cad86a4c854fed1e5e17c5c2217b44d7ffd0632cd8384d9",
+      "qualification": {
+        "source": "8b9827521d0546ddd7eaace299492f9bd45b7af5",
+        "actual": {
+          "system": "Linux",
+          "machine": "x86_64",
+          "cpu": "AMD EPYC 9V45 96-Core Processor",
+          "processors": 4,
+          "cVersion": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+          "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+        },
+        "expected": {
+          "system": "Linux",
+          "machine": "x86_64",
+          "cpu": "AMD EPYC 7763 64-Core Processor",
+          "processors": 4,
+          "cVersion": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+          "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+        },
+        "lscpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 9V45 96-Core Processor\nCPU family:                              26\nModel:                                   2\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                5192.19\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves user_shstk avx_vnni avx512_bf16 clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm avx512_vp2intersect\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               96 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                2 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+        "failures": [
+          "cpu: expected 'AMD EPYC 7763 64-Core Processor', observed 'AMD EPYC 9V45 96-Core Processor'"
+        ],
+        "qualified": false
+      },
+      "decision": "host-rejected-before-building-or-timing"
+    },
+    {
+      "run": 41418956333,
+      "source": "8b9827521d0546ddd7eaace299492f9bd45b7af5",
+      "job": {
+        "id": 125189611110,
+        "run_id": 41418956333,
+        "workflow_name": "Numerical and ownership evidence",
+        "head_branch": "matrix-calculation-costs",
+        "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/41418956333",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOU33zxM8AAAAdJeHeZg",
+        "head_sha": "8b9827521d0546ddd7eaace299492f9bd45b7af5",
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/125189611110",
+        "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41418956333/job/125189611110",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-02T09:14:02Z",
+        "started_at": "2026-11-02T09:15:38Z",
+        "completed_at": "2026-11-02T09:25:26Z",
+        "name": "current_kernels (1, ubuntu-24.04-arm)",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-02T09:15:39Z",
+            "completed_at": "2026-11-02T09:15:40Z"
+          },
+          {
+            "name": "Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-02T09:15:40Z",
+            "completed_at": "2026-11-02T09:15:48Z"
+          },
+          {
+            "name": "Run dtolnay/rust-toolchain@master",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-02T09:15:48Z",
+            "completed_at": "2026-11-02T09:15:54Z"
+          },
+          {
+            "name": "Qualify the kernel host before building",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-11-02T09:15:54Z",
+            "completed_at": "2026-11-02T09:15:54Z"
+          },
+          {
+            "name": "Retain host qualification and any rejection",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-02T09:15:54Z",
+            "completed_at": "2026-11-02T09:15:55Z"
+          },
+          {
+            "name": "Run actions/cache@v6",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-11-02T09:15:55Z",
+            "completed_at": "2026-11-02T09:15:56Z"
+          },
+          {
+            "name": "Fetch locked Rust dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-11-02T09:15:56Z",
+            "completed_at": "2026-11-02T09:15:56Z"
+          },
+          {
+            "name": "Reference, scheduling and damaged-evidence controls",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-11-02T09:15:56Z",
+            "completed_at": "2026-11-02T09:16:02Z"
+          },
+          {
+            "name": "Require matching native matrix safety checks",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9,
+            "started_at": "2026-11-02T09:16:02Z",
+            "completed_at": "2026-11-02T09:16:04Z"
+          },
+          {
+            "name": "Retain the verified matrix prerequisite",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10,
+            "started_at": "2026-11-02T09:16:04Z",
+            "completed_at": "2026-11-02T09:16:05Z"
+          },
+          {
+            "name": "Build the current compiler",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 11,
+            "started_at": "2026-11-02T09:16:05Z",
+            "completed_at": "2026-11-02T09:17:36Z"
+          },
+          {
+            "name": "Build the exact word-state reference",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 12,
+            "started_at": "2026-11-02T09:17:36Z",
+            "completed_at": "2026-11-02T09:17:36Z"
+          },
+          {
+            "name": "Reference results, aliases, failure and cancellation",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 13,
+            "started_at": "2026-11-02T09:17:36Z",
+            "completed_at": "2026-11-02T09:17:36Z"
+          },
+          {
+            "name": "Measure both fwp variants and C/Rust with independent copy controls",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 14,
+            "started_at": "2026-11-02T09:17:36Z",
+            "completed_at": "2026-11-02T09:17:36Z"
+          },
+          {
+            "name": "Measure paired and scalar matrix columns with C/Rust peers",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 15,
+            "started_at": "2026-11-02T09:17:36Z",
+            "completed_at": "2026-11-02T09:24:18Z"
+          },
+          {
+            "name": "Independently audit raw evidence including failed timing rules",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 16,
+            "started_at": "2026-11-02T09:24:18Z",
+            "completed_at": "2026-11-02T09:24:24Z"
+          },
+          {
+            "name": "Preserve the reference source, compiler and focused checks",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 17,
+            "started_at": "2026-11-02T09:24:24Z",
+            "completed_at": "2026-11-02T09:24:24Z"
+          },
+          {
+            "name": "Retain complete measurements and partial failed observations",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 18,
+            "started_at": "2026-11-02T09:24:24Z",
+            "completed_at": "2026-11-02T09:25:23Z"
+          },
+          {
+            "name": "Post Run actions/cache@v6",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 35,
+            "started_at": "2026-11-02T09:25:23Z",
+            "completed_at": "2026-11-02T09:25:23Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 36,
+            "started_at": "2026-11-02T09:25:23Z",
+            "completed_at": "2026-11-02T09:25:24Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 37,
+            "started_at": "2026-11-02T09:25:24Z",
+            "completed_at": "2026-11-02T09:25:24Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/125189611110",
+        "labels": [
+          "ubuntu-24.04-arm"
+        ],
+        "runner_id": 1000396593,
+        "runner_name": "GitHub Actions 1000396593",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      },
+      "artifacts": {
+        "current-kernel-host-ubuntu-24.04-arm-1": {
+          "id": 13128259255,
+          "node_id": "MDg6QXJ0aWZhY3QxMzEyODI1OTI1NQ==",
+          "name": "current-kernel-host-ubuntu-24.04-arm-1",
+          "size_in_bytes": 1089,
+          "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13128259255",
+          "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13128259255/zip",
+          "expired": false,
+          "digest": "sha256:756859e083b8efc4df7cae0a0f38dfde8931345ef3ae525eafa797c59f965f90",
+          "created_at": "2026-11-02T09:15:55Z",
+          "updated_at": "2026-11-02T09:15:55Z",
+          "expires_at": "2027-01-31T09:14:02Z",
+          "workflow_run": {
+            "id": 41418956333,
+            "repository_id": 1400763332,
+            "head_repository_id": 1400763332,
+            "head_branch": "matrix-calculation-costs",
+            "head_sha": "8b9827521d0546ddd7eaace299492f9bd45b7af5"
+          }
+        },
+        "current-kernels-ubuntu-24.04-arm-1": {
+          "id": 13129093824,
+          "node_id": "MDg6QXJ0aWZhY3QxMzEyOTA5MzgyNA==",
+          "name": "current-kernels-ubuntu-24.04-arm-1",
+          "size_in_bytes": 70380313,
+          "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13129093824",
+          "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13129093824/zip",
+          "expired": false,
+          "digest": "sha256:40605232bf4e08f0cf8b363a2b74ca2fc8011eb88cad881bfb62bfdef925a96a",
+          "created_at": "2026-11-02T09:25:23Z",
+          "updated_at": "2026-11-02T09:25:23Z",
+          "expires_at": "2027-01-31T09:14:02Z",
+          "workflow_run": {
+            "id": 41418956333,
+            "repository_id": 1400763332,
+            "head_repository_id": 1400763332,
+            "head_branch": "matrix-calculation-costs",
+            "head_sha": "8b9827521d0546ddd7eaace299492f9bd45b7af5"
+          }
+        },
+        "matrix-prerequisite-ubuntu-24.04-arm-1": {
+          "id": 13129236178,
+          "node_id": "MDg6QXJ0aWZhY3QxMzEyOTIzNjE3OA==",
+          "name": "matrix-prerequisite-ubuntu-24.04-arm-1",
+          "size_in_bytes": 3235,
+          "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13129236178",
+          "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13129236178/zip",
+          "expired": false,
+          "digest": "sha256:f661f569926fec244e7dd2077cc04c4a22e294d52a0a5a2c6998b9a30e5c1131",
+          "created_at": "2026-11-02T09:16:05Z",
+          "updated_at": "2026-11-02T09:16:05Z",
+          "expires_at": "2027-01-31T09:14:02Z",
+          "workflow_run": {
+            "id": 41418956333,
+            "repository_id": 1400763332,
+            "head_repository_id": 1400763332,
+            "head_branch": "matrix-calculation-costs",
+            "head_sha": "8b9827521d0546ddd7eaace299492f9bd45b7af5"
+          }
+        }
+      },
+      "machine": "aarch64",
+      "session": 1,
+      "log": "aarch64-1-125189611110.log.gz",
+      "logBytes": 237959,
+      "logSha256": "cf6e9f870ca7b9dc250879f073769d42409ae2614e7cf4a7ff356400e8e1307c",
+      "qualification": {
+        "source": "8b9827521d0546ddd7eaace299492f9bd45b7af5",
+        "actual": {
+          "system": "Linux",
+          "machine": "aarch64",
+          "cpu": "Neoverse-N2",
+          "processors": 4,
+          "cVersion": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+          "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+        },
+        "expected": {
+          "system": "Linux",
+          "machine": "aarch64",
+          "cpu": "Neoverse-N2",
+          "processors": 4,
+          "cVersion": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+          "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+        },
+        "lscpu": "Architecture:                            aarch64\nCPU op-mode(s):                          32-bit, 64-bit\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               ARM\nModel name:                              Neoverse-N2\nModel:                                   0\nThread(s) per core:                      1\nCore(s) per socket:                      4\nSocket(s):                               1\nStepping:                                r0p0\nBogoMIPS:                                2000.00\nFlags:                                   fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nL1d cache:                               256 KiB (4 instances)\nL1i cache:                               256 KiB (4 instances)\nL2 cache:                                4 MiB (4 instances)\nL3 cache:                                128 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; CSV2, BHB\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+        "failures": [],
+        "qualified": true
+      },
+      "decision": "all-current-rules-pass",
+      "prerequisite": "aarch64-1-125189611110-prerequisite.json",
+      "prerequisiteSha256": "f7f93a0a26228d4a01600dbe325b3ef59d6fafefff5126be837e50b4a884ef33",
+      "report": "aarch64-1-125189611110.json.gz",
+      "reportBytes": 78858211,
+      "reportSha256": "b3585fe7fa0688384e0c9719052c78e43a7acec9319ad3602f44429e672da9c0",
+      "files": "aarch64-1-125189611110-files.json.gz",
+      "filesSha256": "b74fbaa399b7d2f162a7197a328106f3d702a109ad0d499027ff973dddbde63b",
+      "failures": [],
+      "sourceTrees": {
+        "src": "8bb74db0d05fa51350fe4cdcbf22d5e5f9bf2f2d",
+        "runtime": "0a670b0d301edfdabc821b703581d3a3c33c7e71",
+        "lib": "6ebae9a727e01dbbc935e069263b496e1dda9e3f",
+        "Cargo.toml": "5c3e7020b063ed5305669e5076f4b270a9239afa",
+        "Cargo.lock": "3aba3265112a1da0ccf0043cb89fbff2aff7e8ce",
+        "build.rs": "ad434d41a91d366690f273b40c96cdb7631918e8"
+      },
+      "runtimeSha256": "aef3b35009988f811f3d0725fecc73057ae47e1206c56c374b94be8b6acae12c",
+      "candidateLoopSha256": "4f7e5f4145c86124bb136cc6cd94f79a282a53f0473d185f35f1d4578909c19c",
+      "referenceLoopSha256": "31a118287ad8d25be7b9099345b1bc601d239714bd4326aba443feb582252eec"
+    },
+    {
+      "run": 41418956333,
+      "source": "8b9827521d0546ddd7eaace299492f9bd45b7af5",
+      "job": {
+        "id": 125189611219,
+        "run_id": 41418956333,
+        "workflow_name": "Numerical and ownership evidence",
+        "head_branch": "matrix-calculation-costs",
+        "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/41418956333",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOU33zxM8AAAAdJeHe0w",
+        "head_sha": "8b9827521d0546ddd7eaace299492f9bd45b7af5",
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/125189611219",
+        "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41418956333/job/125189611219",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-02T09:14:02Z",
+        "started_at": "2026-11-02T09:16:42Z",
+        "completed_at": "2026-11-02T09:26:23Z",
+        "name": "current_kernels (2, ubuntu-24.04-arm)",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-02T09:16:42Z",
+            "completed_at": "2026-11-02T09:16:44Z"
+          },
+          {
+            "name": "Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-02T09:16:44Z",
+            "completed_at": "2026-11-02T09:16:52Z"
+          },
+          {
+            "name": "Run dtolnay/rust-toolchain@master",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-02T09:16:52Z",
+            "completed_at": "2026-11-02T09:16:58Z"
+          },
+          {
+            "name": "Qualify the kernel host before building",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-11-02T09:16:58Z",
+            "completed_at": "2026-11-02T09:16:58Z"
+          },
+          {
+            "name": "Retain host qualification and any rejection",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-02T09:16:58Z",
+            "completed_at": "2026-11-02T09:16:59Z"
+          },
+          {
+            "name": "Run actions/cache@v6",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-11-02T09:16:59Z",
+            "completed_at": "2026-11-02T09:17:00Z"
+          },
+          {
+            "name": "Fetch locked Rust dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-11-02T09:17:00Z",
+            "completed_at": "2026-11-02T09:17:00Z"
+          },
+          {
+            "name": "Reference, scheduling and damaged-evidence controls",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-11-02T09:17:00Z",
+            "completed_at": "2026-11-02T09:17:06Z"
+          },
+          {
+            "name": "Require matching native matrix safety checks",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9,
+            "started_at": "2026-11-02T09:17:06Z",
+            "completed_at": "2026-11-02T09:17:08Z"
+          },
+          {
+            "name": "Retain the verified matrix prerequisite",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10,
+            "started_at": "2026-11-02T09:17:08Z",
+            "completed_at": "2026-11-02T09:17:09Z"
+          },
+          {
+            "name": "Build the current compiler",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 11,
+            "started_at": "2026-11-02T09:17:09Z",
+            "completed_at": "2026-11-02T09:18:32Z"
+          },
+          {
+            "name": "Build the exact word-state reference",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 12,
+            "started_at": "2026-11-02T09:18:32Z",
+            "completed_at": "2026-11-02T09:18:32Z"
+          },
+          {
+            "name": "Reference results, aliases, failure and cancellation",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 13,
+            "started_at": "2026-11-02T09:18:32Z",
+            "completed_at": "2026-11-02T09:18:32Z"
+          },
+          {
+            "name": "Measure both fwp variants and C/Rust with independent copy controls",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 14,
+            "started_at": "2026-11-02T09:18:32Z",
+            "completed_at": "2026-11-02T09:18:32Z"
+          },
+          {
+            "name": "Measure paired and scalar matrix columns with C/Rust peers",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 15,
+            "started_at": "2026-11-02T09:18:32Z",
+            "completed_at": "2026-11-02T09:25:11Z"
+          },
+          {
+            "name": "Independently audit raw evidence including failed timing rules",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 16,
+            "started_at": "2026-11-02T09:25:11Z",
+            "completed_at": "2026-11-02T09:25:17Z"
+          },
+          {
+            "name": "Preserve the reference source, compiler and focused checks",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 17,
+            "started_at": "2026-11-02T09:25:17Z",
+            "completed_at": "2026-11-02T09:25:17Z"
+          },
+          {
+            "name": "Retain complete measurements and partial failed observations",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 18,
+            "started_at": "2026-11-02T09:25:17Z",
+            "completed_at": "2026-11-02T09:26:21Z"
+          },
+          {
+            "name": "Post Run actions/cache@v6",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 35,
+            "started_at": "2026-11-02T09:26:21Z",
+            "completed_at": "2026-11-02T09:26:21Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 36,
+            "started_at": "2026-11-02T09:26:21Z",
+            "completed_at": "2026-11-02T09:26:21Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 37,
+            "started_at": "2026-11-02T09:26:21Z",
+            "completed_at": "2026-11-02T09:26:21Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/125189611219",
+        "labels": [
+          "ubuntu-24.04-arm"
+        ],
+        "runner_id": 1000396598,
+        "runner_name": "GitHub Actions 1000396598",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      },
+      "artifacts": {
+        "current-kernel-host-ubuntu-24.04-arm-2": {
+          "id": 13129047441,
+          "node_id": "MDg6QXJ0aWZhY3QxMzEyOTA0NzQ0MQ==",
+          "name": "current-kernel-host-ubuntu-24.04-arm-2",
+          "size_in_bytes": 1089,
+          "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13129047441",
+          "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13129047441/zip",
+          "expired": false,
+          "digest": "sha256:976b1921e474b96087e425764a2aa7f57d3b51dc76528765c4ca4e38c3b050cf",
+          "created_at": "2026-11-02T09:16:59Z",
+          "updated_at": "2026-11-02T09:16:59Z",
+          "expires_at": "2027-01-31T09:14:02Z",
+          "workflow_run": {
+            "id": 41418956333,
+            "repository_id": 1400763332,
+            "head_repository_id": 1400763332,
+            "head_branch": "matrix-calculation-costs",
+            "head_sha": "8b9827521d0546ddd7eaace299492f9bd45b7af5"
+          }
+        },
+        "current-kernels-ubuntu-24.04-arm-2": {
+          "id": 13130100954,
+          "node_id": "MDg6QXJ0aWZhY3QxMzEzMDEwMDk1NA==",
+          "name": "current-kernels-ubuntu-24.04-arm-2",
+          "size_in_bytes": 70365291,
+          "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13130100954",
+          "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13130100954/zip",
+          "expired": false,
+          "digest": "sha256:b6ff97317669661ae409d15d949b55f4a6e76d1a72ab96fb58016a550628f3dd",
+          "created_at": "2026-11-02T09:26:20Z",
+          "updated_at": "2026-11-02T09:26:20Z",
+          "expires_at": "2027-01-31T09:14:02Z",
+          "workflow_run": {
+            "id": 41418956333,
+            "repository_id": 1400763332,
+            "head_repository_id": 1400763332,
+            "head_branch": "matrix-calculation-costs",
+            "head_sha": "8b9827521d0546ddd7eaace299492f9bd45b7af5"
+          }
+        },
+        "matrix-prerequisite-ubuntu-24.04-arm-2": {
+          "id": 13128838471,
+          "node_id": "MDg6QXJ0aWZhY3QxMzEyODgzODQ3MQ==",
+          "name": "matrix-prerequisite-ubuntu-24.04-arm-2",
+          "size_in_bytes": 3235,
+          "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13128838471",
+          "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13128838471/zip",
+          "expired": false,
+          "digest": "sha256:a2da9b4f3802b1d8777e61a1a127a3298c1b341f2f3a1e399e55fa73a8559c03",
+          "created_at": "2026-11-02T09:17:09Z",
+          "updated_at": "2026-11-02T09:17:09Z",
+          "expires_at": "2027-01-31T09:14:02Z",
+          "workflow_run": {
+            "id": 41418956333,
+            "repository_id": 1400763332,
+            "head_repository_id": 1400763332,
+            "head_branch": "matrix-calculation-costs",
+            "head_sha": "8b9827521d0546ddd7eaace299492f9bd45b7af5"
+          }
+        }
+      },
+      "machine": "aarch64",
+      "session": 2,
+      "log": "aarch64-2-125189611219.log.gz",
+      "logBytes": 237956,
+      "logSha256": "be362e33cdeb0d4b4706d231fdd32316ed2e79871935cb920be2b61252024505",
+      "qualification": {
+        "source": "8b9827521d0546ddd7eaace299492f9bd45b7af5",
+        "actual": {
+          "system": "Linux",
+          "machine": "aarch64",
+          "cpu": "Neoverse-N2",
+          "processors": 4,
+          "cVersion": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+          "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+        },
+        "expected": {
+          "system": "Linux",
+          "machine": "aarch64",
+          "cpu": "Neoverse-N2",
+          "processors": 4,
+          "cVersion": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+          "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+        },
+        "lscpu": "Architecture:                            aarch64\nCPU op-mode(s):                          32-bit, 64-bit\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               ARM\nModel name:                              Neoverse-N2\nModel:                                   0\nThread(s) per core:                      1\nCore(s) per socket:                      4\nSocket(s):                               1\nStepping:                                r0p0\nBogoMIPS:                                2000.00\nFlags:                                   fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nL1d cache:                               256 KiB (4 instances)\nL1i cache:                               256 KiB (4 instances)\nL2 cache:                                4 MiB (4 instances)\nL3 cache:                                128 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; CSV2, BHB\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+        "failures": [],
+        "qualified": true
+      },
+      "decision": "all-current-rules-pass",
+      "prerequisite": "aarch64-2-125189611219-prerequisite.json",
+      "prerequisiteSha256": "f7f93a0a26228d4a01600dbe325b3ef59d6fafefff5126be837e50b4a884ef33",
+      "report": "aarch64-2-125189611219.json.gz",
+      "reportBytes": 78858279,
+      "reportSha256": "03a4bf9d2bd054fd613e1cf2177ed2f9e4dda2131413ffba8594c4572b1a7731",
+      "files": "aarch64-2-125189611219-files.json.gz",
+      "filesSha256": "434f23aede6e70602682cb908ae44cd479f8170620a8e7fc477ef17fde9dd020",
+      "failures": [],
+      "sourceTrees": {
+        "src": "8bb74db0d05fa51350fe4cdcbf22d5e5f9bf2f2d",
+        "runtime": "0a670b0d301edfdabc821b703581d3a3c33c7e71",
+        "lib": "6ebae9a727e01dbbc935e069263b496e1dda9e3f",
+        "Cargo.toml": "5c3e7020b063ed5305669e5076f4b270a9239afa",
+        "Cargo.lock": "3aba3265112a1da0ccf0043cb89fbff2aff7e8ce",
+        "build.rs": "ad434d41a91d366690f273b40c96cdb7631918e8"
+      },
+      "runtimeSha256": "aef3b35009988f811f3d0725fecc73057ae47e1206c56c374b94be8b6acae12c",
+      "candidateLoopSha256": "4f7e5f4145c86124bb136cc6cd94f79a282a53f0473d185f35f1d4578909c19c",
+      "referenceLoopSha256": "31a118287ad8d25be7b9099345b1bc601d239714bd4326aba443feb582252eec"
+    },
+    {
+      "run": 41419526409,
+      "source": "8b9827521d0546ddd7eaace299492f9bd45b7af5",
+      "job": {
+        "id": 125191464720,
+        "run_id": 41419526409,
+        "workflow_name": "Numerical and ownership evidence",
+        "head_branch": "roadmap/matrix-paired-column-measurements-2026-11-02",
+        "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/41419526409",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOU33zxM8AAAAdJf4nEA",
+        "head_sha": "8b9827521d0546ddd7eaace299492f9bd45b7af5",
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/125191464720",
+        "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41419526409/job/125191464720",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-11-02T09:18:17Z",
+        "started_at": "2026-11-02T09:21:31Z",
+        "completed_at": "2026-11-02T09:21:55Z",
+        "name": "current_kernels (1, ubuntu-latest)",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-02T09:21:32Z",
+            "completed_at": "2026-11-02T09:21:33Z"
+          },
+          {
+            "name": "Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-02T09:21:33Z",
+            "completed_at": "2026-11-02T09:21:43Z"
+          },
+          {
+            "name": "Run dtolnay/rust-toolchain@master",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-02T09:21:43Z",
+            "completed_at": "2026-11-02T09:21:52Z"
+          },
+          {
+            "name": "Qualify the kernel host before building",
+            "status": "completed",
+            "conclusion": "failure",
+            "number": 4,
+            "started_at": "2026-11-02T09:21:52Z",
+            "completed_at": "2026-11-02T09:21:52Z"
+          },
+          {
+            "name": "Retain host qualification and any rejection",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-02T09:21:52Z",
+            "completed_at": "2026-11-02T09:21:53Z"
+          },
+          {
+            "name": "Run actions/cache@v6",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 6,
+            "started_at": "2026-11-02T09:21:53Z",
+            "completed_at": "2026-11-02T09:21:53Z"
+          },
+          {
+            "name": "Fetch locked Rust dependencies",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 7,
+            "started_at": "2026-11-02T09:21:53Z",
+            "completed_at": "2026-11-02T09:21:53Z"
+          },
+          {
+            "name": "Reference, scheduling and damaged-evidence controls",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 8,
+            "started_at": "2026-11-02T09:21:53Z",
+            "completed_at": "2026-11-02T09:21:53Z"
+          },
+          {
+            "name": "Require matching native matrix safety checks",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 9,
+            "started_at": "2026-11-02T09:21:53Z",
+            "completed_at": "2026-11-02T09:21:53Z"
+          },
+          {
+            "name": "Retain the verified matrix prerequisite",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 10,
+            "started_at": "2026-11-02T09:21:53Z",
+            "completed_at": "2026-11-02T09:21:53Z"
+          },
+          {
+            "name": "Build the current compiler",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 11,
+            "started_at": "2026-11-02T09:21:53Z",
+            "completed_at": "2026-11-02T09:21:53Z"
+          },
+          {
+            "name": "Build the exact word-state reference",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 12,
+            "started_at": "2026-11-02T09:21:53Z",
+            "completed_at": "2026-11-02T09:21:53Z"
+          },
+          {
+            "name": "Reference results, aliases, failure and cancellation",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 13,
+            "started_at": "2026-11-02T09:21:53Z",
+            "completed_at": "2026-11-02T09:21:53Z"
+          },
+          {
+            "name": "Measure both fwp variants and C/Rust with independent copy controls",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 14,
+            "started_at": "2026-11-02T09:21:53Z",
+            "completed_at": "2026-11-02T09:21:53Z"
+          },
+          {
+            "name": "Measure paired and scalar matrix columns with C/Rust peers",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 15,
+            "started_at": "2026-11-02T09:21:53Z",
+            "completed_at": "2026-11-02T09:21:53Z"
+          },
+          {
+            "name": "Independently audit raw evidence including failed timing rules",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 16,
+            "started_at": "2026-11-02T09:21:53Z",
+            "completed_at": "2026-11-02T09:21:54Z"
+          },
+          {
+            "name": "Preserve the reference source, compiler and focused checks",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 17,
+            "started_at": "2026-11-02T09:21:54Z",
+            "completed_at": "2026-11-02T09:21:54Z"
+          },
+          {
+            "name": "Retain complete measurements and partial failed observations",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 18,
+            "started_at": "2026-11-02T09:21:54Z",
+            "completed_at": "2026-11-02T09:21:54Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 36,
+            "started_at": "2026-11-02T09:21:54Z",
+            "completed_at": "2026-11-02T09:21:54Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 37,
+            "started_at": "2026-11-02T09:21:54Z",
+            "completed_at": "2026-11-02T09:21:54Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/125191464720",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "runner_id": 1000396622,
+        "runner_name": "GitHub Actions 1000396622",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      },
+      "artifacts": {
+        "current-kernel-host-ubuntu-latest-1": {
+          "id": 13129985213,
+          "node_id": "MDg6QXJ0aWZhY3QxMzEyOTk4NTIxMw==",
+          "name": "current-kernel-host-ubuntu-latest-1",
+          "size_in_bytes": 1660,
+          "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13129985213",
+          "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13129985213/zip",
+          "expired": false,
+          "digest": "sha256:7717a7773f67f1c2c4b3233a3816b8c385e4feca3294c4c07da0403d2a6ea997",
+          "created_at": "2026-11-02T09:21:53Z",
+          "updated_at": "2026-11-02T09:21:53Z",
+          "expires_at": "2027-01-31T09:18:16Z",
+          "workflow_run": {
+            "id": 41419526409,
+            "repository_id": 1400763332,
+            "head_repository_id": 1400763332,
+            "head_branch": "roadmap/matrix-paired-column-measurements-2026-11-02",
+            "head_sha": "8b9827521d0546ddd7eaace299492f9bd45b7af5"
+          }
+        }
+      },
+      "machine": "x86_64",
+      "session": 1,
+      "log": "x86_64-1-125191464720.log.gz",
+      "logBytes": 217017,
+      "logSha256": "1751460d45674e809e381c934bc85a57d12acd59e6d79f13081d68207df609f2",
+      "qualification": {
+        "source": "8b9827521d0546ddd7eaace299492f9bd45b7af5",
+        "actual": {
+          "system": "Linux",
+          "machine": "x86_64",
+          "cpu": "Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz",
+          "processors": 4,
+          "cVersion": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+          "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+        },
+        "expected": {
+          "system": "Linux",
+          "machine": "x86_64",
+          "cpu": "AMD EPYC 7763 64-Core Processor",
+          "processors": 4,
+          "cVersion": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+          "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+        },
+        "lscpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           46 bits physical, 57 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               GenuineIntel\nModel name:                              Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz\nCPU family:                              6\nModel:                                   106\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                6\nCPU(s) scaling MHz:                      125%\nCPU max MHz:                             2800.0000\nCPU min MHz:                             800.0000\nBogoMIPS:                                5586.87\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq vmx ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch tpr_shadow ept vpid ept_ad fsgsbase tsc_adjust bmi1 hle avx2 smep bmi2 erms invpcid rtm avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves vnmi avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq la57 rdpid fsrm arch_capabilities\nVirtualization:                          VT-x\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               96 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                2.5 MiB (2 instances)\nL3 cache:                                48 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Mitigation; Aligned branch/return thunks\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Vulnerable: Clear CPU buffers attempted, no microcode; SMT Host state unknown\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Vulnerable\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Retpoline\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+        "failures": [
+          "cpu: expected 'AMD EPYC 7763 64-Core Processor', observed 'Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz'"
+        ],
+        "qualified": false
+      },
+      "decision": "host-rejected-before-building-or-timing"
+    },
+    {
+      "run": 41420187469,
+      "source": "8b9827521d0546ddd7eaace299492f9bd45b7af5",
+      "job": {
+        "id": 125193609921,
+        "run_id": 41420187469,
+        "workflow_name": "Numerical and ownership evidence",
+        "head_branch": "roadmap/matrix-paired-column-measurements-2026-11-02",
+        "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/41420187469",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOU33zxM8AAAAdJh7iwQ",
+        "head_sha": "8b9827521d0546ddd7eaace299492f9bd45b7af5",
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/125193609921",
+        "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41420187469/job/125193609921",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-11-02T09:23:07Z",
+        "started_at": "2026-11-02T09:25:35Z",
+        "completed_at": "2026-11-02T09:26:06Z",
+        "name": "current_kernels (1, ubuntu-latest)",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-02T09:25:45Z",
+            "completed_at": "2026-11-02T09:25:47Z"
+          },
+          {
+            "name": "Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-02T09:25:47Z",
+            "completed_at": "2026-11-02T09:25:55Z"
+          },
+          {
+            "name": "Run dtolnay/rust-toolchain@master",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-02T09:25:55Z",
+            "completed_at": "2026-11-02T09:26:03Z"
+          },
+          {
+            "name": "Qualify the kernel host before building",
+            "status": "completed",
+            "conclusion": "failure",
+            "number": 4,
+            "started_at": "2026-11-02T09:26:03Z",
+            "completed_at": "2026-11-02T09:26:03Z"
+          },
+          {
+            "name": "Retain host qualification and any rejection",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-02T09:26:03Z",
+            "completed_at": "2026-11-02T09:26:04Z"
+          },
+          {
+            "name": "Run actions/cache@v6",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 6,
+            "started_at": "2026-11-02T09:26:04Z",
+            "completed_at": "2026-11-02T09:26:04Z"
+          },
+          {
+            "name": "Fetch locked Rust dependencies",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 7,
+            "started_at": "2026-11-02T09:26:04Z",
+            "completed_at": "2026-11-02T09:26:04Z"
+          },
+          {
+            "name": "Reference, scheduling and damaged-evidence controls",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 8,
+            "started_at": "2026-11-02T09:26:04Z",
+            "completed_at": "2026-11-02T09:26:04Z"
+          },
+          {
+            "name": "Require matching native matrix safety checks",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 9,
+            "started_at": "2026-11-02T09:26:04Z",
+            "completed_at": "2026-11-02T09:26:04Z"
+          },
+          {
+            "name": "Retain the verified matrix prerequisite",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 10,
+            "started_at": "2026-11-02T09:26:04Z",
+            "completed_at": "2026-11-02T09:26:04Z"
+          },
+          {
+            "name": "Build the current compiler",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 11,
+            "started_at": "2026-11-02T09:26:04Z",
+            "completed_at": "2026-11-02T09:26:04Z"
+          },
+          {
+            "name": "Build the exact word-state reference",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 12,
+            "started_at": "2026-11-02T09:26:04Z",
+            "completed_at": "2026-11-02T09:26:04Z"
+          },
+          {
+            "name": "Reference results, aliases, failure and cancellation",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 13,
+            "started_at": "2026-11-02T09:26:04Z",
+            "completed_at": "2026-11-02T09:26:04Z"
+          },
+          {
+            "name": "Measure both fwp variants and C/Rust with independent copy controls",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 14,
+            "started_at": "2026-11-02T09:26:04Z",
+            "completed_at": "2026-11-02T09:26:04Z"
+          },
+          {
+            "name": "Measure paired and scalar matrix columns with C/Rust peers",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 15,
+            "started_at": "2026-11-02T09:26:04Z",
+            "completed_at": "2026-11-02T09:26:04Z"
+          },
+          {
+            "name": "Independently audit raw evidence including failed timing rules",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 16,
+            "started_at": "2026-11-02T09:26:04Z",
+            "completed_at": "2026-11-02T09:26:04Z"
+          },
+          {
+            "name": "Preserve the reference source, compiler and focused checks",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 17,
+            "started_at": "2026-11-02T09:26:04Z",
+            "completed_at": "2026-11-02T09:26:04Z"
+          },
+          {
+            "name": "Retain complete measurements and partial failed observations",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 18,
+            "started_at": "2026-11-02T09:26:04Z",
+            "completed_at": "2026-11-02T09:26:04Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 36,
+            "started_at": "2026-11-02T09:26:04Z",
+            "completed_at": "2026-11-02T09:26:04Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 37,
+            "started_at": "2026-11-02T09:26:04Z",
+            "completed_at": "2026-11-02T09:26:04Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/125193609921",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "runner_id": 1000396634,
+        "runner_name": "GitHub Actions 1000396634",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      },
+      "artifacts": {
+        "current-kernel-host-ubuntu-latest-1": {
+          "id": 13129897121,
+          "node_id": "MDg6QXJ0aWZhY3QxMzEyOTg5NzEyMQ==",
+          "name": "current-kernel-host-ubuntu-latest-1",
+          "size_in_bytes": 1615,
+          "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13129897121",
+          "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13129897121/zip",
+          "expired": false,
+          "digest": "sha256:e99467ecf7b6823029b7a34b9c8ee34129878eca21ebc2a158f065aeb6ed0cf3",
+          "created_at": "2026-11-02T09:26:04Z",
+          "updated_at": "2026-11-02T09:26:04Z",
+          "expires_at": "2027-01-31T09:23:05Z",
+          "workflow_run": {
+            "id": 41420187469,
+            "repository_id": 1400763332,
+            "head_repository_id": 1400763332,
+            "head_branch": "roadmap/matrix-paired-column-measurements-2026-11-02",
+            "head_sha": "8b9827521d0546ddd7eaace299492f9bd45b7af5"
+          }
+        }
+      },
+      "machine": "x86_64",
+      "session": 1,
+      "log": "x86_64-1-125193609921.log.gz",
+      "logBytes": 216753,
+      "logSha256": "de3484146e1029834ee9544ce3350f3d2b1a60aa64d7bd854f08f9750a8030db",
+      "qualification": {
+        "source": "8b9827521d0546ddd7eaace299492f9bd45b7af5",
+        "actual": {
+          "system": "Linux",
+          "machine": "x86_64",
+          "cpu": "AMD EPYC 9V74 80-Core Processor",
+          "processors": 4,
+          "cVersion": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+          "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+        },
+        "expected": {
+          "system": "Linux",
+          "machine": "x86_64",
+          "cpu": "AMD EPYC 7763 64-Core Processor",
+          "processors": 4,
+          "cVersion": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+          "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+        },
+        "lscpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 9V74 80-Core Processor\nCPU family:                              25\nModel:                                   17\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                5192.29\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves user_shstk avx512_bf16 clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               64 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                2 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Vulnerable: No microcode\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+        "failures": [
+          "cpu: expected 'AMD EPYC 7763 64-Core Processor', observed 'AMD EPYC 9V74 80-Core Processor'"
+        ],
+        "qualified": false
+      },
+      "decision": "host-rejected-before-building-or-timing"
+    },
+    {
+      "run": 41420961312,
+      "source": "8b9827521d0546ddd7eaace299492f9bd45b7af5",
+      "job": {
+        "id": 125196124849,
+        "run_id": 41420961312,
+        "workflow_name": "Numerical and ownership evidence",
+        "head_branch": "roadmap/matrix-paired-column-measurements-2026-11-02",
+        "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/41420961312",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOU33zxM8AAAAdJkVCsQ",
+        "head_sha": "8b9827521d0546ddd7eaace299492f9bd45b7af5",
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/125196124849",
+        "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41420961312/job/125196124849",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-11-02T09:28:41Z",
+        "started_at": "2026-11-02T09:31:48Z",
+        "completed_at": "2026-11-02T09:42:16Z",
+        "name": "current_kernels (1, ubuntu-latest)",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-02T09:31:48Z",
+            "completed_at": "2026-11-02T09:31:49Z"
+          },
+          {
+            "name": "Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-02T09:31:49Z",
+            "completed_at": "2026-11-02T09:31:58Z"
+          },
+          {
+            "name": "Run dtolnay/rust-toolchain@master",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-02T09:31:58Z",
+            "completed_at": "2026-11-02T09:32:07Z"
+          },
+          {
+            "name": "Qualify the kernel host before building",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-11-02T09:32:07Z",
+            "completed_at": "2026-11-02T09:32:07Z"
+          },
+          {
+            "name": "Retain host qualification and any rejection",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-02T09:32:07Z",
+            "completed_at": "2026-11-02T09:32:08Z"
+          },
+          {
+            "name": "Run actions/cache@v6",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-11-02T09:32:08Z",
+            "completed_at": "2026-11-02T09:32:09Z"
+          },
+          {
+            "name": "Fetch locked Rust dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-11-02T09:32:09Z",
+            "completed_at": "2026-11-02T09:32:09Z"
+          },
+          {
+            "name": "Reference, scheduling and damaged-evidence controls",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-11-02T09:32:09Z",
+            "completed_at": "2026-11-02T09:32:15Z"
+          },
+          {
+            "name": "Require matching native matrix safety checks",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9,
+            "started_at": "2026-11-02T09:32:15Z",
+            "completed_at": "2026-11-02T09:32:16Z"
+          },
+          {
+            "name": "Retain the verified matrix prerequisite",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10,
+            "started_at": "2026-11-02T09:32:16Z",
+            "completed_at": "2026-11-02T09:32:17Z"
+          },
+          {
+            "name": "Build the current compiler",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 11,
+            "started_at": "2026-11-02T09:32:17Z",
+            "completed_at": "2026-11-02T09:33:45Z"
+          },
+          {
+            "name": "Build the exact word-state reference",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 12,
+            "started_at": "2026-11-02T09:33:45Z",
+            "completed_at": "2026-11-02T09:33:45Z"
+          },
+          {
+            "name": "Reference results, aliases, failure and cancellation",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 13,
+            "started_at": "2026-11-02T09:33:45Z",
+            "completed_at": "2026-11-02T09:33:45Z"
+          },
+          {
+            "name": "Measure both fwp variants and C/Rust with independent copy controls",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 14,
+            "started_at": "2026-11-02T09:33:45Z",
+            "completed_at": "2026-11-02T09:33:45Z"
+          },
+          {
+            "name": "Measure paired and scalar matrix columns with C/Rust peers",
+            "status": "completed",
+            "conclusion": "failure",
+            "number": 15,
+            "started_at": "2026-11-02T09:33:45Z",
+            "completed_at": "2026-11-02T09:40:55Z"
+          },
+          {
+            "name": "Independently audit raw evidence including failed timing rules",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 16,
+            "started_at": "2026-11-02T09:40:55Z",
+            "completed_at": "2026-11-02T09:41:02Z"
+          },
+          {
+            "name": "Preserve the reference source, compiler and focused checks",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 17,
+            "started_at": "2026-11-02T09:41:02Z",
+            "completed_at": "2026-11-02T09:41:02Z"
+          },
+          {
+            "name": "Retain complete measurements and partial failed observations",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 18,
+            "started_at": "2026-11-02T09:41:02Z",
+            "completed_at": "2026-11-02T09:42:12Z"
+          },
+          {
+            "name": "Post Run actions/cache@v6",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 35,
+            "started_at": "2026-11-02T09:42:12Z",
+            "completed_at": "2026-11-02T09:42:12Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 36,
+            "started_at": "2026-11-02T09:42:12Z",
+            "completed_at": "2026-11-02T09:42:12Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 37,
+            "started_at": "2026-11-02T09:42:12Z",
+            "completed_at": "2026-11-02T09:42:12Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/125196124849",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "runner_id": 1000396661,
+        "runner_name": "GitHub Actions 1000396661",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      },
+      "artifacts": {
+        "current-kernel-host-ubuntu-latest-1": {
+          "id": 13129788023,
+          "node_id": "MDg6QXJ0aWZhY3QxMzEyOTc4ODAyMw==",
+          "name": "current-kernel-host-ubuntu-latest-1",
+          "size_in_bytes": 1512,
+          "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13129788023",
+          "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13129788023/zip",
+          "expired": false,
+          "digest": "sha256:253a38406cfd856ae2a4864b52ff894e64f860536173fbbd241ce8aaa187bb68",
+          "created_at": "2026-11-02T09:32:08Z",
+          "updated_at": "2026-11-02T09:32:08Z",
+          "expires_at": "2027-01-31T09:28:40Z",
+          "workflow_run": {
+            "id": 41420961312,
+            "repository_id": 1400763332,
+            "head_repository_id": 1400763332,
+            "head_branch": "roadmap/matrix-paired-column-measurements-2026-11-02",
+            "head_sha": "8b9827521d0546ddd7eaace299492f9bd45b7af5"
+          }
+        },
+        "current-kernels-ubuntu-latest-1": {
+          "id": 13129958893,
+          "node_id": "MDg6QXJ0aWZhY3QxMzEyOTk1ODg5Mw==",
+          "name": "current-kernels-ubuntu-latest-1",
+          "size_in_bytes": 74790065,
+          "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13129958893",
+          "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13129958893/zip",
+          "expired": false,
+          "digest": "sha256:d74e8143bc474882eeb771c4c311654ae30c2135c4cbd36fe4e312f6728a4cf4",
+          "created_at": "2026-11-02T09:42:11Z",
+          "updated_at": "2026-11-02T09:42:11Z",
+          "expires_at": "2027-01-31T09:28:40Z",
+          "workflow_run": {
+            "id": 41420961312,
+            "repository_id": 1400763332,
+            "head_repository_id": 1400763332,
+            "head_branch": "roadmap/matrix-paired-column-measurements-2026-11-02",
+            "head_sha": "8b9827521d0546ddd7eaace299492f9bd45b7af5"
+          }
+        },
+        "matrix-prerequisite-ubuntu-latest-1": {
+          "id": 13130231243,
+          "node_id": "MDg6QXJ0aWZhY3QxMzEzMDIzMTI0Mw==",
+          "name": "matrix-prerequisite-ubuntu-latest-1",
+          "size_in_bytes": 3235,
+          "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13130231243",
+          "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13130231243/zip",
+          "expired": false,
+          "digest": "sha256:48a9608f392dc49fcda92b0b9b6d3d474ec6ae0f82bf236d322f4505e037177e",
+          "created_at": "2026-11-02T09:32:17Z",
+          "updated_at": "2026-11-02T09:32:17Z",
+          "expires_at": "2027-01-31T09:28:40Z",
+          "workflow_run": {
+            "id": 41420961312,
+            "repository_id": 1400763332,
+            "head_repository_id": 1400763332,
+            "head_branch": "roadmap/matrix-paired-column-measurements-2026-11-02",
+            "head_sha": "8b9827521d0546ddd7eaace299492f9bd45b7af5"
+          }
+        }
+      },
+      "machine": "x86_64",
+      "session": 1,
+      "log": "x86_64-1-125196124849.log.gz",
+      "logBytes": 240717,
+      "logSha256": "cff24b8d58077408b5cc7ac634642017888a09613a5d0501d9949caa0b28579c",
+      "qualification": {
+        "source": "8b9827521d0546ddd7eaace299492f9bd45b7af5",
+        "actual": {
+          "system": "Linux",
+          "machine": "x86_64",
+          "cpu": "AMD EPYC 7763 64-Core Processor",
+          "processors": 4,
+          "cVersion": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+          "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+        },
+        "expected": {
+          "system": "Linux",
+          "machine": "x86_64",
+          "cpu": "AMD EPYC 7763 64-Core Processor",
+          "processors": 4,
+          "cVersion": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+          "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+        },
+        "lscpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 7763 64-Core Processor\nCPU family:                              25\nModel:                                   1\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                4890.85\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves user_shstk clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload umip vaes vpclmulqdq rdpid fsrm\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               64 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                1 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Vulnerable: No microcode\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+        "failures": [],
+        "qualified": true
+      },
+      "decision": "performance-limits-remain-open",
+      "prerequisite": "x86_64-1-125196124849-prerequisite.json",
+      "prerequisiteSha256": "f7f93a0a26228d4a01600dbe325b3ef59d6fafefff5126be837e50b4a884ef33",
+      "report": "x86_64-1-125196124849.json.gz",
+      "reportBytes": 78854247,
+      "reportSha256": "19961ef5314530a6f2b1a62ec8ad1f8746d5aa7dc21ff94038e7fa620ad4eeb2",
+      "files": "x86_64-1-125196124849-files.json.gz",
+      "filesSha256": "276256e9fdd3c910f342d686166c51e31f22f873f24f0a1c7de24271469a44d2",
+      "failures": [
+        {
+          "kind": "copy",
+          "case": "matrix-65-67-63",
+          "label": "reference",
+          "metric": "kernelNs",
+          "ratio": 1.0266609105605635,
+          "limit": 1.02
+        },
+        {
+          "kind": "copy",
+          "case": "matrix-65-67-63",
+          "label": "reference",
+          "metric": "allocationInclusiveNs",
+          "ratio": 1.0260848485912755,
+          "limit": 1.02
+        }
+      ],
+      "sourceTrees": {
+        "src": "8bb74db0d05fa51350fe4cdcbf22d5e5f9bf2f2d",
+        "runtime": "0a670b0d301edfdabc821b703581d3a3c33c7e71",
+        "lib": "6ebae9a727e01dbbc935e069263b496e1dda9e3f",
+        "Cargo.toml": "5c3e7020b063ed5305669e5076f4b270a9239afa",
+        "Cargo.lock": "3aba3265112a1da0ccf0043cb89fbff2aff7e8ce",
+        "build.rs": "ad434d41a91d366690f273b40c96cdb7631918e8"
+      },
+      "runtimeSha256": "aef3b35009988f811f3d0725fecc73057ae47e1206c56c374b94be8b6acae12c",
+      "candidateLoopSha256": "4f7e5f4145c86124bb136cc6cd94f79a282a53f0473d185f35f1d4578909c19c",
+      "referenceLoopSha256": "31a118287ad8d25be7b9099345b1bc601d239714bd4326aba443feb582252eec"
+    }
+  ],
+  "measurements": [
+    125189610999,
+    125189611110,
+    125189611219,
+    125196124849
+  ],
+  "auditErrors": [],
+  "complete": true,
+  "decision": "performance-limits-remain-open"
+}

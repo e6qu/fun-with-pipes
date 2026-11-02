@@ -7,7 +7,45 @@ repeatable calculation-only gap for 257×259 by 259×255 products: current fwp t
 about 65% more time than the matched C peer on AMD64, and 6% more on ARM64.
 Both sessions pass their identical-copy controls for this case. The runtime uses
 zero effective retains during this workload. The paired-column candidate below
-passes focused safety checks; performance acceptance is still open.
+passes focused safety checks and the qualified timing comparisons below. Six
+small-AMD64 noise limits remain open; the full production delivery is pending.
+
+## Results: November 2, 2026
+
+[Four sessions and every failed limit](matrix-columns-2026-11-02/README.md) are
+retained with raw-report/file hashes and complete logs. Independent audit
+`41422907313` at `9f6c8d00` passes. Three wrong-host allocations were rejected
+before building or timing; no completed timing was repeated for a better result.
+
+| Qualified comparison | Calculation time versus scalar fwp | Time versus C | Time versus Rust |
+|---|---:|---:|---:|
+| ARM64, small matrix | 33.5% less | 29.6% less | 6.0% less |
+| ARM64, large matrix | 33.0% less | 29.2% less | 9.5–9.7% less |
+| AMD64, large matrix | 30.8% less | 13.9–14.0% more | 3.6% less |
+
+Allocation-through-cleanup takes 28.9–31.7% less time on ARM64 and 29.8–29.9%
+less for the large AMD64 case. The small ARM64 inclusive result still takes
+about 4.1–4.2% more time than Rust; faster calculation does not erase setup costs.
+
+- Both fwp variants make five requests per product: three array payloads and two
+  input records constructed by the C driver. C/Rust make three requests.
+- The fwp variants request 88 extra bytes per product compared with C/Rust and
+  peak 24 bytes above their payload count. Paired versus scalar storage is equal.
+- Effective retains and final live workload storage are zero. The generated
+  matrix worker's frame grows by 48 bytes: 1,408→1,456 on ARM64 and 1,568→1,616
+  on AMD64. The benchmark driver's frame stays at 384/352 bytes respectively.
+  These are compiler estimates, not whole-program stack peaks. Code grows by
+  128/320 bytes respectively.
+- Full process RSS varies independently: large-matrix fwp peaks around 3.46 MiB
+  on ARM64 and 3.74–3.81 MiB on AMD64. Do not equate managed counts with total memory.
+
+Small AMD64 timing remains **inconclusive**: identical copies differ by 2.6–8.3%
+across six case/scope/control observations, exceeding the unchanged 2% limit.
+All correctness, memory and independent raw-data checks pass. Following the
+standing preference to retain verified improvements with unmet timing goals
+explicit, keep the qualified gains and retain these six failures as open goals.
+This is a delivery decision, not a change to the frozen measurement rules or a
+claim that the entire experiment passed. Full production CI is still required.
 
 The computation multiplies each left row by each right column. For example,
 `[1, 2]` dotted with `[3, 4]` gives `1*3 + 2*4 = 11`. Each output cell must keep

@@ -147,6 +147,26 @@ def render(index, reports, comparison):
                 lines.append('| ' + ' | '.join([machine, case, label,
                     span([r['peakProcessRssBytes'][label] for r in rows], 1024 * 1024),
                     span([r['binaries'][label + '-timing']['instructionBytes'] for r in rows], 1)]) + ' |')
+    if comparison == 'matrix-columns':
+        lines += ['', '## Generated C stack frames', '',
+            'GCC estimates for the generated `product-data` worker (`f0`) and benchmark',
+            'driver (`main`). These are individual static frames, not a runtime stack peak.', '',
+            '| Host | Function | Paired bytes | Scalar bytes |', '|---|---|---:|---:|']
+        for machine in CHECK.HOSTS:
+            rows = [row for metadata, report in reports if metadata['machine'] == machine
+                    for row in report['results'].values()]
+            for function in ('f0', 'main'):
+                sizes = {}
+                for label in ('fwp', 'reference'):
+                    sizes[label] = []
+                    for row in rows:
+                        prefix = Path(row['binaries'][label + '-timing']['path']).stem + '-'
+                        frame, = [entry for name, info in row['stack'].items() if name.startswith(prefix)
+                                  for entry in info['entries'] if entry['location'].endswith(':' + function)]
+                        assert frame['qualifier'] == 'static'
+                        sizes[label].append(frame['bytes'])
+                lines.append('| ' + ' | '.join([machine, function,
+                    span(sizes['fwp'], 1), span(sizes['reference'], 1)]) + ' |')
     lines += ['', '## Every missed limit', '']
     for metadata, report in reports:
         job = metadata['job']['id']

@@ -13,7 +13,10 @@ independent branch prepares the matrix work; do not open a second PR.
 
 The [matrix protocol](docs/measurements/matrix-calculation-costs.md) selects the
 paired-column loop after exact GCC diagnostics. Focused safety checks precede
-timing; no speed improvement is accepted yet.
+timing. Both ARM64 sizes and the large AMD64 case show qualified improvements;
+six small-AMD64 noise limits remain open. Retain the verified gains under the
+standing preference for keeping improvements with unmet goals explicit; do not
+declare the whole timing experiment accepted.
 
 | Step | Work | Completion requirement |
 |---|---|---|
@@ -56,6 +59,12 @@ selecting any compiler change.
 
 ## Open performance goals
 
+- [Small AMD64 matrix timing](docs/measurements/matrix-columns-2026-11-02/README.md):
+  six identical-copy failures remain at 2.6–8.3% against the frozen 2% limit.
+  Analyze the retained per-round/per-process samples and execution settings before
+  declaring a revised measurement protocol. Do not repeat unchanged timings or
+  infer a runtime safety bug from these timing differences. ARM64 and large AMD64
+  gains do not settle this separate case.
 - [D2 derivative speed](docs/measurements/descent-costs.md): original 5% limits
   remain open. Typed-owner count reductions do not settle the ordinary F64
   Rosenbrock timings. The array-to-list change's AMD64 copy control also remains
