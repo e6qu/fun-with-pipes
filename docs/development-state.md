@@ -1,7 +1,7 @@
 # Current work
 
-**Next:** audit repaired safety run `41448056587` on all three hosts, then run
-the frozen same-source timing comparison if every focused gate passes.
+**Next:** dispatch and audit the frozen same-source timing comparison using
+verified safety run `41448056587`; retain every completed outcome.
 Keep source, safety checks, timing, docs and final validation in one substantial PR.
 
 ## Branch and last verified delivery
@@ -26,7 +26,7 @@ Keep source, safety checks, timing, docs and final validation in one substantial
 |---|---|---|
 | 1 | Verified | Construction diagnostic `41427397530`: both production GCC architectures at O1/O2, exact source/storage/control audit |
 | 2 | In progress | All four sessions audited; both ARM64 and AMD64 session 2 pass; AMD64 session 1 retains six failed timing-copy limits |
-| 3 | In progress | Protocol `5cf1c80f` predates selection change; all three jobs exposed two test-harness defects, now repaired; repair `240d8897` runs in `41448056587` |
+| 3 | Verified | Repair `240d8897` passes all three hosts in `41448056587`; every target/probe and Linux construction record audited |
 | 4 | Pending | Acceptance frozen; paired runner prepared, timing requires all three focused safety jobs first |
 | 5 | Pending | Publish one coherent PR; nine final-head production gates, docs, audit and verified squash merge |
 
@@ -72,22 +72,16 @@ Keep source, safety checks, timing, docs and final validation in one substantial
   Protocol tag: `roadmap/scalar-array-selection-protocol-2026-11-02`.
   Grouped suite: `scalar-array-checks` (GCC ARM64/AMD64 and Clang ARM64), using
   five existing targets plus Linux construction diagnostics. No full CI yet.
-- Safety run `41442126003`, source `5437f39f`: macOS ARM64 job `125266313620`,
-  Linux ARM64 `125266313829`, Linux AMD64 `125266313984` all failed. Full job logs
-  and all 15 target logs were audited: on each host argument preparation (2),
-  array unwind (1), fusion (4), ten array-element tests and three size tests pass.
-  The only two failures are new test-harness defects:
-  - The overflow expectation used UBSan wording. It now matches the interpreter
-    and runtime's actual `arithmetic overflow in I64` diagnostic.
-  - The cancellation hook referenced task declarations from an earlier primitive
-    helper. It now runs in the generated loop, after two stores and after those
-    declarations. Production runtime code is unchanged.
-  The repaired probe reconstructed from the saved candidate C passes locally at
-  Clang O1/O2; all four negative controls produce their required failures (ten
-  executions total). This does not replace remote Rust/clippy or GCC checks.
-  Repair run `41448056587` uses `240d8897`: macOS job `125286026052`, Linux ARM64
-  `125286026439`, Linux AMD64 `125286026473`. No candidate timing dispatched yet.
-  Raw failed-run artifacts: `13142606109` (macOS), `13142741152` (ARM64), `13141209899` (AMD64).
+- [Focused safety](measurements/scalar-array-safety-2026-11-02/README.md) passes
+  run `41448056587` at `240d8897`: macOS job `125286026052`, Linux ARM64
+  `125286026439`, Linux AMD64 `125286026473`. All 15 target logs, 30 callback
+  probe executions and both Linux construction reports audited (3.01s). No compiler
+  diagnostic remains. Five targets / 22 tests pass per host; source still allocates
+  once when materialized and zero times when composed. Saved manifests identify
+  artifacts `13143626431`, `13144385796`, `13144565684` respectively.
+  The linked record explains the two repaired harness defects in `41442126003`;
+  no production runtime change was required. Clang local probe checks preceded
+  this independent GCC/Clang runner verification.
 - Paired timing suite `scalar-array-time` is prepared but not dispatched. It
   requires `evidence_run` naming the successful focused run and compares its exact
   `src/runtime/lib/tests` trees. `prepare-scalar-array-reference.py` changes only

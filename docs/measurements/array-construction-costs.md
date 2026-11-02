@@ -184,7 +184,8 @@ no longer the candidate's reference. C/Rust remain materialized peers.
 | Measurement validity | Both independent copies stay within 2% for every timer/size/session; preserve all failed limits and never rerun completed timings for a pass |
 | Other costs | Report requested/peak/final storage, ARC operations, RSS, code and qualified stack estimates; code size is not a substitute for elapsed-time improvement |
 
-Complete focused semantic, cleanup, exact-output and profiling checks before any
-candidate timing. Keep the original baselines, rejected hosts and unmet goals.
+[Focused safety checks](scalar-array-safety-2026-11-02/README.md) now pass on all
+three declared hosts, including semantic, cleanup, exact-output and profiling checks.
+These checks are required before any candidate timing. Keep the original baselines, rejected hosts and unmet goals.
 The full nine-job production matrix and documentation run once the combined
 implementation, evidence and documentation batch is ready.
