@@ -59,3 +59,11 @@ vectorization on cost. These are compiler decisions, not a proven timing cause.
 The protocol now freezes a first bounded candidate: read-only restricted input
 pointers, retaining byte-copy access, shared-input legality and all cleanup.
 No runtime edit has been made yet; compile the exact candidate substitution next.
+
+The diagnostic runner now requires explicit `matrix_input_access=original` or
+`restricted`. The restricted case substitutes only the frozen comment/declaration
+in the two fwp matrix sources; the six C/array controls must still reproduce their
+original binaries. All eight outputs are checked and every binary identity retained.
+Five focused archive/patch controls pass (0.14s), actionlint passes (6.34s).
+No production runtime or compiler source has changed. Dispatch this bounded
+candidate diagnostic next; use its result before committing to full measurements.

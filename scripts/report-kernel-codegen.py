@@ -20,6 +20,19 @@ CHECK = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(CHECK)
 
 
+MATRIX_INPUTS_BEFORE = b"""     * The shape predicate bounds every copy. Only the fresh output is
+     * restrict-qualified: inputs may share backing. */
+    const unsigned char *a=fwp_array_data(left),*b=fwp_array_data(right);"""
+MATRIX_INPUTS_AFTER = b"""     * The shape predicate bounds every copy. Both inputs stay read-only,
+     * so their restrict qualifiers still permit shared backing. */
+    const unsigned char *restrict a=fwp_array_data(left),*restrict b=fwp_array_data(right);"""
+
+
+def restricted_inputs(source):
+    assert source.count(MATRIX_INPUTS_BEFORE) == 1 and MATRIX_INPUTS_AFTER not in source
+    return source.replace(MATRIX_INPUTS_BEFORE, MATRIX_INPUTS_AFTER)
+
+
 def digest(data):
     return hashlib.sha256(data).hexdigest()
 
@@ -62,6 +75,7 @@ def main():
         parser.add_argument('--' + name, required=True)
     parser.add_argument('--timeout', type=int, required=True)
     parser.add_argument('--session', type=int, choices=(1, 2), required=True)
+    parser.add_argument('--matrix-inputs', choices=('original', 'restricted'), required=True)
     args = parser.parse_args()
     assert os.environ.get('GITHUB_ACTIONS') == 'true' and platform.system() == 'Linux'
     assert args.timeout == 180
@@ -82,6 +96,7 @@ def main():
                          arguments={k: str(v) if isinstance(v, Path) else v for k, v in vars(args).items()})
     (output / 'configuration.json').write_text(json.dumps(configuration, indent=2) + '\n')
     results = {}
+    reproduced = 0
 
     def run(command, destination):
         command = list(map(str, command))
@@ -114,6 +129,9 @@ def main():
             assert Path(info['path']).name == info['path']
             original = archive.read(case + '/' + info['path'])
             assert digest(original) == info['sha256']
+            modified = args.matrix_inputs == 'restricted' and language == 'fwp' and case.startswith('matrix')
+            if modified:
+                source = restricted_inputs(source)
             path = directory / (name + '.c')
             path.write_bytes(source)
             binary = directory / info['path']
@@ -124,18 +142,24 @@ def main():
                  '-DMATRIX_BENCH=' + str(int(case.startswith('matrix'))),
                  '-fopt-info-vec-all=' + str(vector), '-fdump-tree-optimized=' + str(optimized),
                  path, '-o', binary, '-lm', '-lpthread'], directory / (language + '-build'))
-            assert binary.read_bytes() == original, 'Report options changed the retained binary'
+            observed_binary = binary.read_bytes()
+            if not modified:
+                assert observed_binary == original, 'Report options changed the retained binary'
+                reproduced += 1
             assert vector.stat().st_size > 0 and optimized.stat().st_size > 0
             invocation = [binary] + (['matrix' if case.startswith('matrix') else 'array'] if language == 'c' else [])
             raw = run(invocation, directory / (language + '-output'))
             MEASURE.check_samples(raw, row['resultHash'], language, False)
-            results[case][language] = dict(binarySha256=info['sha256'], sourceSha256=info['sourceSha256'],
+            results[case][language] = dict(binarySha256=digest(observed_binary), sourceSha256=digest(source),
+                                           modified=modified, originalBinarySha256=info['sha256'],
+                                           originalSourceSha256=info['sourceSha256'], binaryUnchanged=observed_binary == original,
                                            vectorizationSha256=digest(vector.read_bytes()),
                                            optimizedTreeSha256=digest(optimized.read_bytes()),
                                            stdoutSha256=digest(raw), expectedResultHash=row['resultHash'])
             (output / 'results.json').write_text(json.dumps(results, indent=2) + '\n')
     archive.close()
-    print('Eight original binary hashes and all outputs match; compiler reports are diagnostic only')
+    assert reproduced == (8 if args.matrix_inputs == 'original' else 6)
+    print(f'{reproduced} unchanged binaries reproduce exactly; all eight outputs match; diagnostic only')
 
 
 if __name__ == '__main__':

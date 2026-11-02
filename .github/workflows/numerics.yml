@@ -16,6 +16,10 @@ on:
         description: Required for derivative/kernel timing suites; both sessions or one replacement
         type: choice
         options: [both, '1', '2']
+      matrix_input_access:
+        description: Required for kernel-codegen; original inputs or the declared restricted-input candidate
+        type: choice
+        options: [original, restricted]
       server_entry_part:
         description: Server-entry jobs; queued isolates queue regressions, checks includes API, all adds measurements
         type: choice
@@ -1266,9 +1270,11 @@ jobs:
         env:
           SESSION: ${{ inputs.comparison_session }}
           SOURCE: ${{ inputs.source_revision }}
+          INPUT_ACCESS: ${{ inputs.matrix_input_access }}
         run: |
           test "$SESSION" = 2
           test "$SOURCE" = b9da15a1a323ae3f5d3ff247e0b6b4c59ab73528
+          test "$INPUT_ACCESS" = original || test "$INPUT_ACCESS" = restricted
       - name: Check archive identity controls
         run: python3 scripts/test-kernel-codegen-input.py
       - name: Retrieve the exact current-kernel archive
@@ -1280,11 +1286,12 @@ jobs:
         env:
           C_ARCH: ${{ matrix.runner == 'ubuntu-latest' && 'x86-64' || 'armv8-a' }}
           SOURCE: ${{ inputs.source_revision }}
+          INPUT_ACCESS: ${{ inputs.matrix_input_access }}
           SESSION: ${{ inputs.comparison_session }}
         run: >-
           python3 scripts/report-kernel-codegen.py --archive "$RUNNER_TEMP/kernel-input.zip"
           --index docs/measurements/current-kernels-2026-11-02/index.json
-          --source "$SOURCE" --session "$SESSION" --cc gcc --c-arch "$C_ARCH"
+          --source "$SOURCE" --session "$SESSION" --matrix-inputs "$INPUT_ACCESS" --cc gcc --c-arch "$C_ARCH"
           --timeout 180 --output kernel-codegen
       - name: Retain complete or partial compiler reports
         if: ${{ always() && hashFiles('kernel-codegen/**') != '' }}
