@@ -1307,6 +1307,9 @@ jobs:
         run: >-
           python3 scripts/retain-current-kernels.py --repository "$GITHUB_REPOSITORY"
           --selection docs/measurements/current-kernel-selection.json --output current-kernel-audit
+      - name: Recompute retained reports and publish complete time and memory tables
+        run: >-
+          python3 scripts/report-current-kernels.py --directory current-kernel-audit/summary --mode write
       - name: Preserve completed summaries and any audit errors
         if: ${{ always() && hashFiles('current-kernel-audit/**') != '' }}
         uses: actions/upload-artifact@v7

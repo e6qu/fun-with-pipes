@@ -151,6 +151,7 @@ jobs:
           python3 scripts/test-current-kernel-costs.py
           python3 scripts/test-current-kernel-evidence.py
           python3 scripts/test-retain-current-kernels.py
+          python3 scripts/test-current-kernel-report.py
       - name: Matched-host evidence rejection controls
         run: python3 scripts/test-descent-groups.py
       - name: Numeric array comparison evidence controls
