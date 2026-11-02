@@ -1,0 +1,327 @@
+{
+  "records": [
+    {
+      "machine": "aarch64",
+      "session": 1,
+      "run": 41472025679,
+      "job": 125367826083,
+      "conclusion": "success",
+      "source": "87d4f6b099b755a52cd091b6c07cb57bb456af77",
+      "artifact": {
+        "id": 13154414998,
+        "node_id": "MDg6QXJ0aWZhY3QxMzE1NDQxNDk5OA==",
+        "name": "array-consumption-ubuntu-24.04-arm-1",
+        "size_in_bytes": 64295103,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13154414998",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13154414998/zip",
+        "expired": false,
+        "digest": "sha256:3dc4ece7b1a1d65002238f446c25bbebc48c9603e258e5ca93aea5f90a4a8db1",
+        "created_at": "2026-11-02T15:32:42Z",
+        "updated_at": "2026-11-02T15:32:42Z",
+        "expires_at": "2027-01-31T15:29:08Z",
+        "workflow_run": {
+          "id": 41472025679,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "array-consumption-diagnostics",
+          "head_sha": "87d4f6b099b755a52cd091b6c07cb57bb456af77"
+        }
+      },
+      "report": "aarch64-1.json.gz",
+      "raw": "aarch64-1-raw.zip",
+      "files": "aarch64-1-files.json.gz",
+      "log": "aarch64-1.log.gz",
+      "rawAudit": "Complete source/control/binary/command/sample audit passed"
+    },
+    {
+      "machine": "aarch64",
+      "session": 2,
+      "run": 41472025679,
+      "job": 125367826052,
+      "conclusion": "success",
+      "source": "87d4f6b099b755a52cd091b6c07cb57bb456af77",
+      "artifact": {
+        "id": 13155741912,
+        "node_id": "MDg6QXJ0aWZhY3QxMzE1NTc0MTkxMg==",
+        "name": "array-consumption-ubuntu-24.04-arm-2",
+        "size_in_bytes": 64292680,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13155741912",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13155741912/zip",
+        "expired": false,
+        "digest": "sha256:8af91a9a9934b6928cb7dc25a52844fe6b6225585c90ccbdef8611407be38e7e",
+        "created_at": "2026-11-02T15:35:16Z",
+        "updated_at": "2026-11-02T15:35:16Z",
+        "expires_at": "2027-01-31T15:29:08Z",
+        "workflow_run": {
+          "id": 41472025679,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "array-consumption-diagnostics",
+          "head_sha": "87d4f6b099b755a52cd091b6c07cb57bb456af77"
+        }
+      },
+      "report": "aarch64-2.json.gz",
+      "raw": "aarch64-2-raw.zip",
+      "files": "aarch64-2-files.json.gz",
+      "log": "aarch64-2.log.gz",
+      "rawAudit": "Complete source/control/binary/command/sample audit passed"
+    },
+    {
+      "machine": "x86_64",
+      "session": 1,
+      "run": 41472493298,
+      "job": 125369442114,
+      "conclusion": "success",
+      "source": "87d4f6b099b755a52cd091b6c07cb57bb456af77",
+      "artifact": {
+        "id": 13157230350,
+        "node_id": "MDg6QXJ0aWZhY3QxMzE1NzIzMDM1MA==",
+        "name": "array-consumption-ubuntu-latest-1",
+        "size_in_bytes": 71013583,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13157230350",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13157230350/zip",
+        "expired": false,
+        "digest": "sha256:5575385413132d4d1276077e3e4b2b45176bda3c77ea597da97834dedabd2794",
+        "created_at": "2026-11-02T15:37:28Z",
+        "updated_at": "2026-11-02T15:37:28Z",
+        "expires_at": "2027-01-31T15:31:57Z",
+        "workflow_run": {
+          "id": 41472493298,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "array-consumption-diagnostics",
+          "head_sha": "87d4f6b099b755a52cd091b6c07cb57bb456af77"
+        }
+      },
+      "report": "x86_64-1.json.gz",
+      "raw": "x86_64-1-raw.zip",
+      "files": "x86_64-1-files.json.gz",
+      "log": "x86_64-1.log.gz",
+      "rawAudit": "Complete source/control/binary/command/sample audit passed"
+    },
+    {
+      "machine": "x86_64",
+      "session": 2,
+      "run": 41475998964,
+      "job": 125381620085,
+      "conclusion": "success",
+      "source": "87d4f6b099b755a52cd091b6c07cb57bb456af77",
+      "artifact": {
+        "id": 13156803999,
+        "node_id": "MDg6QXJ0aWZhY3QxMzE1NjgwMzk5OQ==",
+        "name": "array-consumption-ubuntu-latest-2",
+        "size_in_bytes": 71013880,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13156803999",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13156803999/zip",
+        "expired": false,
+        "digest": "sha256:db6ffe1aab489649e4494ef879884a1868007dcfa4e8b31cf07a9ec7490cb0a7",
+        "created_at": "2026-11-02T15:58:34Z",
+        "updated_at": "2026-11-02T15:58:34Z",
+        "expires_at": "2027-01-31T15:53:19Z",
+        "workflow_run": {
+          "id": 41475998964,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "array-consumption-diagnostics",
+          "head_sha": "87d4f6b099b755a52cd091b6c07cb57bb456af77"
+        }
+      },
+      "report": "x86_64-2.json.gz",
+      "raw": "x86_64-2-raw.zip",
+      "files": "x86_64-2-files.json.gz",
+      "log": "x86_64-2.log.gz",
+      "rawAudit": "Complete source/control/binary/command/sample audit passed"
+    }
+  ],
+  "rejectedHosts": [
+    {
+      "run": 41472025679,
+      "job": 125367826121,
+      "session": 1,
+      "artifact": {
+        "id": 13155706196,
+        "node_id": "MDg6QXJ0aWZhY3QxMzE1NTcwNjE5Ng==",
+        "name": "array-consumption-host-ubuntu-latest-1",
+        "size_in_bytes": 1590,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13155706196",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13155706196/zip",
+        "expired": false,
+        "digest": "sha256:cd54d8a190e7a9bf34282fcc7c05c875b896e40c0c220732343bfd3dd9b5ab1c",
+        "created_at": "2026-11-02T15:30:11Z",
+        "updated_at": "2026-11-02T15:30:11Z",
+        "expires_at": "2027-01-31T15:29:08Z",
+        "workflow_run": {
+          "id": 41472025679,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "array-consumption-diagnostics",
+          "head_sha": "87d4f6b099b755a52cd091b6c07cb57bb456af77"
+        }
+      },
+      "qualification": "amd1-host-rejection.zip",
+      "log": "amd1-host-rejection.log.gz"
+    },
+    {
+      "run": 41472025679,
+      "job": 125367825956,
+      "session": 2,
+      "artifact": {
+        "id": 13156195414,
+        "node_id": "MDg6QXJ0aWZhY3QxMzE1NjE5NTQxNA==",
+        "name": "array-consumption-host-ubuntu-latest-2",
+        "size_in_bytes": 1579,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13156195414",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13156195414/zip",
+        "expired": false,
+        "digest": "sha256:164c93831f28c3813d67217a77297f52f6024e2cc40deeb2595e4e77ad07c637",
+        "created_at": "2026-11-02T15:29:54Z",
+        "updated_at": "2026-11-02T15:29:54Z",
+        "expires_at": "2027-01-31T15:29:08Z",
+        "workflow_run": {
+          "id": 41472025679,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "array-consumption-diagnostics",
+          "head_sha": "87d4f6b099b755a52cd091b6c07cb57bb456af77"
+        }
+      },
+      "qualification": "amd2-host-rejection.zip",
+      "log": "amd2-host-rejection.log.gz"
+    },
+    {
+      "run": 41472493298,
+      "job": 125369442948,
+      "session": 2,
+      "artifact": {
+        "id": 13155228475,
+        "node_id": "MDg6QXJ0aWZhY3QxMzE1NTIyODQ3NQ==",
+        "name": "array-consumption-host-ubuntu-latest-2",
+        "size_in_bytes": 1590,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13155228475",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13155228475/zip",
+        "expired": false,
+        "digest": "sha256:7651042a9ad4fc92c9d998782a0336e2a1058a48891f977013b75ea73ffc600e",
+        "created_at": "2026-11-02T15:33:52Z",
+        "updated_at": "2026-11-02T15:33:52Z",
+        "expires_at": "2027-01-31T15:31:57Z",
+        "workflow_run": {
+          "id": 41472493298,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "array-consumption-diagnostics",
+          "head_sha": "87d4f6b099b755a52cd091b6c07cb57bb456af77"
+        }
+      },
+      "qualification": "amd2-host-rejection-2.zip",
+      "log": "amd2-host-rejection-2.log.gz"
+    },
+    {
+      "run": 41473009249,
+      "job": 125371247295,
+      "session": 2,
+      "artifact": {
+        "id": 13155313570,
+        "node_id": "MDg6QXJ0aWZhY3QxMzE1NTMxMzU3MA==",
+        "name": "array-consumption-host-ubuntu-latest-2",
+        "size_in_bytes": 1581,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13155313570",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13155313570/zip",
+        "expired": false,
+        "digest": "sha256:b555959450fbaf65aff1b34387c3b776f19a174220b15e53a8c699e6771f0c59",
+        "created_at": "2026-11-02T15:35:47Z",
+        "updated_at": "2026-11-02T15:35:47Z",
+        "expires_at": "2027-01-31T15:35:05Z",
+        "workflow_run": {
+          "id": 41473009249,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "array-consumption-diagnostics",
+          "head_sha": "87d4f6b099b755a52cd091b6c07cb57bb456af77"
+        }
+      },
+      "qualification": "amd2-host-rejection-3.zip",
+      "log": "amd2-host-rejection-3.log.gz"
+    },
+    {
+      "run": 41473761048,
+      "job": 125373839110,
+      "session": 2,
+      "artifact": {
+        "id": 13156287621,
+        "node_id": "MDg6QXJ0aWZhY3QxMzE1NjI4NzYyMQ==",
+        "name": "array-consumption-host-ubuntu-latest-2",
+        "size_in_bytes": 1517,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13156287621",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13156287621/zip",
+        "expired": false,
+        "digest": "sha256:05cabd2968d96d7fd6a447e09be7a8ad87da3a9511b69a6e55a32a186ba27f6e",
+        "created_at": "2026-11-02T15:43:40Z",
+        "updated_at": "2026-11-02T15:43:40Z",
+        "expires_at": "2027-01-31T15:39:37Z",
+        "workflow_run": {
+          "id": 41473761048,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "array-consumption-diagnostics",
+          "head_sha": "87d4f6b099b755a52cd091b6c07cb57bb456af77"
+        }
+      },
+      "qualification": "amd2-host-rejection-4.zip",
+      "log": "amd2-host-rejection-4.log.gz"
+    },
+    {
+      "run": 41474872939,
+      "job": 125377680053,
+      "session": 2,
+      "artifact": {
+        "id": 13156033564,
+        "node_id": "MDg6QXJ0aWZhY3QxMzE1NjAzMzU2NA==",
+        "name": "array-consumption-host-ubuntu-latest-2",
+        "size_in_bytes": 1590,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13156033564",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13156033564/zip",
+        "expired": false,
+        "digest": "sha256:b3b89fe1a86c370f0e299feb7637db469611a1328aa3905c527075e290568419",
+        "created_at": "2026-11-02T15:47:25Z",
+        "updated_at": "2026-11-02T15:47:25Z",
+        "expires_at": "2027-01-31T15:46:24Z",
+        "workflow_run": {
+          "id": 41474872939,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "array-consumption-diagnostics",
+          "head_sha": "87d4f6b099b755a52cd091b6c07cb57bb456af77"
+        }
+      },
+      "qualification": "amd2-host-rejection-5.zip",
+      "log": "amd2-host-rejection-5.log.gz"
+    },
+    {
+      "run": 41475351668,
+      "job": 125379358967,
+      "session": 2,
+      "artifact": {
+        "id": 13155919126,
+        "node_id": "MDg6QXJ0aWZhY3QxMzE1NTkxOTEyNg==",
+        "name": "array-consumption-host-ubuntu-latest-2",
+        "size_in_bytes": 1626,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13155919126",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13155919126/zip",
+        "expired": false,
+        "digest": "sha256:959f676fd754a110ed14a1e2b229017f2ad0b59390daeb95611e0ade352a513a",
+        "created_at": "2026-11-02T15:49:45Z",
+        "updated_at": "2026-11-02T15:49:45Z",
+        "expires_at": "2027-01-31T15:49:20Z",
+        "workflow_run": {
+          "id": 41475351668,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "array-consumption-diagnostics",
+          "head_sha": "87d4f6b099b755a52cd091b6c07cb57bb456af77"
+        }
+      },
+      "qualification": "amd2-host-rejection-6.zip",
+      "log": "amd2-host-rejection-6.log.gz"
+    }
+  ]
+}

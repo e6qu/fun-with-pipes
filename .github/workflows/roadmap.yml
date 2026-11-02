@@ -155,6 +155,7 @@ jobs:
           python3 scripts/test-kernel-codegen-input.py
           python3 scripts/test-array-construction.py
           python3 scripts/test-array-consumption-setup.py
+          python3 scripts/check-array-consumption-records.py --directory docs/measurements/array-consumption-2026-11-02 --mode check
           python3 scripts/test-array-construction-phases.py
           python3 scripts/test-scalar-array-reference.py
           python3 scripts/check-array-phase-records.py --comparison source-paths --directory docs/measurements/array-construction-phases-2026-11-02

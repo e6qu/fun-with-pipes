@@ -86,13 +86,16 @@ requirements above before compiler edits.
 
 ## Candidate and validation
 
-[PR #240](https://github.com/e6qu/fun-with-pipes/pull/240) implements the selected
-fold in `src/cgen.rs`. Focused numeric-fold checks and both native count audits
-pass, including repaired older cleanup probes. Timing and final production
-validation remain.
-The [handoff](../development-state.md) tracks current source and job identities.
+[PR #240](../roadmap-history.md#numeric-record-fold-implementation-pr-240)
+introduced the selected fold. [PR #241](../roadmap-history.md#numeric-fold-verification-and-handler-specialization-pr-241)
+repaired its semantic fixture and handler specialization. Full CI then found a
+callback-unwind leak; [PR #242](../roadmap-history.md#numeric-callbacks-and-inline-cleanup-pr-242)
+fixed caller cleanup and passed all nine production jobs plus documentation.
+Count and timing results below are complete; their failed performance limits
+remain open. They are historical evidence, not pending validation work.
 
-Use the `Numerical and ownership evidence` workflow with explicit inputs:
+These `Numerical and ownership evidence` suites reproduce the recorded experiment
+at its recorded source. [PLAN.md](../../PLAN.md) lists current work.
 
 | Suite | Purpose | Additional inputs |
 |---|---|---|

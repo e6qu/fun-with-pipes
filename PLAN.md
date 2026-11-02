@@ -29,20 +29,22 @@ Use the [declared diagnostic](docs/measurements/array-consumption-setup.md).
 Reuse audited generated C; no compiler rebuild is needed for these measurements.
 Fix all harness/native-control failures before timing. Do not repeat a completed
 noisy measurement for a pass or change runtime ownership without a demonstrated
-source-level need. Apply any justified next investigation to the related small
-matrix discrepancy only after declaring its scope.
+source-level need. [All four results](docs/measurements/array-consumption-2026-11-02/README.md)
+are now audited: preparation shifts page-fault work outside timing and narrows
+some copy differences, but does not resolve the original consumption regression.
+Next, freeze a comparison of the original driver, observation-only driver and
+zero-preparation driver to separate observer/call-context changes. Do not add
+hidden warming or change runtime ownership. Apply a related matrix investigation
+only after declaring its scope.
 
 ## Open performance goals
 
-- **Next investigation: AMD64 array consumption.** Both sessions pass the large
-  array's copy controls, yet consumption is 4.93–5.23% slower; the small array also
-  misses copy limits. Generated consumption C is unchanged. First analyze retained
-  [per-process samples and role order](docs/measurements/array-sample-positions.md).
-  The [setup diagnostic](docs/measurements/array-consumption-setup.md) freezes a
-  diagnostic comparing equal untimed preparation before the same consumption
-  work, retaining wall/CPU times and storage. Do not repeat unchanged timings,
-  erase the original 2% limits or infer a source safety bug from elapsed time.
-  Check whether the same diagnostic can explain the small-matrix limits below.
+- **AMD64 array consumption.** The original large-array copy controls pass,
+  but consumption is 4.93–5.23% slower; small-array copy limits also fail.
+  [Sample analysis](docs/measurements/array-sample-positions.md) and the
+  [completed preparation diagnostic](docs/measurements/array-consumption-2026-11-02/README.md)
+  preserve those failures. Separate observer and preparation-call effects next,
+  using the bounded comparison above; do not infer a source safety bug from time.
 - [Small AMD64 matrix timing](docs/measurements/matrix-columns-2026-11-02/README.md):
   six identical-copy failures remain at 2.6–8.3% against the frozen 2% limit.
   [Retained-sample analysis](docs/measurements/matrix-sample-positions.md) locates

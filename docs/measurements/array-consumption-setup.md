@@ -1,7 +1,7 @@
 # Investigate early array-consumption samples
 
-Freeze this diagnostic before implementation. It is not a new acceptance rule
-or a runtime fix.
+This diagnostic was frozen before implementation. It is not a new acceptance
+rule or a runtime fix.
 PR #245's original AMD64 copy and consumption failures remain open.
 
 ## Evidence and question
@@ -110,3 +110,6 @@ jobs were cancelled before starting; no completed timing was discarded or retrie
 [Saved logs, profiles and artifact identities](array-consumption-failures-2026-11-02/index.json)
 retain the original failure. Guarded replay of both profiles and the five harness
 tests pass (0.14s each); native reruns must still verify every remaining control.
+
+[All four completed sessions](array-consumption-2026-11-02/README.md) retain the
+findings, memory costs, raw outputs and still-open original limits.
