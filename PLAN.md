@@ -98,10 +98,13 @@ for each element, while still finishing every map call before any fold call.
   unchanged drivers and original cases. Report all regressions and copy failures;
   fewer allocations alone do not complete D2 or prove C/Rust parity.
 
-The initial implementation passes all 96 frozen count observations and the first
-GCC/Clang cleanup controls on native Linux ARM64/AMD64. Its largest current-only
-solve uses 51,143 fewer managed allocations and 4,064 fewer peak managed bytes.
-Callback-owner/exclusion tests, paired timing acceptance and the full final matrix
+The implementation passes all 96 frozen count observations and the expanded
+GCC/Clang correctness and cleanup checks on native Linux ARM64/AMD64: 40 tests
+per host, including callback owners, exclusions and deliberately broken cleanup.
+Its largest current-only solve uses 51,143 fewer managed allocations and 4,064
+fewer peak managed bytes. Both ARM64 timing sessions pass; AMD64 session 2 misses
+the zero-update history limit (2.024% slower against a 2% limit). Preserve that
+failure. AMD64 session 1, independent timing audits and the full final matrix
 remain. Bundle implementation, controls and measured results into one PR after
 the current delivery; this does not eliminate arbitrary lists or complete D2.
 

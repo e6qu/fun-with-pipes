@@ -1,13 +1,14 @@
 # Current work
 
-**Next:** monitor the frozen paired timings, then audit each complete session
-with `packed-records-report`. Source `a4f3200c` is retained by
-`roadmap/derivative-temporary-storage-runner-2026-11-02`. Original run
-`41514265188` has three qualified sessions; AMD64 session 1 rejected a wrong CPU
-before building/timing. Replacement `41514783218` also rejected its CPU (EPYC 9V45); the next
-session-1 attempt is `41515994738`. Preserve all outcomes and do not repeat completed noisy measurements. PR #247 has eight
-verified production passes; its targeted macOS ARM64 retry is job `125511841693`
-in attempt 2 of run `41497408964`, currently queued.
+**Next:** incorporate AMD64 session 1 from `41518220615`, job `125527179997`,
+which obtained the required CPU and is building its same-source reference.
+The other three sessions and all four host rejections are independently audited
+and retained in the repository. Source `a4f3200c` is retained by
+`roadmap/derivative-temporary-storage-runner-2026-11-02`. Both ARM64 sessions
+pass; AMD64 session 2 retains a 2.024% zero-update history regression against
+the frozen 2% limit. Do not repeat completed measurements. PR #247 has eight verified
+production passes; its macOS ARM64 attempt-3 retry, job `125524990804` in run
+`41497408964`, has started.
 
 ## Branch and delivery
 
@@ -33,17 +34,19 @@ Production run `41497408964`; documentation run `41497408857`:
 | macOS AMD64 regular | `125455860276` | Pass; full log and all 131 native targets audited |
 | macOS ARM64 regular | `125455860363` | Pass; full log and all 131 native targets audited |
 | macOS AMD64 ownership | `125455860541` | Pass; full log and all 126 targets audited |
-| macOS ARM64 ownership | `125511841693` | Targeted attempt-2 retry queued; original job had no runner |
+| macOS ARM64 ownership | `125524990804` | Attempt-3 retry running; both earlier attempts had no runner |
 | Windows ARM64 | `125455860399` | Pass; full log, initial target archive and reuse checks audited |
 | Windows AMD64 | `125455860474` | Pass; full log and initial target archive audited |
 | C/Rust benchmarks | `125455860614` | Pass; full log audited |
 | Documentation | `125455859455` | Pass; full log audited |
 
 The original macOS ARM64 job executed no steps because of hosted-runner capacity.
-Once all other jobs finished, GitHub accepted its targeted retry. Successful jobs
+Once all other jobs finished, GitHub accepted its targeted retry. That attempt
+also received no runner; attempt 3 has started. Successful jobs
 were carried forward without rerunning; their original IDs above identify the
 audited logs. Original annotations are saved at
-`/private/tmp/fwp-247-macos-arm-ownership-cancellation.json`. No source failure is
+`/private/tmp/fwp-247-macos-arm-ownership-cancellation.json`; retry annotations
+are `/private/tmp/fwp-247-macos-arm-retry-annotations.json`. No source failure is
 known in PR #247. Queued/cancelled work does not establish native support.
 
 Completed audits:
@@ -121,7 +124,7 @@ The same-source reference disables only packed-record lowering, retaining old
 record-fold optimizations. Tests pass: reference mutations (three), timing/memory
 limits (twelve), archive/historical evidence (eleven), artifact retention (three).
 The longest guarded audit took 50.92s; formatting, workflow lint and roadmap links
-also pass. Timing is now running. Preserve every completed/rejected session;
+also pass. Timing and independent archive audits are running. Preserve every completed/rejected session;
 do not rerun unchanged noisy measurements to obtain a pass.
 
 Focused validation is complete: independent archive replay (4.10s), actual-probe
@@ -137,8 +140,19 @@ job record and artifact `13174047975` are retained at
 `/private/tmp/fwp-packed-timing-amd1-rejection*`; guard verifies CPU-only rejection
 before building or measuring (0.13s). The second CPU-only rejection is job
 `125515446874`, artifact `13173453867`, retained at
-`/private/tmp/fwp-packed-timing-amd1-rejection2*`. Both attempts stopped before
-compilation or timing; completed measurements are not repeated.
+`/private/tmp/fwp-packed-timing-amd1-rejection2*`. Third rejection run
+`41515994738`, job `125519605648`, artifact `13174793593` received EPYC 9V74.
+All three stopped before compilation or timing. Independent rejection reports
+are `41517734538` and `41517746039`; the original report includes rejection 1.
+The fourth attempt `41517608442`, job `125525061276`, also received EPYC 9V45;
+its report `41518209544` passes. Original report `41517598393` and both earlier
+rejection reports pass too. Complete logs have no unexpected diagnostics.
+All compact reports, log hashes and archive identities are retained under
+`docs/measurements/derivative-temporary-storage-2026-11-02/timing/`; local digest,
+report and budget replay passes (0.49s). [Readable timing tables](measurements/derivative-temporary-storage-2026-11-02/timing.md)
+include all 18 completed cases, RSS, C/Rust ratios and code/frame sizes. No
+completed measurement is repeated. Fourth and fifth attempts were requested
+after the qualified AMD64 session 2 finished.
 
 Remaining: two qualified timing sessions per architecture, full archive
 audit/report, then one substantial PR and the complete final matrix.

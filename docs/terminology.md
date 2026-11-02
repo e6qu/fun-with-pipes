@@ -103,6 +103,8 @@ energy = fn x -> let square = x * x in square + square
 | Partial application / saturation | Supply fewer arguments than an entry needs / supply its complete argument list. |
 | Combinator | Connect functions: `both length sum` returns both answers for one list. |
 | Constant function | `const 7` ignores an input and returns `7`; `7` alone is a number. |
+| Map | Apply a function to every item: `[1, 2] \| map (add 1)` gives `[2, 3]`. |
+| Fold / accumulator / seed | Combine items into a running result, starting from an initial value. `[1, 2, 3] \| fold add 0` visits accumulator values `0 → 1 → 3 → 6`; `0` is its seed. |
 | Callback | A function passed to another operation: `mul 2` in `map (mul 2)`. |
 | Closure / capture / environment | A function remembers surrounding values; those values are captures, and their storage is its environment. |
 | Escaping | A value may be returned or stored beyond its creating call. |
@@ -215,6 +217,7 @@ prove some uses need only a borrow or move.
 | Register / spill | CPU-local value storage / move a value to memory when registers cannot hold it. |
 | Cache line / locality | A transferred CPU-cache block / accessing nearby or recently used data. |
 | Pointer chasing / contiguous buffer | Follow separate linked allocations / store elements consecutively. |
+| Packed temporary records | Store several results' numeric fields consecutively in one buffer instead of separate record/list allocations. [Example and limits](measurements/derivative-temporary-storage-2026-11-02/README.md). |
 | SIMD / lane | One instruction handles several values / one of those numeric positions. |
 | Vectorization | The compiler combines independent scalar operations into SIMD work. For example, two neighboring matrix cells can be updated together while each cell keeps its own sum order. |
 | Strict aliasing | C rules limiting which pointer types may access an object. |
@@ -281,7 +284,7 @@ Output: `[6.0]`.
 | AD / chain rule | Automatic differentiation / multiply contributions along a dependency path and add contributions from multiple paths. |
 | Finite differences / symbolic differentiation | Estimate from nearby inputs / rewrite a formula into a derivative formula. Neither describes ordinary fwp AD. |
 | Node / parent / edge / leaf | Recorded identity / earlier dependency / link and weight / input node. `x*x` has two edges to the same parent. |
-| Seed / adjoint / primal | Initial output weight / accumulated derivative / ordinary value. |
+| Derivative seed / adjoint / primal | Initial output weight / accumulated derivative / ordinary value. |
 | Forward mode / dual number | Propagate derivatives alongside values / the value-and-derivative pair. At `(x,dx)=(3,1)`, squaring gives `(9,6)`. |
 | Reverse mode | Record a forward calculation, then propagate output weights backward. `grad` uses this; `gradient` uses forward mode. |
 | VJP / JVP | Weight output derivatives / propagate an input direction. Definitions, not promises of identically named APIs. |
@@ -290,6 +293,7 @@ Output: `[6.0]`.
 | Stop-gradient | Keep a value but treat its dependency as constant for this derivative. |
 | Tape scope / stale / mixed nodes | Valid recording lifetime / node from an ended tape / nodes from unrelated tapes. Invalid uses are rejected. |
 | Owned or typed tape | Stores language values and callbacks, needed for F128 and nested derivatives. |
+| Derivative workspace | Temporary arrays reused across passes, such as storage for derivative weights. Reuse reduces allocation traffic; the arrays still need an owner and release. |
 | Retirement / raw buffers | Finish using a tape / numeric storage outside managed-object counters, still requiring release. |
 | Gradient descent | Repeatedly subtract a step size times the gradient to seek a smaller objective. |
 | Rosenbrock | Benchmark objective: sum `100*(y-x*x)^2 + (1-x)^2` over adjacent coordinates. |

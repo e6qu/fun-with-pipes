@@ -1,11 +1,13 @@
 # Packed temporary records for derivative sums
 
-The compiler can replace a private mapped list of numeric records with one
-contiguous buffer. It finishes every map call before folding the results.
+`map` computes one result per input. `fold` combines those results, starting
+from a **seed** value. When only the fold uses a mapped list of numeric records,
+the compiler can store those records in one contiguous buffer. It finishes every
+map call before folding the results.
 Focused correctness, cleanup and allocation checks pass on native Linux
 ARM64/AMD64. Paired timings are running; the full final platform matrix remains.
 
-[Baseline](baseline.md) · [Frozen requirements](protocol.md) · [Verification](verification.md)
+[Baseline](baseline.md) · [Frozen requirements](protocol.md) · [Verification](verification.md) · [Timing tables](timing.md)
 
 ## What changes
 
@@ -33,17 +35,20 @@ numeric fields in one buffer. Seed evaluation stays at its original position.
 The buffer is released after the fold, or during failure/cancellation cleanup.
 No new syntax or public collection API is needed.
 
-Selection requires one consuming use, known uncaptured callbacks and flat numeric
-fields. Shared/escaping lists, dynamic/captured callbacks, managed/nested/wide
-fields and right folds keep the existing representation. The [protocol](protocol.md)
-contains the exact boundaries and acceptance limits.
+Selection requires one consuming use and callbacks known to the compiler without
+stored values from an enclosing scope. Fields must be machine-sized numbers.
+Shared/escaping lists, functions chosen at runtime, captured values, strings,
+nested records, boxed wide numbers and right folds keep the existing
+representation. The [protocol](protocol.md) contains the exact boundaries and
+acceptance limits.
 
 ## Allocation results
 
 [Verified source](verified-counts.json.gz): `a4f3200c`, run
 [41511493637](https://github.com/e6qu/fun-with-pipes/actions/runs/41511493637).
 Both architectures agree across all six inputs, current/history forms, GCC O1/O2
-and workspace reuse off/on: 96 complete observations.
+and reusable derivative scratch storage (the **workspace**) off/on: 96 complete
+observations.
 
 An update subtracts `0.001 * gradient` from each coordinate. Initial coordinates
 alternate -1.2 and 1.0. **Current** keeps only the latest vector; **history** keeps
@@ -60,8 +65,9 @@ Whole-solve results below use current form, GCC O2 and workspace reuse off:
 
 Requested bytes are cumulative allocation traffic. Peak managed bytes include
 size-class rounding, but exclude allocator bookkeeping and separately measured
-raw tape/workspace storage; they are not RSS. Retains, derivative operation counts
-and raw tape/workspace observations stay unchanged. Final managed/raw storage is
+raw tape/workspace storage; they are not RSS. Reference-count increments
+(**retains**), derivative operation counts and raw tape/workspace observations
+stay unchanged. Final managed/raw storage is
 zero in every case. All largest-frame growth limits pass.
 
 For `n = coordinates - 1` adjacent pairs per update, the exact saving is:
@@ -99,8 +105,14 @@ forms run. The [shared protocol](../descent-costs.md) specifies solves per proce
 Identical-copy noise and every missed timing limit remain visible. D2 stays open
 until its separate requirements pass.
 
-Three qualified sessions are running in
+Three qualified sessions completed in
 [41514265188](https://github.com/e6qu/fun-with-pipes/actions/runs/41514265188).
-AMD64 session 1 was rejected before building/timing because GitHub assigned an
-EPYC 9V74 instead of the frozen EPYC 7763; its replacement qualification is tracked
-in the handoff. No completed timing session is repeated to seek a passing result.
+Both ARM64 sessions pass their timing limits. AMD64 session 2 misses one limit:
+zero-update history is 2.024% slower, against a maximum 2% regression. Independent
+archive audits pass, preserving that failure. Cases with at least 199 updates
+use 5.1–14.2% less elapsed time. All identical-copy controls pass so far.
+[Timing tables](timing.md) show every case, C/Rust ratios, RSS and code/stack costs.
+
+Four assigned CPUs failed AMD64 session 1's qualification before building/timing.
+The fifth attempt has obtained the required EPYC 7763 and is preparing its
+measurement. No completed timing session is repeated to seek a passing result.

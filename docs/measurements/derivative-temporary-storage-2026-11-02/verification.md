@@ -65,6 +65,17 @@ failed jobs. Initial successful evidence remains in [candidate counts](candidate
 
 ## Reproduce
 
+The [timing tables](timing.md) link each measured run's compressed reports and
+audit index. The index retains every file's hash, complete job-log identity,
+source revision, reference patch and original acceptance result. Each run's
+`report-artifacts.json` also identifies the independent report workflow and its
+full retained archive. CPU-only rejections remain beside measured outcomes.
+
+`packed-records-report` downloads and audits the complete native evidence on
+GitHub without executing saved binaries. Its compact output is digest-checked
+locally; report medians, balanced orders, counts and timing limits are recomputed.
+These audits preserve a failed performance limit as failed.
+
 Download the archives identified by `verified-artifacts.json` and verify their
 SHA-256 digests. Recompute all observations and acceptance limits with:
 
