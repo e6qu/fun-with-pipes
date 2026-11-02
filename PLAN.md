@@ -11,8 +11,9 @@ current-kernel comparison. Keep its final head unchanged during production
 validation and merge only after all nine jobs and documentation pass. This
 independent branch prepares the matrix work; do not open a second PR.
 
-The [matrix protocol](docs/measurements/matrix-calculation-costs.md) fixes a first
-source/compiler diagnostic before implementation. No runtime candidate is selected.
+The [matrix protocol](docs/measurements/matrix-calculation-costs.md) selects the
+paired-column loop after exact GCC diagnostics. Focused safety checks precede
+timing; no speed improvement is accepted yet.
 
 | Step | Work | Completion requirement |
 |---|---|---|

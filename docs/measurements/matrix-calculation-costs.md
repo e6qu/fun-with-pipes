@@ -175,3 +175,39 @@ Select this exact paired loop for correctness/cleanup checks, then measurement.
 Vectorization alone does not establish a speedup. Keep the old single-column
 loop as the same-source comparison; no other runtime/compiler change is allowed
 between the two timed implementations.
+
+## Frozen paired-column measurement
+
+This experiment measures the selected loop, not the earlier typed loop-state
+optimization. Build one current compiler. Emit each matrix program once, then
+construct its reference by replacing exactly the paired loop with the recorded
+single-column loop. Require the production runtime to contain the exact candidate
+and keep every other generated-source byte identical. Save both sources and hashes.
+
+| Setting | Required value |
+|---|---|
+| Hosts | Native Linux ARM64 Neoverse-N2 / GCC 13.3 and AMD64 EPYC 7763 / GCC 15.2; four CPUs; exact versions from the current-kernel protocol |
+| Programs | 65×67 multiplied by 67×63; 257×259 multiplied by 259×255 |
+| Roles | C, Rust, paired fwp, its byte-identical copy, single-column fwp, its byte-identical copy |
+| Sessions | Two independent qualified hosts per architecture |
+| Work | Eight products per sample, five samples per process; 256 processes per role/round for the small case, four for the large case |
+| Rounds | Two retained warmup rounds, then 18 measured rounds |
+| Order | Role indices `[0,1,5,2,4,3]`, rotated by `(round + block) % 6`; use every observation |
+| Compilation | Generated C and C peer: O2, `-ffp-contract=off`, `armv8-a` / `x86-64`, no LTO; Rust 1.99.1 at O2 and `generic` / `x86-64` |
+| Scope | Separately time calculation and C-driver construction through final cleanup; report median round totals and fwp/peer ratios |
+| Correctness | Exact integer-derived outputs; matching profile samples; zero final live workload storage; deliberate retained-owner control must fail |
+| Timing limits | Both identical-copy ratios ≤1.02 in each case/scope/session; paired/reference ≤0.95 for large AMD64 calculation, ≤1.02 everywhere else |
+| Memory limits | No increase in requests, requested bytes, effective retains or peak charged storage in any profile sample |
+
+The source compiler uses production Rust O1 with assertions/overflow checks; this
+is distinct from the Rust peer's O2. Record complete toolchain, source and binary
+identities, raw process output, allocation counts, RSS, executable/text bytes and
+GCC static frames. Static frames are not a measured stack high-water mark, and
+managed storage is not total process memory. Preserve all host rejections and
+failed speed/noise limits; never rerun an unchanged timed experiment for a pass.
+
+Array controls already reproduce byte-identical binaries in both diagnostics.
+Do not repeat their timing: this runtime edit changes only the matrix loop. The
+two declared matrix sizes cover the small-case overhead and large-case target.
+The C driver still constructs fwp inputs; the inclusive ratio does not measure
+source-compiled `array.generate`. Input records remain outside calculation time.
