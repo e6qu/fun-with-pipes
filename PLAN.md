@@ -37,7 +37,8 @@ capture/reuse/failure coverage; no new syntax, allocator or compatibility layer.
 - **Next investigation: AMD64 array consumption.** Both sessions pass the large
   array's copy controls, yet consumption is 4.93–5.23% slower; the small array also
   misses copy limits. Generated consumption C is unchanged. First analyze retained
-  per-process samples and role order. Then freeze a setup/sample-progression
+  [per-process samples and role order](docs/measurements/array-sample-positions.md).
+  The [setup diagnostic](docs/measurements/array-consumption-setup.md) freezes a
   diagnostic comparing equal untimed preparation before the same consumption
   work, retaining wall/CPU times and storage. Do not repeat unchanged timings,
   erase the original 2% limits or infer a source safety bug from elapsed time.

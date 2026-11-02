@@ -1,12 +1,15 @@
 # Current work
 
-**Next:** publish the completed PR #245 evidence/docs batch, mark ready, and audit
-all nine production jobs plus documentation for that exact head before squash merge.
+**Next:** audit production run `41454128868` and documentation `41453962382`
+at exact head `d53fb07a639214739d7648fcd1dd2a022d9b8e10`, then squash merge if all pass.
+Documentation passed and its full log was audited; all nine production gates remain pending.
 
 ## Branch and delivery
 
-- Worktree `/private/tmp/fwp-array-construction`, branch `array-construction-costs`.
-  [PR #245](https://github.com/e6qu/fun-with-pipes/pull/245) is still a draft.
+- Active follow-up worktree `/private/tmp/fwp-array-consumption`, branch
+  `array-consumption-diagnostics`; no second PR. Current PR validation stays at
+  `/private/tmp/fwp-array-construction`, branch `array-construction-costs`.
+  [PR #245](https://github.com/e6qu/fun-with-pipes/pull/245) is ready for review.
   Preserve the primary checkout and other worktrees.
 - [PR #244](roadmap-history.md#paired-matrix-columns-pr-244) passed all nine jobs
   and documentation. Verified squash merge `e70f0e2d30112df0c7ee0912a77bac251092a539`
@@ -26,7 +29,7 @@ all nine production jobs plus documentation for that exact head before squash me
 | 2 | Verified | All four baseline sessions audited; both ARM64 and AMD64 session 2 pass, AMD64 session 1 retains six copy failures |
 | 3 | Verified | Repaired focused safety: five targets / 22 tests per host, all three hosts pass; complete logs/probes audited |
 | 4 | Implemented | Four paired sessions audited; ARM64 passes every limit; AMD64 retains four consumption and four copy failures; storage/cleanup pass |
-| 5 | In progress | Final evidence/docs ready for publication; full exact-head production matrix and documentation still required |
+| 5 | In progress | Exact head `d53fb07a` runs production `41454128868` and docs `41453962382`; audit all nine jobs and documentation |
 
 ## Source and verification identities
 
@@ -76,8 +79,20 @@ The failed goals remain in the plan. Candidate/reference memory profiles pass.
 - Focused local checks use `python3 scripts/local-guard.py`, serially: Rust format,
   selected saved-C Clang probes, source/reference controls, raw-evidence audits,
   actionlint and roadmap links. These do not replace native runner checks.
-- Latest pre-final documentation run `41449692849` / job `125291542425` passes
-  at `f8a558da`; full log audited, including intentional test-runner failures.
-  It is not a substitute for the final head's documentation gate.
+- Final-head documentation run `41453962382` / job `125305832207` passes
+  at `d53fb07a`; full log audited, including intentional test-runner failures.
+- Independent next-task preparation uses retained data only: sample analysis
+  `/private/tmp/fwp-array-sample-positions.py` and `.json` (guarded, 0.25s),
+  draft protocol `/private/tmp/fwp-array-consumption-protocol.md`. Large AMD64
+  consumption excess is mostly early within-process samples; this is not a cause
+  or an acceptance change. No new experiment has been dispatched.
 - No local compiler build, full suite or benchmark. Last free disk: 65 GiB.
   Preserve the guard's 64 GiB / 1 GiB RSS / 2 GiB target / 180-second limits.
+
+## Follow-up preparation while production runs
+
+[Sample analysis](measurements/array-sample-positions.md) retains every process,
+sample position and original failed limit. `summarize-array-samples.py` reproduces
+16 dataset/session/case records (guarded, 0.25s). The [fixed diagnostic](measurements/array-consumption-setup.md)
+uses retained C, explicit 0/1,024 preparation calls and both wall/CPU observations.
+Its implementation and measurement remain pending; no runtime change is selected.
