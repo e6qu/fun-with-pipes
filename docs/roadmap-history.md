@@ -6,6 +6,25 @@ and complete platform validation are different events. Measurements retain their
 original source and settings; old numbers are not measurements of current main.
 The linked PRs, runs and data records supply the detailed evidence.
 
+## Numeric fold verification and handler specialization (PR #241)
+
+[PR #241](https://github.com/e6qu/fun-with-pipes/pull/241) merged November 2 as
+`81aed372`, retaining the reported improvements with unmet limits open. Its tree
+matches head `45af930e`; the squash message is one line with no body/trailers.
+Known callbacks inside `attempt` specialize without moving captures inside the
+handler. Repaired cleanup probes and all 39 focused tests pass on each of three
+native GCC/Clang hosts. Documentation `41375291046` passes.
+
+The [measurements](measurements/derivative-record-folds.md) verify 25,273 fewer
+allocations and 25,472 fewer effective retains in the largest single solve,
+unchanged peak managed storage, and 5.8–7.8% faster larger solves. Sixteen speed
+limits, one timing-noise limit and 15 ARM64 code-growth limits remain unmet.
+No completed noisy timing was repeated. D2 and prior limits remain open.
+
+Full production run `41385349559` was started before merge and remains pending.
+Duplicate merge-tree run `41385360274` was cancelled after tree equality and no
+failed jobs were confirmed. This is not yet a fully verified platform delivery.
+
 ## Numeric record fold implementation (PR #240)
 
 [PR #240](https://github.com/e6qu/fun-with-pipes/pull/240) merged November 2 as

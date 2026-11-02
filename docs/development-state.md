@@ -1,121 +1,65 @@
 # Current work
 
-**Next:** resolve whether to retain the verified benefits with the frozen size and
-speed limits still open, then finalize [PR #241](https://github.com/e6qu/fun-with-pipes/pull/241)
-and run all nine final production jobs plus documentation before squash merge.
-The [complete measurement report](measurements/derivative-record-folds.md#paired-timings-larger-solves-improve-acceptance-remains-open)
-contains the concrete results. No performance requirement has been waived.
+**Next:** implement the bounded application-through-field-binding simplification
+from the [prepared scope](measurements/numeric-callback-bindings.md), add semantic
+and ownership coverage, and monitor #241's full production run `41385349559`.
 
-Worktree `/private/tmp/fwp-returned-callables`, branch `numeric-fold-validation`.
-Preserve unrelated primary-checkout edits. Compiler source is `0bca5f91`; subsequent
-changes repair fixtures and retain evidence. Do not repeat count measurements for
-these fixture-only changes or repeat unchanged noisy timings to seek a pass.
+Worktree `/private/tmp/fwp-returned-callables`, branch `numeric-callback-lifetimes`,
+base `81aed37265661c0c79e47ca7223b40be2d1fe225`. Preserve unrelated primary-checkout
+edits. No compiler change in this preparation. Keep one active PR for this batch.
 
 ## Roadmap status
 
 | Step | Status | Evidence / remaining work |
 |---|---|---|
-| 1 | Verified | All 96 source/count observations identify addition accumulators as removable; input/pair results escape into lists |
-| 2 | Verified | Preparation `7b300717`, tag `roadmap/derivative-record-fold-protocol-2026-11-02`, freezes requirements before compiler edits |
-| 3 | Verified | All 39 focused tests pass on each native host, including repaired cleanup probes and handler-order checks |
-| 4 | In progress | Counts/timings independently audited; size/speed/noise limits remain unmet; acceptance decision and final full matrix remain |
+| 1 | Verified | Saved C and reproduced IR identify an application outside numeric field bindings; local proof and checks documented before code edits |
+| 2 | Pending | Extend only `Opt::apply`; preserve stages, binding order and resource guards |
+| 3 | Pending | Add tuple/named-record selection, semantic/count/cleanup and rejected-shape controls; native GCC/Clang focused run |
+| 4 | In progress | #241 full matrix running; next batch needs its own final exact-head matrix and documentation |
 
-## Current results
+## Baseline delivery and CI
 
-| Check | Source / run | Result |
-|---|---|---|
-| Focused native suite | `55d46cd5`, `41372899452` | Each host: all 39 tests pass |
-| Documentation | `55d46cd5`, `41372902366` | Pass |
-| Updated count measurements | `0bca5f91`, `41371032477` | All observations complete; job failures are those same two probe lookups |
-| Independent updated count audit | `41372228352` | All 96 count/memory observations pass; 15 ARM64 code-size limits fail |
-| Initial count audit | `a690733e`, `41371028926` | Same savings and size failures, retained separately |
-| Paired timings | `55d46cd5`, `41372905207` and `41373123684` | Four measured sessions; 16 missed speed limits and one noise limit |
-| Timing archive audits | `41374711502`, `41374854968` | Pass, including validation of all failed outcomes |
+The user merged #241 after the retention choice was presented, directing continued
+work. Treat that as retaining the benefits with unmet limits open, not as passing
+the original thresholds. Merge `81aed372` and PR head `45af930e` share tree
+`a188f53196b53797719ecbc0e89589517ab4959b`; the squash subject meets the one-line,
+80-character/no-trailer rule. Documentation `41375291046` passes; log
+`/private/tmp/fwp-241-docs-final.log` has only deliberate runner-control failures.
 
-All eight target logs and compiler diagnostics were audited on GCC Linux
-ARM64/AMD64 and Clang macOS ARM64. Numeric-fold semantics, exact owner counts,
-empty/shared inputs, exclusions, injected traps, allocation failure and actual
-cancellation pass. Worker boxing/preparation, derivative precision/nesting/scopes
-and all 15 effect tests pass. No unexpected compiler warnings were found.
-Latest focused jobs: ARM64 `125046966341`, AMD64 `125046966337`, macOS `125046966148`.
-Logs: `/private/tmp/fwp-241-roots-{arm,amd,mac}.log`. The updated count audit log
-is `/private/tmp/fwp-241-export-audit.log`.
+Full run `41385349559` has all nine jobs running, no reported failed step yet:
+Linux ARM/AMD `125084848880`/`125084848907`, regular macOS ARM/AMD
+`125084848914`/`125084848899`, ownership macOS ARM/AMD
+`125084848670`/`125084848861`, Windows ARM/AMD `125084848959`/`125084849027`,
+benchmark `125084848998`. Audit every completed target and warning.
+Duplicate merge run `41385360274` was cancelled while queued after verifying tree
+identity and no failed jobs. Post-merge docs `41385359961` remains enabled.
 
-The [measurement report](measurements/derivative-record-folds.md) retains both
-compiler sources, archive digests and failed limits. At 129 coordinates/199 updates,
-current-vector form, GCC O2/workspace off, the whole solve removes 25,273 allocation
-requests, 606,552 requested bytes and 25,472 effective retains on both hosts.
-Peak managed charge stays 21,888 bytes; final managed/raw storage is zero.
-ARM64 instruction growth reaches 2,976 bytes against a 1,024-byte limit; AMD64
-shrinks by 928–1,328 bytes. Static-frame limits pass.
+#241's focused suite `41372899452` passes all 39 tests on each of Linux ARM64/AMD64
+and macOS ARM64. [The report](measurements/derivative-record-folds.md) retains both
+count audits and all four timing sessions, including 16 missed speed limits,
+one noisy AMD64 case and 15 ARM64 single-solve size failures. No count/timing
+rerun is needed for this next investigation. #239 remains the last fully verified
+platform baseline until the running matrix completes.
 
-The 33/129-coordinate timings improve 5.8–7.8% across both forms and all sessions.
-Three-coordinate solves improve less than the required 5%; one AMD64 3/1,999 case
-has 3.224% identical-copy variation and is inconclusive. Zero/one-update cases
-pass non-regression. All output/count/cleanup checks pass. Repeated timing binaries
-pass their code/frame limits but do not erase single-solve size failures.
+## Source investigation
 
-Original AMD64 session 1 rejected an EPYC 9V74 before building/timing; its qualified
-EPYC 7763 replacement is retained separately. No completed timing was repeated.
-Timing jobs: ARM64 `125046983749`/`125046983860`, AMD64 `125047629643`/`125046983741`.
-Logs: `/private/tmp/fwp-241-time-{arm1,arm2,amd1,amd2}.log`; independent audits:
-`/private/tmp/fwp-241-audit-{original,replacement}.log`.
-Source tag: `roadmap/record-fold-timing-2026-11-02`.
+Saved C `/private/tmp/fwp-241-failed-values.c` contains `destructured-step` with
+arity two but a boxed result: its worker calls a known partial function through
+numeric field bindings, then applies the returned value. The retained verified
+#239 compiler reproduces:
+`Apply(Let(Field, Let(Field, Apply(Func, captures))), argument)`.
 
-## Repairs and their evidence
+Reproduction used `FWP_DUMP_IR=1`, `FWP_STACK=0`, explicit dynamic memory/emit-C;
+input `/private/tmp/fwp-242-destructuring.fwp`, IR
+`/private/tmp/fwp-242-baseline-ir.log`, C `/private/tmp/fwp-242-baseline.c`.
+Guarded command completed in 0.25s. This is compiler IR/source inspection, not a
+machine-code inference. Do not globally flatten constructors: that could retain
+an escaping record longer. Preserve the field bindings at their original point.
 
-- First semantic fixture destructured before its next `fn`, producing a returned
-  closure outside the selected direct-worker contract. Projection-based callbacks
-  now test selection while retaining the destructured semantic comparison.
-- Generated C then exposed generic folding beneath `attempt`. Adding `attempt`
-  to the existing known-callback pass preserves capture evaluation outside the
-  handler. Raw/optimized interpretation and native O0/O1/O2 agree on captures,
-  input order, callback errors and outer handling of capture errors.
-- That specialization removed two old probes' indirectly reached entry points.
-  Merely adding `export` did not fix executable rooting: CLI builds still select
-  only `main`. The repair uses `compile_source` with both `main` and `exports`
-  rooted, then ordinary C generation. It saves source/C before probe assertions.
-  Production code and the measurement compiler remain unchanged. The repaired
-  probes pass on all three hosts, including their deliberate missing-release controls.
+## Local verification
 
-Earlier focused runs `41359574645`, `41369894377`, `41370956853` and
-`41372225789` retain the
-selection/probe failures. Their logs are `/private/tmp/fwp-240-focused-*.log`,
-`/private/tmp/fwp-241-focused-*.log` and `/private/tmp/fwp-241-attempt-*.log`.
-No passing rerun is presented as a repair without its source change.
-
-## Local checks
-
-All commands use `python3 scripts/local-guard.py`, serially. Full builds, suites,
-benchmarks and large audits run on GitHub. Local target data is empty; last free
-disk reading was about 69 GiB. Stop if the guard refuses work.
-
-- Current probe-root repair: `cargo fmt --all` passes (1.87s).
-- Updated audit archive digest verified and report retained (0.13s).
-- Roadmap audit initially caught a renamed required heading; restored
-  `Roadmap status`, then all 198 link sets/106 preparation pairs/four steps pass
-  (3.66s). No audit requirement was relaxed.
-- Timing summary ZIP/file digests pass (0.49s/0.26s); all four measured source-hash
-  sets agree (0.26s). Large archive audits ran on GitHub.
-- Earlier checks: all ten fwp fixtures type-check; raw handled-callback output
-  matches its oracle; reference patch controls, count/timing/layout validators,
-  evidence-retention tests, workflow lint and roadmap audit pass.
-- Retained verified #239 compiler is under `/private/tmp/fwp-240-baseline-macos/`;
-  it checked fixture semantics only, not current compiler changes. Artifact
-  `13098119213`, compiler SHA-256
-  `6ae32e315ded657cb8e7b5d9b518fc337d527204bf2164733c9c4c273c6cb3b3`.
-
-## Delivery boundaries
-
-The user merged #240 before validation as `5fbd6bea`; its tree matches final head
-`20deddfd`. Run `41369348762` passed its benchmark job `125036266818`; remaining
-jobs and duplicate merge-tree run `41369360785` were cancelled after confirming
-known fixture failures and no additional failed jobs. Cancelled jobs establish
-no coverage. Documentation `41361067737` passed. #241 is still a draft; skipped
-production jobs do not satisfy acceptance.
-
-[PR #239](roadmap-history.md#numeric-record-zipmap-fusion-pr-239) is the verified
-baseline (`1f358249`): all nine production jobs `41342124001` and documentation
-`41342116834` pass. The user accepted its allocation savings with ten timing
-limits and D2 still open. Preserve those limits and the original failed results.
-The present batch has no waiver for its ARM64 size limit or new timing limits.
+All focused commands use `python3 scripts/local-guard.py`, serially; full builds,
+suites and measurements run on GitHub. No local compiler build or native suite.
+Keep 64 GiB free disk, target data under 2 GiB, RSS under 1 GiB and the 180s guard.
+Retained baseline compiler: `/private/tmp/fwp-240-baseline-macos/fwp-macos-arm64/fwp`.
+Its identity and earlier validation are recorded in #241's history and reports.
