@@ -88,16 +88,53 @@ C driver does not need for its bounded loop. Record these differences explicitly
 A source-composed program may eliminate materialized storage; report that as a
 different execution boundary, not an equivalent isolated allocation sample.
 
-## Following measurement
+## Next measurement: materialized construction phases
 
-Only after the diagnostic passes, freeze a separate timing protocol that names
-all peers and phases. Keep materialized construction separate from whole-source
-composition. Split allocation/filling from reduction/release using explicit
-boundaries, report timer/control costs, and retain inclusive work as a check.
-C/Rust peers must perform the same formulas, materialization and arithmetic order.
-Compare allocations, bytes, live memory, RSS, code and per-function stack costs.
+Freeze this protocol before implementing its runner. Use the current compiler;
+no production optimization is selected. Keep the composed program as an exact,
+zero-allocation control, but do not time it against materialized C/Rust programs.
+That would conflate construction overhead with eliminating the array entirely.
 
-Declare hosts, rounds and copy-control limits before sampling. Retain every
-failure; no unchanged retries for a passing number. A demonstrated source cost
-may select one bounded compiler optimization with its own safety and measurement
-criteria. This document does not preselect removing checks, cleanup or ARC.
+Measure counts 65,537 and 262,145 with the same round-dependent formula above.
+Build one fwp module and select its two materialized paths in otherwise identical
+C drivers. Both call the same compiled `reduce64` after construction. C and Rust
+peers keep the existing materialized formula and ordered map/fold. Retain exact
+input/result checks and omitted-release controls before timing.
+
+| Setting | Required value |
+|---|---|
+| Programs | C, Rust, source-built fwp, identical source copy, C-driver-built fwp, identical driver copy |
+| Hosts | Four-CPU Neoverse N2 / GCC 13.3 and EPYC 7763 / GCC 15.2, matching the recorded current-kernel hosts; record exact toolchain strings and reject other hosts before building |
+| Builds | Production Rust O1 compiler with assertions; C/generated C O2, contraction off, baseline armv8-a/x86-64, no LTO; Rust peer O2 |
+| Sessions | Two complete sessions per architecture |
+| Samples | Two warmup rounds, 18 measured rounds, four fresh processes per role/round, five samples of eight calculations per process |
+| Order | Existing six-role schedule: `[0,1,5,2,4,3]`, rotated by round plus process block |
+| Construction timer | Allocation, metadata preparation, filling and builder cleanup; source path includes its callback dispatch/checks |
+| Consumption timer | Existing compiled reduction plus release of its input; C/Rust match that boundary |
+| Inclusive timer | Construction through checksum and final cleanup; excludes process startup, printing and runtime shutdown |
+| Decisions | Both identical-copy controls must stay within 2% for every timer/size/session; preserve all results when a control fails |
+
+This baseline has no required speedup: its question is the cost of two current
+paths. Report time per constructed/consumed array, source/driver and fwp/C/Rust
+ratios, all raw samples, allocation requests/bytes, effective retains, peak/final
+managed storage, RSS, code size and qualified per-function stack estimates.
+Compare memory accounting boundaries explicitly; do not call managed charge RSS.
+
+Use separate instrumented binaries to split the two fwp construction paths into:
+
+1. Storage allocation plus header/count initialization and fresh-owner setup.
+2. The fill loop, including the source callback, stores and filled-element tracking.
+3. Remaining construction work, including checks, cleanup registration and timers.
+
+Keep every ownership guard and arithmetic check. These phase observations are
+diagnostic: extra clock reads may affect code and timing. Record the instrumented
+source and elapsed cost separately; never replace ordinary timing samples with
+phase samples. C/Rust comparisons use total construction/consumption rather than
+an invented allocation split for their different implementations.
+
+After this comparison, a repeatable source cost may select the bounded
+all-scalar-capture specialization identified above. Its later candidate/reference
+experiment must freeze speed/storage limits before timing and retain the fully
+composed zero-allocation control. Keep safety, count, source, timing and full-CI
+work in one substantial PR; do not rerun the full platform matrix for each local
+implementation step. No unchanged timing retries or relaxed copy thresholds.
