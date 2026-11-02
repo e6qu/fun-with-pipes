@@ -1,7 +1,7 @@
 # Separate observation overhead from preparation-driver changes
 
 This protocol follows the [preparation diagnostic](array-consumption-2026-11-02/README.md).
-Freeze it before implementing or measuring the next comparison. Original timing
+Its choices were frozen before implementation or measurement. Original timing
 failures remain open; this diagnostic selects no compiler/runtime change.
 
 ## Question and limits
@@ -113,4 +113,6 @@ The [C-only runner](../../scripts/diagnose-array-observations.py) and
 Every profile, exact result and deliberate failure must pass before the first
 warmup. [Focused harness tests](../../scripts/test-array-observation-boundaries.py)
 cover source boundaries, missing observations and complete balanced rounds.
-No native execution or timing is claimed until the dispatched jobs pass.
+[All four sessions and raw audits now pass](array-observations-2026-11-02/README.md).
+The report retains all 13 small-AMD64 copy failures and four pre-build host
+rejections. This focused evidence does not replace final production CI.

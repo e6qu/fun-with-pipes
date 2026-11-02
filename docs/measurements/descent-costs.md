@@ -409,7 +409,7 @@ full integration passed in PR #236; timing remains inconclusive. A list saving
 must not be called a recording-time saving. The delivered
 [typed-owner batch](typed-derivative-owners.md) reduces F128 and nested ownership
 costs. The delivered [recording-transfer batch](derivative-recording-moves.md) passes
-weights directly and removes redundant recording retains. The next
+weights directly and removes redundant recording retains. The
 [phase/source report](derivative-forward-costs.md) identifies remaining work;
 these count results do not settle D2 timing acceptance.
 

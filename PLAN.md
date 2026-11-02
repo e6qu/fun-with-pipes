@@ -32,10 +32,13 @@ noisy measurement for a pass or change runtime ownership without a demonstrated
 source-level need. [All four results](docs/measurements/array-consumption-2026-11-02/README.md)
 are now audited: preparation shifts page-fault work outside timing and narrows
 some copy differences, but does not resolve the original consumption regression.
-Next, freeze the [three-driver comparison](docs/measurements/array-observation-boundaries.md)
-to separate observation changes from the complete preparation-capable driver. Do not add
-hidden warming or change runtime ownership. Apply a related matrix investigation
-only after declaring its scope.
+The separate [three-driver comparison](docs/measurements/array-observations-2026-11-02/README.md)
+is now complete on an independent branch while PR #246 finishes CI. Added
+observations alone retain the early large-AMD64 pattern; the complete preparation
+driver changes it, but raises total timed work by 7.7–9.8%. Close this diagnostic
+without a runtime change. Deliver its controls, all four archives and the 96-role
+table after #246 merges; preserve all original limits and 13 new copy failures.
+Any related matrix investigation needs its own declared scope.
 
 ## Open performance goals
 
@@ -43,8 +46,11 @@ only after declaring its scope.
   but consumption is 4.93–5.23% slower; small-array copy limits also fail.
   [Sample analysis](docs/measurements/array-sample-positions.md) and the
   [completed preparation diagnostic](docs/measurements/array-consumption-2026-11-02/README.md)
-  preserve those failures. Separate observer and preparation-call effects next,
-  using the bounded comparison above; do not infer a source safety bug from time.
+  preserve those failures. The [driver comparison](docs/measurements/array-observations-2026-11-02/README.md)
+  separates observation changes from the complete preparation-capable driver. It
+  justifies no ownership change and does not resolve original timing acceptance.
+  Keep the entire driver fixed for future candidate/reference comparisons and
+  report construction, consumption and enclosing work together.
 - [Small AMD64 matrix timing](docs/measurements/matrix-columns-2026-11-02/README.md):
   six identical-copy failures remain at 2.6–8.3% against the frozen 2% limit.
   [Retained-sample analysis](docs/measurements/matrix-sample-positions.md) locates

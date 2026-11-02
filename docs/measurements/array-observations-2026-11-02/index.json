@@ -1,0 +1,250 @@
+{
+  "records": [
+    {
+      "machine": "aarch64",
+      "session": 1,
+      "run": 41483622413,
+      "job": 125408109437,
+      "conclusion": "success",
+      "source": "d1f18ff74727a62cffa85506fc912597a8a3d7e6",
+      "artifact": {
+        "id": 13160584315,
+        "node_id": "MDg6QXJ0aWZhY3QxMzE2MDU4NDMxNQ==",
+        "name": "array-observations-ubuntu-24.04-arm-1",
+        "size_in_bytes": 82734777,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13160584315",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13160584315/zip",
+        "expired": false,
+        "digest": "sha256:cba6a1d5b7d6baa448f8c6f04001db8d61232ad0d591646669a7afe0257f4426",
+        "created_at": "2026-11-02T16:54:01Z",
+        "updated_at": "2026-11-02T16:54:01Z",
+        "expires_at": "2027-01-31T16:39:31Z",
+        "workflow_run": {
+          "id": 41483622413,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "array-observation-diagnostics",
+          "head_sha": "d1f18ff74727a62cffa85506fc912597a8a3d7e6"
+        }
+      },
+      "report": "aarch64-1.json.gz",
+      "raw": "aarch64-1-raw.zip",
+      "files": "aarch64-1-files.json.gz",
+      "log": "aarch64-1.log.gz",
+      "rawAudit": "Complete source/control/binary/command/sample audit passed"
+    },
+    {
+      "machine": "aarch64",
+      "session": 2,
+      "run": 41483622413,
+      "job": 125408109314,
+      "conclusion": "success",
+      "source": "d1f18ff74727a62cffa85506fc912597a8a3d7e6",
+      "artifact": {
+        "id": 13162246109,
+        "node_id": "MDg6QXJ0aWZhY3QxMzE2MjI0NjEwOQ==",
+        "name": "array-observations-ubuntu-24.04-arm-2",
+        "size_in_bytes": 82732695,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13162246109",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13162246109/zip",
+        "expired": false,
+        "digest": "sha256:7cfe2c9a452d5d12109cb5c007d0286d37047cefffb40201ded8b4cc131e7a62",
+        "created_at": "2026-11-02T16:50:14Z",
+        "updated_at": "2026-11-02T16:50:14Z",
+        "expires_at": "2027-01-31T16:39:31Z",
+        "workflow_run": {
+          "id": 41483622413,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "array-observation-diagnostics",
+          "head_sha": "d1f18ff74727a62cffa85506fc912597a8a3d7e6"
+        }
+      },
+      "report": "aarch64-2.json.gz",
+      "raw": "aarch64-2-raw.zip",
+      "files": "aarch64-2-files.json.gz",
+      "log": "aarch64-2.log.gz",
+      "rawAudit": "Complete source/control/binary/command/sample audit passed"
+    },
+    {
+      "machine": "x86_64",
+      "session": 1,
+      "run": 41483622413,
+      "job": 125408109605,
+      "conclusion": "success",
+      "source": "d1f18ff74727a62cffa85506fc912597a8a3d7e6",
+      "artifact": {
+        "id": 13162735018,
+        "node_id": "MDg6QXJ0aWZhY3QxMzE2MjczNTAxOA==",
+        "name": "array-observations-ubuntu-latest-1",
+        "size_in_bytes": 89516263,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13162735018",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13162735018/zip",
+        "expired": false,
+        "digest": "sha256:c9757933ff1bb9622b494a6e1f7bdb3f4645567673e89bb9bf1d43f858d1c463",
+        "created_at": "2026-11-02T16:55:57Z",
+        "updated_at": "2026-11-02T16:55:57Z",
+        "expires_at": "2027-01-31T16:39:31Z",
+        "workflow_run": {
+          "id": 41483622413,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "array-observation-diagnostics",
+          "head_sha": "d1f18ff74727a62cffa85506fc912597a8a3d7e6"
+        }
+      },
+      "report": "x86_64-1.json.gz",
+      "raw": "x86_64-1-raw.zip",
+      "files": "x86_64-1-files.json.gz",
+      "log": "x86_64-1.log.gz",
+      "rawAudit": "Complete source/control/binary/command/sample audit passed"
+    },
+    {
+      "machine": "x86_64",
+      "session": 2,
+      "run": 41487610457,
+      "job": 125421960114,
+      "conclusion": "success",
+      "source": "d1f18ff74727a62cffa85506fc912597a8a3d7e6",
+      "artifact": {
+        "id": 13163836448,
+        "node_id": "MDg6QXJ0aWZhY3QxMzE2MzgzNjQ0OA==",
+        "name": "array-observations-ubuntu-latest-2",
+        "size_in_bytes": 89516175,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13163836448",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13163836448/zip",
+        "expired": false,
+        "digest": "sha256:9a2e3030118886445cc5051fd0ad00b81739ae18a54082d38724e58f928789d9",
+        "created_at": "2026-11-02T17:16:21Z",
+        "updated_at": "2026-11-02T17:16:21Z",
+        "expires_at": "2027-01-31T17:04:30Z",
+        "workflow_run": {
+          "id": 41487610457,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "roadmap/array-observation-runner-2026-11-02",
+          "head_sha": "d1f18ff74727a62cffa85506fc912597a8a3d7e6"
+        }
+      },
+      "report": "x86_64-2.json.gz",
+      "raw": "x86_64-2-raw.zip",
+      "files": "x86_64-2-files.json.gz",
+      "log": "x86_64-2.log.gz",
+      "rawAudit": "Complete source/control/binary/command/sample audit passed"
+    }
+  ],
+  "rejectedHosts": [
+    {
+      "machine": "x86_64",
+      "session": 2,
+      "run": 41483622413,
+      "job": 125408108962,
+      "artifact": {
+        "id": 13161891520,
+        "node_id": "MDg6QXJ0aWZhY3QxMzE2MTg5MTUyMA==",
+        "name": "array-observations-host-ubuntu-latest-2",
+        "size_in_bytes": 1636,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13161891520",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13161891520/zip",
+        "expired": false,
+        "digest": "sha256:07360637a623ccbb960dd22e6edcd07f73148a929da1748b90fe564dd8504990",
+        "created_at": "2026-11-02T16:48:44Z",
+        "updated_at": "2026-11-02T16:48:44Z",
+        "expires_at": "2027-01-31T16:39:31Z",
+        "workflow_run": {
+          "id": 41483622413,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "array-observation-diagnostics",
+          "head_sha": "d1f18ff74727a62cffa85506fc912597a8a3d7e6"
+        }
+      },
+      "qualification": "rejected-x86_64-2-125408108962.zip",
+      "log": "rejected-x86_64-2-125408108962.log.gz"
+    },
+    {
+      "machine": "x86_64",
+      "session": 2,
+      "run": 41485451806,
+      "job": 125414479327,
+      "artifact": {
+        "id": 13161032820,
+        "node_id": "MDg6QXJ0aWZhY3QxMzE2MTAzMjgyMA==",
+        "name": "array-observations-host-ubuntu-latest-2",
+        "size_in_bytes": 1645,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13161032820",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13161032820/zip",
+        "expired": false,
+        "digest": "sha256:c99617db2759195e5c8e20fb25ba25fdb94591540460c1b02a0605e1582feb0d",
+        "created_at": "2026-11-02T16:55:34Z",
+        "updated_at": "2026-11-02T16:55:34Z",
+        "expires_at": "2027-01-31T16:50:55Z",
+        "workflow_run": {
+          "id": 41485451806,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "roadmap/array-observation-runner-2026-11-02",
+          "head_sha": "d1f18ff74727a62cffa85506fc912597a8a3d7e6"
+        }
+      },
+      "qualification": "rejected-x86_64-2-125414479327.zip",
+      "log": "rejected-x86_64-2-125414479327.log.gz"
+    },
+    {
+      "machine": "x86_64",
+      "session": 2,
+      "run": 41486437859,
+      "job": 125417925556,
+      "artifact": {
+        "id": 13161337995,
+        "node_id": "MDg6QXJ0aWZhY3QxMzE2MTMzNzk5NQ==",
+        "name": "array-observations-host-ubuntu-latest-2",
+        "size_in_bytes": 1582,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13161337995",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13161337995/zip",
+        "expired": false,
+        "digest": "sha256:775e5d00e0f2a6d34e07117ff080c39cdb7cdcd1d691cba1916cbedb09352d9f",
+        "created_at": "2026-11-02T16:58:40Z",
+        "updated_at": "2026-11-02T16:58:40Z",
+        "expires_at": "2027-01-31T16:57:07Z",
+        "workflow_run": {
+          "id": 41486437859,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "roadmap/array-observation-runner-2026-11-02",
+          "head_sha": "d1f18ff74727a62cffa85506fc912597a8a3d7e6"
+        }
+      },
+      "qualification": "rejected-x86_64-2-125417925556.zip",
+      "log": "rejected-x86_64-2-125417925556.log.gz"
+    },
+    {
+      "machine": "x86_64",
+      "session": 2,
+      "run": 41487001394,
+      "job": 125419894353,
+      "artifact": {
+        "id": 13162078008,
+        "node_id": "MDg6QXJ0aWZhY3QxMzE2MjA3ODAwOA==",
+        "name": "array-observations-host-ubuntu-latest-2",
+        "size_in_bytes": 1518,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13162078008",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13162078008/zip",
+        "expired": false,
+        "digest": "sha256:2d5fc7a6d514b79fb3d2d4db74cf00c5fdfce2ae132cfb4d227f3eb08b85e8da",
+        "created_at": "2026-11-02T17:02:03Z",
+        "updated_at": "2026-11-02T17:02:03Z",
+        "expires_at": "2027-01-31T17:00:48Z",
+        "workflow_run": {
+          "id": 41487001394,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "roadmap/array-observation-runner-2026-11-02",
+          "head_sha": "d1f18ff74727a62cffa85506fc912597a8a3d7e6"
+        }
+      },
+      "qualification": "rejected-x86_64-2-125419894353.zip",
+      "log": "rejected-x86_64-2-125419894353.log.gz"
+    }
+  ]
+}

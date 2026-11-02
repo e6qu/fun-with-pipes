@@ -1,8 +1,14 @@
-# Current kernel costs and typed loop state
+# Kernel costs at PR #243 and typed loop state
+
+These observations precede the [paired matrix columns delivered in PR #244](matrix-columns-2026-11-02/README.md)
+and [direct array callbacks delivered in PR #245](scalar-array-captures-2026-11-02/README.md).
+They describe the recorded #243 compiler, not the latest implementation. Matrix
+#244 includes new C/Rust comparisons; array #245 compares fwp with its prior
+callback rule and does not remeasure C/Rust parity.
 
 ## Question
 
-How much time and memory does the current compiler use for the four array/matrix
+How much time and memory does the #243 compiler use for the four array/matrix
 kernels, compared with equivalent C and Rust? How much does keeping floating-point
 loop state in native C `float`/`double` fields contribute?
 
@@ -55,15 +61,18 @@ Storage is the same in current fwp and the word-state reference:
   the report. Managed charge is not total process memory, and a frame estimate
   is not measured maximum stack use.
 
-The next numerical investigation should target the repeatable large-matrix
-calculation gap. Inspect the runtime loop and matched peers while preserving
-byte-copy alias safety, increasing inner-dimension arithmetic order, shared input
-views, shape guards and cancellation cleanup. The two small input records do not
-explain the calculation-only gap: their construction is outside that timer.
-The broader ARM64 array gap includes the C driver's input construction. It is
-not evidence for adding ARC work or changing the allocation-free reduction loop;
-measure source-compiled fwp input construction separately before assigning that
-cost to a compiler transformation.
+The two investigations selected by these results are complete:
+
+- [Paired matrix columns](matrix-columns-2026-11-02/README.md) reduce calculation
+  time while preserving byte-copy alias safety, arithmetic order, shared views,
+  shape checks and cancellation cleanup. Small AMD64 copy limits remain open.
+- [Source-compiled array construction](scalar-array-captures-2026-11-02/README.md)
+  measures the generator separately and records the direct-callback improvement.
+  [Driver comparisons](array-observations-2026-11-02/README.md) investigate the
+  remaining consumption observations; they do not justify changing runtime ownership.
+
+The original typed-state timing limits above remain evidence of this experiment.
+Later improvements do not turn its failed controls into passing results.
 
 ## Six programs and equivalent work
 

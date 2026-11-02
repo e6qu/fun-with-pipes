@@ -1,84 +1,89 @@
 # Current work
 
-**Next:** monitor PR #246's final production run `41478753238` and documentation
-`41478745298` at exact head `44626348b71bf3af1aa16030aae1e7976cb26c37`.
-Documentation passed; its full log, new raw-data replay and intentional runner
-failures are audited. C/Rust benchmarks passed and their full log is audited.
-All other production jobs are running or queued with no reported failed steps.
-Audit every final-head job and target before squash merge; keep that source unchanged.
+**Next:** finish auditing PR #246's exact-head CI and squash merge when all gates
+pass. Production run `41478753238`, documentation `41478745298`, source
+`44626348b71bf3af1aa16030aae1e7976cb26c37`. Do not change that passing head.
 
-## Branch and delivery
+## Final PR #246 gates
 
-- [PR #246](https://github.com/e6qu/fun-with-pipes/pull/246): branch
-  `array-consumption-diagnostics`, worktree `/private/tmp/fwp-array-consumption`.
-  It contains the diagnostic, regression controls, findings and plan updates.
-  No compiler/runtime code changes. Preserve the primary checkout.
-- The same temporary worktree now checks out `array-observation-diagnostics` for
-  independent next-task preparation, avoiding another large worktree. PR #246's
-  branch remains at `44626348`; no second PR is open. The
-  [next diagnostic protocol](measurements/array-observation-boundaries.md) was frozen at `c583459b` / `roadmap/array-observation-protocol-2026-11-02`.
-  Its C-only runner, source checks, schedule and independent auditor are now
-  implemented but not dispatched. Three harness tests pass (0.14s); all 48
-  retained C variants pass source/fault-site checks (0.86s); runner/auditor syntax
-  passes (0.13–0.14s), all guarded. A test caught a global clock-call replacement;
-  it now targets only the benchmark helper and proves runtime clocks unchanged.
-- [PR #245](roadmap-history.md#direct-numeric-array-callbacks-pr-245) passed all
-  nine production jobs and documentation at `d53fb07a`; full logs/target archives
-  were audited. Squash `c43f05c22ed36277b491490b7d9e222dfd0af025` preserves the
-  tested tree and one-line message, with no body/trailers. Duplicate same-tree
-  main runs `41471361931` / `41471361814` were cancelled.
-- Final merge requires nine exact-head production jobs plus documentation,
-  all log audits, an explicit subject of at most 80 characters and an empty
-  squash body. Verify the message and tree. Keep one active PR.
+| Gate | Status / audit |
+|---|---|
+| Documentation | Passed; full log and intentional runner failures audited |
+| C/Rust benchmarks | Passed; full log audited |
+| macOS ARM64 regular | Passed; full log, 131 targets / 650 tests audited |
+| macOS ARM64 ownership | Passed; full log, 126 targets / 379 tests audited |
+| macOS AMD64 ownership | Passed; full log, 126 targets / 379 tests audited |
+| Windows ARM64 | Passed; full log: 206 passing summaries / 853 tests; native archive: 57 logs / 428 tests |
+| macOS AMD64 regular | Running; no reported failed step |
+| Linux ARM64 / AMD64 | Running; no reported failed step |
+| Windows AMD64 | Running; native archive passes 57 logs / 428 tests; full job audit pending |
+
+Both macOS corpus archives pass 85 distinct programs. Existing ignored runner
+measurements remain explicit. Reviewed diagnostics are Homebrew already-installed
+notices, echoed strict-warning commands and the intentional scheduler entry/child
+panic controls in `src/sched.rs`; their test passes. No unresolved failure.
+Logs and audit helpers are `/private/tmp/fwp-246-*`; artifact identities are in
+`/private/tmp/fwp-246-final-artifacts.json`. Refresh that list before downloads.
+
+## Independent next batch: complete driver comparison
+
+Worktree `/private/tmp/fwp-array-consumption` checks out
+`array-observation-diagnostics`, a child of #246. Its branch has no PR yet. The
+primary checkout remains untouched. Keep one active PR: after #246 merges,
+rebase only the child commits, publish this complete batch and run final gates.
+
+- Frozen [protocol](measurements/array-observation-boundaries.md): `c583459b`,
+  tag `roadmap/array-observation-protocol-2026-11-02`.
+- Measured source: `d1f18ff74727a62cffa85506fc912597a8a3d7e6`, tag
+  `roadmap/array-observation-runner-2026-11-02`. No compiler/runtime change.
+- [Complete report](measurements/array-observations-2026-11-02/README.md): four
+  native sessions, complete sources/binaries/commands independently audited;
+  four CPU-only rejections retained. No completed timing repeated.
+- Added observations alone retain the early large-AMD64 consumption pattern;
+  the complete zero-preparation driver changes it but raises total timed work
+  7.7–9.8%. All ARM64 and large-AMD64 copies pass. Thirteen small-AMD64 copy limits
+  fail and remain explicit. Original performance acceptance remains open.
+- The report includes every version/copy/sample position, managed counts, RSS,
+  instruction size and stack estimates. Absent CPU/fault measurements stay blank.
+  Close this diagnostic without hidden preparation or a speculative ownership fix.
+
+| Session | Run / job | Artifact | Full local audit |
+|---|---|---|---|
+| ARM64 1 | `41483622413` / `125408109437` | `13160584315` | Pass, 4.51s |
+| ARM64 2 | `41483622413` / `125408109314` | `13162246109` | Pass, 4.56s |
+| AMD64 1 | `41483622413` / `125408109605` | `13162735018` | Pass, 4.63s |
+| AMD64 2 | `41487610457` / `125421960114` | `13163836448` | Pass, 4.82s |
 
 ## Roadmap status
 
 | Step | Status | Evidence / remaining work |
 |---|---|---|
-| 1 | Verified | [Retained sample analysis](measurements/array-sample-positions.md) replays both four-session datasets without dropping failures |
-| 2 | Verified | Native exact-result, ownership, omitted-release and failed-clock controls pass on both GCC architectures |
-| 3 | Verified | [All four sessions](measurements/array-consumption-2026-11-02/README.md) and complete archives independently audited; seven pre-build CPU rejections retained |
-| 4 | Verified | Preparation changes page-fault/copy observations; original consumption limits remain open. Next: freeze original/observer-only/zero-preparation driver comparison |
-| 5 | In progress | Publish full evidence, run final gates once, audit and squash merge |
+| 1 | Verified | Retained sample analysis preserves all earlier failures |
+| 2 | Verified | Native numerical, ownership and deliberate-failure controls pass |
+| 3 | Verified | All four preparation sessions and all four subsequent driver sessions audited |
+| 4 | Verified | Driver effect documented; original limits retained; no runtime change justified |
+| 5 | In progress | Finish #246 gates/merge, then deliver the separate completed driver batch |
 
-## Evidence identities
+## Checks, repairs and resources
 
-- Frozen protocol: `5a581248`, tag `roadmap/array-consumption-protocol-2026-11-02`.
-- Measured source: `87d4f6b099b755a52cd091b6c07cb57bb456af77`, tag
-  `roadmap/array-consumption-control-repair-2026-11-02`.
-- [The initial harness failure](measurements/array-consumption-setup.md#harness-repair-before-timing)
-  expected an extra instrumented release check. Both full ARM logs and all 28
-  completed commands were audited; no timing started. The corrected expectation
-  preserves zero-live-storage and omitted-final-release controls. Two queued
-  AMD64 copies were cancelled before starting.
+Guarded checks pass: three source/schedule tests (0.14s), all 48 retained C input
+variants (0.86s), workflow lint (6.33s), all 213 documentation link sets (3.03s), and complete compact write/check replay (2.96s / 3.13s).
+The 96-role CSV reproduces all raw data. Final report/workflow checks pass after
+staging. No local compiler build, full suite or benchmark.
 
-| Session | Run / job | Artifact | Full archive audit |
-|---|---|---|---|
-| ARM64 1 | `41472025679` / `125367826083` | `13154414998` | Pass, 1.93s |
-| ARM64 2 | `41472025679` / `125367826052` | `13155741912` | Pass, 1.88s |
-| AMD64 1 | `41472493298` / `125369442114` | `13157230350` | Pass, 1.76s |
-| AMD64 2 | `41475998964` / `125381620085` | `13156803999` | Pass, 1.89s |
+The source test caught and fixed a global clock-call replacement before publication;
+failure controls now alter only benchmark clocks. One local audit rejected an
+incomplete download; waiting for completion resolved its digest check, with no
+measurement rerun. Stale #243 kernel directions now link completed #244/#245 work;
+the derivative page no longer calls its delivered phase report a next task.
 
-Every source, command, binary identity, profile, failure control and raw sample
-was replayed independently. Full job logs contain no unresolved diagnostic.
-No completed timing was repeated. [The report](measurements/array-consumption-2026-11-02/README.md)
-explains timer boundaries, all copies/settings, memory, instruction and stack costs.
-Its compact replay checks all raw outputs and the 64-role CSV; it does not replace
-the full native-archive audit.
+PR #245 is verified and merged as `c43f05c22ed36277b491490b7d9e222dfd0af025`,
+with the tested tree and one-line message. Completed #243/#244 temporary checkouts
+were removed only after tree verification. The completed #245 checkout was also
+removed after saving its exact uncommitted handoff and patch under
+`/private/tmp/fwp-245-worktree-handoff-preserved`; commits and evidence remain.
+Free space is about 64.5 GiB. Preserve at least 64 GiB; use the local guard, serially.
 
-## Checks and resources
-
-Guarded checks pass: five harness tests (0.14s), both failed-profile/command
-replays (0.14s), all 48 retained C variants (0.38s), and complete compact replay in
-write/check modes (2.33s each). The report writer's local variable-shadowing bug
-was fixed before publication; both modes now pass. The stale derivative-fold
-validation paragraph now records its completed #242 verification and open limits.
-No local compiler build, full suite or benchmark.
-
-The guard stopped at 63.9 GiB free disk. Removed only two clean temporary worktrees
-whose trees matched verified merged #243/#244, preserving commits and evidence;
-primary/active checkouts remain. Duplicate nested failure-archive inputs were
-hash-checked against retained originals before removal; every unique file remains.
-Free space recovered to about 64.7 GiB. Keep at least 64 GiB free, sampled workload
-RSS below 1 GiB, target data below 2 GiB and the 180-second guard deadline.
-Use `python3 scripts/local-guard.py` for focused work; full gates stay on GitHub.
+Merge only after all nine production jobs and documentation pass for the exact
+head, with full audits. Supply one subject (at most 80 characters), empty body,
+no trailers/attribution; verify merged tree and message. Then continue PLAN.md.
