@@ -1,56 +1,72 @@
 # Current work
 
-**Next:** publish the audited repair checkpoint and run `packed-record-checks` plus Clang controls. The new boxed-input
-fixture omitted `fwp_prog_out = stdout`; its first print crashed. The stream
-initialization repair passes a focused local Clang O1 compile/run. Include the
-cheap eligibility-before-use-count compiler repair; confirm all counts again
-before dispatching `packed-records-time` with both explicit sessions. The unchanged compiler's 96 count observations are fully
-audited. Keep monitoring [PR #247](https://github.com/e6qu/fun-with-pipes/pull/247);
-merge only after all nine exact-head production jobs and documentation pass and
-all logs are audited.
+**Next:** monitor the frozen paired timings, then audit each complete session
+with `packed-records-report`. Source `a4f3200c` is retained by
+`roadmap/derivative-temporary-storage-runner-2026-11-02`. Original run
+`41514265188` has three qualified sessions; AMD64 session 1 rejected a wrong CPU
+before building/timing. Replacement `41514783218` also rejected its CPU (EPYC 9V45); the next
+session-1 attempt is `41515994738`. Preserve all outcomes and do not repeat completed noisy measurements. PR #247 has eight
+verified production passes; its targeted macOS ARM64 retry is job `125511841693`
+in attempt 2 of run `41497408964`, currently queued.
 
 ## Branch and delivery
 
-- Worktree `/private/tmp/fwp-array-consumption`, branch
-  `derivative-temporary-storage`, based on PR #247 head
-  `bb2e5b29fa6f53b3f187c3fba3fd15d38ff4085b`. Primary checkout untouched.
-- PR branch `array-observation-diagnostics` remains unchanged at that head.
-  Production run `41497408964` is in progress. Benchmark job `125455860614`
-  and documentation `41497408857` pass; their complete logs are audited.
-  Keep one active PR.
-- Full documentation log `/private/tmp/fwp-247-final-docs.log` is audited:
-  73 Python test groups / 465 tests, 213 link sets, 106 immutable pairs/tags and
-  five plan steps. Deliberate runner failures match their tests; no unexplained
-  diagnostic. Guarded audit: 0.14s.
-- Target archive auditor `/private/tmp/fwp-247-audit-targets.py` checks this exact
-  head. The full-log helper is `/private/tmp/fwp-audit-full-job.py`; review every
-  diagnostic it reports, including warnings in passing logs.
-- [PR #246](roadmap-history.md#array-preparation-diagnostic-pr-246) is verified and
-  merged as `7e48e438`, with matching tested tree and one 61-character message.
-  Its duplicate same-tree main runs were cancelled. Full audits are in history;
-  no unresolved production failure carried into this batch.
+Worktree `/private/tmp/fwp-array-consumption`, branch `derivative-temporary-storage`,
+based on PR #247 head `bb2e5b29fa6f53b3f187c3fba3fd15d38ff4085b`. Primary checkout
+untouched. Keep one active PR: `array-observation-diagnostics` remains at that
+head while the next compiler batch develops on its separate branch.
 
-## PR #247: driver-comparison evidence
+[PR #246](roadmap-history.md#array-preparation-diagnostic-pr-246) is verified and
+merged as `7e48e438`; identical-tree duplicate main jobs were cancelled.
+[PR #247](https://github.com/e6qu/fun-with-pipes/pull/247) delivers the completed
+[three-driver comparison](measurements/array-observations-2026-11-02/README.md).
+Its four complete native sessions and four rejected hosts are retained. All 96
+roles are audited; thirteen small-AMD64 copy failures and all old timing goals
+remain explicit. No production compiler/runtime change belongs to that PR.
 
-- Frozen [protocol](measurements/array-observation-boundaries.md): `c583459b`, tag
-  `roadmap/array-observation-protocol-2026-11-02`.
-- Measured source `d1f18ff74727a62cffa85506fc912597a8a3d7e6`, tag
-  `roadmap/array-observation-runner-2026-11-02`. Original identities survive rebase.
-- [Report](measurements/array-observations-2026-11-02/README.md): four native sessions
-  and full archive audits pass; four CPU-only rejections are retained. All 96 roles
-  and thirteen failed small-AMD64 copy limits remain explicit. No compiler/runtime
-  change, new timing acceptance or completed-session rerun.
-- Added observations alone retain the early large-AMD64 pattern. The complete
-  zero-preparation driver changes it but increases total timed work 7.7–9.8%.
-  ARM64 consumption becomes 4.5–5.4% slower. Close this diagnostic without hidden
-  preparation or a speculative ownership change; keep original timing goals open.
+Production run `41497408964`; documentation run `41497408857`:
 
-| Session | Run / job | Artifact | Full local audit |
-|---|---|---|---|
-| ARM64 1 | `41483622413` / `125408109437` | `13160584315` | Pass, 4.51s |
-| ARM64 2 | `41483622413` / `125408109314` | `13162246109` | Pass, 4.56s |
-| AMD64 1 | `41483622413` / `125408109605` | `13162735018` | Pass, 4.63s |
-| AMD64 2 | `41487610457` / `125421960114` | `13163836448` | Pass, 4.82s |
+| Gate | Job | Status / audit |
+|---|---|---|
+| Linux AMD64 | `125455859870` | Pass; full log and all 257 native targets audited |
+| Linux ARM64 | `125455860365` | Pass; full log and all 257 native targets audited |
+| macOS AMD64 regular | `125455860276` | Pass; full log and all 131 native targets audited |
+| macOS ARM64 regular | `125455860363` | Pass; full log and all 131 native targets audited |
+| macOS AMD64 ownership | `125455860541` | Pass; full log and all 126 targets audited |
+| macOS ARM64 ownership | `125511841693` | Targeted attempt-2 retry queued; original job had no runner |
+| Windows ARM64 | `125455860399` | Pass; full log, initial target archive and reuse checks audited |
+| Windows AMD64 | `125455860474` | Pass; full log and initial target archive audited |
+| C/Rust benchmarks | `125455860614` | Pass; full log audited |
+| Documentation | `125455859455` | Pass; full log audited |
+
+The original macOS ARM64 job executed no steps because of hosted-runner capacity.
+Once all other jobs finished, GitHub accepted its targeted retry. Successful jobs
+were carried forward without rerunning; their original IDs above identify the
+audited logs. Original annotations are saved at
+`/private/tmp/fwp-247-macos-arm-ownership-cancellation.json`. No source failure is
+known in PR #247. Queued/cancelled work does not establish native support.
+
+Completed audits:
+
+- Each Linux host: 258 Rust summaries, 1,035 passes, 20 ignored. Its native target
+  archive has 257 targets / 1,034 passes / no diagnostics.
+- Each macOS regular job: 132 summaries / 651 passes / four ignored; target
+  archive: 131 targets / 650 passes. Only benign Homebrew already-installed
+  OpenSSL notices and echoed warning flags appear in the full logs.
+- Intel macOS ownership: 128 summaries / 381 passes / 20 ignored; its 126-target
+  archive has 379 passes and no diagnostics.
+- Each Windows host: 206 summaries / 853 passes / 12 ignored. Their sixteen intentional
+  scheduler panics match `src/sched.rs` controls. Both Windows initial archives
+  have 57 logs / 428 passes / two ignored. Both hosts' separate 12 reuse tests pass.
+- Intel macOS corpus: all 85 programs finish. Benchmark: two passing summaries.
+  Documentation: 73 Python groups / 465 tests, 213 link sets, 106 immutable pairs
+  and five plan steps; intentional runner failures match their test controls.
+
+Full logs and target archives use `/private/tmp/fwp-247-*`. Current metadata is
+`/private/tmp/fwp-247-final-artifacts.json`. Auditors:
+`/private/tmp/fwp-247-audit-targets.py` and `/private/tmp/fwp-audit-full-job.py`.
+Run these serially through the local guard; review diagnostics rather than
+ignoring warnings or intentional-failure output wholesale.
 
 ## Roadmap status
 
@@ -60,117 +76,84 @@ all logs are audited.
 | 2 | Verified | Native numerical, ownership, omitted-destruction and failed-clock controls |
 | 3 | Verified | Four complete archives audited; every host rejection preserved |
 | 4 | Verified | Complete 96-role report preserves timing limits and failures |
-| 5 | In progress | PR #247 documentation passes; nine production jobs and merge remain |
+| 5 | In progress | PR #247 final production gates, targeted capacity retry and merge |
 
 ## Next batch: temporary derivative records
 
-[Baseline and candidate requirements](measurements/derivative-temporary-storage-2026-11-02/README.md)
-retain counts, current C, logs and artifact identities. Both native jobs in
-`41497441785` pass at `bb2e5b29`: AMD64 `125455981525`, ARM64 `125455982054`.
-Full logs/digests pass (0.14s); independent archive replay covers all 96 observations
-(4.10s), which agree across architectures (0.13s). Full archives remain at
-`/private/tmp/fwp-current-derivative-{arm64,amd64}.zip`.
+[Report, frozen requirements and evidence](measurements/derivative-temporary-storage-2026-11-02/README.md)
+contain the full baseline and first candidate counts. The change keeps a sole-use
+mapped numeric-record collection in one owned word buffer. All map calls still
+finish before folding; seed evaluation stays at its original point. Numeric
+bits have no child owners. Existing typed cleanup releases the buffer on failure.
 
-The largest solve still creates 25,472 pair-result records and 199 final fold
-records. Replace the temporary mapped list only after proving its sole consumer;
-keep all mapping before summation and preserve seed evaluation and caller cleanup.
-The existing observer includes scratch allocations through `fwp_mem_alloc`.
-Preparation `15aa4c0a` and immutable tag
-`roadmap/derivative-temporary-storage-protocol-2026-11-02` are published.
-The initial compiler change at `229ea441` passes focused native jobs
-`125483983930` (ARM64) and `125483984472` (AMD64), run `41505591902`.
-Both compile/lint the compiler and affected tests, pass the fold/order/unwind
-regressions, and meet all 96 frozen allocation observations. Full archives and
-job logs are `/private/tmp/fwp-packed-record-{arm64,amd64}.{zip,log}`; identities
-are in `/private/tmp/fwp-packed-record-artifacts.json`. Independent archive audit passes (4.11s); digests/source identities pass (0.26s).
-Both full logs have ten passing Rust tests, no diagnostics (0.14s).
-It lowers a sole-use mapped collection to an internal word array before ownership
-insertion; mapping and folding remain separate calls with seed evaluation between
-them. Existing typed ownership handles the buffer through failure paths. New
-order tests cover map/seed/fold effects, empty/unequal inputs and aliases. First dedicated cleanup controls at `0c5b9827` pass run `41507658382`:
-ARM64 `125490975035`, AMD64 `125490974569`, both GCC and Clang O1/O2. Complete
-logs `/private/tmp/fwp-packed-controls-{arm64,amd64}.log` each contain 22 passing
-Rust tests and no diagnostics (guarded audit 0.14s). Identities are in
-`/private/tmp/fwp-packed-controls-artifacts.json`.
+| Checkpoint | Source / run | Result |
+|---|---|---|
+| Baseline | `bb2e5b29` / `41497441785` | Both native GCC hosts; all 96 observations audited |
+| Frozen protocol | `15aa4c0a` | Published before compiler edits |
+| Initial compiler/counts | `229ea441` / `41505591902` | All 96 limits pass; full archives and logs audited |
+| Initial cleanup controls | `0c5b9827` / `41507658382` | GCC and Clang O1/O2 on both hosts; 22 passes per host |
+| Expanded callback controls | `76069cfa` / `41509110166` | Harness output-stream failure; all targets audited |
+| Combined repair | `a4f3200c` / `41511493637` | Pass; both native jobs, 40 tests each, all counts and actual probes audited |
 
-Expanded controls now inject failures inside real callback frames while scalar
-or boxed numeric input owners are protected. Ordinary task yields are suppressed
-only in the synchronous injected C fixture; cancellation invokes the actual
-runtime cancellation check and cleanup chain. The missing-buffer-release control
-must still fail. Nine selection exclusions cover aliases, escape, right fold,
-dynamic/captured callbacks, managed/nested/wide fields. These additions and
-nearby autodiff regressions need the next focused run; do not repeat unchanged
-allocation measurements.
+Immutable tags retain protocol `roadmap/derivative-temporary-storage-protocol-2026-11-02`
+and first counts `roadmap/derivative-temporary-storage-counts-2026-11-02`.
+Largest current-only O2 solve: 208,086 → 156,943 managed allocations;
+21,888 → 17,824 peak managed bytes. Retains and raw tape/workspace observations
+are unchanged; final storage is zero. These are memory/count results, not speed.
 
-The same-source timing reference and audit tools are implemented. Three reference
-mutation tests pass (0.13s), twelve timing/memory policy tests pass (0.13s), eleven
-archive controls including historical reports pass (50.92s), and three retention
-controls pass (0.13s). Workflow lint passes (6.46s); formatting passes (1.82s).
-No timing session has run yet. Timing runs require explicit `native_runner=all`
-and `comparison_session=both`; preserve every completed/rejected observation.
-The full final matrix is still pending.
+Expanded tests cover scalar and boxed callback input owners, map/between-stage/
+fold traps, cancellation, buffer/final allocation failure, input aliases and
+intentional missing buffer destruction. Nine exclusions cover shared/escaping
+lists, right fold, dynamic/captured callbacks and managed/nested/wide fields.
+The related autodiff, worker-preparation and zip-unwind targets also run.
 
-The callback-box auditor now requires an explicit accumulator layout. Current
-counts pass (0.27s). The old #239 report reproduces exactly; both wrong layouts
-and an omitted pair-result count are rejected (0.38s). All 214 document link sets, 106 immutable pairs/tags and five plan steps pass
-(3.02s). Preparation was published before compiler edits. Source-review notes and the
-one-off current summary helper remain `/private/tmp/fwp-derivative-storage-notes.md`
-and `/private/tmp/fwp-current-derivative-summary.py`.
+Both failed jobs showed only the boxed fixture's null `fwp_prog_out`: its first
+print crashed because the standalone driver bypassed executable startup. Each
+host had 38 passing tests and two instances of that failure. Repair explicitly
+initializes stdout. The exact failed C with that one-line fix passes guarded
+local Clang O1 compilation (0.62s) and execution (0.73s); this is not GCC coverage.
+The same checkpoint moves use counting after cheap mapper eligibility checks,
+avoiding whole-body scans for unrelated `let` bindings. Source-level ordering and
+representation remain unchanged. Failed logs and artifact identities are retained
+in [verification](measurements/derivative-temporary-storage-2026-11-02/verification.md); full probes are `/private/tmp/fwp-packed-expanded-arm64.zip`.
 
-The ARM64 macOS ownership job `125455860392` was cancelled without a runner
-or executed step. GitHub reports hosted-runner capacity exhaustion; annotations
-are saved in `/private/tmp/fwp-247-macos-arm-ownership-cancellation.json`. A targeted
-retry was refused with HTTP 403 because the parent workflow is still running.
-Retry only that job when the run completes; do not restart successful jobs or
-count this cancelled job as a native pass. Benchmark full-log audit: two passing
-Rust summaries, no diagnostics (0.14s).
+The same-source reference disables only packed-record lowering, retaining old
+record-fold optimizations. Tests pass: reference mutations (three), timing/memory
+limits (twelve), archive/historical evidence (eleven), artifact retention (three).
+The longest guarded audit took 50.92s; formatting, workflow lint and roadmap links
+also pass. Timing is now running. Preserve every completed/rejected session;
+do not rerun unchanged noisy measurements to obtain a pass.
+
+Focused validation is complete: independent archive replay (4.10s), actual-probe
+and binary audits (0.13/0.14s), complete job logs and source/count equivalence
+(0.26s) pass. All 48 case C sources plus four control sources are unchanged from
+the first implementation. Every count matches the exact saving of `2*n+1`
+requests / `48*n+16` bytes per update for `n=coordinates-1`.
+
+Original timing jobs: ARM64 session 1 `125513671132`, ARM64 session 2
+`125513671731`, AMD64 session 2 `125513671211`; rejected AMD64 session 1
+`125513671580`. Its CPU was EPYC 9V74 rather than frozen EPYC 7763. Full log,
+job record and artifact `13174047975` are retained at
+`/private/tmp/fwp-packed-timing-amd1-rejection*`; guard verifies CPU-only rejection
+before building or measuring (0.13s). The second CPU-only rejection is job
+`125515446874`, artifact `13173453867`, retained at
+`/private/tmp/fwp-packed-timing-amd1-rejection2*`. Both attempts stopped before
+compilation or timing; completed measurements are not repeated.
+
+Remaining: two qualified timing sessions per architecture, full archive
+audit/report, then one substantial PR and the complete final matrix.
+Do not mark D2 complete merely because allocations fall.
 
 ## Resources and merge rules
 
-No local build, full suite or benchmark. Use the guard serially and preserve
-64 GiB free. Completed #243/#244/#245 checkouts were removed after tree verification;
-#245's uncommitted handoff/patch are saved in
-`/private/tmp/fwp-245-worktree-handoff-preserved`. Commits and evidence remain.
+No local Rust build, full suite or benchmark. One focused saved-C probe was
+compiled and run under the guard. Keep all other focused checks serial, preserve
+64 GiB free and do not raise resource limits. Last observed free space: 66 GiB.
 
-Merge only after final-head gates and audits pass, with one subject of at most
-80 characters and an empty body, no trailers/attribution. Verify tree and raw
-message, cancel only verified duplicate same-tree main checks, and continue PLAN.md.
+Merge only after all exact-head gates and audits pass: squash with an explicit
+single-line subject, at most 80 characters, empty body and no attribution/trailers.
+Verify merged tree and raw message. Cancel only proven duplicate same-tree main
+checks. Rebase the next batch while preserving source tags, then continue PLAN.md.
 
-Initial implementation checks: guarded formatting passes (1.94s), focused workflow
-lint passes (5.74s), and the new count-limit mutation test passes (0.25s).
-No local Rust build or native compilation. The focused runner suite adds compiler
-lint, existing fold/unwind regressions plus the new order test, and all 96
-count observations against the frozen current baseline.
-
-New controls checkpoint: guarded formatting passes (1.91s), workflow lint passes
-(6.06s). No local compiler build or native test run.
-
-
-Expanded run `41509110166`, source `76069cfa`: ARM64 `125496023606` fails only
-the new boxed-input probe under GCC and Clang O1. All seven GCC target logs and
-two Clang target logs are audited: exclusion/order tests and related derivative,
-worker-preparation and zip-unwind tests pass. Artifact `13172383078` is hash-checked
-at `/private/tmp/fwp-packed-expanded-arm64.zip`; complete log is
-`/private/tmp/fwp-packed-expanded-arm64.log`. AMD64 `125496023717` has the identical failure under both compilers. Both full
-logs are audited: nine target summaries each, 38 passes and only those two
-probe failures, with no compiler warnings/errors (0.14s). Earlier commentary swapped these two expanded job host labels; these
-identities are authoritative.
-
-The boxed callback's first `echo` reached `fwrite` with null `fwp_prog_out` in the
-standalone fixture, which bypasses normal executable initialization. Fix the
-fixture's explicit stream setup, retaining actual printing and ownership checks.
-A guarded Clang O1 compile of the exact failing generated C with that one-line
-repair passes (0.62s); execution passes (0.73s). This verifies the harness cause
-on local macOS ARM64, not Linux GCC coverage. Also move sole-use counting after
-cheap mapper checks, avoiding body scans for every unrelated `let`. No generated
-representation/evaluation change is intended; verify counts on runners.
-
-PR #247 Windows ARM64 `125455860399` passes; its complete log is
-`/private/tmp/fwp-247-final-windows-arm.log` (206 Rust summaries, 853 passes,
-12 ignored; guarded audit 0.14s). The only diagnostics are echoed warning flags
-and 16 intentional scheduler panic controls, checked against `src/sched.rs`.
-macOS Intel's 85-program corpus and Windows ARM64's 12 reuse tests also pass;
-artifact identities and all outcomes are checked (0.14s). The remaining five
-running production jobs and cancelled ARM64 macOS ownership retry still gate merge.
-
-Combined repair formatting passes (1.95s), workflow lint passes (5.64s).
+Documentation is split into results, baseline, frozen protocol and verification;
+all 217 link sets, 106 immutable pairs and five plan steps pass (3.04s).
