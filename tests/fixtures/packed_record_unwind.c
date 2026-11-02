@@ -10,7 +10,7 @@ int main(void) {
             for (int i = 3; i > 0; i--) xs = fwp_rc_fresh(fwp_cons((V)i, xs));
             if (aliases & 1) fwp_rc_dup(seed);
             if (aliases & 2) fwp_rc_dup(xs);
-            packed_mode = mode; packed_map_visits = packed_fold_visits = packed_fail_allocation = 0;
+            packed_mode = mode; packed_stage = 0; packed_map_visits = packed_fold_visits = packed_fail_allocation = 0;
             jmp_buf jump;
             fwp_trap_recover = packed_recover;
             fwp_trap_jb = &jump; fwp_trap_cleanup = 0;

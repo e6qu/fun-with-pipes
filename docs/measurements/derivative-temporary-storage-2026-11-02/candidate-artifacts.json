@@ -1,0 +1,85 @@
+{
+  "total_count": 4,
+  "artifacts": [
+    {
+      "id": 13171740130,
+      "node_id": "MDg6QXJ0aWZhY3QxMzE3MTc0MDEzMA==",
+      "name": "derivative-forward-evidence-aarch64",
+      "size_in_bytes": 25710998,
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13171740130",
+      "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13171740130/zip",
+      "expired": false,
+      "digest": "sha256:945a09d091fc67225810eb2aa74b9fb7817d208f4ab894dc5704acc834018250",
+      "created_at": "2026-11-02T19:04:02Z",
+      "updated_at": "2026-11-02T19:04:02Z",
+      "expires_at": "2027-01-31T18:58:38Z",
+      "workflow_run": {
+        "id": 41505591902,
+        "repository_id": 1400763332,
+        "head_repository_id": 1400763332,
+        "head_branch": "derivative-temporary-storage",
+        "head_sha": "229ea441bec8fe9c568b423e22a5e6336c52b34b"
+      }
+    },
+    {
+      "id": 13171630310,
+      "node_id": "MDg6QXJ0aWZhY3QxMzE3MTYzMDMxMA==",
+      "name": "record-fold-checks-aarch64",
+      "size_in_bytes": 8861368,
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13171630310",
+      "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13171630310/zip",
+      "expired": false,
+      "digest": "sha256:6161c59808f74c5edcb6240c1044884b5f016bb4c650c6f9dc563ca2e342b046",
+      "created_at": "2026-11-02T19:04:05Z",
+      "updated_at": "2026-11-02T19:04:05Z",
+      "expires_at": "2027-01-31T18:58:38Z",
+      "workflow_run": {
+        "id": 41505591902,
+        "repository_id": 1400763332,
+        "head_repository_id": 1400763332,
+        "head_branch": "derivative-temporary-storage",
+        "head_sha": "229ea441bec8fe9c568b423e22a5e6336c52b34b"
+      }
+    },
+    {
+      "id": 13170958020,
+      "node_id": "MDg6QXJ0aWZhY3QxMzE3MDk1ODAyMA==",
+      "name": "derivative-forward-evidence-x86_64",
+      "size_in_bytes": 25632126,
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13170958020",
+      "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13170958020/zip",
+      "expired": false,
+      "digest": "sha256:9a727389cded689abbf3e10c02fb2ab7558d020829067ef2e1102128a1a4c181",
+      "created_at": "2026-11-02T19:04:14Z",
+      "updated_at": "2026-11-02T19:04:14Z",
+      "expires_at": "2027-01-31T18:58:38Z",
+      "workflow_run": {
+        "id": 41505591902,
+        "repository_id": 1400763332,
+        "head_repository_id": 1400763332,
+        "head_branch": "derivative-temporary-storage",
+        "head_sha": "229ea441bec8fe9c568b423e22a5e6336c52b34b"
+      }
+    },
+    {
+      "id": 13170354488,
+      "node_id": "MDg6QXJ0aWZhY3QxMzE3MDM1NDQ4OA==",
+      "name": "record-fold-checks-x86_64",
+      "size_in_bytes": 8839142,
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13170354488",
+      "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13170354488/zip",
+      "expired": false,
+      "digest": "sha256:d0e3e65893e61100dbb31cbe477d5aef6920345f7e4b0d7f4bfd10277d79d76b",
+      "created_at": "2026-11-02T19:04:18Z",
+      "updated_at": "2026-11-02T19:04:18Z",
+      "expires_at": "2027-01-31T18:58:38Z",
+      "workflow_run": {
+        "id": 41505591902,
+        "repository_id": 1400763332,
+        "head_repository_id": 1400763332,
+        "head_branch": "derivative-temporary-storage",
+        "head_sha": "229ea441bec8fe9c568b423e22a5e6336c52b34b"
+      }
+    }
+  ]
+}

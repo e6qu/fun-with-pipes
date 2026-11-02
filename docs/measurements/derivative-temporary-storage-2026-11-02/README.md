@@ -154,3 +154,48 @@ Then run `scripts/summarize-derivative-callback-boxes.py` with that `--summary`,
 both archive paths, `--output` and `--accumulator direct-fields`. Both audits read
 saved evidence without executing saved images. The older #239 audit uses explicit
 `--accumulator boxed-each-step`; choosing the wrong layout must fail.
+
+
+## First implementation: allocation results
+
+Source `229ea441bec8fe9c568b423e22a5e6336c52b34b`, retained by tag
+`roadmap/derivative-temporary-storage-counts-2026-11-02`, passes run
+[41505591902](https://github.com/e6qu/fun-with-pipes/actions/runs/41505591902).
+The [complete count audit](candidate-counts.json.gz), [artifact identities](candidate-artifacts.json)
+and compressed job logs retain the evidence. Both GCC architectures pass all
+96 observations against the frozen baseline. This is not a timing result or
+final platform acceptance.
+
+Whole-solve results below use current-only derivatives, GCC O2, workspace off.
+Both architectures agree. Requested bytes count cumulative managed allocation
+traffic; peak bytes count the maximum simultaneous managed charge. Neither is RSS
+or the separately measured derivative-tape storage.
+
+| Coordinates / updates | Requests before → after | Requested bytes before → after | Peak bytes before → after |
+|---|---|---|---|
+| 3 / 0 | 4 → 4 | 98 → 98 | 128 → 128 |
+| 3 / 1 | 42 → 37 | 1,088 → 976 | 448 → 416 |
+| 3 / 199 | 7,368 → 6,373 | 183,249 → 160,961 | 480 → 448 |
+| 129 / 199 | 208,086 → 156,943 | 6,607,982 → 5,382,142 | 21,888 → 17,824 |
+
+The candidate replaces result records and list cells with a word buffer and
+removes the two old input scratch arrays. It still traverses input lengths before
+mapping and prepares callback input owners normally. Effective retain counts,
+derivative operations and raw tape/workspace counts remain unchanged. Every
+final managed/raw count is zero. All largest-frame growth limits pass.
+For the largest O2 case, instruction bytes change from 46,876 to 46,908 on ARM64
+and from 49,602 to 50,226 on AMD64; code size is reported, not used as a speed claim.
+
+Independent archive replay passes in 4.11s under the local guard; complete native
+logs contain ten passing Rust tests per architecture and no diagnostics. The
+first added cleanup controls at `0c5b9827` also pass GCC and Clang on both native
+architectures in run `41507658382`. Further callback-owner and selection-exclusion
+controls are being added before the paired timings and final production matrix.
+
+The timing reference is prepared by `scripts/prepare-packed-records-reference.py`.
+Its exact patch replaces only the call to packed-record lowering with a clone of
+the preceding representation. The disabled branch remains type-checked; there is
+no runtime setting. Existing record-fold optimizations stay enabled in both
+compilers. The runner saves and verifies the patch, source hashes and compiler
+identity, and the archive audit reconstructs the patch without executing saved
+code. Use explicit `packed-records-time` and `packed-records-report` suites.

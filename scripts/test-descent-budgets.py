@@ -130,6 +130,50 @@ class DescentBudgets(unittest.TestCase):
                     self.assertEqual(old['fwp-packed']['managed']['retains'], 0)
                     self.assertEqual(failures, [])
 
+    def test_packed_records_keep_frozen_timing_and_storage_limits(self):
+        rows = {str(updates): self.recording_case(updates) for updates in [0, 1, 199, 1999]}
+        for row in rows.values():
+            updates = row['updates']
+            row['medianNs']['fwp-ad-identical'] = 100 if updates < 199 else 95
+            for label in ['fwp-ad', 'fwp-ad-history']:
+                row['medianNs'][label] = 100 if updates < 199 else 95
+                old = row['fwpProfiles'][label + '-reference']['managed']
+                current = row['fwpProfiles'][label]['managed']
+                old.update(requests=100000, requestedBytes=4000000, retains=100000)
+                current.update(requests=100000-3*updates, requestedBytes=4000000-56*updates,
+                               retains=100000)
+                # Code size is reported; this protocol freezes no text-size cap.
+                row['binaries'][label]['instructionBytes'] += 4096
+        self.assertEqual(DESCENT.paired_budget_failures(rows, 'packed-records'), [])
+        for name, limit in [('0', 102), ('1', 102), ('199', 95), ('1999', 95)]:
+            changed = copy.deepcopy(rows)
+            changed[name]['medianNs']['fwp-ad-history'] = limit + 0.01
+            self.assertEqual([f['metric'] for f in DESCENT.paired_budget_failures(
+                changed, 'packed-records')], ['candidate/reference time'])
+        for name in rows:
+            for field in ('requests', 'requestedBytes', 'retains', 'peakChargedBytes', 'finalChargedBytes'):
+                changed = copy.deepcopy(rows)
+                changed[name]['fwpProfiles']['fwp-ad']['managed'][field] += 1
+                self.assertTrue(DESCENT.paired_budget_failures(changed, 'packed-records'))
+        for field in ('requests', 'requestedBytes', 'retains', 'peakChargedBytes'):
+            changed = copy.deepcopy(rows)
+            changed['0']['fwpProfiles']['fwp-ad']['managed'][field] -= 1
+            self.assertEqual([f['metric'] for f in DESCENT.paired_budget_failures(
+                changed, 'packed-records')], ['zero-update counts'])
+        changed = copy.deepcopy(rows)
+        changed['1']['medianNs']['fwp-ad-identical'] = 97
+        self.assertEqual([f['metric'] for f in DESCENT.paired_budget_failures(
+            changed, 'packed-records')], ['identical median variation'])
+        changed = copy.deepcopy(rows)
+        changed['1']['cCompilerStackUsage']['fwp-ad.su']['entries'][0]['bytes'] += 129
+        self.assertEqual([f['metric'] for f in DESCENT.paired_budget_failures(
+            changed, 'packed-records')], ['largest static stack frame'])
+        for field, value in [('rawDerivativeStorage', {'finalBytes': 1}), ('expandedRawSha256', 'changed')]:
+            changed = copy.deepcopy(rows)
+            changed['1']['fwpProfiles']['fwp-ad'][field] = value
+            self.assertEqual([f['metric'] for f in DESCENT.paired_budget_failures(
+                changed, 'packed-records')], [field])
+
     def test_record_fold_limits_separate_short_and_long_solve_timing(self):
         rows = {str(updates): self.recording_case(updates) for updates in [0, 1, 199, 1999]}
         for row in rows.values():

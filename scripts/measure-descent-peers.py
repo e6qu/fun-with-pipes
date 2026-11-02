@@ -96,7 +96,7 @@ def ownership_budget_failures(profiles, baseline):
 
 def paired_budget_failures(results, comparison):
     """Apply the selected pre-candidate limits and report every violation."""
-    assert comparison in {'scalar-recording', 'eager-captures', 'array-lists', 'record-zip', 'record-fold'}
+    assert comparison in {'scalar-recording', 'eager-captures', 'array-lists', 'record-zip', 'record-fold', 'packed-records'}
     failures = []
 
     def require(case, program, metric, actual, limit):
@@ -111,7 +111,7 @@ def paired_budget_failures(results, comparison):
         for label in ['fwp-ad', 'fwp-ad-history']:
             reference = label + '-reference'
             current, old = (row['fwpProfiles'][name] for name in [label, reference])
-            if comparison == 'record-fold':
+            if comparison in ('record-fold', 'packed-records'):
                 time_limit = 0.95 if row['updates'] >= 199 else 1.02
             else:
                 time_limit = 1.02 if comparison == 'array-lists' else 0.95 if row['updates'] else 1.02
@@ -121,12 +121,16 @@ def paired_budget_failures(results, comparison):
             if comparison == 'array-lists':
                 cells = row['dimensions'] * row['updates'] * row['solvesPerProcess']
                 savings = [('requests', cells), ('requestedBytes', 24 * cells)]
-            if comparison in ('record-zip', 'record-fold'):
+            if comparison in ('record-zip', 'record-fold', 'packed-records'):
                 pairs = (row['dimensions'] - 1) * row['updates'] * row['solvesPerProcess']
                 removed = (2 * pairs if comparison == 'record-zip' else
                            max(row['dimensions'] - 2, 0) * row['updates'] * row['solvesPerProcess'])
                 retains = 3 * pairs if comparison == 'record-zip' else pairs
                 savings = [('requests', removed), ('requestedBytes', 24 * removed), ('retains', retains)]
+                if comparison == 'packed-records':
+                    buffers = row['updates'] * row['solvesPerProcess']
+                    savings = [('requests', 2 * pairs - buffers),
+                               ('requestedBytes', 32 * pairs - 8 * buffers), ('retains', 0)]
                 if not row['updates'] and current['managed'] != old['managed']:
                     failures.append(dict(case=case, program=label, metric='zero-update counts',
                                          actual=current['managed'], expected=old['managed']))
@@ -140,8 +144,9 @@ def paired_budget_failures(results, comparison):
                     failures.append(dict(case=case, program=label, metric=key,
                                          actual=current[key], expected=old[key]))
             images = row['binaries']
-            require(case, label, 'instruction bytes', images[label]['instructionBytes'],
-                    images[reference]['instructionBytes'] + 1024)
+            if comparison != 'packed-records':
+                require(case, label, 'instruction bytes', images[label]['instructionBytes'],
+                        images[reference]['instructionBytes'] + 1024)
             stacks = row['cCompilerStackUsage']
             def frame(name):
                 return max(entry['bytes'] for entry in stacks[name + '.su']['entries'])
@@ -152,7 +157,7 @@ def paired_budget_failures(results, comparison):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--compiler', required=True, type=Path)
-    parser.add_argument('--comparison', required=True, choices=['current', 'eager-captures', 'array-lists', 'record-zip', 'record-fold'])
+    parser.add_argument('--comparison', required=True, choices=['current', 'eager-captures', 'array-lists', 'record-zip', 'record-fold', 'packed-records'])
     parser.add_argument('--reference-compiler', type=Path)
     parser.add_argument('--reference-manifest', type=Path)
     parser.add_argument('--cc', required=True)
@@ -184,9 +189,11 @@ def main():
         if args.comparison == 'eager-captures':
             assert reference_manifest['candidateOptimizerSha256'] == digest((ROOT / 'src/opt.rs').read_bytes())
             assert reference_manifest['disabledTransformation'] == 'once-used eager capture bindings'
-        elif args.comparison == 'record-fold':
+        elif args.comparison in ('record-fold', 'packed-records'):
             assert reference_manifest['candidateCodegenSha256'] == digest((ROOT / 'src/cgen.rs').read_bytes())
-            assert reference_manifest['disabledTransformation'] == 'direct numeric-record left folds'
+            expected = ('packed temporary numeric-record storage' if args.comparison == 'packed-records'
+                        else 'direct numeric-record left folds')
+            assert reference_manifest['disabledTransformation'] == expected
         else:
             assert args.comparison == 'record-zip'
             assert reference_manifest['candidateFusionSha256'] == digest((ROOT / 'src/fuse.rs').read_bytes())
@@ -469,7 +476,7 @@ def main():
     paths = ['scripts/descent-baselines.py', 'scripts/measure-descent-peers.py', 'scripts/measure-ad-application.py',
              'scripts/ad-storage-profile.py', 'scripts/measure-iteration.py', 'scripts/descent-phases.py',
              'tests/fixtures/descent_phases.c',
-             'scripts/prepare-capture-reference.py', 'scripts/prepare-record-zip-reference.py', 'scripts/prepare-record-fold-reference.py', 'src/opt.rs', 'src/fuse.rs',
+             'scripts/prepare-capture-reference.py', 'scripts/prepare-record-zip-reference.py', 'scripts/prepare-record-fold-reference.py', 'scripts/prepare-packed-records-reference.py', 'src/cgen/packed_records.rs', 'src/opt.rs', 'src/fuse.rs',
              'tests/fixtures/ad_raw_storage_probe.c', 'tests/fixtures/descent_explicit.fwp',
              'tests/fixtures/descent_explicit.c', 'tests/fixtures/descent_explicit.rs',
              'tests/fixtures/descent_packed.fwp', 'src/ownership.rs', 'src/escape.rs', 'src/cgen.rs', 'src/rc.rs', 'tests/boxed_projection_ownership.rs',
@@ -488,6 +495,7 @@ def main():
             'current': 'Six current-source implementations and one byte-identical AD-current control. ',
             'eager-captures': 'Current-source eager-capture comparison: reference compiler restores only constant-only capture hoisting; both compilers retain scalar recording stack storage. ',
             'array-lists': 'One current compiler with FWP_ARRAY_FUSION explicitly 1 versus 0. This toggles all numeric array fusion, including result formatting, so whole-solve differences are not attributed solely to gradient-list removal. Independent direct-boundary counts establish that removal. ',
+            'packed-records': 'Same-source compilers differ only in packed temporary numeric-record storage. Both keep all existing map/fold optimizations and preserve complete mapping before folding. ',
             'record-fold': 'Same-source compilers differ only in direct numeric-record left-fold selection. Both retain numeric record zip/map fusion and all other current optimizations. ',
             'record-zip': 'Same-source compilers differ only in flat numeric record zip/map selection. Both retain the existing scalar numeric zip/map fusion and all other current optimizations. ',
         }[args.comparison] +
