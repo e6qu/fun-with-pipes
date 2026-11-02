@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [current-kernel-report, current-kernels, record-fold-count-report, record-fold-time, record-fold-report, record-fold-checks, record-fold-measurements, record-zip-codegen, record-zip-report, record-zip-time, record-zip-checks, derivative-forward-costs, typed-derivative-owners, array-list-report, swift-allocation-report, swift-allocations, array-list-measurements, lexical-bindings, lexical-probes, callable-phase-paired, callable-phase-context, callable-construction-diagnosis, callable-phases, callable-phase-report, swift-peer-report, swift-peers, returned-callables, state-range-checks, scalar-fold-checks, scan-comparison, buffer-baselines, buffer-peer-checks, timing-names, timing-resources, typed-loop-state, kernel-codegen, timing-diagnostics, kernel-baselines, eager-captures, eager-capture-time, runtime-startup, decimal-count, decimal-count-repeat, decimal-count-interleaved, decimal-count-balanced, cpu-phases, cpu-baselines, functional-calls, functional-probes, parser-measurements, parser-workspace, inline-key-time, inline-key-audit, arc-cost-audit, scalar-projections, unique-arrays, unique-array-checks, arc-costs, ownership-analysis, compiler-lifetimes, array-sort, list-copy-costs, list-copy, benchmark-comparison, socket-inheritance, http-mappings, http-idle-checks, array-text, float-text, float-text-checks, float-text-costs, descent-output, coordinate-work, descent-batches, descent-call-costs, descent-peers, descent-checks, ad-depth, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, wordfreq-current, direct-strings, string-reuse, ad-application, wordfreq-baseline, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, memory-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, fixed-function-checks, server-checks, http-application, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
+        options: [matrix-tables, matrix-columns-report, matrix-columns, matrix-checks, current-kernel-report, current-kernels, record-fold-count-report, record-fold-time, record-fold-report, record-fold-checks, record-fold-measurements, record-zip-codegen, record-zip-report, record-zip-time, record-zip-checks, derivative-forward-costs, typed-derivative-owners, array-list-report, swift-allocation-report, swift-allocations, array-list-measurements, lexical-bindings, lexical-probes, callable-phase-paired, callable-phase-context, callable-construction-diagnosis, callable-phases, callable-phase-report, swift-peer-report, swift-peers, returned-callables, state-range-checks, scalar-fold-checks, scan-comparison, buffer-baselines, buffer-peer-checks, timing-names, timing-resources, typed-loop-state, kernel-codegen, timing-diagnostics, kernel-baselines, eager-captures, eager-capture-time, runtime-startup, decimal-count, decimal-count-repeat, decimal-count-interleaved, decimal-count-balanced, cpu-phases, cpu-baselines, functional-calls, functional-probes, parser-measurements, parser-workspace, inline-key-time, inline-key-audit, arc-cost-audit, scalar-projections, unique-arrays, unique-array-checks, arc-costs, ownership-analysis, compiler-lifetimes, array-sort, list-copy-costs, list-copy, benchmark-comparison, socket-inheritance, http-mappings, http-idle-checks, array-text, float-text, float-text-checks, float-text-costs, descent-output, coordinate-work, descent-batches, descent-call-costs, descent-peers, descent-checks, ad-depth, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, wordfreq-current, direct-strings, string-reuse, ad-application, wordfreq-baseline, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, memory-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, fixed-function-checks, server-checks, http-application, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -16,6 +16,10 @@ on:
         description: Required for derivative/kernel timing suites; both sessions or one replacement
         type: choice
         options: [both, '1', '2']
+      matrix_variant:
+        description: Required for kernel-codegen; original or a declared matrix candidate
+        type: choice
+        options: [original, restricted, paired-columns]
       server_entry_part:
         description: Server-entry jobs; queued isolates queue regressions, checks includes API, all adds measurements
         type: choice
@@ -37,6 +41,60 @@ on:
         description: Exact focused API run supplying native diagnostic executables
         type: string
 jobs:
+  matrix_checks:
+    if: inputs.suite == 'matrix-checks'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            cc: gcc
+          - runner: ubuntu-24.04-arm
+            cc: gcc
+          - runner: macos-15
+            cc: clang
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    env:
+      CC: ${{ matrix.cc }}
+      CARGO_BUILD_JOBS: 2
+      CARGO_PROFILE_DEV_OPT_LEVEL: '1'
+      CARGO_PROFILE_DEV_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_DEV_OVERFLOW_CHECKS: 'true'
+      CARGO_PROFILE_TEST_OPT_LEVEL: '1'
+      CARGO_PROFILE_TEST_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_TEST_OVERFLOW_CHECKS: 'true'
+      FWP_ARRAY_FUSION_ARTIFACTS: matrix-checks/probes
+      FWP_LTO: '0'
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: macOS OpenSSL
+        if: runner.os == 'macOS'
+        run: echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cargo/registry
+          key: cargo-registry-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Cargo.lock') }}
+      - name: Fetch locked dependencies
+        run: cargo fetch --locked
+      - name: Check formatting and matrix target
+        run: |
+          cargo fmt --all -- --check
+          CARGO_NET_OFFLINE=true cargo clippy --locked --lib --bin fwp --test blocked_matrix -- -D warnings
+      - name: Check arithmetic, overlapping views, storage and unwinding
+        run: |
+          CARGO_NET_OFFLINE=true cargo build --locked --bin fwp
+          CARGO_NET_OFFLINE=true python3 scripts/run-native-tests.py --targets blocked_matrix --idle-timeout 600 --logs matrix-checks/targets
+      - name: Retain complete matrix checks and partial failures
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: matrix-checks-${{ matrix.runner }}
+          path: matrix-checks/
+          if-no-files-found: warn
   record_fold_checks:
     if: inputs.suite == 'record-fold-checks'
     strategy:
@@ -1262,26 +1320,32 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v7
-      - name: Require the declared input run and session
+      - name: Require the declared current-source session
         env:
-          EVIDENCE_RUN: ${{ inputs.evidence_run }}
           SESSION: ${{ inputs.comparison_session }}
+          SOURCE: ${{ inputs.source_revision }}
+          MATRIX_VARIANT: ${{ inputs.matrix_variant }}
         run: |
-          test "$EVIDENCE_RUN" = 40951090783
           test "$SESSION" = 2
-      - name: Retrieve retained kernel sources and binaries
+          test "$SOURCE" = b9da15a1a323ae3f5d3ff247e0b6b4c59ab73528
+          test "$MATRIX_VARIANT" = original || test "$MATRIX_VARIANT" = restricted || test "$MATRIX_VARIANT" = paired-columns
+      - name: Check archive identity controls
+        run: python3 scripts/test-kernel-codegen-input.py
+      - name: Retrieve the exact current-kernel archive
         env:
           GH_TOKEN: ${{ github.token }}
-          EVIDENCE_RUN: ${{ inputs.evidence_run }}
-          SESSION: ${{ inputs.comparison_session }}
-          NATIVE_RUNNER: ${{ matrix.runner }}
-        run: gh run download "$EVIDENCE_RUN" --repo "$GITHUB_REPOSITORY" --name "kernel-baselines-$NATIVE_RUNNER-$SESSION" --dir kernel-input
-      - name: Collect GCC reports without changing the measured binaries
+          ARTIFACT: ${{ matrix.runner == 'ubuntu-latest' && '13123941925' || '13123885145' }}
+        run: gh api --allow-escape-sequences "repos/$GITHUB_REPOSITORY/actions/artifacts/$ARTIFACT/zip" > "$RUNNER_TEMP/kernel-input.zip"
+      - name: Collect GCC reports for the declared candidate and exact controls
         env:
           C_ARCH: ${{ matrix.runner == 'ubuntu-latest' && 'x86-64' || 'armv8-a' }}
+          SOURCE: ${{ inputs.source_revision }}
+          MATRIX_VARIANT: ${{ inputs.matrix_variant }}
+          SESSION: ${{ inputs.comparison_session }}
         run: >-
-          python3 scripts/report-kernel-codegen.py --evidence kernel-input
-          --source 37da74419046eb568d30cc8a96ab11208db7ca91 --cc gcc --c-arch "$C_ARCH"
+          python3 scripts/report-kernel-codegen.py --archive "$RUNNER_TEMP/kernel-input.zip"
+          --index docs/measurements/current-kernels-2026-11-02/index.json
+          --source "$SOURCE" --session "$SESSION" --matrix-variant "$MATRIX_VARIANT" --cc gcc --c-arch "$C_ARCH"
           --timeout 180 --output kernel-codegen
       - name: Retain complete or partial compiler reports
         if: ${{ always() && hashFiles('kernel-codegen/**') != '' }}
@@ -1290,10 +1354,31 @@ jobs:
           name: kernel-codegen-${{ matrix.runner }}
           path: kernel-codegen/
           if-no-files-found: error
+  matrix_tables:
+    if: inputs.suite == 'matrix-tables'
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Recompute tables from the already audited matrix reports
+        run: >-
+          python3 scripts/report-current-kernels.py
+          --directory docs/measurements/matrix-columns-2026-11-02
+          --comparison matrix-columns --mode write
+      - uses: actions/upload-artifact@v7
+        with:
+          name: matrix-tables
+          path: docs/measurements/matrix-columns-2026-11-02/README.md
+          if-no-files-found: error
   current_kernel_report:
-    if: inputs.suite == 'current-kernel-report'
+    if: contains(fromJSON('["current-kernel-report","matrix-columns-report"]'), inputs.suite)
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 20
+    env:
+      COMPARISON: ${{ inputs.suite == 'matrix-columns-report' && 'matrix-columns' || 'loop-state' }}
+      SELECTION: ${{ inputs.suite == 'matrix-columns-report' && 'docs/measurements/matrix-column-selection.json' || 'docs/measurements/current-kernel-selection.json' }}
     permissions:
       contents: read
       actions: read
@@ -1306,10 +1391,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: >-
           python3 scripts/retain-current-kernels.py --repository "$GITHUB_REPOSITORY"
-          --selection docs/measurements/current-kernel-selection.json --output current-kernel-audit
+          --comparison "$COMPARISON" --selection "$SELECTION" --output current-kernel-audit
       - name: Recompute retained reports and publish complete time and memory tables
         run: >-
-          python3 scripts/report-current-kernels.py --directory current-kernel-audit/summary --mode write
+          python3 scripts/report-current-kernels.py --directory current-kernel-audit/summary --comparison "$COMPARISON" --mode write
       - name: Preserve completed summaries and any audit errors
         if: ${{ always() && hashFiles('current-kernel-audit/**') != '' }}
         uses: actions/upload-artifact@v7
@@ -1320,7 +1405,7 @@ jobs:
             current-kernel-audit/*.json
           if-no-files-found: error
   current_kernels:
-    if: inputs.suite == 'current-kernels' && contains(fromJSON('["all","ubuntu-latest","ubuntu-24.04-arm"]'), inputs.native_runner) && contains(fromJSON('["both","1","2"]'), inputs.comparison_session)
+    if: contains(fromJSON('["current-kernels","matrix-columns"]'), inputs.suite) && contains(fromJSON('["all","ubuntu-latest","ubuntu-24.04-arm"]'), inputs.native_runner) && contains(fromJSON('["both","1","2"]'), inputs.comparison_session)
     strategy:
       fail-fast: false
       matrix:
@@ -1328,6 +1413,9 @@ jobs:
         runner: ${{ fromJSON(inputs.native_runner == 'all' && '["ubuntu-latest","ubuntu-24.04-arm"]' || format('["{0}"]', inputs.native_runner)) }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 90
+    permissions:
+      contents: read
+      actions: read
     env:
       CC: gcc
       CARGO_BUILD_JOBS: 2
@@ -1341,6 +1429,8 @@ jobs:
       FWP_LTO: '0'
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: 1.99.1
@@ -1372,32 +1462,85 @@ jobs:
       - name: Reference, scheduling and damaged-evidence controls
         run: |
           python3 scripts/test-loop-state-reference.py
+          python3 scripts/test-kernel-codegen-input.py
           python3 scripts/test-current-kernel-costs.py
           python3 scripts/test-current-kernel-evidence.py
-      - name: Build the current compiler and exact word-state reference
+      - name: Require matching native matrix safety checks
+        if: inputs.suite == 'matrix-columns'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CHECK_RUN: ${{ inputs.evidence_run }}
+          CHECK_SOURCE: ${{ inputs.source_revision }}
+        run: |
+          python3 - <<'PYCODE'
+          import json
+          import os
+          from pathlib import Path
+          import re
+          import subprocess
+          run = os.environ['CHECK_RUN']
+          source = os.environ['CHECK_SOURCE']
+          assert re.fullmatch('[0-9]+', run) and re.fullmatch('[0-9a-f]{40}', source)
+          api = 'repos/' + os.environ['GITHUB_REPOSITORY'] + '/actions/runs/' + run
+          metadata = json.loads(subprocess.check_output(['gh', 'api', api]))
+          pages = json.loads(subprocess.check_output(['gh', 'api', '--paginate', '--slurp', api + '/jobs?per_page=100']))
+          jobs = [job for page in pages for job in page['jobs'] if job['name'].startswith('matrix_checks (')]
+          assert metadata['head_sha'] == source and metadata['conclusion'] == 'success'
+          assert {job['name'] for job in jobs} == {'matrix_checks (ubuntu-latest, gcc)', 'matrix_checks (ubuntu-24.04-arm, gcc)', 'matrix_checks (macos-15, clang)'}
+          assert len(jobs) == 3 and all(job['head_sha'] == source and job['conclusion'] == 'success' for job in jobs)
+          trees = {}
+          for path in ('src', 'runtime', 'lib', 'Cargo.toml', 'Cargo.lock', 'build.rs',
+                       'tests/blocked_matrix.rs', 'tests/fixtures/matrix_allocation_probe.c',
+                       'tests/fixtures/matrix_unwind_probe.c', 'tests/fixtures/blocked_matrix.fwp'):
+              verified = subprocess.check_output(['git', 'rev-parse', source + ':' + path], text=True).strip()
+              current = subprocess.check_output(['git', 'rev-parse', os.environ['GITHUB_SHA'] + ':' + path], text=True).strip()
+              assert verified == current, path + ' differs from the verified checks'
+              trees[path] = current
+          Path('matrix-prerequisite.json').write_text(json.dumps(dict(run=metadata, jobs=jobs, trees=trees), indent=2) + '\n')
+          PYCODE
+      - name: Retain the verified matrix prerequisite
+        if: ${{ always() && hashFiles('matrix-prerequisite.json') != '' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: matrix-prerequisite-${{ matrix.runner }}-${{ matrix.session }}
+          path: matrix-prerequisite.json
+          if-no-files-found: error
+      - name: Build the current compiler
+        run: cargo build --locked --bin fwp
+      - name: Build the exact word-state reference
+        if: inputs.suite == 'current-kernels'
         shell: bash
         run: |
-          cargo build --locked --bin fwp
           git worktree add --detach "$RUNNER_TEMP/loop-state-reference" "$GITHUB_SHA"
           python3 scripts/prepare-loop-state-reference.py --checkout "$RUNNER_TEMP/loop-state-reference" --output loop-state-reference
           cargo build --locked --bin fwp --manifest-path "$RUNNER_TEMP/loop-state-reference/Cargo.toml" --target-dir "$RUNNER_TEMP/loop-state-reference-target"
           cp "$RUNNER_TEMP/loop-state-reference-target/debug/fwp" loop-state-reference/fwp
           python3 scripts/prepare-loop-state-reference.py --verify "$RUNNER_TEMP/loop-state-reference" --output loop-state-reference
       - name: Reference results, aliases, failure and cancellation
-        if: matrix.session == 1
+        if: inputs.suite == 'current-kernels' && matrix.session == 1
         shell: bash
         run: |
           cd "$RUNNER_TEMP/loop-state-reference"
           CARGO_TARGET_DIR="$RUNNER_TEMP/loop-state-reference-target" FWP_ARC_ARTIFACTS="$GITHUB_WORKSPACE/loop-state-reference/owners" python3 scripts/run-native-tests.py --targets numeric_array_fusion loop_unwind_ownership loop_preparation_ownership nested_loop_boxing --idle-timeout 600 --logs "$GITHUB_WORKSPACE/loop-state-reference/targets"
       - name: Measure both fwp variants and C/Rust with independent copy controls
-        id: measurements
+        if: inputs.suite == 'current-kernels'
         run: >-
-          python3 scripts/measure-current-kernels.py --compiler target/debug/fwp
+          python3 scripts/measure-current-kernels.py --compiler target/debug/fwp --comparison loop-state
           --reference-compiler loop-state-reference/fwp --reference-manifest loop-state-reference/manifest.json
           --cc gcc --rustc rustc --c-arch "${{ matrix.runner == 'ubuntu-latest' && 'x86-64' || 'armv8-a' }}"
           --rust-cpu "${{ matrix.runner == 'ubuntu-latest' && 'x86-64' || 'generic' }}"
           --objdump objdump --nm nm --time /usr/bin/time
           --case array-65537 --case array-262145 --case matrix-65-67-63 --case matrix-257-259-255
+          --samples 18 --warmups 2 --processes 4 --small-matrix-processes 256 --timeout 180
+          --session "${{ matrix.session }}" --qualification current-kernel-host.json --output current-kernels
+      - name: Measure paired and scalar matrix columns with C/Rust peers
+        if: inputs.suite == 'matrix-columns'
+        run: >-
+          python3 scripts/measure-current-kernels.py --compiler target/debug/fwp --comparison matrix-columns
+          --cc gcc --rustc rustc --c-arch "${{ matrix.runner == 'ubuntu-latest' && 'x86-64' || 'armv8-a' }}"
+          --rust-cpu "${{ matrix.runner == 'ubuntu-latest' && 'x86-64' || 'generic' }}"
+          --objdump objdump --nm nm --time /usr/bin/time
+          --case matrix-65-67-63 --case matrix-257-259-255
           --samples 18 --warmups 2 --processes 4 --small-matrix-processes 256 --timeout 180
           --session "${{ matrix.session }}" --qualification current-kernel-host.json --output current-kernels
       - name: Independently audit raw evidence including failed timing rules

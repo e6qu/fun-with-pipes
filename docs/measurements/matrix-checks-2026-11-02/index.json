@@ -1,0 +1,449 @@
+{
+  "run": 41417716203,
+  "source": "a4172afdc045d0ecb98054e068e749a84392136b",
+  "jobs": [
+    {
+      "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/125185532624",
+      "completed_at": "2026-11-02T09:07:31Z",
+      "conclusion": "success",
+      "created_at": "2026-11-02T09:04:31Z",
+      "head_branch": "matrix-calculation-costs",
+      "head_sha": "a4172afdc045d0ecb98054e068e749a84392136b",
+      "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41417716203/job/125185532624",
+      "id": 125185532624,
+      "labels": [
+        "ubuntu-latest"
+      ],
+      "name": "matrix_checks (ubuntu-latest, gcc)",
+      "node_id": "CR_kwDOU33zxM8AAAAdJaOi0A",
+      "run_attempt": 1,
+      "run_id": 41417716203,
+      "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/41417716203",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions",
+      "runner_id": 1000396543,
+      "runner_name": "GitHub Actions 1000396543",
+      "started_at": "2026-11-02T09:04:34Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completed_at": "2026-11-02T09:04:36Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "started_at": "2026-11-02T09:04:35Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T09:04:46Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v7",
+          "number": 2,
+          "started_at": "2026-11-02T09:04:36Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T09:04:47Z",
+          "conclusion": "success",
+          "name": "Run dtolnay/rust-toolchain@stable",
+          "number": 3,
+          "started_at": "2026-11-02T09:04:46Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T09:04:47Z",
+          "conclusion": "skipped",
+          "name": "macOS OpenSSL",
+          "number": 4,
+          "started_at": "2026-11-02T09:04:47Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T09:04:49Z",
+          "conclusion": "success",
+          "name": "Run actions/cache@v6",
+          "number": 5,
+          "started_at": "2026-11-02T09:04:47Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T09:04:50Z",
+          "conclusion": "success",
+          "name": "Fetch locked dependencies",
+          "number": 6,
+          "started_at": "2026-11-02T09:04:49Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T09:05:29Z",
+          "conclusion": "success",
+          "name": "Check formatting and matrix target",
+          "number": 7,
+          "started_at": "2026-11-02T09:04:50Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T09:07:27Z",
+          "conclusion": "success",
+          "name": "Check arithmetic, overlapping views, storage and unwinding",
+          "number": 8,
+          "started_at": "2026-11-02T09:05:29Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T09:07:28Z",
+          "conclusion": "success",
+          "name": "Retain complete matrix checks and partial failures",
+          "number": 9,
+          "started_at": "2026-11-02T09:07:27Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T09:07:29Z",
+          "conclusion": "success",
+          "name": "Post Run actions/cache@v6",
+          "number": 17,
+          "started_at": "2026-11-02T09:07:28Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T09:07:29Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v7",
+          "number": 18,
+          "started_at": "2026-11-02T09:07:29Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T09:07:29Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 19,
+          "started_at": "2026-11-02T09:07:29Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/125185532624",
+      "workflow_name": "Numerical and ownership evidence"
+    },
+    {
+      "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/125185532882",
+      "completed_at": "2026-11-02T09:07:50Z",
+      "conclusion": "success",
+      "created_at": "2026-11-02T09:04:31Z",
+      "head_branch": "matrix-calculation-costs",
+      "head_sha": "a4172afdc045d0ecb98054e068e749a84392136b",
+      "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41417716203/job/125185532882",
+      "id": 125185532882,
+      "labels": [
+        "ubuntu-24.04-arm"
+      ],
+      "name": "matrix_checks (ubuntu-24.04-arm, gcc)",
+      "node_id": "CR_kwDOU33zxM8AAAAdJaOj0g",
+      "run_attempt": 1,
+      "run_id": 41417716203,
+      "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/41417716203",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions",
+      "runner_id": 1000396547,
+      "runner_name": "GitHub Actions 1000396547",
+      "started_at": "2026-11-02T09:05:10Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completed_at": "2026-11-02T09:05:12Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "started_at": "2026-11-02T09:05:11Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T09:05:21Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v7",
+          "number": 2,
+          "started_at": "2026-11-02T09:05:12Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T09:05:21Z",
+          "conclusion": "success",
+          "name": "Run dtolnay/rust-toolchain@stable",
+          "number": 3,
+          "started_at": "2026-11-02T09:05:21Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T09:05:21Z",
+          "conclusion": "skipped",
+          "name": "macOS OpenSSL",
+          "number": 4,
+          "started_at": "2026-11-02T09:05:21Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T09:05:22Z",
+          "conclusion": "success",
+          "name": "Run actions/cache@v6",
+          "number": 5,
+          "started_at": "2026-11-02T09:05:21Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T09:05:24Z",
+          "conclusion": "success",
+          "name": "Fetch locked dependencies",
+          "number": 6,
+          "started_at": "2026-11-02T09:05:22Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T09:06:00Z",
+          "conclusion": "success",
+          "name": "Check formatting and matrix target",
+          "number": 7,
+          "started_at": "2026-11-02T09:05:24Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T09:07:47Z",
+          "conclusion": "success",
+          "name": "Check arithmetic, overlapping views, storage and unwinding",
+          "number": 8,
+          "started_at": "2026-11-02T09:06:00Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T09:07:48Z",
+          "conclusion": "success",
+          "name": "Retain complete matrix checks and partial failures",
+          "number": 9,
+          "started_at": "2026-11-02T09:07:47Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T09:07:48Z",
+          "conclusion": "success",
+          "name": "Post Run actions/cache@v6",
+          "number": 17,
+          "started_at": "2026-11-02T09:07:48Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T09:07:48Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v7",
+          "number": 18,
+          "started_at": "2026-11-02T09:07:48Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T09:07:48Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 19,
+          "started_at": "2026-11-02T09:07:48Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/125185532882",
+      "workflow_name": "Numerical and ownership evidence"
+    },
+    {
+      "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/125185533065",
+      "completed_at": "2026-11-02T09:08:08Z",
+      "conclusion": "success",
+      "created_at": "2026-11-02T09:04:31Z",
+      "head_branch": "matrix-calculation-costs",
+      "head_sha": "a4172afdc045d0ecb98054e068e749a84392136b",
+      "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41417716203/job/125185533065",
+      "id": 125185533065,
+      "labels": [
+        "macos-15"
+      ],
+      "name": "matrix_checks (macos-15, clang)",
+      "node_id": "CR_kwDOU33zxM8AAAAdJaOkiQ",
+      "run_attempt": 1,
+      "run_id": 41417716203,
+      "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/41417716203",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions",
+      "runner_id": 1000396545,
+      "runner_name": "GitHub Actions 1000396545",
+      "started_at": "2026-11-02T09:04:47Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completed_at": "2026-11-02T09:04:49Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "started_at": "2026-11-02T09:04:48Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T09:05:09Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v7",
+          "number": 2,
+          "started_at": "2026-11-02T09:04:49Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T09:05:10Z",
+          "conclusion": "success",
+          "name": "Run dtolnay/rust-toolchain@stable",
+          "number": 3,
+          "started_at": "2026-11-02T09:05:09Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T09:05:10Z",
+          "conclusion": "success",
+          "name": "macOS OpenSSL",
+          "number": 4,
+          "started_at": "2026-11-02T09:05:10Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T09:05:14Z",
+          "conclusion": "success",
+          "name": "Run actions/cache@v6",
+          "number": 5,
+          "started_at": "2026-11-02T09:05:10Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T09:05:15Z",
+          "conclusion": "success",
+          "name": "Fetch locked dependencies",
+          "number": 6,
+          "started_at": "2026-11-02T09:05:14Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T09:05:46Z",
+          "conclusion": "success",
+          "name": "Check formatting and matrix target",
+          "number": 7,
+          "started_at": "2026-11-02T09:05:15Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T09:08:00Z",
+          "conclusion": "success",
+          "name": "Check arithmetic, overlapping views, storage and unwinding",
+          "number": 8,
+          "started_at": "2026-11-02T09:05:46Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T09:08:03Z",
+          "conclusion": "success",
+          "name": "Retain complete matrix checks and partial failures",
+          "number": 9,
+          "started_at": "2026-11-02T09:08:00Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T09:08:03Z",
+          "conclusion": "success",
+          "name": "Post Run actions/cache@v6",
+          "number": 17,
+          "started_at": "2026-11-02T09:08:03Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T09:08:04Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v7",
+          "number": 18,
+          "started_at": "2026-11-02T09:08:03Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T09:08:05Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 19,
+          "started_at": "2026-11-02T09:08:04Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/125185533065",
+      "workflow_name": "Numerical and ownership evidence"
+    }
+  ],
+  "artifacts": {
+    "arm": {
+      "metadata": {
+        "id": 13128163699,
+        "node_id": "MDg6QXJ0aWZhY3QxMzEyODE2MzY5OQ==",
+        "name": "matrix-checks-ubuntu-24.04-arm",
+        "size_in_bytes": 790582,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13128163699",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13128163699/zip",
+        "expired": false,
+        "digest": "sha256:e75bb84775d3a9fa9e9cd278a2648eea30993ad45ac51663e36692c463e99521",
+        "created_at": "2026-11-02T09:07:48Z",
+        "updated_at": "2026-11-02T09:07:48Z",
+        "expires_at": "2027-01-31T09:04:30Z",
+        "workflow_run": {
+          "id": 41417716203,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "matrix-calculation-costs",
+          "head_sha": "a4172afdc045d0ecb98054e068e749a84392136b"
+        }
+      },
+      "logSha256": "e20ac07e79551349b396aa482440e352d63521ffc91236a7e91771333a735023"
+    },
+    "amd": {
+      "metadata": {
+        "id": 13128218007,
+        "node_id": "MDg6QXJ0aWZhY3QxMzEyODIxODAwNw==",
+        "name": "matrix-checks-ubuntu-latest",
+        "size_in_bytes": 793052,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13128218007",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13128218007/zip",
+        "expired": false,
+        "digest": "sha256:0b385f060d0b153bc561a0f3e4ed9988e07df00ab003ec1d2bceef8cc3a6f69f",
+        "created_at": "2026-11-02T09:07:28Z",
+        "updated_at": "2026-11-02T09:07:28Z",
+        "expires_at": "2027-01-31T09:04:30Z",
+        "workflow_run": {
+          "id": 41417716203,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "matrix-calculation-costs",
+          "head_sha": "a4172afdc045d0ecb98054e068e749a84392136b"
+        }
+      },
+      "logSha256": "20e0ded22b17d64497487ba82860aa5f3abab012cda1c7b8c342b73c34818e53"
+    },
+    "mac": {
+      "metadata": {
+        "id": 13128482918,
+        "node_id": "MDg6QXJ0aWZhY3QxMzEyODQ4MjkxOA==",
+        "name": "matrix-checks-macos-15",
+        "size_in_bytes": 752435,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13128482918",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13128482918/zip",
+        "expired": false,
+        "digest": "sha256:8bb70b2414752c58a8a281dcf025904f054fb71f23bfd8413a0be5606e7d6de0",
+        "created_at": "2026-11-02T09:08:03Z",
+        "updated_at": "2026-11-02T09:08:03Z",
+        "expires_at": "2027-01-31T09:04:30Z",
+        "workflow_run": {
+          "id": 41417716203,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "matrix-calculation-costs",
+          "head_sha": "a4172afdc045d0ecb98054e068e749a84392136b"
+        }
+      },
+      "logSha256": "13f4482dc3ae6bfa10dc0a5af5e95f79eba66d9a1d9e8a88d2088688d4ed7f92"
+    }
+  }
+}

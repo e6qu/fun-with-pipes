@@ -56,9 +56,33 @@ def check_report(report, source, machine, session):
                     rustVersion='rustc 1.99.1 (58cf8f9c3 2026-10-13)')
     assert qualification['actual'] == qualification['expected'] == expected
     config = report['configuration']
+    manifest = report['referenceManifest']
+    assert manifest['source'] == source
+    transformation = manifest['disabledTransformation']
+    if transformation == 'native floating-point loop-state fields':
+        cases = MEASURE.CASES
+        preparation_sources = {'scripts/prepare-loop-state-reference.py'}
+        assert set(report['compilerSha256']) == {'fwp', 'reference'}
+        assert manifest['compilerSha256'] == report['compilerSha256']['reference']
+        assert 'comparison' not in config or config['comparison'] == 'loop-state'
+        if 'comparison' in config:
+            preparation_sources.add('scripts/report-kernel-codegen.py')
+        speed_cases = {'array-65537', 'array-262145'}
+    elif transformation == 'paired matrix columns':
+        cases = {k: v for k, v in MEASURE.CASES.items() if k.startswith('matrix')}
+        preparation_sources = {'scripts/report-kernel-codegen.py', 'runtime/fwp_rt_kernel.c'}
+        assert set(report['compilerSha256']) == {'fwp'}
+        assert config['comparison'] == 'matrix-columns'
+        assert config['reference_compiler'] is None and config['reference_manifest'] is None
+        assert manifest['runtimeSha256'] == report['sourceHashes']['runtime/fwp_rt_kernel.c']
+        assert all(re.fullmatch('[0-9a-f]{64}', manifest[key]) for key in
+                   ('runtimeSha256', 'candidateLoopSha256', 'referenceLoopSha256'))
+        speed_cases = {'matrix-257-259-255'} if machine == 'x86_64' else set()
+    else:
+        raise AssertionError('Undeclared reference transformation: ' + transformation)
     required = dict(samples=18, warmups=2, processes=4, small_matrix_processes=256,
                     timeout=180, session=session, c_arch=c_arch, rust_cpu=rust_cpu,
-                    case=list(MEASURE.CASES))
+                    case=list(cases))
     assert {key: config[key] for key in required} == required
     assert len(report['allowedCpus']) == len(set(report['allowedCpus'])) == 4
     environment = report['executionEnvironment']
@@ -70,15 +94,10 @@ def check_report(report, source, machine, session):
     assert set(report['sourceHashes']) == {
         'scripts/measure-current-kernels.py', 'scripts/current_kernel_costs.py',
         'scripts/measure-kernel-baselines.py', 'scripts/numerical-baselines.py',
-        'scripts/prepare-loop-state-reference.py', 'tests/fixtures/numerical_bench.c',
-        'tests/fixtures/numerical_bench.rs', 'tests/fixtures/numerical_bench_native.c', 'src/cgen.rs'}
-    assert set(report['compilerSha256']) == {'fwp', 'reference'}
-    manifest = report['referenceManifest']
-    assert manifest['source'] == source
-    assert manifest['disabledTransformation'] == 'native floating-point loop-state fields'
-    assert manifest['compilerSha256'] == report['compilerSha256']['reference']
-    assert list(report['results']) == list(MEASURE.CASES)
-    for case, dimensions in MEASURE.CASES.items():
+        'tests/fixtures/numerical_bench.c', 'tests/fixtures/numerical_bench.rs',
+        'tests/fixtures/numerical_bench_native.c', 'src/cgen.rs'} | preparation_sources
+    assert list(report['results']) == list(cases)
+    for case, dimensions in cases.items():
         row = report['results'][case]
         assert row['dimensions'] == list(dimensions)
         elements, rows, inner, columns = dimensions
@@ -106,18 +125,11 @@ def check_report(report, source, machine, session):
         assert set(row['binaries']) == {f'{label}-{mode}' for label in ('c', 'rust', 'fwp', 'reference')
                                        for mode in ('timing', 'profile', 'verify')}
         assert row['stack'] and all(item['entries'] for item in row['stack'].values())
-    assert report['failures'] == decisions(report['results'])
+    assert report['failures'] == decisions(report['results'], speed_cases)
     return report['failures']
 
 
-def check_directory(directory, source, machine, session):
-    report = json.loads((directory / 'comparison.json').read_text())
-    failures = check_report(report, source, machine, session)
-    identity = json.loads((directory / 'configuration.json').read_text())
-    assert identity == {k: v for k, v in report.items() if k not in ('results', 'failures')}
-    assert json.loads((directory / 'results.json').read_text()) == report['results']
-    assert json.loads((directory / 'reference-manifest.json').read_text()) == report['referenceManifest']
-    manifest = report['referenceManifest']
+def check_loop_state_reference(directory, source, manifest):
     candidate = subprocess.check_output(['git', 'show', source + ':src/cgen.rs'], cwd=ROOT, text=True)
     preparation = subprocess.check_output(['git', 'show', source + ':scripts/prepare-loop-state-reference.py'], cwd=ROOT, text=True)
     reference = PATCH.recorded_reference(candidate, preparation)
@@ -139,6 +151,42 @@ def check_directory(directory, source, machine, session):
     assert digest(candidate.encode()) == manifest['candidateCodegenSha256']
     assert digest(reference.encode()) == manifest['referenceCodegenSha256']
     assert digest((directory / 'reference.patch').read_bytes()) == manifest['patchSha256']
+
+
+def check_matrix_reference(directory, source, manifest, results):
+    preparation = subprocess.check_output(
+        ['git', 'show', source + ':scripts/report-kernel-codegen.py'], cwd=ROOT)
+    names = ('MATRIX_COLUMNS_BEFORE', 'MATRIX_COLUMNS_AFTER')
+    literals = {name: [ast.literal_eval(node.value) for node in ast.parse(preparation).body
+                if isinstance(node, ast.Assign) and any(isinstance(target, ast.Name)
+                    and target.id == name for target in node.targets)] for name in names}
+    assert all(len(values) == 1 and isinstance(values[0], bytes) for values in literals.values())
+    before, after = (literals[name][0] for name in names)
+    runtime = subprocess.check_output(['git', 'show', source + ':runtime/fwp_rt_kernel.c'], cwd=ROOT)
+    assert runtime.count(after) == 1 and before not in runtime
+    assert manifest['runtimeSha256'] == digest(runtime)
+    assert manifest['candidateLoopSha256'] == digest(after)
+    assert manifest['referenceLoopSha256'] == digest(before)
+    for case in results:
+        for name in ('generated', 'timing', 'profile', 'verify'):
+            candidate = (directory / case / ('fwp-' + name + '.c')).read_bytes()
+            reference = (directory / case / ('reference-' + name + '.c')).read_bytes()
+            assert candidate.count(after) == 1 and before not in candidate
+            assert candidate.replace(after, before) == reference
+
+
+def check_directory(directory, source, machine, session):
+    report = json.loads((directory / 'comparison.json').read_text())
+    failures = check_report(report, source, machine, session)
+    identity = json.loads((directory / 'configuration.json').read_text())
+    assert identity == {k: v for k, v in report.items() if k not in ('results', 'failures')}
+    assert json.loads((directory / 'results.json').read_text()) == report['results']
+    assert json.loads((directory / 'reference-manifest.json').read_text()) == report['referenceManifest']
+    manifest = report['referenceManifest']
+    if manifest['disabledTransformation'] == 'native floating-point loop-state fields':
+        check_loop_state_reference(directory, source, manifest)
+    else:
+        check_matrix_reference(directory, source, manifest, report['results'])
     for name, sha in report['sourceHashes'].items():
         assert digest(subprocess.check_output(['git', 'show', source + ':' + name], cwd=ROOT)) == sha
     for name, tree in report['sourceTrees'].items():
@@ -237,7 +285,7 @@ def main():
     parser.add_argument('--session', type=int, choices=(1, 2), required=True)
     args = parser.parse_args()
     failures = check_directory(args.directory, args.source, args.machine, args.session)
-    print(f'All four cases and raw evidence agree; {len(failures)} retained performance failures')
+    print(f'All declared cases and raw evidence agree; {len(failures)} retained performance failures')
 
 
 if __name__ == '__main__':

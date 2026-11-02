@@ -273,7 +273,8 @@ Alternate-stack and signal-handler registration are also required. Static numeri
 workers check their stack attributes; a partial startup joins every started worker
 before reporting failure. O0/O2 fault controls pass on native Linux and macOS, on ARM64 and AMD64,
 including a deliberately omitted stack-error check that must fail the test.
-The broader final-head matrix remains required before merge.
+The complete platform matrix passed in
+[PR #225](roadmap-history.md#decimal-counting-and-current-derivative-baselines-pr-225).
 
 ## Ownership implementation
 
@@ -354,7 +355,8 @@ defines selection, cleanup, exact budgets and completed validation.
 
 ### Numeric record fold accumulators
 
-PR #240 implements a narrower call boundary, with focused native checks in #241:
+Implemented in #240–#241 and fully verified in
+[PR #242](roadmap-history.md#numeric-callbacks-and-inline-cleanup-pr-242):
 a known left fold can keep its accumulator's numeric fields in local variables.
 An accumulator is the running result passed to the next iteration. `.0` selects
 the first tuple field and `.1` the second. For example:
@@ -382,8 +384,8 @@ seed (0, 0.5) → add (1, 1.5) → (1, 2.0) → add (2, 2.5) → (3, 4.5)
 The [requirements and measurement protocol](measurements/derivative-record-folds.md)
 cover alias preservation, allocation failure, traps, cancellation and exact counts.
 This does not remove records that must remain stored in a list. Selection depends
-on the generated worker, not just the source type. This batch extends direct
-calls through local field bindings, so this equivalent spelling can use the same
+on the generated worker, not just the source type. Known calls remain direct
+through local field bindings, so this equivalent spelling can use the same
 numeric worker:
 
 ```fwp
@@ -395,7 +397,7 @@ reference counting. Bindings remain before later argument evaluation. Managed or
 nested fields retain their existing path; escaping partial functions keep their
 original constructor stages. [The prepared scope](measurements/numeric-callback-bindings.md)
 records the implementation and verification requirements. Focused GCC/Clang
-checks pass, including the cleanup repairs below; the full matrix remains open.
+checks and #242's full platform matrix pass, including the cleanup repairs below.
 
 Inline collection loops, mapped arrays and state updates need the same caller
 cleanup as an ordinary function call. Install that cleanup before their first
@@ -404,7 +406,7 @@ a callback fails. [The repair evidence](measurements/numeric-callback-bindings.m
 records the exposed leak and its regression checks.
 
 Known partial callbacks passed to `attempt` now use the same specialization pass
-as other synchronous handlers (PR #241, focused GCC/Clang checks pass). For
+as other synchronous handlers (implemented in #241, verified in #242). For
 `attempt (fold step seed) values`, the pass exposes the fold inside the callback.
 It evaluates `seed` before entering the handler; failures during the callback are
 caught by `attempt`. The handler itself remains in place.
@@ -489,6 +491,15 @@ ascending inner-index order. Multiply and add remain separate. Shape validation
 precedes the specialized work; malformed cast shapes retain their specified
 library behavior. Wider arithmetic and floating formats keep their own contracts.
 
+The current candidate computes two adjacent columns together, then one scalar
+column if the tile width is odd. It preserves each cell's arithmetic order and
+uses fixed-size byte copies, including for overlapping read-only input views.
+Both GCC targets vectorize the pair; focused GCC/Clang safety checks pass.
+[The matrix results](measurements/matrix-calculation-costs.md#results-november-2-2026)
+show about 33% less calculation time on ARM64 and 31% less for large AMD64
+products, with unchanged managed storage. Small AMD64 timings remain inconclusive;
+final production acceptance is still pending.
+
 A numeric derivative tape records two parents and local derivative weights per
 operation. Its backward workspace need only reach the last requested output;
 later forward work and failures still run. Parent buffers share one allocation
@@ -534,7 +545,7 @@ balanced tree of exact power-of-ten comparisons, with at most five comparisons
 and no lookup table.
 
 Two selected sessions per architecture meet the frozen
-timing limits; the final production matrix remains required before merge. The
+timing limits, and #225 passed the complete production matrix. The
 preceding bit-length/table experiment passed correctness but failed the two-host
 timing acceptance rule; its complete results remain in the report.
 Signed values use unsigned magnitude and add one for the minus sign, so I64's

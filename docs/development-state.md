@@ -1,84 +1,87 @@
 # Current work
 
-**Next:** deliver `current-kernel-costs`: finish the documentation audit, then run
-all nine production jobs on the final head and squash-merge only after they pass.
-Keep one active PR. Use `gh pr view` from the branch to find its exact head and
-checks. Do not rerun completed numerical sessions or change a passing CI head.
+**Next:** publish the completed matrix batch as the only active PR, then audit
+its nine final-head production jobs and documentation before squash merge. Keep
+all six failed timing controls visible; preserve this head while gates run.
 
-Worktree: `/private/tmp/fwp-current-kernel-costs`. The branch was rebased onto
-verified #242 squash merge `10b9bbff10afd97cb6ce653b1bf9c4aaea5f2531`; measured
-source commits remain available through the tags below. #242's nine production
-jobs and docs pass, all logs are audited, and its merge tree/message are verified.
-[History](roadmap-history.md#numeric-callbacks-and-inline-cleanup-pr-242) holds the
-delivery record. Duplicate merge-tree runs were cancelled after that verification.
+## PR #243: verified delivery
+
+Merged `ea9938debef5cc75d53edb8ca427b49f2513bea3` after production `41412228669`
+and docs `41411731331` passed on `ea976b7e19c26c5be0ad9e748e284cc97a269379`.
+All nine full logs and native target archives are audited. The squash tree equals
+the tested tree; the message is one line, 62 characters, without body/trailers.
+Duplicate same-tree main runs `41425026087` and `41425026016` were cancelled.
+[History](roadmap-history.md#current-numerical-costs-pr-243) records the delivery.
+
+## Matrix batch
+
+Branch/worktree: `matrix-calculation-costs`, `/private/tmp/fwp-matrix-calculation`.
+Rebased onto the verified #243 squash tree. All measured sources and the failed
+report-generation source have remote retention tags; preserve them.
 
 ## Roadmap status
 
 | Step | Status | Evidence / remaining work |
 |---|---|---|
-| 1 | Verified | Protocol `818731e3` published before implementation; #242 fully verified and merged as `10b9bbff` |
-| 2 | Verified | Paired reference and six-program runner pass correctness/memory audits; damaged-evidence controls pass; no production compiler change |
-| 3 | Verified | Four sessions retained; raw audit `41407524129` passes; four speed and nine copy limits remain open |
-| 4 | In progress | Reproducible current costs and concrete matrix follow-up documented; documentation audit and final production gates remain |
+| 1 | Verified | Source protocol `5f235bb0`, published before diagnostics |
+| 2 | Verified | `41412675762` reproduces original binaries on both GCC architectures |
+| 3 | Verified | Paired-loop diagnostic `41416927586`; safety run `41417716203` passes GCC ARM64/AMD64 and Clang ARM64 |
+| 4 | Verified | All four sessions and three host rejections retained; raw audit `41422907313` passes; six timing controls remain open |
+| 5 | In progress | Frame table repaired and regenerated; publish one coherent PR, pass final-head gates, verify squash merge |
 
-The [protocol](measurements/current-kernel-costs.md) fixes the inputs, hosts,
-timing scopes and rules. The historical AMD64 array slowdown predates typed loop
-state (#227); it is not current overhead. Bounds-proved array increments already
-wrap, and typed double state already exists. Neither fact proves a speedup.
+The runtime processes two neighboring output columns together, preserving each
+cell's multiplication/addition order, byte-copy access, shared input views,
+polling and cleanup. A first restricted-input candidate produced identical
+binaries and was rejected without timing. The paired loop vectorizes on both GCC
+hosts; twelve O1/O2 allocation/arithmetic cases and four native tests pass per
+host. Missing normal/unwind releases fail their intended observers. No API change.
 
-## Current measurements
+## Results and open limits
 
-[Selected runs and jobs](measurements/current-kernel-selection.json) retain all
-attempts. Sources `b9da15a1` and `9f6d0f7c` have identical compiler/runtime/library
-trees; the latter changes only the isolated reference's expected layout checks.
+[Protocol and results](measurements/matrix-calculation-costs.md) and
+[complete tables](measurements/matrix-columns-2026-11-02/README.md) retain:
 
-| Architecture/session | Job | Current result |
-|---|---|---|
-| ARM64 / 2 | `125141953515` | Raw audit passes; array ratios 0.99814 and 1.00141 miss the required 0.95 |
-| AMD64 / 2 | `125145128971` | Raw audit passes; small array and small matrix identical-copy controls exceed 2% |
-| ARM64 / 1 | `125147087471` | Reference and raw checks pass; both array speed targets miss |
-| AMD64 / 1 | `125147087334` | Reference and raw checks pass; five array copy limits miss |
+- About 33% less calculation time on ARM64; about 31% less for large AMD64.
+  Large AMD64 remains about 14% slower than C and 3.6% faster than Rust.
+- Unchanged managed requests, requested bytes, peak charge and effective retains;
+  zero final workload storage. Five fwp requests versus three C/Rust requests
+  include two input records built by the C driver, not by source `array.generate`.
+- Six small-AMD64 copy failures at 2.6–8.3%, against the unchanged 2% limit.
+  Do not claim a qualified speed result for that case or rerun unchanged timings.
+- The matrix worker (`f0`) gains 48 static frame bytes: 1,408→1,456 ARM64 and
+  1,568→1,616 AMD64. Driver `main` stays 384 static bytes on ARM64 and a 352-byte bounded
+  dynamic estimate on AMD64. Code gains 128/320 bytes.
+  Frame estimates and managed charge are not whole-process memory measurements.
 
-Six hosts were rejected before building or timing; their logs and qualification
-records remain selected. Initial ARM session 1 (`125141953749`) failed only two
-reference assertions expecting `double v3`, while its declared word-state layout
-uses `V v3`. Repair `9f6d0f7c` changes those expectations only in the isolated
-reference checkout, retaining alias, failure, cancellation and cleanup checks.
-That job never timed; completed sessions are not rerun to seek passing limits.
+Retain the qualified improvements under the user's earlier preference to keep
+verified gains with unmet timing goals explicit. This does not turn the six noise
+failures into passes or complete those goals. Full production acceptance remains
+mandatory. Analyze retained small-case samples before declaring a changed timing
+protocol; array-construction costs remain the next independent numerical task.
 
-The independent report job `125152829956`, run `41407524129`, passes at `c3add130`.
-It checks raw streams, actual binaries, compiler patches and every decision.
-Retained summaries/data are in `docs/measurements/current-kernels-2026-11-02/`;
-artifact `13123504113` and full audit log hashes are recorded in `download.json`.
-The docs workflow recomputes the committed tables from retained observations.
+## Sources, runs and reproduction
 
-Qualified large-matrix calculation costs about 65% more time than C on AMD64,
-6% more on ARM64. Both kernels perform zero effective retains; array allocation
-count matches peers, matrices add two input records. PLAN.md now specifies the
-next source-level matrix investigation and its safety/measurement requirements.
-No new compiler optimization is selected in this measurement batch.
+- Timing protocol `6c7e9cea`: `roadmap/matrix-paired-column-timing-2026-11-02`.
+- Native safety source `a4172afdc045d0ecb98054e068e749a84392136b`:
+  `roadmap/matrix-paired-column-checks-2026-11-02`.
+- Measured source `8b9827521d0546ddd7eaace299492f9bd45b7af5`:
+  `roadmap/matrix-paired-column-measurements-2026-11-02`.
+- Runs `41418956333` and `41420961312` supply four complete sessions.
+  `41419526409` and `41420187469` supplied only rejected hosts. The selection file
+  includes every run/job; rejections were EPYC 9V45, Xeon 8370C and EPYC 9V74.
+- Combined audit `41422907313`, job `125202508959`, source `9f6c8d00`, passes.
+  Artifact `13129819093` and all normalized reports/logs/file manifests are retained
+  in `matrix-columns-2026-11-02/`. Full audit log is clean; source tag retained.
+- Table run `41424485974` at `3ae24c0d` failed: the renderer incorrectly required
+  every GCC estimate to be `static`; AMD64 driver `main` is `dynamic,bounded`.
+  The repair reports the actual qualifier and checks both variants agree, retaining
+  the real 48-byte worker increase. Repair run `41425270814`, job `125210262696`,
+  at `fce7b3cc` passes; artifact `13132131070` supplies the regenerated README.
+  Full log audited clean; no native rebuild or new timing. Docs check both sets.
 
-## Verification and source retention
-
-- Protocol tag: `roadmap/current-kernel-costs-protocol-2026-11-02` (`818731e3`).
-- Initial measured-source tag: `roadmap/current-kernel-initial-measurements-2026-11-02`
-  (`b9da15a1`). Repaired checks retained by
-  `roadmap/current-kernel-reference-checks-2026-11-02` (`9f6d0f7c`);
-  audit by `roadmap/current-kernel-audit-2026-11-02` (`c3add130`).
-- Guarded local checks: reference preparation 4 tests (0.13s); scheduling and
-  decisions 7 (0.13s); damaged evidence 10 (4.28s); job retention 4 (0.13s);
-  report normalization 2 (0.13s); actionlint (6.73s); roadmap/link/commit audit (3.13s). No local full build or timing.
-- #242 final production `41399968432` and docs `41399968400` pass on `f411df1f`.
-  Full logs: `/private/tmp/fwp-242-f411-{linux-arm,linux-amd,windows-arm,windows-amd,
-  mac-arm-regular,mac-arm-ownership,mac-amd-regular,mac-amd-ownership}.log`, plus
-  `/private/tmp/fwp-242-final-bench.log` and `/private/tmp/fwp-242-repaired-docs.log`.
-  Corresponding target ZIPs: 257 logs per Linux, 131 regular/126 ownership per
-  macOS, and 135 passing summaries per Windows native archive. Only intentional
-  scheduler panics/TLS rejections appear; no unresolved diagnostic.
-- Numerical logs: `/private/tmp/fwp-current-kernels-{arm2,amd2}.log` and
-  `/private/tmp/fwp-current-kernels-{arm1,amd1}-repaired.log`. Their only failures
-  are the retained performance decisions. `/private/tmp/fwp-current-kernel-audit.log`
-  is clean; its compressed copy is committed with the data.
-- Initial matrix source audit: `/private/tmp/fwp-matrix-source-audit.md`. Input
-  records are outside the kernel timer; task-free scheduler polls are already
-  eliminated. Preserve byte-copy alias safety. No speculative runtime edit.
+Local guarded checks pass: six patch controls, eight scheduling/limit controls,
+thirteen evidence controls, six retention/prerequisite controls, two table-unit
+checks; Rust formatting, actionlint and roadmap audit. Historical tables verify
+unchanged (7.46s). Handoff heading/status drift was repaired; documentation audit
+passes (2.88s). Latest actionlint: 5.95s. No local
+compiler build, full suite or benchmark. Free space was 67 GiB at the last check.

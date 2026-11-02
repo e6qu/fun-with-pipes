@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Collect GCC explanations for exact retained kernel binaries; do not benchmark."""
+"""Collect GCC reports for retained kernels and declared candidates; no timing acceptance."""
 import argparse
 import hashlib
 import importlib.util
@@ -8,28 +8,108 @@ import os
 from pathlib import Path
 import platform
 import subprocess
+import zipfile
+
+from process_wait import run_capture
 
 SPEC = importlib.util.spec_from_file_location('kernel_measurement', Path(__file__).with_name('measure-kernel-baselines.py'))
 MEASURE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(MEASURE)
+SPEC = importlib.util.spec_from_file_location('archive_check', Path(__file__).with_name('check-array-list-evidence.py'))
+CHECK = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(CHECK)
+
+
+MATRIX_INPUTS_BEFORE = b"""     * The shape predicate bounds every copy. Only the fresh output is
+     * restrict-qualified: inputs may share backing. */
+    const unsigned char *a=fwp_array_data(left),*b=fwp_array_data(right);"""
+MATRIX_INPUTS_AFTER = b"""     * The shape predicate bounds every copy. Both inputs stay read-only,
+     * so their restrict qualifiers still permit shared backing. */
+    const unsigned char *restrict a=fwp_array_data(left),*restrict b=fwp_array_data(right);"""
+MATRIX_COLUMNS_BEFORE = b"""                    for(size_t j=jb;j<je;j++){
+                        double y,prior;__builtin_memcpy(&y,b+(q*n+j)*sizeof(double),sizeof y);
+                        __builtin_memcpy(&prior,out+(i*n+j)*sizeof(double),sizeof prior);
+                        double product=x*y,value=product+prior;
+                        __builtin_memcpy(out+(i*n+j)*sizeof(double),&value,sizeof value);
+                    }"""
+MATRIX_COLUMNS_AFTER = b"""                    size_t j=jb;
+                    for(;je-j>=2;j+=2){
+                        double y0,y1,prior0,prior1;
+                        __builtin_memcpy(&y0,b+(q*n+j)*sizeof(double),sizeof y0);
+                        __builtin_memcpy(&y1,b+(q*n+j+1)*sizeof(double),sizeof y1);
+                        __builtin_memcpy(&prior0,out+(i*n+j)*sizeof(double),sizeof prior0);
+                        __builtin_memcpy(&prior1,out+(i*n+j+1)*sizeof(double),sizeof prior1);
+                        double product0=x*y0,product1=x*y1;
+                        double value0=product0+prior0,value1=product1+prior1;
+                        __builtin_memcpy(out+(i*n+j)*sizeof(double),&value0,sizeof value0);
+                        __builtin_memcpy(out+(i*n+j+1)*sizeof(double),&value1,sizeof value1);
+                    }
+                    for(;j<je;j++){
+                        double y,prior;__builtin_memcpy(&y,b+(q*n+j)*sizeof(double),sizeof y);
+                        __builtin_memcpy(&prior,out+(i*n+j)*sizeof(double),sizeof prior);
+                        double product=x*y,value=product+prior;
+                        __builtin_memcpy(out+(i*n+j)*sizeof(double),&value,sizeof value);
+                    }"""
+
+
+def restricted_inputs(source):
+    assert source.count(MATRIX_INPUTS_BEFORE) == 1 and MATRIX_INPUTS_AFTER not in source
+    return source.replace(MATRIX_INPUTS_BEFORE, MATRIX_INPUTS_AFTER)
+
+
+def paired_columns(source):
+    assert source.count(MATRIX_COLUMNS_BEFORE) == 1 and MATRIX_COLUMNS_AFTER not in source
+    return source.replace(MATRIX_COLUMNS_BEFORE, MATRIX_COLUMNS_AFTER)
 
 
 def digest(data):
     return hashlib.sha256(data).hexdigest()
 
 
+def evidence_record(index, source, machine, session):
+    assert index['schema'] == 1 and index['complete'] and not index['auditErrors']
+    record, = [row for row in index['jobs'] if row['source'] == source
+               and row['machine'] == machine and row['session'] == session
+               and row['job']['id'] in index['measurements']]
+    assert record['qualification']['qualified'] and not record['qualification']['failures']
+    artifact, = [value for name, value in record['artifacts'].items()
+                 if name.startswith('current-kernels-')]
+    assert artifact['workflow_run']['head_sha'] == source
+    return record, artifact
+
+
+def read_archive(path, index, source, machine, session):
+    record, artifact = evidence_record(index, source, machine, session)
+    assert artifact['digest'] == 'sha256:' + digest(path.read_bytes())
+    archive = zipfile.ZipFile(path)
+    try:
+        CHECK.check_zip(archive)
+        raw = archive.read('comparison.json')
+        assert len(raw) == record['reportBytes'] and digest(raw) == record['reportSha256']
+        report = json.loads(raw)
+        assert report['source'] == source and report['configuration']['session'] == session
+        assert report['qualification'] == record['qualification']
+        assert report['failures'] == record['failures']
+        return archive, report, artifact
+    except BaseException:
+        archive.close()
+        raise
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    for name in ['evidence', 'output']:
+    for name in ['archive', 'index', 'output']:
         parser.add_argument('--' + name, type=Path, required=True)
     for name in ['source', 'cc', 'c-arch']:
         parser.add_argument('--' + name, required=True)
     parser.add_argument('--timeout', type=int, required=True)
+    parser.add_argument('--session', type=int, choices=(1, 2), required=True)
+    parser.add_argument('--matrix-variant', choices=('original', 'restricted', 'paired-columns'), required=True)
     args = parser.parse_args()
     assert os.environ.get('GITHUB_ACTIONS') == 'true' and platform.system() == 'Linux'
     assert args.timeout == 180
-    report = json.loads((args.evidence / 'comparison.json').read_text())
-    assert report['source'] == args.source
+    archive, report, artifact = read_archive(args.archive, json.loads(args.index.read_text()),
+        args.source, platform.machine(), args.session)
     expected = report['qualification']['actual']
     assert platform.machine() == expected['machine']
     assert args.c_arch == report['configuration']['c_arch']
@@ -41,15 +121,17 @@ def main():
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=False)
     configuration = dict(diagnosticSource=os.environ['GITHUB_SHA'], inputSource=args.source,
-                         host=host, inputFailures=report['failures'], decision='diagnostic-only',
+                         host=host, inputFailures=report['failures'], inputArtifact=artifact, decision='diagnostic-only',
                          arguments={k: str(v) if isinstance(v, Path) else v for k, v in vars(args).items()})
     (output / 'configuration.json').write_text(json.dumps(configuration, indent=2) + '\n')
     results = {}
+    reproduced = 0
 
     def run(command, destination):
         command = list(map(str, command))
         try:
-            execution = subprocess.run(command, capture_output=True, timeout=args.timeout)
+            execution = run_capture(command, timeout=args.timeout, env=os.environ.copy(), cwd=None,
+                input_data=None, input_stream=None, text=False, encoding='utf-8', check=False)
             timed_out = False
         except subprocess.TimeoutExpired as error:
             execution = subprocess.CompletedProcess(command, 124, error.stdout or b'', error.stderr or b'')
@@ -71,13 +153,17 @@ def main():
         for language in ['c', 'fwp']:
             name = language + '-timing'
             info = row['binaries'][name]
-            original = args.evidence / case
-            source = (original / (name + '.c')).read_bytes()
+            source = archive.read(case + '/' + name + '.c')
             assert digest(source) == info['sourceSha256']
-            assert digest((original / name).read_bytes()) == info['sha256']
+            assert Path(info['path']).name == info['path']
+            original = archive.read(case + '/' + info['path'])
+            assert digest(original) == info['sha256']
+            modified = args.matrix_variant != 'original' and language == 'fwp' and case.startswith('matrix')
+            if modified:
+                source = {'restricted': restricted_inputs, 'paired-columns': paired_columns}[args.matrix_variant](source)
             path = directory / (name + '.c')
             path.write_bytes(source)
-            binary = directory / name
+            binary = directory / info['path']
             vector = directory / (language + '-vectorization.txt')
             optimized = directory / (language + '-optimized.txt')
             run([args.cc, '-O2', '-std=gnu11', '-ffp-contract=off', '-march=' + args.c_arch, '-w',
@@ -85,17 +171,24 @@ def main():
                  '-DMATRIX_BENCH=' + str(int(case.startswith('matrix'))),
                  '-fopt-info-vec-all=' + str(vector), '-fdump-tree-optimized=' + str(optimized),
                  path, '-o', binary, '-lm', '-lpthread'], directory / (language + '-build'))
-            assert digest(binary.read_bytes()) == info['sha256'], 'Report options changed the retained binary'
+            observed_binary = binary.read_bytes()
+            if not modified:
+                assert observed_binary == original, 'Report options changed the retained binary'
+                reproduced += 1
             assert vector.stat().st_size > 0 and optimized.stat().st_size > 0
             invocation = [binary] + (['matrix' if case.startswith('matrix') else 'array'] if language == 'c' else [])
             raw = run(invocation, directory / (language + '-output'))
             MEASURE.check_samples(raw, row['resultHash'], language, False)
-            results[case][language] = dict(binarySha256=info['sha256'], sourceSha256=info['sourceSha256'],
+            results[case][language] = dict(binarySha256=digest(observed_binary), sourceSha256=digest(source),
+                                           modified=modified, originalBinarySha256=info['sha256'],
+                                           originalSourceSha256=info['sourceSha256'], binaryUnchanged=observed_binary == original,
                                            vectorizationSha256=digest(vector.read_bytes()),
                                            optimizedTreeSha256=digest(optimized.read_bytes()),
                                            stdoutSha256=digest(raw), expectedResultHash=row['resultHash'])
             (output / 'results.json').write_text(json.dumps(results, indent=2) + '\n')
-    print('Eight original binary hashes and all outputs match; compiler reports are diagnostic only')
+    archive.close()
+    assert reproduced == (8 if args.matrix_variant == 'original' else 6)
+    print(f'{reproduced} unchanged binaries reproduce exactly; all eight outputs match; diagnostic only')
 
 
 if __name__ == '__main__':

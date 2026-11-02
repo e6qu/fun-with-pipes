@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 """Reject incomplete, corrupted and mislabelled current-kernel reports."""
 import copy
+import hashlib
 import importlib.util
 from pathlib import Path
+import tempfile
 import unittest
+from unittest import mock
 
 from current_kernel_costs import LABELS, decisions, execution_order, summarize
 
@@ -61,7 +64,7 @@ def report_fixture():
             stack={'probe.su': dict(entries=[dict(location='kernel', bytes=32, qualifier='static')])},
             **summarize(records, processes))
         result['results'][case] = row
-    result['failures'] = decisions(result['results'])
+    result['failures'] = decisions(result['results'], {'array-65537', 'array-262145'})
     return result
 
 
@@ -75,6 +78,62 @@ class CurrentKernelEvidence(unittest.TestCase):
 
     def check(self):
         return CHECK.check_report(self.report, SOURCE, 'aarch64', 1)
+
+    def use_matrix_report(self):
+        report = self.report
+        report['results'] = {k: v for k, v in report['results'].items() if k.startswith('matrix')}
+        report['configuration'].update(comparison='matrix-columns', reference_compiler=None,
+            reference_manifest=None, case=list(report['results']))
+        report['compilerSha256'].pop('reference')
+        report['sourceHashes'].pop('scripts/prepare-loop-state-reference.py')
+        report['sourceHashes'].update({'scripts/report-kernel-codegen.py': '0' * 64,
+                                      'runtime/fwp_rt_kernel.c': '0' * 64})
+        report['referenceManifest'] = dict(source=SOURCE, disabledTransformation='paired matrix columns',
+            runtimeSha256='0' * 64, candidateLoopSha256='d' * 64, referenceLoopSha256='e' * 64)
+        report['failures'] = decisions(report['results'], set())
+
+    def test_matrix_report_requires_its_declared_cases_and_single_compiler(self):
+        self.use_matrix_report()
+        self.assertEqual(self.check(), [])
+        self.report['compilerSha256']['reference'] = 'c' * 64
+        with self.assertRaises(AssertionError):
+            self.check()
+        self.report['compilerSha256'].pop('reference')
+        self.report['results'].pop('matrix-65-67-63')
+        with self.assertRaises(AssertionError):
+            self.check()
+
+    def test_matrix_report_rejects_wrong_protocol_and_runtime(self):
+        self.use_matrix_report()
+        self.report['configuration']['comparison'] = 'loop-state'
+        with self.assertRaises(AssertionError):
+            self.check()
+        self.report['configuration']['comparison'] = 'matrix-columns'
+        self.report['referenceManifest']['runtimeSha256'] = 'f' * 64
+        with self.assertRaises(AssertionError):
+            self.check()
+
+    def test_matrix_reference_cannot_change_unrelated_source(self):
+        before, after = b'old scalar loop', b'new paired loop'
+        runtime = b'prefix\n' + after + b'\nsuffix'
+        preparation = ('MATRIX_COLUMNS_BEFORE = ' + repr(before) + '\nMATRIX_COLUMNS_AFTER = '
+                       + repr(after) + '\nraise RuntimeError("do not execute recorded code")\n').encode()
+        manifest = dict(runtimeSha256=hashlib.sha256(runtime).hexdigest(),
+                        candidateLoopSha256=hashlib.sha256(after).hexdigest(),
+                        referenceLoopSha256=hashlib.sha256(before).hexdigest())
+        def recorded(command, **kwargs):
+            return preparation if command[-1].endswith('report-kernel-codegen.py') else runtime
+        with tempfile.TemporaryDirectory() as name, mock.patch.object(CHECK.subprocess, 'check_output', side_effect=recorded):
+            root = Path(name)
+            folder = root / 'matrix-case'
+            folder.mkdir()
+            for mode in ('generated', 'timing', 'profile', 'verify'):
+                (folder / ('fwp-' + mode + '.c')).write_bytes(runtime)
+                (folder / ('reference-' + mode + '.c')).write_bytes(runtime.replace(after, before))
+            CHECK.check_matrix_reference(root, SOURCE, manifest, ['matrix-case'])
+            (folder / 'reference-timing.c').write_bytes(runtime.replace(after, before) + b'changed')
+            with self.assertRaises(AssertionError):
+                CHECK.check_matrix_reference(root, SOURCE, manifest, ['matrix-case'])
 
     def test_recorded_test_changes_are_literal_and_narrow(self):
         source = (ROOT / 'scripts/prepare-loop-state-reference.py').read_text()
@@ -141,7 +200,7 @@ class CurrentKernelEvidence(unittest.TestCase):
                 if observation['label'] == 'reference-identical':
                     observation['samples'] = [dict(s, kernelNs=120) for s in observation['samples']]
         row.update(summarize(row['observations'], 4))
-        self.report['failures'] = decisions(self.report['results'])
+        self.report['failures'] = decisions(self.report['results'], {'array-65537', 'array-262145'})
         self.assertEqual(len(self.check()), 1)
         self.report['failures'] = []
         with self.assertRaises(AssertionError):

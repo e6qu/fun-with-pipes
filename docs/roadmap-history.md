@@ -6,6 +6,23 @@ and complete platform validation are different events. Measurements retain their
 original source and settings; old numbers are not measurements of current main.
 The linked PRs, runs and data records supply the detailed evidence.
 
+## Current numerical costs (PR #243)
+
+[PR #243](https://github.com/e6qu/fun-with-pipes/pull/243) merged November 2 as
+`ea9938debef5cc75d53edb8ca427b49f2513bea3`. All nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/41412228669)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/41411731331)
+pass on `ea976b7e19c26c5be0ad9e748e284cc97a269379`; all job/target diagnostics
+were audited. The merge has the same tree, `d2c202d8cca7a9e4fc880a443ee0cf7cc9e6135a`,
+and a verified single-line message with no body or trailers. Duplicate same-tree
+main runs `41425026087` and `41425026016` were cancelled.
+
+The [comparison](measurements/current-kernel-costs.md) measures current fwp,
+a same-source representation reference, C and Rust. It separates calculation
+from C-driver construction and cleanup. It identifies matrix calculation and
+array construction costs; failed timing controls remain visible. This PR changes
+measurement tools, evidence and plans, without a production runtime change.
+
 ## Numeric callbacks and inline cleanup (PR #242)
 
 [PR #242](https://github.com/e6qu/fun-with-pipes/pull/242) merged November 2 as
