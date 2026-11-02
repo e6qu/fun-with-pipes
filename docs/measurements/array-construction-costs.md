@@ -90,7 +90,7 @@ different execution boundary, not an equivalent isolated allocation sample.
 
 ## Next measurement: materialized construction phases
 
-Freeze this protocol before implementing its runner. Use the current compiler;
+This protocol was frozen before implementing its runner. Use the current compiler;
 no production optimization is selected. Keep the composed program as an exact,
 zero-allocation control, but do not time it against materialized C/Rust programs.
 That would conflate construction overhead with eliminating the array entirely.
@@ -138,3 +138,9 @@ experiment must freeze speed/storage limits before timing and retain the fully
 composed zero-allocation control. Keep safety, count, source, timing and full-CI
 work in one substantial PR; do not rerun the full platform matrix for each local
 implementation step. No unchanged timing retries or relaxed copy thresholds.
+
+If selected, extend only the existing direct-generator rule to captures whose
+types already have plain scalar representations. Do not equate “needs no ARC”
+with “scalar”: records and other representations need their own proof. Cover
+scalar capture evaluation, reused/stored callbacks, empty input, checked overflow,
+partial failure and cancellation through the existing array ownership tests.
