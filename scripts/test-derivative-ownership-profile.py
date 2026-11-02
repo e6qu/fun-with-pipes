@@ -236,5 +236,32 @@ static void use(void) { fwp_alloc_init(24); }
             self.assertTrue(MEASURE.comparison_failures(changed, baseline, 'packed-records'))
 
 
+    def test_field_owner_limits_preserve_storage_and_require_all_retains(self):
+        baseline = json.loads(gzip.decompress((PROFILE.ARC.ROOT /
+            'docs/measurements/derivative-temporary-storage-2026-11-02/verified-counts.json.gz').read_bytes()))
+        host = baseline['hosts']['aarch64']
+        selected = ('3-0-current-O2', '3-1-current-O2', '129-199-history-O1')
+        host['cases'] = {name: host['cases'][name] for name in selected}
+        report = dict(machine='aarch64', cases={name: copy.deepcopy(case['observations'])
+            for name, case in host['cases'].items()})
+        self.assertTrue(MEASURE.comparison_failures(report, baseline, 'field-owners'))
+        for name, observations in report['cases'].items():
+            dimensions, updates = map(int, name.split('-')[:2])
+            for actual in observations.values():
+                actual['totals']['managed']['retains'] -= (dimensions - 1) * updates
+        self.assertEqual(MEASURE.comparison_failures(report, baseline, 'field-owners'), [])
+        for name in selected:
+            for mode in ('0', '1'):
+                for field in ('requests', 'requestedBytes', 'retains', 'peakChargedBytes', 'finalChargedBytes'):
+                    changed = copy.deepcopy(report)
+                    changed['cases'][name][mode]['totals']['managed'][field] += 1
+                    with self.subTest(name=name, mode=mode, field=field):
+                        self.assertTrue(MEASURE.comparison_failures(changed, baseline, 'field-owners'))
+        for field in ('visits', 'raw'):
+            changed = copy.deepcopy(report)
+            changed['cases']['129-199-history-O1']['1'][field] = {}
+            self.assertTrue(MEASURE.comparison_failures(changed, baseline, 'field-owners'))
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -3,7 +3,7 @@
 use super::{record_fields, FnGen, Gen};
 use crate::ir::*;
 
-impl FnGen<'_, '_> {
+impl FnGen<'_, '_, '_> {
     pub(super) fn inline_sort_keys(&mut self, id: FuncId, args: &[Expr]) -> Option<String> {
         if !matches!(&self.g.prog.funcs[id].body, Body::Prim(s) if s == "sort-by") {
             return None;

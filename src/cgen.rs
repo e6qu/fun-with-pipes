@@ -431,9 +431,6 @@ struct Gen<'p> {
     drops: HashMap<MT, usize>,
     drop_defs: Vec<String>,
     cleanup_defs: Vec<String>,
-    /// Last local mentions in the immutable ownership tree, built lazily once
-    /// per function that has a complete separated-field transfer candidate.
-    field_last_uses: HashMap<FuncId, HashMap<Local, *const Expr>>,
     /// Type-directed ownership of fresh runtime result trees.
     tree_owners: HashMap<MT, usize>,
     tree_owner_defs: Vec<String>,
@@ -2446,7 +2443,11 @@ enum ResourceSlot {
 }
 
 /// Per-function code generation state.
-struct FnGen<'g, 'p> {
+struct FnGen<'g, 'p, 'e> {
+    /// The exact emission tree, also used for call-liveness pointer identities.
+    root: &'e Expr,
+    /// Built lazily once for this emission; never shared across cloned bodies.
+    field_last_uses: Option<HashMap<Local, *const Expr>>,
     g: &'g mut Gen<'p>,
     out: String,
     tmp: usize,
@@ -3176,7 +3177,7 @@ fn loop_shape(f: &Func) -> Option<Option<usize>> {
     }
 }
 
-impl<'g, 'p> FnGen<'g, 'p> {
+impl<'g, 'p> FnGen<'g, 'p, '_> {
     fn line(&mut self, s: &str) {
         for _ in 0..self.indent {
             self.out.push_str("    ");
@@ -3274,7 +3275,11 @@ impl<'g, 'p> FnGen<'g, 'p> {
 
     /// The number of fields of a record `e` can give without building it.
     fn unboxed(&self, e: &Expr) -> Option<usize> {
-        fn fields(fg: &FnGen<'_, '_>, e: &Expr, known: &HashMap<Local, usize>) -> Option<usize> {
+        fn fields(
+            fg: &FnGen<'_, '_, '_>,
+            e: &Expr,
+            known: &HashMap<Local, usize>,
+        ) -> Option<usize> {
             if let Some((_, n)) = fg.state_field(e) {
                 return Some(n);
             }
@@ -3570,7 +3575,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
         }
         let m = small_variant(self.g.prog, ty)?;
         fn produces(
-            fg: &FnGen<'_, '_>,
+            fg: &FnGen<'_, '_, '_>,
             e: &Expr,
             m: usize,
             known: &HashMap<Local, bool>,
@@ -4050,7 +4055,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
         }
         let mut found = None;
         // The same traversal used by field eligibility, without assuming a tag.
-        fn visit(fg: &FnGen<'_, '_>, e: &Expr, l: Local, ty: &MT, found: &mut Option<usize>) {
+        fn visit(fg: &FnGen<'_, '_, '_>, e: &Expr, l: Local, ty: &MT, found: &mut Option<usize>) {
             if found.is_some() {
                 return;
             }
@@ -7722,6 +7727,8 @@ impl<'p> Gen<'p> {
             let _ = writeln!(out, "    V l{l} = 0;");
         }
         let mut fg = FnGen {
+            root: &body,
+            field_last_uses: None,
             live_calls,
             g: self,
             out: String::new(),
@@ -7890,6 +7897,8 @@ static inline __attribute__((always_inline)) int fs{}(fwp_loop_state{step} *st, 
             HashMap::new()
         };
         let mut fg = FnGen {
+            root: e,
+            field_last_uses: None,
             live_calls,
             g: self,
             out: String::new(),
@@ -8964,6 +8973,8 @@ static inline __attribute__((always_inline)) int fs{}(fwp_loop_state{step} *st, 
     fn boxed_body(&mut self, id: FuncId, e: &Expr) -> String {
         let locals = self.prog.funcs[id].locals.clone();
         let mut fg = FnGen {
+            root: e,
+            field_last_uses: None,
             live_calls: self.live_calls(id, e),
             g: self,
             out: String::new(),
@@ -9044,6 +9055,8 @@ static inline __attribute__((always_inline)) int fs{}(fwp_loop_state{step} *st, 
             }
         }
         let mut fg = FnGen {
+            root: e,
+            field_last_uses: None,
             live_calls: self.live_calls(id, e),
             g: self,
             out: String::new(),
@@ -10247,7 +10260,6 @@ fn generate_mode(prog: &Program, mut mode: Mode) -> Result<String, String> {
         drops: HashMap::new(),
         drop_defs: Vec::new(),
         cleanup_defs: Vec::new(),
-        field_last_uses: HashMap::new(),
         tree_owners: HashMap::new(),
         tree_owner_defs: Vec::new(),
         vhelpers: HashMap::new(),

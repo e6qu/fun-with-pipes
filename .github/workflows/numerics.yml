@@ -104,6 +104,26 @@ jobs:
           env CC=clang FWP_ARC_ARTIFACTS=field-owner-checks/clang CARGO_NET_OFFLINE=true
           python3 scripts/run-native-tests.py --targets record_conversion_ownership field_context_ownership
           worker_preparation_ownership --idle-timeout 600 --logs field-owner-checks/clang/targets
+      - name: Observer controls and all derivative ownership counts
+        if: ${{ !cancelled() && steps.compiler_build.outcome == 'success' }}
+        env:
+          EXPECTED_MACHINE: ${{ matrix.runner == 'ubuntu-24.04-arm' && 'aarch64' || 'x86_64' }}
+          C_ARCH: ${{ matrix.runner == 'ubuntu-24.04-arm' && 'armv8-a' || 'x86-64' }}
+        run: |
+          python3 scripts/test-derivative-ownership-profile.py
+          python3 scripts/test-descent-phases.py --cc gcc
+          python3 scripts/measure-derivative-forward-costs.py \
+            --compiler target/debug/fwp --cc gcc --machine "$EXPECTED_MACHINE" \
+            --c-arch "$C_ARCH" --source "$GITHUB_SHA" --timeout 180 \
+            --output field-owner-counts --comparison field-owners \
+            --baseline docs/measurements/derivative-temporary-storage-2026-11-02/verified-counts.json.gz
+      - name: Preserve complete and rejected counts
+        if: ${{ !cancelled() && hashFiles('field-owner-counts/**') != '' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: field-owner-counts-${{ runner.arch }}
+          path: field-owner-counts/
+          if-no-files-found: error
       - name: Preserve source, native probes and all target logs
         if: ${{ !cancelled() && hashFiles('field-owner-checks/**') != '' }}
         uses: actions/upload-artifact@v7
