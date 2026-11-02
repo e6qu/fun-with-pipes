@@ -33,7 +33,8 @@ about 4.1–4.2% more time than Rust; faster calculation does not erase setup co
   peak 24 bytes above their payload count. Paired versus scalar storage is equal.
 - Effective retains and final live workload storage are zero. The generated
   matrix worker's frame grows by 48 bytes: 1,408→1,456 on ARM64 and 1,568→1,616
-  on AMD64. The benchmark driver's frame stays at 384/352 bytes respectively.
+  on AMD64. The driver stays at 384 static bytes on ARM64 and a 352-byte
+  compile-time upper bound (`dynamic,bounded`) on AMD64.
   These are compiler estimates, not whole-program stack peaks. Code grows by
   128/320 bytes respectively.
 - Full process RSS varies independently: large-matrix fwp peaks around 3.46 MiB
@@ -255,7 +256,8 @@ and keep every other generated-source byte identical. Save both sources and hash
 The source compiler uses production Rust O1 with assertions/overflow checks; this
 is distinct from the Rust peer's O2. Record complete toolchain, source and binary
 identities, raw process output, allocation counts, RSS, executable/text bytes and
-GCC static frames. Static frames are not a measured stack high-water mark, and
+GCC per-function stack estimates and their qualifiers. These are not a measured
+stack high-water mark, and
 managed storage is not total process memory. Preserve all host rejections and
 failed speed/noise limits; never rerun an unchanged timed experiment for a pass.
 

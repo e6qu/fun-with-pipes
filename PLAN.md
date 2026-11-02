@@ -6,10 +6,10 @@ necessary sharing. GC is removed; JIT and backward compatibility are excluded.
 
 ## Current batch: investigate matrix calculation costs
 
-[PR #243](https://github.com/e6qu/fun-with-pipes/pull/243) publishes the completed
-current-kernel comparison. Keep its final head unchanged during production
-validation and merge only after all nine jobs and documentation pass. This
-independent branch prepares the matrix work; do not open a second PR.
+[PR #243](https://github.com/e6qu/fun-with-pipes/pull/243) passed all nine production
+jobs and documentation and merged as `ea9938de`. The paired-column implementation,
+safety tests and measurements are complete. Publish them together and verify the
+full final-head production matrix before merging.
 
 The [matrix protocol](docs/measurements/matrix-calculation-costs.md) selects the
 paired-column loop after exact GCC diagnostics. Focused safety checks precede
@@ -20,7 +20,7 @@ declare the whole timing experiment accepted.
 
 | Step | Work | Completion requirement |
 |---|---|---|
-| 1 | Publish source findings and diagnostic protocol | Retain the preparation before runner edits; preserve #243's final-head checks |
+| 1 | Publish source findings and diagnostic protocol | Complete: preparation retained before runner edits |
 | 2 | Inspect current generated C with production GCC | Original binaries reproduce byte for byte; all outputs/cleanup agree; both architectures and all compiler diagnostics audited |
 | 3 | Select and prove one bounded source change | Freeze exact reference and timing scope; pass alias, arithmetic, shape, failure and cancellation probes |
 | 4 | Measure both matrix sizes and retain every outcome | Two sessions per declared architecture, independent copy controls, time/memory/code/frame costs and all failed limits |

@@ -1,36 +1,24 @@
 # Current work
 
-**Next:** audit the last PR #243 gate, squash-merge its unchanged passing head,
-then publish the completed matrix batch as the only active PR. Finish the matrix
-stack-frame table regeneration before publishing; keep its six failed timing
-controls visible. Merge only after nine final-head production jobs and docs pass.
+**Next:** repair and regenerate the matrix stack table, publish the completed
+matrix batch as the only active PR, then audit its nine final-head production
+jobs and documentation before squash merge. Keep all six failed timing controls
+visible; no new timing is needed to repair the report.
 
-## PR #243: final delivery
+## PR #243: verified delivery
 
-PR: https://github.com/e6qu/fun-with-pipes/pull/243
-Head: `ea976b7e19c26c5be0ad9e748e284cc97a269379`; do not change it.
-Worktree: `/private/tmp/fwp-current-kernel-costs`.
-
-Production `41412228669` has eight passing jobs. Only Intel macOS regular job
-`125167651319` is still packaging; its 131 target logs already pass. Docs
-`41411731331`, job `125166069914`, passes and its complete log is audited.
-The earlier draft run `41411731289` skipped production and is not acceptance.
-
-Every completed job log is audited under `/private/tmp/fwp-243-*.log`.
-Native archives contain 257 passing logs per Linux architecture, 131 per macOS
-regular job, 126 per ownership job, and 57 logs/135 summaries per Windows native
-archive. No unexpected diagnostics. Windows `sched.rs:683/696` panics are
-intentional controls; echoed `-W error::ResourceWarning` is not a warning.
-Read the final Intel macOS job log once complete, then merge with an explicit
-one-line subject, at most 80 characters, and empty body. Verify message and tree.
-Cancel only duplicate main CI/docs after proving tree equality.
+Merged `ea9938debef5cc75d53edb8ca427b49f2513bea3` after production `41412228669`
+and docs `41411731331` passed on `ea976b7e19c26c5be0ad9e748e284cc97a269379`.
+All nine full logs and native target archives are audited. The squash tree equals
+the tested tree; the message is one line, 62 characters, without body/trailers.
+Duplicate same-tree main runs `41425026087` and `41425026016` were cancelled.
+[History](roadmap-history.md#current-numerical-costs-pr-243) records the delivery.
 
 ## Matrix batch
 
 Branch/worktree: `matrix-calculation-costs`, `/private/tmp/fwp-matrix-calculation`.
-Its base is the preserved #243 head. Do not open another PR before #243 merges.
-Rebase only commits after that base onto the verified squash tree. All measured
-sources have remote retention tags; preserve them.
+Rebased onto the verified #243 squash tree. All measured sources and the failed
+report-generation source have remote retention tags; preserve them.
 
 | Step | Status | Evidence / remaining work |
 |---|---|---|
@@ -38,7 +26,7 @@ sources have remote retention tags; preserve them.
 | 2 | Verified | `41412675762` reproduces original binaries on both GCC architectures |
 | 3 | Verified | Paired-loop diagnostic `41416927586`; safety run `41417716203` passes GCC ARM64/AMD64 and Clang ARM64 |
 | 4 | Evidence complete; six limits open | Four measured sessions and three host rejections; combined raw audit `41422907313` passes |
-| 5 | Pending | Regenerate the frame table, publish one coherent PR after #243, pass full final-head gates, verify squash merge |
+| 5 | Pending | Regenerate the frame table, publish one coherent PR, pass full final-head gates, verify squash merge |
 
 The runtime processes two neighboring output columns together, preserving each
 cell's multiplication/addition order, byte-copy access, shared input views,
@@ -60,7 +48,8 @@ host. Missing normal/unwind releases fail their intended observers. No API chang
 - Six small-AMD64 copy failures at 2.6–8.3%, against the unchanged 2% limit.
   Do not claim a qualified speed result for that case or rerun unchanged timings.
 - The matrix worker (`f0`) gains 48 static frame bytes: 1,408→1,456 ARM64 and
-  1,568→1,616 AMD64. Driver `main` stays 384/352 bytes. Code gains 128/320 bytes.
+  1,568→1,616 AMD64. Driver `main` stays 384 static bytes on ARM64 and a 352-byte bounded
+  dynamic estimate on AMD64. Code gains 128/320 bytes.
   Frame estimates and managed charge are not whole-process memory measurements.
 
 Retain the qualified improvements under the user's earlier preference to keep
@@ -81,10 +70,12 @@ protocol; array-construction costs remain the next independent numerical task.
   includes every run/job; rejections were EPYC 9V45, Xeon 8370C and EPYC 9V74.
 - Combined audit `41422907313`, job `125202508959`, source `9f6c8d00`, passes.
   Artifact `13129819093` and all normalized reports/logs/file manifests are retained
-  in `matrix-columns-2026-11-02/`. Full audit log is clean. Add/preserve its source tag.
-- The report now exposes both worker and driver frames. Dispatch `matrix-tables`
-  to regenerate only README from retained reports; no native rebuild or new timing.
-  The documentation workflow checks both historical and new generated tables.
+  in `matrix-columns-2026-11-02/`. Full audit log is clean; source tag retained.
+- Table run `41424485974` at `3ae24c0d` failed: the renderer incorrectly required
+  every GCC estimate to be `static`; AMD64 driver `main` is `dynamic,bounded`.
+  The repair reports the actual qualifier and checks both variants agree, retaining
+  the real 48-byte worker increase. Regenerate README from retained reports with
+  `matrix-tables`; no native rebuild or new timing. Docs check both table sets.
 
 Local guarded checks pass: six patch controls, eight scheduling/limit controls,
 thirteen evidence controls, six retention/prerequisite controls, two table-unit
