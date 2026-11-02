@@ -62,8 +62,10 @@ starts with source/storage diagnostics, including a fully composed fwp program.
 
 - [Small AMD64 matrix timing](docs/measurements/matrix-columns-2026-11-02/README.md):
   six identical-copy failures remain at 2.6–8.3% against the frozen 2% limit.
-  Analyze the retained per-round/per-process samples and execution settings before
-  declaring a revised measurement protocol. Do not repeat unchanged timings or
+  [Retained-sample analysis](docs/measurements/matrix-sample-positions.md) locates
+  much of the mismatch in early within-process samples, without establishing its
+  cause. Declare a setup/sample-progression diagnostic before changing the timing
+  protocol. Do not repeat unchanged timings or
   infer a runtime safety bug from these timing differences. ARM64 and large AMD64
   gains do not settle this separate case.
 - [D2 derivative speed](docs/measurements/descent-costs.md): original 5% limits

@@ -74,7 +74,8 @@ jobs:
       - name: Check construction evidence observers and source formatting
         run: |
           python3 scripts/test-array-construction.py
-          target/debug/fwp fmt --check tests/fixtures/array_construction_costs.fwp
+          target/debug/fwp fmt - < tests/fixtures/array_construction_costs.fwp > array-construction-source.fwp
+          cmp tests/fixtures/array_construction_costs.fwp array-construction-source.fwp
       - name: Compare constructed bits, composed work, storage and compiler reports
         run: >-
           python3 scripts/report-array-construction.py
@@ -85,8 +86,11 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: array-construction-${{ matrix.runner }}
-          path: array-construction/
-          if-no-files-found: warn
+          path: |
+            array-construction/
+            array-construction-source.fwp
+            tests/fixtures/array_construction_costs.fwp
+          if-no-files-found: error
   matrix_checks:
     if: inputs.suite == 'matrix-checks'
     strategy:

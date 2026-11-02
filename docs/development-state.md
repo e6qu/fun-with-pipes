@@ -105,3 +105,16 @@ case/round/path combinations at each O1/O2 setting, ordinary and profiled, plus
 small interpreter cases and deliberately missing-release controls. Six observer
 unit checks pass locally (0.13s), actionlint passes (6.43s). Full compiler builds
 and native diagnostics run only on GitHub. Free space: 66 GiB.
+
+Array run `41426573182` at `f97e8520` failed on both hosts before probes:
+`fwp fmt --check` rejected redundant grouping. Both full logs audited; all six
+observer tests passed. The fixture is now formatted with #243's verified macOS
+package (artifact `13127374308`, archive hash/source checked); small interpreter
+preflights also pass. These release-package preflights are not native GCC evidence.
+The runner now preserves canonical source even when formatting fails. Rerun the
+focused diagnostic after this repair; no production code changed.
+
+[Small-matrix sample analysis](measurements/matrix-sample-positions.md) retains all
+four sessions and locates the copy mismatch mainly in early process samples.
+It establishes no cause and changes no acceptance rule. Its guarded reduction
+took 2.67s; no executable or timing was rerun.
