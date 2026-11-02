@@ -78,3 +78,44 @@ speculation as a speed improvement.
 Group the justified change, probes, measurements and readable docs into one PR.
 PR #243 remains the sole active PR until its complete final-head matrix passes
 and it is squash-merged. This preparation does not change that tested head.
+
+## Diagnostic results and first bounded candidate
+
+Run `41412675762` at `f4fd8be4` passes on native ARM64 and AMD64. All eight
+original C/fwp binaries reproduce byte for byte on each architecture, with exact
+outputs and zero final workload storage. [Archives and full logs](matrix-codegen-2026-11-02/index.json)
+retain the sources, commands, binaries and compiler reports; both artifact digests
+and all completed logs are audited.
+
+| Compiler | C matrix inner loop | fwp matrix inner loop |
+|---|---|---|
+| GCC 15.2 / AMD64 | Vectorizes using 16-byte vectors | Does not vectorize the byte-copy loads |
+| GCC 13.3 / ARM64 | Does not vectorize: estimated cost is not worthwhile | Does not vectorize: would require a runtime alias check |
+
+These explain compiler decisions, not the whole measured timing gap. The fwp loop
+already marks its local output pointer `restrict`, but that does not produce the
+same alias result as the C peer's kernel interface in these reports.
+
+First test a small, standard-C expression of the existing read-only input rule:
+
+```c
+const unsigned char *restrict a = fwp_array_data(left);
+const unsigned char *restrict b = fwp_array_data(right);
+```
+
+Keep byte-copy loads/stores, the existing fresh-output qualifier, loop structure,
+arithmetic order, polling and cleanup. No typed-pointer cast, intrinsic, wrapper,
+extra storage or new source-language rule is selected.
+
+This does **not** prohibit `left` and `right` sharing data: both only read it.
+[C11 draft N1570, §6.7.3.1 example 3](https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf)
+explicitly permits two restricted pointers to alias an unmodified object. fwp's
+immutable inputs remain owned during the call, and the fresh output is separate.
+Existing identical/sliced-input probes must still pass; add a partially overlapping
+pair before accepting a compiler change.
+
+First compile the exact source substitution against the retained programs, using
+the same diagnostic settings and original C peers. Keep every result, including
+unchanged binaries or missed vectorization. This is still not a timing acceptance
+run. If it does not improve the intended compiler decision, record that outcome
+before selecting another candidate; do not add qualifiers merely for appearance.

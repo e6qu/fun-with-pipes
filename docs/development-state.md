@@ -22,7 +22,7 @@ The previous full handoff remains at `ea976b7e:docs/development-state.md`.
 | Step | Status | Evidence / remaining work |
 |---|---|---|
 | 1 | Verified | Protocol `5f235bb0`, tag `roadmap/matrix-calculation-protocol-2026-11-02`, published before runner edits |
-| 2 | In progress | Runner uses explicit current archive/binary identities; four damaged-input controls pass (0.13s); native GCC runs next |
+| 2 | In progress | Runner uses explicit current archive/binary identities; four damaged-input controls pass (0.13s); run `41412675762` passes both architectures |
 | 3 | Pending | Select a source-level candidate from evidence; no speculative runtime change |
 | 4 | Pending | Freeze candidate/reference before two-session timing; preserve all failed controls |
 | 5 | Pending | Deliver coherent changes after #243; exact-head full matrix/docs and verified squash merge |
@@ -50,3 +50,12 @@ checks their recorded SHA-256 values, and uses each executable's explicit role
 path. It adds only GCC diagnostic options and requires identical binary bytes.
 Compiler commands use the shared child-deadline runner. Historical dispatch
 instructions identify their recorded revisions; no old-format fallback is added.
+
+Run `41412675762` at `f4fd8be4` reproduces all eight original binaries and outputs
+on each native architecture. Complete artifacts/logs are retained under
+`docs/measurements/matrix-codegen-2026-11-02/`. AMD C vectorizes the matrix inner
+loop but fwp does not; ARM fwp reports a required alias check while C rejects
+vectorization on cost. These are compiler decisions, not a proven timing cause.
+The protocol now freezes a first bounded candidate: read-only restricted input
+pointers, retaining byte-copy access, shared-input legality and all cleanup.
+No runtime edit has been made yet; compile the exact candidate substitution next.
