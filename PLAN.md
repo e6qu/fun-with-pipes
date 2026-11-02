@@ -29,14 +29,17 @@ Steps 1–2 are complete: all 96 saved observations agree on the selected bounda
 [PR #240](https://github.com/e6qu/fun-with-pipes/pull/240) merged the implementation of the
 [frozen selection](docs/measurements/derivative-record-folds.md): keep a known
 left-fold accumulator in local numeric fields and leave list-stored results alone.
-Step 3's first native run passed allocation/release controls on both GCC hosts
-and Clang, but its semantic fixture failed selection: destructuring before the
-next `fn` left a returned closure. The follow-up uses direct-field callbacks,
-retains semantic comparisons with destructuring, and tightens exclusion coverage.
-That repair exposed missing known-callback specialization in `attempt`; extend
-the existing pass and verify capture order and handler boundaries.
-It must finish the added unwind controls, measurements and final validation.
-No whole-solve allocation saving or speedup is verified yet.
+Step 3 now passes numeric-fold semantics, aliases, exact allocation/release,
+failure/cancellation and handler-order checks on GCC Linux ARM64/AMD64 and Clang
+macOS ARM64. The follow-up specializes known callbacks passed to `attempt` without
+moving capture evaluation into the handler. Two older cleanup probes need explicit
+compiler roots because their C harness calls functions that an ordinary executable
+can optimize away; their repair is still under verification.
+
+Both native count archives verify the planned savings: the largest measured solve
+removes 25,273 allocations and 25,472 effective retains with unchanged peak managed
+storage and zero final live storage. Fifteen ARM64 cases exceed the frozen 1,024-byte
+code-growth limit; AMD64 images shrink. Timing and the final full matrix remain.
 Mapping must still finish before summation when interleaving changes recording
 or trap order.
 

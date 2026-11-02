@@ -87,7 +87,8 @@ requirements above before compiler edits.
 ## Candidate and validation
 
 [PR #240](https://github.com/e6qu/fun-with-pipes/pull/240) implements the selected
-fold in `src/cgen.rs`. Native correctness, count and timing results remain pending.
+fold in `src/cgen.rs`. Focused numeric-fold checks and both native count audits
+pass; older cleanup probes, timing and final production validation remain.
 The [handoff](../development-state.md) tracks current source and job identities.
 
 Use the `Numerical and ownership evidence` workflow with explicit inputs:
@@ -143,6 +144,26 @@ and [download identities](derivative-record-fold-counts-initial-artifacts-2026-1
 preserve the audit. Source tag: `roadmap/record-fold-initial-counts-2026-11-02`.
 These measurements do not verify the later optimizer repair. Its own observations
 and passing correctness checks are still required.
+
+## Updated optimizer: same count savings and size failures
+
+Source `0bca5f91` adds known-callback specialization for `attempt`. Count run
+[41371032477](https://github.com/e6qu/fun-with-pipes/actions/runs/41371032477)
+completed every measurement. Its two jobs fail separately because older cleanup
+probes look up entry points removed by optimization. Those probes are being
+repaired; this report does not claim that their checks passed.
+
+Independent audit [41372228352](https://github.com/e6qu/fun-with-pipes/actions/runs/41372228352)
+verifies all 96 count/memory observations and retains the same 15 ARM64 size-limit
+failures. The largest solve has the same totals shown above. Keep the
+[updated counts](derivative-record-fold-counts-2026-11-02.json.gz) and
+[archive identities](derivative-record-fold-counts-artifacts-2026-11-02.json)
+separate from the earlier compiler. Source tag:
+`roadmap/record-fold-attempt-2026-11-02`.
+
+The fixture repair changes no compiler or measurement source, so these count
+observations can be reused once the cleanup checks pass. Elapsed time is still
+unmeasured; allocation savings establish no speedup.
 
 ## Reproduce the source/count audit
 

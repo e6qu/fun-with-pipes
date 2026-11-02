@@ -354,7 +354,7 @@ defines selection, cleanup, exact budgets and completed validation.
 
 ### Numeric record fold accumulators
 
-PR #240 implements a narrower call boundary, pending native verification:
+PR #240 implements a narrower call boundary, with focused native checks in #241:
 a known left fold can keep its accumulator's numeric fields in local variables.
 An accumulator is the running result passed to the next iteration. `.0` selects
 the first tuple field and `.1` the second. For example:
@@ -387,7 +387,7 @@ the next `fn` can currently leave a returned closure and a boxed result; that pa
 is semantically equivalent but does not qualify for this optimization.
 
 Known partial callbacks passed to `attempt` now use the same specialization pass
-as other synchronous handlers (PR #241, native verification pending). For
+as other synchronous handlers (PR #241, focused GCC/Clang checks pass). For
 `attempt (fold step seed) values`, the pass exposes the fold inside the callback.
 It evaluates `seed` before entering the handler; failures during the callback are
 caught by `attempt`. The handler itself remains in place.

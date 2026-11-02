@@ -51,6 +51,36 @@ main = [task.yield (),
     ["a", "b"] | direct "seed" | echo,
 ] | ignore
 "#;
+// The C probes call these exports directly. An ordinary executable roots only
+// main, so optimization may correctly remove the entry points they need.
+fn probe_source() -> String {
+    fwp::driver::with_big_stack(|| {
+        let (compilation, program) = fwp::driver::compile_source(
+            "fold-unwind.fwp",
+            SOURCE,
+            fwp::mono::Roots {
+                main: true,
+                exports: true,
+                ..Default::default()
+            },
+        )
+        .map_err(|error| error.rendered)
+        .unwrap();
+        assert!(
+            compilation.warnings.is_empty(),
+            "{}",
+            compilation.render_warnings()
+        );
+        let emitted = fwp::cgen::generate(&program).unwrap();
+        if let Some(root) = std::env::var_os("FWP_ARC_ARTIFACTS") {
+            let directory = PathBuf::from(root).join("record-ownership/fold_unwind_source");
+            std::fs::create_dir_all(&directory).unwrap();
+            std::fs::write(directory.join("input.fwp"), SOURCE).unwrap();
+            std::fs::write(directory.join("generated.c"), &emitted).unwrap();
+        }
+        emitted
+    })
+}
 fn function_id<'a>(emitted: &'a str, name: &str) -> &'a str {
     let start = emitted
         .find(&format!("/* {name} :"))
@@ -162,7 +192,6 @@ transform = fn pause -> fn seed -> fn values ->
 fn right_fold_releases_accumulator_and_scratch_on_failure() {
     let dir = Scratch::new("failure");
     let src = dir.0.join("fold.fwp");
-    let cfile = dir.0.join("fold.c");
     let exe = dir.0.join("fold.exe");
     let fwp = env!("CARGO_BIN_EXE_fwp");
     std::fs::write(&src, SOURCE).unwrap();
@@ -173,15 +202,7 @@ fn right_fold_releases_accumulator_and_scratch_on_failure() {
             .arg(&src),
     );
     {
-        checked(
-            Command::new(fwp)
-                .env("FWP_STACK", "1")
-                .args(["build", "--memory", "dynamic"])
-                .arg(&src)
-                .args(["--emit-c", "-O2", "-o"])
-                .arg(&cfile),
-        );
-        let emitted = std::fs::read_to_string(&cfile).unwrap();
+        let emitted = probe_source();
         let probe = r#"
 static volatile V input_seed, source_list, input_capture;
 static int recover_fold(void) { return 1; }
@@ -409,21 +430,9 @@ int main(void) {
 #[test]
 fn borrowed_prefix_duplicates_and_scalar_words_release_precisely() {
     let dir = Scratch::new("preparation");
-    let src = dir.0.join("preparation.fwp");
-    let cfile = dir.0.join("preparation.c");
     let exe = dir.0.join("preparation.exe");
-    let fwp = env!("CARGO_BIN_EXE_fwp");
-    std::fs::write(&src, SOURCE).unwrap();
     {
-        checked(
-            Command::new(fwp)
-                .env("FWP_STACK", "1")
-                .args(["build", "--memory", "dynamic"])
-                .arg(&src)
-                .args(["--emit-c", "-O2", "-o"])
-                .arg(&cfile),
-        );
-        let emitted = std::fs::read_to_string(&cfile).unwrap();
+        let emitted = probe_source();
         let probe = r#"
 static volatile V first, second, function_value, scalar_word;
 static jmp_buf prepare_trap;
