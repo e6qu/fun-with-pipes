@@ -1,9 +1,9 @@
 # Current work
 
-**Next:** monitor PR #244's nine final-head production jobs and documentation;
-audit failures and all completed diagnostics. Meanwhile implement the independent
-array-construction diagnostic under its published protocol. Keep #244's head
-unchanged unless a real CI repair is required; one active PR only.
+**Next:** monitor and audit PR #244's final-head production gates; docs and
+bench pass. The independent array diagnostic now passes both GCC hosts. Freeze
+its source-versus-driver phase timing protocol before selecting a compiler change.
+Preserve #244's head unless a real CI repair is required; one active PR only.
 
 ## Active delivery
 
@@ -118,3 +118,12 @@ focused diagnostic after this repair; no production code changed.
 four sessions and locates the copy mismatch mainly in early process samples.
 It establishes no cause and changes no acceptance rule. Its guarded reduction
 took 2.67s; no executable or timing was rerun.
+
+Repaired array diagnostic `41427397530` at `d3ddc94d6eb8c5c58af74159051670241dd23e5b`
+passes on AMD64 job `125217227607` / artifact `13132143987` and ARM64 job
+`125217227733` / artifact `13132374453`. Complete logs audited clean; all retained
+file hashes and all four ordinary/profiled outputs per host independently checked
+under the guard (2.32s). Evidence: `measurements/array-construction-2026-11-02/`.
+Both materialized paths allocate once; composed source already allocates zero.
+Source generation retains generic callback dispatch for all-scalar captures.
+Do not claim elapsed-time improvement or remove checks based only on this result.
