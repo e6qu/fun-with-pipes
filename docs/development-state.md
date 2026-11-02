@@ -1,14 +1,17 @@
 # Current work
 
-**Next:** monitor PR #243's nine final-head production gates while the independent
-matrix compiler diagnostic runs. Keep head `ea976b7e19c26c5be0ad9e748e284cc97a269379`
+**Next:** compile the declared two-column matrix candidate on both native GCC
+hosts while monitoring PR #243. Keep head `ea976b7e19c26c5be0ad9e748e284cc97a269379`
 unchanged. Squash-merge only after all gates pass, with an explicit one-line subject
 at most 80 characters and empty body; verify the merge message and tree.
 
 PR: https://github.com/e6qu/fun-with-pipes/pull/243
 Docs run `41411731331`, job `125166069914`, passes and its complete log is audited:
 `/private/tmp/fwp-243-docs.log`. Only deliberate test-runner rejection/panic controls
-appear. Ready production run `41412228669` is queued/running without failed steps.
+appear. Production run `41412228669` has passing benchmarks and both ARM macOS
+jobs; six platform jobs remain running without failed steps. Complete passing logs
+are audited (`/private/tmp/fwp-243-bench.log`, `fwp-243-mac-arm-regular.log` and
+`fwp-243-mac-arm-ownership.log`); the echoed ResourceWarning option is not a warning.
 Draft run `41411731289` is skipped and establishes no platform support.
 The published worktree is `/private/tmp/fwp-current-kernel-costs`.
 
@@ -22,8 +25,8 @@ The previous full handoff remains at `ea976b7e:docs/development-state.md`.
 | Step | Status | Evidence / remaining work |
 |---|---|---|
 | 1 | Verified | Protocol `5f235bb0`, tag `roadmap/matrix-calculation-protocol-2026-11-02`, published before runner edits |
-| 2 | In progress | Runner uses explicit current archive/binary identities; four damaged-input controls pass (0.13s); run `41412675762` passes both architectures |
-| 3 | Pending | Select a source-level candidate from evidence; no speculative runtime change |
+| 2 | Verified | Run `41412675762` reproduces all original binaries on both architectures; complete compiler reports and logs retained |
+| 3 | In progress | Restricted-input candidate rejected: identical binaries; two-column diagnostic declared before implementation |
 | 4 | Pending | Freeze candidate/reference before two-session timing; preserve all failed controls |
 | 5 | Pending | Deliver coherent changes after #243; exact-head full matrix/docs and verified squash merge |
 
@@ -56,14 +59,15 @@ on each native architecture. Complete artifacts/logs are retained under
 `docs/measurements/matrix-codegen-2026-11-02/`. AMD C vectorizes the matrix inner
 loop but fwp does not; ARM fwp reports a required alias check while C rejects
 vectorization on cost. These are compiler decisions, not a proven timing cause.
-The protocol now freezes a first bounded candidate: read-only restricted input
-pointers, retaining byte-copy access, shared-input legality and all cleanup.
-No runtime edit has been made yet; compile the exact candidate substitution next.
+Run `41414518831` at `dce1f2b6` checks the declared restricted-input candidate.
+Both native jobs pass, but every candidate binary and vectorization decision is
+unchanged. Complete evidence is retained under
+`docs/measurements/matrix-input-restrict-2026-11-02/`; no timing retry is justified.
+Five archive/patch controls pass (0.14s), actionlint passes (6.34s).
 
-The diagnostic runner now requires explicit `matrix_input_access=original` or
-`restricted`. The restricted case substitutes only the frozen comment/declaration
-in the two fwp matrix sources; the six C/array controls must still reproduce their
-original binaries. All eight outputs are checked and every binary identity retained.
-Five focused archive/patch controls pass (0.14s), actionlint passes (6.34s).
-No production runtime or compiler source has changed. Dispatch this bounded
-candidate diagnostic next; use its result before committing to full measurements.
+The protocol now declares two adjacent columns per inner-loop iteration, followed
+by a scalar odd-column remainder. Keep byte-copy access, the original pointers,
+per-cell arithmetic order, polling and cleanup. Exposing this fixed pair might
+let GCC combine independent work; compiler diagnostics must establish that first.
+No production runtime or compiler source has changed. Preserve the protocol in a
+pushed commit/tag before implementing its exact source substitution.

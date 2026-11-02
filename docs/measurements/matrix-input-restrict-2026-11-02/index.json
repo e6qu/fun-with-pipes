@@ -1,0 +1,255 @@
+{
+  "run": 41414518831,
+  "source": "dce1f2b6fe785b9eb9db55ae08ea4a63ba09520c",
+  "decision": "rejected-identical-binaries",
+  "jobs": [
+    {
+      "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/125175016728",
+      "completed_at": "2026-11-02T08:46:43Z",
+      "conclusion": "success",
+      "created_at": "2026-11-02T08:38:15Z",
+      "head_branch": "matrix-calculation-costs",
+      "head_sha": "dce1f2b6fe785b9eb9db55ae08ea4a63ba09520c",
+      "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41414518831/job/125175016728",
+      "id": 125175016728,
+      "labels": [
+        "ubuntu-latest"
+      ],
+      "name": "kernel_codegen (ubuntu-latest)",
+      "node_id": "CR_kwDOU33zxM8AAAAdJQMtGA",
+      "run_attempt": 1,
+      "run_id": 41414518831,
+      "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/41414518831",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions",
+      "runner_id": 1000396467,
+      "runner_name": "GitHub Actions 1000396467",
+      "started_at": "2026-11-02T08:46:03Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completed_at": "2026-11-02T08:46:05Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "started_at": "2026-11-02T08:46:04Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T08:46:14Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v7",
+          "number": 2,
+          "started_at": "2026-11-02T08:46:05Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T08:46:14Z",
+          "conclusion": "success",
+          "name": "Require the declared current-source session",
+          "number": 3,
+          "started_at": "2026-11-02T08:46:14Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T08:46:14Z",
+          "conclusion": "success",
+          "name": "Check archive identity controls",
+          "number": 4,
+          "started_at": "2026-11-02T08:46:14Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T08:46:17Z",
+          "conclusion": "success",
+          "name": "Retrieve the exact current-kernel archive",
+          "number": 5,
+          "started_at": "2026-11-02T08:46:14Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T08:46:30Z",
+          "conclusion": "success",
+          "name": "Collect GCC reports without changing the measured binaries",
+          "number": 6,
+          "started_at": "2026-11-02T08:46:17Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T08:46:31Z",
+          "conclusion": "success",
+          "name": "Retain complete or partial compiler reports",
+          "number": 7,
+          "started_at": "2026-11-02T08:46:30Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T08:46:32Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v7",
+          "number": 14,
+          "started_at": "2026-11-02T08:46:31Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T08:46:32Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 15,
+          "started_at": "2026-11-02T08:46:32Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/125175016728",
+      "workflow_name": "Numerical and ownership evidence"
+    },
+    {
+      "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/125175016811",
+      "completed_at": "2026-11-02T08:45:27Z",
+      "conclusion": "success",
+      "created_at": "2026-11-02T08:38:15Z",
+      "head_branch": "matrix-calculation-costs",
+      "head_sha": "dce1f2b6fe785b9eb9db55ae08ea4a63ba09520c",
+      "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41414518831/job/125175016811",
+      "id": 125175016811,
+      "labels": [
+        "ubuntu-24.04-arm"
+      ],
+      "name": "kernel_codegen (ubuntu-24.04-arm)",
+      "node_id": "CR_kwDOU33zxM8AAAAdJQMtaw",
+      "run_attempt": 1,
+      "run_id": 41414518831,
+      "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/41414518831",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions",
+      "runner_id": 1000396458,
+      "runner_name": "GitHub Actions 1000396458",
+      "started_at": "2026-11-02T08:45:00Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completed_at": "2026-11-02T08:45:01Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "started_at": "2026-11-02T08:45:01Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T08:45:10Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v7",
+          "number": 2,
+          "started_at": "2026-11-02T08:45:01Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T08:45:10Z",
+          "conclusion": "success",
+          "name": "Require the declared current-source session",
+          "number": 3,
+          "started_at": "2026-11-02T08:45:10Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T08:45:10Z",
+          "conclusion": "success",
+          "name": "Check archive identity controls",
+          "number": 4,
+          "started_at": "2026-11-02T08:45:10Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T08:45:12Z",
+          "conclusion": "success",
+          "name": "Retrieve the exact current-kernel archive",
+          "number": 5,
+          "started_at": "2026-11-02T08:45:10Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T08:45:24Z",
+          "conclusion": "success",
+          "name": "Collect GCC reports without changing the measured binaries",
+          "number": 6,
+          "started_at": "2026-11-02T08:45:12Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T08:45:25Z",
+          "conclusion": "success",
+          "name": "Retain complete or partial compiler reports",
+          "number": 7,
+          "started_at": "2026-11-02T08:45:24Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T08:45:26Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v7",
+          "number": 14,
+          "started_at": "2026-11-02T08:45:25Z",
+          "status": "completed"
+        },
+        {
+          "completed_at": "2026-11-02T08:45:26Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 15,
+          "started_at": "2026-11-02T08:45:26Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/125175016811",
+      "workflow_name": "Numerical and ownership evidence"
+    }
+  ],
+  "artifacts": {
+    "arm": {
+      "metadata": {
+        "id": 13126553688,
+        "node_id": "MDg6QXJ0aWZhY3QxMzEyNjU1MzY4OA==",
+        "name": "kernel-codegen-ubuntu-24.04-arm",
+        "size_in_bytes": 1789548,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13126553688",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13126553688/zip",
+        "expired": false,
+        "digest": "sha256:bbba4c37d495b99ca0df6bad8e495107accec0ec62a3666154f88341ce2737ff",
+        "created_at": "2026-11-02T08:45:25Z",
+        "updated_at": "2026-11-02T08:45:25Z",
+        "expires_at": "2027-01-31T08:38:14Z",
+        "workflow_run": {
+          "id": 41414518831,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "matrix-calculation-costs",
+          "head_sha": "dce1f2b6fe785b9eb9db55ae08ea4a63ba09520c"
+        }
+      },
+      "logSha256": "e98c40e58b7723973ce68aa56534c8408a023dd08cd1e80e011d5ddf093ffb55"
+    },
+    "amd": {
+      "metadata": {
+        "id": 13127077838,
+        "node_id": "MDg6QXJ0aWZhY3QxMzEyNzA3NzgzOA==",
+        "name": "kernel-codegen-ubuntu-latest",
+        "size_in_bytes": 1819918,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13127077838",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13127077838/zip",
+        "expired": false,
+        "digest": "sha256:84d5bc3fdc5d311fce751d58511d6118f43631f9e80fef6a8d444883a45fb881",
+        "created_at": "2026-11-02T08:46:31Z",
+        "updated_at": "2026-11-02T08:46:31Z",
+        "expires_at": "2027-01-31T08:38:14Z",
+        "workflow_run": {
+          "id": 41414518831,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "matrix-calculation-costs",
+          "head_sha": "dce1f2b6fe785b9eb9db55ae08ea4a63ba09520c"
+        }
+      },
+      "logSha256": "10ee4688c285be2103073c081cdfe8dbe6703e8448880366858bab65eb054288"
+    }
+  }
+}

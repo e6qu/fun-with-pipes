@@ -119,3 +119,45 @@ the same diagnostic settings and original C peers. Keep every result, including
 unchanged binaries or missed vectorization. This is still not a timing acceptance
 run. If it does not improve the intended compiler decision, record that outcome
 before selecting another candidate; do not add qualifiers merely for appearance.
+
+### Restricted local inputs: rejected without timing
+
+Run `41414518831` at `dce1f2b6` passes exact outputs on both architectures, but
+every candidate binary is byte-identical to its original. The vectorization
+remarks are unchanged too. [Complete evidence](matrix-input-restrict-2026-11-02/index.json)
+retains both archives and full logs. Do not add these ineffective qualifiers to
+the runtime or spend a new timing session trying to find a speedup.
+
+## Second candidate: two adjacent output columns
+
+Freeze a source-only diagnostic of a two-column inner loop before implementation.
+Keep the original input pointer declarations. For each row/inner-index pair:
+
+```text
+read x
+read y[j], y[j+1], prior[j], prior[j+1]
+value[j]   = x*y[j]   + prior[j]
+value[j+1] = x*y[j+1] + prior[j+1]
+store both values
+```
+
+Advance by two only while `je - j >= 2`, then use the original scalar operation
+for a remaining odd column. Each cell keeps its increasing inner index and the
+same multiplication/addition operands. The two cells are independent: the output
+is fresh, inputs are read-only and validated, and canonical F64 arithmetic has no
+source-level effects. The existing specialization already interleaves independent
+cells; it preserves each cell's reduction order, not a global sequence of all cells.
+Arithmetic NaN payload/sign rules remain [implementation dependent](../reference.md#types).
+
+Use ordinary scalar `double` locals and existing fixed-size byte copies. No vector
+type, alignment assumption, pointer cast, extra buffer, helper wrapper or runtime
+hardware selection is added. The pair exposes independent arithmetic to GCC's
+basic-block vectorizer; whether it combines that work must be checked, not assumed.
+Bounds keep both accesses inside the tile and validated arrays. Polling, shape
+checks, allocation and cleanup remain at their existing points.
+
+Compile the exact substitution with the same original C/array controls first.
+Retain all binaries, outputs and compiler remarks. Full compiler/interpreter,
+partial-overlap, floating-edge and unwind probes are required before timing a
+candidate selected for the runtime. The declared 5%/2% speed/noise rules above
+still apply; diagnostic durations do not count toward them.
