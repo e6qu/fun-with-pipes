@@ -65,6 +65,14 @@ failed jobs. Initial successful evidence remains in [candidate counts](candidate
 
 ## Reproduce
 
+PR #248's first documentation run `41522418627` exposed a stale test: disabling
+the scalar-array selection rule in the current compiler was expected to reproduce
+an entire historical code-generator file. That incorrectly rejected unrelated
+packed-record code. The repair compares the frozen candidate with its frozen
+baseline, and separately checks that the current rule's exact reversal preserves
+all other source. All three checks pass; no compiler change was needed. The
+[complete failed log](initial-docs-failure.log.gz) retains the original failure.
+
 The [timing tables](timing.md) link each measured run's compressed reports and
 audit index. The index retains every file's hash, complete job-log identity,
 source revision, reference patch and original acceptance result. Each run's

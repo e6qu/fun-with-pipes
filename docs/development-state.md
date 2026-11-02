@@ -18,6 +18,23 @@ compiler commit is `b08cdf91`. Immutable measurement tags remain unchanged.
 Use `gh pr checks 248` / `gh pr view 248 --json headRefOid,statusCheckRollup` to
 identify the final head and run IDs; do not treat draft/skipped jobs as validation.
 
+Initial head `b06a36baa4bc71d56a5a5b4ab821a047f5602196` ran production
+`41522419557` and documentation `41522418627`. The documentation failure is a
+stale scalar-array reference test comparing current entire C generation against
+an old baseline. Repair pins both sides of that historical comparison and adds
+a current-source round-trip check preserving unrelated changes; all three tests
+pass (0.14s). The complete failed documentation log is retained in verification.
+All other completed documentation controls are audited; the apparent earlier
+Rust failure is the intentional native-runner propagation control.
+
+The benchmark job `125541517034` passes both tests with no diagnostics. Every
+production job was checked before the repair push; no production failure was
+reported. Supersede the unfinished initial run when publishing this test/docs-only
+repair rather than let two complete matrices consume runners. No production
+compiler or native test source changes. Identify the new final run IDs through
+PR #248; keep a local status update while gates run rather than restart CI solely
+to publish their IDs. Draft/skipped jobs are not validation.
+
 [PR #247](roadmap-history.md#benchmark-driver-comparison-pr-247) merged as
 `389337b9495f8fc2c4343339765707c4503b9984`. All nine production jobs and documentation
 pass on `bb2e5b29fa6f53b3f187c3fba3fd15d38ff4085b`; every job/target log is audited.
