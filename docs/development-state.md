@@ -1,11 +1,22 @@
 # Current work
 
-**Next:** publish the completed direct-array-call report in
-[PR #253](https://github.com/e6qu/fun-with-pipes/pull/253), mark it ready, and monitor
-its exact final head through nine production jobs plus documentation. Audit every
-full/target log before the authorized one-line squash; verify the merge tree.
-Keep missed timing goals open. Select the next storage change only after declaring
-its proof, scope and measurement; the review below does not select an implementation.
+**Next:** finish the exact-head CI audit and delivery of
+[PR #253](https://github.com/e6qu/fun-with-pipes/pull/253), then implement the [prepared conversion contract](measurements/scalar-array-identities.md). Final head is
+`893942291b0f1e51a23488c9dea2a9d811acfab1`; production run `41662326563` has nine
+jobs. Its benchmark job and documentation run `41662323124` passed full-log
+audit; the other eight production jobs are pending. `collect-253.py` in
+`.worktrees/gradient-work` collects and audits each completed gate.
+
+This checkout is `.worktrees/scalar-array-identities`, branch
+`scalar-array-identities`, based on that final head. The source review and pre-implementation contract are prepared. [The proposed next scope](measurements/remaining-gradient-storage.md#conversion-semantics-to-settle-first)
+records a same-type float conversion inconsistency and concrete ownership/check
+requirements. The pending user question asks whether same-type conversions
+should preserve all bits. Cross-type conversion rules would remain unchanged.
+The draft uses bit-preserving same-type conversion unless that answer changes.
+No scalar/optimizer implementation, new timing or second PR exists yet. An
+unrun regression test compares exact bits through interpreter/native entries;
+its formatting check passes. Source review links pass the guarded roadmap audit
+(242 link sets, 106 preparation anchors; 2.63s).
 
 ## Checkout and sources
 
