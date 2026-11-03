@@ -1,6 +1,10 @@
 # Returning the final iteration value
 
-**Implemented and verified on three focused native hosts; measurements and final delivery gates remain open.**
+**Implemented and verified on three focused native hosts; final delivery gates remain open.**
+The [complete runtime report](final-iteration-time-2026-11-04/README.md) verifies
+the large-case memory goal and retains six missed timing limits.
+[Compiler costs](final-iteration-analysis-2026-11-04/README.md) retain one noisy
+timing case. These outcomes do not change the frozen limits below.
 This contract was frozen at `2a257a3e` with
 `roadmap/final-iteration-storage-protocol-2026-11-03` before implementation.
 PR #254 must finish its gates before

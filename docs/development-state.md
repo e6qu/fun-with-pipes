@@ -1,8 +1,8 @@
 # Current work
 
 **Next:** finish and audit #254's Intel macOS ownership retry, then squash the
-verified head. In parallel, retain the final-iteration measurements already running
-at the frozen source. Open its delivery PR only after #254 merges.
+verified head. Final-iteration measurements and raw audits are complete. Reconcile
+that branch onto the verified squash, then open its grouped PR and run final gates.
 
 ## PR #254: final gates
 
@@ -68,33 +68,39 @@ missing test list layouts (`41720302662`), omitted scratch-buffer count
 Compiler/runtime/library code has not changed since `f599dfba`; later fixes correct
 fixtures and measurement tooling. Original source IDs remain reachable by the tag.
 
-### Measurements in progress
+### Complete measurements; delivery remains
 
-- Compiler costs: run `41729365239`. ARM64 passes; AMD64 field-transfer has 2.043%
-  identical-copy variation against 2%, so that timing case is inconclusive.
-  All 480 commands, inputs, native compiler images and raw records are audited;
-  [retained results](measurements/final-iteration-analysis-2026-11-04/README.md).
-  Do not repeat this session. ARM64/AMD64 audits took 45.24s/4.85s under the guard.
-- Runtime: run `41729376533`. Both ARM64 sessions are measuring. Both AMD64 hosts
-  were rejected before build/timing (Xeon 6975P-C instead of EPYC 7763).
-  Audited rejections are in scratch `final-iteration-host-rejections/41729376533`.
-  Replacement AMD64-only sessions in `41730462251` qualified and are measuring.
-  [Run/host records](measurements/final-iteration-time-2026-11-04/README.md).
-  Never rerun completed timings.
-- Once sessions finish, dispatch `final-iteration-report` against each run on the
-  frozen tag, with `source_revision=bb5433b688c26c60f0b2561a59420deb0f0e95ed`.
-  Retain full/raw audits, every missed limit, compiler cost and stack observations.
-- Reference restores reverse/head and disables only history removal. Both sides
-  keep count and cleanup repairs. Reference, budget and evidence controls pass.
-- After reconciliation onto #254's squash, require nine final-head production
-  jobs plus docs before delivery. No final production matrix has been dispatched.
+- Compiler run `41729365239`: all 480 commands, inputs, native compiler images and
+  raw records are audited. Nine timing cases pass; AMD64 field-transfer copy
+  variation is 2.043% against 2%, so it remains inconclusive. All observed memory
+  ratios pass. [Results](measurements/final-iteration-analysis-2026-11-04/README.md).
+- Runtime runs `41729376533` (ARM64) and `41730462251` (AMD64): all four sessions
+  complete. Raw audits `41732080777` / `41733338891` pass; all 5,336 file records,
+  full logs, reference sources, commands and native images reconcile.
+- [Complete results](measurements/final-iteration-time-2026-11-04/README.md): largest
+  history-form peak managed storage 838,688 → 19,360 bytes (97.7% less); 5.1–5.9%
+  faster. Each 199-update solve saves 400 requests, 11,192 requested bytes and
+  399 retains. Current-form counts and raw storage are unchanged; final storage
+  is zero. All 48 count comparisons agree across hosts and workspace modes.
+- Keep six runtime timing misses open: ARM64 3/199 and 33/199 history in both
+  sessions; AMD64 session 1's 33/199 history; AMD64 session 2's 3/1 history is
+  2.79% slower against 2%. All identical-copy controls pass. No timing was rerun.
+  Two initial wrong-CPU AMD64 hosts stopped before building/measuring and are retained.
+- No reported frame growth; native text changes −528 to +1,120 bytes. C/Rust use
+  manual gradients and different storage; their ratios do not isolate language overhead.
+- Both reference compilers retain count/cleanup repairs. Frozen source/tag remain
+  `bb5433b6`; docs-only commits do not change those measured programs.
+- After #254's verified squash, reconcile source and retained evidence onto it;
+  require nine final-head production jobs plus docs. No final matrix is dispatched.
 
 ### Local checks and resume tools
 
 - Guarded focused checks: formatting 1.70s; docs (253 link sets) 2.55s; workflow
   lint 6.85s; inventory 395 declarations/374 contracts, baseline unchanged;
   shard coverage 255 targets. Final focused evidence audit 1.85s, retention 3.82s.
-  Updated tracked-document links and handoff checks pass (3.12s).
+  Updated documentation checks pass (255 link sets, 3.15s). Runtime collections
+  5.93s/6.04s; complete retention 0.48s; 48-count audit 0.26s; report 0.25s.
+  Compiler audits 45.24s/4.85s. All under the guard.
 - Scratch collectors/auditors live in `../gradient-work`: `collect-final-platforms.py`,
   `collect-final-iteration-checks.py`, `audit-final-iteration-success.py`,
   `audit-final-iteration-analysis.py`, `collect-final-iteration-runtime.py` and

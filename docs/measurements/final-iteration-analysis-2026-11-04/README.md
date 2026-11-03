@@ -23,7 +23,8 @@ below 5%; that does not override the failed noise control. No session was repeat
 - Two identical copies per compiler; two warmups and ten balanced measured rounds
   per copy. Time medians exclude warmups; peak RSS includes them. Each architecture
   runs 240 commands. Limits: copy variation ≤2%, time/RSS ratios ≤1.05.
-- Native Linux ARM64 and AMD64; Rust 1.99.1, compiler O1, debug assertions and
+- Native Linux ARM64 (implementer `0x41`, part `0xd49`) and AMD EPYC 7763;
+  GCC 13.3.0/15.2.0 respectively. Rust 1.99.1, compiler O1, debug assertions and
   overflow checks enabled, two build jobs, `FWP_LTO=0`. The compiler-cost protocol
   checks architecture; the runtime protocol separately requires qualified CPUs.
 

@@ -98,11 +98,13 @@ shared-history control retains a second use that must remain available.
 The [implementation contract](final-iteration-storage.md) now selects direct
 `last`, eligible numeric-state history removal, matching count validation and
 an incidental optional-result cleanup repair as one group. Implementation and
-three-host focused verification are complete; measurements and final platform
-gates remain open. Resource-bearing states are excluded from history removal;
+three-host focused verification are complete. The
+[four-session report](final-iteration-time-2026-11-04/README.md) verifies lower
+memory and ARC costs, with six timing limits still open. Final platform gates
+remain required. Resource-bearing states are excluded from history removal;
 general `last` passes separate ownership checks for those values.
 
-Measure this separately from coordinate representation. If the history is removed,
-label new comparisons by their source forms and report what each actually retains.
+This is measured separately from coordinate representation. Comparisons label
+the source forms: the candidate history-form program retains only its current state.
 Preserve older reports as observations of their recorded compiler; their history
 allocation counts are not future semantic requirements.

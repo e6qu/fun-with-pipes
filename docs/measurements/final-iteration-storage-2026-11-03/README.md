@@ -3,8 +3,10 @@
 All three focused hosts pass at `bb5433b688c26c60f0b2561a59420deb0f0e95ed`,
 tag `roadmap/final-iteration-measurement-2026-11-04`.
 [Run 41726742943](https://github.com/e6qu/fun-with-pipes/actions/runs/41726742943)
-checks Linux GCC on ARM64/AMD64 and macOS Clang on ARM64. Runtime measurements
-and the full delivery matrix are separate gates, not established by this report.
+checks Linux GCC on ARM64/AMD64 and macOS Clang on ARM64.
+[Runtime/memory results](../final-iteration-time-2026-11-04/README.md) and
+[compiler costs](../final-iteration-analysis-2026-11-04/README.md) are recorded
+separately, including every timing miss. The full delivery matrix remains open.
 The [contract](../final-iteration-storage.md) was frozen before implementation.
 
 ## What changes

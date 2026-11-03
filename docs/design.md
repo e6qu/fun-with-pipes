@@ -628,7 +628,9 @@ insertion. The runtime moves each current numeric state into the next callback;
 only the final state survives. Numeric lists and arrays also qualify. Resource
 states and histories used elsewhere keep their ordinary storage. Callback order,
 input evaluation and count errors stay unchanged. Three-host focused native
-checks pass; memory/speed measurements and final delivery gates remain open.
+checks pass. [Measured results](measurements/final-iteration-time-2026-11-04/README.md)
+show lower peak storage and ARC traffic, with explicit timing misses. Final
+delivery gates remain open.
 
 A temporary tuple or record can disappear only when its uses and child lifetimes
 permit it. Ignored fields still evaluate in their original order. Known tuple

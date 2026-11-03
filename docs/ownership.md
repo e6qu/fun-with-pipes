@@ -58,7 +58,10 @@ remove a JavaScript host's collector.
   are still open; allocation savings do not establish faster execution.
 - Verify the [final-iteration group](measurements/final-iteration-storage.md): direct
   `last`, removal of an unused numeric history, count validation and partial-result
-  cleanup. Native checks and memory/speed measurements remain pending.
+  cleanup. Three-host focused checks and all four raw measurement audits pass;
+  the largest history solve uses 97.7% less peak managed storage. Six runtime
+  timing limits and one compiler noise control remain open. Full final-head
+  platform verification is still required.
 - Preserve delivered A1–A6 and #236 call/collection reductions, including the
   [parser workspace's limits](measurements/parser-workspace.md). Broader reductions
   need a named workload and proof; zero retains does not mean zero allocations

@@ -57,9 +57,12 @@ PR #254's Windows probe repair is awaiting its new final-head gates. Keep that
 head intact while they run; open the next delivery PR only after its verified merge.
 The changes below pass the grouped focused checks on Linux ARM64/AMD64 and macOS
 ARM64 at `bb5433b6`. Compiler/runtime measurements use the immutable tag
-`roadmap/final-iteration-measurement-2026-11-04`; their results and the final
-delivery matrix remain open. The scalar control removes 2k list nodes and one
-temporary pointer buffer. That count reduction alone does not establish speed.
+`roadmap/final-iteration-measurement-2026-11-04`. All four runtime sessions and
+their raw audits are complete: the largest history solve uses 97.7% less peak
+managed storage and takes 5.1–5.9% less time. Five speed targets, one small-case
+regression and one compiler timing control remain open. The final delivery matrix
+is still required. The scalar control removes 2k list nodes and one temporary
+pointer buffer; the complete-program report records its own net allocation costs.
 
 | Task | Required result |
 |---|---|
@@ -79,8 +82,15 @@ This group changes neither representation. Older timing goals remain open.
   transfer has 2.043% identical-copy variation against 2%, so that timing case
   remains inconclusive. Preserve its samples and failure. Declare any further
   sample/setup diagnostic before changing the protocol; do not repeat unchanged
-  timings for a pass. [Runtime measurements](docs/measurements/final-iteration-time-2026-11-04/README.md)
-  remain in progress and cannot yet establish speed or peak-memory savings.
+  timings for a pass.
+
+- **Final-iteration runtime.** [Four completed sessions](docs/measurements/final-iteration-time-2026-11-04/README.md)
+  miss 5% on 3/199 history in both ARM64 sessions, and on 33/199 history in both
+  ARM64 sessions and AMD64 session 1. AMD64 session 2's 3/1 history is 2.79%
+  slower against a 2% limit. Preserve all six misses and the verified memory/ARC
+  reductions. Diagnose the small-case source and saved sample progression before
+  selecting another change; do not rerun unchanged timings or infer a safety
+  failure from the timing ratio. All raw audits and identical-copy controls pass.
 
 - **Identity array-map speed.** [Four completed sessions](docs/measurements/scalar-array-identity-time-2026-11-03/README.md)
   miss every required 5% gain on 3/199, 3/1999, 33/199 and 129/199, in both forms.
