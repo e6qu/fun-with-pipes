@@ -86,7 +86,7 @@ scope_keys = {('lib/autodiff.fwp', 'ad.scope'), ('lib/autodiff.fwp', 'ad.scope2'
 owned_tapes = {
     'ad.tape-owned': (2, 'Shared', '(t, t -> t -> t, t -> t -> t, t -> Bool) -> List[t] -> I64 where Dup[t]'),
     'ad.push-owned': (4, 'Shared', 'I64 -> t -> I64 -> t -> I64 where Dup[t]'),
-    'ad.backward-owned': (3, 'OwnedTree', 'I64 -> List[I64] -> List[t] -> List[t] where Dup[t]'),
+    'ad.backward-owned': (3, 'OwnedTree', 'I64 -> List[I64] -> List[t] -> Array[t] where Dup[t]'),
 }
 service_scopes = {
     'grpc.with-gzip': (1, 'OwnedCallback', 0),

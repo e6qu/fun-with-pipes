@@ -447,7 +447,7 @@ fn typed_adjoints_borrow_zero_and_transfer_results_without_extra_owners() {
     let scratch = Scratch::new("typed-adjoints");
     let input = scratch.0.join("runtime.fwp");
     let cfile = scratch.0.join("runtime.c");
-    std::fs::write(&input, "main = echo \"runtime\"\n").unwrap();
+    std::fs::write(&input, "main = task.yield ()\n").unwrap();
     checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
             .env_remove("FWP_NO_OPT")
@@ -458,28 +458,38 @@ fn typed_adjoints_borrow_zero_and_transfer_results_without_extra_owners() {
             .arg(&cfile),
     );
     let mut code = std::fs::read_to_string(cfile).unwrap();
+    assert!(code.contains("#define FWP_UNWIND 1"));
+    assert!(code.contains("#define FWP_TASK_TICKS 1"));
     for (marker, replacement) in [
-        ("static V fwp_p_ad_backward_owned(V base, V outs, V seeds, const fwp_desc *list_type) {",
-            "static void typed_begin(int);\nstatic V fwp_p_ad_backward_owned(V base, V outs, V seeds, const fwp_desc *list_type) {"),
+        ("static V fwp_p_ad_backward_owned(V base, V outs, V seeds, const fwp_desc *array_type) {",
+            "static void typed_begin(int);\nstatic V fwp_p_ad_backward_owned(V base, V outs, V seeds, const fwp_desc *array_type) {"),
         ("    /* The tape owns zero until all slots and result transfers are finished. */",
             "    typed_begin(1);\n    /* The tape owns zero until all slots and result transfers are finished. */"),
         ("    V output_cursor = outs, seed_cursor = seeds;", "    typed_begin(0);\n    V output_cursor = outs, seed_cursor = seeds;"),
-        ("    for (int64_t i = tp.leaves; i; i--) {", "    typed_begin(2);\n    for (int64_t i = tp.leaves; i; i--) {"),
-        ("    fwp_cleanup_pop(&result_cleanup);\n    fwp_cleanup_pop(&value_cleanup);", "    typed_begin(0);\n    fwp_cleanup_pop(&result_cleanup);\n    fwp_cleanup_pop(&value_cleanup);"),
+        ("    fwp_array_builder result = {\n        fwp_array_typed_new((size_t)tp.leaves, owner->elem), 0, owner->elem\n    };", "    typed_begin(2);\n    fwp_array_builder result = {\n        fwp_array_typed_new((size_t)tp.leaves, owner->elem), 0, owner->elem\n    };"),
+        ("    V output = fwp_array_builder_finish(&result, &result_cleanup);", "    typed_begin(0);\n    V output = fwp_array_builder_finish(&result, &result_cleanup);"),
         ("int main(int argc, char **argv)", "int original_main(int argc, char **argv)"),
     ] {
         assert_eq!(code.matches(marker).count(), 1, "{marker}");
         code = code.replace(marker, replacement);
     }
     code.push_str(include_str!("fixtures/ad_typed_owners_probe.c"));
-    let extra_result = "        result.value = fwp_rc_fresh(fwp_cons(value, result.value));\n        fwp_cleanup_pop(&input_cleanup);";
+    let extra_result = "        fwp_array_store_owned(result.value, (size_t)i, value, owner->elem);\n        result.filled++;\n        fwp_cleanup_pop(&input_cleanup);";
     let zero_drop = "if (owner->adj[i] != owner->zero) owner->elem->drop(owner->adj[i]);";
+    let partial_storage =
+        "    fwp_rc_resource_free_arr(value);\n}\nstatic void fwp_array_builder_protect";
+    let partial_element =
+        "            owner->element->drop(fwp_array_load(value, i, owner->element));";
     assert_eq!(code.matches(extra_result).count(), 1);
     assert_eq!(code.matches(zero_drop).count(), 1);
+    assert_eq!(code.matches(partial_storage).count(), 1);
+    assert_eq!(code.matches(partial_element).count(), 1);
     let cases = [
         ("owners", code.clone(), 0),
         ("extra-owner", code.replace(extra_result, &format!("{extra_result}\n        typed_begin(0); owner->elem->dup(value); typed_begin(2);")), 188),
         ("drop-borrowed-zero", code.replace(zero_drop, "owner->elem->drop(owner->adj[i]);"), 187),
+        ("missing-partial-array", code.replace(partial_storage, "    /* omitted array release control */\n}\nstatic void fwp_array_builder_protect"), 184),
+        ("missing-partial-element", code.replace(partial_element, "            (void)fwp_array_load(value, i, owner->element);"), 188),
     ];
     for opt in ["-O1", "-O2"] {
         for (name, source, expected) in &cases {
@@ -494,7 +504,7 @@ fn typed_adjoints_borrow_zero_and_transfer_results_without_extra_owners() {
                 record_probe::save("ad_tape_ownership", &label, source, &executable, &output);
                 assert_eq!(output.status.code(), Some(*expected), "{label}: {output:?}");
                 if *expected == 0 {
-                    assert_eq!(String::from_utf8_lossy(&output.stdout).lines().count(), 6);
+                    assert_eq!(String::from_utf8_lossy(&output.stdout).lines().count(), 9);
                     assert!(output.stderr.is_empty());
                 }
             }
