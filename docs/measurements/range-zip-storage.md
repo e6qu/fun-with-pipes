@@ -1,11 +1,11 @@
 # Consume an index range without constructing its list
 
-**Status:** contract frozen at `e86ee4cc` before edits; implementation and
-controls are written in PR #251. The [first native attempt](range-zip-storage-2026-11-03/README.md)
-missed inline range arguments and exposed a test-injection bug; both are repaired
-for runner verification. Measurements remain pending.
+**Status:** contract frozen at `e86ee4cc` before edits. Corrected native checks
+and all 96 allocation observations pass at `3be9479c` in PR #251.
+[Verification and retained first-attempt failures](range-zip-storage-2026-11-03/README.md).
+Compiler/runtime measurements are now running; full-platform acceptance remains pending.
 This is the next storage change after the scalar-map buffer. Keep its reference
-separate from the ongoing [scalar-buffer comparison](temporary-list-storage.md).
+separate from the completed [scalar-buffer comparison](scalar-map-zip-time-2026-11-03/README.md).
 
 ## Observed cost
 

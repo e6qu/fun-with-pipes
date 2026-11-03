@@ -11,9 +11,8 @@ The linked PRs, runs and data records supply the detailed evidence.
 [PR #250](https://github.com/e6qu/fun-with-pipes/pull/250) merged November 3 as
 `a8a5568d5c1ee791f872de382c6d7e850cec09df`. Its tree equals focused-tested
 `da510f18b089c3db5527466b349fec0f2f3ee9ef` (`ec6935165379492d07cb236d0f8f05a75f8b6fd9`).
-The user merged before runtime/compiler measurements and the full platform matrix;
-those checks continue in the next batch. The squash message is one line, without
-body or trailers.
+The user merged before runtime/compiler measurements and the full platform matrix.
+The squash message is one line, without body or trailers.
 
 The private adjustment list becomes one numeric buffer, consumed directly by
 zip-with after all map callbacks finish. Both native Linux hosts pass 11 unit
@@ -24,8 +23,11 @@ establish no elapsed-speed claim. [Evidence and original failure](measurements/t
 
 A unit-test helper name and four workflow steps that hid test failures behind
 `tee` were repaired. Both attempts' logs remain available. Production run
-`41591834975`, compiler-cost run `41591971248` and runtime run `41591978166`
-are pending; keep their outcome separate from the completed focused checks.
+`41591834975` has seven of nine jobs passing, with both macOS AMD64 checks still
+running. [Compiler costs](measurements/scalar-map-zip-analysis-2026-11-03/README.md)
+pass. [Four completed runtime sessions](measurements/scalar-map-zip-time-2026-11-03/README.md)
+show about 7–8.5% less time on larger cases, while small-case speed goals and
+ARM64 zero-update regression limits remain open. All raw audits are complete.
 
 ## Numeric callback owner transfers (PR #249)
 

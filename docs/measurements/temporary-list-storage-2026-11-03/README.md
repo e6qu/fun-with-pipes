@@ -24,8 +24,10 @@ and peak managed storage, matching output/work and zero final storage.
   [AMD64](verified/x86_64-count-artifact.json).
 
 The user merged this source before the full platform and performance gates.
-The squash `a8a5568d` has the identical tree; remaining checks continue in the
-next batch. No runtime-speed or compiler-cost acceptance is claimed yet.
+The squash `a8a5568d` has the identical tree. [Compiler costs](../scalar-map-zip-analysis-2026-11-03/README.md)
+now pass; [all four runtime sessions](../scalar-map-zip-time-2026-11-03/README.md)
+are audited with timing acceptance still open. Remaining platform checks continue
+in PR #251.
 
 ## First native attempt
 
@@ -72,17 +74,18 @@ For 129 coordinates and 199 updates, current-only, GCC O2, workspace 0:
 
 These are allocation measurements, not elapsed-speed results or whole-process
 RSS. The history form saves the same requests/bytes but retains its history;
-its peak is 838,432 bytes. Timing and compiler-cost acceptance remain unmeasured.
+its peak is 838,432 bytes. The later compiler/runtime comparisons linked above
+measure elapsed costs separately.
 
-### Repairs required
+### Completed repairs
 
-- The unit test must call `reachable_functions(&program, &[0])`. Its old
-  `live_functions` name prevents library-test compilation and all-target lint.
+- The unit test now calls `reachable_functions(&program, &[0])`. Its old
+  `live_functions` name prevented library-test compilation and all-target lint.
 - The unit workflow used `tee` without pipeline failure propagation. Both unit
-  commands failed even though the step appeared green. Use explicit Bash,
-  preserve both results, and return failure if either command fails.
+  commands failed even though the step appeared green. The repair uses explicit
+  Bash, preserves both results and returns failure if either command fails.
 - Three older numeric-owner workflow steps had the same reporting defect;
-  repair them too. Their previously audited passing test logs remain evidence.
+  the same repair now covers them. Previously audited passing test logs remain evidence.
 
 Every failed step and completed target was audited before publishing this batch.
 The full native logs contain no other diagnostics beyond the same unresolved
@@ -116,4 +119,18 @@ job `125770099192` passes: [131 target logs](platforms/macos-arm-targets.zip),
 and [artifact identities](platforms/macos-arm-artifacts.json). Target diagnostics
 are clean; Homebrew reports only that the requested OpenSSL is already installed.
 The ownership archive's [verified file manifest](platforms/macos-arm-manifest.zip)
-is retained. Documentation passes. Remaining platform jobs are still running.
+is retained. Documentation passes.
+
+Additional completed jobs have clean target/full logs (the macOS ownership job
+has the same expected Homebrew notice):
+
+| Gate | Job | Retained target logs |
+|---|---:|---|
+| Linux ARM64 | 125770099083 | [257 logs](platforms/linux-arm-targets.zip) |
+| Linux AMD64 | 125770099249 | [257 logs](platforms/linux-amd-targets.zip) |
+| macOS ARM64 ownership | 125770099175 | [126 logs](platforms/mac-arm-ownership-targets.zip) |
+| Windows ARM64 | 125770099313 | [57 logs](platforms/windows-arm-targets.zip) |
+| Windows AMD64 | 125770099451 | [57 logs](platforms/windows-amd-targets.zip) |
+
+Full logs and source/digest-verified artifact identities are retained beside each
+archive. Seven of nine production jobs pass; both macOS AMD64 jobs remain running.

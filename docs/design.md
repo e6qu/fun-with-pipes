@@ -516,8 +516,9 @@ private index list. For example, zip indices `0, 1` with `[10, 20]` to produce
   extremes. The other list limits how many indices are generated.
 
 This internal change adds no syntax or public API. See the [frozen contract](measurements/range-zip-storage.md)
-for exact allocation predictions and acceptance checks. Native validation and
-performance acceptance are still pending.
+for exact allocation predictions and acceptance checks. Focused GCC/Clang
+checks and all 96 count observations pass on Linux ARM64/AMD64; full-platform
+and performance acceptance remain pending.
 
 ### Numeric callback inputs
 

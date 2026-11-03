@@ -1,9 +1,10 @@
 # Current work
 
-**Next:** publish the batched range-selection and fault-injection repairs, then
-run `range-zip-checks` on both Linux architectures. Audit all target logs and all
-96 count observations before starting the prepared range measurements. Continue
-auditing the merged scalar-buffer platform gates while runners work.
+**Next:** monitor range compiler costs `41603242667` and runtime sessions
+`41603246961`, frozen at `3be9479c`; audit all complete outcomes and retain any
+missed limit. Replace only hosts rejected before measurement. Finish the two
+merged-head macOS AMD64 gates, then prepare the final nine-job matrix after
+all reports and any repairs are included.
 
 ## Checkout and source identities
 
@@ -23,12 +24,12 @@ auditing the merged scalar-buffer platform gates while runners work.
 
 | Step | Status | Remaining work |
 |---|---|---|
-| 1 | In progress | Five of nine pass; audit the four remaining merged-head gates and repair failures |
+| 1 | In progress | Seven of nine pass; audit the two remaining merged-head gates and repair failures |
 | 2 | Verified | Measurements and raw audits complete; timing acceptance remains open |
 | 3 | Verified | Contract and reference published; keep frozen bounds unchanged |
-| 4 | In progress | First attempt failed; verify repairs, measure change, pass nine final-head jobs plus docs |
+| 4 | In progress | Corrected native/count checks pass; measurements running, final nine-head gates remain |
 
-## Range repair and pending verification
+## Range verification and active measurements
 
 [Full first-attempt report](measurements/range-zip-storage-2026-11-03/README.md).
 Run `41596501915`: ARM64 `125785012603`, AMD64 `125785012332`. Both fail the same
@@ -47,11 +48,21 @@ assertion. All completed targets and full logs were audited before repair.
   executions failing. All 96 count observations preserve baseline outputs,
   work and storage; each host's 80 failed savings assertions have the same cause.
   Each host has 118 clean C compilation logs.
-- New compiler code is **not yet runner-verified**. Run corrected focused checks
-  before `range-zip-analysis` / `range-zip-time`; supply their passing run as
-  `evidence_run`. Freeze measurement source before timing. `range-zip-report`
-  independently retains complete outcomes, including failed limits and host
-  rejections. No repeated completed timing for a better outcome.
+- **Corrected run `41601233570` passes** at `3be9479c`: ARM64 `125800213798`,
+  AMD64 `125800214058`; docs `41601188883` / `125800044359` also pass. All full
+  and target logs audited. Both hosts pass 17 unit / 37 integration executions,
+  32 cleanup outcomes, 204 image architecture checks and all 48 count observations.
+- All 96 counts agree across hosts. Largest current-only solve: 131,073 → 105,203
+  requests; 4,559,078 → 3,736,014 requested bytes; retains remain 995; managed
+  peak falls 17,824 → 14,976 bytes; final storage stays zero. History saves the
+  same requests/bytes. Each host has 118 clean C compilation logs.
+- Frozen measurement tag `roadmap/range-zip-measurement-2026-11-03` points to
+  full source `3be9479c4150d7aae5695d7f7aa4ce3f84d0f738`. Compiler run
+  `41603242667`, runtime run `41603246961` (both sessions, both architectures)
+  are requested with passing correctness run `41601233570` as `evidence_run`.
+  Use `range-zip-report` to audit complete runtime sessions and rejected hosts.
+  Do not change sources, inputs, driver or limits; do not repeat completed timing
+  for a better outcome. Speed remains unmeasured for this change.
 
 ## Completed scalar-buffer evidence
 
@@ -88,33 +99,39 @@ Run `41591834975`, source `a8a5568d`; do not cancel as redundant.
 | macOS ARM64 ownership | 125770099175 | Pass; 126 target logs clean; expected Homebrew notice only |
 | Linux AMD64 | 125770099249 | Pass; 257 target logs and full log clean |
 | Windows ARM64 | 125770099313 | Pass; 57 target logs and full log clean |
-| Linux ARM64 | 125770099083 | Running |
+| Linux ARM64 | 125770099083 | Pass; 257 target logs and full log clean |
 | macOS AMD64 regular | 125770099310 | Running |
 | macOS AMD64 ownership | 125770099197 | Running |
-| Windows AMD64 | 125770099451 | Running |
+| Windows AMD64 | 125770099451 | Pass; 57 target logs and full log clean |
 
 Compact logs and verified artifact identities:
 [platform records](measurements/temporary-list-storage-2026-11-03/platforms/).
 Merged docs `41591834978` pass. PR #251 metadata docs `41597725595` also pass;
-full log has only the three intentional runner-failure controls. Final-head
+full log has only the intentional runner-failure controls. Corrected-source
+docs `41601188883` also pass and are audited. Final-head
 production gates for the repaired range implementation have not started.
 
 ## Local checks and retained files
 
 All checks use `scripts/local-guard.py`; no local full build, suite or benchmark.
 
+- Repaired native audit: both hosts pass 54 unit/integration executions and
+  32 cleanup outcomes; 204 image headers per host checked (0.24/0.25s). Reader
+  initially expected an absent source.txt; corrected to actual artifact source
+  metadata and digest, without changing any tested output or limit.
 - Exact failed C fixture replay: Apple Clang 17, production O1/O2; two ordinary
   exits 0, six omitted-cleanup controls exit 90, empty stderr (3.46s).
 - Matching merged native compiler emits the diagnostic typed IR (0.49s);
   inline-order interpreter example passes (0.26s). No local compiler build.
 - Rust formatting passes (2.02s). Both failed-attempt audits pass (1.22s).
-  New completed platform log/digest audits pass (0.14s).
+  New completed platform log/digest audits pass (0.13–0.14s).
+  Corrected 96-count cross-host audit and full-log review pass (0.50s).
 - Prepared routes already passed reference isolation, 16 allocation controls,
   15 timing-budget controls, seven compiler-schedule controls, 14 archive controls
   and workflow lint. Primitive inventory: 394 declarations, 384 symbols,
   no unreviewed symbols. Repaired reference controls pass (0.13s); inventory passes (1.09s).
   Roadmap audit initially rejected descriptive status labels; fixed to the allowed
-  labels while keeping details in the remaining-work column.
+  labels and then passed: 230 link sets, 106 anchors, four steps (3.00s).
 
 Raw archives, full logs and audit helpers live under `/private/tmp/fwp-*`:
 `fwp-range-{arm,amd}-attempt1.zip`, `fwp-range-{arm,amd}-counts-attempt1.zip`,
@@ -123,7 +140,7 @@ Raw archives, full logs and audit helpers live under `/private/tmp/fwp-*`:
 `fwp-audit-250-platforms.py`, `fwp-250-production-artifacts.json`.
 Reports retain hashes and original artifact URLs; preserve failed evidence.
 
-Last disk check: about 66 GiB free, zero target data. Keep 64 GiB free, generated
+Last disk check: about 65 GiB free, zero target data. Keep 64 GiB free, generated
 target data below 2 GiB, sampled RSS below 1 GiB and the 180s guard deadline.
 Move refused work to runners; never bypass limits. Final merge requires all nine
 exact-head production jobs plus docs, audited logs, explicit one-line squash

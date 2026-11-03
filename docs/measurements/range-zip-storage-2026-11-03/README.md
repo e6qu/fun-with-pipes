@@ -1,8 +1,11 @@
 # Private range storage: verification
 
-**Status:** first native attempt failed; both identified causes are repaired but
-not yet verified on runners. The [frozen contract](../range-zip-storage.md) and
-exact allocation predictions are unchanged. No performance claim is established.
+**Status:** corrected native checks pass on both Linux architectures at
+`3be9479c4150d7aae5695d7f7aa4ce3f84d0f738`. Both completed target archives, all 96 allocation observations
+and both full job logs are audited.
+The [frozen contract](../range-zip-storage.md) and exact predictions are unchanged.
+Runtime speed and full-platform acceptance remain pending. The measured source
+is frozen as `roadmap/range-zip-measurement-2026-11-03` at that commit.
 
 ## First native attempt
 
@@ -42,8 +45,8 @@ observations: outputs, work, allocations and final storage match. Each host has
   and omitted-partial-list cleanup controls each exit 90. All eight executions
   have empty stderr. This checks the fixture repair, not the new compiler pass.
 - The inline-order program prints the expected result under the existing
-  interpreter. Rust formatting passes. New compiler code still needs native
-  GCC/Clang runner checks and exact allocation comparisons.
+  interpreter. Rust formatting passes. The corrected GCC/Clang checks have since passed on both
+  runner architectures. See the completed verification below.
 - No local compiler build, full suite or benchmark was run.
 
 ## Retained evidence
@@ -56,3 +59,57 @@ metadata identifies the original downloadable archives and source commit.
 [AMD64 counts](attempt-1/x86_64-counts.zip) retain the independent audits, exact
 misses and original archive identities. Both original archive digests and nested
 report digests were verified. Full job logs are retained beside these archives.
+
+## Corrected native verification
+
+[Run 41601233570](https://github.com/e6qu/fun-with-pipes/actions/runs/41601233570)
+passes: ARM64 `125800213798`, AMD64 `125800214058`. Documentation
+`41601188883` / `125800044359` also passes; its full log contains only the
+intentional runner-failure controls.
+
+Each host passes 17 selection unit tests and 37 integration test executions.
+Both target archives have clean diagnostics and 204 native images with the
+expected architecture headers. All 32 scalar/range cleanup outcomes per host
+match: ordinary cleanup exits 0; deliberately omitted frees exit 90.
+
+- [ARM64 native records and image hashes](verified/aarch64-controls.json.gz).
+- [AMD64 native records and image hashes](verified/x86_64-controls.json.gz).
+- [Documentation full log](verified/docs-job.log.gz).
+
+### Verified storage reduction
+
+All 96 observations agree across architectures, O1/O2 and workspace settings.
+Savings match `(d+1)*u` requests and `(32*d+8)*u` requested bytes for `d`
+coordinates and `u` updates. Ordinary results and derivative work match the
+reference. Retains stay unchanged; final managed/raw storage is zero. Each host
+has 118 clean C compilation logs.
+
+Largest current-only solve, 129 coordinates / 199 updates:
+
+| Managed cost | Scalar-buffer baseline | Range consumer |
+|---|---:|---:|
+| Allocation requests | 131,073 | 105,203 |
+| Requested bytes over the solve | 4,559,078 | 3,736,014 |
+| Retains | 995 | 995 |
+| Peak charged bytes | 17,824 | 14,976 |
+| Final charged bytes | 0 | 0 |
+
+The history form saves the same requests and bytes; its retained history keeps
+peak charged storage at 838,432 bytes. These counters measure fwp-managed
+storage, not whole-process memory or elapsed speed.
+
+- Reconstructed counts: [ARM64](verified/aarch64-counts.json.gz),
+  [AMD64](verified/x86_64-counts.json.gz).
+- Full job logs: [ARM64](verified/aarch64-job.log.gz),
+  [AMD64](verified/x86_64-job.log.gz).
+- Original archive identities: [ARM64](verified/aarch64-count-artifact.json),
+  [AMD64](verified/x86_64-count-artifact.json).
+
+## Measurements in progress
+
+Compiler comparison `41603242667` and runtime comparison `41603246961` use
+`3be9479c`, with passing correctness run `41601233570` as a prerequisite.
+The reference disables only range-to-zip selection in the same source. The
+[frozen inputs, timing scope and limits](../range-zip-storage.md) are unchanged.
+Two runtime sessions per qualified architecture are required; only hosts rejected
+before measuring may be replaced. Keep every completed outcome.

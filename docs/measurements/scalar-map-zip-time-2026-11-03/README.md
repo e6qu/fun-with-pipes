@@ -51,7 +51,7 @@ checked. These are host rejections, not measured performance failures.
 Only unmeasured, rejected sessions receive replacement requests. Required CPUs,
 source, inputs, sample order, thresholds and completed outcomes remain unchanged.
 
-## Completed AMD64 session 2
+## Completed AMD64 observations
 
 Qualified EPYC 7763 job `125774733224` completed all six cases. Four timing
 requirements fail: candidate/reference is 0.97536 (3/199 current), 0.95767
