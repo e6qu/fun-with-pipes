@@ -167,6 +167,22 @@ for all four sessions. Largest cases take 5.2–6.4% less time; smaller cases mi
 speed targets and AMD64 3/1999 fails the 2% copy limit. Keep those goals open.
 Final delivery still requires nine production jobs and documentation.
 
+## Production verification
+
+The first full run, `41554814165` on `82dc81d8`, found a needless allocation in a
+Rust unit-test helper on both Linux and both regular macOS jobs. Updating the
+existing box removes it. Early Clippy now checks all targets, including library
+tests; its earlier target selection missed that test build. Production compiler
+code is unchanged by this repair, so existing performance measurements stand.
+
+All four compiler diagnostics are audited:
+[Linux ARM64](callback-owners-2026-11-03/production-attempt-1/rust-checks-Linux-ARM64.log.gz),
+[Linux AMD64](callback-owners-2026-11-03/production-attempt-1/rust-checks-Linux-X64.log.gz),
+[macOS ARM64](callback-owners-2026-11-03/production-attempt-1/rust-checks-macOS-ARM64.log.gz),
+[macOS AMD64](callback-owners-2026-11-03/production-attempt-1/rust-checks-macOS-X64.log.gz).
+Benchmark and docs jobs pass; remaining native logs are still being collected.
+The repaired commit must pass the complete final matrix before merge.
+
 ## Replaying the original site audit
 
 The original packed-storage baseline is `a4f3200c9b97b955c3f3603788eacbfac19fde4e`,

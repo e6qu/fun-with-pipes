@@ -313,7 +313,7 @@ mod tests {
             unreachable!()
         };
         let saved = tail.clone();
-        *tail = Box::new(Expr::Let(10, Box::new(Expr::Call(4, vec![])), saved));
+        **tail = Expr::Let(10, Box::new(Expr::Call(4, vec![])), saved);
         assert!(select(&body, 2).is_none());
         for value in [
             field(0, 0, 20, true),

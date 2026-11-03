@@ -1,10 +1,26 @@
 # Current work
 
-**Next:** publish the audited runtime/compiler reports, mark
-[PR #249](https://github.com/e6qu/fun-with-pipes/pull/249) ready, then require all
-nine production jobs plus documentation on the final head. Audit all job/target
-logs, fix every failure, and squash only after passing gates with a one-line
-subject ≤80 characters and empty body. [PLAN.md](../PLAN.md) tracks the batch.
+**Next:** publish the batched test-helper/lint-coverage repair, then monitor
+its nine exact-head production jobs and documentation for ready
+[PR #249](https://github.com/e6qu/fun-with-pipes/pull/249). Keep original production
+run `41554814165` on `82dc81d845d1ab0d88c359aa9f1ca6f3164b5a9f` active and audit
+its remaining target logs too; do not lose additional failures during repair
+validation. Squash only after all repaired-head gates pass and logs are audited,
+with a one-line subject ≤80 characters and empty body. Verify message/tree.
+
+Both Linux and both regular macOS Clippy steps report only `replace_box` at
+`src/cgen/field_transfers.rs:316`, inside a unit test. Repair: update the existing
+box contents. The early lint workflow now includes all targets, covering library
+test code it previously missed. Production source outside the test module is
+byte-identical; do not rerun unchanged timings. All four diagnostic artifacts are
+audited and retained in the linked measurement report.
+
+Original benchmark job `125651000542` and docs job `125651006789` pass. Full logs
+are audited, including ANSI-normalized diagnostics and expected negative controls.
+Both macOS counted-ownership golden-corpus checks pass with clean logs. Other
+native suites continue; no further failed step is reported yet. Local checks:
+Rust formatting 1.82s, actionlint 6.81s, diagnostic/source-equality audit 0.13s.
+The duplicate draft CI run `41554816431` is skipped and does not count.
 
 ## Checkout and sources
 
@@ -28,7 +44,7 @@ subject ≤80 characters and empty body. [PLAN.md](../PLAN.md) tracks the batch.
 | 2 | Verified | Preserve numeric-input selection, exclusion and cleanup controls |
 | 3 | Verified | Counts, exact sites and compiler time/RSS pass |
 | 4 | Implemented | Four sessions audited; retain failed speed/noise goals in PLAN.md |
-| 5 | Pending | Nine final production gates, docs and verified squash |
+| 5 | In progress | Nine final production gates and docs running; audit then squash |
 
 ## Verified focused checks
 
@@ -114,3 +130,12 @@ remain open. Do not discard their original samples or infer a safety bug from ti
 No local full build, suite or benchmark. Use `python3 scripts/local-guard.py`
 serially. Last free disk: 64.7 GiB; no local target data. Keep 64 GiB free, workload
 RSS below 1 GiB and the fixed 180-second deadline; move refused work to runners.
+
+## Next-batch preparation only
+
+`/private/tmp/fwp-next-allocation-direction.md` records an evidence-based allocation
+diagnosis to pursue after delivery. Existing counts attribute 154,952 of 156,943
+allocations to the shared 24-byte `fwp_data` constructor, split between forward
+recording and outside phases. Split list/record/generated callers before choosing
+a transformation; existing constructor counts do not establish those identities.
+No new benchmark or production change is started for that preparation.

@@ -161,12 +161,12 @@ jobs:
         run: |
           cargo fetch --locked
           CARGO_NET_OFFLINE=true cargo build --locked --bin fwp
-      - name: Formatting, primitive contracts and affected-target lint
+      - name: Formatting, primitive contracts and all-target lint
         run: |
           cargo fmt --all -- --check
           target/debug/fwp fmt --check tests/fixtures/field_owner_transfer.fwp tests/fixtures/numeric_callback_inputs.fwp
           python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output numeric-owner-checks/primitive-inventory.json
-          CARGO_NET_OFFLINE=true cargo clippy --locked --lib --bin fwp --test record_conversion_ownership --test field_context_ownership --test worker_preparation_ownership --test fold_ownership --test fold_unwind_ownership -- -D warnings
+          CARGO_NET_OFFLINE=true cargo clippy --locked --all-targets -- -D warnings
       - name: Complete-transfer selection and rejection controls
         if: ${{ !cancelled() && steps.compiler_build.outcome == 'success' }}
         run: CARGO_NET_OFFLINE=true cargo test --locked --lib cgen::field_transfers -- --nocapture 2>&1 | tee numeric-owner-checks/field-selection.log
