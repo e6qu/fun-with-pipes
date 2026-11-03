@@ -4,32 +4,32 @@ Build an ahead-of-time language with simple pipes, immutable values, strong type
 and useful inference. Prefer direct values, moves and borrows; reserve ARC for
 necessary sharing. GC is removed; JIT and backward compatibility are excluded.
 
-## Current batch: remove temporary derivative owners
+## Current batch: reduce remaining temporary list storage
 
-[PR #248](docs/roadmap-history.md#packed-temporary-numeric-records-pr-248) is verified
-and merged. It reduces temporary allocations; its failed zero-update timing goal
-remains open. This grouped batch removes reference-count operations left in
-those callbacks. [Measured sites](docs/measurements/derivative-owner-transfers.md)
-account for 76,416 of 77,411 retains in the largest saved solve; that is a
-verified count reduction. Largest solves take 5.2–6.4% less time; some
-smaller-case timing requirements remain open.
+[PR #249](docs/roadmap-history.md#numeric-callback-owner-transfers-pr-249) is
+verified and merged. It removes 98.7% of retains in the largest saved solve. It leaves
+allocation traffic unchanged: 154,952 of 156,943 requests use the 24-byte
+record/list constructor. Its missed timing goals remain open below.
 
 | Step | Work | Completion requirement |
 |---|---|---|
-| 1 | Move complete groups of already-separated field owners | Published selection/protocol; GCC/Clang O1/O2 direct/boxed/shared, failure/cancellation and broken-cleanup controls; remove at least one retain per differentiated pair |
-| 2 | Remove unnecessary callback input owners | Freeze the numeric-leaf or borrowed-call proof before implementation; preserve input lifetime, callback order and owning entries that still need owners |
-| 3 | Verify the combined costs and compiler work | All 96 count observations; attribute savings to exact sites; no managed/raw storage growth, zero final storage; bounded analysis and measured compilation costs |
-| 4 | Measure whole-solve performance | Same-source reference, fixed drivers, two qualified sessions per architecture; preserve 2% copy/regression and 5% large-case limits, all samples and failures |
-| 5 | Deliver the complete batch | One substantial PR with code, controls, evidence and clear docs; all nine exact-head production gates and documentation; audited logs and verified one-line squash |
+| 1 | Attribute remaining constructors to their actual callers | Publish the count-only protocol; same six cases, both forms, O1/O2, workspace 0/1 and native GCC hosts. Match existing allocation totals, output, derivative work and zero final storage. Retain source/image hashes and every failure. |
+| 2 | Freeze one storage change supported by those counts | Name the exact producer and consumer, aliases/escapes that exclude it, callback/trap order, lifetime and failure cleanup. Publish the same-source reference switch and predicted count changes before compiler edits. |
+| 3 | Implement and verify the selected change | Ordinary/unoptimized interpreter versus native GCC/Clang O1/O2; direct/shared/escaping/empty/unequal-length inputs; failure, cancellation and allocation controls; exact saved-source counts and cleanup; bounded compiler analysis. |
+| 4 | Measure and deliver the whole batch | Fixed complete-driver comparison and qualified hosts; compiler time/RSS, managed/raw storage, RSS, code/frame costs; preserve 2% copy/regression and 5% speed limits. One substantial PR, all nine exact-head production gates plus docs, audited logs and verified one-line squash. |
 
-Step 1's first native checks exposed an index tied to the wrong expression tree.
-The repair uses the exact emitted body and passes both native GCC/Clang suites
-and all 96 count audits. It removes exactly one retain per differentiated pair.
-Step 2 passes focused GCC/Clang checks on both native hosts: 100 checks and
-400 saved probes, including deliberately broken cleanup controls. All 96 count
-observations and exact-site audits pass. Compiler time/RSS limits pass. All four
-runtime sessions are audited; retain their failed speed/noise limits below.
-Next run the final platform matrix and documentation gate for the complete batch.
+The saved code suggests a concrete candidate: `grad ... | map scale` builds an
+adjustment list used only by `zip-with sub` with the old coordinates. The map
+could write a numeric buffer, then the zip could read it after mapping finishes.
+This would preserve eager callback order and avoid mutating the input list.
+[The count-only protocol](docs/measurements/temporary-list-storage.md) fixes the
+first measurement. Select the storage change only after its census verifies the
+cost and the lifetime proof
+covers its complete consumption and cleanup. Do not interleave the two stages.
+
+Use saved evidence and focused checks during development. Run one grouped final
+measurement/validation after the implementation and its controls are ready.
+Do not rerun unchanged noisy timings or change acceptance limits for a pass.
 
 ## Open performance goals
 

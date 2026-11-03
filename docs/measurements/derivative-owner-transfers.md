@@ -1,9 +1,9 @@
 # Fewer temporary owners in derivative callbacks
 
-**Status:** both compiler changes are implemented. Count and source-site audits
-pass, together with focused GCC/Clang checks on both native hosts.
-Compiler-cost measurements pass. Runtime reports are audited, with speed/noise
-targets still open; final platform gates remain. [PR #249](https://github.com/e6qu/fun-with-pipes/pull/249) · [Plan](../../PLAN.md).
+**Status:** verified and merged in [PR #249](https://github.com/e6qu/fun-with-pipes/pull/249).
+Count/source-site audits, focused GCC/Clang checks, compiler-cost limits and all
+final platform gates pass. Four runtime sessions are audited; missed speed/noise
+goals remain in [PLAN.md](../../PLAN.md).
 
 ## What is measured
 
@@ -165,23 +165,22 @@ hosts: at most 0.53% more compilation time and 0.44% more peak RSS (limits 5%).
 [Runtime results](callback-owners-2026-11-03/README.md) are independently audited
 for all four sessions. Largest cases take 5.2–6.4% less time; smaller cases miss
 speed targets and AMD64 3/1999 fails the 2% copy limit. Keep those goals open.
-Final delivery still requires nine production jobs and documentation.
+All nine final production jobs and documentation pass; see verification below.
 
 ## Production verification
 
-The first full run, `41554814165` on `82dc81d8`, found a needless allocation in a
-Rust unit-test helper on both Linux and both regular macOS jobs. Updating the
-existing box removes it. Early Clippy now checks all targets, including library
-tests; its earlier target selection missed that test build. Production compiler
-code is unchanged by this repair, so existing performance measurements stand.
+The first full run, `41554814165` on `82dc81d8`, failed only Clippy's box-allocation
+lint in a Rust unit-test helper. Updating the existing box fixes it. Early Clippy
+now includes all targets, covering library test code that its previous selection
+missed. [All nine original job logs are audited](callback-owners-2026-11-03/production-attempt-1/audit.json).
+Production code is unchanged by this repair; unchanged timings were not rerun.
 
-All four compiler diagnostics are audited:
-[Linux ARM64](callback-owners-2026-11-03/production-attempt-1/rust-checks-Linux-ARM64.log.gz),
-[Linux AMD64](callback-owners-2026-11-03/production-attempt-1/rust-checks-Linux-X64.log.gz),
-[macOS ARM64](callback-owners-2026-11-03/production-attempt-1/rust-checks-macOS-ARM64.log.gz),
-[macOS AMD64](callback-owners-2026-11-03/production-attempt-1/rust-checks-macOS-X64.log.gz).
-Benchmark and docs jobs pass; remaining native logs are still being collected.
-The repaired commit must pass the complete final matrix before merge.
+Repaired head `6ca3c41106d78f8251d3d59e3750470a3c270f68` passes all nine production
+jobs in `41557647177` and documentation in `41557647102`. Complete job and target
+logs are audited, including explicit ignored measurements and successful panic
+controls. The verified squash is `46af240b8c540746b942b687b416cd52f6a91f9e`, with
+the identical tested tree and a 56-character single-line message without body or
+trailers. [Final gates and retained logs](callback-owners-2026-11-03/final-gates.json).
 
 ## Replaying the original site audit
 

@@ -1,141 +1,77 @@
 # Current work
 
-**Next:** publish the batched test-helper/lint-coverage repair, then monitor
-its nine exact-head production jobs and documentation for ready
-[PR #249](https://github.com/e6qu/fun-with-pipes/pull/249). Keep original production
-run `41554814165` on `82dc81d845d1ab0d88c359aa9f1ca6f3164b5a9f` active and audit
-its remaining target logs too; do not lose additional failures during repair
-validation. Squash only after all repaired-head gates pass and logs are audited,
-with a one-line subject ≤80 characters and empty body. Verify message/tree.
-
-Both Linux and both regular macOS Clippy steps report only `replace_box` at
-`src/cgen/field_transfers.rs:316`, inside a unit test. Repair: update the existing
-box contents. The early lint workflow now includes all targets, covering library
-test code it previously missed. Production source outside the test module is
-byte-identical; do not rerun unchanged timings. All four diagnostic artifacts are
-audited and retained in the linked measurement report.
-
-Original benchmark job `125651000542` and docs job `125651006789` pass. Full logs
-are audited, including ANSI-normalized diagnostics and expected negative controls.
-Both macOS counted-ownership golden-corpus checks pass with clean logs. Other
-native suites continue; no further failed step is reported yet. Local checks:
-Rust formatting 1.82s, actionlint 6.81s, diagnostic/source-equality audit 0.13s.
-The duplicate draft CI run `41554816431` is skipped and does not count.
+**Next:** implement the [constructor census](measurements/temporary-list-storage.md)
+with diagnostic source-site counters and rejection controls. Its protocol anchor
+is `roadmap/temporary-list-protocol-2026-11-03`. Run
+counts on both native Linux GCC hosts before selecting a compiler storage change.
+Keep the entire census, selected improvement, verification and docs in one PR.
 
 ## Checkout and sources
 
-- Worktree `/private/tmp/fwp-array-consumption`, branch `numeric-owner-transfers`;
-  primary checkout untouched. Base: verified #248 merge `31e4e25b`.
-- Focused verified source: `5af0366c0c1ad91feeb08ddbd42a035858b635e4`.
-  Subsequent measurement/doc changes leave compiler, runtime, library and tests
-  unchanged; both measurement workflows verify these source trees explicitly.
-- Numeric protocol `9a4129be`, tag
-  `roadmap/numeric-callback-input-protocol-2026-11-03`, published before code.
-- Stage 1 measured source `ceecb569c6748a226ec6ddebc417dc16351490e9`, tag
-  `roadmap/field-owner-emission-checks-2026-11-03`.
-  [Evidence and earlier failed attempts](measurements/derivative-owner-transfers.md)
-  retain their original identities and outcomes.
+- Worktree `/private/tmp/fwp-array-consumption`, branch `temporary-list-storage`.
+  The primary checkout is untouched.
+- Base: verified PR #249 squash `46af240b8c540746b942b687b416cd52f6a91f9e`.
+  Tested source `6ca3c41106d78f8251d3d59e3750470a3c270f68`, tag
+  `roadmap/callback-owner-final-2026-11-03`; identical tree
+  `ce8dab3adb4fca4643cd600286233ebf11d884bc`.
+- Count baseline: `5af0366c0c1ad91feeb08ddbd42a035858b635e4` and
+  [all 96 verified observations](measurements/numeric-input-checks-2026-11-03/verified-counts.json.gz).
+  No dependency on an older fwp compiler or API is needed.
 
 ## Roadmap status
 
 | Step | Status | Remaining work |
 |---|---|---|
-| 1 | Verified | Preserve complete-field transfer regression coverage |
-| 2 | Verified | Preserve numeric-input selection, exclusion and cleanup controls |
-| 3 | Verified | Counts, exact sites and compiler time/RSS pass |
-| 4 | Implemented | Four sessions audited; retain failed speed/noise goals in PLAN.md |
-| 5 | In progress | Nine final production gates and docs running; audit then squash |
+| 1 | In progress | Publish protocol; implement and verify constructor-site census |
+| 2 | Pending | Select and freeze a bounded storage change from measured callers |
+| 3 | Pending | Implement with native semantic, alias, failure and cleanup controls |
+| 4 | Pending | Grouped measurement, final platform gates and verified squash |
 
-## Verified focused checks
+## Evidence guiding this batch
 
-Run `41548218462` passes on `5af0366c`: AMD64 job `125628947741`, ARM64
-`125628948163`. Each host passes ten unit and forty native GCC/Clang checks.
-Both full job logs and twenty target logs are audited, with no diagnostics.
-All 400 saved native probes have verified source/image hashes, native headers
-and expected outcomes: 184 ordinary returns, 216 rejected broken controls.
+The largest single solve has 154,952 shared-constructor requests out of 156,943
+allocations. Saved C shows input-index lists, derivative input records/list cells,
+gradient-result cells, scaled adjustment cells and coordinate-update cells.
+All 96 aggregate count formulas match (guarded audit, 0.13s); per-caller counts are
+not yet verified. [Protocol and formulas](measurements/temporary-list-storage.md).
 
-All 96 count observations pass exact source attribution, output/work equality,
-managed/raw storage limits and zero final storage. Largest current-only solve:
-77,411 → 51,939 → 995 retains across the two changes, unchanged allocations and
-peak storage. Runtime evidence is reported below. [Retained evidence](measurements/derivative-owner-transfers.md#complete-focused-verification).
+A candidate is an eager numeric map used only by zip-with: keep its results in
+one buffer, then run zip-with after all map callbacks finish. Do not select it
+from aggregate counts alone, assume all lists can become arrays, or change trap
+order. Preserve input aliases and failure/cancellation cleanup.
 
-Local audit commands (guarded):
+## Previous delivery
 
-- `/private/tmp/fwp-audit-numeric-input-passing.py arm aarch64 13190063044 13189589188`
-  and the AMD64 equivalent (`amd x86_64 13190771070 13189852827`): pass, 2.70s/2.66s.
-- `/private/tmp/fwp-audit-numeric-passing-probes.py`: all 400 probes pass.
-- `/private/tmp/fwp-retain-passing-numeric.py`: full-log audit and retention pass, 0.26s.
+[PR #249](roadmap-history.md#numeric-callback-owner-transfers-pr-249) is merged.
+All nine production jobs in `41557647177` and docs `41557647102` pass on the exact
+tested head; every full job and target log is audited. The raw squash message is
+one 56-character line with no body or trailers; its tree equals the tested tree.
+[Final gates and retained logs](measurements/callback-owners-2026-11-03/final-gates.json).
+Duplicate same-tree main runs `41569903194` and `41569903295` were cancelled.
 
-Draft documentation run `41548406106` passes on `5af0366c`; its complete log is
-audited. The draft's production jobs are skipped and do not establish support.
+The original matrix `41554814165` is fully audited. Its only failures were the
+same unit-test Clippy lint on four hosts; the fix reuses the test box and expands
+early lint to all targets. No production-code repair or timing rerun was needed.
+Windows panic output belongs to the successful eight-entry/eight-child cleanup
+controls. Explicit ignored measurement/Linux-only checks are not support claims.
 
-## Runtime results and acceptance
+Largest solves take 5.2–6.4% less time with 98.7% fewer retains and unchanged
+allocation traffic/peak managed storage. Smaller speed/noise goals stay open in
+[PLAN.md](../PLAN.md); do not discard them or relax their limits. The compiler-cost
+experiment isolates numeric inputs, with field transfers enabled in both builds.
 
-Source `d903126f53545098519a36960c5704eb3fcdc8f0`: timing runs `41550970017`
-and `41551538083` are complete. Independent audit runs `41553716035` and
-`41553965234` pass; both full audit logs have no diagnostics. All timing-job
-failures are preserved speed/noise-limit misses. One original AMD64 host was
-rejected before timing; only that session was replaced.
+## Local checks and documentation
 
-[Retained results](measurements/callback-owners-2026-11-03/README.md): largest
-solves take 5.2–6.4% less time. Both hosts miss 5% on 3/199 and 3/1999, both forms;
-AMD64 33/199 current also misses. AMD64 3/1999 current copy variation is
-2.12% / 2.21% against 2%. Keep these goals open under the user's existing
-instruction to retain verified reductions. No unchanged reruns or relaxed limits.
+No local full build, suite or benchmark. Guarded full/target evidence audits pass
+in 0.13–0.14s each. `python3 scripts/check-roadmap.py` passes after this plan rewrite (2.90s):
+224 document link sets, 106 preparation pairs and four matching roadmap steps.
+New target metadata is compressed losslessly; raw archives and failed-job records
+are preserved.
 
-All output/work, managed/raw storage, cleanup, instruction/frame and source/image
-checks pass. RSS is reported separately, including its AMD64 increase. Each
-runner audit verifies 1,334 measurement files and five reference files per
-session. Compact summaries/logs are checked locally; all four reports pass the
-independent schedule/host/source/sample/acceptance check (0.86s guarded).
+`docs/design.md` now corrects stale PR #244 production status and separates passed
+compiler-cost checks from open runtime goals. Final #249 evidence, history and
+status updates are carried into this branch. Keep immutable failed evidence.
 
-## Compiler-cost results
-
-Run `41550965701` passes both hosts on `d903126f`. Independent audits of all 480
-commands, native images, reference sources, raw samples and recalculated outcomes
-pass (AMD64 2.45s, ARM64 2.30s under the local guard). Complete job logs have no
-diagnostics. Maximum increases: 0.53% compilation time, 0.44% peak RSS (limits 5%);
-identical-copy differences ≤0.91% (limit 2%). [Retained results](measurements/numeric-input-analysis-2026-11-03/README.md).
-
-Documentation run `41550957926` also passes. Its only error/panic text comes from
-required negative controls for duplicate/unknown targets and a synthetic failing
-native test; all outcomes match their test assertions.
-
-## Measurement acceptance
-
-- Compiler comparison disables numeric inputs only. Five fixed programs, two
-  identical copies per variant, two warmups and ten balanced rounds. Copy medians
-  must agree within 2%; candidate time and peak RSS must stay within 5% of reference.
-  Peak RSS includes warmups; elapsed medians exclude them. Seven synthetic controls
-  pass (0.25s), including invalid/missing samples and retained timeout evidence.
-- Runtime comparison disables both owner changes, keeping packed storage enabled.
-  Two sessions per architecture; fixed 2% copy/regression and 5% large-case limits.
-  Host qualification happens before timing. Count reductions alone do not pass it.
-- Reference reconstruction, source hashes, actual native images and all samples
-  are independently audited. Reference controls, fourteen site-audit controls,
-  thirteen runtime budget controls and archive/report controls pass.
-
-## Previous delivery and open goals
-
-[PR #248](roadmap-history.md#packed-temporary-numeric-records-pr-248) is merged as
-`31e4e25b9a0494a2ce3d75a189fe1b1b7c177247`. Nine production jobs and docs passed;
-the tested and merged trees match. [Gate identities](measurements/derivative-temporary-storage-2026-11-02/final-gates.json).
-It saves 51,143 allocations / 4,064 peak managed bytes in the largest solve.
-Large cases use 5.1–14.2% less time; AMD64 zero-update history remains 2.024% slower
-(limit 2%). This and the other [open performance goals](../PLAN.md#open-performance-goals)
-remain open. Do not discard their original samples or infer a safety bug from timing.
-
-## Local resources
-
-No local full build, suite or benchmark. Use `python3 scripts/local-guard.py`
-serially. Last free disk: 64.7 GiB; no local target data. Keep 64 GiB free, workload
-RSS below 1 GiB and the fixed 180-second deadline; move refused work to runners.
-
-## Next-batch preparation only
-
-`/private/tmp/fwp-next-allocation-direction.md` records an evidence-based allocation
-diagnosis to pursue after delivery. Existing counts attribute 154,952 of 156,943
-allocations to the shared 24-byte `fwp_data` constructor, split between forward
-recording and outside phases. Split list/record/generated callers before choosing
-a transformation; existing constructor counts do not establish those identities.
-No new benchmark or production change is started for that preparation.
+Use `python3 scripts/local-guard.py` serially. Preserve 64 GiB free disk, generated
+target data below 2 GiB, sampled workload RSS below 1 GiB and the 180-second limit.
+Do not raise or bypass limits; move refused work to GitHub runners.
