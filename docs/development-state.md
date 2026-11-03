@@ -92,6 +92,10 @@ fixtures and measurement tooling. Original source IDs remain reachable by the ta
   `bb5433b6`; docs-only commits do not change those measured programs.
 - After #254's verified squash, reconcile source and retained evidence onto it;
   require nine final-head production jobs plus docs. No final matrix is dispatched.
+- Follow-up after this group's delivery: complete the
+  [matched-option ownership proof](measurements/remaining-gradient-storage.md#follow-up-an-immediately-matched-optional-result).
+  Saved C confirms an optional wrapper and payload retain before immediate match;
+  this is a bounded source finding, not a timing diagnosis. No implementation yet.
 
 ### Local checks and resume tools
 

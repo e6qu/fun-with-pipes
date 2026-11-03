@@ -74,6 +74,10 @@ pointer buffer; the complete-program report records its own net allocation costs
 
 Input derivative-record packing and coordinate-list reuse remain unselected.
 This group changes neither representation. Older timing goals remain open.
+After delivery, complete the [matched-option ownership proof](docs/measurements/remaining-gradient-storage.md#follow-up-an-immediately-matched-optional-result):
+saved C shows an allocated result wrapper that the caller immediately unpacks.
+Use the existing field-return machinery for the proof, then freeze the selection
+and comparison before implementing it. This is not a proven cause of the timing miss.
 
 ## Open performance goals
 

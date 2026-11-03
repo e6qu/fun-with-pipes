@@ -4,8 +4,9 @@ This review records remaining costs and the proofs needed to remove them.
 The [same-type conversion group](scalar-array-identities.md) awaits final delivery,
 separately from the
 [direct array-call experiment](direct-array-callbacks.md). Final-iteration consumption is the
-[selected next group](final-iteration-storage.md); record packing and coordinate
-reuse remain unselected. Each experiment keeps its own reference and measurements.
+[selected next group](final-iteration-storage.md). The optional-result review below
+identifies a smaller remaining boundary cost; record packing and coordinate reuse
+remain unselected. Each experiment keeps its own reference and measurements.
 
 ## Measured costs
 
@@ -108,3 +109,31 @@ This is measured separately from coordinate representation. Comparisons label
 the source forms: the candidate history-form program retains only its current state.
 Preserve older reports as observations of their recorded compiler; their history
 allocation counts are not future semantic requirements.
+
+## Follow-up: an immediately matched optional result
+
+[Saved generated C](final-iteration-storage-2026-11-03/optional-result-review.json)
+compares the same three-coordinate, two-update source before and after history
+removal. The old source returns the option as tag/payload fields. The new internal
+primitive allocates `Some(final)`, then the caller retains its payload and drops
+the wrapper during `match`. The history removal is still a large net saving.
+This source observation does not identify the one-update timing regression's cause.
+
+The compiler already returns matched array/map reads and channel/task results as
+fields (`lookup_value_type`, `owned_option_type` and `expr_variant` in
+`src/cgen.rs`). Before selecting another implementation:
+
+1. Prove direct field ownership for the internal final-iteration result and
+   borrowed list `last`/`nth` reads. Keep whole-value results boxed when needed;
+   use the existing match-use check, without a new global analysis or syntax.
+2. Preserve argument/callback order, empty results, resource lifetimes, aliases
+   and failure/cancellation cleanup. A borrowed read must acquire its result's
+   owner; an already-owned iteration result should move its owner.
+3. Freeze and test the exact selection. Require one fewer wrapper allocation per
+   selected match and no added ARC operations, while unsupported/escaping uses
+   retain correct storage. Check actual generated C and native allocation counts.
+4. Freeze the comparison before timing; retain the current six misses and the
+   compiler-noise case. Report compiler cost, stack and all runtime outcomes.
+
+This review selects the next proof to complete after final-iteration delivery;
+it does not claim an implemented optimization or a measured speed benefit.
