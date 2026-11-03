@@ -1,0 +1,257 @@
+{
+  "source": "1f6a4ac80ed3e9e89106c27573d0c73d46bb6968",
+  "sessions": {
+    "aarch64-1": {
+      "run": 41629714632,
+      "job": 125895890316,
+      "failures": [
+        {
+          "case": "3-199",
+          "program": "fwp-ad",
+          "metric": "candidate/reference time",
+          "actual": 1.0127370618133604,
+          "limit": 0.95
+        },
+        {
+          "case": "3-199",
+          "program": "fwp-ad-history",
+          "metric": "candidate/reference time",
+          "actual": 1.0165251422063344,
+          "limit": 0.95
+        },
+        {
+          "case": "3-1999",
+          "program": "fwp-ad",
+          "metric": "candidate/reference time",
+          "actual": 1.020995750073851,
+          "limit": 0.95
+        },
+        {
+          "case": "3-1999",
+          "program": "fwp-ad-history",
+          "metric": "candidate/reference time",
+          "actual": 1.0133019799409668,
+          "limit": 0.95
+        },
+        {
+          "case": "33-199",
+          "program": "fwp-ad",
+          "metric": "candidate/reference time",
+          "actual": 0.96668106783346,
+          "limit": 0.95
+        },
+        {
+          "case": "33-199",
+          "program": "fwp-ad-history",
+          "metric": "candidate/reference time",
+          "actual": 0.9666954373184445,
+          "limit": 0.95
+        },
+        {
+          "case": "129-199",
+          "program": "fwp-ad",
+          "metric": "candidate/reference time",
+          "actual": 0.9578847240496478,
+          "limit": 0.95
+        },
+        {
+          "case": "129-199",
+          "program": "fwp-ad-history",
+          "metric": "candidate/reference time",
+          "actual": 0.959921039191016,
+          "limit": 0.95
+        }
+      ],
+      "files": 1334
+    },
+    "x86_64-2": {
+      "run": 41629714632,
+      "job": 125895890329,
+      "failures": [
+        {
+          "case": "3-199",
+          "program": "fwp-ad",
+          "metric": "candidate/reference time",
+          "actual": 1.0127891712955595,
+          "limit": 0.95
+        },
+        {
+          "case": "3-199",
+          "program": "fwp-ad-history",
+          "metric": "candidate/reference time",
+          "actual": 1.0010215240476992,
+          "limit": 0.95
+        },
+        {
+          "case": "3-1999",
+          "program": "fwp-ad",
+          "metric": "candidate/reference time",
+          "actual": 1.0195929233386825,
+          "limit": 0.95
+        },
+        {
+          "case": "3-1999",
+          "program": "fwp-ad-history",
+          "metric": "candidate/reference time",
+          "actual": 1.015644943557543,
+          "limit": 0.95
+        },
+        {
+          "case": "33-199",
+          "program": "fwp-ad",
+          "metric": "candidate/reference time",
+          "actual": 1.0042222817810151,
+          "limit": 0.95
+        },
+        {
+          "case": "33-199",
+          "program": "fwp-ad-history",
+          "metric": "candidate/reference time",
+          "actual": 0.999786923143363,
+          "limit": 0.95
+        },
+        {
+          "case": "129-199",
+          "program": "fwp-ad",
+          "metric": "candidate/reference time",
+          "actual": 0.9914680320550394,
+          "limit": 0.95
+        },
+        {
+          "case": "129-199",
+          "program": "fwp-ad-history",
+          "metric": "candidate/reference time",
+          "actual": 0.9848101129393986,
+          "limit": 0.95
+        }
+      ],
+      "files": 1334
+    },
+    "aarch64-2": {
+      "run": 41629714632,
+      "job": 125895890374,
+      "failures": [
+        {
+          "case": "3-199",
+          "program": "fwp-ad",
+          "metric": "candidate/reference time",
+          "actual": 1.0153510772907144,
+          "limit": 0.95
+        },
+        {
+          "case": "3-199",
+          "program": "fwp-ad-history",
+          "metric": "candidate/reference time",
+          "actual": 1.012503174453527,
+          "limit": 0.95
+        },
+        {
+          "case": "3-1999",
+          "program": "fwp-ad",
+          "metric": "candidate/reference time",
+          "actual": 1.0190271340269341,
+          "limit": 0.95
+        },
+        {
+          "case": "3-1999",
+          "program": "fwp-ad-history",
+          "metric": "candidate/reference time",
+          "actual": 1.0145967087877334,
+          "limit": 0.95
+        },
+        {
+          "case": "33-199",
+          "program": "fwp-ad",
+          "metric": "candidate/reference time",
+          "actual": 0.9664619650570553,
+          "limit": 0.95
+        },
+        {
+          "case": "33-199",
+          "program": "fwp-ad-history",
+          "metric": "candidate/reference time",
+          "actual": 0.9667561622108017,
+          "limit": 0.95
+        },
+        {
+          "case": "129-199",
+          "program": "fwp-ad",
+          "metric": "candidate/reference time",
+          "actual": 0.9583852979477435,
+          "limit": 0.95
+        },
+        {
+          "case": "129-199",
+          "program": "fwp-ad-history",
+          "metric": "candidate/reference time",
+          "actual": 0.9595382413488375,
+          "limit": 0.95
+        }
+      ],
+      "files": 1334
+    },
+    "x86_64-1": {
+      "run": 41631438916,
+      "job": 125901736888,
+      "failures": [
+        {
+          "case": "3-199",
+          "program": "fwp-ad",
+          "metric": "candidate/reference time",
+          "actual": 1.003176011358081,
+          "limit": 0.95
+        },
+        {
+          "case": "3-199",
+          "program": "fwp-ad-history",
+          "metric": "candidate/reference time",
+          "actual": 1.0174095426254237,
+          "limit": 0.95
+        },
+        {
+          "case": "3-1999",
+          "program": "fwp-ad",
+          "metric": "candidate/reference time",
+          "actual": 1.0168703086617528,
+          "limit": 0.95
+        },
+        {
+          "case": "3-1999",
+          "program": "fwp-ad-history",
+          "metric": "candidate/reference time",
+          "actual": 1.0132053991795624,
+          "limit": 0.95
+        },
+        {
+          "case": "33-199",
+          "program": "fwp-ad",
+          "metric": "candidate/reference time",
+          "actual": 0.998919897528778,
+          "limit": 0.95
+        },
+        {
+          "case": "33-199",
+          "program": "fwp-ad-history",
+          "metric": "candidate/reference time",
+          "actual": 0.9999515443989613,
+          "limit": 0.95
+        },
+        {
+          "case": "129-199",
+          "program": "fwp-ad",
+          "metric": "candidate/reference time",
+          "actual": 0.9932600268760867,
+          "limit": 0.95
+        },
+        {
+          "case": "129-199",
+          "program": "fwp-ad-history",
+          "metric": "candidate/reference time",
+          "actual": 0.991025286273886,
+          "limit": 0.95
+        }
+      ],
+      "files": 1334
+    }
+  }
+}

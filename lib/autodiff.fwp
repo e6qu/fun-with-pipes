@@ -176,7 +176,7 @@ Rev[T] = { value: T, vertex: I64 }
 trait ReverseScalar[T] : Field[T], Neg[T], Dup[T] =
     rev._seed : List[T] -> (I64, List[Rev[T]])
     rev._push : I64 -> T -> I64 -> T -> I64
-    rev._backward : I64 -> List[I64] -> List[T] -> List[T]
+    rev._backward : I64 -> List[I64] -> List[T] -> Array[T]
     rev._inactive-zero : T -> Bool
 
 foreign "fwp" ad.tape-owned : (t, t -> t -> t, t -> t -> t, t -> Bool) -> List[t] -> I64 where Dup[t]
@@ -186,7 +186,9 @@ foreign "fwp" ad.tape-owned : (t, t -> t -> t, t -> t -> t, t -> Bool) -> List[t
 # Use within ad.scope; weights transfer to the native tape, while separately
 # owned caller aliases remain valid. Both inactive parents return -1.
 foreign "fwp" ad.push-owned : I64 -> t -> I64 -> t -> I64 where Dup[t]
-foreign "fwp" ad.backward-owned : I64 -> List[I64] -> List[t] -> List[t] where Dup[t]
+# Return an owned array of input derivatives and retire the tape's buffers.
+# Stored reverse-mode values still obey their enclosing derivative scope.
+foreign "fwp" ad.backward-owned : I64 -> List[I64] -> List[t] -> Array[t] where Dup[t]
 
 rev._push-float : I64 -> t -> I64 -> t -> I64 where Float[t]
 rev._push-float = fn parent-a -> fn weight-a -> fn parent-b -> fn weight-b ->
@@ -328,14 +330,14 @@ rev._seed-float =
 
 # the adjoints of a tape's inputs, seeding the given vertices (frees the
 # tape)
-rev._backward-float : I64 -> List[I64] -> List[t] -> List[t] where Float[t]
+rev._backward-float : I64 -> List[I64] -> List[t] -> Array[t] where Float[t]
 rev._backward-float = curry3 (make {
     0 = .0,
     1 = .1 | array.from-list,
     2 = .2 | map float.convert | array.from-list,
-} | uncurry3 ad.backward | array.to-list | map float.convert)
+} | uncurry3 ad.backward | array.map float.convert)
 
-rev._finish : (I64, Rev[t]) -> (t, List[t]) where ReverseScalar[t], One[t], Dup[t]
+rev._finish : (I64, Rev[t]) -> (t, Array[t]) where ReverseScalar[t], One[t], Dup[t]
 rev._finish =
     both
         (.1 | .value)
@@ -346,10 +348,12 @@ rev._finish =
 # The value of a scalar function and its gradient at a point, in one
 # forward and one backward pass.
 value-and-grad : (List[Rev[t]] -> Rev[t]) -> List[t] -> (t, List[t]) where ReverseScalar[t], One[t], Dup[t]
-value-and-grad = ad.scope2 rev._value-and-grad
+value-and-grad = fn objective -> fn inputs ->
+    let (value, derivatives) = ad.scope2 rev._value-and-grad objective inputs
+    in (value, array.to-list derivatives)
 
 # internal
-rev._value-and-grad : (List[Rev[t]] -> Rev[t]) -> List[t] -> (t, List[t]) where ReverseScalar[t], One[t], Dup[t]
+rev._value-and-grad : (List[Rev[t]] -> Rev[t]) -> List[t] -> (t, Array[t]) where ReverseScalar[t], One[t], Dup[t]
 rev._value-and-grad = second | compose rev._seed | flip compose rev._finish
 
 # All partial derivatives of a scalar function at a point, using reverse mode.
@@ -357,10 +361,11 @@ rev._value-and-grad = second | compose rev._seed | flip compose rev._finish
 # record backwards. Recording and traversal add time and storage; this is not
 # the cost of an ordinary evaluation. `gradient` uses forward mode instead.
 grad : (List[Rev[t]] -> Rev[t]) -> List[t] -> List[t] where ReverseScalar[t], One[t], Dup[t]
-grad = ad.scope2 rev._grad
+grad = fn objective -> fn inputs ->
+    ad.scope2 rev._grad objective inputs | array.to-list
 
 # internal
-rev._grad : (List[Rev[t]] -> Rev[t]) -> List[t] -> List[t] where ReverseScalar[t], One[t], Dup[t]
+rev._grad : (List[Rev[t]] -> Rev[t]) -> List[t] -> Array[t] where ReverseScalar[t], One[t], Dup[t]
 rev._grad = rev._value-and-grad | flip compose .1
 
 # `grad` of a function of a vector
@@ -371,17 +376,17 @@ grad-vector =
     | compose vector.to-list
     | flip compose (array.from-list | vector.wrap)
 
-rev._vjp-finish : List[t] -> (I64, List[Rev[t]]) -> List[t] where ReverseScalar[t], Dup[t]
+rev._vjp-finish : List[t] -> (I64, List[Rev[t]]) -> Array[t] where ReverseScalar[t], Dup[t]
 rev._vjp-finish = curry (make { 0 = .1 | .0, 1 = .1 | .1 | map .vertex, 2 = .0 }
     | uncurry3 rev._backward)
 
 # Vector-Jacobian product: `xs | vjp f v` is vᵀ·J where J is the Jacobian
 # of f at xs (one backward pass, whatever the number of outputs).
 vjp : (List[Rev[t]] -> List[Rev[t]]) -> List[t] -> List[t] -> List[t] where ReverseScalar[t], Dup[t]
-vjp = curry3 (ad.scope (uncurry3 rev._vjp))
+vjp = curry3 (ad.scope (uncurry3 rev._vjp) | array.to-list)
 
 # internal
-rev._vjp : (List[Rev[t]] -> List[Rev[t]]) -> List[t] -> List[t] -> List[t] where ReverseScalar[t], Dup[t]
+rev._vjp : (List[Rev[t]] -> List[Rev[t]]) -> List[t] -> List[t] -> Array[t] where ReverseScalar[t], Dup[t]
 rev._vjp = curry (both (.0 | second | compose rev._seed) (.1 | rev._vjp-finish)
     | uncurry compose)
 

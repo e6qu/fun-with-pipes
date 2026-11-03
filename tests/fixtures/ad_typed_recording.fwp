@@ -2,7 +2,7 @@
 push-one : I64 -> I64
 push-one = fn node -> ad.push-owned node WEIGHT_ONE -1 WEIGHT_ZERO
 
-record-chain : List[WEIGHT_TYPE] -> List[WEIGHT_TYPE]
+record-chain : List[WEIGHT_TYPE] -> Array[WEIGHT_TYPE]
 record-chain = fn inputs ->
     let base = ad.tape-owned (WEIGHT_ZERO, add, mul, rev._inactive-zero) inputs
     in let final =
@@ -16,4 +16,5 @@ record-chain = fn inputs ->
         True -> result
         False -> prim.trap "input alias changed"
 
-main = [WEIGHT_ONE] | ad.scope record-chain | eq [WEIGHT_ONE] | echo
+# Build the expected array at compile time; its construction is not recording work.
+main = [WEIGHT_ONE] | ad.scope record-chain | eq (comptime (array.from-list [WEIGHT_ONE])) | echo

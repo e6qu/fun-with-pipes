@@ -804,3 +804,122 @@ main = work 3 [10, 20] | echo
         }
     }
 }
+
+#[test]
+fn array_list_zip_preserves_eager_order_slices_and_updated_aliases() {
+    let dir = fwp::cgen::TempDir::new("array-list-zip-order").unwrap();
+    let input = dir.join("main.fwp");
+    std::fs::write(&input, include_str!("fixtures/array_list_zip_order.fwp")).unwrap();
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    let expected = include_bytes!("fixtures/array_list_zip_order.out");
+    let reference = checked(
+        Command::new(compiler)
+            .env("FWP_NO_OPT", "1")
+            .args(["run", "--interp"])
+            .arg(&input),
+    );
+    assert_eq!(&reference.stdout, expected);
+    assert!(reference.stderr.is_empty());
+    let interpreted = checked(
+        Command::new(compiler)
+            .env_remove("FWP_NO_OPT")
+            .args(["run", "--interp"])
+            .arg(&input),
+    );
+    assert_eq!(&interpreted.stdout, expected);
+    assert!(interpreted.stderr.is_empty());
+    for stack in ["0", "1"] {
+        for opt in ["-O1", "-O2"] {
+            let path = dir.join(format!("array-{stack}-{opt}.c"));
+            checked(
+                Command::new(compiler)
+                    .env_remove("FWP_NO_OPT")
+                    .env("FWP_STACK", stack)
+                    .args(["build", "--memory", "dynamic", "--emit-c", opt])
+                    .arg(&input)
+                    .arg("-o")
+                    .arg(&path),
+            );
+            let ordinary = std::fs::read_to_string(path).unwrap();
+            assert!(
+                ordinary.matches("/* array-list-zip :").count() >= 4,
+                "{stack}/{opt}: both I64 slots, I8 and widened F32 inputs must select"
+            );
+            for reuse in [true, false] {
+                let code = if reuse {
+                    ordinary.clone()
+                } else {
+                    format!("#define FWP_NO_REUSE 1\n{ordinary}")
+                };
+                let label = format!("{stack}-{opt}-reuse-{reuse}");
+                let executable = dir.join(format!("array-{label}.exe"));
+                fwp::cgen::compile_c(&code, &executable, opt).unwrap();
+                let output = checked(Command::new(&executable).env("FWP_ALLOC_STATS", "1"));
+                record_probe::save("array_list_zip_order", &label, &code, &executable, &output);
+                assert_eq!(&output.stdout, expected, "{label}");
+                let stats =
+                    allocation_report::parse(std::str::from_utf8(&output.stderr).unwrap()).unwrap();
+                assert_eq!(stats.live, 0, "{label}: {stats:?}");
+            }
+        }
+    }
+}
+
+#[test]
+fn gradient_arrays_cross_scope_and_feed_updates_without_a_private_list() {
+    let dir = fwp::cgen::TempDir::new("gradient-array-consumption").unwrap();
+    let input = dir.join("main.fwp");
+    std::fs::write(
+        &input,
+        include_str!("fixtures/gradient_array_consumption.fwp"),
+    )
+    .unwrap();
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    let expected = "True\n".repeat(7).into_bytes();
+    for raw in [true, false] {
+        let mut command = Command::new(compiler);
+        command.env_remove("FWP_NO_OPT");
+        if raw {
+            command.env("FWP_NO_OPT", "1");
+        }
+        let result = checked(command.args(["run", "--interp"]).arg(&input));
+        assert_eq!(result.stdout, expected, "raw={raw}");
+        assert!(result.stderr.is_empty());
+    }
+    let path = dir.join("main.c");
+    checked(
+        Command::new(compiler)
+            .env_remove("FWP_NO_OPT")
+            .args(["build", "--memory", "dynamic", "--emit-c"])
+            .arg(&input)
+            .arg("-o")
+            .arg(&path),
+    );
+    let code = std::fs::read_to_string(path).unwrap();
+    assert!(
+        code.contains("/* array-list-zip :"),
+        "the complete gradient/update path must select"
+    );
+    for opt in ["-O1", "-O2"] {
+        let executable = dir.join(format!("gradient{opt}.exe"));
+        fwp::cgen::compile_c(&code, &executable, opt).unwrap();
+        for workspace in ["0", "1"] {
+            let result = checked(
+                Command::new(&executable)
+                    .env("FWP_AD_WORKSPACE", workspace)
+                    .env("FWP_ALLOC_STATS", "1"),
+            );
+            record_probe::save(
+                "gradient_array_consumption",
+                &format!("{opt}-workspace{workspace}"),
+                &code,
+                &executable,
+                &result,
+            );
+            assert_eq!(result.stdout, expected, "{opt} workspace={workspace}");
+            let stats =
+                allocation_report::parse(std::str::from_utf8(&result.stderr).unwrap()).unwrap();
+            assert_eq!(stats.live, 0, "{opt} workspace={workspace}: {stats:?}");
+        }
+    }
+}

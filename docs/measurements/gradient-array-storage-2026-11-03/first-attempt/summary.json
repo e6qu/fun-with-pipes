@@ -1,0 +1,246 @@
+{
+  "source": "aed66f261c25ff74e37d04edd9f2d3717817510d",
+  "run": 41618374217,
+  "hosts": {
+    "aarch64": {
+      "artifact": {
+        "id": 13222368341,
+        "node_id": "MDg6QXJ0aWZhY3QxMzIyMjM2ODM0MQ==",
+        "name": "gradient-array-checks-aarch64",
+        "size_in_bytes": 94472703,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13222368341",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13222368341/zip",
+        "expired": false,
+        "digest": "sha256:7436b0f793d35472b3646a460202a0a68baba309af9f17495e260c84e79da2ea",
+        "created_at": "2026-11-03T10:33:25Z",
+        "updated_at": "2026-11-03T10:33:25Z",
+        "expires_at": "2027-02-01T10:20:01Z",
+        "workflow_run": {
+          "id": 41618374217,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "gradient-array-results",
+          "head_sha": "aed66f261c25ff74e37d04edd9f2d3717817510d"
+        }
+      },
+      "targetResults": {
+        "gradient-array-checks/clang/targets/test-ad_tape_ownership.log": [
+          "test result: FAILED. 4 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 57.69s"
+        ],
+        "gradient-array-checks/clang/targets/test-autodiff_nested.log": [
+          "test result: FAILED. 6 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 50.41s"
+        ],
+        "gradient-array-checks/clang/targets/test-autodiff_precision.log": [
+          "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 18.70s"
+        ],
+        "gradient-array-checks/clang/targets/test-zip_map_fusion.log": [
+          "test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 132.24s"
+        ],
+        "gradient-array-checks/clang/targets/test-zip_unwind_ownership.log": [
+          "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 44.90s"
+        ],
+        "gradient-array-checks/gcc/targets/test-ad_tape_ownership.log": [
+          "test result: FAILED. 4 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 49.20s"
+        ],
+        "gradient-array-checks/gcc/targets/test-autodiff_capacity_bounds.log": [
+          "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 18.34s"
+        ],
+        "gradient-array-checks/gcc/targets/test-ad_tape_scopes.log": [
+          "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 30.21s"
+        ],
+        "gradient-array-checks/gcc/targets/test-autodiff_checkpoint.log": [
+          "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 28.29s"
+        ],
+        "gradient-array-checks/gcc/targets/test-autodiff_library.log": [
+          "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 11.34s"
+        ],
+        "gradient-array-checks/gcc/targets/test-autodiff_nested.log": [
+          "test result: FAILED. 6 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 45.65s"
+        ],
+        "gradient-array-checks/gcc/targets/test-autodiff_precision.log": [
+          "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 15.76s"
+        ],
+        "gradient-array-checks/gcc/targets/test-autodiff_workspace.log": [
+          "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 28.07s"
+        ],
+        "gradient-array-checks/gcc/targets/test-stdlib_doc.log": [
+          "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+        ],
+        "gradient-array-checks/gcc/targets/test-zip_map_fusion.log": [
+          "test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 126.09s"
+        ],
+        "gradient-array-checks/gcc/targets/test-zip_unwind_ownership.log": [
+          "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 47.94s"
+        ]
+      },
+      "diagnostics": {
+        "gradient-array-checks/clang/targets/test-ad_tape_ownership.log": [
+          "test typed_recording_moves_direct_weights_without_argument_records ... ",
+          "thread 'typed_recording_moves_direct_weights_without_argument_records' (8145) panicked at tests/ad_tape_ownership.rs:426:21:",
+          "typed-quad-stack1-O1-workspace0: Output { status: ExitStatus(unix_wait_status(54784)), stdout: \"True\\n\", stderr: \"typed recording: 256 calls, 0 heap records\\ntyped memory: process peak charged 11056, cumulative charged 18352, final charged 0\\n\" }",
+          "note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace",
+          "FAILED",
+          "",
+          "failures:",
+          "test result: FAILED. 4 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 57.69s"
+        ],
+        "gradient-array-checks/clang/targets/test-autodiff_nested.log": [
+          "test managed_tapes_release_across_recovered_failure_and_task_cancellation ... ",
+          "thread 'managed_tapes_release_across_recovered_failure_and_task_cancellation' (8552) panicked at tests/autodiff_nested.rs:268:13:",
+          "assertion `left == right` failed: stage 5",
+          "  left: 0",
+          " right: 1",
+          "note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace",
+          "FAILED",
+          "test nested_reverse_derivatives_match_analytic_values_and_both_engines ... ok",
+          "test nested_reverse_rejects_expired_and_unrelated_tapes ... ok",
+          "",
+          "test result: FAILED. 6 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 50.41s"
+        ],
+        "gradient-array-checks/gcc/targets/test-ad_tape_ownership.log": [
+          "test typed_recording_moves_direct_weights_without_argument_records ... ",
+          "thread 'typed_recording_moves_direct_weights_without_argument_records' (5270) panicked at tests/ad_tape_ownership.rs:426:21:",
+          "typed-quad-stack1-O1-workspace0: Output { status: ExitStatus(unix_wait_status(54784)), stdout: \"True\\n\", stderr: \"typed recording: 256 calls, 0 heap records\\ntyped memory: process peak charged 11056, cumulative charged 18352, final charged 0\\n\" }",
+          "note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace",
+          "FAILED",
+          "",
+          "failures:",
+          "test result: FAILED. 4 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 49.20s"
+        ],
+        "gradient-array-checks/gcc/targets/test-autodiff_nested.log": [
+          "test managed_tapes_release_across_recovered_failure_and_task_cancellation ... ",
+          "thread 'managed_tapes_release_across_recovered_failure_and_task_cancellation' (6200) panicked at tests/autodiff_nested.rs:268:13:",
+          "assertion `left == right` failed: stage 5",
+          "  left: 0",
+          " right: 1",
+          "note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace",
+          "FAILED",
+          "test nested_reverse_derivatives_match_analytic_values_and_both_engines ... ok",
+          "test nested_reverse_rejects_expired_and_unrelated_tapes ... ok",
+          "",
+          "test result: FAILED. 6 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 45.65s"
+        ]
+      }
+    },
+    "x86_64": {
+      "artifact": {
+        "id": 13222662685,
+        "node_id": "MDg6QXJ0aWZhY3QxMzIyMjY2MjY4NQ==",
+        "name": "gradient-array-checks-x86_64",
+        "size_in_bytes": 97315985,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13222662685",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13222662685/zip",
+        "expired": false,
+        "digest": "sha256:0e73ce7c607cfe5bccd9ef41a6a8e14af81aa04833f2d7074c45b7bd629a3e3d",
+        "created_at": "2026-11-03T10:34:13Z",
+        "updated_at": "2026-11-03T10:34:13Z",
+        "expires_at": "2027-02-01T10:20:01Z",
+        "workflow_run": {
+          "id": 41618374217,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "gradient-array-results",
+          "head_sha": "aed66f261c25ff74e37d04edd9f2d3717817510d"
+        }
+      },
+      "targetResults": {
+        "gradient-array-checks/clang/targets/test-ad_tape_ownership.log": [
+          "test result: FAILED. 4 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 51.97s"
+        ],
+        "gradient-array-checks/clang/targets/test-autodiff_nested.log": [
+          "test result: FAILED. 6 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 41.67s"
+        ],
+        "gradient-array-checks/clang/targets/test-autodiff_precision.log": [
+          "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 15.23s"
+        ],
+        "gradient-array-checks/clang/targets/test-zip_map_fusion.log": [
+          "test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 116.50s"
+        ],
+        "gradient-array-checks/clang/targets/test-zip_unwind_ownership.log": [
+          "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 37.48s"
+        ],
+        "gradient-array-checks/gcc/targets/test-ad_tape_ownership.log": [
+          "test result: FAILED. 4 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 44.14s"
+        ],
+        "gradient-array-checks/gcc/targets/test-ad_tape_scopes.log": [
+          "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 27.07s"
+        ],
+        "gradient-array-checks/gcc/targets/test-autodiff_capacity_bounds.log": [
+          "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 16.60s"
+        ],
+        "gradient-array-checks/gcc/targets/test-autodiff_checkpoint.log": [
+          "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 25.09s"
+        ],
+        "gradient-array-checks/gcc/targets/test-autodiff_library.log": [
+          "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 10.09s"
+        ],
+        "gradient-array-checks/gcc/targets/test-autodiff_nested.log": [
+          "test result: FAILED. 6 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 40.10s"
+        ],
+        "gradient-array-checks/gcc/targets/test-autodiff_precision.log": [
+          "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.64s"
+        ],
+        "gradient-array-checks/gcc/targets/test-autodiff_workspace.log": [
+          "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 25.14s"
+        ],
+        "gradient-array-checks/gcc/targets/test-stdlib_doc.log": [
+          "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+        ],
+        "gradient-array-checks/gcc/targets/test-zip_map_fusion.log": [
+          "test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 113.45s"
+        ],
+        "gradient-array-checks/gcc/targets/test-zip_unwind_ownership.log": [
+          "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 43.23s"
+        ]
+      },
+      "diagnostics": {
+        "gradient-array-checks/clang/targets/test-ad_tape_ownership.log": [
+          "test typed_recording_moves_direct_weights_without_argument_records ... ",
+          "thread 'typed_recording_moves_direct_weights_without_argument_records' (8159) panicked at tests/ad_tape_ownership.rs:426:21:",
+          "typed-quad-stack1-O1-workspace0: Output { status: ExitStatus(unix_wait_status(54784)), stdout: \"True\\n\", stderr: \"typed recording: 256 calls, 0 heap records\\ntyped memory: process peak charged 11056, cumulative charged 18352, final charged 0\\n\" }",
+          "note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace",
+          "FAILED",
+          "",
+          "failures:",
+          "test result: FAILED. 4 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 51.97s"
+        ],
+        "gradient-array-checks/clang/targets/test-autodiff_nested.log": [
+          "test managed_tapes_release_across_recovered_failure_and_task_cancellation ... ",
+          "thread 'managed_tapes_release_across_recovered_failure_and_task_cancellation' (8558) panicked at tests/autodiff_nested.rs:268:13:",
+          "assertion `left == right` failed: stage 5",
+          "  left: 0",
+          " right: 1",
+          "note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace",
+          "FAILED",
+          "test nested_reverse_derivatives_match_analytic_values_and_both_engines ... ok",
+          "test nested_reverse_rejects_expired_and_unrelated_tapes ... ok",
+          "",
+          "test result: FAILED. 6 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 41.67s"
+        ],
+        "gradient-array-checks/gcc/targets/test-ad_tape_ownership.log": [
+          "test typed_recording_moves_direct_weights_without_argument_records ... ",
+          "thread 'typed_recording_moves_direct_weights_without_argument_records' (5253) panicked at tests/ad_tape_ownership.rs:426:21:",
+          "typed-quad-stack1-O1-workspace0: Output { status: ExitStatus(unix_wait_status(54784)), stdout: \"True\\n\", stderr: \"typed recording: 256 calls, 0 heap records\\ntyped memory: process peak charged 11056, cumulative charged 18352, final charged 0\\n\" }",
+          "note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace",
+          "FAILED",
+          "",
+          "failures:",
+          "test result: FAILED. 4 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 44.14s"
+        ],
+        "gradient-array-checks/gcc/targets/test-autodiff_nested.log": [
+          "test managed_tapes_release_across_recovered_failure_and_task_cancellation ... ",
+          "thread 'managed_tapes_release_across_recovered_failure_and_task_cancellation' (6193) panicked at tests/autodiff_nested.rs:268:13:",
+          "assertion `left == right` failed: stage 5",
+          "  left: 0",
+          " right: 1",
+          "note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace",
+          "FAILED",
+          "test nested_reverse_derivatives_match_analytic_values_and_both_engines ... ok",
+          "test nested_reverse_rejects_expired_and_unrelated_tapes ... ok",
+          "",
+          "test result: FAILED. 6 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 40.10s"
+        ]
+      }
+    }
+  }
+}

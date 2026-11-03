@@ -499,6 +499,34 @@ jobs pass. Runtime timings have recorded misses. The [frozen contract](measureme
 and [starting census](measurements/temporary-list-census-2026-11-03/README.md)
 define the comparison.
 
+### Private array results consumed by zip
+
+The gradient-array batch passes focused native checks and allocation budgets;
+full-platform and timing acceptance remain open.
+A gradient is one derivative per input. For `x*x + y*y` at `[1.0, 2.0]`, it is
+`[2.0, 4.0]`. Scaling by `0.25` and subtracting from the inputs gives `[0.5, 1.0]`.
+The selected storage path is:
+
+```text
+backward traversal → owned derivative array → close derivative scope
+                   → map every derivative → zip with inputs → result list
+```
+
+- Internal backward operations return independent arrays; public `grad`,
+  `value-and-grad` and `vjp` still return their documented list results.
+- Before list fusion, `src/fuse/array_zip.rs` recognizes an array-to-list result
+  used only by one zip, optionally through one known scalar map. It removes that
+  private list conversion while keeping every map callback before zip starts.
+- Straight-line aliases and both zip positions are supported. Shared lists,
+  unknown/captured callbacks, branch-crossing uses and values with child owners
+  retain ordinary list storage. Array aliases remain immutable.
+- Native accessors read packed elements and views correctly. Partial arrays,
+  the zip scratch and the final list require ordinary and exceptional cleanup.
+
+The [contract](measurements/gradient-array-storage.md) fixes the ownership,
+compiler-cost and allocation requirements. Passing the focused C ownership probe
+alone does not establish that the complete compiler selects or safely runs this path.
+
 ### Private index ranges consumed by zip
 
 The range consumer being verified in PR #251 keeps two I64 bounds instead of a

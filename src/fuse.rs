@@ -29,6 +29,8 @@ use std::rc::Rc;
 use crate::ir::*;
 use crate::value::Value;
 
+mod array_zip;
+
 /// The trap messages an expression can raise when it is evaluated; `None`
 /// when it may do anything else.
 type Traps = Option<BTreeSet<String>>;
@@ -2333,6 +2335,7 @@ fn dummy_args(funcs: &[Func], id: FuncId) -> Vec<Expr> {
 
 /// Fuse the list pipelines of every function.
 pub fn fuse(prog: &mut Program) {
+    array_zip::lower(prog);
     let elements: Vec<_> = prog
         .funcs
         .iter()

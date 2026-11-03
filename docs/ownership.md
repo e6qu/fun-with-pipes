@@ -51,6 +51,14 @@ remove a JavaScript host's collector.
 - Enforce the compiler analysis budgets in G2 as proof precision changes.
 - Verify [direct recording and weight transfers](measurements/derivative-recording-moves.md).
   Preserve #237’s [borrowed zero adjoints and moved result owners](measurements/typed-derivative-owners.md).
+- Verify the [gradient-array batch](measurements/gradient-array-storage.md):
+  transfer typed adjoints into an independent array, clean initialized slots on
+  failure, and remove private result-list copies before map/zip. Public list
+  outputs, enclosing derivative scopes and input aliases must keep their behavior.
+  Focused GCC/Clang checks, all 96 allocation observations and compiler-cost
+  limits pass. Runtime speed targets remain open; the
+  [timing report](measurements/gradient-array-time-2026-11-03/README.md) preserves
+  gains and regressions. Full-platform acceptance is still required.
 - Preserve delivered A1–A6 and #236 call/collection reductions, including the
   [parser workspace's limits](measurements/parser-workspace.md). Broader reductions
   need a named workload and proof; zero retains does not mean zero allocations

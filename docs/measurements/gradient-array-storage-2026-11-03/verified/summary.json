@@ -1,0 +1,72 @@
+{
+  "source": "f00fb9dccf6fa0ea6b1bde6f0a6906fc2ed83224",
+  "run": 41626196812,
+  "hosts": {
+    "aarch64": {
+      "job": 125884054605,
+      "artifact": {
+        "id": 13226204616,
+        "node_id": "MDg6QXJ0aWZhY3QxMzIyNjIwNDYxNg==",
+        "name": "gradient-array-checks-aarch64",
+        "size_in_bytes": 169955104,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13226204616",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13226204616/zip",
+        "expired": false,
+        "digest": "sha256:02ad5b595622469c7feb9390ef770526bd82ec3759ec778fa5cbdca2ec73a139",
+        "created_at": "2026-11-03T11:33:50Z",
+        "updated_at": "2026-11-03T11:33:50Z",
+        "expires_at": "2027-02-01T11:16:42Z",
+        "workflow_run": {
+          "id": 41626196812,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "gradient-array-results",
+          "head_sha": "f00fb9dccf6fa0ea6b1bde6f0a6906fc2ed83224"
+        }
+      },
+      "observations": 48,
+      "targets": 16,
+      "nativeImages": 525,
+      "arrayUnwindControls": 16,
+      "typedRecordingAndOwnerControls": 72,
+      "maxFrameGrowth": 0,
+      "textByteChange": [
+        -368,
+        4768
+      ]
+    },
+    "x86_64": {
+      "job": 125884054997,
+      "artifact": {
+        "id": 13226053942,
+        "node_id": "MDg6QXJ0aWZhY3QxMzIyNjA1Mzk0Mg==",
+        "name": "gradient-array-checks-x86_64",
+        "size_in_bytes": 172626311,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13226053942",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13226053942/zip",
+        "expired": false,
+        "digest": "sha256:56b4f718288f3148b754d8aaa309da998230d7598bff19149004357d82a339ca",
+        "created_at": "2026-11-03T11:37:21Z",
+        "updated_at": "2026-11-03T11:37:21Z",
+        "expires_at": "2027-02-01T11:16:42Z",
+        "workflow_run": {
+          "id": 41626196812,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "gradient-array-results",
+          "head_sha": "f00fb9dccf6fa0ea6b1bde6f0a6906fc2ed83224"
+        }
+      },
+      "observations": 48,
+      "targets": 16,
+      "nativeImages": 525,
+      "arrayUnwindControls": 16,
+      "typedRecordingAndOwnerControls": 72,
+      "maxFrameGrowth": 0,
+      "textByteChange": [
+        -528,
+        1360
+      ]
+    }
+  }
+}

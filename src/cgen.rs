@@ -2576,18 +2576,26 @@ impl Gen<'_> {
         format!("    /* Eager scalar buffer: finish every map callback before zip. */\n    size_t count = fwp_list_len(l0);\n    if (count > (SIZE_MAX - sizeof(fwp_arr)) / sizeof(V)) fwp_trap(\"map too large\");\n    V buffer = fwp_rc_fresh(fwp_arr_new(count));\n    fwp_value_owner owner = {{buffer, fwp_rc_free_arr}};\n    fwp_cleanup cleanup; fwp_value_protect(&owner, &cleanup);\n    for (size_t i = 0; i < count; i++) {{\n        ARR(buffer)->d[i] = f{callback}(OBJ(l0)->f[0]);\n        l0 = OBJ(l0)->f[1];\n    }}\n    return fwp_value_finish(&owner, &cleanup);\n")
     }
 
-    fn scalar_buffer_zip(&mut self, callback: FuncId, slot: usize) -> String {
+    fn scalar_buffer_zip(&mut self, id: FuncId, callback: FuncId, slot: usize) -> String {
         assert!(slot < 2);
         let other = 1 - slot;
         let result = self.prog.funcs[callback].ty.params(2).1;
         let result_list = MT::Con("std::List".into(), vec![result.clone()]);
         let drop = self.value_drop(&result_list);
-        let arguments = if slot == 0 {
-            format!("ARR(l{slot})->d[i], items[i]")
-        } else {
-            format!("items[i], ARR(l{slot})->d[i]")
+        let (parameters, _) = self.prog.funcs[id].ty.params(2);
+        let MT::Con(name, elements) = parameters[slot] else {
+            unreachable!("scalar zip input must be an array");
         };
-        format!("    /* Zip after the complete scalar map; borrow buffer and source list. */\n    size_t count;\n    V *items = fwp_map_items(l{other}, &count);\n    fwp_map_owner owner = {{items, 0, 0, NULL, {drop}}};\n    fwp_cleanup cleanup; fwp_map_protect(&owner, &cleanup);\n    size_t buffered = ARR(l{slot})->len;\n    if (buffered < count) count = buffered;\n    for (size_t i = 0; i < count; i++) {{\n        items[i] = f{callback}({arguments});\n        owner.count++;\n    }}\n    return fwp_map_finish_protected(&owner, &cleanup);\n")
+        assert!(name == "std::Array" && elements.len() == 1);
+        let element = elements[0].clone();
+        let descriptor = self.desc(&element);
+        let input = format!("fwp_array_load(l{slot}, i, {descriptor})");
+        let arguments = if slot == 0 {
+            format!("{input}, items[i]")
+        } else {
+            format!("items[i], {input}")
+        };
+        format!("    /* Zip after the complete scalar map; borrow buffer and source list. */\n    size_t count;\n    V *items = fwp_map_items(l{other}, &count);\n    fwp_map_owner owner = {{items, 0, 0, NULL, {drop}}};\n    fwp_cleanup cleanup; fwp_map_protect(&owner, &cleanup);\n    size_t buffered = fwp_array_len(l{slot});\n    if (buffered < count) count = buffered;\n    for (size_t i = 0; i < count; i++) {{\n        items[i] = f{callback}({arguments});\n        owner.count++;\n    }}\n    return fwp_map_finish_protected(&owner, &cleanup);\n")
     }
 
     fn range_zip(&mut self, callback: FuncId, captures: usize, slot: usize) -> String {
@@ -8258,7 +8266,7 @@ static inline __attribute__((always_inline)) int fs{}(fwp_loop_state{step} *st, 
                 out.push_str(&self.scalar_buffer_map(*callback));
             }
             Body::ScalarBufferZip { callback, slot } => {
-                out.push_str(&self.scalar_buffer_zip(*callback, *slot));
+                out.push_str(&self.scalar_buffer_zip(id, *callback, *slot));
             }
             Body::PackedRecordMap { callback } => {
                 out.push_str(&self.packed_record_map(*callback));

@@ -2,7 +2,8 @@
 
 Historical protocol delivered in PR #237. The requirements below describe that
 source; current recording arguments and fixtures follow the separate
-[weight-transfer protocol](derivative-recording-moves.md). This protocol was fixed
+[weight-transfer protocol](derivative-recording-moves.md) and
+[gradient-array contract](gradient-array-storage.md). This protocol was fixed
 before its implementation. The baseline is merged PR #236,
 `658123c7c09aa8991ca69cbb82643e68244edc95`; its complete platform gates pass.
 The [tape example](../terminology.md#tape-and-backward-pass) explains the terms.
@@ -15,12 +16,12 @@ adjoints are language values. Ordinary F64 tape arithmetic is unchanged.
    and separately retains weight values; it never saves the record pointer.
    Allow the existing borrowed stack-record representation while keeping every
    child alive through growth, retention and failure.
-2. Backward setup currently retains the tape's zero once per adjoint slot.
+2. The baseline backward setup retained the tape's zero once per adjoint slot.
    Keep one owner in the tape and let slots containing that exact value borrow
    it. Other slots own their values. Normalize an independently owned callback
    result equal to that exact value by releasing the returned owner; do not
    compare numerical values or skip arithmetic/callbacks.
-3. Building the output list currently retains each input adjoint and later drops
+3. The baseline output-list construction retained each input adjoint and later drops
    the array's owner. Move a distinct owned adjoint into its list cell instead.
    A borrowed zero still needs one result owner. Protect the transferred value
    on the unwind chain until cell allocation succeeds.
@@ -91,7 +92,7 @@ They are test placeholders, not new language syntax.
 |---|---|---|
 | `base` | Register the input values with `ad.tape-owned` | ID of the first input node, not its numeric value |
 | `final` | Loop 256 times, recording one weight-1 edge each time | Last node ID |
-| `result` | Run backward from `[final]` with seed `[WEIGHT_ONE]` | Input derivatives: `[WEIGHT_ONE]` |
+| `result` | Run backward from `[final]` with seed `[WEIGHT_ONE]` | An array containing the input derivative, `WEIGHT_ONE` |
 
 ```text
 let base = create the tape input
@@ -102,7 +103,7 @@ in (let final = record the chain
 
 This is an explanation of nesting, not runnable source. Each `in` belongs to
 the preceding `let`; `in let final` means the first binding's body is another
-binding. The last body returns the saved derivative list only if the input
+binding. The current fixture returns the saved derivative array only if the input
 still equals `[WEIGHT_ONE]`. That checks preservation of the caller's alias.
 See [local names](../terminology.md#local-names) for a small runnable calculation.
 

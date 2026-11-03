@@ -4,8 +4,11 @@
 `3be9479c4150d7aae5695d7f7aa4ce3f84d0f738`. Both completed target archives, all 96 allocation observations
 and both full job logs are audited.
 The [frozen contract](../range-zip-storage.md) and exact predictions are unchanged.
-Runtime measurements are complete with small-case speed goals open. Final
-platform acceptance remains pending. The measured source
+Runtime measurements are complete with small-case speed goals open. All nine
+production jobs and documentation pass at final head `cea8debc`; complete logs
+are audited and [PR #251](https://github.com/e6qu/fun-with-pipes/pull/251) is merged
+as `296ec5b4` with the same tree. [Gate identities and logs](platforms/final-gates.json).
+The measured source
 is frozen as `roadmap/range-zip-measurement-2026-11-03` at that commit.
 
 ## Corrected native verification

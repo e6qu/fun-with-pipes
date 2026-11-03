@@ -227,10 +227,25 @@ impl<'p> Interp<'p> {
             Body::RegionEntry { .. } | Body::RegionCtor(_) => {
                 return trap("internal: native region body reached interpreter");
             }
+            Body::ScalarBufferZip { callback, slot } => {
+                let Value::Array(values) = &args[*slot] else {
+                    return trap("internal: array-list zip requires an array");
+                };
+                let items = args[1 - *slot].list_items();
+                let mut result = Vec::with_capacity(values.len().min(items.len()));
+                for (value, item) in values.iter().zip(items) {
+                    let inputs = if *slot == 0 {
+                        vec![value.clone(), item]
+                    } else {
+                        vec![item, value.clone()]
+                    };
+                    result.push(self.call(*callback, inputs)?);
+                }
+                Value::list(result)
+            }
             Body::PackedRecordMap { .. }
             | Body::PackedRecordFold { .. }
             | Body::ScalarBufferMap { .. }
-            | Body::ScalarBufferZip { .. }
             | Body::RangeZip { .. } => {
                 return trap("internal: native buffer body reached interpreter");
             }

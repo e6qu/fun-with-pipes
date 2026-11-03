@@ -284,10 +284,14 @@ their recorded source, not a measurement of the current compiler.
 Typed native backward storage keeps one owner of its zero value. Untouched slots
 borrow that exact value; other slots own their computed adjoints. Callback results
 that return that same zero release their extra owner. Finished input adjoints move
-into the result list, protected against allocation failure; returning a borrowed
-zero acquires the owner the result needs. This changes reference operations, not
-arithmetic or callback order. The [count and cleanup protocol](measurements/typed-derivative-owners.md)
-records verification status; it makes no speed claim.
+into an independent result array, protected against allocation failure. Returning
+a borrowed zero acquires the owner the result needs. Public helpers convert this
+array to a list when the caller needs one; eligible private map/zip uses read the
+array directly. Arithmetic and callback order stay unchanged. The
+[gradient-array verification](measurements/gradient-array-storage-2026-11-03/README.md)
+tracks the current implementation; the earlier
+[owner-transfer results](measurements/typed-derivative-owners.md) describe its
+list-based predecessor. Neither count reduction alone establishes speed.
 
 The vertex token encodes `(tape id << 32) | index`, with −1 for constants.
 The tape ID encodes `(generation << 16) | (slot + 1)`. Generation numbers prevent

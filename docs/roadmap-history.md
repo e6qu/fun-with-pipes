@@ -6,6 +6,23 @@ and complete platform validation are different events. Measurements retain their
 original source and settings; old numbers are not measurements of current main.
 The linked PRs, runs and data records supply the detailed evidence.
 
+## Direct private range indices (PR #251)
+
+[PR #251](https://github.com/e6qu/fun-with-pipes/pull/251) merged November 3 as
+`296ec5b4c3540c6d57671d076d2a39247b2389f4`. Its tree equals tested head `cea8debc`;
+the squash message is one line with no body or trailers. All nine production
+jobs and documentation pass, with every full and target log audited.
+[Gate identities and logs](measurements/range-zip-storage-2026-11-03/platforms/final-gates.json).
+
+A private integer range supplies indices directly to zip instead of allocating
+a list. The largest solve saves 25,870 requests and 823,064 requested bytes;
+peak managed storage falls from 17,824 to 14,976 bytes. Four runtime sessions
+show 7.1–10.0% less time for larger cases; small-case speed goals remain open.
+[Storage and cleanup](measurements/range-zip-storage-2026-11-03/README.md),
+[compiler costs](measurements/range-zip-analysis-2026-11-03/README.md) and
+[timings with every missed limit](measurements/range-zip-time-2026-11-03/README.md)
+retain the comparison boundaries and failed first attempt.
+
 ## Temporary scalar map buffers (PR #250)
 
 [PR #250](https://github.com/e6qu/fun-with-pipes/pull/250) merged November 3 as

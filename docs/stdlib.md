@@ -2560,7 +2560,7 @@ Rev[T] = { value: T, vertex: I64 }
 trait ReverseScalar[T] : Field[T], Neg[T], Dup[T] =
     rev._seed : List[T] -> (I64, List[Rev[T]])
     rev._push : I64 -> T -> I64 -> T -> I64
-    rev._backward : I64 -> List[I64] -> List[T] -> List[T]
+    rev._backward : I64 -> List[I64] -> List[T] -> Array[T]
     rev._inactive-zero : T -> Bool
 ad.tape-owned : (t, t -> t -> t, t -> t -> t, t -> Bool) -> List[t] -> I64 where Dup[t]
 
@@ -2570,7 +2570,10 @@ ad.tape-owned : (t, t -> t -> t, t -> t -> t, t -> Bool) -> List[t] -> I64 where
 # Use within ad.scope; weights transfer to the native tape, while separately
 # owned caller aliases remain valid. Both inactive parents return -1.
 ad.push-owned : I64 -> t -> I64 -> t -> I64 where Dup[t]
-ad.backward-owned : I64 -> List[I64] -> List[t] -> List[t] where Dup[t]
+
+# Return an owned array of input derivatives and retire the tape's buffers.
+# Stored reverse-mode values still obey their enclosing derivative scope.
+ad.backward-owned : I64 -> List[I64] -> List[t] -> Array[t] where Dup[t]
 
 # a constant: no gradient flows through it
 rev.const : t -> Rev[t]

@@ -501,11 +501,11 @@ static V fwp_owned_tape_add(fwp_owned_tape *owner, V value, V old) {
     return result;
 }
 
-static V fwp_p_ad_backward_owned(V base, V outs, V seeds, const fwp_desc *list_type) {
+static V fwp_p_ad_backward_owned(V base, V outs, V seeds, const fwp_desc *array_type) {
     int64_t id = (int64_t)base >> 32;
     fwp_tape *t = fwp_tape_of(id);
     fwp_owned_tape *owner = t->owned;
-    if (!owner || owner->elem != list_type->elem) fwp_trap(FWP_AD_REPRESENTATION);
+    if (!owner || owner->elem != array_type->elem) fwp_trap(FWP_AD_REPRESENTATION);
     if (owner->task != (fwp_cur == fwp_root ? 0 : fwp_cur->identity))
         fwp_trap("autodiff: managed tape belongs to another task");
     fwp_tape_unlink_scope(t);
@@ -554,24 +554,27 @@ static V fwp_p_ad_backward_owned(V base, V outs, V seeds, const fwp_desc *list_t
             fwp_cleanup_pop(&product_cleanup); fwp_value_release(&product);
         }
     }
-    fwp_value_owner result = {0, list_type->drop};
+    fwp_array_builder result = {
+        fwp_array_typed_new((size_t)tp.leaves, owner->elem), 0, owner->elem
+    };
     fwp_cleanup result_cleanup;
-    fwp_cleanup_push(&result_cleanup, fwp_value_release, &result);
-    for (int64_t i = tp.leaves; i; i--) {
-        V value = owner->adj[i - 1];
+    fwp_array_builder_protect(&result, &result_cleanup);
+    for (int64_t i = 0; i < tp.leaves; i++) {
+        V value = owner->adj[i];
         if (value == owner->zero && owner->elem->dup) owner->elem->dup(value);
         fwp_value_owner input_owner = {value, owner->elem->drop};
         fwp_cleanup input_cleanup;
         fwp_cleanup_push(&input_cleanup, fwp_value_release, &input_owner);
-        owner->adj[i - 1] = owner->zero;
-        result.value = fwp_rc_fresh(fwp_cons(value, result.value));
+        owner->adj[i] = owner->zero;
+        fwp_array_store_owned(result.value, (size_t)i, value, owner->elem);
+        result.filled++;
         fwp_cleanup_pop(&input_cleanup);
     }
-    fwp_cleanup_pop(&result_cleanup);
+    V output = fwp_array_builder_finish(&result, &result_cleanup);
     fwp_cleanup_pop(&value_cleanup); fwp_owned_tape_release(owner);
     fwp_cleanup_pop(&tape_cleanup); fwp_tape_buffers_dispose(&buffers);
 
-    return result.value;
+    return output;
 }
 
 /* ---------------------------------------------------------------- kernels */
