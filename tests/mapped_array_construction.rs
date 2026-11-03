@@ -1,8 +1,155 @@
 //! Numeric map-to-array construction preserves order and owns its scratch.
+use std::path::PathBuf;
 use std::process::{Command, Output};
+
+#[path = "support/record_probe.rs"]
+mod record_probe;
+
+#[test]
+fn direct_scalar_array_maps_preserve_values_order_aliases_and_exclusions() {
+    let dir = fwp::cgen::TempDir::new("direct-array-maps").unwrap();
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    let marker = "direct known scalar array map; input stays borrowed";
+    for (label, program, status) in [
+        ("values", include_str!("fixtures/direct_array_maps.fwp"), 0),
+        (
+            "trap",
+            r#"
+step : I8 -> I8 ! {IO}
+step = fn value -> let shown = echo value in value + 1i8
+export mapped : Array[I8] -> Array[I8] ! {IO}
+mapped = array.map step
+main = array.from-list [1i8, 127i8, 2i8] | mapped | array.to-list | echo
+"#,
+            101,
+        ),
+    ] {
+        let input = dir.join(format!("{label}.fwp"));
+        std::fs::write(&input, program).unwrap();
+        let reference = Command::new(compiler)
+            .env("FWP_NO_OPT", "1")
+            .args(["run", "--interp"])
+            .arg(&input)
+            .output()
+            .unwrap();
+        assert_eq!(
+            reference.status.code(),
+            Some(status),
+            "{label}: {reference:?}"
+        );
+        if label == "trap" {
+            assert_eq!(reference.stdout, b"1\n127\n");
+        } else {
+            assert!(reference.stdout.starts_with(b"[2, -1]\n[0.5, 1.0]"));
+        }
+        for packing in ["0", "1"] {
+            let interpreted = Command::new(compiler)
+                .env_remove("FWP_NO_OPT")
+                .env("FWP_PACKED_ARRAYS", packing)
+                .args(["run", "--interp"])
+                .arg(&input)
+                .output()
+                .unwrap();
+            assert_eq!(interpreted.stdout, reference.stdout, "{label}");
+            assert_eq!(interpreted.stderr, reference.stderr, "{label}");
+            assert_eq!(interpreted.status.code(), Some(status), "{label}");
+            let cfile = dir.join(format!("{label}-{packing}.c"));
+            checked(
+                Command::new(compiler)
+                    .env_remove("FWP_NO_OPT")
+                    .env("FWP_PACKED_ARRAYS", packing)
+                    .args(["build", "--emit-c"])
+                    .arg(&input)
+                    .arg("-o")
+                    .arg(&cfile),
+            );
+            let code = std::fs::read_to_string(&cfile).unwrap();
+            let artifacts = std::env::var_os("FWP_ARC_ARTIFACTS")
+                .map(|root| PathBuf::from(root).join("direct-array-map-sources"));
+            if let Some(directory) = &artifacts {
+                std::fs::create_dir_all(directory).unwrap();
+                std::fs::write(directory.join(format!("{label}.fwp")), program).unwrap();
+                std::fs::write(directory.join(format!("{label}-{packing}.c")), &code).unwrap();
+            }
+            if label == "values" {
+                // Main-only compilation may inline or remove these functions.
+                // Request exported roots explicitly for selection inspection;
+                // native semantic checks below still execute the ordinary main.
+                let exported_file = dir.join(format!("exports-{packing}.c"));
+                checked(
+                    Command::new(compiler)
+                        .env_remove("FWP_NO_OPT")
+                        .env("FWP_PACKED_ARRAYS", packing)
+                        .args(["build", "--fn", "small", "--emit-c"])
+                        .arg(&input)
+                        .arg("-o")
+                        .arg(&exported_file),
+                );
+                let exported = std::fs::read_to_string(exported_file).unwrap();
+                if let Some(directory) = &artifacts {
+                    std::fs::write(directory.join(format!("exports-{packing}.c")), &exported)
+                        .unwrap();
+                }
+                for (name, selected) in [
+                    ("small", true),
+                    ("signed", true),
+                    ("unsigned", true),
+                    ("scaled", true),
+                    ("rounded", true),
+                    ("converted", true),
+                    ("observed", true),
+                    ("dynamic", false),
+                    ("captured", false),
+                    ("wide", false),
+                    ("text-lengths", false),
+                    ("record-sums", false),
+                ] {
+                    let start = exported
+                        .find(&format!("/* {name} :"))
+                        .unwrap_or_else(|| panic!("missing exported map probe `{name}`"));
+                    let body = &exported[start..start + exported[start..].find("\n}\n").unwrap()];
+                    assert_eq!(body.contains(marker), selected, "{name}: {body}");
+                    if selected {
+                        assert!(body.contains("fwp_array_store_owned("));
+                        assert!(body.contains("fwp_array_load("));
+                        assert!(!body.contains("fwp_apply"));
+                    }
+                }
+            } else {
+                assert!(code.contains(marker));
+            }
+            for opt in ["-O1", "-O2"] {
+                let binary = dir.join(format!("{label}-{packing}-{opt}.exe"));
+                fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+                let output = Command::new(&binary).output().unwrap();
+                record_probe::save(
+                    "direct-array-maps",
+                    &format!("{label}-{packing}-{opt}"),
+                    &code,
+                    &binary,
+                    &output,
+                );
+                assert_eq!(output.stdout, reference.stdout, "{label} {packing} {opt}");
+                assert_eq!(output.stderr, reference.stderr, "{label} {packing} {opt}");
+                assert_eq!(
+                    output.status.code(),
+                    Some(status),
+                    "{label} {packing} {opt}"
+                );
+            }
+        }
+    }
+}
+
 fn checked(command: &mut Command) -> Output {
     let out = command.output().unwrap();
-    assert!(out.status.success(), "{command:?}: {out:?}");
+    assert!(
+        out.status.success(),
+        "{command:?}: status {:?}\n{}\n{}",
+        out.status.code(),
+        String::from_utf8_lossy(&out.stdout),
+        String::from_utf8_lossy(&out.stderr)
+    );
     out
 }
 fn emitted(

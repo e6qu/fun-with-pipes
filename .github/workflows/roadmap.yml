@@ -51,6 +51,7 @@ jobs:
           python3 scripts/test-scalar-map-zip-reference.py
           python3 scripts/test-range-zip-reference.py
           python3 scripts/test-gradient-array-reference.py
+          python3 scripts/test-scalar-array-map-reference.py
           python3 scripts/test-gradient-array-budgets.py
       - name: Sorting-time evidence controls
         run: python3 scripts/test-sort-time-evidence.py
@@ -183,6 +184,8 @@ jobs:
         run: python3 scripts/test-array-list-evidence.py
       - name: Derivative evidence downloads and host-rejection controls
         run: python3 scripts/test-retain-derivative-evidence.py
+      - name: Exact reconstruction of omitted scalar-map reference evidence
+        run: python3 scripts/test-recover-scalar-map-reference.py
       - name: Packed temporary records and retained timing decisions
         run: |
           python3 scripts/test-packed-record-reports.py

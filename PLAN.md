@@ -4,70 +4,75 @@ Build an ahead-of-time language with simple pipes, immutable values, strong type
 and useful inference. Prefer direct values, moves and borrows; reserve ARC for
 necessary sharing. GC is removed; JIT and backward compatibility are excluded.
 
-## Current work: remove private gradient-list storage
+## Current work: direct calls in scalar array maps
 
-[PR #251](https://github.com/e6qu/fun-with-pipes/pull/251) is merged as
-`296ec5b4`. It saves 25,870 allocation requests and 823,064 requested bytes in the
-largest verified solve; larger timed solves take 7.1–10.0% less time. Small-case
-speed goals remain open. All nine production jobs and documentation pass;
-complete logs, the one-line merge message and tested-tree equality are verified.
+[PR #252](https://github.com/e6qu/fun-with-pipes/pull/252) merged with all nine
+production jobs and documentation passing; every full and target log is audited.
+It keeps private gradients in arrays. The largest solve saves 25,472 allocation
+requests and 409,144 requested bytes, but all 32 required 5% speed gains remain
+open. [Delivery and measurements](docs/roadmap-history.md#private-gradient-arrays-pr-252)
+retain the exact sources, counts and timing misses.
 
-The next grouped batch keeps private gradient results in owned arrays and reads
-those arrays directly during the following map/zip. The
-[implementation contract](docs/measurements/gradient-array-storage.md) defines
-scope cleanup, typed/nested derivatives, selection limits and measurement budgets.
-Both native Linux hosts pass the repaired GCC/Clang checks, array cleanup and
-all 96 allocation observations. The largest solve saves 25,472 requests and
-409,144 requested bytes, with unchanged retains and peak managed storage.
-[Verified counts](docs/measurements/gradient-array-storage-2026-11-03/README.md)
-do not establish a speedup. [Compiler costs](docs/measurements/gradient-array-analysis-2026-11-03/README.md)
-pass on both architectures. [Runtime timings](docs/measurements/gradient-array-time-2026-11-03/README.md)
-miss the 5% targets: larger ARM64 cases improve by about 3–4%; AMD64 gains are
-smaller, and small repeated updates slow down by roughly 1–2%. Keep the verified
-storage reduction under the accepted policy, with speed goals explicitly open.
-Final platform acceptance remains required.
+The current grouped change removes generic function dispatch from selected
+`array.map` calls. For example, `array.map scale` can call the known scalar
+function `scale` directly for each element. It still allocates an independent
+result array and preserves input aliases, effects, traps and cancellation.
+This is an experiment, not an established explanation of earlier timing misses.
+
+The [contract](docs/measurements/direct-array-callbacks.md) was frozen before code.
+[Native correctness and cleanup](docs/measurements/direct-array-callbacks-2026-11-03/README.md)
+pass on three hosts; [compiler costs](docs/measurements/direct-array-analysis-2026-11-03/README.md)
+pass. [All four runtime sessions](docs/measurements/direct-array-time-2026-11-03/README.md)
+and raw audits are complete. Larger cases improve by 4.8–5.2% on ARM64 and
+5.5–8.1% on AMD64, with unchanged allocation/ARC counts. Sixteen speed targets
+and one noisy comparison remain open; AMD64 current-only RSS observations rise
+6–14%. Keep the proven work reduction under the accepted policy, preserving
+those limits. No completed timing was rerun.
+
+[Draft PR #253](https://github.com/e6qu/fun-with-pipes/pull/253) groups the compiler
+change, semantic/cleanup checks, evidence repairs and current docs. Publish its
+complete report, then run the final nine production jobs plus documentation.
 
 | Step | Work | Completion requirement |
 |---|---|---|
-| 1 | Range-storage delivery complete | All nine jobs in `41610112980` and docs pass at `cea8debc`; every full/target log, squash message and merge tree are verified. [Range evidence](docs/measurements/range-zip-storage-2026-11-03/README.md). |
-| 2 | Keep internal gradient results in owned arrays | Floating, F128 and nested reverse paths agree in both engines; public list results materialize when needed. Select sole-use numeric array conversions for map/zip before list fusion hides them. Preserve eager order, aliases and scope cleanup. |
-| 3 | Verify the grouped storage change | Freeze the contract before edits and the isolated whole-change reference before measurements. GCC/Clang O1/O2 semantic, failure, cancellation, reuse, physical-free and compiler-scaling controls pass. All 96 allocation observations meet the declared net budgets with exact attribution. |
-| 4 | Measure and deliver the next substantial PR | Compiler costs and four qualified runtime sessions are independently audited; retain every missed limit. Complete the final nine-job matrix plus docs, audit all logs, and verify the one-line squash. |
+| 1 | Declare the direct-call experiment | Freeze selection, ownership rules and limits before implementation. Keep storage layouts and other optimizations unchanged. |
+| 2 | Verify implementation and cleanup | GCC ARM64/AMD64 and Clang ARM64 pass O1/O2 comparisons with both interpreters, rejected cases, aliases/slices, eager order, allocation failure and cancellation. Audit selected direct calls and deliberately broken cleanup controls. |
+| 3 | Measure the isolated change | Freeze a same-source reference disabling only direct scalar array-map selection. Audit compiler time/RSS, four qualified runtime sessions, every count, native image and failed limit. No allocation/ARC/live-storage increase; preserve timing, copy and stack limits. |
+| 4 | Deliver the grouped PR | Finish PR #253 with implementation, repairs, evidence and current docs. Run the final nine production jobs plus docs, audit all logs, then verify the one-line squash and tested-tree equality. |
 
-The completed range comparison remains frozen at `3be9479c`, tag
-`roadmap/range-zip-measurement-2026-11-03`; the scalar-buffer comparison remains at
-`da510f18`, tag `roadmap/scalar-map-zip-measurement-2026-11-03`.
-[Completed results](docs/measurements/range-zip-storage-2026-11-03/README.md) and
-[history](docs/roadmap-history.md) retain source IDs and failed outcomes. Predecessor
-#250 passes all nine production jobs and docs, with every log audited.
-Do not repeat completed timings for a better result.
+[History](docs/roadmap-history.md) and the linked reports preserve completed
+storage changes and their source identities. Do not repeat completed timings for
+a better result. Keep verified work reductions separate from unfulfilled speed
+goals. [The remaining-storage review](docs/measurements/remaining-gradient-storage.md)
+records the input/output ownership constraints and an unused-history candidate.
+These changes remain unselected.
 
 ## Open performance goals
 
-- **Gradient-array callbacks.** Keep the [completed observations](docs/measurements/gradient-array-time-2026-11-03/README.md),
-  including slowdowns, as the baseline for the next investigation. The source
-  currently sends known scalar `array.map` callbacks through generic application;
-  the earlier scalar-buffer map called them directly. This is avoidable dispatch,
-  not an established explanation of the measured differences. After this batch's
-  final gates, freeze a direct-call experiment before editing code: initially
-  select closed, known callbacks with ordinary scalar inputs/results; reuse the
-  existing array builder and element accessors. Keep eager order, aliases, slices,
-  partial-result cleanup, cancellation and traps. Verify rejected callbacks and
-  compiler scaling, count the removed dispatches, then compare whole solves
-  against the same source with only this selection disabled. Preserve the current
-  allocation/ARC/peak limits and original timing/copy limits. Do not combine this
-  experiment with input-record or output-list storage changes.
+- **Direct scalar array calls.** [The complete report](docs/measurements/direct-array-time-2026-11-03/README.md)
+  retains 16 missed 5% gains: both 3/199 forms and 3/1999 current on all sessions,
+  plus 3/1999 history and 129/199 history on ARM64. AMD64 session 2's 3/1 current
+  has 3.53% identical-copy variation against 2%, making that case inconclusive.
+  Keep these outcomes open; declare a source/sample diagnostic before changing
+  the measurement or selecting another optimization. Larger-case gains do not
+  close older comparisons with different references.
+
+- **Gradient-array speed.** [Completed observations](docs/measurements/gradient-array-time-2026-11-03/README.md)
+  miss every required 5% gain. Larger ARM64 cases improve by about 3–4%; AMD64
+  gains are smaller, and small repeated updates slow down by roughly 1–2%.
+  The direct-call experiment above tests one avoidable cost. Keep the original
+  misses open until qualified evidence meets their limits; fewer allocations do
+  not establish less elapsed time or whole-process memory use.
 
 - **Private range consumption.** ARM64 misses the 5% target on 3/199 current
   in both sessions and history in session 1. AMD64 misses it on 3/199 and 3/1999
   history in both sessions. Those improvements are 3.97–4.98%.
   [Complete results](docs/measurements/range-zip-time-2026-11-03/README.md) retain
   every miss; all four raw audits are complete. Preserve verified reductions
-  while leaving these goals open. The next batch selects the gradient-list group
-  from the
-  [remaining allocation sites](docs/measurements/range-zip-storage-2026-11-03/README.md#remaining-allocation-sites)
-  for owned-array results and direct consumption. The other groups still need
-  separate lifetime proofs before selection.
+  while leaving these goals open. Merged PR #252 implements the gradient-list group
+  from the [remaining allocation sites](docs/measurements/range-zip-storage-2026-11-03/README.md#remaining-allocation-sites).
+  Other storage groups still need separate lifetime proofs and measured costs
+  before selection.
 
 - **Scalar-buffer timings.** Both completed ARM64 sessions report a 3.32%
   zero-update current-only slowdown against the 2% limit; several small cases

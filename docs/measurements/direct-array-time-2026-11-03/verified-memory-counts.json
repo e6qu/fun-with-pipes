@@ -1,0 +1,114 @@
+[
+  {
+    "session": "aarch64-2",
+    "form": "fwp-ad",
+    "solves": 8,
+    "managed": {
+      "requests": 636946,
+      "requestedBytes": 26593312,
+      "retains": 7968,
+      "peakChargedBytes": 19360,
+      "finalChargedBytes": 0
+    },
+    "rawPeak": 33904,
+    "rawFinal": 0
+  },
+  {
+    "session": "aarch64-2",
+    "form": "fwp-ad-history",
+    "solves": 8,
+    "managed": {
+      "requests": 640154,
+      "requestedBytes": 26682976,
+      "retains": 11168,
+      "peakChargedBytes": 838688,
+      "finalChargedBytes": 0
+    },
+    "rawPeak": 33904,
+    "rawFinal": 0
+  },
+  {
+    "session": "aarch64-1",
+    "form": "fwp-ad",
+    "solves": 8,
+    "managed": {
+      "requests": 636946,
+      "requestedBytes": 26593312,
+      "retains": 7968,
+      "peakChargedBytes": 19360,
+      "finalChargedBytes": 0
+    },
+    "rawPeak": 33904,
+    "rawFinal": 0
+  },
+  {
+    "session": "aarch64-1",
+    "form": "fwp-ad-history",
+    "solves": 8,
+    "managed": {
+      "requests": 640154,
+      "requestedBytes": 26682976,
+      "retains": 11168,
+      "peakChargedBytes": 838688,
+      "finalChargedBytes": 0
+    },
+    "rawPeak": 33904,
+    "rawFinal": 0
+  },
+  {
+    "session": "x86_64-1",
+    "form": "fwp-ad",
+    "solves": 8,
+    "managed": {
+      "requests": 636946,
+      "requestedBytes": 26593312,
+      "retains": 7968,
+      "peakChargedBytes": 19360,
+      "finalChargedBytes": 0
+    },
+    "rawPeak": 33904,
+    "rawFinal": 0
+  },
+  {
+    "session": "x86_64-1",
+    "form": "fwp-ad-history",
+    "solves": 8,
+    "managed": {
+      "requests": 640154,
+      "requestedBytes": 26682976,
+      "retains": 11168,
+      "peakChargedBytes": 838688,
+      "finalChargedBytes": 0
+    },
+    "rawPeak": 33904,
+    "rawFinal": 0
+  },
+  {
+    "session": "x86_64-2",
+    "form": "fwp-ad",
+    "solves": 8,
+    "managed": {
+      "requests": 636946,
+      "requestedBytes": 26593312,
+      "retains": 7968,
+      "peakChargedBytes": 19360,
+      "finalChargedBytes": 0
+    },
+    "rawPeak": 33904,
+    "rawFinal": 0
+  },
+  {
+    "session": "x86_64-2",
+    "form": "fwp-ad-history",
+    "solves": 8,
+    "managed": {
+      "requests": 640154,
+      "requestedBytes": 26682976,
+      "retains": 11168,
+      "peakChargedBytes": 838688,
+      "finalChargedBytes": 0
+    },
+    "rawPeak": 33904,
+    "rawFinal": 0
+  }
+]

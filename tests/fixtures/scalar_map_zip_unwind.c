@@ -13,7 +13,7 @@ int main(void) {
             }
             if(aliases&1) fwp_rc_dup(xs);
             if(aliases&2) fwp_rc_dup(other);
-            scalar_mode=mode; scalar_stage=scalar_maps=scalar_zips=scalar_nodes=scalar_fail_allocation=0;
+            scalar_mode=mode; scalar_stage=scalar_maps=scalar_zips=scalar_nodes=scalar_fail_allocation=scalar_generic_calls=0;
             jmp_buf jump;
             fwp_trap_recover=scalar_recover; fwp_trap_jb=&jump; fwp_trap_cleanup=0;
             memset(&scalar_task,0,sizeof scalar_task);
@@ -36,6 +36,7 @@ int main(void) {
             int maps=mode==5 ? 0 : (mode==0 || mode==3) ? 2 : 3;
             int zips=(mode==2 || mode==4) ? 2 : (mode==7 || mode==8) ? 3 : 0;
             if(scalar_maps!=maps || scalar_zips!=zips) return 242;
+            if(scalar_generic_calls) return 248;
             if(aliases&1) {
                 if(*fwp_rc_slot(xs)!=1 || INPUT_CHECK) return 243;
                 DROP_INPUT(xs);

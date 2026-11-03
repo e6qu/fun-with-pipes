@@ -407,25 +407,34 @@ transform = fn pause -> fn input -> fn other ->
         if array_input {
             assert!(emitted.contains("/* array-list-zip :"));
         }
-        let map = section(if array_input {
-            "static V fwp_p_array_map_typed("
+        let map = if array_input {
+            let marker = "/* direct known scalar array map; input stays borrowed */";
+            assert_eq!(emitted.matches(marker).count(), 1);
+            let start = emitted.find(marker).unwrap();
+            let finish = start + emitted[start..].find("fwp_array_builder_finish(").unwrap();
+            let end = finish + emitted[finish..].find(';').unwrap() + 2;
+            &emitted[start..end]
         } else {
-            "    /* Eager scalar buffer:"
-        });
+            section("    /* Eager scalar buffer:")
+        };
         let zip = section("    /* Zip after the complete scalar map;");
         let map_control = if array_input {
-            map.replace(
-                "    fwp_array_builder result =",
-                "    scalar_fail_allocation = scalar_mode == 5;\n    fwp_array_builder result =",
-            )
-            .replace(
-                "        V value =",
-                "        scalar_stage = 1; scalar_maps++;\n        V value =",
-            )
-            .replace(
-                "    return fwp_array_builder_finish",
-                "    scalar_stage = 0;\n    return fwp_array_builder_finish",
-            )
+            assert_eq!(map.matches("fwp_array_store_owned(").count(), 1);
+            assert!(!map.contains("fwp_apply"));
+            map.split_inclusive('\n')
+                .map(|line| {
+                    let control = if line.trim_start().starts_with("fwp_array_builder ") {
+                        "    scalar_fail_allocation = scalar_mode == 5;\n"
+                    } else if line.contains("fwp_array_store_owned(") {
+                        "    scalar_stage = 1; scalar_maps++;\n"
+                    } else if line.contains("fwp_array_builder_finish(") {
+                        "    scalar_stage = 0;\n"
+                    } else {
+                        ""
+                    };
+                    format!("{control}{line}")
+                })
+                .collect::<String>()
         } else {
             map.replace(
                 "    V buffer =",
@@ -456,7 +465,14 @@ transform = fn pause -> fn input -> fn other ->
         assert_ne!(map, map_control);
         assert_ne!(zip, zip_control);
         let mut code = emitted[..emitted.find("int main(").unwrap()].replace(map, &map_control).replace(zip, &zip_control)
-        .replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic int scalar_mode, scalar_stage, scalar_maps, scalar_zips, scalar_nodes, scalar_fail_allocation;\nstatic void fwp_trap(const char *);");
+        .replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic int scalar_mode, scalar_stage, scalar_maps, scalar_zips, scalar_nodes, scalar_fail_allocation, scalar_generic_calls;\nstatic void fwp_trap(const char *);");
+        let dispatch =
+            "static V fwp_apply_borrowed_prefix(V f, uint32_t n, V *args, uint32_t owned_prefix) {";
+        assert_eq!(code.matches(dispatch).count(), 1);
+        code = code.replace(
+            dispatch,
+            &format!("{dispatch}\n    if (scalar_stage == 1) scalar_generic_calls++;"),
+        );
         for signature in [
             "static inline void *fwp_heap_alloc(size_t n, int kind) {",
             "static inline void *fwp_alloc_init(size_t n) {",
@@ -569,6 +585,20 @@ transform = fn pause -> fn input -> fn other ->
                     Some(status),
                     "{name}/{opt}: {output:?}"
                 );
+            }
+            if array_input {
+                let text = format!("#define FWP_NO_REUSE 1\n{code}");
+                let exe = dir.0.join(format!("array-no-reuse-{opt}.exe"));
+                fwp::cgen::compile_c(&text, &exe, opt).unwrap();
+                let output = Command::new(&exe).output().unwrap();
+                record_probe::save(
+                    "array_list_zip_unwind",
+                    &format!("complete-no-reuse-{opt}"),
+                    &text,
+                    &exe,
+                    &output,
+                );
+                assert!(output.status.success(), "no-reuse/{opt}: {output:?}");
             }
         }
     }

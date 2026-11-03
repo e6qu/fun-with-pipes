@@ -1,0 +1,51 @@
+[
+  {
+    "run": 41649285227,
+    "session": 1,
+    "job": 125962884323,
+    "cpu": "AMD EPYC 9V74 80-Core Processor",
+    "record": "41649285227-1/session-1.json"
+  },
+  {
+    "run": 41649285227,
+    "session": 2,
+    "job": 125962884358,
+    "cpu": "AMD EPYC 9V74 80-Core Processor",
+    "record": "41649285227-2/session-2.json"
+  },
+  {
+    "run": 41650921950,
+    "session": 1,
+    "job": 125968556902,
+    "cpu": "AMD EPYC 9V45 96-Core Processor",
+    "record": "41650921950-1/session-1.json"
+  },
+  {
+    "run": 41650921950,
+    "session": 2,
+    "job": 125968556630,
+    "cpu": "AMD EPYC 9V74 80-Core Processor",
+    "record": "41650921950-2/session-2.json"
+  },
+  {
+    "run": 41651545947,
+    "session": 1,
+    "job": 125970739833,
+    "cpu": "AMD EPYC 9V74 80-Core Processor",
+    "record": "41651545947-1/session-1.json"
+  },
+  {
+    "run": 41651545947,
+    "session": 2,
+    "job": 125970740161,
+    "cpu": "AMD EPYC 9V74 80-Core Processor",
+    "record": "41651545947-2/session-2.json"
+  },
+  {
+    "run": 41654861200,
+    "session": 2,
+    "job": 125982375819,
+    "cpu": "AMD EPYC 9V74 80-Core Processor",
+    "record": "41654861200-2/session-2.json"
+  }
+]

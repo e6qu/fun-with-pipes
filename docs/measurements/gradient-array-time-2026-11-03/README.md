@@ -14,9 +14,10 @@ speed goals open. No completed timing was rerun for a better result.
   complete seven-file gradient-array change. Both retain previous optimizations
   and run the same programs. This isolates the storage change within fwp.
 - **Programs:** complete Rosenbrock gradient-descent solves. Current-only returns
-  final coordinates; history returns every step. For the six coordinate/update
-  pairs below, each process repeats 32,768, 512, 32, 4, 32 or 8 solves,
-  respectively, printing every result.
+  final coordinates. The history form builds `iterate count descend`, then takes
+  its last vector; this compiler retains the intermediates but prints only the
+  final vector. For the six coordinate/update pairs below, each process repeats
+  32,768, 512, 32, 4, 32 or 8 solves, respectively, printing every result.
 - **Timing:** 98 samples per case/form/session, each summing seven fresh process
   runs. Startup, computation, output and cleanup are included. Compilation,
   instrumented allocation counts and RSS observations are separate. Saved reports

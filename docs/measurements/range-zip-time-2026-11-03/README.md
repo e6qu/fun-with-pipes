@@ -11,7 +11,9 @@ checks pass separately; no completed timing was rerun for a better result.
   tag `roadmap/range-zip-measurement-2026-11-03`. The reference disables only
   `range_zip::lower`. Both keep all preceding optimizations and run identical
   complete derivative solves. This measures one compiler change within fwp.
-- **Forms:** current-only returns final coordinates; history returns every step.
+- **Forms:** both return and print only the final coordinates. Current-only keeps
+  the latest vector; the history form builds `iterate count descend` and selects
+  its last vector. These recorded compilers retain the intermediate vectors.
   Coordinates/updates are the six pairs in the table below. Each process repeats
   32,768, 512, 32, 4, 32 or 8 complete solves, respectively, and prints every result.
 - **Timing:** 98 samples per cell; each sample sums seven fresh process runs.

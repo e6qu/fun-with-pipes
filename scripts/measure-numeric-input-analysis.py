@@ -68,7 +68,7 @@ def main():
     parser.add_argument('--compiler', required=True, type=Path)
     parser.add_argument('--reference', required=True, type=Path)
     parser.add_argument('--reference-manifest', required=True, type=Path)
-    parser.add_argument('--comparison', required=True, choices=('numeric-inputs', 'scalar-map-zip', 'range-zip', 'gradient-array'))
+    parser.add_argument('--comparison', required=True, choices=('numeric-inputs', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map'))
     parser.add_argument('--time', required=True, type=Path)
     parser.add_argument('--machine', required=True, choices=('aarch64', 'x86_64'))
     parser.add_argument('--source', required=True)
@@ -99,9 +99,10 @@ def main():
         assert reference_manifest['ownershipSha256'] == sha(ROOT / 'src/ownership.rs')
         assert reference_manifest['frozenPatchSha256'] == sha(ROOT / 'scripts/gradient-array-candidate.patch')
     else:
-        assert args.comparison in ('scalar-map-zip', 'range-zip')
+        assert args.comparison in ('scalar-map-zip', 'range-zip', 'scalar-array-map')
         expected = {'scalar-map-zip': 'scalar map-to-zip buffer storage',
-                    'range-zip': 'private range-to-zip storage'}[args.comparison]
+                    'range-zip': 'private range-to-zip storage',
+                    'scalar-array-map': 'direct closed scalar array map callbacks'}[args.comparison]
         assert reference_manifest['disabledTransformation'] == expected
         assert reference_manifest['candidateCodegenSha256'] == sha(ROOT / 'src/cgen.rs')
         assert reference_manifest['ownershipSha256'] == sha(ROOT / 'src/ownership.rs')

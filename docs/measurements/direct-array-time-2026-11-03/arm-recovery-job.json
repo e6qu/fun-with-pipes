@@ -1,0 +1,108 @@
+{
+  "id": 125988896953,
+  "run_id": 41656720253,
+  "workflow_name": "Numerical and ownership evidence",
+  "head_branch": "direct-array-callbacks",
+  "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/41656720253",
+  "run_attempt": 1,
+  "node_id": "CR_kwDOU33zxM8AAAAdVYYAuQ",
+  "head_sha": "80b5f93e5cbdedd4f08d8942db478d35b4518e5f",
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/125988896953",
+  "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41656720253/job/125988896953",
+  "status": "completed",
+  "conclusion": "success",
+  "created_at": "2026-11-03T14:44:51Z",
+  "started_at": "2026-11-03T14:50:39Z",
+  "completed_at": "2026-11-03T14:54:31Z",
+  "name": "scalar_map_reference_recovery (ubuntu-24.04-arm)",
+  "steps": [
+    {
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 1,
+      "started_at": "2026-11-03T14:50:40Z",
+      "completed_at": "2026-11-03T14:50:41Z"
+    },
+    {
+      "name": "Run actions/checkout@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 2,
+      "started_at": "2026-11-03T14:50:41Z",
+      "completed_at": "2026-11-03T14:50:51Z"
+    },
+    {
+      "name": "Run dtolnay/rust-toolchain@stable",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 3,
+      "started_at": "2026-11-03T14:50:51Z",
+      "completed_at": "2026-11-03T14:51:00Z"
+    },
+    {
+      "name": "Verify exact-reference recovery and retention controls",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 4,
+      "started_at": "2026-11-03T14:51:00Z",
+      "completed_at": "2026-11-03T14:51:00Z"
+    },
+    {
+      "name": "Recover the recorded reference and audit original samples",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 5,
+      "started_at": "2026-11-03T14:51:00Z",
+      "completed_at": "2026-11-03T14:52:40Z"
+    },
+    {
+      "name": "Retain recovery identities, original outcomes and complete logs",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 6,
+      "started_at": "2026-11-03T14:52:40Z",
+      "completed_at": "2026-11-03T14:52:42Z"
+    },
+    {
+      "name": "Package original and recovered evidence, including failures",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 7,
+      "started_at": "2026-11-03T14:52:42Z",
+      "completed_at": "2026-11-03T14:54:26Z"
+    },
+    {
+      "name": "Run actions/upload-artifact@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 8,
+      "started_at": "2026-11-03T14:54:26Z",
+      "completed_at": "2026-11-03T14:54:29Z"
+    },
+    {
+      "name": "Post Run actions/checkout@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 16,
+      "started_at": "2026-11-03T14:54:29Z",
+      "completed_at": "2026-11-03T14:54:29Z"
+    },
+    {
+      "name": "Complete job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 17,
+      "started_at": "2026-11-03T14:54:29Z",
+      "completed_at": "2026-11-03T14:54:29Z"
+    }
+  ],
+  "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/125988896953",
+  "labels": [
+    "ubuntu-24.04-arm"
+  ],
+  "runner_id": 1000402797,
+  "runner_name": "GitHub Actions 1000402797",
+  "runner_group_id": 0,
+  "runner_group_name": "GitHub Actions"
+}

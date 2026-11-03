@@ -1,108 +1,90 @@
 # Current work
 
-**Next:** publish the complete reports and mark PR #252 ready for its final
-nine-job production matrix plus docs. Audit every job/target and repair all
-failures together; squash only after the exact final head passes. All four runtime
-sessions and independent raw audits are complete. Keep every missed limit;
-do not rerun completed timings.
+**Next:** publish the completed direct-array-call report in
+[PR #253](https://github.com/e6qu/fun-with-pipes/pull/253), mark it ready, and monitor
+its exact final head through nine production jobs plus documentation. Audit every
+full/target log before the authorized one-line squash; verify the merge tree.
+Keep missed timing goals open. Select the next storage change only after declaring
+its proof, scope and measurement; the review below does not select an implementation.
 
-## Checkout and source identities
+## Checkout and sources
 
-- Active worktree: `.worktrees/gradient-array-results`, branch
-  `gradient-array-results`; [PR #252](https://github.com/e6qu/fun-with-pipes/pull/252)
-  is the only active PR and remains draft until the final matrix is ready.
-- Scratch/evidence: `.worktrees/gradient-work`. `/private/tmp` was cleared earlier;
-  keep checkpoints here. Leave the detached primary checkout's recovery edits alone.
-- Contract: `c191421e`, tag `roadmap/gradient-array-protocol-2026-11-03`.
-  Initial implementation: `aed66f26`, tag
-  `roadmap/gradient-array-first-attempt-2026-11-03`.
-- Measurements: `1f6a4ac80ed3e9e89106c27573d0c73d46bb6968`, tag
-  `roadmap/gradient-array-measurement-2026-11-03`. The frozen reference reverses
-  exactly seven compiler/runtime/library files; it is not an older compiler.
-- Focused native prerequisite: `41626196812` at `f00fb9dc`. Later measurement and
-  documentation changes leave `src`, `runtime`, `lib`, Rust tests and build inputs
-  unchanged. The runner verifies those trees before measuring.
+- Worktree/branch: `.worktrees/direct-array-callbacks` / `direct-array-callbacks`.
+  Scratch: `.worktrees/gradient-work`. Leave the detached primary checkout's
+  recovery edits alone.
+- Frozen contract: `776e8d98`, tag
+  `roadmap/direct-array-callbacks-protocol-2026-11-03`, before implementation.
+- Frozen measurements: `e649da78c41dab8fa6f191d7670b1efba79811b0`, tag
+  `roadmap/scalar-array-map-measurement-2026-11-03`. Compiler/runtime/library/test
+  trees equal focused-tested `5e921fb8517d59cfa0ef452c2c2264ffa00be325` and current
+  implementation. Rebase changed working-branch commit IDs, not frozen tags.
+- Parent PR #252 merged as `3034a9d047c2bef44744c6ffc1807146570ced57`; its tree
+  equals tested `e2d55aa8`. All ten gates and the one-line squash are verified,
+  with [full gate records](measurements/gradient-array-storage-2026-11-03/platforms/final-gates.json).
+  Duplicate same-tree main run `41652287872` was cancelled with no failed steps.
 
 ## Roadmap status
 
+[The contract](measurements/direct-array-callbacks.md) selects closed ordinary-scalar
+array callbacks. It changes no layout, API or language syntax. [The runtime report](measurements/direct-array-time-2026-11-03/README.md)
+separates verified work reductions, unchanged storage counts and unresolved limits.
+The [storage review](measurements/remaining-gradient-storage.md) records same-type
+conversions, boxed inputs and unused history; those candidates remain unselected.
+
 | Step | Status | Remaining work |
 |---|---|---|
-| 1 | Verified | Range-storage PR #251 merged; all gates, logs and merge verified |
-| 2 | Verified | Private gradient arrays pass focused checks in both engines |
-| 3 | Verified | Cleanup controls, 96 allocation observations and compiler costs pass |
-| 4 | In progress | Reports complete; final platform gates, full log audit and squash merge remain |
+| 1 | Verified | Preserve the pre-implementation scope and limits |
+| 2 | Verified | Three native hosts; all targets, selection checks, images and cleanup audited |
+| 3 | Verified | Four original sessions audited; 16 speed misses and one noise failure stay open |
+| 4 | In progress | Final nine production jobs plus docs, complete log audit and verified squash |
 
-## Verified results and repaired failures
+## Completed evidence
 
-- **Storage and cleanup:** [complete report](measurements/gradient-array-storage-2026-11-03/README.md).
-  Run `41626196812`: ARM64 job `125884054605`, AMD64 `125884054997`.
-  Each passes 19 units, 72 integration executions, 48 allocation observations,
-  16 array-map/zip controls and 72 typed probes. Every full/target log is audited;
-  all 525 saved images per host have native ELF headers and verified identities.
-- **Largest current-only solve:** 105,203 → 79,731 allocation requests;
-  3,736,014 → 3,326,870 requested bytes. Retains 995, peak managed bytes 14,976
-  and final bytes 0 are unchanged. This includes all replacement arrays.
-- **First-run repairs:** old cleanup instrumentation targeted the removed list
-  builder; it now targets array-slot/input-owner transfers. The F128 expected
-  value allocated an extra 32-byte array; making that value explicitly compile-time
-  preserves every recording budget. All failing configurations and 32 original
-  target logs are retained in the storage report. The harness now collects every
-  failing type/optimization/workspace combination instead of stopping early.
-- **Compiler costs:** [complete report](measurements/gradient-array-analysis-2026-11-03/README.md).
-  Run `41629709664`: ARM64 job `125895872041`, AMD64 `125895871607`.
-  All 480 commands and raw/source/image records reconcile. Maximum candidate/reference
-  ratios: elapsed 1.0001024, peak RSS 1.0017344; identical copies 1.0115275.
-  All frozen compiler-cost limits pass.
-- **Audit repair:** Git and Python can produce different valid patch hunks. The
-  checker now verifies patch application, exact resulting bytes, file inventory
-  and hashes. Six tests include the real seven-file Git patch and corruption
-  controls. This changes no measured compiler, driver or acceptance limit.
-
-## Runtime observations and delivery
-
-[Runtime report](measurements/gradient-array-time-2026-11-03/README.md): run
-`41629714632` finished three qualified sessions; raw audit `41632779445`, job
-`125906293485`, passes. Replacement AMD64 session 1 `41631438916` / `125901736888`
-also completes; audit `41634286259` / `125911419160` passes. All four jobs fail
-only the final speed assertion; 5,336 raw-file records reconcile.
-Both ARM64 sessions show about 3–4% less time for 33/129-coordinate solves;
-three-coordinate repeated updates are about 1–2% slower. Both AMD64 sessions
-miss every 5% target. All 32 required speed improvements remain open. Count,
-cleanup, zero/one-update, copy and frame limits pass separately. Whole-process
-RSS does not consistently fall: AMD64 current-only observations rise about 9%.
-
-AMD64 session 1 rejected EPYC 9V74 in runs `41629714632` and `41630230085`, then
-EPYC 9V45 in `41630692989`, all before building or timing. The final replacement
-qualified on EPYC 7763.
-Preserve all three rejected hosts and every measured outcome. The accepted policy
-keeps verified reductions while leaving timing goals open.
-
-Source review finds generic application in scalar `array.map`, where the earlier
-buffer map called its known callback directly. This is a next experiment, not a
-proven timing cause. [PLAN.md](../PLAN.md#open-performance-goals) defines its scope.
-
-PR #251 merged as `296ec5b4c3540c6d57671d076d2a39247b2389f4` from `cea8debc`.
-All nine jobs `41610112980` and docs `41610097425` pass; full/target logs, exact
-merge tree and one-line message are verified in the
-[delivery record](measurements/range-zip-storage-2026-11-03/platforms/final-gates.json).
-Duplicate same-tree main run `41625843765` was cancelled with no failed steps.
+- [Focused native checks](measurements/direct-array-callbacks-2026-11-03/README.md):
+  run `41646433358`, GCC ARM64/AMD64 and Clang ARM64. Each passes 40 tests,
+  24 selections, eight semantic executions and ten cleanup observations. All
+  762 native images and full/target logs audited. Both earlier repaired attempts
+  remain recorded: an escaped-C-brace compile failure and a main-only/export-root
+  inspection error.
+- [Compiler costs](measurements/direct-array-analysis-2026-11-03/README.md):
+  run `41649281445`; all 480 observations audited. Maximum elapsed increase
+  0.688%, peak RSS increase 0.185%, identical-copy difference 1.288%.
+- Original runtime runs: ARM64 1/2 `41649285227`; AMD64 1 `41654861200`;
+  AMD64 2 `41655262486`. All completed; none was repeated for a better result.
+- [Reference recovery](measurements/direct-array-callbacks-2026-11-03/evidence-repair/README.md):
+  the upload condition omitted the new directory. Ordinary audit `41654788718`
+  failed correctly. Tooling `80b5f93e` rebuilt the frozen references and required
+  every recorded compiler/source/patch hash to match. Recovery runs `41656720253`,
+  `41658007799`, `41658488279` all pass. Every original log and all 5,336 raw-file
+  records reconcile; reconstructed artifacts are explicitly identified.
+- Four-session outcomes: larger cases improve 4.8–5.2% on ARM64 and 5.5–8.1%
+  on AMD64. Sixteen required 5% gains fail. AMD64 session 2's 3/1 current has
+  3.53% identical-copy variation against 2%; that comparison is inconclusive.
+  All 48 managed/raw profiles match reference, including disabled workspace.
+  AMD64 current-only RSS observations rise 6–14%. Frame growth ≤64 bytes.
+- [Seven host rejections](measurements/direct-array-time-2026-11-03/rejected-hosts/index.json)
+  occurred before building/timing. Six EPYC 9V74 and one 9V45 did not match 7763.
+- Draft docs `41655295706` exposed a stale collection count: four map tests were
+  present, but the inventory expected three. Producer and controls now require
+  four (59 tests across collection targets). Repaired docs `41656730058` pass;
+  all diagnostics audited. Historical benchmark wording now correctly says both
+  forms print only the final vector; the history form retains intermediates.
 
 ## Local checks and limits
 
-Guarded focused checks pass: primitive inventory/stdlib, Clang typed cleanup,
-formatting, workflow lint, count/reference fault controls, compiler/timing driver
-controls, evidence/group/retention checks and documentation links. Corrected
-reference tests: 6 in 0.61s. Compiler-report audits: AMD64 57.85s, ARM64 49.47s;
-compact runtime report/log hashes: 0.25s; all four derived reports: 0.72s.
-The scratch retention helper first needed the scripts import path and a diagnostic
-pattern that distinguishes the expected `AssertionError` from compiler errors;
-both are repaired and the complete check passes. Final native checks run on GitHub.
-Final local documentation check: 236 link sets, 106 immutable preparation pairs
-and four roadmap steps pass in 2.68s; whitespace and unchanged implementation
-trees also pass.
+Run focused checks serially through `python3 scripts/local-guard.py`. Full builds,
+full suites, benchmarks and large regeneration stay on GitHub. Preserve 64 GiB
+free disk, target data <2 GiB, sampled RSS <1 GiB and the 180-second deadline.
+Last free space about 77 GiB; no local compiler build is running.
 
-Use `python3 scripts/local-guard.py` serially. Preserve 64 GiB free, target data
-below 2 GiB, sampled workload RSS below 1 GiB and the 180-second deadline.
-Last free space about 87 GiB. Never raise or bypass limits.
-Squash only after all final-head gates pass: one line, ≤80 characters, empty body,
-no trailers or attribution; verify the commit and tree. Continue the plan afterward.
+Passing repair checks: recovery controls 2 (0.25s), collection controls 8 (0.26s),
+source/patch/binary controls 15 (19.30s), retention controls 3 (0.13s), workflow
+lint after selector cleanup (6.30s). Earlier reference, budget, grouping and
+native checks remain linked above; no implementation changed afterward.
+
+Scratch collection is complete. `collect-direct-runtime.py` independently audited
+ARM/AMD1/AMD2 summaries and full logs in 5.86s/5.97s/5.74s.
+`retain-direct-time.py` reconciled four sessions (0.50s);
+`summarize-direct-memory.py` checked all 48 complete memory-profile pairs (0.25s).
+Those outputs and seven host-rejection records are already retained; do not rerun
+helpers whose output directory must be empty. The measured compiler is frozen.

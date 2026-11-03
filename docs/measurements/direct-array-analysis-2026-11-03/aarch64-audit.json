@@ -1,0 +1,151 @@
+{
+  "source": "e649da78c41dab8fa6f191d7670b1efba79811b0",
+  "run": 41649281445,
+  "job": {
+    "id": 125962867606,
+    "run_id": 41649281445,
+    "workflow_name": "Numerical and ownership evidence",
+    "head_branch": "roadmap/scalar-array-map-measurement-2026-11-03",
+    "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/41649281445",
+    "run_attempt": 1,
+    "node_id": "CR_kwDOU33zxM8AAAAdU_jTlg",
+    "head_sha": "e649da78c41dab8fa6f191d7670b1efba79811b0",
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/125962867606",
+    "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41649281445/job/125962867606",
+    "status": "completed",
+    "conclusion": "success",
+    "created_at": "2026-11-03T13:59:16Z",
+    "started_at": "2026-11-03T14:04:25Z",
+    "completed_at": "2026-11-03T14:09:35Z",
+    "name": "numeric_input_analysis (ubuntu-24.04-arm)",
+    "steps": [
+      {
+        "name": "Set up job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 1,
+        "started_at": "2026-11-03T14:04:26Z",
+        "completed_at": "2026-11-03T14:04:27Z"
+      },
+      {
+        "name": "Run actions/checkout@v7",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 2,
+        "started_at": "2026-11-03T14:04:27Z",
+        "completed_at": "2026-11-03T14:04:40Z"
+      },
+      {
+        "name": "Run dtolnay/rust-toolchain@stable",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 3,
+        "started_at": "2026-11-03T14:04:40Z",
+        "completed_at": "2026-11-03T14:04:45Z"
+      },
+      {
+        "name": "Verify focused correctness and matching compiler sources",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 4,
+        "started_at": "2026-11-03T14:04:45Z",
+        "completed_at": "2026-11-03T14:04:48Z"
+      },
+      {
+        "name": "Run actions/cache@v6",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 5,
+        "started_at": "2026-11-03T14:04:48Z",
+        "completed_at": "2026-11-03T14:04:49Z"
+      },
+      {
+        "name": "Build candidate at production settings",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 6,
+        "started_at": "2026-11-03T14:04:49Z",
+        "completed_at": "2026-11-03T14:06:16Z"
+      },
+      {
+        "name": "Build and verify the selected same-source reference",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 7,
+        "started_at": "2026-11-03T14:06:16Z",
+        "completed_at": "2026-11-03T14:07:44Z"
+      },
+      {
+        "name": "Measure balanced compiler commands and peak memory",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 8,
+        "started_at": "2026-11-03T14:07:44Z",
+        "completed_at": "2026-11-03T14:09:22Z"
+      },
+      {
+        "name": "Preserve complete measurements and failures",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 9,
+        "started_at": "2026-11-03T14:09:22Z",
+        "completed_at": "2026-11-03T14:09:33Z"
+      },
+      {
+        "name": "Post Run actions/cache@v6",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 17,
+        "started_at": "2026-11-03T14:09:33Z",
+        "completed_at": "2026-11-03T14:09:33Z"
+      },
+      {
+        "name": "Post Run actions/checkout@v7",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 18,
+        "started_at": "2026-11-03T14:09:33Z",
+        "completed_at": "2026-11-03T14:09:33Z"
+      },
+      {
+        "name": "Complete job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 19,
+        "started_at": "2026-11-03T14:09:33Z",
+        "completed_at": "2026-11-03T14:09:33Z"
+      }
+    ],
+    "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/125962867606",
+    "labels": [
+      "ubuntu-24.04-arm"
+    ],
+    "runner_id": 1000402612,
+    "runner_name": "GitHub Actions 1000402612",
+    "runner_group_id": 0,
+    "runner_group_name": "GitHub Actions"
+  },
+  "artifact": {
+    "id": 13237396832,
+    "node_id": "MDg6QXJ0aWZhY3QxMzIzNzM5NjgzMg==",
+    "name": "scalar-array-map-analysis-ARM64",
+    "size_in_bytes": 123385885,
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13237396832",
+    "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13237396832/zip",
+    "expired": false,
+    "digest": "sha256:9b515c4f450f840c9253f23f628ac37c0ecaa22448b25ca89da3ad87c89bb610",
+    "created_at": "2026-11-03T14:09:32Z",
+    "updated_at": "2026-11-03T14:09:32Z",
+    "expires_at": "2027-02-01T13:59:16Z",
+    "workflow_run": {
+      "id": 41649281445,
+      "repository_id": 1400763332,
+      "head_repository_id": 1400763332,
+      "head_branch": "roadmap/scalar-array-map-measurement-2026-11-03",
+      "head_sha": "e649da78c41dab8fa6f191d7670b1efba79811b0"
+    }
+  },
+  "commands": 240,
+  "failures": {},
+  "referenceVerified": true
+}

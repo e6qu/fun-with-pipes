@@ -1,0 +1,45 @@
+{
+  "total_count": 2,
+  "artifacts": [
+    {
+      "id": 13242986096,
+      "node_id": "MDg6QXJ0aWZhY3QxMzI0Mjk4NjA5Ng==",
+      "name": "scalar-array-map-recovery-ubuntu-latest-retained",
+      "size_in_bytes": 18849260,
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13242986096",
+      "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13242986096/zip",
+      "expired": false,
+      "digest": "sha256:c041091798b97b7fe0ee46592c36490f23835e690d266bd608aab5a358dfb3e2",
+      "created_at": "2026-11-03T15:11:10Z",
+      "updated_at": "2026-11-03T15:11:10Z",
+      "expires_at": "2027-02-01T14:55:23Z",
+      "workflow_run": {
+        "id": 41658488279,
+        "repository_id": 1400763332,
+        "head_repository_id": 1400763332,
+        "head_branch": "direct-array-callbacks",
+        "head_sha": "80b5f93e5cbdedd4f08d8942db478d35b4518e5f"
+      }
+    },
+    {
+      "id": 13242431314,
+      "node_id": "MDg6QXJ0aWZhY3QxMzI0MjQzMTMxNA==",
+      "name": "scalar-array-map-recovery-ubuntu-latest-summary",
+      "size_in_bytes": 266654,
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13242431314",
+      "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13242431314/zip",
+      "expired": false,
+      "digest": "sha256:9771e65018081cf0535790ef9cdaa721c2689ad662bd2be91d299bf715202217",
+      "created_at": "2026-11-03T15:10:10Z",
+      "updated_at": "2026-11-03T15:10:10Z",
+      "expires_at": "2027-02-01T14:55:23Z",
+      "workflow_run": {
+        "id": 41658488279,
+        "repository_id": 1400763332,
+        "head_repository_id": 1400763332,
+        "head_branch": "direct-array-callbacks",
+        "head_sha": "80b5f93e5cbdedd4f08d8942db478d35b4518e5f"
+      }
+    }
+  ]
+}
