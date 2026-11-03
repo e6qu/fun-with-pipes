@@ -58,8 +58,12 @@ Implementation is prepared but unverified:
 
 Focused run `41667037137` at `b361fa451cea35674c90830e1fbff325455acaf5` is
 was cancelled before any of its three jobs started so the complete fault checks
-and measurement tooling can run together. Dispatch the replacement batch after
-the grouped push. It uses
+and measurement tooling can run together. Replacement run `41670309514` at
+`9bbbc9f50ef3b03ef4405f49f77550efebd1cf98` has not started. Source review found
+the fault probe must declare a reachable task function so C generation enables
+unwinding; the ordinary language cases stay task-free. Replace this unstarted
+batch after that harness correction, rather than executing a knowingly invalid
+probe. The three-host batch uses
 GCC ARM64/AMD64 and Clang ARM64, production Rust settings, the existing eight
 array targets, float-format/core targets and the selector unit test. Audit all
 completed targets before a repair push. No new timing or second PR exists yet. Measurement tooling is prepared locally: a
@@ -89,3 +93,13 @@ Leave the detached primary checkout's recovery edits and old worktrees alone.
 Parent PR #252 merged as `3034a9d047c2bef44744c6ffc1807146570ced57`; its one-line
 message and equality with tested `e2d55aa8` were verified. All ten gate logs are
 [retained](measurements/gradient-array-storage-2026-11-03/platforms/final-gates.json).
+
+## Old workflow status checked
+
+Run `38888712709` still appears running, but all six jobs ended October 16.
+Every failure was audited in scratch `stale-path-run`: four device negative
+controls and two Windows unload setup errors. Commit `9bf203d7` repaired them;
+#252's complete native logs verify the affected targets, including both Windows
+unload tests. GitHub refuses cancellation because the run is already completed,
+while its status endpoints still say running. No active job was stopped. This
+service-status inconsistency is not evidence of today's queue cause.
