@@ -67,3 +67,10 @@ runs exit 0 at O1/O2; omitted buffer, scratch and partial-output cleanup each ex
 alias combinations over sixteen rounds.
 The corrected numeric-value/selection test passes in the verified run above.
 No new performance or memory improvement is claimed yet.
+
+## Runtime evidence and documentation repairs
+
+The initial runtime audit found an omitted reference upload; the draft docs
+check found a stale collection-test count. [Causes, complete logs and repairs](evidence-repair/README.md)
+retain both failures. Original timings are preserved; exact reference recovery
+and the runtime audit remain required.

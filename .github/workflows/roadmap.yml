@@ -184,6 +184,8 @@ jobs:
         run: python3 scripts/test-array-list-evidence.py
       - name: Derivative evidence downloads and host-rejection controls
         run: python3 scripts/test-retain-derivative-evidence.py
+      - name: Exact reconstruction of omitted scalar-map reference evidence
+        run: python3 scripts/test-recover-scalar-map-reference.py
       - name: Packed temporary records and retained timing decisions
         run: |
           python3 scripts/test-packed-record-reports.py

@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [scalar-array-map-analysis, scalar-array-map-time, scalar-array-map-report, gradient-array-analysis, gradient-array-time, gradient-array-report, gradient-array-checks, range-zip-analysis, range-zip-time, range-zip-report, range-zip-checks, scalar-map-zip-analysis, scalar-map-zip-time, scalar-map-zip-report, scalar-map-zip-checks, constructor-census, numeric-input-selection, numeric-input-analysis, numeric-input-checks, callback-owners-time, callback-owners-report, packed-records-time, packed-records-report, packed-record-controls, packed-record-checks, array-observations, array-consumption, scalar-array-time, scalar-array-checks, array-construction-time, array-construction, matrix-tables, matrix-columns-report, matrix-columns, matrix-checks, current-kernel-report, current-kernels, record-fold-count-report, record-fold-time, record-fold-report, record-fold-checks, record-fold-measurements, record-zip-codegen, record-zip-report, record-zip-time, record-zip-checks, derivative-forward-costs, typed-derivative-owners, array-list-report, swift-allocation-report, swift-allocations, array-list-measurements, lexical-bindings, lexical-probes, callable-phase-paired, callable-phase-context, callable-construction-diagnosis, callable-phases, callable-phase-report, swift-peer-report, swift-peers, returned-callables, state-range-checks, scalar-fold-checks, scan-comparison, buffer-baselines, buffer-peer-checks, timing-names, timing-resources, typed-loop-state, kernel-codegen, timing-diagnostics, kernel-baselines, eager-captures, eager-capture-time, runtime-startup, decimal-count, decimal-count-repeat, decimal-count-interleaved, decimal-count-balanced, cpu-phases, cpu-baselines, functional-calls, functional-probes, parser-measurements, parser-workspace, inline-key-time, inline-key-audit, arc-cost-audit, scalar-projections, unique-arrays, unique-array-checks, arc-costs, ownership-analysis, compiler-lifetimes, array-sort, list-copy-costs, list-copy, benchmark-comparison, socket-inheritance, http-mappings, http-idle-checks, array-text, float-text, float-text-checks, float-text-costs, descent-output, coordinate-work, descent-batches, descent-call-costs, descent-peers, descent-checks, ad-depth, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, wordfreq-current, direct-strings, string-reuse, ad-application, wordfreq-baseline, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, memory-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, fixed-function-checks, server-checks, http-application, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
+        options: [scalar-array-map-recover, scalar-array-map-analysis, scalar-array-map-time, scalar-array-map-report, gradient-array-analysis, gradient-array-time, gradient-array-report, gradient-array-checks, range-zip-analysis, range-zip-time, range-zip-report, range-zip-checks, scalar-map-zip-analysis, scalar-map-zip-time, scalar-map-zip-report, scalar-map-zip-checks, constructor-census, numeric-input-selection, numeric-input-analysis, numeric-input-checks, callback-owners-time, callback-owners-report, packed-records-time, packed-records-report, packed-record-controls, packed-record-checks, array-observations, array-consumption, scalar-array-time, scalar-array-checks, array-construction-time, array-construction, matrix-tables, matrix-columns-report, matrix-columns, matrix-checks, current-kernel-report, current-kernels, record-fold-count-report, record-fold-time, record-fold-report, record-fold-checks, record-fold-measurements, record-zip-codegen, record-zip-report, record-zip-time, record-zip-checks, derivative-forward-costs, typed-derivative-owners, array-list-report, swift-allocation-report, swift-allocations, array-list-measurements, lexical-bindings, lexical-probes, callable-phase-paired, callable-phase-context, callable-construction-diagnosis, callable-phases, callable-phase-report, swift-peer-report, swift-peers, returned-callables, state-range-checks, scalar-fold-checks, scan-comparison, buffer-baselines, buffer-peer-checks, timing-names, timing-resources, typed-loop-state, kernel-codegen, timing-diagnostics, kernel-baselines, eager-captures, eager-capture-time, runtime-startup, decimal-count, decimal-count-repeat, decimal-count-interleaved, decimal-count-balanced, cpu-phases, cpu-baselines, functional-calls, functional-probes, parser-measurements, parser-workspace, inline-key-time, inline-key-audit, arc-cost-audit, scalar-projections, unique-arrays, unique-array-checks, arc-costs, ownership-analysis, compiler-lifetimes, array-sort, list-copy-costs, list-copy, benchmark-comparison, socket-inheritance, http-mappings, http-idle-checks, array-text, float-text, float-text-checks, float-text-costs, descent-output, coordinate-work, descent-batches, descent-call-costs, descent-peers, descent-checks, ad-depth, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, wordfreq-current, direct-strings, string-reuse, ad-application, wordfreq-baseline, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, memory-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, fixed-function-checks, server-checks, http-application, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -1393,6 +1393,65 @@ jobs:
           name: typed-derivative-evidence-${{ matrix.runner }}
           path: typed-derivative-evidence/
           if-no-files-found: error
+  scalar_map_reference_recovery:
+    if: inputs.suite == 'scalar-array-map-recover'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: ${{ fromJSON(inputs.native_runner == 'all' && '["ubuntu-latest","ubuntu-24.04-arm"]' || format('["{0}"]', inputs.native_runner)) }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      actions: read
+    env:
+      CC: gcc
+      CARGO_BUILD_JOBS: 2
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.99.1
+      - name: Verify exact-reference recovery and retention controls
+        run: |
+          python3 scripts/test-recover-scalar-map-reference.py
+          python3 scripts/test-retain-derivative-evidence.py
+      - name: Recover the recorded reference and audit original samples
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVIDENCE_RUN: ${{ inputs.evidence_run }}
+          SOURCE_REVISION: ${{ inputs.source_revision }}
+          RECOVERY_RUNNER: ${{ matrix.runner }}
+        run: >-
+          python3 scripts/recover-scalar-map-reference.py
+          --repository "$GITHUB_REPOSITORY" --run "$EVIDENCE_RUN"
+          --source "$SOURCE_REVISION" --runner "$RECOVERY_RUNNER"
+          --candidate-checkout "$RUNNER_TEMP/scalar-array-map-candidate"
+          --reference-checkout "$RUNNER_TEMP/scalar-array-map-reference"
+          --target-dir "$RUNNER_TEMP/scalar-array-map-reference-target"
+          --output recovered-evidence
+      - name: Retain recovery identities, original outcomes and complete logs
+        if: ${{ !cancelled() && hashFiles('recovered-evidence/summary/**') != '' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: scalar-array-map-recovery-${{ matrix.runner }}-summary
+          path: recovered-evidence/summary/
+          if-no-files-found: error
+      - name: Package original and recovered evidence, including failures
+        if: ${{ !cancelled() && hashFiles('recovered-evidence/**') != '' }}
+        run: >-
+          tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner
+          -c -C recovered-evidence . | xz -T1 -6 > recovered-evidence.tar.xz
+      - uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() && hashFiles('recovered-evidence.tar.xz') != '' }}
+        with:
+          name: scalar-array-map-recovery-${{ matrix.runner }}-retained
+          path: recovered-evidence.tar.xz
+          compression-level: 0
+          if-no-files-found: error
+
   retained_comparisons:
     if: inputs.suite == 'array-list-report' || inputs.suite == 'swift-allocation-report' || inputs.suite == 'record-zip-report' || inputs.suite == 'record-fold-report' || inputs.suite == 'packed-records-report' || inputs.suite == 'callback-owners-report' || (inputs.suite == 'scalar-map-zip-report' || (inputs.suite == 'range-zip-report' || (inputs.suite == 'gradient-array-report' || inputs.suite == 'scalar-array-map-report')))
     runs-on: ubuntu-24.04-arm
@@ -7418,7 +7477,7 @@ jobs:
           path: numeric-analysis-safety/
           if-no-files-found: error
       - name: Preserve reference source and compiler identities
-        if: ${{ always() && (hashFiles('capture-reference/**') != '' || hashFiles('record-zip-reference/**') != '' || hashFiles('record-fold-reference/**') != '' || hashFiles('packed-records-reference/**') != '' || hashFiles('numeric-input-reference/**') != '' || hashFiles('scalar-map-zip-reference/**') != '' || hashFiles('range-zip-reference/**') != '' || hashFiles('gradient-array-reference/**') != '') }}
+        if: ${{ always() && env.REFERENCE_KIND != '' && hashFiles(format('{0}-reference/**', env.REFERENCE_KIND)) != '' }}
         uses: actions/upload-artifact@v7
         with:
           name: ${{ env.REFERENCE_KIND }}-reference-${{ matrix.runner }}-${{ matrix.session }}

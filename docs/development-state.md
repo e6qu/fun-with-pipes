@@ -1,10 +1,11 @@
 # Current work
 
-**Next:** audit the completed ARM64 runtime observations with report run
-`41654788718`, then finish AMD64 host qualification and measurements in
-`41654861200`. Keep every measured miss and rejected host. Publish the follow-up
-as the sole draft PR after rebasing onto PR #252's verified squash; run the final
-platform matrix only after the measurement audit is complete.
+**Next:** publish the batched upload/inventory repairs, dispatch explicit
+`scalar-array-map-recover` jobs for the original ARM run `41649285227` and then
+the completed AMD runs `41654861200` / `41655262486`. Both AMD hosts qualified;
+measurements are still running. Preserve all timing outcomes. The sole active
+PR is [draft #253](https://github.com/e6qu/fun-with-pipes/pull/253). Run its final
+platform matrix only after the measurement/recovery audit is complete.
 
 ## Checkout and sources
 
@@ -38,7 +39,7 @@ records possible future work; it selects no further implementation.
 | 1 | Verified | Keep the pre-implementation contract and limits fixed |
 | 2 | Verified | Three hosts pass; 24 targets, 72 selections and 762 native images audited |
 | 3 | In progress | Compiler limits pass; audit both completed ARM sessions and obtain two qualified AMD sessions |
-| 4 | In progress | Publish the sole follow-up draft, then final nine production jobs plus docs and verified squash |
+| 4 | In progress | Draft #253 is published; finish audits, then final nine production jobs plus docs and verified squash |
 
 ## Verification and repairs
 
@@ -66,14 +67,17 @@ This measures fwp-to-C compilation, not generated-program execution.
 Original run `41649285227` completed both ARM64 sessions. Each misses five 5%
 speed goals: both forms of 3/199 and 3/1999, plus 129/199 history. These are
 completed observations, not retries to schedule. Raw audit run `41654788718`
-reads saved artifacts without executing binaries. Other runtime/memory claims
-remain provisional until that audit passes.
+failed because the workflow omitted reference artifacts. The explicit recovery
+requires exact recorded hashes before auditing saved samples. Other runtime/memory
+claims remain provisional until recovery and the audit pass.
 
-AMD64 has no measured session yet. Runs `41649285227`, `41650921950` and
+Both AMD64 measurement sessions qualified and are running. Runs `41649285227`, `41650921950` and
 `41651545947` rejected six hosts before building/timing: five EPYC 9V74 and one
 9V45, against required EPYC 7763. All six qualification records and logs are
-audited in `../gradient-work/direct-host-rejections/RUN`. The next pair is
-`41654861200`, using the same frozen tag and focused prerequisite. Do not change
+audited in `../gradient-work/direct-host-rejections/RUN`. Run `41654861200` qualified session 1, which is building/measuring; session 2
+rejected another 9V74 before building/timing (full record audited, 4.61s).
+Only session 2 is replaced by `41655262486`, which qualified. Both use the same frozen tag and
+focused prerequisite. Do not change
 the frozen CPU requirement or treat host rejection as a timing outcome.
 
 ## Local checks and helpers
@@ -98,3 +102,22 @@ Scratch helpers run under the guard:
   `retain-gradient-delivery.py --merge 3034a9d047c2bef44744c6ffc1807146570ced57`
   already verified and retained the merge/gates (0.13s); do not repeat into its
   nonempty output directory.
+
+After rebase, `adc886f6` preserves all measured implementation/tool/workflow trees;
+the frozen tag still points to `e649da78`. Roadmap audit passes (3.16s, 240 docs).
+`collect-direct-runtime.py --run AUDIT_RUN --prefix PREFIX` checks downloaded
+summary digests, full logs, source identities and saved audit outcomes; it does
+not execute native binaries or rerun measurements.
+
+## Evidence repair in progress
+
+[Complete failures and repairs](measurements/direct-array-callbacks-2026-11-03/evidence-repair/README.md):
+audit `41654788718` omitted reference artifacts for both ARM sessions; docs
+`41655295706` expected 3 map tests instead of 4. Both full logs and all failed
+steps reviewed. Dynamic reference-directory upload fixes the cause; explicit
+recovery rebuilds only the frozen reference and requires every recorded hash.
+It does not rerun timings or reinterpret incomplete evidence as complete.
+
+Focused local recovery controls pass (2 tests, 0.25s); collection controls pass
+(8 tests, 0.26s). The initial local recovery fixture missed the Git patch header;
+adding the required header fixed the fixture. Workflow lint passes (7.14s).
