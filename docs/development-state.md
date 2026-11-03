@@ -1,18 +1,20 @@
 # Current work
 
-**Next:** publish the batched final-iteration repair and run `final-iteration-checks`
-on all three native hosts. Monitor PR #254's repaired final gates in parallel;
-open the next delivery PR only after its verified squash merge. No timing session
-has started for final iteration storage.
+**Next:** publish the complete list-layout fixture repair and dispatch the next
+three-host `final-iteration-checks` batch. Both GCC jobs in run `41720302662`
+were audited; its still-queued macOS job was cancelled. Monitor PR #254's final
+gates independently. Open the next delivery PR only after its verified squash.
+No final-iteration timing session has started.
 
 ## PR #254: final gates
 
 - Active PR: https://github.com/e6qu/fun-with-pipes/pull/254.
 - Repaired head: `8bf9c65bc247bbd94903d0a31fb0823d1e335391` on branch/worktree
   `scalar-array-identities`. Production `41713252299` is running with no failed
-  steps reported. Benchmarks and docs `41713252267` / job `126186525051` pass,
-  with full-log audits retained in scratch `platforms-254-repaired` (5.00 guarded
-  seconds). Remaining native gates are running or queued.
+  steps reported. Benchmarks, macOS ARM64 ownership and docs `41713252267` /
+  job `126186525051` pass. The ownership job's 126 target logs and full log pass
+  audit (4.78 guarded seconds); audits are retained in scratch
+  `platforms-254-repaired`. Seven native gates remain running or queued.
 - Previous production `41694728758` at `9061744b` completed: seven jobs and docs
   passed; both Windows jobs failed the same two float probes. Their custom C
   mains omitted binary-stream setup, producing CRLF. The repair checks `_setmode`
@@ -94,9 +96,32 @@ The repair also adds real-gradient selection checks and the measurement tools:
   as literals, never executed. Seven compiler-cost and three retention controls
   also pass; the latter controls plus reference checks take 1.73 seconds.
 - Workflow lint passes (6.85 seconds); formatting passes (1.72 seconds).
+  Documentation audit passes for 250 link sets (2.55 seconds after status repairs).
   Real emitted-C selection checks run on CI before measurements. They require
   selection for eligible scalar/list/gradient inputs and exclude shared histories
   and the already current-only loop.
+
+### Second focused batch: fixture layouts
+
+Run `41720302662` at `73426169c8a1b29ceead23d83dd8dc30b6aa3664` completed both
+GCC jobs: each passed 268 units (4 ignored), 44 integration tests and all twelve
+source selections. Two hand-built IR fixtures omitted list shapes and were
+rejected before C generation. All nine targets and full/step logs were audited;
+there is no second failure cause. The queued macOS job was cancelled. See
+[retained evidence](measurements/final-iteration-storage-2026-11-03/layout-repair/README.md).
+
+The repair supplies outer/inner list layouts in the iteration fixture and the
+file-list layout in the resource fixture. No compiler rule changes. Native O1/O2
+source behavior, count/effect order and the new optional-wrapper cleanup control
+already pass on both GCC hosts; manual ownership/count/resource probes remain open.
+The batch also carries #254's Windows binary-stream repair into this branch.
+Formatting passes (1.70 guarded seconds). Artifact/full-log collection took 29.27
+and 20.60 seconds; hash-verified retention of all logs/selections took 0.50 seconds.
+
+Uncommitted docs explain the selected loop and correct stale #249/#251/#252
+platform statuses using retained gate records. Scratch collector
+`../gradient-work/collect-final-iteration-checks.py` inventories completed focused
+runs; collection alone is not acceptance. A plain-language PR draft is alongside it.
 
 After the repaired focused batch passes, measure the frozen runtime/compiler/stack
 limits. Do not repeat completed sessions for a pass. Final nine-job plus docs

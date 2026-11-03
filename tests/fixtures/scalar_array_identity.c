@@ -7,6 +7,10 @@ static void identity_fail(void) {
     fwp_trap("identity boundary failure");
 }
 int main(int argc, char **argv) {
+#ifdef _WIN32
+    if (_setmode(_fileno(stdout), _O_BINARY) < 0 ||
+        _setmode(_fileno(stderr), _O_BINARY) < 0) return 253;
+#endif
     if(argc!=2) return 93;
     int missing=!strcmp(argv[1],"missing-release");
     int allocation_failure=!strcmp(argv[1],"allocation-failure");

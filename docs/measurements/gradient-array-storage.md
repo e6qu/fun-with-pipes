@@ -1,9 +1,10 @@
 # Keep private gradient results in arrays
 
-**Status:** implementation, focused cleanup/allocation checks and compiler-cost
-audits pass on both native Linux architectures. [Runtime results](gradient-array-time-2026-11-03/README.md)
-have missed speed targets; final platform acceptance is pending. PR #251 is merged
-as `296ec5b4`, with all production gates and the complete log audit passed.
+**Delivered in [PR #252](../roadmap-history.md#private-gradient-arrays-pr-252).**
+All nine production jobs and documentation passed, with complete log audits.
+Focused cleanup/allocation and compiler-cost checks also pass. The
+[runtime results](gradient-array-time-2026-11-03/README.md) retain every missed
+speed target. The contract below was frozen before implementation.
 The implementation baseline is `cea8debcd8caf067bf210fd612c559b265157b91`, retained
 by `roadmap/range-zip-final-checks-2026-11-03`.
 Tag `roadmap/gradient-array-protocol-2026-11-03` preserves this contract before

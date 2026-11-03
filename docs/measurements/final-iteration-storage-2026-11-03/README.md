@@ -3,7 +3,8 @@
 This is preparation evidence, not a performance result. The
 [implementation contract](../final-iteration-storage.md) defines the next group.
 The [first focused batch](compile-repair/README.md) retains a test-import failure
-and its repair; native ownership verification is still pending.
+and its repair. The [second batch](layout-repair/README.md) found missing list
+layouts in two hand-built test programs; their native probes remain pending.
 
 ## Actual compiler output
 

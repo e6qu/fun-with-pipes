@@ -105,6 +105,21 @@ static int iteration_check_state(V value, int seed) {
         let capture = MT::Fun(Box::new(state.clone()), Box::new(callback.clone()));
         let discard = MT::Fun(Box::new(option.clone()), Box::new(MT::unit()));
         let mut program = Program::default();
+        // Hand-built IR must carry the same recursive list layouts as lowering.
+        // A list state needs both its own shape and the outer history shape.
+        for ty in [&state, &list] {
+            if let MT::Con(name, elements) = ty {
+                if name == "std::List" {
+                    program.shapes.insert(
+                        ty.clone(),
+                        TypeShape::Adt(vec![
+                            ("Nil".into(), vec![]),
+                            ("Cons".into(), vec![elements[0].clone(), ty.clone()]),
+                        ]),
+                    );
+                }
+            }
+        }
         program.shapes.insert(
             option.clone(),
             TypeShape::Adt(vec![
@@ -316,6 +331,13 @@ fn last_keeps_the_selected_file_open_until_its_final_owner_is_released() {
     let drop_list = MT::Fun(Box::new(list.clone()), Box::new(MT::unit()));
     let drop_result = MT::Fun(Box::new(option.clone()), Box::new(MT::unit()));
     let mut program = Program::default();
+    program.shapes.insert(
+        list.clone(),
+        TypeShape::Adt(vec![
+            ("Nil".into(), vec![]),
+            ("Cons".into(), vec![MT::con("std::File"), list.clone()]),
+        ]),
+    );
     program.shapes.insert(
         option.clone(),
         TypeShape::Adt(vec![

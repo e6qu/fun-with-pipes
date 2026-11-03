@@ -49,16 +49,16 @@ remove a JavaScript host's collector.
 - Preserve the independent [ownership diagnostics](ownership-diagnostics.md)
   and binary checks for absent collector code as storage representations change.
 - Enforce the compiler analysis budgets in G2 as proof precision changes.
-- Verify [direct recording and weight transfers](measurements/derivative-recording-moves.md).
-  Preserve #237’s [borrowed zero adjoints and moved result owners](measurements/typed-derivative-owners.md).
-- Verify the [gradient-array batch](measurements/gradient-array-storage.md):
-  transfer typed adjoints into an independent array, clean initialized slots on
-  failure, and remove private result-list copies before map/zip. Public list
-  outputs, enclosing derivative scopes and input aliases must keep their behavior.
-  Focused GCC/Clang checks, all 96 allocation observations and compiler-cost
-  limits pass. Runtime speed targets remain open; the
-  [timing report](measurements/gradient-array-time-2026-11-03/README.md) preserves
-  gains and regressions. Full-platform acceptance is still required.
+- Preserve [direct recording and weight transfers](measurements/derivative-recording-moves.md)
+  delivered in #238 and #237's [borrowed zero adjoints and moved result owners](measurements/typed-derivative-owners.md).
+- Preserve [private gradient arrays](roadmap-history.md#private-gradient-arrays-pr-252),
+  verified across all native platforms in #252. Public list outputs, enclosing
+  derivative scopes, initialized-slot cleanup and input aliases remain protected.
+  Its [runtime speed targets](measurements/gradient-array-time-2026-11-03/README.md)
+  are still open; allocation savings do not establish faster execution.
+- Verify the [final-iteration group](measurements/final-iteration-storage.md): direct
+  `last`, removal of an unused numeric history, count validation and partial-result
+  cleanup. Native checks and memory/speed measurements remain pending.
 - Preserve delivered A1–A6 and #236 call/collection reductions, including the
   [parser workspace's limits](measurements/parser-workspace.md). Broader reductions
   need a named workload and proof; zero retains does not mean zero allocations
