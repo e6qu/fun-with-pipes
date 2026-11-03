@@ -1,8 +1,25 @@
 static void identity_drop(V value) { fwp_arg_drop2(&value, 0, 1); }
+static int identity_recover(void) { return 1; }
+static fwp_task identity_cancel;
+static void identity_fail(void) {
+    if(identity_fault==2) { fwp_cur->cancelled=1; fwp_check_cancel(); }
+    if(identity_fault==3) fwp_heap_oom();
+    fwp_trap("identity boundary failure");
+}
 int main(int argc, char **argv) {
-    (void)argv;
+    if(argc!=2) return 93;
+    int missing=!strcmp(argv[1],"missing-release");
+    int allocation_failure=!strcmp(argv[1],"allocation-failure");
+    if(!missing && !allocation_failure && strcmp(argv[1],"complete")) return 94;
     fwp_heap_start(); fwp_fns=fwp_fn_table; fwp_init_consts();
     const fwp_desc scalar = {.kind=K_F64};
+    if(allocation_failure) {
+        V input=fwp_array_typed_new(32,&scalar);
+        for(size_t i=0;i<32;i++) fwp_array_store(input,i,0,&scalar);
+        identity_fault=3;
+        (void)f5(input);
+        return 95;
+    }
     const V words[] = {0, UINT64_C(0x8000000000000000), 1,
         UINT64_C(0x7ff0000000000000), UINT64_C(0xfff8000000000042),
         UINT64_C(0x7ff0000000000042), UINT64_C(0x3ff0000000000000)};
@@ -39,7 +56,7 @@ int main(int argc, char **argv) {
                     if(fwp_array_load(result,0,&scalar)!=UINT64_C(0x4000000000000000)) return 85;
                     if(alias && fwp_array_load(input,0,&scalar)!=words[offset%7]) return 86;
                 }
-                if(argc==1) identity_drop(result); /* missing-release control */
+                if(!missing) identity_drop(result); /* missing-release control */
                 if(alias) identity_drop(input);
                 if(backing) {
                     for(size_t i=0;i<length+32;i++)
@@ -48,6 +65,34 @@ int main(int argc, char **argv) {
                 }
                 if(fwp_heap.live!=baseline || owner_ledger_live!=live || fwp_heap.rc_wide_len) return 90;
             }
+        }
+    }
+    /* The following allocating read borrows the mapped result. Trap,
+     * cancellation must release its generated owner. Fatal allocator exhaustion
+     * is checked separately for its specified exit 102 and diagnostic. */
+    for(volatile int mode=1;mode<=2;mode++) {
+        for(int sliced=0;sliced<2;sliced++) for(int alias=0;alias<2;alias++) {
+            size_t baseline=fwp_heap.live, live=owner_ledger_live;
+            V backing=fwp_array_typed_new(64,&scalar);
+            for(size_t i=0;i<64;i++) fwp_array_store(backing,i,words[i%7],&scalar);
+            V input=sliced ? fwp_p_array_slice_typed(16,32,backing,NULL,&scalar) : backing;
+            if(!sliced) backing=0;
+            if(alias) fwp_rc_dup(input);
+            jmp_buf jump;
+            fwp_trap_recover=identity_recover; fwp_trap_jb=&jump; fwp_trap_cleanup=0;
+            memset(&identity_cancel,0,sizeof identity_cancel);
+            if(mode==2) { identity_cancel.base=&jump; fwp_cur=&identity_cancel; fwp_budget=1000000; }
+            identity_fault=mode;
+            if(!setjmp(jump)) { (void)f5(input); return 88; }
+            fwp_cur=NULL; fwp_trap_recover=NULL; fwp_trap_jb=NULL; identity_fault=0;
+            if(fwp_cleanups || (mode==2 && !identity_cancel.unwinding)) return 89;
+            if(alias) {
+                if(!owner_ledger_slots[owner_ledger_find((uintptr_t)input)]) return 91;
+                if(*fwp_rc_slot(input)!=1 || fwp_array_load(input,0,&scalar)!=words[sliced ? 16%7 : 0]) return 92;
+                identity_drop(input);
+            }
+            if(backing) identity_drop(backing);
+            if(fwp_heap.live!=baseline || owner_ledger_live!=live || fwp_heap.rc_wide_len) return 90;
         }
     }
     owner_ledger_finish();

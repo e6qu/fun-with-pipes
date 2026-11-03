@@ -67,7 +67,7 @@ class CompilerCosts(unittest.TestCase):
                 ANALYSIS.summarize(rows)
 
     def test_complete_schedule_and_timeout_keep_reviewable_evidence(self):
-        for comparison, fail in itertools.product(('numeric-inputs', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map'), (False, True)):
+        for comparison, fail in itertools.product(('numeric-inputs', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity'), (False, True)):
             with self.subTest(comparison=comparison, timeout=fail), tempfile.TemporaryDirectory() as temporary:
                 root = Path(temporary)
                 compiler, reference = root / 'candidate', root / 'reference'
@@ -93,6 +93,13 @@ class CompilerCosts(unittest.TestCase):
                         candidate={path: ANALYSIS.sha(ANALYSIS.ROOT / path) for path in ('lib/autodiff.fwp', 'runtime/fwp_rt_kernel.c', 'src/cgen.rs', 'src/fuse.rs', 'src/interp.rs', 'src/ir.rs', 'src/numerics.rs')},
                         ownershipSha256=ANALYSIS.sha(ANALYSIS.ROOT / 'src/ownership.rs'),
                         frozenPatchSha256=ANALYSIS.sha(ANALYSIS.ROOT / 'scripts/gradient-array-candidate.patch'))
+                if comparison == 'scalar-array-identity':
+                    manifest = dict(source='test-source', compilerSha256=ANALYSIS.sha(reference),
+                        disabledTransformation='F64 identity array-map elimination',
+                        candidateOptimizerSha256=ANALYSIS.sha(ANALYSIS.ROOT / 'src/opt.rs'),
+                        ownershipSha256=ANALYSIS.sha(ANALYSIS.ROOT / 'src/ownership.rs'),
+                        unchanged={path: ANALYSIS.sha(ANALYSIS.ROOT / path) for path in
+                                   ('src/interp.rs', 'runtime/fwp_rt_num.c', 'src/cgen.rs')})
                 manifest_path.write_text(json.dumps(manifest))
                 output = root / 'output'
                 argv = ['measure', '--comparison', comparison, '--compiler', str(compiler), '--reference', str(reference),

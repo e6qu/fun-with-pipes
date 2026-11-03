@@ -189,6 +189,29 @@ class Evidence(unittest.TestCase):
             CHECK.check_reference_patch(patch.replace('if false && matches!', 'if true && matches!'),
                                         candidate, reference, 'src/cgen.rs')
 
+    def test_identity_map_reference_preserves_scalar_fix_and_uses_actual_patch(self):
+        candidate = (ROOT / 'src/opt.rs').read_text()
+        preparation = (ROOT / 'scripts/prepare-scalar-array-identity-reference.py').read_text()
+        reference = CHECK.recorded_reference(candidate, preparation)
+        selected = '        if callee.arity == 2 && matches!(&callee.body, Body::Prim(symbol) if symbol == "array.map")\n'
+        self.assertEqual(reference, candidate.replace(selected, selected.replace('if callee.arity', 'if false && callee.arity')))
+        self.assertNotEqual(candidate, reference)
+        self.assertEqual(CHECK.recorded_reference(candidate,
+            'raise RuntimeError("must not execute saved code")\n' + preparation), reference)
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / 'src').mkdir()
+            path = root / 'src/opt.rs'
+            path.write_text(candidate)
+            subprocess.run(['git', '-c', 'init.defaultBranch=main', 'init', '-q'], cwd=root, check=True)
+            subprocess.run(['git', 'add', 'src/opt.rs'], cwd=root, check=True)
+            path.write_text(reference)
+            patch = subprocess.check_output(['git', 'diff', '--', 'src/opt.rs'], cwd=root, text=True)
+        CHECK.check_reference_patch(patch, candidate, reference, 'src/opt.rs')
+        with self.assertRaises(AssertionError):
+            CHECK.check_reference_patch(patch.replace('if false && callee.arity', 'if true && callee.arity'),
+                                        candidate, reference, 'src/opt.rs')
+
     def test_recorded_fold_preparation_is_independent_of_current_codegen(self):
         revision = '55d46cd57425fe9f5bb65a1b83a7d12821445711'
         old = subprocess.check_output(['git', 'show', revision + ':src/cgen.rs'],
