@@ -6,7 +6,8 @@ the compiler can store those records in one contiguous buffer. It finishes every
 map call before folding the results.
 Focused correctness, cleanup and allocation checks pass on native Linux
 ARM64/AMD64. All four paired timings are audited; one limit remains unmet.
-The full final platform matrix remains.
+[PR #248](https://github.com/e6qu/fun-with-pipes/pull/248) is merged after all nine
+production jobs and documentation passed; [gate identities](final-gates.json).
 
 [Baseline](baseline.md) · [Frozen requirements](protocol.md) · [Verification](verification.md) · [Timing tables](timing.md)
 

@@ -15,6 +15,8 @@ use crate::ir::*;
 use crate::ownership::ResultOwnership;
 use crate::value::Value;
 
+mod field_transfers;
+mod numeric_parameters;
 mod packed_records;
 mod regions;
 mod scalar_text;
@@ -2442,7 +2444,11 @@ enum ResourceSlot {
 }
 
 /// Per-function code generation state.
-struct FnGen<'g, 'p> {
+struct FnGen<'g, 'p, 'e> {
+    /// The exact emission tree, also used for call-liveness pointer identities.
+    root: &'e Expr,
+    /// Built lazily once for this emission; never shared across cloned bodies.
+    field_last_uses: Option<HashMap<Local, *const Expr>>,
     g: &'g mut Gen<'p>,
     out: String,
     tmp: usize,
@@ -2572,8 +2578,10 @@ impl Gen<'_> {
             .expect("selected packed mapper")
             .clone();
         let width = abi.ret.expect("packed numeric result fields");
-        assert!((1..=2).contains(&arity) && abi.params.iter().all(Option::is_none));
-        self.used_closures[id] = true;
+        assert!((1..=2).contains(&arity));
+        if abi.params.iter().any(Option::is_none) {
+            self.used_closures[id] = true;
+        }
         let mut out = String::from(
             "    /* Eager packed numeric records: finish mapping before folding. */\n",
         );
@@ -2587,12 +2595,37 @@ impl Gen<'_> {
         let arguments = (0..arity)
             .map(|i| format!("OBJ(l{i})->f[0]"))
             .collect::<Vec<_>>();
-        let _ = writeln!(
-            out,
-            "        V arguments[] = {{{}}};\n        fwp_args{id}(arguments, 0, {arity});",
-            arguments.join(", ")
-        );
-        let prepared = (0..arity).map(|i| format!("arguments[{i}]")).collect();
+        let _ = writeln!(out, "        V arguments[] = {{{}}};", arguments.join(", "));
+        if abi.params.iter().all(Option::is_none) {
+            let _ = writeln!(out, "        fwp_args{id}(arguments, 0, {arity});");
+        } else {
+            // At most two parameters: a mixed ABI has only one boxed owner.
+            // Prepare it once, so no earlier prepared owner can be stranded by
+            // a second failing retain. All other arguments are numeric reads.
+            for (parameter, fields) in abi.params.iter().enumerate() {
+                if fields.is_none() {
+                    let _ = writeln!(
+                        out,
+                        "        fwp_args{id}(arguments + {parameter}, {parameter}, 1);"
+                    );
+                }
+            }
+        }
+        let mut prepared = Vec::new();
+        for (parameter, fields) in abi.params.iter().enumerate() {
+            if let Some(width) = fields {
+                assert!(
+                    record_fields(&self.prog.shapes, &function.locals[parameter])
+                        .is_some_and(|fields| fields.len() == *width
+                            && fields.iter().all(|(_, ty)| scalar(ty).is_some()))
+                );
+                prepared.extend(
+                    (0..*width).map(|field| format!("OBJ(arguments[{parameter}])->f[{field}]")),
+                );
+            } else {
+                prepared.push(format!("arguments[{parameter}]"));
+            }
+        }
         let arguments = abi.args_decode_words(self.prog, id, prepared);
         let _ = writeln!(
             out,
@@ -3172,7 +3205,7 @@ fn loop_shape(f: &Func) -> Option<Option<usize>> {
     }
 }
 
-impl<'g, 'p> FnGen<'g, 'p> {
+impl<'g, 'p> FnGen<'g, 'p, '_> {
     fn line(&mut self, s: &str) {
         for _ in 0..self.indent {
             self.out.push_str("    ");
@@ -3270,7 +3303,11 @@ impl<'g, 'p> FnGen<'g, 'p> {
 
     /// The number of fields of a record `e` can give without building it.
     fn unboxed(&self, e: &Expr) -> Option<usize> {
-        fn fields(fg: &FnGen<'_, '_>, e: &Expr, known: &HashMap<Local, usize>) -> Option<usize> {
+        fn fields(
+            fg: &FnGen<'_, '_, '_>,
+            e: &Expr,
+            known: &HashMap<Local, usize>,
+        ) -> Option<usize> {
             if let Some((_, n)) = fg.state_field(e) {
                 return Some(n);
             }
@@ -3566,7 +3603,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
         }
         let m = small_variant(self.g.prog, ty)?;
         fn produces(
-            fg: &FnGen<'_, '_>,
+            fg: &FnGen<'_, '_, '_>,
             e: &Expr,
             m: usize,
             known: &HashMap<Local, bool>,
@@ -4046,7 +4083,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
         }
         let mut found = None;
         // The same traversal used by field eligibility, without assuming a tag.
-        fn visit(fg: &FnGen<'_, '_>, e: &Expr, l: Local, ty: &MT, found: &mut Option<usize>) {
+        fn visit(fg: &FnGen<'_, '_, '_>, e: &Expr, l: Local, ty: &MT, found: &mut Option<usize>) {
             if found.is_some() {
                 return;
             }
@@ -4314,7 +4351,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
         true
     }
 
-    fn bind_local<'e>(&mut self, l: Local, v: &Expr, body: &'e Expr) -> &'e Expr {
+    fn bind_local<'e>(&mut self, l: Local, v: &'e Expr, body: &'e Expr) -> &'e Expr {
         if self.resource_slots.contains_key(&l) {
             if let Some(ResourceSlot::Variant(_, m)) = self.resource_slots.get(&l).cloned() {
                 let ty = self.locals[l as usize].clone();
@@ -4342,6 +4379,9 @@ impl<'g, 'p> FnGen<'g, 'p> {
             self.line(&format!("l{l} = {value};"));
             self.anchor_resource_binding(l, !matches!(v, Expr::Field(..)));
             return body;
+        }
+        if let Some(rest) = self.bind_field_transfers(l, v, body) {
+            return rest;
         }
         if self.bind_unique_array(l, v, body) {
             return body;
@@ -7715,6 +7755,8 @@ impl<'p> Gen<'p> {
             let _ = writeln!(out, "    V l{l} = 0;");
         }
         let mut fg = FnGen {
+            root: &body,
+            field_last_uses: None,
             live_calls,
             g: self,
             out: String::new(),
@@ -7883,6 +7925,8 @@ static inline __attribute__((always_inline)) int fs{}(fwp_loop_state{step} *st, 
             HashMap::new()
         };
         let mut fg = FnGen {
+            root: e,
+            field_last_uses: None,
             live_calls,
             g: self,
             out: String::new(),
@@ -8957,6 +9001,8 @@ static inline __attribute__((always_inline)) int fs{}(fwp_loop_state{step} *st, 
     fn boxed_body(&mut self, id: FuncId, e: &Expr) -> String {
         let locals = self.prog.funcs[id].locals.clone();
         let mut fg = FnGen {
+            root: e,
+            field_last_uses: None,
             live_calls: self.live_calls(id, e),
             g: self,
             out: String::new(),
@@ -9037,6 +9083,8 @@ static inline __attribute__((always_inline)) int fs{}(fwp_loop_state{step} *st, 
             }
         }
         let mut fg = FnGen {
+            root: e,
+            field_last_uses: None,
             live_calls: self.live_calls(id, e),
             g: self,
             out: String::new(),
@@ -10158,15 +10206,17 @@ fn generate_mode(prog: &Program, mut mode: Mode) -> Result<String, String> {
     let string_maps = string_map::lower(&scalar_text);
     let region_program = regions::lower(&string_maps);
     let packed_program = packed_records::lower(region_program.as_ref());
-    let prog = &packed_program;
-    crate::ir::check_locals(prog)?;
-    let weak_channels = crate::resource::uses_weak_channels(&prog.funcs, &prog.shapes);
-    let tests = matches!(mode, Mode::Tests);
-    let main = prog.main.unwrap_or(0);
     let roots: Vec<_> = match &mode {
         Mode::Exec(commands, _) => commands.iter().map(|c| c.fid).collect(),
         _ => Vec::new(),
     };
+    let mut numeric_program = packed_program;
+    numeric_parameters::lower(&mut numeric_program, &roots);
+    let prog = &numeric_program;
+    crate::ir::check_locals(prog)?;
+    let weak_channels = crate::resource::uses_weak_channels(&prog.funcs, &prog.shapes);
+    let tests = matches!(mode, Mode::Tests);
+    let main = prog.main.unwrap_or(0);
     let live = live_functions(prog, &roots)?;
     // the calling conventions follow the bodies as they are; with counted
     // references, the code is generated from the counted bodies

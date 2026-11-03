@@ -1,0 +1,98 @@
+{
+  "artifacts": [
+    {
+      "id": 13189855514,
+      "node_id": "MDg6QXJ0aWZhY3QxMzE4OTg1NTUxNA==",
+      "name": "numeric-owner-checks-ARM64",
+      "size_in_bytes": 769190,
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13189855514",
+      "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13189855514/zip",
+      "expired": false,
+      "digest": "sha256:bf70155b57c02b1042ac3fc5829ac0d42bc3ebc0b077521ecee8376430e30fa8",
+      "created_at": "2026-11-02T23:43:27Z",
+      "updated_at": "2026-11-02T23:43:27Z",
+      "expires_at": "2027-01-31T23:40:07Z",
+      "workflow_run": {
+        "id": 41547177941,
+        "repository_id": 1400763332,
+        "head_repository_id": 1400763332,
+        "head_branch": "numeric-owner-transfers",
+        "head_sha": "ea5deea50bd4447b3864f09f25db780bd8d37518"
+      }
+    },
+    {
+      "id": 13189750889,
+      "node_id": "MDg6QXJ0aWZhY3QxMzE4OTc1MDg4OQ==",
+      "name": "numeric-owner-diagnostics-ARM64",
+      "size_in_bytes": 1552,
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13189750889",
+      "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13189750889/zip",
+      "expired": false,
+      "digest": "sha256:22cd9e3870fb7f4835c67a23ca4c82354eb8d33438d81a3a0cbadd7f15691bee",
+      "created_at": "2026-11-02T23:43:26Z",
+      "updated_at": "2026-11-02T23:43:26Z",
+      "expires_at": "2027-01-31T23:40:07Z",
+      "workflow_run": {
+        "id": 41547177941,
+        "repository_id": 1400763332,
+        "head_repository_id": 1400763332,
+        "head_branch": "numeric-owner-transfers",
+        "head_sha": "ea5deea50bd4447b3864f09f25db780bd8d37518"
+      }
+    }
+  ],
+  "probes": [
+    {
+      "name": "gcc/record-ownership/numeric_callback_inputs/stack-0--O1",
+      "sha256": "6f9b636a370ef19778e6a2144097f87d53eb37ab4dac41b4ce59891ace390394",
+      "status": 0,
+      "stats": {
+        "allocated": 1344,
+        "released": 1344,
+        "live": 0,
+        "peakLive": 560,
+        "heapExtent": 393216,
+        "maxRSSKiB": 1620
+      }
+    },
+    {
+      "name": "gcc/record-ownership/numeric_callback_inputs/stack-0--O2",
+      "sha256": "afa75795c100d55f8e9aec0c3672f35f7aacd1a91ef1969c3ee15e023cd3ecdd",
+      "status": 0,
+      "stats": {
+        "allocated": 1344,
+        "released": 1344,
+        "live": 0,
+        "peakLive": 560,
+        "heapExtent": 393216,
+        "maxRSSKiB": 1636
+      }
+    },
+    {
+      "name": "gcc/record-ownership/numeric_callback_inputs/stack-1--O1",
+      "sha256": "a2968209f1dfeb02d23cea5a2c8340ec5d8becbd76c76d8ad283679cbf63912b",
+      "status": 0,
+      "stats": {
+        "allocated": 1344,
+        "released": 1344,
+        "live": 0,
+        "peakLive": 560,
+        "heapExtent": 393216,
+        "maxRSSKiB": 1640
+      }
+    },
+    {
+      "name": "gcc/record-ownership/numeric_callback_inputs/stack-1--O2",
+      "sha256": "6115c9ffc35354b1806cb8ffc16fe533b558cb82071169bd9efa5ea75128cfa1",
+      "status": 0,
+      "stats": {
+        "allocated": 1344,
+        "released": 1344,
+        "live": 0,
+        "peakLive": 560,
+        "heapExtent": 393216,
+        "maxRSSKiB": 1628
+      }
+    }
+  ]
+}

@@ -235,6 +235,105 @@ static void use(void) { fwp_alloc_init(24); }
             changed['cases']['129-199-current-O2']['1'][field] = {}
             self.assertTrue(MEASURE.comparison_failures(changed, baseline, 'packed-records'))
 
+    def test_owner_transfer_limits_preserve_storage_and_require_all_retains(self):
+        for policy, factor, filename in [
+            ('field-owners', 1, 'docs/measurements/derivative-temporary-storage-2026-11-02/verified-counts.json.gz'),
+            ('numeric-inputs', 2, 'docs/measurements/field-owner-transfer-checks-2026-11-03/verified-counts.json.gz'),
+        ]:
+            baseline = json.loads(gzip.decompress((PROFILE.ARC.ROOT /
+                filename).read_bytes()))
+            host = baseline['hosts']['aarch64']
+            selected = ('3-0-current-O2', '3-1-current-O2', '129-199-history-O1')
+            host['cases'] = {name: host['cases'][name] for name in selected}
+            report = dict(machine='aarch64', cases={name: copy.deepcopy(case['observations'])
+                for name, case in host['cases'].items()})
+            self.assertTrue(MEASURE.comparison_failures(report, baseline, policy))
+            for name, observations in report['cases'].items():
+                dimensions, updates = map(int, name.split('-')[:2])
+                for actual in observations.values():
+                    actual['totals']['managed']['retains'] -= factor * (dimensions - 1) * updates
+            self.assertEqual(MEASURE.comparison_failures(report, baseline, policy), [])
+            for name in selected:
+                for mode in ('0', '1'):
+                    for field in ('requests', 'requestedBytes', 'retains', 'peakChargedBytes', 'finalChargedBytes'):
+                        changed = copy.deepcopy(report)
+                        changed['cases'][name][mode]['totals']['managed'][field] += 1
+                        with self.subTest(name=name, mode=mode, field=field):
+                            self.assertTrue(MEASURE.comparison_failures(changed, baseline, policy))
+            for field in ('visits', 'raw'):
+                changed = copy.deepcopy(report)
+                changed['cases']['129-199-history-O1']['1'][field] = {}
+                self.assertTrue(MEASURE.comparison_failures(changed, baseline, policy))
+
+    def test_field_owner_site_audit_rejects_shifted_or_remaining_retains(self):
+        code = '''/* Eager packed numeric records: finish mapping before folding. */
+fwp_args164(arguments, 0, 2);
+/* fn : (Rev[F64], Rev[F64]) -> Rev[F64] */
+static fwp_wr124 w124(V l0_0, V l0_1) {
+    /* move complete separated field owners */
+    l117 = l0_0;
+    l1 = l117;
+    l118 = l0_1;
+    l2 = l118;
+}'''
+        sites = dict(ownership=[dict(id=i, operation='dup', caller='fwp_args164')
+                                for i in range(2)])
+        observations = {'0': dict(ownership=[dict(site=i, phase='forwardWithRecording',
+                                                 calls=7, effective=7, last=0)
+                                            for i in range(2)])}
+        actual = SUMMARY.field_owner_sites(code, sites, observations, 7)
+        self.assertEqual(actual['counts']['0'], dict(mapperInputs=14, separatedFieldTransfer=0))
+        for statement in ('fwp_rc_dup(l117);', 'fwp_drop5(l0_0);'):
+            with self.assertRaises(AssertionError):
+                SUMMARY.field_owner_sites(code.replace('l1 = l117;', statement), sites, observations, 7)
+        for field, value in [('calls', 8), ('effective', 6), ('last', 1), ('phase', 'outside')]:
+            changed = copy.deepcopy(observations)
+            changed['0']['ownership'][0][field] = value
+            with self.subTest(field=field), self.assertRaises(AssertionError):
+                SUMMARY.field_owner_sites(code, sites, changed, 7)
+        with self.assertRaises(AssertionError):
+            SUMMARY.field_owner_sites(code, dict(ownership=[]), observations, 7)
+        zero = SUMMARY.field_owner_sites(code, dict(ownership=[]), {'0': dict(ownership=[])}, 0)
+        self.assertEqual(zero['counts']['0']['mapperInputs'], 0)
+
+    def test_numeric_input_sites_require_the_complete_direct_call_chain(self):
+        code = """static V f9(V l0, V l1) {
+    /* Eager packed numeric records: finish mapping before folding. */
+    fwp_wr164 mapped = w164(fwp_f64(OBJ(arguments[0])->f[0]),
+        (int64_t)(OBJ(arguments[0])->f[1]), fwp_f64(OBJ(arguments[1])->f[0]),
+        (int64_t)(OBJ(arguments[1])->f[1]));
+}
+static fwp_wr164 w164(double al0_0, int64_t al0_1, double al1_0, int64_t al1_1) {
+    fwp_wr124 t1 = w124(al1_0, al1_1, al0_0, al0_1);
+}
+/* fn : (F64, I64, F64, I64) -> Rev[F64] */
+static fwp_wr124 w124(double al0_0, int64_t al0_1, double al0_2, int64_t al0_3) {
+    return (fwp_wr124){al0_0, al0_1};
+}
+"""
+        sites = dict(ownership=[])
+        observations = {'0': dict(ownership=[]), '1': dict(ownership=[])}
+        before = dict(counts={mode: dict(mapperInputs=14, separatedFieldTransfer=0)
+                             for mode in observations})
+        result = SUMMARY.numeric_input_sites(code, sites, observations, before, 7)
+        self.assertEqual(result['counts']['0']['removedMapperInputs'], 14)
+        for old, new in [('w164(fwp_f64', 'w165(fwp_f64'),
+                         ('w124(al1_0', 'w125(al1_0'),
+                         ('double al0_2', 'V al0_2'),
+                         ('OBJ(arguments[1])->f[1]', 'OBJ(arguments[0])->f[1]'),
+                         ('    return ', '    fwp_rc_dup(l0); return '),
+                         ('    return ', '    fwp_drop3(l0); return '),
+                         ('    fwp_wr164 mapped', '    fwp_args164(arguments, 0, 2);\n    fwp_wr164 mapped')]:
+            with self.subTest(old=old), self.assertRaises((AssertionError, ValueError)):
+                SUMMARY.numeric_input_sites(code.replace(old, new), sites, observations, before, 7)
+        for caller in ('f9', 'w164', 'w124'):
+            changed = dict(ownership=[dict(operation='dup', caller=caller)])
+            with self.assertRaises(AssertionError):
+                SUMMARY.numeric_input_sites(code, changed, observations, before, 7)
+        before['counts']['1']['mapperInputs'] = 13
+        with self.assertRaises(AssertionError):
+            SUMMARY.numeric_input_sites(code, sites, observations, before, 7)
+
 
 if __name__ == '__main__':
     unittest.main()

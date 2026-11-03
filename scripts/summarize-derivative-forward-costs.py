@@ -53,12 +53,76 @@ def attributed_sites(archive, root, sites, profiles):
     return result
 
 
+def field_owner_sites(code, sites, observations, pairs):
+    """Check the removed projection and unchanged input preparation separately."""
+    maps = re.findall(r'/\* Eager packed numeric records:[\s\S]*?fwp_args(\d+)\(arguments, 0, 2\);', code)
+    assert len(maps) == 1, maps
+    callback = 'fwp_args' + maps[0]
+    workers = re.findall(r'/\* fn : \(Rev\[F64\], Rev\[F64\]\) -> Rev\[F64\] \*/\nstatic fwp_wr(\d+) w\1\(V l0_0, V l0_1\) \{([\s\S]*?)\n}', code)
+    selected = [(number, body) for number, body in workers
+                if '/* move complete separated field owners */' in body]
+    assert len(selected) == 1, selected
+    number, body = selected[0]
+    assert 'fwp_rc_dup(' not in body, body
+    assert not re.search(r'fwp_drop\d+\(l0_[01]\)', body), body
+    mapped = {site['id'] for site in sites['ownership']
+              if site['operation'] == 'dup' and site['caller'] == callback}
+    counts = {}
+    for mode, observation in observations.items():
+        total = 0
+        for row in observation['ownership']:
+            if row['site'] in mapped:
+                assert row['phase'] == 'forwardWithRecording', row
+                assert row['calls'] == row['effective'] and row['last'] == 0, row
+                total += row['effective']
+        assert total == 2 * pairs, (mode, total, pairs)
+        counts[mode] = dict(mapperInputs=total, separatedFieldTransfer=0)
+    return dict(callback=callback, projection='w' + number, counts=counts)
+
+
+def numeric_input_sites(code, sites, observations, previous, pairs):
+    """Follow map -> forwarding worker -> numeric callee; check removed owners."""
+    marker = '/* Eager packed numeric records: finish mapping before folding. */'
+    assert code.count(marker) == 1
+    start = code.index(marker)
+    end = code.index('\n}\n', start)
+    mapping = code[start:end]
+    assert 'fwp_args' not in mapping and 'fwp_rc_dup(' not in mapping
+    reads = re.findall(r'OBJ\(arguments\[([01])\]\)->f\[([01])\]', mapping)
+    assert reads == [('0', '0'), ('0', '1'), ('1', '0'), ('1', '1')], reads
+    callback, = re.findall(r'fwp_wr(\d+) mapped = w\1\(', mapping)
+    signature = r'double al0_0, int64_t al0_1, double al1_0, int64_t al1_1'
+    forward, = re.findall(r'static fwp_wr' + callback + r' w' + callback
+                         + r'\(' + signature + r'\) \{([\s\S]*?)\n}', code)
+    workers = re.findall(r'/\* fn : \(F64, I64, F64, I64\) -> Rev\[F64\] \*/\n'
+                         r'static fwp_wr(\d+) w\1\(double al0_0, int64_t al0_1, '
+                         r'double al0_2, int64_t al0_3\) \{([\s\S]*?)\n}', code)
+    selected_workers = [(number, body) for number, body in workers
+                        if re.search(r'\bw' + number + r'\(', forward)]
+    assert len(selected_workers) == 1, selected_workers
+    number, body = selected_workers[0]
+    for text in (forward, body):
+        assert 'fwp_rc_dup(' not in text and 'fwp_args' not in text
+        assert not re.search(r'fwp_drop\d+\(', text)
+    line = code[:start].count('\n') + 1
+    mapper, = [name for first, last, name in CALLERS.caller_lines(code) if first <= line <= last]
+    selected = {mapper, 'w' + callback, 'w' + number}
+    assert not [site for site in sites['ownership']
+                if site['operation'] == 'dup' and site['caller'] in selected]
+    assert set(previous['counts']) == set(observations)
+    counts = {}
+    for mode in observations:
+        assert previous['counts'][mode] == dict(mapperInputs=2 * pairs, separatedFieldTransfer=0)
+        counts[mode] = dict(mapperInputs=0, separatedFieldTransfer=0, removedMapperInputs=2 * pairs)
+    return dict(mapper=mapper, callback='w' + callback, callee='w' + number, counts=counts)
+
+
 def audit(path, source, machine, comparison, baseline):
     with zipfile.ZipFile(path) as archive:
         report = json.loads(archive.read('report.json'))
         assert report['source'] == source and report['machine'] == machine
         assert report.get('complete') is True
-        if comparison in ('record-zip', 'record-fold', 'packed-records'):
+        if comparison in ('record-zip', 'record-fold', 'packed-records', 'field-owners', 'numeric-inputs'):
             assert report['comparison'] == dict(policy=comparison, baselineSource=baseline['source'])
             assert report['cc'] == baseline['hosts'][machine]['cc']
         else:
@@ -137,13 +201,29 @@ def audit(path, source, machine, comparison, baseline):
                         binaryBytes=len(ordinary), textBytes=text_bytes,
                         frames=archive.read(frames[0]).decode(),
                         binarySha256=report['files'][root + 'ordinary.exe'])
+                    if comparison == 'field-owners':
+                        cases[name]['fieldOwners'] = field_owner_sites(
+                            archive.read(root + 'ownership-base.c').decode(), active_sites,
+                            observations, (dimensions - 1) * updates)
+                    if comparison == 'numeric-inputs':
+                        cases[name]['numericInputs'] = numeric_input_sites(
+                            archive.read(root + 'ownership-base.c').decode(), active_sites,
+                            observations, baseline['hosts'][machine]['cases'][name]['fieldOwners'],
+                            (dimensions - 1) * updates)
+                    if comparison in ('field-owners', 'numeric-inputs'):
+                        factor = 1 if comparison == 'field-owners' else 2
+                        for mode, observation in observations.items():
+                            previous = baseline['hosts'][machine]['cases'][name]['observations'][mode]
+                            removed = previous['totals']['managed']['retains'] - observation['totals']['managed']['retains']
+                            assert removed == factor * (dimensions - 1) * updates, (
+                                name, mode, 'retain changes outside the attributed sites', removed)
         failures = []
         if baseline is not None:
             failures = MEASURE.comparison_failures(report, baseline, comparison)
             assert failures == report['comparisonFailures']
             for name, actual in cases.items():
                 previous = baseline['hosts'][machine]['cases'][name]
-                if comparison != 'packed-records' and actual['textBytes'] > previous['textBytes'] + 1024:
+                if comparison in ('record-zip', 'record-fold') and actual['textBytes'] > previous['textBytes'] + 1024:
                     failures.append(name + ': instruction section grew by more than 1024 bytes')
                 def largest_frame(frames):
                     return max(int(line.split('\t')[1]) for line in frames.splitlines())
@@ -163,7 +243,7 @@ def main():
     parser.add_argument('--source', required=True)
     parser.add_argument('--run', required=True)
     parser.add_argument('--output', required=True, type=Path)
-    parser.add_argument('--comparison', required=True, choices=('baseline', 'record-zip', 'record-fold', 'packed-records'))
+    parser.add_argument('--comparison', required=True, choices=('baseline', 'record-zip', 'record-fold', 'packed-records', 'field-owners', 'numeric-inputs'))
     parser.add_argument('--baseline', type=Path)
     args = parser.parse_args()
     assert re.fullmatch('[0-9a-f]{40}', args.source) and args.run.isdigit()

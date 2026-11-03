@@ -1,0 +1,23 @@
+{
+  "auditRun": 41553716035,
+  "artifact": {
+    "id": 13192553302,
+    "node_id": "MDg6QXJ0aWZhY3QxMzE5MjU1MzMwMg==",
+    "name": "callback-owners-report-summary",
+    "size_in_bytes": 839972,
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13192553302",
+    "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13192553302/zip",
+    "expired": false,
+    "digest": "sha256:b8cf0b2ee65ab895083328cbb073ae01741f894cf99c68f278a3b3dba8b29b4e",
+    "created_at": "2026-11-03T00:34:34Z",
+    "updated_at": "2026-11-03T00:34:34Z",
+    "expires_at": "2027-02-01T00:33:36Z",
+    "workflow_run": {
+      "id": 41553716035,
+      "repository_id": 1400763332,
+      "head_repository_id": 1400763332,
+      "head_branch": "numeric-owner-transfers",
+      "head_sha": "d903126f53545098519a36960c5704eb3fcdc8f0"
+    }
+  }
+}

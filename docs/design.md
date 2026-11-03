@@ -444,7 +444,7 @@ caught by `attempt`. The handler itself remains in place.
 
 ### Temporary mapped numeric records
 
-The next compiler batch extends the storage choice to a mapped list used only
+The compiler extends the storage choice to a mapped list used only
 by one known left fold. For example, mapping `(x, x*x)` over `[1, 2]` produces
 `[(1, 1), (2, 4)]`; summing both fields gives `(3, 5)`. The compiler can keep those
 four numbers consecutively in one buffer:
@@ -470,10 +470,38 @@ That distinction matters when callbacks print, fail or record derivative work.
   insertion. The internal `Array[I64]` holds numeric bits, not public array values.
 
 Native Linux GCC/Clang O1/O2 controls and exact allocation counts pass. All four
-timing sessions are audited; one AMD64 zero-update limit remains unmet. The full
-platform matrix remains. See the
+timing sessions are audited; one AMD64 zero-update limit remains unmet. All nine
+final production jobs and documentation pass for PR #248. See the
 [measurement report](measurements/derivative-temporary-storage-2026-11-02/README.md)
 for selection limits, deliberate missing-destruction tests and open timing goals.
+
+### Numeric callback inputs
+
+A record such as `(value, operation-id)` contains two numbers but can still have
+a heap box. When a callback merely forwards two such records to an internal
+function, the compiler can pass their four numeric fields instead:
+
+```text
+Lists own two records → read four numbers → call the numeric worker
+                     → keep the lists alive until mapping ends
+```
+
+`src/cgen/numeric_parameters.rs` proves all uses and callers before changing the
+internal parameter. It allows two record levels and two-to-eight machine-sized
+numeric leaves. Repeated, reordered and unused leaf reads are safe; whole-record
+uses, function-value references, entry points, recursion, resources and deeper
+records exclude selection. The caller must supply pure local/field reads, so
+extracting the numbers cannot repeat an effect or move a trap.
+
+Call-graph analysis visits functions and edges a bounded number of times. The
+pass reuses the packed-lowering program rather than cloning the whole program
+again. Ownership insertion follows the typed-IR check. Numeric bits own no child
+values; mixed callbacks still prepare the boxed argument they require.
+
+This rule preserves source types, curried pipes, callback order and cancellation
+checks. It introduces no source syntax or runtime ownership guess.
+[Evidence](measurements/derivative-owner-transfers.md) records count savings,
+source/native controls and the remaining compiler/runtime timing requirements.
 
 ## Numerical specialization
 

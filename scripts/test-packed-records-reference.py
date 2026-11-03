@@ -20,6 +20,7 @@ class PackedRecordReference(unittest.TestCase):
         self.assertIn('fn record_fold_abi(', restored)
         self.assertIn('fn record_fold_def(', restored)
         self.assertIn('fn packed_record_map(', restored)
+        self.assertIn('numeric_parameters::lower(&mut numeric_program, &roots);', restored)
 
     def test_other_codegen_changes_are_preserved(self):
         changed = CURRENT.replace('fn string_length(', 'fn updated_string_length(', 1)

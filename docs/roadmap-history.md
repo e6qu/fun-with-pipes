@@ -6,6 +6,30 @@ and complete platform validation are different events. Measurements retain their
 original source and settings; old numbers are not measurements of current main.
 The linked PRs, runs and data records supply the detailed evidence.
 
+## Packed temporary numeric records (PR #248)
+
+[PR #248](https://github.com/e6qu/fun-with-pipes/pull/248) merged November 2 as
+`31e4e25b9a0494a2ce3d75a189fe1b1b7c177247`. All nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/41524286630)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/41524286169)
+pass on `32aae4f79b66f5e88e9aded39d6df794439b7430`; every full job/target log was
+audited. The squash preserves tested tree `8213af3a5722c84c8730bad5071f24e5f6579ed3`
+and a verified 51-character single-line message, without body or trailers.
+[Gate identities](measurements/derivative-temporary-storage-2026-11-02/final-gates.json).
+
+A sole-use mapped numeric-record list now uses one temporary word buffer, keeping
+map/seed/fold order and callback owners. The largest measured solve uses 51,143
+fewer managed allocations and 4,064 fewer peak managed bytes. All 96 counts,
+GCC/Clang failure/cancellation controls and deliberately broken cleanup controls
+pass. [Four timing sessions](measurements/derivative-temporary-storage-2026-11-02/timing.md)
+show 5.1–14.2% less time for cases with at least 199 updates. One AMD64 zero-update
+history case remains 2.024% slower against a 2% limit; that goal and D2 stay open.
+
+An obsolete reference test was repaired by pinning its historical sources and
+checking unrelated current changes separately. Documentation's first repaired-head
+attempt completed all checks but timed out during runner finalization; its
+same-head retry passed. Both records remain in the verification report.
+
 ## Benchmark driver comparison (PR #247)
 
 [PR #247](https://github.com/e6qu/fun-with-pipes/pull/247) merged November 2 as

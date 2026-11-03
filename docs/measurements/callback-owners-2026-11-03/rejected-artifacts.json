@@ -1,0 +1,20 @@
+{
+  "id": 13193350042,
+  "node_id": "MDg6QXJ0aWZhY3QxMzE5MzM1MDA0Mg==",
+  "name": "descent-host-ubuntu-latest-2",
+  "size_in_bytes": 1537,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13193350042",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13193350042/zip",
+  "expired": false,
+  "digest": "sha256:1ca571be8bbaef56412200dc22825b67f9ed8a7d8e5dd436dc8e4dbe625ee07a",
+  "created_at": "2026-11-03T00:14:26Z",
+  "updated_at": "2026-11-03T00:14:26Z",
+  "expires_at": "2027-02-01T00:10:51Z",
+  "workflow_run": {
+    "id": 41550970017,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "numeric-owner-transfers",
+    "head_sha": "d903126f53545098519a36960c5704eb3fcdc8f0"
+  }
+}

@@ -30,6 +30,78 @@ impl Drop for Scratch {
 }
 
 #[test]
+fn numeric_callback_inputs_preserve_order_shared_lists_and_mixed_owners() {
+    let dir = Scratch::new("numeric-callback-inputs");
+    let source = dir.0.join("inputs.fwp");
+    std::fs::write(
+        &source,
+        include_str!("fixtures/numeric_callback_inputs.fwp"),
+    )
+    .unwrap();
+    let fwp = env!("CARGO_BIN_EXE_fwp");
+    let reference = checked(
+        Command::new(fwp)
+            .args(["run", "--interp"])
+            .arg(&source)
+            .env("FWP_NO_OPT", "1"),
+    );
+    let interpreted = checked(
+        Command::new(fwp)
+            .args(["run", "--interp"])
+            .arg(&source)
+            .env_remove("FWP_NO_OPT"),
+    );
+    assert_eq!(interpreted.stdout, reference.stdout);
+    assert_eq!(interpreted.stderr, reference.stderr);
+    for stack in ["0", "1"] {
+        let cfile = dir.0.join(format!("inputs-{stack}.c"));
+        checked(
+            Command::new(fwp)
+                .args(["build", "--memory", "dynamic", "--emit-c", "-O2"])
+                .arg(&source)
+                .arg("-o")
+                .arg(&cfile)
+                .env("FWP_STACK", stack),
+        );
+        let code = std::fs::read_to_string(&cfile).unwrap();
+        for opt in ["-O1", "-O2"] {
+            let exe = dir.0.join(format!("inputs-{stack}-{opt}.exe"));
+            fwp::cgen::compile_c(&code, &exe, opt).unwrap();
+            let output = checked(Command::new(&exe).env("FWP_ALLOC_STATS", "1"));
+            record_probe::save(
+                "numeric_callback_inputs",
+                &format!("stack-{stack}-{opt}"),
+                &code,
+                &exe,
+                &output,
+            );
+            assert!(
+                code.contains(" : (I64, F64, I64, F64) -> Point */"),
+                "nested argument must become four numeric fields"
+            );
+            let maps: Vec<_> = code
+                .split("/* Eager packed numeric records:")
+                .skip(1)
+                .map(|section| section.split("\n}\n").next().unwrap())
+                .collect();
+            assert!(maps.len() >= 2);
+            assert!(
+                maps.iter()
+                    .any(|body| !body.contains("fwp_args")
+                        && body.contains("OBJ(arguments[0])->f[0]"))
+            );
+            assert!(maps.iter().any(|body| body.contains("fwp_args")
+                && body.contains("OBJ(arguments[")
+                && body.contains(", 1);")));
+            assert_eq!(output.stdout, reference.stdout);
+            let stats =
+                allocation_report::parse(std::str::from_utf8(&output.stderr).unwrap()).unwrap();
+            assert_eq!(stats.live, 0, "{stack}/{opt}: {stats:?}");
+        }
+    }
+}
+
+#[test]
 fn packed_record_maps_finish_before_seed_and_fold_effects() {
     let dir = Scratch::new("packed-record-order");
     let src = dir.0.join("packed.fwp");

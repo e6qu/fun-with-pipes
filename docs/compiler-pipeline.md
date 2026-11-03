@@ -82,6 +82,23 @@ at its original position. It does not interleave mapping with folding. Ordinary
 ownership insertion keeps the buffer alive through intermediate calls and releases it on return or failure.
 See the [selection rules and verification status](measurements/derivative-temporary-storage-2026-11-02/README.md).
 
+For selected internal callbacks, `src/cgen/numeric_parameters.rs` then replaces
+one nested numeric-record parameter with a flat record of its numeric fields.
+For example, a callback reading two `(value, operation-id)` records can receive
+four numbers directly. This changes the compiler's internal parameter type and
+all known callers together; the source function still takes one argument.
+
+- Prove leaf-only reads and pure argument field reads before rewriting.
+- Exclude function values, entry points, recursion and unproved ownership uses.
+- Keep input lists alive while the packed mapper reads their numeric fields.
+- Check the rewritten typed IR before inserting ownership operations.
+
+During C emission, `src/cgen/field_transfers.rs` can also move a complete group of
+already-separated field owners. It checks the emitted ownership expression;
+it does not remove ownership operations by searching C text.
+[Current verification and limits](measurements/derivative-owner-transfers.md)
+separate these implemented rules from pending performance/platform acceptance.
+
 ## What kind of parser is this?
 
 fwp has a **hand-written, top-down recursive-descent parser** with a separate

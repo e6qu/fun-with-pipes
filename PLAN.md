@@ -4,38 +4,42 @@ Build an ahead-of-time language with simple pipes, immutable values, strong type
 and useful inference. Prefer direct values, moves and borrows; reserve ARC for
 necessary sharing. GC is removed; JIT and backward compatibility are excluded.
 
-## Current batch: reduce temporary derivative allocations
+## Current batch: remove temporary derivative owners
 
-[PR #247](docs/roadmap-history.md#benchmark-driver-comparison-pr-247) is verified
-and merged. Its benchmark-driver diagnostic is complete; original timing goals
-remain open. No compiler/runtime change followed from that diagnostic.
-
-[PR #248](https://github.com/e6qu/fun-with-pipes/pull/248) replaces eligible temporary mapped numeric-record lists with
-one owned buffer. Mapping still finishes before folding, and seed evaluation
-stays at its source position. See [design and boundaries](docs/design.md#temporary-mapped-numeric-records)
-and [results](docs/measurements/derivative-temporary-storage-2026-11-02/README.md).
+[PR #248](docs/roadmap-history.md#packed-temporary-numeric-records-pr-248) is verified
+and merged. It reduces temporary allocations; its failed zero-update timing goal
+remains open. This grouped batch removes reference-count operations left in
+those callbacks. [Measured sites](docs/measurements/derivative-owner-transfers.md)
+account for 76,416 of 77,411 retains in the largest saved solve; that is a
+verified count reduction. Largest solves take 5.2–6.4% less time; some
+smaller-case timing requirements remain open.
 
 | Step | Work | Completion requirement |
 |---|---|---|
-| 1 | Freeze the source baseline, selection and acceptance rules | Fresh counts; published protocol before compiler edits; same-source reference disables only the selected lowering |
-| 2 | Implement packed temporary storage | Prove one consuming use; preserve map/seed/fold order, callback owners, effects, arithmetic and traps |
-| 3 | Verify semantics, cleanup and measured storage | Interpreter/native comparisons; GCC/Clang O1/O2; empty/unequal inputs, aliases, excluded cases, traps, cancellation, allocation failures and deliberately missing destruction; all 96 count observations |
-| 4 | Complete and audit the paired measurements | Two native sessions per architecture; unchanged drivers; all samples, rejected hosts, failures, C/Rust comparisons, RSS and code/stack costs retained |
-| 5 | Deliver implementation, controls, evidence and docs together | One PR; all nine exact-head production jobs and documentation pass; audit every log, then verify the one-line squash merge |
+| 1 | Move complete groups of already-separated field owners | Published selection/protocol; GCC/Clang O1/O2 direct/boxed/shared, failure/cancellation and broken-cleanup controls; remove at least one retain per differentiated pair |
+| 2 | Remove unnecessary callback input owners | Freeze the numeric-leaf or borrowed-call proof before implementation; preserve input lifetime, callback order and owning entries that still need owners |
+| 3 | Verify the combined costs and compiler work | All 96 count observations; attribute savings to exact sites; no managed/raw storage growth, zero final storage; bounded analysis and measured compilation costs |
+| 4 | Measure whole-solve performance | Same-source reference, fixed drivers, two qualified sessions per architecture; preserve 2% copy/regression and 5% large-case limits, all samples and failures |
+| 5 | Deliver the complete batch | One substantial PR with code, controls, evidence and clear docs; all nine exact-head production gates and documentation; audited logs and verified one-line squash |
 
-Steps 1–3 pass focused native Linux verification. Each architecture passes 40
-GCC/Clang tests. The largest current-only solve uses 51,143 fewer managed requests
-and 4,064 fewer peak managed bytes; reference-count increments do not increase.
-
-Step 4 is fully audited: all four sessions and four rejected hosts are retained.
-Both ARM64 sessions and AMD64 session 1 pass. AMD64 session 2 retains a 2.024%
-zero-update history regression against the 2% limit. Every case with at least
-199 updates uses 5.1–14.2% less time; all identical-copy controls pass. Retain the
-verified reductions and leave the failed timing goal open, as in prior deliveries.
-Complete the PR's full final matrix. Fewer allocations do not
-establish C/Rust parity or complete D2.
+Step 1's first native checks exposed an index tied to the wrong expression tree.
+The repair uses the exact emitted body and passes both native GCC/Clang suites
+and all 96 count audits. It removes exactly one retain per differentiated pair.
+Step 2 passes focused GCC/Clang checks on both native hosts: 100 checks and
+400 saved probes, including deliberately broken cleanup controls. All 96 count
+observations and exact-site audits pass. Compiler time/RSS limits pass. All four
+runtime sessions are audited; retain their failed speed/noise limits below.
+Next run the final platform matrix and documentation gate for the complete batch.
 
 ## Open performance goals
+
+- **Callback-owner timings.** [The complete report](docs/measurements/callback-owners-2026-11-03/README.md)
+  retains every outcome. Both architectures miss 5% on 3/199 and 3/1999 in both
+  forms; AMD64 33/199 current also misses it. AMD64 3/1999 copy variation is
+  2.12–2.21%, so that comparison is inconclusive. Keep the verified count
+  reductions and larger-case speed gains, following the accepted policy; do not
+  relabel missed limits as passed. Diagnose remaining allocation/work costs and
+  the noisy case from saved phase/sample evidence before choosing another change.
 
 - **AMD64 array consumption.** The original large-array copy controls pass,
   but consumption is 4.93–5.23% slower; small-array copy limits also fail.

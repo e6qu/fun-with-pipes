@@ -28,6 +28,9 @@ SPEC.loader.exec_module(FOLD_REFERENCE)
 SPEC = importlib.util.spec_from_file_location('packed_reference', ROOT / 'scripts/prepare-packed-records-reference.py')
 PACKED_REFERENCE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(PACKED_REFERENCE)
+SPEC = importlib.util.spec_from_file_location('numeric_reference', ROOT / 'scripts/prepare-numeric-input-reference.py')
+NUMERIC_REFERENCE = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(NUMERIC_REFERENCE)
 SOURCE = 'dc0a6407b5e5aa23517a86db71a3221a418cc7d6'
 REPORT = json.loads(gzip.decompress((ROOT / 'docs/measurements/array-list-first-2026-10-31-amd-2.json.gz').read_bytes()))
 
@@ -89,6 +92,30 @@ class Evidence(unittest.TestCase):
             self.assertNotEqual(changed, patch)
             with self.assertRaises(AssertionError):
                 CHECK.check_reference_patch(changed, candidate, reference, 'src/cgen.rs')
+
+    def test_combined_reference_is_reconstructed_without_executing_saved_code(self):
+        candidates = {path: (ROOT / path).read_text() for path in NUMERIC_REFERENCE.CHANGES}
+        preparation = (ROOT / 'scripts/prepare-numeric-input-reference.py').read_text()
+        expected = NUMERIC_REFERENCE.reference_sources(candidates, 'callback-owners')
+        self.assertEqual(CHECK.recorded_numeric_reference(candidates, preparation), expected)
+        self.assertEqual(CHECK.recorded_numeric_reference(candidates,
+            'raise RuntimeError("must never run")\n' + preparation), expected)
+        for name, (before, _) in NUMERIC_REFERENCE.CHANGES.items():
+            changed = dict(candidates)
+            changed[name] = changed[name].replace(before, '')
+            with self.assertRaises(AssertionError):
+                CHECK.recorded_numeric_reference(changed, preparation)
+        for changed in (preparation + '\nCHANGES = {}\n',
+                        preparation.replace('COMPLETE_TRANSFER =', 'OTHER ='),
+                        preparation.replace('CHANGES = {', 'CHANGES = call({').replace('\nCOMPLETE_TRANSFER', ')\nCOMPLETE_TRANSFER', 1)):
+            with self.assertRaises((AssertionError, ValueError, SyntaxError)):
+                CHECK.recorded_numeric_reference(candidates, changed)
+        for path, reference in expected.items():
+            candidate = candidates[path]
+            header = f'diff --git a/{path} b/{path}\nindex 1234567..2345678 100644\n'
+            patch = header + ''.join(difflib.unified_diff(candidate.splitlines(keepends=True),
+                    reference.splitlines(keepends=True), fromfile='a/' + path, tofile='b/' + path))
+            CHECK.check_reference_patch(patch, candidate, reference, path)
 
     def test_packed_reference_patch_and_recorded_preparation_are_exact(self):
         candidate = (ROOT / 'src/cgen.rs').read_text()

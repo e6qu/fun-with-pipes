@@ -96,7 +96,7 @@ def ownership_budget_failures(profiles, baseline):
 
 def paired_budget_failures(results, comparison):
     """Apply the selected pre-candidate limits and report every violation."""
-    assert comparison in {'scalar-recording', 'eager-captures', 'array-lists', 'record-zip', 'record-fold', 'packed-records'}
+    assert comparison in {'scalar-recording', 'eager-captures', 'array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners'}
     failures = []
 
     def require(case, program, metric, actual, limit):
@@ -111,7 +111,7 @@ def paired_budget_failures(results, comparison):
         for label in ['fwp-ad', 'fwp-ad-history']:
             reference = label + '-reference'
             current, old = (row['fwpProfiles'][name] for name in [label, reference])
-            if comparison in ('record-fold', 'packed-records'):
+            if comparison in ('record-fold', 'packed-records', 'callback-owners'):
                 time_limit = 0.95 if row['updates'] >= 199 else 1.02
             else:
                 time_limit = 1.02 if comparison == 'array-lists' else 0.95 if row['updates'] else 1.02
@@ -121,7 +121,7 @@ def paired_budget_failures(results, comparison):
             if comparison == 'array-lists':
                 cells = row['dimensions'] * row['updates'] * row['solvesPerProcess']
                 savings = [('requests', cells), ('requestedBytes', 24 * cells)]
-            if comparison in ('record-zip', 'record-fold', 'packed-records'):
+            if comparison in ('record-zip', 'record-fold', 'packed-records', 'callback-owners'):
                 pairs = (row['dimensions'] - 1) * row['updates'] * row['solvesPerProcess']
                 removed = (2 * pairs if comparison == 'record-zip' else
                            max(row['dimensions'] - 2, 0) * row['updates'] * row['solvesPerProcess'])
@@ -131,6 +131,8 @@ def paired_budget_failures(results, comparison):
                     buffers = row['updates'] * row['solvesPerProcess']
                     savings = [('requests', 2 * pairs - buffers),
                                ('requestedBytes', 32 * pairs - 8 * buffers), ('retains', 0)]
+                if comparison == 'callback-owners':
+                    savings = [('requests', 0), ('requestedBytes', 0), ('retains', 3 * pairs)]
                 if not row['updates'] and current['managed'] != old['managed']:
                     failures.append(dict(case=case, program=label, metric='zero-update counts',
                                          actual=current['managed'], expected=old['managed']))
@@ -144,7 +146,7 @@ def paired_budget_failures(results, comparison):
                     failures.append(dict(case=case, program=label, metric=key,
                                          actual=current[key], expected=old[key]))
             images = row['binaries']
-            if comparison != 'packed-records':
+            if comparison not in ('packed-records', 'callback-owners'):
                 require(case, label, 'instruction bytes', images[label]['instructionBytes'],
                         images[reference]['instructionBytes'] + 1024)
             stacks = row['cCompilerStackUsage']
@@ -157,7 +159,7 @@ def paired_budget_failures(results, comparison):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--compiler', required=True, type=Path)
-    parser.add_argument('--comparison', required=True, choices=['current', 'eager-captures', 'array-lists', 'record-zip', 'record-fold', 'packed-records'])
+    parser.add_argument('--comparison', required=True, choices=['current', 'eager-captures', 'array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners'])
     parser.add_argument('--reference-compiler', type=Path)
     parser.add_argument('--reference-manifest', type=Path)
     parser.add_argument('--cc', required=True)
@@ -185,7 +187,17 @@ def main():
     if separate_compiler:
         assert reference_manifest['source'] == os.environ['GITHUB_SHA']
         assert digest(args.reference_compiler.read_bytes()) == reference_manifest['compilerSha256']
-        assert reference_manifest['ownershipSha256'] == digest((ROOT / 'src/ownership.rs').read_bytes())
+        if args.comparison == 'callback-owners':
+            assert set(reference_manifest['files']) == {'src/cgen.rs', 'src/cgen/packed_records.rs'}
+            assert set(reference_manifest['unchanged']) == {'src/ownership.rs', 'src/cgen/field_transfers.rs', 'src/cgen/numeric_parameters.rs'}
+            assert reference_manifest['scope'] == 'callback-owners'
+            assert reference_manifest['disabledTransformation'] == 'complete field transfers and numeric callback input owners'
+            for path, hashes in reference_manifest['files'].items():
+                assert digest((ROOT / path).read_bytes()) == hashes['candidateSha256'], path
+            for path, expected_hash in reference_manifest['unchanged'].items():
+                assert digest((ROOT / path).read_bytes()) == expected_hash, path
+        else:
+            assert reference_manifest['ownershipSha256'] == digest((ROOT / 'src/ownership.rs').read_bytes())
         if args.comparison == 'eager-captures':
             assert reference_manifest['candidateOptimizerSha256'] == digest((ROOT / 'src/opt.rs').read_bytes())
             assert reference_manifest['disabledTransformation'] == 'once-used eager capture bindings'
@@ -194,7 +206,7 @@ def main():
             expected = ('packed temporary numeric-record storage' if args.comparison == 'packed-records'
                         else 'direct numeric-record left folds')
             assert reference_manifest['disabledTransformation'] == expected
-        else:
+        elif args.comparison != 'callback-owners':
             assert args.comparison == 'record-zip'
             assert reference_manifest['candidateFusionSha256'] == digest((ROOT / 'src/fuse.rs').read_bytes())
             assert reference_manifest['disabledTransformation'] == 'flat numeric record zip/map fusion'
@@ -476,7 +488,7 @@ def main():
     paths = ['scripts/descent-baselines.py', 'scripts/measure-descent-peers.py', 'scripts/measure-ad-application.py',
              'scripts/ad-storage-profile.py', 'scripts/measure-iteration.py', 'scripts/descent-phases.py',
              'tests/fixtures/descent_phases.c',
-             'scripts/prepare-capture-reference.py', 'scripts/prepare-record-zip-reference.py', 'scripts/prepare-record-fold-reference.py', 'scripts/prepare-packed-records-reference.py', 'src/cgen/packed_records.rs', 'src/opt.rs', 'src/fuse.rs',
+             'scripts/prepare-capture-reference.py', 'scripts/prepare-record-zip-reference.py', 'scripts/prepare-record-fold-reference.py', 'scripts/prepare-packed-records-reference.py', 'scripts/prepare-numeric-input-reference.py', 'src/cgen/numeric_parameters.rs', 'src/cgen/field_transfers.rs', 'src/cgen/packed_records.rs', 'src/opt.rs', 'src/fuse.rs',
              'tests/fixtures/ad_raw_storage_probe.c', 'tests/fixtures/descent_explicit.fwp',
              'tests/fixtures/descent_explicit.c', 'tests/fixtures/descent_explicit.rs',
              'tests/fixtures/descent_packed.fwp', 'src/ownership.rs', 'src/escape.rs', 'src/cgen.rs', 'src/rc.rs', 'tests/boxed_projection_ownership.rs',
@@ -495,6 +507,7 @@ def main():
             'current': 'Six current-source implementations and one byte-identical AD-current control. ',
             'eager-captures': 'Current-source eager-capture comparison: reference compiler restores only constant-only capture hoisting; both compilers retain scalar recording stack storage. ',
             'array-lists': 'One current compiler with FWP_ARRAY_FUSION explicitly 1 versus 0. This toggles all numeric array fusion, including result formatting, so whole-solve differences are not attributed solely to gradient-list removal. Independent direct-boundary counts establish that removal. ',
+            'callback-owners': 'Same-source compilers differ only in complete field-owner moves and numeric callback input owners. Both preserve packed temporary storage, all map/fold arithmetic and callback order. ',
             'packed-records': 'Same-source compilers differ only in packed temporary numeric-record storage. Both keep all existing map/fold optimizations and preserve complete mapping before folding. ',
             'record-fold': 'Same-source compilers differ only in direct numeric-record left-fold selection. Both retain numeric record zip/map fusion and all other current optimizations. ',
             'record-zip': 'Same-source compilers differ only in flat numeric record zip/map selection. Both retain the existing scalar numeric zip/map fusion and all other current optimizations. ',
