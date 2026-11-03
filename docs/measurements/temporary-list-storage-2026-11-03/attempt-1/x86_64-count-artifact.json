@@ -1,0 +1,20 @@
+{
+  "id": 13204505845,
+  "node_id": "MDg6QXJ0aWZhY3QxMzIwNDUwNTg0NQ==",
+  "name": "constructor-census-x86_64",
+  "size_in_bytes": 33971086,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13204505845",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13204505845/zip",
+  "expired": false,
+  "digest": "sha256:7ba7feba54a60c6984613e105a0f2f8f117cb64fed1e35526ff8170bcd5f15b6",
+  "created_at": "2026-11-03T04:20:37Z",
+  "updated_at": "2026-11-03T04:20:37Z",
+  "expires_at": "2027-02-01T04:07:30Z",
+  "workflow_run": {
+    "id": 41576241072,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "temporary-list-storage",
+    "head_sha": "6f4cd46b2623cdbddd7419d18f44a66898891272"
+  }
+}

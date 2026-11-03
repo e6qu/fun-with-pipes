@@ -1,0 +1,1524 @@
+{
+  "conclusion": "failure",
+  "jobs": [
+    {
+      "completedAt": "2026-11-03T03:35:44Z",
+      "conclusion": "failure",
+      "databaseId": 125709105035,
+      "name": "derivative_forward_costs (ubuntu-24.04-arm, aarch64, armv8-a)",
+      "startedAt": "2026-11-03T03:33:15Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-11-03T03:33:17Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-11-03T03:33:15Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-03T03:33:27Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v7",
+          "number": 2,
+          "startedAt": "2026-11-03T03:33:17Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-03T03:33:27Z",
+          "conclusion": "success",
+          "name": "Require the verified production compiler for the diagnostic census",
+          "number": 3,
+          "startedAt": "2026-11-03T03:33:27Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-03T03:33:30Z",
+          "conclusion": "success",
+          "name": "Run dtolnay/rust-toolchain@stable",
+          "number": 4,
+          "startedAt": "2026-11-03T03:33:27Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-03T03:33:53Z",
+          "conclusion": "success",
+          "name": "Observer and phase boundary controls",
+          "number": 5,
+          "startedAt": "2026-11-03T03:33:30Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-03T03:33:54Z",
+          "conclusion": "success",
+          "name": "Run actions/cache@v6",
+          "number": 6,
+          "startedAt": "2026-11-03T03:33:53Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-03T03:35:33Z",
+          "conclusion": "success",
+          "name": "Fetch locked dependencies and build the current compiler",
+          "number": 7,
+          "startedAt": "2026-11-03T03:33:54Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-03T03:35:33Z",
+          "conclusion": "skipped",
+          "name": "Packed record compiler and affected target lint",
+          "number": 8,
+          "startedAt": "2026-11-03T03:35:33Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-03T03:35:33Z",
+          "conclusion": "skipped",
+          "name": "Packed record evaluation order, aliases and existing unwind regressions",
+          "number": 9,
+          "startedAt": "2026-11-03T03:35:33Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-03T03:35:33Z",
+          "conclusion": "skipped",
+          "name": "Packed record controls with Clang",
+          "number": 10,
+          "startedAt": "2026-11-03T03:35:33Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-03T03:35:33Z",
+          "conclusion": "skipped",
+          "name": "Record eligibility and affected target lint",
+          "number": 11,
+          "startedAt": "2026-11-03T03:35:33Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-03T03:35:33Z",
+          "conclusion": "skipped",
+          "name": "Record pair values, aliases, failures, cancellation and derivative controls",
+          "number": 12,
+          "startedAt": "2026-11-03T03:35:33Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-03T03:35:33Z",
+          "conclusion": "skipped",
+          "name": "Record fold nonlocal cleanup and cancellation controls",
+          "number": 13,
+          "startedAt": "2026-11-03T03:35:33Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-03T03:35:39Z",
+          "conclusion": "failure",
+          "name": "Native known-work controls and all six derivative inputs",
+          "number": 14,
+          "startedAt": "2026-11-03T03:35:33Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-03T03:35:39Z",
+          "conclusion": "failure",
+          "name": "Independently reconstruct every constructor source and count",
+          "number": 15,
+          "startedAt": "2026-11-03T03:35:39Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-03T03:35:41Z",
+          "conclusion": "success",
+          "name": "Preserve the constructor audit and its exact archive",
+          "number": 16,
+          "startedAt": "2026-11-03T03:35:39Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-03T03:35:42Z",
+          "conclusion": "success",
+          "name": "Preserve complete and rejected observations",
+          "number": 17,
+          "startedAt": "2026-11-03T03:35:41Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-03T03:35:42Z",
+          "conclusion": "skipped",
+          "name": "Preserve focused record ownership probes and target logs",
+          "number": 18,
+          "startedAt": "2026-11-03T03:35:42Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-03T03:35:42Z",
+          "conclusion": "skipped",
+          "name": "Post Run actions/cache@v6",
+          "number": 35,
+          "startedAt": "2026-11-03T03:35:42Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-03T03:35:42Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v7",
+          "number": 36,
+          "startedAt": "2026-11-03T03:35:42Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-03T03:35:43Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 37,
+          "startedAt": "2026-11-03T03:35:42Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709105035"
+    },
+    {
+      "completedAt": "2026-11-03T03:37:25Z",
+      "conclusion": "failure",
+      "databaseId": 125709105402,
+      "name": "derivative_forward_costs (ubuntu-latest, x86_64, x86-64)",
+      "startedAt": "2026-11-03T03:35:09Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-11-03T03:35:10Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-11-03T03:35:09Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-03T03:35:21Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v7",
+          "number": 2,
+          "startedAt": "2026-11-03T03:35:10Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-03T03:35:21Z",
+          "conclusion": "success",
+          "name": "Require the verified production compiler for the diagnostic census",
+          "number": 3,
+          "startedAt": "2026-11-03T03:35:21Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-03T03:35:22Z",
+          "conclusion": "success",
+          "name": "Run dtolnay/rust-toolchain@stable",
+          "number": 4,
+          "startedAt": "2026-11-03T03:35:21Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-03T03:35:38Z",
+          "conclusion": "success",
+          "name": "Observer and phase boundary controls",
+          "number": 5,
+          "startedAt": "2026-11-03T03:35:22Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-03T03:35:39Z",
+          "conclusion": "success",
+          "name": "Run actions/cache@v6",
+          "number": 6,
+          "startedAt": "2026-11-03T03:35:38Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-03T03:37:14Z",
+          "conclusion": "success",
+          "name": "Fetch locked dependencies and build the current compiler",
+          "number": 7,
+          "startedAt": "2026-11-03T03:35:39Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-03T03:37:14Z",
+          "conclusion": "skipped",
+          "name": "Packed record compiler and affected target lint",
+          "number": 8,
+          "startedAt": "2026-11-03T03:37:14Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-03T03:37:14Z",
+          "conclusion": "skipped",
+          "name": "Packed record evaluation order, aliases and existing unwind regressions",
+          "number": 9,
+          "startedAt": "2026-11-03T03:37:14Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-03T03:37:14Z",
+          "conclusion": "skipped",
+          "name": "Packed record controls with Clang",
+          "number": 10,
+          "startedAt": "2026-11-03T03:37:14Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-03T03:37:14Z",
+          "conclusion": "skipped",
+          "name": "Record eligibility and affected target lint",
+          "number": 11,
+          "startedAt": "2026-11-03T03:37:14Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-03T03:37:14Z",
+          "conclusion": "skipped",
+          "name": "Record pair values, aliases, failures, cancellation and derivative controls",
+          "number": 12,
+          "startedAt": "2026-11-03T03:37:14Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-03T03:37:14Z",
+          "conclusion": "skipped",
+          "name": "Record fold nonlocal cleanup and cancellation controls",
+          "number": 13,
+          "startedAt": "2026-11-03T03:37:14Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-03T03:37:20Z",
+          "conclusion": "failure",
+          "name": "Native known-work controls and all six derivative inputs",
+          "number": 14,
+          "startedAt": "2026-11-03T03:37:14Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-03T03:37:21Z",
+          "conclusion": "failure",
+          "name": "Independently reconstruct every constructor source and count",
+          "number": 15,
+          "startedAt": "2026-11-03T03:37:20Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-03T03:37:22Z",
+          "conclusion": "success",
+          "name": "Preserve the constructor audit and its exact archive",
+          "number": 16,
+          "startedAt": "2026-11-03T03:37:21Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-03T03:37:23Z",
+          "conclusion": "success",
+          "name": "Preserve complete and rejected observations",
+          "number": 17,
+          "startedAt": "2026-11-03T03:37:22Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-03T03:37:23Z",
+          "conclusion": "skipped",
+          "name": "Preserve focused record ownership probes and target logs",
+          "number": 18,
+          "startedAt": "2026-11-03T03:37:23Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-03T03:37:23Z",
+          "conclusion": "skipped",
+          "name": "Post Run actions/cache@v6",
+          "number": 35,
+          "startedAt": "2026-11-03T03:37:23Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-03T03:37:24Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v7",
+          "number": 36,
+          "startedAt": "2026-11-03T03:37:23Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-03T03:37:24Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 37,
+          "startedAt": "2026-11-03T03:37:24Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709105402"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709106420,
+      "name": "retained_comparisons",
+      "startedAt": "2026-11-03T03:31:34Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709106420"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709106474,
+      "name": "coordinate_work",
+      "startedAt": "2026-11-03T03:31:34Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709106474"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709106528,
+      "name": "scalar_array_checks",
+      "startedAt": "2026-11-03T03:31:34Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709106528"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709106536,
+      "name": "numeric_owner_checks",
+      "startedAt": "2026-11-03T03:31:34Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709106536"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709106539,
+      "name": "heap_checks",
+      "startedAt": "2026-11-03T03:31:34Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709106539"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709106543,
+      "name": "buffer_peer_checks",
+      "startedAt": "2026-11-03T03:31:34Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709106543"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709106547,
+      "name": "buffer_baselines",
+      "startedAt": "2026-11-03T03:31:34Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709106547"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709106567,
+      "name": "matrix_checks",
+      "startedAt": "2026-11-03T03:31:34Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709106567"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709106572,
+      "name": "kernel_baselines",
+      "startedAt": "2026-11-03T03:31:34Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709106572"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709106606,
+      "name": "integer_counting",
+      "startedAt": "2026-11-03T03:31:34Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709106606"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709106613,
+      "name": "typed_derivative_owners",
+      "startedAt": "2026-11-03T03:31:34Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709106613"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709106615,
+      "name": "file_applications",
+      "startedAt": "2026-11-03T03:31:34Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709106615"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709106623,
+      "name": "record_fold_checks",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709106623"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709106624,
+      "name": "array_observations",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709106624"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709106646,
+      "name": "lexical_bindings",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709106646"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709106652,
+      "name": "numeric_input_analysis",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709106652"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709106666,
+      "name": "array_construction",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709106666"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709106673,
+      "name": "float_text_costs",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709106673"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709106714,
+      "name": "derivative_zero_codegen",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709106714"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709106720,
+      "name": "swift_peers",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709106720"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709106726,
+      "name": "array_construction_time",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709106726"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709106757,
+      "name": "unique_arrays",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709106757"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709106760,
+      "name": "record_fold_count_report",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709106760"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709106770,
+      "name": "array_text",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709106770"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709106793,
+      "name": "array_list_measurements",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709106793"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709106903,
+      "name": "current_kernel_report",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709106903"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709106932,
+      "name": "arc_costs",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709106932"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709106957,
+      "name": "pointer_ownership",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709106957"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709107006,
+      "name": "array_consumption",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709107006"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709107061,
+      "name": "callable_construction_diagnosis",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709107061"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709107162,
+      "name": "ownership_analysis",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709107162"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709107164,
+      "name": "http_mappings",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709107164"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709107181,
+      "name": "socket_inheritance",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709107181"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709107238,
+      "name": "descent_output",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709107238"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709107336,
+      "name": "arc_cost_audit",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709107336"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709107347,
+      "name": "file_inspection",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709107347"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709107405,
+      "name": "native_commands",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709107405"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709107425,
+      "name": "parser_workspace",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709107425"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709107439,
+      "name": "list_copy",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709107439"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709107490,
+      "name": "state_range_checks",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709107490"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709107500,
+      "name": "channel_transfer_costs",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709107500"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709107512,
+      "name": "task_cancellation_storage",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709107512"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709107528,
+      "name": "inline_key_time",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709107528"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709107566,
+      "name": "returned_callables",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709107566"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709107588,
+      "name": "parser_measurements",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709107588"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709107601,
+      "name": "pointer_width",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709107601"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709107625,
+      "name": "string_map",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709107625"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709107638,
+      "name": "scalar_text_memory",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709107638"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709107691,
+      "name": "direct_strings",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709107691"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709107769,
+      "name": "float_text",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709107769"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709107772,
+      "name": "queued_function_proof",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709107772"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709107794,
+      "name": "compiler_lifetimes",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709107794"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709107831,
+      "name": "eager_captures",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709107831"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709107859,
+      "name": "wordfreq_current",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709107859"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709108012,
+      "name": "functional_calls",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709108012"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709108129,
+      "name": "task_context_storage",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709108129"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:35Z",
+      "conclusion": "skipped",
+      "databaseId": 125709108396,
+      "name": "artifact_paths",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709108396"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:35Z",
+      "conclusion": "skipped",
+      "databaseId": 125709108542,
+      "name": "language",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709108542"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:35Z",
+      "conclusion": "skipped",
+      "databaseId": 125709108565,
+      "name": "shutdown",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709108565"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:35Z",
+      "conclusion": "skipped",
+      "databaseId": 125709108573,
+      "name": "function_captures",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709108573"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:35Z",
+      "conclusion": "skipped",
+      "databaseId": 125709108596,
+      "name": "integer_output_report",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709108596"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:35Z",
+      "conclusion": "skipped",
+      "databaseId": 125709108684,
+      "name": "hash_specialization_repeat",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709108684"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:35Z",
+      "conclusion": "skipped",
+      "databaseId": 125709108772,
+      "name": "repl_terminal",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709108772"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:35Z",
+      "conclusion": "skipped",
+      "databaseId": 125709108827,
+      "name": "hash_alias",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709108827"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:35Z",
+      "conclusion": "skipped",
+      "databaseId": 125709108849,
+      "name": "compiler_cache",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709108849"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:35Z",
+      "conclusion": "skipped",
+      "databaseId": 125709108869,
+      "name": "record_moves",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709108869"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:35Z",
+      "conclusion": "skipped",
+      "databaseId": 125709108979,
+      "name": "descent_batches",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709108979"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:35Z",
+      "conclusion": "skipped",
+      "databaseId": 125709108994,
+      "name": "wordfreq_repeat",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709108994"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:35Z",
+      "conclusion": "skipped",
+      "databaseId": 125709109025,
+      "name": "solvers",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709109025"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:35Z",
+      "conclusion": "skipped",
+      "databaseId": 125709109030,
+      "name": "server_checks",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709109030"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:35Z",
+      "conclusion": "skipped",
+      "databaseId": 125709109048,
+      "name": "console",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709109048"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:35Z",
+      "conclusion": "skipped",
+      "databaseId": 125709109082,
+      "name": "large_map",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709109082"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:35Z",
+      "conclusion": "skipped",
+      "databaseId": 125709109165,
+      "name": "map_storage",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709109165"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:35Z",
+      "conclusion": "skipped",
+      "databaseId": 125709109200,
+      "name": "ad_depth",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709109200"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:35Z",
+      "conclusion": "skipped",
+      "databaseId": 125709109243,
+      "name": "ci_profile",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709109243"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:35Z",
+      "conclusion": "skipped",
+      "databaseId": 125709109374,
+      "name": "collection_build",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709109374"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:35Z",
+      "conclusion": "skipped",
+      "databaseId": 125709109406,
+      "name": "collection_report",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709109406"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:35Z",
+      "conclusion": "skipped",
+      "databaseId": 125709109415,
+      "name": "library_results",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709109415"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:35Z",
+      "conclusion": "skipped",
+      "databaseId": 125709109419,
+      "name": "array_borrow",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709109419"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:35Z",
+      "conclusion": "skipped",
+      "databaseId": 125709109441,
+      "name": "entry_checks",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709109441"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:35Z",
+      "conclusion": "skipped",
+      "databaseId": 125709109468,
+      "name": "matrix_alias",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709109468"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:35Z",
+      "conclusion": "skipped",
+      "databaseId": 125709109469,
+      "name": "list_counts_wasi",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709109469"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:35Z",
+      "conclusion": "skipped",
+      "databaseId": 125709109492,
+      "name": "ad_application",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709109492"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:35Z",
+      "conclusion": "skipped",
+      "databaseId": 125709109496,
+      "name": "fixed_functions_wasi",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709109496"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:35Z",
+      "conclusion": "skipped",
+      "databaseId": 125709109529,
+      "name": "macos_shards",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709109529"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:35Z",
+      "conclusion": "skipped",
+      "databaseId": 125709109538,
+      "name": "autodiff",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709109538"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:35Z",
+      "conclusion": "skipped",
+      "databaseId": 125709109552,
+      "name": "matrix.part == 'ownership' && format('HTTP ownership ({0})', matrix.runner) || matrix.part == 'comparisons' && format('HTTP comparisons ({0})', matrix.runner) || matrix.part == 'client' && format('client checks ({0})', matrix.runner) || matrix.part == 'server' && format('server checks ({0})', matrix.runner) || format('paths ({0})', matrix.runner)",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709109552"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:35Z",
+      "conclusion": "skipped",
+      "databaseId": 125709109586,
+      "name": "descent_call_costs",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709109586"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:35Z",
+      "conclusion": "skipped",
+      "databaseId": 125709109595,
+      "name": "map_borrow",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709109595"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:35Z",
+      "conclusion": "skipped",
+      "databaseId": 125709109683,
+      "name": "wasm_ownership",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709109683"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:35Z",
+      "conclusion": "skipped",
+      "databaseId": 125709109707,
+      "name": "hash_report",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709109707"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:35Z",
+      "conclusion": "skipped",
+      "databaseId": 125709109721,
+      "name": "library",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709109721"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:35Z",
+      "conclusion": "skipped",
+      "databaseId": 125709109744,
+      "name": "wordfreq",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709109744"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:35Z",
+      "conclusion": "skipped",
+      "databaseId": 125709109749,
+      "name": "ad_metadata",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709109749"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:35Z",
+      "conclusion": "skipped",
+      "databaseId": 125709109801,
+      "name": "fixed_functions",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709109801"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:35Z",
+      "conclusion": "skipped",
+      "databaseId": 125709109817,
+      "name": "benchmark_comparison",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709109817"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:35Z",
+      "conclusion": "skipped",
+      "databaseId": 125709109824,
+      "name": "map_replay",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709109824"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:35Z",
+      "conclusion": "skipped",
+      "databaseId": 125709109833,
+      "name": "precision",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709109833"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:35Z",
+      "conclusion": "skipped",
+      "databaseId": 125709109834,
+      "name": "runtime_startup",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709109834"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:35Z",
+      "conclusion": "skipped",
+      "databaseId": 125709109841,
+      "name": "mapped_array_repeat",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709109841"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:35Z",
+      "conclusion": "skipped",
+      "databaseId": 125709109853,
+      "name": "comparison_selection",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709109853"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:35Z",
+      "conclusion": "skipped",
+      "databaseId": 125709109913,
+      "name": "numeric_fusion",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709109913"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:35Z",
+      "conclusion": "skipped",
+      "databaseId": 125709109953,
+      "name": "bundle_preflight",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709109953"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:35Z",
+      "conclusion": "skipped",
+      "databaseId": 125709110016,
+      "name": "portability",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709110016"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:35Z",
+      "conclusion": "skipped",
+      "databaseId": 125709110053,
+      "name": "windows_probe",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709110053"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:35Z",
+      "conclusion": "skipped",
+      "databaseId": 125709110102,
+      "name": "library_unload",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709110102"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:35Z",
+      "conclusion": "skipped",
+      "databaseId": 125709110406,
+      "name": "performance",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709110406"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:35Z",
+      "conclusion": "skipped",
+      "databaseId": 125709110460,
+      "name": "descent_peers",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709110460"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:35Z",
+      "conclusion": "skipped",
+      "databaseId": 125709110490,
+      "name": "syntax",
+      "startedAt": "2026-11-03T03:31:35Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709110490"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709137533,
+      "name": "matrix_tables",
+      "startedAt": "2026-11-03T03:31:40Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709137533"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709140611,
+      "name": "kernel_codegen",
+      "startedAt": "2026-11-03T03:31:41Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709140611"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709149001,
+      "name": "scalar_array_time",
+      "startedAt": "2026-11-03T03:31:42Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709149001"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709149594,
+      "name": "scan_comparison",
+      "startedAt": "2026-11-03T03:31:42Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709149594"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709155912,
+      "name": "timing_diagnostics",
+      "startedAt": "2026-11-03T03:31:44Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709155912"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709160782,
+      "name": "swift_peer_report",
+      "startedAt": "2026-11-03T03:31:44Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709160782"
+    },
+    {
+      "completedAt": "2026-11-03T03:31:34Z",
+      "conclusion": "skipped",
+      "databaseId": 125709161416,
+      "name": "current_kernels",
+      "startedAt": "2026-11-03T03:31:45Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41572713222/job/125709161416"
+    }
+  ],
+  "status": "completed"
+}

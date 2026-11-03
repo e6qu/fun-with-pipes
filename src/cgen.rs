@@ -19,6 +19,7 @@ mod field_transfers;
 mod numeric_parameters;
 mod packed_records;
 mod regions;
+mod scalar_map_zip;
 mod scalar_text;
 mod sort_keys;
 mod string_map;
@@ -2570,6 +2571,24 @@ fn hof_sig(i: usize, sym: &str, k: usize) -> String {
 }
 
 impl Gen<'_> {
+    fn scalar_buffer_map(&self, callback: FuncId) -> String {
+        format!("    /* Eager scalar buffer: finish every map callback before zip. */\n    size_t count = fwp_list_len(l0);\n    if (count > (SIZE_MAX - sizeof(fwp_arr)) / sizeof(V)) fwp_trap(\"map too large\");\n    V buffer = fwp_rc_fresh(fwp_arr_new(count));\n    fwp_value_owner owner = {{buffer, fwp_rc_free_arr}};\n    fwp_cleanup cleanup; fwp_value_protect(&owner, &cleanup);\n    for (size_t i = 0; i < count; i++) {{\n        ARR(buffer)->d[i] = f{callback}(OBJ(l0)->f[0]);\n        l0 = OBJ(l0)->f[1];\n    }}\n    return fwp_value_finish(&owner, &cleanup);\n")
+    }
+
+    fn scalar_buffer_zip(&mut self, callback: FuncId, slot: usize) -> String {
+        assert!(slot < 2);
+        let other = 1 - slot;
+        let result = self.prog.funcs[callback].ty.params(2).1;
+        let result_list = MT::Con("std::List".into(), vec![result.clone()]);
+        let drop = self.value_drop(&result_list);
+        let arguments = if slot == 0 {
+            format!("ARR(l{slot})->d[i], items[i]")
+        } else {
+            format!("items[i], ARR(l{slot})->d[i]")
+        };
+        format!("    /* Zip after the complete scalar map; borrow buffer and source list. */\n    size_t count;\n    V *items = fwp_map_items(l{other}, &count);\n    fwp_map_owner owner = {{items, 0, 0, NULL, {drop}}};\n    fwp_cleanup cleanup; fwp_map_protect(&owner, &cleanup);\n    size_t buffered = ARR(l{slot})->len;\n    if (buffered < count) count = buffered;\n    for (size_t i = 0; i < count; i++) {{\n        items[i] = f{callback}({arguments});\n        owner.count++;\n    }}\n    return fwp_map_finish_protected(&owner, &cleanup);\n")
+    }
+
     fn packed_record_map(&mut self, id: FuncId) -> String {
         let function = &self.prog.funcs[id];
         let arity = function.arity as usize;
@@ -8176,6 +8195,8 @@ static inline __attribute__((always_inline)) int fs{}(fwp_loop_state{step} *st, 
                 | Body::RegionEntry { .. }
                 | Body::PackedRecordMap { .. }
                 | Body::PackedRecordFold { .. }
+                | Body::ScalarBufferMap { .. }
+                | Body::ScalarBufferZip { .. }
         ) {
             let sym = match &f.body {
                 Body::Prim(s) => s.as_str(),
@@ -8203,6 +8224,12 @@ static inline __attribute__((always_inline)) int fs{}(fwp_loop_state{step} *st, 
             }
         }
         match &f.body {
+            Body::ScalarBufferMap { callback } => {
+                out.push_str(&self.scalar_buffer_map(*callback));
+            }
+            Body::ScalarBufferZip { callback, slot } => {
+                out.push_str(&self.scalar_buffer_zip(*callback, *slot));
+            }
             Body::PackedRecordMap { callback } => {
                 out.push_str(&self.packed_record_map(*callback));
             }
@@ -10211,6 +10238,7 @@ fn generate_mode(prog: &Program, mut mode: Mode) -> Result<String, String> {
         _ => Vec::new(),
     };
     let mut numeric_program = packed_program;
+    scalar_map_zip::lower(&mut numeric_program);
     numeric_parameters::lower(&mut numeric_program, &roots);
     let prog = &numeric_program;
     crate::ir::check_locals(prog)?;

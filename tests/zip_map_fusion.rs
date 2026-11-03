@@ -1,6 +1,8 @@
 //! Eliminate numeric zip intermediates without moving effects or ownership.
 use std::process::{Command, Output};
 
+#[path = "support/allocation_report.rs"]
+mod allocation_report;
 #[path = "support/record_probe.rs"]
 mod record_probe;
 fn checked(command: &mut Command) -> Output {
@@ -464,5 +466,160 @@ fn zip_reclaims_partial_pairs_pending_fields_and_scratch_on_failure() {
                 "counted {opt}: {actual:?}"
             );
         }
+    }
+}
+
+#[test]
+fn scalar_map_buffers_preserve_eager_order_aliases_and_both_zip_slots() {
+    let dir = fwp::cgen::TempDir::new("scalar-map-zip-order").unwrap();
+    let input = dir.join("main.fwp");
+    std::fs::write(&input, include_str!("fixtures/scalar_map_zip_order.fwp")).unwrap();
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    let reference = checked(
+        Command::new(compiler)
+            .env("FWP_NO_OPT", "1")
+            .args(["run", "--interp"])
+            .arg(&input),
+    );
+    assert!(reference
+        .stdout
+        .starts_with(b"77\n1\n2\n77\n1\n2\n77\n(10, 101)\n"));
+    let interpreted = checked(
+        Command::new(compiler)
+            .env_remove("FWP_NO_OPT")
+            .args(["run", "--interp"])
+            .arg(&input),
+    );
+    assert_eq!(interpreted.stdout, reference.stdout);
+    assert_eq!(interpreted.stderr, reference.stderr);
+    for stack in ["0", "1"] {
+        for opt in ["-O1", "-O2"] {
+            let path = dir.join(format!("scalar-{stack}-{opt}.c"));
+            checked(
+                Command::new(compiler)
+                    .env("FWP_STACK", stack)
+                    .args(["build", "--memory", "dynamic", "--emit-c", opt])
+                    .arg(&input)
+                    .arg("-o")
+                    .arg(&path),
+            );
+            let code = std::fs::read_to_string(&path).unwrap();
+            assert!(
+                code.contains("Eager scalar buffer"),
+                "{stack}/{opt}: map not selected"
+            );
+            assert!(code.contains("Zip after the complete scalar map"));
+            let executable = dir.join(format!("scalar-{stack}-{opt}.exe"));
+            fwp::cgen::compile_c(&code, &executable, opt).unwrap();
+            let output = checked(Command::new(&executable).env("FWP_ALLOC_STATS", "1"));
+            record_probe::save(
+                "scalar_map_zip_order",
+                &format!("{stack}-{opt}"),
+                &code,
+                &executable,
+                &output,
+            );
+            assert_eq!(output.stdout, reference.stdout, "{stack}/{opt}");
+            let stats =
+                allocation_report::parse(std::str::from_utf8(&output.stderr).unwrap()).unwrap();
+            assert_eq!(stats.live, 0, "{stack}/{opt}: {stats:?}");
+        }
+    }
+}
+
+#[test]
+fn scalar_map_buffers_exclude_shared_results_captures_and_wide_values() {
+    let dir = fwp::cgen::TempDir::new("scalar-map-zip-exclusions").unwrap();
+    let cases = [
+        ("shared", "export run : List[I64] -> (List[I64], List[I64]) ! {IO}\nrun = fn xs -> let ys = map mapped xs in (zip-with sub ys xs, ys)\n", "mapped : I64 -> I64 ! {IO}\nmapped = fn n -> let printed = n | echo in n + 1\n"),
+        ("escape", "export run : List[I64] -> List[I64] ! {IO}\nrun = map mapped\n", "mapped : I64 -> I64 ! {IO}\nmapped = fn n -> let printed = n | echo in n + 1\n"),
+        ("capture", "export run : I64 -> List[I64] -> List[I64] ! {IO}\nrun = fn offset -> fn xs -> let ys = map (fn n -> let printed = n | echo in n + offset) xs in zip-with sub ys xs\n", ""),
+        ("dynamic", "export run : (I64 -> I64) -> List[I64] -> List[I64]\nrun = fn callback -> fn xs -> let ys = map callback xs in zip-with sub ys xs\n", ""),
+        ("dynamic-zip", "export run : (I64 -> I64 -> I64) -> List[I64] -> List[I64] ! {IO}\nrun = fn callback -> fn xs -> let ys = map mapped xs in zip-with callback ys xs\n", "mapped : I64 -> I64 ! {IO}\nmapped = fn n -> let printed = n | echo in n + 1\n"),
+        ("wide", "export run : List[F128] -> List[F128] ! {IO}\nrun = fn xs -> let ys = map mapped xs in zip-with sub ys xs\n", "mapped : F128 -> F128 ! {IO}\nmapped = fn n -> let printed = n | echo in n + 1.0f128\n"),
+    ];
+    for (name, body, helper) in cases {
+        let source = dir.join(format!("{name}.fwp"));
+        let output = dir.join(format!("{name}.c"));
+        std::fs::write(&source, format!("{helper}{body}")).unwrap();
+        checked(
+            Command::new(env!("CARGO_BIN_EXE_fwp"))
+                .args(["build", "--fn", "run", "--emit-c"])
+                .arg(&source)
+                .arg("-o")
+                .arg(&output),
+        );
+        let code = std::fs::read_to_string(output).unwrap();
+        assert!(!code.contains("Eager scalar buffer"), "{name}");
+        assert!(
+            !code.contains("Zip after the complete scalar map"),
+            "{name}"
+        );
+    }
+}
+
+#[test]
+fn scalar_map_buffers_keep_each_machine_number_representation() {
+    let dir = fwp::cgen::TempDir::new("scalar-map-zip-numbers").unwrap();
+    let types = [
+        ("I8", "i8"),
+        ("I16", "i16"),
+        ("I32", "i32"),
+        ("I64", "i64"),
+        ("ISize", "isize"),
+        ("U8", "u8"),
+        ("U16", "u16"),
+        ("U32", "u32"),
+        ("U64", "u64"),
+        ("USize", "usize"),
+        ("F32", "f32"),
+        ("F64", "f64"),
+    ];
+    let mut source = String::new();
+    let mut calls = Vec::new();
+    for (ty, suffix) in types {
+        let one = if ty.starts_with('F') {
+            format!("1.0{suffix}")
+        } else {
+            format!("1{suffix}")
+        };
+        let two = if ty.starts_with('F') {
+            format!("2.0{suffix}")
+        } else {
+            format!("2{suffix}")
+        };
+        source += &format!("mapped-{suffix} : {ty} -> {ty} ! {{IO}}\nmapped-{suffix} = fn n -> let printed = n | echo in n + {one}\nrun-{suffix} : List[{ty}] -> List[{ty}] ! {{IO}}\nrun-{suffix} = fn xs -> let ys = map mapped-{suffix} xs in zip-with add ys xs\n");
+        calls.push(format!("[{one}, {two}] | run-{suffix} | show"));
+    }
+    source += &format!("main = [{}] | each print\n", calls.join(", "));
+    let input = dir.join("numbers.fwp");
+    std::fs::write(&input, source).unwrap();
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    let reference = checked(
+        Command::new(compiler)
+            .env("FWP_NO_OPT", "1")
+            .args(["run", "--interp"])
+            .arg(&input),
+    );
+    let interpreted = checked(Command::new(compiler).args(["run", "--interp"]).arg(&input));
+    assert_eq!(interpreted.stdout, reference.stdout);
+    for opt in ["-O1", "-O2"] {
+        let cfile = dir.join(format!("numbers-{opt}.c"));
+        checked(
+            Command::new(compiler)
+                .args(["build", "--memory", "dynamic", "--emit-c", opt])
+                .arg(&input)
+                .arg("-o")
+                .arg(&cfile),
+        );
+        let code = std::fs::read_to_string(&cfile).unwrap();
+        assert_eq!(code.matches("Eager scalar buffer").count(), types.len());
+        let exe = dir.join(format!("numbers-{opt}.exe"));
+        fwp::cgen::compile_c(&code, &exe, opt).unwrap();
+        let output = checked(Command::new(&exe).env("FWP_ALLOC_STATS", "1"));
+        record_probe::save("scalar_map_zip_numbers", opt, &code, &exe, &output);
+        assert_eq!(output.stdout, reference.stdout, "{opt}");
+        let stats = allocation_report::parse(std::str::from_utf8(&output.stderr).unwrap()).unwrap();
+        assert_eq!(stats.live, 0, "{stats:?}");
     }
 }

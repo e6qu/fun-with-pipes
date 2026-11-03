@@ -68,6 +68,11 @@ class Evidence(unittest.TestCase):
                 '        descriptor++;\n    }\n}\n')
         self.assertEqual(SUMMARY.caller_lines(code), [(1, 1, 'first'), (3, 11, 'second')])
 
+    def test_kernel_and_multiline_function_parameters(self):
+        code = ('FWP_K V kernel(V value,\n    void (*drop)(V)) {\n    return value;\n}\n'
+                'static V other(V value,\n    int n) { return value; }\n')
+        self.assertEqual(SUMMARY.caller_lines(code), [(1, 4, 'kernel'), (5, 6, 'other')])
+
     def test_comparison_checks_attempts_and_preserves_effective_owners(self):
         old = ARC.parse_profile(self.evidence(self.rows, self.managed), self.sites)
         old['operations']['dup']['calls'] = 19

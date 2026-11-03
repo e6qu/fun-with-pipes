@@ -246,6 +246,8 @@ fn prove_cached(
             | Body::RegionCtor(_)
             | Body::PackedRecordMap { .. }
             | Body::PackedRecordFold { .. }
+            | Body::ScalarBufferMap { .. }
+            | Body::ScalarBufferZip { .. }
             | Body::RegionEntry { .. } => {
                 return None;
             }

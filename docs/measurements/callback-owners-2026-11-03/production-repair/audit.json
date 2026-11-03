@@ -1,0 +1,110 @@
+{
+  "head": "6ca3c41106d78f8251d3d59e3750470a3c270f68",
+  "testedTree": "ce8dab3adb4fca4643cd600286233ebf11d884bc",
+  "productionRun": 41557647177,
+  "documentationRun": 41557647102,
+  "jobs": [
+    {
+      "name": "macos (macos-15)",
+      "job": 125660332008,
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41557647177/job/125660332008",
+      "run": 41557647177,
+      "conclusion": "success",
+      "fullLog": "regular-macos-arm-full.log.gz",
+      "fullLogSha256": "0b38095772aad9a6468bb5820ef4e2c5e11a63bbba8d2cb93a7cad3611fc2eef",
+      "fullLogAudited": true
+    },
+    {
+      "name": "macos_ownership (macos-15-intel)",
+      "job": 125660332090,
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41557647177/job/125660332090",
+      "run": 41557647177,
+      "conclusion": "success",
+      "fullLog": "ownership-macos-amd-full.log.gz",
+      "fullLogSha256": "2c5a085431ad5dccb3956f3c582964defca5bff29d2563a29fed6b3db465bb45",
+      "fullLogAudited": true
+    },
+    {
+      "name": "test (ubuntu-latest)",
+      "job": 125660332137,
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41557647177/job/125660332137",
+      "run": 41557647177,
+      "conclusion": "success",
+      "fullLog": "linux-amd-full.log.gz",
+      "fullLogSha256": "ddaceaeda5b0c7d08a507d5d17ed8951ab71866374cbad097a07afb5ea082e38",
+      "fullLogAudited": true
+    },
+    {
+      "name": "macos_ownership (macos-15)",
+      "job": 125660332178,
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41557647177/job/125660332178",
+      "run": 41557647177,
+      "conclusion": "success",
+      "fullLog": "ownership-macos-arm-full.log.gz",
+      "fullLogSha256": "4edebcd3350cebe393046b99ebae3bca0786b73034a6fb7d870a84995e34b29f",
+      "fullLogAudited": true
+    },
+    {
+      "name": "bench",
+      "job": 125660332198,
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41557647177/job/125660332198",
+      "run": 41557647177,
+      "conclusion": "success",
+      "fullLog": "bench.log.gz",
+      "fullLogSha256": "fb0b60ba9fed07f341cb8a376b64aaa0cdaecff22a539de285a424759bed0f01",
+      "fullLogAudited": true
+    },
+    {
+      "name": "macos (macos-15-intel)",
+      "job": 125660332227,
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41557647177/job/125660332227",
+      "run": 41557647177,
+      "conclusion": "success",
+      "fullLog": "regular-macos-amd-full.log.gz",
+      "fullLogSha256": "7de266f4e2a2595f845913db7480fa759aca8233d35e14b3e9752ce034b0432f",
+      "fullLogAudited": true
+    },
+    {
+      "name": "test (ubuntu-24.04-arm)",
+      "job": 125660332303,
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41557647177/job/125660332303",
+      "run": 41557647177,
+      "conclusion": "success",
+      "fullLog": "linux-arm-full.log.gz",
+      "fullLogSha256": "c5d2e7b98104871af272e7ed54364bedb7f08bcd9681bb6d9e94255bc45ea196",
+      "fullLogAudited": true
+    },
+    {
+      "name": "windows / native (windows-2025)",
+      "job": 125660332388,
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41557647177/job/125660332388",
+      "run": 41557647177,
+      "conclusion": "success",
+      "fullLog": "windows-amd-full.log.gz",
+      "fullLogSha256": "017fc06bf873d61776726b87ec7649d5b42a3cf075c5218eb0a6946be06b9986",
+      "fullLogAudited": true
+    },
+    {
+      "name": "windows / native (windows-11-arm)",
+      "job": 125660332407,
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41557647177/job/125660332407",
+      "run": 41557647177,
+      "conclusion": "success",
+      "fullLog": "windows-arm-full.log.gz",
+      "fullLogSha256": "404c3a3b9668e9dc70e2b40dc8de3552009176e922ffc3391013e3b81625635e",
+      "fullLogAudited": true
+    },
+    {
+      "name": "roadmap_docs",
+      "job": 125660331430,
+      "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41557647102/job/125660331430",
+      "run": 41557647102,
+      "conclusion": "success",
+      "fullLog": "docs.log.gz",
+      "fullLogSha256": "6f4acb99ea261dbaf284f9b9718d77d508e4b8ed012a4510faeec28c8edcec80",
+      "fullLogAudited": true
+    }
+  ],
+  "diagnostics": "Windows: eight entry-panic and eight child-panic controls per job, with successful cleanup assertions. Documentation: expected synthetic runner failures. No unexpected diagnostics.",
+  "ignored": "Explicit measurement jobs and Linux-only /proc checks are retained as exclusions, not platform-support evidence."
+}

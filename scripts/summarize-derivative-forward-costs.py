@@ -122,7 +122,8 @@ def audit(path, source, machine, comparison, baseline):
         report = json.loads(archive.read('report.json'))
         assert report['source'] == source and report['machine'] == machine
         assert report.get('complete') is True
-        if comparison in ('record-zip', 'record-fold', 'packed-records', 'field-owners', 'numeric-inputs'):
+        census = comparison in ('constructor-census', 'scalar-map-zip')
+        if comparison in ('record-zip', 'record-fold', 'packed-records', 'field-owners', 'numeric-inputs', 'constructor-census', 'scalar-map-zip'):
             assert report['comparison'] == dict(policy=comparison, baselineSource=baseline['source'])
             assert report['cc'] == baseline['hosts'][machine]['cc']
         else:
@@ -135,7 +136,7 @@ def audit(path, source, machine, comparison, baseline):
         assert set(report['controls']) == {'O1', 'O2'}
         compilations = [row['command'] for row in report['commands']
                         if '-std=gnu11' in row['command']]
-        assert len(compilations) == 82  # 10 controls + 24 cases times three images
+        assert len(compilations) == (118 if census else 82)
         for command in compilations:
             assert Path(command[0]).name == 'gcc'
             assert {'-ffp-contract=off', '-fno-fast-math', '-fno-lto', '-Werror',
@@ -147,7 +148,10 @@ def audit(path, source, machine, comparison, baseline):
             assert opt in ('O1', 'O2') and '-' + opt in command
         for row in report['commands']:
             assert 'timeout' not in row
-            assert row['returncode'] == (233 if Path(row['command'][0]).name == 'unfinished.exe' else 0)
+            executable = Path(row['command'][0]).name
+            expected_return = (233 if executable == 'unfinished.exe' else
+                               234 if census and executable in ('unknown-site.exe', 'mixed-shape.exe') else 0)
+            assert row['returncode'] == expected_return
         for opt, controls in report['controls'].items():
             assert set(controls) == {'complete', 'missing-allocation', 'missing-retain', 'wrong-phase', 'unfinished'}
             root = 'control-' + opt + '/'
@@ -163,6 +167,44 @@ def audit(path, source, machine, comparison, baseline):
                 else:
                     raise AssertionError('broken observer accepted: ' + label)
             assert b'incomplete or unsupported phase sequence' in archive.read(root + 'unfinished.stderr')
+        if census:
+            assert set(report['constructors']['controls']) == {'O1', 'O2'}
+            assert set(report['constructors']['cases']) == expected_cases
+            for opt, controls in report['constructors']['controls'].items():
+                root = 'constructor-control-' + opt + '/'
+                ordinary = archive.read(root + 'ordinary.c').decode()
+                detailed, sites, bases = PROFILE.instrument(
+                    MEASURE.control_source(ordinary, MEASURE.CONSTRUCTOR.CONTROL))
+                assert detailed == archive.read(root + 'detailed.c').decode()
+                assert sites == json.loads(archive.read(root + 'sites.json'))
+                for filename, text in bases.items():
+                    assert text == archive.read(root + filename).decode()
+                code, constructors = MEASURE.CONSTRUCTOR.instrument(detailed)
+                assert constructors == json.loads(archive.read(root + 'constructor-sites.json'))
+                allocators = MEASURE.CONSTRUCTOR.data_allocator_sites(bases['allocation-base.c'], sites['allocations'])
+                variants = MEASURE.CONSTRUCTOR.control_variants(code, constructors)
+                assert set(controls) == set(variants)
+                for label, text in variants.items():
+                    assert text == archive.read(root + label + '.c').decode()
+                    IMAGES.instruction_bytes(archive.read(root + label + '.exe'), machine)
+                    assert not archive.read(root + label + '.stdout')
+                    stderr = archive.read(root + label + '.stderr')
+                    if label in ('unknown-site', 'mixed-shape'):
+                        diagnostic = (b'invalid constructor site or phase' if label == 'unknown-site'
+                                      else b'mixed constructor shape')
+                        assert diagnostic in stderr
+                        assert controls[label] == 'rejected invalid constructor attribution'
+                        continue
+                    try:
+                        parsed, rows = MEASURE.CONSTRUCTOR.parse(stderr, constructors, allocators,
+                                                                sites, 2, 1, False)
+                        MEASURE.CONSTRUCTOR.check_control(parsed, rows, constructors)
+                    except AssertionError:
+                        assert label != 'complete'
+                        assert controls[label] == 'rejected inconsistent counts or cleanup'
+                    else:
+                        assert label == 'complete'
+                        assert controls[label] == dict(profile=parsed, rows=rows)
         cases = {}
         for dimensions, updates in MEASURE.CASES:
             expected = MEASURE.AD.analytic(dimensions, updates + 1)
@@ -176,6 +218,20 @@ def audit(path, source, machine, comparison, baseline):
                     sites = json.loads(archive.read(root + 'sites.json'))
                     observations = report['cases'][name]
                     assert set(observations) == {'0', '1'}
+                    if census:
+                        ordinary_source = archive.read(root + 'ordinary.c').decode()
+                        detailed, regenerated_sites, bases = PROFILE.instrument(ordinary_source)
+                        assert detailed == archive.read(root + 'detailed.c').decode()
+                        assert sites == regenerated_sites
+                        for filename, text in bases.items():
+                            assert text == archive.read(root + filename).decode()
+                        instrumented, constructors = MEASURE.CONSTRUCTOR.instrument(detailed)
+                        assert instrumented == archive.read(root + 'constructors.c').decode()
+                        assert constructors == json.loads(archive.read(root + 'constructor-sites.json'))
+                        allocators = MEASURE.CONSTRUCTOR.data_allocator_sites(bases['allocation-base.c'], sites['allocations'])
+                        counts = report['constructors']['cases'][name]
+                        assert set(counts) == {'0', '1'}
+                        IMAGES.instruction_bytes(archive.read(root + 'constructors.exe'), machine)
                     for workspace in (0, 1):
                         suffix = f'-workspace{workspace}'
                         ordinary = archive.read(root + 'ordinary' + suffix + '.stdout')
@@ -188,6 +244,12 @@ def audit(path, source, machine, comparison, baseline):
                         assert parsed == observations[str(workspace)]
                         managed, raw = MEASURE.parse_totals(archive.read(root + 'totals' + suffix + '.stderr'))
                         assert managed == parsed['totals']['managed'] and raw == parsed['raw']
+                        if census:
+                            assert archive.read(root + 'constructors' + suffix + '.stdout') == ordinary
+                            observed, rows = MEASURE.CONSTRUCTOR.parse(
+                                archive.read(root + 'constructors' + suffix + '.stderr'),
+                                constructors, allocators, sites, dimensions, updates, bool(workspace))
+                            assert observed == parsed and rows == counts[str(workspace)]
                     active_sites = attributed_sites(archive, root, sites, observations)
                     ordinary = archive.read(root + 'ordinary.exe')
                     # Use the existing section/header reader; never execute saved images.
@@ -201,6 +263,10 @@ def audit(path, source, machine, comparison, baseline):
                         binaryBytes=len(ordinary), textBytes=text_bytes,
                         frames=archive.read(frames[0]).decode(),
                         binarySha256=report['files'][root + 'ordinary.exe'])
+                    if census:
+                        active = {row['site'] for rows in counts.values() for row in rows}
+                        cases[name]['constructors'] = dict(counts=counts,
+                            sites=[site for site in constructors if site['id'] in active])
                     if comparison == 'field-owners':
                         cases[name]['fieldOwners'] = field_owner_sites(
                             archive.read(root + 'ownership-base.c').decode(), active_sites,
@@ -243,7 +309,7 @@ def main():
     parser.add_argument('--source', required=True)
     parser.add_argument('--run', required=True)
     parser.add_argument('--output', required=True, type=Path)
-    parser.add_argument('--comparison', required=True, choices=('baseline', 'record-zip', 'record-fold', 'packed-records', 'field-owners', 'numeric-inputs'))
+    parser.add_argument('--comparison', required=True, choices=('baseline', 'record-zip', 'record-fold', 'packed-records', 'field-owners', 'numeric-inputs', 'constructor-census', 'scalar-map-zip'))
     parser.add_argument('--baseline', type=Path)
     args = parser.parse_args()
     assert re.fullmatch('[0-9a-f]{40}', args.source) and args.run.isdigit()

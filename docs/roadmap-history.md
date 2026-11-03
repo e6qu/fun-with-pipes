@@ -6,6 +6,29 @@ and complete platform validation are different events. Measurements retain their
 original source and settings; old numbers are not measurements of current main.
 The linked PRs, runs and data records supply the detailed evidence.
 
+## Numeric callback owner transfers (PR #249)
+
+[PR #249](https://github.com/e6qu/fun-with-pipes/pull/249) merged November 3 as
+`46af240b8c540746b942b687b416cd52f6a91f9e`. All nine
+[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/41557647177)
+and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/41557647102)
+pass on `6ca3c41106d78f8251d3d59e3750470a3c270f68`; every full job and target log
+was audited. The squash has the identical tested tree and a verified 56-character
+single-line message with no body or trailers.
+[Gate identities and logs](measurements/callback-owners-2026-11-03/final-gates.json).
+
+Complete-field moves and numeric callback inputs remove unnecessary owners.
+The largest saved solve drops from 77,411 to 995 retains, with unchanged allocation
+traffic and peak managed storage. Complete solves take 5.2–6.4% less time in the
+largest cases; smaller-case speed/noise goals stay open. The numeric-input pass's
+compiler-cost comparison passes its time/RSS limits.
+[Results, comparison boundaries and failures](measurements/derivative-owner-transfers.md).
+
+The original matrix's only failures were a unit-test box-allocation lint. The
+repair reuses the box and includes library tests in the early all-target lint.
+Both attempts' complete logs are retained. Duplicate same-tree main runs
+`41569903194` and `41569903295` were cancelled after squash verification.
+
 ## Packed temporary numeric records (PR #248)
 
 [PR #248](https://github.com/e6qu/fun-with-pipes/pull/248) merged November 2 as

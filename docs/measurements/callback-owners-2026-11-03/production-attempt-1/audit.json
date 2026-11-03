@@ -1,0 +1,99 @@
+{
+  "run": 41554814165,
+  "source": "82dc81d845d1ab0d88c359aa9f1ca6f3164b5a9f",
+  "conclusion": "failure",
+  "repairSource": "6ca3c41106d78f8251d3d59e3750470a3c270f68",
+  "rootCause": "Clippy replace_box in a field-transfer unit-test helper; no other failed step or unexpected diagnostic in any job.",
+  "windowsNegativeControls": "Each full Windows log contains eight entry-panic and eight child-panic controls from the successful scheduler cleanup test.",
+  "jobs": [
+    {
+      "job": 125651000542,
+      "name": "bench",
+      "conclusion": "success",
+      "failedSteps": [],
+      "fullLog": "bench.log.gz",
+      "fullLogSha256": "65ba9b450b75bec50b489f5567b2564b55cb646b219b61adbd7c1a111f3b7aaa",
+      "fullLogAudited": true
+    },
+    {
+      "job": 125651000695,
+      "name": "macos (macos-15)",
+      "conclusion": "failure",
+      "failedSteps": [
+        "clippy"
+      ],
+      "fullLog": "regular-macos-arm-full.log.gz",
+      "fullLogSha256": "8f8d3c6866a09c902eb46daca334f27465f1c34885e66face06ad515bb9621b9",
+      "fullLogAudited": true
+    },
+    {
+      "job": 125651000710,
+      "name": "macos (macos-15-intel)",
+      "conclusion": "failure",
+      "failedSteps": [
+        "clippy"
+      ],
+      "fullLog": "macos-regular-amd-full.log.gz",
+      "fullLogSha256": "90db20165217e764f70895b3f7d48232923d2ad68ce6c177019cd5e60c3779f8",
+      "fullLogAudited": true
+    },
+    {
+      "job": 125651000718,
+      "name": "macos_ownership (macos-15-intel)",
+      "conclusion": "success",
+      "failedSteps": [],
+      "fullLog": "ownership-macos-amd-full.log.gz",
+      "fullLogSha256": "fcec1108d86f32099989bcf0d363dc9bba1d04269f0525081b8efef99b65e8ac",
+      "fullLogAudited": true
+    },
+    {
+      "job": 125651000751,
+      "name": "test (ubuntu-24.04-arm)",
+      "conclusion": "failure",
+      "failedSteps": [
+        "clippy"
+      ],
+      "fullLog": "linux-arm-full.log.gz",
+      "fullLogSha256": "bdb33513735a5ca17c1b24cf15079dd984d7b44cbf94bd116a5239d52218d6e6",
+      "fullLogAudited": true
+    },
+    {
+      "job": 125651000804,
+      "name": "test (ubuntu-latest)",
+      "conclusion": "failure",
+      "failedSteps": [
+        "clippy"
+      ],
+      "fullLog": "linux-amd-full.log.gz",
+      "fullLogSha256": "cc02f6d5cb3902b5e4ab63e8acda2c883901e36364c7047a33cf9c4905c92df8",
+      "fullLogAudited": true
+    },
+    {
+      "job": 125651000843,
+      "name": "windows / native (windows-2025)",
+      "conclusion": "success",
+      "failedSteps": [],
+      "fullLog": "windows-amd-full.log.gz",
+      "fullLogSha256": "cd7a216eced2dbd14861756a4d77734ff8cbabe56c1047e309b9d8ecf2380173",
+      "fullLogAudited": true
+    },
+    {
+      "job": 125651000943,
+      "name": "windows / native (windows-11-arm)",
+      "conclusion": "success",
+      "failedSteps": [],
+      "fullLog": "windows-arm-full.log.gz",
+      "fullLogSha256": "f8d1fff01c36ad7577884aae279346affb0043cb78bae28b18c3ebaecb7a216d",
+      "fullLogAudited": true
+    },
+    {
+      "job": 125651000964,
+      "name": "macos_ownership (macos-15)",
+      "conclusion": "success",
+      "failedSteps": [],
+      "fullLog": "ownership-macos-arm-full.log.gz",
+      "fullLogSha256": "a6ca6e47ba3126387882a0995c2d7f15b451c67deec85baa8f27f99d15fd51fe",
+      "fullLogAudited": true
+    }
+  ]
+}

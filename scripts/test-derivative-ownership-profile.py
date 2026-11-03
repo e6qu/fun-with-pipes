@@ -43,6 +43,25 @@ class Evidence(unittest.TestCase):
         self.assertEqual(result['phases']['forwardWithRecording']['requests'], 1)
         self.assertEqual(result['phases']['retirement']['operations']['release_last']['last'], 1)
 
+    def test_scalar_map_zip_requires_exact_predicted_savings(self):
+        baseline = json.loads(gzip.decompress((PROFILE.ARC.ROOT /
+            'docs/measurements/temporary-list-census-2026-11-03/verified-counts.json.gz').read_bytes()))
+        report = dict(machine='aarch64', cases={name: copy.deepcopy(case['observations'])
+            for name, case in baseline['hosts']['aarch64']['cases'].items()})
+        self.assertTrue(MEASURE.comparison_failures(report, baseline, 'scalar-map-zip'))
+        for name, modes in report['cases'].items():
+            dimensions, updates = map(int, name.split('-')[:2])
+            for observation in modes.values():
+                managed = observation['totals']['managed']
+                managed['requests'] -= (dimensions + 1) * updates
+                managed['requestedBytes'] -= (32 * dimensions + 8) * updates
+        self.assertEqual(MEASURE.comparison_failures(report, baseline, 'scalar-map-zip'), [])
+        for field in ('requests', 'requestedBytes', 'retains', 'peakChargedBytes', 'finalChargedBytes'):
+            changed = copy.deepcopy(report)
+            changed['cases']['129-199-current-O2']['0']['totals']['managed'][field] += 1
+            with self.subTest(field=field):
+                self.assertTrue(MEASURE.comparison_failures(changed, baseline, 'scalar-map-zip'))
+
     def test_known_work_rejects_valid_but_wrong_phase_assignment(self):
         phases = {}
         for phase, name in enumerate(PROFILE.PHASES):

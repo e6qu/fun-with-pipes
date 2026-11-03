@@ -342,7 +342,10 @@ pub(crate) fn infer(
         match &f.body {
             Body::Expr(body) => references(body, &mut graph[id], &mut values),
             Body::Remote(remote) => values.extend(remote.iter_fn),
-            Body::PackedRecordMap { callback } | Body::PackedRecordFold { callback } => {
+            Body::PackedRecordMap { callback }
+            | Body::PackedRecordFold { callback }
+            | Body::ScalarBufferMap { callback }
+            | Body::ScalarBufferZip { callback, .. } => {
                 graph[id].insert(*callback);
                 // Generated calls preserve the callback's original owning ABI.
                 values.insert(*callback);

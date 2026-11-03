@@ -475,6 +475,30 @@ final production jobs and documentation pass for PR #248. See the
 [measurement report](measurements/derivative-temporary-storage-2026-11-02/README.md)
 for selection limits, deliberate missing-destruction tests and open timing goals.
 
+### Temporary scalar map inputs to zip
+
+A private mapped list used only by one `zip-with` can keep its numbers in one
+buffer. For example, scaling `[1.0, 2.0]` by `0.1`, then subtracting those results
+from `[10.0, 20.0]`, still produces `[9.9, 19.8]`:
+
+```text
+map every input → buffer [0.1, 0.2] → zip with [10.0, 20.0] → list [9.9, 19.8]
+```
+
+The map still finishes first, even if the other list is empty or shorter.
+`src/cgen/scalar_map_zip.rs` proves one use through local aliases, requires known
+scalar callbacks and keeps both calls at their original positions. Shared or
+escaping results and values with child owners retain their ordinary storage.
+The buffer and zip's output scratch remain protected during callbacks; neither
+source list is mutated.
+
+The [first native run](measurements/temporary-list-storage-2026-11-03/README.md)
+verifies behavior, cleanup and exact allocation savings on GCC/Clang ARM64/AMD64.
+A unit-test compilation repair, compiler/runtime timings and final platform gates
+remain open. The [frozen contract](measurements/temporary-list-storage.md#selected-storage-change)
+and [starting census](measurements/temporary-list-census-2026-11-03/README.md)
+define the comparison.
+
 ### Numeric callback inputs
 
 A record such as `(value, operation-id)` contains two numbers but can still have
@@ -501,7 +525,8 @@ values; mixed callbacks still prepare the boxed argument they require.
 This rule preserves source types, curried pipes, callback order and cancellation
 checks. It introduces no source syntax or runtime ownership guess.
 [Evidence](measurements/derivative-owner-transfers.md) records count savings,
-source/native controls and the remaining compiler/runtime timing requirements.
+source/native controls, verified compiler-cost limits and remaining runtime
+timing goals.
 
 ## Numerical specialization
 
@@ -583,14 +608,15 @@ ascending inner-index order. Multiply and add remain separate. Shape validation
 precedes the specialized work; malformed cast shapes retain their specified
 library behavior. Wider arithmetic and floating formats keep their own contracts.
 
-The current candidate computes two adjacent columns together, then one scalar
+The implemented loop computes two adjacent columns together, then one scalar
 column if the tile width is odd. It preserves each cell's arithmetic order and
 uses fixed-size byte copies, including for overlapping read-only input views.
 Both GCC targets vectorize the pair; focused GCC/Clang safety checks pass.
 [The matrix results](measurements/matrix-calculation-costs.md#results-november-2-2026)
 show about 33% less calculation time on ARM64 and 31% less for large AMD64
-products, with unchanged managed storage. Small AMD64 timings remain inconclusive;
-final production acceptance is still pending.
+products, with unchanged managed storage. Small AMD64 timings remain inconclusive.
+[PR #244](roadmap-history.md#paired-matrix-columns-pr-244) passed all nine
+production jobs and documentation; those timing goals remain separate.
 
 A numeric derivative tape records two parents and local derivative weights per
 operation. Its backward workspace need only reach the last requested output;

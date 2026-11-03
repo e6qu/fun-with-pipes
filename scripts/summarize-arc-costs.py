@@ -17,8 +17,8 @@ SPEC.loader.exec_module(ARC)
 def caller_lines(code):
     masked = ARC.OWNERSHIP.mask_c(code)
     # Remove attributes while retaining offsets, so __attribute__ cannot be
-    # mistaken for a function name. These emitted functions have single-line
-    # signatures; retain the actual source line when no signature is found.
+    # mistaken for a function name. Parameter lists may span several lines;
+    # FWP_K marks generated kernel helpers with the same function boundaries.
     masked = re.sub(r'__attribute__\(\([^\n]*?\)\)', lambda m: ' ' * len(m[0]), masked)
     line_starts = [0] + [match.end() for match in re.finditer('\n', code)]
     # Native/WASI/Windows conditional arms can contain alternative opening
@@ -27,7 +27,7 @@ def caller_lines(code):
     # at column zero; one-line functions end on their declaration line.
     closing_lines = [match.start() for match in re.finditer(r'^}', masked, re.M)]
     functions = []
-    for match in re.finditer(r'^static [^=;\n]*?\b(\w+)\([^;{\n]*\)\s*\{', masked, re.M):
+    for match in re.finditer(r'^(?:static |FWP_K )[^=;\n]*?\b(\w+)\([^;{}]*\)\s*\{', masked, re.M):
         opening = match.end() - 1
         line_end = masked.find('\n', opening)
         assert line_end >= 0

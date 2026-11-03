@@ -221,6 +221,17 @@ pub enum Body {
     PackedRecordFold {
         callback: FuncId,
     },
+    /// Native-only eager scalar map. Borrows its list and returns a private
+    /// Array[I64] containing scalar bits, with no child owners.
+    ScalarBufferMap {
+        callback: FuncId,
+    },
+    /// Native-only zip-with borrowing one private scalar buffer and one list.
+    /// `slot` names the buffer's callback parameter (0 or 1, data-last order).
+    ScalarBufferZip {
+        callback: FuncId,
+        slot: usize,
+    },
     /// A C function (`foreign "C"`), called through the C ABI.
     ForeignC {
         symbol: String,
@@ -696,7 +707,10 @@ pub(crate) fn reachable_functions(prog: &Program, entries: &[FuncId]) -> Result<
             Body::Expr(e) => refs(e, &mut work),
             Body::Remote(r) => work.extend(r.iter_fn),
             Body::RegionEntry { worker } => work.push(*worker),
-            Body::PackedRecordMap { callback } | Body::PackedRecordFold { callback } => {
+            Body::PackedRecordMap { callback }
+            | Body::PackedRecordFold { callback }
+            | Body::ScalarBufferMap { callback }
+            | Body::ScalarBufferZip { callback, .. } => {
                 work.push(*callback);
             }
             _ => {}
