@@ -210,6 +210,13 @@ def audit(path, source, machine, comparison, baseline):
                             archive.read(root + 'ownership-base.c').decode(), active_sites,
                             observations, baseline['hosts'][machine]['cases'][name]['fieldOwners'],
                             (dimensions - 1) * updates)
+                    if comparison in ('field-owners', 'numeric-inputs'):
+                        factor = 1 if comparison == 'field-owners' else 2
+                        for mode, observation in observations.items():
+                            previous = baseline['hosts'][machine]['cases'][name]['observations'][mode]
+                            removed = previous['totals']['managed']['retains'] - observation['totals']['managed']['retains']
+                            assert removed == factor * (dimensions - 1) * updates, (
+                                name, mode, 'retain changes outside the attributed sites', removed)
         failures = []
         if baseline is not None:
             failures = MEASURE.comparison_failures(report, baseline, comparison)

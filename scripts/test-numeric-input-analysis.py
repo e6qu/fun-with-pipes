@@ -45,16 +45,26 @@ class CompilerCosts(unittest.TestCase):
         self.assertTrue(any('peak RSS' in failure for failure in ANALYSIS.summarize(self.rows)['failures']))
 
     def test_missing_duplicate_and_reordered_rounds_fail(self):
-        for rows in [self.rows[:-1], self.rows + [self.rows[-1]],
+        for rows in [self.rows[1:], self.rows[:-1], self.rows + [self.rows[-1]],
                      self.rows[:-2] + self.rows[-2:][::-1]]:
             with self.assertRaises(AssertionError):
                 ANALYSIS.summarize(rows)
 
-    def test_warmups_do_not_enter_acceptance(self):
+    def test_warmups_do_not_enter_elapsed_medians_but_do_enter_peak_memory(self):
         for row in self.rows:
             if row['round'] < 0:
-                row.update(seconds=1000, peakCommandKiB=9999999)
+                row.update(seconds=1000)
         self.assertEqual(ANALYSIS.summarize(self.rows)['failures'], [])
+        self.rows[0]['peakCommandKiB'] = 1051
+        self.assertTrue(any('peak RSS' in failure for failure in ANALYSIS.summarize(self.rows)['failures']))
+
+    def test_nonfinite_nonpositive_and_invalid_memory_samples_fail(self):
+        for field, value in [('seconds', float('nan')), ('seconds', float('inf')),
+                             ('seconds', 0), ('peakCommandKiB', 0), ('peakCommandKiB', True)]:
+            rows = copy.deepcopy(self.rows)
+            rows[0][field] = value
+            with self.subTest(field=field, value=value), self.assertRaises(AssertionError):
+                ANALYSIS.summarize(rows)
 
     def test_complete_schedule_and_timeout_keep_reviewable_evidence(self):
         for fail in (False, True):

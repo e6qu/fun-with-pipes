@@ -1,229 +1,173 @@
-# Remaining reference counts in derivative callbacks
+# Fewer temporary owners in derivative callbacks
 
-**Status:** complete-field transfers pass focused Linux ARM64/AMD64 GCC/Clang
-O1/O2 checks and all 96 count observations. Numeric callback inputs pass their
-96 count audits and the repaired source-selection probe; complete focused
-correctness checks for the repaired fixture remain. Combined timings and the final platform
-matrix remain. [Plan](../../PLAN.md).
+**Status:** both compiler changes are implemented. Count and source-site audits
+pass, together with focused GCC/Clang checks on both native hosts.
+Compiler-cost/runtime measurements and the final platform gates remain. [Draft PR #249](https://github.com/e6qu/fun-with-pipes/pull/249) · [Plan](../../PLAN.md).
+
+## What is measured
+
+The workload follows the [autodiff tutorial](../tutorials/20-autodiff-and-devices/main.fwp):
+minimize Rosenbrock's function by subtracting `0.001 * gradient` from each
+coordinate. Initial coordinates alternate -1.2 and 1.0. Each adjacent pair
+`(x, y)` contributes `100 * (y - x*x)^2 + (1 - x)^2` to the function.
+
+- Inputs are **coordinates / updates**: 3/0, 3/1, 3/199, 3/1999, 33/199 and 129/199.
+- **Current** keeps the latest coordinate vector; **history** keeps every vector
+  before selecting the last. Both print the same complete final vector.
+- A **retain** increments an ownership count. Removing it can also remove its
+  later release; it does not imply removing an allocation or a CPU instruction.
+- Counts cover both forms, GCC O1/O2, reusable derivative scratch storage off/on
+  and both architectures: 96 observations. Ordinary and instrumented executions
+  must agree with raw interpretation and the numerical oracle.
+- Count hosts have four virtual CPUs: Neoverse-N2 / GCC 13.3.0 and AMD EPYC 9V74 /
+  GCC 15.2.0. Exact toolchains, images and host records are in the retained reports.
+
+This compares fwp with the same workload before the two changes. It is not a
+measurement of overhead relative to C, Rust or Swift. Peak **managed** bytes
+cover selected fwp storage, including size-class rounding; separately recorded
+raw derivative storage and whole-process RSS are different measurements.
+
+## Results and source attribution
+
+For `d` coordinates and `u` updates, differentiation visits `p=(d-1)*u` adjacent
+pairs. The original callback creates `2*p` temporary input owners and `p` owners
+while separating the input tuple's fields. The two changes remove those sites.
+
+Largest current-only solve, 129 coordinates / 199 updates, GCC O2, workspace off:
+
+| Measurement | Packed-storage baseline | Field moves | Numeric inputs too |
+|---|---:|---:|---:|
+| Retains | 77,411 | 51,939 | 995 |
+| Managed allocations | 156,943 | 156,943 | 156,943 |
+| Requested bytes | 5,382,142 | 5,382,142 | 5,382,142 |
+| Peak managed bytes | 17,824 | 17,824 | 17,824 |
+| Final managed/raw bytes | 0 | 0 | 0 |
+
+That is **76,416 fewer retains (98.7%)**, with unchanged allocation traffic and
+peak storage. All 96 observations agree with the required `p` then `2*p` savings;
+raw tape/workspace storage, derivative work and output remain unchanged.
+Zero-update counts stay unchanged. Static-frame growth stays within 128 bytes.
+No elapsed-time improvement is claimed yet.
+
+The compiler proofs are explained in [design](../design.md#numeric-callback-inputs).
+Their frozen contracts are [complete field transfers](field-owner-transfer-protocol.md)
+and [numeric input fields](numeric-callback-input-protocol.md). In both cases,
+selection follows typed expressions, not a search-and-delete operation on C text.
 
 ## First-stage results
 
 [Run 41538264130](https://github.com/e6qu/fun-with-pipes/actions/runs/41538264130)
-uses source `ceecb569c6748a226ec6ddebc417dc16351490e9`. Both architectures pass
-30 tests: four selection controls and 26 native cases across GCC/Clang. All
-16 target logs and both full job logs are audited, without diagnostics.
+uses `ceecb569c6748a226ec6ddebc417dc16351490e9`. Each host passes four unit and
+26 native GCC/Clang controls. Both full logs, all 16 target logs, all 96 counts
+and 40 saved probes are audited. Sixteen probes return normally; 24 intentionally
+broken retain/release controls fail as required. Coverage includes shared/repeated
+children, two/eight fields, boxed entries, traps, cancellation and boxing failure.
 
-The largest current-only O2 solve changes:
-
-| Measurement | Packed-record baseline | Complete-field transfers |
-|---|---:|---:|
-| Retains | 77,411 | 51,939 |
-| Managed allocations | 156,943 | 156,943 |
-| Requested bytes | 5,382,142 | 5,382,142 |
-| Peak managed bytes | 17,824 | 17,824 |
-| Final managed/raw storage | 0 | 0 |
-
-Each of the 96 observations removes exactly `p=(coordinates-1)*updates` retains.
-The projection site disappears; the mapper-input sites remain exactly `2*p`.
-Raw tape/workspace storage, derivative work and output agree. Both zero-update
-forms are unchanged. Largest O2 instruction bytes fall by 80 on ARM64 and 160 on
-AMD64; all 128-byte frame-growth limits pass. This is no elapsed-time claim.
-
-All 40 saved native probes have verified architecture and observed exit status:
-16 normal probes pass; 24 deliberately broken retain/release controls fail as
-required. Checks cover two/eight fields, shared/repeated children, direct/boxed
-entries, traps, real cancellation and result-boxing failure.
-
-- [Verified counts, sources and image identities](field-owner-transfer-checks-2026-11-03/verified-counts.json.gz)
-- [Archive identities](field-owner-transfer-checks-2026-11-03/verified-artifacts.json)
-  and [actual probe results](field-owner-transfer-checks-2026-11-03/verified-probes.json)
-- Full passing logs: [ARM64](field-owner-transfer-checks-2026-11-03/arm-verified.log.gz),
+- [Counts and source/image hashes](field-owner-transfer-checks-2026-11-03/verified-counts.json.gz)
+- [Artifacts](field-owner-transfer-checks-2026-11-03/verified-artifacts.json) ·
+  [probe outcomes](field-owner-transfer-checks-2026-11-03/verified-probes.json)
+- Full logs: [ARM64](field-owner-transfer-checks-2026-11-03/arm-verified.log.gz) /
   [AMD64](field-owner-transfer-checks-2026-11-03/amd-verified.log.gz)
 
-The initial candidate indexed a stored function body, while C generation emitted
-a clone. Both new native controls rejected the absent selection under both C
-compilers on both hosts. The repaired lazy index belongs to the exact emission
-body, as does call liveness. All failures and completed targets were audited
-before repair. Initial logs: [ARM64](field-owner-transfer-checks-2026-11-03/arm-initial.log.gz),
-[AMD64](field-owner-transfer-checks-2026-11-03/amd-initial.log.gz);
+The initial index used the stored function body while emission used a clone.
+The repair indexes the exact emitted body. All original failures were audited:
+[ARM64](field-owner-transfer-checks-2026-11-03/arm-initial.log.gz),
+[AMD64](field-owner-transfer-checks-2026-11-03/amd-initial.log.gz),
 [artifact identities](field-owner-transfer-checks-2026-11-03/initial-artifacts.json).
-
-A **retain** increments a reference count so another owner can keep a value
-alive. Removing temporary owners can remove both that increment and its later
-release. The [packed-record change](derivative-temporary-storage-2026-11-02/README.md)
-reduces allocations, but deliberately leaves callback argument ownership alone.
 
 ## Initial numeric-input checks
 
-[Run 41542603016](https://github.com/e6qu/fun-with-pipes/actions/runs/41542603016)
-tests `043fcc1cfc1205cb3141f2da5b10b6824f6c7c28`. Both native hosts build and lint
-successfully. Each reports 46 passing checks and three failures: one unit fixture
-and the same native fixture under GCC and Clang. Every full job log and all 20
-target logs were audited before repair; no additional diagnostics were found.
+[Run 41542603016](https://github.com/e6qu/fun-with-pipes/actions/runs/41542603016),
+source `043fcc1cfc1205cb3141f2da5b10b6824f6c7c28`, passed build/lint and all counts.
+Each host reported 46 passing checks and three failures:
 
-- The unit fixture marks an argument-taking function as a cached value, which
-  requires a zero-argument entry. Use a valid named entry to test exclusion.
-- The native fixture expects a surviving nested-argument function, but its small
-  body is inlined. Use a polynomial large enough to survive ordinary inlining;
-  check the transformed signature without assuming an internal function name.
-  Save the compiled probe before selection assertions so a failure keeps evidence.
-- Review also separates numeric rewriting from packed-record lowering, preserving
-  each comparison switch, and excludes explicit execution entries. Caller checks
-  now verify numeric leaf types; constant function references also exclude selection.
+- An invalid unit fixture marked an argument-taking function as a cached value,
+  which requires a zero-argument entry. A valid named-entry fixture replaces it.
+- GCC and Clang both rejected the expected nested-callee signature because the
+  tiny test function had been inlined. A larger polynomial preserves the call.
 
-All 96 initial count observations independently pass manifest, actual-image,
-output, storage, work and stack-frame checks. The largest solve uses **995 retains,
-from 51,939** after stage 1: exactly another `2*p` removed. Allocations (156,943),
-requested bytes (5,382,142) and peak managed bytes (17,824) are unchanged; final
-storage is zero. No timing claim or full correctness acceptance follows yet.
+Review also separated numeric rewriting from packed lowering so comparison
+switches remain independent, excluded execution/constant-function entries and
+checked numeric caller leaf types. No extra whole-program clone was added.
 
-Retained evidence: [counts](numeric-input-checks-2026-11-03/initial-counts.json.gz),
-[artifact identities](numeric-input-checks-2026-11-03/initial-artifacts.json), and
-complete logs [ARM64](numeric-input-checks-2026-11-03/arm-initial.log.gz) /
+Evidence: [counts](numeric-input-checks-2026-11-03/initial-counts.json.gz),
+[artifacts](numeric-input-checks-2026-11-03/initial-artifacts.json), full logs
+[ARM64](numeric-input-checks-2026-11-03/arm-initial.log.gz) /
 [AMD64](numeric-input-checks-2026-11-03/amd-initial.log.gz).
 
 ### Follow-up selection failure
 
-[Run 41545062127](https://github.com/e6qu/fun-with-pipes/actions/runs/41545062127)
-on `1075628e5032ccf7e4f17afb882fada81088c581` passes all nine unit controls and
-38 native checks per host. The same source fixture still rejects selection under
-both GCC and Clang: its nested callee keeps its boxed signature. Saved C and
-executables confirm that the program runs, but the required transformation is
-absent. Do not treat this as passing coverage.
+[Run 41545062127](https://github.com/e6qu/fun-with-pipes/actions/runs/41545062127),
+source `1075628e5032ccf7e4f17afb882fada81088c581`, passed nine unit and 38 native
+checks per host. The top-level function-value fixture still excluded its callee
+under both C compilers. Saved C/executables showed ordinary execution, but no
+required signature rewrite. This was not accepted as transformation coverage.
 
-Both full job logs and all 20 target logs are audited with no additional failures.
-All 96 counts pass again, now with exact map → forwarding worker → numeric callee
-attribution. The fixture is being made local, with a source-to-IR eligibility
-check and a short selection-only runner before repeating broader validation.
-
-Evidence: [counts and sites](numeric-input-checks-2026-11-03/repair-counts.json.gz),
+All 20 target logs and both full job logs were audited: no other failures.
+All 96 counts passed, with exact map → forwarding worker → numeric callee
+attribution. Evidence: [counts/sites](numeric-input-checks-2026-11-03/repair-counts.json.gz),
 [artifacts](numeric-input-checks-2026-11-03/repair-artifacts.json), full logs
 [ARM64](numeric-input-checks-2026-11-03/arm-repair.log.gz) /
 [AMD64](numeric-input-checks-2026-11-03/amd-repair.log.gz).
 
 ### Local callee selection verified
 
-The short [run 41547177941](https://github.com/e6qu/fun-with-pipes/actions/runs/41547177941)
-on `ea5deea50bd4447b3864f09f25db780bd8d37518` passes ten unit controls and the
-native fixture. The former top-level function-value binding is replaced by a
-local callee, matching the pass's internal-call requirement. The source-to-IR
-control proves that its parameter changes; the native control checks the actual
-emitted signature and mixed-input preparation, output order, aliases and cleanup.
+[Run 41547177941](https://github.com/e6qu/fun-with-pipes/actions/runs/41547177941),
+source `ea5deea50bd4447b3864f09f25db780bd8d37518`, passes ten unit controls and
+the native fixture. A local callee matches the internal-call requirement.
+The source-to-IR control proves the parameter changes; native checks cover the
+emitted signature, mixed inputs, output order, aliases and cleanup.
 
-All four saved ARM64 GCC images (O1/O2, stack off/on) are verified. They return
-normally with all 1,344 allocated bytes released. Full logs have no diagnostics.
-[Log](numeric-input-checks-2026-11-03/selection.log.gz) and
+All four saved ARM64 GCC images (O1/O2, stack off/on) return normally and release
+all 1,344 allocated bytes. Full logs have no diagnostics:
+[log](numeric-input-checks-2026-11-03/selection.log.gz),
 [artifact/image identities](numeric-input-checks-2026-11-03/selection-artifacts.json).
-Repeat the complete focused GCC/Clang controls on both hosts before timing.
 
-### Prepared performance experiments
+### Complete focused verification
 
-- `numeric-input-analysis` compares compiler commands through C emission on five
-  fixed programs. Its reference disables numeric rewriting/input preparation only,
-  retaining field-owner moves. The [protocol](numeric-callback-input-protocol.md)
-  fixes two copies per compiler, two warmups, ten balanced rounds, 2% copy limits
-  and at most 5% extra elapsed time or peak RSS. Failed and partial runs are saved.
-- `callback-owners-time` uses the existing whole-solve driver, two qualified
-  sessions per architecture, with the complete batch disabled in its reference.
-  Packed storage remains enabled in both compilers. It requires at least `3*p`
-  fewer retains, unchanged storage/work, at most 2% regression/noise and at least
-  5% improvement for cases with 199 or more updates. This is fwp versus same-source
-  fwp; C/Rust peers remain separately identified in the report.
-- Both workflows require passing focused jobs with matching compiler, runtime,
-  library and test sources. `callback-owners-report` independently audits all
-  samples, original outcomes, source patches and actual image identities.
+[Run 41548218462](https://github.com/e6qu/fun-with-pipes/actions/runs/41548218462)
+on `5af0366c0c1ad91feeb08ddbd42a035858b635e4` passes on both architectures.
+Each host passes ten unit controls and forty native checks under GCC/Clang O1/O2.
+Both full job logs and all twenty target logs have no diagnostics.
 
-These are prepared checks, not measured results.
+All 400 saved probes were audited against their source, native image headers and
+expected status: 184 ordinary returns and 216 rejected, deliberately broken
+ownership/cleanup controls. The selected callback releases all allocated storage;
+failure and cancellation checks include numeric, boxed and mixed inputs.
+All 96 count observations pass, and every retain reduction matches an attributed
+site. This establishes count and cleanup behavior, not elapsed-time performance.
 
-## Where the remaining operations occur
+- [Counts and source/image identities](numeric-input-checks-2026-11-03/verified-counts.json.gz)
+- [Artifact identities](numeric-input-checks-2026-11-03/verified-artifacts.json) ·
+  [saved probe outcomes](numeric-input-checks-2026-11-03/verified-probes.json)
+- Complete logs: [ARM64](numeric-input-checks-2026-11-03/arm-verified.log.gz) /
+  [AMD64](numeric-input-checks-2026-11-03/amd-verified.log.gz)
 
-The retained baseline is compiler `a4f3200c9b97b955c3f3603788eacbfac19fde4e`,
+## Prepared performance experiments
+
+| Workflow | Comparison and acceptance |
+|---|---|
+| `numeric-input-analysis` | Five fixed compiler commands through C emission; reference disables numeric inputs only. Two copies each, two warmups, ten balanced rounds; copy medians within 2%, elapsed time and peak RSS at most 5% above reference (RSS includes warmups). |
+| `callback-owners-time` | Complete solves with both owner changes disabled in the reference; packed storage stays enabled. Two qualified sessions per architecture; at least `3*p` fewer retains, unchanged storage/work, 2% noise/regression limits, 5% speedup for ≥199 updates. |
+| `callback-owners-report` | Independently audit every sample, original outcome, source patch and actual image identity. Retain failed/noisy results. |
+
+Both experiments require passing focused jobs with matching compiler, runtime,
+library and test sources. Compilation timing includes startup, parsing, typing,
+optimization, ownership analysis and C emission; it does not run the program.
+Runtime timing measures complete solves. C/Rust peers use explicit derivatives,
+so their ratios include differentiation-strategy costs, not isolated language
+overhead. [Swift comparisons](swift-allocations.md) are separate measurements.
+
+These experiments are prepared, not measured. Fewer retains alone prove no
+speedup. The final delivery also requires nine production jobs and documentation.
+
+## Replaying the original site audit
+
+The original packed-storage baseline is `a4f3200c9b97b955c3f3603788eacbfac19fde4e`,
 [run 41511493637](https://github.com/e6qu/fun-with-pipes/actions/runs/41511493637).
-Its compiler sources equal PR #248's final compiler sources. The
-[counts](derivative-temporary-storage-2026-11-02/verified-counts.json.gz) cover
-six inputs, current/history forms, O1/O2, workspace off/on and both architectures.
-
-With `d` coordinates and `u` updates, `p = (d - 1) * u` adjacent pairs are
-differentiated. Every one of the 96 observations has these counts:
-
-| Site | Retains | Current ownership rule |
-|---|---:|---|
-| First mapped input | `p` | Give the consuming callback a reference from its input list |
-| Second mapped input | `p` | Do the same for the other input list |
-| First field of the callback's tuple | `p` | Retain the field before releasing its original tuple owner |
-
-For 129 coordinates and 199 updates, `p = 25,472`. These sites account for
-76,416 of the current-only O2 solve's 77,411 retains: 98.7%. That is a measured
-target, not proof that all those operations can be removed.
-
-## Two proofs to develop together
-
-**Move fields that already have separate owners.** The generated worker receives
-two independently owned values, but ownership insertion still sees one tuple:
-
-```text
-Current:  retain first → name first → name second → release original first
-Proposed: move first owner to its name → move second owner to its name
-```
-
-Prove exactly one owner for each value at the next potentially failing operation.
-Start with complete, uninterrupted transfers. Repeated field reads, borrowed
-parents, partial transfers and observable resources require their own proof;
-do not remove operations just by matching generated C text.
-
-A bounded first selection can inspect consecutive field bindings from the same
-already-separated record: every field exactly once, followed by release of that
-record, with no remaining parent use. Reject intervening calls, branches, traces
-or resource frames. Inspect at most the existing direct-call field limit (eight),
-then emit moves to the destination locals. Later call-liveness information stays
-valid because ownership after the complete transfer is unchanged. Prove this on
-the typed ownership expression before emitting C; preserve boxed entry cleanup.
-Index the last local mentions once per eligible function, then check each group
-against that index. Repeated continuation scans would become quadratic; the
-index also checks enclosing continuations beyond the immediate group.
-
-**Keep input elements borrowed through the callback.** Both input lists remain
-alive during the eager map. A callback may use their element boxes without
-owning them only when every call it forwards to obeys that contract too.
-
-In the saved largest case, `w164` simply calls `w124(l1, l0)`. Neither parameter
-is read afterward. Current inference requires continuing owners and excludes
-nested records, so allowing one extra type or deleting argument retains is
-insufficient. Compare an explicit ownership proof through those calls with
-passing their numeric fields directly. Prefer the smaller sound implementation;
-avoid an extra callable wrapper solely to bypass the ownership analysis.
-
-## Delivery requirements
-
-The first stage has [frozen field-transfer requirements](field-owner-transfer-protocol.md).
-They require at least `p` fewer retains and leave mapper input ownership unchanged.
-The separate [numeric-input protocol](numeric-callback-input-protocol.md) selects
-passing numeric leaves and freezes its acceptance rules before second-stage code.
-
-- Publish selection rules and numerical acceptance limits before compiler edits.
-  Separate field-transfer savings (`p`) from input-preparation savings (`2*p`).
-  Freeze a same-source reference that disables only the chosen change.
-- Preserve arithmetic, output, callback/effect order and the packed buffer's
-  allocation savings. Recheck all 96 observations, raw tape/workspace counters,
-  peak storage and zero final storage; attribute each count change to its site.
-- Compare both interpreters with native GCC/Clang O1/O2. Include identical/shared
-  inputs, retained aliases, empty/unequal lists, direct/function-value calls,
-  repeated/reordered/unused fields and excluded resource-bearing records.
-- Test entry/intermediate traps, cancellation and allocation failure; count real
-  destruction and require deliberately broken cleanup to fail.
-- Bound additional compiler analysis and measure fixed representative inputs.
-  Freeze that cost budget before implementation. Preserve the existing timing
-  drivers and old failed limits; fewer retains alone do not establish speedup.
-- Group implementation, controls, measurements and docs. Run focused checks while
-  developing, then one complete final platform matrix after the batch is ready.
-
-The [source audit](../../scripts/check-derivative-owner-sites.py) verifies archive
-digests, all 48 saved C sources, site locations and every observation. It reads
-retained evidence and does not execute saved code. Its required arguments name
-both archives, the counts file, expected source and output report explicitly.
-The [retained site report](derivative-owner-sites.json.gz) includes every C-source
-hash, measured site and observation. Replay it with the ARM64/AMD64 count archives
-identified in the [baseline verification](derivative-temporary-storage-2026-11-02/verification.md):
+Its compiler sources equal PR #248's final compiler sources.
+The [site report](derivative-owner-sites.json.gz) retains every source hash and
+observation. Using its [verified archives](derivative-temporary-storage-2026-11-02/verification.md):
 
 ```sh
 python3 scripts/check-derivative-owner-sites.py \

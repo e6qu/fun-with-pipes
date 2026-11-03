@@ -4,6 +4,7 @@ import argparse
 import hashlib
 import importlib.util
 import json
+import math
 import os
 from pathlib import Path
 import platform
@@ -24,12 +25,15 @@ ORDERS = (COPIES, ('reference2', 'candidate2', 'candidate1', 'reference1'))
 
 
 def summarize(rows):
+    assert len(rows) == 48
+    assert all(type(row['round']) is int and math.isfinite(row['seconds']) and row['seconds'] > 0
+               and type(row['peakCommandKiB']) is int and row['peakCommandKiB'] > 0 for row in rows)
+    for number in range(-2, 10):
+        assert tuple(row['copy'] for row in rows if row['round'] == number) == ORDERS[number % 2]
     samples = {name: [row for row in rows if row['copy'] == name and row['round'] >= 0]
                for name in COPIES}
     assert all(len(values) == 10 and {row['round'] for row in values} == set(range(10))
                for values in samples.values())
-    for round_number in range(10):
-        assert tuple(row['copy'] for row in rows if row['round'] == round_number) == ORDERS[round_number % 2]
     medians = {name: statistics.median(row['seconds'] for row in values)
                for name, values in samples.items()}
     assert all(value > 0 for value in medians.values())
@@ -39,7 +43,7 @@ def summarize(rows):
                                       if row['round'] >= 0 and row['copy'].startswith(kind))
                for kind in ('candidate', 'reference')}
     peaks = {kind: max(row['peakCommandKiB'] for row in rows
-                      if row['round'] >= 0 and row['copy'].startswith(kind))
+                      if row['copy'].startswith(kind))
              for kind in ('candidate', 'reference')}
     assert all(value > 0 for value in peaks.values())
     ratio = seconds['candidate'] / seconds['reference']
@@ -96,7 +100,8 @@ def main():
     report = dict(source=args.source, machine=args.machine, complete=False,
                   scope='Entire compiler command through C emission: startup, parsing, typing, '
                         'optimization, ownership and emission. No generated-program execution. '
-                        'GNU time -v reports process peak RSS; this is not isolated analysis heap use.',
+                        'GNU time -v reports process peak RSS across all invocations, including warmups; '
+                        'this is not isolated analysis heap use.',
                   compilerHashes=dict(candidate=sha(args.compiler), reference=sha(args.reference)),
                   referenceManifest=reference_manifest,
                   buildEnvironment={key: value for key, value in os.environ.items()

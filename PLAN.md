@@ -11,7 +11,7 @@ and merged. It reduces temporary allocations; its failed zero-update timing goal
 remains open. The next grouped batch targets reference-count operations left in
 those callbacks. [Measured sites](docs/measurements/derivative-owner-transfers.md)
 account for 76,416 of 77,411 retains in the largest saved solve; that is an
-opportunity, not a promised reduction or speedup.
+verified count reduction; elapsed-time improvement remains unmeasured.
 
 | Step | Work | Completion requirement |
 |---|---|---|
@@ -24,10 +24,10 @@ opportunity, not a promised reduction or speedup.
 Step 1's first native checks exposed an index tied to the wrong expression tree.
 The repair uses the exact emitted body and passes both native GCC/Clang suites
 and all 96 count audits. It removes exactly one retain per differentiated pair.
-Step 2 passes all 96 count and exact-site audits. The repaired local-callee
-fixture passes the short source/IR/native selection probe. Complete its focused
-GCC/Clang checks on both hosts, then run the prepared compiler and runtime experiments. Run focused checks while
-implementing; complete the full platform matrix once the related batch is ready.
+Step 2 passes focused GCC/Clang checks on both native hosts: 100 checks and
+400 saved probes, including deliberately broken cleanup controls. All 96 count
+observations and exact-site audits pass. Next measure compiler costs and complete
+solve times, then run the full platform matrix once the related batch is ready.
 
 ## Open performance goals
 
