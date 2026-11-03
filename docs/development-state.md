@@ -1,11 +1,19 @@
 # Current work
 
-**Next:** run and audit the [constructor census](measurements/temporary-list-storage.md)
-on both native Linux GCC hosts using the `constructor-census` suite. Its protocol
+**Next:** publish the diagnostic exit-status repair and rerun the
+[constructor census](measurements/temporary-list-storage.md) on both native Linux
+GCC hosts using the `constructor-census` suite. Its protocol
 anchor is `roadmap/temporary-list-protocol-2026-11-03`. Source attribution, count
 parsing, native rejection controls and archive reconstruction are implemented;
 native execution is not yet verified. Keep census, selected storage improvement,
 verification and docs together in draft PR #250.
+
+First census `41572713222`, source `1668a179`, failed on both hosts because an
+exit handler overwrote the invalid-site control's status. Both full logs and all
+nine completed native compilations per host are audited; no other diagnostic
+was found. The synthetic complete control passes. The repair flushes its message
+and uses `_Exit` for malformed observer input. [Retained attempt and explanation](measurements/temporary-list-census-2026-11-03/README.md).
+Real cases and remaining native controls still need execution.
 
 ## Checkout and sources
 

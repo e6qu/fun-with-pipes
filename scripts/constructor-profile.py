@@ -130,17 +130,20 @@ def instrument(source):
     code = source
     for offset, text in reversed(edits):
         code = code[:offset] + text + code[offset:]
+    # A rejected observer must stop before indexing its table. Flush explicitly
+    # and bypass atexit: the phase observer otherwise overwrites status 234 with
+    # its own unfinished-sequence status, hiding which control rejected the run.
     declarations = f'''
 typedef struct {{ uint64_t requests, bytes; uint32_t tag, fields; }} constructor_row;
 static constructor_row constructor_counts[7][{len(sites)}];
 static void constructor_hit(size_t site, uint32_t tag, uint32_t fields, size_t bytes) {{
     if (!iteration_active) return;
     if (derivative_phase >= 7 || site >= {len(sites)}) {{
-        fputs("invalid constructor site or phase\\n", stderr); exit(234);
+        fputs("invalid constructor site or phase\\n", stderr); fflush(stderr); _Exit(234);
     }}
     constructor_row *row = &constructor_counts[derivative_phase][site];
     if (row->requests && (row->tag != tag || row->fields != fields)) {{
-        fputs("mixed constructor shape\\n", stderr); exit(234);
+        fputs("mixed constructor shape\\n", stderr); fflush(stderr); _Exit(234);
     }}
     row->tag=tag; row->fields=fields; row->requests++; row->bytes+=bytes;
 }}
