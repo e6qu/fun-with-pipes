@@ -620,6 +620,27 @@ mod tests {
     fn unknown_or_captured_callbacks_and_two_maps_keep_their_list() {
         for mode in 0..3 {
             let mut program = example(0, 0, true, true, "std::F64");
+            let number = MT::con("std::F64");
+            if mode < 2 {
+                let capture_type = if mode == 0 {
+                    program.funcs[1].ty.clone()
+                } else {
+                    program.funcs[1] = function(
+                        "captured",
+                        vec![number.clone(), number.clone()],
+                        number.clone(),
+                        Body::Expr(Expr::Local(1)),
+                    );
+                    number.clone()
+                };
+                let body = program.funcs[0].body.clone();
+                program.funcs[0] = function(
+                    "entry",
+                    vec![array(&number), list(&number), capture_type],
+                    list(&number),
+                    body,
+                );
+            }
             let Body::Expr(Expr::Call(_, arguments)) = &mut program.funcs[0].body else {
                 unreachable!()
             };
@@ -632,10 +653,10 @@ mod tests {
                 2 => mapped[1] = Expr::Call(3, vec![Expr::Func(1), mapped[1].clone()]),
                 _ => unreachable!(),
             }
-            let callback_type = program.funcs[1].ty.clone();
-            program.funcs[0].locals.push(callback_type);
+            crate::ir::check_locals(&program).unwrap();
             let before = format!("{:?}", program.funcs[0].body);
             lower(&mut program);
+            crate::ir::check_locals(&program).unwrap();
             assert_eq!(program.funcs.len(), 6);
             assert_eq!(format!("{:?}", program.funcs[0].body), before);
         }

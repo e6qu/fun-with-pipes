@@ -16,4 +16,5 @@ record-chain = fn inputs ->
         True -> result
         False -> prim.trap "input alias changed"
 
-main = [WEIGHT_ONE] | ad.scope record-chain | eq (array.from-list [WEIGHT_ONE]) | echo
+# Build the expected array at compile time; its construction is not recording work.
+main = [WEIGHT_ONE] | ad.scope record-chain | eq (comptime (array.from-list [WEIGHT_ONE])) | echo

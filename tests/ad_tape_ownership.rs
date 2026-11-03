@@ -342,6 +342,7 @@ fn scalar_recording_passes_direct_arguments_without_heap_records() {
 fn typed_recording_moves_direct_weights_without_argument_records() {
     let scratch = Scratch::new("typed-recording");
     let compiler = env!("CARGO_BIN_EXE_fwp");
+    let mut failures = Vec::new();
     for (name, ty, one, zero) in [
         ("quad", "F128", "1.0f128", "0.0f128"),
         ("nested", "Rev[F64]", "(rev.const 1.0)", "(rev.const 0.0)"),
@@ -423,23 +424,25 @@ fn typed_recording_moves_direct_weights_without_argument_records() {
                         .unwrap();
                     let label = format!("typed-{name}-stack{stack}{opt}-workspace{workspace}");
                     record_probe::save("ad_tape_ownership", &label, &code, &executable, &output);
-                    assert!(output.status.success(), "{label}: {output:?}");
-                    assert_eq!(output.stdout, reference.stdout, "{label}");
-                    let stderr = String::from_utf8(output.stderr)
-                        .unwrap()
-                        .replace("\r\n", "\n");
+                    let stderr = String::from_utf8_lossy(&output.stderr).replace("\r\n", "\n");
                     let lines = stderr.lines().collect::<Vec<_>>();
-                    assert_eq!(lines.len(), 2);
-                    assert_eq!(
-                        lines[0],
-                        format!("typed recording: 256 calls, {expected_records} heap records")
-                    );
-                    assert!(lines[1].starts_with("typed memory: process peak charged "));
-                    assert!(lines[1].ends_with(", final charged 0"));
+                    if !output.status.success()
+                        || output.stdout != reference.stdout
+                        || lines.len() != 2
+                        || lines[0]
+                            != format!(
+                                "typed recording: 256 calls, {expected_records} heap records"
+                            )
+                        || !lines[1].starts_with("typed memory: process peak charged ")
+                        || !lines[1].ends_with(", final charged 0")
+                    {
+                        failures.push(format!("{label}: {output:?}"));
+                    }
                 }
             }
         }
     }
+    assert!(failures.is_empty(), "{}", failures.join("\n"));
 }
 
 #[test]

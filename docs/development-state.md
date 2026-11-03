@@ -1,140 +1,109 @@
 # Current work
 
-**Next:** publish the grouped gradient-array implementation for focused GCC/Clang
-runner checks; audit all affected targets and fix every failure. Keep monitoring
-PR #251; audit each failed step and completed target. Merge it only after all
-nine exact-head production jobs plus docs pass, using one subject ≤80 characters
-and an empty body. Verify the message/tree before publishing the next PR.
+**Next:** finish the final log audit and squash-merge PR #251, then rebase this
+branch's own commits onto that verified merge. Publish the gradient-array repair
+with its new array cleanup controls and allocation checks as one batch. Audit
+all focused targets before making any performance claim or starting timings.
 
-## Checkout and sources
+## Checkout and recovery
 
-- Worktree `/private/tmp/fwp-array-consumption`, branch `gradient-array-results`;
-  primary checkout untouched. This next branch has no PR yet. It starts at
-  `cea8debcd8caf067bf210fd612c559b265157b91`, the unchanged final head of
-  [PR #251](https://github.com/e6qu/fun-with-pipes/pull/251).
-- Branch `scalar-buffer-performance` and tag
-  `roadmap/range-zip-final-checks-2026-11-03` preserve that CI head. Do not push new
-  work there while its gates run. After its squash merge, rebase only the next
-  branch's commits onto the verified merge; keep one open PR.
-- [Next contract](measurements/gradient-array-storage.md) is retained by
-  `roadmap/gradient-array-protocol-2026-11-03` before implementation edits.
-  Owned-array results, direct array/list consumers, typed cleanup controls and
-  semantic fixtures are implemented locally. The changed Rust/compiler paths
-  have not yet been built; native integration and measurements remain unverified.
+- Persistent worktree: `.worktrees/gradient-array-results` under the primary
+  repository; branch `gradient-array-results`. The detached primary checkout's
+  recovery edits remain untouched.
+- `/private/tmp` was cleared between messages. Published implementation
+  `aed66f261c25ff74e37d04edd9f2d3717817510d` was restored. Keep working files and
+  evidence in the project-local `.worktrees/gradient-work`, and checkpoint changes.
+- Contract commit `c191421e`, tag `roadmap/gradient-array-protocol-2026-11-03`,
+  predates implementation. The whole-change reference patch is committed at
+  `aed66f26`; measurement identities still need freezing before timing.
+- No next PR exists yet. Keep one open PR. After #251 merges, rebase only commits
+  after `cea8debcd8caf067bf210fd612c559b265157b91`; do not include its old commits
+  in the next PR. Every commit/merge message is one line, at most 80 characters,
+  with no body, trailers or attribution.
 
 ## Roadmap status
 
 | Step | Status | Remaining work |
 |---|---|---|
-| 1 | In progress | #251 benchmarks/docs and both ARM64 macOS jobs pass with logs audited; six jobs run |
-| 2 | In progress | Implementation and initial controls written; build and verify the complete compiler paths |
-| 3 | Pending | Isolated whole-change reference, focused semantics/cleanup, scaling and exact counts |
+| 1 | Passing gates | Audit the last full/target logs, merge #251 and verify message/tree |
+| 2 | Implemented | Both Linux compilers/lints and array selection/application checks pass; repair two test assumptions |
+| 3 | In progress | Run restored array fault controls and all 96 allocation observations; retain complete failures |
 | 4 | Pending | Compiler/runtime measurements, independent audits, final platform matrix and delivery |
 
-## PR #251 final gates
+## PR #251 delivery
 
-Production run `41610112980` tests `cea8debc`; all nine jobs exist. The draft-push
-run `41610097600` skipped by design; the ready-for-review run is the required one.
+All nine production jobs in `41610112980` pass at
+`cea8debcd8caf067bf210fd612c559b265157b91`; documentation job `125829540129` in
+`41610097425` also passes. The skipped draft run is not a required gate.
 
-| Gate | Job | Last observed result |
-|---|---:|---|
-| Benchmarks | 125829594182 | Pass; full log audited |
-| Linux ARM64 | 125829594542 | Running tests |
-| Linux AMD64 | 125829594545 | Running tests |
-| macOS ARM64 regular | 125829594788 | Pass; full log and 131 target logs audited |
-| macOS AMD64 regular | 125829594612 | Running tests |
-| macOS ARM64 ownership | 125829594640 | Pass; full log and 126 target logs audited |
-| macOS AMD64 ownership | 125829594596 | Running tests |
-| Windows ARM64 | 125829594942 | Running native resource/ownership checks |
-| Windows AMD64 | 125829594720 | Running native resource/ownership checks |
-| Documentation | 125829540129 | Pass in run 41610097425; full log audited |
+| Gate | Job |
+|---|---:|
+| Benchmarks | 125829594182 |
+| Linux ARM64 | 125829594542 |
+| Linux AMD64 | 125829594545 |
+| macOS ARM64 regular | 125829594788 |
+| macOS AMD64 regular | 125829594612 |
+| macOS ARM64 ownership | 125829594640 |
+| macOS AMD64 ownership | 125829594596 |
+| Windows ARM64 | 125829594942 |
+| Windows AMD64 | 125829594720 |
 
-No failed production steps observed. Requery actual state; this table is a snapshot.
-Docs contain only three intentional runner-failure diagnostics. Benchmark checks
-include 21 native binaries, 14 ARC images, 21 RSS distributions, seven leak
-controls and 32 sort-storage images/comparisons. Guarded log audits pass in
-0.13/0.14s. Evidence is in `/private/tmp/fwp-251-platforms`.
+Benchmarks/docs, all four macOS jobs and Windows AMD64 have passed complete log
+and target audits. Recovering the files and auditing the remaining Linux/Windows
+jobs uses `.worktrees/gradient-work/collect-251.py`; results go in `platforms-251`.
+Require 257 target logs per Linux host, 131/126 per regular/ownership macOS host
+and 57 per Windows host. Inspect unexpected diagnostics rather than hiding them.
+Merge subject: `Generate private zip indices without temporary lists`; empty body.
+Verify the raw commit message and that its tree equals the tested head.
 
-Prepared audit helpers:
+Completed range evidence remains in the
+[storage report](measurements/range-zip-storage-2026-11-03/README.md),
+[compiler report](measurements/range-zip-analysis-2026-11-03/README.md) and
+[timing report](measurements/range-zip-time-2026-11-03/README.md).
+Larger solves take 7.1–10.0% less time; small-case timing limits remain open.
+Do not repeat those completed measurements.
 
-- `/private/tmp/fwp-audit-251-docs.py` and `fwp-audit-251-bench.py` already pass.
-- `/private/tmp/fwp-audit-251-platform.py LABEL` passes for both macOS ARM64 jobs
-  (0.13/0.14s); the other jobs remain pending. Labels:
-  `linux-arm`, `linux-amd`, `mac-arm`, `mac-amd`, `mac-arm-ownership`,
-  `mac-amd-ownership`, `windows-arm`, `windows-amd`.
-  Supply completed downloads `/private/tmp/fwp-251-production-LABEL.log` and
-  `...-LABEL-targets.zip`, plus current `...-jobs.json` / `...-artifacts.json`.
-  It checks source, archive digest, all target/full logs and the exact previously
-  inspected Homebrew notice. Review any unexpected diagnostic instead of hiding it.
-- Wait for each download's exit 0 before reading its file. Full logs:
-  `gh api repos/e6qu/fun-with-pipes/actions/jobs/JOB/logs --allow-escape-sequences`.
-  Keep current-head gate records for the next PR; do not restart CI for status edits.
+## Gradient-array first run and repairs
 
-## Completed range evidence
+Run `41618374217` tests `aed66f26`. ARM64 job `125857466013` and AMD64 job
+`125857466216` complete with the same two failures under GCC and Clang. Both
+builds, all-target Clippy and selection units pass. All 16 integration target logs
+per host have been inspected; no other failures were found. The original archives
+and full logs are retained in `.worktrees/gradient-work/attempt-{arm,amd}.*`.
+The archive digests match GitHub metadata. `audit-attempt.py` records diagnostics.
 
-[Native checks and allocation savings](measurements/range-zip-storage-2026-11-03/README.md),
-[compiler costs](measurements/range-zip-analysis-2026-11-03/README.md) and
-[all runtime sessions](measurements/range-zip-time-2026-11-03/README.md) are complete.
-Measurement source `3be9479c4150d7aae5695d7f7aa4ce3f84d0f738`, tag
-`roadmap/range-zip-measurement-2026-11-03`; contract tag
-`roadmap/range-zip-protocol-2026-11-03` predates edits. The failed first attempt
-and both repaired causes remain in the report. No measurements need rerunning.
+| Failure | Cause and repair |
+|---|---|
+| Nested cleanup instrumentation cannot find stage 5 | It targets the removed list builder. Move stages 5 and 12 to the completed array-slot transfer and the protected input-owner transfer. Keep every existing fault/cancellation mode. |
+| F128 recording exceeds cumulative charge by 32 bytes | The expected value now builds an extra array from a singleton list. Saved generated C calls `array.from-list` before the workload. Make that expected array an explicit compile-time constant; keep every original recording/memory limit. |
 
-- Both native hosts: 17 unit / 37 integration executions, 32 cleanup outcomes,
-  204 image checks, 118 clean C compiler logs and all 96 count observations pass.
-- Largest solve saves 25,870 requests / 823,064 requested bytes; retains stay 995;
-  managed peak 17,824 → 14,976 bytes, final storage zero.
-- All 480 compiler commands and four runtime sessions are independently audited.
-  Compiler time/RSS limits pass; larger solves take 7.1–10.0% less time. Small-case
-  timing limits remain open under the accepted retain-reductions policy.
-- All 5,336 runtime file inventories reconcile. Largest reported frame growth
-  112 bytes ≤128. Reported process RSS observations are separate from allocator
-  counts and do not prove a whole-process memory reduction.
-- #250 is fully verified: all nine production jobs in `41591834975` and docs
-  `41591834978` pass at `a8a5568d`; every full/target log is audited.
-  Earlier timing goals in PLAN.md remain open independently.
+The recording harness now collects failures across all scalar types, stack modes,
+optimization levels and workspace modes instead of stopping at the first result.
+The new array-map/zip fault branch shares the existing list harness: callback
+failure, between-stage failure, cancellation, allocation failure, partial output,
+aliases and deliberate missing releases. These repairs still need runner checks.
 
-## Next-batch preparation and local limits
+The complete gradient/update fixture already passes both engines and native
+GCC/Clang O1/O2, including input aliases and empty/singleton cases. Packed slices,
+map order, F128 precision, typed-result owner controls, checkpoints, workspace,
+capacity and library cleanup also pass in the first run, except the two cases above.
 
-Source facts and detailed proof obligations are in
-`/private/tmp/fwp-next-gradient-storage.md`; the maintained contract above selects
-this batch. The bounded F64 probe `/private/tmp/fwp-gradient-array-probe.fwp`
-passes optimized/unoptimized interpretation (0.26/0.25s) and C emission (0.25s).
-The extracted, verified #250 compiler is `/private/tmp/fwp-range-diagnostic-compiler`.
-Its emitted C still constructs the scaled list, proving that moving the scope's
-result to an array alone is insufficient. This is no native ownership or speed
-verification. The initial probe's unsupported semicolon was corrected to a tuple.
+## Checks and remaining restoration
 
-Implementation and focused checks on the next branch:
+Guarded local checks before the temporary-directory reset passed: primitive
+inventory (394 declarations, 384 symbols, 40 aliases), generated stdlib comparison,
+reference isolation and Clang O1/O2 typed-result cleanup controls. These are
+focused checks, not final-platform or performance acceptance. Rust formatting
+passes again in the persistent checkout (1.79s).
 
-- `src/fuse/array_zip.rs` selects one private numeric array-to-list conversion,
-  optionally one eager map, and one zip. Both slots and aliases are covered;
-  shared/conditional/unknown/boxed cases stay ordinary. Typed array accessors
-  preserve packed values and slices. Visit-count controls cover long aliases and
-  many separate producers.
-- Internal backward results use owned arrays in the library, C and interpreter.
-  Public list conversion follows the derivative scope. Typed result controls
-  cover normal owners, shared zeros, partial-array failure and cancellation.
-- The bounded Clang O1/O2 replay `/private/tmp/fwp-gradient-owners-replay.py`
-  passes 20 ordinary/deliberately-broken outcomes with workspace 0/1 (5.16s).
-  It transplants the changed runtime routine into verified #250 emitted C;
-  this is **not** verification of the new compiler or complete library.
-- Frozen primitive inventory passes: 394 declarations, 384 symbols, 40 explicit
-  aliases (1.09s). `cargo fmt --all` passes (1.89s).
-- `scripts/test-gradient-array-reference.py` passes three isolation/corruption
-  controls (0.37s). Its frozen patch reverses all seven affected source files,
-  retaining unrelated changes and the earlier range/scalar-buffer optimizations.
-  Measurement source/reference identities still need freezing before timing.
-- The standard-library generator was compiled standalone, regenerated its output
-  and passed the unblessed comparison (0.72s); no whole compiler build.
-- Both new semantic fixtures pass with the verified unoptimized interpreter.
-  The complete gradient example prints seven `True` results (0.25s). Its initial
-  use of the reserved name `update` was fixed to `step` before publication.
-- The dedicated `gradient-array-checks` runner route checks GCC/Clang semantics,
-  nested/F128 derivatives, cleanup, inventory, reference isolation and all-target
-  lint. It has not been dispatched. Array-consumer fault controls and all 96
-  allocation observations remain required before measurement/delivery.
+The reset removed uncommitted measurement preparation. Reconstruct it before
+publishing the next grouped check: gradient-array count limits and constructor
+attribution, compiler/time comparison manifests, independent seven-source reference
+reconstruction and workflow routes. Session records retain the edits and prior
+unit results; do not claim those files are restored until they are present.
+The array unwind extension and fully typed callback rejection controls have
+already been restored. No new allocation or timing observations exist yet.
 
-Use `scripts/local-guard.py` serially: keep 64 GiB free disk, generated targets
-below 2 GiB, sampled RSS below 1 GiB and 180s. Last free space about 65 GiB, no
-local target data. Never bypass limits. Full validation belongs on GitHub runners.
+Local work stays serial under `scripts/local-guard.py`: 64 GiB free disk, targets
+below 2 GiB, sampled RSS below 1 GiB and 180 seconds. Last free space about 88 GiB.
+Full builds, suites and measurements belong on GitHub runners; never raise limits.

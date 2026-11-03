@@ -257,20 +257,16 @@ fn managed_tapes_release_across_recovered_failure_and_task_cancellation() {
             ),
             (
                 5,
-                "        fwp_cleanup_pop(&input_cleanup);\n    }\n    fwp_cleanup_pop(&result_cleanup);\n    fwp_cleanup_pop(&value_cleanup);",
+                "        result.filled++;\n        fwp_cleanup_pop(&input_cleanup);",
             ),
             (7, "    V zero = OBJ(parameters)->f[0];"),
             (8, "    owner->zero = zero;"),
             (9, "    V callback = OBJ(parameters)->f[1]; fwp_rc_dup(callback); owner->add = callback;"),
             (10, "    callback = OBJ(parameters)->f[2]; fwp_rc_dup(callback); owner->mul = callback;"),
-            (12, "        owner->adj[i - 1] = owner->zero;"),
+            (12, "        fwp_cleanup_push(&input_cleanup, fwp_value_release, &input_owner);\n        owner->adj[i] = owner->zero;"),
         ] {
             assert_eq!(code.matches(marker).count(), 1, "stage {point}");
-            let injected = if point == 5 {
-                marker.replace("    }\n    fwp_cleanup_pop(&result_cleanup);", "        nested_point(5);\n    }\n    fwp_cleanup_pop(&result_cleanup);")
-            } else {
-                format!("{marker}\n    nested_point({point});")
-            };
+            let injected = format!("{marker}\n    nested_point({point});");
             code = code.replace(marker, &injected);
         }
     code = code.replace(

@@ -7,8 +7,8 @@ int main(void) {
         for (volatile int mode = 0; mode < 9; mode++) for (unsigned aliases = 0; aliases < 4; aliases++) {
             double baseline = fwp_heap.live;
             V xs=0, other=0;
+            INPUT_CREATE
             for (int i=3; i>0; i--) {
-                xs=fwp_rc_fresh(fwp_cons((V)i,xs));
                 other=fwp_rc_fresh(fwp_cons((V)(i*10),other));
             }
             if(aliases&1) fwp_rc_dup(xs);
@@ -37,8 +37,8 @@ int main(void) {
             int zips=(mode==2 || mode==4) ? 2 : (mode==7 || mode==8) ? 3 : 0;
             if(scalar_maps!=maps || scalar_zips!=zips) return 242;
             if(aliases&1) {
-                if(*fwp_rc_slot(xs)!=1 || OBJ(xs)->f[0]!=1) return 243;
-                DROP_LIST(xs);
+                if(*fwp_rc_slot(xs)!=1 || INPUT_CHECK) return 243;
+                DROP_INPUT(xs);
             }
             if(aliases&2) {
                 if(*fwp_rc_slot(other)!=1 || OBJ(other)->f[0]!=10) return 244;
