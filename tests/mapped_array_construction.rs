@@ -1,4 +1,5 @@
 //! Numeric map-to-array construction preserves order and owns its scratch.
+use std::path::PathBuf;
 use std::process::{Command, Output};
 
 #[path = "support/record_probe.rs"]
@@ -63,7 +64,32 @@ main = array.from-list [1i8, 127i8, 2i8] | mapped | array.to-list | echo
                     .arg(&cfile),
             );
             let code = std::fs::read_to_string(&cfile).unwrap();
+            let artifacts = std::env::var_os("FWP_ARC_ARTIFACTS")
+                .map(|root| PathBuf::from(root).join("direct-array-map-sources"));
+            if let Some(directory) = &artifacts {
+                std::fs::create_dir_all(directory).unwrap();
+                std::fs::write(directory.join(format!("{label}.fwp")), program).unwrap();
+                std::fs::write(directory.join(format!("{label}-{packing}.c")), &code).unwrap();
+            }
             if label == "values" {
+                // Main-only compilation may inline or remove these functions.
+                // Request exported roots explicitly for selection inspection;
+                // native semantic checks below still execute the ordinary main.
+                let exported_file = dir.join(format!("exports-{packing}.c"));
+                checked(
+                    Command::new(compiler)
+                        .env_remove("FWP_NO_OPT")
+                        .env("FWP_PACKED_ARRAYS", packing)
+                        .args(["build", "--fn", "small", "--emit-c"])
+                        .arg(&input)
+                        .arg("-o")
+                        .arg(&exported_file),
+                );
+                let exported = std::fs::read_to_string(exported_file).unwrap();
+                if let Some(directory) = &artifacts {
+                    std::fs::write(directory.join(format!("exports-{packing}.c")), &exported)
+                        .unwrap();
+                }
                 for (name, selected) in [
                     ("small", true),
                     ("signed", true),
@@ -78,8 +104,10 @@ main = array.from-list [1i8, 127i8, 2i8] | mapped | array.to-list | echo
                     ("text-lengths", false),
                     ("record-sums", false),
                 ] {
-                    let start = code.find(&format!("/* {name} :")).unwrap();
-                    let body = &code[start..start + code[start..].find("\n}\n").unwrap()];
+                    let start = exported
+                        .find(&format!("/* {name} :"))
+                        .unwrap_or_else(|| panic!("missing exported map probe `{name}`"));
+                    let body = &exported[start..start + exported[start..].find("\n}\n").unwrap()];
                     assert_eq!(body.contains(marker), selected, "{name}: {body}");
                     if selected {
                         assert!(body.contains("fwp_array_store_owned("));
@@ -115,7 +143,13 @@ main = array.from-list [1i8, 127i8, 2i8] | mapped | array.to-list | echo
 
 fn checked(command: &mut Command) -> Output {
     let out = command.output().unwrap();
-    assert!(out.status.success(), "{command:?}: {out:?}");
+    assert!(
+        out.status.success(),
+        "{command:?}: status {:?}\n{}\n{}",
+        out.status.code(),
+        String::from_utf8_lossy(&out.stdout),
+        String::from_utf8_lossy(&out.stderr)
+    );
     out
 }
 fn emitted(

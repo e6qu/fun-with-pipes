@@ -17,5 +17,24 @@ and failed steps. No native test target ran.
   logs. Run native checks independently when the compiler builds, even if lint
   fails; each failure still fails the job.
 
-The repaired source still needs native verification. No performance or memory
-improvement is claimed yet.
+## First native verification
+
+Run [41640932807](https://github.com/e6qu/fun-with-pipes/actions/runs/41640932807)
+at `36bfee09` builds successfully on all three hosts. Each passes 39 tests and
+fails the new export-selection inspection; all 24 target logs and all saved native
+images are audited. [The retained index](native-attempt/index.json) links full job
+logs, target logs, cleanup C/output, archive identities and image hashes.
+
+The test compiled only `main`, then searched generated C for every exported
+function. Main-only optimization can legitimately inline or remove those entries.
+Inspect selection using an explicit `--fn small` build, which retains exported
+roots. Keep the ordinary main build for interpreter/native output comparisons.
+Save generated C before assertions and print compiler diagnostics as text.
+This repair changes the test, not the compiler implementation.
+
+All ten direct-map cleanup observations per host pass: ordinary and disabled-reuse
+runs exit 0 at O1/O2; omitted buffer, scratch and partial-output cleanup each exit
+90 at the detected leak. The successful controls exercise nine modes and four
+alias combinations over sixteen rounds.
+The incomplete numeric-value/selection test still needs a passing run. No new
+performance or memory improvement is claimed yet.
