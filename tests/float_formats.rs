@@ -1,5 +1,5 @@
 //! Declared precision must survive the interpreter, C ABI, text and wire paths.
-use fwp::ir::{Body, Expr, Func, Program, MT};
+use fwp::ir::{Body, Expr, Func, Program, TypeShape, MT};
 use fwp::softfloat::{BFloat16, Binary128, Binary16};
 use fwp::value::Value;
 use std::fmt::Write;
@@ -413,7 +413,9 @@ fn scalar_array_identity_moves_owners_and_preserves_aliases() {
     let array = MT::Con("std::Array".into(), vec![scalar.clone()]);
     let conversion = MT::Fun(Box::new(scalar.clone()), Box::new(scalar.clone()));
     let mapping = MT::Fun(Box::new(array.clone()), Box::new(array.clone()));
-    let program = Program {
+    let option = MT::Con("std::Option".into(), vec![scalar.clone()]);
+    let consuming = MT::Fun(Box::new(array.clone()), Box::new(option.clone()));
+    let mut program = Program {
         funcs: vec![
             Func {
                 name: "convert".into(),
@@ -432,7 +434,7 @@ fn scalar_array_identity_moves_owners_and_preserves_aliases() {
             Func {
                 name: "identity-array".into(),
                 arity: 1,
-                locals: vec![array],
+                locals: vec![array.clone()],
                 ty: mapping.clone(),
                 body: Body::Expr(Expr::Call(1, vec![Expr::Func(0), Expr::Local(0)])),
             },
@@ -440,14 +442,41 @@ fn scalar_array_identity_moves_owners_and_preserves_aliases() {
                 name: "main".into(),
                 arity: 0,
                 locals: vec![],
-                ty: mapping,
-                // Keep the actual callable and its typed argument cleanup reachable.
-                body: Body::Expr(Expr::Func(2)),
+                ty: MT::Record(vec![("0".into(), mapping), ("1".into(), consuming.clone())]),
+                // Keep the actual callables and typed argument cleanup reachable.
+                body: Body::Expr(Expr::Record(vec![Expr::Func(2), Expr::Func(5)])),
+            },
+            Func {
+                name: "get".into(),
+                arity: 2,
+                locals: vec![MT::con("std::I64"), array.clone()],
+                ty: MT::Fun(Box::new(MT::con("std::I64")), Box::new(consuming.clone())),
+                body: Body::Prim("array.get".into()),
+            },
+            Func {
+                name: "consume-identity".into(),
+                arity: 1,
+                locals: vec![array],
+                ty: consuming,
+                body: Body::Expr(Expr::Call(
+                    4,
+                    vec![
+                        Expr::Const(Value::I64(0)),
+                        Expr::Call(2, vec![Expr::Local(0)]),
+                    ],
+                )),
             },
         ],
         main: Some(3),
         ..Program::default()
     };
+    program.shapes.insert(
+        option,
+        TypeShape::Adt(vec![
+            ("None".into(), vec![]),
+            ("Some".into(), vec![MT::con("std::F64")]),
+        ]),
+    );
     fwp::ir::check_locals(&program).unwrap();
     let directory = fwp::cgen::TempDir::new("scalar-array-identity").unwrap();
     let mut failures = Vec::new();
@@ -466,13 +495,19 @@ fn scalar_array_identity_moves_owners_and_preserves_aliases() {
         let generated = ownership_ledger::instrument_native(&generated, 256);
         let generated = generated.replacen(
             "typedef uint64_t V;",
-            "typedef uint64_t V;\nstatic size_t identity_retains;",
+            "typedef uint64_t V;\nstatic size_t identity_retains;\nstatic int identity_fault;\nstatic void identity_fail(void);",
             1,
         );
         let generated = generated.replacen(
             "static inline void fwp_rc_dup(V v) {\n",
             "static inline void fwp_rc_dup(V v) {\n    identity_retains++;\n",
             1,
+        );
+        let boundary = "static V f4(V l0, V l1) {\n";
+        assert_eq!(generated.matches(boundary).count(), 1);
+        let generated = generated.replace(
+            boundary,
+            &format!("{boundary}    if (identity_fault) identity_fail();\n"),
         );
         for packed in [false, true] {
             let marker = if generated.contains("#define FWP_PACKED_ARRAYS 1") {
@@ -495,16 +530,19 @@ fn scalar_array_identity_moves_owners_and_preserves_aliases() {
                 for opt in ["-O1", "-O2"] {
                     let executable = directory.join("identity.exe");
                     fwp::cgen::compile_c(&code, &executable, opt).unwrap();
-                    for missing in [false, true] {
+                    for (control, status, diagnostic) in [
+                        ("complete", 0, ""),
+                        ("missing-release", 90, ""),
+                        ("allocation-failure", 102, "fwp: out of memory\n"),
+                    ] {
                         let mut command = Command::new(&executable);
-                        if missing {
-                            command.arg("missing-release");
-                        }
+                        command.arg(control);
                         let actual = command.output().unwrap();
-                        let label = format!("array-identity-{selected}-packed-{packed}-reuse-{reuse}{opt}-missing-{missing}");
+                        let label = format!("array-identity-{selected}-packed-{packed}-reuse-{reuse}{opt}-{control}");
                         record_probe::save("float_formats", &label, &code, &executable, &actual);
-                        let status = if missing { 90 } else { 0 };
-                        if actual.status.code() != Some(status) || !actual.stderr.is_empty() {
+                        if actual.status.code() != Some(status)
+                            || actual.stderr != diagnostic.as_bytes()
+                        {
                             failures.push(format!("{label}: {actual:?}"));
                         }
                     }

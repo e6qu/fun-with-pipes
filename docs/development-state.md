@@ -9,8 +9,8 @@ focused checks; open no second PR until #253 merges.
 
 - Worktree `.worktrees/direct-array-callbacks`; final head
   `893942291b0f1e51a23488c9dea2a9d811acfab1`.
-- Production run `41662326563`: nine jobs. Benchmark job passed full-log audit;
-  the other eight jobs are running or queued, with no reported failures.
+- Production run `41662326563`: nine jobs. Benchmark and regular macOS ARM64 jobs passed full-log audit (131 target logs
+  for macOS). The other seven jobs are running, with no reported failures.
 - Documentation run `41662323124`, job `126008450991`: passed full-log audit.
 - Scratch `.worktrees/gradient-work/collect-253.py` downloads and audits each
   completed gate. Require all nine production jobs plus docs before squash.
@@ -50,13 +50,27 @@ Implementation is prepared but unverified:
   primitive before ownership insertion. No representation or API changes.
 - Tests compare exact bits through raw/optimized interpreter and native entries;
   check selector exclusions, moves, aliases, slices, immutable updates, source
-  effects and deliberately omitted cleanup. Existing failure/cancellation tests
-  remain in the focused group.
+  effects and deliberately omitted cleanup. Explicit trap/cancellation probes
+  check the generated owner around the following array read. Native allocator
+  exhaustion is fatal exit 102, not an unwind; its separate control requires the
+  exact status and diagnostic. The contract records this source-review finding.
+  Existing failure/cancellation targets also remain in the focused group.
 
-Publish the grouped implementation and dispatch `scalar-identity-checks`. It uses
+Focused run `41667037137` at `b361fa451cea35674c90830e1fbff325455acaf5` is
+was cancelled before any of its three jobs started so the complete fault checks
+and measurement tooling can run together. Dispatch the replacement batch after
+the grouped push. It uses
 GCC ARM64/AMD64 and Clang ARM64, production Rust settings, the existing eight
 array targets, float-format/core targets and the selector unit test. Audit all
-completed targets before a repair push. No new timing or second PR exists yet.
+completed targets before a repair push. No new timing or second PR exists yet. Measurement tooling is prepared locally: a
+same-source reference disables only map elimination while preserving scalar fixes;
+its count budget requires one removed array per update, with existing time/noise
+limits. Reference controls (3), budget controls (18), compiler-analysis controls
+(7) and raw-source/evidence controls (16) pass in one guarded 20.85s batch.
+Grouped-report controls (12), retention controls (3) and reference-upload controls
+(2) pass in 5.48s; workflow lint passes in 6.15s.
+The first reference-marker check failed because Rust formatting joined the
+condition onto one line; the marker was corrected and all controls pass.
 
 ## Local checks and limits
 

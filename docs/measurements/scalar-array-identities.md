@@ -64,6 +64,17 @@ do not infer arbitrary user callbacks to be identities.
    target is added. Run focused checks as one group, repair all findings together,
    then run the final nine production jobs plus documentation once ready.
 
+### Allocation-failure policy found during source review
+
+The native allocator's `fwp_heap_oom` prints `fwp: out of memory` and exits 102;
+it does not unwind. Test that terminal behavior separately. The fault probe calls
+the fatal allocator path at the next allocating array read; it does not claim to
+exhaust the host or observe zero live storage after process termination.
+Recoverable traps and cancellation at that boundary must unwind the generated
+owner and leave zero additional managed storage, including aliases and views.
+This clarifies the failure checks before measurements; it changes no runtime
+failure policy or performance limit.
+
 ## Measurement isolation and limits
 
 Freeze a same-source reference that disables only this array-map rewrite. Both

@@ -68,7 +68,7 @@ def main():
     parser.add_argument('--compiler', required=True, type=Path)
     parser.add_argument('--reference', required=True, type=Path)
     parser.add_argument('--reference-manifest', required=True, type=Path)
-    parser.add_argument('--comparison', required=True, choices=('numeric-inputs', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map'))
+    parser.add_argument('--comparison', required=True, choices=('numeric-inputs', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity'))
     parser.add_argument('--time', required=True, type=Path)
     parser.add_argument('--machine', required=True, choices=('aarch64', 'x86_64'))
     parser.add_argument('--source', required=True)
@@ -91,6 +91,13 @@ def main():
             assert sha(ROOT / path) == hashes['candidateSha256'], path
         for path, digest in reference_manifest['unchanged'].items():
             assert sha(ROOT / path) == digest, path
+    elif args.comparison == 'scalar-array-identity':
+        assert reference_manifest['disabledTransformation'] == 'F64 identity array-map elimination'
+        assert reference_manifest['candidateOptimizerSha256'] == sha(ROOT / 'src/opt.rs')
+        assert reference_manifest['ownershipSha256'] == sha(ROOT / 'src/ownership.rs')
+        assert set(reference_manifest['unchanged']) == {'src/interp.rs', 'runtime/fwp_rt_num.c', 'src/cgen.rs'}
+        for path, checksum in reference_manifest['unchanged'].items():
+            assert sha(ROOT / path) == checksum, path
     elif args.comparison == 'gradient-array':
         assert reference_manifest['disabledTransformation'] == 'owned gradient arrays and direct array/list zip'
         assert set(reference_manifest['candidate']) == {'lib/autodiff.fwp', 'runtime/fwp_rt_kernel.c', 'src/cgen.rs', 'src/fuse.rs', 'src/interp.rs', 'src/ir.rs', 'src/numerics.rs'}
