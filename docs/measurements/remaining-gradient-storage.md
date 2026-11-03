@@ -56,7 +56,65 @@ NaNs, and must transfer the existing owner correctly. Merely returning a borrowe
 input would be unsafe when its caller releases it. Prove that the owned result
 moves through the ordinary ownership pass without additional retains, preserve
 aliases, and test cleanup before claiming removal of that allocation or traversal.
-This is unselected and separate from direct callback dispatch.
+The [new preparation contract](scalar-array-identities.md) selects an initial
+F64 case separately from direct callback dispatch.
+
+### Conversion semantics to settle first
+
+Source inspection at `89394229` found different same-type NaN behavior:
+
+| Path | What the code does |
+|---|---|
+| Interpreter, F64 → F64 | Widens through the software F128 core and narrows again. That core replaces NaNs with a canonical positive quiet NaN. |
+| Native, F64 → F64 | Loads and stores F64 directly, preserving its bits. |
+| Native specialized F128 → F128 | Returns the incoming bit structure unchanged. |
+| Generic boxed F128 → F128 | Copies the bits into a new owned box; returning the borrowed box would break its ownership contract. |
+
+A NaN is a floating-point non-number value. Several bit patterns represent it,
+including a sign and payload. For example, F64 bits `0xfff8000000000042` encode
+a negative quiet NaN with payload `0x42`; `0x7ff8000000000000` is the canonical
+positive quiet NaN. Ordinary numeric equality cannot test this distinction,
+because a NaN does not compare equal even to itself. Tests must inspect bits.
+
+The [float contract](../float-formats.md) describes canonical arithmetic and
+conversion NaNs for the software formats, but does not distinguish same-type
+conversion from changing formats. A pending design decision asks whether every
+same-type conversion should preserve bits. Cross-type conversion rules are not
+part of that proposed change. Do not remove a conversion until its rule is explicit
+and the interpreter, generic native entry and specialized worker agree.
+
+### Proposed bounded implementation and checks
+
+If same-type conversion is defined as an identity:
+
+1. Make that scalar behavior consistent for F16, BF16, F32, F64 and F128. Keep
+   the generic F128 result owned; preserving bits does not permit returning a
+   borrowed box. Test finite values, signed zero, subnormals, infinities and
+   positive/negative quiet/signaling NaNs through raw-bit inputs.
+2. Initially remove only `array.map` of a statically known primitive
+   `float.convert : F64 -> F64`. Match its concrete argument/result types and
+   arity at the existing optimizer call site. Do not follow arbitrary callbacks
+   or add a whole-program analysis. Cross-type maps, dynamic functions and
+   effectful callback construction must remain unchanged.
+3. Replace the selected map with its input expression before ownership insertion.
+   Evaluate that input exactly once. Prove a unique input moves to the result;
+   a shared input gains the ordinary result owner, and slices keep their backing
+   storage alive. Test subsequent immutable updates, aliases and repeated release.
+4. Compare raw and optimized interpreter results with GCC/Clang O1/O2, packed
+   arrays enabled/disabled, empty and sliced arrays, effects, traps, failure and
+   cancellation. Check primitive dispatch and scheduling so the rewrite removes
+   no observable callback action. Native counts must show no replacement array
+   or element traversal, with zero final managed/raw storage.
+5. Freeze a reference disabling only array-map removal. Both sides must include
+   the same scalar correctness fix. Measure the existing gradient cases and
+   compiler scaling workload; do not compare changed float semantics as though
+   they were only a performance optimization. Keep old timing misses open.
+
+Relevant implementation points are [the optimizer](../../src/opt.rs),
+[interpreter](../../src/interp.rs), [generic numeric runtime](../../runtime/fwp_rt_num.c),
+[wide workers](../../src/cgen_wide.rs) and
+[ownership contracts](../../src/ownership.rs). The linked contract freezes this initial F64 array scope before implementation;
+it does not promise elimination for every numeric representation.
 
 ## Another opportunity: discard an unused iteration history
 
