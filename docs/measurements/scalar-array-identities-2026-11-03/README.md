@@ -19,8 +19,9 @@ per archive, with original paths mapped in the observation record.
 Each completed host passes:
 
 - 50 integration tests across ten targets, plus the optimizer selection unit test.
-- 800 native bit comparisons: five float formats, 20 input patterns, primitive
-  and specialized entries, raw/optimized programs, O1/O2. Both interpreters agree.
+- 800 native bit comparisons across five formats, primitive/specialized entries,
+  raw/optimized programs and O1/O2. Both interpreters agree. BF16 has 18 distinct
+  bit patterns in this frozen run; the other formats have 20.
 - 48 owner observations: packed storage and reuse on/off at O1/O2, with the
   rewrite selected/rejected. Successful cases check moves, aliases, slices,
   immutable updates, recoverable traps and cancellation. Missing cleanup exits
@@ -39,6 +40,16 @@ These are correctness and cleanup results. Compiler-cost limits pass in the sepa
 acceptance still requires its frozen comparisons. Optional WebAssembly
 execution in the focused core target is not evidence of WebAssembly support;
 that coverage belongs to the complete production matrix.
+
+## Additional final-matrix checks
+
+Source review found that payload `0x42` already sets BF16's quiet-NaN bit `0x40`.
+The frozen test therefore repeated a quiet pattern instead of exercising a second
+signaling payload. The test now uses `0x21` and rejects duplicate input patterns,
+giving 20 distinct signed bit patterns in every format. This repairs test coverage;
+it changes no compiler or runtime code. The final matrix must verify these inputs
+and the expanded storage probe below. The frozen results above retain their actual
+coverage; they are not relabeled as tests of the new inputs.
 
 ## Result lifetime and allocation traffic
 
@@ -69,8 +80,11 @@ slots, including rounding and view headers, rather than requested payload bytes
 or process RSS. All cases return to zero additional live storage after cleanup.
 
 The original map makes one allocation charging 2,560 bytes; the selected map makes
-none. Neither adds retains during the map. Packed-off slices are independent
-copies, so their storage follows the ordinary-array rows.
+none. Neither adds retains during the map. The shared setup retains one reference
+for the caller before entry; these map counts exclude that setup. Source-level
+borrowing can place reference-count operations at different call boundaries;
+whole-program measurements account for those separately. Packed-off slices are
+independent copies, so their storage follows the ordinary-array rows.
 
 The unique-slice row shows why allocation savings do not establish lower live
 memory: returning a view keeps its larger backing allocation alive. The original

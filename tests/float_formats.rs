@@ -298,7 +298,7 @@ fn same_type_conversion_agrees_across_interpreter_and_native_entries() {
         let quiet = 1u128 << (fraction - 1);
         // Both signs of zero, subnormal boundaries, normal boundaries,
         // infinities, and quiet/signaling NaNs with distinct payloads.
-        for magnitude in [
+        let magnitudes = [
             0,
             1,
             (1u128 << fraction) - 1,
@@ -306,10 +306,16 @@ fn same_type_conversion_agrees_across_interpreter_and_native_entries() {
             infinity - 1,
             infinity,
             infinity | 1,
-            infinity | 0x42,
+            // Keep the second payload below BF16's quiet bit (0x40).
+            infinity | 0x21,
             infinity | quiet,
-            infinity | quiet | 0x42,
-        ] {
+            infinity | quiet | 0x21,
+        ];
+        for (index, magnitude) in magnitudes.into_iter().enumerate() {
+            assert!(
+                !magnitudes[..index].contains(&magnitude),
+                "{name} conversion input patterns must be distinct"
+            );
             for bits in [magnitude, magnitude | sign] {
                 let value = match name {
                     "F16" => Value::F16(Binary16::from_bits(bits as u16)),

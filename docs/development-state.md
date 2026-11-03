@@ -8,7 +8,8 @@ hosts rejected before building or measuring.
 ## Checkout and frozen sources
 
 - Worktree/branch: `.worktrees/scalar-array-identities` / `scalar-array-identities`.
-  Scratch: `.worktrees/gradient-work`. Publish one draft PR after this handoff update.
+  Scratch: `.worktrees/gradient-work`. [Draft PR #254](https://github.com/e6qu/fun-with-pipes/pull/254)
+  is the only active PR; keep it draft until the complete report is ready.
 - PR #253 merged as `ed5b8830a3cb90a4b6a248464d279ac8d1d0ccc7`; the next branch
   was rebased onto it with identical before/after trees. Leave the detached primary
   checkout's recovery edits and old worktrees alone.
@@ -17,7 +18,8 @@ hosts rejected before building or measuring.
 - Native checks and measurements: `beddd406153f1976fed00847292207bff9053e22`,
   immutable tag `roadmap/scalar-array-identity-measurement-2026-11-03`.
   Current compiler/runtime/library/tooling sources match that source. Later changes
-  add only documentation and storage observations to the C probe.
+  add documentation, storage observations to the C probe and distinct BF16 NaN
+  test payloads; no compiler/runtime/library/tooling changes.
 - Same-type conversion preserving all bits is the stated working rule; the pending
   design question has no recorded reply. Cross-type conversion is unchanged.
   If the answer changes, revise the contract explicitly before delivery.
@@ -52,7 +54,10 @@ The [storage report](measurements/scalar-array-identities-2026-11-03/README.md)
 adds eight local Clang O1/O2 executions and 32 observations, using saved generated
 C with only the probe extended. It shows both saved allocation and a unique slice
 retaining its larger backing array. The exact Rust-generated extension still needs
-the final platform matrix; do not rerun the unchanged eight-target focused group.
+the final platform matrix. Source review also corrected a duplicated BF16 NaN
+payload: `0x42` set its quiet bit, so use `0x21` and require distinct test patterns.
+The frozen run has 18 distinct BF16 patterns; final tests have 20. This changes no
+runtime semantics. Do not rerun the unchanged eight-target focused group.
 
 ## Measurements in progress
 
@@ -60,11 +65,22 @@ the final platform matrix; do not rerun the unchanged eight-target focused group
   both jobs and all 480 commands pass full audit. Maximum time increase 0.832%,
   peak RSS increase 0.142%, identical-copy difference 1.767%.
   Scratch `audit-identity-analysis.py` and `identity-analysis/`.
-- Runtime run `41678576958`: both ARM64 sessions are active. Both initial AMD64
-  hosts were rejected before building/timing: EPYC 9V74 instead of frozen 7763.
-  Full logs and qualification artifacts are audited in
-  `identity-host-rejections/41678576958`.
-- Replacement AMD64 sessions: `41679275708`, queued. Neither has measured yet.
+- Runtime run `41678576958`: both ARM64 sessions completed. Each reports eight
+  missed 5% speed gains, with no other failed limits. Full job logs are inspected
+  in `identity-runtime-first/`; raw audit run `41682284697` is queued.
+- Four AMD64 hosts were rejected before building/timing (two 9V74, two 9V45,
+  instead of frozen 7763). Their complete logs and qualification artifacts are
+  audited under scratch `identity-host-rejections/`.
+- AMD64 session 2 completed in `41679275708`, with eight missed 5% gains and
+  no other failed limits in its full log. Raw audit: `41684684676`. Session 1
+  was rejected there and again in `41682465813`; only its unmeasured replacement
+  is being rescheduled. Do not repeat measured sessions.
+- Draft documentation run `41681546983` at `602f449c` exhausted its five-minute
+  budget after a 4m14s full-history fetch. Every completed check passed; cancellation
+  interrupted the buffer-control group. The repair retains full commits/tags with
+  `blob:none` fetching, including review heads, and adds the identity reference
+  control to this gate. Its fresh-clone result remains to be verified in CI.
+  The draft production workflow is intentionally skipped, not a verified gate.
 - Correctness prerequisite for every measurement is `41672290329`. The reference
   disables only map removal; both sides include the scalar repair. Count budgets
   require at least one removed array per selected update. Keep the frozen compiler,
@@ -86,9 +102,11 @@ Passing guarded checks: Rust formatting; generated standard-library docs; workfl
 lint; unchanged primitive inventory (394 declarations, 384 symbols); reference,
 budget, compiler-analysis and raw-evidence controls. The documentation audit
 caught and repaired a missing roadmap-status heading; keep that required section.
-Latest audit: 244 document link sets, 106 anchors, four plan steps (2.53s).
+Latest audit: 245 document link sets, 106 anchors, four plan steps (2.51s).
 The saved-source storage probes pass in 3.45s; retained evidence reconciles in 0.25s.
-No compiler build, full suite or benchmark ran locally.
+The checkout repair passes workflow lint (0.25s), identity-reference controls
+(3 tests, 0.12s) and documentation audit (2.51s). No compiler build, full suite
+or benchmark ran locally.
 
 Use `python3 scripts/local-guard.py` serially: 64 GiB free disk, target data below
 2 GiB, sampled RSS below 1 GiB, 180 seconds. Full work stays on GitHub runners.

@@ -18,8 +18,10 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
+          # Keep ancestry and tags without downloading every historical evidence blob.
+          filter: blob:none
       - name: Retain review heads for preparation references
-        run: git fetch origin "+refs/pull/*/head:refs/remotes/origin/review/*"
+        run: git fetch --filter=blob:none origin "+refs/pull/*/head:refs/remotes/origin/review/*"
       - name: Documentation audit controls
         run: python3 scripts/test-roadmap.py
       - name: Documentation, immutable tags and commit messages
@@ -52,6 +54,7 @@ jobs:
           python3 scripts/test-range-zip-reference.py
           python3 scripts/test-gradient-array-reference.py
           python3 scripts/test-scalar-array-map-reference.py
+          python3 scripts/test-scalar-array-identity-reference.py
           python3 scripts/test-gradient-array-budgets.py
       - name: Sorting-time evidence controls
         run: python3 scripts/test-sort-time-evidence.py
