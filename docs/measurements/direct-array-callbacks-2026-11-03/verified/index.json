@@ -1,0 +1,48 @@
+{
+  "run": 41646433358,
+  "source": "5e921fb8517d59cfa0ef452c2c2264ffa00be325",
+  "jobs": [
+    {
+      "runner": "ubuntu-24.04-arm",
+      "job": 125952899951,
+      "passed": 40,
+      "nativeImages": 256,
+      "selectionChecks": 24,
+      "observations": "ubuntu-24.04-arm-observations.json.gz",
+      "log": "ubuntu-24.04-arm-job.log.gz",
+      "targets": "ubuntu-24.04-arm-targets-and-controls.zip"
+    },
+    {
+      "runner": "ubuntu-latest",
+      "job": 125952899662,
+      "passed": 40,
+      "nativeImages": 256,
+      "selectionChecks": 24,
+      "observations": "ubuntu-latest-observations.json.gz",
+      "log": "ubuntu-latest-job.log.gz",
+      "targets": "ubuntu-latest-targets-and-controls.zip"
+    },
+    {
+      "runner": "macos-15",
+      "job": 125952899658,
+      "passed": 40,
+      "nativeImages": 250,
+      "selectionChecks": 24,
+      "observations": "macos-15-observations.json.gz",
+      "log": "macos-15-job.log.gz",
+      "targets": "macos-15-targets-and-controls.zip"
+    }
+  ],
+  "crossHostOutputs": {
+    "trap": [
+      "Some(101)",
+      "1\n127\n",
+      "fwp: trap: arithmetic overflow in I8\n"
+    ],
+    "values": [
+      "Some(0)",
+      "[2, -1]\n[0.5, 1.0]\n[32767, -32767]\n[0, 18446744073709551614]\n[16777216.0, 2.0]\n[]\n[7.0]\n1\n2\n3\n[2, 3, 4]\n[0.5, 1.0]\n[5.0, 7.0]\n[2.0, 3.0]\n[1, 5]\n[3.0]\n([0.5, 1.0], [9.0, 2.0, 4.0, 8.0])\n",
+      ""
+    ]
+  }
+}

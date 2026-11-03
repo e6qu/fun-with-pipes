@@ -1,6 +1,7 @@
 # Direct calls inside scalar array maps
 
-**Status:** experiment declared before implementation. Baseline:
+**Status:** [focused native verification passes](direct-array-callbacks-2026-11-03/README.md);
+measurements are next. The experiment was declared before implementation. Baseline:
 `e2d55aa81a7830cf7379570944ed7f307c55f7af`, PR #252. Its final production gates
 must pass before this follow-up is published as the next PR. Preserve its
 [complete timing results](gradient-array-time-2026-11-03/README.md).
