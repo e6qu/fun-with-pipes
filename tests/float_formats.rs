@@ -415,6 +415,7 @@ fn scalar_array_identity_moves_owners_and_preserves_aliases() {
     let mapping = MT::Fun(Box::new(array.clone()), Box::new(array.clone()));
     let option = MT::Con("std::Option".into(), vec![scalar.clone()]);
     let consuming = MT::Fun(Box::new(array.clone()), Box::new(option.clone()));
+    let yielding = MT::Fun(Box::new(MT::unit()), Box::new(MT::unit()));
     let mut program = Program {
         funcs: vec![
             Func {
@@ -442,9 +443,17 @@ fn scalar_array_identity_moves_owners_and_preserves_aliases() {
                 name: "main".into(),
                 arity: 0,
                 locals: vec![],
-                ty: MT::Record(vec![("0".into(), mapping), ("1".into(), consuming.clone())]),
-                // Keep the actual callables and typed argument cleanup reachable.
-                body: Body::Expr(Expr::Record(vec![Expr::Func(2), Expr::Func(5)])),
+                ty: MT::Record(vec![
+                    ("0".into(), mapping),
+                    ("1".into(), consuming.clone()),
+                    ("2".into(), yielding.clone()),
+                ]),
+                // Keep owned entries and the real task/unwind execution mode.
+                body: Body::Expr(Expr::Record(vec![
+                    Expr::Func(2),
+                    Expr::Func(5),
+                    Expr::Func(6),
+                ])),
             },
             Func {
                 name: "get".into(),
@@ -465,6 +474,13 @@ fn scalar_array_identity_moves_owners_and_preserves_aliases() {
                         Expr::Call(2, vec![Expr::Local(0)]),
                     ],
                 )),
+            },
+            Func {
+                name: "yield".into(),
+                arity: 1,
+                locals: vec![MT::unit()],
+                ty: yielding,
+                body: Body::Prim("task.yield".into()),
             },
         ],
         main: Some(3),
@@ -488,6 +504,10 @@ fn scalar_array_identity_moves_owners_and_preserves_aliases() {
         }
         fwp::ir::check_locals(&current).unwrap();
         let generated = fwp::cgen::generate(&current).unwrap();
+        assert!(
+            generated.contains("#define FWP_UNWIND 1"),
+            "fault probe needs a task-capable program"
+        );
         let generated = generated.replace(
             "int main(int argc, char **argv)",
             "int original_main(int argc, char **argv)",

@@ -11,7 +11,7 @@ int main(int argc, char **argv) {
     int missing=!strcmp(argv[1],"missing-release");
     int allocation_failure=!strcmp(argv[1],"allocation-failure");
     if(!missing && !allocation_failure && strcmp(argv[1],"complete")) return 94;
-    fwp_heap_start(); fwp_fns=fwp_fn_table; fwp_init_consts();
+    fwp_heap_start(); fwp_fns=fwp_fn_table; fwp_init_consts(); fwp_budget=1000000;
     const fwp_desc scalar = {.kind=K_F64};
     if(allocation_failure) {
         V input=fwp_array_typed_new(32,&scalar);
