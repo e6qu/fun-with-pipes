@@ -4,27 +4,35 @@ Build an ahead-of-time language with simple pipes, immutable values, strong type
 and useful inference. Prefer direct values, moves and borrows; reserve ARC for
 necessary sharing. GC is removed; JIT and backward compatibility are excluded.
 
-## Current batch: deliver private index-list removal
+## Current work: finish range delivery, then remove gradient-list storage
 
 [PR #251](https://github.com/e6qu/fun-with-pipes/pull/251) generates private zip
-indices directly. The largest verified solve makes 25,870 fewer allocations and
-requests 823,064 fewer bytes; retains stay at 995 and managed peak falls from
-17,824 to 14,976 bytes. Larger timed solves take 7.1–10.0% less time, while small
-cases miss the speed target. Measurements and raw audits are complete; final
-platform validation remains. Predecessor #250 is now fully platform-verified.
+indices directly. The largest verified solve saves 25,870 allocation requests
+and 823,064 requested bytes; larger timed solves take 7.1–10.0% less time.
+Small-case speed goals remain open. Documentation and benchmarks pass on its
+final head; eight native platform jobs are still running. Keep that head fixed.
+
+The next grouped batch keeps private gradient results in owned arrays and reads
+those arrays directly during the following map/zip. The
+[implementation contract](docs/measurements/gradient-array-storage.md) defines
+scope cleanup, typed/nested derivatives, selection limits and measurement budgets.
+No code change is claimed yet. Keep one open PR: prepare this batch independently,
+then publish it after #251 passes, is audited and is squash-merged.
 
 | Step | Work | Completion requirement |
 |---|---|---|
-| 1 | Merged implementation platform validation complete | All nine jobs in `41591834975` and docs pass on `a8a5568d`; every full/target log is audited. [Gate records](docs/measurements/temporary-list-storage-2026-11-03/platforms/final-gates.json). |
-| 2 | Scalar-buffer measurements complete; timing goals open | All 480 compiler commands and four runtime sessions are independently audited. Compiler limits pass; small-case speed requirements and ARM64 zero-update regression limits fail. [Complete results](docs/measurements/scalar-map-zip-time-2026-11-03/README.md) retain every outcome. |
-| 3 | Direct consumption of a private index range — contract frozen | [Contract](docs/measurements/range-zip-storage.md): evaluate I64 bounds once; one zip consumer, known scalar captures, scalar or flat numeric-record outputs. Expected reduction: `(d+1)*u` requests and `(32*d+8)*u` bytes. Contract tag `roadmap/range-zip-protocol-2026-11-03` predates implementation. The isolated same-source reference is published and has passing controls. |
-| 4 | Implement, verify and deliver the next substantial batch | Corrected GCC/Clang semantics, cleanup and all 96 count observations pass at `3be9479c`. [Evidence](docs/measurements/range-zip-storage-2026-11-03/README.md). All four runtime sessions and raw audits are complete, with small-case timing goals open. Run all nine final-head production jobs plus docs, audit logs and verify the one-line squash. |
+| 1 | Finish range-storage delivery | All nine jobs in `41610112980` and docs pass at `cea8debc`; audit every full/target log, squash-merge and verify the one-line message and tree. [Range evidence](docs/measurements/range-zip-storage-2026-11-03/README.md). |
+| 2 | Keep internal gradient results in owned arrays | Floating, F128 and nested reverse paths agree in both engines; public list results materialize when needed. Select sole-use numeric array conversions for map/zip before list fusion hides them. Preserve eager order, aliases and scope cleanup. |
+| 3 | Verify the grouped storage change | Freeze the contract before edits and the isolated whole-change reference before measurements. GCC/Clang O1/O2 semantic, failure, cancellation, reuse, physical-free and compiler-scaling controls pass. All 96 allocation observations meet the declared net budgets with exact attribution. |
+| 4 | Measure and deliver the next substantial PR | Compiler costs and four qualified runtime sessions are independently audited; retain every missed limit. Complete the final nine-job matrix plus docs, audit all logs, and verify the one-line squash. |
 
-The range comparison is frozen at `3be9479c`, tag
-`roadmap/range-zip-measurement-2026-11-03`; the completed scalar-buffer comparison
-remains at `da510f18`, tag `roadmap/scalar-map-zip-measurement-2026-11-03`.
-Both use an isolated same-source reference. No completed timing is repeated for
-a better result. [Range results and retained failures](docs/measurements/range-zip-storage-2026-11-03/README.md).
+The completed range comparison remains frozen at `3be9479c`, tag
+`roadmap/range-zip-measurement-2026-11-03`; the scalar-buffer comparison remains at
+`da510f18`, tag `roadmap/scalar-map-zip-measurement-2026-11-03`.
+[Completed results](docs/measurements/range-zip-storage-2026-11-03/README.md) and
+[history](docs/roadmap-history.md) retain source IDs and failed outcomes. Predecessor
+#250 passes all nine production jobs and docs, with every log audited.
+Do not repeat completed timings for a better result.
 
 ## Open performance goals
 
@@ -33,9 +41,11 @@ a better result. [Range results and retained failures](docs/measurements/range-z
   history in both sessions. Those improvements are 3.97–4.98%.
   [Complete results](docs/measurements/range-zip-time-2026-11-03/README.md) retain
   every miss; all four raw audits are complete. Preserve verified reductions
-  while leaving these goals open. Select further work from the
+  while leaving these goals open. The next batch selects the gradient-list group
+  from the
   [remaining allocation sites](docs/measurements/range-zip-storage-2026-11-03/README.md#remaining-allocation-sites)
-  after the current delivery; prove the selected lifetime boundary before editing.
+  for owned-array results and direct consumption. The other groups still need
+  separate lifetime proofs before selection.
 
 - **Scalar-buffer timings.** Both completed ARM64 sessions report a 3.32%
   zero-update current-only slowdown against the 2% limit; several small cases
