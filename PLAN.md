@@ -22,8 +22,8 @@ result array and preserves input aliases, effects, traps and cancellation.
 This is an experiment, not an established explanation of earlier timing misses.
 
 The [contract](docs/measurements/direct-array-callbacks.md) was frozen before code
-changes. The implementation and its comparison tools are ready for focused native
-verification. [The failure record](docs/measurements/direct-array-callbacks-2026-11-03/README.md)
+changes. [Focused native verification](docs/measurements/direct-array-callbacks-2026-11-03/README.md)
+passes on all three hosts; the isolated compiler/runtime measurements are next. [The failure record](docs/measurements/direct-array-callbacks-2026-11-03/README.md)
 retains the first compilation error and repair; no new timing run has started.
 
 | Step | Work | Completion requirement |

@@ -39,6 +39,20 @@ checks where needed. Callbacks must finish in the same order; aliases must retai
 their values. Failure and cancellation must release old input, partial output and
 scratch exactly once, including when zip stops at the shorter input.
 
+## Check redundant same-type conversions
+
+The same report counts 199 replacement conversion arrays, totaling 206,960
+requested bytes in the largest solve. `rev._backward-float` converts the backward
+pass's F64 array to the requested scalar type. F32/F16/BF16 need real conversion;
+for F64, investigate whether the map can be proven to leave every value unchanged.
+
+An identity rewrite must preserve floating-point bits, including signed zero and
+NaNs, and must transfer the existing owner correctly. Merely returning a borrowed
+input would be unsafe when its caller releases it. Prove that the owned result
+moves through the ordinary ownership pass without additional retains, preserve
+aliases, and test cleanup before claiming removal of that allocation or traversal.
+This is unselected and separate from direct callback dispatch.
+
 ## Another opportunity: discard an unused iteration history
 
 The benchmark's history source is `iterate count descend | last`: it builds

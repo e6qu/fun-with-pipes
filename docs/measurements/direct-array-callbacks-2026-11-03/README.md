@@ -1,7 +1,35 @@
 # Direct scalar array callbacks: verification
 
 The [contract](../direct-array-callbacks.md) compares direct calls with the same
-compiler using generic callback application. Timing has not started.
+compiler using generic callback application. Focused native verification passes;
+compiler-cost and runtime measurements have not started.
+
+## Verified native behavior
+
+Run [41646433358](https://github.com/e6qu/fun-with-pipes/actions/runs/41646433358)
+at `5e921fb8517d59cfa0ef452c2c2264ffa00be325` passes on GCC Linux ARM64/AMD64 and
+Clang macOS ARM64. [The retained index](verified/index.json) links every full job
+log, target log, generated source, observation and native image identity.
+
+Each host passes:
+
+- 40 tests across all eight affected targets.
+- 24 export-selection checks: seven selected and five excluded functions, each
+  with ordinary and packed array storage. Independent review of the retained C
+  confirms direct calls and no generic application in selected bodies.
+- Eight native semantic cases: values/traps × two storage modes × O1/O2. Raw and
+  optimized interpreters agree with native execution. Complete output, errors and
+  exit status also match across all three hosts.
+- Ten cleanup observations: normal and disabled reuse succeed at O1/O2; omitted
+  buffer, scratch and partial-result release fail with the expected exit 90.
+  Successful runs cover nine modes, four alias combinations and sixteen rounds.
+  The callback counters require one direct invocation per visited element and
+  zero generic applications during the selected map.
+
+All 762 saved native images have matching architecture headers and recorded
+hashes: 256 on each Linux host and 250 on macOS. Both GCC construction reports
+pass. These checks establish correctness and cleanup for the tested cases;
+whole-solve allocation/ARC limits, compiler costs and speed remain unmeasured.
 
 ## First focused run
 
@@ -36,5 +64,5 @@ All ten direct-map cleanup observations per host pass: ordinary and disabled-reu
 runs exit 0 at O1/O2; omitted buffer, scratch and partial-output cleanup each exit
 90 at the detected leak. The successful controls exercise nine modes and four
 alias combinations over sixteen rounds.
-The incomplete numeric-value/selection test still needs a passing run. No new
-performance or memory improvement is claimed yet.
+The corrected numeric-value/selection test passes in the verified run above.
+No new performance or memory improvement is claimed yet.
