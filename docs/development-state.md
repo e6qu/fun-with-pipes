@@ -1,6 +1,9 @@
 # Current work
 
-**Next:** implement the [selected scalar map-to-zip buffer change](measurements/temporary-list-storage.md#selected-storage-change), including its same-source reference and semantic/cleanup controls. Census verification is complete. Keep implementation, grouped measurements, docs and final production gates in draft PR #250.
+**Next:** publish the scalar map-to-zip implementation and run `scalar-map-zip-checks`
+on both native Linux hosts. Audit every completed target and fix all failures
+before the grouped performance measurements. Census verification is complete;
+new compiler behavior is not yet verified. Keep this batch in draft PR #250.
 
 ## Checkout and sources
 
@@ -22,8 +25,8 @@
 | Step | Status | Remaining work |
 |---|---|---|
 | 1 | Verified | Preserve census controls and evidence |
-| 2 | In progress | Contract frozen; implement and verify the exact same-source reference switch |
-| 3 | Pending | Compiler selection, scalar buffer/zip generation, native semantic and cleanup controls |
+| 2 | Implemented | Frozen contract and reference helper; source-rewrite tests pass, runner checks remain |
+| 3 | Implemented | Native semantic/cleanup controls and exact allocation predictions need execution |
 | 4 | Pending | Grouped cost measurements, final platform gates and verified squash |
 
 ## Verified evidence and selected change
@@ -50,17 +53,30 @@ and source tag `roadmap/constructor-census-attempt-2026-11-03` are retained.
 
 ## Implementation preparation
 
-No compiler change yet. Relevant code: `src/cgen/packed_records.rs`, native body
-variants in `src/ir.rs`, ownership/scoped-effect visitors and `src/cgen.rs`.
-The adjustment passes through a local alias: prove and update the complete
-single-use chain. Collect uses once; avoid repeated tail scans. Preserve data-last
-zip argument order and handle either mapped-input slot. If both inputs qualify,
-select only one. Numeric records, captures and wide boxed values are excluded.
+`src/cgen/scalar_map_zip.rs` indexes uses once, follows single-use aliases and
+rewrites the exact indexed body without cloning it. Native map/zip bodies borrow
+their inputs; callbacks, live-function reachability, scoped effects, numeric
+parameter analysis and borrowing analysis include both new body kinds.
 
-Draft semantic input: `/private/tmp/fwp-scalar-map-zip-order.fwp` (not executed).
-Its key case maps three elements, traps on the third, and zips against one: the
-trap must still occur before zip. Preparation notes are in
-`/private/tmp/fwp-scalar-map-zip-design.md`; the published contract is authoritative.
+Controls extend existing `zip_map_fusion` and `zip_unwind_ownership` targets:
+both input slots, all 12 machine-number kinds, eager order, traps beyond a shorter
+zip, shared inputs/excluded results, failures, cancellation, partial output and
+three deliberately missing frees. Unit controls cover alias/type rewriting,
+exclusions, two eligible inputs and linear visit counts. These Rust/native checks
+have not run locally. Existing fold ownership targets run alongside them on GCC;
+the zip targets also run on Clang, each at O1/O2.
+
+`prepare-scalar-map-zip-reference.py` bypasses only the new selection call.
+Reference-isolation tests pass. The count driver now requires exact predicted
+allocation savings and unchanged retains; it retains constructor attribution and
+all existing storage/output/work checks. Compiler time/RSS, complete-driver timing
+and final production gates remain unimplemented/unrun for this candidate.
+
+The grouped implementation's local checks pass: scalar-reference isolation
+(three tests), preserved numeric-reference isolation (four), derivative observer
+and exact-saving controls (15, 13.95s), Rust formatting (1.81s), actionlint
+(6.48s), roadmap audit (3.00s), and primitive inventory (394 declarations,
+384 symbols, 40 aliases, no unreviewed symbols; 1.23s).
 
 ## Checks and local limits
 

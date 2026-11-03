@@ -227,8 +227,11 @@ impl<'p> Interp<'p> {
             Body::RegionEntry { .. } | Body::RegionCtor(_) => {
                 return trap("internal: native region body reached interpreter");
             }
-            Body::PackedRecordMap { .. } | Body::PackedRecordFold { .. } => {
-                return trap("internal: native packed record body reached interpreter");
+            Body::PackedRecordMap { .. }
+            | Body::PackedRecordFold { .. }
+            | Body::ScalarBufferMap { .. }
+            | Body::ScalarBufferZip { .. } => {
+                return trap("internal: native buffer body reached interpreter");
             }
         };
         if f.arity == 0 {

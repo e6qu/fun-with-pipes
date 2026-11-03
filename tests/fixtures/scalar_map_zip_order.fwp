@@ -1,0 +1,36 @@
+mapped : I64 -> I64 ! {IO, Error[String]}
+mapped = fn n ->
+    let printed = n | echo
+    in n == 3 | match
+        True -> fail "map stopped"
+        False -> n * 10
+subtract : I64 -> I64 -> I64 ! {IO}
+subtract = fn y -> fn x ->
+    let printed = (y, x) | echo
+    in x - y
+left : List[I64] -> List[I64] -> List[I64] ! {IO, Error[String]}
+left = fn input -> fn other ->
+    let values = map mapped input
+    in let printed = 77 | echo
+    in zip-with subtract values other
+right : List[I64] -> List[I64] -> List[I64] ! {IO, Error[String]}
+right = fn input -> fn other ->
+    let values = map mapped input
+    in let printed = 88 | echo
+    in zip-with subtract other values
+alias : List[I64] -> (List[I64], List[I64]) ! {IO, Error[String]}
+alias = fn input -> (left input [101, 202, 303], input)
+shared : List[I64] -> (List[I64], List[I64]) ! {IO, Error[String]}
+shared = fn input ->
+    let values = map mapped input
+    in (zip-with subtract values [101, 202], values)
+main = [
+    [] | attempt (fn input -> left input [101]) | show,
+    [1, 2] | attempt (fn input -> left input []) | show,
+    [1, 2] | attempt (fn input -> left input [101]) | show,
+    [1, 2] | attempt (fn input -> left input [101, 202, 303]) | show,
+    [1, 2] | attempt (fn input -> right input [101]) | show,
+    [1, 2, 3] | attempt (fn input -> left input [101]) | show,
+    [1, 2] | attempt alias | show,
+    [1, 2] | attempt shared | show,
+] | each print

@@ -475,6 +475,28 @@ final production jobs and documentation pass for PR #248. See the
 [measurement report](measurements/derivative-temporary-storage-2026-11-02/README.md)
 for selection limits, deliberate missing-destruction tests and open timing goals.
 
+### Temporary scalar map inputs to zip
+
+A private mapped list used only by one `zip-with` can keep its numbers in one
+buffer. For example, scaling `[1.0, 2.0]` by `0.1`, then subtracting those results
+from `[10.0, 20.0]`, still produces `[9.9, 19.8]`:
+
+```text
+map every input → buffer [0.1, 0.2] → zip with [10.0, 20.0] → list [9.9, 19.8]
+```
+
+The map still finishes first, even if the other list is empty or shorter.
+`src/cgen/scalar_map_zip.rs` proves one use through local aliases, requires known
+scalar callbacks and keeps both calls at their original positions. Shared or
+escaping results and values with child owners retain their ordinary storage.
+The buffer and zip's output scratch remain protected during callbacks; neither
+source list is mutated.
+
+This implementation is awaiting native validation. The
+[frozen contract and count predictions](measurements/temporary-list-storage.md#selected-storage-change)
+and [verified allocation census](measurements/temporary-list-census-2026-11-03/README.md)
+separate the measured starting cost from the new change's unverified savings.
+
 ### Numeric callback inputs
 
 A record such as `(value, operation-id)` contains two numbers but can still have

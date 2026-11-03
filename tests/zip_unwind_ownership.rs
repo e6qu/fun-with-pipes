@@ -345,3 +345,160 @@ int main(void) {
         }
     }
 }
+
+#[test]
+fn scalar_map_zip_buffers_release_on_failure_cancellation_and_partial_output() {
+    let dir = Scratch::new("scalar-buffer");
+    let source = dir.0.join("scalar.fwp");
+    let cfile = dir.0.join("scalar.c");
+    std::fs::write(
+        &source,
+        r#"
+mapped : I64 -> I64 ! {Async}
+mapped = fn n -> let ready = task.yield () in n + 1
+combine : I64 -> I64 -> I64 ! {Async}
+combine = fn adjustment -> fn value -> let ready = task.yield () in value - adjustment
+export transform : Bool -> List[I64] -> List[I64] -> List[I64] ! {Async}
+transform = fn pause -> fn input -> fn other ->
+    let values = map mapped input
+    in let ready = pause | match
+        True -> task.yield ()
+        False -> ()
+    in zip-with combine values other
+"#,
+    )
+    .unwrap();
+    checked(
+        Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .args([
+                "build",
+                "--fn",
+                "transform",
+                "--memory",
+                "dynamic",
+                "--emit-c",
+            ])
+            .arg(&source)
+            .arg("-o")
+            .arg(&cfile),
+    );
+    let emitted = std::fs::read_to_string(cfile).unwrap();
+    assert!(emitted.contains("#define FWP_UNWIND 1"));
+    assert!(emitted.contains("#define FWP_TASK_TICKS 1"));
+    let section = |marker: &str| {
+        assert_eq!(emitted.matches(marker).count(), 1);
+        let start = emitted.find(marker).unwrap();
+        let end = start + emitted[start..].find("\n}\n").unwrap() + 3;
+        &emitted[start..end]
+    };
+    let map = section("    /* Eager scalar buffer:");
+    let zip = section("    /* Zip after the complete scalar map;");
+    let map_control = map
+        .replace(
+            "    V buffer =",
+            "    scalar_fail_allocation = scalar_mode == 5;\n    V buffer =",
+        )
+        .replace(
+            "        ARR(buffer)->d[i] =",
+            "        scalar_stage = 1; scalar_maps++;\n        ARR(buffer)->d[i] =",
+        )
+        .replace(
+            "    return fwp_value_finish",
+            "    scalar_stage = 0;\n    return fwp_value_finish",
+        );
+    let zip_control = zip
+        .replace(
+            "    V *items =",
+            "    scalar_fail_allocation = scalar_mode == 6;\n    V *items =",
+        )
+        .replace(
+            "        items[i] =",
+            "        scalar_stage = 2; scalar_zips++;\n        items[i] =",
+        )
+        .replace(
+            "    return fwp_map_finish_protected",
+            "    scalar_stage = 3;\n    return fwp_map_finish_protected",
+        );
+    assert_ne!(map, map_control);
+    assert_ne!(zip, zip_control);
+    let mut code = emitted[..emitted.find("int main(").unwrap()].replace(map, &map_control).replace(zip, &zip_control)
+        .replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic int scalar_mode, scalar_stage, scalar_maps, scalar_zips, scalar_nodes, scalar_fail_allocation;\nstatic void fwp_trap(const char *);");
+    for signature in [
+        "static inline void *fwp_heap_alloc(size_t n, int kind) {",
+        "static inline void *fwp_alloc_init(size_t n) {",
+    ] {
+        assert_eq!(code.matches(signature).count(), 1);
+        code = code.replace(signature, &format!("{signature}\n    if (scalar_fail_allocation) {{ scalar_fail_allocation = 0; fwp_trap(\"injected scalar buffer allocation failure\"); }}"));
+    }
+    let alloc = "static inline void *fwp_alloc_init(size_t n) {";
+    code = code.replace(alloc, &format!("{alloc}\n    if (scalar_stage == 3 && scalar_mode == 7 && ++scalar_nodes == 2) fwp_trap(\"injected partial result failure\");"));
+    let yielding = "static V fwp_p_task_yield(void) {";
+    assert_eq!(code.matches(yielding).count(), 1);
+    let start = code.find(yielding).unwrap();
+    let end = start + code[start..].find("\n}\n").unwrap() + 3;
+    code.replace_range(
+        start..end,
+        r#"static V fwp_p_task_yield(void) {
+    if(scalar_stage==0 && scalar_mode==1) fwp_trap("injected between-stage failure");
+    if(scalar_stage==1 && scalar_maps==2) {
+        if(scalar_mode==0) fwp_trap("injected map failure");
+        if(scalar_mode==3) { fwp_cur->cancelled=1; fwp_check_cancel(); }
+    }
+    if(scalar_stage==2 && scalar_zips==2) {
+        if(scalar_mode==2) fwp_trap("injected zip failure");
+        if(scalar_mode==4) { fwp_cur->cancelled=1; fwp_check_cancel(); }
+    }
+    return FWP_UNIT;
+}
+"#,
+    );
+    let start = emitted
+        .find("/* List[I64] */\nstatic void fwp_drop")
+        .unwrap();
+    let drop_list = emitted[start..]
+        .split("static void ")
+        .nth(1)
+        .unwrap()
+        .split('(')
+        .next()
+        .unwrap();
+    code += &include_str!("fixtures/scalar_map_zip_unwind.c")
+        .replace(
+            "TRANSFORM",
+            &format!("f{}", function_id(&emitted, "transform")),
+        )
+        .replace("DROP_LIST", drop_list);
+    let destroy = "static void fwp_rc_free_arr(V v) {\n    if (fwp_rc_last(v)) fwp_mem_free((void *)(uintptr_t)v);\n}";
+    assert_eq!(code.matches(destroy).count(), 1);
+    let missing_buffer = code.replace(destroy, "static void fwp_rc_free_arr(V v) { (void)v; }");
+    let scratch = "    fwp_mem_free(owner->items);";
+    assert_eq!(code.matches(scratch).count(), 1);
+    let missing_scratch = code.replace(scratch, "    /* deliberately omit scratch destruction */");
+    let partial = "if (built && owner->list_drop) owner->list_drop(built);";
+    assert_eq!(code.matches(partial).count(), 1);
+    let missing_partial = code.replace(partial, "/* deliberately omit partial list destruction */");
+    for opt in ["-O1", "-O2"] {
+        for (name, text, status) in [
+            ("complete", &code, 0),
+            ("missing-buffer", &missing_buffer, 90),
+            ("missing-scratch", &missing_scratch, 90),
+            ("missing-partial", &missing_partial, 90),
+        ] {
+            let exe = dir.0.join(format!("scalar-{name}-{opt}.exe"));
+            fwp::cgen::compile_c(text, &exe, opt).unwrap();
+            let output = Command::new(&exe).output().unwrap();
+            record_probe::save(
+                "scalar_map_zip_unwind",
+                &format!("{name}-{opt}"),
+                text,
+                &exe,
+                &output,
+            );
+            assert_eq!(
+                output.status.code(),
+                Some(status),
+                "{name}/{opt}: {output:?}"
+            );
+        }
+    }
+}
