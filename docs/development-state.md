@@ -1,149 +1,94 @@
 # Current work
 
-**Next:** publish the complete list-layout fixture repair and dispatch the next
-three-host `final-iteration-checks` batch. Both GCC jobs in run `41720302662`
-were audited; its still-queued macOS job was cancelled. Monitor PR #254's final
-gates independently. Open the next delivery PR only after its verified squash.
-No final-iteration timing session has started.
+**Next:** publish the audited iteration-buffer count correction and run the
+three-host `final-iteration-checks` batch. Monitor #254 independently; retry its
+Intel macOS ownership job after the remaining production jobs finish. Open the
+next delivery PR only after #254's verified squash. No new timing session has started.
 
 ## PR #254: final gates
 
-- Active PR: https://github.com/e6qu/fun-with-pipes/pull/254.
-- Repaired head: `8bf9c65bc247bbd94903d0a31fb0823d1e335391` on branch/worktree
-  `scalar-array-identities`. Production `41713252299` is running with no failed
-  steps reported. Benchmarks, macOS ARM64 ownership and docs `41713252267` /
-  job `126186525051` pass. The ownership job's 126 target logs and full log pass
-  audit (4.78 guarded seconds); audits are retained in scratch
-  `platforms-254-repaired`. Seven native gates remain running or queued.
-- Previous production `41694728758` at `9061744b` completed: seven jobs and docs
-  passed; both Windows jobs failed the same two float probes. Their custom C
-  mains omitted binary-stream setup, producing CRLF. The repair checks `_setmode`
-  on stdout/stderr and preserves exact-byte assertions. The audit verifies all
-  1,600 conversion rows and 32 deliberate fatal-allocation exits. TLS unknown-CA
-  output belongs to a passing untrusted-client rejection control.
-- [Retained diagnosis](https://github.com/e6qu/fun-with-pipes/blob/8bf9c65bc247bbd94903d0a31fb0823d1e335391/docs/measurements/scalar-array-identities-2026-11-03/windows-repair/README.md).
-  Full logs, target archives and collector are in scratch `platforms-254` under
-  `.worktrees/gradient-work`. Audit every completed target and compiler diagnostic.
-- All measurements are complete. The compiler/runtime/library still match frozen
-  `beddd406153f1976fed00847292207bff9053e22`. Keep all 32 missed speed goals open;
-  never repeat completed timing sessions for a pass. See [the complete report](measurements/scalar-array-identity-time-2026-11-03/README.md).
-- Require nine production jobs plus docs at the exact repaired head. Squash
-  subject: `Preserve float bits and remove redundant F64 array copies`. Empty
-  body, one line, at most 80 characters, no trailers/attribution; verify merged
-  tree equals the tested tree. Preserve the passing head while gates run.
+- PR: https://github.com/e6qu/fun-with-pipes/pull/254.
+- Head: `8bf9c65bc247bbd94903d0a31fb0823d1e335391`, branch/worktree
+  `scalar-array-identities`. Production run `41713252299` is still running.
+- Bench, regular Intel macOS, ARM64 macOS ownership and docs `41713252267` /
+  job `126186525051` pass. Full/target audits are in scratch
+  `../gradient-work/platforms-254-repaired`; 131 regular and 126 ownership logs pass.
+- Intel macOS ownership job `126186525953` passed all tests, binary inspection and
+  archive verification, but three artifact uploads failed DNS lookup (`ENOTFOUND`).
+  [Retained failed attempt](measurements/scalar-array-identities-2026-11-03/upload-failure/README.md).
+  GitHub rejected the immediate retry with HTTP 403 because the workflow is still
+  running. After the other jobs finish, rerun **only this job on the same head**.
+  Preserve both attempts and audit the retry. No code fix follows from this upload failure.
+- Earlier Windows failures were custom probe mains missing binary-stream setup.
+  [Diagnosis](https://github.com/e6qu/fun-with-pipes/blob/8bf9c65bc247bbd94903d0a31fb0823d1e335391/docs/measurements/scalar-array-identities-2026-11-03/windows-repair/README.md)
+  retains 1,600 exact conversion rows and 32 correct fatal-allocation exits.
+- Measurements are complete; compiler/runtime/library match frozen `beddd406`.
+  Keep [all 32 missed speed goals](measurements/scalar-array-identity-time-2026-11-03/README.md)
+  open. Never repeat completed timing sessions for a pass.
+- Require nine production jobs plus docs at the exact head. Squash subject:
+  `Preserve float bits and remove redundant F64 array copies`. Empty body,
+  one line ≤80 characters, no trailers/attribution; verify the tested tree.
 
 ## Roadmap status
 
 | Step | Status | Remaining work |
 |---|---|---|
 | 1 | Verified | Preserve #254's conversion and exact selection contract |
-| 2 | Verified | Recheck repaired probe streams in final native CI |
+| 2 | Verified | Finish repaired-probe checks in final native CI |
 | 3 | Verified | Keep completed measurements and all missed speed targets |
-| 4 | In progress | Pass repaired-head gates, audit and squash #254 |
+| 4 | In progress | Retry upload failure, finish gates, audit and squash #254 |
 
 ## Next group: final iteration values
 
-Worktree/branch: `.worktrees/iteration-final-value` / `iteration-final-value`.
-No delivery PR yet. The [contract](measurements/final-iteration-storage.md) was
-frozen at `2a257a3eea7b6005c350f1f860e27755b18b25c2`, tag
+Branch/worktree: `iteration-final-value`, published `81a978b7322618426e854bb9435c5af4de8c3ec6`.
+No delivery PR. [Contract](measurements/final-iteration-storage.md) frozen at
+`2a257a3eea7b6005c350f1f860e27755b18b25c2`, tag
 `roadmap/final-iteration-storage-protocol-2026-11-03`, before implementation.
 
-Implemented, awaiting focused native verification:
+Implemented: direct `last`; exact single-use numeric `iterate` → `last` owner
+transfer; interpreter/native count-bound agreement; fresh optional-wrapper cleanup.
+Shared histories and resource-bearing states remain excluded from fusion.
+Docs/tutorials explain inputs and results; generated library docs were imported
+from matching GCC artifacts. Prior #249/#251/#252 verification status is corrected.
+The Windows probe stream fix from #254 is carried into this branch.
 
-- Direct `last` borrows a list and returns its final item in an owned option.
-- Exact single-use `iterate` → `last` calls with numeric states or numeric
-  lists/arrays keep only the current state. Shared histories and resource-bearing
-  states remain excluded. Dynamic/captured callbacks keep their evaluation order.
-- The interpreter matches native oversized-count rejection before callbacks.
-- Fresh optional wrappers have cleanup protection while retaining children.
-  A failed retain frees the wrapper without dropping an unacquired child.
-- Tests compare old reverse/head, direct-last and selected-history paths, with
-  exact scalar/wide bits, count boundaries, aliases, captured callbacks, array
-  slices, both layouts, reuse, traps, cancellation and missing-cleanup controls.
-  A generic-last file test checks that the selected stream remains open until its
-  final owner is released. Source tests compare both interpreters and native O1/O2.
-- The collections tutorial explains five iterations from 1 yielding `Some 16`.
-  The matching generated library reference was imported from both GCC artifacts;
-  its three added comment lines were reviewed. Do not edit it manually.
+### Focused checks and repairs
 
-The `final-iteration-checks` manual numerical workflow groups compiler units,
-primitive inventory, nine affected integration targets, tutorial execution and
-library-doc generation on GCC Linux ARM64/AMD64 and Clang macOS ARM64. It retains
-all partial logs and native probes. Windows now explicitly includes
-`iteration_consumers` in its final matrix. No new integration target is added.
+| Run / source | Complete audit and action |
+|---|---|
+| `41715801311` / `f599dfba` | Both GCC hosts: private `Value` import prevented integration compilation. Fixed import; queued obsolete macOS cancelled. [Evidence](measurements/final-iteration-storage-2026-11-03/compile-repair/README.md). |
+| `41720302662` / `73426169` | Both GCC hosts: two hand-built IR fixtures lacked list layouts. Each passed 44 integrations; fixed outer/inner/file list shapes. Queued obsolete macOS cancelled. [Evidence](measurements/final-iteration-storage-2026-11-03/layout-repair/README.md). |
+| `41723211349` / `81a978b7` | All three hosts: 45 integrations pass; one scalar allocation assertion omits iterate's temporary pointer buffer. All other native observations pass. Exact count correction is ready. [Evidence](measurements/final-iteration-storage-2026-11-03/count-repair/README.md). |
 
-### First focused batch and repair
+Each host in the last run passes 268 units (4 ignored), all twelve real-program
+selections, inventory, docs and tutorial. Every full log, nine target logs and 429
+native observations was audited. Only sixteen old/direct scalar observations per
+host have the count mismatch. Selected-loop aliases/captures/slices, reuse,
+trap/cancellation, omitted cleanup and generic-last file lifetimes pass.
 
-[Run 41715801311](https://github.com/e6qu/fun-with-pipes/actions/runs/41715801311)
-at `f599dfba030b9fb70b53eb503bb001719a4ce8be` failed on both GCC hosts because
-`iteration_consumers` imported private `fwp::interp::Value`. The repair imports
-`fwp::value::Value`. Both hosts passed compiler build, 268 unit tests (4 ignored),
-inventory, tutorial execution in both engines and identical generated docs.
-The integration batch could not compile, so **no native ownership test ran**.
-All completed full/step logs were audited; no second failure cause was found.
-The still-queued macOS job was cancelled for this obsolete source. See
-[retained failure evidence](measurements/final-iteration-storage-2026-11-03/compile-repair/README.md).
+For positive scalar count k, old/direct/selected totals are **2k+2, k+2, 1**:
+list nodes plus one option, plus the retained iterator's pointer buffer. The frozen
+2k list-node saving remains unchanged. Three actual emitted C probes pass locally
+with the corrected total at Clang O2 (1.48 guarded seconds), including cleanup.
+This is not GCC or Rust-generator verification. Next CI must check the actual fixture.
 
-The repair also adds real-gradient selection checks and the measurement tools:
+### Measurement and delivery
 
-- The same-source reference restores `last = reverse | head` and disables only
-  unused-history removal. Both compilers keep count validation and cleanup repairs.
-- Five reference controls pass, including real tiny Git checkouts and corrupt
-  manifest, patch, saved-source and partial-reference rejection.
-- All 19 budget controls pass. History speed, current-only regressions, large
-  history peak storage, traffic, ARC, cleanup and stack have separate limits.
-- All 17 raw-evidence controls pass (19.42 guarded seconds). Saved edits are read
-  as literals, never executed. Seven compiler-cost and three retention controls
-  also pass; the latter controls plus reference checks take 1.73 seconds.
-- Workflow lint passes (6.85 seconds); formatting passes (1.72 seconds).
-  Documentation audit passes for 250 link sets (2.55 seconds after status repairs).
-  Real emitted-C selection checks run on CI before measurements. They require
-  selection for eligible scalar/list/gradient inputs and exclude shared histories
-  and the already current-only loop.
-
-### Second focused batch: fixture layouts
-
-Run `41720302662` at `73426169c8a1b29ceead23d83dd8dc30b6aa3664` completed both
-GCC jobs: each passed 268 units (4 ignored), 44 integration tests and all twelve
-source selections. Two hand-built IR fixtures omitted list shapes and were
-rejected before C generation. All nine targets and full/step logs were audited;
-there is no second failure cause. The queued macOS job was cancelled. See
-[retained evidence](measurements/final-iteration-storage-2026-11-03/layout-repair/README.md).
-
-The repair supplies outer/inner list layouts in the iteration fixture and the
-file-list layout in the resource fixture. No compiler rule changes. Native O1/O2
-source behavior, count/effect order and the new optional-wrapper cleanup control
-already pass on both GCC hosts; manual ownership/count/resource probes remain open.
-The batch also carries #254's Windows binary-stream repair into this branch.
-Formatting passes (1.70 guarded seconds). Artifact/full-log collection took 29.27
-and 20.60 seconds; hash-verified retention of all logs/selections took 0.50 seconds.
-
-Uncommitted docs explain the selected loop and correct stale #249/#251/#252
-platform statuses using retained gate records. Scratch collector
-`../gradient-work/collect-final-iteration-checks.py` inventories completed focused
-runs; collection alone is not acceptance. A plain-language PR draft is alongside it.
-
-After the repaired focused batch passes, measure the frozen runtime/compiler/stack
-limits. Do not repeat completed sessions for a pass. Final nine-job plus docs
-verification remains required before delivery.
-
-## Completed preparation and local checks
-
-- Inspection `41698313044` at `13df096288aad41300f41d76f9a4f6c58440b192` passes:
-  12 raw/optimized source/IR/C compilations, full log and all artifact hashes.
-  [Evidence](measurements/final-iteration-storage-2026-11-03/README.md) retains
-  real gradient and shared-history inputs. The source had no compiler changes.
-- The retained Clang O2 source probe demonstrates the optional-wrapper leak
-  (16 charged bytes) and protected cleanup (zero). This is source-level evidence;
-  the new Rust-generator regression still requires native execution.
-- Guarded formatting passes (1.61 seconds); workflow lint passes (6.86 seconds).
-  Primitive inventory passes (0.89 seconds): 395 declarations, 385 symbols,
-  374 contracts, no unresolved symbols, unchanged frozen baseline. Native shard
-  coverage passes for all 255 integration targets (0.13 seconds).
-- No local compiler build, full suite or timing run. Use `python3 scripts/local-guard.py`
-  serially: 64 GiB free disk, target data below 2 GiB, workload RSS below 1 GiB,
-  180-second deadline. Move larger work to CI; never raise/bypass limits.
-- Leave the primary checkout's recovery edits and old worktrees alone. Reconcile
-  this preparation branch with #254's verified merge before its final matrix,
-  preserving frozen tags and uncommitted work. The old run `38888712709` is a
-  service-status ghost with no active jobs; its original failures were repaired.
+- Reference tooling restores reverse/head and disables only history removal;
+  both sides preserve count and cleanup repairs. Five corruption controls pass.
+- Nineteen budget, seventeen raw-evidence, seven compiler-cost and three retention
+  controls pass. Workflow integration is published. No timing session has started.
+- After focused checks pass, freeze the measured source and run declared
+  compiler/runtime/stack comparisons. Keep every failure and original session.
+  Then require nine final-head production jobs plus docs before delivery.
+- Scratch `../gradient-work/collect-final-iteration-checks.py` collects full logs,
+  artifact identities and native observations; collection alone is not acceptance.
+  A plain-language PR draft is in `../gradient-work/final-iteration-pr.md`.
+- Guarded checks: formatting 1.70s; docs 251 link sets 2.66s; workflow lint 6.85s;
+  inventory 395 declarations/374 contracts, frozen baseline unchanged; shard
+  coverage 255 targets. Count-failure retention/audit took 0.26s.
+- No local compiler build, full suite or benchmark. Use `python3 scripts/local-guard.py`
+  serially; never bypass 64 GiB disk, 2 GiB target, 1 GiB RSS or 180-second limits.
+- Preserve dirty primary/old worktrees. Before rebasing onto #254's verified
+  squash, retain this branch's evidence source with an immutable tag. Keep one
+  active delivery PR. The old `38888712709` run is a service ghost without active jobs.

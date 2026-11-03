@@ -54,13 +54,18 @@ int main(int argc, char **argv) {
         size_t allocations = owner_ledger_allocations;
         V result = iteration_call((V)(int64_t)count, callback, input);
         size_t added = owner_ledger_allocations - allocations;
-        size_t expected = count > 0 ? (size_t)count * ITERATION_SPINES + 1 : 0;
+        size_t nodes = count > 0 ? (size_t)count * ITERATION_SPINES : 0;
+        /* Retained iterate uses one managed pointer buffer before building
+         * its list. Reverse adds nodes, not another buffer. The selected loop
+         * removes both histories and that buffer; every path returns an Option. */
+        size_t scratch = count > 0 && ITERATION_SPINES != 0;
+        size_t expected = nodes + scratch + (count > 0);
+        printf("iteration allocations: count=%d capture=%d alias=%d slice=%d added=%zu expected_nodes=%zu expected_scratch=%zu scalar_expected=%zu steps=%d\n",
+            count, captured, alias, iteration_sliced, added, nodes, scratch, expected, iteration_steps);
         /* Scalar callbacks do not box results. Wide callbacks may allocate at
          * their typed ABI; record those costs without calling them list nodes. */
         if ((ITERATION_COUNT_SCALAR && added != expected) ||
             iteration_steps != (count > 0 ? count - 1 : 0)) return 80;
-        printf("iteration allocations: count=%d capture=%d alias=%d slice=%d added=%zu\n",
-            count, captured, alias, iteration_sliced, added);
         if (count <= 0) {
             if (result) return 81;
         } else {

@@ -1,0 +1,128 @@
+[
+  {
+    "mode": "old",
+    "control": "complete",
+    "command": [
+      "/usr/bin/clang",
+      "-O2",
+      "-std=gnu11",
+      "-ffp-contract=off",
+      "-w",
+      "/Users/zardoz/projects/fun-with-pipes/.worktrees/gradient-work/final-iteration-count-diagnostic/old-fixture.c",
+      "-o",
+      "/Users/zardoz/projects/fun-with-pipes/.worktrees/gradient-work/final-iteration-count-diagnostic/old-fixture",
+      "-lm",
+      "-lpthread"
+    ],
+    "sourceSha256": "7cae321d614708d344682900e65681f8bcaafc2fa0d05e6e1d3456b11fc615a7",
+    "binarySha256": "b1966faaae674bee9fa0d94d34e9881683ad01000e23ebe42ca2c34f6d4b5e10",
+    "exit": 0,
+    "stdout": "iteration allocations: count=-1 capture=0 alias=0 slice=0 added=0 expected_nodes=0 expected_scratch=0 scalar_expected=0 steps=0\niteration allocations: count=0 capture=0 alias=0 slice=0 added=0 expected_nodes=0 expected_scratch=0 scalar_expected=0 steps=0\niteration allocations: count=1 capture=0 alias=0 slice=0 added=4 expected_nodes=2 expected_scratch=1 scalar_expected=4 steps=0\niteration allocations: count=4 capture=0 alias=0 slice=0 added=10 expected_nodes=8 expected_scratch=1 scalar_expected=10 steps=3\niteration allocations: count=64 capture=0 alias=0 slice=0 added=130 expected_nodes=128 expected_scratch=1 scalar_expected=130 steps=63\niteration allocations: count=-1 capture=0 alias=1 slice=0 added=0 expected_nodes=0 expected_scratch=0 scalar_expected=0 steps=0\niteration allocations: count=0 capture=0 alias=1 slice=0 added=0 expected_nodes=0 expected_scratch=0 scalar_expected=0 steps=0\niteration allocations: count=1 capture=0 alias=1 slice=0 added=4 expected_nodes=2 expected_scratch=1 scalar_expected=4 steps=0\niteration allocations: count=4 capture=0 alias=1 slice=0 added=10 expected_nodes=8 expected_scratch=1 scalar_expected=10 steps=3\niteration allocations: count=64 capture=0 alias=1 slice=0 added=130 expected_nodes=128 expected_scratch=1 scalar_expected=130 steps=63\niteration allocations: count=-1 capture=1 alias=0 slice=0 added=0 expected_nodes=0 expected_scratch=0 scalar_expected=0 steps=0\niteration allocations: count=0 capture=1 alias=0 slice=0 added=0 expected_nodes=0 expected_scratch=0 scalar_expected=0 steps=0\niteration allocations: count=1 capture=1 alias=0 slice=0 added=4 expected_nodes=2 expected_scratch=1 scalar_expected=4 steps=0\niteration allocations: count=4 capture=1 alias=0 slice=0 added=10 expected_nodes=8 expected_scratch=1 scalar_expected=10 steps=3\niteration allocations: count=64 capture=1 alias=0 slice=0 added=130 expected_nodes=128 expected_scratch=1 scalar_expected=130 steps=63\niteration allocations: count=-1 capture=1 alias=1 slice=0 added=0 expected_nodes=0 expected_scratch=0 scalar_expected=0 steps=0\niteration allocations: count=0 capture=1 alias=1 slice=0 added=0 expected_nodes=0 expected_scratch=0 scalar_expected=0 steps=0\niteration allocations: count=1 capture=1 alias=1 slice=0 added=4 expected_nodes=2 expected_scratch=1 scalar_expected=4 steps=0\niteration allocations: count=4 capture=1 alias=1 slice=0 added=10 expected_nodes=8 expected_scratch=1 scalar_expected=10 steps=3\niteration allocations: count=64 capture=1 alias=1 slice=0 added=130 expected_nodes=128 expected_scratch=1 scalar_expected=130 steps=63\nfinal iteration: exact bits, counts, aliases, captures, failure and cancellation pass\n",
+    "stderr": ""
+  },
+  {
+    "mode": "old",
+    "control": "missing-release",
+    "command": [
+      "/usr/bin/clang",
+      "-O2",
+      "-std=gnu11",
+      "-ffp-contract=off",
+      "-w",
+      "/Users/zardoz/projects/fun-with-pipes/.worktrees/gradient-work/final-iteration-count-diagnostic/old-fixture.c",
+      "-o",
+      "/Users/zardoz/projects/fun-with-pipes/.worktrees/gradient-work/final-iteration-count-diagnostic/old-fixture",
+      "-lm",
+      "-lpthread"
+    ],
+    "sourceSha256": "7cae321d614708d344682900e65681f8bcaafc2fa0d05e6e1d3456b11fc615a7",
+    "binarySha256": "b1966faaae674bee9fa0d94d34e9881683ad01000e23ebe42ca2c34f6d4b5e10",
+    "exit": 90,
+    "stdout": "iteration allocations: count=-1 capture=0 alias=0 slice=0 added=0 expected_nodes=0 expected_scratch=0 scalar_expected=0 steps=0\niteration allocations: count=0 capture=0 alias=0 slice=0 added=0 expected_nodes=0 expected_scratch=0 scalar_expected=0 steps=0\niteration allocations: count=1 capture=0 alias=0 slice=0 added=4 expected_nodes=2 expected_scratch=1 scalar_expected=4 steps=0\n",
+    "stderr": ""
+  },
+  {
+    "mode": "direct",
+    "control": "complete",
+    "command": [
+      "/usr/bin/clang",
+      "-O2",
+      "-std=gnu11",
+      "-ffp-contract=off",
+      "-w",
+      "/Users/zardoz/projects/fun-with-pipes/.worktrees/gradient-work/final-iteration-count-diagnostic/direct-fixture.c",
+      "-o",
+      "/Users/zardoz/projects/fun-with-pipes/.worktrees/gradient-work/final-iteration-count-diagnostic/direct-fixture",
+      "-lm",
+      "-lpthread"
+    ],
+    "sourceSha256": "2b5fa1188a711b3a2570b64ead590de05bd2babc18eb1e21df2575a2f2597d4e",
+    "binarySha256": "2162152e547ce5a01a40a3d5e9c8cfea97a25c973779cb2a862b53830ab06a96",
+    "exit": 0,
+    "stdout": "iteration allocations: count=-1 capture=0 alias=0 slice=0 added=0 expected_nodes=0 expected_scratch=0 scalar_expected=0 steps=0\niteration allocations: count=0 capture=0 alias=0 slice=0 added=0 expected_nodes=0 expected_scratch=0 scalar_expected=0 steps=0\niteration allocations: count=1 capture=0 alias=0 slice=0 added=3 expected_nodes=1 expected_scratch=1 scalar_expected=3 steps=0\niteration allocations: count=4 capture=0 alias=0 slice=0 added=6 expected_nodes=4 expected_scratch=1 scalar_expected=6 steps=3\niteration allocations: count=64 capture=0 alias=0 slice=0 added=66 expected_nodes=64 expected_scratch=1 scalar_expected=66 steps=63\niteration allocations: count=-1 capture=0 alias=1 slice=0 added=0 expected_nodes=0 expected_scratch=0 scalar_expected=0 steps=0\niteration allocations: count=0 capture=0 alias=1 slice=0 added=0 expected_nodes=0 expected_scratch=0 scalar_expected=0 steps=0\niteration allocations: count=1 capture=0 alias=1 slice=0 added=3 expected_nodes=1 expected_scratch=1 scalar_expected=3 steps=0\niteration allocations: count=4 capture=0 alias=1 slice=0 added=6 expected_nodes=4 expected_scratch=1 scalar_expected=6 steps=3\niteration allocations: count=64 capture=0 alias=1 slice=0 added=66 expected_nodes=64 expected_scratch=1 scalar_expected=66 steps=63\niteration allocations: count=-1 capture=1 alias=0 slice=0 added=0 expected_nodes=0 expected_scratch=0 scalar_expected=0 steps=0\niteration allocations: count=0 capture=1 alias=0 slice=0 added=0 expected_nodes=0 expected_scratch=0 scalar_expected=0 steps=0\niteration allocations: count=1 capture=1 alias=0 slice=0 added=3 expected_nodes=1 expected_scratch=1 scalar_expected=3 steps=0\niteration allocations: count=4 capture=1 alias=0 slice=0 added=6 expected_nodes=4 expected_scratch=1 scalar_expected=6 steps=3\niteration allocations: count=64 capture=1 alias=0 slice=0 added=66 expected_nodes=64 expected_scratch=1 scalar_expected=66 steps=63\niteration allocations: count=-1 capture=1 alias=1 slice=0 added=0 expected_nodes=0 expected_scratch=0 scalar_expected=0 steps=0\niteration allocations: count=0 capture=1 alias=1 slice=0 added=0 expected_nodes=0 expected_scratch=0 scalar_expected=0 steps=0\niteration allocations: count=1 capture=1 alias=1 slice=0 added=3 expected_nodes=1 expected_scratch=1 scalar_expected=3 steps=0\niteration allocations: count=4 capture=1 alias=1 slice=0 added=6 expected_nodes=4 expected_scratch=1 scalar_expected=6 steps=3\niteration allocations: count=64 capture=1 alias=1 slice=0 added=66 expected_nodes=64 expected_scratch=1 scalar_expected=66 steps=63\nfinal iteration: exact bits, counts, aliases, captures, failure and cancellation pass\n",
+    "stderr": ""
+  },
+  {
+    "mode": "direct",
+    "control": "missing-release",
+    "command": [
+      "/usr/bin/clang",
+      "-O2",
+      "-std=gnu11",
+      "-ffp-contract=off",
+      "-w",
+      "/Users/zardoz/projects/fun-with-pipes/.worktrees/gradient-work/final-iteration-count-diagnostic/direct-fixture.c",
+      "-o",
+      "/Users/zardoz/projects/fun-with-pipes/.worktrees/gradient-work/final-iteration-count-diagnostic/direct-fixture",
+      "-lm",
+      "-lpthread"
+    ],
+    "sourceSha256": "2b5fa1188a711b3a2570b64ead590de05bd2babc18eb1e21df2575a2f2597d4e",
+    "binarySha256": "2162152e547ce5a01a40a3d5e9c8cfea97a25c973779cb2a862b53830ab06a96",
+    "exit": 90,
+    "stdout": "iteration allocations: count=-1 capture=0 alias=0 slice=0 added=0 expected_nodes=0 expected_scratch=0 scalar_expected=0 steps=0\niteration allocations: count=0 capture=0 alias=0 slice=0 added=0 expected_nodes=0 expected_scratch=0 scalar_expected=0 steps=0\niteration allocations: count=1 capture=0 alias=0 slice=0 added=3 expected_nodes=1 expected_scratch=1 scalar_expected=3 steps=0\n",
+    "stderr": ""
+  },
+  {
+    "mode": "selected",
+    "control": "complete",
+    "command": [
+      "/usr/bin/clang",
+      "-O2",
+      "-std=gnu11",
+      "-ffp-contract=off",
+      "-w",
+      "/Users/zardoz/projects/fun-with-pipes/.worktrees/gradient-work/final-iteration-count-diagnostic/selected-fixture.c",
+      "-o",
+      "/Users/zardoz/projects/fun-with-pipes/.worktrees/gradient-work/final-iteration-count-diagnostic/selected-fixture",
+      "-lm",
+      "-lpthread"
+    ],
+    "sourceSha256": "b5b86f6c259c6e2182497c182f49de77de14777da86e72f45b2ae01cdeb6f848",
+    "binarySha256": "78611f7e5e092c807836ee3110e3e9ef4fdf44e1e22d837db2fa5a32e26a6c3a",
+    "exit": 0,
+    "stdout": "iteration allocations: count=-1 capture=0 alias=0 slice=0 added=0 expected_nodes=0 expected_scratch=0 scalar_expected=0 steps=0\niteration allocations: count=0 capture=0 alias=0 slice=0 added=0 expected_nodes=0 expected_scratch=0 scalar_expected=0 steps=0\niteration allocations: count=1 capture=0 alias=0 slice=0 added=1 expected_nodes=0 expected_scratch=0 scalar_expected=1 steps=0\niteration allocations: count=4 capture=0 alias=0 slice=0 added=1 expected_nodes=0 expected_scratch=0 scalar_expected=1 steps=3\niteration allocations: count=64 capture=0 alias=0 slice=0 added=1 expected_nodes=0 expected_scratch=0 scalar_expected=1 steps=63\niteration allocations: count=-1 capture=0 alias=1 slice=0 added=0 expected_nodes=0 expected_scratch=0 scalar_expected=0 steps=0\niteration allocations: count=0 capture=0 alias=1 slice=0 added=0 expected_nodes=0 expected_scratch=0 scalar_expected=0 steps=0\niteration allocations: count=1 capture=0 alias=1 slice=0 added=1 expected_nodes=0 expected_scratch=0 scalar_expected=1 steps=0\niteration allocations: count=4 capture=0 alias=1 slice=0 added=1 expected_nodes=0 expected_scratch=0 scalar_expected=1 steps=3\niteration allocations: count=64 capture=0 alias=1 slice=0 added=1 expected_nodes=0 expected_scratch=0 scalar_expected=1 steps=63\niteration allocations: count=-1 capture=1 alias=0 slice=0 added=0 expected_nodes=0 expected_scratch=0 scalar_expected=0 steps=0\niteration allocations: count=0 capture=1 alias=0 slice=0 added=0 expected_nodes=0 expected_scratch=0 scalar_expected=0 steps=0\niteration allocations: count=1 capture=1 alias=0 slice=0 added=1 expected_nodes=0 expected_scratch=0 scalar_expected=1 steps=0\niteration allocations: count=4 capture=1 alias=0 slice=0 added=1 expected_nodes=0 expected_scratch=0 scalar_expected=1 steps=3\niteration allocations: count=64 capture=1 alias=0 slice=0 added=1 expected_nodes=0 expected_scratch=0 scalar_expected=1 steps=63\niteration allocations: count=-1 capture=1 alias=1 slice=0 added=0 expected_nodes=0 expected_scratch=0 scalar_expected=0 steps=0\niteration allocations: count=0 capture=1 alias=1 slice=0 added=0 expected_nodes=0 expected_scratch=0 scalar_expected=0 steps=0\niteration allocations: count=1 capture=1 alias=1 slice=0 added=1 expected_nodes=0 expected_scratch=0 scalar_expected=1 steps=0\niteration allocations: count=4 capture=1 alias=1 slice=0 added=1 expected_nodes=0 expected_scratch=0 scalar_expected=1 steps=3\niteration allocations: count=64 capture=1 alias=1 slice=0 added=1 expected_nodes=0 expected_scratch=0 scalar_expected=1 steps=63\nfinal iteration: exact bits, counts, aliases, captures, failure and cancellation pass\n",
+    "stderr": ""
+  },
+  {
+    "mode": "selected",
+    "control": "missing-release",
+    "command": [
+      "/usr/bin/clang",
+      "-O2",
+      "-std=gnu11",
+      "-ffp-contract=off",
+      "-w",
+      "/Users/zardoz/projects/fun-with-pipes/.worktrees/gradient-work/final-iteration-count-diagnostic/selected-fixture.c",
+      "-o",
+      "/Users/zardoz/projects/fun-with-pipes/.worktrees/gradient-work/final-iteration-count-diagnostic/selected-fixture",
+      "-lm",
+      "-lpthread"
+    ],
+    "sourceSha256": "b5b86f6c259c6e2182497c182f49de77de14777da86e72f45b2ae01cdeb6f848",
+    "binarySha256": "78611f7e5e092c807836ee3110e3e9ef4fdf44e1e22d837db2fa5a32e26a6c3a",
+    "exit": 90,
+    "stdout": "iteration allocations: count=-1 capture=0 alias=0 slice=0 added=0 expected_nodes=0 expected_scratch=0 scalar_expected=0 steps=0\niteration allocations: count=0 capture=0 alias=0 slice=0 added=0 expected_nodes=0 expected_scratch=0 scalar_expected=0 steps=0\niteration allocations: count=1 capture=0 alias=0 slice=0 added=1 expected_nodes=0 expected_scratch=0 scalar_expected=1 steps=0\n",
+    "stderr": ""
+  }
+]

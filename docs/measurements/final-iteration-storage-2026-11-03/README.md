@@ -4,7 +4,9 @@ This is preparation evidence, not a performance result. The
 [implementation contract](../final-iteration-storage.md) defines the next group.
 The [first focused batch](compile-repair/README.md) retains a test-import failure
 and its repair. The [second batch](layout-repair/README.md) found missing list
-layouts in two hand-built test programs; their native probes remain pending.
+layouts in two hand-built test programs. The [third batch](count-repair/README.md)
+executes those probes and finds one omitted scratch-buffer allocation in the
+scalar expectation; the corrected assertion still needs three-host verification.
 
 ## Actual compiler output
 

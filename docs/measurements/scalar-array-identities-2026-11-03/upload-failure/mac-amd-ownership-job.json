@@ -1,0 +1,204 @@
+{
+  "id": 126186525953,
+  "run_id": 41713252299,
+  "workflow_name": "CI",
+  "head_branch": "scalar-array-identities",
+  "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/41713252299",
+  "run_attempt": 1,
+  "node_id": "CR_kwDOU33zxM8AAAAdYU2VAQ",
+  "head_sha": "8bf9c65bc247bbd94903d0a31fb0823d1e335391",
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/126186525953",
+  "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41713252299/job/126186525953",
+  "status": "completed",
+  "conclusion": "failure",
+  "created_at": "2026-11-03T20:30:52Z",
+  "started_at": "2026-11-03T20:51:17Z",
+  "completed_at": "2026-11-03T21:46:43Z",
+  "name": "macos_ownership (macos-15-intel)",
+  "steps": [
+    {
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 1,
+      "started_at": "2026-11-03T20:51:18Z",
+      "completed_at": "2026-11-03T20:51:20Z"
+    },
+    {
+      "name": "Run actions/checkout@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 2,
+      "started_at": "2026-11-03T20:51:20Z",
+      "completed_at": "2026-11-03T20:54:23Z"
+    },
+    {
+      "name": "Run dtolnay/rust-toolchain@stable",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 3,
+      "started_at": "2026-11-03T20:54:23Z",
+      "completed_at": "2026-11-03T20:54:37Z"
+    },
+    {
+      "name": "Cache locked Rust dependencies",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 4,
+      "started_at": "2026-11-03T20:54:37Z",
+      "completed_at": "2026-11-03T20:54:40Z"
+    },
+    {
+      "name": "Fetch locked Rust dependencies before offline builds",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 5,
+      "started_at": "2026-11-03T20:54:40Z",
+      "completed_at": "2026-11-03T20:54:41Z"
+    },
+    {
+      "name": "OpenSSL 3",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 6,
+      "started_at": "2026-11-03T20:54:41Z",
+      "completed_at": "2026-11-03T20:54:45Z"
+    },
+    {
+      "name": "Generated standard-library docs preflight",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 7,
+      "started_at": "2026-11-03T20:54:45Z",
+      "completed_at": "2026-11-03T20:54:50Z"
+    },
+    {
+      "name": "Language formatting preflight",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 8,
+      "started_at": "2026-11-03T20:54:50Z",
+      "completed_at": "2026-11-03T20:57:58Z"
+    },
+    {
+      "name": "Full counted-ownership golden corpus",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 9,
+      "started_at": "2026-11-03T20:57:58Z",
+      "completed_at": "2026-11-03T20:59:15Z"
+    },
+    {
+      "name": "Publish native-memory diagnostics before the remaining shard",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 10,
+      "started_at": "2026-11-03T20:59:15Z",
+      "completed_at": "2026-11-03T20:59:16Z"
+    },
+    {
+      "name": "Second macOS test shard",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 11,
+      "started_at": "2026-11-03T20:59:16Z",
+      "completed_at": "2026-11-03T21:45:54Z"
+    },
+    {
+      "name": "Inspect list-copy executables and missing-cleanup controls",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 12,
+      "started_at": "2026-11-03T21:45:54Z",
+      "completed_at": "2026-11-03T21:45:58Z"
+    },
+    {
+      "name": "Publish individual ownership test logs",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 13,
+      "started_at": "2026-11-03T21:45:58Z",
+      "completed_at": "2026-11-03T21:46:00Z"
+    },
+    {
+      "name": "Preserve failed native corpus binaries, C and statuses",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 14,
+      "started_at": "2026-11-03T21:46:00Z",
+      "completed_at": "2026-11-03T21:46:00Z"
+    },
+    {
+      "name": "Run actions/upload-artifact@v7",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 15,
+      "started_at": "2026-11-03T21:46:00Z",
+      "completed_at": "2026-11-03T21:46:00Z"
+    },
+    {
+      "name": "Package and verify ownership evidence",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 16,
+      "started_at": "2026-11-03T21:46:00Z",
+      "completed_at": "2026-11-03T21:46:27Z"
+    },
+    {
+      "name": "Upload verified ownership archive",
+      "status": "completed",
+      "conclusion": "failure",
+      "number": 17,
+      "started_at": "2026-11-03T21:46:27Z",
+      "completed_at": "2026-11-03T21:46:28Z"
+    },
+    {
+      "name": "Preserve ownership file manifest and read failures",
+      "status": "completed",
+      "conclusion": "failure",
+      "number": 18,
+      "started_at": "2026-11-03T21:46:28Z",
+      "completed_at": "2026-11-03T21:46:28Z"
+    },
+    {
+      "name": "Preserve compiler crash reports",
+      "status": "completed",
+      "conclusion": "failure",
+      "number": 19,
+      "started_at": "2026-11-03T21:46:28Z",
+      "completed_at": "2026-11-03T21:46:28Z"
+    },
+    {
+      "name": "Post Cache locked Rust dependencies",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 37,
+      "started_at": "2026-11-03T21:46:28Z",
+      "completed_at": "2026-11-03T21:46:28Z"
+    },
+    {
+      "name": "Post Run actions/checkout@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 38,
+      "started_at": "2026-11-03T21:46:28Z",
+      "completed_at": "2026-11-03T21:46:29Z"
+    },
+    {
+      "name": "Complete job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 39,
+      "started_at": "2026-11-03T21:46:29Z",
+      "completed_at": "2026-11-03T21:46:30Z"
+    }
+  ],
+  "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/126186525953",
+  "labels": [
+    "macos-15-intel"
+  ],
+  "runner_id": 1000404135,
+  "runner_name": "GitHub Actions 1000404135",
+  "runner_group_id": 0,
+  "runner_group_name": "GitHub Actions"
+}
