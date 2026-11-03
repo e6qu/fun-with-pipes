@@ -560,7 +560,7 @@ transform = fn lo -> fn hi -> fn offset -> fn xs ->
         code = code.replace(signature, &format!("{signature}\n    if(range_fail_allocation) {{ range_fail_allocation=0; fwp_trap(\"injected range scratch failure\"); }}"));
     }
     let alloc = "static inline void *fwp_alloc_init(size_t n) {";
-    code = code.replace(alloc, &format!("{alloc}\n    if(range_stage==1 && range_mode==3 && range_calls==2) fwp_trap(\"injected record failure\");\n    if(range_stage==2 && range_mode==4 && ++range_nodes==2) fwp_trap(\"injected partial list failure\");"));
+    code = code.replace(alloc, &format!("{alloc}\n    if(range_stage==1 && range_mode==3 && range_calls==2) {{ range_stage=0; fwp_trap(\"injected record failure\"); }}\n    if(range_stage==2 && range_mode==4 && ++range_nodes==2) {{ range_stage=0; fwp_trap(\"injected partial list failure\"); }}"));
     let yielding = "static V fwp_p_task_yield(void) {";
     assert_eq!(code.matches(yielding).count(), 1);
     let start = code.find(yielding).unwrap();

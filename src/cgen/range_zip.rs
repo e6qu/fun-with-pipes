@@ -28,11 +28,15 @@ struct Producer {
     block: usize,
 }
 #[derive(Clone, Copy)]
+enum Bounds {
+    Locals(Local, Local),
+    Argument,
+}
+#[derive(Clone, Copy)]
 struct Consumer {
     helper: FuncId,
     slot: usize,
-    lo: Local,
-    hi: Local,
+    bounds: Bounds,
 }
 
 fn integer() -> MT {
@@ -86,6 +90,7 @@ struct Index<'a> {
     uses: Vec<Option<Use>>,
     origins: Vec<Option<Callback>>,
     producers: Vec<Producer>,
+    inline: Vec<(usize, Callback, usize)>,
     blocks: usize,
     visits: usize,
 }
@@ -141,6 +146,23 @@ impl Index<'_> {
                     .first()
                     .and_then(|value| self.origin(value))
                     .filter(|step| arguments.len() == 3 && zip(self.program, *id, *step));
+                if let Some(callback) = step {
+                    for (slot, argument) in arguments[1..].iter().enumerate() {
+                        if let Expr::Call(id, bounds) = argument {
+                            if bounds.len() == 2
+                                && range(self.program, *id)
+                                && self.program.funcs[callback.id]
+                                    .ty
+                                    .params(callback.captures + 2)
+                                    .0[callback.captures + slot]
+                                    == &integer()
+                            {
+                                self.inline
+                                    .push((expr as *const Expr as usize, callback, slot));
+                            }
+                        }
+                    }
+                }
                 for (slot, argument) in arguments.iter().enumerate() {
                     if let (Some(callback), Expr::Local(_), true) = (step, argument, slot > 0) {
                         self.walk(
@@ -262,15 +284,27 @@ fn rewrite(
     if let Some(Consumer {
         helper,
         slot,
-        lo,
-        hi,
+        bounds,
     }) = replacement
     {
         let Expr::Call(id, arguments) = expr else {
             unreachable!()
         };
-        arguments[slot + 1] = Expr::Local(lo);
-        arguments.insert(slot + 2, Expr::Local(hi));
+        let [lo, hi] = match bounds {
+            Bounds::Locals(lo, hi) => [Expr::Local(lo), Expr::Local(hi)],
+            Bounds::Argument => {
+                let Expr::Call(_, bounds) =
+                    std::mem::replace(&mut arguments[slot + 1], Expr::Const(Value::unit()))
+                else {
+                    unreachable!()
+                };
+                bounds.try_into().expect("inline range bounds")
+            }
+        };
+        // The two bounds occupy the range argument's original evaluation slot.
+        // Callback construction and the other argument remain on the same side.
+        arguments[slot + 1] = lo;
+        arguments.insert(slot + 2, hi);
         *id = helper;
     }
     if let Some((lo, hi)) = bounds {
@@ -294,6 +328,39 @@ fn rewrite(
     }
 }
 
+fn helper(
+    program: &Program,
+    made: &mut Vec<Func>,
+    helpers: &mut HashMap<(Callback, usize), FuncId>,
+    step: Callback,
+    slot: usize,
+) -> FuncId {
+    let worker = &program.funcs[step.id];
+    let (parameters, result) = worker.ty.params(step.captures + 2);
+    *helpers.entry((step, slot)).or_insert_with(|| {
+        let helper = program.funcs.len() + made.len();
+        let mut inputs = vec![worker.ty.params(step.captures).1.clone()];
+        for position in 0..2 {
+            if position == slot {
+                inputs.extend([integer(), integer()]);
+            } else {
+                inputs.push(list(parameters[step.captures + position]));
+            }
+        }
+        made.push(function_body(
+            "range-zip",
+            inputs,
+            list(result),
+            Body::RangeZip {
+                callback: step.id,
+                captures: step.captures,
+                slot,
+            },
+        ));
+        helper
+    })
+}
+
 /// Index uses once and follow disjoint single-use alias chains; count visits
 /// deterministically so tests can check analysis scaling without wall-clock noise.
 pub(super) fn lower(program: &mut Program) -> usize {
@@ -311,6 +378,7 @@ pub(super) fn lower(program: &mut Program) -> usize {
             uses: vec![None; function.locals.len()],
             origins: vec![None; function.locals.len()],
             producers: Vec::new(),
+            inline: Vec::new(),
             blocks: 0,
             visits: 0,
         };
@@ -351,32 +419,11 @@ pub(super) fn lower(program: &mut Program) -> usize {
                 continue;
             }
             let worker = &program.funcs[step.id];
-            let (parameters, result) = worker.ty.params(step.captures + 2);
+            let (parameters, _) = worker.ty.params(step.captures + 2);
             if parameters[step.captures + slot] != &integer() {
                 continue;
             }
-            let helper = *helpers.entry((step, slot)).or_insert_with(|| {
-                let helper = original_len + made.len();
-                let mut inputs = vec![worker.ty.params(step.captures).1.clone()];
-                for position in 0..2 {
-                    if position == slot {
-                        inputs.extend([integer(), integer()]);
-                    } else {
-                        inputs.push(list(parameters[step.captures + position]));
-                    }
-                }
-                made.push(function_body(
-                    "range-zip",
-                    inputs,
-                    list(result),
-                    Body::RangeZip {
-                        callback: step.id,
-                        captures: step.captures,
-                        slot,
-                    },
-                ));
-                helper
-            });
+            let helper = helper(program, &mut made, &mut helpers, step, slot);
             let lo = Local::try_from(fresh).expect("range lower local");
             let hi = Local::try_from(fresh + 1).expect("range upper local");
             fresh += 2;
@@ -385,12 +432,19 @@ pub(super) fn lower(program: &mut Program) -> usize {
                 Consumer {
                     helper,
                     slot,
-                    lo,
-                    hi,
+                    bounds: Bounds::Locals(lo, hi),
                 },
             );
             producers.insert(producer.node, (lo, hi));
             changed.extend(aliases);
+        }
+        for (node, step, slot) in index.inline {
+            visits += 1;
+            calls.entry(node).or_insert_with(|| Consumer {
+                helper: helper(program, &mut made, &mut helpers, step, slot),
+                slot,
+                bounds: Bounds::Argument,
+            });
         }
         if !calls.is_empty() {
             let function = &mut program.funcs[id];
@@ -508,6 +562,45 @@ mod tests {
                     assert_eq!(crate::escape::params(&program)[4], [true; 4]);
                 }
             }
+        }
+    }
+
+    #[test]
+    fn immediate_range_and_inline_capture_keep_argument_order() {
+        for slot in 0..2 {
+            let mut program = example(0, slot, true, integer());
+            let Body::Expr(Expr::Let(_, callback, outer)) = std::mem::replace(
+                &mut program.funcs[0].body,
+                Body::Expr(Expr::Const(Value::unit())),
+            ) else {
+                unreachable!()
+            };
+            let Expr::Let(_, range, body) = *outer else {
+                unreachable!()
+            };
+            let Expr::Call(id, mut arguments) = *body else {
+                unreachable!()
+            };
+            arguments[0] = *callback;
+            arguments[slot + 1] = *range;
+            program.funcs[0].body = Body::Expr(Expr::Call(id, arguments));
+            check_locals(&program).unwrap();
+            lower(&mut program);
+            check_locals(&program).unwrap();
+            assert_eq!(program.funcs.len(), 5);
+            assert_eq!(program.funcs[0].locals.len(), 6);
+            let Body::Expr(Expr::Call(4, arguments)) = &program.funcs[0].body else {
+                panic!("inline range not consumed")
+            };
+            assert!(
+                matches!(&arguments[0], Expr::Apply(_, captures) if matches!(captures.as_slice(), [Expr::Local(3)]))
+            );
+            assert!(matches!(arguments[slot + 1], Expr::Local(0)));
+            assert!(matches!(arguments[slot + 2], Expr::Local(1)));
+            assert!(matches!(
+                arguments[if slot == 0 { 3 } else { 1 }],
+                Expr::Local(2)
+            ));
         }
     }
 

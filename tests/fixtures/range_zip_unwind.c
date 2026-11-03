@@ -37,7 +37,8 @@ int main(void) {
             DROP_RESULT(result);
         } else if(mode==5) return 244;
         fwp_cur=NULL; fwp_trap_recover=NULL; fwp_trap_jb=NULL;
-        range_fail_allocation=0;
+        /* Fault injection belongs to this call, never the next input setup. */
+        range_stage=range_fail_allocation=0;
         if(fwp_cleanups || (mode==1 && !range_task.unwinding)) return 245;
         int expected_calls=mode==2 || b>=3 ? 0 : (mode<=1 || mode==3) ? 2 : 3;
         if(range_calls!=expected_calls) return 246;

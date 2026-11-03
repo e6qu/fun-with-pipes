@@ -691,6 +691,20 @@ main = work 3 [10, 20, 30] | echo
             101,
         ),
         (
+            "inline-order",
+            r#"
+mark : String -> I64 -> I64 ! {IO}
+mark = fn name -> tap (const name | echo)
+combine : I64 -> I64 -> I64 -> (I64, I64)
+combine = fn offset -> fn index -> fn value -> (index + offset, value)
+main = zip-with (combine (mark "callback" 10))
+    (range (mark "lo" -2) (mark "hi" 2))
+    ([10, 20] | tap (const "input" | echo)) | echo
+"#,
+            true,
+            0,
+        ),
+        (
             "shared",
             r#"
 work : I64 -> List[I64] -> (List[I64], List[I64])
@@ -729,6 +743,12 @@ main = work 3 [10, 20] | echo
             assert_eq!(
                 reference.stdout,
                 b"lo\nhi\ncapture\nbetween\ninput\n-2\n-1\n[(8, 10), (9, 20)]\n"
+            );
+        }
+        if name == "inline-order" {
+            assert_eq!(
+                reference.stdout,
+                b"callback\nlo\nhi\ninput\n[(8, 10), (9, 20)]\n"
             );
         }
         let ordinary = Command::new(compiler)

@@ -15,7 +15,7 @@ matrix; complete those checks before treating the delivery as fully verified.
 | Step | Work | Completion requirement |
 |---|---|---|
 | 1 | Complete the merged implementation's platform validation | Audit all nine jobs in run `41591834975` and docs. Fix every failure in this batch; preserve the original evidence. |
-| 2 | Measure scalar-buffer compiler and program costs | Complete the [frozen comparison](docs/measurements/temporary-list-storage.md#execution-of-the-frozen-comparison): five compiler inputs, all six runtime inputs, two native sessions per architecture. Independently audit raw evidence and retain every missed limit. |
+| 2 | Scalar-buffer measurements complete; timing goals open | All 480 compiler commands and four runtime sessions are independently audited. Compiler limits pass; small-case speed requirements and ARM64 zero-update regression limits fail. [Complete results](docs/measurements/scalar-map-zip-time-2026-11-03/README.md) retain every outcome. |
 | 3 | Direct consumption of a private index range — contract frozen | [Contract](docs/measurements/range-zip-storage.md): evaluate I64 bounds once; one zip consumer, known scalar captures, scalar or flat numeric-record outputs. Expected reduction: `(d+1)*u` requests and `(32*d+8)*u` bytes. Contract tag `roadmap/range-zip-protocol-2026-11-03` predates implementation. The isolated same-source reference has passing local controls; publish it before measurement. |
 | 4 | Implement, verify and deliver the next substantial batch | Bundle the selected storage change, incidental repairs and reports. Compare unoptimized/ordinary/native behavior, shared/escaping inputs and failure/cancellation/physical-free controls. Measure the isolated change, run all nine final-head production gates plus docs, audit logs and verify the one-line squash. |
 
@@ -29,11 +29,11 @@ before measurement; do not rerun completed noisy observations for a pass.
 
 - **Scalar-buffer timings.** Both completed ARM64 sessions report a 3.32%
   zero-update current-only slowdown against the 2% limit; several small cases
-  improve by less than the required 5%. [Results and running audits](docs/measurements/scalar-map-zip-time-2026-11-03/README.md)
+  improve by less than the required 5%. [Complete results](docs/measurements/scalar-map-zip-time-2026-11-03/README.md)
   retain these failures. Saved C changes only the positive-update branch; no added zero-branch work
   was identified. Further source/driver diagnosis is needed before attributing
-  a cause or selecting a correction. ARM64 and AMD64 session-2 raw audits pass; AMD64 also misses the small-case
-  speed goals. Complete its final session; allocation savings and passing compiler costs do not close this goal.
+  a cause or selecting a correction. All four raw audits pass; both AMD64 sessions also miss four small-case
+  speed goals. Allocation savings and passing compiler costs do not close this goal.
 
 - **Callback-owner timings.** [The complete report](docs/measurements/callback-owners-2026-11-03/README.md)
   retains every outcome. Both architectures miss 5% on 3/199 and 3/1999 in both

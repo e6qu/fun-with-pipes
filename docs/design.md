@@ -505,7 +505,8 @@ The range consumer being verified in PR #251 keeps two I64 bounds instead of a
 private index list. For example, zip indices `0, 1` with `[10, 20]` to produce
 `[(0, 10), (1, 20)]`; the index list and its scratch copy need not exist.
 
-- Evaluate bounds once at their original position. Generate indices at the sole
+- Accept a direct range argument or a sole-use named range. Evaluate bounds once
+  at their original position. Generate indices at the sole
   zip consumer; shared/escaping ranges keep ordinary list storage.
 - Require a known callback with scalar captures/inputs and scalar or flat
   one/two-field numeric results. Borrow its closure and the other list.

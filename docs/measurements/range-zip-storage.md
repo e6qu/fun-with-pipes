@@ -1,7 +1,9 @@
 # Consume an index range without constructing its list
 
 **Status:** contract frozen at `e86ee4cc` before edits; implementation and
-controls are written in PR #251, with native verification and measurements pending.
+controls are written in PR #251. The [first native attempt](range-zip-storage-2026-11-03/README.md)
+missed inline range arguments and exposed a test-injection bug; both are repaired
+for runner verification. Measurements remain pending.
 This is the next storage change after the scalar-map buffer. Keep its reference
 separate from the ongoing [scalar-buffer comparison](temporary-list-storage.md).
 
@@ -41,8 +43,8 @@ After:  evaluate bounds → retain two scalar bounds ─────────
 
 - Select only the existing I64 `range` primitive: lower bound inclusive, upper
   bound exclusive; upper ≤ lower means empty. Do not change the public API.
-- Require one zip consumer through a complete single-use, straight-line alias
-  chain. Shared/escaping ranges and unproved control-flow paths keep their
+- Require one zip consumer, directly or through a complete single-use, straight-line
+  alias chain. Shared/escaping ranges and unproved control-flow paths keep their
   ordinary implementation. Support either zip input slot.
 - Resolve a known two-argument callback, including a known partial application
   with machine-scalar captures. Require the non-index input to be a machine
