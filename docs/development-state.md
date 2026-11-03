@@ -1,130 +1,101 @@
 # Current work
 
-**Next:** publish the batched direct-array callback repair and verify all three
-focused jobs before freezing measurements. PR #252 remains the only active PR;
-monitor production `41635110882` and docs `41635092370` at
-`e2d55aa81a7830cf7379570944ed7f307c55f7af`. Keep its head fixed unless a real
-failure needs repair. Benchmarks and docs pass; eight platform jobs remain.
-Open the next PR only after #252 passes, is fully audited and merges.
+**Next:** publish the export-inspection repair and audit its three-host focused
+run before freezing measurements. All three jobs in `41640932807` are audited:
+each passes 39 tests and fails the same test-root inspection. Continue monitoring
+PR #252's final gates and merge only after every log is audited. Open the follow-up
+PR afterward.
 
 ## Checkout and source identities
 
-- Predecessor worktree: `.worktrees/gradient-array-results`, branch
-  `gradient-array-results`; [PR #252](https://github.com/e6qu/fun-with-pipes/pull/252)
-  is the only active PR; its final production matrix is running.
-- Scratch/evidence: `.worktrees/gradient-work`. `/private/tmp` was cleared earlier;
-  keep checkpoints here. Leave the detached primary checkout's recovery edits alone.
-- Contract: `c191421e`, tag `roadmap/gradient-array-protocol-2026-11-03`.
-  Initial implementation: `aed66f26`, tag
-  `roadmap/gradient-array-first-attempt-2026-11-03`.
-- Measurements: `1f6a4ac80ed3e9e89106c27573d0c73d46bb6968`, tag
-  `roadmap/gradient-array-measurement-2026-11-03`. The frozen reference reverses
-  exactly seven compiler/runtime/library files; it is not an older compiler.
-- Focused native prerequisite: `41626196812` at `f00fb9dc`. Later measurement and
-  documentation changes leave `src`, `runtime`, `lib`, Rust tests and build inputs
-  unchanged. The runner verifies those trees before measuring.
+- Work here: `.worktrees/direct-array-callbacks`, branch `direct-array-callbacks`.
+  Contract `776e8d98`, tag `roadmap/direct-array-callbacks-protocol-2026-11-03`,
+  precedes implementation `8537e7a9`. Repair/comparison tools: `36bfee09`.
+- [PR #252](https://github.com/e6qu/fun-with-pipes/pull/252) remains the only active
+  PR, branch/worktree `gradient-array-results`, final head
+  `e2d55aa81a7830cf7379570944ed7f307c55f7af`. Keep that head fixed unless a real
+  failure needs repair. After merge, rebase this follow-up onto its squash commit.
+- Scratch and evidence: `.worktrees/gradient-work`. `/private/tmp` was cleared
+  earlier. Leave the detached primary checkout's recovery edits alone.
+- No direct-call measurement source is frozen yet. The reference disables only
+  the new scalar array-map selector; both compilers retain all gradient arrays.
 
 ## Roadmap status
 
-Follow-up contract `776e8d98` precedes code changes. The direct array-map draft
-uses existing scalar type checks, array accessors, caller-owner protection and
-partial-array cleanup; it adds no runtime layout, syntax or generic adapter.
-New semantic cases cover signed/unsigned widths, F32/F64, conversions, empty and
-sliced inputs, aliases, effects/traps and excluded callbacks/representations.
-Existing map/zip probes now instrument the direct loop, assert zero generic
-application calls, and exercise disabled reuse as well as all original fault modes.
-The existing `scalar-array-checks` route includes these affected targets.
-First focused run `41638033527` at `8537e7a9` failed on all three hosts:
-one unescaped C brace in a Rust format string prevented compilation; the absent
-evidence directory then failed uploads. No native targets ran. Full logs and
-[the repair record](measurements/direct-array-callbacks-2026-11-03/README.md) are
-retained. The brace and early evidence retention are repaired; independent native
-checks now run whenever the compiler builds, including after a lint failure.
-
-Same-source reference and measurement routes are prepared, not yet run. Guarded
-checks pass: reference controls (3), timing budgets (17), compiler-analysis
-controls (7), retained-patch audit (15), comparison groups (12), retention (3),
-Rust formatting and workflow lint. Native correctness, counts and performance
-remain unverified. No new timing source is frozen yet.
+The [contract](measurements/direct-array-callbacks.md) limits selection to known,
+closed callbacks with ordinary scalar inputs/results. Code reuses array accessors,
+caller-owner protection and partial-array cleanup. It adds no layout or syntax.
+Native correctness, memory limits and performance remain unverified. A separate
+[storage review](measurements/remaining-gradient-storage.md) records remaining
+input/output ownership constraints and unused iteration history; it selects no
+new implementation and changes no measurement protocol.
 
 | Step | Status | Remaining work |
 |---|---|---|
-| 1 | Verified | Range-storage PR #251 merged; all gates, logs and merge verified |
-| 2 | Verified | Private gradient arrays pass focused checks in both engines |
-| 3 | Verified | Cleanup controls, 96 allocation observations and compiler costs pass |
-| 4 | In progress | Reports complete; final platform gates, full log audit and squash merge remain |
+| 1 | Verified | Contract frozen before implementation; keep scope and limits fixed |
+| 2 | In progress | Audit the repaired three-host focused run, fixing all failures together |
+| 3 | Pending | Freeze the verified source; measure compiler costs and four runtime sessions |
+| 4 | Pending | Finish #252 delivery, open the sole next PR, complete its final gates and merge |
 
-## Verified results and repaired failures
+## Follow-up checks and repairs
 
-- **Storage and cleanup:** [complete report](measurements/gradient-array-storage-2026-11-03/README.md).
-  Run `41626196812`: ARM64 job `125884054605`, AMD64 `125884054997`.
-  Each passes 19 units, 72 integration executions, 48 allocation observations,
-  16 array-map/zip controls and 72 typed probes. Every full/target log is audited;
-  all 525 saved images per host have native ELF headers and verified identities.
-- **Largest current-only solve:** 105,203 → 79,731 allocation requests;
-  3,736,014 → 3,326,870 requested bytes. Retains 995, peak managed bytes 14,976
-  and final bytes 0 are unchanged. This includes all replacement arrays.
-- **First-run repairs:** old cleanup instrumentation targeted the removed list
-  builder; it now targets array-slot/input-owner transfers. The F128 expected
-  value allocated an extra 32-byte array; making that value explicitly compile-time
-  preserves every recording budget. All failing configurations and 32 original
-  target logs are retained in the storage report. The harness now collects every
-  failing type/optimization/workspace combination instead of stopping early.
-- **Compiler costs:** [complete report](measurements/gradient-array-analysis-2026-11-03/README.md).
-  Run `41629709664`: ARM64 job `125895872041`, AMD64 `125895871607`.
-  All 480 commands and raw/source/image records reconcile. Maximum candidate/reference
-  ratios: elapsed 1.0001024, peak RSS 1.0017344; identical copies 1.0115275.
-  All frozen compiler-cost limits pass.
-- **Audit repair:** Git and Python can produce different valid patch hunks. The
-  checker now verifies patch application, exact resulting bytes, file inventory
-  and hashes. Six tests include the real seven-file Git patch and corruption
-  controls. This changes no measured compiler, driver or acceptance limit.
+First run `41638033527` at `8537e7a9` failed on all three hosts before native tests:
+an unescaped C brace in a Rust format string prevented compilation, then missing
+artifact directories failed uploads. [Complete logs and repair](measurements/direct-array-callbacks-2026-11-03/README.md).
+The brace is corrected. CI now records source/host/compiler identity before checks,
+retains format/lint/build logs, and runs native targets whenever the compiler builds,
+even after a lint failure. Every failing step still fails the job.
 
-## Runtime observations and delivery
+Run `41640932807` checked eight affected targets on GCC ARM64/AMD64 and Clang ARM64.
+The new cases cover numeric widths, conversions, empty and sliced arrays, aliases,
+effects/traps and excluded callbacks. Map/zip probes count direct calls and zero
+generic applications; normal/disabled reuse and missing-cleanup controls remain.
 
-[Runtime report](measurements/gradient-array-time-2026-11-03/README.md): run
-`41629714632` finished three qualified sessions; raw audit `41632779445`, job
-`125906293485`, passes. Replacement AMD64 session 1 `41631438916` / `125901736888`
-also completes; audit `41634286259` / `125911419160` passes. All four jobs fail
-only the final speed assertion; 5,336 raw-file records reconcile.
-Both ARM64 sessions show about 3–4% less time for 33/129-coordinate solves;
-three-coordinate repeated updates are about 1–2% slower. Both AMD64 sessions
-miss every 5% target. All 32 required speed improvements remain open. Count,
-cleanup, zero/one-update, copy and frame limits pass separately. Whole-process
-RSS does not consistently fall: AMD64 current-only observations rise about 9%.
+Guarded local checks pass:
 
-AMD64 session 1 rejected EPYC 9V74 in runs `41629714632` and `41630230085`, then
-EPYC 9V45 in `41630692989`, all before building or timing. The final replacement
-qualified on EPYC 7763.
-Preserve all three rejected hosts and every measured outcome. The accepted policy
-keeps verified reductions while leaving timing goals open.
+- Reference controls: 3; timing budgets: 17; compiler-analysis controls: 7;
+  retained-patch audit: 15; comparison groups: 12; retention: 3.
+- Rust formatting (1.85s), workflow lint (6.41s), documentation audit (2.80s).
+- The production initializer format alone compiles and emits the intended C
+  initializer (0.84s). This does not verify the native implementation.
 
-Source review finds generic application in scalar `array.map`, where the earlier
-buffer map called its known callback directly. This is a next experiment, not a
-proven timing cause. [PLAN.md](../PLAN.md#open-performance-goals) defines its scope.
+The first native attempt's complete logs, targets, image identities and cleanup
+observations are retained in [the repair record](measurements/direct-array-callbacks-2026-11-03/README.md).
+The inspection wrongly expected exported names in a main-only build. The repair
+requests exported roots separately, preserves ordinary main execution, saves C
+before assertions and prints compiler diagnostics as text. All ten cleanup
+observations per host pass. Native selection/value verification remains incomplete.
 
-PR #251 merged as `296ec5b4c3540c6d57671d076d2a39247b2389f4` from `cea8debc`.
-All nine jobs `41610112980` and docs `41610097425` pass; full/target logs, exact
-merge tree and one-line message are verified in the
-[delivery record](measurements/range-zip-storage-2026-11-03/platforms/final-gates.json).
-Duplicate same-tree main run `41625843765` was cancelled with no failed steps.
+Use `../gradient-work/collect-direct.py` under the guard with the new `--run`,
+exact `--source` and a fresh `--output` directory. It retains complete job/target
+logs, validates archive/native-image identities and reconciles eight direct-map
+plus ten cleanup observations. Keep failed-run directories; do not overwrite them.
 
-## Local checks and limits
+## PR #252: final gates still running
 
-Guarded focused checks pass: primitive inventory/stdlib, Clang typed cleanup,
-formatting, workflow lint, count/reference fault controls, compiler/timing driver
-controls, evidence/group/retention checks and documentation links. Corrected
-reference tests: 6 in 0.61s. Compiler-report audits: AMD64 57.85s, ARM64 49.47s;
-compact runtime report/log hashes: 0.25s; all four derived reports: 0.72s.
-The scratch retention helper first needed the scripts import path and a diagnostic
-pattern that distinguishes the expected `AssertionError` from compiler errors;
-both are repaired and the complete check passes. Final native checks run on GitHub.
-Final local documentation check: 236 link sets, 106 immutable preparation pairs
-and four roadmap steps pass in 2.68s; whitespace and unchanged implementation
-trees also pass.
+Production `41635110882` requires nine jobs; docs `41635092370` also must pass.
+Benchmarks, docs and both macOS ARM64 jobs pass and are fully audited; six
+platform jobs remain. Use `../gradient-work/collect-252.py` under the guard to collect new
+completed jobs. Results are in `../gradient-work/platforms-252`.
+Carry final gate records into this follow-up rather than restarting #252 for a
+status-only edit. After all ten pass, squash with an explicit one-line subject
+(≤80 characters), empty body and no trailers; verify the raw message and tree.
 
-Use `python3 scripts/local-guard.py` serially. Preserve 64 GiB free, target data
-below 2 GiB, sampled workload RSS below 1 GiB and the 180-second deadline.
-Last free space about 87 GiB. Never raise or bypass limits.
-Squash only after all final-head gates pass: one line, ≤80 characters, empty body,
-no trailers or attribution; verify the commit and tree. Continue the plan afterward.
+[Storage checks](measurements/gradient-array-storage-2026-11-03/README.md),
+[compiler costs](measurements/gradient-array-analysis-2026-11-03/README.md) and
+[all runtime observations](measurements/gradient-array-time-2026-11-03/README.md)
+are complete. Largest current-only solve: 105,203 → 79,731 allocation requests;
+3,736,014 → 3,326,870 requested bytes; retains 995, peak managed bytes 14,976 and
+final bytes 0 unchanged. Four raw audits reconcile 5,336 file records. All 32
+required 5% speed gains remain open; AMD64 current-only whole-process RSS rises
+about 9%. Keep these outcomes and rejected hosts; never rerun for a better result.
+Measurement source `1f6a4ac80ed3e9e89106c27573d0c73d46bb6968`, tag
+`roadmap/gradient-array-measurement-2026-11-03`. Focused prerequisite `41626196812`
+at `f00fb9dc`; unchanged implementation trees are verified by measurement jobs.
+
+## Local limits
+
+Use `python3 scripts/local-guard.py` serially. Full builds, suites, benchmarks and
+large regeneration belong on GitHub. Preserve 64 GiB free, target data below 2 GiB,
+sampled workload RSS below 1 GiB and the 180-second deadline. Last free space about
+86 GiB. Never raise or bypass limits. No local compiler build is running.
