@@ -1,7 +1,7 @@
 {
   "run": 41672290329,
   "source": "beddd406153f1976fed00847292207bff9053e22",
-  "complete": false,
+  "complete": true,
   "jobs": [
     {
       "runner": "ubuntu-24.04-arm",
@@ -20,6 +20,15 @@
       "observations": "ubuntu-latest-observations.json.gz",
       "log": "ubuntu-latest-job.log.gz",
       "targets": "ubuntu-latest-targets-and-controls.zip"
+    },
+    {
+      "runner": "macos-15",
+      "job": 126043554283,
+      "passedTests": 50,
+      "nativeImages": 312,
+      "observations": "macos-15-observations.json.gz",
+      "log": "macos-15-job.log.gz",
+      "targets": "macos-15-targets-and-controls.zip"
     }
   ],
   "crossHostOutputs": {

@@ -9,9 +9,9 @@ focused checks; open no second PR until #253 merges.
 
 - Worktree `.worktrees/direct-array-callbacks`; final head
   `893942291b0f1e51a23488c9dea2a9d811acfab1`.
-- Production run `41662326563`: six of nine jobs pass and are fully audited
-  (four macOS jobs, Windows ARM64 and benchmarks). Linux ARM64/AMD64 and
-  Windows AMD64 remain running, without reported failures.
+- Production run `41662326563`: eight of nine jobs pass and are fully audited.
+  Linux AMD64 has finished its suite and is completing packaging/uploads,
+  without reported failures.
 - Documentation run `41662323124`, job `126008450991`: passed full-log audit.
 - Scratch `.worktrees/gradient-work/collect-253.py` downloads and audits each
   completed gate. Require all nine production jobs plus docs before squash.
@@ -45,7 +45,7 @@ the pending user question has no recorded reply. This is an explicit working
 choice, not a recorded user decision. Cross-type rules remain unchanged. If the
 answer changes, revise the contract explicitly before delivery or measurement.
 
-Implemented; GCC native checks pass, Clang and final-platform verification remain:
+Implemented; all three focused native hosts pass. Final-platform verification remains:
 
 - Same-type F16/BF16/F32/F64/F128 conversions preserve bits. Generic F128 still
   allocates an independently owned result box.
@@ -60,9 +60,11 @@ Implemented; GCC native checks pass, Clang and final-platform verification remai
   Existing failure/cancellation targets also remain in the focused group.
 
 Focused run `41672290329` tests `beddd406153f1976fed00847292207bff9053e22`.
-Both GCC jobs pass full-log/artifact audit: 50 integration tests, the selector
-unit test, 54 new observations and 318 native images per host. Their generated C
-and 32 native entry images were inspected. Clang ARM64 is queued without a runner.
+All three jobs pass full-log/artifact audit: 50 integration tests, the selector
+unit test and 54 new observations per host. All 948 saved native images have
+checked headers/hashes; generated C and 32 GCC native entry images were inspected.
+The [complete index](measurements/scalar-array-identities-2026-11-03/native/index.json)
+retains logs, sources, controls and matching cross-host transcripts.
 Earlier batches `41667037137` and `41670309514`
 were cancelled before any jobs started, to include the complete fault checks
 and correct their task context. The fault probe now declares a reachable task
@@ -78,8 +80,18 @@ both the saved allocation and longer backing retention for unique slices.
 The exact Rust-generated fixture still needs final platform verification.
 Batch its source/docs with any native-check fixes; do not rerun unchanged eight-target
 checks merely for this probe extension.
-No new timing or second PR exists yet. Committed measurement tooling provides a
-same-source reference that disables only map elimination while preserving scalar fixes;
+Measurements are frozen at focused-tested `beddd406`, tag
+`roadmap/scalar-array-identity-measurement-2026-11-03`. Compiler-cost run
+`41678571054` is measuring both compiler hosts. Runtime run `41678576958`
+continues both ARM64 sessions; its two AMD64 hosts were rejected before building
+or timing (9V74 instead of the frozen 7763). Both full logs and qualification
+artifacts are audited in scratch `identity-host-rejections/41678576958`.
+Replacement AMD64 sessions are run `41679275708`; do not replace any session
+that has begun measurement.
+Both use correctness run `41672290329`. No second PR exists yet. The newer branch
+adds only the storage probe and documentation; compiler/runtime/library/tooling
+sources still match the measured source. Preserve both immutable tags on rebase.
+Committed tooling provides a same-source reference disabling only map elimination;
 its count budget requires one removed array per update, with existing time/noise
 limits. Reference controls (3), budget controls (18), compiler-analysis controls
 (7) and raw-source/evidence controls (16) pass in one guarded 20.85s batch.

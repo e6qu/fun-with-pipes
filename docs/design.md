@@ -597,12 +597,22 @@ The optimizer removes work only when doing so preserves observable behavior:
 | Optimization | Work it can remove | Important limit |
 |---|---|---|
 | Scalar replacement | Building a record that is only read field by field | A whole-value use may still need the record |
+| F64 identity conversion map | A replacement array and its element traversal | Only the exact known `float.convert : F64 -> F64` primitive qualifies |
 | Direct numeric workers | Boxing and generic word conversion at suitable calls | Closures and other generic boundaries keep conversion code |
 | List/array fusion | Intermediate collections between eligible map/filter/consumer stages | Interleaving must preserve effects, termination and which trap occurs first |
 | Iterator specialization | Tail closures and indirect calls for known producers/consumers | Early stopping and successor lookahead remain observable |
 | Flat loop state | Rebuilding state tuples on each iteration | Unsupported shapes keep ordinary state representation |
 | Variant returns | Building `Some`/`Ok` only to immediately inspect it | Unknown whole-value consumers may require a box |
 | Blocked matrix multiplication | Poor locality and generic loop overhead | Preserve multiplication/addition order and shape semantics |
+
+For the identity conversion map, `src/opt.rs` returns the original input
+expression before ownership insertion. It checks the existing concrete types,
+primitive identity and arity; it does not analyze arbitrary callbacks. The input
+is evaluated once, and ordinary ownership insertion determines a move or shared
+result owner. Returning a slice can prolong its backing array's lifetime.
+[The contract](measurements/scalar-array-identities.md) and
+[verification/storage report](measurements/scalar-array-identities-2026-11-03/README.md)
+distinguish that cost from the saved allocation.
 
 A temporary tuple or record can disappear only when its uses and child lifetimes
 permit it. Ignored fields still evaluate in their original order. Known tuple

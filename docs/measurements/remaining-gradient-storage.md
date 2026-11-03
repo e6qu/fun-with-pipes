@@ -112,6 +112,24 @@ intermediate vectors even though only the last is returned. A selected compiler
 transformation could keep only the current value when the iteration list has no
 other use. This is not implemented by the current measured source.
 
+For example, `0 | iterate 3 (add 1) | last` currently builds `[0, 1, 2]`
+and returns `Some 2`. The count is the number of values, including the initial
+value; it is not the number of callback calls:
+
+| Count | Callback calls | Result from initial value 0 |
+|---|---:|---|
+| Negative or zero | 0 | `None` |
+| 1 | 0 | `Some 0` |
+| 3 | 2 | `Some 2` |
+
+In [the standard library](../../lib/list.fwp), `last` is `reverse | head`, not a
+primitive. [Native iteration](../../runtime/fwp_rt_prims.c) retains each state
+in a scratch array before constructing the list. A future rewrite must recognize
+the actual lowered producer/consumer, preserve the optional result and avoid
+retaining intermediate states that have no remaining use. Evaluating the count,
+callback expression and initial value still matters even when the callback is
+never called. This source review does not select that rewrite yet.
+
 Earlier destruction can be observable for files, locks or other resources. An
 initial selection should exclude such states unless it proves that release timing
 is preserved; numeric state alone does not need that broader promise.

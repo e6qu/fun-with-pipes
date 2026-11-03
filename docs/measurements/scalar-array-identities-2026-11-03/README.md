@@ -9,9 +9,9 @@ Full platform verification, compiler costs and runtime timings are still pending
 ## Focused native verification
 
 [Run 41672290329](https://github.com/e6qu/fun-with-pipes/actions/runs/41672290329)
-at `beddd406153f1976fed00847292207bff9053e22` passes on GCC Linux ARM64 and
-AMD64. Clang macOS ARM64 is still queued. [The index](native/index.json) explicitly
-marks that group incomplete and links the full logs, target logs, generated C,
+at `beddd406153f1976fed00847292207bff9053e22` passes on GCC Linux ARM64/AMD64 and
+Clang macOS ARM64. [The complete index](native/index.json) links the full logs,
+target logs, generated C,
 observations and native image identities. Identical generated C is stored once
 per archive, with original paths mapped in the observation record.
 
@@ -27,8 +27,8 @@ Each completed host passes:
 - Two source-program executions preserving values and effect order, plus eight
   existing float-text observations including deliberate corruption controls.
 
-All new output/error/status transcripts match between GCC hosts. All 636 saved
-native images have checked architecture headers and hashes. The 32 owner-probe
+All new output/error/status transcripts match across all three hosts. All 948 saved
+native images have checked architecture headers and hashes. The 32 GCC owner-probe
 images also have saved entry inspection: generated C shows the selected function
 returning its input with scheduler cleanup intact; native entries corroborate
 removal of the replacement-array work. GCC sometimes inlines the source function
