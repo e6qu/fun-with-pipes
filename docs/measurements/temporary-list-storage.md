@@ -1,6 +1,6 @@
 # Remaining temporary list storage
 
-**Status:** count-only protocol; no new compiler transformation selected.
+**Status:** census verified; scalar map-to-zip storage change selected below.
 Protocol anchor: `roadmap/temporary-list-protocol-2026-11-03`.
 [PLAN.md](../../PLAN.md) groups the census, selected storage change, controls and
 final measurements in one PR.
@@ -81,14 +81,76 @@ ordinary, existing-counter and constructor-counter executions. A separate audit
 reconstructs the instrumented C and site tables from saved ordinary C, checks
 every archived hash and native image, and recomputes all phase totals.
 
-After attribution, freeze one bounded storage change and its predicted savings
-before editing the compiler. A candidate is the sole-use numeric adjustment list:
-map into one numeric buffer, then let zip-with read it after the map completes.
-Do not mutate the input list or interleave the two callbacks. Explicitly exclude
-shared/escaping results and unsupported value layouts.
+The [verified census](temporary-list-census-2026-11-03/README.md) attributes the
+adjustment list to its map and matches `d*u` cells in all 96 observations. The
+following contract is frozen before compiler edits; anchor
+`roadmap/scalar-map-zip-protocol-2026-11-03`.
 
-Verify ordinary/unoptimized/native behavior, aliases, empty and unequal inputs,
-callback order, failures, cancellation and allocation errors. Keep the same-source
-runtime reference and the existing 2% copy/regression and 5% large-case speed
+## Selected storage change
+
+Keep the sole-use scalar map in one private numeric buffer. Then zip-with reads
+that buffer directly and builds its ordinary output list:
+
+```text
+Before: gradient list → complete scaled list → zip-with old coordinates → new list
+After:  gradient list → complete numeric buffer → same zip-with → new list
+```
+
+- Select a direct map with a known single-argument callback. Its input and result
+  must be machine integers through 64 bits, F32 or F64. No child owners are stored.
+- Prove one consumer, including any straight-line local aliases. Every alias
+  must have one use; update their types together. The consumer must be a direct
+  zip-with with a known two-argument callback, scalar inputs and scalar output.
+  Support either input slot while preserving data-last argument order.
+- Exclude shared/escaping map results, captures, unknown callbacks, records,
+  boxed wide values, resources and unproved control flow. Other programs retain
+  their ordinary representation. If both zip inputs qualify, select only one.
+- Keep the map, intervening effects and zip argument expressions in their
+  original positions. Finish **every** map callback before starting zip, even
+  when the other list is shorter or empty. Preserve checked arithmetic and traps.
+- Borrow the source list while filling one protected `Array[I64]` of numeric
+  bits. Zip borrows the buffer and other list, uses one protected output scratch
+  area, then constructs its result. Do not mutate either source collection.
+- Keep the existing callback scheduling checks. Release the buffer, scratch and
+  partial output on return, traps, cancellation and allocation failure. Changed
+  allocation points do not authorize leaked owners or hidden retries.
+- Collect uses once and follow disjoint alias chains; avoid repeatedly scanning
+  unrelated function tails. Check scaling with deterministic visit counts and
+  measure compiler time/RSS against the same-source reference.
+
+### Predicted savings and comparison
+
+For one solve with `d` coordinates and `u` updates:
+
+| Cost removed | Amount |
+|---|---:|
+| Adjustment list cells | `d*u` allocations, `24*d*u` requested bytes |
+| Zip's copy of that input into scratch | `u` allocations, `8*(d+1)*u` bytes |
+| Total | `(d+1)*u` allocations, `(32*d+8)*u` bytes |
+
+The map's old scratch allocation becomes the numeric buffer. At 129/199, expect
+25,870 fewer requests and 823,064 fewer requested bytes. Zero-update counts must
+stay unchanged; output, derivative work and final live storage must match.
+Measure peak managed storage, raw buffers, RSS, instructions and frames separately.
+
+The reference will disable only this new selection in the same Rust source.
+Use one `scalar_map_zip::lower(&mut numeric_program)` call after packed-record
+lowering and before numeric-parameter lowering; the reference bypasses that call.
+Keep packed-record map/fold and numeric-input transformations enabled in both
+builds; builds must not depend on an older fwp compiler. Publish and verify that
+source rewrite before measurements.
+
+### Required controls
+
+- Both zip input slots; each supported scalar kind; empty and unequal lists.
+- Shared source lists; shared/escaping map results and unsupported callbacks.
+- Printed callback order, intervening effects, subtraction argument order, and
+  a map trap beyond the shorter zip input. These must match unoptimized execution.
+- Partial map, partial zip and result-construction failures, cancellation,
+  allocation failures, physical frees and deliberately omitted destruction.
+- Ordinary/unoptimized interpretation and native GCC/Clang O1/O2; all saved
+  count cases, workspace settings and the grouped final platform gates.
+
+Keep the same-source runtime reference and the existing 2% copy/regression and 5% large-case speed
 limits. Report compiler time/RSS, managed/raw memory, process RSS and code/frame
 costs separately. Prior missed goals remain open regardless of the new result.

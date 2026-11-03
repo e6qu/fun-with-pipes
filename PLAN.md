@@ -13,19 +13,16 @@ record/list constructor. Its missed timing goals remain open below.
 
 | Step | Work | Completion requirement |
 |---|---|---|
-| 1 | Attribute remaining constructors to their actual callers | Publish the count-only protocol; same six cases, both forms, O1/O2, workspace 0/1 and native GCC hosts. Match existing allocation totals, output, derivative work and zero final storage. Retain source/image hashes and every failure. |
-| 2 | Freeze one storage change supported by those counts | Name the exact producer and consumer, aliases/escapes that exclude it, callback/trap order, lifetime and failure cleanup. Publish the same-source reference switch and predicted count changes before compiler edits. |
+| 1 | Attribute remaining constructors to their actual callers — verified | All 96 native GCC observations match prior counts/output/work and zero final storage. Constructor controls, reconstructed sources, images and full logs pass. [Evidence](docs/measurements/temporary-list-census-2026-11-03/README.md). |
+| 2 | Freeze one storage change supported by those counts — selected | [Contract](docs/measurements/temporary-list-storage.md#selected-storage-change): scalar map buffer consumed by one zip-with; explicit alias, effect and cleanup rules. Predicted reduction: `(d+1)*u` allocations. Publish the same-source reference implementation before measurement. |
 | 3 | Implement and verify the selected change | Ordinary/unoptimized interpreter versus native GCC/Clang O1/O2; direct/shared/escaping/empty/unequal-length inputs; failure, cancellation and allocation controls; exact saved-source counts and cleanup; bounded compiler analysis. |
 | 4 | Measure and deliver the whole batch | Fixed complete-driver comparison and qualified hosts; compiler time/RSS, managed/raw storage, RSS, code/frame costs; preserve 2% copy/regression and 5% speed limits. One substantial PR, all nine exact-head production gates plus docs, audited logs and verified one-line squash. |
 
-The saved code suggests a concrete candidate: `grad ... | map scale` builds an
-adjustment list used only by `zip-with sub` with the old coordinates. The map
-could write a numeric buffer, then the zip could read it after mapping finishes.
-This would preserve eager callback order and avoid mutating the input list.
-[The count-only protocol](docs/measurements/temporary-list-storage.md) fixes the
-first measurement. Select the storage change only after its census verifies the
-cost and the lifetime proof
-covers its complete consumption and cleanup. Do not interleave the two stages.
+The census verifies that `grad ... | map scale` creates `d*u` adjustment-list
+cells used only by `zip-with sub`. Replace those cells with a private numeric
+buffer and remove zip's extra input copy, preserving eager callback order and
+input aliases. The [frozen contract](docs/measurements/temporary-list-storage.md)
+defines selection, cleanup and count predictions. Do not interleave the stages.
 
 Use saved evidence and focused checks during development. Run one grouped final
 measurement/validation after the implementation and its controls are ready.
