@@ -12,16 +12,17 @@ jobs:
   roadmap_docs:
     # Evidence checks read saved binaries; small compiled controls run natively.
     runs-on: ubuntu-24.04-arm
-    timeout-minutes: 5
+    # Checkout plus the evidence controls can exceed five minutes on a cold runner.
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
-          # Keep ancestry and tags without downloading every historical evidence blob.
-          filter: blob:none
+          # Fetch historical source together; leave large old evidence blobs on demand.
+          filter: blob:limit=1m
       - name: Retain review heads for preparation references
-        run: git fetch --filter=blob:none origin "+refs/pull/*/head:refs/remotes/origin/review/*"
+        run: git fetch --filter=blob:limit=1m origin "+refs/pull/*/head:refs/remotes/origin/review/*"
       - name: Documentation audit controls
         run: python3 scripts/test-roadmap.py
       - name: Documentation, immutable tags and commit messages

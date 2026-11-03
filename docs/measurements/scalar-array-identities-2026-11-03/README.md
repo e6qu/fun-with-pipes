@@ -5,7 +5,9 @@ selected `array.map float.convert` calls on F64 arrays. The
 [contract](../scalar-array-identities.md) fixes selection, ownership and measurement
 requirements. [The handoff](../../development-state.md) records current CI status.
 [Compiler-cost limits](../scalar-array-identity-analysis-2026-11-03/README.md) pass.
-Full platform verification and runtime timings remain pending.
+Full platform verification and runtime timings remain pending. The
+[documentation checkout repair](documentation-repair/README.md) retains the
+timeout diagnosis and its verification status.
 
 ## Focused native verification
 

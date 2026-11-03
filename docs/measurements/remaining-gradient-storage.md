@@ -46,62 +46,28 @@ checks where needed. Callbacks must finish in the same order; aliases must retai
 their values. Failure and cancellation must release old input, partial output and
 scratch exactly once, including when zip stops at the shorter input.
 
-## Check redundant same-type conversions
+## Selected conversion change
 
-The same report counts 199 replacement conversion arrays, totaling 206,960
-requested bytes in the largest solve. `rev._backward-float` converts the backward
-pass's F64 array to the requested scalar type. F32/F16/BF16 need real conversion;
-the selected F64 change proves the callback preserves every bit before removing
-its map. Native verification and measurements are still pending.
+The measured source above makes 199 replacement conversion arrays per large
+solve, requesting 206,960 bytes. The current implementation removes that F64
+identity map before ownership insertion. It also repairs same-type scalar
+conversion to preserve all bits, including signed zero and NaN payloads.
+Cross-type conversions still round; generic F128 results keep independent owners.
+[Conversion rules](../float-formats.md#current-contract) explain the semantics.
 
-An identity rewrite must preserve floating-point bits, including signed zero and
-NaNs, and must transfer the existing owner correctly. Merely returning a borrowed
-input would be unsafe when its caller releases it. Prove that the owned result
-moves through the ordinary ownership pass without additional retains, preserve
-aliases, and test cleanup before claiming removal of that allocation or traversal.
-The [preparation contract](scalar-array-identities.md) selects an initial
-F64 case separately from direct callback dispatch.
+[Three-host native checks](scalar-array-identities-2026-11-03/README.md) and
+[compiler-cost checks](scalar-array-identity-analysis-2026-11-03/README.md) pass.
+The complete runtime report and final platform matrix remain in progress;
+[the handoff](../development-state.md) records exact sources and jobs. Both sides
+of the frozen comparison include the scalar repair; the reference disables only
+map removal. Passing allocation checks does not satisfy the separate speed goals.
 
-### Conversion semantics to settle first
-
-Source inspection at `89394229` found different same-type NaN behavior:
-
-| Path | What the code does |
-|---|---|
-| Interpreter, F64 → F64 | Widens through the software F128 core and narrows again. That core replaces NaNs with a canonical positive quiet NaN. |
-| Native, F64 → F64 | Loads and stores F64 directly, preserving its bits. |
-| Native specialized F128 → F128 | Returns the incoming bit structure unchanged. |
-| Generic boxed F128 → F128 | Copies the bits into a new owned box; returning the borrowed box would break its ownership contract. |
-
-A NaN is a floating-point non-number value. Several bit patterns represent it,
-including a sign and payload. For example, F64 bits `0xfff8000000000042` encode
-a negative quiet NaN with payload `0x42`; `0x7ff8000000000000` is the canonical
-positive quiet NaN. Ordinary numeric equality cannot test this distinction,
-because a NaN does not compare equal even to itself. Tests must inspect bits.
-
-At that reviewed source, the float contract did not distinguish same-type
-conversion from changing formats. The selected rule now preserves every bit for
-same-type conversion. [Current conversion rules](../float-formats.md#current-contract)
-separate that operation from cross-type conversion.
-
-### Implementation and verification
-
-The draft repairs scalar conversion first, then removes only the known F64
-conversion map before ownership insertion. It adds no whole-program analysis or
-new syntax. [The frozen contract](scalar-array-identities.md) specifies selection,
-ownership, native bit/cleanup checks and measurement limits; the
-[handoff](../development-state.md) records actual verification status.
-
-A same-source reference disables only map removal. Both sides include the same
-scalar repair, so the performance comparison does not also change float semantics.
-Unique arrays can move without a replacement allocation. Shared arrays and slices
-need separate storage observations: keeping a slice can prolong its backing
-array's lifetime. Allocation savings alone do not prove lower live memory.
-
-Relevant implementation points are [the optimizer](../../src/opt.rs),
-[interpreter](../../src/interp.rs), [generic numeric runtime](../../runtime/fwp_rt_num.c),
-[wide workers](../../src/cgen_wide.rs) and
-[ownership contracts](../../src/ownership.rs).
+The rewrite transfers the existing owner through the ordinary ownership pass.
+Aliases retain their values, and failure/cancellation checks verify cleanup.
+Keeping a slice can prolong its larger backing array's lifetime: the
+[storage report](scalar-array-identities-2026-11-03/README.md#result-lifetime-and-allocation-traffic)
+shows that cost alongside the removed allocation. Unknown/effectful callbacks
+and non-F64 maps are outside this selection.
 
 ## Another opportunity: discard an unused iteration history
 

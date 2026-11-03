@@ -67,20 +67,21 @@ runtime semantics. Do not rerun the unchanged eight-target focused group.
   Scratch `audit-identity-analysis.py` and `identity-analysis/`.
 - Runtime run `41678576958`: both ARM64 sessions completed. Each reports eight
   missed 5% speed gains, with no other failed limits. Full job logs are inspected
-  in `identity-runtime-first/`; raw audit run `41682284697` is queued.
-- Four AMD64 hosts were rejected before building/timing (two 9V74, two 9V45,
-  instead of frozen 7763). Their complete logs and qualification artifacts are
-  audited under scratch `identity-host-rejections/`.
+  in `identity-runtime-first/`; raw audit run `41682284697` passes, with all 2,668 file records reconciled.
+- Six AMD64 hosts were rejected before building/timing: three EPYC 9V74,
+  two 9V45 and one Xeon 8370C instead of frozen 7763. All complete logs and
+  qualification artifacts are audited under scratch `identity-host-rejections/`.
 - AMD64 session 2 completed in `41679275708`, with eight missed 5% gains and
-  no other failed limits in its full log. Raw audit: `41684684676`. Session 1
-  was rejected there and again in `41682465813`; only its unmeasured replacement
-  is being rescheduled. Do not repeat measured sessions.
-- Draft documentation run `41681546983` at `602f449c` exhausted its five-minute
-  budget after a 4m14s full-history fetch. Every completed check passed; cancellation
-  interrupted the buffer-control group. The repair retains full commits/tags with
-  `blob:none` fetching, including review heads, and adds the identity reference
-  control to this gate. Its fresh-clone result remains to be verified in CI.
-  The draft production workflow is intentionally skipped, not a verified gate.
+  no other failed limits. Raw audit `41684684676` passes; all 1,334 file records
+  reconcile. Session 1's only active unmeasured replacement is `41688990925`.
+- Draft docs runs `41681546983` and `41684788290` exhausted their five-minute
+  whole-job budget. Full-history fetching dominated the first; `blob:none`
+  caused individual historical-source fetches during the second. Every completed
+  check passed. [The repair record](measurements/scalar-array-identities-2026-11-03/documentation-repair/README.md)
+  retains both logs and the passing-job comparison. Fetch small historical files
+  together with `blob:limit=1m`, allow ten CI minutes for setup plus validation,
+  and retain every check. The revised fresh-clone check remains pending.
+  Draft production workflows are intentionally skipped, not verified gates.
 - Correctness prerequisite for every measurement is `41672290329`. The reference
   disables only map removal; both sides include the scalar repair. Count budgets
   require at least one removed array per selected update. Keep the frozen compiler,
@@ -102,10 +103,10 @@ Passing guarded checks: Rust formatting; generated standard-library docs; workfl
 lint; unchanged primitive inventory (394 declarations, 384 symbols); reference,
 budget, compiler-analysis and raw-evidence controls. The documentation audit
 caught and repaired a missing roadmap-status heading; keep that required section.
-Latest audit: 245 document link sets, 106 anchors, four plan steps (2.51s).
+Latest audit: 246 document link sets, 106 anchors, four plan steps (2.39s).
 The saved-source storage probes pass in 3.45s; retained evidence reconciles in 0.25s.
-The checkout repair passes workflow lint (0.25s), identity-reference controls
-(3 tests, 0.12s) and documentation audit (2.51s). No compiler build, full suite
+The revised checkout repair passes workflow lint (0.14s) and the documentation
+audit. Identity-reference controls pass (3 tests, 0.12s). No compiler build, full suite
 or benchmark ran locally.
 
 Use `python3 scripts/local-guard.py` serially: 64 GiB free disk, target data below
