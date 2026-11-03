@@ -1,9 +1,21 @@
 # Current work
 
-**Next:** publish the complete PR #254 report, run the final nine production jobs
-plus documentation on that exact head, audit every full/target log, then squash
-and verify the merged tree and one-line message. All measurements are complete;
-do not repeat them. Keep the 32 missed speed targets open.
+**Next:** monitor PR #254's final production run `41694728758` at `9061744b`,
+audit every completed full/target log, then squash and verify its tree/message
+once all nine production jobs and documentation pass. Docs and benchmarks passed
+with full-log audits; the eight native jobs are running. Keep the head unchanged,
+the 32 missed speed targets open, and completed timing sessions unrepeated.
+
+**Preparation branch:** `.worktrees/iteration-final-value` / `iteration-final-value`.
+While the final gates run, inspect the [final-iteration candidate](measurements/final-iteration-storage.md)
+with `suite=iteration-storage-review` here. No rewrite is selected or implemented.
+The runner saves real raw/optimized IR and C without timing programs. Workflow
+lint passed through the guard in 6.50 seconds. Collector state for #254 is in
+scratch `platforms-254`. Open no second delivery PR before #254 is merged.
+
+The old list-iteration page now distinguishes its completed seven-sample report
+from the current eight-sample reproduction schedule; it no longer claims a new
+run is pending.
 
 ## Checkout and sources
 
