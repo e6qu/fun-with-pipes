@@ -48,6 +48,9 @@ their values.
   source line, enclosing function, tag, field count, phase, requests and bytes.
   Reject unsupported references or unresolved callers; do not silently group them
   under an unknown origin. No production API, ownership or allocation changes.
+  The diagnostic table accepts one tag/field shape per source site and phase;
+  it rejects a mixed shape explicitly. This restriction concerns the observer,
+  not the language. Counters use static storage and add no heap allocations.
 - **Required equality:** constructor totals must exactly equal the independently
   counted `fwp_data` requests and bytes in each phase. Preserve all other managed
   and raw storage counts, full output, derivative work and zero final storage.
@@ -70,6 +73,13 @@ input record boxes/cells, gradient results, scaling and coordinate updates.
 Test direct and forwarded constructors, zero-field values, source comments and
 strings, duplicate/missing/unknown sites, incorrect phase/byte totals and incomplete
 cleanup. A rejected control must fail the audit, not merely print a warning.
+
+`constructor-census` in the numerical evidence workflow runs the experiment.
+Each native host first checks that production sources match the verified #249
+tree. It builds the current compiler, runs GCC O1/O2 controls, and compares
+ordinary, existing-counter and constructor-counter executions. A separate audit
+reconstructs the instrumented C and site tables from saved ordinary C, checks
+every archived hash and native image, and recomputes all phase totals.
 
 After attribution, freeze one bounded storage change and its predicted savings
 before editing the compiler. A candidate is the sole-use numeric adjustment list:

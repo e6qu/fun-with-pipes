@@ -1,10 +1,11 @@
 # Current work
 
-**Next:** implement the [constructor census](measurements/temporary-list-storage.md)
-with diagnostic source-site counters and rejection controls. Its protocol anchor
-is `roadmap/temporary-list-protocol-2026-11-03`. Run
-counts on both native Linux GCC hosts before selecting a compiler storage change.
-Keep the entire census, selected improvement, verification and docs in one PR.
+**Next:** run and audit the [constructor census](measurements/temporary-list-storage.md)
+on both native Linux GCC hosts using the `constructor-census` suite. Its protocol
+anchor is `roadmap/temporary-list-protocol-2026-11-03`. Source attribution, count
+parsing, native rejection controls and archive reconstruction are implemented;
+native execution is not yet verified. Keep census, selected storage improvement,
+verification and docs together in draft PR #250.
 
 ## Checkout and sources
 
@@ -22,7 +23,7 @@ Keep the entire census, selected improvement, verification and docs in one PR.
 
 | Step | Status | Remaining work |
 |---|---|---|
-| 1 | In progress | Publish protocol; implement and verify constructor-site census |
+| 1 | In progress | Protocol published and observer implemented; native census and audit remain |
 | 2 | Pending | Select and freeze a bounded storage change from measured callers |
 | 3 | Pending | Implement with native semantic, alias, failure and cleanup controls |
 | 4 | Pending | Grouped measurement, final platform gates and verified squash |
@@ -62,11 +63,27 @@ experiment isolates numeric inputs, with field transfers enabled in both builds.
 
 ## Local checks and documentation
 
-No local full build, suite or benchmark. Guarded full/target evidence audits pass
-in 0.13–0.14s each. `python3 scripts/check-roadmap.py` passes after this plan rewrite (2.90s):
-224 document link sets, 106 preparation pairs and four matching roadmap steps.
-New target metadata is compressed losslessly; raw archives and failed-job records
-are preserved.
+No local full build, suite or benchmark. Under `scripts/local-guard.py`:
+
+- `test-constructor-profile.py`: seven controls pass, 0.73s. Corrected its leak
+  mutation to match the existing instrumented ownership call before publication.
+- `test-ownership-profile.py`: 13 tests pass, 0.13s. Caller detection now handles
+  kernel macros and multiline parameters; 22 previously unresolved calls in
+  saved C are attributed. All 277 constructor sites have known callers.
+- `test-derivative-ownership-profile.py`: 14 tests pass, 13.65s.
+- `actionlint .github/workflows/numerics.yml .github/workflows/roadmap.yml`: pass,
+  6.46s. No runtime/compiler changes; the runner checks production-tree equality.
+- `check-roadmap.py`: 224 link sets, 106 immutable anchors and four steps pass,
+  3.00s. The production-source comparison and `git diff --check` pass.
+
+An attempted unittest discovery found zero tests because script names contain
+hyphens; direct execution verified them. A subsequent command met the guard's
+serialization lock, was refused, and ran successfully after the active check
+finished. No limits were bypassed. Draft documentation run `41571171638` passes;
+its full log contains only the expected rejected-input/synthetic-panic controls
+and retained failed measurement limits. Skipped draft production jobs are not gates.
+New #249 target metadata is compressed losslessly; raw archives and failed-job
+records are preserved.
 
 `docs/design.md` now corrects stale PR #244 production status and separates passed
 compiler-cost checks from open runtime goals. Final #249 evidence, history and

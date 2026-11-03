@@ -17,19 +17,20 @@ PROFILE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(PROFILE)
 ARC = PROFILE.ARC
 AD = ARC.module('measure-ad-application')
+CONSTRUCTOR = ARC.module('constructor-profile')
 CASES = ((3, 0), (3, 1), (3, 199), (3, 1999), (33, 199), (129, 199))
 CONTROL_OPERATIONS = dict(fresh=(3, 2, 0), dup=(302, 301, 0), drop=(301, 300, 0),
     release_last=(3, 2, 1), unique=(3, 1, 0), unique_mut=(3, 1, 0),
     last=(5, 3, 0), free_obj=(1, 1, 0), free_arr=(1, 1, 0))
 
 
-def control_source(source):
+def control_source(source, operations):
     chunks = []
     for phase in range(7):
         if phase:
             chunks.append(f'    descent_phase_step({phase - 1});\n')
         chunks.append(f'    for (int repeat=0; repeat<{phase + 1}; repeat++) {{\n'
-                      + ARC.CONTROL + '\n    }\n')
+                      + operations + '\n    }\n')
     chunks.append('    descent_inputs=2; descent_nodes=8;\n'
                   '    descent_phase_step(DESCENT_PHASES);\n'
                   '    ad_raw_sample(0,0);\n')
@@ -61,7 +62,7 @@ def parse_totals(stderr):
 
 def comparison_failures(report, baseline, policy):
     """Apply the selected frozen count limits to every case and storage mode."""
-    assert policy in ('record-zip', 'record-fold', 'packed-records', 'field-owners', 'numeric-inputs')
+    assert policy in ('record-zip', 'record-fold', 'packed-records', 'field-owners', 'numeric-inputs', 'constructor-census')
     old = baseline['hosts'][report['machine']]['cases']
     assert set(report['cases']) == set(old)
     failures = []
@@ -81,6 +82,11 @@ def comparison_failures(report, baseline, policy):
         assert set(observations) == {'0', '1'}
         for mode, actual in observations.items():
             previous = old[name]['observations'][mode]
+            if policy == 'constructor-census':
+                for field in ('totals', 'phases', 'visits', 'raw'):
+                    if actual[field] != previous[field]:
+                        failures.append(f'{name}/workspace{mode}: {field} changed during census')
+                continue
             current = actual['totals']['managed']
             before = previous['totals']['managed']
             label = name + '/workspace' + mode
@@ -112,7 +118,7 @@ def main():
     parser.add_argument('--source', required=True)
     parser.add_argument('--timeout', required=True, type=int)
     parser.add_argument('--output', required=True, type=Path)
-    parser.add_argument('--comparison', required=True, choices=('baseline', 'record-zip', 'record-fold', 'packed-records', 'field-owners', 'numeric-inputs'))
+    parser.add_argument('--comparison', required=True, choices=('baseline', 'record-zip', 'record-fold', 'packed-records', 'field-owners', 'numeric-inputs', 'constructor-census'))
     parser.add_argument('--baseline', type=Path)
     args = parser.parse_args()
     assert (args.comparison != 'baseline') == (args.baseline is not None)
@@ -135,6 +141,9 @@ def main():
                   'Ownership sites name generated-C calls. Both retain their exact input C.')
     report['comparison'] = dict(policy=args.comparison,
                                 baselineSource=baseline['source'] if baseline else None)
+    census = args.comparison == 'constructor-census'
+    if census:
+        report['constructors'] = dict(controls={}, cases={})
 
     def run(command, directory, label, env):
         command = list(map(str, command))
@@ -195,7 +204,7 @@ def main():
             directory = out / ('control-' + opt)
             directory.mkdir()
             _, source = generated(directory, 'main = ()\n', opt)
-            code, sites, bases = PROFILE.instrument(control_source(source))
+            code, sites, bases = PROFILE.instrument(control_source(source, ARC.CONTROL))
             save_sites(directory, sites, bases)
             changes = {
                 'complete': code,
@@ -231,6 +240,36 @@ def main():
                         outcomes[label] = 'rejected inconsistent counts or phase attribution'
                     else:
                         raise AssertionError('broken observer passed: ' + label)
+            if census:
+                directory = out / ('constructor-control-' + opt)
+                directory.mkdir()
+                (directory / 'ordinary.c').write_text(source)
+                detailed, sites, bases = PROFILE.instrument(control_source(source, CONSTRUCTOR.CONTROL))
+                save_sites(directory, sites, bases)
+                (directory / 'detailed.c').write_text(detailed)
+                instrumented, constructors = CONSTRUCTOR.instrument(detailed)
+                (directory / 'constructor-sites.json').write_text(json.dumps(constructors, indent=2) + '\n')
+                allocators = CONSTRUCTOR.data_allocator_sites(bases['allocation-base.c'], sites['allocations'])
+                outcomes = report['constructors']['controls'][opt] = {}
+                for label, text in CONSTRUCTOR.control_variants(instrumented, constructors).items():
+                    binary = compile_c(directory, label, text, opt)
+                    result = run([binary], directory, label, environment)
+                    assert not result.stdout
+                    if label in ('unknown-site', 'mixed-shape'):
+                        assert result.returncode == 234, result.stderr
+                        outcomes[label] = 'rejected invalid constructor attribution'
+                        continue
+                    assert result.returncode == 0, result.stderr
+                    try:
+                        actual, rows = CONSTRUCTOR.parse(result.stderr, constructors, allocators,
+                                                        sites, 2, 1, False)
+                        CONSTRUCTOR.check_control(actual, rows, constructors)
+                    except AssertionError:
+                        assert label != 'complete'
+                        outcomes[label] = 'rejected inconsistent counts or cleanup'
+                    else:
+                        assert label == 'complete', ('broken constructor control passed', label)
+                        outcomes[label] = dict(profile=actual, rows=rows)
         for dimensions, updates in CASES:
             expected = AD.analytic(dimensions, updates + 1)
             for form in ('current', 'history'):
@@ -248,6 +287,12 @@ def main():
                     binaries = {label: compile_c(directory, label, text, opt) for label, text in (
                         ('ordinary', code), ('totals', PROFILE.RAW.instrument(ARC.PROFILE.instrument(code))),
                         ('detailed', detailed))}
+                    if census:
+                        instrumented, constructors = CONSTRUCTOR.instrument(detailed)
+                        (directory / 'constructor-sites.json').write_text(json.dumps(constructors, indent=2) + '\n')
+                        allocators = CONSTRUCTOR.data_allocator_sites(bases['allocation-base.c'], sites['allocations'])
+                        binaries['constructors'] = compile_c(directory, 'constructors', instrumented, opt)
+                        constructor_rows = report['constructors']['cases'][name] = {}
                     observations = report['cases'][name] = {}
                     for workspace in (0, 1):
                         env = dict(environment, FWP_AD_WORKSPACE=str(workspace))
@@ -260,6 +305,11 @@ def main():
                         actual = PROFILE.parse(outputs['detailed'].stderr, sites, dimensions, updates, bool(workspace))
                         totals, raw_totals = parse_totals(outputs['totals'].stderr)
                         assert totals == actual['totals']['managed'] and raw_totals == actual['raw']
+                        if census:
+                            observed, rows = CONSTRUCTOR.parse(outputs['constructors'].stderr,
+                                constructors, allocators, sites, dimensions, updates, bool(workspace))
+                            assert observed == actual, 'constructor observer changed execution counts'
+                            constructor_rows[str(workspace)] = rows
                         observations[str(workspace)] = actual
                     print(name + ': ordinary, totals and phase/site observations agree', flush=True)
         report['complete'] = True
