@@ -21,8 +21,11 @@ all 96 allocation observations. The largest solve saves 25,472 requests and
 409,144 requested bytes, with unchanged retains and peak managed storage.
 [Verified counts](docs/measurements/gradient-array-storage-2026-11-03/README.md)
 do not establish a speedup. [Compiler costs](docs/measurements/gradient-array-analysis-2026-11-03/README.md)
-pass on both architectures. Runtime timings are in progress, followed by final
-platform acceptance.
+pass on both architectures. [Runtime timings](docs/measurements/gradient-array-time-2026-11-03/README.md)
+miss the 5% targets: larger ARM64 cases improve by about 3–4%; AMD64 gains are
+smaller, and small repeated updates slow down by roughly 1–2%. Keep the verified
+storage reduction under the accepted policy, with speed goals explicitly open.
+Final platform acceptance remains required.
 
 | Step | Work | Completion requirement |
 |---|---|---|
@@ -40,6 +43,20 @@ The completed range comparison remains frozen at `3be9479c`, tag
 Do not repeat completed timings for a better result.
 
 ## Open performance goals
+
+- **Gradient-array callbacks.** Keep the [completed observations](docs/measurements/gradient-array-time-2026-11-03/README.md),
+  including slowdowns, as the baseline for the next investigation. The source
+  currently sends known scalar `array.map` callbacks through generic application;
+  the earlier scalar-buffer map called them directly. This is avoidable dispatch,
+  not an established explanation of the measured differences. After this batch's
+  final gates, freeze a direct-call experiment before editing code: initially
+  select closed, known callbacks with ordinary scalar inputs/results; reuse the
+  existing array builder and element accessors. Keep eager order, aliases, slices,
+  partial-result cleanup, cancellation and traps. Verify rejected callbacks and
+  compiler scaling, count the removed dispatches, then compare whole solves
+  against the same source with only this selection disabled. Preserve the current
+  allocation/ARC/peak limits and original timing/copy limits. Do not combine this
+  experiment with input-record or output-list storage changes.
 
 - **Private range consumption.** ARM64 misses the 5% target on 3/199 current
   in both sessions and history in session 1. AMD64 misses it on 3/199 and 3/1999

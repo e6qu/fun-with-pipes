@@ -2,8 +2,10 @@
 
 **Status:** corrected native checks and all 96 allocation observations pass in
 [PR #252](https://github.com/e6qu/fun-with-pipes/pull/252). Both complete job logs
-and every target log are audited. Compiler/runtime measurements and the final
-platform matrix remain; no elapsed-speed gain is claimed yet.
+and every target log are audited. [Compiler-cost checks](../gradient-array-analysis-2026-11-03/README.md)
+pass. [Runtime measurements](../gradient-array-time-2026-11-03/README.md) miss the
+5% speed targets; their gains and regressions are reported separately. The final
+platform matrix remains required before merge.
 The [frozen contract](../gradient-array-storage.md) defines the requirements.
 
 ## What changes
@@ -98,7 +100,7 @@ saving: at least `(d-1)*u` fewer requests and `(16*d-8)*u` fewer requested bytes
 Retains and peak managed storage must not grow; final storage must be zero.
 Counts do not establish an elapsed-time improvement.
 
-### Next comparison
+### Same-source comparison
 
 Compiler and runtime measurements compare two compilers built from the same
 source, frozen by `roadmap/gradient-array-measurement-2026-11-03`. A frozen patch removes the complete grouped change from the reference:

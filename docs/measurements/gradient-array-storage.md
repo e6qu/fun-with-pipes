@@ -1,10 +1,11 @@
 # Keep private gradient results in arrays
 
-**Status:** implementation and focused verification in progress. PR #251 is merged
+**Status:** implementation, focused cleanup/allocation checks and compiler-cost
+audits pass on both native Linux architectures. [Runtime results](gradient-array-time-2026-11-03/README.md)
+have missed speed targets; final platform acceptance is pending. PR #251 is merged
 as `296ec5b4`, with all production gates and the complete log audit passed.
 The implementation baseline is `cea8debcd8caf067bf210fd612c559b265157b91`, retained
-by `roadmap/range-zip-final-checks-2026-11-03`. Full-path verification and all
-performance acceptance remain pending.
+by `roadmap/range-zip-final-checks-2026-11-03`.
 Tag `roadmap/gradient-array-protocol-2026-11-03` preserves this contract before
 compiler/runtime edits.
 
@@ -12,7 +13,7 @@ compiler/runtime edits.
 
 The [remaining allocation census](range-zip-storage-2026-11-03/README.md#remaining-allocation-sites)
 finds 25,671 gradient-list cells requesting 616,104 bytes in a 129-coordinate,
-199-update solve. Backward differentiation already produces an array. Today:
+199-update solve. Before this change, the private F64 gradient followed this path:
 
 ```text
 backward array → converted gradient list → close derivative scope
