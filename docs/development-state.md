@@ -1,9 +1,10 @@
 # Current work
 
-**Next:** audit `gradient-array-checks` run `41626196812` at `f00fb9dc`: every
-GCC/Clang target and all 96 allocation observations. Fix all failures together.
-Once it passes, freeze the measurement head and dispatch compiler analysis plus
-two runtime sessions per architecture using that run as the correctness prerequisite.
+**Next:** freeze this report commit as `roadmap/gradient-array-measurement-2026-11-03`,
+then dispatch `gradient-array-analysis` and `gradient-array-time` (both native
+hosts, both sessions), using `evidence_run=41626196812`. Audit all commands/logs
+and retain every timing outcome. Final nine-platform-job acceptance follows
+those reports; keep PR #252 draft until ready for that final matrix.
 
 ## Checkout and recovery
 
@@ -15,7 +16,7 @@ two runtime sessions per architecture using that run as the correctness prerequi
   evidence in the project-local `.worktrees/gradient-work`, and checkpoint changes.
 - Contract commit `c191421e`, tag `roadmap/gradient-array-protocol-2026-11-03`,
   predates implementation. The whole-change reference patch is committed at
-  `aed66f26`; measurement identities still need freezing before timing.
+  `aed66f26`; the measurement tag above must be published before dispatch.
 - PR #251 merged as `296ec5b4c3540c6d57671d076d2a39247b2389f4`; this
   branch is rebased onto it. [PR #252](https://github.com/e6qu/fun-with-pipes/pull/252)
   is the only active PR and remains draft.
@@ -27,8 +28,8 @@ two runtime sessions per architecture using that run as the correctness prerequi
 | Step | Status | Remaining work |
 |---|---|---|
 | 1 | Verified | All logs audited; squash message and tested-tree equality verified |
-| 2 | Implemented | Both Linux compilers/lints and array selection/application checks pass; verify both repaired test assumptions |
-| 3 | In progress | Run restored array fault controls and all 96 allocation observations; retain complete failures |
+| 2 | Verified | Focused array, typed/nested and both-engine behavior checks pass |
+| 3 | Verified | All cleanup controls and 96 allocation observations pass; exact savings and all logs retained |
 | 4 | Pending | Compiler/runtime measurements, independent audits, final platform matrix and delivery |
 
 ## Completed predecessor
@@ -59,7 +60,7 @@ The recording harness now collects failures across all scalar types, stack modes
 optimization levels and workspace modes instead of stopping at the first result.
 The new array-map/zip fault branch shares the existing list harness: callback
 failure, between-stage failure, cancellation, allocation failure, partial output,
-aliases and deliberate missing releases. These repairs still need runner checks.
+aliases and deliberate missing releases. Both repairs and the additional controls pass on GCC/Clang ARM64/AMD64.
 
 The complete gradient/update fixture already passes both engines and native
 GCC/Clang O1/O2, including input aliases and empty/singleton cases. Packed slices,
@@ -78,7 +79,7 @@ The count limits, exact constructor attribution and runner count/audit step are
 restored. Guarded checks pass: gradient count fault tests (3, 0.13s), whole-change
 reference controls (3, 0.24s), formatting (1.78s), and workflow lint (5.85s).
 The array unwind extension and typed callback rejection controls are restored.
-No new allocation or timing observations exist yet.
+Allocation results are now retained below; timing remains unmeasured.
 
 Compiler/time comparison manifests, independent seven-source reconstruction and
 measurement workflow routes are restored. Guarded checks pass: reference controls
@@ -88,11 +89,25 @@ evidence reader (14, 42.71s), grouped reports (12, 5.49s), retention controls
 audit rejected the status word `Complete`; the handoff now uses its required
 `Verified` status. No acceptance requirement was changed.
 
-Run `41626196812` was dispatched after all known native failures were repaired.
-ARM64 job `125884054605` is running integration targets; AMD64 `125884054997`
-has passed build/lint and reached the selection units. The run's
-compiler/runtime/library/test sources match the prepared measurement branch;
-later script/docs changes do not alter those trees. No performance result exists yet.
+Run `41626196812` passes at `f00fb9dccf6fa0ea6b1bde6f0a6906fc2ed83224`:
+ARM64 job `125884054605`, artifact `13226204616`; AMD64 job `125884054997`,
+artifact `13226053942`. Each host passes 19 units, 72 integration executions,
+48 allocation observations, 16 array-map/zip controls and 72 typed probes.
+Every target/full log is clean and all 525 saved images per host have native
+ELF headers. Artifact digests match metadata; the runner independently audited
+all raw count files. Retention/derived-summary check passed locally in 0.99s.
+[Complete results](measurements/gradient-array-storage-2026-11-03/README.md).
+
+Largest current-only solve: 105,203 → 79,731 requests; 3,736,014 → 3,326,870
+requested bytes; retains 995, peak 14,976, final 0 remain unchanged. Raw buffers
+and derivative work stay unchanged; largest reported stack frames do not grow.
+Code size is reported separately. No elapsed-time result exists yet.
+
+Documentation `41627595545` / `125888781247` passes at `a4f9df46`; its full log
+contains only expected runner-failure controls. The duplicate post-merge main
+run `41625843765` is cancelled after confirming the tested #251 tree; it had no
+failed jobs or steps. Native check sources match the prepared measurement branch;
+subsequent scripts/docs changes do not alter compiler/runtime/library/test trees.
 
 Local work stays serial under `scripts/local-guard.py`: 64 GiB free disk, targets
 below 2 GiB, sampled RSS below 1 GiB and 180 seconds. Last free space about 88 GiB.

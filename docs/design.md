@@ -501,10 +501,11 @@ define the comparison.
 
 ### Private array results consumed by zip
 
-The gradient-array batch is implemented but still awaiting runner validation.
+The gradient-array batch passes focused native checks and allocation budgets;
+full-platform and timing acceptance remain open.
 A gradient is one derivative per input. For `x*x + y*y` at `[1.0, 2.0]`, it is
 `[2.0, 4.0]`. Scaling by `0.25` and subtracting from the inputs gives `[0.5, 1.0]`.
-The proposed storage path is:
+The selected storage path is:
 
 ```text
 backward traversal → owned derivative array → close derivative scope
