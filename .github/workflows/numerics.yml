@@ -84,6 +84,7 @@ jobs:
         run: |
           cargo fmt --all -- --check
           python3 scripts/test-gradient-array-reference.py
+          python3 scripts/test-gradient-array-budgets.py
           python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output gradient-array-checks/inventory.json
           CARGO_NET_OFFLINE=true cargo clippy --locked --all-targets -- -D warnings
       - name: Array admission, aliases and analysis scaling
@@ -113,6 +114,59 @@ jobs:
           python3 scripts/run-native-tests.py
           --targets zip_map_fusion zip_unwind_ownership ad_tape_ownership autodiff_nested autodiff_precision
           --idle-timeout 600 --logs gradient-array-checks/clang/targets
+      - name: Count complete solves and independently audit every observation
+        if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
+        shell: bash
+        env:
+          MEASUREMENT_MACHINE: ${{ matrix.machine }}
+          MEASUREMENT_ARCH: ${{ matrix.machine == 'aarch64' && 'armv8-a' || 'x86-64' }}
+        run: |
+          python3 - <<'PYCODE'
+          import gzip
+          import json
+          from pathlib import Path
+          root = Path('docs/measurements/range-zip-storage-2026-11-03/verified')
+          hosts = {arch: json.loads(gzip.decompress((root / f'{arch}-counts.json.gz').read_bytes()))
+                   for arch in ('aarch64', 'x86_64')}
+          sources = {host['source'] for host in hosts.values()}
+          assert len(sources) == 1
+          baseline = dict(source=sources.pop(), hosts=hosts)
+          Path('gradient-array-baseline.json.gz').write_bytes(gzip.compress(
+              (json.dumps(baseline) + '\n').encode(), mtime=0))
+          PYCODE
+          status=0
+          python3 scripts/measure-derivative-forward-costs.py --compiler target/debug/fwp \
+            --cc gcc --machine "$MEASUREMENT_MACHINE" --c-arch "$MEASUREMENT_ARCH" \
+            --source "$GITHUB_SHA" --timeout 180 --output gradient-array-counts \
+            --comparison gradient-array --baseline gradient-array-baseline.json.gz || status=1
+          if [[ -f gradient-array-counts/report.json ]]; then
+            python3 - <<'PYCODE' || status=1
+          import gzip
+          import importlib.util
+          import json
+          import os
+          from pathlib import Path
+          import sys
+          import zipfile
+          sys.path.insert(0, str(Path('scripts').resolve()))
+          spec = importlib.util.spec_from_file_location('summary', 'scripts/summarize-derivative-forward-costs.py')
+          summary = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(summary)
+          folder = Path('gradient-array-counts')
+          archive = Path('gradient-array-counts.zip')
+          with zipfile.ZipFile(archive, 'w', zipfile.ZIP_DEFLATED) as out:
+              for path in sorted(folder.rglob('*')):
+                  if path.is_file():
+                      out.write(path, path.relative_to(folder))
+          baseline = json.loads(gzip.decompress(Path('gradient-array-baseline.json.gz').read_bytes()))
+          result = summary.audit(archive, os.environ['GITHUB_SHA'], os.environ['MEASUREMENT_MACHINE'],
+                                 'gradient-array', baseline)
+          Path('gradient-array-audit.json.gz').write_bytes(gzip.compress(
+              (json.dumps(result) + '\n').encode(), mtime=0))
+          assert not result['comparisonFailures'], result['comparisonFailures']
+          PYCODE
+          fi
+          exit "$status"
       - name: Preserve source, compiler, target logs and native probes
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v7
@@ -120,6 +174,10 @@ jobs:
           name: gradient-array-checks-${{ matrix.machine }}
           path: |
             gradient-array-checks/
+            gradient-array-counts/
+            gradient-array-counts.zip
+            gradient-array-audit.json.gz
+            gradient-array-baseline.json.gz
             target/debug/fwp
           if-no-files-found: error
   numeric_input_analysis:

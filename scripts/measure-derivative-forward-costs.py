@@ -62,7 +62,7 @@ def parse_totals(stderr):
 
 def comparison_failures(report, baseline, policy):
     """Apply the selected frozen count limits to every case and storage mode."""
-    assert policy in ('record-zip', 'record-fold', 'packed-records', 'field-owners', 'numeric-inputs', 'constructor-census', 'scalar-map-zip', 'range-zip')
+    assert policy in ('record-zip', 'record-fold', 'packed-records', 'field-owners', 'numeric-inputs', 'constructor-census', 'scalar-map-zip', 'range-zip', 'gradient-array')
     old = baseline['hosts'][report['machine']]['cases']
     assert set(report['cases']) == set(old)
     failures = []
@@ -82,6 +82,10 @@ def comparison_failures(report, baseline, policy):
         elif policy in ('scalar-map-zip', 'range-zip'):
             removed = (dimensions + 1) * updates
             bytes_removed = (32 * dimensions + 8) * updates
+            retains = 0
+        elif policy == 'gradient-array':
+            removed = (dimensions - 1) * updates
+            bytes_removed = (16 * dimensions - 8) * updates
             retains = 0
         assert set(observations) == {'0', '1'}
         for mode, actual in observations.items():
@@ -112,6 +116,26 @@ def comparison_failures(report, baseline, policy):
                 failures.append(label + ': derivative work changed')
             if actual['raw'] != previous['raw']:
                 failures.append(label + ': raw tape/workspace storage changed')
+            if policy == 'gradient-array':
+                def totals(rows):
+                    groups = {}
+                    for row in rows:
+                        key = (row['phase'], row['tag'], row['fields'])
+                        requests, size = groups.get(key, (0, 0))
+                        groups[key] = (requests + row['requests'], size + row['requestedBytes'])
+                    return groups
+                expected = totals(old[name]['constructors']['counts'][mode])
+                if updates:
+                    key = ('outside', 1, 2)
+                    requests, size = expected[key]
+                    expected[key] = (requests - dimensions * updates,
+                                     size - 24 * dimensions * updates)
+                    assert min(expected[key]) >= 0
+                    if expected[key] == (0, 0):
+                        del expected[key]
+                observed = totals(report['constructors']['cases'][name][mode])
+                if observed != expected:
+                    failures.append(label + ': constructor groups differ from exact gradient-list removal')
     return failures
 
 
@@ -124,7 +148,7 @@ def main():
     parser.add_argument('--source', required=True)
     parser.add_argument('--timeout', required=True, type=int)
     parser.add_argument('--output', required=True, type=Path)
-    parser.add_argument('--comparison', required=True, choices=('baseline', 'record-zip', 'record-fold', 'packed-records', 'field-owners', 'numeric-inputs', 'constructor-census', 'scalar-map-zip', 'range-zip'))
+    parser.add_argument('--comparison', required=True, choices=('baseline', 'record-zip', 'record-fold', 'packed-records', 'field-owners', 'numeric-inputs', 'constructor-census', 'scalar-map-zip', 'range-zip', 'gradient-array'))
     parser.add_argument('--baseline', type=Path)
     args = parser.parse_args()
     assert (args.comparison != 'baseline') == (args.baseline is not None)
@@ -147,7 +171,7 @@ def main():
                   'Ownership sites name generated-C calls. Both retain their exact input C.')
     report['comparison'] = dict(policy=args.comparison,
                                 baselineSource=baseline['source'] if baseline else None)
-    census = args.comparison in ('constructor-census', 'scalar-map-zip', 'range-zip')
+    census = args.comparison in ('constructor-census', 'scalar-map-zip', 'range-zip', 'gradient-array')
     if census:
         report['constructors'] = dict(controls={}, cases={})
 

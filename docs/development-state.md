@@ -1,9 +1,9 @@
 # Current work
 
-**Next:** finish the final log audit and squash-merge PR #251, then rebase this
-branch's own commits onto that verified merge. Publish the gradient-array repair
-with its new array cleanup controls and allocation checks as one batch. Audit
-all focused targets before making any performance claim or starting timings.
+**Next:** publish the repaired gradient-array batch and run `gradient-array-checks`
+on both native Linux hosts. Audit every target and all 96 allocation observations.
+While those run, finish the compiler/time measurement routes and independent
+whole-change reference audits. Do not start timings before correctness passes.
 
 ## Checkout and recovery
 
@@ -16,16 +16,16 @@ all focused targets before making any performance claim or starting timings.
 - Contract commit `c191421e`, tag `roadmap/gradient-array-protocol-2026-11-03`,
   predates implementation. The whole-change reference patch is committed at
   `aed66f26`; measurement identities still need freezing before timing.
-- No next PR exists yet. Keep one open PR. After #251 merges, rebase only commits
-  after `cea8debcd8caf067bf210fd612c559b265157b91`; do not include its old commits
-  in the next PR. Every commit/merge message is one line, at most 80 characters,
-  with no body, trailers or attribution.
+- PR #251 merged as `296ec5b4c3540c6d57671d076d2a39247b2389f4`; this
+  branch is rebased onto it. No next PR exists yet. Keep one active PR.
+  Every commit/merge message is one line, at most 80 characters, with no body,
+  trailers or attribution.
 
 ## Roadmap status
 
 | Step | Status | Remaining work |
 |---|---|---|
-| 1 | Passing gates | Audit the last full/target logs, merge #251 and verify message/tree |
+| 1 | Complete | All logs audited; squash message and tested-tree equality verified |
 | 2 | Implemented | Both Linux compilers/lints and array selection/application checks pass; repair two test assumptions |
 | 3 | In progress | Run restored array fault controls and all 96 allocation observations; retain complete failures |
 | 4 | Pending | Compiler/runtime measurements, independent audits, final platform matrix and delivery |
@@ -48,13 +48,12 @@ All nine production jobs in `41610112980` pass at
 | Windows ARM64 | 125829594942 |
 | Windows AMD64 | 125829594720 |
 
-Benchmarks/docs, all four macOS jobs and Windows AMD64 have passed complete log
-and target audits. Recovering the files and auditing the remaining Linux/Windows
-jobs uses `.worktrees/gradient-work/collect-251.py`; results go in `platforms-251`.
-Require 257 target logs per Linux host, 131/126 per regular/ownership macOS host
-and 57 per Windows host. Inspect unexpected diagnostics rather than hiding them.
-Merge subject: `Generate private zip indices without temporary lists`; empty body.
-Verify the raw commit message and that its tree equals the tested head.
+All full logs and all native target logs pass audit: 257 per Linux host,
+131/126 per regular/ownership macOS host and 57 per Windows host. The documentation
+job contains three expected negative-fixture diagnostics. Evidence is retained
+in `.worktrees/gradient-work/platforms-251`. The merge subject is
+`Generate private zip indices without temporary lists`, with no body or trailers;
+its tree equals the tested head (`c8d1a2aa0398c7719dc0c7bc9fc34410142a3556`).
 
 Completed range evidence remains in the
 [storage report](measurements/range-zip-storage-2026-11-03/README.md),
@@ -96,13 +95,16 @@ reference isolation and Clang O1/O2 typed-result cleanup controls. These are
 focused checks, not final-platform or performance acceptance. Rust formatting
 passes again in the persistent checkout (1.79s).
 
-The reset removed uncommitted measurement preparation. Reconstruct it before
-publishing the next grouped check: gradient-array count limits and constructor
-attribution, compiler/time comparison manifests, independent seven-source reference
-reconstruction and workflow routes. Session records retain the edits and prior
-unit results; do not claim those files are restored until they are present.
-The array unwind extension and fully typed callback rejection controls have
-already been restored. No new allocation or timing observations exist yet.
+The count limits, exact constructor attribution and runner count/audit step are
+restored. Guarded checks pass: gradient count fault tests (3, 0.13s), whole-change
+reference controls (3, 0.24s), formatting (1.78s), and workflow lint (5.85s).
+The array unwind extension and typed callback rejection controls are restored.
+No new allocation or timing observations exist yet.
+
+Still restore compiler/time comparison manifests, independent seven-source
+reference reconstruction and measurement workflow routes. Their prior uncommitted
+versions were lost with `/private/tmp`; do not claim those files exist or pass
+until reconstructed. Keep checkpoints in Git and scratch evidence project-local.
 
 Local work stays serial under `scripts/local-guard.py`: 64 GiB free disk, targets
 below 2 GiB, sampled RSS below 1 GiB and 180 seconds. Last free space about 88 GiB.

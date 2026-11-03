@@ -1,6 +1,7 @@
 # Keep private gradient results in arrays
 
-**Status:** implementation in progress while PR #251 completes final platform checks.
+**Status:** implementation and focused verification in progress. PR #251 is merged
+as `296ec5b4`, with all production gates and the complete log audit passed.
 The implementation baseline is `cea8debcd8caf067bf210fd612c559b265157b91`, retained
 by `roadmap/range-zip-final-checks-2026-11-03`. Full-path verification and all
 performance acceptance remain pending.

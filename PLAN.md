@@ -4,25 +4,25 @@ Build an ahead-of-time language with simple pipes, immutable values, strong type
 and useful inference. Prefer direct values, moves and borrows; reserve ARC for
 necessary sharing. GC is removed; JIT and backward compatibility are excluded.
 
-## Current work: finish range delivery, then remove gradient-list storage
+## Current work: remove private gradient-list storage
 
-[PR #251](https://github.com/e6qu/fun-with-pipes/pull/251) generates private zip
-indices directly. The largest verified solve saves 25,870 allocation requests
-and 823,064 requested bytes; larger timed solves take 7.1–10.0% less time.
-Small-case speed goals remain open. All nine production jobs and documentation pass on its final head. Finish the
-complete log audit and squash merge; keep that head fixed.
+[PR #251](https://github.com/e6qu/fun-with-pipes/pull/251) is merged as
+`296ec5b4`. It saves 25,870 allocation requests and 823,064 requested bytes in the
+largest verified solve; larger timed solves take 7.1–10.0% less time. Small-case
+speed goals remain open. All nine production jobs and documentation pass;
+complete logs, the one-line merge message and tested-tree equality are verified.
 
 The next grouped batch keeps private gradient results in owned arrays and reads
 those arrays directly during the following map/zip. The
 [implementation contract](docs/measurements/gradient-array-storage.md) defines
 scope cleanup, typed/nested derivatives, selection limits and measurement budgets.
-The implementation is in progress, with focused native compiler checks next.
-No performance gain is claimed yet. Keep one open PR: prepare this batch independently,
-then publish it after #251 passes, is audited and is squash-merged.
+Both native Linux builds and the array behavior checks pass. Two test assumptions
+are repaired; the next grouped run checks those repairs, array cleanup and all
+96 allocation observations. No performance gain is claimed yet.
 
 | Step | Work | Completion requirement |
 |---|---|---|
-| 1 | Finish range-storage delivery | All nine jobs in `41610112980` and docs pass at `cea8debc`; audit every full/target log, squash-merge and verify the one-line message and tree. [Range evidence](docs/measurements/range-zip-storage-2026-11-03/README.md). |
+| 1 | Range-storage delivery complete | All nine jobs in `41610112980` and docs pass at `cea8debc`; every full/target log, squash message and merge tree are verified. [Range evidence](docs/measurements/range-zip-storage-2026-11-03/README.md). |
 | 2 | Keep internal gradient results in owned arrays | Floating, F128 and nested reverse paths agree in both engines; public list results materialize when needed. Select sole-use numeric array conversions for map/zip before list fusion hides them. Preserve eager order, aliases and scope cleanup. |
 | 3 | Verify the grouped storage change | Freeze the contract before edits and the isolated whole-change reference before measurements. GCC/Clang O1/O2 semantic, failure, cancellation, reuse, physical-free and compiler-scaling controls pass. All 96 allocation observations meet the declared net budgets with exact attribution. |
 | 4 | Measure and deliver the next substantial PR | Compiler costs and four qualified runtime sessions are independently audited; retain every missed limit. Complete the final nine-job matrix plus docs, audit all logs, and verify the one-line squash. |
