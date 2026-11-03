@@ -623,3 +623,164 @@ fn scalar_map_buffers_keep_each_machine_number_representation() {
         assert_eq!(stats.live, 0, "{stats:?}");
     }
 }
+
+#[test]
+fn private_ranges_preserve_bounds_order_callbacks_and_aliases() {
+    let dir = fwp::cgen::TempDir::new("range-zip-semantics").unwrap();
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    let cases = [
+        (
+            "bounds",
+            r#"
+left : I64 -> I64 -> List[I64] -> List[I64]
+left = fn lo -> fn hi -> fn xs -> let indices = range lo hi in zip-with sub indices xs
+right : I64 -> I64 -> List[I64] -> List[I64]
+right = fn lo -> fn hi -> fn xs -> let indices = range lo hi in zip-with sub xs indices
+main = [
+    left -2 2 [10, 20, 30] | echo,
+    right -2 2 [10, 20, 30] | echo,
+    left 4 2 [1, 2] | echo,
+    left 2 2 [1, 2] | echo,
+    left -2 2 [] | echo,
+    left -9223372036854775808 -9223372036854775806 [-9223372036854775808, -9223372036854775808] | echo,
+    right 9223372036854775805 9223372036854775807 [0, 0] | echo,
+] | ignore
+"#,
+            true,
+            0,
+        ),
+        (
+            "capture-record",
+            r#"
+work : I64 -> List[I64] -> (List[(I64, I64)], List[I64])
+work = fn offset -> fn xs ->
+    let indices = range 0 (length xs)
+    in let result = zip-with (fn index -> fn value -> (index + offset, value)) indices xs
+    in (result, xs)
+main = [10, 20, 30] | work (args () | length) | echo
+"#,
+            true,
+            0,
+        ),
+        (
+            "order",
+            r#"
+mark : String -> I64 -> I64 ! {IO}
+mark = fn name -> tap (const name | echo)
+work : List[I64] -> List[(I64, I64)] ! {IO}
+work = fn xs ->
+    let indices = range (mark "lo" -2) (mark "hi" 2)
+    in let offset = mark "capture" 10
+    in let ready = echo "between"
+    in zip-with (fn index -> fn value -> let printed = echo index in (index + offset, value)) indices (xs | tap (const "input" | echo))
+main = [10, 20] | work | echo
+"#,
+            true,
+            0,
+        ),
+        (
+            "trap",
+            r#"
+work : I64 -> List[I64] -> List[I64] ! {IO}
+work = fn count -> fn xs ->
+    let indices = range 0 count
+    in zip-with (fn index -> fn value -> let printed = echo index in value / index) indices xs
+main = work 3 [10, 20, 30] | echo
+"#,
+            true,
+            101,
+        ),
+        (
+            "shared",
+            r#"
+work : I64 -> List[I64] -> (List[I64], List[I64])
+work = fn count -> fn xs -> let indices = range 0 count in (zip-with add indices xs, indices)
+main = work 3 [10, 20] | echo
+"#,
+            false,
+            0,
+        ),
+        (
+            "managed-result",
+            r#"
+work : I64 -> List[I64] -> List[String]
+work = fn count -> fn xs -> let indices = range 0 count in zip-with (fn index -> fn value -> show (index + value)) indices xs
+main = work 3 [10, 20] | echo
+"#,
+            false,
+            0,
+        ),
+    ];
+    for (name, source, selected, status) in cases {
+        let input = dir.join("main.fwp");
+        std::fs::write(&input, source).unwrap();
+        let reference = Command::new(compiler)
+            .env("FWP_NO_OPT", "1")
+            .args(["run", "--interp"])
+            .arg(&input)
+            .output()
+            .unwrap();
+        assert_eq!(
+            reference.status.code(),
+            Some(status),
+            "{name}: {reference:?}"
+        );
+        if name == "order" {
+            assert_eq!(
+                reference.stdout,
+                b"lo\nhi\ncapture\nbetween\ninput\n-2\n-1\n[(8, 10), (9, 20)]\n"
+            );
+        }
+        let ordinary = Command::new(compiler)
+            .env_remove("FWP_NO_OPT")
+            .args(["run", "--interp"])
+            .arg(&input)
+            .output()
+            .unwrap();
+        assert_eq!(
+            (&ordinary.stdout, &ordinary.stderr, ordinary.status.code()),
+            (
+                &reference.stdout,
+                &reference.stderr,
+                reference.status.code()
+            ),
+            "{name} optimized interpreter"
+        );
+        let cfile = dir.join("main.c");
+        checked(
+            Command::new(compiler)
+                .env_remove("FWP_NO_OPT")
+                .args(["build", "--emit-c"])
+                .arg(&input)
+                .arg("-o")
+                .arg(&cfile),
+        );
+        let code = std::fs::read_to_string(cfile).unwrap();
+        assert_eq!(
+            code.contains("/* Generate private range indices;"),
+            selected,
+            "{name}"
+        );
+        for opt in ["-O1", "-O2"] {
+            let binary = dir.join("main.exe");
+            fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+            let output = Command::new(&binary).output().unwrap();
+            record_probe::save(
+                "range_zip_semantics",
+                &format!("{name}-{opt}"),
+                &code,
+                &binary,
+                &output,
+            );
+            assert_eq!(
+                (&output.stdout, &output.stderr, output.status.code()),
+                (
+                    &reference.stdout,
+                    &reference.stderr,
+                    reference.status.code()
+                ),
+                "{name} {opt}"
+            );
+        }
+    }
+}

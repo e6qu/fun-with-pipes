@@ -1148,7 +1148,8 @@ impl<'a> Proof<'a> {
             Body::PackedRecordMap { callback }
             | Body::PackedRecordFold { callback }
             | Body::ScalarBufferMap { callback }
-            | Body::ScalarBufferZip { callback, .. } => {
+            | Body::ScalarBufferZip { callback, .. }
+            | Body::RangeZip { callback, .. } => {
                 // Admission excludes resource-bearing fields and captures.
                 // Still visit the callback: its effects require the same scope
                 // (notably derivative recording) as the original map/fold.

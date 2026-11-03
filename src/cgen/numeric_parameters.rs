@@ -372,7 +372,8 @@ pub(super) fn lower(program: &mut Program, entries: &[FuncId]) -> usize {
             Body::PackedRecordMap { callback }
             | Body::PackedRecordFold { callback }
             | Body::ScalarBufferMap { callback }
-            | Body::ScalarBufferZip { callback, .. } => {
+            | Body::ScalarBufferZip { callback, .. }
+            | Body::RangeZip { callback, .. } => {
                 blocked[*callback] = true;
                 graph[caller].push(*callback);
             }

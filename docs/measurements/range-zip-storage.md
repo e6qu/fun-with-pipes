@@ -1,6 +1,7 @@
 # Consume an index range without constructing its list
 
-**Status:** selected from saved constructor counts; not implemented or measured.
+**Status:** contract frozen at `e86ee4cc` before edits; implementation and
+controls are written in PR #251, with native verification and measurements pending.
 This is the next storage change after the scalar-map buffer. Keep its reference
 separate from the ongoing [scalar-buffer comparison](temporary-list-storage.md).
 
@@ -81,7 +82,8 @@ At 129/199, current-only, the predicted change is:
 Use a same-source reference that bypasses only `range_zip::lower` after the
 scalar-map buffer selection and before numeric-parameter lowering. Keep every
 previous optimization enabled in both builds. Publish and verify that isolated
-source rewrite before measuring.
+source rewrite before measuring. `scripts/prepare-range-zip-reference.py`
+removes that call only; its three isolation/corruption controls pass locally.
 
 ## Controls and acceptance
 

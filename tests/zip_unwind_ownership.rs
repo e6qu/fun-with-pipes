@@ -502,3 +502,138 @@ transform = fn pause -> fn input -> fn other ->
         }
     }
 }
+
+#[test]
+fn range_zip_records_release_on_failure_cancellation_and_partial_output() {
+    let dir = Scratch::new("range-zip");
+    let source = dir.0.join("range.fwp");
+    std::fs::write(&source, r#"
+export transform : I64 -> I64 -> I64 -> List[I64] -> List[(I64, I64)] ! {Async}
+transform = fn lo -> fn hi -> fn offset -> fn xs ->
+    let indices = range lo hi
+    in zip-with (fn index -> fn value -> let ready = task.yield () in (index, value + offset)) indices xs
+"#).unwrap();
+    let cfile = dir.0.join("range.c");
+    checked(
+        Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .args([
+                "build",
+                "--fn",
+                "transform",
+                "--memory",
+                "dynamic",
+                "--emit-c",
+            ])
+            .arg(&source)
+            .arg("-o")
+            .arg(&cfile),
+    );
+    let emitted = std::fs::read_to_string(cfile).unwrap();
+    assert!(emitted.contains("#define FWP_UNWIND 1"));
+    assert!(emitted.contains("#define FWP_TASK_TICKS 1"));
+    let marker = "    /* Generate private range indices;";
+    assert_eq!(emitted.matches(marker).count(), 1);
+    let start = emitted.find(marker).unwrap();
+    let end = start + emitted[start..].find("\n}\n").unwrap() + 3;
+    let helper = &emitted[start..end];
+    let instrumented = helper
+        .replace(
+            "    V *items =",
+            "    range_fail_allocation = range_mode == 2;\n    V *items =",
+        )
+        .replace(
+            "        items[i] =",
+            "        range_stage = 1; range_calls++;\n        items[i] =",
+        )
+        .replace(
+            "    return fwp_map_finish_protected",
+            "    range_stage = 2;\n    return fwp_map_finish_protected",
+        );
+    assert_ne!(helper, instrumented);
+    let mut code = emitted[..emitted.find("int main(").unwrap()].replace(helper, &instrumented)
+        .replace("typedef uint64_t V;", "typedef uint64_t V;\nstatic int range_mode, range_stage, range_calls, range_nodes, range_fail_allocation;\nstatic void fwp_trap(const char *);");
+    for signature in [
+        "static inline void *fwp_heap_alloc(size_t n, int kind) {",
+        "static inline void *fwp_alloc_init(size_t n) {",
+    ] {
+        assert_eq!(code.matches(signature).count(), 1);
+        code = code.replace(signature, &format!("{signature}\n    if(range_fail_allocation) {{ range_fail_allocation=0; fwp_trap(\"injected range scratch failure\"); }}"));
+    }
+    let alloc = "static inline void *fwp_alloc_init(size_t n) {";
+    code = code.replace(alloc, &format!("{alloc}\n    if(range_stage==1 && range_mode==3 && range_calls==2) fwp_trap(\"injected record failure\");\n    if(range_stage==2 && range_mode==4 && ++range_nodes==2) fwp_trap(\"injected partial list failure\");"));
+    let yielding = "static V fwp_p_task_yield(void) {";
+    assert_eq!(code.matches(yielding).count(), 1);
+    let start = code.find(yielding).unwrap();
+    let end = start + code[start..].find("\n}\n").unwrap() + 3;
+    code.replace_range(
+        start..end,
+        r#"static V fwp_p_task_yield(void) {
+    if(range_calls==2) {
+        if(range_mode==0) fwp_trap("injected range callback failure");
+        if(range_mode==1) { fwp_cur->cancelled=1; fwp_check_cancel(); }
+    }
+    return FWP_UNIT;
+}
+"#,
+    );
+    let drop_name = |ty: &str| {
+        let start = emitted
+            .find(&format!("/* {ty} */\nstatic void fwp_drop"))
+            .unwrap();
+        emitted[start..]
+            .split("static void ")
+            .nth(1)
+            .unwrap()
+            .split('(')
+            .next()
+            .unwrap()
+    };
+    code += &include_str!("fixtures/range_zip_unwind.c")
+        .replace(
+            "TRANSFORM",
+            &format!("f{}", function_id(&emitted, "transform")),
+        )
+        .replace("DROP_INPUT", drop_name("List[I64]"))
+        .replace("DROP_RESULT", drop_name("List[(I64, I64)]"));
+    let partial = "if (built && owner->list_drop) owner->list_drop(built);";
+    let elements = "if (owner->element_drop)";
+    assert_eq!(code.matches(partial).count(), 1);
+    assert_eq!(code.matches(elements).count(), 1);
+    let missing_partial = code.replace(partial, "/* deliberately omit partial list destruction */");
+    let missing_elements = code.replace(elements, "if (0 && owner->element_drop)");
+    let missing_scratch = code
+        .replace(
+            "if (items) fwp_mem_free(items);",
+            "/* deliberately omit unwind scratch destruction */",
+        )
+        .replace(
+            "    fwp_mem_free(owner->items);",
+            "/* deliberately omit ordinary scratch destruction */",
+        );
+    assert_ne!(code, missing_scratch);
+    for opt in ["-O1", "-O2"] {
+        for (name, text, status) in [
+            ("complete", &code, 0),
+            ("missing-records", &missing_elements, 90),
+            ("missing-scratch", &missing_scratch, 90),
+            ("missing-partial", &missing_partial, 90),
+        ] {
+            let exe = dir.0.join(format!("range-{name}-{opt}.exe"));
+            fwp::cgen::compile_c(text, &exe, opt).unwrap();
+            let output = Command::new(&exe).output().unwrap();
+            record_probe::save(
+                "range_zip_unwind",
+                &format!("{name}-{opt}"),
+                text,
+                &exe,
+                &output,
+            );
+            assert_eq!(
+                output.status.code(),
+                Some(status),
+                "{name}/{opt}: {output:?}"
+            );
+            assert!(output.stderr.is_empty(), "{name}/{opt}: {output:?}");
+        }
+    }
+}

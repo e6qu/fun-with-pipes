@@ -25,7 +25,8 @@ report no output, ownership, allocation, raw-work or final-storage failure.
 
 Session 2's 3/1999 current-only case also misses 0.95 at 0.95423. A ratio of
 1.03320 means 3.32% slower; 0.95683 means 4.32% less time. The complete results
-and raw-sample audit are pending run `41593988021`. These observations remain
+and raw-sample audit pass in run `41593988021`: [verified reports and logs](arm-audit.zip),
+[artifact identities](arm-audit-artifacts.json). Audit success confirms the records; timing observations remain
 failures; no completed session is rerun for a better result. Diagnose the saved
 zero-update source and driver before attributing the slowdown to any cause.
 
@@ -42,7 +43,30 @@ checked. These are host rejections, not measured performance failures.
 | Replacement `41592143741` | 2 | EPYC 9V74 rejected; [record](rejected-hosts/replacement1-amd2.json.gz), [log](rejected-hosts/replacement1-amd2.log.gz) |
 | Replacement `41592549006` | 1 / 2 | EPYC 9V74 / 9V45 rejected; [independent audit](rejected-hosts/replacement2.zip), run `41593021814` |
 | Replacement `41593285140` | 1 | Intel 6973P-C rejected; [record](rejected-hosts/replacement3-amd1.json.gz), [log](rejected-hosts/replacement3-amd1.log.gz) |
-| Replacement `41593285140` | 2 | Qualified; job `125774733224` is measuring |
+| Replacement `41593285140` | 2 | Qualified; job `125774733224` completed, timing limits failed |
+| Replacement `41594132242` | 1 | Intel 8573C rejected; [record](rejected-hosts/replacement4-amd1.json.gz), [log](rejected-hosts/replacement4-amd1.log.gz) |
+| Replacement `41595396878` | 1 | Qualified; job `125781458554` is measuring |
 
 Only unmeasured, rejected sessions receive replacement requests. Required CPUs,
 source, inputs, sample order, thresholds and completed outcomes remain unchanged.
+
+## Completed AMD64 session 2
+
+Qualified EPYC 7763 job `125774733224` completed all six cases. Four timing
+requirements fail: candidate/reference is 0.97536 (3/199 current), 0.95767
+(3/199 history), 0.96861 (3/1999 current) and 0.96334 (3/1999 history), against
+0.95. The full job has no other diagnostics. Independent raw audit `41595559659`
+passes: [reports and logs](amd-session2-audit.zip),
+[artifact identities](amd-session2-audit-artifacts.json). Preserve these misses;
+session 1 remains in progress. No completed timings are repeated.
+
+## Zero-update source review
+
+The saved current-only C changes the positive-update branch of `fs170` and its
+boxed worker: mapped-list construction becomes a scalar buffer, followed by its
+zip consumer. The zero-update branch still returns the input list directly.
+The source review identifies no extra operation on that branch. It does not
+establish why elapsed time increased; changes to untaken code can still affect
+native execution. Do not infer an ownership defect or a resolved timing goal.
+The complete original C and driver evidence remain in the retained audit archive
+(artifact `13211059421`); no benchmark or acceptance threshold was changed.

@@ -345,7 +345,8 @@ pub(crate) fn infer(
             Body::PackedRecordMap { callback }
             | Body::PackedRecordFold { callback }
             | Body::ScalarBufferMap { callback }
-            | Body::ScalarBufferZip { callback, .. } => {
+            | Body::ScalarBufferZip { callback, .. }
+            | Body::RangeZip { callback, .. } => {
                 graph[id].insert(*callback);
                 // Generated calls preserve the callback's original owning ABI.
                 values.insert(*callback);

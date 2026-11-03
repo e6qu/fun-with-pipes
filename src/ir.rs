@@ -232,6 +232,13 @@ pub enum Body {
         callback: FuncId,
         slot: usize,
     },
+    /// Native-only zip: borrow a scalar callback and list; generate the I64
+    /// indices from two evaluated bounds. Results own only flat numeric fields.
+    RangeZip {
+        callback: FuncId,
+        captures: usize,
+        slot: usize,
+    },
     /// A C function (`foreign "C"`), called through the C ABI.
     ForeignC {
         symbol: String,
@@ -710,7 +717,8 @@ pub(crate) fn reachable_functions(prog: &Program, entries: &[FuncId]) -> Result<
             Body::PackedRecordMap { callback }
             | Body::PackedRecordFold { callback }
             | Body::ScalarBufferMap { callback }
-            | Body::ScalarBufferZip { callback, .. } => {
+            | Body::ScalarBufferZip { callback, .. }
+            | Body::RangeZip { callback, .. } => {
                 work.push(*callback);
             }
             _ => {}

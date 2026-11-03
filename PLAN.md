@@ -4,7 +4,7 @@ Build an ahead-of-time language with simple pipes, immutable values, strong type
 and useful inference. Prefer direct values, moves and borrows; reserve ARC for
 necessary sharing. GC is removed; JIT and backward compatibility are excluded.
 
-## Current batch: verify scalar-buffer costs and choose the next storage reduction
+## Current batch: verify scalar buffers and remove private index lists
 
 [PR #250](docs/roadmap-history.md#temporary-scalar-map-buffers-pr-250) is merged.
 Its focused native checks verify 25,870 fewer allocations and 823,064 fewer
@@ -16,7 +16,7 @@ matrix; complete those checks before treating the delivery as fully verified.
 |---|---|---|
 | 1 | Complete the merged implementation's platform validation | Audit all nine jobs in run `41591834975` and docs. Fix every failure in this batch; preserve the original evidence. |
 | 2 | Measure scalar-buffer compiler and program costs | Complete the [frozen comparison](docs/measurements/temporary-list-storage.md#execution-of-the-frozen-comparison): five compiler inputs, all six runtime inputs, two native sessions per architecture. Independently audit raw evidence and retain every missed limit. |
-| 3 | Freeze direct consumption of a private index range — selected | [Contract](docs/measurements/range-zip-storage.md): evaluate I64 bounds once; one zip consumer, known scalar captures, scalar or flat numeric-record outputs. Expected reduction: `(d+1)*u` requests and `(32*d+8)*u` bytes. Publish the isolated same-source reference before measurement. |
+| 3 | Direct consumption of a private index range — contract frozen | [Contract](docs/measurements/range-zip-storage.md): evaluate I64 bounds once; one zip consumer, known scalar captures, scalar or flat numeric-record outputs. Expected reduction: `(d+1)*u` requests and `(32*d+8)*u` bytes. Contract tag `roadmap/range-zip-protocol-2026-11-03` predates implementation. The isolated same-source reference has passing local controls; publish it before measurement. |
 | 4 | Implement, verify and deliver the next substantial batch | Bundle the selected storage change, incidental repairs and reports. Compare unoptimized/ordinary/native behavior, shared/escaping inputs and failure/cancellation/physical-free controls. Measure the isolated change, run all nine final-head production gates plus docs, audit logs and verify the one-line squash. |
 
 Current measurements use retained source `da510f18`, tag
@@ -30,10 +30,10 @@ before measurement; do not rerun completed noisy observations for a pass.
 - **Scalar-buffer timings.** Both completed ARM64 sessions report a 3.32%
   zero-update current-only slowdown against the 2% limit; several small cases
   improve by less than the required 5%. [Results and running audits](docs/measurements/scalar-map-zip-time-2026-11-03/README.md)
-  retain these failures. Inspect the saved zero-update source and driver before
-  selecting a correction or attributing a cause. Complete AMD64 and the raw
-  audits; allocation savings and passing compiler costs do not close this goal.
-
+  retain these failures. Saved C changes only the positive-update branch; no added zero-branch work
+  was identified. Further source/driver diagnosis is needed before attributing
+  a cause or selecting a correction. ARM64 and AMD64 session-2 raw audits pass; AMD64 also misses the small-case
+  speed goals. Complete its final session; allocation savings and passing compiler costs do not close this goal.
 
 - **Callback-owner timings.** [The complete report](docs/measurements/callback-owners-2026-11-03/README.md)
   retains every outcome. Both architectures miss 5% on 3/199 and 3/1999 in both

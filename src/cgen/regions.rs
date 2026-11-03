@@ -248,6 +248,7 @@ fn prove_cached(
             | Body::PackedRecordFold { .. }
             | Body::ScalarBufferMap { .. }
             | Body::ScalarBufferZip { .. }
+            | Body::RangeZip { .. }
             | Body::RegionEntry { .. } => {
                 return None;
             }

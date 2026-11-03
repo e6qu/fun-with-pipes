@@ -1,16 +1,15 @@
 # Current work
 
-**Next:** inspect independent ARM64 timing audit `41593988021` and diagnose its
-zero-update slowdown from saved source/driver; monitor qualified AMD64 session 2
-and every production job in `41591834975`. Compiler costs are audited and pass. Retain each outcome;
-replace only timing hosts rejected before measurement. Prepare the next storage
-change from saved constructor counts while these independent gates run.
+**Next:** finish the range-zip batch review and publish one grouped native check
+run (GCC/Clang O1/O2, admission, cleanup, all 96 count observations). Monitor the
+merged-head production run and final scalar-buffer AMD64 timing session while
+those checks run. Fix every failed target before measurement or final gates.
 
 ## Checkout and sources
 
 - Worktree `/private/tmp/fwp-array-consumption`, branch `scalar-buffer-performance`.
-  The primary checkout is untouched. No new PR yet; bundle measurements, needed
-  CI repairs and the selected next storage improvement in one substantial PR.
+  The primary checkout is untouched. Draft [PR #251](https://github.com/e6qu/fun-with-pipes/pull/251)
+  bundles measurements, needed CI repairs and private index-list removal.
 - User merged PR #250 as `a8a5568d5c1ee791f872de382c6d7e850cec09df` before full
   platform and performance gates. Its tree equals focused-tested `da510f18`
   (`ec6935165379492d07cb236d0f8f05a75f8b6fd9`). Squash message is one line,
@@ -27,9 +26,9 @@ change from saved constructor counts while these independent gates run.
 | Step | Status | Remaining work |
 |---|---|---|
 | 1 | In progress | Nine-job merged-head production matrix and documentation audit |
-| 2 | In progress | Audit completed compiler costs; complete and audit four runtime sessions |
-| 3 | In progress | Publish the selected range-to-zip contract before compiler edits |
-| 4 | Pending | Implement selected change, grouped verification, final gates and verified squash |
+| 2 | In progress | Compiler costs and three runtime sessions audited; complete AMD64 session 1 |
+| 3 | Verified | Contract published at `e86ee4cc`, tag `roadmap/range-zip-protocol-2026-11-03`; isolated reference has three passing controls |
+| 4 | In progress | Range lowering, typed record cleanup and focused controls written; native verification, measurements and final gates remain |
 
 ## Verified scalar-buffer behavior and storage
 
@@ -61,7 +60,7 @@ remain in saved/GitHub archives; compact logs, outputs and file hashes are retai
 - **Runtime original:** `41591978166`. Both ARM64 sessions completed:
   session 1 `125770553887`, session 2 `125770553867`. Both are now complete and
   fail only final timing limits: zero-update current is 3.32% slower in both;
-  several small cases miss 5% improvement. Independent audit `41593988021` runs.
+  several small cases miss 5% improvement. Independent audit `41593988021` passes; raw report/digest and full audit log checked.
   [Recorded outcomes](measurements/scalar-map-zip-time-2026-11-03/README.md).
   AMD64 sessions 1 `125770553924` and 2 `125770553865` rejected Intel CPUs before
   building/timing. Full logs, host metadata/digests and skipped work were audited.
@@ -71,9 +70,11 @@ remain in saved/GitHub archives; compact logs, outputs and file hashes are retai
   CPU qualification failed for both. Independent retention audit `41593021814`
   passes; both raw host reports are independently checked and retained in
   `rejected-hosts/replacement2.zip` (EPYC 9V74 / 9V45). Replacement 3,
-  `41593285140`: session 2 `125774733224` qualified and is measuring; session 1
-  `125774733158` rejected Intel 6973P-C and is audited/retained. Request a new
-  session 1 only: replacement 4 run `41594132242`. Required CPU remains EPYC 7763. Do not repeat completed timings.
+  `41593285140`: session 2 `125774733224` qualified and completed; only four small-case timing limits fail; independent audit `41595559659` passes; session 1
+  `125774733158` rejected Intel 6973P-C and is audited/retained. Replacement 4
+  `41594132242` rejected Intel 8573C before builds/timing and is audited/retained.
+  Replacement 5 `41595396878`, session 1 `125781458554`, qualified and is measuring.
+  Required CPU remains EPYC 7763; no further host request is needed.
 
 [The frozen execution](measurements/temporary-list-storage.md#execution-of-the-frozen-comparison)
 compares the same source with only `scalar_map_zip::lower` disabled. Compiler:
@@ -95,8 +96,14 @@ a list-building loop. The selected next change is [direct range consumption](mea
 one I64 range consumer, known callback with machine-scalar captures, scalar inputs
 and scalar/flat numeric-record results. Preserve evaluated bounds at their original
 position and use one protected output scratch buffer. Predicted largest saving:
-25,870 requests and 823,064 bytes again. Contract is written but not yet published;
-no compiler edit yet. Publish this preparation before implementation.
+25,870 requests and 823,064 bytes again. Contract was published before edits at `e86ee4cc`. Implementation is now written:
+`src/cgen/range_zip.rs` indexes sole uses and scalar callback origins; generated C
+borrows one list and uses typed cleanup for scalar/flat numeric-record results.
+Bounds remain at creation, in order. Added both-slot admission/alias/exclusion/
+linear-work tests, interpreted/native source parity and physical-free controls
+for callback traps, cancellation, scratch/record/partial-list allocation failures.
+Huge signed ranges are checked with short inputs; ordinary finite cases establish
+interpreter parity. These new native checks have not run yet.
 
 ## Local checks and files
 
@@ -130,3 +137,10 @@ one early check rejected an unfinished download, then passed after completion. M
 to runners, never raise limits. Final delivery still requires nine exact-head
 production jobs plus docs, all logs audited, one-line squash ≤80 characters,
 no body/trailers, and verified message/tested-tree equality.
+
+Current local checks: Rust formatting passes; isolated range reference 3 tests
+pass (0.13s); allocation observer/comparison controls 16 tests pass (14.35s).
+ARM64 and AMD64 session-2 audit archives match GitHub digests; audit logs are clean.
+PR #251 preparation docs run `41594393960` passes. Full final-head gates have not
+started for the new compiler code. Temporary source/audit helpers remain in
+`/private/tmp/fwp-*`; no local compiler build or benchmark was run.
