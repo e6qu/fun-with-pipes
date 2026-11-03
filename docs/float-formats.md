@@ -56,10 +56,16 @@ Protocol golden-byte tests cover widths, signed zero, infinities and NaN payload
 transport. Delivery evidence links the corresponding production verification.
 
 The implementation uses shared binary16/bfloat16/binary128 arithmetic and exact
-decimal cores. For these three formats (F16, BF16 and F128), arithmetic and
-conversion NaNs are canonical positive quiet NaNs. F32/F64 arithmetic NaN signs
-and payloads are implementation dependent. Raw bit transport preserves payloads
-and signs for every format.
+decimal cores. Converting a float to the same type preserves every bit, including
+signed zero and quiet/signaling NaN signs and payloads. For example,
+`same : F64 -> F64` with `same = float.convert` is an identity; it does not round
+or quiet a NaN. A generic F128 result still needs its own owner.
+
+Conversions between different types retain their rounding rules. For the software
+formats (F16, BF16 and F128), arithmetic and cross-type conversion NaNs are
+canonical positive quiet NaNs. F32/F64 arithmetic NaN signs and payloads are
+implementation dependent. Raw bit transport preserves payloads and signs for
+every format.
 
 Tests of NaN key ordering must supply the same bits
 to both implementations, rather than derive keys from arithmetic such as 0/0. Decimal conversion uses explicit per-call

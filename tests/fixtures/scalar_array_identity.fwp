@@ -1,0 +1,24 @@
+selected : Array[F64] -> Array[F64]
+selected = array.map float.convert
+narrow : Array[F64] -> Array[F32]
+narrow = array.map float.convert
+dynamic : (F64 -> F64) -> Array[F64] -> Array[F64]
+dynamic = fn callback -> array.map callback
+observed : Array[F64] -> Array[F64] ! {IO}
+observed = array.map (tap echo | float.convert)
+input : () -> Array[F64] ! {IO}
+input = fn () -> let printed = echo "input" in array.from-list [1.0, -0.0, 3.0]
+main =
+    let original = input ()
+    in let converted = selected original
+    in let changed = converted | array.set 0 9.0 | option.unwrap-or converted
+    in [
+        (original | array.to-list) | echo,
+        (converted | array.to-list) | echo,
+        (changed | array.to-list) | echo,
+        (original | array.slice 1 2 | selected | array.to-list) | echo,
+        (array.from-list [] | selected | array.to-list) | echo,
+        (original | narrow | array.to-list) | echo,
+        (original | dynamic (add 1.0) | array.to-list) | echo,
+        (original | observed | array.to-list) | echo,
+    ] | ignore
