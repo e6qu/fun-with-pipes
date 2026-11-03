@@ -1,0 +1,9 @@
+{
+  "source": "e649da78c41dab8fa6f191d7670b1efba79811b0",
+  "disabledTransformation": "direct closed scalar array map callbacks",
+  "candidateCodegenSha256": "25590e6cc4262193ee4c3d09c0e80ea948012f530b551e1e87f84dbb4c4c6dda",
+  "referenceCodegenSha256": "36962395d7240a1a31f5958ac85d352b13322234e41adbeba62a0d55b4e6b152",
+  "ownershipSha256": "dee951517f92d3cdd35ba7d8dd5a0eb954c153ff3076bcbf78174e84175956fe",
+  "patchSha256": "8c3d2740a0e84038ab5de7a96fc89bb8f0d7e3314e3d312f5c8a09d6712fba41",
+  "compilerSha256": "eb3f245ea847bf5a75bd29c7724f9354980f12273e11223fc554189709ae2fb1"
+}

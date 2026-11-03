@@ -6,6 +6,25 @@ and complete platform validation are different events. Measurements retain their
 original source and settings; old numbers are not measurements of current main.
 The linked PRs, runs and data records supply the detailed evidence.
 
+## Private gradient arrays (PR #252)
+
+[PR #252](https://github.com/e6qu/fun-with-pipes/pull/252) merged November 3 as
+`3034a9d047c2bef44744c6ffc1807146570ced57`. Its tree equals tested head `e2d55aa8`;
+the squash message is one line, under 80 characters, with no body or trailers.
+All nine production jobs and documentation pass. Every full and target log is
+audited; [gate identities and logs](measurements/gradient-array-storage-2026-11-03/platforms/final-gates.json)
+are retained here. Duplicate same-tree main CI was cancelled after confirming
+it had no failed steps.
+
+Private derivatives remain arrays through map/zip; public gradient APIs still
+return lists. The largest solve saves 25,472 allocation requests and 409,144
+requested bytes. Retains, peak managed storage and final zero storage are
+unchanged. All 32 required 5% timing gains remain open; AMD64 current-only
+whole-process RSS rises about 9%. [Counts and cleanup](measurements/gradient-array-storage-2026-11-03/README.md),
+[compiler costs](measurements/gradient-array-analysis-2026-11-03/README.md) and
+[every timing result](measurements/gradient-array-time-2026-11-03/README.md)
+keep reductions separate from unresolved speed goals.
+
 ## Direct private range indices (PR #251)
 
 [PR #251](https://github.com/e6qu/fun-with-pipes/pull/251) merged November 3 as

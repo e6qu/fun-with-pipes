@@ -6,16 +6,14 @@ necessary sharing. GC is removed; JIT and backward compatibility are excluded.
 
 ## Current work: direct calls in scalar array maps
 
-[PR #252](https://github.com/e6qu/fun-with-pipes/pull/252) is the only active PR.
-It keeps private gradients in arrays; its final platform matrix is running.
-Focused correctness, cleanup and compiler-cost checks pass. The largest solve
-saves 25,472 allocation requests and 409,144 requested bytes, but all 32 required
-5% speed gains remain open. [Counts](docs/measurements/gradient-array-storage-2026-11-03/README.md),
-[compiler costs](docs/measurements/gradient-array-analysis-2026-11-03/README.md) and
-[timings](docs/measurements/gradient-array-time-2026-11-03/README.md) retain every
-outcome. Complete its gates and merge before opening the follow-up PR.
+[PR #252](https://github.com/e6qu/fun-with-pipes/pull/252) merged with all nine
+production jobs and documentation passing; every full and target log is audited.
+It keeps private gradients in arrays. The largest solve saves 25,472 allocation
+requests and 409,144 requested bytes, but all 32 required 5% speed gains remain
+open. [Delivery and measurements](docs/roadmap-history.md#private-gradient-arrays-pr-252)
+retain the exact sources, counts and timing misses.
 
-The next grouped change removes generic function dispatch from selected
+The current grouped change removes generic function dispatch from selected
 `array.map` calls. For example, `array.map scale` can call the known scalar
 function `scale` directly for each element. It still allocates an independent
 result array and preserves input aliases, effects, traps and cancellation.
@@ -23,15 +21,18 @@ This is an experiment, not an established explanation of earlier timing misses.
 
 The [contract](docs/measurements/direct-array-callbacks.md) was frozen before code
 changes. [Focused native verification](docs/measurements/direct-array-callbacks-2026-11-03/README.md)
-passes on all three hosts; the isolated compiler/runtime measurements are next. [The failure record](docs/measurements/direct-array-callbacks-2026-11-03/README.md)
-retains the first compilation error and repair; no new timing run has started.
+passes on all three hosts. [Compiler costs](docs/measurements/direct-array-analysis-2026-11-03/README.md)
+pass. Both ARM64 runtime sessions completed with five speed-target misses each;
+the raw audit is running. AMD64 has no qualified measurement yet. [The failure record](docs/measurements/direct-array-callbacks-2026-11-03/README.md)
+retains both repaired verification failures. Runtime measurements are in progress;
+keep host rejections and every measured outcome.
 
 | Step | Work | Completion requirement |
 |---|---|---|
 | 1 | Declare the direct-call experiment | Freeze selection, ownership rules and limits before implementation. Keep storage layouts and other optimizations unchanged. |
 | 2 | Verify implementation and cleanup | GCC ARM64/AMD64 and Clang ARM64 pass O1/O2 comparisons with both interpreters, rejected cases, aliases/slices, eager order, allocation failure and cancellation. Audit selected direct calls and deliberately broken cleanup controls. |
 | 3 | Measure the isolated change | Freeze a same-source reference disabling only direct scalar array-map selection. Audit compiler time/RSS, four qualified runtime sessions, every count, native image and failed limit. No allocation/ARC/live-storage increase; preserve timing, copy and stack limits. |
-| 4 | Deliver the grouped PR | After #252 merges, open one follow-up PR with implementation, repairs, evidence and current docs. Run the final nine production jobs plus docs, audit all logs, then verify the one-line squash and tested-tree equality. |
+| 4 | Deliver the grouped PR | Publish one follow-up PR with implementation, repairs, evidence and current docs. Run the final nine production jobs plus docs, audit all logs, then verify the one-line squash and tested-tree equality. |
 
 [History](docs/roadmap-history.md) and the linked reports preserve completed
 storage changes and their source identities. Do not repeat completed timings for
@@ -54,7 +55,7 @@ These changes remain unselected.
   history in both sessions. Those improvements are 3.97–4.98%.
   [Complete results](docs/measurements/range-zip-time-2026-11-03/README.md) retain
   every miss; all four raw audits are complete. Preserve verified reductions
-  while leaving these goals open. PR #252 implements the gradient-list group
+  while leaving these goals open. Merged PR #252 implements the gradient-list group
   from the [remaining allocation sites](docs/measurements/range-zip-storage-2026-11-03/README.md#remaining-allocation-sites).
   Other storage groups still need separate lifetime proofs and measured costs
   before selection.

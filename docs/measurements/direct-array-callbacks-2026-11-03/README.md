@@ -2,7 +2,8 @@
 
 The [contract](../direct-array-callbacks.md) compares direct calls with the same
 compiler using generic callback application. Focused native verification passes;
-compiler-cost and runtime measurements have not started.
+[compiler costs](../direct-array-analysis-2026-11-03/README.md) also pass; runtime
+measurements are in progress.
 
 ## Verified native behavior
 
@@ -29,7 +30,7 @@ Each host passes:
 All 762 saved native images have matching architecture headers and recorded
 hashes: 256 on each Linux host and 250 on macOS. Both GCC construction reports
 pass. These checks establish correctness and cleanup for the tested cases;
-whole-solve allocation/ARC limits, compiler costs and speed remain unmeasured.
+whole-solve allocation/ARC limits and speed remain unverified.
 
 ## First focused run
 
