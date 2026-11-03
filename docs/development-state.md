@@ -17,7 +17,8 @@ two runtime sessions per architecture using that run as the correctness prerequi
   predates implementation. The whole-change reference patch is committed at
   `aed66f26`; measurement identities still need freezing before timing.
 - PR #251 merged as `296ec5b4c3540c6d57671d076d2a39247b2389f4`; this
-  branch is rebased onto it. No next PR exists yet. Keep one active PR.
+  branch is rebased onto it. [PR #252](https://github.com/e6qu/fun-with-pipes/pull/252)
+  is the only active PR and remains draft.
   Every commit/merge message is one line, at most 80 characters, with no body,
   trailers or attribution.
 
@@ -26,50 +27,28 @@ two runtime sessions per architecture using that run as the correctness prerequi
 | Step | Status | Remaining work |
 |---|---|---|
 | 1 | Verified | All logs audited; squash message and tested-tree equality verified |
-| 2 | Implemented | Both Linux compilers/lints and array selection/application checks pass; repair two test assumptions |
+| 2 | Implemented | Both Linux compilers/lints and array selection/application checks pass; verify both repaired test assumptions |
 | 3 | In progress | Run restored array fault controls and all 96 allocation observations; retain complete failures |
 | 4 | Pending | Compiler/runtime measurements, independent audits, final platform matrix and delivery |
 
-## PR #251 delivery
+## Completed predecessor
 
-All nine production jobs in `41610112980` pass at
-`cea8debcd8caf067bf210fd612c559b265157b91`; documentation job `125829540129` in
-`41610097425` also passes. The skipped draft run is not a required gate.
-
-| Gate | Job |
-|---|---:|
-| Benchmarks | 125829594182 |
-| Linux ARM64 | 125829594542 |
-| Linux AMD64 | 125829594545 |
-| macOS ARM64 regular | 125829594788 |
-| macOS AMD64 regular | 125829594612 |
-| macOS ARM64 ownership | 125829594640 |
-| macOS AMD64 ownership | 125829594596 |
-| Windows ARM64 | 125829594942 |
-| Windows AMD64 | 125829594720 |
-
-All full logs and all native target logs pass audit: 257 per Linux host,
-131/126 per regular/ownership macOS host and 57 per Windows host. The documentation
-job contains three expected negative-fixture diagnostics. Evidence is retained
-in `.worktrees/gradient-work/platforms-251`. The merge subject is
-`Generate private zip indices without temporary lists`, with no body or trailers;
-its tree equals the tested head (`c8d1a2aa0398c7719dc0c7bc9fc34410142a3556`).
-
-Completed range evidence remains in the
-[storage report](measurements/range-zip-storage-2026-11-03/README.md),
-[compiler report](measurements/range-zip-analysis-2026-11-03/README.md) and
-[timing report](measurements/range-zip-time-2026-11-03/README.md).
-Larger solves take 7.1–10.0% less time; small-case timing limits remain open.
-Do not repeat those completed measurements.
+PR #251 merged as `296ec5b4`, with all nine production jobs and documentation
+passed and all logs audited. Its one-line message and tested-tree equality are
+verified. [History](roadmap-history.md#direct-private-range-indices-pr-251) and
+[gate records](measurements/range-zip-storage-2026-11-03/platforms/final-gates.json)
+retain the complete evidence. Larger solves take 7.1–10.0% less time; small-case
+speed goals remain open. Do not repeat completed measurements.
 
 ## Gradient-array first run and repairs
 
 Run `41618374217` tests `aed66f26`. ARM64 job `125857466013` and AMD64 job
 `125857466216` complete with the same two failures under GCC and Clang. Both
 builds, all-target Clippy and selection units pass. All 16 integration target logs
-per host have been inspected; no other failures were found. The original archives
-and full logs are retained in `.worktrees/gradient-work/attempt-{arm,amd}.*`.
-The archive digests match GitHub metadata. `audit-attempt.py` records diagnostics.
+per host have been inspected; no other failures were found. [Retained evidence](measurements/gradient-array-storage-2026-11-03/README.md)
+includes all 32 target logs, full jobs, artifact identities and diagnostics.
+Archive digests match GitHub metadata; tag
+`roadmap/gradient-array-first-attempt-2026-11-03` preserves the original source.
 
 | Failure | Cause and repair |
 |---|---|
@@ -87,7 +66,7 @@ GCC/Clang O1/O2, including input aliases and empty/singleton cases. Packed slice
 map order, F128 precision, typed-result owner controls, checkpoints, workspace,
 capacity and library cleanup also pass in the first run, except the two cases above.
 
-## Checks and remaining restoration
+## Checks and current execution
 
 Guarded local checks before the temporary-directory reset passed: primitive
 inventory (394 declarations, 384 symbols, 40 aliases), generated stdlib comparison,
@@ -110,7 +89,8 @@ audit rejected the status word `Complete`; the handoff now uses its required
 `Verified` status. No acceptance requirement was changed.
 
 Run `41626196812` was dispatched after all known native failures were repaired.
-ARM64 job `125884054605` is building; AMD64 `125884054997` is queued. The run's
+ARM64 job `125884054605` is running integration targets; AMD64 `125884054997`
+has passed build/lint and reached the selection units. The run's
 compiler/runtime/library/test sources match the prepared measurement branch;
 later script/docs changes do not alter those trees. No performance result exists yet.
 

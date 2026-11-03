@@ -34,9 +34,12 @@ order. No new language syntax or runtime primitive is introduced.
 ## Gradient results
 
 Reverse-mode AD records operations, traverses their dependencies backward and
-returns one derivative per input. `rev._backward-float` currently obtains an F64
-array, converts it to a list, then maps `float.convert` to the requested format.
-Direct traversal removes the first list. The conversion remains: narrower
+returns one derivative per input. In the measured #236 source,
+`rev._backward-float` obtained an F64 array, converted it to a list, then mapped
+`float.convert` to the requested format. Direct traversal removed the first
+list. The [later gradient-array batch](gradient-array-storage.md) keeps internal
+results in arrays through conversion and private map/zip use; its new checks
+do not replace the historical results below. The conversion remains: narrower
 formats round, and NaNs must retain the supported conversion behavior.
 
 The runtime phase observer measures tape setup, forward work with recording,
