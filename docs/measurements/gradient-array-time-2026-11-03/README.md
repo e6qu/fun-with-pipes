@@ -12,15 +12,24 @@ sizes, current/history outputs, two sessions per architecture, identical-copy
 controls and the original timing/memory limits. C/Rust explicit derivatives are
 separate algorithm comparisons, not isolated language overhead.
 
-- [Initial four-session run](https://github.com/e6qu/fun-with-pipes/actions/runs/41629714632).
-- [Replacement AMD64 session 1](https://github.com/e6qu/fun-with-pipes/actions/runs/41630230085).
+The original four-session run is [41629714632](https://github.com/e6qu/fun-with-pipes/actions/runs/41629714632).
+Both ARM64 sessions and AMD64 session 2 qualified and are measuring. AMD64 session 1
+has needed replacement hosts:
 
-The initial AMD64 session 1 received an EPYC 9V74 instead of the required EPYC
-7763. Qualification rejected it before building or timing; no measured samples
-exist. The replacement requests only that session on the same frozen source.
-The [host record](rejected-amd64-session1/host.json),
-[job steps](rejected-amd64-session1/job.json) and
-[full log](rejected-amd64-session1/job.log.gz) retain the rejected attempt.
+| Attempt/run | Host | Outcome |
+|---|---|---|
+| 41629714632 / 125895890311 | EPYC 9V74 | Rejected before building/timing |
+| 41630230085 / 125897628367 | EPYC 9V74 | Rejected before building/timing |
+| 41630692989 / 125899210881 | EPYC 9V45 | Rejected before building/timing |
+| [41631438916](https://github.com/e6qu/fun-with-pipes/actions/runs/41631438916) | Pending | Requested only AMD64 session 1 |
+
+The contract requires EPYC 7763. These rejected jobs collected no timing samples;
+replacement jobs keep the same frozen source and limits. Records retain each
+host, job and full log:
+
+- Attempt 1: [host](rejected-amd64-session1/host.json), [job](rejected-amd64-session1/job.json), [log](rejected-amd64-session1/job.log.gz).
+- Attempt 2: [host](rejected-amd64-session1-attempt2/host.json), [job](rejected-amd64-session1-attempt2/job.json), [log](rejected-amd64-session1-attempt2/job.log.gz).
+- Attempt 3: [host](rejected-amd64-session1-attempt3/host.json), [job](rejected-amd64-session1-attempt3/job.json), [log](rejected-amd64-session1-attempt3/job.log.gz).
 
 An audit-only defect was found before collecting timing reports: Git and Python
 can format the same multi-file source change with different hunk boundaries.

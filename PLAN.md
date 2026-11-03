@@ -20,7 +20,9 @@ Both native Linux hosts pass the repaired GCC/Clang checks, array cleanup and
 all 96 allocation observations. The largest solve saves 25,472 requests and
 409,144 requested bytes, with unchanged retains and peak managed storage.
 [Verified counts](docs/measurements/gradient-array-storage-2026-11-03/README.md)
-do not establish a speedup. Compiler costs and runtime timings are next.
+do not establish a speedup. [Compiler costs](docs/measurements/gradient-array-analysis-2026-11-03/README.md)
+pass on both architectures. Runtime timings are in progress, followed by final
+platform acceptance.
 
 | Step | Work | Completion requirement |
 |---|---|---|

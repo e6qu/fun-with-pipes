@@ -1,12 +1,12 @@
 # Current work
 
-**Next:** monitor and audit compiler analysis `41629709664`, runtime sessions
-`41629714632`, and replacement AMD64 session 1 `41630230085`. All use frozen
-`1f6a4ac80ed3e9e89106c27573d0c73d46bb6968` and correctness run `41626196812`.
-Retain every outcome. Run the large raw timing audits through
-`gradient-array-report` from the repaired audit branch, supplying each completed
-run and the frozen source. Final nine-job production validation follows the
-reports; PR #252 stays draft until ready for that matrix.
+**Next:** monitor runtime sessions `41629714632` and replacement AMD64 session 1
+`41631438916`. Frozen source is `1f6a4ac80ed3e9e89106c27573d0c73d46bb6968`;
+correctness prerequisite is `41626196812`. Compiler analysis `41629709664` passes
+and all 480 commands are audited. Run each completed timing run through
+`gradient-array-report` from the repaired audit branch, supplying that run and
+the frozen source. Retain every timing/host outcome. PR #252 stays draft until
+reports are complete and ready for the final nine-job production matrix.
 
 ## Checkout and recovery
 
@@ -111,10 +111,20 @@ run `41625843765` is cancelled after confirming the tested #251 tree; it had no
 failed jobs or steps. Native check sources match the prepared measurement branch;
 subsequent scripts/docs changes do not alter compiler/runtime/library/test trees.
 
-Compiler analysis `41629709664` is building/measuring both native hosts. Runtime
-`41629714632` rejected AMD64 session 1 (job `125895890311`) before building or
-timing: EPYC 9V74 differs from the required 7763. Only that session is replaced
-in `41630230085`; no noisy timing was rerun. [Runtime record](measurements/gradient-array-time-2026-11-03/README.md).
+[Compiler analysis](measurements/gradient-array-analysis-2026-11-03/README.md)
+`41629709664` passes: AMD64 job `125895871607`, ARM64 `125895872041`. All 480
+commands, exact source/reference files, inputs, generated C, images and memory
+records are audited. Maximum ratios: time 1.0001024, RSS 1.0017344, identical
+copies 1.0115275. Local audits: AMD64 57.85s, ARM64 49.47s, input/retention 0.13s.
+
+Runtime `41629714632` has three qualified sessions measuring. AMD64 session 1
+rejected EPYC 9V74 in that run and replacement `41630230085`, then EPYC 9V45 in
+`41630692989`. All stopped before building/timing; none has measured samples.
+Replacement `41631438916` requests only that session on the same frozen source.
+[All host records](measurements/gradient-array-time-2026-11-03/README.md) are retained.
+Scratch archives and audit helpers are under `.worktrees/gradient-work`:
+`checks-41626196812`, `gradient-analysis`, `audit-gradient-analysis.py` and
+`collect-gradient-checks.py`. Large raw timing audits run on GitHub, not locally.
 
 A real-patch regression exposed an audit-only bug: canonical Git and difflib
 hunks need not match. The seven-source checker now validates patch application,

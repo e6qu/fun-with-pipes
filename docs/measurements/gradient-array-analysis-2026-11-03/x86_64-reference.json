@@ -1,0 +1,26 @@
+{
+  "source": "1f6a4ac80ed3e9e89106c27573d0c73d46bb6968",
+  "disabledTransformation": "owned gradient arrays and direct array/list zip",
+  "candidate": {
+    "lib/autodiff.fwp": "0274942f72e8ae60bceca2ca723a8f14a8dae3346ec71209aeb1ae8bf2841440",
+    "runtime/fwp_rt_kernel.c": "a731f9e46bc03ff47a0e5107519fe13e76d1d04681c18cdb8a9ebc6855da1739",
+    "src/cgen.rs": "211a27ebd5815b491a474b9fbbd35fea9041dabdd2a5c48a2b2c3cbde698712b",
+    "src/fuse.rs": "b32586f0a19989dcf24ed75718801b7a0850bb819508bad92cd01f40a13be9d6",
+    "src/interp.rs": "bf7f6b1ddea61984916c126d6fa2217dc26e5b6931046f4ede5d6222aa145aa9",
+    "src/ir.rs": "550aeb37686deac3026030889419db24aad5d35d680e89f7bc0643ee2738ab88",
+    "src/numerics.rs": "770a0eaa84047cbadf3bca232494c99a6abf5668ec820084910cffa9d77952ba"
+  },
+  "reference": {
+    "lib/autodiff.fwp": "96bfcc0b5c75d1e19555932cb0572d68e8bed2269773d77ac4f6032213a17a93",
+    "runtime/fwp_rt_kernel.c": "aef3b35009988f811f3d0725fecc73057ae47e1206c56c374b94be8b6acae12c",
+    "src/cgen.rs": "b5690e23b4404733190be7c9072004d18c627e0cbf73d5650fb09101122dfc2e",
+    "src/fuse.rs": "2970009f5578127425b33be02cf5a9320aa7be2b64c466fd3c34aa0dc1812dc5",
+    "src/interp.rs": "3c3392d8726bd5b2e9e25bfc823a89e22cb26d0927ce69c23653fa579caef56f",
+    "src/ir.rs": "f7d083cee2c59cefad31ec063b84089aafc07622b4bcd503760f97ae6c346d32",
+    "src/numerics.rs": "602e1b7957890b6732a863bb2f3729c57483b9d11d4a341a312eb89f63f1e0ba"
+  },
+  "ownershipSha256": "dee951517f92d3cdd35ba7d8dd5a0eb954c153ff3076bcbf78174e84175956fe",
+  "patchSha256": "a3cd6a5ef83387beca77691b8770f22908f498de28b3b82bee1cae79241910a6",
+  "frozenPatchSha256": "82fa5a2d42fd8d722f529ff41f9394e9c9965ac836711a1b6b82d5f8481e4062",
+  "compilerSha256": "823deedeebc5b6fd106c83ad4d8123fa40e1cd3c4578ccea90b8105abb7b7e36"
+}

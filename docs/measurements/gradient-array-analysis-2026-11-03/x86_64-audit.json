@@ -1,0 +1,151 @@
+{
+  "source": "1f6a4ac80ed3e9e89106c27573d0c73d46bb6968",
+  "run": 41629709664,
+  "job": {
+    "id": 125895871607,
+    "run_id": 41629709664,
+    "workflow_name": "Numerical and ownership evidence",
+    "head_branch": "roadmap/gradient-array-measurement-2026-11-03",
+    "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/41629709664",
+    "run_attempt": 1,
+    "node_id": "CR_kwDOU33zxM8AAAAdT_qMdw",
+    "head_sha": "1f6a4ac80ed3e9e89106c27573d0c73d46bb6968",
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/125895871607",
+    "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41629709664/job/125895871607",
+    "status": "completed",
+    "conclusion": "success",
+    "created_at": "2026-11-03T11:42:40Z",
+    "started_at": "2026-11-03T11:42:46Z",
+    "completed_at": "2026-11-03T11:48:30Z",
+    "name": "numeric_input_analysis (ubuntu-latest)",
+    "steps": [
+      {
+        "name": "Set up job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 1,
+        "started_at": "2026-11-03T11:42:47Z",
+        "completed_at": "2026-11-03T11:42:48Z"
+      },
+      {
+        "name": "Run actions/checkout@v7",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 2,
+        "started_at": "2026-11-03T11:42:48Z",
+        "completed_at": "2026-11-03T11:43:03Z"
+      },
+      {
+        "name": "Run dtolnay/rust-toolchain@stable",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 3,
+        "started_at": "2026-11-03T11:43:03Z",
+        "completed_at": "2026-11-03T11:43:12Z"
+      },
+      {
+        "name": "Verify focused correctness and matching compiler sources",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 4,
+        "started_at": "2026-11-03T11:43:12Z",
+        "completed_at": "2026-11-03T11:43:15Z"
+      },
+      {
+        "name": "Run actions/cache@v6",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 5,
+        "started_at": "2026-11-03T11:43:15Z",
+        "completed_at": "2026-11-03T11:43:17Z"
+      },
+      {
+        "name": "Build candidate at production settings",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 6,
+        "started_at": "2026-11-03T11:43:17Z",
+        "completed_at": "2026-11-03T11:44:55Z"
+      },
+      {
+        "name": "Build and verify the selected same-source reference",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 7,
+        "started_at": "2026-11-03T11:44:55Z",
+        "completed_at": "2026-11-03T11:46:23Z"
+      },
+      {
+        "name": "Measure balanced compiler commands and peak memory",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 8,
+        "started_at": "2026-11-03T11:46:23Z",
+        "completed_at": "2026-11-03T11:48:11Z"
+      },
+      {
+        "name": "Preserve complete measurements and failures",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 9,
+        "started_at": "2026-11-03T11:48:11Z",
+        "completed_at": "2026-11-03T11:48:27Z"
+      },
+      {
+        "name": "Post Run actions/cache@v6",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 17,
+        "started_at": "2026-11-03T11:48:27Z",
+        "completed_at": "2026-11-03T11:48:27Z"
+      },
+      {
+        "name": "Post Run actions/checkout@v7",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 18,
+        "started_at": "2026-11-03T11:48:27Z",
+        "completed_at": "2026-11-03T11:48:27Z"
+      },
+      {
+        "name": "Complete job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 19,
+        "started_at": "2026-11-03T11:48:27Z",
+        "completed_at": "2026-11-03T11:48:27Z"
+      }
+    ],
+    "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/125895871607",
+    "labels": [
+      "ubuntu-latest"
+    ],
+    "runner_id": 1000402133,
+    "runner_name": "GitHub Actions 1000402133",
+    "runner_group_id": 0,
+    "runner_group_name": "GitHub Actions"
+  },
+  "artifact": {
+    "id": 13227453924,
+    "node_id": "MDg6QXJ0aWZhY3QxMzIyNzQ1MzkyNA==",
+    "name": "gradient-array-analysis-X64",
+    "size_in_bytes": 137863407,
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13227453924",
+    "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13227453924/zip",
+    "expired": false,
+    "digest": "sha256:9d844c4d646b7773a5e22b629f1da685216b0e0b94ad5bd762fd900314e36d36",
+    "created_at": "2026-11-03T11:48:27Z",
+    "updated_at": "2026-11-03T11:48:27Z",
+    "expires_at": "2027-02-01T11:42:40Z",
+    "workflow_run": {
+      "id": 41629709664,
+      "repository_id": 1400763332,
+      "head_repository_id": 1400763332,
+      "head_branch": "roadmap/gradient-array-measurement-2026-11-03",
+      "head_sha": "1f6a4ac80ed3e9e89106c27573d0c73d46bb6968"
+    }
+  },
+  "commands": 240,
+  "failures": {},
+  "referenceVerified": true
+}
