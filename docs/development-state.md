@@ -1,9 +1,9 @@
 # Current work
 
-**Next:** finish the range-zip batch review and publish one grouped native check
-run (GCC/Clang O1/O2, admission, cleanup, all 96 count observations). Monitor the
-merged-head production run and final scalar-buffer AMD64 timing session while
-those checks run. Fix every failed target before measurement or final gates.
+**Next:** monitor grouped range checks `41596501915` at implementation `aeae4afd`
+(AMD64 `125785012332`, ARM64 `125785012603`). Audit every target and repair all
+failures together. Complete scalar-buffer AMD64 session 1 and merged-head platform
+logs while queued; then measure the range change with the isolated reference.
 
 ## Checkout and sources
 
@@ -50,8 +50,9 @@ remain in saved/GitHub archives; compact logs, outputs and file hashes are retai
 ## Active measurements and platform gates
 
 - **Production:** `41591834975`, merged source `a8a5568d`; benchmark job
-  `125770098958` passes with a clean audited full log (21 images and memory controls). Linux/Windows jobs
-  run; four macOS jobs queue. Docs: `41591834978`, job `125770098628`, passes; expected runner fault controls only.
+  `125770098958` passes with a clean audited full log (21 images and memory controls). Regular macOS ARM64 `125770099192` passes: 131 target logs are clean; the full
+  log has only Homebrew's already-installed OpenSSL notice. Linux/Windows and
+  remaining macOS checks continue. Docs: `41591834978`, job `125770098628`, passes; expected runner fault controls only.
 - **Compiler cost:** `41591971248`, both jobs pass: AMD64 `125770529588`, ARM64
   `125770529929`. All 480 commands, exact reference patches, images, archived
   hashes, generated C, raw RSS and summaries are audited. Maximum elapsed overhead
@@ -103,7 +104,7 @@ Bounds remain at creation, in order. Added both-slot admission/alias/exclusion/
 linear-work tests, interpreted/native source parity and physical-free controls
 for callback traps, cancellation, scratch/record/partial-list allocation failures.
 Huge signed ranges are checked with short inputs; ordinary finite cases establish
-interpreter parity. These new native checks have not run yet.
+interpreter parity. The grouped native run is queued; no verification result is claimed yet.
 
 ## Local checks and files
 
@@ -144,3 +145,12 @@ ARM64 and AMD64 session-2 audit archives match GitHub digests; audit logs are cl
 PR #251 preparation docs run `41594393960` passes. Full final-head gates have not
 started for the new compiler code. Temporary source/audit helpers remain in
 `/private/tmp/fwp-*`; no local compiler build or benchmark was run.
+
+Range measurement routes (`range-zip-analysis`, `range-zip-time`,
+`range-zip-report`) are prepared with unchanged frozen limits and explicit source
+and correctness prerequisites. Local controls pass: 15 timing-budget tests,
+7 compiler-schedule tests, 14 archive/reference tests (51.13s), and workflow lint
+(5.86s). The source/driver review confirms the saved zero branch, repeated-solve
+main and outer loop are textually unchanged; the 3.32% ARM64 slowdown stays open.
+Mac ARM64 compact platform records are under the scalar-buffer report's
+`platforms/` directory. Full/native artifact URLs remain in their metadata.

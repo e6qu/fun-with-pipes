@@ -96,7 +96,7 @@ def ownership_budget_failures(profiles, baseline):
 
 def paired_budget_failures(results, comparison):
     """Apply the selected pre-candidate limits and report every violation."""
-    assert comparison in {'scalar-recording', 'eager-captures', 'array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip'}
+    assert comparison in {'scalar-recording', 'eager-captures', 'array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip'}
     failures = []
 
     def require(case, program, metric, actual, limit):
@@ -111,7 +111,7 @@ def paired_budget_failures(results, comparison):
         for label in ['fwp-ad', 'fwp-ad-history']:
             reference = label + '-reference'
             current, old = (row['fwpProfiles'][name] for name in [label, reference])
-            if comparison in ('record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip'):
+            if comparison in ('record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip'):
                 time_limit = 0.95 if row['updates'] >= 199 else 1.02
             else:
                 time_limit = 1.02 if comparison == 'array-lists' else 0.95 if row['updates'] else 1.02
@@ -121,7 +121,7 @@ def paired_budget_failures(results, comparison):
             if comparison == 'array-lists':
                 cells = row['dimensions'] * row['updates'] * row['solvesPerProcess']
                 savings = [('requests', cells), ('requestedBytes', 24 * cells)]
-            if comparison in ('record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip'):
+            if comparison in ('record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip'):
                 pairs = (row['dimensions'] - 1) * row['updates'] * row['solvesPerProcess']
                 removed = (2 * pairs if comparison == 'record-zip' else
                            max(row['dimensions'] - 2, 0) * row['updates'] * row['solvesPerProcess'])
@@ -133,7 +133,7 @@ def paired_budget_failures(results, comparison):
                                ('requestedBytes', 32 * pairs - 8 * buffers), ('retains', 0)]
                 if comparison == 'callback-owners':
                     savings = [('requests', 0), ('requestedBytes', 0), ('retains', 3 * pairs)]
-                if comparison == 'scalar-map-zip':
+                if comparison in ('scalar-map-zip', 'range-zip'):
                     updates = row['updates'] * row['solvesPerProcess']
                     savings = [('requests', (row['dimensions'] + 1) * updates),
                                ('requestedBytes', (32 * row['dimensions'] + 8) * updates), ('retains', 0)]
@@ -144,7 +144,7 @@ def paired_budget_failures(results, comparison):
                 savings += [('retains', 0)]
             for key, saving in savings + [('peakChargedBytes', 0), ('finalChargedBytes', 0)]:
                 limit = 0 if key == 'finalChargedBytes' else old['managed'][key] - saving
-                if comparison == 'scalar-map-zip' and key in ('requests', 'requestedBytes', 'retains'):
+                if comparison in ('scalar-map-zip', 'range-zip') and key in ('requests', 'requestedBytes', 'retains'):
                     if current['managed'][key] != limit:
                         failures.append(dict(case=case, program=label, metric=key,
                                              actual=current['managed'][key], expected=limit))
@@ -155,7 +155,7 @@ def paired_budget_failures(results, comparison):
                     failures.append(dict(case=case, program=label, metric=key,
                                          actual=current[key], expected=old[key]))
             images = row['binaries']
-            if comparison not in ('packed-records', 'callback-owners', 'scalar-map-zip'):
+            if comparison not in ('packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip'):
                 require(case, label, 'instruction bytes', images[label]['instructionBytes'],
                         images[reference]['instructionBytes'] + 1024)
             stacks = row['cCompilerStackUsage']
@@ -168,7 +168,7 @@ def paired_budget_failures(results, comparison):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--compiler', required=True, type=Path)
-    parser.add_argument('--comparison', required=True, choices=['current', 'eager-captures', 'array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip'])
+    parser.add_argument('--comparison', required=True, choices=['current', 'eager-captures', 'array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip'])
     parser.add_argument('--reference-compiler', type=Path)
     parser.add_argument('--reference-manifest', type=Path)
     parser.add_argument('--cc', required=True)
@@ -210,9 +210,10 @@ def main():
         if args.comparison == 'eager-captures':
             assert reference_manifest['candidateOptimizerSha256'] == digest((ROOT / 'src/opt.rs').read_bytes())
             assert reference_manifest['disabledTransformation'] == 'once-used eager capture bindings'
-        elif args.comparison in ('record-fold', 'packed-records', 'scalar-map-zip'):
+        elif args.comparison in ('record-fold', 'packed-records', 'scalar-map-zip', 'range-zip'):
             assert reference_manifest['candidateCodegenSha256'] == digest((ROOT / 'src/cgen.rs').read_bytes())
-            expected = ('scalar map-to-zip buffer storage' if args.comparison == 'scalar-map-zip'
+            expected = ('private range-to-zip storage' if args.comparison == 'range-zip'
+                        else 'scalar map-to-zip buffer storage' if args.comparison == 'scalar-map-zip'
                         else 'packed temporary numeric-record storage' if args.comparison == 'packed-records'
                         else 'direct numeric-record left folds')
             assert reference_manifest['disabledTransformation'] == expected
@@ -499,6 +500,7 @@ def main():
              'scripts/ad-storage-profile.py', 'scripts/measure-iteration.py', 'scripts/descent-phases.py',
              'tests/fixtures/descent_phases.c',
              'scripts/prepare-scalar-map-zip-reference.py', 'src/cgen/scalar_map_zip.rs',
+             'scripts/prepare-range-zip-reference.py', 'src/cgen/range_zip.rs',
              'scripts/prepare-capture-reference.py', 'scripts/prepare-record-zip-reference.py', 'scripts/prepare-record-fold-reference.py', 'scripts/prepare-packed-records-reference.py', 'scripts/prepare-numeric-input-reference.py', 'src/cgen/numeric_parameters.rs', 'src/cgen/field_transfers.rs', 'src/cgen/packed_records.rs', 'src/opt.rs', 'src/fuse.rs',
              'tests/fixtures/ad_raw_storage_probe.c', 'tests/fixtures/descent_explicit.fwp',
              'tests/fixtures/descent_explicit.c', 'tests/fixtures/descent_explicit.rs',
@@ -519,6 +521,7 @@ def main():
             'eager-captures': 'Current-source eager-capture comparison: reference compiler restores only constant-only capture hoisting; both compilers retain scalar recording stack storage. ',
             'array-lists': 'One current compiler with FWP_ARRAY_FUSION explicitly 1 versus 0. This toggles all numeric array fusion, including result formatting, so whole-solve differences are not attributed solely to gradient-list removal. Independent direct-boundary counts establish that removal. ',
             'callback-owners': 'Same-source compilers differ only in complete field-owner moves and numeric callback input owners. Both preserve packed temporary storage, all map/fold arithmetic and callback order. ',
+            'range-zip': 'Same-source compilers differ only in direct consumption of private I64 index ranges by zip. Both retain scalar map buffers, numeric callbacks and packed record storage. ',
             'scalar-map-zip': 'Same-source compilers differ only in private scalar map-to-zip buffer storage. Both preserve complete field moves, numeric callback inputs, packed record storage and eager callback order. ',
             'packed-records': 'Same-source compilers differ only in packed temporary numeric-record storage. Both keep all existing map/fold optimizations and preserve complete mapping before folding. ',
             'record-fold': 'Same-source compilers differ only in direct numeric-record left-fold selection. Both retain numeric record zip/map fusion and all other current optimizations. ',

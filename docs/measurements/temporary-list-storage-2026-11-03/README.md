@@ -106,3 +106,14 @@ archived hashes/images and recomputes all observations. Downloaded archive hashe
 all compilation diagnostics, exact count differences and cross-host equality were
 also checked locally under the resource guard. Full C/images remain in the linked
 run artifacts and saved local archives; compact logs and hashes are retained here.
+
+## Merged-head platform checks
+
+Run `41591834975` tests merged source `a8a5568d`, whose tree equals `da510f18`.
+Benchmark job `125770098958` passes with its full log audited. Regular macOS ARM64
+job `125770099192` passes: [131 target logs](platforms/macos-arm-targets.zip),
+[corpus log](platforms/macos-arm-corpus.zip), [full job](platforms/macos-arm-job.log.gz)
+and [artifact identities](platforms/macos-arm-artifacts.json). Target diagnostics
+are clean; Homebrew reports only that the requested OpenSSL is already installed.
+The ownership archive's [verified file manifest](platforms/macos-arm-manifest.zip)
+is retained. Documentation passes. Remaining platform jobs are still running.

@@ -65,8 +65,32 @@ session 1 remains in progress. No completed timings are repeated.
 The saved current-only C changes the positive-update branch of `fs170` and its
 boxed worker: mapped-list construction becomes a scalar buffer, followed by its
 zip consumer. The zero-update branch still returns the input list directly.
-The source review identifies no extra operation on that branch. It does not
+The zero branch, repeated-solve main and outer loop are textually unchanged.
+The source review identifies no extra operation on that path. It does not
 establish why elapsed time increased; changes to untaken code can still affect
 native execution. Do not infer an ownership defect or a resolved timing goal.
 The complete original C and driver evidence remain in the retained audit archive
 (artifact `13211059421`); no benchmark or acceptance threshold was changed.
+
+## All completed timing comparisons
+
+Values below are candidate time divided by same-source reference time. For example,
+`0.90` means 10% less elapsed time. Each cell uses 98 recorded samples;
+process launch, repeated complete solves, output and teardown are included.
+The two ARM64 sessions and AMD64 session 2 have independently audited raw samples.
+Allocation counters were measured separately; they do not explain a timing ratio.
+
+| Coordinates / updates | Form | ARM64 session 1 | ARM64 session 2 | AMD64 session 2 |
+|---|---|---:|---:|---:|
+| 3 / 0 | current | 1.03320 | 1.03320 | 1.01843 |
+| 3 / 0 | history | 1.00103 | 0.99935 | 1.01906 |
+| 3 / 1 | current | 0.99780 | 0.99813 | 1.01869 |
+| 3 / 1 | history | 0.99805 | 0.99654 | 1.00857 |
+| 3 / 199 | current | 0.95683 | 0.95433 | 0.97536 |
+| 3 / 199 | history | 0.96073 | 0.95721 | 0.95767 |
+| 3 / 1999 | current | 0.94993 | 0.95423 | 0.96861 |
+| 3 / 1999 | history | 0.95736 | 0.95297 | 0.96334 |
+| 33 / 199 | current | 0.91730 | 0.91757 | 0.92624 |
+| 33 / 199 | history | 0.91827 | 0.91870 | 0.92723 |
+| 129 / 199 | current | 0.91458 | 0.91469 | 0.92694 |
+| 129 / 199 | history | 0.91489 | 0.91520 | 0.91623 |

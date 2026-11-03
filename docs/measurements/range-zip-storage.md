@@ -110,3 +110,9 @@ removes that call only; its three isolation/corruption controls pass locally.
 Finish implementation and focused controls before the grouped measurement and
 final platform runs. Bundle the change with scalar-buffer reports and any CI
 repairs in the next substantial PR.
+
+Runner routes are explicit: `range-zip-checks` first, then `range-zip-analysis`
+and `range-zip-time` with that completed correctness run as `evidence_run`.
+`range-zip-report` independently reconstructs the completed runtime artifacts,
+including failed timing limits and hosts rejected before measurement. No runtime
+comparison starts before matching correctness passes.
