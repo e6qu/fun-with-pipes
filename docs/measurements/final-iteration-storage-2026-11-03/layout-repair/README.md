@@ -33,7 +33,7 @@ Each `logs-and-selection.zip` preserves all step/target logs, source identity,
 toolchain, generated docs, tutorial output and the twelve source/IR/C selections.
 The adjacent `retained.json` verifies every retained byte against the original
 artifact inventory. `audit.json` inventories the complete original artifact,
-including 305 native observations, but does not claim all those images are in
+including 294 native executions and eleven interpreter/inventory statuses, but does not claim all those images are in
 this smaller archive. Artifact metadata preserves the full download identity and
 digest; full job logs are retained separately. Complete originals remain in the
 local `final-iteration-second` scratch folder and the linked GitHub run.

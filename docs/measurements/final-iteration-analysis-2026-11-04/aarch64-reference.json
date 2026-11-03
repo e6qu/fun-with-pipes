@@ -1,0 +1,24 @@
+{
+  "source": "bb5433b688c26c60f0b2561a59420deb0f0e95ed",
+  "disabledTransformation": "direct list last and unused numeric iteration history removal",
+  "candidate": {
+    "src/fuse.rs": "6e9d0e40e52d4fa2acbed62da6a68c27d78204744ebe6369f65643c7bd6f6f19",
+    "lib/list.fwp": "9f4988e962654e84695944abbb5fc97b01678a37915aebfc48d286fc1e375993"
+  },
+  "reference": {
+    "src/fuse.rs": "1ef8ce781aa5c9dc89d810a759c0e3a8de4e400b7a9d0e4aaf8e4fe58e81bd70",
+    "lib/list.fwp": "1e2443ef06e126fe54e28f1bfc4ef115d85ec81222ad838e207fa8f2688931e4"
+  },
+  "unchanged": {
+    "src/cgen.rs": "b8ab05b5f323d3fb0fba6bc00016bffa013a71fe1c638123b30bf5449cc87f40",
+    "src/prims_std.rs": "080e4ac17ea4049bdcd2732910c1835559625cf9a97cc62adf8a461dbdfea574",
+    "src/ownership.rs": "26d7ebc592acbad1b83bd34150afb2d9b39f3c0a3691d35c8e1db6c059ac3c55",
+    "src/opt.rs": "dc36fa785e03a6ee8b5b17a312e98c68c5481be3540a9094b2b5878568aebf61",
+    "runtime/fwp_rt_prims.c": "2f984038de5040e4db51cf23a2a6b140f4cad0c224b32f9ffc5b9bb435545f03",
+    "runtime/fwp_rt_heap.c": "ac26a18c249847c5b6c25f02776eee417bf4eb4a98cbad60aec58f00338c5a6e",
+    "lib/autodiff.fwp": "0274942f72e8ae60bceca2ca723a8f14a8dae3346ec71209aeb1ae8bf2841440"
+  },
+  "ownershipSha256": "26d7ebc592acbad1b83bd34150afb2d9b39f3c0a3691d35c8e1db6c059ac3c55",
+  "patchSha256": "6f243d1f4dfa6fc7a5a9e60a70cdce219c038a8422c5a4bf74ad74326c783968",
+  "compilerSha256": "4d15050c2ffdf1737f71a3902c66e5fe933c0c5c23b4b7fb6a4087b1e514b622"
+}

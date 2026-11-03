@@ -1,8 +1,8 @@
 # Remaining storage in gradient descent
 
 This review records remaining costs and the proofs needed to remove them.
-The [same-type conversion group](scalar-array-identities.md) is now selected for
-implementation and verification, separately from the
+The [same-type conversion group](scalar-array-identities.md) awaits final delivery,
+separately from the
 [direct array-call experiment](direct-array-callbacks.md). Final-iteration consumption is the
 [selected next group](final-iteration-storage.md); record packing and coordinate
 reuse remain unselected. Each experiment keeps its own reference and measurements.
@@ -90,15 +90,17 @@ and non-F64 maps are outside this selection.
 
 The benchmark's history source is `iterate count descend | last`: it builds
 intermediate coordinate lists although only the final one is returned. The
-[completed source review](final-iteration-storage-2026-11-03/README.md) confirms
-that the actual optimized program still constructs that history and a reverse
-copy. Its shared-history control retains a second use that must remain available.
+[source review and native checks](final-iteration-storage-2026-11-03/README.md)
+confirm that the original compiler constructs both the history and a reverse
+copy. The new selection removes both when only the final value is used. Its
+shared-history control retains a second use that must remain available.
 
 The [implementation contract](final-iteration-storage.md) now selects direct
 `last`, eligible numeric-state history removal, matching count validation and
 an incidental optional-result cleanup repair as one group. Implementation and
-native verification remain open. Resource-bearing states are excluded from
-history removal; general `last` still needs correct ownership for those values.
+three-host focused verification are complete; measurements and final platform
+gates remain open. Resource-bearing states are excluded from history removal;
+general `last` passes separate ownership checks for those values.
 
 Measure this separately from coordinate representation. If the history is removed,
 label new comparisons by their source forms and report what each actually retains.

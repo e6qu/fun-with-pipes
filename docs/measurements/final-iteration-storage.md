@@ -1,11 +1,12 @@
 # Returning the final iteration value
 
-**Implemented on the preparation branch; native verification and measurements remain open.**
+**Implemented and verified on three focused native hosts; measurements and final delivery gates remain open.**
 This contract was frozen at `2a257a3e` with
 `roadmap/final-iteration-storage-protocol-2026-11-03` before implementation.
 PR #254 must finish its gates before
 another delivery PR opens. [Source evidence](final-iteration-storage-2026-11-03/README.md)
-confirms the actual compiler input, including the real gradient program.
+records the actual compiler input, native checks and scalar allocation counts,
+including selection in the real gradient program.
 
 ```fwp
 0 | iterate 3 (add 1) | last

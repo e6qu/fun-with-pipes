@@ -317,7 +317,8 @@ released explicitly. Scalar bits never select a reference destructor.
 | index-of | Borrow key/list | Fresh Option of scalar; comparison key is read-only |
 
 The [final-iteration group](measurements/final-iteration-storage.md) adds `last`
-and the internal history-free operation. Its native verification is pending.
+and the internal history-free operation. Three-host focused native checks pass;
+the full final-head platform matrix remains required.
 The optional wrapper is protected while its borrowed child is retained: a failed
 retain frees the wrapper without releasing a child it never acquired.
 

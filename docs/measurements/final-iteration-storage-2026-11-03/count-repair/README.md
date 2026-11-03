@@ -46,7 +46,8 @@ paths exit 0 with complete cleanup and 90 when the result is deliberately leaked
 commands, binaries, hashes and outputs. Each host's `logs-and-probes.zip` retains
 all step/target logs and three original scalar C/native probes. `retained.json`
 checks their hashes against the complete original artifact; `audit.json.gz`
-inventories all 429 original native observations. These smaller archives do not
-contain every original image. Artifact metadata records the full download
+inventories 418 native executions plus eleven interpreter/inventory statuses.
+These smaller archives do not contain every original image. Artifact metadata records the full download
 identity/digest; complete originals remain in `final-iteration-third` scratch and
-the linked run. No completed performance session was rerun; none has started.
+the linked run. No performance session had started at this repair. The
+[subsequent three-host run](../README.md) verifies the corrected counts.
