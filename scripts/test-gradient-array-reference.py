@@ -4,6 +4,7 @@ import copy
 import difflib
 import importlib.util
 from pathlib import Path
+import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -48,6 +49,45 @@ class GradientArrayReference(unittest.TestCase):
             changed[name] = restored[name]
             with self.subTest(file=name), self.assertRaises(AssertionError):
                 AUDIT.recorded_gradient_reference(changed, patch)
+
+    def test_actual_git_diff_restores_exact_sources_without_requiring_hunk_layout(self):
+        restored = REFERENCE.reference_sources(CURRENT)
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            subprocess.run(['git', 'init', '-q', str(root)], check=True)
+            for name, data in CURRENT.items():
+                target = root / name
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes(data)
+            subprocess.run(['git', 'add', '--', *sorted(CURRENT)], cwd=root, check=True)
+            for name, data in restored.items():
+                (root / name).write_bytes(data)
+            difference = subprocess.check_output(['git', 'diff', '--no-ext-diff'], cwd=root)
+            folder = root / 'saved'
+            for name, data in restored.items():
+                target = folder / 'source' / name
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes(data)
+            (folder / 'fwp').write_bytes(b'compiler')
+            (folder / 'reference.patch').write_bytes(difference)
+            frozen = REFERENCE.PATCH.read_bytes()
+            ownership = (ROOT / 'src/ownership.rs').read_bytes()
+            source = dict(CURRENT, **{'scripts/gradient-array-candidate.patch': frozen,
+                                     'src/ownership.rs': ownership})
+            manifest = dict(disabledTransformation='owned gradient arrays and direct array/list zip',
+                candidate={name: AUDIT.digest(data) for name, data in CURRENT.items()},
+                reference={name: AUDIT.digest(data) for name, data in restored.items()},
+                frozenPatchSha256=AUDIT.digest(frozen), patchSha256=AUDIT.digest(difference),
+                compilerSha256=AUDIT.digest(b'compiler'), ownershipSha256=AUDIT.digest(ownership))
+            with patch.object(AUDIT.subprocess, 'check_output',
+                              side_effect=lambda command, **kwargs: source[command[2].split(':', 1)[1]]), \
+                    patch.object(AUDIT, 'instruction_bytes'):
+                AUDIT.check_gradient_reference(folder, manifest, 'source', 'aarch64')
+        self.assertEqual(AUDIT.recorded_gradient_reference(restored, difference), CURRENT)
+        extra = (b'diff --git a/extra b/extra\nnew file mode 100644\n'
+                 b'--- /dev/null\n+++ b/extra\n@@ -0,0 +1 @@\n+unrelated\n')
+        with self.assertRaises(AssertionError):
+            AUDIT.recorded_gradient_reference(restored, difference + extra)
 
     def test_saved_reference_audit_rejects_changed_hashes_sources_and_patch(self):
         candidates = {name: b'candidate\n' for name in REFERENCE.FILES}

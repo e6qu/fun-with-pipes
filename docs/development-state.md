@@ -1,10 +1,12 @@
 # Current work
 
-**Next:** freeze this report commit as `roadmap/gradient-array-measurement-2026-11-03`,
-then dispatch `gradient-array-analysis` and `gradient-array-time` (both native
-hosts, both sessions), using `evidence_run=41626196812`. Audit all commands/logs
-and retain every timing outcome. Final nine-platform-job acceptance follows
-those reports; keep PR #252 draft until ready for that final matrix.
+**Next:** monitor and audit compiler analysis `41629709664`, runtime sessions
+`41629714632`, and replacement AMD64 session 1 `41630230085`. All use frozen
+`1f6a4ac80ed3e9e89106c27573d0c73d46bb6968` and correctness run `41626196812`.
+Retain every outcome. Run the large raw timing audits through
+`gradient-array-report` from the repaired audit branch, supplying each completed
+run and the frozen source. Final nine-job production validation follows the
+reports; PR #252 stays draft until ready for that matrix.
 
 ## Checkout and recovery
 
@@ -16,7 +18,7 @@ those reports; keep PR #252 draft until ready for that final matrix.
   evidence in the project-local `.worktrees/gradient-work`, and checkpoint changes.
 - Contract commit `c191421e`, tag `roadmap/gradient-array-protocol-2026-11-03`,
   predates implementation. The whole-change reference patch is committed at
-  `aed66f26`; the measurement tag above must be published before dispatch.
+  `aed66f26`; `roadmap/gradient-array-measurement-2026-11-03` freezes `1f6a4ac8`.
 - PR #251 merged as `296ec5b4c3540c6d57671d076d2a39247b2389f4`; this
   branch is rebased onto it. [PR #252](https://github.com/e6qu/fun-with-pipes/pull/252)
   is the only active PR and remains draft.
@@ -108,6 +110,16 @@ contains only expected runner-failure controls. The duplicate post-merge main
 run `41625843765` is cancelled after confirming the tested #251 tree; it had no
 failed jobs or steps. Native check sources match the prepared measurement branch;
 subsequent scripts/docs changes do not alter compiler/runtime/library/test trees.
+
+Compiler analysis `41629709664` is building/measuring both native hosts. Runtime
+`41629714632` rejected AMD64 session 1 (job `125895890311`) before building or
+timing: EPYC 9V74 differs from the required 7763. Only that session is replaced
+in `41630230085`; no noisy timing was rerun. [Runtime record](measurements/gradient-array-time-2026-11-03/README.md).
+
+A real-patch regression exposed an audit-only bug: canonical Git and difflib
+hunks need not match. The seven-source checker now validates patch application,
+exact resulting bytes, file inventory and hashes. The complete reference tests
+pass (6 tests, 0.61s). This changes neither frozen measurement source nor limits.
 
 Local work stays serial under `scripts/local-guard.py`: 64 GiB free disk, targets
 below 2 GiB, sampled RSS below 1 GiB and 180 seconds. Last free space about 88 GiB.

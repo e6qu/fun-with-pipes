@@ -148,6 +148,8 @@ def check_numeric_reference(folder, manifest, source, architecture):
 def recorded_gradient_reference(candidates, patch):
     """Reconstruct all seven sources from the saved patch, never saved Python."""
     assert set(candidates) == {'lib/autodiff.fwp', 'runtime/fwp_rt_kernel.c', 'src/cgen.rs', 'src/fuse.rs', 'src/interp.rs', 'src/ir.rs', 'src/numerics.rs'}
+    headers = re.findall(rb'^diff --git a/([^\n ]+) b/([^\n ]+)$', patch, re.MULTILINE)
+    assert headers == [(name.encode(), name.encode()) for name in sorted(candidates)]
     with tempfile.TemporaryDirectory(prefix='fwp-gradient-audit-') as directory:
         root = Path(directory)
         for name, data in candidates.items():
@@ -159,6 +161,8 @@ def recorded_gradient_reference(candidates, patch):
         result = subprocess.run(['git', 'apply', '--reverse', str(patch_path)],
                                 cwd=root, capture_output=True)
         assert result.returncode == 0, result.stderr.decode()
+        assert {str(path.relative_to(root)) for path in root.rglob('*') if path.is_file()} == set(candidates) | {'candidate.patch'}
+        assert all(not (root / name).is_symlink() and not (root / name).stat().st_mode & 0o111 for name in candidates)
         restored = {name: (root / name).read_bytes() for name in candidates}
         assert all(restored[name] != candidates[name] for name in candidates)
         return restored
@@ -177,13 +181,13 @@ def check_gradient_reference(folder, manifest, source, architecture):
     instruction_bytes(compiler, architecture)
     patch = (folder / 'reference.patch').read_bytes()
     assert digest(patch) == manifest['patchSha256']
-    patches = re.split(r'(?=^diff --git )', patch.decode(), flags=re.MULTILINE)
-    assert patches[0] == '' and len(patches) == 8
-    for (name, reference), difference in zip(sorted(expected.items()), patches[1:]):
+    # Git and difflib can choose different valid hunk boundaries. Verify the
+    # applied source, not one textual presentation of the same change.
+    assert recorded_gradient_reference(expected, patch) == candidates
+    for name, reference in expected.items():
         assert digest(candidates[name]) == manifest['candidate'][name]
         saved = (folder / 'source' / name).read_bytes()
         assert saved == reference and digest(saved) == manifest['reference'][name]
-        check_reference_patch(difference, candidates[name].decode(), reference.decode(), name)
     ownership = subprocess.check_output(['git', 'show', source + ':src/ownership.rs'], cwd=ROOT)
     assert digest(ownership) == manifest['ownershipSha256']
 
