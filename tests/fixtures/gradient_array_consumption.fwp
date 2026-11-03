@@ -1,0 +1,24 @@
+objective : List[Rev[F64]] -> Rev[F64]
+objective = map (fork mul id id) | sum
+
+step : List[F64] -> List[F64]
+step = fn inputs ->
+    let derivatives = grad objective inputs
+    in let adjustments = map (mul 0.25) derivatives
+    in zip-with sub adjustments inputs
+
+step-with-value : List[F64] -> (F64, List[F64])
+step-with-value = fn inputs ->
+    let (value, derivatives) = value-and-grad objective inputs
+    in let adjustments = map (mul 0.25) derivatives
+    in (value, zip-with sub adjustments inputs)
+
+main = [
+    [1.0, 2.0] | grad objective | eq [2.0, 4.0] | echo,
+    [1.0, 2.0] | step | eq [0.5, 1.0] | echo,
+    [1.0, 2.0] | both step id | eq ([0.5, 1.0], [1.0, 2.0]) | echo,
+    [1.0, 2.0] | step-with-value | eq (5.0, [0.5, 1.0]) | echo,
+    [] | step | eq [] | echo,
+    [2.0] | step | eq [1.0] | echo,
+    [1.0, 2.0] | vjp (map (fork mul id id)) [1.0, 1.0] | eq [2.0, 4.0] | echo,
+] | ignore

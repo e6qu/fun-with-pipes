@@ -536,7 +536,7 @@ pub(crate) fn backward_owned(
         }
     }
     adj.truncate(t.leaves);
-    Ok(Value::list(adj))
+    Ok(Value::Array(Rc::new(adj)))
 }
 
 // ---------------------------------------------------------------- kernels

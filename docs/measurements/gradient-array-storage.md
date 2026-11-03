@@ -1,8 +1,9 @@
 # Keep private gradient results in arrays
 
-**Status:** next batch prepared while PR #251 completes final platform checks.
+**Status:** implementation in progress while PR #251 completes final platform checks.
 The implementation baseline is `cea8debcd8caf067bf210fd612c559b265157b91`, retained
-by `roadmap/range-zip-final-checks-2026-11-03`. No implementation or speed claim yet.
+by `roadmap/range-zip-final-checks-2026-11-03`. Full-path verification and all
+performance acceptance remain pending.
 Tag `roadmap/gradient-array-protocol-2026-11-03` preserves this contract before
 compiler/runtime edits.
 

@@ -46,10 +46,12 @@ int main(void) {
     fwp_rc_free_arr(result); fwp_rc_free_arr(empty); fwp_rc_free_arr(outputs); fwp_rc_free_arr(seeds);
     /* Managed backward releases its slot before any user scalar callback. */
     static const fwp_desc element = {.kind=K_I64};
-    static const fwp_desc list_type = {.elem=&element};
+    static const fwp_desc array_type = {.elem=&element};
     V parameters = fwp_rc_fresh(fwp_record(4, (V[4]){0,0,0,0}));
     base = fwp_p_ad_tape_owned(parameters, 0, &element);
-    if (fwp_p_ad_backward_owned(base, 0, 0, &list_type) || fwp_tape_next_slot != 0) return 207;
+    result = fwp_p_ad_backward_owned(base, 0, 0, &array_type);
+    if (fwp_array_len(result) || fwp_tape_next_slot != 0) return 207;
+    fwp_rc_resource_free_arr(result);
     fwp_rc_free_obj(parameters);
     fwp_cleanup_pop(&cleanup); fwp_tape_scope_release(&scope);
     fwp_tape_finish();

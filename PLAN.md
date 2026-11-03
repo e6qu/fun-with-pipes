@@ -9,14 +9,15 @@ necessary sharing. GC is removed; JIT and backward compatibility are excluded.
 [PR #251](https://github.com/e6qu/fun-with-pipes/pull/251) generates private zip
 indices directly. The largest verified solve saves 25,870 allocation requests
 and 823,064 requested bytes; larger timed solves take 7.1–10.0% less time.
-Small-case speed goals remain open. Documentation and benchmarks pass on its
-final head; eight native platform jobs are still running. Keep that head fixed.
+Small-case speed goals remain open. Documentation, benchmarks and both macOS ARM64 jobs pass on its final head;
+six native platform jobs are still running. Keep that head fixed.
 
 The next grouped batch keeps private gradient results in owned arrays and reads
 those arrays directly during the following map/zip. The
 [implementation contract](docs/measurements/gradient-array-storage.md) defines
 scope cleanup, typed/nested derivatives, selection limits and measurement budgets.
-No code change is claimed yet. Keep one open PR: prepare this batch independently,
+The implementation is in progress, with focused native compiler checks next.
+No performance gain is claimed yet. Keep one open PR: prepare this batch independently,
 then publish it after #251 passes, is audited and is squash-merged.
 
 | Step | Work | Completion requirement |

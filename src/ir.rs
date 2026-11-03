@@ -226,8 +226,9 @@ pub enum Body {
     ScalarBufferMap {
         callback: FuncId,
     },
-    /// Native-only zip-with borrowing one private scalar buffer and one list.
-    /// `slot` names the buffer's callback parameter (0 or 1, data-last order).
+    /// Zip-with borrowing one numeric array and one list. Native-only scalar
+    /// map buffers also use this operation with an Array[I64] of value bits.
+    /// `slot` names the array's callback parameter (0 or 1, data-last order).
     ScalarBufferZip {
         callback: FuncId,
         slot: usize,

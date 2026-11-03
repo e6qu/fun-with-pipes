@@ -1,0 +1,56 @@
+mapped : I64 -> I64 ! {IO, Error[String]}
+mapped = fn n ->
+    let printed = n | echo
+    in n == 3 | match
+        True -> fail "map stopped"
+        False -> n * 10
+subtract : I64 -> I64 -> I64 ! {IO}
+subtract = fn y -> fn x ->
+    let printed = (y, x) | echo
+    in x - y
+left : Array[I64] -> List[I64] -> List[I64] ! {IO, Error[String]}
+left = fn input -> fn other ->
+    let values = array.to-list input | map mapped
+    in let printed = 77 | echo
+    in zip-with subtract values other
+right : Array[I64] -> List[I64] -> List[I64] ! {IO, Error[String]}
+right = fn input -> fn other ->
+    let values = array.to-list input | map mapped
+    in let printed = 88 | echo
+    in zip-with subtract other values
+alias : Array[I64] -> (List[I64], Array[I64]) ! {IO, Error[String]}
+alias = fn input -> (left input [101, 202, 303], input)
+shared : Array[I64] -> (List[I64], List[I64]) ! {IO, Error[String]}
+shared = fn input ->
+    let values = array.to-list input | map mapped
+    in (zip-with subtract values [101, 202], values)
+update-alias : Array[I64] -> (List[I64], Option[Array[I64]]) ! {IO}
+update-alias = fn input ->
+    let values = array.to-list input
+    in let changed = array.set 0 99 input
+    in let zipped = zip-with subtract values [101, 202]
+    in (zipped, changed)
+as-f32 : I64 -> F32
+as-f32 = int.to-float | float.convert
+as-i8 : I64 -> I8
+as-i8 = int.convert | match
+    Some value -> value
+    None -> prim.trap "fixture index outside I8"
+widen : F32 -> F64
+widen = float.convert
+main = [
+    [] | array.from-list | attempt (fn input -> left input [101]) | show,
+    [1, 2] | array.from-list | attempt (fn input -> left input []) | show,
+    [1, 2] | array.from-list | attempt (fn input -> left input [101]) | show,
+    [1, 2] | array.from-list | attempt (fn input -> left input [101, 202, 303]) | show,
+    [1, 2] | array.from-list | attempt (fn input -> right input [101]) | show,
+    [1, 2, 3] | array.from-list | attempt (fn input -> left input [101]) | show,
+    [1, 2] | array.from-list | attempt alias | show,
+    [1, 2] | array.from-list | attempt shared | show,
+    [1, 2] | array.from-list | update-alias | show,
+    array.generate 128 as-i8 | array.slice 16 96
+        | array.to-list | zip-with add [1i8, -1i8] | show,
+    array.generate 128 as-f32 | array.slice 16 96
+        | array.to-list | map widen
+        | zip-with add [0.5, -0.5] | show,
+] | each print

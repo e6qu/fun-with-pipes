@@ -1,0 +1,271 @@
+diff --git a/lib/autodiff.fwp b/lib/autodiff.fwp
+index cb060bd4..be82f2f0 100644
+--- a/lib/autodiff.fwp
++++ b/lib/autodiff.fwp
+@@ -176,7 +176,7 @@ Rev[T] = { value: T, vertex: I64 }
+ trait ReverseScalar[T] : Field[T], Neg[T], Dup[T] =
+     rev._seed : List[T] -> (I64, List[Rev[T]])
+     rev._push : I64 -> T -> I64 -> T -> I64
+-    rev._backward : I64 -> List[I64] -> List[T] -> List[T]
++    rev._backward : I64 -> List[I64] -> List[T] -> Array[T]
+     rev._inactive-zero : T -> Bool
+ 
+ foreign "fwp" ad.tape-owned : (t, t -> t -> t, t -> t -> t, t -> Bool) -> List[t] -> I64 where Dup[t]
+@@ -186,7 +186,9 @@ foreign "fwp" ad.tape-owned : (t, t -> t -> t, t -> t -> t, t -> Bool) -> List[t
+ # Use within ad.scope; weights transfer to the native tape, while separately
+ # owned caller aliases remain valid. Both inactive parents return -1.
+ foreign "fwp" ad.push-owned : I64 -> t -> I64 -> t -> I64 where Dup[t]
+-foreign "fwp" ad.backward-owned : I64 -> List[I64] -> List[t] -> List[t] where Dup[t]
++# Return an owned array of input derivatives and retire the tape's buffers.
++# Stored reverse-mode values still obey their enclosing derivative scope.
++foreign "fwp" ad.backward-owned : I64 -> List[I64] -> List[t] -> Array[t] where Dup[t]
+ 
+ rev._push-float : I64 -> t -> I64 -> t -> I64 where Float[t]
+ rev._push-float = fn parent-a -> fn weight-a -> fn parent-b -> fn weight-b ->
+@@ -328,14 +330,14 @@ rev._seed-float =
+ 
+ # the adjoints of a tape's inputs, seeding the given vertices (frees the
+ # tape)
+-rev._backward-float : I64 -> List[I64] -> List[t] -> List[t] where Float[t]
++rev._backward-float : I64 -> List[I64] -> List[t] -> Array[t] where Float[t]
+ rev._backward-float = curry3 (make {
+     0 = .0,
+     1 = .1 | array.from-list,
+     2 = .2 | map float.convert | array.from-list,
+-} | uncurry3 ad.backward | array.to-list | map float.convert)
++} | uncurry3 ad.backward | array.map float.convert)
+ 
+-rev._finish : (I64, Rev[t]) -> (t, List[t]) where ReverseScalar[t], One[t], Dup[t]
++rev._finish : (I64, Rev[t]) -> (t, Array[t]) where ReverseScalar[t], One[t], Dup[t]
+ rev._finish =
+     both
+         (.1 | .value)
+@@ -346,10 +348,12 @@ rev._finish =
+ # The value of a scalar function and its gradient at a point, in one
+ # forward and one backward pass.
+ value-and-grad : (List[Rev[t]] -> Rev[t]) -> List[t] -> (t, List[t]) where ReverseScalar[t], One[t], Dup[t]
+-value-and-grad = ad.scope2 rev._value-and-grad
++value-and-grad = fn objective -> fn inputs ->
++    let (value, derivatives) = ad.scope2 rev._value-and-grad objective inputs
++    in (value, array.to-list derivatives)
+ 
+ # internal
+-rev._value-and-grad : (List[Rev[t]] -> Rev[t]) -> List[t] -> (t, List[t]) where ReverseScalar[t], One[t], Dup[t]
++rev._value-and-grad : (List[Rev[t]] -> Rev[t]) -> List[t] -> (t, Array[t]) where ReverseScalar[t], One[t], Dup[t]
+ rev._value-and-grad = second | compose rev._seed | flip compose rev._finish
+ 
+ # All partial derivatives of a scalar function at a point, using reverse mode.
+@@ -357,10 +361,11 @@ rev._value-and-grad = second | compose rev._seed | flip compose rev._finish
+ # record backwards. Recording and traversal add time and storage; this is not
+ # the cost of an ordinary evaluation. `gradient` uses forward mode instead.
+ grad : (List[Rev[t]] -> Rev[t]) -> List[t] -> List[t] where ReverseScalar[t], One[t], Dup[t]
+-grad = ad.scope2 rev._grad
++grad = fn objective -> fn inputs ->
++    ad.scope2 rev._grad objective inputs | array.to-list
+ 
+ # internal
+-rev._grad : (List[Rev[t]] -> Rev[t]) -> List[t] -> List[t] where ReverseScalar[t], One[t], Dup[t]
++rev._grad : (List[Rev[t]] -> Rev[t]) -> List[t] -> Array[t] where ReverseScalar[t], One[t], Dup[t]
+ rev._grad = rev._value-and-grad | flip compose .1
+ 
+ # `grad` of a function of a vector
+@@ -371,17 +376,17 @@ grad-vector =
+     | compose vector.to-list
+     | flip compose (array.from-list | vector.wrap)
+ 
+-rev._vjp-finish : List[t] -> (I64, List[Rev[t]]) -> List[t] where ReverseScalar[t], Dup[t]
++rev._vjp-finish : List[t] -> (I64, List[Rev[t]]) -> Array[t] where ReverseScalar[t], Dup[t]
+ rev._vjp-finish = curry (make { 0 = .1 | .0, 1 = .1 | .1 | map .vertex, 2 = .0 }
+     | uncurry3 rev._backward)
+ 
+ # Vector-Jacobian product: `xs | vjp f v` is vᵀ·J where J is the Jacobian
+ # of f at xs (one backward pass, whatever the number of outputs).
+ vjp : (List[Rev[t]] -> List[Rev[t]]) -> List[t] -> List[t] -> List[t] where ReverseScalar[t], Dup[t]
+-vjp = curry3 (ad.scope (uncurry3 rev._vjp))
++vjp = curry3 (ad.scope (uncurry3 rev._vjp) | array.to-list)
+ 
+ # internal
+-rev._vjp : (List[Rev[t]] -> List[Rev[t]]) -> List[t] -> List[t] -> List[t] where ReverseScalar[t], Dup[t]
++rev._vjp : (List[Rev[t]] -> List[Rev[t]]) -> List[t] -> List[t] -> Array[t] where ReverseScalar[t], Dup[t]
+ rev._vjp = curry (both (.0 | second | compose rev._seed) (.1 | rev._vjp-finish)
+     | uncurry compose)
+ 
+diff --git a/runtime/fwp_rt_kernel.c b/runtime/fwp_rt_kernel.c
+index 596603ff..013e64d3 100644
+--- a/runtime/fwp_rt_kernel.c
++++ b/runtime/fwp_rt_kernel.c
+@@ -501,11 +501,11 @@ static V fwp_owned_tape_add(fwp_owned_tape *owner, V value, V old) {
+     return result;
+ }
+ 
+-static V fwp_p_ad_backward_owned(V base, V outs, V seeds, const fwp_desc *list_type) {
++static V fwp_p_ad_backward_owned(V base, V outs, V seeds, const fwp_desc *array_type) {
+     int64_t id = (int64_t)base >> 32;
+     fwp_tape *t = fwp_tape_of(id);
+     fwp_owned_tape *owner = t->owned;
+-    if (!owner || owner->elem != list_type->elem) fwp_trap(FWP_AD_REPRESENTATION);
++    if (!owner || owner->elem != array_type->elem) fwp_trap(FWP_AD_REPRESENTATION);
+     if (owner->task != (fwp_cur == fwp_root ? 0 : fwp_cur->identity))
+         fwp_trap("autodiff: managed tape belongs to another task");
+     fwp_tape_unlink_scope(t);
+@@ -554,24 +554,27 @@ static V fwp_p_ad_backward_owned(V base, V outs, V seeds, const fwp_desc *list_t
+             fwp_cleanup_pop(&product_cleanup); fwp_value_release(&product);
+         }
+     }
+-    fwp_value_owner result = {0, list_type->drop};
++    fwp_array_builder result = {
++        fwp_array_typed_new((size_t)tp.leaves, owner->elem), 0, owner->elem
++    };
+     fwp_cleanup result_cleanup;
+-    fwp_cleanup_push(&result_cleanup, fwp_value_release, &result);
+-    for (int64_t i = tp.leaves; i; i--) {
+-        V value = owner->adj[i - 1];
++    fwp_array_builder_protect(&result, &result_cleanup);
++    for (int64_t i = 0; i < tp.leaves; i++) {
++        V value = owner->adj[i];
+         if (value == owner->zero && owner->elem->dup) owner->elem->dup(value);
+         fwp_value_owner input_owner = {value, owner->elem->drop};
+         fwp_cleanup input_cleanup;
+         fwp_cleanup_push(&input_cleanup, fwp_value_release, &input_owner);
+-        owner->adj[i - 1] = owner->zero;
+-        result.value = fwp_rc_fresh(fwp_cons(value, result.value));
++        owner->adj[i] = owner->zero;
++        fwp_array_store_owned(result.value, (size_t)i, value, owner->elem);
++        result.filled++;
+         fwp_cleanup_pop(&input_cleanup);
+     }
+-    fwp_cleanup_pop(&result_cleanup);
++    V output = fwp_array_builder_finish(&result, &result_cleanup);
+     fwp_cleanup_pop(&value_cleanup); fwp_owned_tape_release(owner);
+     fwp_cleanup_pop(&tape_cleanup); fwp_tape_buffers_dispose(&buffers);
+ 
+-    return result.value;
++    return output;
+ }
+ 
+ /* ---------------------------------------------------------------- kernels */
+diff --git a/src/cgen.rs b/src/cgen.rs
+index 4c56b190..e097464e 100644
+--- a/src/cgen.rs
++++ b/src/cgen.rs
+@@ -2576,18 +2576,26 @@ impl Gen<'_> {
+         format!("    /* Eager scalar buffer: finish every map callback before zip. */\n    size_t count = fwp_list_len(l0);\n    if (count > (SIZE_MAX - sizeof(fwp_arr)) / sizeof(V)) fwp_trap(\"map too large\");\n    V buffer = fwp_rc_fresh(fwp_arr_new(count));\n    fwp_value_owner owner = {{buffer, fwp_rc_free_arr}};\n    fwp_cleanup cleanup; fwp_value_protect(&owner, &cleanup);\n    for (size_t i = 0; i < count; i++) {{\n        ARR(buffer)->d[i] = f{callback}(OBJ(l0)->f[0]);\n        l0 = OBJ(l0)->f[1];\n    }}\n    return fwp_value_finish(&owner, &cleanup);\n")
+     }
+ 
+-    fn scalar_buffer_zip(&mut self, callback: FuncId, slot: usize) -> String {
++    fn scalar_buffer_zip(&mut self, id: FuncId, callback: FuncId, slot: usize) -> String {
+         assert!(slot < 2);
+         let other = 1 - slot;
+         let result = self.prog.funcs[callback].ty.params(2).1;
+         let result_list = MT::Con("std::List".into(), vec![result.clone()]);
+         let drop = self.value_drop(&result_list);
++        let (parameters, _) = self.prog.funcs[id].ty.params(2);
++        let MT::Con(name, elements) = parameters[slot] else {
++            unreachable!("scalar zip input must be an array");
++        };
++        assert!(name == "std::Array" && elements.len() == 1);
++        let element = elements[0].clone();
++        let descriptor = self.desc(&element);
++        let input = format!("fwp_array_load(l{slot}, i, {descriptor})");
+         let arguments = if slot == 0 {
+-            format!("ARR(l{slot})->d[i], items[i]")
++            format!("{input}, items[i]")
+         } else {
+-            format!("items[i], ARR(l{slot})->d[i]")
++            format!("items[i], {input}")
+         };
+-        format!("    /* Zip after the complete scalar map; borrow buffer and source list. */\n    size_t count;\n    V *items = fwp_map_items(l{other}, &count);\n    fwp_map_owner owner = {{items, 0, 0, NULL, {drop}}};\n    fwp_cleanup cleanup; fwp_map_protect(&owner, &cleanup);\n    size_t buffered = ARR(l{slot})->len;\n    if (buffered < count) count = buffered;\n    for (size_t i = 0; i < count; i++) {{\n        items[i] = f{callback}({arguments});\n        owner.count++;\n    }}\n    return fwp_map_finish_protected(&owner, &cleanup);\n")
++        format!("    /* Zip after the complete scalar map; borrow buffer and source list. */\n    size_t count;\n    V *items = fwp_map_items(l{other}, &count);\n    fwp_map_owner owner = {{items, 0, 0, NULL, {drop}}};\n    fwp_cleanup cleanup; fwp_map_protect(&owner, &cleanup);\n    size_t buffered = fwp_array_len(l{slot});\n    if (buffered < count) count = buffered;\n    for (size_t i = 0; i < count; i++) {{\n        items[i] = f{callback}({arguments});\n        owner.count++;\n    }}\n    return fwp_map_finish_protected(&owner, &cleanup);\n")
+     }
+ 
+     fn range_zip(&mut self, callback: FuncId, captures: usize, slot: usize) -> String {
+@@ -8258,7 +8266,7 @@ static inline __attribute__((always_inline)) int fs{}(fwp_loop_state{step} *st,
+                 out.push_str(&self.scalar_buffer_map(*callback));
+             }
+             Body::ScalarBufferZip { callback, slot } => {
+-                out.push_str(&self.scalar_buffer_zip(*callback, *slot));
++                out.push_str(&self.scalar_buffer_zip(id, *callback, *slot));
+             }
+             Body::PackedRecordMap { callback } => {
+                 out.push_str(&self.packed_record_map(*callback));
+diff --git a/src/fuse.rs b/src/fuse.rs
+index afdab18a..5227e35e 100644
+--- a/src/fuse.rs
++++ b/src/fuse.rs
+@@ -29,6 +29,8 @@ use std::rc::Rc;
+ use crate::ir::*;
+ use crate::value::Value;
+ 
++mod array_zip;
++
+ /// The trap messages an expression can raise when it is evaluated; `None`
+ /// when it may do anything else.
+ type Traps = Option<BTreeSet<String>>;
+@@ -2333,6 +2335,7 @@ fn dummy_args(funcs: &[Func], id: FuncId) -> Vec<Expr> {
+ 
+ /// Fuse the list pipelines of every function.
+ pub fn fuse(prog: &mut Program) {
++    array_zip::lower(prog);
+     let elements: Vec<_> = prog
+         .funcs
+         .iter()
+diff --git a/src/interp.rs b/src/interp.rs
+index dcff3e72..e5b915ac 100644
+--- a/src/interp.rs
++++ b/src/interp.rs
+@@ -227,10 +227,25 @@ impl<'p> Interp<'p> {
+             Body::RegionEntry { .. } | Body::RegionCtor(_) => {
+                 return trap("internal: native region body reached interpreter");
+             }
++            Body::ScalarBufferZip { callback, slot } => {
++                let Value::Array(values) = &args[*slot] else {
++                    return trap("internal: array-list zip requires an array");
++                };
++                let items = args[1 - *slot].list_items();
++                let mut result = Vec::with_capacity(values.len().min(items.len()));
++                for (value, item) in values.iter().zip(items) {
++                    let inputs = if *slot == 0 {
++                        vec![value.clone(), item]
++                    } else {
++                        vec![item, value.clone()]
++                    };
++                    result.push(self.call(*callback, inputs)?);
++                }
++                Value::list(result)
++            }
+             Body::PackedRecordMap { .. }
+             | Body::PackedRecordFold { .. }
+             | Body::ScalarBufferMap { .. }
+-            | Body::ScalarBufferZip { .. }
+             | Body::RangeZip { .. } => {
+                 return trap("internal: native buffer body reached interpreter");
+             }
+diff --git a/src/ir.rs b/src/ir.rs
+index 45b088bd..730182c9 100644
+--- a/src/ir.rs
++++ b/src/ir.rs
+@@ -226,8 +226,9 @@ pub enum Body {
+     ScalarBufferMap {
+         callback: FuncId,
+     },
+-    /// Native-only zip-with borrowing one private scalar buffer and one list.
+-    /// `slot` names the buffer's callback parameter (0 or 1, data-last order).
++    /// Zip-with borrowing one numeric array and one list. Native-only scalar
++    /// map buffers also use this operation with an Array[I64] of value bits.
++    /// `slot` names the array's callback parameter (0 or 1, data-last order).
+     ScalarBufferZip {
+         callback: FuncId,
+         slot: usize,
+diff --git a/src/numerics.rs b/src/numerics.rs
+index 567720b9..387f1fd1 100644
+--- a/src/numerics.rs
++++ b/src/numerics.rs
+@@ -536,7 +536,7 @@ pub(crate) fn backward_owned(
+         }
+     }
+     adj.truncate(t.leaves);
+-    Ok(Value::list(adj))
++    Ok(Value::Array(Rc::new(adj)))
+ }
+ 
+ // ---------------------------------------------------------------- kernels
