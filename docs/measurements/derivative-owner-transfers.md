@@ -2,7 +2,8 @@
 
 **Status:** both compiler changes are implemented. Count and source-site audits
 pass, together with focused GCC/Clang checks on both native hosts.
-Compiler-cost/runtime measurements and the final platform gates remain. [Draft PR #249](https://github.com/e6qu/fun-with-pipes/pull/249) · [Plan](../../PLAN.md).
+Compiler-cost measurements pass. Runtime reports are audited, with speed/noise
+targets still open; final platform gates remain. [PR #249](https://github.com/e6qu/fun-with-pipes/pull/249) · [Plan](../../PLAN.md).
 
 ## What is measured
 
@@ -47,7 +48,8 @@ That is **76,416 fewer retains (98.7%)**, with unchanged allocation traffic and
 peak storage. All 96 observations agree with the required `p` then `2*p` savings;
 raw tape/workspace storage, derivative work and output remain unchanged.
 Zero-update counts stay unchanged. Static-frame growth stays within 128 bytes.
-No elapsed-time improvement is claimed yet.
+The largest complete solves take 5.2–6.4% less time, but smaller-case speed
+targets and an AMD64 noise limit remain open; see the runtime report below.
 
 The compiler proofs are explained in [design](../design.md#numeric-callback-inputs).
 Their frozen contracts are [complete field transfers](field-owner-transfer-protocol.md)
@@ -143,7 +145,7 @@ site. This establishes count and cleanup behavior, not elapsed-time performance.
 - Complete logs: [ARM64](numeric-input-checks-2026-11-03/arm-verified.log.gz) /
   [AMD64](numeric-input-checks-2026-11-03/amd-verified.log.gz)
 
-## Prepared performance experiments
+## Performance experiments
 
 | Workflow | Comparison and acceptance |
 |---|---|
@@ -158,8 +160,12 @@ Runtime timing measures complete solves. C/Rust peers use explicit derivatives,
 so their ratios include differentiation-strategy costs, not isolated language
 overhead. [Swift comparisons](swift-allocations.md) are separate measurements.
 
-These experiments are prepared, not measured. Fewer retains alone prove no
-speedup. The final delivery also requires nine production jobs and documentation.
+[Compiler-cost results](numeric-input-analysis-2026-11-03/README.md) pass on both
+hosts: at most 0.53% more compilation time and 0.44% more peak RSS (limits 5%).
+[Runtime results](callback-owners-2026-11-03/README.md) are independently audited
+for all four sessions. Largest cases take 5.2–6.4% less time; smaller cases miss
+speed targets and AMD64 3/1999 fails the 2% copy limit. Keep those goals open.
+Final delivery still requires nine production jobs and documentation.
 
 ## Replaying the original site audit
 

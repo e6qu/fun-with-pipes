@@ -1,12 +1,10 @@
 # Current work
 
-**Next:** dispatch `numeric-input-analysis` and `callback-owners-time` on the
-published branch, with passing focused run `41548218462` as `evidence_run`.
-Use `native_runner=all` and `comparison_session=both` for runtime measurements.
-Audit every outcome; retain noisy or failed measurements without unchanged reruns.
-[PLAN.md](../PLAN.md) tracks this grouped batch in
-[draft PR #249](https://github.com/e6qu/fun-with-pipes/pull/249).
-Final production gates have not started.
+**Next:** publish the audited runtime/compiler reports, mark
+[PR #249](https://github.com/e6qu/fun-with-pipes/pull/249) ready, then require all
+nine production jobs plus documentation on the final head. Audit all job/target
+logs, fix every failure, and squash only after passing gates with a one-line
+subject ≤80 characters and empty body. [PLAN.md](../PLAN.md) tracks the batch.
 
 ## Checkout and sources
 
@@ -28,8 +26,8 @@ Final production gates have not started.
 |---|---|---|
 | 1 | Verified | Preserve complete-field transfer regression coverage |
 | 2 | Verified | Preserve numeric-input selection, exclusion and cleanup controls |
-| 3 | In progress | Counts and exact sites verified; measure compiler time/RSS |
-| 4 | Pending | Two qualified runtime sessions per architecture |
+| 3 | Verified | Counts, exact sites and compiler time/RSS pass |
+| 4 | Implemented | Four sessions audited; retain failed speed/noise goals in PLAN.md |
 | 5 | Pending | Nine final production gates, docs and verified squash |
 
 ## Verified focused checks
@@ -43,7 +41,7 @@ and expected outcomes: 184 ordinary returns, 216 rejected broken controls.
 All 96 count observations pass exact source attribution, output/work equality,
 managed/raw storage limits and zero final storage. Largest current-only solve:
 77,411 → 51,939 → 995 retains across the two changes, unchanged allocations and
-peak storage. No speed claim. [Retained evidence](measurements/derivative-owner-transfers.md#complete-focused-verification).
+peak storage. Runtime evidence is reported below. [Retained evidence](measurements/derivative-owner-transfers.md#complete-focused-verification).
 
 Local audit commands (guarded):
 
@@ -54,6 +52,38 @@ Local audit commands (guarded):
 
 Draft documentation run `41548406106` passes on `5af0366c`; its complete log is
 audited. The draft's production jobs are skipped and do not establish support.
+
+## Runtime results and acceptance
+
+Source `d903126f53545098519a36960c5704eb3fcdc8f0`: timing runs `41550970017`
+and `41551538083` are complete. Independent audit runs `41553716035` and
+`41553965234` pass; both full audit logs have no diagnostics. All timing-job
+failures are preserved speed/noise-limit misses. One original AMD64 host was
+rejected before timing; only that session was replaced.
+
+[Retained results](measurements/callback-owners-2026-11-03/README.md): largest
+solves take 5.2–6.4% less time. Both hosts miss 5% on 3/199 and 3/1999, both forms;
+AMD64 33/199 current also misses. AMD64 3/1999 current copy variation is
+2.12% / 2.21% against 2%. Keep these goals open under the user's existing
+instruction to retain verified reductions. No unchanged reruns or relaxed limits.
+
+All output/work, managed/raw storage, cleanup, instruction/frame and source/image
+checks pass. RSS is reported separately, including its AMD64 increase. Each
+runner audit verifies 1,334 measurement files and five reference files per
+session. Compact summaries/logs are checked locally; all four reports pass the
+independent schedule/host/source/sample/acceptance check (0.86s guarded).
+
+## Compiler-cost results
+
+Run `41550965701` passes both hosts on `d903126f`. Independent audits of all 480
+commands, native images, reference sources, raw samples and recalculated outcomes
+pass (AMD64 2.45s, ARM64 2.30s under the local guard). Complete job logs have no
+diagnostics. Maximum increases: 0.53% compilation time, 0.44% peak RSS (limits 5%);
+identical-copy differences ≤0.91% (limit 2%). [Retained results](measurements/numeric-input-analysis-2026-11-03/README.md).
+
+Documentation run `41550957926` also passes. Its only error/panic text comes from
+required negative controls for duplicate/unknown targets and a synthetic failing
+native test; all outcomes match their test assertions.
 
 ## Measurement acceptance
 
@@ -82,5 +112,5 @@ remain open. Do not discard their original samples or infer a safety bug from ti
 ## Local resources
 
 No local full build, suite or benchmark. Use `python3 scripts/local-guard.py`
-serially. Last free disk: 65 GiB; no local target data. Keep 64 GiB free, workload
+serially. Last free disk: 64.7 GiB; no local target data. Keep 64 GiB free, workload
 RSS below 1 GiB and the fixed 180-second deadline; move refused work to runners.

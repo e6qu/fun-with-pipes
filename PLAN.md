@@ -8,10 +8,11 @@ necessary sharing. GC is removed; JIT and backward compatibility are excluded.
 
 [PR #248](docs/roadmap-history.md#packed-temporary-numeric-records-pr-248) is verified
 and merged. It reduces temporary allocations; its failed zero-update timing goal
-remains open. The next grouped batch targets reference-count operations left in
+remains open. This grouped batch removes reference-count operations left in
 those callbacks. [Measured sites](docs/measurements/derivative-owner-transfers.md)
-account for 76,416 of 77,411 retains in the largest saved solve; that is an
-verified count reduction; elapsed-time improvement remains unmeasured.
+account for 76,416 of 77,411 retains in the largest saved solve; that is a
+verified count reduction. Largest solves take 5.2–6.4% less time; some
+smaller-case timing requirements remain open.
 
 | Step | Work | Completion requirement |
 |---|---|---|
@@ -26,10 +27,19 @@ The repair uses the exact emitted body and passes both native GCC/Clang suites
 and all 96 count audits. It removes exactly one retain per differentiated pair.
 Step 2 passes focused GCC/Clang checks on both native hosts: 100 checks and
 400 saved probes, including deliberately broken cleanup controls. All 96 count
-observations and exact-site audits pass. Next measure compiler costs and complete
-solve times, then run the full platform matrix once the related batch is ready.
+observations and exact-site audits pass. Compiler time/RSS limits pass. All four
+runtime sessions are audited; retain their failed speed/noise limits below.
+Next run the final platform matrix and documentation gate for the complete batch.
 
 ## Open performance goals
+
+- **Callback-owner timings.** [The complete report](docs/measurements/callback-owners-2026-11-03/README.md)
+  retains every outcome. Both architectures miss 5% on 3/199 and 3/1999 in both
+  forms; AMD64 33/199 current also misses it. AMD64 3/1999 copy variation is
+  2.12–2.21%, so that comparison is inconclusive. Keep the verified count
+  reductions and larger-case speed gains, following the accepted policy; do not
+  relabel missed limits as passed. Diagnose remaining allocation/work costs and
+  the noisy case from saved phase/sample evidence before choosing another change.
 
 - **AMD64 array consumption.** The original large-array copy controls pass,
   but consumption is 4.93–5.23% slower; small-array copy limits also fail.
