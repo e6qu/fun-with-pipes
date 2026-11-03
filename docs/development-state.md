@@ -1,9 +1,15 @@
 # Current work
 
-**Next:** publish the complete PR #254 report, run the final nine production jobs
-plus documentation on that exact head, audit every full/target log, then squash
-and verify the merged tree and one-line message. All measurements are complete;
-do not repeat them. Keep the 32 missed speed targets open.
+**Next:** publish the batched Windows probe repair for PR #254, then monitor all
+nine production jobs and documentation at the repaired head. Run `41694728758`
+at `9061744b324ad5b4e7c84866ca36cfcf8597d34a` is complete: seven production jobs
+and docs (`41694638618`, job `126121832983`) pass; both Windows jobs fail two
+probes because their custom C entry points omitted binary-stream setup. Every
+completed full/target log has been audited. The [retained failure analysis](measurements/scalar-array-identities-2026-11-03/windows-repair/README.md)
+checks every failed observation; the repair preserves exact-byte assertions.
+Compiler/runtime/library and all completed measurements remain unchanged. Do not
+repeat timing sessions; keep the 32 missed speed targets open. Squash only after
+the repaired head passes every gate, then verify the merged tree/message.
 
 ## Checkout and sources
 
@@ -77,7 +83,23 @@ one batch after auditing all completed jobs/targets. Require Linux ARM64/AMD64,
 regular and ownership-stress macOS ARM64/AMD64, native Windows ARM64/AMD64,
 C/Rust benchmarks and documentation. `collect-final-platforms.py` in scratch takes
 explicit `--run`, `--source`, `--docs-job` and `--output`; it retains full logs and
-audits each native target. Mark PR ready only after the complete report is pushed.
+audits each native target. The complete report and final description are published; PR #254 is ready for
+review. The earlier same-head draft CI run `41694638643` was skipped and is not
+a production gate.
+
+Full logs, target archives and audits for the completed production run are in
+scratch `platforms-254`. The collector audited the remaining Linux/macOS jobs in
+14.04 guarded seconds and correctly rejected both Windows failures. A separate
+guarded diagnostic audit (0.13 seconds) verifies 1,600 bit-pattern rows and 32
+fatal-allocation exits: only CRLF differs. The TLS rejection is an intentional
+negative control, not another failed test.
+
+Separate branch/worktree `iteration-final-value` has a completed source-inspection
+run `41698313044` at `13df0962` and a frozen next-group contract at `2a257a3e`
+(`roadmap/final-iteration-storage-protocol-2026-11-03`). Its uncommitted direct-last,
+history-removal, count-validation and optional-wrapper cleanup changes are saved
+there, formatted and inventory-checked, but not compiler-tested. Resume that
+group after repairing #254; open no second delivery PR before this one merges.
 
 Squash subject: `Preserve float bits and remove redundant F64 array copies`.
 Supply an empty body; verify one line, at most 80 characters, no trailers or
@@ -93,6 +115,10 @@ workflow lint and documentation checks pass. The latest link audit covers 247
 doc sets, 106 preparation anchors and four plan steps. Compact runtime reports,
 all rejected-host records and memory/count summaries reconcile. Full builds,
 suites and benchmarks stayed on GitHub; no unchanged timing session was rerun.
+For the Windows-only stream repair, guarded `rustfmt --check --edition 2021
+tests/float_formats.rs` passes (0.13 seconds), and `python3 scripts/check-roadmap.py`
+passes (2.52 seconds). The compiler/runtime/library diff from the measured source
+is empty. Native verification is delegated to the full repaired-head CI matrix.
 
 Use `python3 scripts/local-guard.py` serially: 64 GiB free disk, target data below
 2 GiB, sampled RSS below 1 GiB, 180 seconds. Do not raise or bypass these limits.

@@ -344,8 +344,16 @@ fn same_type_conversion_agrees_across_interpreter_and_native_entries() {
         let mut interpreter =
             fwp::interp::Interp::new(&current, Box::new(std::io::sink())).unwrap();
         let mut expected = String::new();
-        let mut probe =
-            String::from("\nint main(void) { fwp_lib_init(); size_t before = fwp_heap.live;\n");
+        let mut probe = String::from(
+            r#"
+int main(void) {
+#ifdef _WIN32
+    if (_setmode(_fileno(stdout), _O_BINARY) < 0 ||
+        _setmode(_fileno(stderr), _O_BINARY) < 0) return 253;
+#endif
+    fwp_lib_init(); size_t before = fwp_heap.live;
+"#,
+        );
         for (name, bits, value, id) in &cases {
             let converted = interpreter.call_root(*id, vec![value.clone()]).unwrap();
             let output = match &converted {
