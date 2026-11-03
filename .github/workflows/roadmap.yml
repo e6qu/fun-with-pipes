@@ -46,10 +46,12 @@ jobs:
         run: python3 scripts/test-derivative-ownership-profile.py
       - name: Constructor attribution and allocation controls
         run: python3 scripts/test-constructor-profile.py
-      - name: Scalar buffer same-source reference isolation
+      - name: Collection storage reference isolation and allocation budgets
         run: |
           python3 scripts/test-scalar-map-zip-reference.py
           python3 scripts/test-range-zip-reference.py
+          python3 scripts/test-gradient-array-reference.py
+          python3 scripts/test-gradient-array-budgets.py
       - name: Sorting-time evidence controls
         run: python3 scripts/test-sort-time-evidence.py
       - name: Parser measurement evidence controls

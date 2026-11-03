@@ -1,9 +1,9 @@
 # Current work
 
-**Next:** publish the repaired gradient-array batch and run `gradient-array-checks`
-on both native Linux hosts. Audit every target and all 96 allocation observations.
-While those run, finish the compiler/time measurement routes and independent
-whole-change reference audits. Do not start timings before correctness passes.
+**Next:** audit `gradient-array-checks` run `41626196812` at `f00fb9dc`: every
+GCC/Clang target and all 96 allocation observations. Fix all failures together.
+Once it passes, freeze the measurement head and dispatch compiler analysis plus
+two runtime sessions per architecture using that run as the correctness prerequisite.
 
 ## Checkout and recovery
 
@@ -25,7 +25,7 @@ whole-change reference audits. Do not start timings before correctness passes.
 
 | Step | Status | Remaining work |
 |---|---|---|
-| 1 | Complete | All logs audited; squash message and tested-tree equality verified |
+| 1 | Verified | All logs audited; squash message and tested-tree equality verified |
 | 2 | Implemented | Both Linux compilers/lints and array selection/application checks pass; repair two test assumptions |
 | 3 | In progress | Run restored array fault controls and all 96 allocation observations; retain complete failures |
 | 4 | Pending | Compiler/runtime measurements, independent audits, final platform matrix and delivery |
@@ -101,10 +101,18 @@ reference controls (3, 0.24s), formatting (1.78s), and workflow lint (5.85s).
 The array unwind extension and typed callback rejection controls are restored.
 No new allocation or timing observations exist yet.
 
-Still restore compiler/time comparison manifests, independent seven-source
-reference reconstruction and measurement workflow routes. Their prior uncommitted
-versions were lost with `/private/tmp`; do not claim those files exist or pass
-until reconstructed. Keep checkpoints in Git and scratch evidence project-local.
+Compiler/time comparison manifests, independent seven-source reconstruction and
+measurement workflow routes are restored. Guarded checks pass: reference controls
+(5, 0.49s), timing budgets (16, 0.13s), compiler driver controls (7, 0.83s),
+evidence reader (14, 42.71s), grouped reports (12, 5.49s), retention controls
+(3, 0.13s), workflow lint (5.81s), and roadmap audit (2.52s). The first roadmap
+audit rejected the status word `Complete`; the handoff now uses its required
+`Verified` status. No acceptance requirement was changed.
+
+Run `41626196812` was dispatched after all known native failures were repaired.
+ARM64 job `125884054605` is building; AMD64 `125884054997` is queued. The run's
+compiler/runtime/library/test sources match the prepared measurement branch;
+later script/docs changes do not alter those trees. No performance result exists yet.
 
 Local work stays serial under `scripts/local-guard.py`: 64 GiB free disk, targets
 below 2 GiB, sampled RSS below 1 GiB and 180 seconds. Last free space about 88 GiB.

@@ -1,13 +1,20 @@
 #!/usr/bin/env python3
 """Verify whole-change isolation and reject incomplete or corrupted references."""
+import copy
+import difflib
 import importlib.util
 from pathlib import Path
+import tempfile
 import unittest
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parent.parent
 SPEC = importlib.util.spec_from_file_location('reference', ROOT / 'scripts/prepare-gradient-array-reference.py')
 REFERENCE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(REFERENCE)
+AUDIT_SPEC = importlib.util.spec_from_file_location('audit', ROOT / 'scripts/check-array-list-evidence.py')
+AUDIT = importlib.util.module_from_spec(AUDIT_SPEC)
+AUDIT_SPEC.loader.exec_module(AUDIT)
 CURRENT = {name: (ROOT / name).read_bytes() for name in REFERENCE.FILES}
 SELECTIONS = {
     'lib/autodiff.fwp': b'rev._backward : I64 -> List[I64] -> List[T] -> Array[T]',
@@ -31,6 +38,61 @@ class GradientArrayReference(unittest.TestCase):
         self.assertIn(b'fn scalar_buffer_zip(&mut self, callback:', restored['src/cgen.rs'])
         self.assertIn(b'range_zip::lower(&mut numeric_program);', restored['src/cgen.rs'])
         self.assertIn(b'scalar_map_zip::lower(&mut numeric_program);', restored['src/cgen.rs'])
+
+    def test_independent_audit_reconstructs_the_same_seven_sources(self):
+        restored = REFERENCE.reference_sources(CURRENT)
+        patch = REFERENCE.PATCH.read_bytes()
+        self.assertEqual(AUDIT.recorded_gradient_reference(CURRENT, patch), restored)
+        for name in REFERENCE.FILES:
+            changed = dict(CURRENT)
+            changed[name] = restored[name]
+            with self.subTest(file=name), self.assertRaises(AssertionError):
+                AUDIT.recorded_gradient_reference(changed, patch)
+
+    def test_saved_reference_audit_rejects_changed_hashes_sources_and_patch(self):
+        candidates = {name: b'candidate\n' for name in REFERENCE.FILES}
+        references = {name: b'reference\n' for name in REFERENCE.FILES}
+
+        def difference(before, after):
+            return ''.join(f'diff --git a/{name} b/{name}\nindex 1234567..2345678 100644\n' +
+                ''.join(difflib.unified_diff(before[name].decode().splitlines(keepends=True),
+                    after[name].decode().splitlines(keepends=True), fromfile='a/' + name, tofile='b/' + name))
+                for name in sorted(before)).encode()
+
+        frozen = difference(references, candidates)
+        reverted = difference(candidates, references)
+        source = dict(candidates, **{'scripts/gradient-array-candidate.patch': frozen,
+                                   'src/ownership.rs': b'ownership'})
+        manifest = dict(disabledTransformation='owned gradient arrays and direct array/list zip',
+            candidate={name: AUDIT.digest(data) for name, data in candidates.items()},
+            reference={name: AUDIT.digest(data) for name, data in references.items()},
+            frozenPatchSha256=AUDIT.digest(frozen), patchSha256=AUDIT.digest(reverted),
+            compilerSha256=AUDIT.digest(b'compiler'), ownershipSha256=AUDIT.digest(b'ownership'))
+        with tempfile.TemporaryDirectory() as temporary:
+            folder = Path(temporary)
+            (folder / 'fwp').write_bytes(b'compiler')
+            (folder / 'reference.patch').write_bytes(reverted)
+            for name, data in references.items():
+                path = folder / 'source' / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(data)
+            with patch.object(AUDIT.subprocess, 'check_output',
+                              side_effect=lambda command, **kwargs: source[command[2].split(':', 1)[1]]), \
+                    patch.object(AUDIT, 'instruction_bytes') as image:
+                AUDIT.check_gradient_reference(folder, manifest, 'source', 'aarch64')
+                image.assert_called_once_with(b'compiler', 'aarch64')
+                for field in ('frozenPatchSha256', 'patchSha256', 'compilerSha256', 'ownershipSha256',
+                              'candidate', 'reference'):
+                    changed = copy.deepcopy(manifest)
+                    if field in ('candidate', 'reference'):
+                        changed[field]['src/cgen.rs'] = 'wrong'
+                    else:
+                        changed[field] = 'wrong'
+                    with self.subTest(field=field), self.assertRaises(AssertionError):
+                        AUDIT.check_gradient_reference(folder, changed, 'source', 'aarch64')
+                (folder / 'source/src/ir.rs').write_bytes(b'changed source')
+                with self.assertRaises(AssertionError):
+                    AUDIT.check_gradient_reference(folder, manifest, 'source', 'aarch64')
 
     def test_unrelated_source_edits_are_preserved(self):
         changed = dict(CURRENT)

@@ -11,6 +11,7 @@ from pathlib import Path, PurePosixPath
 import re
 import struct
 import subprocess
+import tempfile
 import zipfile
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -144,13 +145,59 @@ def check_numeric_reference(folder, manifest, source, architecture):
         assert digest(subprocess.check_output(['git', 'show', source + ':' + path], cwd=ROOT)) == expected_hash
 
 
+def recorded_gradient_reference(candidates, patch):
+    """Reconstruct all seven sources from the saved patch, never saved Python."""
+    assert set(candidates) == {'lib/autodiff.fwp', 'runtime/fwp_rt_kernel.c', 'src/cgen.rs', 'src/fuse.rs', 'src/interp.rs', 'src/ir.rs', 'src/numerics.rs'}
+    with tempfile.TemporaryDirectory(prefix='fwp-gradient-audit-') as directory:
+        root = Path(directory)
+        for name, data in candidates.items():
+            path = root / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(data)
+        patch_path = root / 'candidate.patch'
+        patch_path.write_bytes(patch)
+        result = subprocess.run(['git', 'apply', '--reverse', str(patch_path)],
+                                cwd=root, capture_output=True)
+        assert result.returncode == 0, result.stderr.decode()
+        restored = {name: (root / name).read_bytes() for name in candidates}
+        assert all(restored[name] != candidates[name] for name in candidates)
+        return restored
+
+
+def check_gradient_reference(folder, manifest, source, architecture):
+    assert manifest['disabledTransformation'] == 'owned gradient arrays and direct array/list zip'
+    assert set(manifest['candidate']) == set(manifest['reference']) == {'lib/autodiff.fwp', 'runtime/fwp_rt_kernel.c', 'src/cgen.rs', 'src/fuse.rs', 'src/interp.rs', 'src/ir.rs', 'src/numerics.rs'}
+    candidates = {name: subprocess.check_output(['git', 'show', source + ':' + name], cwd=ROOT)
+                  for name in manifest['candidate']}
+    frozen = subprocess.check_output(['git', 'show', source + ':scripts/gradient-array-candidate.patch'], cwd=ROOT)
+    assert digest(frozen) == manifest['frozenPatchSha256']
+    expected = recorded_gradient_reference(candidates, frozen)
+    compiler = (folder / 'fwp').read_bytes()
+    assert digest(compiler) == manifest['compilerSha256']
+    instruction_bytes(compiler, architecture)
+    patch = (folder / 'reference.patch').read_bytes()
+    assert digest(patch) == manifest['patchSha256']
+    patches = re.split(r'(?=^diff --git )', patch.decode(), flags=re.MULTILINE)
+    assert patches[0] == '' and len(patches) == 8
+    for (name, reference), difference in zip(sorted(expected.items()), patches[1:]):
+        assert digest(candidates[name]) == manifest['candidate'][name]
+        saved = (folder / 'source' / name).read_bytes()
+        assert saved == reference and digest(saved) == manifest['reference'][name]
+        check_reference_patch(difference, candidates[name].decode(), reference.decode(), name)
+    ownership = subprocess.check_output(['git', 'show', source + ':src/ownership.rs'], cwd=ROOT)
+    assert digest(ownership) == manifest['ownershipSha256']
+
+
 def check_reference(folder, report, source, architecture, protocol):
     manifest = json.loads((folder / 'manifest.json').read_text())
     assert manifest == report['referenceCompiler'] and manifest['source'] == source
+    if protocol == 'gradient-array':
+        check_gradient_reference(folder, manifest, source, architecture)
+        return
     if protocol == 'callback-owners':
         check_numeric_reference(folder, manifest, source, architecture)
         return
-    assert protocol in ('record-zip', 'record-fold', 'packed-records', 'scalar-map-zip', 'range-zip')
+    assert protocol in ('record-zip', 'record-fold', 'packed-records', 'scalar-map-zip', 'range-zip', 'gradient-array')
     if protocol == 'record-zip':
         source_path, field, saved = 'src/fuse.rs', 'Fusion', 'fusion-reference.rs'
         transform = 'flat numeric record zip/map fusion'
@@ -223,8 +270,8 @@ def check_zip(archive):
 
 
 def check_directory(folder, source, architecture, session, protocol, reference):
-    assert protocol in ('array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip')
-    assert (protocol in ('record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip')) == (reference is not None)
+    assert protocol in ('array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array')
+    assert (protocol in ('record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array')) == (reference is not None)
     report = json.loads((folder / 'comparison.json').read_text())
     GROUPS.check_report(report, source, protocol)
     assert report['machine'] == architecture and report['configuration']['session'] == session
@@ -296,11 +343,14 @@ def check_directory(folder, source, architecture, session, protocol, reference):
             assert (case / (name + '.stderr')).read_text() == control['stderr']
         check_profiles(case, row)
     files = file_inventory(folder)
-    if protocol in ('record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip'):
+    if protocol in ('record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array'):
         assert len(files) == 1334
     reference_files = file_inventory(reference) if reference is not None else None
     if protocol == 'callback-owners':
         assert set(reference_files) == {'manifest.json', 'fwp', 'reference-cgen.rs', 'reference-packed_records.rs', 'reference.patch'}
+    elif protocol == 'gradient-array':
+        assert set(reference_files) == {'manifest.json', 'fwp', 'reference.patch'} | {
+            'source/' + name for name in ('lib/autodiff.fwp', 'runtime/fwp_rt_kernel.c', 'src/cgen.rs', 'src/fuse.rs', 'src/interp.rs', 'src/ir.rs', 'src/numerics.rs')}
     elif reference_files is not None:
         saved = {'record-zip': 'fusion-reference.rs', 'record-fold': 'codegen-reference.rs',
                  'packed-records': 'codegen-reference.rs', 'scalar-map-zip': 'codegen-reference.rs', 'range-zip': 'codegen-reference.rs'}[protocol]
@@ -314,7 +364,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--input', type=Path, required=True)
     parser.add_argument('--input-format', choices=['directory', 'zip'], required=True)
-    parser.add_argument('--protocol', choices=['array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip'], required=True)
+    parser.add_argument('--protocol', choices=['array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array'], required=True)
     parser.add_argument('--reference', type=Path)
     parser.add_argument('--source', required=True)
     parser.add_argument('--arch', choices=['x86_64', 'aarch64'], required=True)
