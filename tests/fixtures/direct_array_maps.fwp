@@ -1,0 +1,69 @@
+# A closed callback has no saved arguments. These maps keep their input arrays.
+inc-small : I8 -> I8
+inc-small = fn value -> value + 1i8
+neg-small : I16 -> I16
+neg-small = fn value -> -value
+dec-large : U64 -> U64
+dec-large = fn value -> value - 1u64
+scale : F64 -> F64
+scale = fn value -> value * 0.25
+inc-float : F32 -> F32
+inc-float = fn value -> value + 1.0f32
+to-double : I64 -> F64
+to-double = int.to-float
+observe : I64 -> I64 ! {IO}
+observe = fn value -> let shown = echo value in value + 1
+export small : Array[I8] -> Array[I8]
+small = array.map inc-small
+export signed : Array[I16] -> Array[I16]
+signed = array.map neg-small
+export unsigned : Array[U64] -> Array[U64]
+unsigned = array.map dec-large
+export scaled : Array[F64] -> Array[F64]
+scaled = array.map scale
+export rounded : Array[F32] -> Array[F32]
+rounded = array.map inc-float
+export converted : Array[I64] -> Array[F64]
+converted = array.map to-double
+export observed : Array[I64] -> Array[I64] ! {IO}
+observed = array.map observe
+
+# These callbacks or representations are outside the selected direct-call case.
+export dynamic : (F64 -> F64) -> Array[F64] -> Array[F64]
+dynamic = fn callback -> array.map callback
+export captured : F64 -> Array[F64] -> Array[F64]
+captured = fn offset -> array.map (fn value -> value + offset)
+quad-step : F128 -> F128
+quad-step = fn value -> value + 1.0f128
+export wide : Array[F128] -> Array[F128]
+wide = array.map quad-step
+export text-lengths : Array[String] -> Array[I64]
+text-lengths = array.map string.length
+Point = {x: F64, y: F64}
+point-sum : Point -> F64
+point-sum = fn point -> (point | .x) + (point | .y)
+export record-sums : Array[Point] -> Array[F64]
+record-sums = array.map point-sum
+
+# Mapping a slice must preserve the original array and the slice's bounds.
+sliced = fn () ->
+    let input = array.from-list [9.0, 2.0, 4.0, 8.0]
+    in let part = input | array.slice 1 2
+    in ((part | scaled | array.to-list), (input | array.to-list)) | echo
+
+main = [
+    array.from-list [1i8, -2i8] | small | array.to-list | echo,
+    array.from-list [2.0, 4.0] | scaled | array.to-list | echo,
+    array.from-list [-32767i16, 32767i16] | signed | array.to-list | echo,
+    array.from-list [1u64, 18446744073709551615u64] | unsigned | array.to-list | echo,
+    array.from-list [16777216.0f32, 1.0f32] | rounded | array.to-list | echo,
+    array.from-list [] | converted | array.to-list | echo,
+    array.from-list [7] | converted | array.to-list | echo,
+    array.from-list [1, 2, 3] | observed | array.to-list | echo,
+    array.from-list [2.0, 4.0] | dynamic scale | array.to-list | echo,
+    array.from-list [2.0, 4.0] | captured 3.0 | array.to-list | echo,
+    array.from-list [1.0f128, 2.0f128] | wide | array.to-list | echo,
+    array.from-list ["a", "hello"] | text-lengths | array.to-list | echo,
+    array.from-list [Point {x = 1.0, y = 2.0}] | record-sums | array.to-list | echo,
+    sliced (),
+] | ignore
