@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Measure the frozen numeric-input compiler experiment on native Linux runners."""
+"""Measure an explicitly selected compiler pass on native Linux runners."""
 import argparse
 import hashlib
 import importlib.util
@@ -68,6 +68,7 @@ def main():
     parser.add_argument('--compiler', required=True, type=Path)
     parser.add_argument('--reference', required=True, type=Path)
     parser.add_argument('--reference-manifest', required=True, type=Path)
+    parser.add_argument('--comparison', required=True, choices=('numeric-inputs', 'scalar-map-zip'))
     parser.add_argument('--time', required=True, type=Path)
     parser.add_argument('--machine', required=True, choices=('aarch64', 'x86_64'))
     parser.add_argument('--source', required=True)
@@ -79,16 +80,22 @@ def main():
     assert args.timeout > 0
     assert subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip() == args.source
     reference_manifest = json.loads(args.reference_manifest.read_text())
-    assert set(reference_manifest['files']) == {'src/cgen.rs', 'src/cgen/packed_records.rs'}
-    assert set(reference_manifest['unchanged']) == {'src/ownership.rs', 'src/cgen/field_transfers.rs', 'src/cgen/numeric_parameters.rs'}
-    assert reference_manifest['scope'] == 'numeric-inputs'
     assert reference_manifest['source'] == args.source
     assert reference_manifest['compilerSha256'] == sha(args.reference)
-    assert reference_manifest['disabledTransformation'] == 'numeric internal parameters and numeric packed-map input preparation'
-    for path, hashes in reference_manifest['files'].items():
-        assert sha(ROOT / path) == hashes['candidateSha256'], path
-    for path, digest in reference_manifest['unchanged'].items():
-        assert sha(ROOT / path) == digest, path
+    if args.comparison == 'numeric-inputs':
+        assert set(reference_manifest['files']) == {'src/cgen.rs', 'src/cgen/packed_records.rs'}
+        assert set(reference_manifest['unchanged']) == {'src/ownership.rs', 'src/cgen/field_transfers.rs', 'src/cgen/numeric_parameters.rs'}
+        assert reference_manifest['scope'] == 'numeric-inputs'
+        assert reference_manifest['disabledTransformation'] == 'numeric internal parameters and numeric packed-map input preparation'
+        for path, hashes in reference_manifest['files'].items():
+            assert sha(ROOT / path) == hashes['candidateSha256'], path
+        for path, digest in reference_manifest['unchanged'].items():
+            assert sha(ROOT / path) == digest, path
+    else:
+        assert args.comparison == 'scalar-map-zip'
+        assert reference_manifest['disabledTransformation'] == 'scalar map-to-zip buffer storage'
+        assert reference_manifest['candidateCodegenSha256'] == sha(ROOT / 'src/cgen.rs')
+        assert reference_manifest['ownershipSha256'] == sha(ROOT / 'src/ownership.rs')
     for key, expected in [('CARGO_PROFILE_DEV_OPT_LEVEL', '1'),
                           ('CARGO_PROFILE_DEV_DEBUG_ASSERTIONS', 'true'),
                           ('CARGO_PROFILE_DEV_OVERFLOW_CHECKS', 'true'), ('FWP_LTO', '0')]:
@@ -97,7 +104,7 @@ def main():
     output.mkdir(parents=True, exist_ok=False)
     environment = {key: value for key, value in os.environ.items() if not key.startswith('FWP_')}
     environment.update(FWP_LTO='0', LC_ALL='C')
-    report = dict(source=args.source, machine=args.machine, complete=False,
+    report = dict(source=args.source, machine=args.machine, complete=False, comparison=args.comparison,
                   scope='Entire compiler command through C emission: startup, parsing, typing, '
                         'optimization, ownership and emission. No generated-program execution. '
                         'GNU time -v reports process peak RSS across all invocations, including warmups; '

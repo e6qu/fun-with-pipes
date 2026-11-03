@@ -429,7 +429,7 @@ mod tests {
             assert!(
                 matches!(program.funcs[6].body, Body::ScalarBufferZip { callback: 2, slot: selected } if selected == slot)
             );
-            let live = live_functions(&program, &[]).unwrap();
+            let live = reachable_functions(&program, &[0]).unwrap();
             assert!(live[1] && live[2] && live[5] && live[6]);
         }
     }

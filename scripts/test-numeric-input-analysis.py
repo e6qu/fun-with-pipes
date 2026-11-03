@@ -67,8 +67,8 @@ class CompilerCosts(unittest.TestCase):
                 ANALYSIS.summarize(rows)
 
     def test_complete_schedule_and_timeout_keep_reviewable_evidence(self):
-        for fail in (False, True):
-            with self.subTest(timeout=fail), tempfile.TemporaryDirectory() as temporary:
+        for comparison, fail in itertools.product(('numeric-inputs', 'scalar-map-zip'), (False, True)):
+            with self.subTest(comparison=comparison, timeout=fail), tempfile.TemporaryDirectory() as temporary:
                 root = Path(temporary)
                 compiler, reference = root / 'candidate', root / 'reference'
                 compiler.write_bytes(b'candidate image')
@@ -81,9 +81,14 @@ class CompilerCosts(unittest.TestCase):
                     unchanged={path: ANALYSIS.sha(ANALYSIS.ROOT / path) for path in
                                ('src/ownership.rs', 'src/cgen/field_transfers.rs', 'src/cgen/numeric_parameters.rs')})
                 manifest_path = root / 'manifest.json'
+                if comparison == 'scalar-map-zip':
+                    manifest = dict(source='test-source', compilerSha256=ANALYSIS.sha(reference),
+                        disabledTransformation='scalar map-to-zip buffer storage',
+                        candidateCodegenSha256=ANALYSIS.sha(ANALYSIS.ROOT / 'src/cgen.rs'),
+                        ownershipSha256=ANALYSIS.sha(ANALYSIS.ROOT / 'src/ownership.rs'))
                 manifest_path.write_text(json.dumps(manifest))
                 output = root / 'output'
-                argv = ['measure', '--compiler', str(compiler), '--reference', str(reference),
+                argv = ['measure', '--comparison', comparison, '--compiler', str(compiler), '--reference', str(reference),
                         '--reference-manifest', str(manifest_path), '--time', '/usr/bin/time',
                         '--machine', 'aarch64', '--source', 'test-source', '--timeout', '180',
                         '--output', str(output)]

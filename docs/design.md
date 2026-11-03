@@ -492,10 +492,12 @@ escaping results and values with child owners retain their ordinary storage.
 The buffer and zip's output scratch remain protected during callbacks; neither
 source list is mutated.
 
-This implementation is awaiting native validation. The
-[frozen contract and count predictions](measurements/temporary-list-storage.md#selected-storage-change)
-and [verified allocation census](measurements/temporary-list-census-2026-11-03/README.md)
-separate the measured starting cost from the new change's unverified savings.
+The [first native run](measurements/temporary-list-storage-2026-11-03/README.md)
+verifies behavior, cleanup and exact allocation savings on GCC/Clang ARM64/AMD64.
+A unit-test compilation repair, compiler/runtime timings and final platform gates
+remain open. The [frozen contract](measurements/temporary-list-storage.md#selected-storage-change)
+and [starting census](measurements/temporary-list-census-2026-11-03/README.md)
+define the comparison.
 
 ### Numeric callback inputs
 

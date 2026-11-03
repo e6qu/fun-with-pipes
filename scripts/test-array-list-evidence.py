@@ -130,6 +130,24 @@ class Evidence(unittest.TestCase):
             CHECK.check_reference_patch(patch.replace('+    let packed_program = if false',
                 '+    let packed_program = if true'), candidate, reference, 'src/cgen.rs')
 
+    def test_scalar_map_reference_reconstruction_preserves_other_transformations(self):
+        candidate = (ROOT / 'src/cgen.rs').read_text()
+        preparation = (ROOT / 'scripts/prepare-scalar-map-zip-reference.py').read_text()
+        reference = CHECK.recorded_reference(candidate, preparation)
+        self.assertEqual(reference, candidate.replace(
+            '    scalar_map_zip::lower(&mut numeric_program);\n',
+            '    if false { scalar_map_zip::lower(&mut numeric_program); }\n'))
+        self.assertNotEqual(candidate, reference)
+        self.assertEqual(CHECK.recorded_reference(candidate,
+            'raise RuntimeError("must not execute saved code")\n' + preparation), reference)
+        header = 'diff --git a/src/cgen.rs b/src/cgen.rs\nindex 1234567..2345678 100644\n'
+        patch = header + ''.join(difflib.unified_diff(candidate.splitlines(keepends=True),
+                    reference.splitlines(keepends=True), fromfile='a/src/cgen.rs', tofile='b/src/cgen.rs'))
+        CHECK.check_reference_patch(patch, candidate, reference, 'src/cgen.rs')
+        with self.assertRaises(AssertionError):
+            CHECK.check_reference_patch(patch.replace('+    if false', '+    if true'),
+                                        candidate, reference, 'src/cgen.rs')
+
     def test_recorded_fold_preparation_is_independent_of_current_codegen(self):
         revision = '55d46cd57425fe9f5bb65a1b83a7d12821445711'
         old = subprocess.check_output(['git', 'show', revision + ':src/cgen.rs'],

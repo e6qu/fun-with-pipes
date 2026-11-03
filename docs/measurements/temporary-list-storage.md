@@ -154,3 +154,30 @@ source rewrite before measurements.
 Keep the same-source runtime reference and the existing 2% copy/regression and 5% large-case speed
 limits. Report compiler time/RSS, managed/raw memory, process RSS and code/frame
 costs separately. Prior missed goals remain open regardless of the new result.
+
+### Execution of the frozen comparison
+
+Use `scalar-map-zip-checks` first. Both native jobs must pass, and their compiler,
+runtime, library and test sources must match the measured sources.
+
+| Measurement | Fixed execution |
+|---|---|
+| Compiler cost (`scalar-map-zip-analysis`) | Five programs: field transfers, autodiff tutorial, and generated 3/0, 33/199, 129/199 solves. Four executable copies (two candidate, two reference), two warmups each, then ten balanced rounds: 240 commands per architecture. Measure the whole C-emission command and GNU time peak RSS. |
+| Program cost (`scalar-map-zip-time`) | Two independent sessions on native Neoverse N2 ARM64 and EPYC 7763 AMD64. Reuse the complete derivative driver and its qualified GCC/Rust toolchains. Run all six inputs, both current-only and history forms, two warmups and 98 timed samples. |
+| Instrumented work | Preserve separate allocator/phase runs, ordinary output, native images, source hashes, commands and diagnostics. Instrumented execution does not establish elapsed speed. |
+| Independent audit (`scalar-map-zip-report`) | Download each complete or failed session, verify archive hashes, reconstruct the exact reference patch and recalculate all acceptance results from retained observations. |
+
+Runtime batches use 32,768, 512, 32, 4, 32 and 8 solves per process for the six
+inputs in the order listed above. Each timed sample sums seven process runs per
+implementation; each process performs the stated number of solves.
+Phase timing uses two warmups and 12 samples. Seed `20261029` fixes process order;
+no host or session is selected implicitly. Reject unqualified hosts before
+measurement; preserve every completed timing outcome.
+
+The compiler limit remains 5% for elapsed time and peak RSS, with at most 2%
+identical-copy variation. Program timings keep 2% identical-copy variation,
+at most 2% slowdown for zero/one update, and at least 5% improvement for 199 or
+more updates. Require the exact allocation savings above and unchanged retains;
+managed peak must not grow, final storage must be zero, and raw derivative work
+must match. Report code size without a size cap; the largest static frame may
+grow by at most 128 bytes. These limits are unchanged from the selected contract.

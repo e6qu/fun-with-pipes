@@ -1,9 +1,9 @@
 # Current work
 
-**Next:** publish the scalar map-to-zip implementation and run `scalar-map-zip-checks`
-on both native Linux hosts. Audit every completed target and fix all failures
-before the grouped performance measurements. Census verification is complete;
-new compiler behavior is not yet verified. Keep this batch in draft PR #250.
+**Next:** publish the audited unit/workflow repairs and completed scalar-buffer
+measurement tooling, then run `scalar-map-zip-checks` on the new head. Require
+both native jobs to pass before dispatching compiler/runtime comparisons.
+Keep the batch in draft PR #250; timing and final production gates remain open.
 
 ## Checkout and sources
 
@@ -15,82 +15,86 @@ new compiler behavior is not yet verified. Keep this batch in draft PR #250.
   `ce8dab3adb4fca4643cd600286233ebf11d884bc`.
 - Verified census source `c8e8a17ad7a68ef3235be4e5de59167589c55d4b`, run
   `41573569217`; production sources equal the verified #249 tree.
-- Count baseline: [96 attributed observations](measurements/temporary-list-census-2026-11-03/verified-counts.json.gz).
-  No dependency on an older fwp compiler or API is needed.
-- Protocol anchors: `roadmap/temporary-list-protocol-2026-11-03` (census) and
-  `roadmap/scalar-map-zip-protocol-2026-11-03` (selected implementation).
+- Selected storage implementation: `6f4cd46b2623cdbddd7419d18f44a66898891272`.
+  [First native attempt and complete audit](measurements/temporary-list-storage-2026-11-03/README.md).
+- Protocol anchors: `roadmap/temporary-list-protocol-2026-11-03` and
+  `roadmap/scalar-map-zip-protocol-2026-11-03`.
 
 ## Roadmap status
 
 | Step | Status | Remaining work |
 |---|---|---|
-| 1 | Verified | Preserve census controls and evidence |
-| 2 | Implemented | Frozen contract and reference helper; source-rewrite tests pass, runner checks remain |
-| 3 | Implemented | Native semantic/cleanup controls and exact allocation predictions need execution |
-| 4 | Pending | Grouped cost measurements, final platform gates and verified squash |
+| 1 | Verified | Preserve attributed constructor census |
+| 2 | Verified | Selected storage contract and tested same-source reference |
+| 3 | In progress | Repair unit compilation and workflow failure reporting; rerun grouped checks |
+| 4 | Pending | Compiler/runtime measurements, final platform gates and verified squash |
 
-## Verified evidence and selected change
+## What the first native run establishes
 
-[Both native census jobs](measurements/temporary-list-census-2026-11-03/README.md)
-pass: ARM64 `125711836846`, AMD64 `125711837155`; docs `125711765045` also passes.
-The runner reconstructs instrumented C/site tables, hashes every archived file,
-checks native images and recomputes counts. All 118 C compilation logs per host
-and both full job logs are clean. All 96 observations preserve output, derivative
-work, managed/raw counts and zero final storage; cross-host caller counts agree.
+Run `41576241072`, ARM64 job `125720292199`, AMD64 `125720292215`:
 
-The largest solve creates 25,671 scaled-adjustment cells. The selected change
-replaces its sole-use map result with a numeric buffer, then lets zip-with read
-it directly. Expected saving: 25,870 allocations and 823,064 requested bytes per
-129-coordinate/199-update solve. These are predictions, not measured savings.
-Preserve full map-before-zip order, aliases, traps, cancellation and cleanup.
-Keep prior timing failures open; preserve the 2%/5% limits in PLAN.md.
+- Production compiler builds; 23 GCC and 10 Clang integration tests pass per host.
+- All 96 allocation observations match exact predictions, output and derivative
+  work. Each host has 118 clean C compilation logs and passing observer controls.
+- Largest current-only solve: 156,943 → 131,073 allocation requests;
+  5,382,142 → 4,559,078 requested bytes. Retains stay 995; peak managed bytes stay
+  17,824; final storage is zero. History saves the same requests/bytes.
+- Both jobs fail all-target lint because the new unit test calls an out-of-scope
+  helper. Both unit-test invocations fail too, hidden by `tee` exit handling.
+  No passing unit-test claim is supported by this attempt.
+- Full logs and every completed target are audited. No additional compiler
+  diagnostic remains unexplained. Docs job `125720204926` passes; its deliberate
+  failing-runner controls are expected. Raw evidence and failures are retained.
 
-The original census attempt `41572713222` failed because an exit handler replaced
-the invalid-site diagnostic's status. Both jobs were audited before repair.
-Diagnostic failure now flushes stderr and uses `_Exit(234)`; the repaired native
-controls pass. [Original raw evidence](measurements/temporary-list-census-2026-11-03/README.md#first-attempt-diagnostic-exit-status-repaired)
-and source tag `roadmap/constructor-census-attempt-2026-11-03` are retained.
+Prepared repairs use `reachable_functions(&program, &[0])` and explicit Bash
+pipeline failure checks. Both unit groups still run and retain their logs.
+Three older numeric-owner pipeline steps receive the same reporting repair.
+No production compiler behavior changes in this repair batch.
 
-## Implementation preparation
+## Performance comparison ready to run
 
-`src/cgen/scalar_map_zip.rs` indexes uses once, follows single-use aliases and
-rewrites the exact indexed body without cloning it. Native map/zip bodies borrow
-their inputs; callbacks, live-function reachability, scoped effects, numeric
-parameter analysis and borrowing analysis include both new body kinds.
+[The fixed execution](measurements/temporary-list-storage.md#execution-of-the-frozen-comparison)
+uses the same-source reference with only `scalar_map_zip::lower` disabled.
+Both builds retain packed-record storage and numeric callback improvements.
 
-Controls extend existing `zip_map_fusion` and `zip_unwind_ownership` targets:
-both input slots, all 12 machine-number kinds, eager order, traps beyond a shorter
-zip, shared inputs/excluded results, failures, cancellation, partial output and
-three deliberately missing frees. Unit controls cover alias/type rewriting,
-exclusions, two eligible inputs and linear visit counts. These Rust/native checks
-have not run locally. Existing fold ownership targets run alongside them on GCC;
-the zip targets also run on Clang, each at O1/O2.
+- `scalar-map-zip-analysis`: both native hosts, five programs, 240 balanced
+  compiler commands per host; 2% identical-copy, 5% elapsed/RSS limits.
+- `scalar-map-zip-time`: explicit native host and session selection; two sessions
+  per architecture, all six inputs, 98 samples. Qualified Neoverse N2/EPYC 7763
+  hosts only. Supply the passing correctness run as `evidence_run`.
+- `scalar-map-zip-report`: independently audit retained outputs, samples,
+  source/reference identities, native images and storage. Preserve every failure.
+- Runtime budgets require exact allocation savings and unchanged retains, no
+  managed peak growth, zero final storage, unchanged raw work, 2% copy/regression
+  limits and 5% improvement for 199+ updates. Code size is reported; frames may
+  grow by at most 128 bytes. Prior PLAN.md timing failures remain open.
 
-`prepare-scalar-map-zip-reference.py` bypasses only the new selection call.
-Reference-isolation tests pass. The count driver now requires exact predicted
-allocation savings and unchanged retains; it retains constructor attribution and
-all existing storage/output/work checks. Compiler time/RSS, complete-driver timing
-and final production gates remain unimplemented/unrun for this candidate.
+The workflows require two passing correctness jobs with matching compiler,
+runtime, library and test sources. Do not dispatch timing before that check can
+pass. After measurements and repairs, require nine exact-head production jobs
+plus docs, audit every log, then squash with one line ≤80 characters and no body
+or trailers. Verify the squash message and tested-tree equality.
 
-The grouped implementation's local checks pass: scalar-reference isolation
-(three tests), preserved numeric-reference isolation (four), derivative observer
-and exact-saving controls (15, 13.95s), Rust formatting (1.81s), actionlint
-(6.48s), roadmap audit (3.00s), and primitive inventory (394 declarations,
-384 symbols, 40 aliases, no unreviewed symbols; 1.23s).
+## Local verification and retained files
 
-## Checks and local limits
+All local checks used `scripts/local-guard.py`; no local build or benchmark:
 
-No local full build, suite or benchmark. All checks used `scripts/local-guard.py`:
-seven constructor tests (0.74s), 13 ownership-profile tests (0.13s), 14 derivative
-profile tests (13.58s), workflow lint (6.46s), roadmap/link audit (3.03s). Saved-C
-rewrite attributes all 277 sites; caller detection now handles kernel macros and
-multiline signatures. Artifact/log/cross-host audit passes (0.63s); all 96 map/zip
-count formulas pass (0.14s). Published commits have one line, 57/59/62 characters,
-no body/trailers. The early test-discovery mistake and serialization refusal were
-resolved by direct, serial checks; no guard limit was bypassed.
+- Reference isolation: scalar (3), numeric (4); observer/exact savings (15).
+- Measurement controls: compiler (7, 0.62s), runtime budgets (14, 0.14s),
+  grouped evidence (12, 6.01s), retained downloads/hosts (3, 0.13s),
+  independent archives/reference patches (13, 50.58s).
+- Rust formatting (1.91s), workflow lint (5.59s), roadmap (3.03s), primitive
+  inventory (394 declarations, 384 symbols, no unreviewed symbols; 1.23s).
+- Native archive/log audit (0.13s); 320 image headers, 32 scalar unwind statuses
+  and all integration results (0.73s); all 96 exact count differences and clean
+  compilation logs (0.50s). An audit helper first assumed plain numeric statuses;
+  the harness stores `Some(code)`. The corrected audit passes.
 
-Passing archives: `/private/tmp/fwp-census-passing-{arm,amd}.zip`; their hashes
-match GitHub metadata. Retained ordinary C: `/private/tmp/fwp-census-largest-{arm,amd}.c`.
-Guarded audit helper: `/private/tmp/fwp-audit-constructor-census.py`.
+Raw archives: `/private/tmp/fwp-250-scalar-first-{arm,amd}.zip` (controls),
+`/private/tmp/fwp-250-scalar-counts-{arm,amd}.zip` (counts). Full job logs use
+`fwp-250-scalar-first-{arm,amd,docs}.log`. Auditors are
+`/private/tmp/fwp-{audit-scalar-controls,retain-scalar-controls,audit-scalar-counts}.py`.
+The earlier census archives and audit remain under `/private/tmp/fwp-census-*`.
+
 Preserve 64 GiB free disk, target data below 2 GiB, workload RSS below 1 GiB and
-the 180-second deadline. Move refused checks to runners; never raise the limits.
+the 180-second guard deadline. Move refused work to runners; never raise limits.
