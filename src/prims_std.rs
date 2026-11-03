@@ -31,6 +31,14 @@ fn count_arg(v: &Value) -> usize {
     (int(v).max(0) as u64).min(usize::MAX as u64) as usize
 }
 
+fn iterate_count(v: &Value) -> R<usize> {
+    let count = count_arg(v);
+    if count >= usize::MAX / std::mem::size_of::<u64>() {
+        return trap("iterate too large");
+    }
+    Ok(count)
+}
+
 // Match the native length/header/V-slot overflow limit before allocating or
 // invoking a generator callback. Negative counts retain their empty result.
 fn array_count(v: &Value) -> R<usize> {
@@ -296,6 +304,15 @@ impl<'p> Interp<'p> {
                         .ok()
                         .and_then(|index| a[1].list_items().into_iter().nth(index)))
                 }
+                "last" => {
+                    let mut current = &a[0];
+                    let mut last = None;
+                    while let Value::Data(1, fields) = current {
+                        last = Some(&fields[0]);
+                        current = &fields[1];
+                    }
+                    opt(last.cloned())
+                }
                 "find" => {
                     let f = a[0].clone();
                     let mut found = None;
@@ -345,7 +362,7 @@ impl<'p> Interp<'p> {
                     )
                 }
                 "iterate" => {
-                    let n = int(&a[0]).max(0);
+                    let n = iterate_count(&a[0])?;
                     let f = a[1].clone();
                     let mut x = a[2].clone();
                     let mut out = Vec::new();
@@ -356,6 +373,19 @@ impl<'p> Interp<'p> {
                         }
                     }
                     Value::list(out)
+                }
+                "list._iterate-last" => {
+                    let n = iterate_count(&a[0])?;
+                    let f = a[1].clone();
+                    let mut current = std::mem::replace(&mut a[2], Value::unit());
+                    if n == 0 {
+                        none()
+                    } else {
+                        for _ in 1..n {
+                            current = self.apply(f.clone(), vec![current])?;
+                        }
+                        some(current)
+                    }
                 }
                 // ----- strings
                 "trim-start" => {

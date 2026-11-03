@@ -65,6 +65,15 @@ fn num(t: &MT) -> Option<Num> {
     }
 }
 
+/// These states can own storage, but releasing it has no resource-close effect.
+/// Keep this bounded: no recursive records, closures or arbitrary type expansion.
+fn numeric_iteration_state(ty: &MT) -> bool {
+    num(ty).is_some()
+        || matches!(ty, MT::Con(name, elements)
+            if matches!(name.as_str(), "std::List" | "std::Array")
+                && elements.len() == 1 && num(&elements[0]).is_some())
+}
+
 struct Behaviors<'p> {
     funcs: &'p [Func],
     memo: HashMap<FuncId, Traps>,
@@ -258,7 +267,7 @@ fn prim(sym: &str, ty: &MT, args: &[Expr]) -> Traps {
         // is not a trap a program can tell from another)
         "show" | "array._show-list" | "concat" | "string.length" | "string.byte-length"
         | "string.chars" | "split" | "join" | "lower" | "upper" | "trim" | "trim-start"
-        | "trim-end" | "length" | "reverse" | "not" | "and" | "or" | "range" => none(),
+        | "trim-end" | "length" | "reverse" | "last" | "not" | "and" | "or" | "range" => none(),
         // ordered maps and sets: structural comparisons of keys
         s if (s.starts_with("map.") || s.starts_with("set."))
             && !matches!(s, "map.update" | "map.map-values") =>
@@ -1339,6 +1348,7 @@ impl Fuser<'_> {
             }
             ("length", 1) => Some("length"),
             ("find", 2) => Some("find"),
+            ("last", 1) => Some("last"),
             _ => None,
         }
     }
@@ -1362,6 +1372,39 @@ impl Fuser<'_> {
                 return Some(Expr::Let(*local, value.clone(), Box::new(consumed)));
             }
             return None;
+        }
+        if kind == "last" {
+            let Expr::Call(producer, inputs) = &args[0] else {
+                return None;
+            };
+            let producer = self.funcs.get(*producer)?;
+            if !matches!(&producer.body, Body::Prim(symbol) if symbol == "iterate")
+                || producer.arity != 3
+                || inputs.len() != 3
+                || self.funcs[cons_id].arity != 1
+            {
+                return None;
+            }
+            let (parameters, produced) = producer.ty.params(3);
+            if parameters.len() != 3 || !numeric_iteration_state(parameters[2]) {
+                return None;
+            }
+            let state = parameters[2].clone();
+            let count = MT::con("std::I64");
+            let callback = MT::Fun(Box::new(state.clone()), Box::new(state.clone()));
+            let list = MT::Con("std::List".into(), vec![state.clone()]);
+            let result = MT::Con("std::Option".into(), vec![state.clone()]);
+            if parameters != [&count, &callback, &state]
+                || produced != &list
+                || self.funcs[cons_id].ty != MT::Fun(Box::new(list), Box::new(result.clone()))
+            {
+                return None;
+            }
+            let ty = MT::Fun(Box::new(count), Box::new(fun2(&callback, &state, &result)));
+            let direct = self.prim("list._iterate-last", ty, 3);
+            // Keep every argument and its evaluation point. Only the unused
+            // history and reverse copy disappear; callback work stays ordered.
+            return Some(Expr::Call(direct, inputs.clone()));
         }
         if kind == "array-list-text" {
             let Expr::Call(producer, inputs) = &args[0] else {
@@ -2491,6 +2534,110 @@ pub fn specialize_matrices(prog: &mut Program) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn final_iteration_selects_only_numeric_states_with_one_history_use() {
+        let integer = MT::con("std::I64");
+        let float = MT::con("std::F64");
+        for (state, eligible) in [
+            (integer.clone(), true),
+            (MT::con("std::I128"), true),
+            (MT::con("std::F128"), true),
+            (MT::Con("std::List".into(), vec![float.clone()]), true),
+            (MT::Con("std::Array".into(), vec![float]), true),
+            (MT::con("std::File"), false),
+            (MT::con("std::String"), false),
+            (MT::con("?"), false),
+            (
+                MT::Con("std::List".into(), vec![MT::con("std::Conn")]),
+                false,
+            ),
+            (
+                MT::Fun(Box::new(integer.clone()), Box::new(integer.clone())),
+                false,
+            ),
+        ] {
+            for shared in [false, true] {
+                for primitive in [false, true] {
+                    let callback = MT::Fun(Box::new(state.clone()), Box::new(state.clone()));
+                    let list = MT::Con("std::List".into(), vec![state.clone()]);
+                    let option = MT::Con("std::Option".into(), vec![state.clone()]);
+                    let result = if shared {
+                        MT::Record(vec![
+                            ("0".into(), list.clone()),
+                            ("1".into(), option.clone()),
+                        ])
+                    } else {
+                        option.clone()
+                    };
+                    let last = Expr::Call(1, vec![Expr::Local(3)]);
+                    let body = if shared {
+                        Expr::Record(vec![Expr::Local(3), last])
+                    } else {
+                        last
+                    };
+                    let mut program = Program::default();
+                    program.shapes.insert(
+                        option.clone(),
+                        TypeShape::Adt(vec![
+                            ("None".into(), vec![]),
+                            ("Some".into(), vec![state.clone()]),
+                        ]),
+                    );
+                    program.funcs = vec![
+                        Func {
+                            name: "iterate".into(),
+                            arity: 3,
+                            locals: vec![integer.clone(), callback.clone(), state.clone()],
+                            ty: MT::Fun(
+                                Box::new(integer.clone()),
+                                Box::new(fun2(&callback, &state, &list)),
+                            ),
+                            body: Body::Prim("iterate".into()),
+                        },
+                        Func {
+                            name: "last".into(),
+                            arity: 1,
+                            locals: vec![list.clone()],
+                            ty: MT::Fun(Box::new(list.clone()), Box::new(option)),
+                            body: if primitive {
+                                Body::Prim("last".into())
+                            } else {
+                                Body::Expr(Expr::Construct(0, vec![]))
+                            },
+                        },
+                        Func {
+                            name: "finish".into(),
+                            arity: 3,
+                            locals: vec![integer.clone(), callback.clone(), state.clone(), list],
+                            ty: MT::Fun(
+                                Box::new(integer.clone()),
+                                Box::new(fun2(&callback, &state, &result)),
+                            ),
+                            body: Body::Expr(Expr::Let(
+                                3,
+                                Box::new(Expr::Call(
+                                    0,
+                                    vec![Expr::Local(0), Expr::Local(1), Expr::Local(2)],
+                                )),
+                                Box::new(body),
+                            )),
+                        },
+                    ];
+                    fuse(&mut program);
+                    let selected = program.funcs.iter().any(
+                        |f| matches!(&f.body, Body::Prim(symbol) if symbol == "list._iterate-last"),
+                    );
+                    assert_eq!(
+                        selected,
+                        eligible && !shared && primitive,
+                        "{state}/{shared}/{primitive}"
+                    );
+                    crate::ir::check_locals(&program).unwrap();
+                }
+            }
+        }
+    }
 
     #[test]
     fn zip_map_records_exclude_owned_children_and_boxed_numbers() {

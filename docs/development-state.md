@@ -1,129 +1,95 @@
 # Current work
 
-**Next:** monitor PR #254's final production run `41694728758` at `9061744b`,
-audit every completed full/target log, then squash and verify its tree/message
-once all nine production jobs and documentation pass. Docs and benchmarks passed
-with full-log audits; the eight native jobs are running. Keep the head unchanged,
-the 32 missed speed targets open, and completed timing sessions unrepeated.
+**Next:** monitor PR #254's repaired head and publish the next group's focused
+checks from `iteration-final-value`. Keep one delivery PR: open the next only
+after #254 passes all final gates and its squash tree/message are verified.
 
-**Preparation branch:** `.worktrees/iteration-final-value` / `iteration-final-value`.
-The [next-group contract](measurements/final-iteration-storage.md) selects direct
-`last`, eligible history removal, count validation and optional-result cleanup.
-The source review is complete; the optimizations are not implemented yet. Workflow
-lint passed through the guard in 6.50 seconds. Collector state for #254 is in
-scratch `platforms-254`. Open no second delivery PR before #254 is merged.
+## PR #254: final gates
 
-The old list-iteration page now distinguishes its completed seven-sample report
-from the current eight-sample reproduction schedule; it no longer claims a new
-run is pending.
-
-Inspection run `41698313044` passed at `13df096288aad41300f41d76f9a4f6c58440b192`.
-That source has an empty compiler/runtime/library diff from `9061744b`. All 12
-raw/optimized compilations, full logs and artifact/file hashes passed the guarded
-collector in 5.54 seconds; the [retained review](measurements/final-iteration-storage-2026-11-03/README.md)
-confirms the real scalar/list/gradient/shared-history shapes. Script imports/help
-passed through the guard in 0.13 seconds; after staging, the documentation audit
-passes 248 link sets, 106 anchors and four plan steps in 2.64 seconds. No local
-compiler build or timing run was performed. Keep this run's source identity when
-reviewing its saved output, even if later implementation changes this branch.
-
-The same report retains a source-level cleanup reproduction: a failed retained
-child left a 16-byte optional wrapper allocated. An existing cleanup guard repairs
-that reproduction (Clang O2, 1.14 seconds guarded, with the old failure retained).
-The Rust generator repair and new `retain_unwind_ownership` regression are local
-and formatted; their actual generated output is not yet verified. Include them
-in the next focused batch rather than running the full matrix for this fragment.
-
-## Checkout and sources
-
-- Worktree/branch: `.worktrees/scalar-array-identities` / `scalar-array-identities`.
-  [PR #254](https://github.com/e6qu/fun-with-pipes/pull/254) is the only active PR.
-  Scratch collectors and downloaded evidence: `.worktrees/gradient-work`.
-- Base: PR #253 merged as `ed5b8830a3cb90a4b6a248464d279ac8d1d0ccc7` with all
-  gates/logs verified. Its [delivery history](roadmap-history.md#direct-scalar-array-calls-pr-253)
-  retains the tested source, merge-message check and duplicate-main cancellation.
-  Leave the primary checkout's recovery edits and old worktrees alone.
-- Frozen contract: `97c47a422a029e9913953ecba5aa6f4cb81414f4`, tag
-  `roadmap/scalar-array-identities-protocol-2026-11-03`, before implementation.
-- Native checks and measurements: `beddd406153f1976fed00847292207bff9053e22`, tag
-  `roadmap/scalar-array-identity-measurement-2026-11-03`. Compiler/runtime/library
-  and measurement tooling are unchanged since that source. Later changes add
-  docs, the storage probe, distinct BF16 inputs and documentation CI repair.
-- Same-type conversion preserves all bits under the stated working rule; no
-  alternative instruction arrived. Cross-type behavior is unchanged. Generic
-  F128 results keep independent ownership.
+- Active PR: https://github.com/e6qu/fun-with-pipes/pull/254.
+- Repaired head: `8bf9c65bc247bbd94903d0a31fb0823d1e335391` on branch/worktree
+  `scalar-array-identities`. Production `41713252299` and docs `41713252267` are
+  queued; no repaired-head native job has run yet.
+- Previous production `41694728758` at `9061744b` completed: seven jobs and docs
+  passed; both Windows jobs failed the same two float probes. Their custom C
+  mains omitted binary-stream setup, producing CRLF. The repair checks `_setmode`
+  on stdout/stderr and preserves exact-byte assertions. The audit verifies all
+  1,600 conversion rows and 32 deliberate fatal-allocation exits. TLS unknown-CA
+  output belongs to a passing untrusted-client rejection control.
+- [Retained diagnosis](https://github.com/e6qu/fun-with-pipes/blob/8bf9c65bc247bbd94903d0a31fb0823d1e335391/docs/measurements/scalar-array-identities-2026-11-03/windows-repair/README.md).
+  Full logs, target archives and collector are in scratch `platforms-254` under
+  `.worktrees/gradient-work`. Audit every completed target and compiler diagnostic.
+- All measurements are complete. The compiler/runtime/library still match frozen
+  `beddd406153f1976fed00847292207bff9053e22`. Keep all 32 missed speed goals open;
+  never repeat completed timing sessions for a pass. See [the complete report](measurements/scalar-array-identity-time-2026-11-03/README.md).
+- Require nine production jobs plus docs at the exact repaired head. Squash
+  subject: `Preserve float bits and remove redundant F64 array copies`. Empty
+  body, one line, at most 80 characters, no trailers/attribution; verify merged
+  tree equals the tested tree. Preserve the passing head while gates run.
 
 ## Roadmap status
 
 | Step | Status | Remaining work |
 |---|---|---|
-| 1 | Verified | Preserve the conversion rule, exact F64 selection and frozen reference |
-| 2 | Verified | Keep three-host correctness/cleanup evidence; final matrix checks the expanded probes |
-| 3 | Verified | Measurements/audits are complete; keep all 32 missed speed targets open |
-| 4 | In progress | Publish the report; nine exact-head production jobs plus docs; audited squash |
+| 1 | Verified | Preserve #254's conversion and exact selection contract |
+| 2 | Verified | Recheck repaired probe streams in final native CI |
+| 3 | Verified | Keep completed measurements and all missed speed targets |
+| 4 | In progress | Pass repaired-head gates, audit and squash #254 |
 
-## Verification and measurements
+## Next group: final iteration values
 
-- [Focused native run `41672290329`](measurements/scalar-array-identities-2026-11-03/README.md):
-  GCC ARM64/AMD64 and Clang ARM64 pass 50 integration tests and the selector unit.
-  All full/target logs and 948 image identities are audited. Exact bits, moves,
-  aliases, slices, updates, recoverable traps, cancellation and fatal OOM controls
-  pass. The fault probe declares a task so actual unwind code is exercised.
-- Final tests also cover the expanded result-lifetime probe and 20 distinct signed
-  bit patterns per format. The frozen BF16 test had 18 because payload `0x42`
-  already set its quiet bit; the repaired test uses `0x21` and rejects duplicates.
-  Saved-C storage checks pass locally; their Rust-generated form needs final CI.
-- [Compiler-cost run `41678571054`](measurements/scalar-array-identity-analysis-2026-11-03/README.md):
-  all 480 commands and both raw audits pass. Maximum time increase 0.832%, peak
-  RSS increase 0.142%, identical-copy difference 1.767%.
-- [Runtime report](measurements/scalar-array-identity-time-2026-11-03/README.md):
-  ARM64 sessions use `41678576958`, audited by `41682284697`; AMD64 session 1
-  uses `41688990925`, audited by `41692822388`; session 2 uses `41679275708`,
-  audited by `41684684676`. All 5,336 raw-file records and four complete logs
-  reconcile. Six hosts were rejected before building/timing; all are retained.
-- All 48 case/form/session count comparisons, with and without workspace reuse,
-  remove exactly one allocation per update. The largest solve requests 206,960
-  fewer bytes. ARC, managed peaks and raw storage are unchanged; cleanup reaches
-  zero. No reported frame grows. Every required 5% gain is missed; noise and
-  zero/one-update regression limits pass. Accepted policy keeps reductions with
-  speed goals open. The slice probe separately shows prolonged backing storage.
+Worktree/branch: `.worktrees/iteration-final-value` / `iteration-final-value`.
+No delivery PR yet. The [contract](measurements/final-iteration-storage.md) was
+frozen at `2a257a3eea7b6005c350f1f860e27755b18b25c2`, tag
+`roadmap/final-iteration-storage-protocol-2026-11-03`, before implementation.
 
-## Documentation CI repair
+Implemented, awaiting focused native verification:
 
-[Both timeouts and the repair](measurements/scalar-array-identities-2026-11-03/documentation-repair/README.md)
-are retained. Full-history fetching consumed most of the first five-minute job;
-`blob:none` then caused separate historical-source fetches during checks. Fetch
-small historical files together with `blob:limit=1m` and allow ten CI minutes for
-setup plus validation. All checks remain, including the identity reference test.
-Run `41689453129` at `24f86ddf` passes all 62 steps and full-log audit in 9m29s.
-The packed-record check returned to three seconds; checkout took 5m27s. Do not
-claim uniformly faster cloning. Draft production runs were skipped, not gates.
+- Direct `last` borrows a list and returns its final item in an owned option.
+- Exact single-use `iterate` → `last` calls with numeric states or numeric
+  lists/arrays keep only the current state. Shared histories and resource-bearing
+  states remain excluded. Dynamic/captured callbacks keep their evaluation order.
+- The interpreter matches native oversized-count rejection before callbacks.
+- Fresh optional wrappers have cleanup protection while retaining children.
+  A failed retain frees the wrapper without dropping an unacquired child.
+- Tests compare old reverse/head, direct-last and selected-history paths, with
+  exact scalar/wide bits, count boundaries, aliases, captured callbacks, array
+  slices, both layouts, reuse, traps, cancellation and missing-cleanup controls.
+  A generic-last file test checks that the selected stream remains open until its
+  final owner is released. Source tests compare both interpreters and native O1/O2.
+- The collections tutorial explains five iterations from 1 yielding `Some 16`.
+  Library comments generate the updated reference on CI; import that artifact
+  after reviewing its diff. Do not edit `docs/stdlib.md` manually.
 
-## Final delivery controls
+The `final-iteration-checks` manual numerical workflow groups compiler units,
+primitive inventory, nine affected integration targets, tutorial execution and
+library-doc generation on GCC Linux ARM64/AMD64 and Clang macOS ARM64. It retains
+all partial logs and native probes. Windows now explicitly includes
+`iteration_consumers` in its final matrix. No new integration target is added.
 
-Preserve a passing final head while remaining gates run. Repair every failure in
-one batch after auditing all completed jobs/targets. Require Linux ARM64/AMD64,
-regular and ownership-stress macOS ARM64/AMD64, native Windows ARM64/AMD64,
-C/Rust benchmarks and documentation. `collect-final-platforms.py` in scratch takes
-explicit `--run`, `--source`, `--docs-job` and `--output`; it retains full logs and
-audits each native target. Mark PR ready only after the complete report is pushed.
+After focused checks: repair every finding in one batch; implement/audit the
+same-source reference, then measure the frozen runtime/compiler/stack limits.
+Both reference and candidate must contain count/cleanup repairs. Reference alone
+restores reverse/head and disables history removal. No timing session has started.
+Final nine-job plus docs verification remains required before delivery.
 
-Squash subject: `Preserve float bits and remove redundant F64 array copies`.
-Supply an empty body; verify one line, at most 80 characters, no trailers or
-attribution, and a merged tree equal to the tested head. Then continue with a
-separately declared group from [remaining storage](measurements/remaining-gradient-storage.md).
-Private packed-record consumers and general numeric-record arrays have different
-lifetime obligations; neither is selected by this experiment.
+## Completed preparation and local checks
 
-## Local checks and limits
-
-Guarded formatting, reference/budget/evidence controls, primitive inventory,
-workflow lint and documentation checks pass. The latest link audit covers 247
-doc sets, 106 preparation anchors and four plan steps. Compact runtime reports,
-all rejected-host records and memory/count summaries reconcile. Full builds,
-suites and benchmarks stayed on GitHub; no unchanged timing session was rerun.
-
-Use `python3 scripts/local-guard.py` serially: 64 GiB free disk, target data below
-2 GiB, sampled RSS below 1 GiB, 180 seconds. Do not raise or bypass these limits.
-Old run `38888712709` is a service-status ghost: all six jobs completed October 16;
-its failures were repaired by `9bf203d7` and verified in #252. It has no active work.
+- Inspection `41698313044` at `13df096288aad41300f41d76f9a4f6c58440b192` passes:
+  12 raw/optimized source/IR/C compilations, full log and all artifact hashes.
+  [Evidence](measurements/final-iteration-storage-2026-11-03/README.md) retains
+  real gradient and shared-history inputs. The source had no compiler changes.
+- The retained Clang O2 source probe demonstrates the optional-wrapper leak
+  (16 charged bytes) and protected cleanup (zero). This is source-level evidence;
+  the new Rust-generator regression still requires native execution.
+- Guarded formatting passes (1.61 seconds); workflow lint passes (6.86 seconds).
+  Primitive inventory passes (0.89 seconds): 395 declarations, 385 symbols,
+  374 contracts, no unresolved symbols, unchanged frozen baseline. Native shard
+  coverage passes for all 255 integration targets (0.13 seconds).
+- No local compiler build, full suite or timing run. Use `python3 scripts/local-guard.py`
+  serially: 64 GiB free disk, target data below 2 GiB, workload RSS below 1 GiB,
+  180-second deadline. Move larger work to CI; never raise/bypass limits.
+- Leave the primary checkout's recovery edits and old worktrees alone. Reconcile
+  this preparation branch with #254's verified merge before its final matrix,
+  preserving frozen tags and uncommitted work. The old run `38888712709` is a
+  service-status ghost with no active jobs; its original failures were repaired.

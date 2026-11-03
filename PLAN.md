@@ -53,8 +53,11 @@ next section selects the history group; the representation candidates remain uns
 The [frozen implementation contract](docs/measurements/final-iteration-storage.md)
 groups four related changes. [The source review](docs/measurements/final-iteration-storage-2026-11-03/README.md)
 confirms the actual gradient program's iteration, reverse copy and final-item read.
-Keep PR #254's passing head intact while its remaining gates run; open the next
-delivery PR only after its verified merge.
+PR #254's Windows probe repair is awaiting its new final-head gates. Keep that
+head intact while they run; open the next delivery PR only after its verified merge.
+The changes below are implemented on `iteration-final-value`; native verification
+and measurements remain open. A grouped three-host focused workflow checks the
+implementation before any performance sessions or final delivery matrix.
 
 | Task | Required result |
 |---|---|

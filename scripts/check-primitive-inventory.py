@@ -75,9 +75,9 @@ weak_channels = {
     'channel.downgrade': 'Channel[a] -> WeakChannel[a] ! {Async}',
     'channel.upgrade': 'WeakChannel[a] -> Option[Channel[a]] ! {Async}',
 }
-assert len(rows) == len(baseline['rows']) + 5 + len(scalar_math) + len(weak_channels) - len(removed_symbols)
+assert len(rows) == len(baseline['rows']) + 5 + len(scalar_math) + len(weak_channels) + 1 - len(removed_symbols)
 assert len({(row['file'], row['declared']) for row in rows}) == len(rows)
-assert len({row['symbol'] for row in rows}) == baseline['distinctSymbols'] + 5 + len(scalar_math) + len(weak_channels) - len(removed_symbols)
+assert len({row['symbol'] for row in rows}) == baseline['distinctSymbols'] + 5 + len(scalar_math) + len(weak_channels) + 1 - len(removed_symbols)
 assert sum(row['aliased'] for row in rows) == 40
 raw_symbols = {'mem.alloc', 'mem.free', 'mem.string', 'ptr.cast', 'ptr.at',
                'ptr.read', 'ptr.write', 'ptr.read-string', 'ptr.address'}
@@ -97,6 +97,7 @@ service_scopes = {
 }
 new_keys = {('lib/prelude.fwp', name) for name in scalar_math} | scope_keys | {('lib/autodiff.fwp', name) for name in owned_tapes}
 new_keys |= {('lib/task.fwp', name) for name in weak_channels}
+new_keys.add(('lib/list.fwp', 'last'))
 leaf_symbols = {'json.encode', 'json.write', 'url.encode', 'int.to-hex', 'cli.help', 'zlib.gzip', 'zlib.gzip-chunk', 'zlib.deflate', 'ws.accept', 'ws.deflate', 'ws.key', 'zlib.gzip-end', 'ws.close-payload', 'ws.frame'}
 removed_keys = {('lib/tensor.fwp', symbol) for symbol in removed_symbols}
 assert removed_keys <= set(baseline_rows)
@@ -212,6 +213,11 @@ promoted = []
 changed_symbols = set()
 for row in rows:
     key = (row['file'], row['declared'])
+    if row['symbol'] == 'last':
+        assert row == dict(file='lib/list.fwp', declared='last', symbol='last',
+            aliased=False, bucket='contract', signature='List[a] -> Option[a]',
+            contract='Some(Contract { arguments: [Borrow], result: FreshOuter, callback: None, aliases: [0] })')
+        continue
     if row['symbol'] in weak_channels:
         assert row == dict(file='lib/task.fwp', declared=row['symbol'], symbol=row['symbol'],
             aliased=False, bucket='contract', signature=weak_channels[row['symbol']],
@@ -392,7 +398,7 @@ for row in rows:
     changed_symbols.add(row['symbol'])
 assert changed_symbols == raw_symbols | leaf_symbols | set(bundle_contracts) | set(service_scopes) | {'trim', 'trim-start', 'trim-end', 'lower', 'upper', 'replace', 'task.spawn', 'task.within', 'channel.send', 'http2.serve', 'grpc._force', 'map.empty', 'set.empty', 'ad.tape', 'ad.push', 'ad.backward', 'list.ap', 'list.flat-map', 'get', 'put', 'modify', 'run-state', 'fail', 'parse-int', 'parse-float', 'array.sort', 'array.from-list'}
 expected_counts = dict(baseline['counts'])
-expected_counts['contract'] += len(raw_symbols) + 25 + len(owned_tapes) + len(scalar_math) + len(weak_channels)
+expected_counts['contract'] += len(raw_symbols) + 26 + len(owned_tapes) + len(scalar_math) + len(weak_channels)
 expected_counts['runtime_or_specialization_review'] -= len(raw_symbols) + 22
 for key in removed_keys:
     expected_counts[baseline_rows[key]['bucket']] -= 1

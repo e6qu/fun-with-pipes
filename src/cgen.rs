@@ -7287,6 +7287,10 @@ impl<'p> Gen<'p> {
                 let ops = self.loop_owned_ops(&step)?;
                 format!("return fwp_p_loop(l0, l1, {ops});")
             }
+            "list._iterate-last" => {
+                let drop = self.value_drop(&p(2));
+                format!("return fwp_p_iterate_last(l0, l1, l2, {drop});")
+            }
             "sort" => format!("return fwp_p_sort(l0, {});", self.desc(&elem(&p(0), 0))),
             "sort-by" => {
                 let key = match p(0) {
@@ -7546,6 +7550,7 @@ impl<'p> Gen<'p> {
                     ("unzip", "fwp_p_unzip(l0)"),
                     ("repeat", "fwp_p_repeat(l0, l1)"),
                     ("nth", "fwp_p_nth(l0, l1)"),
+                    ("last", "fwp_p_last(l0)"),
                     ("find", "fwp_p_find(l0, l1)"),
                     ("scan", "fwp_p_scan(l0, l1, l2)"),
                     ("chunks", "fwp_p_chunks(l0, l1)"),
@@ -8938,14 +8943,28 @@ static inline __attribute__((always_inline)) int fs{}(fwp_loop_state{step} *st, 
                                     })?;
                                 let mut body = format!("V result = fwp_rc_fresh({result}); if (result) {{ switch (OBJ(result)->tag) {{");
                                 for (tag, fields) in cases {
-                                    let _ = write!(body, " case {tag}:");
-                                    for (i, ty) in fields.iter().enumerate() {
-                                        if crate::rc::needs_rc(&self.prog.shapes, ty) {
-                                            let dup = self.value_dup(ty);
-                                            let _ = write!(body, " {dup}(OBJ(result)->f[{i}]);");
-                                        }
+                                    let _ = write!(body, " case {tag}: {{");
+                                    let fields: Vec<_> = fields
+                                        .into_iter()
+                                        .enumerate()
+                                        .map(|(i, ty)| (format!("OBJ(result)->f[{i}]"), ty))
+                                        .collect();
+                                    let retain = self.duplicate_values(
+                                        &fields,
+                                        "retained",
+                                        "retaining_cleanup",
+                                    );
+                                    if !retain.is_empty() {
+                                        // Fields still borrow their source until each retain
+                                        // succeeds. On failure, release completed retains and
+                                        // only the new wrapper, never its borrowed children.
+                                        body.push_str(" fwp_value_owner outer = {result, fwp_rc_free_obj}; fwp_cleanup outer_cleanup; fwp_value_protect(&outer, &outer_cleanup);");
+                                        body.push_str(&retain);
+                                        body.push_str(
+                                            " (void)fwp_value_finish(&outer, &outer_cleanup);",
+                                        );
                                     }
-                                    body.push_str(" break;");
+                                    body.push_str(" break; }");
                                 }
                                 body.push_str(" } } return result;");
                                 s = body;

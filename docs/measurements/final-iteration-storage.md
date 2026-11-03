@@ -1,8 +1,9 @@
 # Returning the final iteration value
 
-**Selected next group; implementation and platform verification remain open.**
-Freeze this contract with `roadmap/final-iteration-storage-protocol-2026-11-03`
-before implementing the optimizations. PR #254 must finish its gates before
+**Implemented on the preparation branch; native verification and measurements remain open.**
+This contract was frozen at `2a257a3e` with
+`roadmap/final-iteration-storage-protocol-2026-11-03` before implementation.
+PR #254 must finish its gates before
 another delivery PR opens. [Source evidence](final-iteration-storage-2026-11-03/README.md)
 confirms the actual compiler input, including the real gradient program.
 
@@ -11,7 +12,7 @@ confirms the actual compiler input, including the real gradient program.
 ```
 
 `iterate` builds `[0, 1, 2]`: its count includes the initial value. `last` returns
-`Some 2`. Its current definition, `reverse | head`, also builds a reversed list.
+`Some 2`. Its previous definition, `reverse | head`, also built a reversed list.
 The selected change reads an ordinary list's final item directly. When an eligible
 iteration has no other consumer, it keeps only the current value instead of a history.
 

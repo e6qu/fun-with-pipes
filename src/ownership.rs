@@ -49,7 +49,8 @@ pub enum ResultOwnership {
     },
     /// One new record/variant allocation with typed borrowed field aliases.
     FreshOuter,
-    /// A callback-produced owned value, or the unchanged empty-fold input.
+    /// An owned result from a consumed initial state and callback-produced values.
+    /// The runtime may return the state directly or wrap the final state.
     OwnedAccumulator {
         argument: usize,
         runtime: &'static str,
@@ -453,6 +454,15 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
             Some(Callback::Borrowed(1)),
             &[1, 2],
         ),
+        "list._iterate-last" => (
+            &[B, B, C],
+            ResultOwnership::OwnedAccumulator {
+                argument: 2,
+                runtime: "iterate_last",
+            },
+            Some(Callback::Borrowed(1)),
+            &[1, 2],
+        ),
         "zip-with" => (
             &[B, B, B],
             ResultOwnership::FreshSpine,
@@ -569,6 +579,7 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         "linalg.cg" => (&[B, B, B, B, B], ResultOwnership::OwnedTree, None, &[]),
         "list.transpose" => (&[B], ResultOwnership::CopiedStructure, None, &[0]),
         "nth" => (&[B, B], ResultOwnership::FreshOuter, None, &[1]),
+        "last" => (&[B], ResultOwnership::FreshOuter, None, &[0]),
         "index-of" => (&[B, B], ResultOwnership::FreshOuter, None, &[]),
         "find" => (
             &[B, B],
@@ -988,6 +999,24 @@ mod tests {
                 runtime: "loop",
             }
         );
+        let final_iteration = primitive("list._iterate-last").unwrap();
+        assert_eq!(
+            final_iteration.arguments,
+            &[Argument::Borrow, Argument::Borrow, Argument::Consume]
+        );
+        assert_eq!(final_iteration.callback, Some(Callback::Borrowed(1)));
+        assert_eq!(final_iteration.aliases, &[1, 2]);
+        assert_eq!(
+            final_iteration.result,
+            ResultOwnership::OwnedAccumulator {
+                argument: 2,
+                runtime: "iterate_last",
+            }
+        );
+        let last = primitive("last").unwrap();
+        assert_eq!(last.arguments, &[Argument::Borrow]);
+        assert_eq!(last.result, ResultOwnership::FreshOuter);
+        assert_eq!(last.aliases, &[0]);
         assert!(primitive("array.map").unwrap().borrows_callback());
         assert!(primitive("map.map-values").unwrap().borrows_callback());
         assert!(primitive("unknown").is_none());
