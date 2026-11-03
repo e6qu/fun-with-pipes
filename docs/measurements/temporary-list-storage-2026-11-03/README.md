@@ -131,6 +131,7 @@ has the same expected Homebrew notice):
 | macOS ARM64 ownership | 125770099175 | [126 logs](platforms/mac-arm-ownership-targets.zip) |
 | Windows ARM64 | 125770099313 | [57 logs](platforms/windows-arm-targets.zip) |
 | Windows AMD64 | 125770099451 | [57 logs](platforms/windows-amd-targets.zip) |
+| macOS AMD64 regular | 125770099310 | [131 logs](platforms/mac-amd-targets.zip); OpenSSL 3.6.3 already-installed notice only |
 
 Full logs and source/digest-verified artifact identities are retained beside each
-archive. Seven of nine production jobs pass; both macOS AMD64 jobs remain running.
+archive. Eight of nine production jobs pass; macOS AMD64 ownership remains running.

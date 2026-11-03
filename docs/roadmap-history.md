@@ -23,7 +23,7 @@ establish no elapsed-speed claim. [Evidence and original failure](measurements/t
 
 A unit-test helper name and four workflow steps that hid test failures behind
 `tee` were repaired. Both attempts' logs remain available. Production run
-`41591834975` has seven of nine jobs passing, with both macOS AMD64 checks still
+`41591834975` has eight of nine jobs passing, with macOS AMD64 ownership still
 running. [Compiler costs](measurements/scalar-map-zip-analysis-2026-11-03/README.md)
 pass. [Four completed runtime sessions](measurements/scalar-map-zip-time-2026-11-03/README.md)
 show about 7–8.5% less time on larger cases, while small-case speed goals and

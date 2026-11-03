@@ -107,9 +107,28 @@ storage, not whole-process memory or elapsed speed.
 
 ## Measurements in progress
 
-Compiler comparison `41603242667` and runtime comparison `41603246961` use
-`3be9479c`, with passing correctness run `41601233570` as a prerequisite.
+[Compiler comparison](../range-zip-analysis-2026-11-03/README.md) `41603242667`
+passes on both hosts; all 480 commands and raw measurements are audited. Runtime
+comparison `41603246961` remains active. Both use `3be9479c`, with passing
+correctness run `41601233570` as a prerequisite.
 The reference disables only range-to-zip selection in the same source. The
 [frozen inputs, timing scope and limits](../range-zip-storage.md) are unchanged.
+[Runtime status and rejected hosts](../range-zip-time-2026-11-03/README.md).
 Two runtime sessions per qualified architecture are required; only hosts rejected
 before measuring may be replaced. Keep every completed outcome.
+
+## Remaining allocation sites
+
+The largest current-only solve still has four groups of per-coordinate objects.
+Each group makes 25,671 requests for 616,104 bytes on both architectures:
+
+- The records pairing input values with derivative node positions.
+- The list containing those records, passed to the objective function.
+- The gradient result list, constructed from the backward pass's numeric array.
+- The updated coordinate list returned by the step.
+
+[Exact constructor sites](residual-sites.json) link these counts to saved generated
+C. This identifies candidates for the next investigation; it does not establish
+that each object can safely be removed. Before selecting another change, prove
+which results are private and preserve output shape, aliases, effect order and
+the derivative scope's cleanup. The current measured source remains unchanged.

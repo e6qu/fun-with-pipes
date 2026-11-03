@@ -1,9 +1,9 @@
 # Current work
 
-**Next:** monitor range compiler costs `41603242667` and runtime sessions
-`41603246961`, frozen at `3be9479c`; audit all complete outcomes and retain any
-missed limit. Replace only hosts rejected before measurement. Finish the two
-merged-head macOS AMD64 gates, then prepare the final nine-job matrix after
+**Next:** monitor range runtime sessions `41603246961` (ARM64) and
+`41603882629` (replacement AMD64), frozen at `3be9479c`; audit all complete
+outcomes and retain any missed limit. Replace only hosts rejected before measurement. Finish the
+merged-head macOS AMD64 ownership gate, then prepare the final nine-job matrix after
 all reports and any repairs are included.
 
 ## Checkout and source identities
@@ -24,10 +24,10 @@ all reports and any repairs are included.
 
 | Step | Status | Remaining work |
 |---|---|---|
-| 1 | In progress | Seven of nine pass; audit the two remaining merged-head gates and repair failures |
+| 1 | In progress | Eight of nine pass; audit the remaining merged-head gates and repair failures |
 | 2 | Verified | Measurements and raw audits complete; timing acceptance remains open |
 | 3 | Verified | Contract and reference published; keep frozen bounds unchanged |
-| 4 | In progress | Corrected native/count checks pass; measurements running, final nine-head gates remain |
+| 4 | In progress | Corrected native/count checks pass; measurements running, nine final platform jobs remain |
 
 ## Range verification and active measurements
 
@@ -58,11 +58,21 @@ assertion. All completed targets and full logs were audited before repair.
   same requests/bytes. Each host has 118 clean C compilation logs.
 - Frozen measurement tag `roadmap/range-zip-measurement-2026-11-03` points to
   full source `3be9479c4150d7aae5695d7f7aa4ce3f84d0f738`. Compiler run
-  `41603242667`, runtime run `41603246961` (both sessions, both architectures)
-  are requested with passing correctness run `41601233570` as `evidence_run`.
+  `41603242667` passes on both hosts; all 480 commands, exact references, images,
+  RSS and full logs are independently audited. Maximum time overhead 0.17%,
+  peak-RSS overhead 0.28%, identical-copy variation 1.08%; all limits pass.
+  [Report](measurements/range-zip-analysis-2026-11-03/README.md).
+  Runtime run `41603246961` uses passing correctness run `41601233570` as `evidence_run`.
   Use `range-zip-report` to audit complete runtime sessions and rejected hosts.
   Do not change sources, inputs, driver or limits; do not repeat completed timing
   for a better outcome. Speed remains unmeasured for this change.
+- Original AMD64 timing jobs `125806772756` / `125806772669` rejected EPYC 9V74
+  before builds/timing. Host records, job metadata, digests and full logs are
+  audited and retained. Replacement run `41603882629` requests both AMD64
+  sessions on the same frozen source. Both replacements qualified and are now
+  measuring: session 1 `125808854223`, session 2 `125808854159`. Original ARM64
+  sessions `125806772559` / `125806772536` are also measuring.
+  [Runtime status and rejected hosts](measurements/range-zip-time-2026-11-03/README.md).
 
 ## Completed scalar-buffer evidence
 
@@ -100,7 +110,7 @@ Run `41591834975`, source `a8a5568d`; do not cancel as redundant.
 | Linux AMD64 | 125770099249 | Pass; 257 target logs and full log clean |
 | Windows ARM64 | 125770099313 | Pass; 57 target logs and full log clean |
 | Linux ARM64 | 125770099083 | Pass; 257 target logs and full log clean |
-| macOS AMD64 regular | 125770099310 | Running |
+| macOS AMD64 regular | 125770099310 | Pass; 131 clean target logs; expected Homebrew OpenSSL 3.6.3 notice |
 | macOS AMD64 ownership | 125770099197 | Running |
 | Windows AMD64 | 125770099451 | Pass; 57 target logs and full log clean |
 
@@ -108,7 +118,8 @@ Compact logs and verified artifact identities:
 [platform records](measurements/temporary-list-storage-2026-11-03/platforms/).
 Merged docs `41591834978` pass. PR #251 metadata docs `41597725595` also pass;
 full log has only the intentional runner-failure controls. Corrected-source
-docs `41601188883` also pass and are audited. Final-head
+docs `41601188883` also pass and are audited. Report-head docs `41603477962` /
+`125807516382` pass with only the same expected runner diagnostics. Final-head
 production gates for the repaired range implementation have not started.
 
 ## Local checks and retained files
@@ -125,7 +136,11 @@ All checks use `scripts/local-guard.py`; no local full build, suite or benchmark
   inline-order interpreter example passes (0.26s). No local compiler build.
 - Rust formatting passes (2.02s). Both failed-attempt audits pass (1.22s).
   New completed platform log/digest audits pass (0.13–0.14s).
-  Corrected 96-count cross-host audit and full-log review pass (0.50s).
+  Corrected 96-count cross-host audit and full-log review pass (0.50s). Range
+  compiler audits pass (2.48s ARM64, 2.71s AMD64); report/log audit passes (0.13s).
+  Residual-site audit passes after fixing an accidentally negated source assertion;
+  four remaining groups each cost 25,671 allocations / 616,104 bytes. This is
+  evidence for later selection, not a new implemented or accepted optimization.
 - Prepared routes already passed reference isolation, 16 allocation controls,
   15 timing-budget controls, seven compiler-schedule controls, 14 archive controls
   and workflow lint. Primitive inventory: 394 declarations, 384 symbols,

@@ -1,0 +1,43 @@
+{
+  "source": "3be9479c4150d7aae5695d7f7aa4ce3f84d0f738",
+  "case": "129-199-current-O2",
+  "workspace": 0,
+  "rows": [
+    {
+      "role": "Updated coordinate list",
+      "phase": "outside",
+      "caller": "f183",
+      "site": 275,
+      "requests": 25671,
+      "requestedBytes": 616104,
+      "source": "return fwp_map_finish_protected(&owner, &cleanup);"
+    },
+    {
+      "role": "Gradient result list",
+      "phase": "outside",
+      "caller": "fs175",
+      "site": 277,
+      "requests": 25671,
+      "requestedBytes": 616104,
+      "source": "V t9 = fwp_rc_fresh_profile(455, fwp_data(1, 2, (V[]){l5, l2}));"
+    },
+    {
+      "role": "Derivative input records",
+      "phase": "forwardWithRecording",
+      "caller": "f167",
+      "site": 271,
+      "requests": 25671,
+      "requestedBytes": 616104,
+      "source": "static V f167(V l0, V l1, V l2) { fwp_wr167 r = w167((int64_t)(l0), fwp_f64(l1), (int64_t)(l2));  V result = fwp_rc_fresh_profile(444, fwp_record(2, (V[]){fwp_from_f64(r.f0), (V)(int64_t)(r.f1)})); return result; }"
+    },
+    {
+      "role": "List containing derivative input records",
+      "phase": "forwardWithRecording",
+      "caller": "f184",
+      "site": 276,
+      "requests": 25671,
+      "requestedBytes": 616104,
+      "source": "return fwp_map_finish_protected(&owner, &cleanup);"
+    }
+  ]
+}
