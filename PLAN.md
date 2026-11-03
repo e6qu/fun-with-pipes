@@ -4,31 +4,36 @@ Build an ahead-of-time language with simple pipes, immutable values, strong type
 and useful inference. Prefer direct values, moves and borrows; reserve ARC for
 necessary sharing. GC is removed; JIT and backward compatibility are excluded.
 
-## Current batch: reduce remaining temporary list storage
+## Current batch: verify scalar-buffer costs and choose the next storage reduction
 
-[PR #249](docs/roadmap-history.md#numeric-callback-owner-transfers-pr-249) is
-verified and merged. It removes 98.7% of retains in the largest saved solve. It leaves
-allocation traffic unchanged: 154,952 of 156,943 requests use the 24-byte
-record/list constructor. Its missed timing goals remain open below.
+[PR #250](docs/roadmap-history.md#temporary-scalar-map-buffers-pr-250) is merged.
+Its focused native checks verify 25,870 fewer allocations and 823,064 fewer
+requested bytes in the largest solve. Retains and peak managed storage stay
+unchanged. The user merged before performance measurements and the full platform
+matrix; complete those checks before treating the delivery as fully verified.
 
 | Step | Work | Completion requirement |
 |---|---|---|
-| 1 | Attribute remaining constructors to their actual callers — verified | All 96 native GCC observations match prior counts/output/work and zero final storage. Constructor controls, reconstructed sources, images and full logs pass. [Evidence](docs/measurements/temporary-list-census-2026-11-03/README.md). |
-| 2 | Freeze one storage change supported by those counts — selected | [Contract](docs/measurements/temporary-list-storage.md#selected-storage-change): scalar map buffer consumed by one zip-with; explicit alias, effect and cleanup rules. Predicted reduction: `(d+1)*u` allocations. Publish the same-source reference implementation before measurement. |
-| 3 | Implement and verify the selected change | Ordinary/unoptimized interpreter versus native GCC/Clang O1/O2; direct/shared/escaping/empty/unequal-length inputs; failure, cancellation and allocation controls; exact saved-source counts and cleanup; bounded compiler analysis. |
-| 4 | Measure and deliver the whole batch | Fixed complete-driver comparison and qualified hosts; compiler time/RSS, managed/raw storage, RSS, code/frame costs; preserve 2% copy/regression and 5% speed limits. One substantial PR, all nine exact-head production gates plus docs, audited logs and verified one-line squash. |
+| 1 | Complete the merged implementation's platform validation | Audit all nine jobs in run `41591834975` and docs. Fix every failure in this batch; preserve the original evidence. |
+| 2 | Measure scalar-buffer compiler and program costs | Complete the [frozen comparison](docs/measurements/temporary-list-storage.md#execution-of-the-frozen-comparison): five compiler inputs, all six runtime inputs, two native sessions per architecture. Independently audit raw evidence and retain every missed limit. |
+| 3 | Freeze direct consumption of a private index range — selected | [Contract](docs/measurements/range-zip-storage.md): evaluate I64 bounds once; one zip consumer, known scalar captures, scalar or flat numeric-record outputs. Expected reduction: `(d+1)*u` requests and `(32*d+8)*u` bytes. Publish the isolated same-source reference before measurement. |
+| 4 | Implement, verify and deliver the next substantial batch | Bundle the selected storage change, incidental repairs and reports. Compare unoptimized/ordinary/native behavior, shared/escaping inputs and failure/cancellation/physical-free controls. Measure the isolated change, run all nine final-head production gates plus docs, audit logs and verify the one-line squash. |
 
-The census verifies that `grad ... | map scale` creates `d*u` adjustment-list
-cells used only by `zip-with sub`. Replace those cells with a private numeric
-buffer and remove zip's extra input copy, preserving eager callback order and
-input aliases. The [frozen contract](docs/measurements/temporary-list-storage.md)
-defines selection, cleanup and count predictions. Do not interleave the stages.
-
-Use saved evidence and focused checks during development. Run one grouped final
-measurement/validation after the implementation and its controls are ready.
-Do not rerun unchanged noisy timings or change acceptance limits for a pass.
+Current measurements use retained source `da510f18`, tag
+`roadmap/scalar-map-zip-measurement-2026-11-03`; its tree equals merged `a8a5568d`.
+No production edit is part of that comparison. Replace only hosts rejected
+before measurement; do not rerun completed noisy observations for a pass.
+[Focused results and retained failures](docs/measurements/temporary-list-storage-2026-11-03/README.md).
 
 ## Open performance goals
+
+- **Scalar-buffer timings.** Both completed ARM64 sessions report a 3.32%
+  zero-update current-only slowdown against the 2% limit; several small cases
+  improve by less than the required 5%. [Results and running audits](docs/measurements/scalar-map-zip-time-2026-11-03/README.md)
+  retain these failures. Inspect the saved zero-update source and driver before
+  selecting a correction or attributing a cause. Complete AMD64 and the raw
+  audits; allocation savings and passing compiler costs do not close this goal.
+
 
 - **Callback-owner timings.** [The complete report](docs/measurements/callback-owners-2026-11-03/README.md)
   retains every outcome. Both architectures miss 5% on 3/199 and 3/1999 in both

@@ -494,8 +494,8 @@ source list is mutated.
 
 The [first native run](measurements/temporary-list-storage-2026-11-03/README.md)
 verifies behavior, cleanup and exact allocation savings on GCC/Clang ARM64/AMD64.
-A unit-test compilation repair, compiler/runtime timings and final platform gates
-remain open. The [frozen contract](measurements/temporary-list-storage.md#selected-storage-change)
+Corrected unit and all-target lint checks also pass. Compiler/runtime timings
+and final platform gates remain open. The [frozen contract](measurements/temporary-list-storage.md#selected-storage-change)
 and [starting census](measurements/temporary-list-census-2026-11-03/README.md)
 define the comparison.
 

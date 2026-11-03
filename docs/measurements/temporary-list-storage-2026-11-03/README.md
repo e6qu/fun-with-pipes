@@ -4,6 +4,29 @@ The new storage pass keeps a private mapped list in a numeric buffer until its
 sole `zip-with` consumer. All mapping still finishes before zipping begins.
 [Selection and measurement contract](../temporary-list-storage.md).
 
+## Corrected native verification
+
+[Run 41578060081](https://github.com/e6qu/fun-with-pipes/actions/runs/41578060081)
+passes on `da510f18b089c3db5527466b349fec0f2f3ee9ef`: ARM64 job `125726094841`,
+AMD64 `125726094987`; documentation job `125725949307` also passes.
+Each host passes 11 unit tests and the 33 integration executions listed below.
+Every full/target log is audited; all 118 C compilation logs per host are clean.
+All 96 observations reproduce the exact savings below, with unchanged retains
+and peak managed storage, matching output/work and zero final storage.
+
+- Corrected controls: [ARM64](verified/aarch64-controls.json.gz) /
+  [AMD64](verified/x86_64-controls.json.gz).
+- Independently reconstructed counts: [ARM64](verified/aarch64-counts.json.gz) /
+  [AMD64](verified/x86_64-counts.json.gz).
+- Full logs: [ARM64](verified/aarch64-job.log.gz) /
+  [AMD64](verified/x86_64-job.log.gz) / [docs](verified/docs-job.log.gz).
+- Count artifact identities: [ARM64](verified/aarch64-count-artifact.json) /
+  [AMD64](verified/x86_64-count-artifact.json).
+
+The user merged this source before the full platform and performance gates.
+The squash `a8a5568d` has the identical tree; remaining checks continue in the
+next batch. No runtime-speed or compiler-cost acceptance is claimed yet.
+
 ## First native attempt
 
 Source `6f4cd46b2623cdbddd7419d18f44a66898891272`,

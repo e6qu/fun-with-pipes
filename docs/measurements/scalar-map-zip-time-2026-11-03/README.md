@@ -1,0 +1,48 @@
+# Scalar buffer runtime comparison
+
+**Status:** measurements and independent audits are in progress. Compiler costs
+[pass separately](../scalar-map-zip-analysis-2026-11-03/README.md). Runtime acceptance
+is not established by the verified allocation reduction.
+
+Candidate and reference use source `da510f18`, identical to merged PR #250; only
+the reference's scalar-map buffer selection is disabled. Both execute the same
+complete derivative solves and preserve the previous optimizations.
+[Exact inputs, timing scope, batching, hosts and limits](../temporary-list-storage.md#execution-of-the-frozen-comparison).
+
+## Completed ARM64 observations
+
+Original [run 41591978166](https://github.com/e6qu/fun-with-pipes/actions/runs/41591978166):
+session 1 job `125770553887`, session 2 `125770553867`.
+Both finish all work and fail their final timing budget assertion. Their logs
+report no output, ownership, allocation, raw-work or final-storage failure.
+
+| Case / form | Session 1 candidate/reference | Session 2 | Required limit |
+|---|---:|---:|---:|
+| 3/0 current only | 1.03320 | 1.03320 | ≤1.02 |
+| 3/199 current only | 0.95683 | 0.95433 | ≤0.95 |
+| 3/199 history | 0.96073 | 0.95721 | ≤0.95 |
+| 3/1999 history | 0.95736 | 0.95297 | ≤0.95 |
+
+Session 2's 3/1999 current-only case also misses 0.95 at 0.95423. A ratio of
+1.03320 means 3.32% slower; 0.95683 means 4.32% less time. The complete results
+and raw-sample audit are pending run `41593988021`. These observations remain
+failures; no completed session is rerun for a better result. Diagnose the saved
+zero-update source and driver before attributing the slowdown to any cause.
+
+## AMD64 host qualification
+
+Required runtime CPU: EPYC 7763. Each rejected job stops **before** compiler
+builds or timing. Full logs, host records, archive digests and skipped work were
+checked. These are host rejections, not measured performance failures.
+
+| Request | Session | Result / retained evidence |
+|---|---:|---|
+| Original `41591978166` | 1 | Intel 6975P-C rejected; [record](rejected-hosts/initial-amd1.json.gz), [log](rejected-hosts/initial-amd1.log.gz) |
+| Original `41591978166` | 2 | Intel 6973P-C rejected; [record](rejected-hosts/initial-amd64-session2.json.gz), [log](rejected-hosts/initial-amd64-session2.log.gz) |
+| Replacement `41592143741` | 2 | EPYC 9V74 rejected; [record](rejected-hosts/replacement1-amd2.json.gz), [log](rejected-hosts/replacement1-amd2.log.gz) |
+| Replacement `41592549006` | 1 / 2 | EPYC 9V74 / 9V45 rejected; [independent audit](rejected-hosts/replacement2.zip), run `41593021814` |
+| Replacement `41593285140` | 1 | Intel 6973P-C rejected; [record](rejected-hosts/replacement3-amd1.json.gz), [log](rejected-hosts/replacement3-amd1.log.gz) |
+| Replacement `41593285140` | 2 | Qualified; job `125774733224` is measuring |
+
+Only unmeasured, rejected sessions receive replacement requests. Required CPUs,
+source, inputs, sample order, thresholds and completed outcomes remain unchanged.
