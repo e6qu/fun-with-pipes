@@ -3,8 +3,9 @@
 This review records remaining costs and the proofs needed to remove them.
 The [same-type conversion group](scalar-array-identities.md) is now selected for
 implementation and verification, separately from the
-[direct array-call experiment](direct-array-callbacks.md). Other candidates below
-remain unselected. Each experiment keeps its own reference and measurements.
+[direct array-call experiment](direct-array-callbacks.md). Final-iteration consumption is the
+[selected next group](final-iteration-storage.md); record packing and coordinate
+reuse remain unselected. Each experiment keeps its own reference and measurements.
 
 ## Measured costs
 
@@ -85,46 +86,21 @@ Keeping a slice can prolong its larger backing array's lifetime: the
 shows that cost alongside the removed allocation. Unknown/effectful callbacks
 and non-F64 maps are outside this selection.
 
-## Another opportunity: discard an unused iteration history
+## Selected next group: discard an unused iteration history
 
 The benchmark's history source is `iterate count descend | last`: it builds
-intermediate vectors even though only the last is returned. A selected compiler
-transformation could keep only the current value when the iteration list has no
-other use. This is not implemented by the current measured source.
+intermediate coordinate lists although only the final one is returned. The
+[completed source review](final-iteration-storage-2026-11-03/README.md) confirms
+that the actual optimized program still constructs that history and a reverse
+copy. Its shared-history control retains a second use that must remain available.
 
-For example, `0 | iterate 3 (add 1) | last` currently builds `[0, 1, 2]`
-and returns `Some 2`. The count is the number of values, including the initial
-value; it is not the number of callback calls:
+The [implementation contract](final-iteration-storage.md) now selects direct
+`last`, eligible numeric-state history removal, matching count validation and
+an incidental optional-result cleanup repair as one group. Implementation and
+native verification remain open. Resource-bearing states are excluded from
+history removal; general `last` still needs correct ownership for those values.
 
-| Count | Callback calls | Result from initial value 0 |
-|---|---:|---|
-| Negative or zero | 0 | `None` |
-| 1 | 0 | `Some 0` |
-| 3 | 2 | `Some 2` |
-
-In [the standard library](../../lib/list.fwp), `last` is `reverse | head`, not a
-primitive. [Native iteration](../../runtime/fwp_rt_prims.c) retains each state
-in a scratch array before constructing the list. A future rewrite must recognize
-the actual lowered producer/consumer, preserve the optional result and avoid
-retaining intermediate states that have no remaining use. Evaluating the count,
-callback expression and initial value still matters even when the callback is
-never called. This source review does not select that rewrite yet.
-
-Earlier destruction can be observable for files, locks or other resources. An
-initial selection should exclude such states unless it proves that release timing
-is preserved; numeric state alone does not need that broader promise.
-
-Before selecting it, specify and test:
-
-- Zero/negative counts, one value, and the exact number of callback calls.
-- Evaluation of the count, callback construction and initial value, even when no
-  callback executes; preserve effects and trap order.
-- A callback returning an alias of its input, shared/captured values, failure,
-  cancellation, and values whose destruction releases resources.
-- Rejection when the history itself is returned, shared or inspected elsewhere.
-
-Measure this separately from changing coordinate storage. If a later compiler
-eliminates the history, label the comparison by the source forms (`iterate | last`
-and a current-value loop), and report what each actually retains. Preserve the
-older reports as observations of their recorded compiler; do not silently relabel
-their data or treat their allocation counts as future semantic requirements.
+Measure this separately from coordinate representation. If the history is removed,
+label new comparisons by their source forms and report what each actually retains.
+Preserve older reports as observations of their recorded compiler; their history
+allocation counts are not future semantic requirements.

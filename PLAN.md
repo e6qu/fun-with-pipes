@@ -45,8 +45,27 @@ PR #253's verified merge and evidence are in [delivery history](docs/roadmap-his
 
 Keep older timing goals open against their original references. Do not repeat
 completed sessions for a better result. [Remaining storage candidates](docs/measurements/remaining-gradient-storage.md)
-include input records, coordinate lists and an unused iteration history. They
-remain unselected until their lifetime proof, scope and measurements are declared.
+include input records, coordinate lists and an unused iteration history. The
+next section selects the history group; the representation candidates remain unselected.
+
+## Next group: final list values without retained histories
+
+The [frozen implementation contract](docs/measurements/final-iteration-storage.md)
+groups four related changes. [The source review](docs/measurements/final-iteration-storage-2026-11-03/README.md)
+confirms the actual gradient program's iteration, reverse copy and final-item read.
+Keep PR #254's passing head intact while its remaining gates run; open the next
+delivery PR only after its verified merge.
+
+| Task | Required result |
+|---|---|
+| Direct `last` | Borrow the list and return its final item in an owned option, without a reverse copy; preserve every supported element type. |
+| Remove unused iteration histories | Select exact typed, single-use `iterate` → `last` calls for numeric states and numeric lists/arrays; transfer the current owner through unchanged callback order. Retained/shared histories remain intact. |
+| Repair boundary failures | Match interpreter/native oversized-count rejection before callbacks; release a newly allocated optional wrapper if retaining its child fails. |
+| Verify and measure together | Check aliases, effects, resource exclusions, wide numbers, cancellation and physical release. Require 2k fewer list-node allocations in the scalar control and ≥80% less peak managed storage for the large history solve; keep separate timing/compiler/stack limits. |
+| Deliver | Update examples, contracts and benchmark explanations; audit all final-head native/benchmark/documentation gates before one squash merge. |
+
+Input derivative-record packing and coordinate-list reuse remain unselected.
+This group changes neither representation. Older timing goals remain open.
 
 ## Open performance goals
 

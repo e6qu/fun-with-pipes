@@ -7,15 +7,32 @@ with full-log audits; the eight native jobs are running. Keep the head unchanged
 the 32 missed speed targets open, and completed timing sessions unrepeated.
 
 **Preparation branch:** `.worktrees/iteration-final-value` / `iteration-final-value`.
-While the final gates run, inspect the [final-iteration candidate](measurements/final-iteration-storage.md)
-with `suite=iteration-storage-review` here. No rewrite is selected or implemented.
-The runner saves real raw/optimized IR and C without timing programs. Workflow
+The [next-group contract](measurements/final-iteration-storage.md) selects direct
+`last`, eligible history removal, count validation and optional-result cleanup.
+The source review is complete; the optimizations are not implemented yet. Workflow
 lint passed through the guard in 6.50 seconds. Collector state for #254 is in
 scratch `platforms-254`. Open no second delivery PR before #254 is merged.
 
 The old list-iteration page now distinguishes its completed seven-sample report
 from the current eight-sample reproduction schedule; it no longer claims a new
 run is pending.
+
+Inspection run `41698313044` passed at `13df096288aad41300f41d76f9a4f6c58440b192`.
+That source has an empty compiler/runtime/library diff from `9061744b`. All 12
+raw/optimized compilations, full logs and artifact/file hashes passed the guarded
+collector in 5.54 seconds; the [retained review](measurements/final-iteration-storage-2026-11-03/README.md)
+confirms the real scalar/list/gradient/shared-history shapes. Script imports/help
+passed through the guard in 0.13 seconds; after staging, the documentation audit
+passes 248 link sets, 106 anchors and four plan steps in 2.64 seconds. No local
+compiler build or timing run was performed. Keep this run's source identity when
+reviewing its saved output, even if later implementation changes this branch.
+
+The same report retains a source-level cleanup reproduction: a failed retained
+child left a 16-byte optional wrapper allocated. An existing cleanup guard repairs
+that reproduction (Clang O2, 1.14 seconds guarded, with the old failure retained).
+The Rust generator repair and new `retain_unwind_ownership` regression are local
+and formatted; their actual generated output is not yet verified. Include them
+in the next focused batch rather than running the full matrix for this fragment.
 
 ## Checkout and sources
 

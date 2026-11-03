@@ -1,0 +1,21 @@
+{
+  "generatedSource": "beddd406153f1976fed00847292207bff9053e22",
+  "compiler": "Apple clang version 17.0.0 (clang-1700.4.4.1)\nTarget: arm64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Library/Developer/CommandLineTools/usr/bin\n",
+  "sourceSha256": "0eee1a46dadc89fd8cabb3863bcfc09dd396e37b8b1cd14f0d0cffeb162a5827",
+  "command": [
+    "/usr/bin/clang",
+    "-O2",
+    "-std=gnu11",
+    "-ffp-contract=off",
+    "-w",
+    "/Users/zardoz/projects/fun-with-pipes/.worktrees/iteration-final-value/../gradient-work/fresh-outer-probe/protected.c",
+    "-o",
+    "/Users/zardoz/projects/fun-with-pipes/.worktrees/iteration-final-value/../gradient-work/fresh-outer-probe/protected",
+    "-lm",
+    "-lpthread"
+  ],
+  "binarySha256": "bb768d3c3efb1b8e24e2000866f8c4635006b5c47f0e06828d391b3ae367196f",
+  "stdout": "FreshOuter retain overflow leaves 0 block / 0 charged bytes before probe cleanup\n",
+  "exit": 0,
+  "scope": "Source-level reproduction of current Option[String] FreshOuter emission; not a Rust generator test"
+}
