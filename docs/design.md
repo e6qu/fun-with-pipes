@@ -343,6 +343,16 @@ uses. [Safety checks](measurements/scalar-array-safety-2026-11-02/README.md) ver
 these cases on GCC ARM64/AMD64 and Clang ARM64. [Paired timings](measurements/scalar-array-captures-2026-11-02/README.md)
 record ARM64 gains, unchanged storage and the still-open AMD64 timing limits.
 
+Native `array.map` can also call an explicitly known, closed scalar function
+directly. For example, mapping `fn x -> x * 0.25` over `array[2.0, 4.0]` produces
+an independent `array[0.5, 1.0]`. The input stays borrowed; the existing typed-array
+builder cleans partial output on failure. This selection accepts ordinary
+integer/F32/F64 arguments and results, with no saved arguments. Dynamic functions,
+captures, wide values and reference-bearing elements keep their ordinary calls.
+The [experiment contract](measurements/direct-array-callbacks.md) specifies the
+remaining correctness and performance verification; implementation alone does
+not establish a speedup.
+
 ### Proving a local array has one owner
 
 `src/rc/unique.rs` checks the ownership-lowered body after a candidate allocation.

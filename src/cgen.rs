@@ -5595,6 +5595,53 @@ impl<'g, 'p> FnGen<'g, 'p, '_> {
             self.tail_tokens(tail);
             return Some(self.bind_call(call_key, call));
         }
+        if matches!(&self.g.prog.funcs[id].body, Body::Prim(s) if s == "array.map") {
+            let [Expr::Func(callback), input] = args else {
+                return None;
+            };
+            let function = &self.g.prog.funcs[*callback];
+            let (parameters, result) = function.ty.params(1);
+            if function.arity != 1
+                || parameters.len() != 1
+                || scalar(parameters[0]).is_none()
+                || scalar(result).is_none()
+            {
+                return None;
+            }
+            let input_type = parameters[0].clone();
+            let result_type = result.clone();
+            let input_descriptor = self.g.desc(&input_type);
+            let result_descriptor = self.g.desc(&result_type);
+            // A closed function expression has no captures to evaluate. Bind
+            // the input once before allocating, preserving eager evaluation.
+            let input = self.expr(input);
+            let input = self.bind(input);
+            self.tail_tokens(tail);
+            let owner_cleanup = self.begin_call(call_key);
+            let count = self.fresh();
+            let builder = self.fresh();
+            let cleanup = self.fresh();
+            let index = self.fresh();
+            self.line("/* direct known scalar array map; input stays borrowed */");
+            self.line(&format!("size_t {count} = fwp_array_len({input});"));
+            self.line(&format!("fwp_array_builder {builder} = {{fwp_array_typed_new({count}, {result_descriptor}), 0, {result_descriptor}};"));
+            self.line(&format!(
+                "fwp_cleanup {cleanup}; fwp_array_builder_protect(&{builder}, &{cleanup});"
+            ));
+            self.line(&format!(
+                "for (size_t {index} = 0; {index} < {count}; {index}++) {{"
+            ));
+            self.indent += 1;
+            // Plain scalar arguments need no owner preparation. Keep the
+            // ordinary function entry, including its scheduling/effect rules.
+            self.line(&format!("fwp_array_store_owned({builder}.value, {index}, f{callback}(fwp_array_load({input}, {index}, {input_descriptor})), {result_descriptor});"));
+            self.line(&format!("{builder}.filled++;"));
+            self.indent -= 1;
+            self.line("}");
+            let result = self.bind(format!("fwp_array_builder_finish(&{builder}, &{cleanup})"));
+            self.end_call(owner_cleanup);
+            return Some(result);
+        }
         if matches!(&self.g.prog.funcs[id].body, Body::Prim(s) if s == "array.fold") {
             let [Expr::Func(callback), initial, input] = args else {
                 return None;

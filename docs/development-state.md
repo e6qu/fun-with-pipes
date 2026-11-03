@@ -11,9 +11,9 @@ sessions and raw audits are complete; keep their missed timing limits open.
 
 ## Checkout and source identities
 
-- Active worktree: `.worktrees/gradient-array-results`, branch
+- Predecessor worktree: `.worktrees/gradient-array-results`, branch
   `gradient-array-results`; [PR #252](https://github.com/e6qu/fun-with-pipes/pull/252)
-  is the only active PR and remains draft until the final matrix is ready.
+  is the only active PR; its final production matrix is running.
 - Scratch/evidence: `.worktrees/gradient-work`. `/private/tmp` was cleared earlier;
   keep checkpoints here. Leave the detached primary checkout's recovery edits alone.
 - Contract: `c191421e`, tag `roadmap/gradient-array-protocol-2026-11-03`.
@@ -27,6 +27,18 @@ sessions and raw audits are complete; keep their missed timing limits open.
   unchanged. The runner verifies those trees before measuring.
 
 ## Roadmap status
+
+Follow-up contract `776e8d98` precedes code changes. The direct array-map draft
+uses existing scalar type checks, array accessors, caller-owner protection and
+partial-array cleanup; it adds no runtime layout, syntax or generic adapter.
+New semantic cases cover signed/unsigned widths, F32/F64, conversions, empty and
+sliced inputs, aliases, effects/traps and excluded callbacks/representations.
+Existing map/zip probes now instrument the direct loop, assert zero generic
+application calls, and exercise disabled reuse as well as all original fault modes.
+The existing `scalar-array-checks` route includes these affected targets.
+Local formatting (1.78s), workflow lint (6.36s) and documentation audit pass.
+Native correctness, count/reference evidence and performance remain unverified;
+builds and native checks go to runners. No new timing source is frozen yet.
 
 | Step | Status | Remaining work |
 |---|---|---|

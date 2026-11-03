@@ -1,5 +1,118 @@
 //! Numeric map-to-array construction preserves order and owns its scratch.
 use std::process::{Command, Output};
+
+#[path = "support/record_probe.rs"]
+mod record_probe;
+
+#[test]
+fn direct_scalar_array_maps_preserve_values_order_aliases_and_exclusions() {
+    let dir = fwp::cgen::TempDir::new("direct-array-maps").unwrap();
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    let marker = "direct known scalar array map; input stays borrowed";
+    for (label, program, status) in [
+        ("values", include_str!("fixtures/direct_array_maps.fwp"), 0),
+        (
+            "trap",
+            r#"
+step : I8 -> I8 ! {IO}
+step = fn value -> let shown = echo value in value + 1i8
+export mapped : Array[I8] -> Array[I8] ! {IO}
+mapped = array.map step
+main = array.from-list [1i8, 127i8, 2i8] | mapped | array.to-list | echo
+"#,
+            101,
+        ),
+    ] {
+        let input = dir.join(format!("{label}.fwp"));
+        std::fs::write(&input, program).unwrap();
+        let reference = Command::new(compiler)
+            .env("FWP_NO_OPT", "1")
+            .args(["run", "--interp"])
+            .arg(&input)
+            .output()
+            .unwrap();
+        assert_eq!(
+            reference.status.code(),
+            Some(status),
+            "{label}: {reference:?}"
+        );
+        if label == "trap" {
+            assert_eq!(reference.stdout, b"1\n127\n");
+        } else {
+            assert!(reference.stdout.starts_with(b"[2, -1]\n[0.5, 1.0]"));
+        }
+        for packing in ["0", "1"] {
+            let interpreted = Command::new(compiler)
+                .env_remove("FWP_NO_OPT")
+                .env("FWP_PACKED_ARRAYS", packing)
+                .args(["run", "--interp"])
+                .arg(&input)
+                .output()
+                .unwrap();
+            assert_eq!(interpreted.stdout, reference.stdout, "{label}");
+            assert_eq!(interpreted.stderr, reference.stderr, "{label}");
+            assert_eq!(interpreted.status.code(), Some(status), "{label}");
+            let cfile = dir.join(format!("{label}-{packing}.c"));
+            checked(
+                Command::new(compiler)
+                    .env_remove("FWP_NO_OPT")
+                    .env("FWP_PACKED_ARRAYS", packing)
+                    .args(["build", "--emit-c"])
+                    .arg(&input)
+                    .arg("-o")
+                    .arg(&cfile),
+            );
+            let code = std::fs::read_to_string(&cfile).unwrap();
+            if label == "values" {
+                for (name, selected) in [
+                    ("small", true),
+                    ("signed", true),
+                    ("unsigned", true),
+                    ("scaled", true),
+                    ("rounded", true),
+                    ("converted", true),
+                    ("observed", true),
+                    ("dynamic", false),
+                    ("captured", false),
+                    ("wide", false),
+                    ("text-lengths", false),
+                    ("record-sums", false),
+                ] {
+                    let start = code.find(&format!("/* {name} :")).unwrap();
+                    let body = &code[start..start + code[start..].find("\n}\n").unwrap()];
+                    assert_eq!(body.contains(marker), selected, "{name}: {body}");
+                    if selected {
+                        assert!(body.contains("fwp_array_store_owned("));
+                        assert!(body.contains("fwp_array_load("));
+                        assert!(!body.contains("fwp_apply"));
+                    }
+                }
+            } else {
+                assert!(code.contains(marker));
+            }
+            for opt in ["-O1", "-O2"] {
+                let binary = dir.join(format!("{label}-{packing}-{opt}.exe"));
+                fwp::cgen::compile_c(&code, &binary, opt).unwrap();
+                let output = Command::new(&binary).output().unwrap();
+                record_probe::save(
+                    "direct-array-maps",
+                    &format!("{label}-{packing}-{opt}"),
+                    &code,
+                    &binary,
+                    &output,
+                );
+                assert_eq!(output.stdout, reference.stdout, "{label} {packing} {opt}");
+                assert_eq!(output.stderr, reference.stderr, "{label} {packing} {opt}");
+                assert_eq!(
+                    output.status.code(),
+                    Some(status),
+                    "{label} {packing} {opt}"
+                );
+            }
+        }
+    }
+}
+
 fn checked(command: &mut Command) -> Output {
     let out = command.output().unwrap();
     assert!(out.status.success(), "{command:?}: {out:?}");

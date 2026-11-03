@@ -847,11 +847,11 @@ jobs:
       - name: Check formatting and affected ownership targets
         run: |
           cargo fmt --all -- --check
-          CARGO_NET_OFFLINE=true cargo clippy --locked --lib --bin fwp --test array_element_ownership --test array_unwind_ownership --test array_size_limits --test numeric_array_fusion --test argument_preparation_ownership -- -D warnings
+          CARGO_NET_OFFLINE=true cargo clippy --locked --lib --bin fwp --test array_element_ownership --test array_unwind_ownership --test array_size_limits --test numeric_array_fusion --test argument_preparation_ownership --test mapped_array_construction --test zip_map_fusion --test zip_unwind_ownership -- -D warnings
       - name: Check scalar captures, arithmetic, reuse, failure and cancellation
         run: |
           CARGO_NET_OFFLINE=true cargo build --locked --bin fwp
-          CARGO_NET_OFFLINE=true python3 scripts/run-native-tests.py --targets array_element_ownership array_unwind_ownership array_size_limits numeric_array_fusion argument_preparation_ownership --idle-timeout 600 --logs scalar-array-checks/targets
+          CARGO_NET_OFFLINE=true python3 scripts/run-native-tests.py --targets array_element_ownership array_unwind_ownership array_size_limits numeric_array_fusion argument_preparation_ownership mapped_array_construction zip_map_fusion zip_unwind_ownership --idle-timeout 600 --logs scalar-array-checks/targets
       - name: Check materialized and composed construction on production GCC
         if: runner.os == 'Linux'
         run: >-
