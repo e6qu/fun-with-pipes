@@ -1,13 +1,11 @@
 # Current work
 
-**Next:** implement and verify the [direct scalar array callback experiment](measurements/direct-array-callbacks.md)
-on branch `direct-array-callbacks`, after committing its contract. This worktree is
-`.worktrees/direct-array-callbacks`; PR #252 remains the only active PR, on
-`gradient-array-results`. Monitor its production run `41635110882` and docs
-`41635092370` at `e2d55aa81a7830cf7379570944ed7f307c55f7af`; keep that head fixed
-unless a real failure needs repair. It is ready for review, not draft.
-Publish the next PR only after #252 passes and merges. All four existing runtime
-sessions and raw audits are complete; keep their missed timing limits open.
+**Next:** publish the batched direct-array callback repair and verify all three
+focused jobs before freezing measurements. PR #252 remains the only active PR;
+monitor production `41635110882` and docs `41635092370` at
+`e2d55aa81a7830cf7379570944ed7f307c55f7af`. Keep its head fixed unless a real
+failure needs repair. Benchmarks and docs pass; eight platform jobs remain.
+Open the next PR only after #252 passes, is fully audited and merges.
 
 ## Checkout and source identities
 
@@ -36,9 +34,18 @@ sliced inputs, aliases, effects/traps and excluded callbacks/representations.
 Existing map/zip probes now instrument the direct loop, assert zero generic
 application calls, and exercise disabled reuse as well as all original fault modes.
 The existing `scalar-array-checks` route includes these affected targets.
-Local formatting (1.78s), workflow lint (6.36s) and documentation audit pass.
-Native correctness, count/reference evidence and performance remain unverified;
-builds and native checks go to runners. No new timing source is frozen yet.
+First focused run `41638033527` at `8537e7a9` failed on all three hosts:
+one unescaped C brace in a Rust format string prevented compilation; the absent
+evidence directory then failed uploads. No native targets ran. Full logs and
+[the repair record](measurements/direct-array-callbacks-2026-11-03/README.md) are
+retained. The brace and early evidence retention are repaired; independent native
+checks now run whenever the compiler builds, including after a lint failure.
+
+Same-source reference and measurement routes are prepared, not yet run. Guarded
+checks pass: reference controls (3), timing budgets (17), compiler-analysis
+controls (7), retained-patch audit (15), comparison groups (12), retention (3),
+Rust formatting and workflow lint. Native correctness, counts and performance
+remain unverified. No new timing source is frozen yet.
 
 | Step | Status | Remaining work |
 |---|---|---|

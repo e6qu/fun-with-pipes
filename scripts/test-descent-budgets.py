@@ -121,6 +121,36 @@ class DescentBudgets(unittest.TestCase):
                     self.assertEqual([failure['metric'] for failure in
                         DESCENT.paired_budget_failures({'case': changed}, 'range-zip')], [metric])
 
+    def test_direct_array_map_calls_require_no_memory_growth_and_keep_speed_limits(self):
+        for dimensions in (3, 33, 129):
+            for updates in (0, 1, 199, 1999):
+                row = self.recording_case(updates)
+                row.update(dimensions=dimensions, solvesPerProcess=8)
+                row['medianNs']['fwp-ad-identical'] = 95 if updates >= 199 else 100
+                for label in ('fwp-ad', 'fwp-ad-history'):
+                    row['medianNs'][label] = 95 if updates >= 199 else 100
+                    reference = row['fwpProfiles'][label + '-reference']['managed']
+                    row['fwpProfiles'][label]['managed'] = dict(reference)
+                    row['binaries'][label]['instructionBytes'] += 4096
+                self.assertEqual(DESCENT.paired_budget_failures({'case': row}, 'scalar-array-map'), [])
+                for metric in ('requests', 'requestedBytes', 'retains', 'peakChargedBytes', 'finalChargedBytes'):
+                    changed = copy.deepcopy(row)
+                    changed['fwpProfiles']['fwp-ad']['managed'][metric] += 1
+                    self.assertIn(metric, [failure['metric'] for failure in
+                        DESCENT.paired_budget_failures({'case': changed}, 'scalar-array-map')])
+                for metric, mutate in (
+                    ('candidate/reference time', lambda item: item['medianNs'].update(
+                        {'fwp-ad-history': 96 if updates >= 199 else 103})),
+                    ('identical median variation', lambda item: item['medianNs'].update(
+                        {'fwp-ad-identical': item['medianNs']['fwp-ad'] * 1.03})),
+                    ('largest static stack frame', lambda item: item['cCompilerStackUsage'][
+                        'fwp-ad.su']['entries'][0].update(bytes=193)),
+                ):
+                    changed = copy.deepcopy(row)
+                    mutate(changed)
+                    self.assertEqual([failure['metric'] for failure in
+                        DESCENT.paired_budget_failures({'case': changed}, 'scalar-array-map')], [metric])
+
     def test_gradient_arrays_require_net_savings_and_preserve_timing_limits(self):
         for dimensions in (3, 33, 129):
             for updates in (0, 1, 199, 1999):

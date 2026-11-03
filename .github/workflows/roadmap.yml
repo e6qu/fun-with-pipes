@@ -51,6 +51,7 @@ jobs:
           python3 scripts/test-scalar-map-zip-reference.py
           python3 scripts/test-range-zip-reference.py
           python3 scripts/test-gradient-array-reference.py
+          python3 scripts/test-scalar-array-map-reference.py
           python3 scripts/test-gradient-array-budgets.py
       - name: Sorting-time evidence controls
         run: python3 scripts/test-sort-time-evidence.py
