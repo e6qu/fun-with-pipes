@@ -96,7 +96,7 @@ def ownership_budget_failures(profiles, baseline):
 
 def paired_budget_failures(results, comparison):
     """Apply the selected pre-candidate limits and report every violation."""
-    assert comparison in {'scalar-recording', 'eager-captures', 'array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity'}
+    assert comparison in {'scalar-recording', 'eager-captures', 'array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration'}
     failures = []
 
     def require(case, program, metric, actual, limit):
@@ -111,6 +111,26 @@ def paired_budget_failures(results, comparison):
         for label in ['fwp-ad', 'fwp-ad-history']:
             reference = label + '-reference'
             current, old = (row['fwpProfiles'][name] for name in [label, reference])
+            if comparison == 'final-iteration':
+                history = label == 'fwp-ad-history'
+                time_limit = 0.95 if history and row['updates'] >= 199 else 1.02
+                require(case, label, 'candidate/reference time', medians[label] / medians[reference], time_limit)
+                if not history:
+                    for key in ('requests', 'requestedBytes', 'retains'):
+                        require(case, label, key, current['managed'][key], old['managed'][key])
+                if history and (row['dimensions'], row['updates']) == (129, 199):
+                    require(case, label, 'peakChargedBytes', current['managed']['peakChargedBytes'],
+                            old['managed']['peakChargedBytes'] / 5)
+                require(case, label, 'finalChargedBytes', current['managed']['finalChargedBytes'], 0)
+                require(case, label, 'final raw bytes', current['rawDerivativeStorage']['finalBytes'], 0)
+                stacks = row['cCompilerStackUsage']
+                current_frame = max(entry['bytes'] for entry in stacks[label + '.su']['entries'])
+                reference_frame = max(entry['bytes'] for entry in stacks[reference + '.su']['entries'])
+                require(case, label, 'largest static stack frame', current_frame, reference_frame + 128)
+                # Scalar 2k node savings are verified by the ownership probe.
+                # Here the full AD solve reports traffic, raw storage, code and
+                # RSS separately; those are not substitutes for peak live bytes.
+                continue
             if comparison in ('record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity'):
                 time_limit = 0.95 if row['updates'] >= 199 else 1.02
             else:
@@ -177,7 +197,7 @@ def paired_budget_failures(results, comparison):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--compiler', required=True, type=Path)
-    parser.add_argument('--comparison', required=True, choices=['current', 'eager-captures', 'array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity'])
+    parser.add_argument('--comparison', required=True, choices=['current', 'eager-captures', 'array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration'])
     parser.add_argument('--reference-compiler', type=Path)
     parser.add_argument('--reference-manifest', type=Path)
     parser.add_argument('--cc', required=True)
@@ -216,7 +236,14 @@ def main():
                 assert digest((ROOT / path).read_bytes()) == expected_hash, path
         else:
             assert reference_manifest['ownershipSha256'] == digest((ROOT / 'src/ownership.rs').read_bytes())
-        if args.comparison == 'scalar-array-identity':
+        if args.comparison == 'final-iteration':
+            assert reference_manifest['disabledTransformation'] == 'direct list last and unused numeric iteration history removal'
+            assert set(reference_manifest['candidate']) == set(reference_manifest['reference']) == {'src/fuse.rs', 'lib/list.fwp'}
+            assert set(reference_manifest['unchanged']) == {'src/cgen.rs', 'src/prims_std.rs', 'src/ownership.rs', 'src/opt.rs', 'runtime/fwp_rt_prims.c', 'runtime/fwp_rt_heap.c', 'lib/autodiff.fwp'}
+            for group in ('candidate', 'unchanged'):
+                for path, checksum in reference_manifest[group].items():
+                    assert digest((ROOT / path).read_bytes()) == checksum, path
+        elif args.comparison == 'scalar-array-identity':
             assert reference_manifest['candidateOptimizerSha256'] == digest((ROOT / 'src/opt.rs').read_bytes())
             assert reference_manifest['disabledTransformation'] == 'F64 identity array-map elimination'
             assert set(reference_manifest['unchanged']) == {'src/interp.rs', 'runtime/fwp_rt_num.c', 'src/cgen.rs'}
@@ -524,6 +551,7 @@ def main():
              'scripts/prepare-scalar-map-zip-reference.py', 'src/cgen/scalar_map_zip.rs',
              'scripts/prepare-range-zip-reference.py', 'src/cgen/range_zip.rs',
              'scripts/prepare-scalar-array-map-reference.py', 'scripts/prepare-scalar-array-identity-reference.py',
+             'scripts/prepare-final-iteration-reference.py', 'lib/list.fwp', 'src/prims_std.rs', 'runtime/fwp_rt_prims.c', 'runtime/fwp_rt_heap.c',
              'scripts/prepare-gradient-array-reference.py', 'scripts/gradient-array-candidate.patch',
              'src/fuse/array_zip.rs', 'lib/autodiff.fwp', 'runtime/fwp_rt_kernel.c',
              'src/numerics.rs', 'src/interp.rs', 'src/ir.rs', 'runtime/fwp_rt_num.c',
@@ -543,6 +571,7 @@ def main():
         referenceCompiler=reference_manifest,
         sourceHashes={name: digest((ROOT / name).read_bytes()) for name in paths}, results=results,
         scope={
+            'final-iteration': 'Same-source compilers differ only in direct last and unused numeric iteration history removal. Both preserve count validation, optional-wrapper cleanup and callback order. The manual C/Rust peers use different derivative algorithms and storage; their ratios do not isolate language or ARC overhead. ',
             'current': 'Six current-source implementations and one byte-identical AD-current control. ',
             'eager-captures': 'Current-source eager-capture comparison: reference compiler restores only constant-only capture hoisting; both compilers retain scalar recording stack storage. ',
             'array-lists': 'One current compiler with FWP_ARRAY_FUSION explicitly 1 versus 0. This toggles all numeric array fusion, including result formatting, so whole-solve differences are not attributed solely to gradient-list removal. Independent direct-boundary counts establish that removal. ',

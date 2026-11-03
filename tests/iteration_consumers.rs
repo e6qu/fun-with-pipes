@@ -1,8 +1,8 @@
 //! Raw interpreter oracles, tracked effects, and bounded-stack traversal for
 //! direct consumers. Golden suites separately cover ownership checks and reuse.
 use fwp::driver::check_source;
-use fwp::interp::Value;
 use fwp::ir::{Body, Expr, Func, Pat, Program, TypeShape, MT};
+use fwp::value::Value;
 use std::path::Path;
 use std::process::Command;
 

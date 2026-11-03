@@ -22,6 +22,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--compiler', required=True, type=Path)
     parser.add_argument('--output', required=True, type=Path)
+    parser.add_argument('--expected-selection', required=True, choices=('baseline', 'candidate'))
     args = parser.parse_args()
     assert os.environ.get('GITHUB_ACTIONS') == 'true', 'compiler builds belong on CI'
     compiler = args.compiler.resolve()
@@ -60,18 +61,26 @@ def main():
                                  encoding='utf-8', check=False)
             Path(str(stem) + '.stdout').write_bytes(result.stdout)
             Path(str(stem) + '.ir').write_bytes(result.stderr)
-            commands.append(dict(command=command, mode=mode, exit=result.returncode))
+            record = dict(command=command, mode=mode, exit=result.returncode)
+            if result.returncode == 0:
+                emitted = Path(str(stem) + '.c').read_text()
+                selected = '/* list._iterate-last :' in emitted
+                expected = (args.expected_selection == 'candidate' and mode == 'optimized'
+                            and label not in ('shared-history', 'current-large'))
+                record.update(selected=selected, expected=expected, selectionPass=selected == expected)
+            commands.append(record)
             (output / 'commands.json').write_text(json.dumps(commands, indent=2) + '\n')
             print(label, mode, 'exit', result.returncode, 'diagnostics retained', flush=True)
     manifest = {
         'source': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
         'compilerSha256': hashlib.sha256(compiler.read_bytes()).hexdigest(),
+        'expectedSelection': args.expected_selection,
         'files': {path.name: hashlib.sha256(path.read_bytes()).hexdigest()
                   for path in sorted(output.iterdir()) if path.is_file()},
     }
     (output / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
-    failures = [record for record in commands if record['exit'] != 0]
-    assert not failures, f'{len(failures)} failed compilations: see commands.json and retained diagnostics'
+    failures = [record for record in commands if record['exit'] != 0 or not record['selectionPass']]
+    assert not failures, f'{len(failures)} compilation/selection failures: see commands.json and retained diagnostics'
 
 
 if __name__ == '__main__':

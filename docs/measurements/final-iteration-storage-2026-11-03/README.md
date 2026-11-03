@@ -2,6 +2,8 @@
 
 This is preparation evidence, not a performance result. The
 [implementation contract](../final-iteration-storage.md) defines the next group.
+The [first focused batch](compile-repair/README.md) retains a test-import failure
+and its repair; native ownership verification is still pending.
 
 ## Actual compiler output
 

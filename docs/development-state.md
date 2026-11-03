@@ -1,15 +1,18 @@
 # Current work
 
-**Next:** monitor PR #254's repaired head and publish the next group's focused
-checks from `iteration-final-value`. Keep one delivery PR: open the next only
-after #254 passes all final gates and its squash tree/message are verified.
+**Next:** publish the batched final-iteration repair and run `final-iteration-checks`
+on all three native hosts. Monitor PR #254's repaired final gates in parallel;
+open the next delivery PR only after its verified squash merge. No timing session
+has started for final iteration storage.
 
 ## PR #254: final gates
 
 - Active PR: https://github.com/e6qu/fun-with-pipes/pull/254.
 - Repaired head: `8bf9c65bc247bbd94903d0a31fb0823d1e335391` on branch/worktree
-  `scalar-array-identities`. Production `41713252299` and docs `41713252267` are
-  queued; no repaired-head native job has run yet.
+  `scalar-array-identities`. Production `41713252299` is running with no failed
+  steps reported. Benchmarks and docs `41713252267` / job `126186525051` pass,
+  with full-log audits retained in scratch `platforms-254-repaired` (5.00 guarded
+  seconds). Remaining native gates are running or queued.
 - Previous production `41694728758` at `9061744b` completed: seven jobs and docs
   passed; both Windows jobs failed the same two float probes. Their custom C
   mains omitted binary-stream setup, producing CRLF. The repair checks `_setmode`
@@ -58,8 +61,8 @@ Implemented, awaiting focused native verification:
   A generic-last file test checks that the selected stream remains open until its
   final owner is released. Source tests compare both interpreters and native O1/O2.
 - The collections tutorial explains five iterations from 1 yielding `Some 16`.
-  Library comments generate the updated reference on CI; import that artifact
-  after reviewing its diff. Do not edit `docs/stdlib.md` manually.
+  The matching generated library reference was imported from both GCC artifacts;
+  its three added comment lines were reviewed. Do not edit it manually.
 
 The `final-iteration-checks` manual numerical workflow groups compiler units,
 primitive inventory, nine affected integration targets, tutorial execution and
@@ -67,11 +70,37 @@ library-doc generation on GCC Linux ARM64/AMD64 and Clang macOS ARM64. It retain
 all partial logs and native probes. Windows now explicitly includes
 `iteration_consumers` in its final matrix. No new integration target is added.
 
-After focused checks: repair every finding in one batch; implement/audit the
-same-source reference, then measure the frozen runtime/compiler/stack limits.
-Both reference and candidate must contain count/cleanup repairs. Reference alone
-restores reverse/head and disables history removal. No timing session has started.
-Final nine-job plus docs verification remains required before delivery.
+### First focused batch and repair
+
+[Run 41715801311](https://github.com/e6qu/fun-with-pipes/actions/runs/41715801311)
+at `f599dfba030b9fb70b53eb503bb001719a4ce8be` failed on both GCC hosts because
+`iteration_consumers` imported private `fwp::interp::Value`. The repair imports
+`fwp::value::Value`. Both hosts passed compiler build, 268 unit tests (4 ignored),
+inventory, tutorial execution in both engines and identical generated docs.
+The integration batch could not compile, so **no native ownership test ran**.
+All completed full/step logs were audited; no second failure cause was found.
+The still-queued macOS job was cancelled for this obsolete source. See
+[retained failure evidence](measurements/final-iteration-storage-2026-11-03/compile-repair/README.md).
+
+The repair also adds real-gradient selection checks and the measurement tools:
+
+- The same-source reference restores `last = reverse | head` and disables only
+  unused-history removal. Both compilers keep count validation and cleanup repairs.
+- Five reference controls pass, including real tiny Git checkouts and corrupt
+  manifest, patch, saved-source and partial-reference rejection.
+- All 19 budget controls pass. History speed, current-only regressions, large
+  history peak storage, traffic, ARC, cleanup and stack have separate limits.
+- All 17 raw-evidence controls pass (19.42 guarded seconds). Saved edits are read
+  as literals, never executed. Seven compiler-cost and three retention controls
+  also pass; the latter controls plus reference checks take 1.73 seconds.
+- Workflow lint passes (6.85 seconds); formatting passes (1.72 seconds).
+  Real emitted-C selection checks run on CI before measurements. They require
+  selection for eligible scalar/list/gradient inputs and exclude shared histories
+  and the already current-only loop.
+
+After the repaired focused batch passes, measure the frozen runtime/compiler/stack
+limits. Do not repeat completed sessions for a pass. Final nine-job plus docs
+verification remains required before delivery.
 
 ## Completed preparation and local checks
 
