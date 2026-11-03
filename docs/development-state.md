@@ -1,10 +1,13 @@
 # Current work
 
-**Next:** publish the complete reports and mark PR #252 ready for its final
-nine-job production matrix plus docs. Audit every job/target and repair all
-failures together; squash only after the exact final head passes. All four runtime
-sessions and independent raw audits are complete. Keep every missed limit;
-do not rerun completed timings.
+**Next:** implement and verify the [direct scalar array callback experiment](measurements/direct-array-callbacks.md)
+on branch `direct-array-callbacks`, after committing its contract. This worktree is
+`.worktrees/direct-array-callbacks`; PR #252 remains the only active PR, on
+`gradient-array-results`. Monitor its production run `41635110882` and docs
+`41635092370` at `e2d55aa81a7830cf7379570944ed7f307c55f7af`; keep that head fixed
+unless a real failure needs repair. It is ready for review, not draft.
+Publish the next PR only after #252 passes and merges. All four existing runtime
+sessions and raw audits are complete; keep their missed timing limits open.
 
 ## Checkout and source identities
 
