@@ -3,7 +3,8 @@
 The [contract](../direct-array-callbacks.md) compares direct calls with the same
 compiler using generic callback application. Focused native verification passes;
 [compiler costs](../direct-array-analysis-2026-11-03/README.md) also pass; runtime
-measurements are in progress.
+[measurements and all four raw audits](../direct-array-time-2026-11-03/README.md)
+are complete, retaining every missed speed/noise limit.
 
 ## Verified native behavior
 
@@ -30,7 +31,8 @@ Each host passes:
 All 762 saved native images have matching architecture headers and recorded
 hashes: 256 on each Linux host and 250 on macOS. Both GCC construction reports
 pass. These checks establish correctness and cleanup for the tested cases;
-whole-solve allocation/ARC limits and speed remain unverified.
+the separate [runtime report](../direct-array-time-2026-11-03/README.md) verifies
+unchanged whole-solve allocation/ARC profiles and reports speed limits separately.
 
 ## First focused run
 
@@ -66,11 +68,12 @@ runs exit 0 at O1/O2; omitted buffer, scratch and partial-output cleanup each ex
 90 at the detected leak. The successful controls exercise nine modes and four
 alias combinations over sixteen rounds.
 The corrected numeric-value/selection test passes in the verified run above.
-No new performance or memory improvement is claimed yet.
+The runtime report distinguishes verified speed gains from unchanged storage
+counts and unresolved performance limits.
 
 ## Runtime evidence and documentation repairs
 
 The initial runtime audit found an omitted reference upload; the draft docs
 check found a stale collection-test count. [Causes, complete logs and repairs](evidence-repair/README.md)
-retain both failures. Original timings are preserved; exact reference recovery
-and the runtime audit remain required.
+retain both failures. All exact-reference recoveries and original-sample audits
+now pass; no measured session was repeated.

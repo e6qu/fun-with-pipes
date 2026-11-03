@@ -19,20 +19,26 @@ function `scale` directly for each element. It still allocates an independent
 result array and preserves input aliases, effects, traps and cancellation.
 This is an experiment, not an established explanation of earlier timing misses.
 
-The [contract](docs/measurements/direct-array-callbacks.md) was frozen before code
-changes. [Focused native verification](docs/measurements/direct-array-callbacks-2026-11-03/README.md)
-passes on all three hosts. [Compiler costs](docs/measurements/direct-array-analysis-2026-11-03/README.md)
-pass. Both ARM64 runtime sessions completed with five speed-target misses each;
-the raw audit is running. AMD64 has no qualified measurement yet. [The failure record](docs/measurements/direct-array-callbacks-2026-11-03/README.md)
-retains both repaired verification failures. Runtime measurements are in progress;
-keep host rejections and every measured outcome.
+The [contract](docs/measurements/direct-array-callbacks.md) was frozen before code.
+[Native correctness and cleanup](docs/measurements/direct-array-callbacks-2026-11-03/README.md)
+pass on three hosts; [compiler costs](docs/measurements/direct-array-analysis-2026-11-03/README.md)
+pass. [All four runtime sessions](docs/measurements/direct-array-time-2026-11-03/README.md)
+and raw audits are complete. Larger cases improve by 4.8–5.2% on ARM64 and
+5.5–8.1% on AMD64, with unchanged allocation/ARC counts. Sixteen speed targets
+and one noisy comparison remain open; AMD64 current-only RSS observations rise
+6–14%. Keep the proven work reduction under the accepted policy, preserving
+those limits. No completed timing was rerun.
+
+[Draft PR #253](https://github.com/e6qu/fun-with-pipes/pull/253) groups the compiler
+change, semantic/cleanup checks, evidence repairs and current docs. Publish its
+complete report, then run the final nine production jobs plus documentation.
 
 | Step | Work | Completion requirement |
 |---|---|---|
 | 1 | Declare the direct-call experiment | Freeze selection, ownership rules and limits before implementation. Keep storage layouts and other optimizations unchanged. |
 | 2 | Verify implementation and cleanup | GCC ARM64/AMD64 and Clang ARM64 pass O1/O2 comparisons with both interpreters, rejected cases, aliases/slices, eager order, allocation failure and cancellation. Audit selected direct calls and deliberately broken cleanup controls. |
 | 3 | Measure the isolated change | Freeze a same-source reference disabling only direct scalar array-map selection. Audit compiler time/RSS, four qualified runtime sessions, every count, native image and failed limit. No allocation/ARC/live-storage increase; preserve timing, copy and stack limits. |
-| 4 | Deliver the grouped PR | Publish one follow-up PR with implementation, repairs, evidence and current docs. Run the final nine production jobs plus docs, audit all logs, then verify the one-line squash and tested-tree equality. |
+| 4 | Deliver the grouped PR | Finish PR #253 with implementation, repairs, evidence and current docs. Run the final nine production jobs plus docs, audit all logs, then verify the one-line squash and tested-tree equality. |
 
 [History](docs/roadmap-history.md) and the linked reports preserve completed
 storage changes and their source identities. Do not repeat completed timings for
@@ -42,6 +48,14 @@ records the input/output ownership constraints and an unused-history candidate.
 These changes remain unselected.
 
 ## Open performance goals
+
+- **Direct scalar array calls.** [The complete report](docs/measurements/direct-array-time-2026-11-03/README.md)
+  retains 16 missed 5% gains: both 3/199 forms and 3/1999 current on all sessions,
+  plus 3/1999 history and 129/199 history on ARM64. AMD64 session 2's 3/1 current
+  has 3.53% identical-copy variation against 2%, making that case inconclusive.
+  Keep these outcomes open; declare a source/sample diagnostic before changing
+  the measurement or selecting another optimization. Larger-case gains do not
+  close older comparisons with different references.
 
 - **Gradient-array speed.** [Completed observations](docs/measurements/gradient-array-time-2026-11-03/README.md)
   miss every required 5% gain. Larger ARM64 cases improve by about 3–4%; AMD64

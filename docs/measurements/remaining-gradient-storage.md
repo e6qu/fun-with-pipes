@@ -31,6 +31,11 @@ F128 and nested `Rev` require their own representation and cleanup evidence.
 Changing the public objective type is permitted in this pre-alpha, but changing
 `List` to `Array` alone does not prove that record allocations disappear.
 
+The existing [packed-record lowering](../../src/cgen/packed_records.rs) handles
+an eager map whose only consumer is a numeric-record fold. The objective's
+overlapping reads do not match that pattern. Extending it needs a representation
+and lifetime proof for those reads, not just adding `Rev` to an eligibility list.
+
 **Updated coordinates:** [the ownership contract](../../src/ownership.rs) makes
 `zip-with` borrow both lists and return a fresh list spine. Its implementation
 cannot overwrite or free an input under that contract. Reuse would require an

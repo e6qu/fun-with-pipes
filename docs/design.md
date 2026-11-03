@@ -349,9 +349,11 @@ an independent `array[0.5, 1.0]`. The input stays borrowed; the existing typed-a
 builder cleans partial output on failure. This selection accepts ordinary
 integer/F32/F64 arguments and results, with no saved arguments. Dynamic functions,
 captures, wide values and reference-bearing elements keep their ordinary calls.
-The [experiment contract](measurements/direct-array-callbacks.md) specifies the
-remaining correctness and performance verification; implementation alone does
-not establish a speedup.
+The [native checks](measurements/direct-array-callbacks-2026-11-03/README.md) cover
+selection, effects, traps and partial-output cleanup. [Compiler-cost measurements](measurements/direct-array-analysis-2026-11-03/README.md)
+bound compilation overhead; they do not measure generated-program speed. The
+[contract](measurements/direct-array-callbacks.md) defines separate runtime and
+whole-solve memory requirements.
 
 ### Proving a local array has one owner
 

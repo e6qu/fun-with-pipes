@@ -1,0 +1,172 @@
+{
+  "source": "e649da78c41dab8fa6f191d7670b1efba79811b0",
+  "sessions": {
+    "aarch64-2": {
+      "run": 41649285227,
+      "job": 125962884426,
+      "failures": [
+        {
+          "case": "3-199",
+          "program": "fwp-ad",
+          "metric": "candidate/reference time",
+          "actual": 0.9646141827928024,
+          "limit": 0.95
+        },
+        {
+          "case": "3-199",
+          "program": "fwp-ad-history",
+          "metric": "candidate/reference time",
+          "actual": 0.9723030155770566,
+          "limit": 0.95
+        },
+        {
+          "case": "3-1999",
+          "program": "fwp-ad",
+          "metric": "candidate/reference time",
+          "actual": 0.9600825587663174,
+          "limit": 0.95
+        },
+        {
+          "case": "3-1999",
+          "program": "fwp-ad-history",
+          "metric": "candidate/reference time",
+          "actual": 0.9661524709069064,
+          "limit": 0.95
+        },
+        {
+          "case": "129-199",
+          "program": "fwp-ad-history",
+          "metric": "candidate/reference time",
+          "actual": 0.9518895674809381,
+          "limit": 0.95
+        }
+      ],
+      "files": 1334,
+      "referenceRecovery": {
+        "method": "rebuild frozen reference and require exact recorded hashes",
+        "workflowRun": "41656720253",
+        "toolingSource": "80b5f93e5cbdedd4f08d8942db478d35b4518e5f"
+      }
+    },
+    "aarch64-1": {
+      "run": 41649285227,
+      "job": 125962884441,
+      "failures": [
+        {
+          "case": "3-199",
+          "program": "fwp-ad",
+          "metric": "candidate/reference time",
+          "actual": 0.9645003276651599,
+          "limit": 0.95
+        },
+        {
+          "case": "3-199",
+          "program": "fwp-ad-history",
+          "metric": "candidate/reference time",
+          "actual": 0.9719197164848377,
+          "limit": 0.95
+        },
+        {
+          "case": "3-1999",
+          "program": "fwp-ad",
+          "metric": "candidate/reference time",
+          "actual": 0.9576271915166993,
+          "limit": 0.95
+        },
+        {
+          "case": "3-1999",
+          "program": "fwp-ad-history",
+          "metric": "candidate/reference time",
+          "actual": 0.9637450020075486,
+          "limit": 0.95
+        },
+        {
+          "case": "129-199",
+          "program": "fwp-ad-history",
+          "metric": "candidate/reference time",
+          "actual": 0.9520372650634029,
+          "limit": 0.95
+        }
+      ],
+      "files": 1334,
+      "referenceRecovery": {
+        "method": "rebuild frozen reference and require exact recorded hashes",
+        "workflowRun": "41656720253",
+        "toolingSource": "80b5f93e5cbdedd4f08d8942db478d35b4518e5f"
+      }
+    },
+    "x86_64-1": {
+      "run": 41654861200,
+      "job": 125982375361,
+      "failures": [
+        {
+          "case": "3-199",
+          "program": "fwp-ad",
+          "metric": "candidate/reference time",
+          "actual": 0.9795949887321366,
+          "limit": 0.95
+        },
+        {
+          "case": "3-199",
+          "program": "fwp-ad-history",
+          "metric": "candidate/reference time",
+          "actual": 0.9575693790589632,
+          "limit": 0.95
+        },
+        {
+          "case": "3-1999",
+          "program": "fwp-ad",
+          "metric": "candidate/reference time",
+          "actual": 0.9725494872122131,
+          "limit": 0.95
+        }
+      ],
+      "files": 1334,
+      "referenceRecovery": {
+        "method": "rebuild frozen reference and require exact recorded hashes",
+        "workflowRun": "41658007799",
+        "toolingSource": "80b5f93e5cbdedd4f08d8942db478d35b4518e5f"
+      }
+    },
+    "x86_64-2": {
+      "run": 41655262486,
+      "job": 125983765417,
+      "failures": [
+        {
+          "case": "3-1",
+          "program": "fwp-ad",
+          "metric": "identical median variation",
+          "actual": 1.0352829903471057,
+          "limit": 1.02
+        },
+        {
+          "case": "3-199",
+          "program": "fwp-ad",
+          "metric": "candidate/reference time",
+          "actual": 0.9760292092375352,
+          "limit": 0.95
+        },
+        {
+          "case": "3-199",
+          "program": "fwp-ad-history",
+          "metric": "candidate/reference time",
+          "actual": 0.9626607784949431,
+          "limit": 0.95
+        },
+        {
+          "case": "3-1999",
+          "program": "fwp-ad",
+          "metric": "candidate/reference time",
+          "actual": 0.9647851682429326,
+          "limit": 0.95
+        }
+      ],
+      "files": 1334,
+      "referenceRecovery": {
+        "method": "rebuild frozen reference and require exact recorded hashes",
+        "workflowRun": "41658488279",
+        "toolingSource": "80b5f93e5cbdedd4f08d8942db478d35b4518e5f"
+      }
+    }
+  }
+}

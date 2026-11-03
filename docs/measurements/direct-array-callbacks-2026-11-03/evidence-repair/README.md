@@ -28,4 +28,7 @@ fails recovery; it does not relax the original evidence requirements.
 Local controls reject altered compiler bytes, source, patch, every manifest
 field, source identity and architecture. The upload regression requires the
 selected directory; collection controls still reject missing/ignored/failed
-or duplicate tests. Native recovery remains pending until its runner jobs pass.
+or duplicate tests. All three native recovery jobs now pass: [four original sessions](../../direct-array-time-2026-11-03/README.md#original-evidence-and-exact-reference-recovery)
+have matching reference hashes and complete raw audits. Repaired documentation
+run [41656730058](https://github.com/e6qu/fun-with-pipes/actions/runs/41656730058)
+also passes; its complete log contains only the three existing rejection controls.

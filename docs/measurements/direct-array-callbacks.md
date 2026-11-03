@@ -2,7 +2,9 @@
 
 **Status:** [focused native verification](direct-array-callbacks-2026-11-03/README.md)
 and [compiler-cost limits](direct-array-analysis-2026-11-03/README.md) pass.
-Runtime audits remain. The experiment was declared before implementation against
+[Four runtime audits](direct-array-time-2026-11-03/README.md) are complete; 16
+speed targets and one identical-copy limit remain open. The experiment was
+declared before implementation against
 `e2d55aa81a7830cf7379570944ed7f307c55f7af`. PR #252 has since merged with all final
 gates passing. Preserve its [complete timing results](gradient-array-time-2026-11-03/README.md).
 

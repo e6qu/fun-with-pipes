@@ -1,123 +1,90 @@
 # Current work
 
-**Next:** publish the batched upload/inventory repairs, dispatch explicit
-`scalar-array-map-recover` jobs for the original ARM run `41649285227` and then
-the completed AMD runs `41654861200` / `41655262486`. Both AMD hosts qualified;
-measurements are still running. Preserve all timing outcomes. The sole active
-PR is [draft #253](https://github.com/e6qu/fun-with-pipes/pull/253). Run its final
-platform matrix only after the measurement/recovery audit is complete.
+**Next:** publish the completed direct-array-call report in
+[PR #253](https://github.com/e6qu/fun-with-pipes/pull/253), mark it ready, and monitor
+its exact final head through nine production jobs plus documentation. Audit every
+full/target log before the authorized one-line squash; verify the merge tree.
+Keep missed timing goals open. Select the next storage change only after declaring
+its proof, scope and measurement; the review below does not select an implementation.
 
 ## Checkout and sources
 
 - Worktree/branch: `.worktrees/direct-array-callbacks` / `direct-array-callbacks`.
   Scratch: `.worktrees/gradient-work`. Leave the detached primary checkout's
   recovery edits alone.
-- Contract `776e8d98`, tag `roadmap/direct-array-callbacks-protocol-2026-11-03`,
-  precedes implementation `8537e7a9`. Repairs: `36bfee09`, `5e921fb8`.
+- Frozen contract: `776e8d98`, tag
+  `roadmap/direct-array-callbacks-protocol-2026-11-03`, before implementation.
 - Frozen measurements: `e649da78c41dab8fa6f191d7670b1efba79811b0`, tag
-  `roadmap/scalar-array-map-measurement-2026-11-03`. Implementation trees equal
-  focused-tested `5e921fb8517d59cfa0ef452c2c2264ffa00be325`. Rebase the working
-  branch, never the frozen tag. The reference disables only direct scalar
-  array-map selection; both builds keep the gradient-array implementation.
-- PR #252 merged as `3034a9d047c2bef44744c6ffc1807146570ced57`. Its tree equals
-  tested `e2d55aa81a7830cf7379570944ed7f307c55f7af`; its 64-character single-line
-  subject has no body/trailers. All nine production jobs `41635110882` and docs
-  `41635092370` pass; all full/target logs are audited and
-  [retained](measurements/gradient-array-storage-2026-11-03/platforms/final-gates.json).
+  `roadmap/scalar-array-map-measurement-2026-11-03`. Compiler/runtime/library/test
+  trees equal focused-tested `5e921fb8517d59cfa0ef452c2c2264ffa00be325` and current
+  implementation. Rebase changed working-branch commit IDs, not frozen tags.
+- Parent PR #252 merged as `3034a9d047c2bef44744c6ffc1807146570ced57`; its tree
+  equals tested `e2d55aa8`. All ten gates and the one-line squash are verified,
+  with [full gate records](measurements/gradient-array-storage-2026-11-03/platforms/final-gates.json).
   Duplicate same-tree main run `41652287872` was cancelled with no failed steps.
 
 ## Roadmap status
 
-The [direct-call contract](measurements/direct-array-callbacks.md) selects known,
-closed ordinary-scalar callbacks. The implementation uses existing array
-accessors, caller-owner protection and partial-array cleanup. No layout, API or
-syntax changes. The separate [storage review](measurements/remaining-gradient-storage.md)
-records possible future work; it selects no further implementation.
+[The contract](measurements/direct-array-callbacks.md) selects closed ordinary-scalar
+array callbacks. It changes no layout, API or language syntax. [The runtime report](measurements/direct-array-time-2026-11-03/README.md)
+separates verified work reductions, unchanged storage counts and unresolved limits.
+The [storage review](measurements/remaining-gradient-storage.md) records same-type
+conversions, boxed inputs and unused history; those candidates remain unselected.
 
 | Step | Status | Remaining work |
 |---|---|---|
-| 1 | Verified | Keep the pre-implementation contract and limits fixed |
-| 2 | Verified | Three hosts pass; 24 targets, 72 selections and 762 native images audited |
-| 3 | In progress | Compiler limits pass; audit both completed ARM sessions and obtain two qualified AMD sessions |
-| 4 | In progress | Draft #253 is published; finish audits, then final nine production jobs plus docs and verified squash |
+| 1 | Verified | Preserve the pre-implementation scope and limits |
+| 2 | Verified | Three native hosts; all targets, selection checks, images and cleanup audited |
+| 3 | Verified | Four original sessions audited; 16 speed misses and one noise failure stay open |
+| 4 | In progress | Final nine production jobs plus docs, complete log audit and verified squash |
 
-## Verification and repairs
+## Completed evidence
 
-[Native evidence](measurements/direct-array-callbacks-2026-11-03/README.md)
-retains both failures and the complete passing run:
+- [Focused native checks](measurements/direct-array-callbacks-2026-11-03/README.md):
+  run `41646433358`, GCC ARM64/AMD64 and Clang ARM64. Each passes 40 tests,
+  24 selections, eight semantic executions and ten cleanup observations. All
+  762 native images and full/target logs audited. Both earlier repaired attempts
+  remain recorded: an escaped-C-brace compile failure and a main-only/export-root
+  inspection error.
+- [Compiler costs](measurements/direct-array-analysis-2026-11-03/README.md):
+  run `41649281445`; all 480 observations audited. Maximum elapsed increase
+  0.688%, peak RSS increase 0.185%, identical-copy difference 1.288%.
+- Original runtime runs: ARM64 1/2 `41649285227`; AMD64 1 `41654861200`;
+  AMD64 2 `41655262486`. All completed; none was repeated for a better result.
+- [Reference recovery](measurements/direct-array-callbacks-2026-11-03/evidence-repair/README.md):
+  the upload condition omitted the new directory. Ordinary audit `41654788718`
+  failed correctly. Tooling `80b5f93e` rebuilt the frozen references and required
+  every recorded compiler/source/patch hash to match. Recovery runs `41656720253`,
+  `41658007799`, `41658488279` all pass. Every original log and all 5,336 raw-file
+  records reconcile; reconstructed artifacts are explicitly identified.
+- Four-session outcomes: larger cases improve 4.8–5.2% on ARM64 and 5.5–8.1%
+  on AMD64. Sixteen required 5% gains fail. AMD64 session 2's 3/1 current has
+  3.53% identical-copy variation against 2%; that comparison is inconclusive.
+  All 48 managed/raw profiles match reference, including disabled workspace.
+  AMD64 current-only RSS observations rise 6–14%. Frame growth ≤64 bytes.
+- [Seven host rejections](measurements/direct-array-time-2026-11-03/rejected-hosts/index.json)
+  occurred before building/timing. Six EPYC 9V74 and one 9V45 did not match 7763.
+- Draft docs `41655295706` exposed a stale collection count: four map tests were
+  present, but the inventory expected three. Producer and controls now require
+  four (59 tests across collection targets). Repaired docs `41656730058` pass;
+  all diagnostics audited. Historical benchmark wording now correctly says both
+  forms print only the final vector; the history form retains intermediates.
 
-- `41638033527` at `8537e7a9`: all hosts failed compilation on an unescaped C
-  brace in a Rust format string. Fixed the brace and early artifact creation;
-  CI retains lint/build logs and runs native targets whenever compilation works.
-- `41640932807` at `36bfee09`: 39 tests passed and one failed per host. The new
-  inspection expected exported names in a main-only build. The repair requests
-  exports separately, keeps ordinary main execution and saves C before assertions.
-  All ten cleanup observations per host passed even in the failed attempt.
-- `41646433358` at `5e921fb8`: GCC ARM64/AMD64 and Clang ARM64 pass 40 tests,
-  24 selection checks, eight semantic executions and ten cleanup observations
-  per host. Every full/target log, image identity and cross-host output is audited.
+## Local checks and limits
 
-[Compiler costs](measurements/direct-array-analysis-2026-11-03/README.md) pass in
-`41649281445`: all 480 commands and source/reference identities audited. Maximum
-elapsed increase 0.688%, peak RSS increase 0.185%, identical-copy difference 1.288%.
-This measures fwp-to-C compilation, not generated-program execution.
+Run focused checks serially through `python3 scripts/local-guard.py`. Full builds,
+full suites, benchmarks and large regeneration stay on GitHub. Preserve 64 GiB
+free disk, target data <2 GiB, sampled RSS <1 GiB and the 180-second deadline.
+Last free space about 77 GiB; no local compiler build is running.
 
-## Runtime observations
+Passing repair checks: recovery controls 2 (0.25s), collection controls 8 (0.26s),
+source/patch/binary controls 15 (19.30s), retention controls 3 (0.13s), workflow
+lint after selector cleanup (6.30s). Earlier reference, budget, grouping and
+native checks remain linked above; no implementation changed afterward.
 
-Original run `41649285227` completed both ARM64 sessions. Each misses five 5%
-speed goals: both forms of 3/199 and 3/1999, plus 129/199 history. These are
-completed observations, not retries to schedule. Raw audit run `41654788718`
-failed because the workflow omitted reference artifacts. The explicit recovery
-requires exact recorded hashes before auditing saved samples. Other runtime/memory
-claims remain provisional until recovery and the audit pass.
-
-Both AMD64 measurement sessions qualified and are running. Runs `41649285227`, `41650921950` and
-`41651545947` rejected six hosts before building/timing: five EPYC 9V74 and one
-9V45, against required EPYC 7763. All six qualification records and logs are
-audited in `../gradient-work/direct-host-rejections/RUN`. Run `41654861200` qualified session 1, which is building/measuring; session 2
-rejected another 9V74 before building/timing (full record audited, 4.61s).
-Only session 2 is replaced by `41655262486`, which qualified. Both use the same frozen tag and
-focused prerequisite. Do not change
-the frozen CPU requirement or treat host rejection as a timing outcome.
-
-## Local checks and helpers
-
-Use `python3 scripts/local-guard.py` serially. Full builds, suites, benchmarks and
-large regeneration run on GitHub. Keep 64 GiB free, target data below 2 GiB,
-sampled RSS below 1 GiB and the 180-second deadline. Last free space about 86 GiB.
-No local compiler build is running.
-
-Passing focused checks: reference controls 3, budgets 17, compiler-analysis 7,
-patch auditing 15, comparison groups 12, retention 3; predecessor reference
-reconstruction 6 (0.60s). Formatting, workflow lint and docs pass. The standalone
-production initializer-format check passes (0.84s); this is not native verification.
-
-Scratch helpers run under the guard:
-
-- `collect-direct.py --run 41646433358 --source 5e921fb8517d59cfa0ef452c2c2264ffa00be325 --output ../gradient-work/direct-export-repaired`
-- `audit-direct-analysis.py x86_64` or `aarch64`: completed in 42.39s/45.14s;
-  `retain-direct-analysis.py`: completed in 0.14s.
-- `audit-direct-rejected-hosts.py --run RUN`: only early AMD host rejections.
-- `collect-252.py`: all ten audits complete, final Linux collection 5.42s.
-  `retain-gradient-delivery.py --merge 3034a9d047c2bef44744c6ffc1807146570ced57`
-  already verified and retained the merge/gates (0.13s); do not repeat into its
-  nonempty output directory.
-
-After rebase, `adc886f6` preserves all measured implementation/tool/workflow trees;
-the frozen tag still points to `e649da78`. Roadmap audit passes (3.16s, 240 docs).
-`collect-direct-runtime.py --run AUDIT_RUN --prefix PREFIX` checks downloaded
-summary digests, full logs, source identities and saved audit outcomes; it does
-not execute native binaries or rerun measurements.
-
-## Evidence repair in progress
-
-[Complete failures and repairs](measurements/direct-array-callbacks-2026-11-03/evidence-repair/README.md):
-audit `41654788718` omitted reference artifacts for both ARM sessions; docs
-`41655295706` expected 3 map tests instead of 4. Both full logs and all failed
-steps reviewed. Dynamic reference-directory upload fixes the cause; explicit
-recovery rebuilds only the frozen reference and requires every recorded hash.
-It does not rerun timings or reinterpret incomplete evidence as complete.
-
-Focused local recovery controls pass (2 tests, 0.25s); collection controls pass
-(8 tests, 0.26s). The initial local recovery fixture missed the Git patch header;
-adding the required header fixed the fixture. Workflow lint passes (7.14s).
+Scratch collection is complete. `collect-direct-runtime.py` independently audited
+ARM/AMD1/AMD2 summaries and full logs in 5.86s/5.97s/5.74s.
+`retain-direct-time.py` reconciled four sessions (0.50s);
+`summarize-direct-memory.py` checked all 48 complete memory-profile pairs (0.25s).
+Those outputs and seven host-rejection records are already retained; do not rerun
+helpers whose output directory must be empty. The measured compiler is frozen.
