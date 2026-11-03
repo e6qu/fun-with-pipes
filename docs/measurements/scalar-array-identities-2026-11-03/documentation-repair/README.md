@@ -27,4 +27,10 @@ The CI job gets ten minutes for setup and validation: the observed 4m14s fetch
 plus normal three-to-four-minute controls already exceed five minutes. No test,
 source-hash check or performance acceptance limit is removed. Local guard limits
 are unchanged. The identity-map reference control is also included in this gate.
-Fresh-clone verification of the revised repair is pending.
+[Run 41689453129](https://github.com/e6qu/fun-with-pipes/actions/runs/41689453129)
+at `24f86ddf` passes all 62 steps. The packed-record check returned to three
+seconds. Checkout itself took 5m27s and review-head fetching 24s; this is not a
+claim of uniformly faster network setup. The larger whole-job budget allowed
+all checks to finish. [Job](verified-job.json), [full log](verified-job.log.gz)
+and [audit with step timings](verified-audit.json) retain the successful result.
+The full-log audit finds only the three expected child-failure diagnostics.

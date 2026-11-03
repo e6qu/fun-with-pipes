@@ -38,6 +38,21 @@ an eager map whose only consumer is a numeric-record fold. The objective's
 overlapping reads do not match that pattern. Extending it needs a representation
 and lifetime proof for those reads, not just adding `Rev` to an eligibility list.
 
+Current arrays pack scalar numeric values, including F128 bits. A `Rev[F64]` element
+still occupies a pointer-sized slot referring to a separate record. The
+[runtime array operations](../../runtime/fwp_rt.c) therefore need more than a
+library type change to store `Rev[F64]` as adjacent value/node-number fields.
+Two possible scopes have different proof costs:
+
+| Approach | Work required before selection |
+|---|---|
+| Extend private packed-record lowering | Recognize overlapping reads in a known consumer; keep the producer and callback order; prove that the buffer and borrowed fields cannot escape. |
+| Make numeric-record arrays a general representation | Define record layout and alignment; update every load/store, slice, comparison, encoding and cleanup path; give escaped records independent owners. |
+
+F128 arrays already distinguish borrowed payload reads from independently owned
+escaping values. That is a useful lifetime example, not proof that record reads
+can use the same representation unchanged. Neither approach is selected yet.
+
 **Updated coordinates:** [the ownership contract](../../src/ownership.rs) makes
 `zip-with` borrow both lists and return a fresh list spine. Its implementation
 cannot overwrite or free an input under that contract. Reuse would require an
@@ -57,8 +72,9 @@ Cross-type conversions still round; generic F128 results keep independent owners
 
 [Three-host native checks](scalar-array-identities-2026-11-03/README.md) and
 [compiler-cost checks](scalar-array-identity-analysis-2026-11-03/README.md) pass.
-The complete runtime report and final platform matrix remain in progress;
-[the handoff](../development-state.md) records exact sources and jobs. Both sides
+[The runtime report](scalar-array-identity-time-2026-11-03/README.md) and four
+raw audits are complete; all 32 required speed gains are missed. The final
+platform matrix remains pending. [The handoff](../development-state.md) tracks it. Both sides
 of the frozen comparison include the scalar repair; the reference disables only
 map removal. Passing allocation checks does not satisfy the separate speed goals.
 

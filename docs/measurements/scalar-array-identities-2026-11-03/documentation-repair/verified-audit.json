@@ -1,0 +1,256 @@
+{
+  "source": "24f86ddfd9609f728bff6c5ced78895c3e0b0bce",
+  "job": 126103885058,
+  "run": 41689453129,
+  "logSha256": "182d5648437809eb4e0c48a908064290c3ca25794345aafe3f0d26a5d59cf88c",
+  "steps": [
+    {
+      "name": "Set up job",
+      "seconds": 1.0
+    },
+    {
+      "name": "Run actions/checkout@v7",
+      "seconds": 327.0
+    },
+    {
+      "name": "Retain review heads for preparation references",
+      "seconds": 24.0
+    },
+    {
+      "name": "Documentation audit controls",
+      "seconds": 0.0
+    },
+    {
+      "name": "Documentation, immutable tags and commit messages",
+      "seconds": 1.0
+    },
+    {
+      "name": "Run dtolnay/rust-toolchain@stable",
+      "seconds": 4.0
+    },
+    {
+      "name": "Tutorial code and output copies",
+      "seconds": 13.0
+    },
+    {
+      "name": "Measured child deadlines and polling control",
+      "seconds": 3.0
+    },
+    {
+      "name": "Local guard sampling integration checks",
+      "seconds": 2.0
+    },
+    {
+      "name": "Native test coverage and failure propagation",
+      "seconds": 9.0
+    },
+    {
+      "name": "Evidence archive integrity and read-failure controls",
+      "seconds": 0.0
+    },
+    {
+      "name": "Collection evidence completeness and memory controls",
+      "seconds": 0.0
+    },
+    {
+      "name": "Ownership operation evidence controls",
+      "seconds": 1.0
+    },
+    {
+      "name": "Derivative phase and source accounting controls",
+      "seconds": 20.0
+    },
+    {
+      "name": "Constructor attribution and allocation controls",
+      "seconds": 1.0
+    },
+    {
+      "name": "Collection storage reference isolation and allocation budgets",
+      "seconds": 1.0
+    },
+    {
+      "name": "Sorting-time evidence controls",
+      "seconds": 0.0
+    },
+    {
+      "name": "Parser measurement evidence controls",
+      "seconds": 0.0
+    },
+    {
+      "name": "Recursion measurement evidence controls",
+      "seconds": 0.0
+    },
+    {
+      "name": "Measurement clock success and failure controls",
+      "seconds": 3.0
+    },
+    {
+      "name": "Buffer comparison schedule and compiler-report controls",
+      "seconds": 11.0
+    },
+    {
+      "name": "Kernel result oracle and scheduling controls",
+      "seconds": 0.0
+    },
+    {
+      "name": "Timing diagnostic observation and output controls",
+      "seconds": 0.0
+    },
+    {
+      "name": "Child CPU and scheduling observation controls",
+      "seconds": 0.0
+    },
+    {
+      "name": "Retained executable-name diagnostic and damaged-evidence controls",
+      "seconds": 6.0
+    },
+    {
+      "name": "Word-frequency failure-output controls",
+      "seconds": 1.0
+    },
+    {
+      "name": "Retained word-frequency observations and rejection controls",
+      "seconds": 7.0
+    },
+    {
+      "name": "Rejected direct-string observations and evidence controls",
+      "seconds": 13.0
+    },
+    {
+      "name": "Rejected unique-string observations and evidence controls",
+      "seconds": 16.0
+    },
+    {
+      "name": "Qualified byte-search measurements and allocation budgets",
+      "seconds": 18.0
+    },
+    {
+      "name": "Kernel baseline archive and altered-evidence controls",
+      "seconds": 14.0
+    },
+    {
+      "name": "Derivative process scheduling and host qualification controls",
+      "seconds": 0.0
+    },
+    {
+      "name": "Derivative baseline completeness controls",
+      "seconds": 0.0
+    },
+    {
+      "name": "Retained derivative baseline reports",
+      "seconds": 0.0
+    },
+    {
+      "name": "Derivative comparison limits and exact capture reference",
+      "seconds": 2.0
+    },
+    {
+      "name": "Current kernel comparison reference, schedule and evidence controls",
+      "seconds": 30.0
+    },
+    {
+      "name": "Matched-host evidence rejection controls",
+      "seconds": 6.0
+    },
+    {
+      "name": "Numeric array comparison evidence controls",
+      "seconds": 22.0
+    },
+    {
+      "name": "Derivative evidence downloads and host-rejection controls",
+      "seconds": 0.0
+    },
+    {
+      "name": "Exact reconstruction of omitted scalar-map reference evidence",
+      "seconds": 0.0
+    },
+    {
+      "name": "Packed temporary records and retained timing decisions",
+      "seconds": 3.0
+    },
+    {
+      "name": "Matched grouped-process baselines and noisy controls",
+      "seconds": 1.0
+    },
+    {
+      "name": "Repeated-solve baselines and fixed noise qualification",
+      "seconds": 0.0
+    },
+    {
+      "name": "Preserve rejected scalar recording results",
+      "seconds": 1.0
+    },
+    {
+      "name": "Audit accepted eager capture comparisons",
+      "seconds": 1.0
+    },
+    {
+      "name": "Derivative depth evidence rejection controls",
+      "seconds": 0.0
+    },
+    {
+      "name": "Retained derivative depth costs before and after stack recording",
+      "seconds": 0.0
+    },
+    {
+      "name": "Derivative output comparison controls",
+      "seconds": 0.0
+    },
+    {
+      "name": "Retained output comparisons and inconclusive decisions",
+      "seconds": 0.0
+    },
+    {
+      "name": "CPU baseline completeness and budget controls",
+      "seconds": 1.0
+    },
+    {
+      "name": "Decimal-count proof and timing controls",
+      "seconds": 0.0
+    },
+    {
+      "name": "Preserve rejected decimal-count measurements",
+      "seconds": 0.0
+    },
+    {
+      "name": "Preserve longer decimal sessions and their original decisions",
+      "seconds": 0.0
+    },
+    {
+      "name": "Preserve the position-rotated experiment and its schedule limitation",
+      "seconds": 1.0
+    },
+    {
+      "name": "Verify accepted balanced decimal comparisons",
+      "seconds": 0.0
+    },
+    {
+      "name": "CPU execution-phase evidence controls",
+      "seconds": 1.0
+    },
+    {
+      "name": "Verify retained CPU execution diagnostics",
+      "seconds": 0.0
+    },
+    {
+      "name": "Scalar candidate comparison controls",
+      "seconds": 0.0
+    },
+    {
+      "name": "Verify frozen CPU limits against all original sessions",
+      "seconds": 1.0
+    },
+    {
+      "name": "Verify rejected scalar-bound experiments and source variants",
+      "seconds": 0.0
+    },
+    {
+      "name": "Post Run actions/checkout@v7",
+      "seconds": 0.0
+    },
+    {
+      "name": "Complete job",
+      "seconds": 0.0
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "total_count": 2,
+  "artifacts": [
+    {
+      "id": 13255031180,
+      "node_id": "MDg6QXJ0aWZhY3QxMzI1NTAzMTE4MA==",
+      "name": "scalar-array-identity-report-summary",
+      "size_in_bytes": 595782,
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13255031180",
+      "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13255031180/zip",
+      "expired": false,
+      "digest": "sha256:2c4a0539354e08b0b34b5590b2eadfe527fe40cf2c858e80c0fab135c031b52d",
+      "created_at": "2026-11-03T17:27:07Z",
+      "updated_at": "2026-11-03T17:27:07Z",
+      "expires_at": "2027-02-01T17:14:28Z",
+      "workflow_run": {
+        "id": 41682284697,
+        "repository_id": 1400763332,
+        "head_repository_id": 1400763332,
+        "head_branch": "roadmap/scalar-array-identity-measurement-2026-11-03",
+        "head_sha": "beddd406153f1976fed00847292207bff9053e22"
+      }
+    },
+    {
+      "id": 13254007580,
+      "node_id": "MDg6QXJ0aWZhY3QxMzI1NDAwNzU4MA==",
+      "name": "scalar-array-identity-report-retained",
+      "size_in_bytes": 26809082,
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13254007580",
+      "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13254007580/zip",
+      "expired": false,
+      "digest": "sha256:cfd990ebe0d8eb4b151e8abdd7c8679b915be16d8ea453a029527f0c7c72b3e1",
+      "created_at": "2026-11-03T17:28:51Z",
+      "updated_at": "2026-11-03T17:28:51Z",
+      "expires_at": "2027-02-01T17:14:28Z",
+      "workflow_run": {
+        "id": 41682284697,
+        "repository_id": 1400763332,
+        "head_repository_id": 1400763332,
+        "head_branch": "roadmap/scalar-array-identity-measurement-2026-11-03",
+        "head_sha": "beddd406153f1976fed00847292207bff9053e22"
+      }
+    }
+  ]
+}

@@ -6,43 +6,42 @@ necessary sharing. GC is removed; JIT and backward compatibility are excluded.
 
 ## Current work: preserve float bits and remove redundant array copies
 
-[PR #253](https://github.com/e6qu/fun-with-pipes/pull/253) is merged with all nine
-production jobs and documentation passing. Its one-line squash and tested tree
-are verified. [Delivery history](docs/roadmap-history.md#direct-scalar-array-calls-pr-253)
-links complete logs, measurements and the remaining timing limits.
+[PR #254](https://github.com/e6qu/fun-with-pipes/pull/254) implements same-type
+float conversion that preserves every bit, including signed zero and NaN payloads,
+for F16, BF16, F32, F64 and F128. Cross-type conversion stays unchanged; generic
+F128 results keep separate ownership.
 
-The next group repairs same-type float conversion and removes one selected array
-copy. Converting F16, BF16, F32, F64 or F128 to its own type preserves every bit,
-including negative zero and NaN payloads. Cross-type conversion rules stay the
-same; generic F128 results still need their own owner.
+A known `float.convert : F64 -> F64` map can transfer its input array's owner
+instead of copying it. The rewrite checks existing concrete types before ownership
+insertion and evaluates the array expression once. It adds no syntax or
+whole-program analysis. [The contract](docs/measurements/scalar-array-identities.md)
+was frozen before implementation.
 
-For a known `float.convert : F64 -> F64` callback, `array.map` can return its input
-owner instead of allocating and traversing a replacement array. The rewrite runs
-before ownership insertion, checks existing concrete types and evaluates the input
-once. It adds no syntax or whole-program analysis. Unknown/effectful callbacks and
-other array element types retain their existing behavior.
+- [Three-host native checks](docs/measurements/scalar-array-identities-2026-11-03/README.md)
+  pass for exact bits, moves, aliases, slices, updates, traps and cancellation.
+  Final platform CI must also verify the expanded storage probe and distinct
+  BF16 NaN inputs; the frozen results retain their actual coverage.
+- [All four runtime sessions](docs/measurements/scalar-array-identity-time-2026-11-03/README.md)
+  and raw audits are complete. One array allocation is removed per selected update;
+  the largest solve requests 206,960 fewer bytes. ARC counts and peak managed/raw
+  storage are unchanged. All 32 required 5% speed gains are missed.
+- [Compiler-time/memory limits](docs/measurements/scalar-array-identity-analysis-2026-11-03/README.md)
+  pass. Both sides of the runtime comparison contain the scalar repair; the
+  reference disables only map removal. No completed session was repeated.
+- Returning a small slice can retain its larger backing array longer. The
+  [storage probe](docs/measurements/scalar-array-identities-2026-11-03/README.md#result-lifetime-and-allocation-traffic)
+  measures that tradeoff separately from requested bytes and process RSS.
 
-The [contract](docs/measurements/scalar-array-identities.md) was frozen before code.
-[Focused checks](docs/measurements/scalar-array-identities-2026-11-03/README.md)
-pass on GCC ARM64/AMD64 and Clang ARM64. They cover exact bits, moves, aliases,
-slices, immutable updates, traps and cancellation. The expanded storage probe
-passes locally; its Rust-generated form still needs the final platform matrix.
-
-Returning a slice can keep a larger backing array alive longer. The storage report
-shows both saved allocations and that retention cost; it does not promise lower
-live memory for every alias pattern. Compiler-cost and four-session runtime
-comparisons use a frozen same-source reference disabling only map removal.
-[Compiler-cost limits](docs/measurements/scalar-array-identity-analysis-2026-11-03/README.md)
-pass on both hosts; runtime sessions are underway. Both sides include the scalar
-correctness fix. [The handoff](docs/development-state.md)
-tracks exact sources, active jobs and audits.
+Under the accepted policy, retain the verified reductions while leaving missed
+speed goals open. [The handoff](docs/development-state.md) tracks final gates.
+PR #253's verified merge and evidence are in [delivery history](docs/roadmap-history.md#direct-scalar-array-calls-pr-253).
 
 | Step | Work | Completion requirement |
 |---|---|---|
 | 1 | Define conversion and selection rules | Preserve same-type bits in all five formats; keep cross-type behavior and independently owned F128 boxes. Freeze the exact F64 map selection and measurements. |
 | 2 | Verify owner transfer and observable behavior | Three native hosts pass O1/O2 checks, packed/reuse controls, source effects, alias updates, failure/cancellation and deliberately omitted cleanup. Retain emitted C and native image evidence. |
-| 3 | Measure the isolated change | Remove at least one array allocation per selected update. Report traffic, ARC, live/raw memory, process RSS, timing, code and stack costs. Require the frozen timing/noise and compiler-cost limits; retain every miss. |
-| 4 | Deliver one grouped PR | Include scalar fixes, map removal, storage observations, complete measurements and clear docs. Verify the expanded probe in all nine final-head production jobs plus documentation; audit all logs, squash and verify the tested tree. |
+| 3 | Measure the isolated change | Remove at least one array allocation per selected update. Report traffic, ARC, live/raw memory, process RSS, timing, code and stack costs. Audit every frozen timing/noise, count, compiler-cost and stack limit; keep all missed speed targets open under the accepted policy. |
+| 4 | Deliver one grouped PR | Include scalar fixes, map removal, storage observations, complete measurements and clear docs. Verify the expanded probes across supported native platforms; require all nine final-head production jobs plus documentation; audit all logs, squash and verify the tested tree. |
 
 Keep older timing goals open against their original references. Do not repeat
 completed sessions for a better result. [Remaining storage candidates](docs/measurements/remaining-gradient-storage.md)
@@ -50,6 +49,12 @@ include input records, coordinate lists and an unused iteration history. They
 remain unselected until their lifetime proof, scope and measurements are declared.
 
 ## Open performance goals
+
+- **Identity array-map speed.** [Four completed sessions](docs/measurements/scalar-array-identity-time-2026-11-03/README.md)
+  miss every required 5% gain on 3/199, 3/1999, 33/199 and 129/199, in both forms.
+  Noise and zero/one-update regression limits pass. Keep all 32 speed misses open;
+  the allocation reduction does not satisfy them. Select further work from the
+  remaining storage costs and their lifetime proofs, not repeated timings.
 
 - **Direct scalar array calls.** [The complete report](docs/measurements/direct-array-time-2026-11-03/README.md)
   retains 16 missed 5% gains: both 3/199 forms and 3/1999 current on all sessions,
