@@ -9,8 +9,9 @@ focused checks; open no second PR until #253 merges.
 
 - Worktree `.worktrees/direct-array-callbacks`; final head
   `893942291b0f1e51a23488c9dea2a9d811acfab1`.
-- Production run `41662326563`: nine jobs. Benchmark and regular macOS ARM64 jobs passed full-log audit (131 target logs
-  for macOS). The other seven jobs are running, with no reported failures.
+- Production run `41662326563`: six of nine jobs pass and are fully audited
+  (four macOS jobs, Windows ARM64 and benchmarks). Linux ARM64/AMD64 and
+  Windows AMD64 remain running, without reported failures.
 - Documentation run `41662323124`, job `126008450991`: passed full-log audit.
 - Scratch `.worktrees/gradient-work/collect-253.py` downloads and audits each
   completed gate. Require all nine production jobs plus docs before squash.
@@ -22,6 +23,8 @@ focused checks; open no second PR until #253 merges.
 - [Native checks](measurements/direct-array-callbacks-2026-11-03/README.md) and
   [compiler costs](measurements/direct-array-analysis-2026-11-03/README.md) pass.
   Their frozen sources, repairs and recovered reference identities are retained.
+
+## Roadmap status
 
 | Step | Status | Remaining work |
 |---|---|---|
@@ -42,7 +45,7 @@ the pending user question has no recorded reply. This is an explicit working
 choice, not a recorded user decision. Cross-type rules remain unchanged. If the
 answer changes, revise the contract explicitly before delivery or measurement.
 
-Implementation is prepared but unverified:
+Implemented; GCC native checks pass, Clang and final-platform verification remain:
 
 - Same-type F16/BF16/F32/F64/F128 conversions preserve bits. Generic F128 still
   allocates an independently owned result box.
@@ -56,18 +59,27 @@ Implementation is prepared but unverified:
   exact status and diagnostic. The contract records this source-review finding.
   Existing failure/cancellation targets also remain in the focused group.
 
-Focused run `41667037137` at `b361fa451cea35674c90830e1fbff325455acaf5` is
-was cancelled before any of its three jobs started so the complete fault checks
-and measurement tooling can run together. Replacement run `41670309514` at
-`9bbbc9f50ef3b03ef4405f49f77550efebd1cf98` has not started. Source review found
-the fault probe must declare a reachable task function so C generation enables
-unwinding; the ordinary language cases stay task-free. Replace this unstarted
-batch after that harness correction, rather than executing a knowingly invalid
-probe. The three-host batch uses
+Focused run `41672290329` tests `beddd406153f1976fed00847292207bff9053e22`.
+Both GCC jobs pass full-log/artifact audit: 50 integration tests, the selector
+unit test, 54 new observations and 318 native images per host. Their generated C
+and 32 native entry images were inspected. Clang ARM64 is queued without a runner.
+Earlier batches `41667037137` and `41670309514`
+were cancelled before any jobs started, to include the complete fault checks
+and correct their task context. The fault probe now declares a reachable task
+function so C generation enables unwinding; ordinary language cases stay task-free.
+The three-host batch uses
 GCC ARM64/AMD64 and Clang ARM64, production Rust settings, the existing eight
 array targets, float-format/core targets and the selector unit test. Audit all
-completed targets before a repair push. No new timing or second PR exists yet. Measurement tooling is prepared locally: a
-same-source reference disables only map elimination while preserving scalar fixes;
+completed targets before a repair push. The extended result-lifetime probe passes eight local Clang O1/O2 executions
+(32 storage observations, packed on/off). Saved generated C was recompiled with
+only the probe fixture changed; no compiler build ran locally. The
+[storage report](measurements/scalar-array-identities-2026-11-03/README.md) records
+both the saved allocation and longer backing retention for unique slices.
+The exact Rust-generated fixture still needs final platform verification.
+Batch its source/docs with any native-check fixes; do not rerun unchanged eight-target
+checks merely for this probe extension.
+No new timing or second PR exists yet. Committed measurement tooling provides a
+same-source reference that disables only map elimination while preserving scalar fixes;
 its count budget requires one removed array per update, with existing time/noise
 limits. Reference controls (3), budget controls (18), compiler-analysis controls
 (7) and raw-source/evidence controls (16) pass in one guarded 20.85s batch.
@@ -79,10 +91,13 @@ condition onto one line; the marker was corrected and all controls pass.
 ## Local checks and limits
 
 Passing guarded checks: Rust formatting (0.13s), standalone standard-library doc
-regeneration (1.03s), workflow lint (6.15s), unchanged primitive inventory
+regeneration (1.03s), workflow lint (6.15s), saved-source storage probes (3.45s), unchanged primitive inventory
 (394 declarations, 384 symbols, zero review items; 0.64s). The source review's
 roadmap audit passed before implementation (242 link sets, 106 anchors; 2.63s).
-The updated documentation audit passes (243 link sets, 106 anchors; 2.50s).
+The earlier documentation audit passed (243 link sets, 106 anchors; 2.50s).
+A later handoff rewrite omitted the required roadmap-status heading; the audit
+caught it, and the heading is restored without weakening the check. The repaired
+audit passes all 244 link sets, 106 anchors and four steps (2.51s).
 No compiler build ran locally.
 
 Use `python3 scripts/local-guard.py` serially. Keep at least 64 GiB free disk,

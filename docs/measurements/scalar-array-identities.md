@@ -93,6 +93,12 @@ without new retains. Report allocation requests/bytes, ARC operations, live and
 raw-buffer peaks, final cleanup, and whole-process RSS separately. Shared/view
 cases may retain existing backing storage longer: measure and state those costs;
 do not generalize the private-gradient result to every alias pattern.
+The native owner probe measures 256-element arrays, both unique and shared, and
+256-element slices of 1,024-element arrays. For each, report allocation/count
+operations and charged allocator bytes during the map, live bytes before/after,
+peak live bytes and final cleanup. Charged bytes include allocator size classes;
+they are not requested bytes or whole-process RSS. Packed-off controls use copied
+slices and must not be described as views.
 
 Retain every failed timing/noise limit without rerunning completed measurements
 for a pass. Accepted policy permits verified reductions with speed goals open.

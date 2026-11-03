@@ -1,8 +1,10 @@
 # Remaining storage in gradient descent
 
-This is a source review, not a selected optimization or a performance claim.
-Finish the [direct array-call experiment](direct-array-callbacks.md) before
-choosing another implementation. Its reference and timings must remain isolated.
+This review records remaining costs and the proofs needed to remove them.
+The [same-type conversion group](scalar-array-identities.md) is now selected for
+implementation and verification, separately from the
+[direct array-call experiment](direct-array-callbacks.md). Other candidates below
+remain unselected. Each experiment keeps its own reference and measurements.
 
 ## Measured costs
 
@@ -49,14 +51,15 @@ scratch exactly once, including when zip stops at the shorter input.
 The same report counts 199 replacement conversion arrays, totaling 206,960
 requested bytes in the largest solve. `rev._backward-float` converts the backward
 pass's F64 array to the requested scalar type. F32/F16/BF16 need real conversion;
-for F64, investigate whether the map can be proven to leave every value unchanged.
+the selected F64 change proves the callback preserves every bit before removing
+its map. Native verification and measurements are still pending.
 
 An identity rewrite must preserve floating-point bits, including signed zero and
 NaNs, and must transfer the existing owner correctly. Merely returning a borrowed
 input would be unsafe when its caller releases it. Prove that the owned result
 moves through the ordinary ownership pass without additional retains, preserve
 aliases, and test cleanup before claiming removal of that allocation or traversal.
-The [new preparation contract](scalar-array-identities.md) selects an initial
+The [preparation contract](scalar-array-identities.md) selects an initial
 F64 case separately from direct callback dispatch.
 
 ### Conversion semantics to settle first
@@ -76,45 +79,31 @@ a negative quiet NaN with payload `0x42`; `0x7ff8000000000000` is the canonical
 positive quiet NaN. Ordinary numeric equality cannot test this distinction,
 because a NaN does not compare equal even to itself. Tests must inspect bits.
 
-The [float contract](../float-formats.md) describes canonical arithmetic and
-conversion NaNs for the software formats, but does not distinguish same-type
-conversion from changing formats. A pending design decision asks whether every
-same-type conversion should preserve bits. Cross-type conversion rules are not
-part of that proposed change. Do not remove a conversion until its rule is explicit
-and the interpreter, generic native entry and specialized worker agree.
+At that reviewed source, the float contract did not distinguish same-type
+conversion from changing formats. The draft now uses the explicit working rule
+that same-type conversion preserves every bit; the pending question has no
+recorded user reply. [Current conversion rules](../float-formats.md#current-contract)
+separate that operation from cross-type conversion. If the answer changes, revise
+the contract before delivery or measurement.
 
-### Proposed bounded implementation and checks
+### Implementation and verification
 
-If same-type conversion is defined as an identity:
+The draft repairs scalar conversion first, then removes only the known F64
+conversion map before ownership insertion. It adds no whole-program analysis or
+new syntax. [The frozen contract](scalar-array-identities.md) specifies selection,
+ownership, native bit/cleanup checks and measurement limits; the
+[handoff](../development-state.md) records actual verification status.
 
-1. Make that scalar behavior consistent for F16, BF16, F32, F64 and F128. Keep
-   the generic F128 result owned; preserving bits does not permit returning a
-   borrowed box. Test finite values, signed zero, subnormals, infinities and
-   positive/negative quiet/signaling NaNs through raw-bit inputs.
-2. Initially remove only `array.map` of a statically known primitive
-   `float.convert : F64 -> F64`. Match its concrete argument/result types and
-   arity at the existing optimizer call site. Do not follow arbitrary callbacks
-   or add a whole-program analysis. Cross-type maps, dynamic functions and
-   effectful callback construction must remain unchanged.
-3. Replace the selected map with its input expression before ownership insertion.
-   Evaluate that input exactly once. Prove a unique input moves to the result;
-   a shared input gains the ordinary result owner, and slices keep their backing
-   storage alive. Test subsequent immutable updates, aliases and repeated release.
-4. Compare raw and optimized interpreter results with GCC/Clang O1/O2, packed
-   arrays enabled/disabled, empty and sliced arrays, effects, traps, failure and
-   cancellation. Check primitive dispatch and scheduling so the rewrite removes
-   no observable callback action. Native counts must show no replacement array
-   or element traversal, with zero final managed/raw storage.
-5. Freeze a reference disabling only array-map removal. Both sides must include
-   the same scalar correctness fix. Measure the existing gradient cases and
-   compiler scaling workload; do not compare changed float semantics as though
-   they were only a performance optimization. Keep old timing misses open.
+A same-source reference disables only map removal. Both sides include the same
+scalar repair, so the performance comparison does not also change float semantics.
+Unique arrays can move without a replacement allocation. Shared arrays and slices
+need separate storage observations: keeping a slice can prolong its backing
+array's lifetime. Allocation savings alone do not prove lower live memory.
 
 Relevant implementation points are [the optimizer](../../src/opt.rs),
 [interpreter](../../src/interp.rs), [generic numeric runtime](../../runtime/fwp_rt_num.c),
 [wide workers](../../src/cgen_wide.rs) and
-[ownership contracts](../../src/ownership.rs). The linked contract freezes this initial F64 array scope before implementation;
-it does not promise elimination for every numeric representation.
+[ownership contracts](../../src/ownership.rs).
 
 ## Another opportunity: discard an unused iteration history
 

@@ -73,6 +73,22 @@ scratch ownership, including cleanup on allocation failure. Delivery evidence
 records language integration and native verification alongside core arithmetic
 checks.
 
+The same rule permits this selected array operation to return the existing
+immutable values without copying each element:
+
+```fwp
+same-array : Array[F64] -> Array[F64]
+same-array = array.map float.convert
+```
+
+For input `array[1.0, -0.0]`, the result has the same two values and exactly the
+same bits. Subsequent immutable updates still preserve any input aliases.
+Removing this copy can keep a slice's backing array alive longer; fewer
+allocations do not always mean less live storage. The
+[implementation and verification contract](measurements/scalar-array-identities.md)
+records the narrow selection and required checks; [the handoff](development-state.md)
+distinguishes completed checks from pending verification.
+
 Keep `float.convert` explicit. Preserve operation order and the existing policy
 against implicit reassociation or contraction. Do not silently substitute the
 host C `long double`: its width, representation and ABI vary by target.

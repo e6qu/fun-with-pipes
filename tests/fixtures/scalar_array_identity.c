@@ -95,6 +95,46 @@ int main(int argc, char **argv) {
             if(fwp_heap.live!=baseline || owner_ledger_live!=live || fwp_heap.rc_wide_len) return 90;
         }
     }
+    /* Measure result lifetime separately from allocation savings. A view of
+     * one quarter of an array can keep that entire backing owner alive. */
+    for(int sliced=0;sliced<2;sliced++) for(int alias=0;alias<2;alias++) {
+        size_t baseline=fwp_heap.live, live=owner_ledger_live;
+        V backing=fwp_array_typed_new(sliced ? 1024 : 256,&scalar);
+        for(size_t i=0;i<(sliced ? 1024u : 256u);i++)
+            fwp_array_store(backing,i,words[i%7],&scalar);
+        V input=backing;
+        if(sliced) {
+            input=fwp_p_array_slice_typed(0,256,backing,NULL,&scalar);
+            identity_drop(backing);
+        }
+        int view=fwp_array_is_view(input);
+        if(view!=(sliced && FWP_PACKED_ARRAYS)) return 96;
+        if(alias) fwp_rc_dup(input);
+        size_t before=fwp_heap.live, allocations=owner_ledger_allocations;
+        size_t retains=identity_retains;
+        double charged=fwp_heap.total_alloc;
+        fwp_heap.peak=before;
+        V result=f2(input);
+        size_t after=fwp_heap.live, peak=fwp_heap.peak;
+        size_t new_allocations=owner_ledger_allocations-allocations;
+        size_t new_retains=identity_retains-retains;
+        double new_charged=fwp_heap.total_alloc-charged;
+        if(IDENTITY_SELECTED) {
+            if(result!=input || new_allocations || new_retains || new_charged || after!=before || peak!=before) return 97;
+        } else {
+            if(new_allocations!=1 || new_charged<=0 || peak<=before) return 98;
+            if(alias && after<=before) return 99;
+            if(!alias && (view ? after>=before : after!=before)) return 100;
+        }
+        for(size_t i=0;i<256;i++)
+            if(fwp_array_load(result,i,&scalar)!=words[i%7]) return 84;
+        identity_drop(result);
+        if(alias) identity_drop(input);
+        if(fwp_heap.live!=baseline || owner_ledger_live!=live || fwp_heap.rc_wide_len) return 90;
+        printf("identity storage: slice=%d alias=%d view=%d allocations=%zu retains=%zu charged=%.0f before=%zu result=%zu peak=%zu final=%zu\n",
+            sliced,alias,view,new_allocations,new_retains,new_charged,
+            before-baseline,after-baseline,peak-baseline,fwp_heap.live-baseline);
+    }
     owner_ledger_finish();
     puts("identity arrays: moves, aliases, slices, updates and cleanup pass");
     return 0;

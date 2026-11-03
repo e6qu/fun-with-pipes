@@ -29,9 +29,10 @@ and one noisy comparison remain open; AMD64 current-only RSS observations rise
 6–14%. Keep the proven work reduction under the accepted policy, preserving
 those limits. No completed timing was rerun.
 
-[Draft PR #253](https://github.com/e6qu/fun-with-pipes/pull/253) groups the compiler
-change, semantic/cleanup checks, evidence repairs and current docs. Publish its
-complete report, then run the final nine production jobs plus documentation.
+[PR #253](https://github.com/e6qu/fun-with-pipes/pull/253) groups the compiler
+change, semantic/cleanup checks, evidence repairs and current docs. Its complete
+report is published and the final nine production jobs plus documentation are
+running. Preserve the exact head while auditing every completed gate.
 
 | Step | Work | Completion requirement |
 |---|---|---|
@@ -45,7 +46,10 @@ storage changes and their source identities. Do not repeat completed timings for
 a better result. Keep verified work reductions separate from unfulfilled speed
 goals. [The remaining-storage review](docs/measurements/remaining-gradient-storage.md)
 records the input/output ownership constraints and an unused-history candidate.
-These changes remain unselected.
+The next [same-type conversion group](docs/measurements/scalar-array-identities.md)
+is implemented separately and undergoing focused verification. Input-record,
+coordinate-list and unused-history changes remain unselected. Open its PR only
+after #253 merges.
 
 ## Open performance goals
 

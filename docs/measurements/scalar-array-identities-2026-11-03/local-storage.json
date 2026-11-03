@@ -1,0 +1,198 @@
+{
+  "generatedSource": "beddd406153f1976fed00847292207bff9053e22",
+  "fixtureSha256": "253ecd804b521e682bb78e4c2966063948ec912a28b3bdbf3f6bde41eac97055",
+  "compiler": "Apple clang version 17.0.0 (clang-1700.4.4.1)\nTarget: arm64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Library/Developer/CommandLineTools/usr/bin\n",
+  "observations": [
+    {
+      "label": "array-identity-false-packed-false-reuse-true-O1-complete",
+      "command": [
+        "/usr/bin/clang",
+        "-O1",
+        "-std=gnu11",
+        "-ffp-contract=off",
+        "-w",
+        "/Users/zardoz/projects/fun-with-pipes/.worktrees/gradient-work/identity-storage-local/array-identity-false-packed-false-reuse-true-O1-complete.c",
+        "-o",
+        "/Users/zardoz/projects/fun-with-pipes/.worktrees/gradient-work/identity-storage-local/array-identity-false-packed-false-reuse-true-O1-complete.exe",
+        "-lm",
+        "-lpthread"
+      ],
+      "status": 0,
+      "stdout": "identity storage: slice=0 alias=0 view=0 allocations=1 retains=0 charged=2560 before=2560 result=2560 peak=5120 final=0\nidentity storage: slice=0 alias=1 view=0 allocations=1 retains=0 charged=2560 before=2560 result=5120 peak=5120 final=0\nidentity storage: slice=1 alias=0 view=0 allocations=1 retains=0 charged=2560 before=2560 result=2560 peak=5120 final=0\nidentity storage: slice=1 alias=1 view=0 allocations=1 retains=0 charged=2560 before=2560 result=5120 peak=5120 final=0\nidentity arrays: moves, aliases, slices, updates and cleanup pass\n",
+      "stderr": "",
+      "sourceSha256": "b725fe3cff4a77bf172ebdf0937359295e8ecf82cfed8466a064786f6a4c800c",
+      "binarySha256": "2539016a725c1e5fc7ea34f74f3ad45683005dc7d3b42366a07dd80814770d32"
+    },
+    {
+      "label": "array-identity-false-packed-false-reuse-true-O2-complete",
+      "command": [
+        "/usr/bin/clang",
+        "-O2",
+        "-std=gnu11",
+        "-ffp-contract=off",
+        "-w",
+        "/Users/zardoz/projects/fun-with-pipes/.worktrees/gradient-work/identity-storage-local/array-identity-false-packed-false-reuse-true-O2-complete.c",
+        "-o",
+        "/Users/zardoz/projects/fun-with-pipes/.worktrees/gradient-work/identity-storage-local/array-identity-false-packed-false-reuse-true-O2-complete.exe",
+        "-lm",
+        "-lpthread"
+      ],
+      "status": 0,
+      "stdout": "identity storage: slice=0 alias=0 view=0 allocations=1 retains=0 charged=2560 before=2560 result=2560 peak=5120 final=0\nidentity storage: slice=0 alias=1 view=0 allocations=1 retains=0 charged=2560 before=2560 result=5120 peak=5120 final=0\nidentity storage: slice=1 alias=0 view=0 allocations=1 retains=0 charged=2560 before=2560 result=2560 peak=5120 final=0\nidentity storage: slice=1 alias=1 view=0 allocations=1 retains=0 charged=2560 before=2560 result=5120 peak=5120 final=0\nidentity arrays: moves, aliases, slices, updates and cleanup pass\n",
+      "stderr": "",
+      "sourceSha256": "b725fe3cff4a77bf172ebdf0937359295e8ecf82cfed8466a064786f6a4c800c",
+      "binarySha256": "ac4370438fb9b08a92bc3a29f0cbbd1d06d0988e897811007404b5f1d00eb9ef"
+    },
+    {
+      "label": "array-identity-false-packed-true-reuse-true-O1-complete",
+      "command": [
+        "/usr/bin/clang",
+        "-O1",
+        "-std=gnu11",
+        "-ffp-contract=off",
+        "-w",
+        "/Users/zardoz/projects/fun-with-pipes/.worktrees/gradient-work/identity-storage-local/array-identity-false-packed-true-reuse-true-O1-complete.c",
+        "-o",
+        "/Users/zardoz/projects/fun-with-pipes/.worktrees/gradient-work/identity-storage-local/array-identity-false-packed-true-reuse-true-O1-complete.exe",
+        "-lm",
+        "-lpthread"
+      ],
+      "status": 0,
+      "stdout": "identity storage: slice=0 alias=0 view=0 allocations=1 retains=0 charged=2560 before=2560 result=2560 peak=5120 final=0\nidentity storage: slice=0 alias=1 view=0 allocations=1 retains=0 charged=2560 before=2560 result=5120 peak=5120 final=0\nidentity storage: slice=1 alias=0 view=1 allocations=1 retains=0 charged=2560 before=10272 result=2560 peak=12832 final=0\nidentity storage: slice=1 alias=1 view=1 allocations=1 retains=0 charged=2560 before=10272 result=12832 peak=12832 final=0\nidentity arrays: moves, aliases, slices, updates and cleanup pass\n",
+      "stderr": "",
+      "sourceSha256": "592a43458b059320b95615c69acf925fe27c82a105c4bb8caeab471ee16c184e",
+      "binarySha256": "c1ec0c04e9ac158378ebcb6c01e2e26402787e90a3bfdcaecb27e8c78f97e369"
+    },
+    {
+      "label": "array-identity-false-packed-true-reuse-true-O2-complete",
+      "command": [
+        "/usr/bin/clang",
+        "-O2",
+        "-std=gnu11",
+        "-ffp-contract=off",
+        "-w",
+        "/Users/zardoz/projects/fun-with-pipes/.worktrees/gradient-work/identity-storage-local/array-identity-false-packed-true-reuse-true-O2-complete.c",
+        "-o",
+        "/Users/zardoz/projects/fun-with-pipes/.worktrees/gradient-work/identity-storage-local/array-identity-false-packed-true-reuse-true-O2-complete.exe",
+        "-lm",
+        "-lpthread"
+      ],
+      "status": 0,
+      "stdout": "identity storage: slice=0 alias=0 view=0 allocations=1 retains=0 charged=2560 before=2560 result=2560 peak=5120 final=0\nidentity storage: slice=0 alias=1 view=0 allocations=1 retains=0 charged=2560 before=2560 result=5120 peak=5120 final=0\nidentity storage: slice=1 alias=0 view=1 allocations=1 retains=0 charged=2560 before=10272 result=2560 peak=12832 final=0\nidentity storage: slice=1 alias=1 view=1 allocations=1 retains=0 charged=2560 before=10272 result=12832 peak=12832 final=0\nidentity arrays: moves, aliases, slices, updates and cleanup pass\n",
+      "stderr": "",
+      "sourceSha256": "592a43458b059320b95615c69acf925fe27c82a105c4bb8caeab471ee16c184e",
+      "binarySha256": "ac28f3b1bab2891b55e63d5d67c2f92d0fad27139a6ed3b1b39ba978cf84bb18"
+    },
+    {
+      "label": "array-identity-true-packed-false-reuse-true-O1-complete",
+      "command": [
+        "/usr/bin/clang",
+        "-O1",
+        "-std=gnu11",
+        "-ffp-contract=off",
+        "-w",
+        "/Users/zardoz/projects/fun-with-pipes/.worktrees/gradient-work/identity-storage-local/array-identity-true-packed-false-reuse-true-O1-complete.c",
+        "-o",
+        "/Users/zardoz/projects/fun-with-pipes/.worktrees/gradient-work/identity-storage-local/array-identity-true-packed-false-reuse-true-O1-complete.exe",
+        "-lm",
+        "-lpthread"
+      ],
+      "status": 0,
+      "stdout": "identity storage: slice=0 alias=0 view=0 allocations=0 retains=0 charged=0 before=2560 result=2560 peak=2560 final=0\nidentity storage: slice=0 alias=1 view=0 allocations=0 retains=0 charged=0 before=2560 result=2560 peak=2560 final=0\nidentity storage: slice=1 alias=0 view=0 allocations=0 retains=0 charged=0 before=2560 result=2560 peak=2560 final=0\nidentity storage: slice=1 alias=1 view=0 allocations=0 retains=0 charged=0 before=2560 result=2560 peak=2560 final=0\nidentity arrays: moves, aliases, slices, updates and cleanup pass\n",
+      "stderr": "",
+      "sourceSha256": "d633fbce6307b52e95b0149754cb8d3ac095228f63cd201ff7002973094c1ae6",
+      "binarySha256": "adca6b5017a1bb7e7635329ccfea5d00ddc8a3b9c20c5a147946b6f813355390"
+    },
+    {
+      "label": "array-identity-true-packed-false-reuse-true-O2-complete",
+      "command": [
+        "/usr/bin/clang",
+        "-O2",
+        "-std=gnu11",
+        "-ffp-contract=off",
+        "-w",
+        "/Users/zardoz/projects/fun-with-pipes/.worktrees/gradient-work/identity-storage-local/array-identity-true-packed-false-reuse-true-O2-complete.c",
+        "-o",
+        "/Users/zardoz/projects/fun-with-pipes/.worktrees/gradient-work/identity-storage-local/array-identity-true-packed-false-reuse-true-O2-complete.exe",
+        "-lm",
+        "-lpthread"
+      ],
+      "status": 0,
+      "stdout": "identity storage: slice=0 alias=0 view=0 allocations=0 retains=0 charged=0 before=2560 result=2560 peak=2560 final=0\nidentity storage: slice=0 alias=1 view=0 allocations=0 retains=0 charged=0 before=2560 result=2560 peak=2560 final=0\nidentity storage: slice=1 alias=0 view=0 allocations=0 retains=0 charged=0 before=2560 result=2560 peak=2560 final=0\nidentity storage: slice=1 alias=1 view=0 allocations=0 retains=0 charged=0 before=2560 result=2560 peak=2560 final=0\nidentity arrays: moves, aliases, slices, updates and cleanup pass\n",
+      "stderr": "",
+      "sourceSha256": "d633fbce6307b52e95b0149754cb8d3ac095228f63cd201ff7002973094c1ae6",
+      "binarySha256": "4effe136c8cd13d8c882ffbef710b0ec6d289263cee0e1b9966862498742dd7a"
+    },
+    {
+      "label": "array-identity-true-packed-true-reuse-true-O1-complete",
+      "command": [
+        "/usr/bin/clang",
+        "-O1",
+        "-std=gnu11",
+        "-ffp-contract=off",
+        "-w",
+        "/Users/zardoz/projects/fun-with-pipes/.worktrees/gradient-work/identity-storage-local/array-identity-true-packed-true-reuse-true-O1-complete.c",
+        "-o",
+        "/Users/zardoz/projects/fun-with-pipes/.worktrees/gradient-work/identity-storage-local/array-identity-true-packed-true-reuse-true-O1-complete.exe",
+        "-lm",
+        "-lpthread"
+      ],
+      "status": 0,
+      "stdout": "identity storage: slice=0 alias=0 view=0 allocations=0 retains=0 charged=0 before=2560 result=2560 peak=2560 final=0\nidentity storage: slice=0 alias=1 view=0 allocations=0 retains=0 charged=0 before=2560 result=2560 peak=2560 final=0\nidentity storage: slice=1 alias=0 view=1 allocations=0 retains=0 charged=0 before=10272 result=10272 peak=10272 final=0\nidentity storage: slice=1 alias=1 view=1 allocations=0 retains=0 charged=0 before=10272 result=10272 peak=10272 final=0\nidentity arrays: moves, aliases, slices, updates and cleanup pass\n",
+      "stderr": "",
+      "sourceSha256": "212506408c9342e58b66fc31e028ee446a39162b0ca46419cc8dfbd49344cef7",
+      "binarySha256": "6033e87aa427a69ab9fac9e63ee616bbaa8adec8f9a5a9b898b2b6dde25bb0e0"
+    },
+    {
+      "label": "array-identity-true-packed-true-reuse-true-O2-complete",
+      "command": [
+        "/usr/bin/clang",
+        "-O2",
+        "-std=gnu11",
+        "-ffp-contract=off",
+        "-w",
+        "/Users/zardoz/projects/fun-with-pipes/.worktrees/gradient-work/identity-storage-local/array-identity-true-packed-true-reuse-true-O2-complete.c",
+        "-o",
+        "/Users/zardoz/projects/fun-with-pipes/.worktrees/gradient-work/identity-storage-local/array-identity-true-packed-true-reuse-true-O2-complete.exe",
+        "-lm",
+        "-lpthread"
+      ],
+      "status": 0,
+      "stdout": "identity storage: slice=0 alias=0 view=0 allocations=0 retains=0 charged=0 before=2560 result=2560 peak=2560 final=0\nidentity storage: slice=0 alias=1 view=0 allocations=0 retains=0 charged=0 before=2560 result=2560 peak=2560 final=0\nidentity storage: slice=1 alias=0 view=1 allocations=0 retains=0 charged=0 before=10272 result=10272 peak=10272 final=0\nidentity storage: slice=1 alias=1 view=1 allocations=0 retains=0 charged=0 before=10272 result=10272 peak=10272 final=0\nidentity arrays: moves, aliases, slices, updates and cleanup pass\n",
+      "stderr": "",
+      "sourceSha256": "212506408c9342e58b66fc31e028ee446a39162b0ca46419cc8dfbd49344cef7",
+      "binarySha256": "e89151e6645917c630fe8d1436dcdf9f350fb51791786074186b5009ae3fa4ac"
+    }
+  ],
+  "generatedEvidence": {
+    "id": 13250506025,
+    "node_id": "MDg6QXJ0aWZhY3QxMzI1MDUwNjAyNQ==",
+    "name": "scalar-array-checks-ubuntu-24.04-arm",
+    "size_in_bytes": 72882952,
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13250506025",
+    "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13250506025/zip",
+    "expired": false,
+    "digest": "sha256:f62df849a6b2d01f4143bd9dc6b4f321e739e41c18b9e24d8dcfff697585077d",
+    "created_at": "2026-11-03T16:27:03Z",
+    "updated_at": "2026-11-03T16:27:03Z",
+    "expires_at": "2027-02-01T16:15:22Z",
+    "workflow_run": {
+      "id": 41672290329,
+      "repository_id": 1400763332,
+      "head_repository_id": 1400763332,
+      "head_branch": "scalar-array-identities",
+      "head_sha": "beddd406153f1976fed00847292207bff9053e22"
+    }
+  },
+  "scope": "Local Clang compilation of retained generated C with only the probe fixture extended; no compiler rebuild or timing benchmark.",
+  "retainedSources": {
+    "array-identity-false-packed-false-reuse-true-O1-complete": "local-source-b725fe3cff4a77bf172ebdf0937359295e8ecf82cfed8466a064786f6a4c800c.c.gz",
+    "array-identity-false-packed-false-reuse-true-O2-complete": "local-source-b725fe3cff4a77bf172ebdf0937359295e8ecf82cfed8466a064786f6a4c800c.c.gz",
+    "array-identity-false-packed-true-reuse-true-O1-complete": "local-source-592a43458b059320b95615c69acf925fe27c82a105c4bb8caeab471ee16c184e.c.gz",
+    "array-identity-false-packed-true-reuse-true-O2-complete": "local-source-592a43458b059320b95615c69acf925fe27c82a105c4bb8caeab471ee16c184e.c.gz",
+    "array-identity-true-packed-false-reuse-true-O1-complete": "local-source-d633fbce6307b52e95b0149754cb8d3ac095228f63cd201ff7002973094c1ae6.c.gz",
+    "array-identity-true-packed-false-reuse-true-O2-complete": "local-source-d633fbce6307b52e95b0149754cb8d3ac095228f63cd201ff7002973094c1ae6.c.gz",
+    "array-identity-true-packed-true-reuse-true-O1-complete": "local-source-212506408c9342e58b66fc31e028ee446a39162b0ca46419cc8dfbd49344cef7.c.gz",
+    "array-identity-true-packed-true-reuse-true-O2-complete": "local-source-212506408c9342e58b66fc31e028ee446a39162b0ca46419cc8dfbd49344cef7.c.gz"
+  }
+}
