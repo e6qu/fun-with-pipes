@@ -5624,7 +5624,7 @@ impl<'g, 'p> FnGen<'g, 'p, '_> {
             let index = self.fresh();
             self.line("/* direct known scalar array map; input stays borrowed */");
             self.line(&format!("size_t {count} = fwp_array_len({input});"));
-            self.line(&format!("fwp_array_builder {builder} = {{fwp_array_typed_new({count}, {result_descriptor}), 0, {result_descriptor}};"));
+            self.line(&format!("fwp_array_builder {builder} = {{fwp_array_typed_new({count}, {result_descriptor}), 0, {result_descriptor}}};"));
             self.line(&format!(
                 "fwp_cleanup {cleanup}; fwp_array_builder_protect(&{builder}, &{cleanup});"
             ));

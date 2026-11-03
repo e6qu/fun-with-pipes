@@ -1,0 +1,34 @@
+{
+  "run": 41638033527,
+  "source": "8537e7a9aeecf37cfc0c3498693100496b2c2707",
+  "jobs": [
+    {
+      "host": "arm",
+      "job": 125924109975,
+      "logSha256": "20df947158f5b5b29f57013819bf4f0e234e611eef726be841ed0d40b4bf715a",
+      "failedSteps": [
+        "Check formatting and affected ownership targets",
+        "Retain all focused checks and partial failures"
+      ]
+    },
+    {
+      "host": "mac",
+      "job": 125924110031,
+      "logSha256": "f4786adf606e47beb804f12b5329fef0983c21ae282d57edd95368f2b67f3465",
+      "failedSteps": [
+        "Check formatting and affected ownership targets",
+        "Retain all focused checks and partial failures"
+      ]
+    },
+    {
+      "host": "amd",
+      "job": 125924110266,
+      "logSha256": "c6c0dac3725d109c421d32036405de8b9ffeb182124413ef6eeb53aadec0f09e",
+      "failedSteps": [
+        "Check formatting and affected ownership targets",
+        "Retain all focused checks and partial failures"
+      ]
+    }
+  ],
+  "nativeTestsExecuted": false
+}

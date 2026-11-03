@@ -1,0 +1,132 @@
+{
+  "id": 125924109975,
+  "run_id": 41638033527,
+  "workflow_name": "Numerical and ownership evidence",
+  "head_branch": "direct-array-callbacks",
+  "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/41638033527",
+  "run_attempt": 1,
+  "node_id": "CR_kwDOU33zxM8AAAAdUalulw",
+  "head_sha": "8537e7a9aeecf37cfc0c3498693100496b2c2707",
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/125924109975",
+  "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41638033527/job/125924109975",
+  "status": "completed",
+  "conclusion": "failure",
+  "created_at": "2026-11-03T12:42:55Z",
+  "started_at": "2026-11-03T12:54:52Z",
+  "completed_at": "2026-11-03T12:55:59Z",
+  "name": "scalar_array_checks (ubuntu-24.04-arm, gcc)",
+  "steps": [
+    {
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 1,
+      "started_at": "2026-11-03T12:54:53Z",
+      "completed_at": "2026-11-03T12:54:54Z"
+    },
+    {
+      "name": "Run actions/checkout@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 2,
+      "started_at": "2026-11-03T12:54:54Z",
+      "completed_at": "2026-11-03T12:55:07Z"
+    },
+    {
+      "name": "Run dtolnay/rust-toolchain@stable",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 3,
+      "started_at": "2026-11-03T12:55:07Z",
+      "completed_at": "2026-11-03T12:55:11Z"
+    },
+    {
+      "name": "macOS OpenSSL",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 4,
+      "started_at": "2026-11-03T12:55:11Z",
+      "completed_at": "2026-11-03T12:55:11Z"
+    },
+    {
+      "name": "Run actions/cache@v6",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 5,
+      "started_at": "2026-11-03T12:55:11Z",
+      "completed_at": "2026-11-03T12:55:12Z"
+    },
+    {
+      "name": "Fetch locked dependencies",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 6,
+      "started_at": "2026-11-03T12:55:12Z",
+      "completed_at": "2026-11-03T12:55:14Z"
+    },
+    {
+      "name": "Check formatting and affected ownership targets",
+      "status": "completed",
+      "conclusion": "failure",
+      "number": 7,
+      "started_at": "2026-11-03T12:55:14Z",
+      "completed_at": "2026-11-03T12:55:57Z"
+    },
+    {
+      "name": "Check scalar captures, arithmetic, reuse, failure and cancellation",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 8,
+      "started_at": "2026-11-03T12:55:57Z",
+      "completed_at": "2026-11-03T12:55:57Z"
+    },
+    {
+      "name": "Check materialized and composed construction on production GCC",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 9,
+      "started_at": "2026-11-03T12:55:57Z",
+      "completed_at": "2026-11-03T12:55:57Z"
+    },
+    {
+      "name": "Retain all focused checks and partial failures",
+      "status": "completed",
+      "conclusion": "failure",
+      "number": 10,
+      "started_at": "2026-11-03T12:55:57Z",
+      "completed_at": "2026-11-03T12:55:57Z"
+    },
+    {
+      "name": "Post Run actions/cache@v6",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 19,
+      "started_at": "2026-11-03T12:55:57Z",
+      "completed_at": "2026-11-03T12:55:57Z"
+    },
+    {
+      "name": "Post Run actions/checkout@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 20,
+      "started_at": "2026-11-03T12:55:57Z",
+      "completed_at": "2026-11-03T12:55:57Z"
+    },
+    {
+      "name": "Complete job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 21,
+      "started_at": "2026-11-03T12:55:57Z",
+      "completed_at": "2026-11-03T12:55:57Z"
+    }
+  ],
+  "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/125924109975",
+  "labels": [
+    "ubuntu-24.04-arm"
+  ],
+  "runner_id": 1000402431,
+  "runner_name": "GitHub Actions 1000402431",
+  "runner_group_id": 0,
+  "runner_group_name": "GitHub Actions"
+}

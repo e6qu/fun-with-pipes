@@ -166,6 +166,29 @@ class Evidence(unittest.TestCase):
             CHECK.check_reference_patch(patch.replace('+    if false', '+    if true'),
                                         candidate, reference, 'src/cgen.rs')
 
+    def test_direct_array_map_reference_uses_actual_git_patch_and_preserves_storage(self):
+        candidate = (ROOT / 'src/cgen.rs').read_text()
+        preparation = (ROOT / 'scripts/prepare-scalar-array-map-reference.py').read_text()
+        reference = CHECK.recorded_reference(candidate, preparation)
+        selected = '        if matches!(&self.g.prog.funcs[id].body, Body::Prim(s) if s == "array.map") {\n'
+        self.assertEqual(reference, candidate.replace(selected, selected.replace('if matches!', 'if false && matches!')))
+        self.assertNotEqual(candidate, reference)
+        self.assertEqual(CHECK.recorded_reference(candidate,
+            'raise RuntimeError("must not execute saved code")\n' + preparation), reference)
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / 'src').mkdir()
+            path = root / 'src/cgen.rs'
+            path.write_text(candidate)
+            subprocess.run(['git', '-c', 'init.defaultBranch=main', 'init', '-q'], cwd=root, check=True)
+            subprocess.run(['git', 'add', 'src/cgen.rs'], cwd=root, check=True)
+            path.write_text(reference)
+            patch = subprocess.check_output(['git', 'diff', '--', 'src/cgen.rs'], cwd=root, text=True)
+        CHECK.check_reference_patch(patch, candidate, reference, 'src/cgen.rs')
+        with self.assertRaises(AssertionError):
+            CHECK.check_reference_patch(patch.replace('if false && matches!', 'if true && matches!'),
+                                        candidate, reference, 'src/cgen.rs')
+
     def test_recorded_fold_preparation_is_independent_of_current_codegen(self):
         revision = '55d46cd57425fe9f5bb65a1b83a7d12821445711'
         old = subprocess.check_output(['git', 'show', revision + ':src/cgen.rs'],

@@ -67,7 +67,7 @@ class CompilerCosts(unittest.TestCase):
                 ANALYSIS.summarize(rows)
 
     def test_complete_schedule_and_timeout_keep_reviewable_evidence(self):
-        for comparison, fail in itertools.product(('numeric-inputs', 'scalar-map-zip', 'range-zip', 'gradient-array'), (False, True)):
+        for comparison, fail in itertools.product(('numeric-inputs', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map'), (False, True)):
             with self.subTest(comparison=comparison, timeout=fail), tempfile.TemporaryDirectory() as temporary:
                 root = Path(temporary)
                 compiler, reference = root / 'candidate', root / 'reference'
@@ -81,9 +81,10 @@ class CompilerCosts(unittest.TestCase):
                     unchanged={path: ANALYSIS.sha(ANALYSIS.ROOT / path) for path in
                                ('src/ownership.rs', 'src/cgen/field_transfers.rs', 'src/cgen/numeric_parameters.rs')})
                 manifest_path = root / 'manifest.json'
-                if comparison in ('scalar-map-zip', 'range-zip'):
+                if comparison in ('scalar-map-zip', 'range-zip', 'scalar-array-map'):
                     manifest = dict(source='test-source', compilerSha256=ANALYSIS.sha(reference),
-                        disabledTransformation=('private range-to-zip storage' if comparison == 'range-zip' else 'scalar map-to-zip buffer storage'),
+                        disabledTransformation=('direct closed scalar array map callbacks' if comparison == 'scalar-array-map'
+                            else 'private range-to-zip storage' if comparison == 'range-zip' else 'scalar map-to-zip buffer storage'),
                         candidateCodegenSha256=ANALYSIS.sha(ANALYSIS.ROOT / 'src/cgen.rs'),
                         ownershipSha256=ANALYSIS.sha(ANALYSIS.ROOT / 'src/ownership.rs'))
                 if comparison == 'gradient-array':
