@@ -80,11 +80,9 @@ positive quiet NaN. Ordinary numeric equality cannot test this distinction,
 because a NaN does not compare equal even to itself. Tests must inspect bits.
 
 At that reviewed source, the float contract did not distinguish same-type
-conversion from changing formats. The draft now uses the explicit working rule
-that same-type conversion preserves every bit; the pending question has no
-recorded user reply. [Current conversion rules](../float-formats.md#current-contract)
-separate that operation from cross-type conversion. If the answer changes, revise
-the contract before delivery or measurement.
+conversion from changing formats. The selected rule now preserves every bit for
+same-type conversion. [Current conversion rules](../float-formats.md#current-contract)
+separate that operation from cross-type conversion.
 
 ### Implementation and verification
 

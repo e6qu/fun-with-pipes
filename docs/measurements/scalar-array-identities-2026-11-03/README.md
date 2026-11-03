@@ -4,7 +4,8 @@ This work makes same-type float conversion preserve every bit, then removes
 selected `array.map float.convert` calls on F64 arrays. The
 [contract](../scalar-array-identities.md) fixes selection, ownership and measurement
 requirements. [The handoff](../../development-state.md) records current CI status.
-Full platform verification, compiler costs and runtime timings are still pending.
+[Compiler-cost limits](../scalar-array-identity-analysis-2026-11-03/README.md) pass.
+Full platform verification and runtime timings remain pending.
 
 ## Focused native verification
 
@@ -34,8 +35,8 @@ returning its input with scheduler cleanup intact; native entries corroborate
 removal of the replacement-array work. GCC sometimes inlines the source function
 into its owned entry, so inspection records the actual retained symbols.
 
-These are correctness and cleanup results. Compiler and runtime performance
-acceptance still require their separate frozen comparisons. Optional WebAssembly
+These are correctness and cleanup results. Compiler-cost limits pass in the separate report; runtime performance
+acceptance still requires its frozen comparisons. Optional WebAssembly
 execution in the focused core target is not evidence of WebAssembly support;
 that coverage belongs to the complete production matrix.
 

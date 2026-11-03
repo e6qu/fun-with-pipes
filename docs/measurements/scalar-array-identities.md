@@ -1,13 +1,11 @@
 # Same-type float conversions and redundant array maps
 
-**Preparation:** based on PR #253's final head `89394229`, before changing the
-interpreter, runtime or optimizer. PR #253 remains the only active PR until its
-nine production jobs and documentation pass and its merge is verified.
+**Preparation:** frozen before implementation, based on PR #253's final head
+`89394229`. That PR is now [delivered](../roadmap-history.md#direct-scalar-array-calls-pr-253).
+[The handoff](../development-state.md) records this group's exact sources and checks.
 
-The selected draft rule is that converting a float to its own type preserves
-all bits. This is the recommended answer to the pending design question, not a
-recorded user decision. If that answer changes, revise this contract explicitly
-before delivery; do not silently change the reference or measurements.
+The rule for this implementation is that converting a float to its own type
+preserves every bit. Cross-type conversion rules remain unchanged.
 
 ## Observable behavior
 
@@ -23,9 +21,9 @@ A NaN is a non-number float value; its sign and extra payload bits can differ
 between representations of NaN. `narrow` changes the format and rounds according
 to the existing conversion rules. Its behavior is unchanged by this work.
 
-Apply the same-type rule to F16, BF16, F32, F64 and F128. Currently the interpreter
-can canonicalize NaNs that native F64 preserves. Repair that inconsistency before
-optimizing arrays. Keep generic F128 results independently owned: returning a
+Apply the same-type rule to F16, BF16, F32, F64 and F128. At the preparation source, the
+interpreter canonicalized NaNs that native F64 preserved. Scalar paths must agree
+before the map can be removed. Keep generic F128 results independently owned: returning a
 borrowed box as an owned result is not an identity optimization.
 
 ## Selected optimization

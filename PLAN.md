@@ -4,52 +4,50 @@ Build an ahead-of-time language with simple pipes, immutable values, strong type
 and useful inference. Prefer direct values, moves and borrows; reserve ARC for
 necessary sharing. GC is removed; JIT and backward compatibility are excluded.
 
-## Current work: direct calls in scalar array maps
+## Current work: preserve float bits and remove redundant array copies
 
-[PR #252](https://github.com/e6qu/fun-with-pipes/pull/252) merged with all nine
-production jobs and documentation passing; every full and target log is audited.
-It keeps private gradients in arrays. The largest solve saves 25,472 allocation
-requests and 409,144 requested bytes, but all 32 required 5% speed gains remain
-open. [Delivery and measurements](docs/roadmap-history.md#private-gradient-arrays-pr-252)
-retain the exact sources, counts and timing misses.
+[PR #253](https://github.com/e6qu/fun-with-pipes/pull/253) is merged with all nine
+production jobs and documentation passing. Its one-line squash and tested tree
+are verified. [Delivery history](docs/roadmap-history.md#direct-scalar-array-calls-pr-253)
+links complete logs, measurements and the remaining timing limits.
 
-The current grouped change removes generic function dispatch from selected
-`array.map` calls. For example, `array.map scale` can call the known scalar
-function `scale` directly for each element. It still allocates an independent
-result array and preserves input aliases, effects, traps and cancellation.
-This is an experiment, not an established explanation of earlier timing misses.
+The next group repairs same-type float conversion and removes one selected array
+copy. Converting F16, BF16, F32, F64 or F128 to its own type preserves every bit,
+including negative zero and NaN payloads. Cross-type conversion rules stay the
+same; generic F128 results still need their own owner.
 
-The [contract](docs/measurements/direct-array-callbacks.md) was frozen before code.
-[Native correctness and cleanup](docs/measurements/direct-array-callbacks-2026-11-03/README.md)
-pass on three hosts; [compiler costs](docs/measurements/direct-array-analysis-2026-11-03/README.md)
-pass. [All four runtime sessions](docs/measurements/direct-array-time-2026-11-03/README.md)
-and raw audits are complete. Larger cases improve by 4.8–5.2% on ARM64 and
-5.5–8.1% on AMD64, with unchanged allocation/ARC counts. Sixteen speed targets
-and one noisy comparison remain open; AMD64 current-only RSS observations rise
-6–14%. Keep the proven work reduction under the accepted policy, preserving
-those limits. No completed timing was rerun.
+For a known `float.convert : F64 -> F64` callback, `array.map` can return its input
+owner instead of allocating and traversing a replacement array. The rewrite runs
+before ownership insertion, checks existing concrete types and evaluates the input
+once. It adds no syntax or whole-program analysis. Unknown/effectful callbacks and
+other array element types retain their existing behavior.
 
-[PR #253](https://github.com/e6qu/fun-with-pipes/pull/253) groups the compiler
-change, semantic/cleanup checks, evidence repairs and current docs. Its complete
-report is published and the final nine production jobs plus documentation are
-running. Preserve the exact head while auditing every completed gate.
+The [contract](docs/measurements/scalar-array-identities.md) was frozen before code.
+[Focused checks](docs/measurements/scalar-array-identities-2026-11-03/README.md)
+pass on GCC ARM64/AMD64 and Clang ARM64. They cover exact bits, moves, aliases,
+slices, immutable updates, traps and cancellation. The expanded storage probe
+passes locally; its Rust-generated form still needs the final platform matrix.
+
+Returning a slice can keep a larger backing array alive longer. The storage report
+shows both saved allocations and that retention cost; it does not promise lower
+live memory for every alias pattern. Compiler-cost and four-session runtime
+comparisons use a frozen same-source reference disabling only map removal.
+[Compiler-cost limits](docs/measurements/scalar-array-identity-analysis-2026-11-03/README.md)
+pass on both hosts; runtime sessions are underway. Both sides include the scalar
+correctness fix. [The handoff](docs/development-state.md)
+tracks exact sources, active jobs and audits.
 
 | Step | Work | Completion requirement |
 |---|---|---|
-| 1 | Declare the direct-call experiment | Freeze selection, ownership rules and limits before implementation. Keep storage layouts and other optimizations unchanged. |
-| 2 | Verify implementation and cleanup | GCC ARM64/AMD64 and Clang ARM64 pass O1/O2 comparisons with both interpreters, rejected cases, aliases/slices, eager order, allocation failure and cancellation. Audit selected direct calls and deliberately broken cleanup controls. |
-| 3 | Measure the isolated change | Freeze a same-source reference disabling only direct scalar array-map selection. Audit compiler time/RSS, four qualified runtime sessions, every count, native image and failed limit. No allocation/ARC/live-storage increase; preserve timing, copy and stack limits. |
-| 4 | Deliver the grouped PR | Finish PR #253 with implementation, repairs, evidence and current docs. Run the final nine production jobs plus docs, audit all logs, then verify the one-line squash and tested-tree equality. |
+| 1 | Define conversion and selection rules | Preserve same-type bits in all five formats; keep cross-type behavior and independently owned F128 boxes. Freeze the exact F64 map selection and measurements. |
+| 2 | Verify owner transfer and observable behavior | Three native hosts pass O1/O2 checks, packed/reuse controls, source effects, alias updates, failure/cancellation and deliberately omitted cleanup. Retain emitted C and native image evidence. |
+| 3 | Measure the isolated change | Remove at least one array allocation per selected update. Report traffic, ARC, live/raw memory, process RSS, timing, code and stack costs. Require the frozen timing/noise and compiler-cost limits; retain every miss. |
+| 4 | Deliver one grouped PR | Include scalar fixes, map removal, storage observations, complete measurements and clear docs. Verify the expanded probe in all nine final-head production jobs plus documentation; audit all logs, squash and verify the tested tree. |
 
-[History](docs/roadmap-history.md) and the linked reports preserve completed
-storage changes and their source identities. Do not repeat completed timings for
-a better result. Keep verified work reductions separate from unfulfilled speed
-goals. [The remaining-storage review](docs/measurements/remaining-gradient-storage.md)
-records the input/output ownership constraints and an unused-history candidate.
-The next [same-type conversion group](docs/measurements/scalar-array-identities.md)
-is implemented separately and undergoing focused verification. Input-record,
-coordinate-list and unused-history changes remain unselected. Open its PR only
-after #253 merges.
+Keep older timing goals open against their original references. Do not repeat
+completed sessions for a better result. [Remaining storage candidates](docs/measurements/remaining-gradient-storage.md)
+include input records, coordinate lists and an unused iteration history. They
+remain unselected until their lifetime proof, scope and measurements are declared.
 
 ## Open performance goals
 
@@ -64,7 +62,7 @@ after #253 merges.
 - **Gradient-array speed.** [Completed observations](docs/measurements/gradient-array-time-2026-11-03/README.md)
   miss every required 5% gain. Larger ARM64 cases improve by about 3–4%; AMD64
   gains are smaller, and small repeated updates slow down by roughly 1–2%.
-  The direct-call experiment above tests one avoidable cost. Keep the original
+  Merged PR #253 tested one avoidable callback cost. Keep the original
   misses open until qualified evidence meets their limits; fewer allocations do
   not establish less elapsed time or whole-process memory use.
 

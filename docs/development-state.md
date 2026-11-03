@@ -1,132 +1,96 @@
 # Current work
 
-**Next:** finish the exact-head CI audit and delivery of
-[PR #253](https://github.com/e6qu/fun-with-pipes/pull/253). Keep its tested head
-fixed while production jobs run. Independently run the prepared next change's
-focused checks; open no second PR until #253 merges.
+**Next:** audit the compiler-cost and runtime comparisons for identity F64 array
+maps, finish their report, then run the complete final-head matrix and merge the
+one grouped PR. Preserve every completed timing and missed limit. Replace only
+hosts rejected before building or measuring.
 
-## Active PR: direct calls in scalar array maps
+## Checkout and frozen sources
 
-- Worktree `.worktrees/direct-array-callbacks`; final head
-  `893942291b0f1e51a23488c9dea2a9d811acfab1`.
-- Production run `41662326563`: eight of nine jobs pass and are fully audited.
-  Linux AMD64 has finished its suite and is completing packaging/uploads,
-  without reported failures.
-- Documentation run `41662323124`, job `126008450991`: passed full-log audit.
-- Scratch `.worktrees/gradient-work/collect-253.py` downloads and audits each
-  completed gate. Require all nine production jobs plus docs before squash.
-- Squash subject: `Call known scalar array functions directly`, empty body.
-  Verify the raw one-line message and equality with the tested tree.
-- The [complete report](measurements/direct-array-time-2026-11-03/README.md)
-  retains four original runtime sessions, 16 speed misses and one noisy case.
-  Do not repeat completed timings or relabel those limits as passed.
-- [Native checks](measurements/direct-array-callbacks-2026-11-03/README.md) and
-  [compiler costs](measurements/direct-array-analysis-2026-11-03/README.md) pass.
-  Their frozen sources, repairs and recovered reference identities are retained.
+- Worktree/branch: `.worktrees/scalar-array-identities` / `scalar-array-identities`.
+  Scratch: `.worktrees/gradient-work`. Publish one draft PR after this handoff update.
+- PR #253 merged as `ed5b8830a3cb90a4b6a248464d279ac8d1d0ccc7`; the next branch
+  was rebased onto it with identical before/after trees. Leave the detached primary
+  checkout's recovery edits and old worktrees alone.
+- Contract: `97c47a422a029e9913953ecba5aa6f4cb81414f4`, immutable tag
+  `roadmap/scalar-array-identities-protocol-2026-11-03`, before implementation.
+- Native checks and measurements: `beddd406153f1976fed00847292207bff9053e22`,
+  immutable tag `roadmap/scalar-array-identity-measurement-2026-11-03`.
+  Current compiler/runtime/library/tooling sources match that source. Later changes
+  add only documentation and storage observations to the C probe.
+- Same-type conversion preserving all bits is the stated working rule; the pending
+  design question has no recorded reply. Cross-type conversion is unchanged.
+  If the answer changes, revise the contract explicitly before delivery.
 
 ## Roadmap status
 
 | Step | Status | Remaining work |
 |---|---|---|
-| 1 | Verified | Preserve direct-call selection and ownership contract |
-| 2 | Verified | Keep three-host native and cleanup evidence |
-| 3 | Verified | Preserve all original runtime/compiler outcomes and failed limits |
-| 4 | In progress | Audit final gates, squash and verify the merge tree |
+| 1 | Verified | Preserve scalar semantics, narrow selection and frozen reference |
+| 2 | Verified | Keep three-host bit, owner, failure and source/native evidence |
+| 3 | In progress | Audit both compiler jobs and four qualified runtime sessions |
+| 4 | Pending | Complete report; final nine production jobs plus docs; verified squash |
 
-## Prepared next group: same-type conversions
+## Verified behavior and storage
 
-Checkout `.worktrees/scalar-array-identities`, branch `scalar-array-identities`,
-starts at #253's final head. Its [contract](measurements/scalar-array-identities.md)
-is frozen at `97c47a422a029e9913953ecba5aa6f4cb81414f4`, tag
-`roadmap/scalar-array-identities-protocol-2026-11-03`, before runtime/optimizer edits.
+[Run 41672290329](https://github.com/e6qu/fun-with-pipes/actions/runs/41672290329)
+passes on GCC ARM64/AMD64 and Clang ARM64: 50 integration tests, the selection
+unit test and 54 new observations per host. Every full/target log is audited.
+[The complete index](measurements/scalar-array-identities-2026-11-03/native/index.json)
+retains sources, controls and matching cross-host transcripts. All 948 saved native
+images have checked headers/hashes; 32 GCC entry images were also inspected.
 
-The draft uses the recommended rule that same-type conversion preserves all bits;
-the pending user question has no recorded reply. This is an explicit working
-choice, not a recorded user decision. Cross-type rules remain unchanged. If the
-answer changes, revise the contract explicitly before delivery or measurement.
+The selected F64 map transfers its input owner before reference-count insertion.
+Same-type scalar conversion preserves all five formats' bits; generic F128 still
+returns an independently owned box. Tests cover source effects, aliases, slices,
+updates and cleanup. Fatal allocator failure exits 102; recoverable traps and
+cancellation unwind. The fault probe declares a task so real unwind code is enabled.
+Two earlier queued batches were cancelled before any job started to complete that
+harness; no executed test was discarded.
 
-Implemented; all three focused native hosts pass. Final-platform verification remains:
+The [storage report](measurements/scalar-array-identities-2026-11-03/README.md)
+adds eight local Clang O1/O2 executions and 32 observations, using saved generated
+C with only the probe extended. It shows both saved allocation and a unique slice
+retaining its larger backing array. The exact Rust-generated extension still needs
+the final platform matrix; do not rerun the unchanged eight-target focused group.
 
-- Same-type F16/BF16/F32/F64/F128 conversions preserve bits. Generic F128 still
-  allocates an independently owned result box.
-- The optimizer removes only `array.map` of the known `F64 -> F64` conversion
-  primitive before ownership insertion. No representation or API changes.
-- Tests compare exact bits through raw/optimized interpreter and native entries;
-  check selector exclusions, moves, aliases, slices, immutable updates, source
-  effects and deliberately omitted cleanup. Explicit trap/cancellation probes
-  check the generated owner around the following array read. Native allocator
-  exhaustion is fatal exit 102, not an unwind; its separate control requires the
-  exact status and diagnostic. The contract records this source-review finding.
-  Existing failure/cancellation targets also remain in the focused group.
+## Measurements in progress
 
-Focused run `41672290329` tests `beddd406153f1976fed00847292207bff9053e22`.
-All three jobs pass full-log/artifact audit: 50 integration tests, the selector
-unit test and 54 new observations per host. All 948 saved native images have
-checked headers/hashes; generated C and 32 GCC native entry images were inspected.
-The [complete index](measurements/scalar-array-identities-2026-11-03/native/index.json)
-retains logs, sources, controls and matching cross-host transcripts.
-Earlier batches `41667037137` and `41670309514`
-were cancelled before any jobs started, to include the complete fault checks
-and correct their task context. The fault probe now declares a reachable task
-function so C generation enables unwinding; ordinary language cases stay task-free.
-The three-host batch uses
-GCC ARM64/AMD64 and Clang ARM64, production Rust settings, the existing eight
-array targets, float-format/core targets and the selector unit test. Audit all
-completed targets before a repair push. The extended result-lifetime probe passes eight local Clang O1/O2 executions
-(32 storage observations, packed on/off). Saved generated C was recompiled with
-only the probe fixture changed; no compiler build ran locally. The
-[storage report](measurements/scalar-array-identities-2026-11-03/README.md) records
-both the saved allocation and longer backing retention for unique slices.
-The exact Rust-generated fixture still needs final platform verification.
-Batch its source/docs with any native-check fixes; do not rerun unchanged eight-target
-checks merely for this probe extension.
-Measurements are frozen at focused-tested `beddd406`, tag
-`roadmap/scalar-array-identity-measurement-2026-11-03`. Compiler-cost run
-`41678571054` is measuring both compiler hosts. Runtime run `41678576958`
-continues both ARM64 sessions; its two AMD64 hosts were rejected before building
-or timing (9V74 instead of the frozen 7763). Both full logs and qualification
-artifacts are audited in scratch `identity-host-rejections/41678576958`.
-Replacement AMD64 sessions are run `41679275708`; do not replace any session
-that has begun measurement.
-Both use correctness run `41672290329`. No second PR exists yet. The newer branch
-adds only the storage probe and documentation; compiler/runtime/library/tooling
-sources still match the measured source. Preserve both immutable tags on rebase.
-Committed tooling provides a same-source reference disabling only map elimination;
-its count budget requires one removed array per update, with existing time/noise
-limits. Reference controls (3), budget controls (18), compiler-analysis controls
-(7) and raw-source/evidence controls (16) pass in one guarded 20.85s batch.
-Grouped-report controls (12), retention controls (3) and reference-upload controls
-(2) pass in 5.48s; workflow lint passes in 6.15s.
-The first reference-marker check failed because Rust formatting joined the
-condition onto one line; the marker was corrected and all controls pass.
+- [Compiler-cost run `41678571054`](measurements/scalar-array-identity-analysis-2026-11-03/README.md):
+  both jobs and all 480 commands pass full audit. Maximum time increase 0.832%,
+  peak RSS increase 0.142%, identical-copy difference 1.767%.
+  Scratch `audit-identity-analysis.py` and `identity-analysis/`.
+- Runtime run `41678576958`: both ARM64 sessions are active. Both initial AMD64
+  hosts were rejected before building/timing: EPYC 9V74 instead of frozen 7763.
+  Full logs and qualification artifacts are audited in
+  `identity-host-rejections/41678576958`.
+- Replacement AMD64 sessions: `41679275708`, queued. Neither has measured yet.
+- Correctness prerequisite for every measurement is `41672290329`. The reference
+  disables only map removal; both sides include the scalar repair. Count budgets
+  require at least one removed array per selected update. Keep the frozen compiler,
+  timing/noise and stack limits and all older timing goals explicit.
+
+## Completed delivery
+
+PR #253's nine production jobs (`41662326563`) and documentation (`41662323124`)
+pass at `893942291b0f1e51a23488c9dea2a9d811acfab1`; all logs are audited and
+[retained](measurements/direct-array-callbacks-2026-11-03/platforms/final-gates.json).
+Its squash message is exactly `Call known scalar array functions directly`, with
+no body/trailers, and its tree equals that tested head. Duplicate same-tree main
+runs `41680031792` and `41680031784` were cancelled after verifying no failed steps.
+Keep its sixteen speed misses and one noisy result open in [PLAN.md](../PLAN.md).
 
 ## Local checks and limits
 
-Passing guarded checks: Rust formatting (0.13s), standalone standard-library doc
-regeneration (1.03s), workflow lint (6.15s), saved-source storage probes (3.45s), unchanged primitive inventory
-(394 declarations, 384 symbols, zero review items; 0.64s). The source review's
-roadmap audit passed before implementation (242 link sets, 106 anchors; 2.63s).
-The earlier documentation audit passed (243 link sets, 106 anchors; 2.50s).
-A later handoff rewrite omitted the required roadmap-status heading; the audit
-caught it, and the heading is restored without weakening the check. The repaired
-audit passes all 244 link sets, 106 anchors and four steps (2.51s).
-No compiler build ran locally.
+Passing guarded checks: Rust formatting; generated standard-library docs; workflow
+lint; unchanged primitive inventory (394 declarations, 384 symbols); reference,
+budget, compiler-analysis and raw-evidence controls. The documentation audit
+caught and repaired a missing roadmap-status heading; keep that required section.
+Latest audit: 244 document link sets, 106 anchors, four plan steps (2.53s).
+The saved-source storage probes pass in 3.45s; retained evidence reconciles in 0.25s.
+No compiler build, full suite or benchmark ran locally.
 
-Use `python3 scripts/local-guard.py` serially. Keep at least 64 GiB free disk,
-target data below 2 GiB and sampled RSS below 1 GiB, with the 180-second deadline.
-Full builds, suites, benchmarks and large regeneration stay on runners.
-
-Leave the detached primary checkout's recovery edits and old worktrees alone.
-Parent PR #252 merged as `3034a9d047c2bef44744c6ffc1807146570ced57`; its one-line
-message and equality with tested `e2d55aa8` were verified. All ten gate logs are
-[retained](measurements/gradient-array-storage-2026-11-03/platforms/final-gates.json).
-
-## Old workflow status checked
-
-Run `38888712709` still appears running, but all six jobs ended October 16.
-Every failure was audited in scratch `stale-path-run`: four device negative
-controls and two Windows unload setup errors. Commit `9bf203d7` repaired them;
-#252's complete native logs verify the affected targets, including both Windows
-unload tests. GitHub refuses cancellation because the run is already completed,
-while its status endpoints still say running. No active job was stopped. This
-service-status inconsistency is not evidence of today's queue cause.
+Use `python3 scripts/local-guard.py` serially: 64 GiB free disk, target data below
+2 GiB, sampled RSS below 1 GiB, 180 seconds. Full work stays on GitHub runners.
+Old run `38888712709` is a service-status ghost: all six jobs completed October 16;
+its errors were fixed by `9bf203d7` and verified in #252. It has no active work.
