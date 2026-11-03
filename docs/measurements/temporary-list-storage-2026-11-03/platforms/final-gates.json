@@ -1,0 +1,91 @@
+{
+  "source": "a8a5568d5c1ee791f872de382c6d7e850cec09df",
+  "productionRun": 41591834975,
+  "jobs": [
+    {
+      "id": 125770098958,
+      "name": "bench",
+      "head_sha": "a8a5568d5c1ee791f872de382c6d7e850cec09df",
+      "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41591834975/job/125770098958",
+      "conclusion": "success",
+      "started_at": "2026-11-03T06:44:53Z",
+      "completed_at": "2026-11-03T06:48:32Z"
+    },
+    {
+      "id": 125770099083,
+      "name": "test (ubuntu-24.04-arm)",
+      "head_sha": "a8a5568d5c1ee791f872de382c6d7e850cec09df",
+      "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41591834975/job/125770099083",
+      "conclusion": "success",
+      "started_at": "2026-11-03T06:44:58Z",
+      "completed_at": "2026-11-03T08:07:13Z"
+    },
+    {
+      "id": 125770099175,
+      "name": "macos_ownership (macos-15)",
+      "head_sha": "a8a5568d5c1ee791f872de382c6d7e850cec09df",
+      "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41591834975/job/125770099175",
+      "conclusion": "success",
+      "started_at": "2026-11-03T07:14:40Z",
+      "completed_at": "2026-11-03T07:44:36Z"
+    },
+    {
+      "id": 125770099192,
+      "name": "macos (macos-15)",
+      "head_sha": "a8a5568d5c1ee791f872de382c6d7e850cec09df",
+      "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41591834975/job/125770099192",
+      "conclusion": "success",
+      "started_at": "2026-11-03T06:56:31Z",
+      "completed_at": "2026-11-03T07:30:50Z"
+    },
+    {
+      "id": 125770099197,
+      "name": "macos_ownership (macos-15-intel)",
+      "head_sha": "a8a5568d5c1ee791f872de382c6d7e850cec09df",
+      "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41591834975/job/125770099197",
+      "conclusion": "success",
+      "started_at": "2026-11-03T07:47:33Z",
+      "completed_at": "2026-11-03T08:49:19Z"
+    },
+    {
+      "id": 125770099249,
+      "name": "test (ubuntu-latest)",
+      "head_sha": "a8a5568d5c1ee791f872de382c6d7e850cec09df",
+      "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41591834975/job/125770099249",
+      "conclusion": "success",
+      "started_at": "2026-11-03T06:44:54Z",
+      "completed_at": "2026-11-03T07:53:29Z"
+    },
+    {
+      "id": 125770099310,
+      "name": "macos (macos-15-intel)",
+      "head_sha": "a8a5568d5c1ee791f872de382c6d7e850cec09df",
+      "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41591834975/job/125770099310",
+      "conclusion": "success",
+      "started_at": "2026-11-03T07:17:20Z",
+      "completed_at": "2026-11-03T08:28:49Z"
+    },
+    {
+      "id": 125770099313,
+      "name": "windows / native (windows-11-arm)",
+      "head_sha": "a8a5568d5c1ee791f872de382c6d7e850cec09df",
+      "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41591834975/job/125770099313",
+      "conclusion": "success",
+      "started_at": "2026-11-03T06:44:57Z",
+      "completed_at": "2026-11-03T07:58:33Z"
+    },
+    {
+      "id": 125770099451,
+      "name": "windows / native (windows-2025)",
+      "head_sha": "a8a5568d5c1ee791f872de382c6d7e850cec09df",
+      "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41591834975/job/125770099451",
+      "conclusion": "success",
+      "started_at": "2026-11-03T06:44:54Z",
+      "completed_at": "2026-11-03T08:13:39Z"
+    }
+  ],
+  "documentationRun": 41591834978,
+  "documentationURL": "https://github.com/e6qu/fun-with-pipes/actions/runs/41591834978",
+  "documentationConclusion": "success",
+  "allFullAndTargetLogsAudited": true
+}

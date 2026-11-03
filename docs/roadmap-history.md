@@ -23,8 +23,8 @@ establish no elapsed-speed claim. [Evidence and original failure](measurements/t
 
 A unit-test helper name and four workflow steps that hid test failures behind
 `tee` were repaired. Both attempts' logs remain available. Production run
-`41591834975` has eight of nine jobs passing, with macOS AMD64 ownership still
-running. [Compiler costs](measurements/scalar-map-zip-analysis-2026-11-03/README.md)
+`41591834975` now passes all nine jobs, and documentation passes; every full
+and target log is audited. [Exact-source gate records](measurements/temporary-list-storage-2026-11-03/platforms/final-gates.json). [Compiler costs](measurements/scalar-map-zip-analysis-2026-11-03/README.md)
 pass. [Four completed runtime sessions](measurements/scalar-map-zip-time-2026-11-03/README.md)
 show about 7–8.5% less time on larger cases, while small-case speed goals and
 ARM64 zero-update regression limits remain open. All raw audits are complete.

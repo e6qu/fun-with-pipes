@@ -26,8 +26,8 @@ and peak managed storage, matching output/work and zero final storage.
 The user merged this source before the full platform and performance gates.
 The squash `a8a5568d` has the identical tree. [Compiler costs](../scalar-map-zip-analysis-2026-11-03/README.md)
 now pass; [all four runtime sessions](../scalar-map-zip-time-2026-11-03/README.md)
-are audited with timing acceptance still open. Remaining platform checks continue
-in PR #251.
+are audited with timing acceptance still open. All nine platform jobs and documentation now pass, with every full/target log
+audited in PR #251.
 
 ## First native attempt
 
@@ -132,6 +132,9 @@ has the same expected Homebrew notice):
 | Windows ARM64 | 125770099313 | [57 logs](platforms/windows-arm-targets.zip) |
 | Windows AMD64 | 125770099451 | [57 logs](platforms/windows-amd-targets.zip) |
 | macOS AMD64 regular | 125770099310 | [131 logs](platforms/mac-amd-targets.zip); OpenSSL 3.6.3 already-installed notice only |
+| macOS AMD64 ownership | 125770099197 | [126 logs](platforms/mac-amd-ownership-targets.zip); same expected OpenSSL notice |
 
 Full logs and source/digest-verified artifact identities are retained beside each
-archive. Eight of nine production jobs pass; macOS AMD64 ownership remains running.
+archive. All nine production jobs and documentation pass on the exact merged source.
+[Final gate identities](platforms/final-gates.json), [benchmark log](platforms/bench-job.log.gz)
+and [documentation log](platforms/docs-job.log.gz) close this platform verification.

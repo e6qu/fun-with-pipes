@@ -1,0 +1,486 @@
+{
+  "source": "3be9479c4150d7aae5695d7f7aa4ce3f84d0f738",
+  "baselineSource": "da510f18b089c3db5527466b349fec0f2f3ee9ef",
+  "cases": [
+    {
+      "machine": "aarch64",
+      "case": "3-0-current-O1",
+      "baselineBinaryBytes": 79368,
+      "binaryBytes": 79320,
+      "baselineTextBytes": 35324,
+      "textBytes": 34732,
+      "baselineLargestReportedFrame": 704,
+      "largestReportedFrame": 704
+    },
+    {
+      "machine": "aarch64",
+      "case": "3-0-current-O2",
+      "baselineBinaryBytes": 78912,
+      "binaryBytes": 78832,
+      "baselineTextBytes": 34844,
+      "textBytes": 34876,
+      "baselineLargestReportedFrame": 704,
+      "largestReportedFrame": 704
+    },
+    {
+      "machine": "aarch64",
+      "case": "3-0-history-O1",
+      "baselineBinaryBytes": 145408,
+      "binaryBytes": 145368,
+      "baselineTextBytes": 38412,
+      "textBytes": 37820,
+      "baselineLargestReportedFrame": 704,
+      "largestReportedFrame": 704
+    },
+    {
+      "machine": "aarch64",
+      "case": "3-0-history-O2",
+      "baselineBinaryBytes": 79432,
+      "binaryBytes": 144888,
+      "baselineTextBytes": 37564,
+      "textBytes": 37644,
+      "baselineLargestReportedFrame": 704,
+      "largestReportedFrame": 704
+    },
+    {
+      "machine": "aarch64",
+      "case": "3-1-current-O1",
+      "baselineBinaryBytes": 79440,
+      "binaryBytes": 79400,
+      "baselineTextBytes": 36636,
+      "textBytes": 36044,
+      "baselineLargestReportedFrame": 704,
+      "largestReportedFrame": 704
+    },
+    {
+      "machine": "aarch64",
+      "case": "3-1-current-O2",
+      "baselineBinaryBytes": 78984,
+      "binaryBytes": 78904,
+      "baselineTextBytes": 36076,
+      "textBytes": 36108,
+      "baselineLargestReportedFrame": 704,
+      "largestReportedFrame": 704
+    },
+    {
+      "machine": "aarch64",
+      "case": "3-1-history-O1",
+      "baselineBinaryBytes": 145408,
+      "binaryBytes": 145368,
+      "baselineTextBytes": 38460,
+      "textBytes": 37868,
+      "baselineLargestReportedFrame": 704,
+      "largestReportedFrame": 704
+    },
+    {
+      "machine": "aarch64",
+      "case": "3-1-history-O2",
+      "baselineBinaryBytes": 144968,
+      "binaryBytes": 144888,
+      "baselineTextBytes": 37612,
+      "textBytes": 37692,
+      "baselineLargestReportedFrame": 704,
+      "largestReportedFrame": 704
+    },
+    {
+      "machine": "aarch64",
+      "case": "3-199-current-O1",
+      "baselineBinaryBytes": 79440,
+      "binaryBytes": 79400,
+      "baselineTextBytes": 36636,
+      "textBytes": 36044,
+      "baselineLargestReportedFrame": 704,
+      "largestReportedFrame": 704
+    },
+    {
+      "machine": "aarch64",
+      "case": "3-199-current-O2",
+      "baselineBinaryBytes": 78984,
+      "binaryBytes": 78904,
+      "baselineTextBytes": 36364,
+      "textBytes": 36396,
+      "baselineLargestReportedFrame": 704,
+      "largestReportedFrame": 704
+    },
+    {
+      "machine": "aarch64",
+      "case": "3-199-history-O1",
+      "baselineBinaryBytes": 145408,
+      "binaryBytes": 145368,
+      "baselineTextBytes": 38492,
+      "textBytes": 37900,
+      "baselineLargestReportedFrame": 704,
+      "largestReportedFrame": 704
+    },
+    {
+      "machine": "aarch64",
+      "case": "3-199-history-O2",
+      "baselineBinaryBytes": 144968,
+      "binaryBytes": 144888,
+      "baselineTextBytes": 37644,
+      "textBytes": 37708,
+      "baselineLargestReportedFrame": 704,
+      "largestReportedFrame": 704
+    },
+    {
+      "machine": "aarch64",
+      "case": "3-1999-current-O1",
+      "baselineBinaryBytes": 79440,
+      "binaryBytes": 79400,
+      "baselineTextBytes": 36636,
+      "textBytes": 36044,
+      "baselineLargestReportedFrame": 704,
+      "largestReportedFrame": 704
+    },
+    {
+      "machine": "aarch64",
+      "case": "3-1999-current-O2",
+      "baselineBinaryBytes": 78984,
+      "binaryBytes": 78904,
+      "baselineTextBytes": 36364,
+      "textBytes": 36396,
+      "baselineLargestReportedFrame": 704,
+      "largestReportedFrame": 704
+    },
+    {
+      "machine": "aarch64",
+      "case": "3-1999-history-O1",
+      "baselineBinaryBytes": 145408,
+      "binaryBytes": 145368,
+      "baselineTextBytes": 38492,
+      "textBytes": 37900,
+      "baselineLargestReportedFrame": 704,
+      "largestReportedFrame": 704
+    },
+    {
+      "machine": "aarch64",
+      "case": "3-1999-history-O2",
+      "baselineBinaryBytes": 144968,
+      "binaryBytes": 144888,
+      "baselineTextBytes": 37644,
+      "textBytes": 37708,
+      "baselineLargestReportedFrame": 704,
+      "largestReportedFrame": 704
+    },
+    {
+      "machine": "aarch64",
+      "case": "33-199-current-O1",
+      "baselineBinaryBytes": 145000,
+      "binaryBytes": 144960,
+      "baselineTextBytes": 42572,
+      "textBytes": 41964,
+      "baselineLargestReportedFrame": 784,
+      "largestReportedFrame": 784
+    },
+    {
+      "machine": "aarch64",
+      "case": "33-199-current-O2",
+      "baselineBinaryBytes": 144544,
+      "binaryBytes": 144472,
+      "baselineTextBytes": 41388,
+      "textBytes": 41052,
+      "baselineLargestReportedFrame": 816,
+      "largestReportedFrame": 816
+    },
+    {
+      "machine": "aarch64",
+      "case": "33-199-history-O1",
+      "baselineBinaryBytes": 145456,
+      "binaryBytes": 145392,
+      "baselineTextBytes": 48348,
+      "textBytes": 43644,
+      "baselineLargestReportedFrame": 720,
+      "largestReportedFrame": 720
+    },
+    {
+      "machine": "aarch64",
+      "case": "33-199-history-O2",
+      "baselineBinaryBytes": 144992,
+      "binaryBytes": 144920,
+      "baselineTextBytes": 42700,
+      "textBytes": 42380,
+      "baselineLargestReportedFrame": 736,
+      "largestReportedFrame": 736
+    },
+    {
+      "machine": "aarch64",
+      "case": "129-199-current-O1",
+      "baselineBinaryBytes": 145240,
+      "binaryBytes": 145192,
+      "baselineTextBytes": 46972,
+      "textBytes": 46380,
+      "baselineLargestReportedFrame": 2192,
+      "largestReportedFrame": 2192
+    },
+    {
+      "machine": "aarch64",
+      "case": "129-199-current-O2",
+      "baselineBinaryBytes": 144640,
+      "binaryBytes": 144560,
+      "baselineTextBytes": 44988,
+      "textBytes": 44732,
+      "baselineLargestReportedFrame": 2160,
+      "largestReportedFrame": 2160
+    },
+    {
+      "machine": "aarch64",
+      "case": "129-199-history-O1",
+      "baselineBinaryBytes": 145648,
+      "binaryBytes": 145608,
+      "baselineTextBytes": 48556,
+      "textBytes": 47964,
+      "baselineLargestReportedFrame": 2112,
+      "largestReportedFrame": 2112
+    },
+    {
+      "machine": "aarch64",
+      "case": "129-199-history-O2",
+      "baselineBinaryBytes": 145032,
+      "binaryBytes": 144952,
+      "baselineTextBytes": 45900,
+      "textBytes": 45580,
+      "baselineLargestReportedFrame": 2256,
+      "largestReportedFrame": 2256
+    },
+    {
+      "machine": "x86_64",
+      "case": "3-0-current-O1",
+      "baselineBinaryBytes": 77784,
+      "binaryBytes": 77696,
+      "baselineTextBytes": 33026,
+      "textBytes": 32226,
+      "baselineLargestReportedFrame": 688,
+      "largestReportedFrame": 688
+    },
+    {
+      "machine": "x86_64",
+      "case": "3-0-current-O2",
+      "baselineBinaryBytes": 81464,
+      "binaryBytes": 81392,
+      "baselineTextBytes": 36482,
+      "textBytes": 36402,
+      "baselineLargestReportedFrame": 720,
+      "largestReportedFrame": 720
+    },
+    {
+      "machine": "x86_64",
+      "case": "3-0-history-O1",
+      "baselineBinaryBytes": 82408,
+      "binaryBytes": 82328,
+      "baselineTextBytes": 35810,
+      "textBytes": 35074,
+      "baselineLargestReportedFrame": 688,
+      "largestReportedFrame": 688
+    },
+    {
+      "machine": "x86_64",
+      "case": "3-0-history-O2",
+      "baselineBinaryBytes": 86136,
+      "binaryBytes": 86064,
+      "baselineTextBytes": 39330,
+      "textBytes": 39250,
+      "baselineLargestReportedFrame": 720,
+      "largestReportedFrame": 720
+    },
+    {
+      "machine": "x86_64",
+      "case": "3-1-current-O1",
+      "baselineBinaryBytes": 77856,
+      "binaryBytes": 77776,
+      "baselineTextBytes": 34530,
+      "textBytes": 33762,
+      "baselineLargestReportedFrame": 688,
+      "largestReportedFrame": 688
+    },
+    {
+      "machine": "x86_64",
+      "case": "3-1-current-O2",
+      "baselineBinaryBytes": 81544,
+      "binaryBytes": 81464,
+      "baselineTextBytes": 37986,
+      "textBytes": 37890,
+      "baselineLargestReportedFrame": 720,
+      "largestReportedFrame": 720
+    },
+    {
+      "machine": "x86_64",
+      "case": "3-1-history-O1",
+      "baselineBinaryBytes": 82408,
+      "binaryBytes": 82328,
+      "baselineTextBytes": 35874,
+      "textBytes": 35138,
+      "baselineLargestReportedFrame": 688,
+      "largestReportedFrame": 688
+    },
+    {
+      "machine": "x86_64",
+      "case": "3-1-history-O2",
+      "baselineBinaryBytes": 86136,
+      "binaryBytes": 86064,
+      "baselineTextBytes": 39298,
+      "textBytes": 39298,
+      "baselineLargestReportedFrame": 720,
+      "largestReportedFrame": 720
+    },
+    {
+      "machine": "x86_64",
+      "case": "3-199-current-O1",
+      "baselineBinaryBytes": 77856,
+      "binaryBytes": 77776,
+      "baselineTextBytes": 34594,
+      "textBytes": 33826,
+      "baselineLargestReportedFrame": 688,
+      "largestReportedFrame": 688
+    },
+    {
+      "machine": "x86_64",
+      "case": "3-199-current-O2",
+      "baselineBinaryBytes": 81544,
+      "binaryBytes": 81464,
+      "baselineTextBytes": 38226,
+      "textBytes": 38162,
+      "baselineLargestReportedFrame": 720,
+      "largestReportedFrame": 720
+    },
+    {
+      "machine": "x86_64",
+      "case": "3-199-history-O1",
+      "baselineBinaryBytes": 82408,
+      "binaryBytes": 82328,
+      "baselineTextBytes": 35906,
+      "textBytes": 35170,
+      "baselineLargestReportedFrame": 688,
+      "largestReportedFrame": 688
+    },
+    {
+      "machine": "x86_64",
+      "case": "3-199-history-O2",
+      "baselineBinaryBytes": 86136,
+      "binaryBytes": 86064,
+      "baselineTextBytes": 39346,
+      "textBytes": 39314,
+      "baselineLargestReportedFrame": 720,
+      "largestReportedFrame": 720
+    },
+    {
+      "machine": "x86_64",
+      "case": "3-1999-current-O1",
+      "baselineBinaryBytes": 77856,
+      "binaryBytes": 77776,
+      "baselineTextBytes": 34594,
+      "textBytes": 33826,
+      "baselineLargestReportedFrame": 688,
+      "largestReportedFrame": 688
+    },
+    {
+      "machine": "x86_64",
+      "case": "3-1999-current-O2",
+      "baselineBinaryBytes": 81544,
+      "binaryBytes": 81464,
+      "baselineTextBytes": 38226,
+      "textBytes": 38162,
+      "baselineLargestReportedFrame": 720,
+      "largestReportedFrame": 720
+    },
+    {
+      "machine": "x86_64",
+      "case": "3-1999-history-O1",
+      "baselineBinaryBytes": 82408,
+      "binaryBytes": 82328,
+      "baselineTextBytes": 35906,
+      "textBytes": 35170,
+      "baselineLargestReportedFrame": 688,
+      "largestReportedFrame": 688
+    },
+    {
+      "machine": "x86_64",
+      "case": "3-1999-history-O2",
+      "baselineBinaryBytes": 86136,
+      "binaryBytes": 86064,
+      "baselineTextBytes": 39346,
+      "textBytes": 39314,
+      "baselineLargestReportedFrame": 720,
+      "largestReportedFrame": 720
+    },
+    {
+      "machine": "x86_64",
+      "case": "33-199-current-O1",
+      "baselineBinaryBytes": 86072,
+      "binaryBytes": 85992,
+      "baselineTextBytes": 40194,
+      "textBytes": 39458,
+      "baselineLargestReportedFrame": 752,
+      "largestReportedFrame": 752
+    },
+    {
+      "machine": "x86_64",
+      "case": "33-199-current-O2",
+      "baselineBinaryBytes": 85712,
+      "binaryBytes": 85632,
+      "baselineTextBytes": 43042,
+      "textBytes": 42530,
+      "baselineLargestReportedFrame": 752,
+      "largestReportedFrame": 752
+    },
+    {
+      "machine": "x86_64",
+      "case": "33-199-history-O1",
+      "baselineBinaryBytes": 86528,
+      "binaryBytes": 86448,
+      "baselineTextBytes": 41602,
+      "textBytes": 40866,
+      "baselineLargestReportedFrame": 704,
+      "largestReportedFrame": 704
+    },
+    {
+      "machine": "x86_64",
+      "case": "33-199-history-O2",
+      "baselineBinaryBytes": 90272,
+      "binaryBytes": 90192,
+      "baselineTextBytes": 44642,
+      "textBytes": 44162,
+      "baselineLargestReportedFrame": 720,
+      "largestReportedFrame": 720
+    },
+    {
+      "machine": "x86_64",
+      "case": "129-199-current-O1",
+      "baselineBinaryBytes": 90408,
+      "binaryBytes": 90320,
+      "baselineTextBytes": 45858,
+      "textBytes": 45122,
+      "baselineLargestReportedFrame": 2144,
+      "largestReportedFrame": 2144
+    },
+    {
+      "machine": "x86_64",
+      "case": "129-199-current-O2",
+      "baselineBinaryBytes": 94016,
+      "binaryBytes": 93936,
+      "baselineTextBytes": 48242,
+      "textBytes": 47762,
+      "baselineLargestReportedFrame": 2160,
+      "largestReportedFrame": 2160
+    },
+    {
+      "machine": "x86_64",
+      "case": "129-199-history-O1",
+      "baselineBinaryBytes": 90840,
+      "binaryBytes": 90760,
+      "baselineTextBytes": 47234,
+      "textBytes": 46498,
+      "baselineLargestReportedFrame": 2112,
+      "largestReportedFrame": 2112
+    },
+    {
+      "machine": "x86_64",
+      "case": "129-199-history-O2",
+      "baselineBinaryBytes": 94400,
+      "binaryBytes": 94328,
+      "baselineTextBytes": 49042,
+      "textBytes": 48562,
+      "baselineLargestReportedFrame": 2240,
+      "largestReportedFrame": 2240
+    }
+  ]
+}

@@ -3,8 +3,9 @@
 **Status:** contract frozen at `e86ee4cc` before edits. Corrected native checks
 and all 96 allocation observations pass at `3be9479c` in PR #251.
 [Verification and retained first-attempt failures](range-zip-storage-2026-11-03/README.md).
-[Compiler costs](range-zip-analysis-2026-11-03/README.md) pass; runtime measurements
-and full-platform acceptance remain pending.
+[Compiler costs](range-zip-analysis-2026-11-03/README.md) pass.
+[Runtime measurements](range-zip-time-2026-11-03/README.md) and audits are complete
+with small-case timing goals open. Final platform acceptance remains pending.
 This is the next storage change after the scalar-map buffer. Keep its reference
 separate from the completed [scalar-buffer comparison](scalar-map-zip-time-2026-11-03/README.md).
 

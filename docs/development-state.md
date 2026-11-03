@@ -1,162 +1,131 @@
 # Current work
 
-**Next:** monitor range runtime sessions `41603246961` (ARM64) and
-`41603882629` (replacement AMD64), frozen at `3be9479c`; audit all complete
-outcomes and retain any missed limit. Replace only hosts rejected before measurement. Finish the
-merged-head macOS AMD64 ownership gate, then prepare the final nine-job matrix after
-all reports and any repairs are included.
+**Next:** run and monitor the nine final-head production jobs plus docs for
+PR #251. Audit every failed step and completed target before any repair push.
+When all pass, squash-merge with one explicit subject ≤80 characters and an empty
+body; verify the message and tested-tree equality. Keep the missed timing goals
+open and use the residual allocation census to select the next substantial task.
 
-## Checkout and source identities
+## Checkout and sources
 
 - Worktree `/private/tmp/fwp-array-consumption`, branch `scalar-buffer-performance`.
-  Primary checkout untouched. Draft [PR #251](https://github.com/e6qu/fun-with-pipes/pull/251)
-  bundles scalar-buffer reports, private index-list removal and CI repairs.
-- User merged #250 as `a8a5568d5c1ee791f872de382c6d7e850cec09df` before full gates.
-  Its tree `ec6935165379492d07cb236d0f8f05a75f8b6fd9` equals focused-tested
-  `da510f18b089c3db5527466b349fec0f2f3ee9ef`. One-line squash verified.
-- Scalar measurements remain at `roadmap/scalar-map-zip-measurement-2026-11-03`
-  (`da510f18`). No production edits or timing-limit changes enter that comparison.
-- Range contract: `e86ee4ccc0f505b31e7421c9faaa45e7a0d104ba`, tag
-  `roadmap/range-zip-protocol-2026-11-03`. Failed attempt: `aeae4afd`, retained
-  as `roadmap/range-zip-attempt-2026-11-03`. Metadata/routes published at `5d6750b6`.
+  Primary checkout untouched. [PR #251](https://github.com/e6qu/fun-with-pipes/pull/251).
+- The final delivery test revision is tagged
+  `roadmap/range-zip-final-checks-2026-11-03`. Resolve that tag / PR head for the
+  exact commit. Compiler sources remain identical to the focused-tested revision.
+- Range measurement source `3be9479c4150d7aae5695d7f7aa4ce3f84d0f738`, tag
+  `roadmap/range-zip-measurement-2026-11-03`. Preserve it for every comparison.
+- Contract `e86ee4ccc0f505b31e7421c9faaa45e7a0d104ba`, tag
+  `roadmap/range-zip-protocol-2026-11-03`; failed attempt `aeae4afd`, tag
+  `roadmap/range-zip-attempt-2026-11-03`. Reports retain both attempts.
+- Scalar measurement tag `roadmap/scalar-map-zip-measurement-2026-11-03` points
+  to `da510f18b089c3db5527466b349fec0f2f3ee9ef`. Its tree
+  `ec6935165379492d07cb236d0f8f05a75f8b6fd9` equals user-merged #250 source
+  `a8a5568d5c1ee791f872de382c6d7e850cec09df`; one-line squash verified.
 
 ## Roadmap status
 
 | Step | Status | Remaining work |
 |---|---|---|
-| 1 | In progress | Eight of nine pass; audit the remaining merged-head gates and repair failures |
-| 2 | Verified | Measurements and raw audits complete; timing acceptance remains open |
-| 3 | Verified | Contract and reference published; keep frozen bounds unchanged |
-| 4 | In progress | Corrected native/count checks pass; measurements running, nine final platform jobs remain |
+| 1 | Verified | All nine merged-source production jobs and docs pass; all logs audited |
+| 2 | Verified | Scalar measurements/audits complete; missed timing goals remain open |
+| 3 | Verified | Range contract and isolated reference published before measurement |
+| 4 | In progress | Native/count/compiler checks and runtime audits complete; final-head gates and merge remain |
 
-## Range verification and active measurements
+## Current range results
 
-[Full first-attempt report](measurements/range-zip-storage-2026-11-03/README.md).
-Run `41596501915`: ARM64 `125785012603`, AMD64 `125785012332`. Both fail the same
-four steps: GCC/Clang cleanup fixture, count comparison and independent count
-assertion. All completed targets and full logs were audited before repair.
+[Native verification, failed attempt and exact storage results](measurements/range-zip-storage-2026-11-03/README.md).
+Corrected run `41601233570`: ARM64 `125800213798`, AMD64 `125800214058`, both pass.
+Docs `41601188883` / `125800044359` pass. All full/target logs are audited.
 
-- **Missed inline ranges:** typed IR contains the range directly inside zip's
-  argument, not a named binding. The first pass selected only named producers,
-  so all derivative counts were unchanged. Repair handles direct arguments at
-  their original evaluation position; both-slot IR and effect-order regressions
-  added. Predicted savings stay 25,870 requests / 823,064 bytes at 129/199.
-- **Persistent test fault:** the injected record failure stayed armed during the
-  next case's input setup. Faults are now one-shot and reset before setup.
-  No production runtime change was needed for this fixture defect.
-- Each host passes 16 unit tests and 35 integration executions, with two fixture
-  executions failing. All 96 count observations preserve baseline outputs,
-  work and storage; each host's 80 failed savings assertions have the same cause.
-  Each host has 118 clean C compilation logs.
-- **Corrected run `41601233570` passes** at `3be9479c`: ARM64 `125800213798`,
-  AMD64 `125800214058`; docs `41601188883` / `125800044359` also pass. All full
-  and target logs audited. Both hosts pass 17 unit / 37 integration executions,
-  32 cleanup outcomes, 204 image architecture checks and all 48 count observations.
-- All 96 counts agree across hosts. Largest current-only solve: 131,073 → 105,203
-  requests; 4,559,078 → 3,736,014 requested bytes; retains remain 995; managed
-  peak falls 17,824 → 14,976 bytes; final storage stays zero. History saves the
-  same requests/bytes. Each host has 118 clean C compilation logs.
-- Frozen measurement tag `roadmap/range-zip-measurement-2026-11-03` points to
-  full source `3be9479c4150d7aae5695d7f7aa4ce3f84d0f738`. Compiler run
-  `41603242667` passes on both hosts; all 480 commands, exact references, images,
-  RSS and full logs are independently audited. Maximum time overhead 0.17%,
-  peak-RSS overhead 0.28%, identical-copy variation 1.08%; all limits pass.
-  [Report](measurements/range-zip-analysis-2026-11-03/README.md).
-  Runtime run `41603246961` uses passing correctness run `41601233570` as `evidence_run`.
-  Use `range-zip-report` to audit complete runtime sessions and rejected hosts.
-  Do not change sources, inputs, driver or limits; do not repeat completed timing
-  for a better outcome. Speed remains unmeasured for this change.
-- Original AMD64 timing jobs `125806772756` / `125806772669` rejected EPYC 9V74
-  before builds/timing. Host records, job metadata, digests and full logs are
-  audited and retained. Replacement run `41603882629` requests both AMD64
-  sessions on the same frozen source. Both replacements qualified and are now
-  measuring: session 1 `125808854223`, session 2 `125808854159`. Original ARM64
-  sessions `125806772559` / `125806772536` are also measuring.
-  [Runtime status and rejected hosts](measurements/range-zip-time-2026-11-03/README.md).
+- Each host: 17 unit / 37 integration executions, 32 cleanup outcomes and 204
+  native image architecture checks. All 96 allocation observations agree;
+  each host has 118 clean C compilation logs.
+- Largest current-only solve: 131,073 → 105,203 requests; 4,559,078 → 3,736,014
+  requested bytes; retains remain 995; managed peak 17,824 → 14,976 bytes;
+  final storage zero. History saves the same requests/bytes.
+- First attempt missed inline range arguments and left test faults armed during
+  the next case's setup. Both causes are repaired. No failed evidence was removed.
+- [Compiler costs](measurements/range-zip-analysis-2026-11-03/README.md): run
+  `41603242667` passes; ARM64 `125806753941`, AMD64 `125806753716`. All 480 commands,
+  exact references, image/file hashes, RSS and full logs independently audited.
+  Maximum time increase 0.17%, peak-RSS increase 0.28%, copy variation 1.08%.
+- Code/frame figures and four remaining per-coordinate allocation groups are
+  recorded in the native report. They guide later investigation; no additional
+  implementation is selected while this candidate is being measured.
 
-## Completed scalar-buffer evidence
+## Completed runtime comparison
 
-- Focused `41578060081`: both native hosts and docs pass; all logs audited.
-  All 96 count predictions match. Largest current-only solve: 156,943 → 131,073
-  requests, 5,382,142 → 4,559,078 requested bytes; retains 995, managed peak
-  17,824 bytes, final storage zero. History saves the same requests/bytes.
-  [Records](measurements/temporary-list-storage-2026-11-03/README.md).
-- Compiler `41591971248`: both hosts pass. All 480 commands, references, images,
-  source hashes, RSS and summaries audited. Maximum elapsed overhead 1.15%, RSS
-  overhead 0.32%, copy variation 1.64%; all limits pass.
-  [Report](measurements/scalar-map-zip-analysis-2026-11-03/README.md).
-- Runtime: four qualified sessions complete. ARM64 original `41591978166`;
-  AMD64 session 2 `41593285140`, session 1 `41595396878`. Raw audits
-  `41593988021`, `41595559659`, `41597796416` pass; all source/reference hashes,
-  5,336 raw-file inventory entries and reported limits independently reconciled.
-  [Complete report](measurements/scalar-map-zip-time-2026-11-03/README.md).
-- Timing goals stay open: ARM64 zero-update current is 3.32% slower in both
-  sessions; both architectures miss small-case speed limits. Large cases are
-  about 7–8.5% faster. All identical-copy controls pass. Saved zero branch,
-  repeated-solve main and outer loop are textually unchanged; the slowdown's
-  cause remains unknown. Allocation gains do not resolve timing acceptance.
-- Every rejected AMD64 host was retained separately; replacements ran only
-  after rejection before building/timing. No additional scalar run is needed.
+[Report and retained host rejections](measurements/range-zip-time-2026-11-03/README.md).
+All runs use `3be9479c` and passing correctness run `41601233570` as prerequisite.
 
-## Merged-head production gates
+- **ARM64 complete:** original run `41603246961`, sessions 1 `125806772559` and
+  2 `125806772536`. Only the 3/199 timing limits fail: session 1 current/history
+  ratios 0.953963 / 0.956425, session 2 current 0.950161, against ≤0.95.
+  Larger cases take about 9.4–10.0% less time; all copy controls pass.
+- **ARM64 audit complete:** `41605943666` / `125815667922` passes. Both downloaded
+  archive digests and the full audit log are checked. Report/log digests, source
+  hashes, exact reference and 2,668 raw-file inventory entries reconcile locally.
+- **AMD64 complete:** replacement run `41603882629`, session 1 `125808854223`,
+  session 2 `125808854159`. Both qualified on EPYC 7763. Both miss 5% on 3/199
+  and 3/1999 history (3.97–4.92% less time); all other budgets pass. Independent
+  audit `41607485480` / `125820866330` passes. The two downloaded archives, full
+  audit log, report/source/reference hashes and 2,668-file inventories reconcile.
+  Larger AMD64 cases take 7.1–8.8% less time.
+  Original jobs `125806772756` / `125806772669` rejected EPYC 9V74 before builds
+  or timing; host/job records, digests, skipped work and full logs are retained.
+- All four sessions share identical source hashes and one exact reference patch;
+  all 5,336 raw-file inventories reconcile. The maximum reported frame growth
+  is 112 bytes, within 128; text changes range −656 to +1,008 bytes. Runtime RSS
+  is reported separately as individual process observations, without treating
+  allocator savings as proof of a whole-process memory reduction.
+- Accepted policy: retain verified reductions and leave timing misses open.
+  Do not relax limits or rerun completed timings for a pass. Old scalar-buffer,
+  callback-owner and other PLAN.md timing goals remain open independently.
 
-Run `41591834975`, source `a8a5568d`; do not cancel as redundant.
+## Completed predecessor verification
 
-| Gate | Job | Status / audit |
-|---|---:|---|
-| C/Rust benchmarks | 125770098958 | Pass; full log clean, 21 images and memory controls |
-| macOS ARM64 regular | 125770099192 | Pass; 131 target logs clean; expected Homebrew notice only |
-| macOS ARM64 ownership | 125770099175 | Pass; 126 target logs clean; expected Homebrew notice only |
-| Linux AMD64 | 125770099249 | Pass; 257 target logs and full log clean |
-| Windows ARM64 | 125770099313 | Pass; 57 target logs and full log clean |
-| Linux ARM64 | 125770099083 | Pass; 257 target logs and full log clean |
-| macOS AMD64 regular | 125770099310 | Pass; 131 clean target logs; expected Homebrew OpenSSL 3.6.3 notice |
-| macOS AMD64 ownership | 125770099197 | Running |
-| Windows AMD64 | 125770099451 | Pass; 57 target logs and full log clean |
+#250 run `41591834975` passes all nine production jobs at `a8a5568d`; docs
+`41591834978` pass. Every full/target log is audited. macOS notices only confirm
+OpenSSL is already installed (ARM64 3.5.9, AMD64 3.6.3).
+[Exact-source gates and logs](measurements/temporary-list-storage-2026-11-03/platforms/final-gates.json).
 
-Compact logs and verified artifact identities:
-[platform records](measurements/temporary-list-storage-2026-11-03/platforms/).
-Merged docs `41591834978` pass. PR #251 metadata docs `41597725595` also pass;
-full log has only the intentional runner-failure controls. Corrected-source
-docs `41601188883` also pass and are audited. Report-head docs `41603477962` /
-`125807516382` pass with only the same expected runner diagnostics. Final-head
-production gates for the repaired range implementation have not started.
+Scalar-buffer [compiler costs](measurements/scalar-map-zip-analysis-2026-11-03/README.md)
+and [four runtime sessions](measurements/scalar-map-zip-time-2026-11-03/README.md)
+are complete and audited. Compiler limits pass; small-case timing goals and
+ARM64's 3.32% zero-update slowdown remain open. The saved zero branch/main/loop
+are unchanged; its cause is not established. Do not infer a safety bug or resolution.
 
-## Local checks and retained files
+## Local checks and resume files
 
-All checks use `scripts/local-guard.py`; no local full build, suite or benchmark.
+All substantive checks used `scripts/local-guard.py`; no local full build, suite
+or benchmark. Formatting, reference isolation, inventory (394 declarations,
+384 symbols, no unreviewed symbols) and roadmap pass. Latest roadmap check:
+232 link sets, 106 preparation anchors and four steps (3.02s).
 
-- Repaired native audit: both hosts pass 54 unit/integration executions and
-  32 cleanup outcomes; 204 image headers per host checked (0.24/0.25s). Reader
-  initially expected an absent source.txt; corrected to actual artifact source
-  metadata and digest, without changing any tested output or limit.
-- Exact failed C fixture replay: Apple Clang 17, production O1/O2; two ordinary
-  exits 0, six omitted-cleanup controls exit 90, empty stderr (3.46s).
-- Matching merged native compiler emits the diagnostic typed IR (0.49s);
-  inline-order interpreter example passes (0.26s). No local compiler build.
-- Rust formatting passes (2.02s). Both failed-attempt audits pass (1.22s).
-  New completed platform log/digest audits pass (0.13–0.14s).
-  Corrected 96-count cross-host audit and full-log review pass (0.50s). Range
-  compiler audits pass (2.48s ARM64, 2.71s AMD64); report/log audit passes (0.13s).
-  Residual-site audit passes after fixing an accidentally negated source assertion;
-  four remaining groups each cost 25,671 allocations / 616,104 bytes. This is
-  evidence for later selection, not a new implemented or accepted optimization.
-- Prepared routes already passed reference isolation, 16 allocation controls,
-  15 timing-budget controls, seven compiler-schedule controls, 14 archive controls
-  and workflow lint. Primitive inventory: 394 declarations, 384 symbols,
-  no unreviewed symbols. Repaired reference controls pass (0.13s); inventory passes (1.09s).
-  Roadmap audit initially rejected descriptive status labels; fixed to the allowed
-  labels and then passed: 230 link sets, 106 anchors, four steps (3.00s).
+- Corrected C fixture replay: Apple Clang 17 O1/O2; ordinary exits 0, six
+  omitted-cleanup controls exit 90, empty stderr (3.46s). Matching merged compiler
+  IR diagnostic (0.49s) and inline-order interpreter example (0.26s) pass.
+- Corrected native audits: 0.24/0.25s; cross-host count/full-log audit: 0.50s.
+  Compiler audits: 2.48/2.71s; runtime-summary audits: 0.61/0.63s; platform audits:
+  0.13–0.14s. All 48 native cases preserve their largest reported frame (0.25s).
+- Local reader repairs: use actual artifact source metadata instead of assuming
+  a source.txt; correct a negated source assertion; account for the exact inspected
+  Homebrew notice. These change no tested output, experiment or acceptance limit.
+- Latest published report-head docs `41605765870` / `125815070690` pass; the full
+  log contains only intentional runner-failure controls. Final delivery docs must
+  pass again on the final head. Four-session table/frame audit passes (0.50s),
+  separate RSS summary passes (0.38s), and final full-log audit passes (0.13s).
 
-Raw archives, full logs and audit helpers live under `/private/tmp/fwp-*`:
-`fwp-range-{arm,amd}-attempt1.zip`, `fwp-range-{arm,amd}-counts-attempt1.zip`,
-`fwp-audit-range-attempt1.py`, `fwp-range-diagnostic.{fwp,ir,c}`,
-`fwp-range-fixed-probe.c`, `fwp-replay-range.py`, `fwp-complete-scalar-report.py`,
-`fwp-audit-250-platforms.py`, `fwp-250-production-artifacts.json`.
-Reports retain hashes and original artifact URLs; preserve failed evidence.
+Helpers and raw evidence are under `/private/tmp/fwp-*`. Key helpers:
+`fwp-audit-range-runtime-summary.py LABEL` (`arm` / `amd`; matching
+`fwp-range-LABEL-retention-*` files), `fwp-audit-range-analysis.py`,
+`fwp-audit-range-repaired-counts.py`, `fwp-retain-range-repaired-controls.py`,
+`fwp-retain-range-rejection.py`, `fwp-finalize-250-gates.py`.
+Final report helpers: `fwp-finish-range-runtime-report.py` and
+`fwp-range-memory-summary.py`. The report is complete; do not rerun measurements.
 
-Last disk check: about 65 GiB free, zero target data. Keep 64 GiB free, generated
-target data below 2 GiB, sampled RSS below 1 GiB and the 180s guard deadline.
-Move refused work to runners; never bypass limits. Final merge requires all nine
-exact-head production jobs plus docs, audited logs, explicit one-line squash
-subject ≤80 characters, empty body/trailers and verified message/tree equality.
+Keep 64 GiB free disk, generated targets below 2 GiB, sampled RSS below 1 GiB and
+180s. Last free space about 65 GiB; no target data. Never bypass guard limits.
+Final merge needs nine exact-head production jobs plus docs, all logs audited,
+one-line squash ≤80 characters, empty body/trailers and verified message/tree.
