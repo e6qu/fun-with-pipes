@@ -253,6 +253,8 @@ foreign "fwp" bit.shr : U32 -> a -> a where Integer[a]
 foreign "fwp" int.convert : a -> Option[b] where Integer[a], Integer[b]
 foreign "fwp" int.to-float : a -> b where Integer[a], Float[b]
 foreign "fwp" float.to-int : a -> Option[b] where Float[a], Integer[b]
+# Converting to the same float type preserves every bit, including NaN payloads.
+# Converting to a different type rounds to that destination format.
 foreign "fwp" float.convert : a -> b where Float[a], Float[b]
 
 # Floating point. The elementary functions are methods of `Floating`, so

@@ -670,7 +670,15 @@ impl<'p> Interp<'p> {
                     None => Value::nullary(0),
                 })
             }
-            "float.convert" => float_of_quad(&result, a[0].as_quad().unwrap()),
+            "float.convert" => {
+                if params[0] == result {
+                    // A same-format conversion is a bit-preserving identity,
+                    // including signaling NaNs; do not round through F128.
+                    Ok(a.remove(0))
+                } else {
+                    float_of_quad(&result, a[0].as_quad().unwrap())
+                }
+            }
             "sqrt" | "exp" | "ln" | "sin" | "cos" | "tan" | "floor" | "ceil" | "round" | "asin"
             | "acos" | "atan" | "sinh" | "cosh" | "tanh" | "asinh" | "acosh" | "atanh" | "log2"
             | "log10" | "log1p" | "exp2" | "expm1" => {

@@ -277,6 +277,9 @@ bit.shr : U32 -> a -> a where Integer[a]
 int.convert : a -> Option[b] where Integer[a], Integer[b]
 int.to-float : a -> b where Integer[a], Float[b]
 float.to-int : a -> Option[b] where Float[a], Integer[b]
+
+# Converting to the same float type preserves every bit, including NaN payloads.
+# Converting to a different type rounds to that destination format.
 float.convert : a -> b where Float[a], Float[b]
 
 # Floating point. The elementary functions are methods of `Floating`, so

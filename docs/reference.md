@@ -403,7 +403,9 @@ declared type name. An open row means additional fields/effects may be present.
     an integer literal at a float type is its magnitude, rounded once.
     `neg` flips the sign, so `neg 0.0` is `-0.0`. `float.to-int` is `None`
     unless the truncated value fits the integer type exactly.
-    Copies, storage, protocol and ABI bridges preserve float bits. F32/F64
+    Copies, storage, protocol and ABI bridges preserve float bits.
+    `float.convert` also preserves every bit when source and destination types
+    are the same; conversion to a different type retains its rounding rules. F32/F64
     arithmetic NaN payloads/signs are implementation dependent; the other
     [floating formats](float-formats.md) use canonical arithmetic NaNs.
     Optimizations preserve operation/reduction order and exact finite and
