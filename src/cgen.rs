@@ -18,6 +18,7 @@ use crate::value::Value;
 mod field_transfers;
 mod numeric_parameters;
 mod packed_records;
+mod range_zip;
 mod regions;
 mod scalar_map_zip;
 mod scalar_text;
@@ -2587,6 +2588,27 @@ impl Gen<'_> {
             format!("items[i], ARR(l{slot})->d[i]")
         };
         format!("    /* Zip after the complete scalar map; borrow buffer and source list. */\n    size_t count;\n    V *items = fwp_map_items(l{other}, &count);\n    fwp_map_owner owner = {{items, 0, 0, NULL, {drop}}};\n    fwp_cleanup cleanup; fwp_map_protect(&owner, &cleanup);\n    size_t buffered = ARR(l{slot})->len;\n    if (buffered < count) count = buffered;\n    for (size_t i = 0; i < count; i++) {{\n        items[i] = f{callback}({arguments});\n        owner.count++;\n    }}\n    return fwp_map_finish_protected(&owner, &cleanup);\n")
+    }
+
+    fn range_zip(&mut self, callback: FuncId, captures: usize, slot: usize) -> String {
+        assert!(slot < 2);
+        let other = if slot == 0 { 3 } else { 1 };
+        let lo = slot + 1;
+        let hi = lo + 1;
+        let result = self.prog.funcs[callback].ty.params(captures + 2).1.clone();
+        let ops = self.map_ops(&result);
+        let mut arguments = (0..captures)
+            .map(|i| format!("CLO(l0)->a[{i}]"))
+            .collect::<Vec<_>>();
+        for position in 0..2 {
+            arguments.push(if position == slot {
+                "index".into()
+            } else {
+                "items[i]".into()
+            });
+        }
+        let arguments = arguments.join(", ");
+        format!("    /* Generate private range indices; borrow callback and source list. */\n    size_t count;\n    V *items = fwp_map_items(l{other}, &count);\n    fwp_map_owner owner = {{items, 0, 0, {ops}}};\n    fwp_cleanup cleanup; fwp_map_protect(&owner, &cleanup);\n    int64_t lo = (int64_t)l{lo}, hi = (int64_t)l{hi};\n    uint64_t available = hi > lo ? (uint64_t)hi - (uint64_t)lo : 0;\n    if (available < count) count = (size_t)available;\n    for (size_t i = 0; i < count; i++) {{\n        V index = (V)((uint64_t)lo + (uint64_t)i);\n        items[i] = f{callback}({arguments});\n        owner.count++;\n    }}\n    return fwp_map_finish_protected(&owner, &cleanup);\n")
     }
 
     fn packed_record_map(&mut self, id: FuncId) -> String {
@@ -8197,6 +8219,7 @@ static inline __attribute__((always_inline)) int fs{}(fwp_loop_state{step} *st, 
                 | Body::PackedRecordFold { .. }
                 | Body::ScalarBufferMap { .. }
                 | Body::ScalarBufferZip { .. }
+                | Body::RangeZip { .. }
         ) {
             let sym = match &f.body {
                 Body::Prim(s) => s.as_str(),
@@ -8224,6 +8247,13 @@ static inline __attribute__((always_inline)) int fs{}(fwp_loop_state{step} *st, 
             }
         }
         match &f.body {
+            Body::RangeZip {
+                callback,
+                captures,
+                slot,
+            } => {
+                out.push_str(&self.range_zip(*callback, *captures, *slot));
+            }
             Body::ScalarBufferMap { callback } => {
                 out.push_str(&self.scalar_buffer_map(*callback));
             }
@@ -10239,6 +10269,7 @@ fn generate_mode(prog: &Program, mut mode: Mode) -> Result<String, String> {
     };
     let mut numeric_program = packed_program;
     scalar_map_zip::lower(&mut numeric_program);
+    range_zip::lower(&mut numeric_program);
     numeric_parameters::lower(&mut numeric_program, &roots);
     let prog = &numeric_program;
     crate::ir::check_locals(prog)?;

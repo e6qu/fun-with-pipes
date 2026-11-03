@@ -494,10 +494,32 @@ source list is mutated.
 
 The [first native run](measurements/temporary-list-storage-2026-11-03/README.md)
 verifies behavior, cleanup and exact allocation savings on GCC/Clang ARM64/AMD64.
-A unit-test compilation repair, compiler/runtime timings and final platform gates
-remain open. The [frozen contract](measurements/temporary-list-storage.md#selected-storage-change)
+Corrected unit, all-target lint, compiler-cost checks and all nine production
+jobs pass. Runtime timings have recorded misses. The [frozen contract](measurements/temporary-list-storage.md#selected-storage-change)
 and [starting census](measurements/temporary-list-census-2026-11-03/README.md)
 define the comparison.
+
+### Private index ranges consumed by zip
+
+The range consumer being verified in PR #251 keeps two I64 bounds instead of a
+private index list. For example, zip indices `0, 1` with `[10, 20]` to produce
+`[(0, 10), (1, 20)]`; the index list and its scratch copy need not exist.
+
+- Accept a direct range argument or a sole-use named range. Evaluate bounds once
+  at their original position. Generate indices at the sole
+  zip consumer; shared/escaping ranges keep ordinary list storage.
+- Require a known callback with scalar captures/inputs and scalar or flat
+  one/two-field numeric results. Borrow its closure and the other list.
+- Protect completed results, scratch storage and a partially built output list
+  through traps, cancellation and allocation failure.
+- Use unsigned distance/index arithmetic to avoid signed overflow across I64
+  extremes. The other list limits how many indices are generated.
+
+This internal change adds no syntax or public API. See the [frozen contract](measurements/range-zip-storage.md)
+for exact allocation predictions and acceptance checks. Focused GCC/Clang
+checks and all 96 count observations pass on Linux ARM64/AMD64. Compiler-cost
+limits pass; four runtime sessions show larger solves taking 7.1–10.0% less time,
+with small-case timing goals still open. Full-platform validation remains pending.
 
 ### Numeric callback inputs
 

@@ -230,7 +230,8 @@ impl<'p> Interp<'p> {
             Body::PackedRecordMap { .. }
             | Body::PackedRecordFold { .. }
             | Body::ScalarBufferMap { .. }
-            | Body::ScalarBufferZip { .. } => {
+            | Body::ScalarBufferZip { .. }
+            | Body::RangeZip { .. } => {
                 return trap("internal: native buffer body reached interpreter");
             }
         };

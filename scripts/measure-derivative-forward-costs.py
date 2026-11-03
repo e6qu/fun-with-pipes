@@ -62,7 +62,7 @@ def parse_totals(stderr):
 
 def comparison_failures(report, baseline, policy):
     """Apply the selected frozen count limits to every case and storage mode."""
-    assert policy in ('record-zip', 'record-fold', 'packed-records', 'field-owners', 'numeric-inputs', 'constructor-census', 'scalar-map-zip')
+    assert policy in ('record-zip', 'record-fold', 'packed-records', 'field-owners', 'numeric-inputs', 'constructor-census', 'scalar-map-zip', 'range-zip')
     old = baseline['hosts'][report['machine']]['cases']
     assert set(report['cases']) == set(old)
     failures = []
@@ -79,7 +79,7 @@ def comparison_failures(report, baseline, policy):
         elif policy in ('field-owners', 'numeric-inputs'):
             removed = bytes_removed = 0
             retains = pairs * (2 if policy == 'numeric-inputs' else 1)
-        elif policy == 'scalar-map-zip':
+        elif policy in ('scalar-map-zip', 'range-zip'):
             removed = (dimensions + 1) * updates
             bytes_removed = (32 * dimensions + 8) * updates
             retains = 0
@@ -100,9 +100,9 @@ def comparison_failures(report, baseline, policy):
             else:
                 for field, saving in [('requests', removed), ('requestedBytes', bytes_removed),
                                       ('retains', retains)]:
-                    if (current[field] != before[field] - saving if policy == 'scalar-map-zip'
+                    if (current[field] != before[field] - saving if policy in ('scalar-map-zip', 'range-zip')
                             else current[field] > before[field] - saving):
-                        requirement = 'exactly' if policy == 'scalar-map-zip' else 'at least'
+                        requirement = 'exactly' if policy in ('scalar-map-zip', 'range-zip') else 'at least'
                         failures.append(f'{label}: {field} saving {before[field] - current[field]}, expected {requirement} {saving}')
                 if current['peakChargedBytes'] > before['peakChargedBytes']:
                     failures.append(label + ': peak managed charge grew')
@@ -124,7 +124,7 @@ def main():
     parser.add_argument('--source', required=True)
     parser.add_argument('--timeout', required=True, type=int)
     parser.add_argument('--output', required=True, type=Path)
-    parser.add_argument('--comparison', required=True, choices=('baseline', 'record-zip', 'record-fold', 'packed-records', 'field-owners', 'numeric-inputs', 'constructor-census', 'scalar-map-zip'))
+    parser.add_argument('--comparison', required=True, choices=('baseline', 'record-zip', 'record-fold', 'packed-records', 'field-owners', 'numeric-inputs', 'constructor-census', 'scalar-map-zip', 'range-zip'))
     parser.add_argument('--baseline', type=Path)
     args = parser.parse_args()
     assert (args.comparison != 'baseline') == (args.baseline is not None)
@@ -147,7 +147,7 @@ def main():
                   'Ownership sites name generated-C calls. Both retain their exact input C.')
     report['comparison'] = dict(policy=args.comparison,
                                 baselineSource=baseline['source'] if baseline else None)
-    census = args.comparison in ('constructor-census', 'scalar-map-zip')
+    census = args.comparison in ('constructor-census', 'scalar-map-zip', 'range-zip')
     if census:
         report['constructors'] = dict(controls={}, cases={})
 

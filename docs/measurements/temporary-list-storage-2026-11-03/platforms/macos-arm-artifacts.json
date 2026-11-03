@@ -1,0 +1,62 @@
+[
+  {
+    "id": 13212447113,
+    "node_id": "MDg6QXJ0aWZhY3QxMzIxMjQ0NzExMw==",
+    "name": "macos-regular-tests-macos-15",
+    "size_in_bytes": 47760,
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13212447113",
+    "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13212447113/zip",
+    "expired": false,
+    "digest": "sha256:e9569b466e746aa0571c6a516eedb8d61f38b5cd4a486a7b217bf988b72ab388",
+    "created_at": "2026-11-03T07:27:13Z",
+    "updated_at": "2026-11-03T07:27:13Z",
+    "expires_at": "2027-02-01T06:44:51Z",
+    "workflow_run": {
+      "id": 41591834975,
+      "repository_id": 1400763332,
+      "head_repository_id": 1400763332,
+      "head_branch": "main",
+      "head_sha": "a8a5568d5c1ee791f872de382c6d7e850cec09df"
+    }
+  },
+  {
+    "id": 13212440549,
+    "node_id": "MDg6QXJ0aWZhY3QxMzIxMjQ0MDU0OQ==",
+    "name": "native-corpus-log-macos-15",
+    "size_in_bytes": 1849,
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13212440549",
+    "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13212440549/zip",
+    "expired": false,
+    "digest": "sha256:f41c961ac743c5e30222bc0196bcf8949fb5319c0cd708525b32a40ea8c4adaa",
+    "created_at": "2026-11-03T07:18:26Z",
+    "updated_at": "2026-11-03T07:18:26Z",
+    "expires_at": "2027-02-01T06:44:51Z",
+    "workflow_run": {
+      "id": 41591834975,
+      "repository_id": 1400763332,
+      "head_repository_id": 1400763332,
+      "head_branch": "main",
+      "head_sha": "a8a5568d5c1ee791f872de382c6d7e850cec09df"
+    }
+  },
+  {
+    "id": 13211848909,
+    "node_id": "MDg6QXJ0aWZhY3QxMzIxMTg0ODkwOQ==",
+    "name": "ownership-evidence-regular-macOS-ARM64-manifest",
+    "size_in_bytes": 80586,
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13211848909",
+    "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13211848909/zip",
+    "expired": false,
+    "digest": "sha256:3b3282dc0e7543227d99da0fd5d8e76abee8e04c36f3a0a6b2829b0a1756d34c",
+    "created_at": "2026-11-03T07:30:43Z",
+    "updated_at": "2026-11-03T07:30:43Z",
+    "expires_at": "2027-02-01T06:44:51Z",
+    "workflow_run": {
+      "id": 41591834975,
+      "repository_id": 1400763332,
+      "head_repository_id": 1400763332,
+      "head_branch": "main",
+      "head_sha": "a8a5568d5c1ee791f872de382c6d7e850cec09df"
+    }
+  }
+]

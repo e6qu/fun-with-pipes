@@ -86,6 +86,41 @@ class DescentBudgets(unittest.TestCase):
                     self.assertEqual([failure['metric'] for failure in
                         DESCENT.paired_budget_failures({'case': changed}, 'scalar-map-zip')], [metric])
 
+    def test_range_zip_requires_exact_counts_and_preserves_timing_limits(self):
+        for dimensions in (3, 33, 129):
+            for updates in (0, 1, 199, 1999):
+                row = self.recording_case(updates)
+                row.update(dimensions=dimensions, solvesPerProcess=8)
+                row['medianNs']['fwp-ad-identical'] = 95 if updates >= 199 else 100
+                for label in ('fwp-ad', 'fwp-ad-history'):
+                    row['medianNs'][label] = 95 if updates >= 199 else 100
+                    reference = row['fwpProfiles'][label + '-reference']['managed']
+                    candidate = row['fwpProfiles'][label]['managed']
+                    reference.update(requests=10000000, requestedBytes=400000000, retains=10000000)
+                    candidate.update(reference)
+                    candidate['requests'] -= (dimensions + 1) * updates * 8
+                    candidate['requestedBytes'] -= (32 * dimensions + 8) * updates * 8
+                    row['binaries'][label]['instructionBytes'] += 4096
+                self.assertEqual(DESCENT.paired_budget_failures({'case': row}, 'range-zip'), [])
+                for metric in ('requests', 'requestedBytes', 'retains'):
+                    for delta in (-1, 1):
+                        changed = copy.deepcopy(row)
+                        changed['fwpProfiles']['fwp-ad']['managed'][metric] += delta
+                        self.assertIn(metric, [failure['metric'] for failure in
+                            DESCENT.paired_budget_failures({'case': changed}, 'range-zip')])
+                for metric, mutate in (
+                    ('candidate/reference time', lambda item: item['medianNs'].update(
+                        {'fwp-ad-history': 96 if updates >= 199 else 103})),
+                    ('identical median variation', lambda item: item['medianNs'].update(
+                        {'fwp-ad-identical': item['medianNs']['fwp-ad'] * 1.03})),
+                    ('largest static stack frame', lambda item: item['cCompilerStackUsage'][
+                        'fwp-ad.su']['entries'][0].update(bytes=193)),
+                ):
+                    changed = copy.deepcopy(row)
+                    mutate(changed)
+                    self.assertEqual([failure['metric'] for failure in
+                        DESCENT.paired_budget_failures({'case': changed}, 'range-zip')], [metric])
+
     def test_recording_limits_accept_boundaries_without_changing_observations(self):
         rows = {str(updates): self.recording_case(updates) for updates in [0, 1]}
         rows['1']['binaries']['fwp-ad']['instructionBytes'] += 1024

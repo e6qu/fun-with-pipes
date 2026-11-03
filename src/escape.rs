@@ -26,7 +26,8 @@ pub(crate) fn stack_enabled() -> bool {
 
 /// For each function, whether each parameter escapes (`false`: it does
 /// not). Non-expression functions let parameters escape except primitive slots
-/// with an explicit nonescape proof in the ownership inventory.
+/// with an explicit nonescape proof in the ownership inventory, and RangeZip,
+/// whose scalar inputs/results cannot retain the borrowed list or callback.
 pub fn params(prog: &Program) -> Vec<Vec<bool>> {
     let mut noesc: Vec<Vec<bool>> = prog
         .funcs
@@ -34,7 +35,7 @@ pub fn params(prog: &Program) -> Vec<Vec<bool>> {
         .map(|f| {
             (0..f.arity as usize)
                 .map(|j| {
-                    matches!(f.body, Body::Expr(_))
+                    matches!(f.body, Body::Expr(_) | Body::RangeZip { .. })
                         || matches!(&f.body, Body::Prim(s)
                             if crate::ownership::borrows_without_escape(s, j))
                 })

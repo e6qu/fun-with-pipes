@@ -68,7 +68,7 @@ def main():
     parser.add_argument('--compiler', required=True, type=Path)
     parser.add_argument('--reference', required=True, type=Path)
     parser.add_argument('--reference-manifest', required=True, type=Path)
-    parser.add_argument('--comparison', required=True, choices=('numeric-inputs', 'scalar-map-zip'))
+    parser.add_argument('--comparison', required=True, choices=('numeric-inputs', 'scalar-map-zip', 'range-zip'))
     parser.add_argument('--time', required=True, type=Path)
     parser.add_argument('--machine', required=True, choices=('aarch64', 'x86_64'))
     parser.add_argument('--source', required=True)
@@ -92,8 +92,10 @@ def main():
         for path, digest in reference_manifest['unchanged'].items():
             assert sha(ROOT / path) == digest, path
     else:
-        assert args.comparison == 'scalar-map-zip'
-        assert reference_manifest['disabledTransformation'] == 'scalar map-to-zip buffer storage'
+        assert args.comparison in ('scalar-map-zip', 'range-zip')
+        expected = {'scalar-map-zip': 'scalar map-to-zip buffer storage',
+                    'range-zip': 'private range-to-zip storage'}[args.comparison]
+        assert reference_manifest['disabledTransformation'] == expected
         assert reference_manifest['candidateCodegenSha256'] == sha(ROOT / 'src/cgen.rs')
         assert reference_manifest['ownershipSha256'] == sha(ROOT / 'src/ownership.rs')
     for key, expected in [('CARGO_PROFILE_DEV_OPT_LEVEL', '1'),

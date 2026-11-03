@@ -1,0 +1,22 @@
+rosenbrock : List[t] -> t where Ring[t], FromFloat[t], Dup[t]
+rosenbrock = fn values ->
+    values
+    | zip (drop 1 values)
+    | map (fn (x, y) ->
+        let distance = y - x * x
+        in let offset = 1.0 - x
+        in distance * distance * 100.0 + offset * offset)
+    | sum
+
+descend : List[F64] -> List[F64]
+descend = fn values ->
+    let adjustment = grad rosenbrock values | map (mul 0.001)
+    in values | zip-with sub adjustment
+
+solve : List[F64] -> List[F64]
+solve = both (const 0) id | loop (if
+    (.0 | eq 0)
+    (.1 | Stop)
+    (both (.0 | sub 1) (.1 | descend) | Again))
+
+main = range 0 32768 | each (const [-1.2, 1.0, -1.2] | solve | echo)

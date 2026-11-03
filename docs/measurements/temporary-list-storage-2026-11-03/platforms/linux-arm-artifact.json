@@ -1,0 +1,20 @@
+{
+  "id": 13213343682,
+  "node_id": "MDg6QXJ0aWZhY3QxMzIxMzM0MzY4Mg==",
+  "name": "native-test-logs-ubuntu-24.04-arm",
+  "size_in_bytes": 89810,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13213343682",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13213343682/zip",
+  "expired": false,
+  "digest": "sha256:44e493b9a1d436ebe1ebc0b158196beefd0f2f5087186fdc0ce8aaa221765036",
+  "created_at": "2026-11-03T08:03:30Z",
+  "updated_at": "2026-11-03T08:03:30Z",
+  "expires_at": "2027-02-01T06:44:51Z",
+  "workflow_run": {
+    "id": 41591834975,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "main",
+    "head_sha": "a8a5568d5c1ee791f872de382c6d7e850cec09df"
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "source": "3be9479c4150d7aae5695d7f7aa4ce3f84d0f738",
+  "sessions": {
+    "x86_64-2": {
+      "run": 41603882629,
+      "job": 125808854159,
+      "failures": [
+        {
+          "case": "3-199",
+          "program": "fwp-ad-history",
+          "metric": "candidate/reference time",
+          "actual": 0.9560344422050845,
+          "limit": 0.95
+        },
+        {
+          "case": "3-1999",
+          "program": "fwp-ad-history",
+          "metric": "candidate/reference time",
+          "actual": 0.960279650637256,
+          "limit": 0.95
+        }
+      ],
+      "files": 1334
+    },
+    "x86_64-1": {
+      "run": 41603882629,
+      "job": 125808854223,
+      "failures": [
+        {
+          "case": "3-199",
+          "program": "fwp-ad-history",
+          "metric": "candidate/reference time",
+          "actual": 0.9589665815583526,
+          "limit": 0.95
+        },
+        {
+          "case": "3-1999",
+          "program": "fwp-ad-history",
+          "metric": "candidate/reference time",
+          "actual": 0.9507778609131368,
+          "limit": 0.95
+        }
+      ],
+      "files": 1334
+    }
+  }
+}
