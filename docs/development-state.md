@@ -22,8 +22,8 @@
 | Step | Status | Remaining work |
 |---|---|---|
 | 1 | Verified | Preserve census controls and evidence |
-| 2 | Contract frozen | Implement and verify the exact same-source reference switch |
-| 3 | Next | Compiler selection, scalar buffer/zip generation, native semantic and cleanup controls |
+| 2 | In progress | Contract frozen; implement and verify the exact same-source reference switch |
+| 3 | Pending | Compiler selection, scalar buffer/zip generation, native semantic and cleanup controls |
 | 4 | Pending | Grouped cost measurements, final platform gates and verified squash |
 
 ## Verified evidence and selected change
