@@ -58,6 +58,34 @@ No arithmetic reassociation, syntax, tracing, compatibility adapter or JIT.
 
 ## Ownership and failure proof
 
+### Selection extension before timing
+
+Frozen by `roadmap/owned-numeric-selection-proof-2026-11-04` before code changes.
+
+[Complete-program inspection](owned-numeric-selection-2026-11-04/README.md)
+found that the first pass excludes both operations in the current-only loop and
+the array operation in the history form. Freeze these narrow additions before
+implementing them; keep all count and timing limits unchanged:
+
+- A fully applied direct call returning the exact array type produces an owned
+  result. Allow that result as the map input without introducing a new evaluation
+  step. It may alias another value; runtime uniqueness still decides reuse.
+- A record or variant constructor owns its fields. Allow selection inside those
+  fields when the constructor itself is in an eligible context. Track later
+  fields as later uses. Earlier fields already require their own owners; rerun
+  ARC insertion to prepare them before a later consuming operation.
+- Continue excluding ordinary call/apply arguments, borrowed record arguments,
+  field projections, record updates and resource anchors. Do not move effects
+  across arguments or add general expression normalization.
+- Require unit ownership checks for temporary call results, both alias orders
+  in owned fields, constructor branches, nested ordinary-call exclusion and
+  bounded traversal. Add native value/cleanup coverage for these boundaries.
+- Require live consuming map and zip calls in both complete gradient forms,
+  followed by the whole-solve allocation-count check before any timing.
+
+This keeps selection and rewriting bounded by the original body and signature
+sizes; no repeated suffix scan or recursive specialization is introduced.
+
 ### Array map
 
 Protect the transferred input before any allocation or callback. Use
