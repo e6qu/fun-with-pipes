@@ -138,7 +138,7 @@ int main(int argc, char **argv) {
         if (!field_check(result, count > 0 ? 0 : 9) || field_steps != (count > 0 ? count - 1 : 0)) return 82;
         /* Wide callback ABIs can allocate independently of an Option wrapper. */
         size_t added = owner_ledger_allocations - allocations;
-        if (!FIELD_COUNTED && added != 0) return 80;
+        if (!FIELD_WIDE && added != 0) return 80;
         if (alias) {
             if (!field_check(initial, 0)) return 83;
             field_drop(initial);

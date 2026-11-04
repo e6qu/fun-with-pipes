@@ -9,9 +9,15 @@ complete and must not be repeated for a pass.
 
 Branch/worktree: `iteration-final-value`, based on verified main `379bc9d5`.
 Head: `19b91c059d223614124773ab6e356824514f69f1`. Production run
-`41796687665` is running; docs run `41796687483` passes. Benchmark and ARM64
-macOS ownership jobs pass and their full logs are audited. Seven production jobs
-remain in progress with no reported failures. Keep this head intact.
+`41796687665` is running; docs run `41796687483` passes. Benchmark, both macOS
+ownership jobs, regular ARM64 macOS and Windows ARM64 pass and are audited.
+The ownership hosts each pass 126 target logs; regular macOS passes 131.
+Windows has two archives: 57 early logs and 157 final logs covering all 155
+executed targets, including iteration. Both artifact identities and every log
+are verified; the earlier expected count of 58 in the early bundle was an audit
+configuration error, not missing test execution. Latest full audit: 5.17 guarded
+seconds, after a 65.61-second guarded download. Four production jobs remain in
+progress with no reported failures. Keep this head intact.
 Compiler, runtime, library, tests and build inputs match
 measured `bb5433b688c26c60f0b2561a59420deb0f0e95ed` byte for byte after rebase.
 The immutable tag `roadmap/final-iteration-measurement-2026-11-04` retains that
@@ -122,42 +128,56 @@ fixtures and measurement tooling. Original source IDs remain reachable by the ta
 
 ## Prepared next ownership group
 
-`../matched-option-fields` branches from PR #255's exact head. Contract frozen at
+`../matched-option-fields` branches from #255's exact head. Contract frozen at
 `4ec13baa`, tag `roadmap/matched-option-fields-protocol-2026-11-04`, before code.
-No second PR. Keep #255's head intact; reconcile this branch after verified merge.
+One active PR: keep #255's head intact; reconcile this branch after verified merge.
 
-Prepared implementation: shared optional-result fields; typed direct `last`/
-`nth` reads; owned iteration-field transfer; protected generic boxing; bounded
-selection using existing variant/match rules. Tests in
-`tests/support/matched_option_fields.rs` (part of `iteration_consumers`) and its
-C/fwp fixtures cover scalar/String/F128/File owners, aliases, missing/present
-results, allocation counts, tag corruption, omitted release, retain overflow,
-iteration traps/cancellation/count bounds and failed result boxing. Source cases
-compare raw/optimized interpreters and representation/reuse controls.
+Implementation `15d94416` returns selected `last`, `nth` and internal final-iteration
+results as direct owned fields. Borrowed reads retain one owner; iteration moves
+its existing owner. Whole-value entries protect their payload while boxing.
+Measurement controls and workflows are published at `8efeb985`.
 
-**Native verification pending.** Guarded formatting passed (1.71s); both new
-reference controls (3 tests) and previous iteration-reference controls (5 tests)
-pass. Inventory is unchanged at 395 declarations / 374 contracts. Workflow lint
-and the 257-link-set documentation audit pass (10.82 guarded seconds together
-with inventory). No local compiler build or native execution.
+**Next for this branch:** publish the audited fixture repair and expanded container
+controls, then dispatch one `matched-option-checks` batch. No performance sessions
+before all three focused hosts pass with matching compiler/runtime/library/tests.
 
-The same-source reference disables only the three new field selections;
-it preserves iteration fusion and all lifetime repairs. Seven saved-source
-selection checks include stored options, shared histories and both gradient forms.
-Focused run `41803373296` at `15d94416027b4a377addef008fcee8b4ade6f6b5`
-is queued. The `matched-option-checks` runner suite groups 15 integration targets, units,
-production lint, the source/representation controls and both tutorial engines on
-GCC AMD64/ARM64 and Clang ARM64. Audit every failed step and completed target before a repair push. The scratch
-collector `../gradient-work/collect-matched-option-checks.py` retains every target,
-execution status and diagnostic, including failures; collection is not acceptance.
+[First batch and repair](measurements/matched-option-fields-2026-11-04/README.md):
+run `41803373296` at `15d94416027b4a377addef008fcee8b4ade6f6b5` is fully audited.
+Each of GCC ARM64/AMD64 and Clang ARM64 passes 268 unit tests (four deliberate
+ignores), seven selection cases, 56 integration tests and all 22 new native owner
+controls. One source-fixture type error and its formatting fail on each host.
+Every one of the 15 target logs and 499 status records per host is retained;
+no other failure or warning was found. Do not label this batch green.
 
-Measurement workflows and raw auditors now recognize the `matched-option`
-comparison. The same-source reference is checked using saved literal edits,
-without executing archived Python. Limits remain the frozen 2% runtime/noise,
-5% compiler time/RSS and 128-byte frame-growth limits. All count and cleanup
-requirements remain separate from timing. Guarded controls pass: 3 reference,
-5 previous-reference, 20 budgets, 18 raw-auditor, 12 grouped-report and 7 compiler
-measurement tests, plus workflow lint (34.28s). The compiler schedule/timeout check also passes with the new protocol
-case (7 tests, 1.83 guarded seconds). No measurements
-have run; do not dispatch timing before the three-host correctness prerequisite
-passes and candidate sources are frozen.
+Repair: use explicit `apply "!" (...)` for the selected function and run the
+language formatter. Compiler/runtime code is unchanged. The same batch now also
+checks physical release of numeric list/array payloads, including aliases,
+overflow, cancellation and failed boxing; a slice example checks that changing
+the selected result leaves the original array unchanged. Extended native checks
+remain pending.
+
+### Checks and evidence tools
+
+- Local checks use the tested #255 macOS ARM64 package, artifact `13309487060`,
+  archive SHA-256 `06c3e782d6e1aa4537fb0b40bc6ad167fb4258ecbd08692f8d5df5a4da735a36`.
+  Manifest/source and executable digest verified. Guarded formatting/type checks
+  pass (0.25s); raw/optimized interpreters agree on the extended fixture (0.36s).
+  This verifies the fixture with the existing compiler, not the new native change.
+  Rust formatting passes (1.65s). No local compiler build, full suite or benchmark.
+- Inventory remains 395 declarations / 374 contracts. Workflow lint and docs
+  passed 257 link sets (10.82s with inventory; later docs check 2.63s).
+- Measurement controls pass: 3 reference, 5 previous-reference, 20 budgets,
+  18 raw-auditor, 12 grouped-report and 7 compiler-cost tests, plus workflow lint
+  (34.28s). The new compiler protocol's schedule/timeout check also passes (1.83s).
+- The `matched-option` reference disables only these three field selections,
+  preserving all earlier iteration and lifetime work. Saved-source audits read
+  literal edits without executing archived Python. Frozen limits remain 2%
+  runtime/noise, 5% compiler time/RSS and 128-byte frame growth. No timings yet.
+- Scratch tools in `../gradient-work`: `collect-matched-option-checks.py`,
+  `audit-matched-option-success.py`, `retain-matched-option-first.py`,
+  `collect-final-iteration-platforms.py`, `retain-final-iteration-delivery.py`.
+  Raw first-batch archives are in `matched-option-first`; fixture checks and the
+  verified packaged compiler are in `matched-option-local`. The cancellation
+  check refused when ARM64 had already started; no job was cancelled.
+- Preserve dirty primary/old worktrees. Batch every encountered repair; do not
+  repeat completed timing sessions to obtain a pass.

@@ -1,7 +1,8 @@
 pick : a -> Option[a] -> a
-pick = fn otherwise -> match
-    Some value -> value
-    None -> otherwise
+pick = fn otherwise ->
+    match
+        Some value -> value
+        None -> otherwise
 
 advance : I64 -> I64 ! {State[List[I64]]}
 advance = tap (Cons | modify) | add 1
@@ -11,6 +12,18 @@ fail-step = match
     1 -> fail "second callback"
     value -> value + 1
 
+array-alias : () -> (List[F64], List[F64])
+array-alias = fn () ->
+    let input = array.from-list [1.0, 2.0, 3.0]
+    in let final =
+        input
+        | array.slice 1 2
+        | iterate 4 id
+        | last
+        | pick (array.from-list [])
+    in let changed = final | array.set 0 9.0 | pick (array.from-list [])
+    in (input | array.to-list, changed | array.to-list)
+
 main = [
     [] | list._test-ints | last | pick 9 | echo,
     [0, 1, 2] | nth -1 | pick 9 | echo,
@@ -18,7 +31,7 @@ main = [
     [0, 1, 2] | nth 9 | pick 9 | echo,
     [0, 1, 2] | last | pick 9 | echo,
     ["a", "b"] | both id (last | pick "missing") | echo,
-    ["a", "b"] | map concat | nth 1 | pick (concat "missing") | apply "!" | echo,
+    apply "!" (["a", "b"] | map concat | nth 1 | pick (concat "missing")) | echo,
     [[1, 2], [3, 4]] | last | pick [] | echo,
     [0.1f16, 0.2f16] | last | pick 0.0f16 | echo,
     [0.1bf16, 0.2bf16] | nth 0 | pick 0.0bf16 | echo,
@@ -32,6 +45,13 @@ main = [
     0 | run-state [] (iterate 4 advance | last | pick -1) | echo,
     0 | attempt (iterate 4 fail-step | last | pick -1) | echo,
     [1.0, 2.0] | both id (iterate 4 id | last | pick []) | echo,
-    [1.0, 2.0] | array.from-list | iterate 4 id | last | pick (array.from-list []) | array.to-list | echo,
+    [1.0, 2.0]
+    | array.from-list
+    | iterate 4 id
+    | last
+    | pick (array.from-list [])
+    | array.to-list
+    | echo,
+    array-alias () | echo,
     0.1f128 | iterate 4 id | last | pick 0.0f128 | echo,
 ] | ignore
