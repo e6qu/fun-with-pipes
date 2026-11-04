@@ -10502,8 +10502,10 @@ fn generate_mode(prog: &Program, mut mode: Mode) -> Result<String, String> {
     let mut numeric_program = packed_program;
     scalar_map_zip::lower(&mut numeric_program);
     range_zip::lower(&mut numeric_program);
-    packed_inputs::lower(&mut numeric_program);
     numeric_parameters::lower(&mut numeric_program, &roots);
+    // Forwarding pair callbacks gain their field-only ABI when their numeric
+    // callees are flattened. Prove packed windows against that final body.
+    packed_inputs::lower(&mut numeric_program);
     let prog = &numeric_program;
     crate::ir::check_locals(prog)?;
     let weak_channels = crate::resource::uses_weak_channels(&prog.funcs, &prog.shapes);

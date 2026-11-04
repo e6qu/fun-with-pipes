@@ -1,12 +1,12 @@
 # Current work
 
-**Next:** run the packed-input source/proof preflight, finish native cleanup
-controls and measurement wiring, and monitor
+**Next:** publish the packed-input pass-order repair and native cleanup preflight,
+finish the grouped measurement wiring, and monitor
 [PR #256](https://github.com/e6qu/fun-with-pipes/pull/256). Preserve its exact head
 `81bce309c4524058aefead68f203d6dfa3b5731a`. Production `41822132045` is running;
-documentation `41822131973`, job `126547601776`, and benchmark job `126547602413`
-pass and their full logs are audited (5.19s guarded collection). Other production
-jobs are running except Intel regular macOS, which is queued. No failed steps at
+documentation `41822131973`, job `126547601776`, benchmark job `126547602413`
+and both ARM64 macOS jobs pass; their full/target logs are audited (5.19/8.42s
+guarded collections). The other six production jobs are running. No failed steps at
 the latest check. Require all nine production jobs plus docs and full/target-log
 audits before squash merge. Keep one active delivery PR.
 
@@ -15,9 +15,9 @@ Preparation worktree/branch: `.worktrees/packed-derivative-inputs` /
 groups bounded scoped specialization, packed indexed records and overlapping
 pair reads. Frozen at `cc425aba`, immutable tag
 `roadmap/packed-derivative-inputs-protocol-2026-11-04`. Scoped specialization,
-packed producer/consumer lowering and eight compiler proof controls are written;
-native cleanup controls and measurement wiring remain. Guarded formatting and
-workflow lint pass; compilation/selection and proof tests are not yet verified.
+packed producer/consumer lowering and eight compiler proof controls compile/pass
+at `0b274ca8`. Actual gradient selection failed; the repair and native controls
+are written but unverified. Measurement wiring remains. No local build or timing.
 
 Source diagnostic `41824802673`, job `126556701498`, passes at `3c091d3f`: all
 12 emissions, 43 hashes and full log audited in 5.46s. It exposes the known
@@ -25,13 +25,27 @@ objective but leaves its input producer inside a temporary record. The
 [binding proof](measurements/scoped-objective-review-2026-11-04/README.md) was
 frozen at `3ccc9bf2`, tag `roadmap/packed-input-binding-proof-2026-11-04`, before
 implementing bounded, resource-safe let reassociation. That implementation is
-included in the pending preflight; do not claim the real gradient selects yet.
+passed preflight `41827593617`, job `126566218264`, at `0b274ca8`, but all three
+optimized gradient cases still missed packed-input selection. All twelve
+compilations and the other nine selection controls pass. The full log and 43
+file hashes are audited and [retained](measurements/packed-input-selection-2026-11-04/README.md).
+Numeric-parameter lowering exposed field reads only after the new pass had
+already rejected the callbacks. Move packed-input selection after it; retain
+the strict proof and add a production-generation forwarding regression.
+
+New native controls cover both window orders and range positions, scalar
+captures, bounds/list sizes, caller aliases, each stage's trap/cancellation,
+allocation failure, eager order, actual frees, disabled reuse and deliberate
+missing-free/field-corruption controls. Raw/optimized interpreter and O1/O2
+outputs are compared. These tests join existing `zip_unwind_ownership` coverage;
+the source preflight now runs these two tests and focused Clippy on ARM64 GCC.
+The unchanged #256 delivery head does not contain these next-group changes.
 
 The updated `iteration-storage-review` suite now explicitly requires packed
 producer and pair selections for all three optimized gradient inputs, absent
 for raw/scalar/shared-history controls. It also runs both new proof-test groups
 even if source selection fails. This is a short preflight, not the grouped
-native correctness or performance gate. No runtime timings have started.
+three-host native correctness or performance gate. No runtime timings have started.
 
 ## Roadmap status
 

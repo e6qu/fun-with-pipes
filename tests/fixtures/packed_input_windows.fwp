@@ -1,0 +1,35 @@
+Point = { index: I64, value: I64 }
+
+input-point : I64 -> I64 -> I64 -> Point ! {Async}
+input-point = fn offset -> fn index -> fn value ->
+    let ready = task.yield () in Point { index = index, value = value + offset }
+
+pair-point : Point -> Point -> Point ! {Async}
+pair-point = fn left -> fn right ->
+    let ready = task.yield ()
+    in Point {
+        index = right | .index,
+        value = (left | .value) + (right | .value),
+    }
+
+sum-point : Point -> Point -> Point ! {Async}
+sum-point = fn total -> fn point ->
+    let ready = task.yield ()
+    in Point {
+        index = point | .index,
+        value = (total | .value) + (point | .value),
+    }
+
+export transform : I64 -> I64 -> I64 -> Point -> List[I64] -> Point ! {Async}
+transform = fn lo -> fn hi -> fn offset -> fn seed -> fn inputs ->
+    let records = zip-with (input-point offset) (range lo hi) inputs
+    in let ready = task.yield ()
+    in let pairs = zip-with pair-point (drop 1 records) records
+    in fold sum-point seed pairs
+
+export transform-reversed : I64 -> I64 -> I64 -> Point -> List[I64] -> Point ! {Async}
+transform-reversed = fn lo -> fn hi -> fn offset -> fn seed -> fn inputs ->
+    let records = zip-with (flip (input-point offset)) inputs (range lo hi)
+    in let ready = task.yield ()
+    in let pairs = zip-with pair-point records (drop 1 records)
+    in fold sum-point seed pairs
