@@ -43,7 +43,7 @@ Compressed archives retain generated sources, actual new-control executables,
 outputs and statuses; repeated sources/images are stored once by digest.
 [The first batch](fixture-repair/README.md) preserves its repaired fixture failure.
 
-## Measurements and delivery remain open
+## Measurements pass; delivery remains open
 
 Measurement source is `82963531dddb6d9a5f32ec26657dc220736f4055`, immutable tag
 `roadmap/matched-option-measurement-2026-11-04`. Its compiler, runtime, library,
@@ -56,10 +56,13 @@ measurement drivers explicitly set and record `FWP_VRET=1` and
 
 [Compiler-cost measurements](../matched-option-analysis-2026-11-04/README.md)
 pass all ten cases; all 480 commands and raw records are audited.
-Both ARM64 sessions in runtime run `41811658838` pass, pending raw audit. AMD64
-session 2 is still measuring. Session 1 needs a qualified replacement;
-[four rejected hosts](../matched-option-time-2026-11-04/rejected-hosts/README.md)
-stopped before building/timing. Complete runtime acceptance remains open.
-Allocation reductions do not close older timing goals. Final platform gates and
-delivery also remain pending; [the handoff](../../development-state.md) records
-current jobs and the one active delivery PR.
+[All four runtime sessions](../matched-option-time-2026-11-04/README.md) and their
+raw audits pass. Every history-form solve saves one allocation request, 16
+requested bytes and one retain. Peak managed/raw storage is unchanged. Some
+larger cases are up to 1.95% slower, within the frozen 2% limit; maximum frame
+growth is 16 bytes. These reductions are not a general speedup and do not close
+older timing goals. Four wrong-CPU hosts were rejected before building/timing;
+all are retained and only their unmeasured sessions were replaced.
+
+Final platform gates and delivery remain pending; [the handoff](../../development-state.md)
+records the exact jobs and the one active delivery PR.

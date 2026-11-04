@@ -1,9 +1,11 @@
 # Optional results without a temporary box
 
-**Three-host correctness and compiler-cost checks pass; runtime audit and delivery remain pending.**
+**Correctness, compiler costs and four runtime sessions pass; final delivery remains pending.**
 [The native report](matched-option-fields-2026-11-04/README.md) records values,
 owners, physical cleanup, controls and binary identities. The first batch's
-fixture failure and repair remain linked there.
+fixture failure and repair remain linked there. [Complete runtime results](matched-option-time-2026-11-04/README.md)
+retain small slowdowns alongside the removed wrapper and retain; peak storage
+is unchanged. Passing the 2% regression limit is not a general speedup.
 The contract was frozen at `4ec13baa`, tag
 `roadmap/matched-option-fields-protocol-2026-11-04`, before implementation. This follows
 [final-iteration delivery](final-iteration-storage.md). Keep PR #255's head

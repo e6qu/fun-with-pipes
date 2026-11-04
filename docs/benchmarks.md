@@ -20,31 +20,33 @@ which host/toolchain, and what difference in behavior or algorithm?** Detailed
 
 ## Latest audited derivative comparison
 
-The [November 4 iteration report](measurements/final-iteration-time-2026-11-04/README.md)
-compares two fwp compilers on the same gradient-descent programs. In the largest
-case, 129 coordinates and 199 updates, retaining only the final iteration value
-reduces peak managed storage from 838,688 to 19,360 bytes and takes 5.1–5.9% less
-time. Five other speed targets and one small-case regression remain open.
-The report separates allocation traffic, live storage and process RAM.
+The [November 4 matched-result report](measurements/matched-option-time-2026-11-04/README.md)
+compares two fwp compilers on the same gradient-descent programs. It saves one
+allocation and one retain per history-form solve, with unchanged peak storage.
+Some larger cases are up to 1.95% slower, within the frozen 2% limit. All four
+sessions and their complete raw audits pass; this is not a general speedup.
 
-The same sessions also run handwritten C/Rust programs:
+The same sessions run handwritten C/Rust programs. For 129 coordinates and 199
+updates, using the current-result source:
 
-| Largest current-result solve | fwp time / C time | fwp time / Rust time |
+| Native architecture, two sessions | fwp time / C time | fwp time / Rust time |
 |---|---:|---:|
-| ARM64, two sessions | 19.39–19.49× | 19.14–19.17× |
-| AMD64, two sessions | 24.73–26.26× | 23.07–24.90× |
+| ARM64 | 18.09–18.71× | 17.96–18.49× |
+| AMD64 | 24.37–25.32× | 22.86–23.75× |
 
-For example, 19.39× means 1,839% extra time for these implementations. C/Rust
+For example, 18.09× means 1,709% extra time for these implementations. C/Rust
 calculate handwritten derivative formulas; fwp records operations and propagates
 derivatives automatically. Storage and formatting also differ. These ratios
 measure that whole implementation gap, not isolated ARC overhead. No Swift
 derivative counterpart was measured in this batch; the [Swift comparisons](#swift-comparison)
 below cover other workloads and cannot establish derivative parity.
 
-The subsequent [matched-result experiment](measurements/matched-option-fields-2026-11-04/README.md)
-removes a temporary optional wrapper. Its native correctness and compiler-cost
-checks pass; full runtime auditing and platform delivery are still pending.
-Neither experiment updates every older whole-program baseline below.
+The preceding [iteration-history change](measurements/final-iteration-time-2026-11-04/README.md)
+reduced the largest history-form peak from 838,688 to 19,360 managed bytes and
+took 5.1–5.9% less time. Its five other speed misses and one small regression
+remain recorded against their own reference. Both reports distinguish allocation
+traffic, live storage and process RAM. Neither refreshes every older baseline below.
+Final platform delivery is tracked separately in [the handoff](development-state.md).
 
 ## PR 233 whole-program baseline
 

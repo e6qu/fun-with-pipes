@@ -3,7 +3,7 @@
 **Next:** finish Intel macOS retry `126506098945`, audit its full/target logs, then
 squash [PR #255](https://github.com/e6qu/fun-with-pipes/pull/255). Eight other production
 jobs and docs already pass and are audited. Keep its head unchanged. In parallel,
-finish the final optional-result measurement below; open its PR only after #255.
+retain the completed optional-result measurements below; open its PR only after #255.
 
 ## Roadmap status
 
@@ -69,7 +69,7 @@ is complete measurement retention, #255 reconciliation and final platform delive
 | Compiler cost | `41811652687`, both jobs and all 480 command/raw-record audits pass |
 | Initial runtime batch | `41811658838`: both ARM64 sessions and AMD64 session 2 pass; session 1 rejected before build/time |
 | Initial raw audit | `41814391372` passes; all 4,002 file records and full logs reconcile |
-| Remaining runtime session | `41814521814`: qualified EPYC 7763, AMD64 session 1 is measuring |
+| Final runtime session | `41814521814` passes; raw audit `41817009801` passes all 1,334 file records |
 
 Compiler/runtime/library/tests/build inputs at the frozen measurement source match
 passing `fb461933` byte for byte. Later edits only retain evidence and clarify docs.
@@ -84,27 +84,30 @@ is retained; its repair did not change compiler/runtime code.
 
 [Compiler costs](measurements/matched-option-analysis-2026-11-04/README.md) pass all
 ten cases: maximum time ratio 1.00804, peak-RSS ratio 1.00386, copy variation 1.24%.
-The three audited runtime sessions save one request, 16 requested bytes and one
-retain per history-form solve. Peak managed/raw storage is unchanged. Several
-larger timings are 1–1.9% slower, within the frozen 2% limit; do not claim a general
-speedup. Final four-session acceptance is still pending.
+[All four runtime sessions](measurements/matched-option-time-2026-11-04/README.md)
+and raw audits pass, reconciling 5,336 files. Each history-form solve saves one
+request, 16 requested bytes and one retain; peak managed/raw storage is unchanged.
+Some larger timings are up to 1.95% slower, within 2%; maximum frame growth is
+16 bytes. Do not claim a general speedup or close older timing comparisons.
 
 [Four rejected hosts](measurements/matched-option-time-2026-11-04/rejected-hosts/README.md)
 are fully audited and retained. Each stopped before build/time. A later dispatch
 returned HTTP 502; the run list confirmed no run existed before retry `41814521814`.
-When it completes, dispatch `matched-option-report` at frozen tag `82963531` with
-its run ID and full `source_revision`. Audit any failure without replacing its results.
+The final audit uses the frozen measurement tag and source; its complete
+collection passes. No measured session was repeated.
 
 ### Collection and publication
 
 Scratch tools live in `../gradient-work`; use `python3 scripts/local-guard.py`:
 
 - `collect-matched-option-runtime.py --run AUDIT_RUN --prefix matched-option-runtime-amd1 --audit-source 82963531dddb6d9a5f32ec26657dc220736f4055 --source 82963531dddb6d9a5f32ec26657dc220736f4055`.
-  The initial collection already passes under prefix `matched-option-runtime-all`.
-- Then `retain-matched-option-time.py`, `summarize-matched-option-memory.py` and
-  `write-matched-option-time-readme.py`, serially. They require all four reports.
-- Update PLAN, report links, handoff and scratch `matched-option-pr.md` with the
-  complete outcomes; the current PR draft explicitly marks pending checks.
+  Both collections now pass under prefixes `matched-option-runtime-all` and
+  `matched-option-runtime-amd1`; do not repeat them.
+- Retention, all 48 cross-session count comparisons and report generation pass
+  (0.78/0.30/0.28s). Tools: `retain-matched-option-time.py`,
+  `summarize-matched-option-memory.py`, `write-matched-option-time-readme.py`.
+- Reconcile after #255, then update scratch `matched-option-pr.md` and publish
+  one grouped PR. Final platform checks remain pending.
 - Full evidence processing and final test gates belong on GitHub, not locally.
 
 `82963531` also gives each macOS test-log upload one retry with identical files
@@ -115,14 +118,14 @@ the exact retry step and artifact; do not blanket-ignore diagnostics.
 ### Local verification and workspace
 
 - Latest `python3 scripts/local-guard.py python3 scripts/check-roadmap.py`: passes
-  262 link sets, 106 immutable identities and four roadmap steps (2.58 seconds).
+  263 link sets, 106 immutable identities and four roadmap steps (2.68 seconds).
   Shortening the handoff initially removed its required status table; restored it
   and the recheck passes (2.83 seconds).
 - Rust formatting, workflow lint, primitive inventory (395 declarations / 374
   contracts), source-reference, measurement-budget, raw-audit and report controls
   pass. No new Cargo target; native shard assignment is unchanged.
 - Guarded collections: native 23.67/23.26/23.14s; ownership/image/count audit 2.34s;
-  retention 4.79s. Compiler audits 28.59/31.15s; initial runtime collection 4.52s.
+  retention 4.79s. Compiler audits 28.59/31.15s; runtime collections 4.52/5.74s.
 - The checksum-verified #255 macOS compiler package checked only the small fixture's
   formatting/types and raw/optimized interpreter outputs. No local compiler build,
   full suite or benchmark. Keep the fixed disk/RSS/target/deadline guard limits.

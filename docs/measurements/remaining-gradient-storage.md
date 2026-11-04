@@ -139,5 +139,7 @@ The [contract](matched-option-fields.md) defines the ownership boundaries and
 limits. [Three-host native checks](matched-option-fields-2026-11-04/README.md)
 verify values, aliases, physical cleanup and the removed wrapper.
 [Compiler-cost comparisons](matched-option-analysis-2026-11-04/README.md) pass.
-Runtime measurements and final platform delivery remain open; the allocation
-reduction alone establishes no speed benefit.
+[Four runtime sessions](matched-option-time-2026-11-04/README.md) and all raw audits
+pass their frozen limits. Each history-form solve saves one allocation and one
+retain; peak storage is unchanged and some larger cases are slightly slower.
+Final platform delivery remains open.
