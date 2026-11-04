@@ -357,7 +357,9 @@ whole-solve memory requirements.
 
 ### Consuming numeric storage
 
-**Implemented; repaired native verification and measurements pending.**
+**[Focused native verification](measurements/owned-numeric-checks-2026-11-05/README.md)
+and the [exact allocation census](measurements/owned-numeric-census-2026-11-05/README.md)
+pass; compiler/runtime timing and final platform delivery remain open.**
 For a dead array input, a private same-type scalar map can take its owner and
 overwrite exclusive storage. A shared array or view receives independent output.
 For an array/list zip, a private entry can consume the list and reuse only its
@@ -382,7 +384,8 @@ unused old tail and new result then have distinct cleanup owners. Array mapping
 protects either its reused input or fresh partial result through callback failure.
 Both use the mutation-uniqueness check, including disabled-reuse controls.
 The [contract](measurements/owned-numeric-updates.md) defines exclusions, examples,
-failure tests and measurement limits. Count predictions are not measured results.
+failure tests and measurement limits. The census verifies the predicted counts;
+reduced allocation alone does not demonstrate a speedup.
 
 ### Proving a local array has one owner
 

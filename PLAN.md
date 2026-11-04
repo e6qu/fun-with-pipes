@@ -35,17 +35,19 @@ explains why a node beneath a shared ancestor cannot be overwritten.
 
 Step 1 is frozen at `1c5e6a66`; the returned-owner/constructor-field extension at
 `c99451ec` precedes its implementation. Step 2's complete-program selection and
-new ownership controls pass on all three hosts. The [retained diagnosis and repair](docs/measurements/owned-numeric-selection-2026-11-04/README.md)
-now check explicit borrowing and both consuming positions; all 285 units and
-103 integrations pass. The expanded formatter check found one older layout issue,
-now repaired to the exact saved output. Verify that repair before measurements.
-Steps 3–4 remain open; no whole-solve savings or speedup is claimed.
+new ownership controls [pass on all three hosts](docs/measurements/owned-numeric-checks-2026-11-05/README.md):
+285 units, 103 integrations, real-program selection and formatting. The
+[earlier failures and repairs](docs/measurements/owned-numeric-selection-2026-11-04/README.md)
+remain explicit. Step 3's [allocation census passes on both architectures](docs/measurements/owned-numeric-census-2026-11-05/README.md)
+from frozen source `07541ff9`; all six predicted reductions and cleanup checks
+match. Compiler-cost and runtime measurements are running. Step 4 remains open.
 The [handoff](docs/development-state.md) identifies the current source and runs.
 
 For N coordinates and U updates, predict U fewer array requests and
 N × max(U−1, 0) fewer list-cell requests per solve. The first coordinate list is
 shared with the input, so it must be copied. At 129 coordinates / 199 updates,
-that predicts **25,741 fewer requests and 819,968 fewer requested bytes**.
+the census confirms **25,741 fewer requests and 819,968 fewer requested bytes**
+per solve. ARC retain counts and raw derivative storage are unchanged.
 Any unexplained difference stops measurement review before timing. Compiler
 time/RSS may grow at most 5%; identical-copy variation must stay within 2%.
 Long solves require at least 5% less time; small cases allow at most 2% more.

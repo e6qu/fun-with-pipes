@@ -1,6 +1,8 @@
 # Reuse consumed numeric arrays and coordinate lists
 
-**Implemented after merged PR #257; repaired native verification and measurements pending.**
+**[Native verification](owned-numeric-checks-2026-11-05/README.md) and the
+[whole-solve allocation census](owned-numeric-census-2026-11-05/README.md) pass.
+Compiler-cost, runtime and final production acceptance remain open.**
 Contract frozen before implementation at `1c5e6a66`, immutable tag
 `roadmap/owned-numeric-updates-protocol-2026-11-04`.
 Starting source: `519fc96670b0db90ebe0f68e1263ccf85d2cf4f1`.
@@ -18,7 +20,7 @@ finish scaling:    [1, 2, 3]
 finish subtraction: [9, 18, 27]
 ```
 
-The current native loop allocates a second gradient array and a fresh coordinate
+The reference loop allocates a second gradient array and a fresh coordinate
 list, then releases both old inputs. This group gives the compiler two private
 operations that consume an input owner. Consuming means the caller transfers its
 reference; it does not mean no other owner exists.
@@ -65,8 +67,8 @@ Frozen by `roadmap/owned-numeric-selection-proof-2026-11-04` before code changes
 
 [Complete-program inspection](owned-numeric-selection-2026-11-04/README.md)
 found that the first pass excludes both operations in the current-only loop and
-the array operation in the history form. Freeze these narrow additions before
-implementing them; keep all count and timing limits unchanged:
+the array operation in the history form. These narrow additions were frozen
+before implementation; all count and timing limits remain unchanged:
 
 - A fully applied direct call returning the exact array type produces an owned
   result. Allow that result as the map input without introducing a new evaluation
@@ -170,7 +172,7 @@ missing/duplicate/altered edits before timing. Retain both compiler identities.
   all seven exports and reject consumption of an input read again afterward. Compiler elapsed time and peak RSS may grow at most 5%; frame growth
   at most 128 bytes. Report code size; it is not the main performance objective.
 - C/Rust manual derivatives do different work; their ratios do not isolate
-  language or ARC overhead. There is no equivalent Swift derivative peer.
+  language or ARC overhead. This experiment includes no equivalent Swift derivative peer.
 
 The accepted policy may retain verified reductions with timing goals explicitly
 open. A new reference cannot settle the old packed-input or other timing misses.

@@ -1,125 +1,109 @@
 # Current work
 
-**Next:** verify the formatting-only repair on all three hosts, then run the
-untimed whole-solve allocation comparison before compiler/runtime timing.
-[Run 41917699225](https://github.com/e6qu/fun-with-pipes/actions/runs/41917699225)
-at `8fa9f890eea2f0efbfa6f45d2e5fd76bda430e5f` passes all native checks but fails
-one old fixture's formatting. GCC ARM64 `126881638472`, GCC AMD64 `126881638843`,
-Clang ARM64 `126881638830`: all 285 units, 103 integrations, twelve complete-program
-selections, 660 images and 671 statuses per host are audited. The repair uses the
-exact saved formatter bytes and passes local production-formatter checks.
-The immutable tag `roadmap/owned-numeric-premerge-checks-2026-11-04` preserves this
-source and its earlier failed runs. A source tag is not a passing result.
+**Next:** monitor and audit compiler-cost run [41926855499](https://github.com/e6qu/fun-with-pipes/actions/runs/41926855499)
+and runtime run [41926862701](https://github.com/e6qu/fun-with-pipes/actions/runs/41926862701).
+AMD64 session 1 replacement: [41927345094](https://github.com/e6qu/fun-with-pipes/actions/runs/41927345094).
+The first job `126913419469` rejected EPYC 9V74 before building or timing; the
+frozen requirement remains EPYC 7763. Its full log/qualification are retained
+in the census evidence directory. Do not repeat any collected timing session.
+Both initial runs started only after the complete untimed census passed independent raw-data
+review on both architectures. Runtime requests both frozen sessions per host.
 
-Worktree `.worktrees/owned-numeric-updates`, branch `owned-numeric-updates`.
-[Draft PR #258](https://github.com/e6qu/fun-with-pipes/pull/258) is the only open
-delivery PR. Its head `3b5adde4` is based on #257's verified squash. Rebase checks
-confirm the complete tree stayed unchanged and all compiler/runtime/library/test
-inputs match the running `8fa9f890` verification. Original identities remain tagged.
-Keep full builds, native suites, benchmarks and large regeneration on GitHub.
+Source `07541ff956d582bb9c3936b86261e43fa25b0b2f` is frozen at immutable tag
+`roadmap/owned-numeric-measurement-2026-11-05`. The branch's later changes retain
+evidence and update docs only. Keep this source for comparisons; do not move tags.
+[Draft PR #258](https://github.com/e6qu/fun-with-pipes/pull/258), branch/worktree
+`owned-numeric-updates` / `.worktrees/owned-numeric-updates`, is the only open PR.
+Full production CI remains for the completed batch; skipped draft jobs are not gates.
 
 ## Roadmap status
 
 | Step | Status | Remaining work |
 |---|---|---|
 | 1 | Verified | Preserve frozen ownership, selection and measurement contracts |
-| 2 | In progress | Native behavior passes on all three hosts; verify the formatting-only repair and audit all final results |
-| 3 | Pending | Exact whole-solve allocation census, compiler costs, two timing sessions per architecture and independent audit |
-| 4 | Pending | Grouped PR, nine exact-head production jobs plus docs, verified squash/tree |
+| 2 | Verified | Preserve three-host native checks and all failure/cleanup controls |
+| 3 | In progress | Allocation census verified; audit compiler costs, two timing sessions per architecture and independent review |
+| 4 | Pending | Complete grouped PR, nine exact-head production jobs plus docs, verified squash/tree |
 
-## Implemented and checked
+## Verified behavior
 
-Both private operations consume an input owner. Same-type scalar array maps reuse
-only ordinary exclusive arrays. Array/list zip finishes callbacks before reusing
-an exclusive list prefix; shared suffixes are copied. Views and aliases remain
-unchanged. Cleanup protects transferred inputs, partial outputs and scratch storage.
+[Native run 41920964943](measurements/owned-numeric-checks-2026-11-05/README.md)
+passes at the frozen source: GCC ARM64 `126893053080`, GCC AMD64 `126893053575`,
+Clang ARM64 `126893053536`. Each passes 285 units (four existing ignored),
+103 integrations in eighteen targets, twelve complete-program checks and formatting.
+Every full/target log, all 660 image architectures and all 671 statuses per host
+were audited. Both real gradient forms select consuming maps and coordinate zips.
+Seven exported fixtures select their consuming entries; a later read keeps borrowing.
 
-The contract was frozen at `1c5e6a66`, tag
-`roadmap/owned-numeric-updates-protocol-2026-11-04`. Initial source `b8404dbb`
-passes 282 units (four ignored) and 103 integrations on GCC ARM64/AMD64 and
-Clang ARM64. [Retained safety evidence and the selection diagnosis](measurements/owned-numeric-selection-2026-11-04/README.md)
-show why this was insufficient: current-only solves selected neither operation;
-history selected only zip. Emitted-C temporaries are introduced after selection.
+Arrays reuse storage only when ordinary and exclusive. Coordinate lists reuse
+only an exclusive prefix, after all callbacks finish. Shared roots, ancestors,
+tails and views keep aliases unchanged. Temporary results and earlier constructor
+fields retain the right owners. Tests cover O1/O2, both interpreters, float bits,
+overflow, traps, cancellation, allocation failure, disabled reuse and broken controls.
 
-Extension proof `c99451ec`, tag `roadmap/owned-numeric-selection-proof-2026-11-04`,
-precedes compiler repair `9f8ec909`. The repair admits returned array owners and
-eligible constructor fields; ordinary-call arguments and resource anchors remain
-excluded. Earlier fields get their own owners before later consumption.
+[Earlier failures and repairs](measurements/owned-numeric-selection-2026-11-04/README.md)
+remain recorded: missing real-program selection, an outdated borrowing assertion
+and an older fixture's layout. All are repaired and reverified; none is hidden.
+Protocol `1c5e6a66` and extension proof `c99451ec` precede their code and retain
+immutable tags. `roadmap/owned-numeric-premerge-checks-2026-11-04` preserves the
+original sources before rebasing onto #257's squash; that rebase changed no files.
 
-[Run 41914912241](https://github.com/e6qu/fun-with-pipes/actions/runs/41914912241)
-checks that repair on all three hosts: 285 units, twelve complete-program checks,
-seven consuming exports, one retained-input exclusion and 102 integrations pass.
-The new temporary-result/earlier-field probes cover outside aliases, allocation
-counts, failure and cancellation. All eighteen target logs, full logs, 656 images,
-667 statuses and diagnostics were audited. No compiler warnings were found.
+Documentation `41920859686` / `126892668039` passes at `07541ff9`; full-log audit
+finds only the three expected negative-runner diagnostics. Previous docs
+`41919183424` / `126886829262` also passed at `3b5adde4` and were fully audited.
 
-All three jobs fail one older zip test: it requires a borrowing helper comment,
-but the fixture's eligible calls now consume their inputs. Repair `8fa9f890` adds
-an explicit later input read/returned alias, requires both consuming positions,
-checks exclusions against both representations and saves code/results before
-assertions. It preserves raw/optimized interpreter comparison, native O1/O2,
-stack settings, eager output order and final cleanup. Compiler/runtime trees are
-unchanged. The failed runs and repair are retained together; no failure is hidden.
+## Measurements still required
 
-That repair now passes native verification. The expanded fixture-format check
-also found an existing three-line `subtract` definition that the formatter puts
-on one line. This is the only new failure on all three hosts; both saved fixtures
-match the repair. [Evidence and exact before/after](measurements/owned-numeric-selection-2026-11-04/README.md#native-checks-pass-an-older-fixture-needs-formatting)
-retain every outcome. No compiler/runtime or test assertion changes are needed.
+The [allocation census](measurements/owned-numeric-census-2026-11-05/README.md)
+passes at `07541ff9`, run `41925013907`: ARM64 `126907012020`, AMD64
+`126907012115`. Independent review verifies all 99 commands, 24 native images,
+48 executions and the exact reference per host. No unexpected diagnostics.
+All six cases, both result forms and workspace settings match the prediction.
+Largest eight-solve counts: 223,026 → 17,098 requests; 16,684,704 → 10,124,960
+requested bytes; peak managed 15,232 → 13,664 bytes. Retains stay 3,192;
+raw peak stays 33,904 bytes; final managed/raw storage is zero.
 
-## Measurement gate
+No speedup or process-RAM reduction is claimed. Compiler/runtime runs above use
+`owned-numeric-analysis` and `owned-numeric-time` (`comparison_session=both`),
+with safety run `41920964943` as `evidence_run`. Audit all raw outcomes, then use
+`owned-numeric-report` for independent review. Workflow guards compare compiler,
+runtime, library, test and build trees. Preserve every missed limit and separate
+older timing goals. Never rerun unchanged timings to obtain a passing result.
 
-No whole-solve saving or speedup is claimed yet. The [contract](measurements/owned-numeric-updates.md)
-predicts 25,741 fewer requests / 819,968 fewer requested bytes per 129-coordinate,
-199-update solve. `owned-numeric-census` checks all six cases, both result forms
-and workspace reuse on/off against a same-source reference disabling only these
-two transformations. Any unexplained difference requires diagnosis before timing.
+## Delivery and local checks
 
-After successful native verification, freeze the measurement source, run the census,
-then `owned-numeric-analysis`, `owned-numeric-time` (both sessions) and
-`owned-numeric-report`. Supply the verified safety run as `evidence_run`; workflow
-guards compare compiler/runtime/library/tests/build trees. Preserve original
-failed limits; never rerun unchanged timings to obtain a pass.
+#257 is merged as `30c2bad9b89d8086a8822f992eaa0e9331bd9bd1`, tree identical to
+verified `519fc966`. All nine production jobs/docs and the one-line squash message
+are verified; duplicate same-tree main runs were cancelled. [History and final logs](roadmap-history.md#packed-derivative-inputs-pr-257)
+record its reductions and three still-open AMD64 timing limits.
 
-## Verified previous delivery
+Focused local work uses `python3 scripts/local-guard.py`, serially. Limits remain
+64 GiB free disk, targets below 2 GiB, sampled RSS below 1 GiB and 180 seconds.
+No local full build, native suite or timing was run.
 
-#257 merged as `30c2bad9b89d8086a8822f992eaa0e9331bd9bd1`, tree
-`df3c0d3e430636edd390ac33d4254fec7095381b`, identical to tested `519fc966`.
-All nine production jobs and documentation pass, with every full/target log audited.
-[Final gate identities, logs and capacity cancellations](measurements/packed-input-checks-2026-11-04/platforms/final-gates.json)
-are retained. The squash message is exactly one line, under 80 characters, with
-no body or trailers. Duplicate same-tree main runs `41918420647` / `41918420613`
-were cancelled. [History](roadmap-history.md#packed-derivative-inputs-pr-257)
-records measurements and three still-open AMD64 timing limits.
+- Compiler-selection controls/format/lint/reference/roadmap checks: 15.01s.
+  Test-repair format/lint/roadmap checks: 12.01s. Final roadmap check: 2.60s.
+- Current native collection ARM/AMD/Clang: 40.23s / 57.17s / 41.39s;
+  complete audits: 0.13s / 0.14s / 0.13s; durable retention: 2.08s.
+  Current docs full-log audit: 2.48s.
+- Census download/full-log audit: 28.97s; raw-data verification: 3.28s;
+  exact command audit and durable retention: 3.03s. Rejected timing host
+  full-log audit: 2.24s; qualification and safety retention: 3.22s.
+- Exact fixture formatting with verified #257 macOS ARM64 package: 0.51s.
+  Formatter/parser sources match. `../gradient-work/verified-257-compiler` is
+  usable only for unchanged formatter checks, not new compiler verification or
+  a build dependency on an earlier fwp version.
+- Freed about 721 MiB from the clean #256 checkout after matching its merged tree.
+  Removed 778,568,743 / 791,742,404 bytes of duplicate #256/#257 Windows downloads
+  only after verifying artifact identities and all 157 retained logs per host.
+  Branches, durable evidence and dirty older worktrees remain intact.
 
-## Local checks and resource use
+Scratch: `../gradient-work/owned-numeric-checks-5` holds current full artifacts;
+`owned-numeric-checks-2`, `-3`, `-4` preserve earlier runs. Collect with
+`collect-owned-numeric-checks.py`; verify with `audit-owned-numeric-success.py`.
+`retain-owned-numeric-success.py` retains completed controls. Keep failed outcomes,
+use a new output directory per run, and leave unrelated primary/older changes alone.
 
-All focused checks/collection use `python3 scripts/local-guard.py` serially.
-Limits remain 64 GiB free disk, targets below 2 GiB, sampled RSS below 1 GiB and
-180 seconds. No local full build, native suite or timing was run.
-
-- Selection repair: formatting, workflow lint, three observer, ten compiler-driver,
-  five consuming-reference, five packed-reference, six gradient-reference and five
-  census controls plus roadmap audit pass in 15.01s.
-- Test repair: formatting, workflow lint and roadmap audit pass in 12.01s.
-  Full three-host failure audit/retention: 1.56s.
-- Formatting-only repair: both fixtures pass the verified #257 macOS ARM64
-  formatter, 0.51s. Formatter/parser sources are unchanged. Saved package and
-  identity/check report: `../gradient-work/verified-257-compiler` and
-  `owned-numeric-format-check.json`. Use this only for unchanged formatter checks;
-  it does not verify the new compiler transformations or create a build dependency.
-- #257 final collection: 9.03s; squash verification: 0.14s; retention: 0.13s.
-- Removed the clean `matched-option-fields` checkout only after its tree matched
-  #256's verified squash. About 721 MiB of duplicate checkout data removed; branch
-  and CI evidence retained. Identity/size check: 0.14s; removal: 0.37s.
-  Earlier verified removal of duplicate #256 downloads freed 778,568,743 bytes.
-  Removed another 791,742,404 bytes of duplicate #257 Windows downloads only after
-  checking artifact digests and all 157 retained logs per host (0.73s).
-
-Scratch evidence/helpers: `../gradient-work/owned-numeric-checks-2` (original
-passing safety), `owned-numeric-checks-3` (selection repair and old assertion),
-`owned-numeric-checks-4` (all native checks pass; old fixture formatting),
-`platforms-257`, `collect-owned-numeric-checks.py`,
-`collect-matched-option-platforms.py`, `retain-packed-input-delivery.py` and
-`owned-numeric-pr.md`. Use a new output directory for each new run. Keep failed
-outcomes. Leave unrelated dirty primary/older worktrees alone.
+Census scratch: `../gradient-work/owned-numeric-census-2026-11-05`; audit and
+retention scripts are `audit-owned-census.py` / `retain-owned-census.py`. Reports
+and raw evidence are retained under the matching `docs/measurements` directory.

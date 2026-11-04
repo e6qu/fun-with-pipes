@@ -1,0 +1,20 @@
+{
+  "id": 13367669716,
+  "node_id": "MDg6QXJ0aWZhY3QxMzM2NzY2OTcxNg==",
+  "name": "owned-numeric-census-X64",
+  "size_in_bytes": 36140961,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13367669716",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13367669716/zip",
+  "expired": false,
+  "digest": "sha256:89ed1f0163ed9248e802962285733524584752539f00029958927f19a7127abc",
+  "created_at": "2026-11-04T22:30:36Z",
+  "updated_at": "2026-11-04T22:30:36Z",
+  "expires_at": "2027-02-02T22:24:34Z",
+  "workflow_run": {
+    "id": 41925013907,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "roadmap/owned-numeric-measurement-2026-11-05",
+    "head_sha": "07541ff956d582bb9c3936b86261e43fa25b0b2f"
+  }
+}

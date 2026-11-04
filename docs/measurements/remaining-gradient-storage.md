@@ -5,7 +5,9 @@ Private derivative-input packing is implemented and
 AMD64 timing limits open. [PR #257 is verified delivery](../roadmap-history.md#packed-derivative-inputs-pr-257).
 The current group implements
 [consuming array maps and coordinate-list reuse](owned-numeric-updates.md), with
-native checks and measurements pending. [The plan](../../PLAN.md) owns acceptance.
+[native checks](owned-numeric-checks-2026-11-05/README.md) and
+[exact allocation counts](owned-numeric-census-2026-11-05/README.md) verified.
+Compiler-cost, runtime and final production checks remain. [The plan](../../PLAN.md) owns acceptance.
 
 ## Measured costs
 
@@ -17,7 +19,7 @@ for each group in one 129-coordinate, 199-update solve:
 |---|---|
 | Input derivative records | Selected private one/two-field numeric records now use a shared buffer; other uses keep their ordinary representation. |
 | List of input derivative records | The selected neighboring-pair consumer borrows overlapping windows of that buffer. |
-| Updated coordinate list | A private consuming entry can reuse an exclusive prefix. Its frozen proof and new tests still need native verification and measured counts. |
+| Updated coordinate list | A private consuming entry can reuse an exclusive prefix. Native checks and the whole-solve census verify its reuse and cleanup. |
 
 These historical totals measure allocation traffic, not live memory or process
 RAM. Do not reuse them as current measurements. For the complete packed-input
@@ -25,7 +27,7 @@ group, the [new count report](packed-input-time-2026-11-04/verified-memory-count
 verifies 51,541 fewer requests and 1,031,616 fewer requested bytes per largest
 solve. Public `grad` still returns a list.
 
-## Following group: consumed numeric storage
+## Current group: consumed numeric storage
 
 For example, subtracting adjustments `[1, 2]` from coordinates `[10, 20, 30]`
 produces `[9, 18]`: zip stops at the shorter input. Suppose another value keeps
@@ -48,7 +50,7 @@ entry checks the whole prefix and stops at the first shared cell.
 
 `zip-with` borrows its input lists and returns a fresh list spine. Under that
 [ownership contract](../../src/ownership.rs), its implementation cannot overwrite
-or free an input. The next group uses separate private consuming operations;
+or free an input. This group uses separate private consuming operations;
 the [frozen contract](owned-numeric-updates.md) specifies:
 
 - Last-use selection before ownership insertion; consuming an owner does not
@@ -62,8 +64,10 @@ the [frozen contract](owned-numeric-updates.md) specifies:
 - Same-source references, predicted counts, frozen timing/compiler limits and
   raw/optimized interpreter versus native O1/O2 checks.
 
-Both consuming operations are implemented in preparation, not verified delivery
-or a promised speedup. Allocation predictions still require observed counters.
+Both consuming operations pass native correctness and exact allocation checks.
+They are not yet verified delivery or a demonstrated speedup. At 129 coordinates
+and 199 updates, the census confirms 25,741 fewer requests and 819,968 fewer
+requested bytes per solve. Retain counts and raw derivative storage are unchanged.
 The current packed-input proof covers private flat numeric records. F128, nested
 `Rev`, resources and general escaping record arrays need separate representation
 and lifetime proofs; changing a public list to an array does not remove record
