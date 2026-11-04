@@ -49,6 +49,14 @@ known-function pair and reuses existing body/inlining limits. Do not recursively
 specialize newly made workers or add a global fixed-point analysis. Check exact
 types and arities; recognize primitive identities, not tutorial function names.
 
+The [scoped source diagnostic](scoped-objective-review-2026-11-04/README.md) adds
+one required step inside those workers: reassociate nested, unobservable `let`
+bindings without reordering computations, so existing record scalar replacement
+can expose the producer. Charge each rewrite to the existing budget; exclude
+resource regions and anchored/observable owners. Verify effect/trap order,
+exclusions and budget exhaustion. This proof extension precedes its implementation;
+the original frozen contract remains at its immutable tag.
+
 The storage pass follows existing packed-record and range lowering, before
 numeric parameter and ownership insertion. Use bounded local use analysis.
 Reject additional reads, escapes, unknown consumers and branch-crossing aliases.
