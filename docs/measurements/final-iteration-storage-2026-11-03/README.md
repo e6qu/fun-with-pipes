@@ -6,7 +6,9 @@ tag `roadmap/final-iteration-measurement-2026-11-04`.
 checks Linux GCC on ARM64/AMD64 and macOS Clang on ARM64.
 [Runtime/memory results](../final-iteration-time-2026-11-04/README.md) and
 [compiler costs](../final-iteration-analysis-2026-11-04/README.md) are recorded
-separately, including every timing miss. The full delivery matrix remains open.
+separately, including every timing miss. All nine final production jobs and
+documentation pass; [gate identities and audited logs](platforms/final-gates.json)
+record the verified #255 squash tree.
 The [contract](../final-iteration-storage.md) was frozen before implementation.
 
 ## What changes

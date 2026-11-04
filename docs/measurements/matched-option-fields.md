@@ -8,9 +8,10 @@ retain small slowdowns alongside the removed wrapper and retain; peak storage
 is unchanged. Passing the 2% regression limit is not a general speedup.
 The contract was frozen at `4ec13baa`, tag
 `roadmap/matched-option-fields-protocol-2026-11-04`, before implementation. This follows
-[final-iteration delivery](final-iteration-storage.md). Keep PR #255's head
-unchanged while its platform checks run; open one subsequent grouped PR only
-after that delivery. The source reviewed here is `19b91c05`.
+[final-iteration delivery](final-iteration-storage.md), verified and merged in
+PR #255. The source reviewed here is `19b91c05`. Original preparation and evidence
+commits remain at `roadmap/matched-option-pre-delivery-2026-11-04` (`4c378ce5`)
+after rebasing this group onto the verified squash tree.
 
 An `Option` says whether a value exists: `Some value` or `None`. A box is a heap
 allocation holding that choice and its value. A caller that immediately examines

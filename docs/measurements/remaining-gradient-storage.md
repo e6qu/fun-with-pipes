@@ -3,7 +3,7 @@
 This review records remaining costs and the proofs needed to remove them.
 The [same-type conversion group](scalar-array-identities.md) is verified and merged
 in #254, separately from the [direct array-call experiment](direct-array-callbacks.md).
-Final-iteration consumption is the [current delivery](final-iteration-storage.md). The optional-result review below
+Final-iteration consumption is [verified and merged](final-iteration-storage.md). The optional-result review below
 identifies a smaller remaining boundary cost. A [fresh source review](numeric-record-inputs-2026-11-04/README.md)
 proposes scoped-call specialization and private input-record packing next;
 its implementation contract is not yet frozen. Coordinate reuse remains unselected.
@@ -91,7 +91,7 @@ Keeping a slice can prolong its larger backing array's lifetime: the
 shows that cost alongside the removed allocation. Unknown/effectful callbacks
 and non-F64 maps are outside this selection.
 
-## Current delivery: discard an unused iteration history
+## Delivered: discard an unused iteration history
 
 The benchmark's history source is `iterate count descend | last`: it builds
 intermediate coordinate lists although only the final one is returned. The
@@ -105,8 +105,8 @@ The [implementation contract](final-iteration-storage.md) now selects direct
 an incidental optional-result cleanup repair as one group. Implementation and
 three-host focused verification are complete. The
 [four-session report](final-iteration-time-2026-11-04/README.md) verifies lower
-memory and ARC costs, with six timing limits still open. Final platform gates
-remain required. Resource-bearing states are excluded from history removal;
+memory and ARC costs, with six timing limits still open. All final platform gates
+pass in merged #255. Resource-bearing states are excluded from history removal;
 general `last` passes separate ownership checks for those values.
 
 This is measured separately from coordinate representation. Comparisons label

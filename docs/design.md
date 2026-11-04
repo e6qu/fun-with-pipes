@@ -632,8 +632,9 @@ only the final state survives. Numeric lists and arrays also qualify. Resource
 states and histories used elsewhere keep their ordinary storage. Callback order,
 input evaluation and count errors stay unchanged. Three-host focused native
 checks pass. [Measured results](measurements/final-iteration-time-2026-11-04/README.md)
-show lower peak storage and ARC traffic, with explicit timing misses. Final
-delivery gates remain open.
+show lower peak storage and ARC traffic, with explicit timing misses.
+[PR #255](roadmap-history.md#final-iteration-values-without-histories-pr-255)
+passed every final platform gate and merged with the tested tree.
 
 The next [optional-field change](measurements/matched-option-fields.md) is
 verified by focused GCC ARM64/AMD64 and Clang ARM64 checks.

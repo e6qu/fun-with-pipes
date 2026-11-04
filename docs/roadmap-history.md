@@ -6,6 +6,30 @@ and complete platform validation are different events. Measurements retain their
 original source and settings; old numbers are not measurements of current main.
 The linked PRs, runs and data records supply the detailed evidence.
 
+## Final iteration values without histories (PR #255)
+
+[PR #255](https://github.com/e6qu/fun-with-pipes/pull/255) merged November 4 as
+`24e099135f08403a95f36752e39f4e609a5d06cb`. Its tree equals tested `19b91c05`.
+All nine production jobs and documentation pass, with every full and target log
+audited. [Gate identities and logs](measurements/final-iteration-storage-2026-11-03/platforms/final-gates.json)
+include all 155 Windows targets per architecture. The squash message is one line,
+under 80 characters, without body or trailers.
+
+Ordinary `last` walks directly to the final list node. Eligible numeric
+`iterate … | last` keeps only the current value. Shared histories and resource
+states retain their ordinary behavior. The largest measured history solve uses
+97.7% less peak managed storage and runs 5.1–5.9% faster; each 199-update solve
+saves 400 allocations and 399 retains. Six runtime misses and one noisy compiler
+comparison remain open. [Native checks](measurements/final-iteration-storage-2026-11-03/README.md),
+[runtime results](measurements/final-iteration-time-2026-11-04/README.md) and
+[compiler costs](measurements/final-iteration-analysis-2026-11-04/README.md)
+retain their separate references and outcomes.
+
+Intel macOS's original upload failed with a DNS error after all tests passed.
+Only that job was retried; its 131 target logs and full log pass audit. Both
+attempts remain recorded. Duplicate same-tree main runs `41821619651` and
+`41821619512` were cancelled after verifying no failed steps.
+
 ## Float bits and identity array maps (PR #254)
 
 [PR #254](https://github.com/e6qu/fun-with-pipes/pull/254) merged November 4 as

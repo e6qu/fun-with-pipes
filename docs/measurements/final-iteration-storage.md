@@ -1,6 +1,7 @@
 # Returning the final iteration value
 
-**Implemented and verified on three focused native hosts; final delivery gates remain open.**
+**Verified and merged in [PR #255](../roadmap-history.md#final-iteration-values-without-histories-pr-255).**
+All nine production jobs and documentation pass; full and target logs are audited.
 The [complete runtime report](final-iteration-time-2026-11-04/README.md) verifies
 the large-case memory goal and retains six missed timing limits.
 [Compiler costs](final-iteration-analysis-2026-11-04/README.md) retain one noisy

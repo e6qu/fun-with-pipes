@@ -1,9 +1,8 @@
 # Current work
 
-**Next:** finish Intel macOS retry `126506098945`, audit its full/target logs, then
-squash [PR #255](https://github.com/e6qu/fun-with-pipes/pull/255). Eight other production
-jobs and docs already pass and are audited. Keep its head unchanged. Optional-result
-measurements are fully retained; open that PR only after #255.
+**Next:** publish the matched optional-result PR and monitor its exact-head gates.
+Implementation, focused correctness and all measurements pass; final production
+validation remains required. Keep one active delivery PR.
 
 ## Roadmap status
 
@@ -12,55 +11,30 @@ measurements are fully retained; open that PR only after #255.
 | 1 | Verified | Preserve the frozen selection and ownership contract |
 | 2 | Verified | Preserve native behavior and physical-cleanup checks |
 | 3 | Verified | Keep complete measurements and missed limits explicit |
-| 4 | In progress | Finish the Intel retry, audit, squash and verify the tree |
+| 4 | In progress | Publish, pass final gates, audit and verify squash/tree |
 
-## Delivery: final iteration values
+## Previous delivery completed
 
-- Worktree/branch: `.worktrees/iteration-final-value` / `iteration-final-value`.
-- Exact head: `19b91c059d223614124773ab6e356824514f69f1`, base `379bc9d5`.
-- Production run `41796687665`, attempt 2: Intel regular macOS tests, log upload
-  and Python SDK checks pass; packaging is running. The eight other production
-  jobs pass. Docs `41796687483`, job
-  `126462340110`, also pass. Require all nine plus docs before merging.
-- Intended squash subject: `Return final iteration values without retaining their history`.
-  Supply an empty body; verify the raw one-line message and tested tree afterward.
-- [Native correctness](measurements/final-iteration-storage-2026-11-03/README.md),
-  [runtime results](measurements/final-iteration-time-2026-11-04/README.md) and
-  [compiler costs](measurements/final-iteration-analysis-2026-11-04/README.md) are complete.
-  Preserve all six runtime misses and the compiler-noise case. Do not repeat timings.
-- Measured code/tests/build inputs equal frozen `bb5433b6` byte for byte, retained
-  by `roadmap/final-iteration-measurement-2026-11-04`. The contract and development
-  history also have immutable tags; never move them.
+[#255](https://github.com/e6qu/fun-with-pipes/pull/255) merged as
+`24e099135f08403a95f36752e39f4e609a5d06cb` on November 4. Its tree equals
+`19b91c059d223614124773ab6e356824514f69f1`; the raw squash message is one line,
+under 80 characters, with no body or trailers. [History and complete gates](roadmap-history.md#final-iteration-values-without-histories-pr-255)
+retain all ten successful jobs, full/target logs, the original upload failure
+and Intel retry `126506098945`. Final collection passes in 12.14s; verified
+retention passes in 0.14s. No further #255 checks are needed.
 
-[Attempt 1](measurements/final-iteration-storage-2026-11-03/upload-failure/README.md)
-passed all 128 regular targets and later packaging, but artifact upload failed
-with `ENOTFOUND`. Its full log has no other unexpected diagnostic. Only that job
-was retried. The upload failure is not a compiler bug or a passing gate.
+The matched-option branch rebased onto that squash without content changes.
+Original history is retained at immutable
+`roadmap/matched-option-pre-delivery-2026-11-04` (`4c378ce5`). Never move it or
+any frozen contract/measurement tag. Duplicate main runs `41821619651` and
+`41821619512` were cancelled only after tree equality and no-failure checks.
 
-GitHub copied successful jobs to new IDs for attempt 2. The collector verifies
-unchanged source, runner, steps and execution timestamps against each original
-job, retaining both IDs. New creation times and absent zero-valued runner-group
-metadata describe copied records, not repeated executions. Reconciliation passes.
-Windows audits include all 155 targets per architecture from the final archive;
-the earlier 57-log bundle is incomplete by design, not the whole Windows gate.
-
-From the optional-result worktree, use the local guard for these scratch tools:
-
-```text
-python3 ../gradient-work/collect-final-iteration-platforms.py --run 41796687665 --source 19b91c059d223614124773ab6e356824514f69f1 --docs-job 126462340110 --output ../gradient-work/platforms-255
-python3 ../gradient-work/retain-final-iteration-delivery.py --merge VERIFIED_SQUASH
-```
-
-Do not pass `--attempt 1`; select the current Intel retry. Collection skips pending
-jobs, so require ten successful audit records before merging. Retain the verified
-merge/gates in the next branch, reconcile it onto main, then publish its grouped PR.
-Cancel duplicate main checks only after confirming their tested tree and no failures.
-
-## Next group: matched optional results
+## Current group: matched optional results
 
 Worktree/branch: `.worktrees/matched-option-fields` / `matched-option-fields`.
-No PR yet. Compiler/runtime changes and controls are implemented; remaining work
-is #255 reconciliation and final platform delivery.
+Compiler/runtime changes, controls and measurements are complete. Rebased onto
+verified #255 with a byte-identical tree. Publish the grouped PR, then require
+all nine final-head production jobs and documentation before merging.
 
 | Evidence | Exact identity and status |
 |---|---|
@@ -107,8 +81,10 @@ Scratch tools live in `../gradient-work`; use `python3 scripts/local-guard.py`:
 - Retention, all 48 cross-session count comparisons and report generation pass
   (0.78/0.30/0.28s). Tools: `retain-matched-option-time.py`,
   `summarize-matched-option-memory.py`, `write-matched-option-time-readme.py`.
-- Reconcile after #255, then update scratch `matched-option-pr.md` and publish
-  one grouped PR. Final platform checks remain pending.
+- Update scratch `matched-option-pr.md` and publish one grouped PR. Final
+  platform checks remain pending. Use `collect-matched-option-platforms.py`
+  with the exact production run, source, documentation job and output directory.
+  It audits a recovered upload error only with successful retry and verified logs.
 - Full evidence processing and final test gates belong on GitHub, not locally.
 
 `82963531` also gives each macOS test-log upload one retry with identical files
@@ -127,9 +103,7 @@ the exact retry step and artifact; do not blanket-ignore diagnostics.
   stale #251/#252 platform status in the compiler design guide.
 
 - Latest `python3 scripts/local-guard.py python3 scripts/check-roadmap.py`: passes
-  263 link sets, 106 immutable identities and four roadmap steps (2.68 seconds).
-  Shortening the handoff initially removed its required status table; restored it
-  and the recheck passes (2.83 seconds).
+  264 link sets, 106 immutable identities and four roadmap steps (2.59 seconds).
 - Rust formatting, workflow lint, primitive inventory (395 declarations / 374
   contracts), source-reference, measurement-budget, raw-audit and report controls
   pass. No new Cargo target; native shard assignment is unchanged.
