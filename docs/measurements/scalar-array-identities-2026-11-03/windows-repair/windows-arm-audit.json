@@ -1,0 +1,51 @@
+{
+  "source": "9061744b324ad5b4e7c84866ca36cfcf8597d34a",
+  "job": 126122142906,
+  "logSha256": "26b63322c2a3b660cbb03cac4836a857c773241b9765f69eb8f2c843d14cb7bd",
+  "conversions": [
+    {
+      "case": "optimized=false -O1",
+      "rows": 200,
+      "allBitsEqual": true,
+      "onlyCrtNewlinesDiffer": true
+    },
+    {
+      "case": "optimized=false -O2",
+      "rows": 200,
+      "allBitsEqual": true,
+      "onlyCrtNewlinesDiffer": true
+    },
+    {
+      "case": "optimized=true -O1",
+      "rows": 200,
+      "allBitsEqual": true,
+      "onlyCrtNewlinesDiffer": true
+    },
+    {
+      "case": "optimized=true -O2",
+      "rows": 200,
+      "allBitsEqual": true,
+      "onlyCrtNewlinesDiffer": true
+    }
+  ],
+  "oomControls": [
+    "array-identity-false-packed-false-reuse-false-O1-allocation-failure",
+    "array-identity-false-packed-false-reuse-false-O2-allocation-failure",
+    "array-identity-false-packed-false-reuse-true-O1-allocation-failure",
+    "array-identity-false-packed-false-reuse-true-O2-allocation-failure",
+    "array-identity-false-packed-true-reuse-false-O1-allocation-failure",
+    "array-identity-false-packed-true-reuse-false-O2-allocation-failure",
+    "array-identity-false-packed-true-reuse-true-O1-allocation-failure",
+    "array-identity-false-packed-true-reuse-true-O2-allocation-failure",
+    "array-identity-true-packed-false-reuse-false-O1-allocation-failure",
+    "array-identity-true-packed-false-reuse-false-O2-allocation-failure",
+    "array-identity-true-packed-false-reuse-true-O1-allocation-failure",
+    "array-identity-true-packed-false-reuse-true-O2-allocation-failure",
+    "array-identity-true-packed-true-reuse-false-O1-allocation-failure",
+    "array-identity-true-packed-true-reuse-false-O2-allocation-failure",
+    "array-identity-true-packed-true-reuse-true-O1-allocation-failure",
+    "array-identity-true-packed-true-reuse-true-O2-allocation-failure"
+  ],
+  "tlsUntrustedClientDiagnostics": 0,
+  "tlsTestPassed": true
+}

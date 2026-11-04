@@ -1,0 +1,20 @@
+{
+  "id": 13264870824,
+  "node_id": "MDg6QXJ0aWZhY3QxMzI2NDg3MDgyNA==",
+  "name": "windows-native-windows-11-arm",
+  "size_in_bytes": 34891,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13264870824",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13264870824/zip",
+  "expired": false,
+  "digest": "sha256:8d8ae6adbeeb9c3130954546bb5227b95f0cf929f79d1ff62fde7efdd2776f43",
+  "created_at": "2026-11-03T19:21:31Z",
+  "updated_at": "2026-11-03T19:21:31Z",
+  "expires_at": "2027-02-01T18:32:07Z",
+  "workflow_run": {
+    "id": 41694728758,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "scalar-array-identities",
+    "head_sha": "9061744b324ad5b4e7c84866ca36cfcf8597d34a"
+  }
+}

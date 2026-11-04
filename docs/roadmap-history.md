@@ -6,6 +6,25 @@ and complete platform validation are different events. Measurements retain their
 original source and settings; old numbers are not measurements of current main.
 The linked PRs, runs and data records supply the detailed evidence.
 
+## Direct scalar array calls (PR #253)
+
+[PR #253](https://github.com/e6qu/fun-with-pipes/pull/253) merged November 3 as
+`ed5b8830a3cb90a4b6a248464d279ac8d1d0ccc7`. Its tree equals tested head `89394229`.
+The squash message is exactly one line, under 80 characters, with no body or
+trailers. All nine production jobs and documentation pass; every full and target
+log is audited. [Gate identities and retained logs](measurements/direct-array-callbacks-2026-11-03/platforms/final-gates.json).
+
+Selected numeric `array.map` calls invoke their known scalar callback directly,
+removing generic dispatch while keeping an independent result array. Native
+checks preserve aliases, effects, traps and partial-result cleanup. Allocation
+and ARC profiles are unchanged. Larger cases improve by 4.8–5.2% on ARM64 and
+5.5–8.1% on AMD64, but sixteen speed targets and one noisy comparison remain open.
+AMD64 current-only RSS observations rise 6–14%.
+[Correctness and repairs](measurements/direct-array-callbacks-2026-11-03/README.md),
+[compiler costs](measurements/direct-array-analysis-2026-11-03/README.md) and
+[all original runtime sessions](measurements/direct-array-time-2026-11-03/README.md)
+retain those limits. No completed timing was repeated.
+
 ## Private gradient arrays (PR #252)
 
 [PR #252](https://github.com/e6qu/fun-with-pipes/pull/252) merged November 3 as

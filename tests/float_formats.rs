@@ -1,5 +1,12 @@
 //! Declared precision must survive the interpreter, C ABI, text and wire paths.
+use fwp::ir::{Body, Expr, Func, Program, TypeShape, MT};
+use fwp::softfloat::{BFloat16, Binary128, Binary16};
+use fwp::value::Value;
+use std::fmt::Write;
 use std::process::Command;
+
+#[path = "support/ownership_ledger.rs"]
+mod ownership_ledger;
 
 #[path = "support/record_probe.rs"]
 mod record_probe;
@@ -248,5 +255,395 @@ int main(void) {
         fwp::cgen::compile_c(&code, &binary, "-O2").unwrap();
         let output = Command::new(binary).output().unwrap();
         assert_eq!(output.status.code(), Some(expected), "{name}: {output:?}");
+    }
+}
+
+// Compare bits, not float equality: NaNs are unequal even to themselves, and
+// numeric equality does not distinguish positive and negative zero.
+#[test]
+fn same_type_conversion_agrees_across_interpreter_and_native_entries() {
+    let mut program = Program::default();
+    let mut cases = Vec::new();
+    for (name, width, fraction) in [
+        ("F16", 16u32, 10u32),
+        ("BF16", 16, 7),
+        ("F32", 32, 23),
+        ("F64", 64, 52),
+        ("F128", 128, 112),
+    ] {
+        let ty = MT::con(&format!("std::{name}"));
+        let function = MT::Fun(Box::new(ty.clone()), Box::new(ty.clone()));
+        let primitive = program.funcs.len();
+        for (suffix, body) in [
+            ("primitive", Body::Prim("float.convert".into())),
+            (
+                "worker",
+                Body::Expr(Expr::Call(primitive, vec![Expr::Local(0)])),
+            ),
+        ] {
+            let exported = format!("convert_{}_{}", name.to_lowercase(), suffix);
+            program
+                .exports
+                .push((exported.clone(), program.funcs.len()));
+            program.funcs.push(Func {
+                name: exported,
+                arity: 1,
+                locals: vec![ty.clone()],
+                ty: function.clone(),
+                body,
+            });
+        }
+        let sign = 1u128 << (width - 1);
+        let infinity = ((1u128 << (width - fraction - 1)) - 1) << fraction;
+        let quiet = 1u128 << (fraction - 1);
+        // Both signs of zero, subnormal boundaries, normal boundaries,
+        // infinities, and quiet/signaling NaNs with distinct payloads.
+        let magnitudes = [
+            0,
+            1,
+            (1u128 << fraction) - 1,
+            1u128 << fraction,
+            infinity - 1,
+            infinity,
+            infinity | 1,
+            // Keep the second payload below BF16's quiet bit (0x40).
+            infinity | 0x21,
+            infinity | quiet,
+            infinity | quiet | 0x21,
+        ];
+        for (index, magnitude) in magnitudes.into_iter().enumerate() {
+            assert!(
+                !magnitudes[..index].contains(&magnitude),
+                "{name} conversion input patterns must be distinct"
+            );
+            for bits in [magnitude, magnitude | sign] {
+                let value = match name {
+                    "F16" => Value::F16(Binary16::from_bits(bits as u16)),
+                    "BF16" => Value::BF16(BFloat16::from_bits(bits as u16)),
+                    "F32" => Value::F32(f32::from_bits(bits as u32)),
+                    "F64" => Value::F64(f64::from_bits(bits as u64)),
+                    "F128" => Value::F128(Binary128::from_bits(bits)),
+                    _ => unreachable!(),
+                };
+                for id in [primitive, primitive + 1] {
+                    cases.push((name, bits, value.clone(), id));
+                }
+            }
+        }
+    }
+    fwp::ir::check_locals(&program).unwrap();
+    let directory = fwp::cgen::TempDir::new("same-type-float-conversion").unwrap();
+    let mut failures = Vec::new();
+    let mut raw_transcript = None;
+    for optimized in [false, true] {
+        let mut current = program.clone();
+        if optimized {
+            fwp::opt::optimize(&mut current);
+        }
+        fwp::ir::check_locals(&current).unwrap();
+        let mut interpreter =
+            fwp::interp::Interp::new(&current, Box::new(std::io::sink())).unwrap();
+        let mut expected = String::new();
+        let mut probe = String::from(
+            r#"
+int main(void) {
+#ifdef _WIN32
+    if (_setmode(_fileno(stdout), _O_BINARY) < 0 ||
+        _setmode(_fileno(stderr), _O_BINARY) < 0) return 253;
+#endif
+    fwp_lib_init(); size_t before = fwp_heap.live;
+"#,
+        );
+        for (name, bits, value, id) in &cases {
+            let converted = interpreter.call_root(*id, vec![value.clone()]).unwrap();
+            let output = match &converted {
+                Value::F16(v) => u128::from(v.to_bits()),
+                Value::BF16(v) => u128::from(v.to_bits()),
+                Value::F32(v) => u128::from(v.to_bits()),
+                Value::F64(v) => u128::from(v.to_bits()),
+                Value::F128(v) => v.to_bits(),
+                other => panic!("unexpected conversion result: {other:?}"),
+            };
+            assert_eq!(output, *bits, "{name} same-type conversion changed bits");
+            let exported = &program.funcs[*id].name;
+            writeln!(expected, "{exported} {bits:032x} {output:032x}").unwrap();
+            let low = *bits as u64;
+            let high = (*bits >> 64) as u64;
+            let result = match *name {
+                "F16" | "BF16" => format!(
+                    "uint64_t lo = {exported}(UINT16_C(0x{low:04x})), hi = 0;"
+                ),
+                "F32" => format!(
+                    "uint64_t lo = fwp_from_f32({exported}(fwp_f32(UINT32_C(0x{low:08x})))), hi = 0;"
+                ),
+                "F64" => format!(
+                    "uint64_t lo = fwp_from_f64({exported}(fwp_f64(UINT64_C(0x{low:016x})))), hi = 0;"
+                ),
+                "F128" => format!(
+                    "struct fwp_binary128 out = {exported}((struct fwp_binary128){{UINT64_C(0x{low:016x}),UINT64_C(0x{high:016x})}}); uint64_t lo = out.low, hi = out.high;"
+                ),
+                _ => unreachable!(),
+            };
+            writeln!(probe,
+                "{{ {result} printf(\"{exported} {bits:032x} %016llx%016llx\\n\", (unsigned long long)hi, (unsigned long long)lo); }}"
+            ).unwrap();
+            probe.push_str("if (fwp_heap.live != before || fwp_heap.rc_wide_len) return 90;\n");
+        }
+        probe.push_str("return 0; }\n");
+        if let Some(raw) = &raw_transcript {
+            assert_eq!(&expected, raw, "optimizer changed conversion bits");
+        } else {
+            raw_transcript = Some(expected.clone());
+        }
+        let (generated, _) = fwp::cgen::generate_library(&current, "convert", &[]).unwrap();
+        let source = format!("{generated}\n{probe}");
+        for opt in ["-O1", "-O2"] {
+            let executable = directory.join("convert.exe");
+            fwp::cgen::compile_c(&source, &executable, opt).unwrap();
+            let actual = Command::new(&executable).output().unwrap();
+            record_probe::save(
+                "float_formats",
+                &format!("same-type-optimized-{optimized}{opt}"),
+                &source,
+                &executable,
+                &actual,
+            );
+            if !actual.status.success()
+                || !actual.stderr.is_empty()
+                || actual.stdout != expected.as_bytes()
+            {
+                failures.push(format!(
+                    "optimized={optimized} {opt}: {actual:?}; expected {expected}"
+                ));
+            }
+        }
+    }
+    assert!(failures.is_empty(), "{}", failures.join("\n"));
+}
+
+#[test]
+fn scalar_array_identity_moves_owners_and_preserves_aliases() {
+    let scalar = MT::con("std::F64");
+    let array = MT::Con("std::Array".into(), vec![scalar.clone()]);
+    let conversion = MT::Fun(Box::new(scalar.clone()), Box::new(scalar.clone()));
+    let mapping = MT::Fun(Box::new(array.clone()), Box::new(array.clone()));
+    let option = MT::Con("std::Option".into(), vec![scalar.clone()]);
+    let consuming = MT::Fun(Box::new(array.clone()), Box::new(option.clone()));
+    let yielding = MT::Fun(Box::new(MT::unit()), Box::new(MT::unit()));
+    let mut program = Program {
+        funcs: vec![
+            Func {
+                name: "convert".into(),
+                arity: 1,
+                locals: vec![scalar],
+                ty: conversion.clone(),
+                body: Body::Prim("float.convert".into()),
+            },
+            Func {
+                name: "map".into(),
+                arity: 2,
+                locals: vec![conversion.clone(), array.clone()],
+                ty: MT::Fun(Box::new(conversion), Box::new(mapping.clone())),
+                body: Body::Prim("array.map".into()),
+            },
+            Func {
+                name: "identity-array".into(),
+                arity: 1,
+                locals: vec![array.clone()],
+                ty: mapping.clone(),
+                body: Body::Expr(Expr::Call(1, vec![Expr::Func(0), Expr::Local(0)])),
+            },
+            Func {
+                name: "main".into(),
+                arity: 0,
+                locals: vec![],
+                ty: MT::Record(vec![
+                    ("0".into(), mapping),
+                    ("1".into(), consuming.clone()),
+                    ("2".into(), yielding.clone()),
+                ]),
+                // Keep owned entries and the real task/unwind execution mode.
+                body: Body::Expr(Expr::Record(vec![
+                    Expr::Func(2),
+                    Expr::Func(5),
+                    Expr::Func(6),
+                ])),
+            },
+            Func {
+                name: "get".into(),
+                arity: 2,
+                locals: vec![MT::con("std::I64"), array.clone()],
+                ty: MT::Fun(Box::new(MT::con("std::I64")), Box::new(consuming.clone())),
+                body: Body::Prim("array.get".into()),
+            },
+            Func {
+                name: "consume-identity".into(),
+                arity: 1,
+                locals: vec![array],
+                ty: consuming,
+                body: Body::Expr(Expr::Call(
+                    4,
+                    vec![
+                        Expr::Const(Value::I64(0)),
+                        Expr::Call(2, vec![Expr::Local(0)]),
+                    ],
+                )),
+            },
+            Func {
+                name: "yield".into(),
+                arity: 1,
+                locals: vec![MT::unit()],
+                ty: yielding,
+                body: Body::Prim("task.yield".into()),
+            },
+        ],
+        main: Some(3),
+        ..Program::default()
+    };
+    program.shapes.insert(
+        option,
+        TypeShape::Adt(vec![
+            ("None".into(), vec![]),
+            ("Some".into(), vec![MT::con("std::F64")]),
+        ]),
+    );
+    fwp::ir::check_locals(&program).unwrap();
+    let directory = fwp::cgen::TempDir::new("scalar-array-identity").unwrap();
+    let mut failures = Vec::new();
+    for selected in [false, true] {
+        let mut current = program.clone();
+        if selected {
+            fwp::opt::optimize(&mut current);
+            assert!(matches!(&current.funcs[2].body, Body::Expr(Expr::Local(0))));
+        }
+        fwp::ir::check_locals(&current).unwrap();
+        let generated = fwp::cgen::generate(&current).unwrap();
+        assert!(
+            generated.contains("#define FWP_UNWIND 1"),
+            "fault probe needs a task-capable program"
+        );
+        let generated = generated.replace(
+            "int main(int argc, char **argv)",
+            "int original_main(int argc, char **argv)",
+        );
+        let generated = ownership_ledger::instrument_native(&generated, 256);
+        let generated = generated.replacen(
+            "typedef uint64_t V;",
+            "typedef uint64_t V;\nstatic size_t identity_retains;\nstatic int identity_fault;\nstatic void identity_fail(void);",
+            1,
+        );
+        let generated = generated.replacen(
+            "static inline void fwp_rc_dup(V v) {\n",
+            "static inline void fwp_rc_dup(V v) {\n    identity_retains++;\n",
+            1,
+        );
+        let boundary = "static V f4(V l0, V l1) {\n";
+        assert_eq!(generated.matches(boundary).count(), 1);
+        let generated = generated.replace(
+            boundary,
+            &format!("{boundary}    if (identity_fault) identity_fail();\n"),
+        );
+        for packed in [false, true] {
+            let marker = if generated.contains("#define FWP_PACKED_ARRAYS 1") {
+                "#define FWP_PACKED_ARRAYS 1"
+            } else {
+                "#define FWP_PACKED_ARRAYS 0"
+            };
+            assert_eq!(generated.matches(marker).count(), 1);
+            let generated = generated.replace(
+                marker,
+                &format!("#define FWP_PACKED_ARRAYS {}", u8::from(packed)),
+            );
+            for reuse in [false, true] {
+                let code = format!(
+                    "{}\n{generated}\n#define IDENTITY_SELECTED {}\n{}",
+                    if reuse { "" } else { "#define FWP_NO_REUSE 1" },
+                    u8::from(selected),
+                    include_str!("fixtures/scalar_array_identity.c"),
+                );
+                for opt in ["-O1", "-O2"] {
+                    let executable = directory.join("identity.exe");
+                    fwp::cgen::compile_c(&code, &executable, opt).unwrap();
+                    for (control, status, diagnostic) in [
+                        ("complete", 0, ""),
+                        ("missing-release", 90, ""),
+                        ("allocation-failure", 102, "fwp: out of memory\n"),
+                    ] {
+                        let mut command = Command::new(&executable);
+                        command.arg(control);
+                        let actual = command.output().unwrap();
+                        let label = format!("array-identity-{selected}-packed-{packed}-reuse-{reuse}{opt}-{control}");
+                        record_probe::save("float_formats", &label, &code, &executable, &actual);
+                        if actual.status.code() != Some(status)
+                            || actual.stderr != diagnostic.as_bytes()
+                        {
+                            failures.push(format!("{label}: {actual:?}"));
+                        }
+                    }
+                }
+            }
+        }
+    }
+    assert!(failures.is_empty(), "{}", failures.join("\n"));
+}
+
+#[test]
+fn conversion_maps_preserve_source_evaluation_and_effects() {
+    let directory = fwp::cgen::TempDir::new("conversion-map-order").unwrap();
+    let source = directory.join("main.fwp");
+    std::fs::write(&source, include_str!("fixtures/scalar_array_identity.fwp")).unwrap();
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    let raw = Command::new(compiler)
+        .env("FWP_NO_OPT", "1")
+        .args(["run", "--interp"])
+        .arg(&source)
+        .output()
+        .unwrap();
+    assert!(raw.status.success() && raw.stderr.is_empty(), "{raw:?}");
+    assert_eq!(
+        String::from_utf8_lossy(&raw.stdout)
+            .matches("input\n")
+            .count(),
+        1
+    );
+    let interpreted = Command::new(compiler)
+        .env_remove("FWP_NO_OPT")
+        .args(["run", "--interp"])
+        .arg(&source)
+        .output()
+        .unwrap();
+    assert!(
+        interpreted.status.success() && interpreted.stderr.is_empty(),
+        "{interpreted:?}"
+    );
+    assert_eq!(interpreted.stdout, raw.stdout);
+    let cfile = directory.join("main.c");
+    let emitted = Command::new(compiler)
+        .env_remove("FWP_NO_OPT")
+        .env("FWP_LTO", "0")
+        .args(["build", "--memory", "dynamic", "--emit-c", "-O2"])
+        .arg(&source)
+        .arg("-o")
+        .arg(&cfile)
+        .output()
+        .unwrap();
+    assert!(emitted.status.success(), "{emitted:?}");
+    let generated = std::fs::read_to_string(&cfile).unwrap();
+    for opt in ["-O1", "-O2"] {
+        let executable = directory.join("order.exe");
+        fwp::cgen::compile_c(&generated, &executable, opt).unwrap();
+        let actual = Command::new(&executable).output().unwrap();
+        record_probe::save(
+            "float_formats",
+            &format!("conversion-map-order{opt}"),
+            &generated,
+            &executable,
+            &actual,
+        );
+        assert!(
+            actual.status.success() && actual.stderr.is_empty(),
+            "{actual:?}"
+        );
+        assert_eq!(actual.stdout, raw.stdout);
     }
 }

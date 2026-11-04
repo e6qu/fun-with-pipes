@@ -1,0 +1,44 @@
+[
+  {
+    "run": 41678576958,
+    "session": 1,
+    "job": 126065771880,
+    "cpu": "AMD EPYC 9V74 80-Core Processor",
+    "record": "41678576958-1/session-1.json"
+  },
+  {
+    "run": 41678576958,
+    "session": 2,
+    "job": 126065771586,
+    "cpu": "AMD EPYC 9V74 80-Core Processor",
+    "record": "41678576958-2/session-2.json"
+  },
+  {
+    "run": 41679275708,
+    "session": 1,
+    "job": 126068274501,
+    "cpu": "AMD EPYC 9V45 96-Core Processor",
+    "record": "41679275708-1/session-1.json"
+  },
+  {
+    "run": 41682465813,
+    "session": 1,
+    "job": 126079427565,
+    "cpu": "AMD EPYC 9V45 96-Core Processor",
+    "record": "41682465813-1/session-1.json"
+  },
+  {
+    "run": 41684738354,
+    "session": 1,
+    "job": 126087429972,
+    "cpu": "AMD EPYC 9V74 80-Core Processor",
+    "record": "41684738354-1/session-1.json"
+  },
+  {
+    "run": 41688126556,
+    "session": 1,
+    "job": 126099231733,
+    "cpu": "Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz",
+    "record": "41688126556-1/session-1.json"
+  }
+]

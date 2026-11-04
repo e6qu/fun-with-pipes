@@ -1,8 +1,10 @@
 # Remaining storage in gradient descent
 
-This is a source review, not a selected optimization or a performance claim.
-Finish the [direct array-call experiment](direct-array-callbacks.md) before
-choosing another implementation. Its reference and timings must remain isolated.
+This review records remaining costs and the proofs needed to remove them.
+The [same-type conversion group](scalar-array-identities.md) is now selected for
+implementation and verification, separately from the
+[direct array-call experiment](direct-array-callbacks.md). Other candidates below
+remain unselected. Each experiment keeps its own reference and measurements.
 
 ## Measured costs
 
@@ -36,6 +38,21 @@ an eager map whose only consumer is a numeric-record fold. The objective's
 overlapping reads do not match that pattern. Extending it needs a representation
 and lifetime proof for those reads, not just adding `Rev` to an eligibility list.
 
+Current arrays pack scalar numeric values, including F128 bits. A `Rev[F64]` element
+still occupies a pointer-sized slot referring to a separate record. The
+[runtime array operations](../../runtime/fwp_rt.c) therefore need more than a
+library type change to store `Rev[F64]` as adjacent value/node-number fields.
+Two possible scopes have different proof costs:
+
+| Approach | Work required before selection |
+|---|---|
+| Extend private packed-record lowering | Recognize overlapping reads in a known consumer; keep the producer and callback order; prove that the buffer and borrowed fields cannot escape. |
+| Make numeric-record arrays a general representation | Define record layout and alignment; update every load/store, slice, comparison, encoding and cleanup path; give escaped records independent owners. |
+
+F128 arrays already distinguish borrowed payload reads from independently owned
+escaping values. That is a useful lifetime example, not proof that record reads
+can use the same representation unchanged. Neither approach is selected yet.
+
 **Updated coordinates:** [the ownership contract](../../src/ownership.rs) makes
 `zip-with` borrow both lists and return a fresh list spine. Its implementation
 cannot overwrite or free an input under that contract. Reuse would require an
@@ -44,19 +61,29 @@ checks where needed. Callbacks must finish in the same order; aliases must retai
 their values. Failure and cancellation must release old input, partial output and
 scratch exactly once, including when zip stops at the shorter input.
 
-## Check redundant same-type conversions
+## Selected conversion change
 
-The same report counts 199 replacement conversion arrays, totaling 206,960
-requested bytes in the largest solve. `rev._backward-float` converts the backward
-pass's F64 array to the requested scalar type. F32/F16/BF16 need real conversion;
-for F64, investigate whether the map can be proven to leave every value unchanged.
+The measured source above makes 199 replacement conversion arrays per large
+solve, requesting 206,960 bytes. The current implementation removes that F64
+identity map before ownership insertion. It also repairs same-type scalar
+conversion to preserve all bits, including signed zero and NaN payloads.
+Cross-type conversions still round; generic F128 results keep independent owners.
+[Conversion rules](../float-formats.md#current-contract) explain the semantics.
 
-An identity rewrite must preserve floating-point bits, including signed zero and
-NaNs, and must transfer the existing owner correctly. Merely returning a borrowed
-input would be unsafe when its caller releases it. Prove that the owned result
-moves through the ordinary ownership pass without additional retains, preserve
-aliases, and test cleanup before claiming removal of that allocation or traversal.
-This is unselected and separate from direct callback dispatch.
+[Three-host native checks](scalar-array-identities-2026-11-03/README.md) and
+[compiler-cost checks](scalar-array-identity-analysis-2026-11-03/README.md) pass.
+[The runtime report](scalar-array-identity-time-2026-11-03/README.md) and four
+raw audits are complete; all 32 required speed gains are missed. The final
+platform matrix remains pending. [The handoff](../development-state.md) tracks it. Both sides
+of the frozen comparison include the scalar repair; the reference disables only
+map removal. Passing allocation checks does not satisfy the separate speed goals.
+
+The rewrite transfers the existing owner through the ordinary ownership pass.
+Aliases retain their values, and failure/cancellation checks verify cleanup.
+Keeping a slice can prolong its larger backing array's lifetime: the
+[storage report](scalar-array-identities-2026-11-03/README.md#result-lifetime-and-allocation-traffic)
+shows that cost alongside the removed allocation. Unknown/effectful callbacks
+and non-F64 maps are outside this selection.
 
 ## Another opportunity: discard an unused iteration history
 
@@ -64,6 +91,24 @@ The benchmark's history source is `iterate count descend | last`: it builds
 intermediate vectors even though only the last is returned. A selected compiler
 transformation could keep only the current value when the iteration list has no
 other use. This is not implemented by the current measured source.
+
+For example, `0 | iterate 3 (add 1) | last` currently builds `[0, 1, 2]`
+and returns `Some 2`. The count is the number of values, including the initial
+value; it is not the number of callback calls:
+
+| Count | Callback calls | Result from initial value 0 |
+|---|---:|---|
+| Negative or zero | 0 | `None` |
+| 1 | 0 | `Some 0` |
+| 3 | 2 | `Some 2` |
+
+In [the standard library](../../lib/list.fwp), `last` is `reverse | head`, not a
+primitive. [Native iteration](../../runtime/fwp_rt_prims.c) retains each state
+in a scratch array before constructing the list. A future rewrite must recognize
+the actual lowered producer/consumer, preserve the optional result and avoid
+retaining intermediate states that have no remaining use. Evaluating the count,
+callback expression and initial value still matters even when the callback is
+never called. This source review does not select that rewrite yet.
 
 Earlier destruction can be observable for files, locks or other resources. An
 initial selection should exclude such states unless it proves that release timing

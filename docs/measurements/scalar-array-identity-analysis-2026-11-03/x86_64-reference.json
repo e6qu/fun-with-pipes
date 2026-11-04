@@ -1,0 +1,14 @@
+{
+  "unchanged": {
+    "src/interp.rs": "35e48d38540dcd0dcf2653cd14e11eddd059b613379442b1ce5ef82fb9def7b0",
+    "runtime/fwp_rt_num.c": "bbce67bc55f3135629e506ddeec543141b1e0a14c7a72867ee1fd9c170148b43",
+    "src/cgen.rs": "25590e6cc4262193ee4c3d09c0e80ea948012f530b551e1e87f84dbb4c4c6dda"
+  },
+  "source": "beddd406153f1976fed00847292207bff9053e22",
+  "disabledTransformation": "F64 identity array-map elimination",
+  "candidateOptimizerSha256": "dc36fa785e03a6ee8b5b17a312e98c68c5481be3540a9094b2b5878568aebf61",
+  "referenceOptimizerSha256": "ca667d97f4496c1745529aa2d72afe1f0ab6224cc53182a8b61eaf888fca3672",
+  "ownershipSha256": "dee951517f92d3cdd35ba7d8dd5a0eb954c153ff3076bcbf78174e84175956fe",
+  "patchSha256": "2af7801e6c34a28d7716227779a6ad3baaff2dd1af20c71bce0fbbb6674b75cc",
+  "compilerSha256": "4904b52a1e660bc9844cbeb9523dc17dba6aec7789fc533de0c6906e7bc9d938"
+}

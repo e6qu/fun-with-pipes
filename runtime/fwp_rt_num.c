@@ -570,6 +570,9 @@ static V fwp_fmath(int k, int f, V v) {
 }
 
 static V fwp_float_convert(int source, int target, V v) {
+    /* Same-format immediates preserve every bit, including signaling NaNs.
+     * F128 still copies into a fresh box under the numeric ownership contract. */
+    if (source == target && source != K_F128) return v;
 #ifdef FWP_EXACT_FLOAT
     if (source == K_F16 || source == K_BF16 || source == K_F128 || target == K_F16 || target == K_BF16 || target == K_F128)
         return fwp_quad_float(target, fwp_float_quad(source, v));

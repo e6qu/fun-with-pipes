@@ -664,6 +664,28 @@ impl<'p> Opt<'p> {
                 }
             }
         }
+        // Mapping the F64 identity conversion copies no information. Rewrite
+        // before ownership insertion: a unique input moves, while a shared
+        // input acquires ordinary result ownership. The literal primitive
+        // callback has no captures, effects or function-entry scheduler tick.
+        if callee.arity == 2 && matches!(&callee.body, Body::Prim(symbol) if symbol == "array.map")
+        {
+            if let [Expr::Func(callback), _] = args.as_slice() {
+                let callback = &self.funcs[*callback];
+                let scalar = MT::con("std::F64");
+                let array = MT::Con("std::Array".into(), vec![scalar.clone()]);
+                let identity = MT::Fun(Box::new(scalar.clone()), Box::new(scalar));
+                let (parameters, result) = callee.ty.params(2);
+                if callback.arity == 1
+                    && callback.ty == identity
+                    && matches!(&callback.body, Body::Prim(symbol) if symbol == "float.convert")
+                    && parameters == [&identity, &array]
+                    && result == &array
+                {
+                    return args.into_iter().nth(1).unwrap();
+                }
+            }
+        }
         // Top-level display of a string preserves its bytes. Eliminate the
         // copy before ownership lowering so aliases receive ordinary owners.
         // Strings nested inside other displayed values still need escaping.
@@ -1351,6 +1373,77 @@ fn rename_locals(e: &Expr, caps: &[Local]) -> Expr {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn scalar_array_identity_requires_the_exact_primitive_and_preserves_input() {
+        for (source, destination, symbol, selected) in [
+            ("F64", "F64", "float.convert", true),
+            ("F64", "F32", "float.convert", false),
+            ("F32", "F64", "float.convert", false),
+            ("F32", "F32", "float.convert", false),
+            ("F16", "F16", "float.convert", false),
+            ("BF16", "BF16", "float.convert", false),
+            ("F128", "F128", "float.convert", false),
+            ("F64", "F64", "abs", false),
+        ] {
+            let source = MT::con(&format!("std::{source}"));
+            let destination = MT::con(&format!("std::{destination}"));
+            let input = MT::Con("std::Array".into(), vec![source.clone()]);
+            let output = MT::Con("std::Array".into(), vec![destination.clone()]);
+            let callback = MT::Fun(Box::new(source.clone()), Box::new(destination));
+            let funcs = vec![
+                Func {
+                    name: "conversion".into(),
+                    arity: 1,
+                    locals: vec![source],
+                    ty: callback.clone(),
+                    body: Body::Prim(symbol.into()),
+                },
+                Func {
+                    name: "map".into(),
+                    arity: 2,
+                    locals: vec![callback.clone(), input.clone()],
+                    ty: MT::Fun(
+                        Box::new(callback.clone()),
+                        Box::new(MT::Fun(Box::new(input.clone()), Box::new(output))),
+                    ),
+                    body: Body::Prim("array.map".into()),
+                },
+                Func {
+                    name: "effectful-input".into(),
+                    arity: 1,
+                    locals: vec![MT::unit()],
+                    ty: MT::Fun(Box::new(MT::unit()), Box::new(input)),
+                    body: Body::Prim("test.input-effect".into()),
+                },
+            ];
+            let shapes = Shapes::default();
+            for known in [false, true] {
+                let mut opt = Opt {
+                    funcs: &funcs,
+                    shapes: &shapes,
+                    current: usize::MAX,
+                    locals: vec![callback.clone()],
+                    budget: 600,
+                    resource_locals: Vec::new(),
+                };
+                let callback = if known { Expr::Func(0) } else { Expr::Local(0) };
+                let argument = Expr::Call(2, vec![Expr::Const(crate::value::Value::unit())]);
+                let rewritten = opt.call(1, vec![callback, argument], 0);
+                if selected && known {
+                    assert!(matches!(rewritten, Expr::Call(2, ref args)
+                        if matches!(args.as_slice(), [Expr::Const(_)])));
+                } else {
+                    assert!(matches!(rewritten, Expr::Call(1, ref args)
+                        if matches!(args.as_slice(), [_, Expr::Call(2, _)])));
+                }
+                assert_eq!(
+                    opt.budget, 600,
+                    "selection must not inline or rescan a body"
+                );
+            }
+        }
+    }
 
     #[test]
     fn applied_record_bindings_preserve_argument_order_and_reject_owned_fields() {

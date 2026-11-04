@@ -56,16 +56,38 @@ Protocol golden-byte tests cover widths, signed zero, infinities and NaN payload
 transport. Delivery evidence links the corresponding production verification.
 
 The implementation uses shared binary16/bfloat16/binary128 arithmetic and exact
-decimal cores. For these three formats (F16, BF16 and F128), arithmetic and
-conversion NaNs are canonical positive quiet NaNs. F32/F64 arithmetic NaN signs
-and payloads are implementation dependent. Raw bit transport preserves payloads
-and signs for every format.
+decimal cores. Converting a float to the same type preserves every bit, including
+signed zero and quiet/signaling NaN signs and payloads. For example,
+`same : F64 -> F64` with `same = float.convert` is an identity; it does not round
+or quiet a NaN. A generic F128 result still needs its own owner.
+
+Conversions between different types retain their rounding rules. For the software
+formats (F16, BF16 and F128), arithmetic and cross-type conversion NaNs are
+canonical positive quiet NaNs. F32/F64 arithmetic NaN signs and payloads are
+implementation dependent. Raw bit transport preserves payloads and signs for
+every format.
 
 Tests of NaN key ordering must supply the same bits
 to both implementations, rather than derive keys from arithmetic such as 0/0. Decimal conversion uses explicit per-call
 scratch ownership, including cleanup on allocation failure. Delivery evidence
 records language integration and native verification alongside core arithmetic
 checks.
+
+The same rule permits this selected array operation to return the existing
+immutable values without copying each element:
+
+```fwp
+same-array : Array[F64] -> Array[F64]
+same-array = array.map float.convert
+```
+
+For input `array[1.0, -0.0]`, the result has the same two values and exactly the
+same bits. Subsequent immutable updates still preserve any input aliases.
+Removing this copy can keep a slice's backing array alive longer; fewer
+allocations do not always mean less live storage. The
+[implementation and verification contract](measurements/scalar-array-identities.md)
+records the narrow selection and required checks; [the handoff](development-state.md)
+distinguishes completed checks from pending verification.
 
 Keep `float.convert` explicit. Preserve operation order and the existing policy
 against implicit reassociation or contraction. Do not silently substitute the

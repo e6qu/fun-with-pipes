@@ -1,0 +1,30 @@
+[
+  [
+    "windows-arm",
+    "job failure"
+  ],
+  [
+    "windows-arm",
+    "2026-11-03T19:47:57.0167204Z test result: FAILED. 5 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 62.93s"
+  ],
+  [
+    "windows-arm",
+    "2026-11-03T19:49:17.7148562Z ##[error]Process completed with exit code 1."
+  ],
+  [
+    "windows-amd",
+    "job failure"
+  ],
+  [
+    "windows-amd",
+    "2026-11-03T19:29:23.3351420Z curl peer: curl: (55) OpenSSL SSL_read: OpenSSL/3.6.5: error:0A000418:SSL routines::tlsv1 alert unknown ca, errno 0"
+  ],
+  [
+    "windows-amd",
+    "2026-11-03T19:34:54.0755709Z test result: FAILED. 5 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 51.99s"
+  ],
+  [
+    "windows-amd",
+    "2026-11-03T19:36:06.9757410Z ##[error]Process completed with exit code 1."
+  ]
+]

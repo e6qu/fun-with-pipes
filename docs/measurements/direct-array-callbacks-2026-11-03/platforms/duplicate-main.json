@@ -1,0 +1,130 @@
+{
+  "source": "ed5b8830a3cb90a4b6a248464d279ac8d1d0ccc7",
+  "reason": "Squash tree equals fully audited production and documentation head 89394229",
+  "runs": [
+    {
+      "run": 41680031792,
+      "before": {
+        "conclusion": "",
+        "headSha": "ed5b8830a3cb90a4b6a248464d279ac8d1d0ccc7",
+        "jobs": [
+          {
+            "completedAt": "0001-01-01T00:00:00Z",
+            "conclusion": "",
+            "databaseId": 126070927902,
+            "name": "test (ubuntu-24.04-arm)",
+            "startedAt": "2026-11-03T17:01:07Z",
+            "status": "queued",
+            "steps": [],
+            "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41680031792/job/126070927902"
+          },
+          {
+            "completedAt": "0001-01-01T00:00:00Z",
+            "conclusion": "",
+            "databaseId": 126070928386,
+            "name": "macos_ownership (macos-15-intel)",
+            "startedAt": "2026-11-03T17:01:07Z",
+            "status": "queued",
+            "steps": [],
+            "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41680031792/job/126070928386"
+          },
+          {
+            "completedAt": "0001-01-01T00:00:00Z",
+            "conclusion": "",
+            "databaseId": 126070928444,
+            "name": "bench",
+            "startedAt": "2026-11-03T17:01:07Z",
+            "status": "queued",
+            "steps": [],
+            "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41680031792/job/126070928444"
+          },
+          {
+            "completedAt": "0001-01-01T00:00:00Z",
+            "conclusion": "",
+            "databaseId": 126070928449,
+            "name": "windows / native (windows-2025)",
+            "startedAt": "2026-11-03T17:01:07Z",
+            "status": "queued",
+            "steps": [],
+            "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41680031792/job/126070928449"
+          },
+          {
+            "completedAt": "0001-01-01T00:00:00Z",
+            "conclusion": "",
+            "databaseId": 126070928460,
+            "name": "macos (macos-15)",
+            "startedAt": "2026-11-03T17:01:07Z",
+            "status": "queued",
+            "steps": [],
+            "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41680031792/job/126070928460"
+          },
+          {
+            "completedAt": "0001-01-01T00:00:00Z",
+            "conclusion": "",
+            "databaseId": 126070928487,
+            "name": "macos (macos-15-intel)",
+            "startedAt": "2026-11-03T17:01:07Z",
+            "status": "queued",
+            "steps": [],
+            "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41680031792/job/126070928487"
+          },
+          {
+            "completedAt": "0001-01-01T00:00:00Z",
+            "conclusion": "",
+            "databaseId": 126070928493,
+            "name": "macos_ownership (macos-15)",
+            "startedAt": "2026-11-03T17:01:07Z",
+            "status": "queued",
+            "steps": [],
+            "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41680031792/job/126070928493"
+          },
+          {
+            "completedAt": "0001-01-01T00:00:00Z",
+            "conclusion": "",
+            "databaseId": 126070928593,
+            "name": "windows / native (windows-11-arm)",
+            "startedAt": "2026-11-03T17:01:07Z",
+            "status": "queued",
+            "steps": [],
+            "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41680031792/job/126070928593"
+          },
+          {
+            "completedAt": "0001-01-01T00:00:00Z",
+            "conclusion": "",
+            "databaseId": 126070931122,
+            "name": "test (ubuntu-latest)",
+            "startedAt": "2026-11-03T17:01:08Z",
+            "status": "queued",
+            "steps": [],
+            "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41680031792/job/126070931122"
+          }
+        ],
+        "status": "queued"
+      },
+      "finalStatus": "completed",
+      "finalConclusion": "cancelled"
+    },
+    {
+      "run": 41680031784,
+      "before": {
+        "conclusion": "",
+        "headSha": "ed5b8830a3cb90a4b6a248464d279ac8d1d0ccc7",
+        "jobs": [
+          {
+            "completedAt": "0001-01-01T00:00:00Z",
+            "conclusion": "",
+            "databaseId": 126070927359,
+            "name": "roadmap_docs",
+            "startedAt": "2026-11-03T17:01:07Z",
+            "status": "queued",
+            "steps": [],
+            "url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41680031784/job/126070927359"
+          }
+        ],
+        "status": "queued"
+      },
+      "finalStatus": "completed",
+      "finalConclusion": "cancelled"
+    }
+  ]
+}
