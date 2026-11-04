@@ -10,7 +10,12 @@ audits before squash merge. Keep one active delivery PR.
 Preparation worktree/branch: `.worktrees/packed-derivative-inputs` /
 `packed-derivative-inputs`. [The contract](measurements/packed-derivative-inputs.md)
 groups bounded scoped specialization, packed indexed records and overlapping
-pair reads. Commit/freeze it before code changes. No implementation yet.
+pair reads. Frozen at `cc425aba`, immutable tag
+`roadmap/packed-derivative-inputs-protocol-2026-11-04`. Scoped specialization and
+four compiler controls are implemented; packed producer/consumer lowering and
+native controls remain. Guarded formatting check passes (1.87s). A targeted
+runner source diagnostic will verify the exposed IR shape before storage lowering;
+it is not the grouped correctness or performance gate.
 
 ## Roadmap status
 
@@ -108,7 +113,7 @@ the exact retry step and artifact; do not blanket-ignore diagnostics.
   commands and 43 hashed files. Guarded collection 5.63s; archive/logs retained.
   Proposed group: bounded known scoped-call specialization, packed indexed
   numeric input records and overlapping reads. Preserve all three eager stages.
-  The implementation contract is prepared above; no performance claim yet. Also corrected
+  The implementation contract is frozen above; no performance claim yet. Also corrected
   stale #251/#252 platform status in the compiler design guide.
 
 - Latest `python3 scripts/local-guard.py python3 scripts/check-roadmap.py`: passes

@@ -2083,6 +2083,8 @@ pub fn lower(env: &Env, typed: &Typed, roots: Roots) -> MResult<Program> {
         check(&prog, "matrix specialization");
         crate::opt::optimize(&mut prog);
         check(&prog, "optimizing");
+        crate::opt::scoped::specialize(&mut prog);
+        check(&prog, "scoped arguments");
         crate::opt::specialize_hofs(&mut prog);
         check(&prog, "specializing");
         crate::fuse::fuse(&mut prog);
