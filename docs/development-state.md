@@ -1,13 +1,15 @@
 # Current work
 
-**Next:** audit the grouped packed-input checks `41834093801` at
-`adbe92abb855dfeea5c648fb122131433a1681f3`; fix every finding before measuring.
+**Next:** publish the batched grouped-check/documentation repairs and dispatch
+`packed-input-checks`; audit all three hosts before measuring.
 [PR #256](https://github.com/e6qu/fun-with-pipes/pull/256) is verified and merged.
 The branch now starts from its squash, with byte-identical content across the
 rebase. Original history is preserved at immutable
 `roadmap/packed-input-pre-delivery-2026-11-04` (`db7ae09c`). Compiler/runtime,
-library, test and build inputs still match `adbe92ab` exactly. Publish the next
-delivery as a draft while grouped checks and measurements run.
+library and build inputs still match `adbe92ab`; the current repairs change
+test expectations, measurement inputs, CI setup and documentation.
+[Draft PR #257](https://github.com/e6qu/fun-with-pipes/pull/257) groups this work;
+keep it in draft while correctness checks and measurements run.
 
 Worktree/branch: `.worktrees/packed-derivative-inputs` / `packed-derivative-inputs`.
 The [contract](measurements/packed-derivative-inputs.md) groups known scoped
@@ -31,9 +33,14 @@ construction, pair mapping and folding as separate eager stages.
 - Failed preflight retained at `roadmap/packed-input-preflight-2026-11-04`
   (`9ad9d162`). Never move frozen tags.
 - Grouped run `41834093801`: GCC ARM64 `126588461641`, GCC AMD64
-  `126588461854`, Clang ARM64 `126588461334`; initially queued on all hosts.
-  All use the exact `adbe92ab` source above. Later doc-only updates do not change
-  compiler/runtime/library/test/build inputs.
+  `126588461854`, Clang ARM64 `126588461334`. All completed and audited: each
+  passes 277 units (four ignored), contracts, twelve selections and 92/93 native
+  tests. Failures: omitted export-box allocation in the assertion, shallow
+  checkout missing historical evidence, invalid generated `scope-0` names.
+  All used the exact `adbe92ab` source above; retain this failed source.
+- Documentation `41838130161` / `126602280596` failed at `a001184a`: stale
+  gradient-array reference patch context. Refresh context only, preserving both
+  new native bodies. Full log and audit retained with the grouped preflight.
 
 [Preflight failures and repairs](measurements/packed-input-selection-2026-11-04/README.md):
 
@@ -53,8 +60,9 @@ object counts, both window/range orders, bounds, aliases, failure/cancellation,
 actual frees, disabled reuse and deliberately broken cleanup/value controls.
 Compare raw/optimized interpreters and native O1/O2. Keep existing autodiff scope,
 workspace, precision, callback and ownership targets in the same batch.
-These extend `zip_unwind_ownership`; no new Cargo target. New/repaired checks
-remain unverified until the grouped jobs finish.
+These extend `zip_unwind_ownership`; no new Cargo target. Add an extra-allocation
+negative control, fetch full history and use `scope0` names. Both cost inputs
+now retain individual results even if one fails. Repaired checks need CI.
 
 ## Measurement and collection
 
@@ -63,8 +71,9 @@ Full builds, suites, benchmarks and large regeneration stay on GitHub.
 
 - `../gradient-work/collect-packed-input-checks.py --run 41834093801
   --source adbe92abb855dfeea5c648fb122131433a1681f3 --output ../gradient-work/packed-input-checks-1`
-  collects completed jobs. Inspect every full/target log and saved status;
-  a successful collector with unfinished jobs does not mean the gate passed.
+  collected all jobs (78.18s). All artifact hashes, 619 native images and 630
+  statuses per host were audited (3.61s); logs/new controls are retained in
+  the preflight's `grouped-preflight` directory. No other failures or warnings.
 - After the complete matching-source correctness gate, freeze the measurement
   source and dispatch `packed-input-analysis` and `packed-input-time` with that
   `evidence_run`. Runtime needs explicit `native_runner=all` and
@@ -91,6 +100,14 @@ compiler only formats/type-checks small fixtures and confirms the single-field
 interpreter result `True` (0.24s); it does not verify the new compiler.
 No local build or benchmark. Preserve 64 GiB free disk and all guard limits.
 Leave the dirty primary/older worktrees alone; this branch owns current work.
+
+Repair checks: both generated inputs type-check (0.47s); corrected saved macOS
+C passes O1/O2 and all cleanup loops (0.82s); seven driver controls pass (2.00s);
+workflow lint passes (6.47s). Rust formatting caught one new long assertion;
+corrected and passes (1.75s). Extra-allocation controls reject at O1/O2 (0.81s).
+These do not establish GCC or regenerated support.
+Six gradient-reference controls pass (0.60s); six related suites skipped in that
+CI step pass (22 tests, 1.08s). Roadmap audit passes (2.49s).
 
 ## Completed delivery
 

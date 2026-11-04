@@ -73,6 +73,8 @@ jobs:
       FWP_ARC_ARTIFACTS: packed-input-checks/owners
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
       - name: Record source and production toolchain
         run: |
           mkdir -p packed-input-checks
@@ -155,10 +157,19 @@ jobs:
           spec.loader.exec_module(module)
           folder = Path('packed-input-checks/compiler-cases')
           folder.mkdir()
+          failed = False
           for name, source in module.scoped_cost_inputs().items():
               path = folder / (name + '.fwp')
               path.write_text(source)
-              subprocess.run(['target/debug/fwp', 'build', '--memory', 'dynamic', '--emit-c', '-O2', str(path), '-o', str(folder / (name + '.c'))], check=True)
+              result = subprocess.run(['target/debug/fwp', 'build', '--memory', 'dynamic', '--emit-c', '-O2', str(path), '-o', str(folder / (name + '.c'))], capture_output=True)
+              (folder / (name + '.stdout')).write_bytes(result.stdout)
+              (folder / (name + '.stderr')).write_bytes(result.stderr)
+              (folder / (name + '.status')).write_text(str(result.returncode) + '\n')
+              print(name, 'exit', result.returncode, flush=True)
+              sys.stdout.buffer.write(result.stdout)
+              sys.stderr.buffer.write(result.stderr)
+              failed |= result.returncode != 0
+          sys.exit(int(failed))
           PYCODE
           exit "$status"
       - name: Retain checks, generated C and native images including failures

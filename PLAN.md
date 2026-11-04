@@ -31,11 +31,12 @@ explains the order. Coordinate-list reuse remains unselected.
 | 4 | Deliver the grouped PR | Keep code, controls, documentation and evidence together. Pass nine exact-head production jobs plus docs, audit every full/target log, then squash and verify tree/message. |
 
 Step 1 is frozen at `cc425aba`; the subsequent binding proof at `3ccc9bf2`
-precedes its implementation. Step 2 is running as one grouped batch.
+precedes its implementation. Step 2 needs the repaired grouped batch.
 [Preflights](docs/measurements/packed-input-selection-2026-11-04/README.md)
-now select all three real gradient examples and pass twenty GCC ARM64 cleanup
-images. The grouped gate must verify the remaining fixture/reporting repairs
-and added boundaries. No performance measurements have started. The
+now select all three real gradient examples. The three-host batch passes 92 of
+93 integration tests; its allocation assertion omitted the exported result box.
+The repair also fixes missing checkout history and invalid benchmark names.
+No performance measurements have started. The
 [handoff](docs/development-state.md) records exact sources, jobs and next actions.
 
 [PR #256 is verified delivery](docs/roadmap-history.md#matched-optional-results-pr-256):

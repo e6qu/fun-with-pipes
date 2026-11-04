@@ -64,7 +64,57 @@ Source collection took 5.52s; native-image/log audit 3.30s; retention 0.13s.
 The collector first rejected a mistyped source identity before accepting the
 exact revision above. No benchmark has run.
 
-## Retained evidence
+## Grouped preflight
+
+[Run 41834093801](https://github.com/e6qu/fun-with-pipes/actions/runs/41834093801)
+at `adbe92abb855dfeea5c648fb122131433a1681f3` failed on GCC ARM64/AMD64 and
+Clang ARM64. Each host passed 277 compiler unit checks (four ignored), primitive
+contracts, all twelve selections and 92 of 93 integration tests across fifteen
+targets. Both interpreters, native O1/O2 outputs, one-field records and all eight
+F32/F64 bit-preservation images pass. No compiler warnings were found.
+
+Three causes and repairs:
+
+- **Allocation assertion:** the native export returns a boxed `Point`. The
+  observer counted two buffers and a nonempty fold's box but omitted the export
+  box. Generated `f0` calls the field-return worker, then allocates that result.
+  The exact total is three objects for zero/one input and four for longer input.
+  Keep this boundary cost visible; add a deliberately extra allocation to prove
+  the counter rejects it. Cleanup and alias requirements are unchanged.
+- **Missing history:** the new job's shallow checkout omitted the frozen commits
+  and tags used by five raw-evidence assertions. Fetch full history, as the
+  documentation gate already does; do not weaken the source-identity checks.
+- **Invalid generated names:** `scope-0` parses as subtraction, not an identifier.
+  Generate `scope0` through `scope63`. Check both cost inputs even if one fails,
+  saving each command's output and status. The old loop stopped before the large
+  worker input, so this run did not verify it.
+
+The corrected inputs type-check (0.47s). Saved macOS C with the corrected
+assertion passes O1/O2, including all failure/cancellation loops (0.82s).
+These local checks do not replace regenerated three-host validation.
+
+[Summary](grouped-preflight/summary.json) and per-host audits retain all target
+results, 630 status records and hashes for every artifact file. The audit checked
+all 619 native image machine types per host. Full job/target logs and the eleven
+new probe images, C sources and outputs are retained in `*-controls.zip`; artifact
+metadata identifies the complete downloaded archives. Collection took 78.18s;
+hash/image/log audit and retention took 3.61s. Keep this failure after repair.
+
+### Documentation gate repair
+
+Documentation run `41838130161`, job `126602280596`, failed at `a001184a`:
+five of six gradient-array reference tests could not apply their patch to the
+interpreter. The patch's context predated the two new native-only buffer bodies.
+Refresh those context lines without changing the transformation being disabled;
+assert both new bodies and the packed-input pass remain in the reference.
+The original patch remains frozen with each historical measurement source.
+
+All six reference tests pass after repair (0.60s), as do the six related suites
+skipped after that failure (22 tests, 1.08s). [Audit](grouped-preflight/docs-audit.json)
+and [full log](grouped-preflight/docs-job.log.gz) preserve the failure. This is
+test infrastructure repair, not evidence of a runtime speed change.
+
+## Retained initial evidence
 
 - [Audit](audit.json): all twelve commands, three failed selections, test totals
   and full-log digest.

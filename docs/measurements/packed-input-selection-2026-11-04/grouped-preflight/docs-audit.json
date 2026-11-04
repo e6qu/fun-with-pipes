@@ -1,0 +1,11 @@
+{
+  "source": "a001184a17560e9888815d62fb3d8061631460a6",
+  "run": 41838130161,
+  "job": 126602280596,
+  "fullLogSha256": "6fba92063059a138673eac30a3e6d1c1be295022a38618aeec3b4588edf6912d",
+  "failures": [
+    "Collection storage reference isolation and allocation budgets"
+  ],
+  "cause": "historical gradient-array patch context omitted new native-only buffer bodies",
+  "repair": "update context only; assert both packed input bodies remain in the reconstructed reference"
+}

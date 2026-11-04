@@ -66,13 +66,13 @@ def sha(path):
 def scoped_cost_inputs():
     """Repeated closed calls share one worker; a large dynamic worker is rejected."""
     repeated = 'next : I64 -> I64\nnext = add 1\nworker : (I64 -> I64) -> I64 -> I64\nworker = fn step -> fn value -> step value\n'
-    repeated += ''.join(f'export scope-{i} : I64 -> I64\nscope-{i} = fn value -> ad.scope2 worker next value\n' for i in range(64))
+    repeated += ''.join(f'export scope{i} : I64 -> I64\nscope{i} = fn value -> ad.scope2 worker next value\n' for i in range(64))
     term = 'value' + ' | step' * 20
     large = 'next : I64 -> I64\nnext = add 1\nworker : (I64 -> I64) -> I64 -> I64\nworker = fn step -> fn value -> [\n'
     large += ',\n'.join('    (' + term + ')' for _ in range(256)) + '\n] | sum\n'
     large += 'export scoped : I64 -> I64\nscoped = fn value -> ad.scope2 worker next value\n'
     # Each source is also executable; export roots keep the other cases live.
-    repeated += 'main = scope-0 1 | echo\n'
+    repeated += 'main = scope0 1 | echo\n'
     large += 'main = scoped 1 | echo\n'
     return {'repeated-scopes': repeated, 'large-scoped-worker': large}
 

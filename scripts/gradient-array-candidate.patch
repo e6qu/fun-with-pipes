@@ -213,7 +213,7 @@ diff --git a/src/interp.rs b/src/interp.rs
 index dcff3e72..e5b915ac 100644
 --- a/src/interp.rs
 +++ b/src/interp.rs
-@@ -227,10 +227,25 @@ impl<'p> Interp<'p> {
+@@ -227,12 +227,27 @@ impl<'p> Interp<'p> {
              Body::RegionEntry { .. } | Body::RegionCtor(_) => {
                  return trap("internal: native region body reached interpreter");
              }
@@ -237,7 +237,9 @@ index dcff3e72..e5b915ac 100644
              | Body::PackedRecordFold { .. }
              | Body::ScalarBufferMap { .. }
 -            | Body::ScalarBufferZip { .. }
-             | Body::RangeZip { .. } => {
+             | Body::RangeZip { .. }
+             | Body::PackedRecordRangeZip { .. }
+             | Body::PackedRecordPairs { .. } => {
                  return trap("internal: native buffer body reached interpreter");
              }
 diff --git a/src/ir.rs b/src/ir.rs

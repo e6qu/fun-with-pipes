@@ -41,10 +41,17 @@ int main(void) {
             int expected_value = 5;
             for (int i = 0; i + 1 < count; i++) expected_value += (i + 1) * 10 + 7 + (i + 2) * 10 + 7;
             if (OBJ(result)->f[0] != expected_index || OBJ(result)->f[1] != (V)expected_value) return 241;
-            /* Two buffers, plus one boxed fold result only for a nonempty map.
+            /* Two buffers and the boxed export result. The internal fold also
+             * boxes its result for a nonempty map; the export worker consumes
+             * that box (or the empty-map seed) before returning numeric fields.
              * Caller seed/list construction is outside this observation. */
             size_t added = owner_ledger_allocations - allocations;
-            if (added != 2 + (size_t)(count > 1)) return 248;
+            size_t expected_allocations = 3 + (size_t)(count > 1);
+            if (added != expected_allocations) {
+                fprintf(stderr, "packed input allocations: inputs=%d bounds=%u aliases=%u expected=%zu actual=%zu\n",
+                    count, b, aliases, expected_allocations, added);
+                return 248;
+            }
             if (!round) printf("inputs=%d bounds=%u aliases=%u managed-objects=%zu\n", count, b, aliases, added);
             DROP_POINT(result);
         } else if (mode == 0) return 242;

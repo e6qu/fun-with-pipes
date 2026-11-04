@@ -69,10 +69,12 @@ Reject additional reads, escapes, unknown consumers and branch-crossing aliases.
 Straight-line aliases may qualify only when every use resolves to the same two
 windows and no resource frame anchors the representation.
 
-The [repair preflight](packed-input-selection-2026-11-04/README.md#repair-preflight)
-selects the real gradient inputs and passes twenty GCC ARM64 cleanup images.
-Two test-fixture repairs and hidden pipeline failure reporting still require
-the complete grouped gate; neither implementation nor these partial checks
+The [preflights](packed-input-selection-2026-11-04/README.md)
+select the real gradient inputs and pass twenty GCC ARM64 cleanup images.
+The three-host batch verifies both interpreters, O1/O2 values, one-field records
+and F32/F64 bit preservation. Its new allocation assertion omitted the exported
+return box; shallow history and invalid generated names also broke measurement
+controls. These repairs still require the grouped gate; partial checks do not
 establish performance or support on the other hosts.
 
 ## Ownership and failure proof

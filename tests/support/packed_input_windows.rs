@@ -208,12 +208,18 @@ fn indexed_record_windows_release_every_owner_on_failure_and_cancellation() {
             "if(ARR(buffer)->len) ARR(buffer)->d[1] ^= 1; windows_phase = 10;",
         );
         assert_ne!(corrupt, code);
+        let extra_allocation = code.replace(
+            "size_t added = owner_ledger_allocations - allocations;",
+            "V extra = fwp_rc_fresh(fwp_arr_new(0)); fwp_rc_free_arr(extra);\n            size_t added = owner_ledger_allocations - allocations;",
+        );
+        assert_ne!(extra_allocation, code);
         for opt in ["-O1", "-O2"] {
             for (name, source, expected) in [
                 ("complete", &code, 0),
                 ("missing-input", &missing_input, 90),
                 ("missing-pairs", &missing_pairs, 90),
                 ("corrupt-input", &corrupt, 241),
+                ("extra-allocation", &extra_allocation, 248),
             ] {
                 let executable = scratch.0.join(format!("{entry}-{name}-{opt}.exe"));
                 fwp::cgen::compile_c(source, &executable, opt).unwrap();
@@ -230,6 +236,11 @@ fn indexed_record_windows_release_every_owner_on_failure_and_cancellation() {
                     Some(expected),
                     "{name}/{opt}: {output:?}"
                 );
+                if name == "extra-allocation" {
+                    assert!(String::from_utf8_lossy(&output.stderr).contains("expected=3 actual=4"));
+                } else {
+                    assert!(output.stderr.is_empty(), "{name}/{opt}: {output:?}");
+                }
             }
             let source = format!("#define FWP_NO_REUSE 1\n{code}");
             let executable = scratch.0.join(format!("{entry}-no-reuse-{opt}.exe"));
