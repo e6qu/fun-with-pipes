@@ -198,3 +198,9 @@ Resume the final-gate collector **without `--attempt 1`** to select the latest
 job for each platform. Its cached eight passing production jobs and documentation
 remain valid; the Intel retry has a new job ID. Failed-attempt records are retained
 separately. Require nine passing production jobs plus docs before squash merge.
+
+The next branch also gives each macOS test-log upload exactly one retry after
+failure, against the same artifact name/files. Missing files and an exhausted
+retry fail CI; both attempt logs remain visible. This addresses the observed
+artifact-service DNS failures in #254 and #255 without rerunning whole shards.
+The active #255 workflow is unchanged. Workflow lint passes (0.26 guarded seconds).
