@@ -67,7 +67,7 @@ class CompilerCosts(unittest.TestCase):
                 ANALYSIS.summarize(rows)
 
     def test_complete_schedule_and_timeout_keep_reviewable_evidence(self):
-        for comparison, fail in itertools.product(('numeric-inputs', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'matched-option'), (False, True)):
+        for comparison, fail in itertools.product(('numeric-inputs', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'matched-option', 'packed-input'), (False, True)):
             with self.subTest(comparison=comparison, timeout=fail), tempfile.TemporaryDirectory() as temporary:
                 root = Path(temporary)
                 compiler, reference = root / 'candidate', root / 'reference'
@@ -110,6 +110,13 @@ class CompilerCosts(unittest.TestCase):
                                    ('src/fuse.rs', 'src/prims_std.rs', 'src/ownership.rs', 'src/opt.rs',
                                     'runtime/fwp_rt.c', 'runtime/fwp_rt_prims.c', 'runtime/fwp_rt_task.c',
                                     'runtime/fwp_rt_heap.c', 'lib/list.fwp', 'lib/autodiff.fwp')})
+                if comparison == 'packed-input':
+                    manifest = dict(source='test-source', compilerSha256=ANALYSIS.sha(reference),
+                        disabledTransformation='scoped objective specialization and private numeric input packing',
+                        candidate={path: ANALYSIS.sha(ANALYSIS.ROOT / path) for path in ('src/mono.rs', 'src/cgen.rs')},
+                        reference={path: 'reference-hash' for path in ('src/mono.rs', 'src/cgen.rs')},
+                        ownershipSha256=ANALYSIS.sha(ANALYSIS.ROOT / 'src/ownership.rs'),
+                        unchanged={path: ANALYSIS.sha(ANALYSIS.ROOT / path) for path in {'runtime/fwp_rt_task.c', 'src/opt.rs', 'src/ownership.rs', 'runtime/fwp_rt_kernel.c', 'src/cgen/packed_records.rs', 'runtime/fwp_rt_heap.c', 'src/cgen/packed_inputs.rs', 'src/opt/scoped.rs', 'src/cgen/numeric_parameters.rs', 'lib/autodiff.fwp', 'src/cgen/range_zip.rs', 'lib/list.fwp', 'src/fuse.rs', 'runtime/fwp_rt_prims.c', 'runtime/fwp_rt.c'}})
                 manifest_path.write_text(json.dumps(manifest))
                 output = root / 'output'
                 argv = ['measure', '--comparison', comparison, '--compiler', str(compiler), '--reference', str(reference),
@@ -120,9 +127,12 @@ class CompilerCosts(unittest.TestCase):
 
                 def captured(command, **options):
                     commands.append(command)
-                    if comparison == 'matched-option':
+                    if comparison in ('matched-option', 'packed-input'):
                         self.assertEqual(options['env']['FWP_VRET'], '1')
                         self.assertEqual(options['env']['FWP_FRAME_FIELDS'], '1')
+                    if comparison == 'packed-input':
+                        for setting in ('FWP_PACKED_ARRAYS', 'FWP_STACK', 'FWP_ARRAY_FUSION'):
+                            self.assertEqual(options['env'][setting], '1')
                     self.assertEqual(command[5:10], ['build', '--memory', 'dynamic', '--emit-c', '-O2'])
                     if fail:
                         raise subprocess.TimeoutExpired(command, 180, output=b'partial out', stderr=b'partial error')
@@ -152,10 +162,10 @@ class CompilerCosts(unittest.TestCase):
                         ANALYSIS.main()
                 report = json.loads((output / 'report.json').read_text())
                 self.assertEqual(report['complete'], not fail)
-                if comparison == 'matched-option':
+                if comparison in ('matched-option', 'packed-input'):
                     self.assertEqual(report['executionOverrides']['FWP_VRET'], '1')
                     self.assertEqual(report['executionOverrides']['FWP_FRAME_FIELDS'], '1')
-                self.assertEqual(len(commands), 1 if fail else 240)
+                self.assertEqual(len(commands), 1 if fail else 336 if comparison == 'packed-input' else 240)
                 for name, digest in report['files'].items():
                     self.assertEqual(hashlib.sha256((output / name).read_bytes()).hexdigest(), digest)
                 if fail:
@@ -163,7 +173,7 @@ class CompilerCosts(unittest.TestCase):
                     self.assertEqual(case['samples'][0]['timeout'], 180)
                     self.assertEqual((output / 'field-transfer/-2-candidate1.stderr').read_bytes(), b'partial error')
                 else:
-                    self.assertEqual(len(report['cases']), 5)
+                    self.assertEqual(len(report['cases']), 7 if comparison == 'packed-input' else 5)
                     self.assertTrue(all(len(case['samples']) == 48 and not case['summary']['failures']
                                         for case in report['cases'].values()))
 

@@ -35,8 +35,8 @@ fn packed_input_values_agree_with_both_interpreters_and_native_levels() {
     for (mode, arguments) in [
         ("raw", vec!["run", "--interp"]),
         ("optimized", vec!["run", "--interp"]),
-        ("O1", vec!["run", "--memory", "dynamic", "-O1"]),
-        ("O2", vec!["run", "--memory", "dynamic", "-O2"]),
+        ("O1", vec!["build", "--memory", "dynamic", "-O1"]),
+        ("O2", vec!["build", "--memory", "dynamic", "-O2"]),
     ] {
         let mut command = Command::new(env!("CARGO_BIN_EXE_fwp"));
         command
@@ -49,7 +49,14 @@ fn packed_input_values_agree_with_both_interpreters_and_native_levels() {
         if mode == "raw" {
             command.env("FWP_NO_OPT", "1");
         }
-        let output = checked(command.args(arguments).arg(&source));
+        command.args(arguments).arg(&source);
+        let output = if mode.starts_with('O') {
+            let executable = scratch.0.join(format!("values-{mode}.exe"));
+            checked(command.arg("-o").arg(&executable));
+            checked(&mut Command::new(executable))
+        } else {
+            checked(&mut command)
+        };
         assert_eq!(output.stdout, b"True\n", "{mode}: {output:?}");
         assert!(output.stderr.is_empty(), "{mode}: {output:?}");
     }
@@ -237,5 +244,136 @@ fn indexed_record_windows_release_every_owner_on_failure_and_cancellation() {
             );
             assert!(output.status.success(), "no-reuse/{opt}: {output:?}");
         }
+    }
+}
+
+#[test]
+fn packed_input_windows_preserve_float_bits_in_both_orders() {
+    let scratch = Scratch::new("packed-input-bits");
+    for (name, scalar, width) in [("f64", "F64", 64), ("f32", "F32", 32)] {
+        for reversed in [false, true] {
+            let mut source =
+                include_str!("../fixtures/packed_input_bits.fwp").replace("F64", scalar);
+            if reversed {
+                source = source.replace(
+                    "pair-point (drop 1 records) records",
+                    "pair-point records (drop 1 records)",
+                );
+            }
+            let label = format!("{name}-reversed-{reversed}");
+            let fixture = scratch.0.join(format!("{label}.fwp"));
+            let cfile = scratch.0.join(format!("{label}.c"));
+            std::fs::write(&fixture, source).unwrap();
+            checked(
+                Command::new(env!("CARGO_BIN_EXE_fwp"))
+                    .env_remove("FWP_NO_OPT")
+                    .env("FWP_VRET", "1")
+                    .env("FWP_FRAME_FIELDS", "1")
+                    .env("FWP_PACKED_ARRAYS", "1")
+                    .env("FWP_STACK", "1")
+                    .env("FWP_LTO", "0")
+                    .args([
+                        "build",
+                        "--fn",
+                        "transform",
+                        "--memory",
+                        "dynamic",
+                        "--emit-c",
+                        "-O2",
+                    ])
+                    .arg(&fixture)
+                    .arg("-o")
+                    .arg(&cfile),
+            );
+            let emitted = std::fs::read_to_string(cfile).unwrap();
+            section(&emitted, "    /* Finish indexed input records before");
+            section(&emitted, "    /* Borrow overlapping windows;");
+            let observed = ownership_ledger::instrument_native(&emitted, 64);
+            let prefix = &observed[..observed.find("int main(").unwrap()];
+            let drop_start = emitted.find("/* Point */\nstatic void fwp_drop").unwrap();
+            let drop_point = emitted[drop_start..]
+                .split("static void ")
+                .nth(1)
+                .unwrap()
+                .split('(')
+                .next()
+                .unwrap();
+            let probe = include_str!("../fixtures/packed_input_bits.c")
+                .replace(
+                    "TRANSFORM",
+                    &format!("f{}", function_id(&emitted, "transform")),
+                )
+                .replace("DROP_POINT", drop_point)
+                .replace("FLOAT_WIDTH", &width.to_string())
+                .replace("SELECTED_INDEX", if reversed { "0" } else { "1" });
+            let code = format!("{prefix}{probe}");
+            for opt in ["-O1", "-O2"] {
+                let executable = scratch.0.join(format!("{label}-{opt}.exe"));
+                fwp::cgen::compile_c(&code, &executable, opt).unwrap();
+                let output = Command::new(&executable).output().unwrap();
+                record_probe::save(
+                    "packed_input_bits",
+                    &format!("{label}-{opt}"),
+                    &code,
+                    &executable,
+                    &output,
+                );
+                assert!(output.status.success(), "{label}/{opt}: {output:?}");
+            }
+        }
+    }
+}
+
+#[test]
+fn single_field_input_buffers_agree_with_interpreters_and_native_levels() {
+    let scratch = Scratch::new("packed-input-single-field");
+    let source = scratch.0.join("single.fwp");
+    std::fs::write(
+        &source,
+        include_str!("../fixtures/packed_input_single_field.fwp"),
+    )
+    .unwrap();
+    for raw in [false, true] {
+        let mut command = Command::new(env!("CARGO_BIN_EXE_fwp"));
+        command.env_remove("FWP_NO_OPT");
+        if raw {
+            command.env("FWP_NO_OPT", "1");
+        }
+        let output = checked(command.args(["run", "--interp"]).arg(&source));
+        assert_eq!(output.stdout, b"True\n", "raw={raw}: {output:?}");
+        assert!(output.stderr.is_empty(), "{output:?}");
+    }
+    let cfile = scratch.0.join("single.c");
+    checked(
+        Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .env_remove("FWP_NO_OPT")
+            .env("FWP_VRET", "1")
+            .env("FWP_FRAME_FIELDS", "1")
+            .env("FWP_PACKED_ARRAYS", "1")
+            .env("FWP_STACK", "1")
+            .env("FWP_LTO", "0")
+            .args(["build", "--memory", "dynamic", "--emit-c", "-O2"])
+            .arg(&source)
+            .arg("-o")
+            .arg(&cfile),
+    );
+    let emitted = std::fs::read_to_string(cfile).unwrap();
+    assert!(emitted.contains("/* packed-indexed-records :"));
+    assert!(emitted.contains("/* packed-neighbor-pairs :"));
+    let code = ownership_ledger::instrument_native(&emitted, 128);
+    for opt in ["-O1", "-O2"] {
+        let executable = scratch.0.join(format!("single-{opt}.exe"));
+        fwp::cgen::compile_c(&code, &executable, opt).unwrap();
+        let output = Command::new(&executable).output().unwrap();
+        record_probe::save(
+            "packed_input_single_field",
+            opt,
+            &code,
+            &executable,
+            &output,
+        );
+        assert!(output.status.success(), "{opt}: {output:?}");
+        assert_eq!(output.stdout, b"True\n", "{opt}: {output:?}");
+        assert!(output.stderr.is_empty(), "{opt}: {output:?}");
     }
 }

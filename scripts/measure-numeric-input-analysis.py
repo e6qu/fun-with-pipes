@@ -63,12 +63,26 @@ def sha(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def scoped_cost_inputs():
+    """Repeated closed calls share one worker; a large dynamic worker is rejected."""
+    repeated = 'next : I64 -> I64\nnext = add 1\nworker : (I64 -> I64) -> I64 -> I64\nworker = fn step -> fn value -> step value\n'
+    repeated += ''.join(f'export scope-{i} : I64 -> I64\nscope-{i} = fn value -> ad.scope2 worker next value\n' for i in range(64))
+    term = 'value' + ' | step' * 20
+    large = 'next : I64 -> I64\nnext = add 1\nworker : (I64 -> I64) -> I64 -> I64\nworker = fn step -> fn value -> [\n'
+    large += ',\n'.join('    (' + term + ')' for _ in range(256)) + '\n] | sum\n'
+    large += 'export scoped : I64 -> I64\nscoped = fn value -> ad.scope2 worker next value\n'
+    # Each source is also executable; export roots keep the other cases live.
+    repeated += 'main = scope-0 1 | echo\n'
+    large += 'main = scoped 1 | echo\n'
+    return {'repeated-scopes': repeated, 'large-scoped-worker': large}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--compiler', required=True, type=Path)
     parser.add_argument('--reference', required=True, type=Path)
     parser.add_argument('--reference-manifest', required=True, type=Path)
-    parser.add_argument('--comparison', required=True, choices=('numeric-inputs', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option'))
+    parser.add_argument('--comparison', required=True, choices=('numeric-inputs', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input'))
     parser.add_argument('--time', required=True, type=Path)
     parser.add_argument('--machine', required=True, choices=('aarch64', 'x86_64'))
     parser.add_argument('--source', required=True)
@@ -91,6 +105,14 @@ def main():
             assert sha(ROOT / path) == hashes['candidateSha256'], path
         for path, digest in reference_manifest['unchanged'].items():
             assert sha(ROOT / path) == digest, path
+    elif args.comparison == 'packed-input':
+        assert reference_manifest['disabledTransformation'] == 'scoped objective specialization and private numeric input packing'
+        assert set(reference_manifest['candidate']) == set(reference_manifest['reference']) == {'src/mono.rs', 'src/cgen.rs'}
+        assert set(reference_manifest['unchanged']) == {'runtime/fwp_rt_task.c', 'src/opt.rs', 'src/ownership.rs', 'runtime/fwp_rt_kernel.c', 'src/cgen/packed_records.rs', 'runtime/fwp_rt_heap.c', 'src/cgen/packed_inputs.rs', 'src/opt/scoped.rs', 'src/cgen/numeric_parameters.rs', 'lib/autodiff.fwp', 'src/cgen/range_zip.rs', 'lib/list.fwp', 'src/fuse.rs', 'runtime/fwp_rt_prims.c', 'runtime/fwp_rt.c'}
+        for group in ('candidate', 'unchanged'):
+            for path, checksum in reference_manifest[group].items():
+                assert sha(ROOT / path) == checksum, path
+        assert reference_manifest['ownershipSha256'] == sha(ROOT / 'src/ownership.rs')
     elif args.comparison == 'matched-option':
         assert reference_manifest['disabledTransformation'] == 'direct fields for matched list last, nth and final iteration results'
         assert set(reference_manifest['candidate']) == set(reference_manifest['reference']) == {'src/cgen.rs'}
@@ -137,8 +159,10 @@ def main():
     output.mkdir(parents=True, exist_ok=False)
     environment = {key: value for key, value in os.environ.items() if not key.startswith('FWP_')}
     environment.update(FWP_LTO='0', LC_ALL='C')
-    if args.comparison == 'matched-option':
+    if args.comparison in ('matched-option', 'packed-input'):
         environment.update(FWP_VRET='1', FWP_FRAME_FIELDS='1')
+    if args.comparison == 'packed-input':
+        environment.update(FWP_PACKED_ARRAYS='1', FWP_STACK='1', FWP_ARRAY_FUSION='1')
     report = dict(source=args.source, machine=args.machine, complete=False, comparison=args.comparison,
                   scope='Entire compiler command through C emission: startup, parsing, typing, '
                         'optimization, ownership and emission. No generated-program execution. '
@@ -168,6 +192,8 @@ def main():
             ('autodiff-tutorial', 'docs/tutorials/20-autodiff-and-devices/main.fwp')]}
         programs.update({f'derivative-{dimensions}-{updates}': COSTS.AD.program(dimensions, updates + 1, False)
                          for dimensions, updates in ((3, 0), (33, 199), (129, 199))})
+        if args.comparison == 'packed-input':
+            programs.update(scoped_cost_inputs())
         for name, source in programs.items():
             directory = output / name
             directory.mkdir()

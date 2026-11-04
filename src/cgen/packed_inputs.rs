@@ -599,6 +599,18 @@ mod tests {
     fn forwarding_callbacks_require_numeric_callee_lowering_first() {
         let mut program = program(0, true);
         let record = program.funcs[2].locals[0].clone();
+        // Full C generation also verifies ownership. Synthetic IR must supply
+        // the same recursive List shapes that monomorphization records.
+        for element in [MT::con("std::I64"), record.clone()] {
+            let list = MT::Con("std::List".into(), vec![element.clone()]);
+            program.shapes.insert(
+                list.clone(),
+                TypeShape::Adt(vec![
+                    ("Nil".into(), vec![]),
+                    ("Cons".into(), vec![element, list]),
+                ]),
+            );
+        }
         let nested = MT::Record(vec![
             ("0".into(), record.clone()),
             ("1".into(), record.clone()),
