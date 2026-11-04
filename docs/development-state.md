@@ -1,8 +1,16 @@
 # Current work
 
-**Next:** publish the matched optional-result PR and monitor its exact-head gates.
-Implementation, focused correctness and all measurements pass; final production
-validation remains required. Keep one active delivery PR.
+**Next:** implement the frozen packed-input contract while monitoring
+[PR #256](https://github.com/e6qu/fun-with-pipes/pull/256). Preserve its exact head
+`81bce309c4524058aefead68f203d6dfa3b5731a`. Production `41822132045` is running;
+documentation `41822131973`, job `126547601776`, is queued. No failed steps at
+the latest check. Require all nine production jobs plus docs and full/target-log
+audits before squash merge. Keep one active delivery PR.
+
+Preparation worktree/branch: `.worktrees/packed-derivative-inputs` /
+`packed-derivative-inputs`. [The contract](measurements/packed-derivative-inputs.md)
+groups bounded scoped specialization, packed indexed records and overlapping
+pair reads. Commit/freeze it before code changes. No implementation yet.
 
 ## Roadmap status
 
@@ -33,8 +41,9 @@ any frozen contract/measurement tag. Duplicate main runs `41821619651` and
 
 Worktree/branch: `.worktrees/matched-option-fields` / `matched-option-fields`.
 Compiler/runtime changes, controls and measurements are complete. Rebased onto
-verified #255 with a byte-identical tree. Publish the grouped PR, then require
-all nine final-head production jobs and documentation before merging.
+verified #255 with a byte-identical tree and published as PR #256. Its squash
+subject is `Avoid temporary option allocations for matched list results`;
+supply an empty body and verify the raw message and tree after passing CI.
 
 | Evidence | Exact identity and status |
 |---|---|
@@ -81,9 +90,9 @@ Scratch tools live in `../gradient-work`; use `python3 scripts/local-guard.py`:
 - Retention, all 48 cross-session count comparisons and report generation pass
   (0.78/0.30/0.28s). Tools: `retain-matched-option-time.py`,
   `summarize-matched-option-memory.py`, `write-matched-option-time-readme.py`.
-- Update scratch `matched-option-pr.md` and publish one grouped PR. Final
-  platform checks remain pending. Use `collect-matched-option-platforms.py`
-  with the exact production run, source, documentation job and output directory.
+- Final platform checks are running. Use `collect-matched-option-platforms.py`
+  with `--run 41822132045 --source 81bce309c4524058aefead68f203d6dfa3b5731a
+  --docs-job 126547601776 --output ../gradient-work/platforms-256`.
   It audits a recovered upload error only with successful retry and verified logs.
 - Full evidence processing and final test gates belong on GitHub, not locally.
 
@@ -99,7 +108,7 @@ the exact retry step and artifact; do not blanket-ignore diagnostics.
   commands and 43 hashed files. Guarded collection 5.63s; archive/logs retained.
   Proposed group: bounded known scoped-call specialization, packed indexed
   numeric input records and overlapping reads. Preserve all three eager stages.
-  No implementation contract frozen or performance claim yet. Also corrected
+  The implementation contract is prepared above; no performance claim yet. Also corrected
   stale #251/#252 platform status in the compiler design guide.
 
 - Latest `python3 scripts/local-guard.py python3 scripts/check-roadmap.py`: passes
@@ -115,3 +124,9 @@ the exact retry step and artifact; do not blanket-ignore diagnostics.
 - Preserve dirty primary and old worktrees. Only this branch owns the current docs.
   Keep one active delivery PR. [#254's completed delivery](roadmap-history.md#float-bits-and-identity-array-maps-pr-254)
   is history, not remaining work.
+- Freed 1.55 GiB by removing nine verified download caches after confirming
+  committed audits and live GitHub artifact hashes. Kept logs/reports and the
+  inconclusive comparison's archive. Scratch manifest:
+  `../gradient-work/removed-verified-downloads-2026-11-04.json`. The initial cleanup
+  assertion expected a list rather than the audit's failure map and removed
+  nothing; corrected check passes under the guard (5.04s).
