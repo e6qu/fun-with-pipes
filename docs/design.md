@@ -633,7 +633,8 @@ show lower peak storage and ARC traffic, with explicit timing misses. Final
 delivery gates remain open.
 
 The next [optional-field change](measurements/matched-option-fields.md) is
-implemented on the development branch but still awaits native verification.
+verified by focused GCC ARM64/AMD64 and Clang ARM64 checks; full delivery
+and performance measurements remain pending.
 When `last`, `nth` or the internal final-iteration operation feeds a selected
 match, C generation can return a tag and payload directly:
 
