@@ -36,6 +36,23 @@ REPORT = json.loads(gzip.decompress((ROOT / 'docs/measurements/array-list-first-
 
 
 class Evidence(unittest.TestCase):
+    def test_matched_option_reference_reads_literals_and_rejects_partial_edits(self):
+        preparation = (ROOT / 'scripts/prepare-matched-option-reference.py').read_text()
+        candidates = {'src/cgen.rs': (ROOT / 'src/cgen.rs').read_text()}
+        reference = CHECK.recorded_matched_option_reference(candidates, preparation)
+        self.assertIn('false && matches!(symbol.as_str(), "last" | "nth")', reference['src/cgen.rs'])
+        self.assertIn('false && symbol == "list._iterate-last"', reference['src/cgen.rs'])
+        self.assertEqual(reference, CHECK.recorded_matched_option_reference(
+            candidates, preparation + '\nraise RuntimeError("never execute saved code")\n'))
+        for changed in (preparation.replace('EDITS =', 'MISSING =', 1),
+                        preparation + '\nEDITS = ()\n',
+                        preparation.replace("CHANGED = 'src/cgen.rs'", "CHANGED = 'src/opt.rs'")):
+            with self.assertRaises(AssertionError):
+                CHECK.recorded_matched_option_reference(candidates, changed)
+        for changed in ({}, reference, {'src/cgen.rs': candidates['src/cgen.rs'] * 2}):
+            with self.assertRaises(AssertionError):
+                CHECK.recorded_matched_option_reference(changed, preparation)
+
     def test_final_iteration_reference_uses_saved_literals_and_rejects_partial_edits(self):
         preparation = (ROOT / 'scripts/prepare-final-iteration-reference.py').read_text()
         candidates = {name: (ROOT / name).read_text() for name in ('src/fuse.rs', 'lib/list.fwp')}

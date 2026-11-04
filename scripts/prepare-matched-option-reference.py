@@ -76,7 +76,11 @@ def main():
         patchSha256=digest(patch),
     )
     if args.verify:
-        assert json.loads((args.output / 'manifest.json').read_text()) == manifest
+        saved = json.loads((args.output / 'manifest.json').read_text())
+        compiler_hash = digest((args.output / 'fwp').read_bytes())
+        if 'compilerSha256' in saved:
+            assert saved.pop('compilerSha256') == compiler_hash
+        assert saved == manifest
         assert (args.output / 'reference.patch').read_bytes() == patch
         for name, data in expected.items():
             assert (args.output / 'source' / name).read_text() == data, name

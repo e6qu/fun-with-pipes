@@ -67,7 +67,7 @@ class CompilerCosts(unittest.TestCase):
                 ANALYSIS.summarize(rows)
 
     def test_complete_schedule_and_timeout_keep_reviewable_evidence(self):
-        for comparison, fail in itertools.product(('numeric-inputs', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity'), (False, True)):
+        for comparison, fail in itertools.product(('numeric-inputs', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'matched-option'), (False, True)):
             with self.subTest(comparison=comparison, timeout=fail), tempfile.TemporaryDirectory() as temporary:
                 root = Path(temporary)
                 compiler, reference = root / 'candidate', root / 'reference'
@@ -100,6 +100,16 @@ class CompilerCosts(unittest.TestCase):
                         ownershipSha256=ANALYSIS.sha(ANALYSIS.ROOT / 'src/ownership.rs'),
                         unchanged={path: ANALYSIS.sha(ANALYSIS.ROOT / path) for path in
                                    ('src/interp.rs', 'runtime/fwp_rt_num.c', 'src/cgen.rs')})
+                if comparison == 'matched-option':
+                    manifest = dict(source='test-source', compilerSha256=ANALYSIS.sha(reference),
+                        disabledTransformation='direct fields for matched list last, nth and final iteration results',
+                        candidate={'src/cgen.rs': ANALYSIS.sha(ANALYSIS.ROOT / 'src/cgen.rs')},
+                        reference={'src/cgen.rs': 'reference-codegen-hash'},
+                        ownershipSha256=ANALYSIS.sha(ANALYSIS.ROOT / 'src/ownership.rs'),
+                        unchanged={path: ANALYSIS.sha(ANALYSIS.ROOT / path) for path in
+                                   ('src/fuse.rs', 'src/prims_std.rs', 'src/ownership.rs', 'src/opt.rs',
+                                    'runtime/fwp_rt.c', 'runtime/fwp_rt_prims.c', 'runtime/fwp_rt_task.c',
+                                    'runtime/fwp_rt_heap.c', 'lib/list.fwp', 'lib/autodiff.fwp')})
                 manifest_path.write_text(json.dumps(manifest))
                 output = root / 'output'
                 argv = ['measure', '--comparison', comparison, '--compiler', str(compiler), '--reference', str(reference),
