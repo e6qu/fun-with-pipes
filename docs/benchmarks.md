@@ -18,6 +18,34 @@ Each report should answer: **which implementations, which input, what timed work
 which host/toolchain, and what difference in behavior or algorithm?** Detailed
 [measurement terms](terminology.md#tests-and-measurements) explain ratios and memory.
 
+## Latest audited derivative comparison
+
+The [November 4 iteration report](measurements/final-iteration-time-2026-11-04/README.md)
+compares two fwp compilers on the same gradient-descent programs. In the largest
+case, 129 coordinates and 199 updates, retaining only the final iteration value
+reduces peak managed storage from 838,688 to 19,360 bytes and takes 5.1–5.9% less
+time. Five other speed targets and one small-case regression remain open.
+The report separates allocation traffic, live storage and process RAM.
+
+The same sessions also run handwritten C/Rust programs:
+
+| Largest current-result solve | fwp time / C time | fwp time / Rust time |
+|---|---:|---:|
+| ARM64, two sessions | 19.39–19.49× | 19.14–19.17× |
+| AMD64, two sessions | 24.73–26.26× | 23.07–24.90× |
+
+For example, 19.39× means 1,839% extra time for these implementations. C/Rust
+calculate handwritten derivative formulas; fwp records operations and propagates
+derivatives automatically. Storage and formatting also differ. These ratios
+measure that whole implementation gap, not isolated ARC overhead. No Swift
+derivative counterpart was measured in this batch; the [Swift comparisons](#swift-comparison)
+below cover other workloads and cannot establish derivative parity.
+
+The subsequent [matched-result experiment](measurements/matched-option-fields-2026-11-04/README.md)
+removes a temporary optional wrapper. Its native correctness and compiler-cost
+checks pass; full runtime auditing and platform delivery are still pending.
+Neither experiment updates every older whole-program baseline below.
+
 ## PR 233 whole-program baseline
 
 Source: `fd19b9e4`, same tree as merged `73a6b20d`;
@@ -76,13 +104,12 @@ resident RAM and reserved virtual addresses are different measurements.** The
 records about 65.1 GiB reserved virtually with only 1.5–1.9 MiB resident in its
 small diagnostic; the reservation is not that much occupied RAM.
 
-Large remaining gaps are visible in the older, explicitly dated
-[parser comparison](measurements/parser-workspace.md) (about 5–9× C/Rust time)
-and [automatic derivatives](measurements/eager-captures.md#results) (44–58× the
-handwritten C derivative in the largest current-result case). These are not
-fresh measurements of #233. Allocation reductions do not erase those gaps or
-establish that peak memory fell. The [Swift protocol](#swift-comparison) adds the
-closest ownership-model peer without discarding C and Rust.
+The older [parser comparison](measurements/parser-workspace.md) still records
+about 5–9× C/Rust time. The derivative figures above supersede the older
+44–58× C snapshot for their recorded sources and hosts; they do not refresh the
+parser or PR #233 measurements. Allocation reductions alone establish neither
+elapsed time nor peak memory. The [Swift protocol](#swift-comparison) adds the
+closest ownership-model peer alongside C and Rust.
 
 ## Swift comparison
 
