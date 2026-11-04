@@ -119,22 +119,25 @@ primitive allocates `Some(final)`, then the caller retains its payload and drops
 the wrapper during `match`. The history removal is still a large net saving.
 This source observation does not identify the one-update timing regression's cause.
 
-The compiler already returns matched array/map reads and channel/task results as
-fields (`lookup_value_type`, `owned_option_type` and `expr_variant` in
-`src/cgen.rs`). Before selecting another implementation:
+The new implementation extends the existing field returns for matched array/map
+reads and channel/task results (`lookup_value_type`, `owned_option_type` and
+`expr_variant` in `src/cgen.rs`). Its proof and checks cover:
 
-1. Prove direct field ownership for the internal final-iteration result and
+1. Direct field ownership for the internal final-iteration result and
    borrowed list `last`/`nth` reads. Keep whole-value results boxed when needed;
    use the existing match-use check, without a new global analysis or syntax.
-2. Preserve argument/callback order, empty results, resource lifetimes, aliases
+2. Preserved argument/callback order, empty results, resource lifetimes, aliases
    and failure/cancellation cleanup. A borrowed read must acquire its result's
    owner; an already-owned iteration result should move its owner.
-3. Freeze and test the exact selection. Require one fewer wrapper allocation per
+3. A frozen, tested selection. Require one fewer wrapper allocation per
    selected match and no added ARC operations, while unsupported/escaping uses
    retain correct storage. Check actual generated C and native allocation counts.
-4. Freeze the comparison before timing; retain the current six misses and the
+4. A comparison frozen before timing; retain the current six misses and the
    compiler-noise case. Report compiler cost, stack and all runtime outcomes.
 
-The [next contract](matched-option-fields.md) makes these ownership boundaries,
-implementation rules, controls and measurement limits explicit. It is a source
-proof and plan, not an implemented optimization or a measured speed benefit.
+The [contract](matched-option-fields.md) defines the ownership boundaries and
+limits. [Three-host native checks](matched-option-fields-2026-11-04/README.md)
+verify values, aliases, physical cleanup and the removed wrapper.
+[Compiler-cost comparisons](matched-option-analysis-2026-11-04/README.md) pass.
+Runtime measurements and final platform delivery remain open; the allocation
+reduction alone establishes no speed benefit.
