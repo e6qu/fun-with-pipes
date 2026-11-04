@@ -1,14 +1,16 @@
 # Current work
 
-**Next:** publish the grouped final-iteration PR, then audit all nine production
-jobs and documentation at its exact final head. Fix all encountered failures
+**Next:** monitor and audit all nine production jobs and documentation for
+[PR #255](https://github.com/e6qu/fun-with-pipes/pull/255) at its exact final head. Fix all encountered failures
 before one repair push; squash only after every gate passes. Measurements are
 complete and must not be repeated for a pass.
 
 ## Final iteration values
 
 Branch/worktree: `iteration-final-value`, based on verified main `379bc9d5`.
-No delivery PR yet. Compiler, runtime, library, tests and build inputs match
+Head: `19b91c059d223614124773ab6e356824514f69f1`. Production run
+`41796687665` and docs run `41796687483` are queued. Keep this head intact.
+Compiler, runtime, library, tests and build inputs match
 measured `bb5433b688c26c60f0b2561a59420deb0f0e95ed` byte for byte after rebase.
 The immutable tag `roadmap/final-iteration-measurement-2026-11-04` retains that
 source; `roadmap/final-iteration-pre-delivery-2026-11-04` retains the development
@@ -28,7 +30,7 @@ states remain excluded. The Windows probe repair from #254 is in the base.
 | 1 | Verified | Preserve the frozen selection, count and ownership rules |
 | 2 | Verified | Preserve three-host values, effects and physical cleanup checks |
 | 3 | Verified | Keep complete measurements and all timing misses explicit |
-| 4 | In progress | Publish, audit all final-head gates, squash and verify the tree |
+| 4 | In progress | Audit all final-head gates, squash and verify the tree |
 
 ## Previous delivery
 
@@ -90,7 +92,7 @@ fixtures and measurement tooling. Original source IDs remain reachable by the ta
 - Both reference compilers retain count/cleanup repairs. Frozen source/tag remain
   `bb5433b6`; docs-only commits do not change those measured programs.
 - Reconciliation onto #254 is complete; measured code and tests are unchanged.
-  Require nine final-head production jobs plus docs. No final matrix is dispatched.
+  Require nine final-head production jobs plus docs; the published runs are above.
 - Follow-up after this group's delivery: complete the
   [matched-option ownership proof](measurements/remaining-gradient-storage.md#follow-up-an-immediately-matched-optional-result).
   Saved C confirms an optional wrapper and payload retain before immediate match;
@@ -114,3 +116,14 @@ fixtures and measurement tooling. Original source IDs remain reachable by the ta
 - Run focused checks serially with `python3 scripts/local-guard.py`. No local full
   builds/suites/benchmarks; never bypass disk, RSS, generated-data or deadline limits.
 - Preserve dirty primary and old worktrees. Keep one active delivery PR.
+
+## Prepared next ownership group
+
+`../matched-option-fields` branches from PR #255's exact head. Its
+[matched-option contract](measurements/matched-option-fields.md) records the source
+proof for owned iteration results and borrowed `last`/`nth` reads. No code or
+measurement changes yet. Freeze the contract before implementation. Preserve
+#255's passing head and keep one delivery PR; reconcile this branch after merge.
+The new comparison removes only these direct-field selections, keeps every #255
+change, and requires one fewer wrapper per present match. A single wrapper per
+solve is not a credible promise of a 5% large-solve speedup; older goals stay open.

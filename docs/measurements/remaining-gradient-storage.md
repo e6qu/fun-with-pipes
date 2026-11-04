@@ -135,5 +135,6 @@ fields (`lookup_value_type`, `owned_option_type` and `expr_variant` in
 4. Freeze the comparison before timing; retain the current six misses and the
    compiler-noise case. Report compiler cost, stack and all runtime outcomes.
 
-This review selects the next proof to complete after final-iteration delivery;
-it does not claim an implemented optimization or a measured speed benefit.
+The [next contract](matched-option-fields.md) makes these ownership boundaries,
+implementation rules, controls and measurement limits explicit. It is a source
+proof and plan, not an implemented optimization or a measured speed benefit.
