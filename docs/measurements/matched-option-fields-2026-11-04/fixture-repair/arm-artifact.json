@@ -1,0 +1,20 @@
+{
+  "id": 13309494379,
+  "node_id": "MDg6QXJ0aWZhY3QxMzMwOTQ5NDM3OQ==",
+  "name": "matched-option-checks-ubuntu-24.04-arm",
+  "size_in_bytes": 98347284,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13309494379",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13309494379/zip",
+  "expired": false,
+  "digest": "sha256:911320dd698c20077f9829caaca86cae8190c25e0be0550cbb922367c6818c66",
+  "created_at": "2026-11-04T09:19:57Z",
+  "updated_at": "2026-11-04T09:19:57Z",
+  "expires_at": "2027-02-02T08:56:28Z",
+  "workflow_run": {
+    "id": 41803373296,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "matched-option-fields",
+    "head_sha": "15d94416027b4a377addef008fcee8b4ade6f6b5"
+  }
+}

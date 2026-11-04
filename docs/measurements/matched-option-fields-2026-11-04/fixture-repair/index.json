@@ -1,0 +1,31 @@
+{
+  "run": 41803373296,
+  "source": "15d94416027b4a377addef008fcee8b4ade6f6b5",
+  "hosts": [
+    {
+      "host": "arm",
+      "job": 126484334383,
+      "passedTests": 56,
+      "failedTests": 1,
+      "newOwnerControls": 22,
+      "nativeImagesChecked": 488
+    },
+    {
+      "host": "amd",
+      "job": 126484334806,
+      "passedTests": 56,
+      "failedTests": 1,
+      "newOwnerControls": 22,
+      "nativeImagesChecked": 488
+    },
+    {
+      "host": "mac",
+      "job": 126484334551,
+      "passedTests": 56,
+      "failedTests": 1,
+      "newOwnerControls": 22,
+      "nativeImagesChecked": 488
+    }
+  ],
+  "repair": "Explicitly apply the selected function; format the fixture. Compiler/runtime code unchanged."
+}
