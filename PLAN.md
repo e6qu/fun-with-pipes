@@ -62,7 +62,9 @@ runtime and stack limits. No new syntax or global analysis.
 including the repaired source fixture and list/array cleanup controls. Compiler
 and runtime comparisons use an isolated same-source reference.
 [Compiler overhead passes](docs/measurements/matched-option-analysis-2026-11-04/README.md)
-on both architectures. Runtime acceptance and full platform delivery remain open.
+on both architectures. [All four runtime sessions and raw audits pass](docs/measurements/matched-option-time-2026-11-04/README.md):
+one wrapper and one retain saved per history-form solve, unchanged peak storage,
+and some small slowdowns within 2%. Final platform delivery remains open.
 
 Input derivative-record packing and coordinate-list reuse remain unselected.
 [Their lifetime requirements](docs/measurements/remaining-gradient-storage.md)

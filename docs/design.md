@@ -633,8 +633,9 @@ show lower peak storage and ARC traffic, with explicit timing misses. Final
 delivery gates remain open.
 
 The next [optional-field change](measurements/matched-option-fields.md) is
-verified by focused GCC ARM64/AMD64 and Clang ARM64 checks; full delivery
-and performance measurements remain pending.
+verified by focused GCC ARM64/AMD64 and Clang ARM64 checks.
+[Runtime and compiler limits pass](measurements/matched-option-time-2026-11-04/README.md);
+full platform delivery remains pending.
 When `last`, `nth` or the internal final-iteration operation feeds a selected
 match, C generation can return a tag and payload directly:
 
@@ -647,7 +648,8 @@ List reads retain the borrowed element; iteration transfers its existing owner.
 `None` owns no payload. Existing match-use checks, resource-frame holders and
 unwind protection govern the fields. Whole-value uses still get an owned box,
 with its payload protected during allocation. This changes representation,
-not `Option` syntax or semantics; its measured benefits remain unverified.
+not `Option` syntax or semantics. The history-form solve saves one allocation
+and one retain; peak storage is unchanged and some larger cases are slightly slower.
 
 A temporary tuple or record can disappear only when its uses and child lifetimes
 permit it. Ignored fields still evaluate in their original order. Known tuple
