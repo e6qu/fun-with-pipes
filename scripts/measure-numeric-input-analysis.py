@@ -141,7 +141,7 @@ def consuming_cost_output(emitted, selected):
             private.add(match[2])
         else:
             bodies[match[1]] = body
-    expected = ('mapped', 'mapped32', 'mapped64', 'update-left', 'update-right')
+    expected = ('mapped', 'mapped32', 'mapped64', 'update-left', 'update-right', 'mapped-produced', 'shared-first')
     observed = {}
     for name in (*expected, 'retained'):
         calls = set(re.findall(r'\b(f\d+)\(', bodies[name])) & private

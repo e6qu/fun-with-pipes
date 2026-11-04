@@ -369,8 +369,9 @@ Finish callbacks → allocate required suffix → update exclusive prefix → re
                                              shared aliases stay unchanged
 ```
 
-`src/cgen/owned_numeric.rs` selects direct-local last uses in one reverse walk,
-before borrow inference and ARC insertion. It excludes nested argument calls and
+`src/cgen/owned_numeric.rs` selects direct-local last uses and owned array results
+from fully applied calls. Its reverse walk includes owned record/variant fields
+before borrow inference and ARC insertion. It excludes ordinary call arguments and
 resource-anchored bodies. Private operation metadata specifies exactly which
 argument transfers; public map/zip contracts remain borrowed. Both callbacks and
 elements must satisfy the existing machine-sized scalar type checks.

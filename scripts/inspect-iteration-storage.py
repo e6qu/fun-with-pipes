@@ -7,6 +7,7 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 
 from process_wait import run_capture
@@ -18,12 +19,39 @@ AD = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(AD)
 
 
+def consuming_calls(emitted):
+    """Follow actual main/loop calls and used closure constants, not metadata."""
+    program = emitted.split('/* ---- program ---- */', 1)[1]
+    private = {match[2]: match[1] for match in re.finditer(
+        r'/\* (consumed-scalar-array-map|consumed-scalar-array-list-zip) : [^\n]*\*/\nstatic [^\n]*? (f\d+)\(', program)}
+    bodies = {}
+    for match in re.finditer(
+            r'^static [^\n]*?\b((?:f|w|e|fs)\d+|fwp_(?:loop_fields|hof)\d+)\([^;\n]*\) \{\n', program, re.M):
+        end = program.index('\n}\n', match.end())
+        bodies[match[1]] = program[match.end():end]
+    main = re.search(r'/\* main : [^\n]*\*/\nstatic [^\n]*? ([fw]\d+)\(', program)
+    assert main and main[1] in bodies, 'missing main body in saved C'
+    pending, reached = [main[1]], set()
+    while pending:
+        name = pending.pop()
+        if name in reached:
+            continue
+        reached.add(name)
+        body = bodies[name]
+        calls = set(re.findall(r'\b([A-Za-z_]\w*)\(', body))
+        calls.update('f' + index for index in re.findall(r'\bfc(\d+)\b', body))
+        pending.extend((calls & bodies.keys()) - reached)
+    return {kind: sorted(name for name, actual in private.items() if actual == kind and name in reached)
+            for kind in ('consumed-scalar-array-map', 'consumed-scalar-array-list-zip')}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--compiler', required=True, type=Path)
     parser.add_argument('--output', required=True, type=Path)
     parser.add_argument('--expected-selection', required=True, choices=('baseline', 'candidate'))
     parser.add_argument('--expected-input-storage', required=True, choices=('boxed', 'packed'))
+    parser.add_argument('--expected-owned-storage', required=True, choices=('borrowed', 'consuming'))
     args = parser.parse_args()
     assert os.environ.get('GITHUB_ACTIONS') == 'true', 'compiler builds belong on CI'
     compiler = args.compiler.resolve()
@@ -78,6 +106,12 @@ def main():
                 record.update(packedInputs=packed, packedPairs=pairs,
                               expectedPackedInputs=expected_packed,
                               inputStoragePass=packed == pairs == expected_packed)
+                owned = consuming_calls(emitted)
+                expected_owned = (args.expected_owned_storage == 'consuming'
+                                  and mode == 'optimized'
+                                  and label in ('descent-small', 'descent-large', 'current-large'))
+                record.update(ownedCalls=owned, expectedOwnedStorage=expected_owned,
+                              ownedStoragePass=all(bool(calls) == expected_owned for calls in owned.values()))
             commands.append(record)
             (output / 'commands.json').write_text(json.dumps(commands, indent=2) + '\n')
             print(label, mode, 'exit', result.returncode, 'diagnostics retained', flush=True)
@@ -86,13 +120,14 @@ def main():
         'compilerSha256': hashlib.sha256(compiler.read_bytes()).hexdigest(),
         'expectedSelection': args.expected_selection,
         'expectedInputStorage': args.expected_input_storage,
+        'expectedOwnedStorage': args.expected_owned_storage,
         'settings': {key: value for key, value in environment.items() if key.startswith('FWP_')},
         'files': {path.name: hashlib.sha256(path.read_bytes()).hexdigest()
                   for path in sorted(output.iterdir()) if path.is_file()},
     }
     (output / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
     failures = [record for record in commands if record['exit'] != 0
-                or not record['selectionPass'] or not record['inputStoragePass']]
+                or not record['selectionPass'] or not record['inputStoragePass'] or not record['ownedStoragePass']]
     assert not failures, f'{len(failures)} compilation/selection failures: see commands.json and retained diagnostics'
 
 
