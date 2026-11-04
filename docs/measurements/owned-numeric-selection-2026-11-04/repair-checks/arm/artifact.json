@@ -1,0 +1,20 @@
+{
+  "id": 13365925063,
+  "node_id": "MDg6QXJ0aWZhY3QxMzM2NTkyNTA2Mw==",
+  "name": "owned-numeric-checks-ubuntu-24.04-arm",
+  "size_in_bytes": 131213861,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13365925063",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13365925063/zip",
+  "expired": false,
+  "digest": "sha256:d3aff06230990a783d4d3008384890466147ea0edba5c615652e4ef0c179db0b",
+  "created_at": "2026-11-04T21:31:33Z",
+  "updated_at": "2026-11-04T21:31:33Z",
+  "expires_at": "2027-02-02T21:18:53Z",
+  "workflow_run": {
+    "id": 41914912241,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "owned-numeric-updates",
+    "head_sha": "9f8ec9091c34927f978066ee40a79ca9f44e6a8c"
+  }
+}

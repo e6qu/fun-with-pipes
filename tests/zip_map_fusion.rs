@@ -504,20 +504,31 @@ fn scalar_map_buffers_preserve_eager_order_aliases_and_both_zip_slots() {
                     .arg(&path),
             );
             let code = std::fs::read_to_string(&path).unwrap();
-            assert!(
-                code.contains("Eager scalar buffer"),
-                "{stack}/{opt}: map not selected"
-            );
-            assert!(code.contains("Zip after the complete scalar map"));
             let executable = dir.join(format!("scalar-{stack}-{opt}.exe"));
             fwp::cgen::compile_c(&code, &executable, opt).unwrap();
-            let output = checked(Command::new(&executable).env("FWP_ALLOC_STATS", "1"));
+            let output = Command::new(&executable)
+                .env("FWP_ALLOC_STATS", "1")
+                .output()
+                .unwrap();
             record_probe::save(
                 "scalar_map_zip_order",
                 &format!("{stack}-{opt}"),
                 &code,
                 &executable,
                 &output,
+            );
+            assert!(output.status.success(), "{stack}/{opt}: {output:?}");
+            assert!(
+                code.contains("Eager scalar buffer"),
+                "{stack}/{opt}: map not selected"
+            );
+            assert!(
+                code.contains("Zip after the complete scalar map"),
+                "{stack}/{opt}: the returned input alias must keep a borrowing zip"
+            );
+            assert!(
+                code.matches("/* consumed-scalar-array-list-zip :").count() >= 2,
+                "{stack}/{opt}: both last-use zip slots must consume their list"
             );
             assert_eq!(output.stdout, reference.stdout, "{stack}/{opt}");
             let stats =
@@ -554,6 +565,10 @@ fn scalar_map_buffers_exclude_shared_results_captures_and_wide_values() {
         assert!(
             !code.contains("Zip after the complete scalar map"),
             "{name}"
+        );
+        assert!(
+            !code.contains("/* consumed-scalar-array-list-zip :"),
+            "{name}: an excluded buffer must not become a consuming zip"
         );
     }
 }
