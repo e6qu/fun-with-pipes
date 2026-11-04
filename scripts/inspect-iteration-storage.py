@@ -23,6 +23,7 @@ def main():
     parser.add_argument('--compiler', required=True, type=Path)
     parser.add_argument('--output', required=True, type=Path)
     parser.add_argument('--expected-selection', required=True, choices=('baseline', 'candidate'))
+    parser.add_argument('--expected-input-storage', required=True, choices=('boxed', 'packed'))
     args = parser.parse_args()
     assert os.environ.get('GITHUB_ACTIONS') == 'true', 'compiler builds belong on CI'
     compiler = args.compiler.resolve()
@@ -44,7 +45,8 @@ def main():
     }
     environment = {key: value for key, value in os.environ.items()
                    if not key.startswith('FWP_') and key not in ('GH_TOKEN', 'GITHUB_TOKEN')}
-    environment.update(FWP_LTO='0', FWP_DUMP_IR='all')
+    environment.update(FWP_LTO='0', FWP_DUMP_IR='all', FWP_VRET='1',
+                       FWP_FRAME_FIELDS='1', FWP_PACKED_ARRAYS='1', FWP_STACK='1')
     commands = []
     for label, source in cases.items():
         source_file = output / (label + '.fwp')
@@ -68,6 +70,14 @@ def main():
                 expected = (args.expected_selection == 'candidate' and mode == 'optimized'
                             and label not in ('shared-history', 'current-large'))
                 record.update(selected=selected, expected=expected, selectionPass=selected == expected)
+                packed = '/* packed-indexed-records :' in emitted
+                pairs = '/* packed-neighbor-pairs :' in emitted
+                expected_packed = (args.expected_input_storage == 'packed'
+                                   and mode == 'optimized'
+                                   and label in ('descent-small', 'descent-large', 'current-large'))
+                record.update(packedInputs=packed, packedPairs=pairs,
+                              expectedPackedInputs=expected_packed,
+                              inputStoragePass=packed == pairs == expected_packed)
             commands.append(record)
             (output / 'commands.json').write_text(json.dumps(commands, indent=2) + '\n')
             print(label, mode, 'exit', result.returncode, 'diagnostics retained', flush=True)
@@ -75,11 +85,14 @@ def main():
         'source': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
         'compilerSha256': hashlib.sha256(compiler.read_bytes()).hexdigest(),
         'expectedSelection': args.expected_selection,
+        'expectedInputStorage': args.expected_input_storage,
+        'settings': {key: value for key, value in environment.items() if key.startswith('FWP_')},
         'files': {path.name: hashlib.sha256(path.read_bytes()).hexdigest()
                   for path in sorted(output.iterdir()) if path.is_file()},
     }
     (output / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
-    failures = [record for record in commands if record['exit'] != 0 or not record['selectionPass']]
+    failures = [record for record in commands if record['exit'] != 0
+                or not record['selectionPass'] or not record['inputStoragePass']]
     assert not failures, f'{len(failures)} compilation/selection failures: see commands.json and retained diagnostics'
 
 

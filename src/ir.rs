@@ -240,6 +240,19 @@ pub enum Body {
         captures: usize,
         slot: usize,
     },
+    /// Native-only indexed producer returning an owned buffer of numeric record
+    /// fields. Borrows its callback and list; only PackedRecordPairs reads it.
+    PackedRecordRangeZip {
+        callback: FuncId,
+        captures: usize,
+        slot: usize,
+    },
+    /// Native-only eager map of neighboring records in one borrowed buffer.
+    /// `tail_slot` selects the callback input offset by one complete record.
+    PackedRecordPairs {
+        callback: FuncId,
+        tail_slot: usize,
+    },
     /// A C function (`foreign "C"`), called through the C ABI.
     ForeignC {
         symbol: String,
@@ -719,7 +732,9 @@ pub(crate) fn reachable_functions(prog: &Program, entries: &[FuncId]) -> Result<
             | Body::PackedRecordFold { callback }
             | Body::ScalarBufferMap { callback }
             | Body::ScalarBufferZip { callback, .. }
-            | Body::RangeZip { callback, .. } => {
+            | Body::RangeZip { callback, .. }
+            | Body::PackedRecordRangeZip { callback, .. }
+            | Body::PackedRecordPairs { callback, .. } => {
                 work.push(*callback);
             }
             _ => {}

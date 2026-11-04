@@ -17,6 +17,7 @@ use crate::value::Value;
 
 mod field_transfers;
 mod numeric_parameters;
+mod packed_inputs;
 mod packed_records;
 mod range_zip;
 mod regions;
@@ -2689,6 +2690,66 @@ impl Gen<'_> {
         }
         for i in 0..arity {
             let _ = writeln!(out, "        l{i} = OBJ(l{i})->f[1];");
+        }
+        out.push_str("    }\n    return fwp_value_finish(&owner, &cleanup);\n");
+        out
+    }
+
+    fn packed_record_range_zip(&self, id: FuncId, captures: usize, slot: usize) -> String {
+        assert!(slot < 2);
+        let abi = self.abis[id]
+            .as_ref()
+            .expect("packed indexed record callback");
+        let width = abi.ret.expect("numeric field result");
+        assert!(abi.params.iter().all(Option::is_none));
+        let other = if slot == 0 { 3 } else { 1 };
+        let lo = slot + 1;
+        let hi = lo + 1;
+        let mut words = (0..captures)
+            .map(|i| format!("CLO(l0)->a[{i}]"))
+            .collect::<Vec<_>>();
+        for position in 0..2 {
+            words.push(if position == slot {
+                "index".into()
+            } else {
+                format!("OBJ(l{other})->f[0]")
+            });
+        }
+        let arguments = abi.args_decode_words(self.prog, id, words);
+        let mut out = format!("    /* Finish indexed input records before any neighboring-pair callback. */\n    size_t count = fwp_list_len(l{other});\n    if (count >= SIZE_MAX / sizeof(V)) fwp_trap(\"map too large\");\n    int64_t lo = (int64_t)l{lo}, hi = (int64_t)l{hi};\n    uint64_t available = hi > lo ? (uint64_t)hi - (uint64_t)lo : 0;\n    if (available < count) count = (size_t)available;\n    if (count > (SIZE_MAX - sizeof(fwp_arr)) / ({width} * sizeof(V))) fwp_trap(\"map too large\");\n    V buffer = fwp_rc_fresh(fwp_arr_new(count * {width}));\n    fwp_value_owner owner = {{buffer, fwp_rc_free_arr}};\n    fwp_cleanup cleanup; fwp_value_protect(&owner, &cleanup);\n    for (size_t i = 0; i < count; i++) {{\n        V index = (V)((uint64_t)lo + (uint64_t)i);\n        fwp_wr{id} mapped = w{id}({});\n", arguments.join(", "));
+        for (field, word) in abi.result_words(self.prog, id, "mapped").iter().enumerate() {
+            let _ = writeln!(
+                out,
+                "        ARR(buffer)->d[i * {width} + {field}] = {word};"
+            );
+        }
+        let _ = writeln!(out, "        l{other} = OBJ(l{other})->f[1];\n    }}\n    return fwp_value_finish(&owner, &cleanup);");
+        out
+    }
+
+    fn packed_record_pairs(&self, id: FuncId, tail_slot: usize) -> String {
+        assert!(tail_slot < 2);
+        let abi = self.abis[id]
+            .as_ref()
+            .expect("packed neighboring-pair callback");
+        let input_width = abi.params[0].expect("numeric input fields");
+        assert_eq!(abi.params, [Some(input_width), Some(input_width)]);
+        let width = abi.ret.expect("numeric output fields");
+        let mut words = Vec::new();
+        for slot in 0..2 {
+            let offset = usize::from(slot == tail_slot);
+            words.extend(
+                (0..input_width)
+                    .map(|field| format!("ARR(l0)->d[(i + {offset}) * {input_width} + {field}]")),
+            );
+        }
+        let arguments = abi.args_decode_words(self.prog, id, words);
+        let mut out = format!("    /* Borrow overlapping windows; complete pair mapping before the fold. */\n    size_t count = ARR(l0)->len / {input_width};\n    if (count) count--;\n    if (count > (SIZE_MAX - sizeof(fwp_arr)) / ({width} * sizeof(V))) fwp_trap(\"map too large\");\n    V buffer = fwp_rc_fresh(fwp_arr_new(count * {width}));\n    fwp_value_owner owner = {{buffer, fwp_rc_free_arr}};\n    fwp_cleanup cleanup; fwp_value_protect(&owner, &cleanup);\n    for (size_t i = 0; i < count; i++) {{\n        fwp_wr{id} mapped = w{id}({});\n", arguments.join(", "));
+        for (field, word) in abi.result_words(self.prog, id, "mapped").iter().enumerate() {
+            let _ = writeln!(
+                out,
+                "        ARR(buffer)->d[i * {width} + {field}] = {word};"
+            );
         }
         out.push_str("    }\n    return fwp_value_finish(&owner, &cleanup);\n");
         out
@@ -8362,6 +8423,8 @@ static inline __attribute__((always_inline)) int fs{}(fwp_loop_state{step} *st, 
                 | Body::ScalarBufferMap { .. }
                 | Body::ScalarBufferZip { .. }
                 | Body::RangeZip { .. }
+                | Body::PackedRecordRangeZip { .. }
+                | Body::PackedRecordPairs { .. }
         ) {
             let sym = match &f.body {
                 Body::Prim(s) => s.as_str(),
@@ -8389,6 +8452,19 @@ static inline __attribute__((always_inline)) int fs{}(fwp_loop_state{step} *st, 
             }
         }
         match &f.body {
+            Body::PackedRecordRangeZip {
+                callback,
+                captures,
+                slot,
+            } => {
+                out.push_str(&self.packed_record_range_zip(*callback, *captures, *slot));
+            }
+            Body::PackedRecordPairs {
+                callback,
+                tail_slot,
+            } => {
+                out.push_str(&self.packed_record_pairs(*callback, *tail_slot));
+            }
             Body::RangeZip {
                 callback,
                 captures,
@@ -10426,6 +10502,7 @@ fn generate_mode(prog: &Program, mut mode: Mode) -> Result<String, String> {
     let mut numeric_program = packed_program;
     scalar_map_zip::lower(&mut numeric_program);
     range_zip::lower(&mut numeric_program);
+    packed_inputs::lower(&mut numeric_program);
     numeric_parameters::lower(&mut numeric_program, &roots);
     let prog = &numeric_program;
     crate::ir::check_locals(prog)?;

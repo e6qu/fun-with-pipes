@@ -228,7 +228,9 @@ pub(crate) fn check(
             | Body::PackedRecordFold { .. }
             | Body::ScalarBufferMap { .. }
             | Body::ScalarBufferZip { .. }
-            | Body::RangeZip { .. } => continue,
+            | Body::RangeZip { .. }
+            | Body::PackedRecordRangeZip { .. }
+            | Body::PackedRecordPairs { .. } => continue,
             Body::ForeignC { symbol, .. } => {
                 let (params, result) = crate::ffi::signature(prog, f)
                     .map_err(|e| format!("foreign function `{symbol}`: {e}"))?;

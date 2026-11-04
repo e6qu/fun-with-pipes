@@ -223,7 +223,8 @@ jobs:
         if: ${{ !cancelled() && steps.compiler_build.outcome == 'success' }}
         run: >-
           python3 scripts/inspect-iteration-storage.py --compiler target/debug/fwp
-          --expected-selection candidate --output final-iteration-checks/selection
+          --expected-selection candidate --expected-input-storage packed
+          --output final-iteration-checks/selection
       - name: Native histories, ownership, effects and autodiff
         if: ${{ !cancelled() && steps.compiler_build.outcome == 'success' }}
         run: >-
@@ -265,6 +266,9 @@ jobs:
       CARGO_PROFILE_DEV_OPT_LEVEL: '1'
       CARGO_PROFILE_DEV_DEBUG_ASSERTIONS: 'true'
       CARGO_PROFILE_DEV_OVERFLOW_CHECKS: 'true'
+      CARGO_PROFILE_TEST_OPT_LEVEL: '1'
+      CARGO_PROFILE_TEST_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_TEST_OVERFLOW_CHECKS: 'true'
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
@@ -273,11 +277,21 @@ jobs:
           path: ~/.cargo/registry
           key: cargo-registry-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Cargo.lock') }}
       - name: Build the current compiler for source inspection
+        id: compiler
         run: |
           cargo fetch --locked
           CARGO_NET_OFFLINE=true cargo build --locked --bin fwp
       - name: Save raw and optimized IR and emitted C without timing programs
-        run: python3 scripts/inspect-iteration-storage.py --compiler target/debug/fwp --expected-selection candidate --output iteration-storage-review
+        run: python3 scripts/inspect-iteration-storage.py --compiler target/debug/fwp --expected-selection candidate --expected-input-storage packed --output iteration-storage-review
+      - name: Check scoped and packed-input proof controls
+        if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
+        env:
+          CARGO_NET_OFFLINE: 'true'
+        run: |
+          proof_status=0
+          cargo test --locked --lib opt::scoped::tests -- --nocapture || proof_status=1
+          cargo test --locked --lib cgen::packed_inputs::tests -- --nocapture || proof_status=1
+          exit "$proof_status"
       - uses: actions/upload-artifact@v7
         if: always()
         with:

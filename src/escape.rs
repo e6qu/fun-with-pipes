@@ -35,8 +35,13 @@ pub fn params(prog: &Program) -> Vec<Vec<bool>> {
         .map(|f| {
             (0..f.arity as usize)
                 .map(|j| {
-                    matches!(f.body, Body::Expr(_) | Body::RangeZip { .. })
-                        || matches!(&f.body, Body::Prim(s)
+                    matches!(
+                        f.body,
+                        Body::Expr(_)
+                            | Body::RangeZip { .. }
+                            | Body::PackedRecordRangeZip { .. }
+                            | Body::PackedRecordPairs { .. }
+                    ) || matches!(&f.body, Body::Prim(s)
                             if crate::ownership::borrows_without_escape(s, j))
                 })
                 .collect()

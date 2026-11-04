@@ -1,7 +1,9 @@
 # Private numeric inputs for derivative objectives
 
-**Implementation contract; not implemented or verified.** Freeze this document
-before changing the compiler. The [source review](numeric-record-inputs-2026-11-04/README.md)
+**Implementation in progress; native correctness and performance are unverified.**
+The contract was frozen at `cc425aba` before code changes, tag
+`roadmap/packed-derivative-inputs-protocol-2026-11-04`.
+The [source review](numeric-record-inputs-2026-11-04/README.md)
 identifies the remaining boxes and list cells at `82963531`. The starting
 delivery tree is PR #256's `81bce309`; that PR's final gates remain independent.
 
