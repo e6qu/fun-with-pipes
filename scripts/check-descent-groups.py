@@ -32,6 +32,8 @@ def check_report(report, source, protocol):
     labels = (['fwp-ad-history', 'fwp-ad', 'fwp-ad-history-reference', 'fwp-ad-reference',
                'c-explicit', 'rust-explicit', 'fwp-ad-identical'] if paired else LABELS)
     assert report['source'] == source
+    if protocol == 'matched-option':
+        assert report['settings']['FWP_VRET'] == report['settings']['FWP_FRAME_FIELDS'] == '1'
     config = report['configuration']
     assert (config['samples'], config['warmups'], config['order_seed'],
             config['phase_samples'], config['phase_warmups']) == (samples, 2, seed, 12, 2)

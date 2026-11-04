@@ -137,6 +137,8 @@ def main():
     output.mkdir(parents=True, exist_ok=False)
     environment = {key: value for key, value in os.environ.items() if not key.startswith('FWP_')}
     environment.update(FWP_LTO='0', LC_ALL='C')
+    if args.comparison == 'matched-option':
+        environment.update(FWP_VRET='1', FWP_FRAME_FIELDS='1')
     report = dict(source=args.source, machine=args.machine, complete=False, comparison=args.comparison,
                   scope='Entire compiler command through C emission: startup, parsing, typing, '
                         'optimization, ownership and emission. No generated-program execution. '
@@ -147,7 +149,9 @@ def main():
                   buildEnvironment={key: value for key, value in os.environ.items()
                                     if key.startswith(('CARGO_PROFILE_', 'FWP_'))
                                     or key in ('CC', 'CXX', 'RUSTFLAGS', 'CARGO_BUILD_JOBS')},
-                  executionOverrides=dict(FWP_LTO='0', LC_ALL='C', otherFWPSettings='removed'),
+                  executionOverrides={**{key: value for key, value in environment.items()
+                                         if key.startswith('FWP_') or key == 'LC_ALL'},
+                                      'otherFWPSettings': 'removed'},
                   inputs={}, cases={}, commands=[])
     try:
         for name in COPIES:

@@ -9,15 +9,16 @@ complete and must not be repeated for a pass.
 
 Branch/worktree: `iteration-final-value`, based on verified main `379bc9d5`.
 Head: `19b91c059d223614124773ab6e356824514f69f1`. Production run
-`41796687665` is running; docs run `41796687483` passes. Benchmark, both macOS
-ownership jobs, regular ARM64 macOS and Windows ARM64 pass and are audited.
-The ownership hosts each pass 126 target logs; regular macOS passes 131.
+`41796687665` is running; docs run `41796687483` passes. Audited production gates:
+Linux ARM64 (257 target logs), regular ARM64 macOS (131), both macOS ownership
+jobs (126 each), Windows ARM64 (155 executed targets), and benchmarks.
+Remaining: Linux AMD64, regular Intel macOS, Windows AMD64. No reported failures.
+Keep this head intact. Latest Linux audit: 5.28 guarded seconds.
+
 Windows has two archives: 57 early logs and 157 final logs covering all 155
 executed targets, including iteration. Both artifact identities and every log
-are verified; the earlier expected count of 58 in the early bundle was an audit
-configuration error, not missing test execution. Latest full audit: 5.17 guarded
-seconds, after a 65.61-second guarded download. Four production jobs remain in
-progress with no reported failures. Keep this head intact.
+are verified; expecting 58 in the early bundle was an audit configuration error,
+not missing execution. Full Windows audit: 5.17s after a 65.61s guarded download.
 Compiler, runtime, library, tests and build inputs match
 measured `bb5433b688c26c60f0b2561a59420deb0f0e95ed` byte for byte after rebase.
 The immutable tag `roadmap/final-iteration-measurement-2026-11-04` retains that
@@ -137,8 +138,9 @@ results as direct owned fields. Borrowed reads retain one owner; iteration moves
 its existing owner. Whole-value entries protect their payload while boxing.
 Measurement controls and workflows are published at `8efeb985`.
 
-**Next for this branch:** publish the audited fixture repair and expanded container
-controls, then dispatch one `matched-option-checks` batch. No performance sessions
+**Next for this branch:** monitor and audit grouped run `41808352672` at
+`fb461933` (fixture repair plus expanded container controls). All three hosts are
+queued. Inspect every completed target and failure before any repair push. No performance sessions
 before all three focused hosts pass with matching compiler/runtime/library/tests.
 
 [First batch and repair](measurements/matched-option-fields-2026-11-04/README.md):
@@ -153,8 +155,7 @@ Repair: use explicit `apply "!" (...)` for the selected function and run the
 language formatter. Compiler/runtime code is unchanged. The same batch now also
 checks physical release of numeric list/array payloads, including aliases,
 overflow, cancellation and failed boxing; a slice example checks that changing
-the selected result leaves the original array unchanged. Extended native checks
-remain pending.
+the selected result leaves the original array unchanged. Extended native checks are running in the new batch; acceptance remains pending.
 
 ### Checks and evidence tools
 
@@ -181,3 +182,9 @@ remain pending.
   check refused when ARM64 had already started; no job was cancelled.
 - Preserve dirty primary/old worktrees. Batch every encountered repair; do not
   repeat completed timing sessions to obtain a pass.
+
+Before timing, both new drivers now explicitly set and record `FWP_VRET=1` and
+`FWP_FRAME_FIELDS=1`, matching the focused checks and the existing enabled
+settings. The raw report audit checks them. Compiler schedule/timeout controls
+and grouped-report controls pass (7 + 12 tests, 7.37 guarded seconds). Old
+protocols and frozen acceptance limits are unchanged.
