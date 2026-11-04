@@ -8,7 +8,8 @@ complete and must not be repeated for a pass.
 ## Final iteration values
 
 Branch/worktree: `iteration-final-value`, based on verified main `379bc9d5`.
-Head: `19b91c059d223614124773ab6e356824514f69f1`. Production run `41796687665` attempt 2 is running only Intel macOS job
+Head: `19b91c059d223614124773ab6e356824514f69f1`. Production run `41796687665`
+attempt 2 is running only Intel macOS job
 `126506098945`; all other eight production jobs and docs `41796687483` pass and
 are fully audited. Keep this source head intact.
 
@@ -139,11 +140,12 @@ Measured candidate frozen at `82963531dddb6d9a5f32ec26657dc220736f4055`, tag
 `roadmap/matched-option-measurement-2026-11-04`. Never move either tag.
 
 **Next for this branch:** monitor compiler-cost run `41811652687` and four-session
-runtime run `41811658838`. Both compiler jobs passed and their raw audits are in
-progress. Three runtime sessions are running; AMD64 session 1 rejected an EPYC
-9V45 host before building/timing (expected EPYC 7763). Retain and audit that host
-record before replacing only this unmeasured session. Audit every completed
-measurement. Replace only a host rejected before building/timing; never repeat a
+runtime run `41811658838`. Both compiler jobs and their complete raw audits pass.
+Both ARM64 runtime sessions pass; AMD64 session 2 is still measuring.
+AMD64 session 1 rejected four hosts before building/timing (expected EPYC 7763).
+[All rejected hosts](measurements/matched-option-time-2026-11-04/rejected-hosts/README.md)
+are audited and retained. Replace only that unmeasured session after the running
+AMD64 session finishes; then audit all completed measurements on runners. Replace only a host rejected before building/timing; never repeat a
 completed noisy or failing timing session to obtain a pass. Keep #255's head
 intact and reconcile this branch after its verified merge.
 
@@ -169,7 +171,10 @@ The `matched-option` reference disables only the three new field selections,
 preserving previous iteration and lifetime work. Both drivers explicitly record
 `FWP_VRET=1` and `FWP_FRAME_FIELDS=1`. Raw audits reconstruct literal source edits
 without executing archived Python. Limits: 2% runtime/noise, 5% compiler time/RSS,
-128-byte frame growth. No timing result or complete-program memory gain yet.
+128-byte frame growth. [Compiler costs](measurements/matched-option-analysis-2026-11-04/README.md)
+pass all ten cases: maximum time ratio 1.00804, RSS ratio 1.00386, identical-copy
+variation 1.24%. ARM64 runtime jobs pass; complete raw audits and AMD64 measurements remain.
+No complete-program memory claim yet.
 
 Compiler audit command (substitute the recorded source/run and explicit machine):
 `python3 ../gradient-work/audit-matched-option-analysis.py --source SOURCE --run RUN --machine MACHINE --output ../gradient-work/matched-option-analysis`.
@@ -188,7 +193,8 @@ Full raw auditing stays on runners; bounded collections use the local guard.
   106 immutable identities, four steps (2.66s).
 - Focused collections 23.67/23.26/23.14s; complete owner/image/count audit 2.34s;
   native evidence retention 4.79s. Updated docs audit passes (260 link sets, 2.56s).
-  All guarded and within fixed limits.
+  Compiler audits pass in 28.59/31.15s; retention 0.14s. All checks guarded and
+  within fixed limits.
 - `82963531` adds one retry to each macOS test-log upload, against the same name
   and files. Missing logs or a second failure fail CI; both attempts remain
   visible. Workflow lint passes (0.26s). The active #255 workflow is unchanged.
@@ -201,6 +207,10 @@ Full raw auditing stays on runners; bounded collections use the local guard.
   Raw archives: `matched-option-first`, `matched-option-second`, `platforms-255`.
 - Resume the final-gate collector without `--attempt 1` to select the Intel retry.
   Its other eight production jobs and documentation remain valid and cached.
+  GitHub assigns copied job IDs on attempt 2: verify unchanged source, runner,
+  steps and execution timestamps against the original job, retaining both IDs.
+  Creation timestamps and absent zero-valued runner-group metadata describe the
+  copied record, not another execution. Reconciliation passes in 7.87s.
   The full Windows archive audit checks all 155 executed targets, not just the
   early 57-log bundle. Retain failed attempt 1 separately. Require nine passing
   production jobs plus docs before squash merge.

@@ -1,6 +1,6 @@
 # Optional results without a temporary box
 
-**Three-host focused checks pass; measurements and final delivery remain pending.**
+**Three-host correctness and compiler-cost checks pass; runtime audit and delivery remain pending.**
 [The native report](matched-option-fields-2026-11-04/README.md) records values,
 owners, physical cleanup, controls and binary identities. The first batch's
 fixture failure and repair remain linked there.
@@ -23,8 +23,8 @@ that ownership.
 ```
 
 This returns 12. The three iteration values are 0, 1 and 2; only 2 is needed.
-The current compiler already removes the history, but its internal primitive
-still builds `Some 2` before the caller unpacks it.
+The reviewed compiler at `19b91c05` removes the history but builds `Some 2`
+before the caller unpacks it. The new implementation returns its fields directly.
 [Saved C](final-iteration-storage-2026-11-03/optional-result-review.json) records
 the same boundary in the gradient program. That observation does not establish
 the cause of any timing regression.
@@ -83,8 +83,8 @@ of the result and installation of its next owner.
 - Extend the existing C generator's lookup/result selection. Check both the
   parameter type and `Option` payload type; malformed layouts must not select.
 - Share the existing two-field `fwp_option_result` definition in the common
-  runtime section: list primitives precede the task section where it currently
-  lives. Do not introduce another equivalent result struct.
+  runtime section: list primitives precede the task section that first used it.
+  Do not introduce another equivalent result struct.
 - Give the iteration algorithm one implementation returning owned fields. Its
   existing generic primitive entry boxes only when its value ABI requires it,
   with protected payload ownership. Keep the count-bound and callback algorithm

@@ -1,0 +1,152 @@
+{
+  "source": "82963531dddb6d9a5f32ec26657dc220736f4055",
+  "run": 41811652687,
+  "job": {
+    "id": 126512128896,
+    "run_id": 41811652687,
+    "workflow_name": "Numerical and ownership evidence",
+    "head_branch": "roadmap/matched-option-measurement-2026-11-04",
+    "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/41811652687",
+    "run_attempt": 1,
+    "node_id": "CR_kwDOU33zxM8AAAAddLXjgA",
+    "head_sha": "82963531dddb6d9a5f32ec26657dc220736f4055",
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/126512128896",
+    "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41811652687/job/126512128896",
+    "status": "completed",
+    "conclusion": "success",
+    "created_at": "2026-11-04T10:03:54Z",
+    "started_at": "2026-11-04T10:04:46Z",
+    "completed_at": "2026-11-04T10:10:21Z",
+    "name": "numeric_input_analysis (ubuntu-24.04-arm)",
+    "steps": [
+      {
+        "name": "Set up job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 1,
+        "started_at": "2026-11-04T10:04:47Z",
+        "completed_at": "2026-11-04T10:04:48Z"
+      },
+      {
+        "name": "Run actions/checkout@v7",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 2,
+        "started_at": "2026-11-04T10:04:48Z",
+        "completed_at": "2026-11-04T10:04:59Z"
+      },
+      {
+        "name": "Run dtolnay/rust-toolchain@stable",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 3,
+        "started_at": "2026-11-04T10:04:59Z",
+        "completed_at": "2026-11-04T10:05:06Z"
+      },
+      {
+        "name": "Verify focused correctness and matching compiler sources",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 4,
+        "started_at": "2026-11-04T10:05:06Z",
+        "completed_at": "2026-11-04T10:05:13Z"
+      },
+      {
+        "name": "Run actions/cache@v6",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 5,
+        "started_at": "2026-11-04T10:05:13Z",
+        "completed_at": "2026-11-04T10:05:15Z"
+      },
+      {
+        "name": "Build candidate at production settings",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 6,
+        "started_at": "2026-11-04T10:05:15Z",
+        "completed_at": "2026-11-04T10:06:52Z"
+      },
+      {
+        "name": "Build and verify the selected same-source reference",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 7,
+        "started_at": "2026-11-04T10:06:52Z",
+        "completed_at": "2026-11-04T10:08:27Z"
+      },
+      {
+        "name": "Measure balanced compiler commands and peak memory",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 8,
+        "started_at": "2026-11-04T10:08:27Z",
+        "completed_at": "2026-11-04T10:10:06Z"
+      },
+      {
+        "name": "Preserve complete measurements and failures",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 9,
+        "started_at": "2026-11-04T10:10:06Z",
+        "completed_at": "2026-11-04T10:10:18Z"
+      },
+      {
+        "name": "Post Run actions/cache@v6",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 17,
+        "started_at": "2026-11-04T10:10:18Z",
+        "completed_at": "2026-11-04T10:10:18Z"
+      },
+      {
+        "name": "Post Run actions/checkout@v7",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 18,
+        "started_at": "2026-11-04T10:10:18Z",
+        "completed_at": "2026-11-04T10:10:18Z"
+      },
+      {
+        "name": "Complete job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 19,
+        "started_at": "2026-11-04T10:10:18Z",
+        "completed_at": "2026-11-04T10:10:18Z"
+      }
+    ],
+    "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/126512128896",
+    "labels": [
+      "ubuntu-24.04-arm"
+    ],
+    "runner_id": 1000405525,
+    "runner_name": "GitHub Actions 1000405525",
+    "runner_group_id": 0,
+    "runner_group_name": "GitHub Actions"
+  },
+  "artifact": {
+    "id": 13312443854,
+    "node_id": "MDg6QXJ0aWZhY3QxMzMxMjQ0Mzg1NA==",
+    "name": "matched-option-analysis-ARM64",
+    "size_in_bytes": 123560664,
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13312443854",
+    "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13312443854/zip",
+    "expired": false,
+    "digest": "sha256:bfe6fbf3f72bffc6a57a27431b9dc8332bcecefeefbbf02d004b58c4d0440ffe",
+    "created_at": "2026-11-04T10:10:17Z",
+    "updated_at": "2026-11-04T10:10:17Z",
+    "expires_at": "2027-02-02T10:03:53Z",
+    "workflow_run": {
+      "id": 41811652687,
+      "repository_id": 1400763332,
+      "head_repository_id": 1400763332,
+      "head_branch": "roadmap/matched-option-measurement-2026-11-04",
+      "head_sha": "82963531dddb6d9a5f32ec26657dc220736f4055"
+    }
+  },
+  "commands": 240,
+  "failures": {},
+  "referenceVerified": true,
+  "expectedDiagnostics": []
+}

@@ -54,10 +54,12 @@ Both sides preserve earlier iteration optimizations and lifetime repairs. Both
 measurement drivers explicitly set and record `FWP_VRET=1` and
 `FWP_FRAME_FIELDS=1`; the reference disables the selected transformations in source.
 
-Both jobs in compiler-cost run `41811652687` pass; raw auditing is in progress.
-Runtime run `41811658838` has three running sessions and one host rejected before
-building/timing: AMD EPYC 9V45 instead of the required EPYC 7763. That session
-needs a qualified replacement. No runtime acceptance is established yet.
+[Compiler-cost measurements](../matched-option-analysis-2026-11-04/README.md)
+pass all ten cases; all 480 commands and raw records are audited.
+Both ARM64 sessions in runtime run `41811658838` pass, pending raw audit. AMD64
+session 2 is still measuring. Session 1 needs a qualified replacement;
+[four rejected hosts](../matched-option-time-2026-11-04/rejected-hosts/README.md)
+stopped before building/timing. Complete runtime acceptance remains open.
 Allocation reductions do not close older timing goals. Final platform gates and
 delivery also remain pending; [the handoff](../../development-state.md) records
 current jobs and the one active delivery PR.
