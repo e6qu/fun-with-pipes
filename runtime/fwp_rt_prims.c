@@ -218,6 +218,41 @@ static V fwp_value_finish(fwp_value_owner *owner, fwp_cleanup *cleanup) {
     owner->value = 0;
     return value;
 }
+/* Scalar-only consuming zip. Input owns its entire old spine, while mapped
+ * owns scratch and the newly built suffix. Complete all fallible allocation
+ * before changing any input link. A shared ancestor forbids descendant reuse. */
+static V fwp_map_finish_reusing_list(fwp_value_owner *input,
+                                   fwp_map_owner *mapped, fwp_cleanup *cleanup) {
+    size_t prefix = 0;
+    V cursor = input->value;
+    while (prefix < mapped->count && cursor && fwp_rc_unique_mut(cursor)) {
+        prefix++;
+        cursor = OBJ(cursor)->f[1];
+    }
+    while (mapped->count > prefix) {
+        V fields[] = {mapped->items[mapped->count - 1], mapped->built};
+        V node = fwp_rc_fresh(fwp_data(1, 2, fields));
+        mapped->count--;
+        mapped->built = node;
+    }
+    if (prefix) {
+        V root = input->value, last = 0;
+        cursor = root;
+        /* No callbacks, allocation or suspension in this transfer. Input's
+         * exclusive prefix becomes mapped's prefix; the unused old tail stays
+         * in input. Scalar fields carry no independent child owners. */
+        for (size_t i = 0; i < prefix; i++) {
+            OBJ(cursor)->f[0] = mapped->items[i];
+            last = cursor;
+            cursor = OBJ(cursor)->f[1];
+        }
+        OBJ(last)->f[1] = mapped->built;
+        input->value = cursor;
+        mapped->built = root;
+        mapped->count = 0;
+    }
+    return fwp_map_finish_protected(mapped, cleanup);
+}
 /* Move uniquely owned String-list heads into the callback and build an owned
  * result. String leaves have no resource-close effects; other element types
  * do not use this path. */

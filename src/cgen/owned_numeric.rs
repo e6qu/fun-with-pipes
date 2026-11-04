@@ -1,0 +1,472 @@
+//! Consume dead numeric inputs through explicit private entries, before ARC.
+//! One reverse walk records later uses; one rewrite changes selected calls.
+//! Branches share a conservative union of uses. Nested argument calls and
+//! resource-bearing bodies are excluded rather than guessing owner lifetimes.
+use std::collections::{HashMap, HashSet};
+
+use crate::ir::*;
+
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+enum Operation {
+    Map(FuncId, FuncId),
+    Zip(FuncId),
+}
+
+fn callback(program: &Program, id: FuncId, arity: usize) -> bool {
+    let function = &program.funcs[id];
+    let (parameters, result) = function.ty.params(arity);
+    function.arity as usize == arity
+        && parameters.len() == arity
+        && parameters.iter().all(|ty| super::scalar(ty).is_some())
+        && super::scalar(result).is_some()
+        && matches!(function.body, Body::Expr(_) | Body::Prim(_))
+}
+
+fn selection(
+    program: &Program,
+    locals: &[MT],
+    id: FuncId,
+    args: &[Expr],
+) -> Option<(Local, Operation)> {
+    let function = &program.funcs[id];
+    match (&function.body, args) {
+        (Body::Prim(symbol), [Expr::Func(step), Expr::Local(input)])
+            if symbol == "array.map" && callback(program, *step, 1) =>
+        {
+            let worker = &program.funcs[*step];
+            let (parameters, result) = worker.ty.params(1);
+            let array = MT::Con("std::Array".into(), vec![result.clone()]);
+            let (actual, output) = function.ty.params(2);
+            (parameters[0] == result
+                && function.arity == 2
+                && actual == vec![&worker.ty, &array]
+                && output == &array
+                && locals.get(*input as usize) == Some(&array))
+            .then_some((*input, Operation::Map(id, *step)))
+        }
+        (
+            Body::ScalarBufferZip {
+                callback: step,
+                slot,
+            },
+            [Expr::Local(a), Expr::Local(b)],
+        ) if *slot < 2 && a != b && callback(program, *step, 2) => {
+            let input = if *slot == 0 { *b } else { *a };
+            let (parameters, result) = program.funcs[*step].ty.params(2);
+            let list = MT::Con("std::List".into(), vec![result.clone()]);
+            let (actual, output) = function.ty.params(2);
+            (parameters[1 - slot] == result
+                && function.arity == 2
+                && actual.len() == 2
+                && locals.get(*a as usize) == Some(actual[0])
+                && locals.get(*b as usize) == Some(actual[1])
+                && actual[1 - slot] == &list
+                && output == &list)
+                .then_some((input, Operation::Zip(id)))
+        }
+        _ => None,
+    }
+}
+
+struct Analysis<'a> {
+    program: &'a Program,
+    locals: &'a [MT],
+    later: HashSet<Local>,
+    selected: Vec<(usize, Operation)>,
+    anchored: bool,
+    visits: usize,
+}
+
+impl Analysis<'_> {
+    fn walk(&mut self, expr: &Expr, eligible: bool) {
+        self.visits += 1;
+        match expr {
+            Expr::Local(local) => {
+                self.later.insert(*local);
+            }
+            Expr::Call(id, args) => {
+                if eligible {
+                    if let Some((input, operation)) =
+                        selection(self.program, self.locals, *id, args)
+                    {
+                        if !self.later.contains(&input) {
+                            self.selected
+                                .push((expr as *const Expr as usize, operation));
+                        }
+                    }
+                }
+                for arg in args.iter().rev() {
+                    self.walk(arg, false);
+                }
+            }
+            Expr::Let(_, value, body) => {
+                self.walk(body, eligible);
+                self.walk(value, eligible);
+            }
+            Expr::Match(value, arms) => {
+                // Union, without copying a live-local set for each arm. This
+                // may exclude an earlier arm but never misses a later use.
+                for (_, body) in arms.iter().rev() {
+                    self.walk(body, eligible);
+                }
+                self.walk(value, false);
+            }
+            Expr::Apply(function, args) => {
+                for arg in args.iter().rev() {
+                    self.walk(arg, false);
+                }
+                self.walk(function, false);
+            }
+            Expr::Record(fields) | Expr::Construct(_, fields) => {
+                for field in fields.iter().rev() {
+                    self.walk(field, false);
+                }
+            }
+            Expr::SetFields(base, fields) => {
+                for (_, field) in fields.iter().rev() {
+                    self.walk(field, false);
+                }
+                self.walk(base, false);
+            }
+            Expr::ResourceRegion { body, .. } => {
+                self.anchored = true;
+                self.walk(body, false);
+            }
+            Expr::Dup(_, body) | Expr::Drop(_, body) | Expr::BorrowGlobal(_, _, body) => {
+                // These appear only after ownership preparation. This pass
+                // must not reinterpret an already prepared lifetime.
+                self.anchored = true;
+                self.walk(body, false);
+            }
+            Expr::Trace(_, body) => self.walk(body, eligible),
+            Expr::Field(body, _) => self.walk(body, false),
+            Expr::Const(_) | Expr::Func(_) => {}
+        }
+    }
+}
+
+fn entry(program: &Program, operation: Operation) -> Func {
+    match operation {
+        Operation::Map(id, callback) => {
+            let original = &program.funcs[id];
+            let (parameters, result) = original.ty.params(2);
+            Func {
+                name: "consumed-scalar-array-map".into(),
+                arity: 1,
+                locals: vec![parameters[1].clone()],
+                ty: MT::Fun(Box::new(parameters[1].clone()), Box::new(result.clone())),
+                body: Body::OwnedScalarArrayMap { callback },
+            }
+        }
+        Operation::Zip(id) => {
+            let original = &program.funcs[id];
+            let Body::ScalarBufferZip { callback, slot } = original.body else {
+                unreachable!()
+            };
+            Func {
+                name: "consumed-scalar-array-list-zip".into(),
+                arity: original.arity,
+                locals: original.locals.clone(),
+                ty: original.ty.clone(),
+                body: Body::OwnedScalarBufferZip { callback, slot },
+            }
+        }
+    }
+}
+
+fn rewrite(expr: &mut Expr, replacements: &HashMap<usize, (FuncId, bool)>, visits: &mut usize) {
+    *visits += 1;
+    let selected = replacements.get(&(expr as *const Expr as usize)).copied();
+    match expr {
+        Expr::Call(_, args) | Expr::Record(args) | Expr::Construct(_, args) => {
+            for arg in args {
+                rewrite(arg, replacements, visits);
+            }
+        }
+        Expr::Apply(function, args) => {
+            rewrite(function, replacements, visits);
+            for arg in args {
+                rewrite(arg, replacements, visits);
+            }
+        }
+        Expr::Let(_, value, body) => {
+            rewrite(value, replacements, visits);
+            rewrite(body, replacements, visits);
+        }
+        Expr::Match(value, arms) => {
+            rewrite(value, replacements, visits);
+            for (_, body) in arms {
+                rewrite(body, replacements, visits);
+            }
+        }
+        Expr::SetFields(base, fields) => {
+            rewrite(base, replacements, visits);
+            for (_, field) in fields {
+                rewrite(field, replacements, visits);
+            }
+        }
+        Expr::Field(body, _)
+        | Expr::Trace(_, body)
+        | Expr::ResourceRegion { body, .. }
+        | Expr::Dup(_, body)
+        | Expr::Drop(_, body)
+        | Expr::BorrowGlobal(_, _, body) => rewrite(body, replacements, visits),
+        Expr::Local(_) | Expr::Const(_) | Expr::Func(_) => {}
+    }
+    if let Some((replacement, remove_callback)) = selected {
+        let Expr::Call(id, args) = expr else {
+            unreachable!()
+        };
+        *id = replacement;
+        if remove_callback {
+            args.remove(0);
+        }
+    }
+}
+
+pub(super) fn lower(program: &mut Program) -> usize {
+    let original = program.funcs.len();
+    let mut entries = HashMap::new();
+    let mut made = Vec::new();
+    let mut visits = 0;
+    for id in 0..original {
+        let function = &program.funcs[id];
+        let Body::Expr(body) = &function.body else {
+            continue;
+        };
+        let mut analysis = Analysis {
+            program,
+            locals: &function.locals,
+            later: HashSet::new(),
+            selected: Vec::new(),
+            anchored: false,
+            visits: 0,
+        };
+        analysis.walk(body, true);
+        visits += analysis.visits;
+        if analysis.anchored || analysis.selected.is_empty() {
+            continue;
+        }
+        let mut replacements = HashMap::new();
+        for (node, operation) in analysis.selected {
+            let next = *entries.entry(operation).or_insert_with(|| {
+                let next = original + made.len();
+                made.push(entry(program, operation));
+                next
+            });
+            replacements.insert(node, (next, matches!(operation, Operation::Map(..))));
+        }
+        let Body::Expr(body) = &mut program.funcs[id].body else {
+            unreachable!()
+        };
+        rewrite(body, &replacements, &mut visits);
+    }
+    program.funcs.extend(made);
+    visits
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn function(name: &str, parameters: Vec<MT>, result: MT, body: Body) -> Func {
+        Func {
+            name: name.into(),
+            arity: parameters.len() as u32,
+            ty: parameters.iter().rev().fold(result, |result, input| {
+                MT::Fun(Box::new(input.clone()), Box::new(result))
+            }),
+            locals: parameters,
+            body,
+        }
+    }
+
+    fn example(slot: Option<usize>) -> Program {
+        let number = MT::con("std::F64");
+        let array = MT::Con("std::Array".into(), vec![number.clone()]);
+        let list = MT::Con("std::List".into(), vec![number.clone()]);
+        let callback = function(
+            "callback",
+            vec![number.clone(); if slot.is_some() { 2 } else { 1 }],
+            number.clone(),
+            Body::Expr(Expr::Local(0)),
+        );
+        let (operation, parameters, args, result) = if let Some(slot) = slot {
+            let mut parameters = vec![list.clone(), list.clone()];
+            parameters[slot] = array;
+            (
+                function(
+                    "zip",
+                    parameters.clone(),
+                    list.clone(),
+                    Body::ScalarBufferZip { callback: 1, slot },
+                ),
+                parameters,
+                vec![Expr::Local(0), Expr::Local(1)],
+                list.clone(),
+            )
+        } else {
+            (
+                function(
+                    "map",
+                    vec![callback.ty.clone(), array.clone()],
+                    array.clone(),
+                    Body::Prim("array.map".into()),
+                ),
+                vec![array.clone()],
+                vec![Expr::Func(1), Expr::Local(0)],
+                array,
+            )
+        };
+        let mut entry = function(
+            "entry",
+            parameters,
+            result.clone(),
+            Body::Expr(Expr::Call(2, args)),
+        );
+        entry.locals.push(result);
+        let mut program = Program {
+            funcs: vec![entry, callback, operation],
+            main: Some(0),
+            ..Program::default()
+        };
+        program.shapes.insert(
+            list.clone(),
+            TypeShape::Adt(vec![
+                ("Nil".into(), vec![]),
+                ("Cons".into(), vec![number, list]),
+            ]),
+        );
+        program
+    }
+
+    fn verify_ownership(program: &Program) {
+        crate::ir::check_locals(program).unwrap();
+        for (function, prepared) in program.funcs.iter().zip(crate::rc::insert(program)) {
+            if let Some((body, locals)) = prepared {
+                crate::rc::check(program, function, &body, &locals).unwrap();
+            }
+        }
+    }
+
+    #[test]
+    fn private_entries_consume_only_the_declared_owner() {
+        for slot in [None, Some(0), Some(1)] {
+            let mut program = example(slot);
+            lower(&mut program);
+            assert_eq!(program.funcs.len(), 4);
+            verify_ownership(&program);
+            assert!(reachable_functions(&program, &[0]).unwrap()[1]);
+            for parameter in 0..program.funcs[3].arity as usize {
+                assert_eq!(
+                    crate::rc::consumes_arg(&program, 3, parameter),
+                    slot != Some(parameter)
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn later_uses_and_nested_arguments_keep_borrowed_operations() {
+        for slot in [None, Some(0), Some(1)] {
+            for nested in [false, true] {
+                let mut program = example(slot);
+                let input = slot.map_or(0, |slot| 1 - slot) as Local;
+                let result = program.funcs[0].arity;
+                let Body::Expr(body) = &mut program.funcs[0].body else {
+                    unreachable!()
+                };
+                let call = body.clone();
+                *body = if nested {
+                    Expr::Record(vec![call, Expr::Local(input)])
+                } else {
+                    Expr::Let(result, Box::new(call), Box::new(Expr::Local(input)))
+                };
+                lower(&mut program);
+                assert_eq!(program.funcs.len(), 3);
+            }
+        }
+    }
+
+    #[test]
+    fn earlier_reads_allow_consumption_but_resource_anchors_do_not() {
+        for anchored in [false, true] {
+            let mut program = example(None);
+            let Body::Expr(body) = &mut program.funcs[0].body else {
+                unreachable!()
+            };
+            *body = if anchored {
+                Expr::ResourceRegion {
+                    parameters: vec![0],
+                    bindings: vec![],
+                    body: Box::new(body.clone()),
+                }
+            } else {
+                Expr::Let(1, Box::new(Expr::Local(0)), Box::new(body.clone()))
+            };
+            lower(&mut program);
+            assert_eq!(program.funcs.len(), if anchored { 3 } else { 4 });
+            if !anchored {
+                verify_ownership(&program);
+            }
+        }
+    }
+
+    #[test]
+    fn branch_continuations_and_type_changes_prevent_selection() {
+        let mut program = example(None);
+        let Body::Expr(body) = &mut program.funcs[0].body else {
+            unreachable!()
+        };
+        *body = Expr::Let(
+            1,
+            Box::new(body.clone()),
+            Box::new(Expr::Match(
+                Box::new(Expr::Local(1)),
+                vec![(Pat::Wild, Expr::Local(0))],
+            )),
+        );
+        lower(&mut program);
+        assert_eq!(program.funcs.len(), 3);
+
+        for slot in [None, Some(0), Some(1)] {
+            let mut program = example(slot);
+            // A callback changing F64 to I64 must not overwrite F64 storage.
+            let arity = program.funcs[1].arity as usize;
+            let parameters = vec![MT::con("std::F64"); arity];
+            program.funcs[1] = function(
+                "changed",
+                parameters,
+                MT::con("std::I64"),
+                Body::Prim("fake".into()),
+            );
+            lower(&mut program);
+            assert_eq!(program.funcs.len(), 3);
+        }
+    }
+
+    #[test]
+    fn many_calls_share_one_entry_with_linear_visits() {
+        for count in [1, 8, 128] {
+            let mut program = example(None);
+            let array = program.funcs[0].locals[0].clone();
+            program.funcs[0].locals = vec![array; count + 1];
+            let mut body = Expr::Local(count as Local);
+            for input in (0..count).rev() {
+                body = Expr::Let(
+                    input as Local + 1,
+                    Box::new(Expr::Call(
+                        2,
+                        vec![Expr::Func(1), Expr::Local(input as Local)],
+                    )),
+                    Box::new(body),
+                );
+            }
+            program.funcs[0].body = Body::Expr(body);
+            let visits = lower(&mut program);
+            assert_eq!(program.funcs.len(), 4);
+            assert!(visits <= 8 * count + 3, "{visits} visits for {count} maps");
+            verify_ownership(&program);
+        }
+    }
+}

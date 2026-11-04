@@ -57,7 +57,8 @@ on a separate branch while #257's final gates run. Keep one active delivery PR.
 Both operations transfer an input owner explicitly, reuse only exclusive storage,
 and preserve aliases and eager callback order. The contract fixes last-use
 selection, shared tails/views, failure cleanup, count predictions and measurement
-limits before implementation. Neither operation is implemented or verified yet.
+limits before implementation. Both operations and their focused controls are now
+implemented in preparation; native verification and measurements remain pending.
 
 ## Open performance goals
 

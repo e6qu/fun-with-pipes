@@ -14,6 +14,9 @@ mod ownership_ledger;
 #[path = "support/packed_input_windows.rs"]
 mod packed_input_windows;
 
+#[path = "support/owned_numeric_updates.rs"]
+mod owned_numeric_updates;
+
 fn checked(command: &mut Command) -> Output {
     let out = command.output().unwrap();
     assert!(
@@ -374,7 +377,10 @@ transform = fn pause -> fn input -> fn other ->
     in let ready = pause | match
         True -> task.yield ()
         False -> ()
-    in zip-with combine values other
+    in let result = zip-with combine values other
+    in length result == min (length input) (length other) | match
+        True -> result
+        False -> prim.trap "zip result length changed"
 "#;
         let program = if array_input {
             program
@@ -383,6 +389,7 @@ transform = fn pause -> fn input -> fn other ->
                     "let values = map mapped input",
                     "let values = input | array.to-list | map mapped",
                 )
+                .replace("(length input)", "(array.length input)")
         } else {
             program.to_string()
         };

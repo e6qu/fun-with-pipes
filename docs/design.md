@@ -355,6 +355,34 @@ bound compilation overhead; they do not measure generated-program speed. The
 [contract](measurements/direct-array-callbacks.md) defines separate runtime and
 whole-solve memory requirements.
 
+### Consuming numeric storage
+
+**Implemented in preparation; native verification and measurements pending.**
+For a dead array input, a private same-type scalar map can take its owner and
+overwrite exclusive storage. A shared array or view receives independent output.
+For an array/list zip, a private entry can consume the list and reuse only its
+exclusive prefix. Encountering one shared node excludes its entire suffix from
+reuse, including descendants whose own reference counts are one.
+
+```text
+Finish callbacks → allocate required suffix → update exclusive prefix → return
+                                             shared aliases stay unchanged
+```
+
+`src/cgen/owned_numeric.rs` selects direct-local last uses in one reverse walk,
+before borrow inference and ARC insertion. It excludes nested argument calls and
+resource-anchored bodies. Private operation metadata specifies exactly which
+argument transfers; public map/zip contracts remain borrowed. Both callbacks and
+elements must satisfy the existing machine-sized scalar type checks.
+
+List construction keeps the original input protected while building any required
+fresh suffix. Only after fallible work ends does it transfer prefix links; the
+unused old tail and new result then have distinct cleanup owners. Array mapping
+protects either its reused input or fresh partial result through callback failure.
+Both use the mutation-uniqueness check, including disabled-reuse controls.
+The [contract](measurements/owned-numeric-updates.md) defines exclusions, examples,
+failure tests and measurement limits. Count predictions are not measured results.
+
 ### Proving a local array has one owner
 
 `src/rc/unique.rs` checks the ownership-lowered body after a candidate allocation.

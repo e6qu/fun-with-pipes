@@ -1,7 +1,8 @@
 # Current work
 
-**Next:** freeze the [consuming numeric-storage contract](measurements/owned-numeric-updates.md)
-before implementing its array-map and coordinate-list operations together.
+**Next:** publish the grouped consuming-storage implementation and dispatch
+`owned-numeric-checks` on all three production toolchains. Audit all failures and
+completed targets together before a repair push; measurements have not started.
 Keep monitoring [PR #257](https://github.com/e6qu/fun-with-pipes/pull/257) separately;
 do not open a second PR or replace its head while final gates run.
 
@@ -9,14 +10,35 @@ Preparation worktree `.worktrees/owned-numeric-updates`, branch
 `owned-numeric-updates`, starts at `519fc96670b0db90ebe0f68e1263ccf85d2cf4f1`.
 The delivery worktree `.worktrees/packed-derivative-inputs` owns #257's live
 handoff and collector output. The roadmap table below still describes #257;
-the next group is preparation, not implemented or verified support.
+the next group is implemented in preparation, with native verification pending.
+
+Contract `1c5e6a66`, pushed tag `roadmap/owned-numeric-updates-protocol-2026-11-04`,
+precedes code. Both private consuming entries, bounded last-use selection and
+protected reuse are implemented. Tests cover alias roots/shared ancestors and
+tails, array views, unequal lengths, overflow, F32/F64 bits, traps, cancellation,
+allocation failure, exact allocation counts, physical frees and broken observers.
+Existing borrowed cleanup tests now read input lengths after zipping, so they
+continue exercising the borrowed operations explicitly.
+
+Focused checks: Rust formatting 1.88s; workflow lint 6.48s; native runner coverage
+and failure controls 21/21, 8.25s; roadmap links/anchors 4.27s; five packed-reference
+controls 0.37s. The first gradient-reference check failed five of six controls
+because an unnecessary interpreter branch changed the historical patch context.
+Private consuming entries now explicitly reject interpreter execution (they are
+introduced only in native lowering); all six controls pass, 0.60s. No historical
+patch or evidence was rewritten. Source review also moved the new C finish helper
+after its owner-type declaration before publication. Full builds/tests remain on GitHub.
 
 Final [production 41861939596](https://github.com/e6qu/fun-with-pipes/actions/runs/41861939596)
 and [docs 41861939765](https://github.com/e6qu/fun-with-pipes/actions/runs/41861939765)
 use exact head `519fc96670b0db90ebe0f68e1263ccf85d2cf4f1`. At 16:21 UTC,
 benchmark `126685788959` and docs `126685789213` pass and their full logs are
 audited (guarded collector 5.27s). Linux ARM64 and both Windows jobs run;
-remaining jobs queue. No current-head failure reported.
+remaining jobs queue. Later all three still-queued macOS jobs were cancelled
+without a runner/step. ARM annotations report hosted-runner capacity constraints;
+all diagnostics are retained in the delivery collector directory. A targeted
+retry returned 403 because the other jobs are still running. Retry only the
+missing jobs once the run finishes; never count these as passing native checks.
 
 Remaining jobs: Linux AMD64/ARM64 `126685789790` / `126685789797`;
 macOS ARM64 regular/ownership `126685789545` / `126685789311`;
