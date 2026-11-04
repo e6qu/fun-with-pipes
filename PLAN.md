@@ -50,12 +50,14 @@ shows the new internal primitive allocating `Some(final)` before the caller
 immediately unpacks it. This is a remaining boundary cost, not a proven cause of
 the small timing regression.
 
-Complete the ownership proof for internal final-iteration results and borrowed
-list `last`/`nth` reads using the existing field-return machinery. Preserve empty
-results, aliases, callback order, resource lifetimes and failure/cancellation.
-Then freeze selection and measurements before implementation: one fewer wrapper
-per selected match, no added ARC, correct storage for escaping values, bounded
-compiler cost and explicit runtime/stack results. No new syntax or global analysis.
+The [ownership proof and implementation contract](docs/measurements/matched-option-fields.md)
+cover internal final-iteration results and borrowed list `last`/`nth` reads.
+Borrowed reads retain one selected owner; iteration moves its existing owner.
+Use the existing field-return and match-use checks, preserving empty results,
+aliases, callback order, resource frames and failure/cancellation. Freeze this
+contract before implementation: one fewer wrapper per selected present result,
+no added ARC, correct boxing for whole-value uses, and explicit compiler,
+runtime and stack limits. No new syntax or global analysis.
 
 Input derivative-record packing and coordinate-list reuse remain unselected.
 [Their lifetime requirements](docs/measurements/remaining-gradient-storage.md)
