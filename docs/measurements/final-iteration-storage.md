@@ -7,8 +7,8 @@ the large-case memory goal and retains six missed timing limits.
 timing case. These outcomes do not change the frozen limits below.
 This contract was frozen at `2a257a3e` with
 `roadmap/final-iteration-storage-protocol-2026-11-03` before implementation.
-PR #254 must finish its gates before
-another delivery PR opens. [Source evidence](final-iteration-storage-2026-11-03/README.md)
+PR #254 is verified and merged; this group is based on its tested tree.
+[Source evidence](final-iteration-storage-2026-11-03/README.md)
 records the actual compiler input, native checks and scalar allocation counts,
 including selection in the real gradient program.
 

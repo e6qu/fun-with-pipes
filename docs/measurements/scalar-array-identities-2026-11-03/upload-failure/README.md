@@ -9,9 +9,11 @@ The final archive, manifest and crash-report uploads each failed DNS lookup:
 The individual target logs had already uploaded successfully. They and the full
 job log are retained here with source/job/artifact identities and hashes in
 `diagnosis.json`. This is an upload failure, not a failing native test. No source
-change is justified by it. The job still must pass before merge.
+change was justified by it.
 
-GitHub rejected an immediate job retry with HTTP 403 because the containing
-workflow was still running. Retry only this job on the unchanged commit after
-the other jobs finish. Keep this failed attempt and audit the retry's complete
-logs; the [handoff](../../../development-state.md) records the current state.
+After the containing workflow finished, only this job was retried on the same
+commit. Attempt 2, job `126246098084`, passes the corpus, all 126 targets, native
+inspection, archive verification and uploads. Its full/target logs are audited
+in [the final gate records](../platforms/final-gates.json). GitHub retained two
+archives with the same name; the audit selects artifact `13281382483`, whose ID
+is printed in the passing job's upload log. The failed attempt remains here.

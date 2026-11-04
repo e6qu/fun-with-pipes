@@ -1,10 +1,9 @@
 # Remaining storage in gradient descent
 
 This review records remaining costs and the proofs needed to remove them.
-The [same-type conversion group](scalar-array-identities.md) awaits final delivery,
-separately from the
-[direct array-call experiment](direct-array-callbacks.md). Final-iteration consumption is the
-[selected next group](final-iteration-storage.md). The optional-result review below
+The [same-type conversion group](scalar-array-identities.md) is verified and merged
+in #254, separately from the [direct array-call experiment](direct-array-callbacks.md).
+Final-iteration consumption is the [current delivery](final-iteration-storage.md). The optional-result review below
 identifies a smaller remaining boundary cost; record packing and coordinate reuse
 remain unselected. Each experiment keeps its own reference and measurements.
 
@@ -75,8 +74,9 @@ Cross-type conversions still round; generic F128 results keep independent owners
 [Three-host native checks](scalar-array-identities-2026-11-03/README.md) and
 [compiler-cost checks](scalar-array-identity-analysis-2026-11-03/README.md) pass.
 [The runtime report](scalar-array-identity-time-2026-11-03/README.md) and four
-raw audits are complete; all 32 required speed gains are missed. The final
-platform matrix remains pending. [The handoff](../development-state.md) tracks it. Both sides
+raw audits are complete; all 32 required speed gains are missed. All final
+platform gates pass; [their logs and identities](scalar-array-identities-2026-11-03/platforms/final-gates.json)
+are audited. Both sides
 of the frozen comparison include the scalar repair; the reference disables only
 map removal. Passing allocation checks does not satisfy the separate speed goals.
 
@@ -87,7 +87,7 @@ Keeping a slice can prolong its larger backing array's lifetime: the
 shows that cost alongside the removed allocation. Unknown/effectful callbacks
 and non-F64 maps are outside this selection.
 
-## Selected next group: discard an unused iteration history
+## Current delivery: discard an unused iteration history
 
 The benchmark's history source is `iterate count descend | last`: it builds
 intermediate coordinate lists although only the final one is returned. The

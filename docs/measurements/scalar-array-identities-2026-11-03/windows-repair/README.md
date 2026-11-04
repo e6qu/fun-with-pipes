@@ -32,10 +32,10 @@ compressed full logs, target-artifact identities and diagnostic audits. The audi
 checks all 1,600 conversion rows and 32 fatal-allocation observations. Original
 target archives remain identified by GitHub artifact IDs and SHA-256 digests.
 
-Formatting and source checks run locally through the resource guard. Native
-Windows execution requires the next CI head; local macOS checks cannot establish
-Windows support. All nine production jobs and documentation must pass that head
-before merging. Completed performance sessions are unchanged and are not rerun.
+Formatting and source checks passed locally through the resource guard. Both
+native Windows jobs pass at `8bf9c65b`, as do the other seven production jobs
+and documentation. [All final logs and identities](../platforms/final-gates.json)
+are audited. Completed performance sessions are unchanged and were not rerun.
 
 See [the experiment](../README.md) for correctness and allocation measurements,
 and [the handoff](../../../development-state.md) for current delivery status.

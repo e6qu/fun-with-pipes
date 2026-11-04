@@ -6,6 +6,26 @@ and complete platform validation are different events. Measurements retain their
 original source and settings; old numbers are not measurements of current main.
 The linked PRs, runs and data records supply the detailed evidence.
 
+## Float bits and identity array maps (PR #254)
+
+[PR #254](https://github.com/e6qu/fun-with-pipes/pull/254) merged November 4 as
+`379bc9d553b15dfbadaa9cca1edc58c17897774e`. Its tree equals tested `8bf9c65b`.
+All nine production jobs and documentation pass; every full and target log is
+audited. [Gate identities and logs](measurements/scalar-array-identities-2026-11-03/platforms/final-gates.json).
+The squash message is one line, under 80 characters, without body or trailers.
+
+Same-type conversion preserves all bits in five float formats. Exact F64 identity
+maps transfer their array owner, avoiding one allocation per selected update.
+Returning a slice can keep its larger backing buffer alive. The largest gradient
+solve requests 206,960 fewer bytes; ARC and peak storage are unchanged. All 32
+required speed gains remain missed. [Correctness and storage](measurements/scalar-array-identities-2026-11-03/README.md),
+[compiler costs](measurements/scalar-array-identity-analysis-2026-11-03/README.md)
+and [complete timings](measurements/scalar-array-identity-time-2026-11-03/README.md).
+
+Windows probe stream setup was repaired without weakening byte checks. Intel
+macOS's upload-only DNS failure passed on retry; both attempts remain recorded.
+Duplicate same-tree main jobs were cancelled while queued, with no failed steps.
+
 ## Direct scalar array calls (PR #253)
 
 [PR #253](https://github.com/e6qu/fun-with-pipes/pull/253) merged November 3 as

@@ -1,53 +1,52 @@
 # Current work
 
-**Next:** finish and audit #254's Intel macOS ownership retry, then squash the
-verified head. Final-iteration measurements and raw audits are complete. Reconcile
-that branch onto the verified squash, then open its grouped PR and run final gates.
+**Next:** publish the grouped final-iteration PR, then audit all nine production
+jobs and documentation at its exact final head. Fix all encountered failures
+before one repair push; squash only after every gate passes. Measurements are
+complete and must not be repeated for a pass.
 
-## PR #254: final gates
+## Final iteration values
 
-- PR: https://github.com/e6qu/fun-with-pipes/pull/254.
-- Head: `8bf9c65bc247bbd94903d0a31fb0823d1e335391`, branch/worktree
-  `scalar-array-identities`. Keep this tested head intact.
-- Production run `41713252299`: eight jobs passed. Intel macOS ownership passed
-  tests, binary inspection and archive verification, but three uploads failed
-  DNS lookup (`ENOTFOUND`). [Original failure](measurements/scalar-array-identities-2026-11-03/upload-failure/README.md).
-  Only that job was retried after the workflow finished: attempt 2, job
-  `126246098084`. Audit its full/target logs and artifacts before merge.
-- Docs run `41713252267`, job `126186525051`, passed. All eight passed production
-  jobs and docs have full/target audits in `../gradient-work/platforms-254-attempt2`
-  (26.69 guarded seconds). Original audits remain in `platforms-254-repaired`.
-  GitHub assigns new job IDs to carried-over successes on retry; retain both sets.
-- [Windows stream repair](https://github.com/e6qu/fun-with-pipes/blob/8bf9c65bc247bbd94903d0a31fb0823d1e335391/docs/measurements/scalar-array-identities-2026-11-03/windows-repair/README.md)
-  is verified on both native Windows architectures. No assertion was weakened.
-- Measurements are complete; compiler/runtime/library match frozen `beddd406`.
-  Keep [all 32 missed speed goals](measurements/scalar-array-identity-time-2026-11-03/README.md)
-  open. Never repeat completed timing sessions for a pass.
-- Require nine production jobs plus docs at this exact head. Squash subject:
-  `Preserve float bits and remove redundant F64 array copies`. Empty body,
-  one line ≤80 characters, no trailers/attribution; verify the tested tree.
+Branch/worktree: `iteration-final-value`, based on verified main `379bc9d5`.
+No delivery PR yet. Compiler, runtime, library, tests and build inputs match
+measured `bb5433b688c26c60f0b2561a59420deb0f0e95ed` byte for byte after rebase.
+The immutable tag `roadmap/final-iteration-measurement-2026-11-04` retains that
+source; `roadmap/final-iteration-pre-delivery-2026-11-04` retains the development
+history. Do not move either tag.
+
+[Contract](measurements/final-iteration-storage.md) frozen at `2a257a3e`, tag
+`roadmap/final-iteration-storage-protocol-2026-11-03`.
+Implemented together: direct `last`; exact single-use numeric `iterate` → `last`
+owner transfer; interpreter/native count-bound agreement; optional-wrapper cleanup
+when retaining a child fails. Shared histories and resource-bearing iteration
+states remain excluded. The Windows probe repair from #254 is in the base.
 
 ## Roadmap status
 
 | Step | Status | Remaining work |
 |---|---|---|
-| 1 | Verified | Preserve #254's conversion and exact selection contract |
-| 2 | Verified | Preserve native bit, ownership and cleanup evidence |
-| 3 | Verified | Keep completed measurements and all missed speed targets |
-| 4 | In progress | Audit upload retry, squash #254 and verify the tested tree |
+| 1 | Verified | Preserve the frozen selection, count and ownership rules |
+| 2 | Verified | Preserve three-host values, effects and physical cleanup checks |
+| 3 | Verified | Keep complete measurements and all timing misses explicit |
+| 4 | In progress | Publish, audit all final-head gates, squash and verify the tree |
 
-## Next group: final iteration values
+## Previous delivery
 
-Branch/worktree: `iteration-final-value`; no delivery PR yet.
-[Contract](measurements/final-iteration-storage.md) frozen at `2a257a3e`, tag
-`roadmap/final-iteration-storage-protocol-2026-11-03`.
-Measured source: `bb5433b688c26c60f0b2561a59420deb0f0e95ed`, immutable tag
-`roadmap/final-iteration-measurement-2026-11-04`. Do not move this tag on rebase.
+[#254](https://github.com/e6qu/fun-with-pipes/pull/254) merged November 4 as
+`379bc9d553b15dfbadaa9cca1edc58c17897774e`. Its tree equals tested `8bf9c65b`.
+Nine production jobs (run `41713252299`, attempt 2) plus documentation
+(`41713252267`, job `126186525051`) pass. Every full and target log is audited;
+[gate records](measurements/scalar-array-identities-2026-11-03/platforms/final-gates.json)
+retain source, artifact hashes and logs. The Intel upload retry passes 126 targets;
+its original DNS failure and both Windows stream repairs remain documented.
+The collector now selects the artifact ID printed by the exact job, because
+GitHub kept both attempts' identically named target archives.
 
-Implemented together: direct `last`; exact single-use numeric `iterate` → `last`
-owner transfer; interpreter/native count-bound agreement; optional-wrapper cleanup
-when retaining a child fails. Shared histories and resource-bearing iteration
-states remain excluded from fusion. The Windows probe fix from #254 is included.
+The squash message is exactly `Preserve float bits and remove redundant F64 array copies`,
+one line with no body or trailers. Duplicate main runs `41796239060` and
+`41796238994` were cancelled while queued after checking their identical source
+and absence of failed steps. Full final-log audit: 5.68 guarded seconds;
+retention and squash/tree verification: 0.13 seconds.
 
 ### Verification
 
@@ -90,8 +89,8 @@ fixtures and measurement tooling. Original source IDs remain reachable by the ta
   manual gradients and different storage; their ratios do not isolate language overhead.
 - Both reference compilers retain count/cleanup repairs. Frozen source/tag remain
   `bb5433b6`; docs-only commits do not change those measured programs.
-- After #254's verified squash, reconcile source and retained evidence onto it;
-  require nine final-head production jobs plus docs. No final matrix is dispatched.
+- Reconciliation onto #254 is complete; measured code and tests are unchanged.
+  Require nine final-head production jobs plus docs. No final matrix is dispatched.
 - Follow-up after this group's delivery: complete the
   [matched-option ownership proof](measurements/remaining-gradient-storage.md#follow-up-an-immediately-matched-optional-result).
   Saved C confirms an optional wrapper and payload retain before immediate match;
@@ -99,6 +98,9 @@ fixtures and measurement tooling. Original source IDs remain reachable by the ta
 
 ### Local checks and resume tools
 
+- After rebase: measured compiler/runtime/library/test/build inputs are identical;
+  documentation audit passes 256 link sets, 106 immutable tags and four roadmap
+  steps (2.57 guarded seconds). Only delivery records and explanations changed.
 - Guarded focused checks: formatting 1.70s; docs (253 link sets) 2.55s; workflow
   lint 6.85s; inventory 395 declarations/374 contracts, baseline unchanged;
   shard coverage 255 targets. Final focused evidence audit 1.85s, retention 3.82s.
