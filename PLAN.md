@@ -47,9 +47,10 @@ one delivery does not satisfy older comparisons against different references.
 The [fresh source review](docs/measurements/numeric-record-inputs-2026-11-04/README.md)
 identifies the next proposed group: expose known objectives inside derivative
 scopes, pack their private numeric inputs, and borrow overlapping neighboring
-pairs. Preserve separate input preparation, pair mapping and folding. Freeze
-the selection and measurement contract before implementation; this review proves
-neither cleanup nor performance. Coordinate-list reuse remains unselected.
+pairs. Preserve separate input preparation, pair mapping and folding. The
+[implementation contract](docs/measurements/packed-derivative-inputs.md) defines
+the exact group, ownership proof, count predictions and acceptance limits before
+implementation. Neither document proves cleanup or performance. Coordinate-list reuse remains unselected.
 [Lifetime requirements](docs/measurements/remaining-gradient-storage.md) and older
 timing goals retain their original evidence and references.
 
