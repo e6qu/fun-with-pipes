@@ -1,116 +1,117 @@
 # Current work
 
-**Next:** publish the grouped final-iteration PR, then audit all nine production
-jobs and documentation at its exact final head. Fix all encountered failures
-before one repair push; squash only after every gate passes. Measurements are
-complete and must not be repeated for a pass.
-
-## Final iteration values
-
-Branch/worktree: `iteration-final-value`, based on verified main `379bc9d5`.
-No delivery PR yet. Compiler, runtime, library, tests and build inputs match
-measured `bb5433b688c26c60f0b2561a59420deb0f0e95ed` byte for byte after rebase.
-The immutable tag `roadmap/final-iteration-measurement-2026-11-04` retains that
-source; `roadmap/final-iteration-pre-delivery-2026-11-04` retains the development
-history. Do not move either tag.
-
-[Contract](measurements/final-iteration-storage.md) frozen at `2a257a3e`, tag
-`roadmap/final-iteration-storage-protocol-2026-11-03`.
-Implemented together: direct `last`; exact single-use numeric `iterate` → `last`
-owner transfer; interpreter/native count-bound agreement; optional-wrapper cleanup
-when retaining a child fails. Shared histories and resource-bearing iteration
-states remain excluded. The Windows probe repair from #254 is in the base.
+**Next:** publish the matched optional-result PR and monitor its exact-head gates.
+Implementation, focused correctness and all measurements pass; final production
+validation remains required. Keep one active delivery PR.
 
 ## Roadmap status
 
 | Step | Status | Remaining work |
 |---|---|---|
-| 1 | Verified | Preserve the frozen selection, count and ownership rules |
-| 2 | Verified | Preserve three-host values, effects and physical cleanup checks |
-| 3 | Verified | Keep complete measurements and all timing misses explicit |
-| 4 | In progress | Publish, audit all final-head gates, squash and verify the tree |
+| 1 | Verified | Preserve the frozen selection and ownership contract |
+| 2 | Verified | Preserve native behavior and physical-cleanup checks |
+| 3 | Verified | Keep complete measurements and missed limits explicit |
+| 4 | In progress | Publish, pass final gates, audit and verify squash/tree |
 
-## Previous delivery
+## Previous delivery completed
 
-[#254](https://github.com/e6qu/fun-with-pipes/pull/254) merged November 4 as
-`379bc9d553b15dfbadaa9cca1edc58c17897774e`. Its tree equals tested `8bf9c65b`.
-Nine production jobs (run `41713252299`, attempt 2) plus documentation
-(`41713252267`, job `126186525051`) pass. Every full and target log is audited;
-[gate records](measurements/scalar-array-identities-2026-11-03/platforms/final-gates.json)
-retain source, artifact hashes and logs. The Intel upload retry passes 126 targets;
-its original DNS failure and both Windows stream repairs remain documented.
-The collector now selects the artifact ID printed by the exact job, because
-GitHub kept both attempts' identically named target archives.
+[#255](https://github.com/e6qu/fun-with-pipes/pull/255) merged as
+`24e099135f08403a95f36752e39f4e609a5d06cb` on November 4. Its tree equals
+`19b91c059d223614124773ab6e356824514f69f1`; the raw squash message is one line,
+under 80 characters, with no body or trailers. [History and complete gates](roadmap-history.md#final-iteration-values-without-histories-pr-255)
+retain all ten successful jobs, full/target logs, the original upload failure
+and Intel retry `126506098945`. Final collection passes in 12.14s; verified
+retention passes in 0.14s. No further #255 checks are needed.
 
-The squash message is exactly `Preserve float bits and remove redundant F64 array copies`,
-one line with no body or trailers. Duplicate main runs `41796239060` and
-`41796238994` were cancelled while queued after checking their identical source
-and absence of failed steps. Full final-log audit: 5.68 guarded seconds;
-retention and squash/tree verification: 0.13 seconds.
+The matched-option branch rebased onto that squash without content changes.
+Original history is retained at immutable
+`roadmap/matched-option-pre-delivery-2026-11-04` (`4c378ce5`). Never move it or
+any frozen contract/measurement tag. Duplicate main runs `41821619651` and
+`41821619512` were cancelled only after tree equality and no-failure checks.
 
-### Verification
+## Current group: matched optional results
 
-[Focused run 41726742943](https://github.com/e6qu/fun-with-pipes/actions/runs/41726742943)
-passes on GCC ARM64/AMD64 and Clang ARM64. Each host passes 268 units (4 ignored),
-46 integrations across nine targets, twelve selection checks, primitive inventory,
-docs and tutorial. Full logs, 418 native execution/image observations and eleven
-interpreter/inventory statuses are audited. All 240 scalar count rows agree across
-hosts. [Results and retained evidence](measurements/final-iteration-storage-2026-11-03/README.md).
+Worktree/branch: `.worktrees/matched-option-fields` / `matched-option-fields`.
+Compiler/runtime changes, controls and measurements are complete. Rebased onto
+verified #255 with a byte-identical tree. Publish the grouped PR, then require
+all nine final-head production jobs and documentation before merging.
 
-For positive scalar count k, old/direct/selected totals are **2k+2, k+2, 1**.
-The selected loop removes 2k list nodes and one temporary pointer buffer. This
-count reduction does not establish runtime speed or whole-process peak memory.
+| Evidence | Exact identity and status |
+|---|---|
+| Frozen contract | `4ec13baa`, tag `roadmap/matched-option-fields-protocol-2026-11-04` |
+| Three-host correctness | `41808352672`, source `fb46193306de9c377a644138df8d1480e7ca7db3`, passes |
+| Frozen measurement source | `82963531dddb6d9a5f32ec26657dc220736f4055`, tag `roadmap/matched-option-measurement-2026-11-04` |
+| Compiler cost | `41811652687`, both jobs and all 480 command/raw-record audits pass |
+| Initial runtime batch | `41811658838`: both ARM64 sessions and AMD64 session 2 pass; session 1 rejected before build/time |
+| Initial raw audit | `41814391372` passes; all 4,002 file records and full logs reconcile |
+| Final runtime session | `41814521814` passes; raw audit `41817009801` passes all 1,334 file records |
 
-Earlier failures are repaired and retained: private test import (`41715801311`),
-missing test list layouts (`41720302662`), omitted scratch-buffer count
-(`41723211349`). Their reports are linked from the verified-results page.
-Compiler/runtime/library code has not changed since `f599dfba`; later fixes correct
-fixtures and measurement tooling. Original source IDs remain reachable by the tag.
+Compiler/runtime/library/tests/build inputs at the frozen measurement source match
+passing `fb461933` byte for byte. Later edits only retain evidence and clarify docs.
+Never move either frozen tag or rerun completed noisy/failing timings for a pass.
 
-### Complete measurements; delivery remains
+[Native checks](measurements/matched-option-fields-2026-11-04/README.md) pass per host:
+268 units (four deliberate ignores), 57 integrations across 15 targets, seven
+selection checks, 40 new controls, 506 native-image observations and eleven other
+statuses. All 960 list-read, 80 iteration and 240 prior scalar count rows agree.
+[The first failed fixture batch](measurements/matched-option-fields-2026-11-04/fixture-repair/README.md)
+is retained; its repair did not change compiler/runtime code.
 
-- Compiler run `41729365239`: all 480 commands, inputs, native compiler images and
-  raw records are audited. Nine timing cases pass; AMD64 field-transfer copy
-  variation is 2.043% against 2%, so it remains inconclusive. All observed memory
-  ratios pass. [Results](measurements/final-iteration-analysis-2026-11-04/README.md).
-- Runtime runs `41729376533` (ARM64) and `41730462251` (AMD64): all four sessions
-  complete. Raw audits `41732080777` / `41733338891` pass; all 5,336 file records,
-  full logs, reference sources, commands and native images reconcile.
-- [Complete results](measurements/final-iteration-time-2026-11-04/README.md): largest
-  history-form peak managed storage 838,688 → 19,360 bytes (97.7% less); 5.1–5.9%
-  faster. Each 199-update solve saves 400 requests, 11,192 requested bytes and
-  399 retains. Current-form counts and raw storage are unchanged; final storage
-  is zero. All 48 count comparisons agree across hosts and workspace modes.
-- Keep six runtime timing misses open: ARM64 3/199 and 33/199 history in both
-  sessions; AMD64 session 1's 33/199 history; AMD64 session 2's 3/1 history is
-  2.79% slower against 2%. All identical-copy controls pass. No timing was rerun.
-  Two initial wrong-CPU AMD64 hosts stopped before building/measuring and are retained.
-- No reported frame growth; native text changes −528 to +1,120 bytes. C/Rust use
-  manual gradients and different storage; their ratios do not isolate language overhead.
-- Both reference compilers retain count/cleanup repairs. Frozen source/tag remain
-  `bb5433b6`; docs-only commits do not change those measured programs.
-- Reconciliation onto #254 is complete; measured code and tests are unchanged.
-  Require nine final-head production jobs plus docs. No final matrix is dispatched.
-- Follow-up after this group's delivery: complete the
-  [matched-option ownership proof](measurements/remaining-gradient-storage.md#follow-up-an-immediately-matched-optional-result).
-  Saved C confirms an optional wrapper and payload retain before immediate match;
-  this is a bounded source finding, not a timing diagnosis. No implementation yet.
+[Compiler costs](measurements/matched-option-analysis-2026-11-04/README.md) pass all
+ten cases: maximum time ratio 1.00804, peak-RSS ratio 1.00386, copy variation 1.24%.
+[All four runtime sessions](measurements/matched-option-time-2026-11-04/README.md)
+and raw audits pass, reconciling 5,336 files. Each history-form solve saves one
+request, 16 requested bytes and one retain; peak managed/raw storage is unchanged.
+Some larger timings are up to 1.95% slower, within 2%; maximum frame growth is
+16 bytes. Do not claim a general speedup or close older timing comparisons.
 
-### Local checks and resume tools
+[Four rejected hosts](measurements/matched-option-time-2026-11-04/rejected-hosts/README.md)
+are fully audited and retained. Each stopped before build/time. A later dispatch
+returned HTTP 502; the run list confirmed no run existed before retry `41814521814`.
+The final audit uses the frozen measurement tag and source; its complete
+collection passes. No measured session was repeated.
 
-- After rebase: measured compiler/runtime/library/test/build inputs are identical;
-  documentation audit passes 256 link sets, 106 immutable tags and four roadmap
-  steps (2.57 guarded seconds). Only delivery records and explanations changed.
-- Guarded focused checks: formatting 1.70s; docs (253 link sets) 2.55s; workflow
-  lint 6.85s; inventory 395 declarations/374 contracts, baseline unchanged;
-  shard coverage 255 targets. Final focused evidence audit 1.85s, retention 3.82s.
-  Updated documentation checks pass (255 link sets, 3.15s). Runtime collections
-  5.93s/6.04s; complete retention 0.48s; 48-count audit 0.26s; report 0.25s.
-  Compiler audits 45.24s/4.85s. All under the guard.
-- Scratch collectors/auditors live in `../gradient-work`: `collect-final-platforms.py`,
-  `collect-final-iteration-checks.py`, `audit-final-iteration-success.py`,
-  `audit-final-iteration-analysis.py`, `collect-final-iteration-runtime.py` and
-  `audit-final-iteration-rejected-hosts.py`. Collection alone is not acceptance.
-- Run focused checks serially with `python3 scripts/local-guard.py`. No local full
-  builds/suites/benchmarks; never bypass disk, RSS, generated-data or deadline limits.
-- Preserve dirty primary and old worktrees. Keep one active delivery PR.
+### Collection and publication
+
+Scratch tools live in `../gradient-work`; use `python3 scripts/local-guard.py`:
+
+- `collect-matched-option-runtime.py --run AUDIT_RUN --prefix matched-option-runtime-amd1 --audit-source 82963531dddb6d9a5f32ec26657dc220736f4055 --source 82963531dddb6d9a5f32ec26657dc220736f4055`.
+  Both collections now pass under prefixes `matched-option-runtime-all` and
+  `matched-option-runtime-amd1`; do not repeat them.
+- Retention, all 48 cross-session count comparisons and report generation pass
+  (0.78/0.30/0.28s). Tools: `retain-matched-option-time.py`,
+  `summarize-matched-option-memory.py`, `write-matched-option-time-readme.py`.
+- Update scratch `matched-option-pr.md` and publish one grouped PR. Final
+  platform checks remain pending. Use `collect-matched-option-platforms.py`
+  with the exact production run, source, documentation job and output directory.
+  It audits a recovered upload error only with successful retry and verified logs.
+- Full evidence processing and final test gates belong on GitHub, not locally.
+
+`82963531` also gives each macOS test-log upload one retry with identical files
+and artifact name. Missing logs or a second failure fail CI; both attempts stay
+visible. #255's workflow is unchanged. Audit any recovered upload error against
+the exact retry step and artifact; do not blanket-ignore diagnostics.
+
+### Local verification and workspace
+
+- [Next source review](measurements/numeric-record-inputs-2026-11-04/README.md):
+  run `41818502246`, job `126535365251`, source `82963531` passes all 12 compilation
+  commands and 43 hashed files. Guarded collection 5.63s; archive/logs retained.
+  Proposed group: bounded known scoped-call specialization, packed indexed
+  numeric input records and overlapping reads. Preserve all three eager stages.
+  No implementation contract frozen or performance claim yet. Also corrected
+  stale #251/#252 platform status in the compiler design guide.
+
+- Latest `python3 scripts/local-guard.py python3 scripts/check-roadmap.py`: passes
+  264 link sets, 106 immutable identities and four roadmap steps (2.59 seconds).
+- Rust formatting, workflow lint, primitive inventory (395 declarations / 374
+  contracts), source-reference, measurement-budget, raw-audit and report controls
+  pass. No new Cargo target; native shard assignment is unchanged.
+- Guarded collections: native 23.67/23.26/23.14s; ownership/image/count audit 2.34s;
+  retention 4.79s. Compiler audits 28.59/31.15s; runtime collections 4.52/5.74s.
+- The checksum-verified #255 macOS compiler package checked only the small fixture's
+  formatting/types and raw/optimized interpreter outputs. No local compiler build,
+  full suite or benchmark. Keep the fixed disk/RSS/target/deadline guard limits.
+- Preserve dirty primary and old worktrees. Only this branch owns the current docs.
+  Keep one active delivery PR. [#254's completed delivery](roadmap-history.md#float-bits-and-identity-array-maps-pr-254)
+  is history, not remaining work.

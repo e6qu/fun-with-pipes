@@ -4,62 +4,54 @@ Build an ahead-of-time language with simple pipes, immutable values, strong type
 and useful inference. Prefer direct values, moves and borrows; reserve ARC for
 necessary sharing. GC is removed; JIT and backward compatibility are excluded.
 
-## Current work: final list values without retained histories
+## Current work: matched optional results without temporary boxes
 
 ```fwp
-0 | iterate 3 (add 1) | last
+[10, 20, 30] | nth 1 | match
+    Some value -> value + 1
+    None -> 0
 ```
 
-This returns `Some 2`: the count includes initial value 0, followed by two calls
-to `add 1`. Ordinary `last` now walks directly to a list's final node. For an exact,
-single-use numeric iteration, the compiler keeps only its current value instead
-of building a history and reverse copy. Shared histories remain intact; iteration
-states containing resources are excluded. No new syntax or global analysis.
+This returns 21. The selected match now receives a tag and value directly instead
+of allocating a temporary `Some 20`. The change covers list `nth`, list `last`
+and the internal final-iteration operation. Borrowed reads acquire the selected
+owner; iteration moves its existing owner. Whole-value results retain their
+required storage. No new syntax or global inference pass.
 
-The [contract](docs/measurements/final-iteration-storage.md) was frozen before
-implementation. The group also aligns interpreter/native oversized-count errors
-and protects a new optional wrapper when retaining its borrowed child fails.
-
-- [Three-host native checks](docs/measurements/final-iteration-storage-2026-11-03/README.md)
-  pass on GCC ARM64/AMD64 and Clang ARM64: types, values, aliases, effects, callback
-  order, resources, cancellation, physical cleanup and actual native images.
-- [Four runtime sessions](docs/measurements/final-iteration-time-2026-11-04/README.md)
-  and every raw audit are complete at `bb5433b6`, immutable tag
-  `roadmap/final-iteration-measurement-2026-11-04`. The largest history solve uses
-  97.7% less peak managed storage and runs 5.1–5.9% faster. Each 199-update solve
-  saves 400 allocation requests and 399 retains. Raw storage is unchanged.
-- Five speed targets and one small-case regression remain open. The
-  [compiler comparison](docs/measurements/final-iteration-analysis-2026-11-04/README.md)
-  has one noisy timing case; observed memory ratios pass. Keep all failures under
-  the accepted policy of retaining verified reductions without claiming timing acceptance.
-- The final nine-job production matrix and documentation are still required.
-  [The handoff](docs/development-state.md) records the exact head and current gates.
-  PR #254's verified merge belongs in [delivery history](docs/roadmap-history.md#float-bits-and-identity-array-maps-pr-254).
+The [contract](docs/measurements/matched-option-fields.md) was frozen before
+implementation. This group also gives failed macOS test-log uploads one explicit
+retry, without rerunning tests. Missing logs or a second failure still fail CI.
 
 | Step | Work | Completion requirement |
 |---|---|---|
-| 1 | Define selection and ownership | Exact typed `iterate` → `last`, numeric states only, single history use. Preserve public `last` types, argument/callback order and count rejection. Freeze the reference and limits. |
-| 2 | Verify behavior and physical cleanup | Three native hosts pass raw/optimized interpreter and O1/O2 checks, alias/reuse controls, wide values, resource exclusions, failure/cancellation and omitted-cleanup controls. Retain C and native image identities. |
-| 3 | Measure and record every outcome | Verify the scalar 2k-node saving, large-case managed peak reduction and complete-program ARC/traffic. Audit every timing/noise, compiler and stack limit; leave missed goals explicit. |
-| 4 | Deliver the grouped PR | Include ownership repairs, examples and complete evidence. Require all nine final-head production jobs plus docs, audit every full/target log, squash and verify the tested tree and one-line message. |
+| 1 | Define selection and ownership | Exact primitive/types, immediate matched use, correct borrowed retain or owned move, boxed whole-value uses. Freeze reference and limits. |
+| 2 | Verify values and physical cleanup | GCC ARM64/AMD64 and Clang ARM64, O1/O2, aliases, resources, containers, retain failure, traps, cancellation and omitted-cleanup controls. |
+| 3 | Measure and retain every outcome | No added counts or peak storage, all runtime/compiler/stack limits checked, complete raw records and all rejected hosts retained. Count savings alone are not a speedup. |
+| 4 | Deliver the grouped PR | Reconcile onto verified #255, include docs/evidence/upload repair, pass nine exact-head production jobs plus docs, audit full/target logs, squash and verify tree/message. |
 
-## Next proof: immediately matched optional results
+Steps 1–3 pass. [Three-host native checks](docs/measurements/matched-option-fields-2026-11-04/README.md)
+cover 57 integrations and 40 new ownership controls per host.
+[Compiler costs](docs/measurements/matched-option-analysis-2026-11-04/README.md)
+pass all ten cases. [Four runtime sessions and all raw audits](docs/measurements/matched-option-time-2026-11-04/README.md)
+pass: each history-form solve saves one request, 16 requested bytes and one
+retain. Peak storage is unchanged; some larger cases are up to 1.95% slower,
+within the frozen 2% limit. Maximum frame growth is 16 bytes. Final platform
+delivery remains open; [the handoff](docs/development-state.md) records its state.
 
-[Saved C](docs/measurements/remaining-gradient-storage.md#follow-up-an-immediately-matched-optional-result)
-shows the new internal primitive allocating `Some(final)` before the caller
-immediately unpacks it. This is a remaining boundary cost, not a proven cause of
-the small timing regression.
+Final-iteration history removal is [verified delivery #255](docs/roadmap-history.md#final-iteration-values-without-histories-pr-255).
+Its six timing misses and noisy compiler comparison remain below. Completing
+one delivery does not satisfy older comparisons against different references.
 
-Complete the ownership proof for internal final-iteration results and borrowed
-list `last`/`nth` reads using the existing field-return machinery. Preserve empty
-results, aliases, callback order, resource lifetimes and failure/cancellation.
-Then freeze selection and measurements before implementation: one fewer wrapper
-per selected match, no added ARC, correct storage for escaping values, bounded
-compiler cost and explicit runtime/stack results. No new syntax or global analysis.
+## Next proof: private derivative input records
 
-Input derivative-record packing and coordinate-list reuse remain unselected.
-[Their lifetime requirements](docs/measurements/remaining-gradient-storage.md)
-and older timing goals retain their original evidence and references.
+The [fresh source review](docs/measurements/numeric-record-inputs-2026-11-04/README.md)
+identifies the next proposed group: expose known objectives inside derivative
+scopes, pack their private numeric inputs, and borrow overlapping neighboring
+pairs. Preserve separate input preparation, pair mapping and folding. Freeze
+the selection and measurement contract before implementation; this review proves
+neither cleanup nor performance. Coordinate-list reuse remains unselected.
+[Lifetime requirements](docs/measurements/remaining-gradient-storage.md) and older
+timing goals retain their original evidence and references.
 
 ## Open performance goals
 

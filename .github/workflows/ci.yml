@@ -143,13 +143,24 @@ jobs:
       - name: Regular macOS test shard
         if: ${{ !cancelled() }}
         run: python3 scripts/run-native-tests.py --idle-timeout 1800 --shard regular --logs "$RUNNER_TEMP/macos-regular-tests"
+      # One artifact-service retry avoids rerunning a completed native shard.
+      # Keep both attempts visible; the second failure still fails the job.
       - name: Publish individual regular test logs
+        id: test_logs
         if: always()
+        continue-on-error: true
         uses: actions/upload-artifact@v7
         with:
           name: macos-regular-tests-${{ matrix.runner }}
           path: ${{ runner.temp }}/macos-regular-tests/
-          if-no-files-found: warn
+          if-no-files-found: error
+      - name: Retry individual regular test log upload
+        if: ${{ always() && steps.test_logs.outcome == 'failure' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: macos-regular-tests-${{ matrix.runner }}
+          path: ${{ runner.temp }}/macos-regular-tests/
+          if-no-files-found: error
       - name: Inspect array-sort ownership and wide-value controls
         if: ${{ !cancelled() }}
         run: python3 scripts/inspect-array-sort.py --input ownership-evidence/arc/array-sort --source "${{ github.event.pull_request.head.sha || github.sha }}" --system macOS --arch "$RUNNER_ARCH" --objdump "$(xcrun --find llvm-objdump)" --output ownership-evidence/array-sort-inspection.json
@@ -307,13 +318,24 @@ jobs:
       - name: Inspect list-copy executables and missing-cleanup controls
         if: ${{ !cancelled() }}
         run: python3 scripts/inspect-list-copy.py --input ownership-evidence/arc/list-copy --source "${{ github.event.pull_request.head.sha || github.sha }}" --system macOS --arch "$RUNNER_ARCH" --objdump "$(xcrun --find llvm-objdump)" --output ownership-evidence/list-copy-inspection.json
+      # One artifact-service retry avoids rerunning a completed native shard.
+      # Keep both attempts visible; the second failure still fails the job.
       - name: Publish individual ownership test logs
+        id: test_logs
         if: always()
+        continue-on-error: true
         uses: actions/upload-artifact@v7
         with:
           name: macos-ownership-tests-${{ matrix.runner }}
           path: ${{ runner.temp }}/macos-ownership-tests/
-          if-no-files-found: warn
+          if-no-files-found: error
+      - name: Retry individual ownership test log upload
+        if: ${{ always() && steps.test_logs.outcome == 'failure' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: macos-ownership-tests-${{ matrix.runner }}
+          path: ${{ runner.temp }}/macos-ownership-tests/
+          if-no-files-found: error
       - name: Preserve failed native corpus binaries, C and statuses
         id: native_failures
         if: failure()

@@ -513,8 +513,9 @@ define the comparison.
 
 ### Private array results consumed by zip
 
-The gradient-array batch passes focused native checks and allocation budgets;
-full-platform and timing acceptance remain open.
+The gradient-array batch passed focused and full-platform checks and merged in
+[PR #252](roadmap-history.md#private-gradient-arrays-pr-252). Its original timing
+targets remain open; verified allocation savings do not establish a speedup.
 A gradient is one derivative per input. For `x*x + y*y` at `[1.0, 2.0]`, it is
 `[2.0, 4.0]`. Scaling by `0.25` and subtracting from the inputs gives `[0.5, 1.0]`.
 The selected storage path is:
@@ -541,7 +542,8 @@ alone does not establish that the complete compiler selects or safely runs this 
 
 ### Private index ranges consumed by zip
 
-The range consumer being verified in PR #251 keeps two I64 bounds instead of a
+The range consumer delivered in [PR #251](roadmap-history.md#direct-private-range-indices-pr-251)
+keeps two I64 bounds instead of a
 private index list. For example, zip indices `0, 1` with `[10, 20]` to produce
 `[(0, 10), (1, 20)]`; the index list and its scratch copy need not exist.
 
@@ -559,7 +561,8 @@ This internal change adds no syntax or public API. See the [frozen contract](mea
 for exact allocation predictions and acceptance checks. Focused GCC/Clang
 checks and all 96 count observations pass on Linux ARM64/AMD64. Compiler-cost
 limits pass; four runtime sessions show larger solves taking 7.1–10.0% less time,
-with small-case timing goals still open. Full-platform validation remains pending.
+with small-case timing goals still open. All final platform gates passed;
+the linked delivery history retains their exact identities and logs.
 
 ### Numeric callback inputs
 
@@ -629,8 +632,28 @@ only the final state survives. Numeric lists and arrays also qualify. Resource
 states and histories used elsewhere keep their ordinary storage. Callback order,
 input evaluation and count errors stay unchanged. Three-host focused native
 checks pass. [Measured results](measurements/final-iteration-time-2026-11-04/README.md)
-show lower peak storage and ARC traffic, with explicit timing misses. Final
-delivery gates remain open.
+show lower peak storage and ARC traffic, with explicit timing misses.
+[PR #255](roadmap-history.md#final-iteration-values-without-histories-pr-255)
+passed every final platform gate and merged with the tested tree.
+
+The next [optional-field change](measurements/matched-option-fields.md) is
+verified by focused GCC ARM64/AMD64 and Clang ARM64 checks.
+[Runtime and compiler limits pass](measurements/matched-option-time-2026-11-04/README.md);
+full platform delivery remains pending.
+When `last`, `nth` or the internal final-iteration operation feeds a selected
+match, C generation can return a tag and payload directly:
+
+```text
+Before: final value → allocate Some(value) → match → value
+After:  final value → tag + owned payload  → match → value
+```
+
+List reads retain the borrowed element; iteration transfers its existing owner.
+`None` owns no payload. Existing match-use checks, resource-frame holders and
+unwind protection govern the fields. Whole-value uses still get an owned box,
+with its payload protected during allocation. This changes representation,
+not `Option` syntax or semantics. The history-form solve saves one allocation
+and one retain; peak storage is unchanged and some larger cases are slightly slower.
 
 A temporary tuple or record can disappear only when its uses and child lifetimes
 permit it. Ignored fields still evaluate in their original order. Known tuple

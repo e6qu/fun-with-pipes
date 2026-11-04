@@ -97,6 +97,13 @@ observes scheduler function-entry counts, which optimization can change; the
 the same expected output. The dedicated preemption tests compare native and
 interpreted scheduling for each declared entry budget.
 
+macOS test-log publication gets at most two attempts against the same artifact
+name and files. Both attempts remain visible in the job log; missing files or a
+failed second upload fail CI. This handles the observed artifact-service DNS
+errors without rerunning a completed test shard. Test failures are never retried
+or ignored by these upload steps. Audit any recovered upload error alongside the
+successful archive identity and its complete target logs.
+
 A skip, cancelled job, emulated execution or draft-PR skip is not a passing gate.
 Draft PRs use dispatched focused checks; marking ready starts the full matrix.
 Before a repair push, audit every failed job and completed target, then batch all

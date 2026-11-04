@@ -329,12 +329,22 @@ The internal result labels describe distinct promises:
   its borrowed element by type. Scoped cleanup owns the partial list, any
   pending element and scratch until construction succeeds. An appended suffix
   gets one owner before copying starts. See [list-copy failure checks](measurements/list-copy-cleanup.md).
-- `FreshOuter`: one new wrapper retains its pointer-bearing fields.
+- `FreshOuter`: the generic value entry builds one wrapper and retains its
+  pointer-bearing fields. Selected direct-field calls can omit that wrapper
+  while acquiring the same payload owner.
 - `FreshTree`: every reachable allocation is new and independently owned.
 
 `None` is an immediate tag and needs no allocation. These contracts preserve
 aliasing and immutable values; they do not establish complete exception or
 retained-callback ownership.
+
+The [matched-result implementation](measurements/matched-option-fields.md)
+adds direct fields for `last`, `nth` and internal final iteration. Focused checks
+pass on GCC ARM64/AMD64 and Clang ARM64; final delivery is pending.
+Borrowed list reads retain the selected element by its concrete
+type. Iteration moves its already-owned result. Original resource-frame
+references remain separate; boxing an escaping result protects its payload
+until allocation succeeds. No primitive ownership obligation is weakened.
 
 Repeat borrows value/count and retains each typed alias in fresh counted list
 nodes. Range borrows bounds and owns fresh nodes and wide numeric elements;

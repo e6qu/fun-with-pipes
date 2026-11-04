@@ -57,6 +57,8 @@ _Noreturn void longjmp(jmp_buf, int);
 #endif
 
 typedef uint64_t V;
+/* An optional result can transfer its tag and payload without a heap wrapper. */
+typedef struct { V tag, value; } fwp_option_result;
 typedef __int128 i128;
 typedef unsigned __int128 u128;
 

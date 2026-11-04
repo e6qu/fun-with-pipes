@@ -1,0 +1,25 @@
+{
+  "source": "82963531dddb6d9a5f32ec26657dc220736f4055",
+  "disabledTransformation": "direct fields for matched list last, nth and final iteration results",
+  "candidate": {
+    "src/cgen.rs": "9898a8f5f78997a920a98128925e6c91d36b46fac34ff566d018ca1ceb80e665"
+  },
+  "reference": {
+    "src/cgen.rs": "ff65586300669c6e8b760e0a2560d98efec29a9f0d582e82815761b477814227"
+  },
+  "unchanged": {
+    "src/fuse.rs": "94b7628849c9c7d1f702d0734be4802575053674e2d638331db59fef20f26772",
+    "src/prims_std.rs": "080e4ac17ea4049bdcd2732910c1835559625cf9a97cc62adf8a461dbdfea574",
+    "src/ownership.rs": "26d7ebc592acbad1b83bd34150afb2d9b39f3c0a3691d35c8e1db6c059ac3c55",
+    "src/opt.rs": "dc36fa785e03a6ee8b5b17a312e98c68c5481be3540a9094b2b5878568aebf61",
+    "runtime/fwp_rt.c": "a3dacfe33d859d10f458e955ac46901a0c5c051c7ba3f8871ce488c5dfe3ba3e",
+    "runtime/fwp_rt_prims.c": "5cd09defeb6fb7ab621229c1ec5065c1ad7c006dd8d8498cb7c756d458678317",
+    "runtime/fwp_rt_task.c": "5c65f5691766571fac773b9c260e753cb6280794b5362cd4b09ca822cc27e9e9",
+    "runtime/fwp_rt_heap.c": "ac26a18c249847c5b6c25f02776eee417bf4eb4a98cbad60aec58f00338c5a6e",
+    "lib/list.fwp": "9f4988e962654e84695944abbb5fc97b01678a37915aebfc48d286fc1e375993",
+    "lib/autodiff.fwp": "0274942f72e8ae60bceca2ca723a8f14a8dae3346ec71209aeb1ae8bf2841440"
+  },
+  "ownershipSha256": "26d7ebc592acbad1b83bd34150afb2d9b39f3c0a3691d35c8e1db6c059ac3c55",
+  "patchSha256": "a60332ab222f613e894b116d2271b333f40703645406d65c6e9446bc7971e56e",
+  "compilerSha256": "1dd11f2ef0a44f7148993cfd56e35125d09d6b6bce07f887da1d5221d65c8ebd"
+}

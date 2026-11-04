@@ -96,7 +96,7 @@ def ownership_budget_failures(profiles, baseline):
 
 def paired_budget_failures(results, comparison):
     """Apply the selected pre-candidate limits and report every violation."""
-    assert comparison in {'scalar-recording', 'eager-captures', 'array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration'}
+    assert comparison in {'scalar-recording', 'eager-captures', 'array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option'}
     failures = []
 
     def require(case, program, metric, actual, limit):
@@ -111,6 +111,20 @@ def paired_budget_failures(results, comparison):
         for label in ['fwp-ad', 'fwp-ad-history']:
             reference = label + '-reference'
             current, old = (row['fwpProfiles'][name] for name in [label, reference])
+            if comparison == 'matched-option':
+                time_limit = 1.02
+                require(case, label, 'candidate/reference time', medians[label] / medians[reference], time_limit)
+                for key in ('requests', 'requestedBytes', 'retains'):
+                    require(case, label, key, current['managed'][key], old['managed'][key])
+                require(case, label, 'finalChargedBytes', current['managed']['finalChargedBytes'], 0)
+                require(case, label, 'final raw bytes', current['rawDerivativeStorage']['finalBytes'], 0)
+                stacks = row['cCompilerStackUsage']
+                current_frame = max(entry['bytes'] for entry in stacks[label + '.su']['entries'])
+                reference_frame = max(entry['bytes'] for entry in stacks[reference + '.su']['entries'])
+                require(case, label, 'largest static stack frame', current_frame, reference_frame + 128)
+                # Boundary probes establish one removed wrapper. The complete
+                # solve reports time and memory separately, without a 5% claim.
+                continue
             if comparison == 'final-iteration':
                 history = label == 'fwp-ad-history'
                 time_limit = 0.95 if history and row['updates'] >= 199 else 1.02
@@ -197,7 +211,7 @@ def paired_budget_failures(results, comparison):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--compiler', required=True, type=Path)
-    parser.add_argument('--comparison', required=True, choices=['current', 'eager-captures', 'array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration'])
+    parser.add_argument('--comparison', required=True, choices=['current', 'eager-captures', 'array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option'])
     parser.add_argument('--reference-compiler', type=Path)
     parser.add_argument('--reference-manifest', type=Path)
     parser.add_argument('--cc', required=True)
@@ -236,7 +250,14 @@ def main():
                 assert digest((ROOT / path).read_bytes()) == expected_hash, path
         else:
             assert reference_manifest['ownershipSha256'] == digest((ROOT / 'src/ownership.rs').read_bytes())
-        if args.comparison == 'final-iteration':
+        if args.comparison == 'matched-option':
+            assert reference_manifest['disabledTransformation'] == 'direct fields for matched list last, nth and final iteration results'
+            assert set(reference_manifest['candidate']) == set(reference_manifest['reference']) == {'src/cgen.rs'}
+            assert set(reference_manifest['unchanged']) == {'src/fuse.rs', 'src/prims_std.rs', 'src/ownership.rs', 'src/opt.rs', 'runtime/fwp_rt.c', 'runtime/fwp_rt_prims.c', 'runtime/fwp_rt_task.c', 'runtime/fwp_rt_heap.c', 'lib/list.fwp', 'lib/autodiff.fwp'}
+            for group in ('candidate', 'unchanged'):
+                for path, checksum in reference_manifest[group].items():
+                    assert digest((ROOT / path).read_bytes()) == checksum, path
+        elif args.comparison == 'final-iteration':
             assert reference_manifest['disabledTransformation'] == 'direct list last and unused numeric iteration history removal'
             assert set(reference_manifest['candidate']) == set(reference_manifest['reference']) == {'src/fuse.rs', 'lib/list.fwp'}
             assert set(reference_manifest['unchanged']) == {'src/cgen.rs', 'src/prims_std.rs', 'src/ownership.rs', 'src/opt.rs', 'runtime/fwp_rt_prims.c', 'runtime/fwp_rt_heap.c', 'lib/autodiff.fwp'}
@@ -288,6 +309,8 @@ def main():
                    if not key.startswith('FWP_') and key not in ('GH_TOKEN', 'GITHUB_TOKEN')}
     environment.update(CC=args.cc, FWP_LTO='0', FWP_AD_WORKSPACE='1',
                        FWP_PACKED_ARRAYS='1', FWP_STACK='1', FWP_ARRAY_FUSION='1')
+    if args.comparison == 'matched-option':
+        environment.update(FWP_VRET='1', FWP_FRAME_FIELDS='1')
     commands = []
     cflags = ['-O2', '-std=gnu11', '-fno-fast-math', '-ffp-contract=off', '-UFWP_NO_REUSE', '-fstack-usage', '-march=' + args.c_arch]
 
@@ -551,6 +574,7 @@ def main():
              'scripts/prepare-scalar-map-zip-reference.py', 'src/cgen/scalar_map_zip.rs',
              'scripts/prepare-range-zip-reference.py', 'src/cgen/range_zip.rs',
              'scripts/prepare-scalar-array-map-reference.py', 'scripts/prepare-scalar-array-identity-reference.py',
+             'scripts/prepare-matched-option-reference.py', 'runtime/fwp_rt.c', 'runtime/fwp_rt_task.c',
              'scripts/prepare-final-iteration-reference.py', 'lib/list.fwp', 'src/prims_std.rs', 'runtime/fwp_rt_prims.c', 'runtime/fwp_rt_heap.c',
              'scripts/prepare-gradient-array-reference.py', 'scripts/gradient-array-candidate.patch',
              'src/fuse/array_zip.rs', 'lib/autodiff.fwp', 'runtime/fwp_rt_kernel.c',
@@ -571,6 +595,7 @@ def main():
         referenceCompiler=reference_manifest,
         sourceHashes={name: digest((ROOT / name).read_bytes()) for name in paths}, results=results,
         scope={
+            'matched-option': 'Same-source compilers differ only in direct fields for immediately matched list reads and final iteration results. Both retain direct last, history removal, count validation and every cleanup repair. C/Rust use manual gradients and different storage, so their ratios do not isolate language or ARC overhead. ',
             'final-iteration': 'Same-source compilers differ only in direct last and unused numeric iteration history removal. Both preserve count validation, optional-wrapper cleanup and callback order. The manual C/Rust peers use different derivative algorithms and storage; their ratios do not isolate language or ARC overhead. ',
             'current': 'Six current-source implementations and one byte-identical AD-current control. ',
             'eager-captures': 'Current-source eager-capture comparison: reference compiler restores only constant-only capture hoisting; both compilers retain scalar recording stack storage. ',
@@ -587,7 +612,7 @@ def main():
         }[args.comparison] +
         ('Candidate and reference record and reverse the same derivatives; an identical candidate copy checks timing noise. '
          if paired else '') +
-        'fwp AD-history retains every vector; AD-current retains current weights. Both record and reverse derivatives. ' +
+        'The history source form requests the last of its iterated vectors; selected compilers can keep only the current vector. The current source form uses an explicit loop. Both record and reverse derivatives. ' +
         ('C/Rust reuse two contiguous buffers. ' if paired else
          'fwp explicit list and packed array forms use handwritten derivatives. C/Rust reuse two contiguous buffers. '
          'Packed fwp can recompute edge residuals that C/Rust compute once. ') +

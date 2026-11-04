@@ -3,9 +3,11 @@
 This review records remaining costs and the proofs needed to remove them.
 The [same-type conversion group](scalar-array-identities.md) is verified and merged
 in #254, separately from the [direct array-call experiment](direct-array-callbacks.md).
-Final-iteration consumption is the [current delivery](final-iteration-storage.md). The optional-result review below
-identifies a smaller remaining boundary cost; record packing and coordinate reuse
-remain unselected. Each experiment keeps its own reference and measurements.
+Final-iteration consumption is [verified and merged](final-iteration-storage.md). The optional-result review below
+identifies a smaller remaining boundary cost. A [fresh source review](numeric-record-inputs-2026-11-04/README.md)
+proposes scoped-call specialization and private input-record packing next;
+its implementation contract is not yet frozen. Coordinate reuse remains unselected.
+Each experiment keeps its own reference and measurements.
 
 ## Measured costs
 
@@ -52,7 +54,9 @@ Two possible scopes have different proof costs:
 
 F128 arrays already distinguish borrowed payload reads from independently owned
 escaping values. That is a useful lifetime example, not proof that record reads
-can use the same representation unchanged. Neither approach is selected yet.
+can use the same representation unchanged. The fresh review proposes the private
+approach, with all input production preceding pair mapping and folding. General
+numeric-record arrays remain a broader alternative, not part of that proposal.
 
 **Updated coordinates:** [the ownership contract](../../src/ownership.rs) makes
 `zip-with` borrow both lists and return a fresh list spine. Its implementation
@@ -87,7 +91,7 @@ Keeping a slice can prolong its larger backing array's lifetime: the
 shows that cost alongside the removed allocation. Unknown/effectful callbacks
 and non-F64 maps are outside this selection.
 
-## Current delivery: discard an unused iteration history
+## Delivered: discard an unused iteration history
 
 The benchmark's history source is `iterate count descend | last`: it builds
 intermediate coordinate lists although only the final one is returned. The
@@ -101,8 +105,8 @@ The [implementation contract](final-iteration-storage.md) now selects direct
 an incidental optional-result cleanup repair as one group. Implementation and
 three-host focused verification are complete. The
 [four-session report](final-iteration-time-2026-11-04/README.md) verifies lower
-memory and ARC costs, with six timing limits still open. Final platform gates
-remain required. Resource-bearing states are excluded from history removal;
+memory and ARC costs, with six timing limits still open. All final platform gates
+pass in merged #255. Resource-bearing states are excluded from history removal;
 general `last` passes separate ownership checks for those values.
 
 This is measured separately from coordinate representation. Comparisons label
@@ -119,21 +123,27 @@ primitive allocates `Some(final)`, then the caller retains its payload and drops
 the wrapper during `match`. The history removal is still a large net saving.
 This source observation does not identify the one-update timing regression's cause.
 
-The compiler already returns matched array/map reads and channel/task results as
-fields (`lookup_value_type`, `owned_option_type` and `expr_variant` in
-`src/cgen.rs`). Before selecting another implementation:
+The new implementation extends the existing field returns for matched array/map
+reads and channel/task results (`lookup_value_type`, `owned_option_type` and
+`expr_variant` in `src/cgen.rs`). Its proof and checks cover:
 
-1. Prove direct field ownership for the internal final-iteration result and
+1. Direct field ownership for the internal final-iteration result and
    borrowed list `last`/`nth` reads. Keep whole-value results boxed when needed;
    use the existing match-use check, without a new global analysis or syntax.
-2. Preserve argument/callback order, empty results, resource lifetimes, aliases
+2. Preserved argument/callback order, empty results, resource lifetimes, aliases
    and failure/cancellation cleanup. A borrowed read must acquire its result's
    owner; an already-owned iteration result should move its owner.
-3. Freeze and test the exact selection. Require one fewer wrapper allocation per
+3. A frozen, tested selection. Require one fewer wrapper allocation per
    selected match and no added ARC operations, while unsupported/escaping uses
    retain correct storage. Check actual generated C and native allocation counts.
-4. Freeze the comparison before timing; retain the current six misses and the
+4. A comparison frozen before timing; retain the current six misses and the
    compiler-noise case. Report compiler cost, stack and all runtime outcomes.
 
-This review selects the next proof to complete after final-iteration delivery;
-it does not claim an implemented optimization or a measured speed benefit.
+The [contract](matched-option-fields.md) defines the ownership boundaries and
+limits. [Three-host native checks](matched-option-fields-2026-11-04/README.md)
+verify values, aliases, physical cleanup and the removed wrapper.
+[Compiler-cost comparisons](matched-option-analysis-2026-11-04/README.md) pass.
+[Four runtime sessions](matched-option-time-2026-11-04/README.md) and all raw audits
+pass their frozen limits. Each history-form solve saves one allocation and one
+retain; peak storage is unchanged and some larger cases are slightly slower.
+Final platform delivery remains open.
