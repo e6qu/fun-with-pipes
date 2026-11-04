@@ -8,6 +8,12 @@ mod exported_probe;
 #[path = "support/record_probe.rs"]
 mod record_probe;
 
+#[path = "support/ownership_ledger.rs"]
+mod ownership_ledger;
+
+#[path = "support/packed_input_windows.rs"]
+mod packed_input_windows;
+
 fn checked(command: &mut Command) -> Output {
     let out = command.output().unwrap();
     assert!(

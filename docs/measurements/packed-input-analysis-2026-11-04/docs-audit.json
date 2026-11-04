@@ -1,0 +1,12 @@
+{
+  "source": "5f63ea1a9a7fb7a6bc1068bbd84c4224c176b106",
+  "job": 126641046022,
+  "run": 41849320036,
+  "logSha256": "c9756615eefd883532f68c21a0d630dc74aa22754a2c4e5dc9fbe3e49c1d6ba4",
+  "expectedDiagnostics": [
+    "2026-11-04T14:46:39.0328946Z run-native-tests.py: error: duplicate selected test target",
+    "2026-11-04T14:46:39.0338392Z run-native-tests.py: error: unknown selected test targets: ['unknown']"
+  ],
+  "intentionalRunnerFailure": true,
+  "unexpectedDiagnostics": []
+}

@@ -100,7 +100,9 @@ pub fn consumes_arg(prog: &Program, id: FuncId, j: usize) -> bool {
         Body::PackedRecordMap { .. }
         | Body::ScalarBufferMap { .. }
         | Body::ScalarBufferZip { .. }
-        | Body::RangeZip { .. } => false,
+        | Body::RangeZip { .. }
+        | Body::PackedRecordRangeZip { .. }
+        | Body::PackedRecordPairs { .. } => false,
         Body::Prim(s) => prim_consumes(s, j),
         _ => false,
     }

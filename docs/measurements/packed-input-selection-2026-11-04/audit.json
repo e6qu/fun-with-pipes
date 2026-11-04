@@ -1,0 +1,83 @@
+{
+  "source": "0b274ca8f404800e5c2dd9f1a90f7fcabaffd746",
+  "run": 41827593617,
+  "job": 126566218264,
+  "conclusion": "failure",
+  "commands": 12,
+  "files": 43,
+  "failedCommands": [
+    {
+      "command": [
+        "/home/runner/work/fun-with-pipes/fun-with-pipes/target/debug/fwp",
+        "build",
+        "--memory",
+        "dynamic",
+        "--emit-c",
+        "-O2",
+        "/home/runner/work/fun-with-pipes/fun-with-pipes/iteration-storage-review/descent-small.fwp",
+        "-o",
+        "/home/runner/work/fun-with-pipes/fun-with-pipes/iteration-storage-review/descent-small-optimized.c"
+      ],
+      "mode": "optimized",
+      "exit": 0,
+      "selected": true,
+      "expected": true,
+      "selectionPass": true,
+      "packedInputs": false,
+      "packedPairs": false,
+      "expectedPackedInputs": true,
+      "inputStoragePass": false
+    },
+    {
+      "command": [
+        "/home/runner/work/fun-with-pipes/fun-with-pipes/target/debug/fwp",
+        "build",
+        "--memory",
+        "dynamic",
+        "--emit-c",
+        "-O2",
+        "/home/runner/work/fun-with-pipes/fun-with-pipes/iteration-storage-review/descent-large.fwp",
+        "-o",
+        "/home/runner/work/fun-with-pipes/fun-with-pipes/iteration-storage-review/descent-large-optimized.c"
+      ],
+      "mode": "optimized",
+      "exit": 0,
+      "selected": true,
+      "expected": true,
+      "selectionPass": true,
+      "packedInputs": false,
+      "packedPairs": false,
+      "expectedPackedInputs": true,
+      "inputStoragePass": false
+    },
+    {
+      "command": [
+        "/home/runner/work/fun-with-pipes/fun-with-pipes/target/debug/fwp",
+        "build",
+        "--memory",
+        "dynamic",
+        "--emit-c",
+        "-O2",
+        "/home/runner/work/fun-with-pipes/fun-with-pipes/iteration-storage-review/current-large.fwp",
+        "-o",
+        "/home/runner/work/fun-with-pipes/fun-with-pipes/iteration-storage-review/current-large-optimized.c"
+      ],
+      "mode": "optimized",
+      "exit": 0,
+      "selected": false,
+      "expected": false,
+      "selectionPass": true,
+      "packedInputs": false,
+      "packedPairs": false,
+      "expectedPackedInputs": true,
+      "inputStoragePass": false
+    }
+  ],
+  "diagnostics": [
+    "2026-11-04T12:23:13.0595901Z Traceback (most recent call last):",
+    "2026-11-04T12:23:13.0760085Z ##[error]Process completed with exit code 1.",
+    "2026-11-04T12:24:21.2906424Z test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 275 filtered out; finished in 0.00s",
+    "2026-11-04T12:24:21.3128040Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 277 filtered out; finished in 0.00s"
+  ],
+  "logSha256": "42321414f1943e25b9ac5d004be1ac1e1e29b93795555484450cee3fef6be046"
+}

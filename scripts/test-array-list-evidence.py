@@ -53,28 +53,31 @@ class Evidence(unittest.TestCase):
             with self.assertRaises(AssertionError):
                 CHECK.recorded_matched_option_reference(changed, preparation)
 
-    def test_final_iteration_reference_uses_saved_literals_and_rejects_partial_edits(self):
-        preparation = (ROOT / 'scripts/prepare-final-iteration-reference.py').read_text()
-        candidates = {name: (ROOT / name).read_text() for name in ('src/fuse.rs', 'lib/list.fwp')}
-        reference = CHECK.recorded_final_iteration_reference(candidates, preparation)
-        self.assertIn('if false && kind == "last"', reference['src/fuse.rs'])
-        self.assertIn('last = reverse | head', reference['lib/list.fwp'])
-        self.assertNotIn('foreign "fwp" last :', reference['lib/list.fwp'])
-        self.assertEqual(reference, CHECK.recorded_final_iteration_reference(
-            candidates, preparation + '\nraise RuntimeError("never execute saved code")\n'))
-        for changed in (preparation.replace('EDITS =', 'MISSING =', 1),
-                        preparation + '\nEDITS = {}\n',
-                        preparation.replace("'lib/list.fwp':", "'lib/other.fwp':", 1)):
-            with self.assertRaises(AssertionError):
-                CHECK.recorded_final_iteration_reference(candidates, changed)
-        for name in candidates:
-            changed = dict(candidates)
-            changed[name] = reference[name]
-            with self.assertRaises(AssertionError):
-                CHECK.recorded_final_iteration_reference(changed, preparation)
-            del changed[name]
-            with self.assertRaises(AssertionError):
-                CHECK.recorded_final_iteration_reference(changed, preparation)
+    def test_file_edits_use_saved_literals_and_reject_partial_references(self):
+        for protocol, paths in (
+            ('final-iteration', ('src/fuse.rs', 'lib/list.fwp')),
+            ('packed-input', ('src/mono.rs', 'src/cgen.rs')),
+        ):
+            preparation = (ROOT / f'scripts/prepare-{protocol}-reference.py').read_text()
+            candidates = {name: (ROOT / name).read_text() for name in paths}
+            reference = CHECK.recorded_file_edits_reference(candidates, preparation, paths)
+            self.assertEqual(set(reference), set(paths))
+            self.assertTrue(all(reference[name] != candidates[name] for name in paths))
+            self.assertEqual(reference, CHECK.recorded_file_edits_reference(
+                candidates, preparation + '\nraise RuntimeError("never execute saved code")\n', paths))
+            for changed in (preparation.replace('EDITS =', 'MISSING =', 1),
+                            preparation + '\nEDITS = {}\n',
+                            preparation.replace(repr(paths[0]) + ':', "'wrong/file':", 1)):
+                with self.assertRaises(AssertionError):
+                    CHECK.recorded_file_edits_reference(candidates, changed, paths)
+            for name in candidates:
+                changed = dict(candidates)
+                changed[name] = reference[name]
+                with self.assertRaises(AssertionError):
+                    CHECK.recorded_file_edits_reference(changed, preparation, paths)
+                del changed[name]
+                with self.assertRaises(AssertionError):
+                    CHECK.recorded_file_edits_reference(changed, preparation, paths)
 
     def test_zip_inventory_matches_directory_without_extraction(self):
         contents = {'report.json': b'{"complete": true}', 'case/image': b'ELF fixture',

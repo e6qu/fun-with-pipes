@@ -1,0 +1,116 @@
+{
+  "id": 126566218264,
+  "run_id": 41827593617,
+  "workflow_name": "Numerical and ownership evidence",
+  "head_branch": "packed-derivative-inputs",
+  "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/41827593617",
+  "run_attempt": 1,
+  "node_id": "CR_kwDOU33zxM8AAAAdd-86GA",
+  "head_sha": "0b274ca8f404800e5c2dd9f1a90f7fcabaffd746",
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/126566218264",
+  "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41827593617/job/126566218264",
+  "status": "completed",
+  "conclusion": "failure",
+  "created_at": "2026-11-04T12:14:47Z",
+  "started_at": "2026-11-04T12:21:30Z",
+  "completed_at": "2026-11-04T12:24:24Z",
+  "name": "iteration_storage_review",
+  "steps": [
+    {
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 1,
+      "started_at": "2026-11-04T12:21:31Z",
+      "completed_at": "2026-11-04T12:21:32Z"
+    },
+    {
+      "name": "Run actions/checkout@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 2,
+      "started_at": "2026-11-04T12:21:32Z",
+      "completed_at": "2026-11-04T12:21:45Z"
+    },
+    {
+      "name": "Run dtolnay/rust-toolchain@stable",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 3,
+      "started_at": "2026-11-04T12:21:45Z",
+      "completed_at": "2026-11-04T12:21:45Z"
+    },
+    {
+      "name": "Run actions/cache@v6",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 4,
+      "started_at": "2026-11-04T12:21:45Z",
+      "completed_at": "2026-11-04T12:21:46Z"
+    },
+    {
+      "name": "Build the current compiler for source inspection",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 5,
+      "started_at": "2026-11-04T12:21:46Z",
+      "completed_at": "2026-11-04T12:23:09Z"
+    },
+    {
+      "name": "Save raw and optimized IR and emitted C without timing programs",
+      "status": "completed",
+      "conclusion": "failure",
+      "number": 6,
+      "started_at": "2026-11-04T12:23:09Z",
+      "completed_at": "2026-11-04T12:23:13Z"
+    },
+    {
+      "name": "Check scoped and packed-input proof controls",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 7,
+      "started_at": "2026-11-04T12:23:13Z",
+      "completed_at": "2026-11-04T12:24:21Z"
+    },
+    {
+      "name": "Run actions/upload-artifact@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 8,
+      "started_at": "2026-11-04T12:24:21Z",
+      "completed_at": "2026-11-04T12:24:22Z"
+    },
+    {
+      "name": "Post Run actions/cache@v6",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 15,
+      "started_at": "2026-11-04T12:24:22Z",
+      "completed_at": "2026-11-04T12:24:22Z"
+    },
+    {
+      "name": "Post Run actions/checkout@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 16,
+      "started_at": "2026-11-04T12:24:22Z",
+      "completed_at": "2026-11-04T12:24:22Z"
+    },
+    {
+      "name": "Complete job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 17,
+      "started_at": "2026-11-04T12:24:22Z",
+      "completed_at": "2026-11-04T12:24:22Z"
+    }
+  ],
+  "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/126566218264",
+  "labels": [
+    "ubuntu-24.04-arm"
+  ],
+  "runner_id": 1000405979,
+  "runner_name": "GitHub Actions 1000405979",
+  "runner_group_id": 0,
+  "runner_group_name": "GitHub Actions"
+}

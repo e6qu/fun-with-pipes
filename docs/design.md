@@ -595,6 +595,42 @@ timing goals.
 
 ## Numerical specialization
 
+### Private derivative input records
+
+**Correctness and measurements audited; three AMD64 timing limits remain open.
+Final platform gates are pending.**
+The compiler can store selected input records together instead of allocating
+one record box and one list cell per input. For three two-number records:
+
+```text
+Input buffer:  [value₀, id₀ | value₁, id₁ | value₂, id₂]
+Pair reads:    [record₀, record₁], then [record₁, record₂]
+Stages:        finish all inputs → finish all pair results → fold results
+```
+
+Here an `id` identifies an operation in the derivative tape, the recording used
+to calculate gradients. It is a number, not a pointer into the buffer. The middle
+record is borrowed twice; neither read needs another owner or a copied record.
+
+- Expose a known objective within its existing scope; keep scope entry and traps
+  in order. Unknown objectives continue through the ordinary call path.
+- Select only private one/two-field numeric records and their sole neighboring
+  pair consumer. Additional uses, escapes and resource anchors exclude selection.
+- Keep one input-buffer owner until pair mapping finishes. Protect both buffers
+  during callbacks; release them on normal return, failure and cancellation.
+- Preserve ordinary lists at public and escaping boundaries. This adds no syntax.
+
+See the [pass order](compiler-pipeline.md), [ownership/measurement contract](measurements/packed-derivative-inputs.md)
+and [native correctness evidence](measurements/packed-input-checks-2026-11-04/README.md).
+[Compiler measurements](measurements/packed-input-analysis-2026-11-04/README.md)
+bound the observed compilation-time and peak-memory overhead.
+[Runtime results](measurements/packed-input-time-2026-11-04/README.md) verify
+lower allocation/retain counts and live managed storage, with three AMD64 timing
+misses preserved. Process RAM does not consistently decrease.
+Passing source selection or saving allocations alone does not prove a speedup.
+
+### Other selected transformations
+
 The optimizer removes work only when doing so preserves observable behavior:
 
 | Optimization | Work it can remove | Important limit |
@@ -636,10 +672,10 @@ show lower peak storage and ARC traffic, with explicit timing misses.
 [PR #255](roadmap-history.md#final-iteration-values-without-histories-pr-255)
 passed every final platform gate and merged with the tested tree.
 
-The next [optional-field change](measurements/matched-option-fields.md) is
+The [optional-field change](measurements/matched-option-fields.md) is
 verified by focused GCC ARM64/AMD64 and Clang ARM64 checks.
 [Runtime and compiler limits pass](measurements/matched-option-time-2026-11-04/README.md);
-full platform delivery remains pending.
+[all final platform gates pass and PR #256 is merged](roadmap-history.md#matched-optional-results-pr-256).
 When `last`, `nth` or the internal final-iteration operation feeds a selected
 match, C generation can return a tag and payload directly:
 

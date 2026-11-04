@@ -1,6 +1,10 @@
 # Removing temporary derivative input records: source review
 
-This is a source review, not an implemented optimization or a timing result.
+This is the historical source review that led to
+[private input packing](../packed-derivative-inputs.md). Its observations below
+describe the recorded source, before implementation; they are not a new backlog
+or current allocation counts. [Current measurements](../packed-input-time-2026-11-04/README.md)
+are recorded separately.
 [Run 41818502246](https://github.com/e6qu/fun-with-pipes/actions/runs/41818502246)
 compiled six inputs with and without optimization at
 `82963531dddb6d9a5f32ec26657dc220736f4055`. All 12 commands, 43 hashed files and

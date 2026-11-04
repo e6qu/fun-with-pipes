@@ -1,0 +1,213 @@
+{
+  "source": "9ad9d1625751b84957a3dccfc9f8c31de197e2ab",
+  "run": 41830904200,
+  "artifact": {
+    "id": 13322074821,
+    "node_id": "MDg6QXJ0aWZhY3QxMzMyMjA3NDgyMQ==",
+    "name": "packed-input-preflight",
+    "size_in_bytes": 3558292,
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13322074821",
+    "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13322074821/zip",
+    "expired": false,
+    "digest": "sha256:f8d0629ef4ed0d0099a5bcbe1c0c9b5e1f7a29170950aaed507aca211b6504b1",
+    "created_at": "2026-11-04T12:48:11Z",
+    "updated_at": "2026-11-04T12:48:11Z",
+    "expires_at": "2027-02-02T12:37:42Z",
+    "workflow_run": {
+      "id": 41830904200,
+      "repository_id": 1400763332,
+      "head_repository_id": 1400763332,
+      "head_branch": "packed-derivative-inputs",
+      "head_sha": "9ad9d1625751b84957a3dccfc9f8c31de197e2ab"
+    }
+  },
+  "files": {
+    "clippy.log": "bb838cbc7b1ee33a689ee708dfab4352b6e2aab8ae2151491c4efa64574eadc6",
+    "native.log": "91dccaff2f4bf388dd7e6e93fe95f0d2a521a40dc15c4056662b524d03593f7b",
+    "record-ownership/packed_input_windows/transform-complete--O1.c": "e576b75f766cbe2d6243d989309c4678e60dade4761cb3eb380c79cbce89aa75",
+    "record-ownership/packed_input_windows/transform-complete--O1.exe": "76785923144dafae0386fb7c67dabb4cbd8a98e1b582eee4c1de17d456f88bd2",
+    "record-ownership/packed_input_windows/transform-complete--O1.status": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+    "record-ownership/packed_input_windows/transform-complete--O1.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "record-ownership/packed_input_windows/transform-complete--O1.stdout": "c2115f38d48827fbe24daa31c4a274b58e7c2734dba4a01c3827d7af699e7346",
+    "record-ownership/packed_input_windows/transform-complete--O2.c": "e576b75f766cbe2d6243d989309c4678e60dade4761cb3eb380c79cbce89aa75",
+    "record-ownership/packed_input_windows/transform-complete--O2.exe": "15c11feee61f4f97c500d1446d995223b9b24779624560bbb3f6e750d8621e55",
+    "record-ownership/packed_input_windows/transform-complete--O2.status": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+    "record-ownership/packed_input_windows/transform-complete--O2.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "record-ownership/packed_input_windows/transform-complete--O2.stdout": "c2115f38d48827fbe24daa31c4a274b58e7c2734dba4a01c3827d7af699e7346",
+    "record-ownership/packed_input_windows/transform-corrupt-input--O1.c": "1c8c99e5d2d793e4ae54f2db64a8aae3241d7139f62e5b71a59addc28f787de9",
+    "record-ownership/packed_input_windows/transform-corrupt-input--O1.exe": "247104132e9d7271842029daca7f34224370a0b20d48181603b164206871d89a",
+    "record-ownership/packed_input_windows/transform-corrupt-input--O1.status": "30a04013ee288b5af154df0d07bd07277f06b5c4292493fb9a4a2bb65b8456a9",
+    "record-ownership/packed_input_windows/transform-corrupt-input--O1.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "record-ownership/packed_input_windows/transform-corrupt-input--O1.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "record-ownership/packed_input_windows/transform-corrupt-input--O2.c": "1c8c99e5d2d793e4ae54f2db64a8aae3241d7139f62e5b71a59addc28f787de9",
+    "record-ownership/packed_input_windows/transform-corrupt-input--O2.exe": "4bc74272de31a5a227c46e20a9771638fb9e9fe60c0173271411f8be83dfc66d",
+    "record-ownership/packed_input_windows/transform-corrupt-input--O2.status": "30a04013ee288b5af154df0d07bd07277f06b5c4292493fb9a4a2bb65b8456a9",
+    "record-ownership/packed_input_windows/transform-corrupt-input--O2.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "record-ownership/packed_input_windows/transform-corrupt-input--O2.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "record-ownership/packed_input_windows/transform-missing-input--O1.c": "f72fb259eede836b029253dc188183bd58f857ab23843b062f2fafeffb23dbb1",
+    "record-ownership/packed_input_windows/transform-missing-input--O1.exe": "54c382f6792ab3d7009a8cc73434343a69b062d3831af5127810ca2ce3147614",
+    "record-ownership/packed_input_windows/transform-missing-input--O1.status": "78cb3ab51c891a06f32570c99d43657d71fb401ad65a2103d8794fb6a453be63",
+    "record-ownership/packed_input_windows/transform-missing-input--O1.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "record-ownership/packed_input_windows/transform-missing-input--O1.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "record-ownership/packed_input_windows/transform-missing-input--O2.c": "f72fb259eede836b029253dc188183bd58f857ab23843b062f2fafeffb23dbb1",
+    "record-ownership/packed_input_windows/transform-missing-input--O2.exe": "23abdf4e42d3315b381d68b03c1e15c210eb04d8db59efc3f13a33739182549b",
+    "record-ownership/packed_input_windows/transform-missing-input--O2.status": "78cb3ab51c891a06f32570c99d43657d71fb401ad65a2103d8794fb6a453be63",
+    "record-ownership/packed_input_windows/transform-missing-input--O2.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "record-ownership/packed_input_windows/transform-missing-input--O2.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "record-ownership/packed_input_windows/transform-missing-pairs--O1.c": "391e789b0c83eccdb5bd102c5b19b46116f79ebf91733965fcd575e265aaf3b0",
+    "record-ownership/packed_input_windows/transform-missing-pairs--O1.exe": "3dd96150e93ae51e18dc216a896398ff1e5ba9befe66d2c6ad3f84099053f546",
+    "record-ownership/packed_input_windows/transform-missing-pairs--O1.status": "78cb3ab51c891a06f32570c99d43657d71fb401ad65a2103d8794fb6a453be63",
+    "record-ownership/packed_input_windows/transform-missing-pairs--O1.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "record-ownership/packed_input_windows/transform-missing-pairs--O1.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "record-ownership/packed_input_windows/transform-missing-pairs--O2.c": "391e789b0c83eccdb5bd102c5b19b46116f79ebf91733965fcd575e265aaf3b0",
+    "record-ownership/packed_input_windows/transform-missing-pairs--O2.exe": "53a414c298a6ae34a18d7dbd0e2785b9a9450509fa3c317f222341b87f027d71",
+    "record-ownership/packed_input_windows/transform-missing-pairs--O2.status": "78cb3ab51c891a06f32570c99d43657d71fb401ad65a2103d8794fb6a453be63",
+    "record-ownership/packed_input_windows/transform-missing-pairs--O2.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "record-ownership/packed_input_windows/transform-missing-pairs--O2.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "record-ownership/packed_input_windows/transform-no-reuse--O1.c": "8b3559ec6ffdb0529b0d383582452b76e3c2300e20c0e40e5a0f28ecec889b2b",
+    "record-ownership/packed_input_windows/transform-no-reuse--O1.exe": "4ae3d5bcf0bf53c17e7b4f30a8b8b3715f1600f88d94ae30a0af2543b81aae3c",
+    "record-ownership/packed_input_windows/transform-no-reuse--O1.status": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+    "record-ownership/packed_input_windows/transform-no-reuse--O1.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "record-ownership/packed_input_windows/transform-no-reuse--O1.stdout": "c2115f38d48827fbe24daa31c4a274b58e7c2734dba4a01c3827d7af699e7346",
+    "record-ownership/packed_input_windows/transform-no-reuse--O2.c": "8b3559ec6ffdb0529b0d383582452b76e3c2300e20c0e40e5a0f28ecec889b2b",
+    "record-ownership/packed_input_windows/transform-no-reuse--O2.exe": "51d7fb5b614fb33c183d43cb8a8bf6e3066bd0eeedd830edfaa5beaab047fe59",
+    "record-ownership/packed_input_windows/transform-no-reuse--O2.status": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+    "record-ownership/packed_input_windows/transform-no-reuse--O2.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "record-ownership/packed_input_windows/transform-no-reuse--O2.stdout": "c2115f38d48827fbe24daa31c4a274b58e7c2734dba4a01c3827d7af699e7346",
+    "record-ownership/packed_input_windows/transform-reversed-complete--O1.c": "ced91bbcd379df2fc549e8f4f642c9307d0e2b0a5f022a250372b49386fa7c57",
+    "record-ownership/packed_input_windows/transform-reversed-complete--O1.exe": "d96061397e9a62302ecb7951fa8d32a308444a17f811cd746b6589178a578877",
+    "record-ownership/packed_input_windows/transform-reversed-complete--O1.status": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+    "record-ownership/packed_input_windows/transform-reversed-complete--O1.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "record-ownership/packed_input_windows/transform-reversed-complete--O1.stdout": "c2115f38d48827fbe24daa31c4a274b58e7c2734dba4a01c3827d7af699e7346",
+    "record-ownership/packed_input_windows/transform-reversed-complete--O2.c": "ced91bbcd379df2fc549e8f4f642c9307d0e2b0a5f022a250372b49386fa7c57",
+    "record-ownership/packed_input_windows/transform-reversed-complete--O2.exe": "ba7951d4a39ea0f124d928c85615151382a991f4d243cde3462be2fc77ae8518",
+    "record-ownership/packed_input_windows/transform-reversed-complete--O2.status": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+    "record-ownership/packed_input_windows/transform-reversed-complete--O2.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "record-ownership/packed_input_windows/transform-reversed-complete--O2.stdout": "c2115f38d48827fbe24daa31c4a274b58e7c2734dba4a01c3827d7af699e7346",
+    "record-ownership/packed_input_windows/transform-reversed-corrupt-input--O1.c": "acb0162987a04988c3fc8a67239a96f4d18e03572098b4f54fa97d41866a0ef0",
+    "record-ownership/packed_input_windows/transform-reversed-corrupt-input--O1.exe": "ef965752320c4757446d6e8d5e95a81d480153bfcdfe44a03a53ebacb7360e14",
+    "record-ownership/packed_input_windows/transform-reversed-corrupt-input--O1.status": "30a04013ee288b5af154df0d07bd07277f06b5c4292493fb9a4a2bb65b8456a9",
+    "record-ownership/packed_input_windows/transform-reversed-corrupt-input--O1.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "record-ownership/packed_input_windows/transform-reversed-corrupt-input--O1.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "record-ownership/packed_input_windows/transform-reversed-corrupt-input--O2.c": "acb0162987a04988c3fc8a67239a96f4d18e03572098b4f54fa97d41866a0ef0",
+    "record-ownership/packed_input_windows/transform-reversed-corrupt-input--O2.status": "30a04013ee288b5af154df0d07bd07277f06b5c4292493fb9a4a2bb65b8456a9",
+    "record-ownership/packed_input_windows/transform-reversed-corrupt-input--O2.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "record-ownership/packed_input_windows/transform-reversed-corrupt-input--O2.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "record-ownership/packed_input_windows/transform-reversed-missing-input--O1.c": "565cd33e49eb327aad646426d1c9975f9570047f827d11f63a877ca8cc7689d4",
+    "record-ownership/packed_input_windows/transform-reversed-corrupt-input--O2.exe": "164ead44f5ebcd21fc061e42e69ec3409b59baf10860dc02d8bd40e94d42b12c",
+    "record-ownership/packed_input_windows/transform-reversed-missing-input--O1.exe": "3037e5747ba16dc6a2f8740bc685b01b2bee5f54dbea6fd2d678f1a491ad00fb",
+    "record-ownership/packed_input_windows/transform-reversed-missing-input--O1.status": "78cb3ab51c891a06f32570c99d43657d71fb401ad65a2103d8794fb6a453be63",
+    "record-ownership/packed_input_windows/transform-reversed-missing-input--O1.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "record-ownership/packed_input_windows/transform-reversed-missing-input--O1.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "record-ownership/packed_input_windows/transform-reversed-missing-input--O2.c": "565cd33e49eb327aad646426d1c9975f9570047f827d11f63a877ca8cc7689d4",
+    "record-ownership/packed_input_windows/transform-reversed-missing-input--O2.exe": "86d9ae3d367d83bc8b71041604800c71185d071337257cd62e352761aa37aaa5",
+    "record-ownership/packed_input_windows/transform-reversed-missing-input--O2.status": "78cb3ab51c891a06f32570c99d43657d71fb401ad65a2103d8794fb6a453be63",
+    "record-ownership/packed_input_windows/transform-reversed-missing-input--O2.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "record-ownership/packed_input_windows/transform-reversed-missing-input--O2.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "record-ownership/packed_input_windows/transform-reversed-missing-pairs--O1.c": "9d66951b6c0f51f89f3fb5ae1145e8b4417af55cb2a521ebb3f95c58261cc5d8",
+    "record-ownership/packed_input_windows/transform-reversed-missing-pairs--O1.exe": "291d078e638a65052b241572c4751107f9b00effe371d12963346295cd014ea0",
+    "record-ownership/packed_input_windows/transform-reversed-missing-pairs--O1.status": "78cb3ab51c891a06f32570c99d43657d71fb401ad65a2103d8794fb6a453be63",
+    "record-ownership/packed_input_windows/transform-reversed-missing-pairs--O1.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "record-ownership/packed_input_windows/transform-reversed-missing-pairs--O1.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "record-ownership/packed_input_windows/transform-reversed-missing-pairs--O2.c": "9d66951b6c0f51f89f3fb5ae1145e8b4417af55cb2a521ebb3f95c58261cc5d8",
+    "record-ownership/packed_input_windows/transform-reversed-missing-pairs--O2.exe": "13ebf80d1cbc7fffb1b97e8c33c9694a2caff3f4c7fd807d27cd4496d6f032b4",
+    "record-ownership/packed_input_windows/transform-reversed-missing-pairs--O2.status": "78cb3ab51c891a06f32570c99d43657d71fb401ad65a2103d8794fb6a453be63",
+    "record-ownership/packed_input_windows/transform-reversed-missing-pairs--O2.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "record-ownership/packed_input_windows/transform-reversed-missing-pairs--O2.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "record-ownership/packed_input_windows/transform-reversed-no-reuse--O1.c": "61f31f609d8c20f02237776a08dc2f3ced3010c4f03501924903788d817f2af0",
+    "record-ownership/packed_input_windows/transform-reversed-no-reuse--O1.exe": "457977054d90b2245be496df3f22765c461ab6c8b36f1156a9feea412da4832d",
+    "record-ownership/packed_input_windows/transform-reversed-no-reuse--O1.status": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+    "record-ownership/packed_input_windows/transform-reversed-no-reuse--O1.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "record-ownership/packed_input_windows/transform-reversed-no-reuse--O1.stdout": "c2115f38d48827fbe24daa31c4a274b58e7c2734dba4a01c3827d7af699e7346",
+    "record-ownership/packed_input_windows/transform-reversed-no-reuse--O2.c": "61f31f609d8c20f02237776a08dc2f3ced3010c4f03501924903788d817f2af0",
+    "record-ownership/packed_input_windows/transform-reversed-no-reuse--O2.exe": "87cfdc075eb9885562c609bc88a541807b965bbd45b5d735f720e4cc878321da",
+    "record-ownership/packed_input_windows/transform-reversed-no-reuse--O2.status": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+    "record-ownership/packed_input_windows/transform-reversed-no-reuse--O2.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "record-ownership/packed_input_windows/transform-reversed-no-reuse--O2.stdout": "c2115f38d48827fbe24daa31c4a274b58e7c2734dba4a01c3827d7af699e7346"
+  },
+  "observations": {
+    "record-ownership/packed_input_windows/transform-complete--O1": {
+      "status": 0,
+      "binarySha256": "76785923144dafae0386fb7c67dabb4cbd8a98e1b582eee4c1de17d456f88bd2"
+    },
+    "record-ownership/packed_input_windows/transform-complete--O2": {
+      "status": 0,
+      "binarySha256": "15c11feee61f4f97c500d1446d995223b9b24779624560bbb3f6e750d8621e55"
+    },
+    "record-ownership/packed_input_windows/transform-corrupt-input--O1": {
+      "status": 241,
+      "binarySha256": "247104132e9d7271842029daca7f34224370a0b20d48181603b164206871d89a"
+    },
+    "record-ownership/packed_input_windows/transform-corrupt-input--O2": {
+      "status": 241,
+      "binarySha256": "4bc74272de31a5a227c46e20a9771638fb9e9fe60c0173271411f8be83dfc66d"
+    },
+    "record-ownership/packed_input_windows/transform-missing-input--O1": {
+      "status": 90,
+      "binarySha256": "54c382f6792ab3d7009a8cc73434343a69b062d3831af5127810ca2ce3147614"
+    },
+    "record-ownership/packed_input_windows/transform-missing-input--O2": {
+      "status": 90,
+      "binarySha256": "23abdf4e42d3315b381d68b03c1e15c210eb04d8db59efc3f13a33739182549b"
+    },
+    "record-ownership/packed_input_windows/transform-missing-pairs--O1": {
+      "status": 90,
+      "binarySha256": "3dd96150e93ae51e18dc216a896398ff1e5ba9befe66d2c6ad3f84099053f546"
+    },
+    "record-ownership/packed_input_windows/transform-missing-pairs--O2": {
+      "status": 90,
+      "binarySha256": "53a414c298a6ae34a18d7dbd0e2785b9a9450509fa3c317f222341b87f027d71"
+    },
+    "record-ownership/packed_input_windows/transform-no-reuse--O1": {
+      "status": 0,
+      "binarySha256": "4ae3d5bcf0bf53c17e7b4f30a8b8b3715f1600f88d94ae30a0af2543b81aae3c"
+    },
+    "record-ownership/packed_input_windows/transform-no-reuse--O2": {
+      "status": 0,
+      "binarySha256": "51d7fb5b614fb33c183d43cb8a8bf6e3066bd0eeedd830edfaa5beaab047fe59"
+    },
+    "record-ownership/packed_input_windows/transform-reversed-complete--O1": {
+      "status": 0,
+      "binarySha256": "d96061397e9a62302ecb7951fa8d32a308444a17f811cd746b6589178a578877"
+    },
+    "record-ownership/packed_input_windows/transform-reversed-complete--O2": {
+      "status": 0,
+      "binarySha256": "ba7951d4a39ea0f124d928c85615151382a991f4d243cde3462be2fc77ae8518"
+    },
+    "record-ownership/packed_input_windows/transform-reversed-corrupt-input--O1": {
+      "status": 241,
+      "binarySha256": "ef965752320c4757446d6e8d5e95a81d480153bfcdfe44a03a53ebacb7360e14"
+    },
+    "record-ownership/packed_input_windows/transform-reversed-corrupt-input--O2": {
+      "status": 241,
+      "binarySha256": "164ead44f5ebcd21fc061e42e69ec3409b59baf10860dc02d8bd40e94d42b12c"
+    },
+    "record-ownership/packed_input_windows/transform-reversed-missing-input--O1": {
+      "status": 90,
+      "binarySha256": "3037e5747ba16dc6a2f8740bc685b01b2bee5f54dbea6fd2d678f1a491ad00fb"
+    },
+    "record-ownership/packed_input_windows/transform-reversed-missing-input--O2": {
+      "status": 90,
+      "binarySha256": "86d9ae3d367d83bc8b71041604800c71185d071337257cd62e352761aa37aaa5"
+    },
+    "record-ownership/packed_input_windows/transform-reversed-missing-pairs--O1": {
+      "status": 90,
+      "binarySha256": "291d078e638a65052b241572c4751107f9b00effe371d12963346295cd014ea0"
+    },
+    "record-ownership/packed_input_windows/transform-reversed-missing-pairs--O2": {
+      "status": 90,
+      "binarySha256": "13ebf80d1cbc7fffb1b97e8c33c9694a2caff3f4c7fd807d27cd4496d6f032b4"
+    },
+    "record-ownership/packed_input_windows/transform-reversed-no-reuse--O1": {
+      "status": 0,
+      "binarySha256": "457977054d90b2245be496df3f22765c461ab6c8b36f1156a9feea412da4832d"
+    },
+    "record-ownership/packed_input_windows/transform-reversed-no-reuse--O2": {
+      "status": 0,
+      "binarySha256": "87cfdc075eb9885562c609bc88a541807b965bbd45b5d735f720e4cc878321da"
+    }
+  },
+  "clippy": "passed",
+  "native": "cleanup probe passed; CLI output comparison failed",
+  "hiddenFailure": "bash pipeline lacked pipefail"
+}

@@ -1,0 +1,12 @@
+{
+  "source": "ba23c6ea7226c31f626839530035e717f3ce05c7",
+  "job": 126610609022,
+  "unitPassed": 277,
+  "unitIgnored": 4,
+  "integrationPassed": 93,
+  "nativeImages": 642,
+  "newProbes": 34,
+  "statusRecords": 655,
+  "compilerCostInputs": 2,
+  "diagnostics": "No unexplained failures or warnings; intended observer statuses and diagnostics verified"
+}

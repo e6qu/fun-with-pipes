@@ -1,0 +1,16 @@
+{
+  "source": "9ad9d1625751b84957a3dccfc9f8c31de197e2ab",
+  "run": 41830904200,
+  "job": 126577546053,
+  "conclusion": "failure",
+  "commands": 12,
+  "files": 43,
+  "failedCommands": [],
+  "diagnostics": [
+    "2026-11-04T12:47:38.9780795Z test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 276 filtered out; finished in 0.00s",
+    "2026-11-04T12:47:39.0030530Z test result: FAILED. 3 passed; 1 failed; 0 ignored; 0 measured; 277 filtered out; finished in 0.00s",
+    "2026-11-04T12:47:39.0065772Z ##[error]Process completed with exit code 1.",
+    "2026-11-04T12:48:10.2272755Z test result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 4 filtered out; finished in 11.10s"
+  ],
+  "logSha256": "9b7a5f8eabab3ce8b4093b63257d8963b04a7c3bc338303b5d258fd6cf08802a"
+}

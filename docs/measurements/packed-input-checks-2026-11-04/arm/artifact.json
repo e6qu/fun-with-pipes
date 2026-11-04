@@ -1,0 +1,20 @@
+{
+  "id": 13329907001,
+  "node_id": "MDg6QXJ0aWZhY3QxMzMyOTkwNzAwMQ==",
+  "name": "packed-input-checks-ubuntu-24.04-arm",
+  "size_in_bytes": 127325811,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13329907001",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13329907001/zip",
+  "expired": false,
+  "digest": "sha256:2065c0a7bdf91725eab4fbcddc1052cb626b7dda7d680636854605fed71b7c64",
+  "created_at": "2026-11-04T13:59:04Z",
+  "updated_at": "2026-11-04T13:59:04Z",
+  "expires_at": "2027-02-02T13:42:18Z",
+  "workflow_run": {
+    "id": 41840527818,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "packed-derivative-inputs",
+    "head_sha": "ba23c6ea7226c31f626839530035e717f3ce05c7"
+  }
+}

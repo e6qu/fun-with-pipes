@@ -64,5 +64,7 @@ growth is 16 bytes. These reductions are not a general speedup and do not close
 older timing goals. Four wrong-CPU hosts were rejected before building/timing;
 all are retained and only their unmeasured sessions were replaced.
 
-Final platform gates and delivery remain pending; [the handoff](../../development-state.md)
-records the exact jobs and the one active delivery PR.
+All nine production jobs and documentation pass at `81bce309`; every full and
+target log is audited. [Final gates](platforms/final-gates.json) retain all ten
+records. [PR #256](../../roadmap-history.md#matched-optional-results-pr-256)
+merged as `cfb6dcc4` with the identical tested tree and verified one-line message.

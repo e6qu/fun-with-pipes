@@ -31,7 +31,7 @@ The arrows show stage order; the table identifies the responsible source files.
 | Infer and check | Expressions → ordinary types, effects, resource checks and resolved calls | `src/infer.rs`, `src/types.rs` |
 | Specialize and lower | Reachable concrete uses → typed IR; evaluate `comptime` expressions | `src/mono.rs`, `src/ir.rs` |
 | Preserve resources | Record original resource scopes before transformations | `src/resource.rs` |
-| Optimize | Matrix specialization → pure-constructor proof → simplification/inlining → known callback specialization → fusion → self-tail proof | `src/fuse.rs`, `src/opt.rs`, `src/opt/stages.rs`, `src/tailrec.rs` |
+| Optimize | Matrix specialization → pure-constructor proof → simplification/inlining → known scoped/callback specialization → fusion → self-tail proof | `src/fuse.rs`, `src/opt.rs`, `src/opt/scoped.rs`, `src/opt/stages.rs`, `src/tailrec.rs` |
 | Interpret | Check entry lifetimes, then execute typed IR directly | `src/arc.rs`, `src/arc_scope.rs`, `src/interp.rs` |
 | Or generate native code | Select representations, prove direct-call borrows, insert and verify reference operations, check ownership for default ARC execution, emit C/runtime | `src/cgen.rs`, `src/rc/borrows.rs`, `src/rc.rs`, `src/ownership.rs` |
 | Compile and link | Generated C and required libraries → native executable/library or supported WebAssembly module | C toolchain, selected by `src/cgen.rs` |
@@ -92,6 +92,22 @@ all known callers together; the source function still takes one argument.
 - Exclude function values, entry points, recursion and unproved ownership uses.
 - Keep input lists alive while the packed mapper reads their numeric fields.
 - Check the rewritten typed IR before inserting ownership operations.
+
+The next derivative-storage group adds two bounded transformations, with
+[grouped verification still in progress](measurements/packed-derivative-inputs.md):
+
+1. `src/opt/scoped.rs` exposes a closed, known objective inside an existing
+   derivative-scope worker. It keeps scope entry and argument evaluation in
+   place, reuses each specialization, and obeys the existing body/work limits.
+2. `src/cgen/packed_inputs.rs` replaces an eligible private input-record list
+   with one numeric buffer. A pair callback borrows neighboring windows of that
+   buffer. Input construction, pair mapping and folding still finish in order.
+
+The second pass runs **after numeric-parameter lowering**: a forwarding callback
+must first expose its field reads before the packing proof can accept it.
+Both changes precede ownership insertion. Extra reads, escaping data, resource
+anchors and branch-crossing aliases exclude packing. No source-level conversion
+or public list representation changes.
 
 During C emission, `src/cgen/field_transfers.rs` can also move a complete group of
 already-separated field owners. It checks the emitted ownership expression;

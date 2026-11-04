@@ -1,0 +1,99 @@
+{
+  "source": "5f63ea1a9a7fb7a6bc1068bbd84c4224c176b106",
+  "artifact": {
+    "id": 13337431626,
+    "node_id": "MDg6QXJ0aWZhY3QxMzMzNzQzMTYyNg==",
+    "name": "descent-peers-ubuntu-latest-2",
+    "size_in_bytes": 38073468,
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13337431626",
+    "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13337431626/zip",
+    "expired": false,
+    "digest": "sha256:58aaf3684bec2d2d128d49c68c0ae1fcfe17e8e55b0d2fdd04622c1a449868b3",
+    "created_at": "2026-11-04T15:18:13Z",
+    "updated_at": "2026-11-04T15:18:13Z",
+    "expires_at": "2027-02-02T14:59:46Z",
+    "workflow_run": {
+      "id": 41853137417,
+      "repository_id": 1400763332,
+      "head_repository_id": 1400763332,
+      "head_branch": "roadmap/packed-input-measurement-2026-11-04",
+      "head_sha": "5f63ea1a9a7fb7a6bc1068bbd84c4224c176b106"
+    }
+  },
+  "session": 2,
+  "cases": {
+    "3-1": {
+      "medianNs": {
+        "fwp-ad": 72226491.5,
+        "fwp-ad-identical": 71025531.0,
+        "fwp-ad-reference": 70596050.5
+      },
+      "quarters": [
+        {
+          "begin": 0,
+          "end": 24,
+          "medianNs": {
+            "fwp-ad": 72315239.5,
+            "fwp-ad-identical": 71670057.0,
+            "fwp-ad-reference": 70138207.5
+          },
+          "candidateReference": 1.0310391736201698,
+          "identicalRatio": 1.0090021206485158
+        },
+        {
+          "begin": 24,
+          "end": 49,
+          "medianNs": {
+            "fwp-ad": 72395190,
+            "fwp-ad-identical": 71635458,
+            "fwp-ad-reference": 70349284
+          },
+          "candidateReference": 1.0290821154626109,
+          "identicalRatio": 1.0106055300155965
+        },
+        {
+          "begin": 49,
+          "end": 73,
+          "medianNs": {
+            "fwp-ad": 70885782.5,
+            "fwp-ad-identical": 70387470.0,
+            "fwp-ad-reference": 70589346.0
+          },
+          "candidateReference": 1.0041994510049719,
+          "identicalRatio": 1.0070795625982862
+        },
+        {
+          "begin": 73,
+          "end": 98,
+          "medianNs": {
+            "fwp-ad": 73172117,
+            "fwp-ad-identical": 70745386,
+            "fwp-ad-reference": 71492691
+          },
+          "candidateReference": 1.023490876850614,
+          "identicalRatio": 1.0343023218503606
+        }
+      ],
+      "managed": {
+        "fwp-ad": {
+          "requests": 8196,
+          "requestedBytes": 245856,
+          "retains": 1536,
+          "peakChargedBytes": 16688,
+          "finalChargedBytes": 0
+        },
+        "fwp-ad-reference": {
+          "requests": 11780,
+          "requestedBytes": 319584,
+          "retains": 3072,
+          "peakChargedBytes": 16752,
+          "finalChargedBytes": 0
+        }
+      },
+      "phaseObservers": {
+        "fwp-ad": 0.9514567423901945,
+        "fwp-ad-reference": 0.9543131238831638
+      }
+    }
+  }
+}

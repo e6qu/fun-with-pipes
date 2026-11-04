@@ -1,0 +1,172 @@
+{
+  "source": "5f63ea1a9a7fb7a6bc1068bbd84c4224c176b106",
+  "artifact": {
+    "id": 13337252922,
+    "node_id": "MDg6QXJ0aWZhY3QxMzMzNzI1MjkyMg==",
+    "name": "descent-peers-ubuntu-latest-1",
+    "size_in_bytes": 38073193,
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13337252922",
+    "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13337252922/zip",
+    "expired": false,
+    "digest": "sha256:2eecd5f4864298ec5f8a5708acfebb2d1232d6bbaa99445e69b54561e3a8a5f9",
+    "created_at": "2026-11-04T15:19:49Z",
+    "updated_at": "2026-11-04T15:19:49Z",
+    "expires_at": "2027-02-02T14:59:46Z",
+    "workflow_run": {
+      "id": 41853137417,
+      "repository_id": 1400763332,
+      "head_repository_id": 1400763332,
+      "head_branch": "roadmap/packed-input-measurement-2026-11-04",
+      "head_sha": "5f63ea1a9a7fb7a6bc1068bbd84c4224c176b106"
+    }
+  },
+  "session": 1,
+  "cases": {
+    "3-199": {
+      "medianNs": {
+        "fwp-ad": 45376927.5,
+        "fwp-ad-identical": 46449097.5,
+        "fwp-ad-reference": 55308271.5
+      },
+      "quarters": [
+        {
+          "begin": 0,
+          "end": 24,
+          "medianNs": {
+            "fwp-ad": 46266260.0,
+            "fwp-ad-identical": 48523704.0,
+            "fwp-ad-reference": 58069018.0
+          },
+          "candidateReference": 0.7967460376202676,
+          "identicalRatio": 0.953477500398568
+        },
+        {
+          "begin": 24,
+          "end": 49,
+          "medianNs": {
+            "fwp-ad": 45276378,
+            "fwp-ad-identical": 45191382,
+            "fwp-ad-reference": 54155108
+          },
+          "candidateReference": 0.8360499991985982,
+          "identicalRatio": 1.0018808010784004
+        },
+        {
+          "begin": 49,
+          "end": 73,
+          "medianNs": {
+            "fwp-ad": 45376927.5,
+            "fwp-ad-identical": 46161407.5,
+            "fwp-ad-reference": 55609572.5
+          },
+          "candidateReference": 0.8159913025765483,
+          "identicalRatio": 0.9830057174924747
+        },
+        {
+          "begin": 73,
+          "end": 98,
+          "medianNs": {
+            "fwp-ad": 45001217,
+            "fwp-ad-identical": 45901245,
+            "fwp-ad-reference": 53825156
+          },
+          "candidateReference": 0.8360629182384534,
+          "identicalRatio": 0.9803920786898046
+        }
+      ],
+      "managed": {
+        "fwp-ad": {
+          "requests": 89220,
+          "requestedBytes": 2448512,
+          "retains": 12768,
+          "peakChargedBytes": 1408,
+          "finalChargedBytes": 0
+        },
+        "fwp-ad-reference": {
+          "requests": 133796,
+          "requestedBytes": 3365504,
+          "retains": 31872,
+          "peakChargedBytes": 1488,
+          "finalChargedBytes": 0
+        }
+      },
+      "phaseObservers": {
+        "fwp-ad": 1.2209302761523009,
+        "fwp-ad-reference": 1.1549511145691562
+      }
+    },
+    "3-1999": {
+      "medianNs": {
+        "fwp-ad": 49317163.5,
+        "fwp-ad-identical": 50689799.0,
+        "fwp-ad-reference": 60906930.0
+      },
+      "quarters": [
+        {
+          "begin": 0,
+          "end": 24,
+          "medianNs": {
+            "fwp-ad": 51058783.5,
+            "fwp-ad-identical": 51469549.5,
+            "fwp-ad-reference": 61621686.0
+          },
+          "candidateReference": 0.8285846560576093,
+          "identicalRatio": 0.9920192423677615
+        },
+        {
+          "begin": 24,
+          "end": 49,
+          "medianNs": {
+            "fwp-ad": 49553058,
+            "fwp-ad-identical": 51020015,
+            "fwp-ad-reference": 61730513
+          },
+          "candidateReference": 0.8027319973835306,
+          "identicalRatio": 0.971247421232628
+        },
+        {
+          "begin": 49,
+          "end": 73,
+          "medianNs": {
+            "fwp-ad": 49100641.5,
+            "fwp-ad-identical": 50588879.0,
+            "fwp-ad-reference": 59418441.5
+          },
+          "candidateReference": 0.8263535740835612,
+          "identicalRatio": 0.9705817260746181
+        },
+        {
+          "begin": 73,
+          "end": 98,
+          "medianNs": {
+            "fwp-ad": 49125784,
+            "fwp-ad-identical": 49984947,
+            "fwp-ad-reference": 60258145
+          },
+          "candidateReference": 0.8152554978252318,
+          "identicalRatio": 0.9828115652498342
+        }
+      ],
+      "managed": {
+        "fwp-ad": {
+          "requests": 111956,
+          "requestedBytes": 3070928,
+          "retains": 15996,
+          "peakChargedBytes": 512,
+          "finalChargedBytes": 0
+        },
+        "fwp-ad-reference": {
+          "requests": 167928,
+          "requestedBytes": 4222352,
+          "retains": 39984,
+          "peakChargedBytes": 592,
+          "finalChargedBytes": 0
+        }
+      },
+      "phaseObservers": {
+        "fwp-ad": 1.2850438166620808,
+        "fwp-ad-reference": 1.3001133482400464
+      }
+    }
+  }
+}

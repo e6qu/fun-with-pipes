@@ -39,6 +39,9 @@ class GradientArrayReference(unittest.TestCase):
         self.assertIn(b'fn scalar_buffer_zip(&mut self, callback:', restored['src/cgen.rs'])
         self.assertIn(b'range_zip::lower(&mut numeric_program);', restored['src/cgen.rs'])
         self.assertIn(b'scalar_map_zip::lower(&mut numeric_program);', restored['src/cgen.rs'])
+        self.assertIn(b'packed_inputs::lower(&mut numeric_program);', restored['src/cgen.rs'])
+        self.assertIn(b'Body::PackedRecordRangeZip { .. }', restored['src/interp.rs'])
+        self.assertIn(b'Body::PackedRecordPairs { .. }', restored['src/interp.rs'])
 
     def test_independent_audit_reconstructs_the_same_seven_sources(self):
         restored = REFERENCE.reference_sources(CURRENT)

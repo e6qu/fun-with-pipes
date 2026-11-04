@@ -37,6 +37,15 @@ identities. Do not edit observations to make an old experiment describe new code
 
 ## Numerical applications
 
+- [Private derivative inputs](packed-derivative-inputs.md): one buffer replaces
+  private record boxes and list cells while keeping evaluation order. Native
+  correctness and compiler-cost limits pass. [Runtime results](packed-input-time-2026-11-04/README.md)
+  show lower allocation/live managed storage and faster long solves; three AMD64
+  timing limits remain open.
+- [Immediately matched list results](matched-option-time-2026-11-04/README.md):
+  removes one temporary allocation and retain per history solve; some larger
+  cases remain slightly slower within the declared limit. Verified in PR #256.
+
 - [Final iteration values](final-iteration-time-2026-11-04/README.md): four audited
   sessions; largest history case uses 97.7% less peak managed storage and runs
   5.1–5.9% faster. Five speed targets and one small-case regression remain open.
@@ -94,6 +103,9 @@ These reports follow different versions of derivative descent. Read the variant 
 
 ## Compiler cost
 
+- [Packed input compiler cost](packed-input-analysis-2026-11-04/README.md): seven
+  inputs on two architectures; maximum time/RSS increases of 4.32%/0.82%, with
+  all live-work and identical-copy checks passing.
 - [Final-iteration compiler cost](final-iteration-analysis-2026-11-04/README.md):
   nine passing timing cases, one noisy AMD64 case and separate process-memory bounds.
 - [Ownership analysis: creation-site correctness, paired cost and size budgets](ownership-analysis.md)

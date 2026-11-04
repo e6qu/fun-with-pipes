@@ -1,0 +1,45 @@
+{
+  "total_count": 2,
+  "artifacts": [
+    {
+      "id": 13339905297,
+      "node_id": "MDg6QXJ0aWZhY3QxMzMzOTkwNTI5Nw==",
+      "name": "packed-input-report-retained",
+      "size_in_bytes": 59387202,
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13339905297",
+      "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13339905297/zip",
+      "expired": false,
+      "digest": "sha256:5f4994f73eea0f95c040dbdffe5d221b3aeda42fa13041f9f3abb8aca4abaa70",
+      "created_at": "2026-11-04T15:39:14Z",
+      "updated_at": "2026-11-04T15:39:14Z",
+      "expires_at": "2027-02-02T15:20:38Z",
+      "workflow_run": {
+        "id": 41856724419,
+        "repository_id": 1400763332,
+        "head_repository_id": 1400763332,
+        "head_branch": "roadmap/packed-input-measurement-2026-11-04",
+        "head_sha": "5f63ea1a9a7fb7a6bc1068bbd84c4224c176b106"
+      }
+    },
+    {
+      "id": 13338169034,
+      "node_id": "MDg6QXJ0aWZhY3QxMzMzODE2OTAzNA==",
+      "name": "packed-input-report-summary",
+      "size_in_bytes": 1050011,
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13338169034",
+      "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13338169034/zip",
+      "expired": false,
+      "digest": "sha256:a919a9c7da1409eb55767a96753fa7a739277a871a450f3c05368c3850db4f29",
+      "created_at": "2026-11-04T15:35:20Z",
+      "updated_at": "2026-11-04T15:35:20Z",
+      "expires_at": "2027-02-02T15:20:38Z",
+      "workflow_run": {
+        "id": 41856724419,
+        "repository_id": 1400763332,
+        "head_repository_id": 1400763332,
+        "head_branch": "roadmap/packed-input-measurement-2026-11-04",
+        "head_sha": "5f63ea1a9a7fb7a6bc1068bbd84c4224c176b106"
+      }
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "source": "5f63ea1a9a7fb7a6bc1068bbd84c4224c176b106",
+  "sessions": {
+    "x86_64-2": {
+      "run": 41853137417,
+      "job": 126654538572,
+      "failures": [
+        {
+          "case": "3-1",
+          "program": "fwp-ad",
+          "metric": "candidate/reference time",
+          "actual": 1.0230953571545762,
+          "limit": 1.02
+        }
+      ],
+      "files": 1334
+    },
+    "aarch64-1": {
+      "run": 41853137417,
+      "job": 126654538623,
+      "failures": [],
+      "files": 1334
+    },
+    "x86_64-1": {
+      "run": 41853137417,
+      "job": 126654538700,
+      "failures": [
+        {
+          "case": "3-199",
+          "program": "fwp-ad",
+          "metric": "identical median variation",
+          "actual": 1.0236280872035683,
+          "limit": 1.02
+        },
+        {
+          "case": "3-1999",
+          "program": "fwp-ad",
+          "metric": "identical median variation",
+          "actual": 1.0278328152429124,
+          "limit": 1.02
+        }
+      ],
+      "files": 1334
+    },
+    "aarch64-2": {
+      "run": 41853137417,
+      "job": 126654538896,
+      "failures": [],
+      "files": 1334
+    }
+  }
+}

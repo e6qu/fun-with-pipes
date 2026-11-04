@@ -1,0 +1,8 @@
+{
+  "source": "ba23c6ea7226c31f626839530035e717f3ce05c7",
+  "job": 126610537046,
+  "run": 41840511498,
+  "conclusion": "success",
+  "logSha256": "5b7b49fd4116a9a142938665b5ca3357c0d0d9acbd11555afe77ba13fa385077",
+  "diagnostics": "Only the intentionally failing test-runner control; no compiler warnings or failed job steps"
+}

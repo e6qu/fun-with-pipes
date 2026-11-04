@@ -6,6 +6,43 @@ and complete platform validation are different events. Measurements retain their
 original source and settings; old numbers are not measurements of current main.
 The linked PRs, runs and data records supply the detailed evidence.
 
+## Matched optional results (PR #256)
+
+[PR #256](https://github.com/e6qu/fun-with-pipes/pull/256) merged November 4 as
+`cfb6dcc4223e281188cf6159e0623368501e2294`. Its tree equals tested `81bce309`.
+All nine production jobs and documentation pass; every full/target log is audited,
+including all 155 Windows targets per architecture. [Final gates and logs](measurements/matched-option-fields-2026-11-04/platforms/final-gates.json)
+retain the evidence. The verified squash message is one line under 80 characters,
+without a body or trailers.
+
+For this expression, the selected native match receives the tag and `20` directly:
+
+```fwp
+[10, 20, 30] | nth 1 | match
+    Some value -> value + 1
+    None -> 0
+```
+
+It avoids allocating
+`Some 20`. The result is `21`. List `last` and internal final-iteration results
+use the same rule; whole-value results keep their storage. Borrowed reads acquire
+the selected owner, while iteration moves its owner. macOS log publication gets
+one explicit upload retry; tests are not retried or ignored.
+
+[Three-host cleanup controls](measurements/matched-option-fields-2026-11-04/README.md),
+[compiler costs](measurements/matched-option-analysis-2026-11-04/README.md) and
+[four runtime sessions](measurements/matched-option-time-2026-11-04/README.md)
+pass their frozen limits. Each history solve saves one request, 16 requested bytes
+and one retain; peak storage is unchanged. Some larger timings are up to 1.95%
+slower, within the 2% limit; maximum frame growth is 16 bytes. No general speedup
+is claimed. Rejected hosts and the first fixture failure remain recorded.
+
+Final collection takes 5.15s and verified retention 0.13s. Duplicate same-tree
+main runs `41836731497` and `41836731217` were cancelled after checking for
+failed jobs. Original preparation history remains at immutable
+`roadmap/matched-option-pre-delivery-2026-11-04`; measurement source `82963531`
+keeps its original tag. No completed timing was repeated.
+
 ## Final iteration values without histories (PR #255)
 
 [PR #255](https://github.com/e6qu/fun-with-pipes/pull/255) merged November 4 as

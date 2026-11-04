@@ -1,0 +1,32 @@
+{
+  "source": "5f63ea1a9a7fb7a6bc1068bbd84c4224c176b106",
+  "disabledTransformation": "scoped objective specialization and private numeric input packing",
+  "candidate": {
+    "src/mono.rs": "3cb509ede807a4677bf32efb53681c85ab65135b9ea36c78f85f6059e13a89d3",
+    "src/cgen.rs": "95dfd0ac8ffd96235ac2cb7a443bb7b34758584a5c4260fe27ec3a4b66a605d8"
+  },
+  "reference": {
+    "src/mono.rs": "f72257d4f4292ae986912073263d9be67128623e0dfdd6b889ec9e0d744995b7",
+    "src/cgen.rs": "81b30efe5457207993b941ad058e09c1906f484f5ebb7c3db994f096d795231d"
+  },
+  "unchanged": {
+    "src/ownership.rs": "26d7ebc592acbad1b83bd34150afb2d9b39f3c0a3691d35c8e1db6c059ac3c55",
+    "src/opt/scoped.rs": "98bcaefe45a0e2a1812a29b6285dd8f58c9d4fccbf34d5dce93bbe22fbf02358",
+    "src/cgen/packed_inputs.rs": "38f86805bceccb2d309a75f4a4900aaaeac64ab46aa6ac37119edd9db29a6e28",
+    "src/cgen/numeric_parameters.rs": "9e71a80e6fe40b3fa94f618b49b5581dc44dd7f49397f1990c0b683f790796ef",
+    "src/cgen/packed_records.rs": "199e790f7f6fbda882025935310ae5447e868afce4e6b242f82438da84588405",
+    "src/cgen/range_zip.rs": "37bae6e0728256bc04b8e59047bce3b54676c3cdd7465dfec34ffd34a6b5cc0b",
+    "src/fuse.rs": "94b7628849c9c7d1f702d0734be4802575053674e2d638331db59fef20f26772",
+    "src/opt.rs": "d64c3ad91dd89067dfb2e416d8fe13dfc4bcfc11b487f8b28a01919950726709",
+    "runtime/fwp_rt.c": "a3dacfe33d859d10f458e955ac46901a0c5c051c7ba3f8871ce488c5dfe3ba3e",
+    "runtime/fwp_rt_heap.c": "ac26a18c249847c5b6c25f02776eee417bf4eb4a98cbad60aec58f00338c5a6e",
+    "runtime/fwp_rt_prims.c": "5cd09defeb6fb7ab621229c1ec5065c1ad7c006dd8d8498cb7c756d458678317",
+    "runtime/fwp_rt_task.c": "5c65f5691766571fac773b9c260e753cb6280794b5362cd4b09ca822cc27e9e9",
+    "runtime/fwp_rt_kernel.c": "a731f9e46bc03ff47a0e5107519fe13e76d1d04681c18cdb8a9ebc6855da1739",
+    "lib/autodiff.fwp": "0274942f72e8ae60bceca2ca723a8f14a8dae3346ec71209aeb1ae8bf2841440",
+    "lib/list.fwp": "9f4988e962654e84695944abbb5fc97b01678a37915aebfc48d286fc1e375993"
+  },
+  "ownershipSha256": "26d7ebc592acbad1b83bd34150afb2d9b39f3c0a3691d35c8e1db6c059ac3c55",
+  "patchSha256": "98cd21c17d4e51e3e882c03b41e038ed27c304532cc90d334e0034e7df82fdbe",
+  "compilerSha256": "ed831ce1561ed08a3f0edb09ebad6ae3b9dbefb23b04f5f1a0598a98bcc6bfc4"
+}

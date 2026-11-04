@@ -13,6 +13,7 @@
 use crate::ir::*;
 use std::collections::HashSet;
 
+pub(crate) mod scoped;
 mod stages;
 
 const INLINE_SIZE: usize = 40;
