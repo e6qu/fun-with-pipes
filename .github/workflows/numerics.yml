@@ -292,6 +292,23 @@ jobs:
           cargo test --locked --lib opt::scoped::tests -- --nocapture || proof_status=1
           cargo test --locked --lib cgen::packed_inputs::tests -- --nocapture || proof_status=1
           exit "$proof_status"
+      - name: Check packed-input values and exceptional buffer cleanup
+        if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
+        env:
+          CARGO_NET_OFFLINE: 'true'
+          FWP_ARC_ARTIFACTS: packed-input-preflight
+        run: |
+          mkdir -p packed-input-preflight
+          status=0
+          cargo clippy --locked --lib --bin fwp --test zip_unwind_ownership -- -D warnings 2>&1 | tee packed-input-preflight/clippy.log || status=1
+          cargo test --locked --test zip_unwind_ownership packed_input_windows:: -- --test-threads=1 --nocapture 2>&1 | tee packed-input-preflight/native.log || status=1
+          exit "$status"
+      - uses: actions/upload-artifact@v7
+        if: ${{ always() && hashFiles('packed-input-preflight/**') != '' }}
+        with:
+          name: packed-input-preflight
+          path: packed-input-preflight/
+          if-no-files-found: error
       - uses: actions/upload-artifact@v7
         if: always()
         with:

@@ -59,8 +59,12 @@ resource regions and anchored/observable owners. Verify effect/trap order,
 exclusions and budget exhaustion. This proof extension precedes its implementation;
 the original frozen contract remains at its immutable tag.
 
-The storage pass follows existing packed-record and range lowering, before
-numeric parameter and ownership insertion. Use bounded local use analysis.
+The storage pass follows existing packed-record, range and numeric-parameter
+lowering, before ownership insertion. Numeric-parameter lowering must first
+expose field-only reads inside forwarding pair callbacks; selecting before it
+incorrectly misses the real gradient programs. The original frozen contract
+keeps that failed ordering; the retained preflight records its correction.
+Use bounded local use analysis.
 Reject additional reads, escapes, unknown consumers and branch-crossing aliases.
 Straight-line aliases may qualify only when every use resolves to the same two
 windows and no resource frame anchors the representation.

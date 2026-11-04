@@ -596,6 +596,43 @@ mod tests {
     }
 
     #[test]
+    fn forwarding_callbacks_require_numeric_callee_lowering_first() {
+        let mut program = program(0, true);
+        let record = program.funcs[2].locals[0].clone();
+        let nested = MT::Record(vec![
+            ("0".into(), record.clone()),
+            ("1".into(), record.clone()),
+        ]);
+        program.funcs.push(function(
+            "numeric-pair",
+            vec![nested],
+            record,
+            Body::Expr(Expr::Record(vec![
+                Expr::Field(Box::new(Expr::Field(Box::new(Expr::Local(0)), 0)), 0),
+                Expr::Field(Box::new(Expr::Field(Box::new(Expr::Local(0)), 1)), 1),
+            ])),
+        ));
+        program.funcs[2].body = Body::Expr(Expr::Call(
+            6,
+            vec![Expr::Record(vec![Expr::Local(0), Expr::Local(1)])],
+        ));
+        crate::ir::check_locals(&program).unwrap();
+        let mut before = program.clone();
+        lower(&mut before);
+        assert_eq!(before.funcs.len(), 7, "whole-record inputs must stay boxed");
+
+        // Exercise the production pass order, not just the two isolated passes.
+        let emitted = super::super::generate_exec(&program, 5, "caller").unwrap();
+        assert!(emitted.contains("/* packed-indexed-records :"));
+        assert!(emitted.contains("/* packed-neighbor-pairs :"));
+
+        super::super::numeric_parameters::lower(&mut program, &[5]);
+        lower(&mut program);
+        assert_eq!(program.funcs.len(), 9);
+        crate::ir::check_locals(&program).unwrap();
+    }
+
+    #[test]
     fn identical_consumers_share_generated_helpers() {
         let mut program = program(1, true);
         let caller = program.funcs[5].clone();
