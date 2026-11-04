@@ -43,7 +43,8 @@ No arithmetic reassociation, syntax, tracing, compatibility adapter or JIT.
 - For coordinate zip, start from `ScalarBufferZip` with its existing known
   scalar callback and either array argument position. Require its result type
   to equal the list element type. The array remains borrowed; consume the list.
-- Select a direct local input at a proved last use. Track later uses in bounded
+- Select a direct local input at a proved last use, or a returned array owner
+  under the extension below. Track later uses in bounded
   expression traversal, including other arguments, enclosing continuations and
   branches. Exclude resource regions, anchored owners and unproved paths.
   Do not rescan the whole remaining function for each candidate.
@@ -166,7 +167,7 @@ missing/duplicate/altered edits before timing. Retain both compiler identities.
 - Keep the seven existing compiler inputs and 48 scheduled compilations each.
   Run four untimed objective-scope checks plus two consuming-selection checks
   (candidate/reference) before any timing. The latter require live calls from
-  all five exports and reject consumption of an input read again afterward. Compiler elapsed time and peak RSS may grow at most 5%; frame growth
+  all seven exports and reject consumption of an input read again afterward. Compiler elapsed time and peak RSS may grow at most 5%; frame growth
   at most 128 bytes. Report code size; it is not the main performance objective.
 - C/Rust manual derivatives do different work; their ratios do not isolate
   language or ARC overhead. There is no equivalent Swift derivative peer.

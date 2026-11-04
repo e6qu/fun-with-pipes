@@ -99,6 +99,11 @@ def main():
         return result
 
     try:
+        for name, command in (('cc', [args.cc, '--version']),
+                              ('rustc', ['rustc', '--version', '--verbose']),
+                              ('cpu', ['lscpu'])):
+            result = run(command, environment, output / name)
+            assert result.stdout and not result.stderr
         for dimensions, updates, solves in CASES:
             for history in (False, True):
                 name = f'{dimensions}-{updates}-' + ('history' if history else 'current')

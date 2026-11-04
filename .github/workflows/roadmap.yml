@@ -61,6 +61,7 @@ jobs:
           python3 scripts/test-packed-input-reference.py
           python3 scripts/test-owned-numeric-reference.py
           python3 scripts/test-owned-numeric-census.py
+          python3 scripts/test-iteration-storage.py
           python3 scripts/test-gradient-array-budgets.py
       - name: Sorting-time evidence controls
         run: python3 scripts/test-sort-time-evidence.py

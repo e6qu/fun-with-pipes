@@ -27,6 +27,25 @@ solve. Public `grad` still returns a list.
 
 ## Following group: consumed numeric storage
 
+For example, subtracting adjustments `[1, 2]` from coordinates `[10, 20, 30]`
+produces `[9, 18]`: zip stops at the shorter input. Suppose another value keeps
+the original tail `[20, 30]`. The compiler may reuse the first coordinate cell,
+but must copy the second result cell:
+
+```text
+Before: caller ──► A:10 ──► B:20 ──► C:30
+                             ▲
+        saved ───────────────┘
+
+After:  result ──► A:9 ──► D:18
+        saved  ──► B:20 ──► C:30
+```
+
+Letters identify physical cells. `A` is reused; `D` is new. `B` and `C` keep
+their original values. Even if `C` has just one incoming link, the saved tail
+can still reach it through `B`, so checking `C` alone would be unsafe. The new
+entry checks the whole prefix and stops at the first shared cell.
+
 `zip-with` borrows its input lists and returns a fresh list spine. Under that
 [ownership contract](../../src/ownership.rs), its implementation cannot overwrite
 or free an input. The next group uses separate private consuming operations;

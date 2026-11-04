@@ -24,6 +24,66 @@ int main(void) {
     reuse_enabled = 0;
 #endif
     unsigned traps = 0, cancellations = 0, allocation_failures = 0;
+    /* The producer result is a temporary owner. A preceding record field is
+     * also an owner, even when no outside alias protects the original array. */
+    for (unsigned produced = 0; produced < 2; produced++)
+    for (unsigned length = 0; length < 3; length++)
+    for (unsigned observed = 0; observed < 2; observed++)
+    for (volatile int mode = 0; mode < 4; mode++)
+    for (int failure = 0; failure < 5; failure++) {
+        int n = lengths[length];
+        if (mode && (n < 2 || failure)) continue;
+        size_t live = owner_ledger_live, baseline = fwp_heap.live;
+        V input = 0;
+        if (produced) {
+            for (int i = n; i > 0; i--)
+                input = fwp_rc_fresh(fwp_cons(mode == 3 && i == 2 ? (V)INT64_MAX : (V)i, input));
+        } else {
+            input = fwp_rc_fresh(fwp_arr_new(n));
+            for (int i = 0; i < n; i++)
+                ARR(input)->d[i] = mode == 3 && i == 1 ? (V)INT64_MAX : (V)(i + 1);
+        }
+        if (observed) fwp_rc_dup(input);
+        size_t allocations = owner_ledger_allocations;
+        jmp_buf jump;
+        numeric_begin(&jump, mode, failure);
+        if (!setjmp(jump)) {
+            V output = produced ? TEMP_ENTRY(input) : SHARED_ENTRY(input);
+            if (mode) return 240;
+            V changed = produced ? output : OBJ(output)->f[1];
+            if (fwp_array_len(changed) != (size_t)n || numeric_calls != n) return 244;
+            for (int i = 0; i < n; i++) {
+                if (ARR(changed)->d[i] != (V)(i + 2)) return 241;
+                if (!produced && ARR(OBJ(output)->f[0])->d[i] != (V)(i + 1)) return 247;
+            }
+            if (!produced && (OBJ(output)->f[0] != input || changed == input)) return 242;
+            if (owner_ledger_allocations - allocations != (size_t)(produced ? 1 + !reuse_enabled : 2)) return 243;
+            if (produced) DROP_ARRAY(output);
+            else {
+                if (*fwp_rc_slot(output) != 1) return 248;
+                DROP_ARRAY(OBJ(output)->f[0]);
+                DROP_ARRAY(OBJ(output)->f[1]);
+                fwp_rc_free_obj(output);
+            }
+        } else {
+            if (mode == 1 || mode == 3) traps++;
+            else if (mode == 2) cancellations++;
+            else if (failure && numeric_allocations == failure) allocation_failures++;
+            else return 245;
+        }
+        if (!numeric_finish(mode)) return 246;
+        if (observed) {
+            V cursor = input;
+            for (int i = 0; i < n; i++) {
+                V value = produced ? OBJ(cursor)->f[0] : ARR(input)->d[i];
+                if (value != (mode == 3 && i == 1 ? (V)INT64_MAX : (V)(i + 1))) return 247;
+                if (produced) cursor = OBJ(cursor)->f[1];
+            }
+            if (input && *fwp_rc_slot(input) != 1) return 248;
+            if (produced) DROP_LIST(input); else DROP_ARRAY(input);
+        }
+        if (owner_ledger_live != live || fwp_heap.live != baseline || fwp_heap.rc_wide_len) return 90;
+    }
     const V bits32[] = {0, UINT32_C(0x80000000), 1, UINT32_C(0x7f800000),
         UINT32_C(0xffc00042), UINT32_C(0x7f800042), UINT32_C(0x3f800000)};
     const V bits64[] = {0, UINT64_C(0x8000000000000000), 1, UINT64_C(0x7ff0000000000000),

@@ -31,10 +31,10 @@ def scoped_output(name, specialized):
 
 
 def consuming_output(selected):
-    roots = ('mapped', 'mapped32', 'mapped64', 'update-left', 'update-right')
+    roots = ('mapped', 'mapped32', 'mapped64', 'update-left', 'update-right', 'mapped-produced', 'shared-first')
     source = '/* ---- program ---- */\n'
     for index, name in enumerate(roots):
-        private = 'consumed-scalar-array-map' if index < 3 else 'consumed-scalar-array-list-zip'
+        private = 'consumed-scalar-array-list-zip' if name in ('update-left', 'update-right') else 'consumed-scalar-array-map'
         if selected:
             source += f'/* {private} : T */\nstatic V f{100 + index}(V input) {{\nreturn input;\n}}\n'
         source += f'/* {name} : T */\nstatic V f{index}(V input) {{\nreturn f{100 + index}(input);\n}}\n'
@@ -45,7 +45,7 @@ def consuming_output(selected):
 
 class CompilerCosts(unittest.TestCase):
     def test_consuming_selection_requires_live_calls_and_retained_exclusion(self):
-        roots = ('mapped', 'mapped32', 'mapped64', 'update-left', 'update-right')
+        roots = ('mapped', 'mapped32', 'mapped64', 'update-left', 'update-right', 'mapped-produced', 'shared-first')
         source = consuming_output(True)
         self.assertEqual(set(ANALYSIS.consuming_cost_output(source, True)), {*roots, 'retained'})
         for index in range(len(roots)):

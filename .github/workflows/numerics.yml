@@ -118,12 +118,13 @@ jobs:
           python3 scripts/test-packed-input-reference.py 2>&1 | tee owned-numeric-checks/packed-reference.log || status=1
           python3 scripts/test-owned-numeric-reference.py 2>&1 | tee owned-numeric-checks/owned-reference.log || status=1
           python3 scripts/test-numeric-input-analysis.py 2>&1 | tee owned-numeric-checks/analysis-controls.log || status=1
+          python3 scripts/test-iteration-storage.py 2>&1 | tee owned-numeric-checks/selection-controls.log || status=1
           exit "$status"
       - name: Real gradient selection and input packing
         if: ${{ !cancelled() && steps.compiler_build.outcome == 'success' }}
         run: >-
           python3 scripts/inspect-iteration-storage.py --compiler target/debug/fwp
-          --expected-selection candidate --expected-input-storage packed --output owned-numeric-checks/selection
+          --expected-selection candidate --expected-input-storage packed --expected-owned-storage consuming --output owned-numeric-checks/selection
       - name: Verify live consuming calls and retained-input exclusion before timing
         if: ${{ !cancelled() && steps.compiler_build.outcome == 'success' }}
         run: |
@@ -246,7 +247,7 @@ jobs:
         if: ${{ !cancelled() && steps.compiler_build.outcome == 'success' }}
         run: >-
           python3 scripts/inspect-iteration-storage.py --compiler target/debug/fwp
-          --expected-selection candidate --expected-input-storage packed --output packed-input-checks/selection
+          --expected-selection candidate --expected-input-storage packed --expected-owned-storage consuming --output packed-input-checks/selection
       - name: Native histories, ownership, effects and autodiff
         if: ${{ !cancelled() && steps.compiler_build.outcome == 'success' }}
         run: >-
@@ -475,7 +476,7 @@ jobs:
         if: ${{ !cancelled() && steps.compiler_build.outcome == 'success' }}
         run: >-
           python3 scripts/inspect-iteration-storage.py --compiler target/debug/fwp
-          --expected-selection candidate --expected-input-storage packed
+          --expected-selection candidate --expected-input-storage packed --expected-owned-storage consuming
           --output final-iteration-checks/selection
       - name: Native histories, ownership, effects and autodiff
         if: ${{ !cancelled() && steps.compiler_build.outcome == 'success' }}
@@ -534,7 +535,7 @@ jobs:
           cargo fetch --locked
           CARGO_NET_OFFLINE=true cargo build --locked --bin fwp
       - name: Save raw and optimized IR and emitted C without timing programs
-        run: python3 scripts/inspect-iteration-storage.py --compiler target/debug/fwp --expected-selection candidate --expected-input-storage packed --output iteration-storage-review
+        run: python3 scripts/inspect-iteration-storage.py --compiler target/debug/fwp --expected-selection candidate --expected-input-storage packed --expected-owned-storage consuming --output iteration-storage-review
       - name: Check scoped and packed-input proof controls
         if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
         env:

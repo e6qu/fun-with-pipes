@@ -1,18 +1,35 @@
 # Current work
 
-**Next:** implement the [frozen selection extension](measurements/owned-numeric-updates.md#selection-extension-before-timing)
-and add complete-solve regression checks, then run grouped verification and the
-untimed allocation comparison. [Saved real-program IR/C](measurements/owned-numeric-selection-2026-11-04/README.md)
+**Next:** run grouped GCC/Clang verification of the implemented
+[selection extension](measurements/owned-numeric-updates.md#selection-extension-before-timing),
+including complete-solve selection and new ownership controls, before the untimed
+allocation comparison. [Saved real-program IR/C](measurements/owned-numeric-selection-2026-11-04/README.md)
 at `b8404dbb` proves a gap: the current-only solve selects neither operation;
 history selects only coordinate zip. Emitted-C temporaries do not exist yet at
 selection, and owned constructor fields were excluded too broadly. No timing has
 started; no whole-solve savings are claimed.
 
 [Native checks 41907057111](https://github.com/e6qu/fun-with-pipes/actions/runs/41907057111)
-at `b8404dbb` pass on both GCC hosts (`126844449792` / `126844449282`). All eighteen
-target logs, 660 images, 671 statuses and the isolated live-call fixtures are
-audited. Clang ARM64 `126844449700` is running integration targets. Preserve its
-outcome; isolated safety success does not establish complete-program selection.
+at `b8404dbb` pass on GCC ARM64/AMD64 (`126844449792` / `126844449282`) and Clang
+ARM64 (`126844449700`). Each passes 282 units (four ignored) and 103 integrations.
+All eighteen target logs, 660 images, 671 statuses, compiler diagnostics and
+isolated live-call fixtures per host are audited. These checks exposed no safety
+failure, but did not establish complete-program selection.
+
+The extension was frozen at `c99451ec` before this repair. Returned arrays now
+transfer their result owner; eligible constructors prepare owners for earlier
+fields before consuming a later field. New Rust ownership controls cover both
+alias orders and ordinary-call exclusions. Native probes cover temporary results,
+unobserved earlier fields, outside aliases, failure, cancellation and allocation
+counts. The real-program checker follows reachable calls and used closures;
+its regression fixture rejects the original saved source on both GCC hosts.
+
+Focused checks pass through the local guard in 15.01s: Rust formatting, workflow
+lint, three complete-program observer controls, ten compiler-driver controls,
+five consuming-reference, five packed-reference, six gradient-reference and five
+census controls. Roadmap audit passes 274 link sets and 106 immutable pairs.
+Results: `../gradient-work/owned-numeric-selection-local.json`. No local full build,
+native suite or timing was run. New compiler/native checks remain pending.
 
 The first run's [failures and passing controls](measurements/owned-numeric-preflight-2026-11-04/README.md)
 are retained: both GCC hosts pass 282 units (four ignored), 103 integrations and
@@ -31,9 +48,10 @@ variants, all six cases, both result forms and both workspace settings must
 match the exact allocation prediction and preserve aliases/cleanup.
 
 Keep [PR #257](https://github.com/e6qu/fun-with-pipes/pull/257) at `519fc966`.
-All six executed production jobs and docs pass; the three unexecuted macOS jobs
-were retried once the first attempt completed. Attempt 2 jobs: Intel ownership
-`126845864825`, ARM ownership `126845865096`, ARM regular `126845865460`.
+Eight production jobs and docs pass; the three unexecuted macOS jobs were retried
+once the first attempt completed. Attempt 2: Intel ownership `126845864825` is
+running its second test shard; ARM ownership `126845865096` and ARM regular
+`126845865460` pass and their full-log audits are in progress.
 Audit completed full logs and preserve carried-forward passing gates. Do not
 open a second PR or merge until every final-head gate passes.
 

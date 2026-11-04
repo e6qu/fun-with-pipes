@@ -118,6 +118,14 @@ fn consumed_numeric_owners_survive_sharing_traps_and_allocation_failure() {
             &format!("f{}", function_id(&emitted, "mapped")),
         )
         .replace(
+            "TEMP_ENTRY",
+            &format!("f{}", function_id(&emitted, "mapped-produced")),
+        )
+        .replace(
+            "SHARED_ENTRY",
+            &format!("f{}", function_id(&emitted, "shared-first")),
+        )
+        .replace(
             "MAP32_ENTRY",
             &format!("f{}", function_id(&emitted, "mapped32")),
         )

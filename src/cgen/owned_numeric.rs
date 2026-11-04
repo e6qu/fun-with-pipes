@@ -1,6 +1,6 @@
 //! Consume dead numeric inputs through explicit private entries, before ARC.
 //! One reverse walk records later uses; one rewrite changes selected calls.
-//! Branches share a conservative union of uses. Nested argument calls and
+//! Branches share a conservative union of uses. Ordinary call arguments and
 //! resource-bearing bodies are excluded rather than guessing owner lifetimes.
 use std::collections::{HashMap, HashSet};
 
@@ -27,22 +27,33 @@ fn selection(
     locals: &[MT],
     id: FuncId,
     args: &[Expr],
-) -> Option<(Local, Operation)> {
+) -> Option<(Option<Local>, Operation)> {
     let function = &program.funcs[id];
     match (&function.body, args) {
-        (Body::Prim(symbol), [Expr::Func(step), Expr::Local(input)])
+        (Body::Prim(symbol), [Expr::Func(step), input])
             if symbol == "array.map" && callback(program, *step, 1) =>
         {
             let worker = &program.funcs[*step];
             let (parameters, result) = worker.ty.params(1);
             let array = MT::Con("std::Array".into(), vec![result.clone()]);
             let (actual, output) = function.ty.params(2);
+            // A saturated call returns an owner at this exact evaluation
+            // point. It need not allocate: aliases still prevent reuse.
+            let local = match input {
+                Expr::Local(local) if locals.get(*local as usize) == Some(&array) => Some(*local),
+                Expr::Call(producer, arguments)
+                    if program.funcs[*producer].arity as usize == arguments.len()
+                        && program.funcs[*producer].ty.after_args(arguments.len()) == &array =>
+                {
+                    None
+                }
+                _ => return None,
+            };
             (parameters[0] == result
                 && function.arity == 2
                 && actual == vec![&worker.ty, &array]
-                && output == &array
-                && locals.get(*input as usize) == Some(&array))
-            .then_some((*input, Operation::Map(id, *step)))
+                && output == &array)
+                .then_some((local, Operation::Map(id, *step)))
         }
         (
             Body::ScalarBufferZip {
@@ -62,7 +73,7 @@ fn selection(
                 && locals.get(*b as usize) == Some(actual[1])
                 && actual[1 - slot] == &list
                 && output == &list)
-                .then_some((input, Operation::Zip(id)))
+                .then_some((Some(input), Operation::Zip(id)))
         }
         _ => None,
     }
@@ -89,7 +100,7 @@ impl Analysis<'_> {
                     if let Some((input, operation)) =
                         selection(self.program, self.locals, *id, args)
                     {
-                        if !self.later.contains(&input) {
+                        if input.is_none_or(|local| !self.later.contains(&local)) {
                             self.selected
                                 .push((expr as *const Expr as usize, operation));
                         }
@@ -118,8 +129,11 @@ impl Analysis<'_> {
                 self.walk(function, false);
             }
             Expr::Record(fields) | Expr::Construct(_, fields) => {
+                // Constructors own their fields. ARC prepares earlier field
+                // owners before a later consuming call. A record passed to an
+                // ordinary call remains excluded by that call's eligibility.
                 for field in fields.iter().rev() {
-                    self.walk(field, false);
+                    self.walk(field, eligible);
                 }
             }
             Expr::SetFields(base, fields) => {
@@ -386,6 +400,90 @@ mod tests {
                 assert_eq!(program.funcs.len(), 3);
             }
         }
+    }
+
+    #[test]
+    fn saturated_array_results_transfer_without_reordering_the_producer() {
+        for saturated in [false, true] {
+            let mut program = example(None);
+            let array = program.funcs[0].locals[0].clone();
+            program.funcs.push(function(
+                "producer",
+                vec![array.clone(); if saturated { 1 } else { 2 }],
+                array,
+                Body::Expr(Expr::Local(0)),
+            ));
+            let producer = Expr::Call(3, vec![Expr::Local(0)]);
+            program.funcs[0].body = Body::Expr(Expr::Call(2, vec![Expr::Func(1), producer]));
+            lower(&mut program);
+            assert_eq!(program.funcs.len(), if saturated { 5 } else { 4 });
+            if saturated {
+                let Body::Expr(Expr::Call(id, args)) = &program.funcs[0].body else {
+                    panic!("producer evaluation must stay inside the owning call")
+                };
+                assert_eq!(*id, 4);
+                assert!(matches!(args.as_slice(), [Expr::Call(3, arguments)]
+                    if matches!(arguments.as_slice(), [Expr::Local(0)])));
+                verify_ownership(&program);
+            }
+        }
+    }
+
+    #[test]
+    fn owned_fields_preserve_both_alias_orders_and_constructor_ownership() {
+        for earlier_alias in [false, true] {
+            for variant in [false, true] {
+                let mut program = example(None);
+                let array = program.funcs[0].locals[0].clone();
+                let record = MT::Record(vec![
+                    ("0".into(), array.clone()),
+                    ("1".into(), array.clone()),
+                ]);
+                let Body::Expr(call) = &program.funcs[0].body else {
+                    unreachable!()
+                };
+                let mut fields = vec![call.clone(), Expr::Local(0)];
+                if earlier_alias {
+                    fields.reverse();
+                }
+                let mut body = Expr::Record(fields);
+                let result = if variant {
+                    let result = MT::con("OwnedFields");
+                    program.shapes.insert(
+                        result.clone(),
+                        TypeShape::Adt(vec![("Yield".into(), vec![record])]),
+                    );
+                    body = Expr::Construct(0, vec![body]);
+                    result
+                } else {
+                    record
+                };
+                program.funcs[0].ty = MT::Fun(Box::new(array), Box::new(result));
+                program.funcs[0].body = Body::Expr(body);
+                lower(&mut program);
+                assert_eq!(program.funcs.len(), if earlier_alias { 4 } else { 3 });
+                verify_ownership(&program);
+            }
+        }
+    }
+
+    #[test]
+    fn ordinary_call_arguments_still_exclude_nested_selection() {
+        let mut program = example(None);
+        let array = program.funcs[0].locals[0].clone();
+        program.funcs.push(function(
+            "sink",
+            vec![array.clone(), array.clone()],
+            array,
+            Body::Expr(Expr::Local(1)),
+        ));
+        let Body::Expr(call) = &program.funcs[0].body else {
+            unreachable!()
+        };
+        program.funcs[0].body = Body::Expr(Expr::Call(3, vec![Expr::Local(0), call.clone()]));
+        lower(&mut program);
+        assert_eq!(program.funcs.len(), 4);
+        verify_ownership(&program);
     }
 
     #[test]
