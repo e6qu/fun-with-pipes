@@ -1,149 +1,61 @@
 # Remaining storage in gradient descent
 
-This review records remaining costs and the proofs needed to remove them.
-The [same-type conversion group](scalar-array-identities.md) is verified and merged
-in #254, separately from the [direct array-call experiment](direct-array-callbacks.md).
-Final-iteration consumption is [verified and merged](final-iteration-storage.md). The optional-result review below
-identifies a smaller remaining boundary cost. A [fresh source review](numeric-record-inputs-2026-11-04/README.md)
-proposes scoped-call specialization and private input-record packing next;
-its implementation contract is not yet frozen. Coordinate reuse remains unselected.
-Each experiment keeps its own reference and measurements.
+Private derivative-input packing is implemented and
+[its measurements are audited](packed-input-time-2026-11-04/README.md), with three
+AMD64 timing limits open. Its [contract](packed-derivative-inputs.md) is frozen;
+final production delivery is pending in PR #257. Coordinate-list reuse remains
+unselected. [The plan](../../PLAN.md) owns current work and acceptance.
 
 ## Measured costs
 
-The [gradient-array report](gradient-array-storage-2026-11-03/README.md) measures
-source `1f6a4ac8`. In one 129-coordinate, 199-update solve, each group below makes
-25,671 allocation requests for 616,104 requested bytes:
+The older [gradient-array census](gradient-array-storage-2026-11-03/README.md),
+source `1f6a4ac8`, counted 25,671 allocation requests and 616,104 requested bytes
+for each group in one 129-coordinate, 199-update solve:
 
-| Group | Why it exists | Constraint on removing it |
-|---|---|---|
-| Input derivative records | Each `Rev` pairs a coordinate value with a derivative-node number | Ordinary floating values have numeric fields; nested derivatives can contain owners that must be preserved. |
-| List of input derivative records | The objective accepts `List[Rev[t]]` | The Rosenbrock objective reads overlapping neighboring pairs. One mapped producer does not imply one traversal or no aliases. |
-| Updated coordinate list | Each step returns immutable coordinates | Current-only iteration can discard old coordinates; retained histories and other aliases still need their original values. |
+| Historical group | Current status |
+|---|---|
+| Input derivative records | Selected private one/two-field numeric records now use a shared buffer; other uses keep their ordinary representation. |
+| List of input derivative records | The selected neighboring-pair consumer borrows overlapping windows of that buffer. |
+| Updated coordinate list | Still returns immutable coordinates. Reuse needs its own ownership proof and a fresh count at the current source. |
 
-These are allocation traffic totals, not simultaneously live memory or process
-RSS. The public `grad` still returns a list. PR #252 removes only selected private
-gradient-list materialization; it does not remove these three groups.
+These historical totals measure allocation traffic, not live memory or process
+RAM. Do not reuse them as current measurements. For the complete packed-input
+group, the [new count report](packed-input-time-2026-11-04/verified-memory-counts.json)
+verifies 51,541 fewer requests and 1,031,616 fewer requested bytes per largest
+solve. Public `grad` still returns a list.
 
 ## Ownership decisions needed
 
-**Input records and their list:** `rev._seed-float` and `rev._seed-owned` in
-[autodiff.fwp](../../lib/autodiff.fwp) construct the objective's inputs. A packed
-representation would need to preserve overlapping reads, callback evaluation
-order and the entire objective call's lifetime. It must reject unsupported escapes
-or provide correct ownership for them. Start any proof with ordinary scalar fields;
-F128 and nested `Rev` require their own representation and cleanup evidence.
-Changing the public objective type is permitted in this pre-alpha, but changing
-`List` to `Array` alone does not prove that record allocations disappear.
+`zip-with` borrows its input lists and returns a fresh list spine. Under that
+[ownership contract](../../src/ownership.rs), its implementation cannot overwrite
+or free an input. Reusing updated coordinates would require a compiler proof or
+an internal consuming operation. Before selecting it:
 
-The existing [packed-record lowering](../../src/cgen/packed_records.rs) handles
-an eager map whose only consumer is a numeric-record fold. The objective's
-overlapping reads do not match that pattern. Extending it needs a representation
-and lifetime proof for those reads, not just adding `Rev` to an eligibility list.
+- Identify current allocation sites and count their cost on the measured source.
+- Prove that the old coordinate owner is consumed after its last read. Retained
+  histories, other aliases and shared tails must keep their original values.
+- Preserve callback, arithmetic and trap order. Do not turn an eager stage into
+  streaming computation across another stage's effects.
+- Release old input, scratch and partial output exactly once on failure or
+  cancellation, including unequal list lengths and empty inputs.
+- Freeze selection, exclusions, same-source reference and cost limits before
+  implementation; then check both interpreters and native O1/O2 cleanup.
 
-Current arrays pack scalar numeric values, including F128 bits. A `Rev[F64]` element
-still occupies a pointer-sized slot referring to a separate record. The
-[runtime array operations](../../runtime/fwp_rt.c) therefore need more than a
-library type change to store `Rev[F64]` as adjacent value/node-number fields.
-Two possible scopes have different proof costs:
+This is a possible next group, not a selected optimization or a promised speedup.
+The current packed-input proof covers private flat numeric records. F128, nested
+`Rev`, resources and general escaping record arrays need separate representation
+and lifetime proofs; changing a public list to an array does not remove record
+boxes by itself.
 
-| Approach | Work required before selection |
-|---|---|
-| Extend private packed-record lowering | Recognize overlapping reads in a known consumer; keep the producer and callback order; prove that the buffer and borrowed fields cannot escape. |
-| Make numeric-record arrays a general representation | Define record layout and alignment; update every load/store, slice, comparison, encoding and cleanup path; give escaped records independent owners. |
+## Completed neighboring work
 
-F128 arrays already distinguish borrowed payload reads from independently owned
-escaping values. That is a useful lifetime example, not proof that record reads
-can use the same representation unchanged. The fresh review proposes the private
-approach, with all input production preceding pair mapping and folding. General
-numeric-record arrays remain a broader alternative, not part of that proposal.
+| Group | Verified result | Remaining limit |
+|---|---|---|
+| [Same-type scalar conversion](scalar-array-identities.md), PR #254 | Removes a private F64 identity map; preserves float bits and independent owned results where needed. | All 32 original speed targets remain unmet. |
+| [Final iteration value](final-iteration-storage.md), PR #255 | Removes an unused history and reverse copy when only the final value is read. Resource-bearing states remain excluded. | Six runtime limits and one compiler-noise case remain open. |
+| [Immediately matched optional results](matched-option-fields.md), PR #256 | Removes a temporary option wrapper; all production gates and frozen runtime limits pass. | Peak storage is unchanged; some cases remain slightly slower within the allowed limit. |
+| [Private input packing](packed-derivative-inputs.md), PR #257 | Native correctness, compiler-cost and complete raw runtime audits pass; input packing preserves all three eager stages. | Three AMD64 timing limits and final production delivery remain open. |
 
-**Updated coordinates:** [the ownership contract](../../src/ownership.rs) makes
-`zip-with` borrow both lists and return a fresh list spine. Its implementation
-cannot overwrite or free an input under that contract. Reuse would require an
-explicit compiler proof or an internal consuming operation, including shared-tail
-checks where needed. Callbacks must finish in the same order; aliases must retain
-their values. Failure and cancellation must release old input, partial output and
-scratch exactly once, including when zip stops at the shorter input.
-
-## Selected conversion change
-
-The measured source above makes 199 replacement conversion arrays per large
-solve, requesting 206,960 bytes. The current implementation removes that F64
-identity map before ownership insertion. It also repairs same-type scalar
-conversion to preserve all bits, including signed zero and NaN payloads.
-Cross-type conversions still round; generic F128 results keep independent owners.
-[Conversion rules](../float-formats.md#current-contract) explain the semantics.
-
-[Three-host native checks](scalar-array-identities-2026-11-03/README.md) and
-[compiler-cost checks](scalar-array-identity-analysis-2026-11-03/README.md) pass.
-[The runtime report](scalar-array-identity-time-2026-11-03/README.md) and four
-raw audits are complete; all 32 required speed gains are missed. All final
-platform gates pass; [their logs and identities](scalar-array-identities-2026-11-03/platforms/final-gates.json)
-are audited. Both sides
-of the frozen comparison include the scalar repair; the reference disables only
-map removal. Passing allocation checks does not satisfy the separate speed goals.
-
-The rewrite transfers the existing owner through the ordinary ownership pass.
-Aliases retain their values, and failure/cancellation checks verify cleanup.
-Keeping a slice can prolong its larger backing array's lifetime: the
-[storage report](scalar-array-identities-2026-11-03/README.md#result-lifetime-and-allocation-traffic)
-shows that cost alongside the removed allocation. Unknown/effectful callbacks
-and non-F64 maps are outside this selection.
-
-## Delivered: discard an unused iteration history
-
-The benchmark's history source is `iterate count descend | last`: it builds
-intermediate coordinate lists although only the final one is returned. The
-[source review and native checks](final-iteration-storage-2026-11-03/README.md)
-confirm that the original compiler constructs both the history and a reverse
-copy. The new selection removes both when only the final value is used. Its
-shared-history control retains a second use that must remain available.
-
-The [implementation contract](final-iteration-storage.md) now selects direct
-`last`, eligible numeric-state history removal, matching count validation and
-an incidental optional-result cleanup repair as one group. Implementation and
-three-host focused verification are complete. The
-[four-session report](final-iteration-time-2026-11-04/README.md) verifies lower
-memory and ARC costs, with six timing limits still open. All final platform gates
-pass in merged #255. Resource-bearing states are excluded from history removal;
-general `last` passes separate ownership checks for those values.
-
-This is measured separately from coordinate representation. Comparisons label
-the source forms: the candidate history-form program retains only its current state.
-Preserve older reports as observations of their recorded compiler; their history
-allocation counts are not future semantic requirements.
-
-## Follow-up: an immediately matched optional result
-
-[Saved generated C](final-iteration-storage-2026-11-03/optional-result-review.json)
-compares the same three-coordinate, two-update source before and after history
-removal. The old source returns the option as tag/payload fields. The new internal
-primitive allocates `Some(final)`, then the caller retains its payload and drops
-the wrapper during `match`. The history removal is still a large net saving.
-This source observation does not identify the one-update timing regression's cause.
-
-The new implementation extends the existing field returns for matched array/map
-reads and channel/task results (`lookup_value_type`, `owned_option_type` and
-`expr_variant` in `src/cgen.rs`). Its proof and checks cover:
-
-1. Direct field ownership for the internal final-iteration result and
-   borrowed list `last`/`nth` reads. Keep whole-value results boxed when needed;
-   use the existing match-use check, without a new global analysis or syntax.
-2. Preserved argument/callback order, empty results, resource lifetimes, aliases
-   and failure/cancellation cleanup. A borrowed read must acquire its result's
-   owner; an already-owned iteration result should move its owner.
-3. A frozen, tested selection. Require one fewer wrapper allocation per
-   selected match and no added ARC operations, while unsupported/escaping uses
-   retain correct storage. Check actual generated C and native allocation counts.
-4. A comparison frozen before timing; retain the current six misses and the
-   compiler-noise case. Report compiler cost, stack and all runtime outcomes.
-
-The [contract](matched-option-fields.md) defines the ownership boundaries and
-limits. [Three-host native checks](matched-option-fields-2026-11-04/README.md)
-verify values, aliases, physical cleanup and the removed wrapper.
-[Compiler-cost comparisons](matched-option-analysis-2026-11-04/README.md) pass.
-[Four runtime sessions](matched-option-time-2026-11-04/README.md) and all raw audits
-pass their frozen limits. Each history-form solve saves one allocation and one
-retain; peak storage is unchanged and some larger cases are slightly slower.
-Final platform delivery remains open.
+Each group keeps its own reference and measured outcomes. A gain against a newer
+reference does not settle an older comparison. [The input source review](numeric-record-inputs-2026-11-04/README.md)
+records the preparation evidence that led to packing; it is not another backlog.

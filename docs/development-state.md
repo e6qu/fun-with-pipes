@@ -1,14 +1,16 @@
 # Current work
 
-**Next:** complete final production validation for
-[PR #257](https://github.com/e6qu/fun-with-pipes/pull/257). Publish this delivery
-commit and mark ready if not yet done, then monitor all nine production jobs plus
-documentation for the exact head. Audit every full/target log before the
-authorized squash merge. Preserve timing misses below; no benchmark rerun needed.
+**Next:** publish the stale remaining-storage guide repair and monitor the
+replacement final production/docs runs for [PR #257](https://github.com/e6qu/fun-with-pipes/pull/257).
+The previous production run `41861223201` at `ee3a80a7` will be superseded:
+seven jobs are queued, Windows compiler checks are running, and no failure is
+reported. Cancel it after replacement publication to avoid redundant long tests.
+Keep the compiler and measurement sources unchanged. Audit every final-head
+full/target log before squash merge; preserve the three accepted open timing goals.
 
 Worktree `.worktrees/packed-derivative-inputs`, branch `packed-derivative-inputs`.
 Immutable measurement tag `roadmap/packed-input-measurement-2026-11-04` points to
-`5f63ea1a9a7fb7a6bc1068bbd84c4224c176b106`. The final delivery changes contain
+`5f63ea1a9a7fb7a6bc1068bbd84c4224c176b106`. The pushed delivery commit contains
 only evidence/docs and an explicit workflow-selection guard; compiler, runtime,
 library, tests and build inputs still match the verified source below.
 
@@ -19,7 +21,7 @@ library, tests and build inputs still match the verified source below.
 | 1 | Verified | Preserve selection, ownership and frozen measurement contracts |
 | 2 | Verified | Preserve audited three-host compiler/cleanup coverage |
 | 3 | Verified | Measurements and every outcome audited; three AMD64 timing goals remain open |
-| 4 | In progress | Publish grouped evidence; pass all final gates; verify squash/tree |
+| 4 | In progress | Evidence published and PR ready; final production/docs running; then verify squash/tree |
 
 ## Verified implementation and measurements
 
@@ -78,6 +80,12 @@ suites stay on GitHub. Limits unchanged; last disk observation was 67 GiB free.
   8.02s/8.56s. No new timings or local native suite.
 - Final staged roadmap check: 271 link sets, 106 immutable preparation pairs and
   four steps pass (2.66s); whitespace checks pass. No core changes since measurement.
+
+A final source review found stale status in `remaining-gradient-storage.md`:
+it still called input packing unfrozen and #256 delivery unfinished. The repair
+replaces obsolete proposals with current evidence and concrete coordinate-reuse
+proof requirements, and labels the earlier input review as historical. No compiler
+or benchmark source changed; no completed measurement is repeated.
 
 Scratch helpers live in `../gradient-work`: `collect-packed-input-runtime.py`,
 `retain-packed-input-time.py`, `summarize-packed-input-memory.py` and
