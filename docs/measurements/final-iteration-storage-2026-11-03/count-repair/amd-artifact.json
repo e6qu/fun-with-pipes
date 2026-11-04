@@ -1,0 +1,20 @@
+{
+  "id": 13274081940,
+  "node_id": "MDg6QXJ0aWZhY3QxMzI3NDA4MTk0MA==",
+  "name": "final-iteration-checks-ubuntu-latest",
+  "size_in_bytes": 85552801,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13274081940",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13274081940/zip",
+  "expired": false,
+  "digest": "sha256:b68a7d10d91e9225622cc6993f19e851fe26b566a041b90c8f2b4ee10ca314aa",
+  "created_at": "2026-11-03T21:51:30Z",
+  "updated_at": "2026-11-03T21:51:30Z",
+  "expires_at": "2027-02-01T21:35:39Z",
+  "workflow_run": {
+    "id": 41723211349,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "iteration-final-value",
+    "head_sha": "81a978b7322618426e854bb9435c5af4de8c3ec6"
+  }
+}

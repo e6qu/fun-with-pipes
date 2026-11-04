@@ -1,0 +1,75 @@
+{
+  "source": "bb5433b688c26c60f0b2561a59420deb0f0e95ed",
+  "sessions": {
+    "aarch64-1": {
+      "run": 41729376533,
+      "job": 126242432360,
+      "failures": [
+        {
+          "case": "3-199",
+          "program": "fwp-ad-history",
+          "metric": "candidate/reference time",
+          "actual": 0.9559822185260917,
+          "limit": 0.95
+        },
+        {
+          "case": "33-199",
+          "program": "fwp-ad-history",
+          "metric": "candidate/reference time",
+          "actual": 0.9515142008890685,
+          "limit": 0.95
+        }
+      ],
+      "files": 1334
+    },
+    "aarch64-2": {
+      "run": 41729376533,
+      "job": 126242432439,
+      "failures": [
+        {
+          "case": "3-199",
+          "program": "fwp-ad-history",
+          "metric": "candidate/reference time",
+          "actual": 0.9609557280197513,
+          "limit": 0.95
+        },
+        {
+          "case": "33-199",
+          "program": "fwp-ad-history",
+          "metric": "candidate/reference time",
+          "actual": 0.9512133163586238,
+          "limit": 0.95
+        }
+      ],
+      "files": 1334
+    },
+    "x86_64-1": {
+      "run": 41730462251,
+      "job": 126246129318,
+      "failures": [
+        {
+          "case": "33-199",
+          "program": "fwp-ad-history",
+          "metric": "candidate/reference time",
+          "actual": 0.951329346045212,
+          "limit": 0.95
+        }
+      ],
+      "files": 1334
+    },
+    "x86_64-2": {
+      "run": 41730462251,
+      "job": 126246129731,
+      "failures": [
+        {
+          "case": "3-1",
+          "program": "fwp-ad-history",
+          "metric": "candidate/reference time",
+          "actual": 1.0278988261765163,
+          "limit": 1.02
+        }
+      ],
+      "files": 1334
+    }
+  }
+}

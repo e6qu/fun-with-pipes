@@ -96,6 +96,25 @@ def recorded_reference(candidate, preparation):
     return candidate.replace(before, after)
 
 
+def recorded_final_iteration_reference(candidates, preparation):
+    """Read the two literal edits without executing the measured preparer."""
+    edits = []
+    for node in ast.parse(preparation).body:
+        if isinstance(node, ast.Assign):
+            for target in node.targets:
+                if isinstance(target, ast.Name) and target.id == 'EDITS':
+                    edits.append(ast.literal_eval(node.value))
+    assert len(edits) == 1
+    changes = edits[0]
+    assert set(changes) == set(candidates) == {'src/fuse.rs', 'lib/list.fwp'}
+    result = {}
+    for path, (before, after) in changes.items():
+        assert isinstance(before, str) and isinstance(after, str) and before and after
+        assert candidates[path].count(before) == 1 and after not in candidates[path]
+        result[path] = candidates[path].replace(before, after)
+    return result
+
+
 def recorded_numeric_reference(candidates, preparation):
     """Rebuild both reference files from saved literals, never saved Python code."""
     constants = {}
@@ -195,13 +214,40 @@ def check_gradient_reference(folder, manifest, source, architecture):
 def check_reference(folder, report, source, architecture, protocol):
     manifest = json.loads((folder / 'manifest.json').read_text())
     assert manifest == report['referenceCompiler'] and manifest['source'] == source
+    if protocol == 'final-iteration':
+        assert manifest['disabledTransformation'] == 'direct list last and unused numeric iteration history removal'
+        assert set(manifest['candidate']) == set(manifest['reference']) == {'src/fuse.rs', 'lib/list.fwp'}
+        assert set(manifest['unchanged']) == {'src/cgen.rs', 'src/prims_std.rs', 'src/ownership.rs', 'src/opt.rs', 'runtime/fwp_rt_prims.c', 'runtime/fwp_rt_heap.c', 'lib/autodiff.fwp'}
+        compiler = (folder / 'fwp').read_bytes()
+        assert digest(compiler) == manifest['compilerSha256']
+        instruction_bytes(compiler, architecture)
+        candidates = {}
+        for path, checksum in manifest['candidate'].items():
+            data = subprocess.check_output(['git', 'show', source + ':' + path], cwd=ROOT)
+            assert digest(data) == checksum, path
+            candidates[path] = data.decode()
+        for path, checksum in manifest['unchanged'].items():
+            data = subprocess.check_output(['git', 'show', source + ':' + path], cwd=ROOT)
+            assert digest(data) == checksum, path
+        assert manifest['ownershipSha256'] == manifest['unchanged']['src/ownership.rs']
+        preparation = subprocess.check_output(['git', 'show', source + ':scripts/prepare-final-iteration-reference.py'], cwd=ROOT, text=True)
+        expected = recorded_final_iteration_reference(candidates, preparation)
+        patch = (folder / 'reference.patch').read_bytes()
+        assert digest(patch) == manifest['patchSha256']
+        sections = re.split(r'(?=^diff --git )', patch.decode(), flags=re.M)
+        assert sections[0] == '' and len(sections) == 3
+        for path, section in zip(sorted(expected), sections[1:]):
+            data = (folder / 'source' / path).read_bytes()
+            assert data == expected[path].encode() and digest(data) == manifest['reference'][path]
+            check_reference_patch(section, candidates[path], expected[path], path)
+        return
     if protocol == 'gradient-array':
         check_gradient_reference(folder, manifest, source, architecture)
         return
     if protocol == 'callback-owners':
         check_numeric_reference(folder, manifest, source, architecture)
         return
-    assert protocol in ('record-zip', 'record-fold', 'packed-records', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity')
+    assert protocol in ('record-zip', 'record-fold', 'packed-records', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration')
     if protocol == 'scalar-array-identity':
         source_path, field, saved = 'src/opt.rs', 'Optimizer', 'optimizer-reference.rs'
         transform = 'F64 identity array-map elimination'
@@ -282,8 +328,8 @@ def check_zip(archive):
 
 
 def check_directory(folder, source, architecture, session, protocol, reference):
-    assert protocol in ('array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity')
-    assert (protocol in ('record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity')) == (reference is not None)
+    assert protocol in ('array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration')
+    assert (protocol in ('record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration')) == (reference is not None)
     report = json.loads((folder / 'comparison.json').read_text())
     GROUPS.check_report(report, source, protocol)
     assert report['machine'] == architecture and report['configuration']['session'] == session
@@ -355,7 +401,7 @@ def check_directory(folder, source, architecture, session, protocol, reference):
             assert (case / (name + '.stderr')).read_text() == control['stderr']
         check_profiles(case, row)
     files = file_inventory(folder)
-    if protocol in ('record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity'):
+    if protocol in ('record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration'):
         assert len(files) == 1334
     reference_files = file_inventory(reference) if reference is not None else None
     if protocol == 'callback-owners':
@@ -363,6 +409,8 @@ def check_directory(folder, source, architecture, session, protocol, reference):
     elif protocol == 'gradient-array':
         assert set(reference_files) == {'manifest.json', 'fwp', 'reference.patch'} | {
             'source/' + name for name in ('lib/autodiff.fwp', 'runtime/fwp_rt_kernel.c', 'src/cgen.rs', 'src/fuse.rs', 'src/interp.rs', 'src/ir.rs', 'src/numerics.rs')}
+    elif protocol == 'final-iteration':
+        assert set(reference_files) == {'manifest.json', 'fwp', 'reference.patch', 'source/lib/list.fwp', 'source/src/fuse.rs'}
     elif reference_files is not None:
         saved = {'scalar-array-identity': 'optimizer-reference.rs', 'record-zip': 'fusion-reference.rs', 'record-fold': 'codegen-reference.rs',
                  'packed-records': 'codegen-reference.rs', 'scalar-map-zip': 'codegen-reference.rs', 'range-zip': 'codegen-reference.rs', 'scalar-array-map': 'codegen-reference.rs'}[protocol]
@@ -376,7 +424,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--input', type=Path, required=True)
     parser.add_argument('--input-format', choices=['directory', 'zip'], required=True)
-    parser.add_argument('--protocol', choices=['array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity'], required=True)
+    parser.add_argument('--protocol', choices=['array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration'], required=True)
     parser.add_argument('--reference', type=Path)
     parser.add_argument('--source', required=True)
     parser.add_argument('--arch', choices=['x86_64', 'aarch64'], required=True)

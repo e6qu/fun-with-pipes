@@ -4,8 +4,9 @@
 [PR #252](https://github.com/e6qu/fun-with-pipes/pull/252). Both complete job logs
 and every target log are audited. [Compiler-cost checks](../gradient-array-analysis-2026-11-03/README.md)
 pass. [Runtime measurements](../gradient-array-time-2026-11-03/README.md) miss the
-5% speed targets; their gains and regressions are reported separately. The final
-platform matrix remains required before merge.
+5% speed targets; their gains and regressions are reported separately. All nine final-head production jobs and documentation passed before the
+[verified squash merge](../../roadmap-history.md#private-gradient-arrays-pr-252);
+[gate identities and logs](platforms/final-gates.json) are retained.
 The [frozen contract](../gradient-array-storage.md) defines the requirements.
 
 ## What changes
@@ -107,5 +108,6 @@ source, frozen by `roadmap/gradient-array-measurement-2026-11-03`. A frozen patc
 internal result containers, direct map/zip consumption and interpreter/native
 support together. Independent checks reconstruct all seven changed sources and
 verify saved patches and binary identities. Timings cover complete equivalent
-solves; C/Rust explicit derivatives are separate algorithm comparisons. Final
-nine-job platform validation and documentation remain required before merge.
+solves; C/Rust explicit derivatives are separate algorithm comparisons. The
+[final platform gates](platforms/final-gates.json) verify correctness and delivery;
+they do not close the separately reported timing misses.

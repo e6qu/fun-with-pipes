@@ -1,0 +1,45 @@
+{
+  "total_count": 2,
+  "artifacts": [
+    {
+      "id": 13278375632,
+      "node_id": "MDg6QXJ0aWZhY3QxMzI3ODM3NTYzMg==",
+      "name": "final-iteration-report-retained",
+      "size_in_bytes": 29288074,
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13278375632",
+      "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13278375632/zip",
+      "expired": false,
+      "digest": "sha256:cfecd80845d1d407f6bd44f089e3cd1e2d0816ac732b16efc1261a6aef918076",
+      "created_at": "2026-11-03T22:46:22Z",
+      "updated_at": "2026-11-03T22:46:22Z",
+      "expires_at": "2027-02-01T22:44:00Z",
+      "workflow_run": {
+        "id": 41733338891,
+        "repository_id": 1400763332,
+        "head_repository_id": 1400763332,
+        "head_branch": "roadmap/final-iteration-measurement-2026-11-04",
+        "head_sha": "bb5433b688c26c60f0b2561a59420deb0f0e95ed"
+      }
+    },
+    {
+      "id": 13278193213,
+      "node_id": "MDg6QXJ0aWZhY3QxMzI3ODE5MzIxMw==",
+      "name": "final-iteration-report-summary",
+      "size_in_bytes": 526504,
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13278193213",
+      "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13278193213/zip",
+      "expired": false,
+      "digest": "sha256:a16c9551a1476e9216e9b959b036938cd02c2909647f9604c73c2b14d46f9c9e",
+      "created_at": "2026-11-03T22:44:28Z",
+      "updated_at": "2026-11-03T22:44:28Z",
+      "expires_at": "2027-02-01T22:44:00Z",
+      "workflow_run": {
+        "id": 41733338891,
+        "repository_id": 1400763332,
+        "head_repository_id": 1400763332,
+        "head_branch": "roadmap/final-iteration-measurement-2026-11-04",
+        "head_sha": "bb5433b688c26c60f0b2561a59420deb0f0e95ed"
+      }
+    }
+  ]
+}

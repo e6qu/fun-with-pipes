@@ -36,6 +36,29 @@ REPORT = json.loads(gzip.decompress((ROOT / 'docs/measurements/array-list-first-
 
 
 class Evidence(unittest.TestCase):
+    def test_final_iteration_reference_uses_saved_literals_and_rejects_partial_edits(self):
+        preparation = (ROOT / 'scripts/prepare-final-iteration-reference.py').read_text()
+        candidates = {name: (ROOT / name).read_text() for name in ('src/fuse.rs', 'lib/list.fwp')}
+        reference = CHECK.recorded_final_iteration_reference(candidates, preparation)
+        self.assertIn('if false && kind == "last"', reference['src/fuse.rs'])
+        self.assertIn('last = reverse | head', reference['lib/list.fwp'])
+        self.assertNotIn('foreign "fwp" last :', reference['lib/list.fwp'])
+        self.assertEqual(reference, CHECK.recorded_final_iteration_reference(
+            candidates, preparation + '\nraise RuntimeError("never execute saved code")\n'))
+        for changed in (preparation.replace('EDITS =', 'MISSING =', 1),
+                        preparation + '\nEDITS = {}\n',
+                        preparation.replace("'lib/list.fwp':", "'lib/other.fwp':", 1)):
+            with self.assertRaises(AssertionError):
+                CHECK.recorded_final_iteration_reference(candidates, changed)
+        for name in candidates:
+            changed = dict(candidates)
+            changed[name] = reference[name]
+            with self.assertRaises(AssertionError):
+                CHECK.recorded_final_iteration_reference(changed, preparation)
+            del changed[name]
+            with self.assertRaises(AssertionError):
+                CHECK.recorded_final_iteration_reference(changed, preparation)
+
     def test_zip_inventory_matches_directory_without_extraction(self):
         contents = {'report.json': b'{"complete": true}', 'case/image': b'ELF fixture',
                     'case/logs/stdout': b'1\n'}

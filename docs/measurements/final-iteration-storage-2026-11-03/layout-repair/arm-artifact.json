@@ -1,0 +1,20 @@
+{
+  "id": 13272702429,
+  "node_id": "MDg6QXJ0aWZhY3QxMzI3MjcwMjQyOQ==",
+  "name": "final-iteration-checks-ubuntu-24.04-arm",
+  "size_in_bytes": 62672267,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13272702429",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13272702429/zip",
+  "expired": false,
+  "digest": "sha256:7d70ad59ff8b771ae40f46ed97c5146a5ac3b718d01a636f47bd8f25d2275acc",
+  "created_at": "2026-11-03T21:29:01Z",
+  "updated_at": "2026-11-03T21:29:01Z",
+  "expires_at": "2027-02-01T21:16:36Z",
+  "workflow_run": {
+    "id": 41720302662,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "iteration-final-value",
+    "head_sha": "73426169c8a1b29ceead23d83dd8dc30b6aa3664"
+  }
+}

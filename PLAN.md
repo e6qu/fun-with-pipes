@@ -4,51 +4,79 @@ Build an ahead-of-time language with simple pipes, immutable values, strong type
 and useful inference. Prefer direct values, moves and borrows; reserve ARC for
 necessary sharing. GC is removed; JIT and backward compatibility are excluded.
 
-## Current work: preserve float bits and remove redundant array copies
+## Current work: final list values without retained histories
 
-[PR #254](https://github.com/e6qu/fun-with-pipes/pull/254) implements same-type
-float conversion that preserves every bit, including signed zero and NaN payloads,
-for F16, BF16, F32, F64 and F128. Cross-type conversion stays unchanged; generic
-F128 results keep separate ownership.
+```fwp
+0 | iterate 3 (add 1) | last
+```
 
-A known `float.convert : F64 -> F64` map can transfer its input array's owner
-instead of copying it. The rewrite checks existing concrete types before ownership
-insertion and evaluates the array expression once. It adds no syntax or
-whole-program analysis. [The contract](docs/measurements/scalar-array-identities.md)
-was frozen before implementation.
+This returns `Some 2`: the count includes initial value 0, followed by two calls
+to `add 1`. Ordinary `last` now walks directly to a list's final node. For an exact,
+single-use numeric iteration, the compiler keeps only its current value instead
+of building a history and reverse copy. Shared histories remain intact; iteration
+states containing resources are excluded. No new syntax or global analysis.
 
-- [Three-host native checks](docs/measurements/scalar-array-identities-2026-11-03/README.md)
-  pass for exact bits, moves, aliases, slices, updates, traps and cancellation.
-  Final platform CI must also verify the expanded storage probe and distinct
-  BF16 NaN inputs; the frozen results retain their actual coverage.
-- [All four runtime sessions](docs/measurements/scalar-array-identity-time-2026-11-03/README.md)
-  and raw audits are complete. One array allocation is removed per selected update;
-  the largest solve requests 206,960 fewer bytes. ARC counts and peak managed/raw
-  storage are unchanged. All 32 required 5% speed gains are missed.
-- [Compiler-time/memory limits](docs/measurements/scalar-array-identity-analysis-2026-11-03/README.md)
-  pass. Both sides of the runtime comparison contain the scalar repair; the
-  reference disables only map removal. No completed session was repeated.
-- Returning a small slice can retain its larger backing array longer. The
-  [storage probe](docs/measurements/scalar-array-identities-2026-11-03/README.md#result-lifetime-and-allocation-traffic)
-  measures that tradeoff separately from requested bytes and process RSS.
+The [contract](docs/measurements/final-iteration-storage.md) was frozen before
+implementation. The group also aligns interpreter/native oversized-count errors
+and protects a new optional wrapper when retaining its borrowed child fails.
 
-Under the accepted policy, retain the verified reductions while leaving missed
-speed goals open. [The handoff](docs/development-state.md) tracks final gates.
-PR #253's verified merge and evidence are in [delivery history](docs/roadmap-history.md#direct-scalar-array-calls-pr-253).
+- [Three-host native checks](docs/measurements/final-iteration-storage-2026-11-03/README.md)
+  pass on GCC ARM64/AMD64 and Clang ARM64: types, values, aliases, effects, callback
+  order, resources, cancellation, physical cleanup and actual native images.
+- [Four runtime sessions](docs/measurements/final-iteration-time-2026-11-04/README.md)
+  and every raw audit are complete at `bb5433b6`, immutable tag
+  `roadmap/final-iteration-measurement-2026-11-04`. The largest history solve uses
+  97.7% less peak managed storage and runs 5.1–5.9% faster. Each 199-update solve
+  saves 400 allocation requests and 399 retains. Raw storage is unchanged.
+- Five speed targets and one small-case regression remain open. The
+  [compiler comparison](docs/measurements/final-iteration-analysis-2026-11-04/README.md)
+  has one noisy timing case; observed memory ratios pass. Keep all failures under
+  the accepted policy of retaining verified reductions without claiming timing acceptance.
+- The final nine-job production matrix and documentation are still required.
+  [The handoff](docs/development-state.md) records the exact head and current gates.
+  PR #254's verified merge belongs in [delivery history](docs/roadmap-history.md#float-bits-and-identity-array-maps-pr-254).
 
 | Step | Work | Completion requirement |
 |---|---|---|
-| 1 | Define conversion and selection rules | Preserve same-type bits in all five formats; keep cross-type behavior and independently owned F128 boxes. Freeze the exact F64 map selection and measurements. |
-| 2 | Verify owner transfer and observable behavior | Three native hosts pass O1/O2 checks, packed/reuse controls, source effects, alias updates, failure/cancellation and deliberately omitted cleanup. Retain emitted C and native image evidence. |
-| 3 | Measure the isolated change | Remove at least one array allocation per selected update. Report traffic, ARC, live/raw memory, process RSS, timing, code and stack costs. Audit every frozen timing/noise, count, compiler-cost and stack limit; keep all missed speed targets open under the accepted policy. |
-| 4 | Deliver one grouped PR | Include scalar fixes, map removal, storage observations, complete measurements and clear docs. Verify the expanded probes across supported native platforms; require all nine final-head production jobs plus documentation; audit all logs, squash and verify the tested tree. |
+| 1 | Define selection and ownership | Exact typed `iterate` → `last`, numeric states only, single history use. Preserve public `last` types, argument/callback order and count rejection. Freeze the reference and limits. |
+| 2 | Verify behavior and physical cleanup | Three native hosts pass raw/optimized interpreter and O1/O2 checks, alias/reuse controls, wide values, resource exclusions, failure/cancellation and omitted-cleanup controls. Retain C and native image identities. |
+| 3 | Measure and record every outcome | Verify the scalar 2k-node saving, large-case managed peak reduction and complete-program ARC/traffic. Audit every timing/noise, compiler and stack limit; leave missed goals explicit. |
+| 4 | Deliver the grouped PR | Include ownership repairs, examples and complete evidence. Require all nine final-head production jobs plus docs, audit every full/target log, squash and verify the tested tree and one-line message. |
 
-Keep older timing goals open against their original references. Do not repeat
-completed sessions for a better result. [Remaining storage candidates](docs/measurements/remaining-gradient-storage.md)
-include input records, coordinate lists and an unused iteration history. They
-remain unselected until their lifetime proof, scope and measurements are declared.
+## Next proof: immediately matched optional results
+
+[Saved C](docs/measurements/remaining-gradient-storage.md#follow-up-an-immediately-matched-optional-result)
+shows the new internal primitive allocating `Some(final)` before the caller
+immediately unpacks it. This is a remaining boundary cost, not a proven cause of
+the small timing regression.
+
+Complete the ownership proof for internal final-iteration results and borrowed
+list `last`/`nth` reads using the existing field-return machinery. Preserve empty
+results, aliases, callback order, resource lifetimes and failure/cancellation.
+Then freeze selection and measurements before implementation: one fewer wrapper
+per selected match, no added ARC, correct storage for escaping values, bounded
+compiler cost and explicit runtime/stack results. No new syntax or global analysis.
+
+Input derivative-record packing and coordinate-list reuse remain unselected.
+[Their lifetime requirements](docs/measurements/remaining-gradient-storage.md)
+and older timing goals retain their original evidence and references.
 
 ## Open performance goals
+
+- **Final-iteration compiler cost.** [The completed compiler comparison](docs/measurements/final-iteration-analysis-2026-11-04/README.md)
+  passes nine timing cases and all observed memory limits. AMD64 field-owner
+  transfer has 2.043% identical-copy variation against 2%, so that timing case
+  remains inconclusive. Preserve its samples and failure. Declare any further
+  sample/setup diagnostic before changing the protocol; do not repeat unchanged
+  timings for a pass.
+
+- **Final-iteration runtime.** [Four completed sessions](docs/measurements/final-iteration-time-2026-11-04/README.md)
+  miss 5% on 3/199 history in both ARM64 sessions, and on 33/199 history in both
+  ARM64 sessions and AMD64 session 1. AMD64 session 2's 3/1 history is 2.79%
+  slower against a 2% limit. Preserve all six misses and the verified memory/ARC
+  reductions. Diagnose the small-case source and saved sample progression before
+  selecting another change; do not rerun unchanged timings or infer a safety
+  failure from the timing ratio. All raw audits and identical-copy controls pass.
 
 - **Identity array-map speed.** [Four completed sessions](docs/measurements/scalar-array-identity-time-2026-11-03/README.md)
   miss every required 5% gain on 3/199, 3/1999, 33/199 and 129/199, in both forms.

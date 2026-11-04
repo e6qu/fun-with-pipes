@@ -12,6 +12,109 @@ fn checked(command: &mut Command) -> std::process::Output {
     );
     out
 }
+
+#[test]
+fn optional_borrowed_result_releases_its_wrapper_when_retaining_fails() {
+    let dir = fwp::cgen::TempDir::new("fwp-fresh-outer-unwind").unwrap();
+    let source = dir.join("probe.fwp");
+    let cfile = dir.join("probe.c");
+    std::fs::write(
+        &source,
+        "main = [task.yield (), [\"first\", \"last\"] | nth 0 | echo] | ignore\n",
+    )
+    .unwrap();
+    checked(
+        Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .args(["build", "--memory", "dynamic", "--emit-c", "-O2"])
+            .arg(&source)
+            .arg("-o")
+            .arg(&cfile),
+    );
+    let code = std::fs::read_to_string(&cfile).unwrap();
+    let start = code.find("/* nth :").unwrap();
+    let entry = code[start..]
+        .split("static V f")
+        .nth(1)
+        .unwrap()
+        .split('(')
+        .next()
+        .unwrap();
+    let runtime = code.replace(
+        "int main(int argc, char **argv)",
+        "int original_main(int argc, char **argv)",
+    );
+    let probe = r#"
+static jmp_buf result_overflow;
+static int recover_result_overflow(void) { return 1; }
+int main(void) {
+#ifdef _WIN32
+    if (_setmode(_fileno(stdout), _O_BINARY) < 0 ||
+        _setmode(_fileno(stderr), _O_BINARY) < 0) return 253;
+#endif
+    fwp_heap_start(); fwp_fns=fwp_fn_table; fwp_init_consts();
+    size_t baseline=fwp_heap.live;
+    for(volatile int round=0;round<32;round++) {
+        V value=fwp_rc_fresh(fwp_str_new("value",5));
+        V xs=fwp_rc_fresh(fwp_cons(value,0));
+        size_t before=fwp_heap.live;
+        V empty=fENTRY(1,xs);
+        if(empty || fwp_heap.live!=before || !fwp_rc_last(value)) return 1;
+        V result=fENTRY(0,xs);
+        if(!result || OBJ(result)->tag!=1 || OBJ(result)->f[0]!=value || *fwp_rc_slot(value)!=2) return 2;
+        fwp_rc_drop(value); fwp_rc_free_obj(result);
+        if(fwp_heap.live!=before || !fwp_rc_last(value)) return 3;
+        for(int i=1;i<255;i++) fwp_rc_dup(value);
+        (*fwp_rc_wide_link(fwp_rc_slot(value)))->count=SIZE_MAX;
+        fwp_trap_recover=recover_result_overflow; fwp_trap_jb=&result_overflow; fwp_trap_cleanup=0;
+        if(!setjmp(result_overflow)) { (void)fENTRY(0,xs); return 4; }
+        fwp_trap_recover=0; fwp_trap_jb=0;
+        if(strcmp(fwp_trap_msg,"reference count overflow") || fwp_cleanups) return 5;
+        if((*fwp_rc_wide_link(fwp_rc_slot(value)))->count!=SIZE_MAX || !fwp_rc_last(xs)) return 6;
+        if(fwp_heap.live!=before) return 90;
+        fwp_rc_fresh(value); fwp_rc_free_obj(value); fwp_rc_free_obj(xs);
+        if(fwp_heap.live!=baseline || fwp_heap.rc_wide_len) return 90;
+    }
+    puts("optional result releases its wrapper after failed retain");
+    return 0;
+}
+"#
+    .replace("ENTRY", entry);
+    let protect = "fwp_value_protect(&outer, &outer_cleanup);";
+    let finish = "(void)fwp_value_finish(&outer, &outer_cleanup);";
+    assert!(runtime.contains(protect) && runtime.contains(finish));
+    let control = runtime.replace(protect, "").replace(finish, "");
+    for opt in ["-O1", "-O2"] {
+        for (name, runtime, expected) in [
+            ("complete", &runtime, 0),
+            ("missing-wrapper-cleanup", &control, 90),
+        ] {
+            let emitted = format!("{runtime}\n{probe}");
+            let binary = dir.join(format!("fresh-outer-{name}-{opt}.exe"));
+            fwp::cgen::compile_c(&emitted, &binary, opt).unwrap();
+            let observed = Command::new(&binary).output().unwrap();
+            record_probe::save(
+                "retain_unwind_ownership",
+                &format!("fresh-outer-{name}-{opt}"),
+                &emitted,
+                &binary,
+                &observed,
+            );
+            assert_eq!(
+                observed.status.code(),
+                Some(expected),
+                "{name}/{opt}: {observed:?}"
+            );
+            assert!(observed.stderr.is_empty(), "{name}/{opt}: {observed:?}");
+            if expected == 0 {
+                assert_eq!(
+                    observed.stdout,
+                    b"optional result releases its wrapper after failed retain\n"
+                );
+            }
+        }
+    }
+}
+
 #[test]
 fn wide_count_overflow_releases_partial_variant_retains_and_live_callers() {
     let dir = std::env::temp_dir().join(format!("fwp-retain-unwind-{}", std::process::id()));

@@ -7,8 +7,9 @@ requirements. [The handoff](../../development-state.md) records current CI statu
 [Compiler-cost limits](../scalar-array-identity-analysis-2026-11-03/README.md) pass.
 [Runtime measurements](../scalar-array-identity-time-2026-11-03/README.md) and
 all four raw audits are complete: one array allocation is removed per update,
-but all 32 required speed gains are missed. Final platform verification remains
-pending. The
+but all 32 required speed gains are missed. All nine final production jobs and
+documentation pass at `8bf9c65b`; [full and target logs](platforms/final-gates.json)
+are audited. PR #254 merged with the identical tested tree. The
 [documentation checkout repair](documentation-repair/README.md) retains the
 timeout diagnosis and its verification status.
 
@@ -52,9 +53,9 @@ Source review found that payload `0x42` already sets BF16's quiet-NaN bit `0x40`
 The frozen test therefore repeated a quiet pattern instead of exercising a second
 signaling payload. The test now uses `0x21` and rejects duplicate input patterns,
 giving 20 distinct signed bit patterns in every format. This repairs test coverage;
-it changes no compiler or runtime code. The final matrix must verify these inputs
-and the expanded storage probe below. The frozen results above retain their actual
-coverage; they are not relabeled as tests of the new inputs.
+it changes no compiler or runtime code. The completed final matrix verifies these
+inputs and the expanded storage probe below. The frozen results above retain
+their actual coverage; they are not relabeled as tests of the new inputs.
 
 ## Result lifetime and allocation traffic
 
