@@ -17,8 +17,8 @@ construction, pair mapping and folding as separate eager stages.
 |---|---|---|
 | 1 | Verified | Preserve exact selection, ownership and measurement contracts |
 | 2 | In progress | Audit the three-host batch and fix every failed control |
-| 3 | Not started | Freeze matching source; measure compiler/runtime costs; audit all records |
-| 4 | Not started | Group docs/evidence into one PR; pass all final gates; verify squash/tree |
+| 3 | Pending | Freeze matching source; measure compiler/runtime costs; audit all records |
+| 4 | Pending | Group docs/evidence into one PR; pass all final gates; verify squash/tree |
 
 ## Current checks and source identities
 
