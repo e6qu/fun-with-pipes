@@ -1,10 +1,28 @@
 # Current work
 
-**Next:** publish the grouped consuming-storage implementation and dispatch
-`owned-numeric-checks` on all three production toolchains. Audit all failures and
+**Next:** monitor grouped [native checks 41871437618](https://github.com/e6qu/fun-with-pipes/actions/runs/41871437618)
+at `05f30383f3c95fda30abae7dbad0b63ebdbbad76`. Audit all failures and
 completed targets together before a repair push; measurements have not started.
 Keep monitoring [PR #257](https://github.com/e6qu/fun-with-pipes/pull/257) separately;
 do not open a second PR or replace its head while final gates run.
+
+Grouped jobs: GCC ARM64 `126719294035`, GCC AMD64 `126719294718`, Clang ARM64
+`126719294431`. Both GCC hosts pass 282 units (four existing ignored) and 103
+integration tests across all eighteen targets. Their only failed step is fixture
+formatting. The local repair matches the retained formatter output byte for byte.
+All target logs have no warnings/failures; 660 image architectures and ten new
+probe statuses per host were checked. [Retained first results](measurements/owned-numeric-preflight-2026-11-04/README.md)
+include failed formatting and passing native controls; full scratch archives are
+in `../gradient-work/owned-numeric-checks-first`. Clang was cancelled before receiving a runner; its capacity diagnostics are retained.
+
+Measurement wiring is complete locally but has not run timings. Five reference,
+ten compiler-driver, 22 budget, eighteen raw-evidence and twelve grouped-evidence
+controls pass serially under the guard (28.66s total). The compiler checks reject
+unused consuming helpers and wrong selection when input stays live. Workflow lint
+passes (7.18s); the grouped CI includes the actual live-call fixture before timing.
+The next push batches the formatting repair, measurements and evidence;
+retain every initial outcome. A whole-solve allocation census is still required
+before freezing measurement source and starting timings.
 
 Preparation worktree `.worktrees/owned-numeric-updates`, branch
 `owned-numeric-updates`, starts at `519fc96670b0db90ebe0f68e1263ccf85d2cf4f1`.

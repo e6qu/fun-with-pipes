@@ -57,6 +57,7 @@ class Evidence(unittest.TestCase):
         for protocol, paths in (
             ('final-iteration', ('src/fuse.rs', 'lib/list.fwp')),
             ('packed-input', ('src/mono.rs', 'src/cgen.rs')),
+            ('owned-numeric', ('src/cgen.rs',)),
         ):
             preparation = (ROOT / f'scripts/prepare-{protocol}-reference.py').read_text()
             candidates = {name: (ROOT / name).read_text() for name in paths}

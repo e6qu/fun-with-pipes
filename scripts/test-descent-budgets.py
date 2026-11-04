@@ -14,6 +14,50 @@ BASELINE = json.loads((ROOT / 'docs/measurements/array-capture-descent-2026-10-2
 
 
 class DescentBudgets(unittest.TestCase):
+    def test_consumed_storage_keeps_first_shared_coordinates_and_every_limit(self):
+        # Frozen per-solve predictions: first coordinates are shared; later
+        # exclusive cells and every fresh gradient-map buffer can be reused.
+        cases = ((3, 0, 0, 0), (3, 1, 1, 32), (3, 199, 793, 20624),
+                 (3, 1999, 7993, 207824), (33, 199, 6733, 210944),
+                 (129, 199, 25741, 819968))
+        for dimensions, updates, requests, requested_bytes in cases:
+            row = self.recording_case(updates)
+            row.update(dimensions=dimensions, solvesPerProcess=8)
+            elapsed = 95 if updates >= 199 else 100
+            row['medianNs']['fwp-ad-identical'] = elapsed
+            for label in ('fwp-ad', 'fwp-ad-history'):
+                row['medianNs'][label] = elapsed
+                old = row['fwpProfiles'][label + '-reference']['managed']
+                old.update(requests=requests * 8 + 100, requestedBytes=requested_bytes * 8 + 1000)
+                row['fwpProfiles'][label]['managed'] = dict(old, requests=100, requestedBytes=1000)
+                row['binaries'][label]['instructionBytes'] += 10000
+            self.assertEqual(DESCENT.paired_budget_failures({'case': row}, 'owned-numeric'), [])
+            for label in ('fwp-ad', 'fwp-ad-history'):
+                for metric in ('requests', 'requestedBytes', 'retains', 'peakChargedBytes', 'finalChargedBytes'):
+                    changed = copy.deepcopy(row)
+                    changed['fwpProfiles'][label]['managed'][metric] += 1
+                    failures = DESCENT.paired_budget_failures({'case': changed}, 'owned-numeric')
+                    self.assertIn(metric, [failure['metric'] for failure in failures])
+                for metric, value in (('finalBytes', 1), ('peakBytes', 999999)):
+                    changed = copy.deepcopy(row)
+                    changed['fwpProfiles'][label]['rawDerivativeStorage'][metric] = value
+                    self.assertIn('rawDerivativeStorage', [failure['metric'] for failure in
+                        DESCENT.paired_budget_failures({'case': changed}, 'owned-numeric')])
+                changed = copy.deepcopy(row)
+                changed['medianNs'][label] = 96 if updates >= 199 else 103
+                if label == 'fwp-ad':
+                    changed['medianNs']['fwp-ad-identical'] = changed['medianNs'][label]
+                self.assertEqual([failure['metric'] for failure in
+                    DESCENT.paired_budget_failures({'case': changed}, 'owned-numeric')], ['candidate/reference time'])
+                changed = copy.deepcopy(row)
+                changed['cCompilerStackUsage'][label + '.su']['entries'][0]['bytes'] = 193
+                self.assertEqual([failure['metric'] for failure in
+                    DESCENT.paired_budget_failures({'case': changed}, 'owned-numeric')], ['largest static stack frame'])
+            changed = copy.deepcopy(row)
+            changed['medianNs']['fwp-ad-identical'] = elapsed * 1.03
+            self.assertEqual([failure['metric'] for failure in
+                DESCENT.paired_budget_failures({'case': changed}, 'owned-numeric')], ['identical median variation'])
+
     def test_packed_inputs_require_count_reductions_speed_and_unchanged_raw_storage(self):
         for dimensions in (3, 33, 129):
             for updates in (0, 1, 199, 1999):

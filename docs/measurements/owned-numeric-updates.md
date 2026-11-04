@@ -130,8 +130,9 @@ missing/duplicate/altered edits before timing. Retain both compiler identities.
   Require copy variation at most 2%, no case over 2% slower, and at least 5% less
   elapsed time for every case with 199 or more updates. Preserve every miss.
 - Keep the seven existing compiler inputs and 48 scheduled compilations each.
-  Add untimed live-selection checks and a sharing/exclusion fixture before any
-  timing. Compiler elapsed time and peak RSS may grow at most 5%; frame growth
+  Run four untimed objective-scope checks plus two consuming-selection checks
+  (candidate/reference) before any timing. The latter require live calls from
+  all five exports and reject consumption of an input read again afterward. Compiler elapsed time and peak RSS may grow at most 5%; frame growth
   at most 128 bytes. Report code size; it is not the main performance objective.
 - C/Rust manual derivatives do different work; their ratios do not isolate
   language or ARC overhead. There is no equivalent Swift derivative peer.
