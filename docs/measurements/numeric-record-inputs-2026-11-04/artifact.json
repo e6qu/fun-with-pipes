@@ -1,0 +1,20 @@
+{
+  "id": 13315233468,
+  "node_id": "MDg6QXJ0aWZhY3QxMzMxNTIzMzQ2OA==",
+  "name": "iteration-storage-review",
+  "size_in_bytes": 1964937,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13315233468",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13315233468/zip",
+  "expired": false,
+  "digest": "sha256:01c0d86a4403c8b9df3be4bc5f398e65f271f8d462745bc2e608b31978efb0cf",
+  "created_at": "2026-11-04T11:07:29Z",
+  "updated_at": "2026-11-04T11:07:29Z",
+  "expires_at": "2027-02-02T11:05:19Z",
+  "workflow_run": {
+    "id": 41818502246,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "roadmap/matched-option-measurement-2026-11-04",
+    "head_sha": "82963531dddb6d9a5f32ec26657dc220736f4055"
+  }
+}

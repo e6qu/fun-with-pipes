@@ -66,9 +66,14 @@ on both architectures. [All four runtime sessions and raw audits pass](docs/meas
 one wrapper and one retain saved per history-form solve, unchanged peak storage,
 and some small slowdowns within 2%. Final platform delivery remains open.
 
-Input derivative-record packing and coordinate-list reuse remain unselected.
-[Their lifetime requirements](docs/measurements/remaining-gradient-storage.md)
-and older timing goals retain their original evidence and references.
+The [fresh input-record source review](docs/measurements/numeric-record-inputs-2026-11-04/README.md)
+identifies the next proposed group: expose known objectives inside derivative
+scopes, pack their private numeric inputs, and borrow overlapping neighboring
+pairs. Preserve separate input preparation, pair mapping and folding. Freeze
+the selection and measurement contract before implementation; this review proves
+neither cleanup nor performance. Coordinate-list reuse remains unselected.
+[Lifetime requirements](docs/measurements/remaining-gradient-storage.md) and older
+timing goals retain their original evidence and references.
 
 ## Open performance goals
 
