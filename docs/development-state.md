@@ -1,179 +1,101 @@
 # Current work
 
-**Next:** publish the grouped packed-input repairs, boundary controls and
-measurement wiring; run `packed-input-checks` once on all three hosts while
-monitoring [PR #256](https://github.com/e6qu/fun-with-pipes/pull/256).
-Preserve its exact head `81bce309c4524058aefead68f203d6dfa3b5731a`.
-Production `41822132045` is running. Documentation `41822131973` and seven
-production jobs pass. Benchmarks, both ARM64 macOS jobs and Intel ownership are
-audited; the latest collection (4.93s) verifies all 126 Intel ownership targets.
-Both Linux jobs and Windows ARM64 have just passed and need full/target audits.
-Intel regular macOS and Windows AMD64 remain running, with no failed steps at
-the latest check. Require all nine plus docs and complete audits
-before the authorized squash merge. Keep one active delivery PR.
+**Next:** audit the grouped packed-input checks `41834093801` at
+`adbe92abb855dfeea5c648fb122131433a1681f3`; fix every finding before measuring.
+[PR #256](https://github.com/e6qu/fun-with-pipes/pull/256) is verified and merged.
+Reconcile this branch onto its squash, preserving the old source history and
+checking tree equality. No new delivery PR is open yet.
 
-Next worktree/branch: `.worktrees/packed-derivative-inputs` /
-`packed-derivative-inputs`. [The contract](measurements/packed-derivative-inputs.md)
-is frozen at `cc425aba`, tag `roadmap/packed-derivative-inputs-protocol-2026-11-04`.
-The [binding proof](measurements/scoped-objective-review-2026-11-04/README.md)
-is frozen at `3ccc9bf2`, tag `roadmap/packed-input-binding-proof-2026-11-04`.
-Keep both tags unchanged. No local build, full suite or benchmark has run.
-
-[Retained preflights and repairs](measurements/packed-input-selection-2026-11-04/README.md):
-
-- `41824802673` at `3c091d3f`: known objective exposed; producer still nested.
-- `41827593617`, job `126566218264`, at `0b274ca8`: eight proof tests pass;
-  all three real gradient selections fail because packing runs before numeric
-  callees expose their field reads. Full log and 43 file hashes audited.
-- `41830904200`, job `126577546053`, at `9ad9d162`: reordered passes select all
-  three gradient inputs; all twelve source/control compilations pass. Clippy,
-  eight prior proof tests and twenty native cleanup/control images pass.
-  The new unit fixture lacks List ownership shapes; output comparison uses an
-  unsupported `run --memory` option. A missing `pipefail` hid the latter from
-  step status. All three repairs are written. Full source/native logs, 43 source
-  files and 102 native files are audited and retained (5.52/3.30s).
-
-The grouped batch adds one-field records, F32/F64 signed-zero/NaN bit preservation, exact managed
-object counts, both window/range orders, aliases, failure/cancellation, actual
-frees, disabled reuse, corrupt-field and omitted-free controls. Raw/optimized
-interpreter and O1/O2 outputs are compared. Existing autodiff scope/workspace,
-precision, callback and ownership targets remain in the same three-host batch.
-These extend `zip_unwind_ownership`; no new Cargo target or missing platform
-assignment. New native checks and repaired fixtures remain unverified.
-
-The same-source reference disables only scoped specialization and packed-input
-selection, preserving all earlier repairs. Five reference tests, twenty-one
-budget tests, eighteen raw-audit controls and seven compiler-schedule controls
-pass locally under the guard. The schedule test's old 240-command assertion was
-updated to 336 for the seven declared cases. Primitive inventory passes:
-395 declarations, 385 symbols, 40 aliases, 374 contracts, 19 IR templates and
-two scalar signatures. The small float fixture formats/type-checks with the
-verified #255 compiler (0.25s); the single-field interpreter returns True
-(0.24s). This is not verification of the new compiler. Workflow lint passes
-(6.73s), roadmap audit passes 267 link sets (2.49s), compiler-setting controls
-pass (2.17s). The failed preflight is retained at immutable
-`roadmap/packed-input-preflight-2026-11-04` (`9ad9d162`).
-
-Next suites are `packed-input-checks`, then source-matching `packed-input-analysis`
-and `packed-input-time`, followed by `packed-input-report`. No timing has started;
-keep every future failed/noisy result. The unchanged #256 delivery head does not
-contain these next-group changes.
+Worktree/branch: `.worktrees/packed-derivative-inputs` / `packed-derivative-inputs`.
+The [contract](measurements/packed-derivative-inputs.md) groups known scoped
+objectives, packed numeric input records and overlapping pair reads. Keep input
+construction, pair mapping and folding as separate eager stages.
 
 ## Roadmap status
 
 | Step | Status | Remaining work |
 |---|---|---|
-| 1 | Verified | Preserve the frozen selection and ownership contract |
-| 2 | Verified | Preserve native behavior and physical-cleanup checks |
-| 3 | Verified | Keep complete measurements and missed limits explicit |
-| 4 | In progress | Publish, pass final gates, audit and verify squash/tree |
+| 1 | Verified | Preserve exact selection, ownership and measurement contracts |
+| 2 | In progress | Audit the three-host batch and fix every failed control |
+| 3 | Not started | Freeze matching source; measure compiler/runtime costs; audit all records |
+| 4 | Not started | Group docs/evidence into one PR; pass all final gates; verify squash/tree |
 
-## Previous delivery completed
+## Current checks and source identities
 
-[#255](https://github.com/e6qu/fun-with-pipes/pull/255) merged as
-`24e099135f08403a95f36752e39f4e609a5d06cb` on November 4. Its tree equals
-`19b91c059d223614124773ab6e356824514f69f1`; the raw squash message is one line,
-under 80 characters, with no body or trailers. [History and complete gates](roadmap-history.md#final-iteration-values-without-histories-pr-255)
-retain all ten successful jobs, full/target logs, the original upload failure
-and Intel retry `126506098945`. Final collection passes in 12.14s; verified
-retention passes in 0.14s. No further #255 checks are needed.
+- Contract: `cc425aba`, immutable `roadmap/packed-derivative-inputs-protocol-2026-11-04`.
+- [Binding proof](measurements/scoped-objective-review-2026-11-04/README.md):
+  `3ccc9bf2`, immutable `roadmap/packed-input-binding-proof-2026-11-04`.
+- Failed preflight retained at `roadmap/packed-input-preflight-2026-11-04`
+  (`9ad9d162`). Never move frozen tags.
+- Grouped run `41834093801`: GCC ARM64 `126588461641`, GCC AMD64
+  `126588461854`, Clang ARM64 `126588461334`; initially queued on all hosts.
+  All use the exact `adbe92ab` source above. Later doc-only updates do not change
+  compiler/runtime/library/test/build inputs.
 
-The matched-option branch rebased onto that squash without content changes.
-Original history is retained at immutable
-`roadmap/matched-option-pre-delivery-2026-11-04` (`4c378ce5`). Never move it or
-any frozen contract/measurement tag. Duplicate main runs `41821619651` and
-`41821619512` were cancelled only after tree equality and no-failure checks.
+[Preflight failures and repairs](measurements/packed-input-selection-2026-11-04/README.md):
 
-## Current group: matched optional results
+1. `41824802673` at `3c091d3f` exposed the objective, but its producer remained
+   inside a temporary record. Freeze the binding proof before normalization.
+2. `41827593617` at `0b274ca8` passed eight proof tests but missed all three real
+   gradient selections. Packing ran before numeric callees exposed field reads.
+3. `41830904200` at `9ad9d162` selected all three gradient inputs; all twelve
+   source/control compilations, Clippy, eight prior proof tests and twenty native
+   cleanup images pass. The new unit fixture lacked List ownership shapes;
+   output comparison used unsupported `run --memory`. Missing `pipefail` hid the
+   latter from step status. All three repairs are in `adbe92ab`. Full source/native
+   logs, 43 source files and 102 native files are audited and retained.
 
-Worktree/branch: `.worktrees/matched-option-fields` / `matched-option-fields`.
-Compiler/runtime changes, controls and measurements are complete. Rebased onto
-verified #255 with a byte-identical tree and published as PR #256. Its squash
-subject is `Avoid temporary option allocations for matched list results`;
-supply an empty body and verify the raw message and tree after passing CI.
+The batch adds one/two-field records, F32/F64 signed-zero/NaN bits, exact managed
+object counts, both window/range orders, bounds, aliases, failure/cancellation,
+actual frees, disabled reuse and deliberately broken cleanup/value controls.
+Compare raw/optimized interpreters and native O1/O2. Keep existing autodiff scope,
+workspace, precision, callback and ownership targets in the same batch.
+These extend `zip_unwind_ownership`; no new Cargo target. New/repaired checks
+remain unverified until the grouped jobs finish.
 
-| Evidence | Exact identity and status |
-|---|---|
-| Frozen contract | `4ec13baa`, tag `roadmap/matched-option-fields-protocol-2026-11-04` |
-| Three-host correctness | `41808352672`, source `fb46193306de9c377a644138df8d1480e7ca7db3`, passes |
-| Frozen measurement source | `82963531dddb6d9a5f32ec26657dc220736f4055`, tag `roadmap/matched-option-measurement-2026-11-04` |
-| Compiler cost | `41811652687`, both jobs and all 480 command/raw-record audits pass |
-| Initial runtime batch | `41811658838`: both ARM64 sessions and AMD64 session 2 pass; session 1 rejected before build/time |
-| Initial raw audit | `41814391372` passes; all 4,002 file records and full logs reconcile |
-| Final runtime session | `41814521814` passes; raw audit `41817009801` passes all 1,334 file records |
+## Measurement and collection
 
-Compiler/runtime/library/tests/build inputs at the frozen measurement source match
-passing `fb461933` byte for byte. Later edits only retain evidence and clarify docs.
-Never move either frozen tag or rerun completed noisy/failing timings for a pass.
+Use `python3 scripts/local-guard.py` for every focused local check or collector.
+Full builds, suites, benchmarks and large regeneration stay on GitHub.
 
-[Native checks](measurements/matched-option-fields-2026-11-04/README.md) pass per host:
-268 units (four deliberate ignores), 57 integrations across 15 targets, seven
-selection checks, 40 new controls, 506 native-image observations and eleven other
-statuses. All 960 list-read, 80 iteration and 240 prior scalar count rows agree.
-[The first failed fixture batch](measurements/matched-option-fields-2026-11-04/fixture-repair/README.md)
-is retained; its repair did not change compiler/runtime code.
+- `../gradient-work/collect-packed-input-checks.py --run 41834093801
+  --source adbe92abb855dfeea5c648fb122131433a1681f3 --output ../gradient-work/packed-input-checks-1`
+  collects completed jobs. Inspect every full/target log and saved status;
+  a successful collector with unfinished jobs does not mean the gate passed.
+- After the complete matching-source correctness gate, freeze the measurement
+  source and dispatch `packed-input-analysis` and `packed-input-time` with that
+  `evidence_run`. Runtime needs explicit `native_runner=all` and
+  `comparison_session=both`. Then use `packed-input-report` to audit raw records.
+- The reference disables only scoped specialization and packed-input selection.
+  It preserves all earlier ownership fixes. Seven compiler inputs exercise
+  ordinary work, shared specializations and an oversized rejected worker.
+  No performance measurements have started. Keep every failed/noisy outcome.
 
-[Compiler costs](measurements/matched-option-analysis-2026-11-04/README.md) pass all
-ten cases: maximum time ratio 1.00804, peak-RSS ratio 1.00386, copy variation 1.24%.
-[All four runtime sessions](measurements/matched-option-time-2026-11-04/README.md)
-and raw audits pass, reconciling 5,336 files. Each history-form solve saves one
-request, 16 requested bytes and one retain; peak managed/raw storage is unchanged.
-Some larger timings are up to 1.95% slower, within 2%; maximum frame growth is
-16 bytes. Do not claim a general speedup or close older timing comparisons.
+## Local verification
 
-[Four rejected hosts](measurements/matched-option-time-2026-11-04/rejected-hosts/README.md)
-are fully audited and retained. Each stopped before build/time. A later dispatch
-returned HTTP 502; the run list confirmed no run existed before retry `41814521814`.
-The final audit uses the frozen measurement tag and source; its complete
-collection passes. No measured session was repeated.
+Guarded checks pass: five reference controls, twenty-one budget tests, eighteen
+raw-audit controls (19.46s), seven compiler-schedule/settings controls (2.17s),
+workflow lint (6.73s), Rust formatting (1.83s), roadmap links/identities (2.87s).
+The schedule fixture initially expected 240 commands; corrected to 336 for the
+seven declared inputs. The reference collector rejected a mistyped source before
+collecting the exact revision. Neither failed observation was treated as a pass.
 
-### Collection and publication
+Primitive inventory passes (0.63s): 395 declarations, 385 symbols, 40 aliases,
+374 contracts, 19 IR templates and two scalar signatures. The verified #255
+compiler only formats/type-checks small fixtures and confirms the single-field
+interpreter result `True` (0.24s); it does not verify the new compiler.
+No local build or benchmark. Preserve 64 GiB free disk and all guard limits.
+Leave the dirty primary/older worktrees alone; this branch owns current work.
 
-Scratch tools live in `../gradient-work`; use `python3 scripts/local-guard.py`:
+## Completed delivery
 
-- `collect-matched-option-runtime.py --run AUDIT_RUN --prefix matched-option-runtime-amd1 --audit-source 82963531dddb6d9a5f32ec26657dc220736f4055 --source 82963531dddb6d9a5f32ec26657dc220736f4055`.
-  Both collections now pass under prefixes `matched-option-runtime-all` and
-  `matched-option-runtime-amd1`; do not repeat them.
-- Retention, all 48 cross-session count comparisons and report generation pass
-  (0.78/0.30/0.28s). Tools: `retain-matched-option-time.py`,
-  `summarize-matched-option-memory.py`, `write-matched-option-time-readme.py`.
-- Final platform checks are running. Use `collect-matched-option-platforms.py`
-  with `--run 41822132045 --source 81bce309c4524058aefead68f203d6dfa3b5731a
-  --docs-job 126547601776 --output ../gradient-work/platforms-256`.
-  It audits a recovered upload error only with successful retry and verified logs.
-- Full evidence processing and final test gates belong on GitHub, not locally.
-
-`82963531` also gives each macOS test-log upload one retry with identical files
-and artifact name. Missing logs or a second failure fail CI; both attempts stay
-visible. #255's workflow is unchanged. Audit any recovered upload error against
-the exact retry step and artifact; do not blanket-ignore diagnostics.
-
-### Local verification and workspace
-
-- [Next source review](measurements/numeric-record-inputs-2026-11-04/README.md):
-  run `41818502246`, job `126535365251`, source `82963531` passes all 12 compilation
-  commands and 43 hashed files. Guarded collection 5.63s; archive/logs retained.
-  Proposed group: bounded known scoped-call specialization, packed indexed
-  numeric input records and overlapping reads. Preserve all three eager stages.
-  The implementation contract is frozen above; no performance claim yet. Also corrected
-  stale #251/#252 platform status in the compiler design guide.
-
-- Latest `python3 scripts/local-guard.py python3 scripts/check-roadmap.py`: passes
-  264 link sets, 106 immutable identities and four roadmap steps (2.59 seconds).
-- Rust formatting, workflow lint, primitive inventory (395 declarations / 374
-  contracts), source-reference, measurement-budget, raw-audit and report controls
-  pass. No new Cargo target; native shard assignment is unchanged.
-- Guarded collections: native 23.67/23.26/23.14s; ownership/image/count audit 2.34s;
-  retention 4.79s. Compiler audits 28.59/31.15s; runtime collections 4.52/5.74s.
-- The checksum-verified #255 macOS compiler package checked only the small fixture's
-  formatting/types and raw/optimized interpreter outputs. No local compiler build,
-  full suite or benchmark. Keep the fixed disk/RSS/target/deadline guard limits.
-- Preserve dirty primary and old worktrees. Only this branch owns the current docs.
-  Keep one active delivery PR. [#254's completed delivery](roadmap-history.md#float-bits-and-identity-array-maps-pr-254)
-  is history, not remaining work.
-- Freed 1.55 GiB by removing nine verified download caches after confirming
-  committed audits and live GitHub artifact hashes. Kept logs/reports and the
-  inconclusive comparison's archive. Scratch manifest:
-  `../gradient-work/removed-verified-downloads-2026-11-04.json`. The initial cleanup
-  assertion expected a list rather than the audit's failure map and removed
-  nothing; corrected check passes under the guard (5.04s).
+[#256](roadmap-history.md#matched-optional-results-pr-256) merged November 4 at
+13:17:18 UTC as `cfb6dcc4223e281188cf6159e0623368501e2294`. Its tree equals tested
+`81bce309c4524058aefead68f203d6dfa3b5731a`. All nine production jobs
+`41822132045` and documentation `41822131973` pass, with every full/target log
+audited: 257 targets per Linux host, 131/126 per regular/ownership macOS job and
+155 Windows probe targets per architecture. [Complete gates](measurements/matched-option-fields-2026-11-04/platforms/final-gates.json)
+retain identities/logs; final collection 5.15s, verified retention 0.13s.
+The raw squash message is exactly one line under 80 characters, with no body or
+trailers. Duplicate same-tree main runs `41836731497` / `41836731217` were
+cancelled only after no-failure checks. No further #256 validation is needed.

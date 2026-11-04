@@ -4,55 +4,45 @@ Build an ahead-of-time language with simple pipes, immutable values, strong type
 and useful inference. Prefer direct values, moves and borrows; reserve ARC for
 necessary sharing. GC is removed; JIT and backward compatibility are excluded.
 
-## Current work: matched optional results without temporary boxes
+## Current work: private derivative inputs in one buffer
 
-```fwp
-[10, 20, 30] | nth 1 | match
-    Some value -> value + 1
-    None -> 0
+For inputs `[-1.2, 1.0, -1.2]`, a neighboring-pair objective reads the first two
+values, then the last two. During differentiation each value also carries a
+numeric tape ID. The middle record must stay available for both reads.
+
+```text
+Separate record boxes and list cells → one private numeric buffer
+Finish input records → finish neighboring-pair results → fold results
 ```
 
-This returns 21. The selected match now receives a tag and value directly instead
-of allocating a temporary `Some 20`. The change covers list `nth`, list `last`
-and the internal final-iteration operation. Borrowed reads acquire the selected
-owner; iteration moves its existing owner. Whole-value results retain their
-required storage. No new syntax or global inference pass.
-
-The [contract](docs/measurements/matched-option-fields.md) was frozen before
-implementation. This group also gives failed macOS test-log uploads one explicit
-retry, without rerunning tests. Missing logs or a second failure still fail CI.
+The compiler exposes a known objective inside its existing derivative scope,
+then proves that its private input records have only those two overlapping
+views. It keeps immutable public lists and all three eager stages. Additional
+uses, escapes, resource anchors and branch-crossing aliases exclude packing.
+The [contract](docs/measurements/packed-derivative-inputs.md) fixes selection,
+ownership, references and limits; the [pipeline](docs/compiler-pipeline.md)
+explains the order. Coordinate-list reuse remains unselected.
 
 | Step | Work | Completion requirement |
 |---|---|---|
-| 1 | Define selection and ownership | Exact primitive/types, immediate matched use, correct borrowed retain or owned move, boxed whole-value uses. Freeze reference and limits. |
-| 2 | Verify values and physical cleanup | GCC ARM64/AMD64 and Clang ARM64, O1/O2, aliases, resources, containers, retain failure, traps, cancellation and omitted-cleanup controls. |
-| 3 | Measure and retain every outcome | No added counts or peak storage, all runtime/compiler/stack limits checked, complete raw records and all rejected hosts retained. Count savings alone are not a speedup. |
-| 4 | Deliver the grouped PR | Reconcile onto verified #255, include docs/evidence/upload repair, pass nine exact-head production jobs plus docs, audit full/target logs, squash and verify tree/message. |
+| 1 | Define scoped specialization and private storage | Freeze exact types, body/work limits, two-window use proof, owner lifetimes and same-source reference before implementation. |
+| 2 | Verify the complete compiler and cleanup | GCC ARM64/AMD64 and Clang ARM64, O1/O2, both interpreters, one/two fields, float bits, aliases, bounds, traps, cancellation, physical frees, count checks and deliberately broken observers. |
+| 3 | Measure the grouped change | Verify predicted input savings of 2N requests / 40N bytes; no added ARC or peak managed storage; unchanged raw tape profiles; zero final storage. At least 5% faster for ≥199 updates, no case >2% slower, copy variation ≤2%, compiler time/RSS growth ≤5%, frame growth ≤128 bytes. Retain every outcome. |
+| 4 | Deliver the grouped PR | Keep code, controls, documentation and evidence together. Pass nine exact-head production jobs plus docs, audit every full/target log, then squash and verify tree/message. |
 
-Steps 1–3 pass. [Three-host native checks](docs/measurements/matched-option-fields-2026-11-04/README.md)
-cover 57 integrations and 40 new ownership controls per host.
-[Compiler costs](docs/measurements/matched-option-analysis-2026-11-04/README.md)
-pass all ten cases. [Four runtime sessions and all raw audits](docs/measurements/matched-option-time-2026-11-04/README.md)
-pass: each history-form solve saves one request, 16 requested bytes and one
-retain. Peak storage is unchanged; some larger cases are up to 1.95% slower,
-within the frozen 2% limit. Maximum frame growth is 16 bytes. Final platform
-delivery remains open; [the handoff](docs/development-state.md) records its state.
+Step 1 is frozen at `cc425aba`; the subsequent binding proof at `3ccc9bf2`
+precedes its implementation. Step 2 is running as one grouped batch.
+[Preflights](docs/measurements/packed-input-selection-2026-11-04/README.md)
+now select all three real gradient examples and pass twenty GCC ARM64 cleanup
+images. The grouped gate must verify the remaining fixture/reporting repairs
+and added boundaries. No performance measurements have started. The
+[handoff](docs/development-state.md) records exact sources, jobs and next actions.
 
-Final-iteration history removal is [verified delivery #255](docs/roadmap-history.md#final-iteration-values-without-histories-pr-255).
-Its six timing misses and noisy compiler comparison remain below. Completing
-one delivery does not satisfy older comparisons against different references.
-
-## Next proof: private derivative input records
-
-The [fresh source review](docs/measurements/numeric-record-inputs-2026-11-04/README.md)
-identifies the next proposed group: expose known objectives inside derivative
-scopes, pack their private numeric inputs, and borrow overlapping neighboring
-pairs. Preserve separate input preparation, pair mapping and folding. The
-[implementation contract](docs/measurements/packed-derivative-inputs.md) defines
-the exact group, ownership proof, count predictions and acceptance limits before
-implementation. Neither document proves cleanup or performance. Coordinate-list reuse remains unselected.
-[Lifetime requirements](docs/measurements/remaining-gradient-storage.md) and older
-timing goals retain their original evidence and references.
+[PR #256 is verified delivery](docs/roadmap-history.md#matched-optional-results-pr-256):
+immediately matched list results avoid a temporary option box. Each measured
+history solve saves one request, 16 bytes and one retain; peak storage is unchanged.
+Some larger cases are up to 1.95% slower within that group's frozen 2% limit.
+This is not a general speedup and does not settle older comparisons below.
 
 ## Open performance goals
 
