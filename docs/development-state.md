@@ -1,28 +1,33 @@
 # Current work
 
-**Next:** monitor grouped [native checks 41871437618](https://github.com/e6qu/fun-with-pipes/actions/runs/41871437618)
-at `05f30383f3c95fda30abae7dbad0b63ebdbbad76`. Audit all failures and
-completed targets together before a repair push; measurements have not started.
-Keep monitoring [PR #257](https://github.com/e6qu/fun-with-pipes/pull/257) separately;
-do not open a second PR or replace its head while final gates run.
+**Next:** audit grouped [native checks 41907057111](https://github.com/e6qu/fun-with-pipes/actions/runs/41907057111)
+at `b8404dbb`, then run the untimed whole-solve allocation census before freezing
+measurement source. GCC ARM64 `126844449792`, GCC AMD64 `126844449282` and
+Clang ARM64 `126844449700` are running. Batch every failure into one repair;
+no compiler or runtime timings have started.
 
-Grouped jobs: GCC ARM64 `126719294035`, GCC AMD64 `126719294718`, Clang ARM64
-`126719294431`. Both GCC hosts pass 282 units (four existing ignored) and 103
-integration tests across all eighteen targets. Their only failed step is fixture
-formatting. The local repair matches the retained formatter output byte for byte.
-All target logs have no warnings/failures; 660 image architectures and ten new
-probe statuses per host were checked. [Retained first results](measurements/owned-numeric-preflight-2026-11-04/README.md)
-include failed formatting and passing native controls; full scratch archives are
-in `../gradient-work/owned-numeric-checks-first`. Clang was cancelled before receiving a runner; its capacity diagnostics are retained.
+The first run's [failures and passing controls](measurements/owned-numeric-preflight-2026-11-04/README.md)
+are retained: both GCC hosts pass 282 units (four ignored), 103 integrations and
+ten new ownership probes, but fail fixture formatting. Repair `b8404dbb` matches
+both saved formatter outputs. Every target log and all 660 image architectures
+per host were audited. The first Clang job never acquired a runner; its capacity
+diagnostics are retained. The new run includes an actual compiler-cost fixture
+that rejects dead consuming helpers and checks a retained-input exclusion.
 
-Measurement wiring is complete locally but has not run timings. Five reference,
-ten compiler-driver, 22 budget, eighteen raw-evidence and twelve grouped-evidence
-controls pass serially under the guard (28.66s total). The compiler checks reject
-unused consuming helpers and wrong selection when input stays live. Workflow lint
-passes (7.18s); the grouped CI includes the actual live-call fixture before timing.
-The next push batches the formatting repair, measurements and evidence;
-retain every initial outcome. A whole-solve allocation census is still required
-before freezing measurement source and starting timings.
+The measurement driver and reference are published. Five reference, ten
+compiler-driver, 22 budget, eighteen raw-evidence and twelve grouped-evidence
+controls pass serially (28.66s); workflow lint passes (7.18s); tracked roadmap
+links pass (273 sets, 2.77s). The census is prepared with five negative controls passing; workflow lint,
+those controls and roadmap checks pass together in 9.21s. It runs no timing samples: both compiler
+variants, all six cases, both result forms and both workspace settings must
+match the exact allocation prediction and preserve aliases/cleanup.
+
+Keep [PR #257](https://github.com/e6qu/fun-with-pipes/pull/257) at `519fc966`.
+All six executed production jobs and docs pass; the three unexecuted macOS jobs
+were retried once the first attempt completed. Attempt 2 jobs: Intel ownership
+`126845864825`, ARM ownership `126845865096`, ARM regular `126845865460`.
+Audit completed full logs and preserve carried-forward passing gates. Do not
+open a second PR or merge until every final-head gate passes.
 
 Preparation worktree `.worktrees/owned-numeric-updates`, branch
 `owned-numeric-updates`, starts at `519fc96670b0db90ebe0f68e1263ccf85d2cf4f1`.
@@ -49,23 +54,12 @@ after its owner-type declaration before publication. Full builds/tests remain on
 
 Final [production 41861939596](https://github.com/e6qu/fun-with-pipes/actions/runs/41861939596)
 and [docs 41861939765](https://github.com/e6qu/fun-with-pipes/actions/runs/41861939765)
-use exact head `519fc96670b0db90ebe0f68e1263ccf85d2cf4f1`. At 16:21 UTC,
-benchmark `126685788959` and docs `126685789213` pass and their full logs are
-audited (guarded collector 5.27s). Linux ARM64 and both Windows jobs run;
-remaining jobs queue. Later all three still-queued macOS jobs were cancelled
-without a runner/step. ARM annotations report hosted-runner capacity constraints;
-all diagnostics are retained in the delivery collector directory. A targeted
-retry returned 403 because the other jobs are still running. Retry only the
-missing jobs once the run finishes; never count these as passing native checks.
-
-Remaining jobs: Linux AMD64/ARM64 `126685789790` / `126685789797`;
-macOS ARM64 regular/ownership `126685789545` / `126685789311`;
-Intel regular/ownership `126685789307` / `126685789742`;
-Windows ARM64/AMD64 `126685789328` / `126685789888`.
-Collector output: `../gradient-work/platforms-257`. Earlier `41861223201`
-was cancelled; its later queued state disagreed with cancelled Windows steps,
-and force-cancel returned 409 (not in progress). Old-head states cannot pass
-final gates. Leave the primary checkout's unrelated changes alone.
+use exact head `519fc96670b0db90ebe0f68e1263ccf85d2cf4f1`. All six executed jobs and docs have audited full logs: 257 integration target
+logs per Linux host, 131 for Intel regular, and 57 main plus 155 additional
+targets per Windows host. Attempt-1 collection took 151.04s and exited nonzero
+only for the three unexecuted macOS gates. Retry identities remain distinct.
+Collector output: `../gradient-work/platforms-257`. Keep cancellation diagnostics;
+no runner means no native coverage. Leave unrelated primary-checkout changes alone.
 
 Immutable measurement tag `roadmap/packed-input-measurement-2026-11-04` points to
 `5f63ea1a9a7fb7a6bc1068bbd84c4224c176b106`. The pushed delivery commit contains
@@ -125,7 +119,11 @@ fall, and manual-gradient C/Rust remain substantially faster.
 ## Local checks and repairs
 
 Focused checks/collection use `python3 scripts/local-guard.py`; full builds and
-suites stay on GitHub. Limits unchanged; last disk observation was 67 GiB free.
+suites stay on GitHub. Limits unchanged. Disk reached 65 GiB free; removed 778,568,743 bytes of
+duplicate #256 downloads after checking all 157 retained logs per Windows host
+against their hashes. An initial cleanup assertion assumed the newer target
+count and stopped before deleting anything; the corrected check compares exact
+file inventories. Current #257 and next-group evidence is preserved.
 
 - Repaired ineffective compiler-cost fixtures before timing: all 64 calls are
   reachable, runtime input keeps specialization live, and the large helper is

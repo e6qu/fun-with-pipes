@@ -124,6 +124,12 @@ missing/duplicate/altered edits before timing. Retain both compiler identities.
 - Require no additional whole-solve retains or peak managed storage, unchanged
   raw tape storage, and zero final managed/raw storage. Report array, coordinate
   and scratch costs separately. Report process RSS even when it does not fall.
+- Before timed comparisons, the allocation-count check (`owned-numeric-census`)
+  builds the same-source
+  compiler pair and checks all six repeated solves, both result forms and both
+  workspace settings. It retains generated C, native images, exact commands and
+  raw counts. An unexplained increase **or additional saving** stops acceptance
+  of the prediction; inspect it before timing. This run collects no timing samples.
 - Keep the six coordinate/update pairs, current/history forms, two qualified
   sessions per architecture, two warmups and 98 balanced rounds of seven processes
   per sample from the [existing runtime protocol](packed-derivative-inputs.md#frozen-comparison-and-acceptance).
