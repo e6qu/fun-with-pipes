@@ -9,16 +9,21 @@ complete and must not be repeated for a pass.
 
 Branch/worktree: `iteration-final-value`, based on verified main `379bc9d5`.
 Head: `19b91c059d223614124773ab6e356824514f69f1`. Production run
-`41796687665` is running; docs run `41796687483` passes. Audited production gates:
-Linux ARM64 (257 target logs), regular ARM64 macOS (131), both macOS ownership
-jobs (126 each), Windows ARM64 (155 executed targets), and benchmarks.
-Remaining: Linux AMD64, regular Intel macOS, Windows AMD64. No reported failures.
-Keep this head intact. Latest Linux audit: 5.28 guarded seconds.
+Production `41796687665` attempt 2 is queued only for Intel macOS job
+`126506098945`; all other eight production jobs and docs `41796687483` pass and
+are fully audited. Keep this source head intact.
 
-Windows has two archives: 57 early logs and 157 final logs covering all 155
-executed targets, including iteration. Both artifact identities and every log
-are verified; expecting 58 in the early bundle was an audit configuration error,
-not missing execution. Full Windows audit: 5.17s after a 65.61s guarded download.
+[Attempt 1's upload failure](measurements/final-iteration-storage-2026-11-03/upload-failure/README.md)
+is retained: job `126462341475` passed all 128 regular targets and later packaging,
+but **Publish individual regular test logs** failed with artifact-service
+`ENOTFOUND`. The full log contains no other unexpected warning/error. Retry only
+this job; do not call the network failure a compiler bug or treat the failed gate
+as passed. Latest full passing-job audit: 6.93 guarded seconds.
+
+Windows audit uses both archives: 57 early logs and 157 final logs covering all
+155 executed targets per architecture. Both archive identities and every log are
+verified. Expecting 58 in the early bundle was an audit configuration error, not
+missing execution. Full AMD64 audit/download: 77.30 guarded seconds.
 Compiler, runtime, library, tests and build inputs match
 measured `bb5433b688c26c60f0b2561a59420deb0f0e95ed` byte for byte after rebase.
 The immutable tag `roadmap/final-iteration-measurement-2026-11-04` retains that
@@ -188,3 +193,8 @@ Before timing, both new drivers now explicitly set and record `FWP_VRET=1` and
 settings. The raw report audit checks them. Compiler schedule/timeout controls
 and grouped-report controls pass (7 + 12 tests, 7.37 guarded seconds). Old
 protocols and frozen acceptance limits are unchanged.
+
+Resume the final-gate collector **without `--attempt 1`** to select the latest
+job for each platform. Its cached eight passing production jobs and documentation
+remain valid; the Intel retry has a new job ID. Failed-attempt records are retained
+separately. Require nine passing production jobs plus docs before squash merge.
