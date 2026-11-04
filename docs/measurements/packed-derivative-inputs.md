@@ -1,11 +1,12 @@
 # Private numeric inputs for derivative objectives
 
-**Three-host native correctness verified; performance and final gates pending.**
+**Native correctness and measurements audited; three AMD64 timing limits remain
+open. Final gates are pending.**
 The contract was frozen at `cc425aba` before code changes, tag
 `roadmap/packed-derivative-inputs-protocol-2026-11-04`.
 The [source review](numeric-record-inputs-2026-11-04/README.md)
 identifies the remaining boxes and list cells at `82963531`. The starting
-delivery tree is PR #256's `81bce309`; that PR's final gates remain independent.
+delivery tree is PR #256's tested `81bce309`, merged as `cfb6dcc4` with the same tree.
 
 ## Example and selected cost
 
@@ -15,8 +16,8 @@ differentiation, each input is a numeric record `(value, tape-node-number)`.
 The middle record must remain available for both reads.
 
 ```text
-Today:    prepare N boxes + N list cells → map neighboring pairs → fold costs
-Proposed: prepare one numeric buffer    → map neighboring pairs → fold costs
+Reference: prepare N boxes + N list cells → map neighboring pairs → fold costs
+Candidate: prepare one numeric buffer    → map neighboring pairs → fold costs
 ```
 
 The three stages stay separate and eager. Finish every input record before the
@@ -73,7 +74,11 @@ The [three-host correctness gate](packed-input-checks-2026-11-04/README.md)
 passes both interpreters, O1/O2 values, one-field records, F32/F64 bits and all
 cleanup/count controls. [Earlier failures](packed-input-selection-2026-11-04/README.md)
 remain retained. Compiler-cost input inspection required the pre-timing repairs
-below; correctness does not establish performance or final platform support.
+below. The [completed compiler comparison](packed-input-analysis-2026-11-04/README.md)
+passes all fourteen input/architecture cases; compiler time increases by at most
+4.32% and peak RSS by at most 0.82%. [Runtime audits](packed-input-time-2026-11-04/README.md)
+verify storage/count savings and preserve three AMD64 timing misses. Final
+platform support still needs the complete production matrix.
 
 ## Ownership and failure proof
 

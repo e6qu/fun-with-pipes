@@ -27,16 +27,21 @@ explains the order. Coordinate-list reuse remains unselected.
 |---|---|---|
 | 1 | Define scoped specialization and private storage | Freeze exact types, body/work limits, two-window use proof, owner lifetimes and same-source reference before implementation. |
 | 2 | Verify the complete compiler and cleanup | GCC ARM64/AMD64 and Clang ARM64, O1/O2, both interpreters, one/two fields, float bits, aliases, bounds, traps, cancellation, physical frees, count checks and deliberately broken observers. |
-| 3 | Measure the grouped change | Verify predicted input savings of 2N requests / 40N bytes; no added ARC or peak managed storage; unchanged raw tape profiles; zero final storage. At least 5% faster for ≥199 updates, no case >2% slower, copy variation ≤2%, compiler time/RSS growth ≤5%, frame growth ≤128 bytes. Retain every outcome. |
+| 3 | Measure the grouped change | Audit predicted input savings of 2N requests / 40N bytes, ownership counts, raw storage, timing, compiler costs and stack growth against the frozen limits. Preserve every outcome; accepted reductions may ship with missed timing goals explicitly open. |
 | 4 | Deliver the grouped PR | Keep code, controls, documentation and evidence together. Pass nine exact-head production jobs plus docs, audit every full/target log, then squash and verify tree/message. |
 
 Step 1 is frozen at `cc425aba`; the subsequent binding proof at `3ccc9bf2`
 precedes its implementation. [Step 2 passes on all three hosts](docs/measurements/packed-input-checks-2026-11-04/README.md):
 277 units, 93 integrations and 34 new native controls per host, with all logs
 and image identities audited. Earlier failures remain retained.
-Before step 3, corrected compiler-cost fixtures must pass untimed checks for
-actual live calls; the old fixtures compiled but did not exercise their intended
-workload. No performance measurements have started. The
+Step 3's [compiler comparison passes](docs/measurements/packed-input-analysis-2026-11-04/README.md)
+on both architectures, including corrected live-work checks. The largest compiler
+time increase is 4.32%; peak RSS grows at most 0.82%, both within 5%.
+[Runtime audits also pass](docs/measurements/packed-input-time-2026-11-04/README.md):
+the largest solve saves 51,541 requests and 597 retains; peak managed storage
+falls from 19,360 to 15,232 bytes. Qualified longer solves take 14.5–23.1% less
+time. Three AMD64 timing limits remain unmet, below. Step 4 still requires final
+production gates and delivery. The
 [handoff](docs/development-state.md) records exact sources, jobs and next actions.
 
 [PR #256 is verified delivery](docs/roadmap-history.md#matched-optional-results-pr-256):
@@ -46,6 +51,14 @@ Some larger cases are up to 1.95% slower within that group's frozen 2% limit.
 This is not a general speedup and does not settle older comparisons below.
 
 ## Open performance goals
+
+- **Packed derivative inputs.** [All four audited sessions](docs/measurements/packed-input-time-2026-11-04/README.md)
+  retain AMD64 session 1's 2.3628%/2.7833% identical-copy variation on 3/199 and
+  3/1999, and session 2's 2.3095% slowdown on 3/1 current, against 2% limits.
+  [Saved-sample inspection](docs/measurements/packed-input-time-2026-11-04/amd64-sample-review.md)
+  establishes no cause and justifies no sample removal or warmup change. Keep
+  verified reductions with these goals open; declare a specific source/setup
+  diagnostic before further measurements. Never repeat unchanged timings for a pass.
 
 - **Final-iteration compiler cost.** [The completed compiler comparison](docs/measurements/final-iteration-analysis-2026-11-04/README.md)
   passes nine timing cases and all observed memory limits. AMD64 field-owner

@@ -1,0 +1,153 @@
+{
+  "source": "5f63ea1a9a7fb7a6bc1068bbd84c4224c176b106",
+  "run": 41849392317,
+  "job": {
+    "id": 126641316888,
+    "run_id": 41849392317,
+    "workflow_name": "Numerical and ownership evidence",
+    "head_branch": "roadmap/packed-input-measurement-2026-11-04",
+    "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/41849392317",
+    "run_attempt": 1,
+    "node_id": "CR_kwDOU33zxM8AAAAdfGkkGA",
+    "head_sha": "5f63ea1a9a7fb7a6bc1068bbd84c4224c176b106",
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/126641316888",
+    "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41849392317/job/126641316888",
+    "status": "completed",
+    "conclusion": "success",
+    "created_at": "2026-11-04T14:37:21Z",
+    "started_at": "2026-11-04T14:46:05Z",
+    "completed_at": "2026-11-04T14:51:59Z",
+    "name": "numeric_input_analysis (ubuntu-24.04-arm)",
+    "steps": [
+      {
+        "name": "Set up job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 1,
+        "started_at": "2026-11-04T14:46:08Z",
+        "completed_at": "2026-11-04T14:46:09Z"
+      },
+      {
+        "name": "Run actions/checkout@v7",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 2,
+        "started_at": "2026-11-04T14:46:09Z",
+        "completed_at": "2026-11-04T14:46:21Z"
+      },
+      {
+        "name": "Run dtolnay/rust-toolchain@stable",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 3,
+        "started_at": "2026-11-04T14:46:21Z",
+        "completed_at": "2026-11-04T14:46:26Z"
+      },
+      {
+        "name": "Verify focused correctness and matching compiler sources",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 4,
+        "started_at": "2026-11-04T14:46:26Z",
+        "completed_at": "2026-11-04T14:46:30Z"
+      },
+      {
+        "name": "Run actions/cache@v6",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 5,
+        "started_at": "2026-11-04T14:46:30Z",
+        "completed_at": "2026-11-04T14:46:31Z"
+      },
+      {
+        "name": "Build candidate at production settings",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 6,
+        "started_at": "2026-11-04T14:46:31Z",
+        "completed_at": "2026-11-04T14:47:55Z"
+      },
+      {
+        "name": "Build and verify the selected same-source reference",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 7,
+        "started_at": "2026-11-04T14:47:55Z",
+        "completed_at": "2026-11-04T14:49:26Z"
+      },
+      {
+        "name": "Measure balanced compiler commands and peak memory",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 8,
+        "started_at": "2026-11-04T14:49:26Z",
+        "completed_at": "2026-11-04T14:51:45Z"
+      },
+      {
+        "name": "Preserve complete measurements and failures",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 9,
+        "started_at": "2026-11-04T14:51:45Z",
+        "completed_at": "2026-11-04T14:51:57Z"
+      },
+      {
+        "name": "Post Run actions/cache@v6",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 17,
+        "started_at": "2026-11-04T14:51:57Z",
+        "completed_at": "2026-11-04T14:51:57Z"
+      },
+      {
+        "name": "Post Run actions/checkout@v7",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 18,
+        "started_at": "2026-11-04T14:51:57Z",
+        "completed_at": "2026-11-04T14:51:57Z"
+      },
+      {
+        "name": "Complete job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 19,
+        "started_at": "2026-11-04T14:51:57Z",
+        "completed_at": "2026-11-04T14:51:57Z"
+      }
+    ],
+    "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/126641316888",
+    "labels": [
+      "ubuntu-24.04-arm"
+    ],
+    "runner_id": 1000406458,
+    "runner_name": "GitHub Actions 1000406458",
+    "runner_group_id": 0,
+    "runner_group_name": "GitHub Actions"
+  },
+  "artifact": {
+    "id": 13335686741,
+    "node_id": "MDg6QXJ0aWZhY3QxMzMzNTY4Njc0MQ==",
+    "name": "packed-input-analysis-ARM64",
+    "size_in_bytes": 126756267,
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13335686741",
+    "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13335686741/zip",
+    "expired": false,
+    "digest": "sha256:4a982eec7102bd21d731110801eceb72ed7f341f0a55cfde6a83cc8feafe3140",
+    "created_at": "2026-11-04T14:51:56Z",
+    "updated_at": "2026-11-04T14:51:56Z",
+    "expires_at": "2027-02-02T14:37:21Z",
+    "workflow_run": {
+      "id": 41849392317,
+      "repository_id": 1400763332,
+      "head_repository_id": 1400763332,
+      "head_branch": "roadmap/packed-input-measurement-2026-11-04",
+      "head_sha": "5f63ea1a9a7fb7a6bc1068bbd84c4224c176b106"
+    }
+  },
+  "commands": 336,
+  "untimedChecks": 4,
+  "failures": {},
+  "referenceVerified": true,
+  "expectedDiagnostics": []
+}

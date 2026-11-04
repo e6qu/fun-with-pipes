@@ -597,7 +597,8 @@ timing goals.
 
 ### Private derivative input records
 
-**Three-host correctness verified; performance and final platform gates pending.**
+**Correctness and measurements audited; three AMD64 timing limits remain open.
+Final platform gates are pending.**
 The compiler can store selected input records together instead of allocating
 one record box and one list cell per input. For three two-number records:
 
@@ -621,6 +622,11 @@ record is borrowed twice; neither read needs another owner or a copied record.
 
 See the [pass order](compiler-pipeline.md), [ownership/measurement contract](measurements/packed-derivative-inputs.md)
 and [native correctness evidence](measurements/packed-input-checks-2026-11-04/README.md).
+[Compiler measurements](measurements/packed-input-analysis-2026-11-04/README.md)
+bound the observed compilation-time and peak-memory overhead.
+[Runtime results](measurements/packed-input-time-2026-11-04/README.md) verify
+lower allocation/retain counts and live managed storage, with three AMD64 timing
+misses preserved. Process RAM does not consistently decrease.
 Passing source selection or saving allocations alone does not prove a speedup.
 
 ### Other selected transformations
