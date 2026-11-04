@@ -1,6 +1,8 @@
 # Optional results without a temporary box
 
-**Correctness, compiler costs and four runtime sessions pass; final delivery remains pending.**
+**Verified delivery: PR #256.** Correctness, compiler costs, four runtime
+sessions and all final platform gates pass. [History](../roadmap-history.md#matched-optional-results-pr-256)
+links the verified squash and complete gate logs.
 [The native report](matched-option-fields-2026-11-04/README.md) records values,
 owners, physical cleanup, controls and binary identities. The first batch's
 fixture failure and repair remain linked there. [Complete runtime results](matched-option-time-2026-11-04/README.md)
