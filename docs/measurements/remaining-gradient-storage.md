@@ -2,8 +2,8 @@
 
 Private derivative-input packing is implemented and
 [its measurements are audited](packed-input-time-2026-11-04/README.md), with three
-AMD64 timing limits open. Its [contract](packed-derivative-inputs.md) is frozen;
-final production delivery is pending in PR #257. The following group implements
+AMD64 timing limits open. [PR #257 is verified delivery](../roadmap-history.md#packed-derivative-inputs-pr-257).
+The current group implements
 [consuming array maps and coordinate-list reuse](owned-numeric-updates.md), with
 native checks and measurements pending. [The plan](../../PLAN.md) owns acceptance.
 
@@ -76,7 +76,7 @@ boxes by itself.
 | [Same-type scalar conversion](scalar-array-identities.md), PR #254 | Removes a private F64 identity map; preserves float bits and independent owned results where needed. | All 32 original speed targets remain unmet. |
 | [Final iteration value](final-iteration-storage.md), PR #255 | Removes an unused history and reverse copy when only the final value is read. Resource-bearing states remain excluded. | Six runtime limits and one compiler-noise case remain open. |
 | [Immediately matched optional results](matched-option-fields.md), PR #256 | Removes a temporary option wrapper; all production gates and frozen runtime limits pass. | Peak storage is unchanged; some cases remain slightly slower within the allowed limit. |
-| [Private input packing](packed-derivative-inputs.md), PR #257 | Native correctness, compiler-cost and complete raw runtime audits pass; input packing preserves all three eager stages. | Three AMD64 timing limits and final production delivery remain open. |
+| [Private input packing](packed-derivative-inputs.md), PR #257 | Native correctness, compiler-cost, complete raw runtime audits and all final production gates pass; input packing preserves all three eager stages. | Three AMD64 timing limits remain open. |
 
 Each group keeps its own reference and measured outcomes. A gain against a newer
 reference does not settle an older comparison. [The input source review](numeric-record-inputs-2026-11-04/README.md)

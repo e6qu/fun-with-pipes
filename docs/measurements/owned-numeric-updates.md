@@ -1,6 +1,6 @@
 # Reuse consumed numeric arrays and coordinate lists
 
-**Implemented in preparation after PR #257; native checks and measurements pending.**
+**Implemented after merged PR #257; repaired native verification and measurements pending.**
 Contract frozen before implementation at `1c5e6a66`, immutable tag
 `roadmap/owned-numeric-updates-protocol-2026-11-04`.
 Starting source: `519fc96670b0db90ebe0f68e1263ccf85d2cf4f1`.
@@ -174,6 +174,6 @@ missing/duplicate/altered edits before timing. Retain both compiler identities.
 
 The accepted policy may retain verified reductions with timing goals explicitly
 open. A new reference cannot settle the old packed-input or other timing misses.
-Never rerun unchanged measurements for a passing result. Publish one grouped PR
-after #257 merges; merge only after all nine exact-head production jobs and docs
+Never rerun unchanged measurements for a passing result. Publish one grouped PR;
+merge only after all nine exact-head production jobs and docs
 pass and every completed target/log is audited.

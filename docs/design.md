@@ -357,7 +357,7 @@ whole-solve memory requirements.
 
 ### Consuming numeric storage
 
-**Implemented in preparation; native verification and measurements pending.**
+**Implemented; repaired native verification and measurements pending.**
 For a dead array input, a private same-type scalar map can take its owner and
 overwrite exclusive storage. A shared array or view receives independent output.
 For an array/list zip, a private entry can consume the list and reuse only its
@@ -626,8 +626,8 @@ timing goals.
 
 ### Private derivative input records
 
-**Correctness and measurements audited; three AMD64 timing limits remain open.
-Final platform gates are pending.**
+**Verified delivery in [PR #257](roadmap-history.md#packed-derivative-inputs-pr-257);
+three AMD64 timing limits remain open.**
 The compiler can store selected input records together instead of allocating
 one record box and one list cell per input. For three two-number records:
 

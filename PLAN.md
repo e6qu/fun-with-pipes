@@ -5,61 +5,56 @@ and useful inference. Prefer direct values, moves and borrows; use automatic
 reference counting (ARC) only for necessary sharing. Tracing garbage collection
 has been removed. JIT compilation and backward compatibility are excluded.
 
-## Current work: private derivative inputs in one buffer
+## Current work: reuse consumed numeric storage
 
-For inputs `[-1.2, 1.0, -1.2]`, a neighboring-pair objective reads the first two
-values, then the last two. During differentiation each value also carries a
-numeric tape ID. The middle record must stay available for both reads.
+A gradient update scales a derivative array, then subtracts it from coordinates:
 
 ```text
-Separate record boxes and list cells → one private numeric buffer
-Finish input records → finish neighboring-pair results → fold results
+coordinates [10, 20, 30], gradient [2, 4, 6], step size 0.5
+scale the gradient → [1, 2, 3]
+subtract it        → [9, 18, 27]
 ```
 
-The compiler exposes a known objective inside its existing derivative scope,
-then proves that its private input records have only those two overlapping
-views. It keeps immutable public lists and all three eager stages. Additional
-uses, escapes, resource anchors and branch-crossing aliases exclude packing.
-The [contract](docs/measurements/packed-derivative-inputs.md) fixes selection,
-ownership, references and limits; the [pipeline](docs/compiler-pipeline.md)
-explains the order. Coordinate-list reuse is the separate next group below.
+Reuse the gradient array when it has one owner; reuse the exclusively owned
+prefix of the coordinate list after all callbacks finish. Shared arrays, views
+and list suffixes keep their original values. “Consume” means transferring an
+owner, not assuming there are no aliases. Both operations stay separate eager
+stages. No new source syntax or public borrowing-contract change is required.
+
+The [contract](docs/measurements/owned-numeric-updates.md) fixes last-use selection,
+returned owners, constructor fields, failure cleanup and measurement limits.
+[The shared-tail example](docs/measurements/remaining-gradient-storage.md)
+explains why a node beneath a shared ancestor cannot be overwritten.
 
 | Step | Work | Completion requirement |
 |---|---|---|
-| 1 | Define scoped specialization and private storage | Freeze exact types, body/work limits, two-window use proof, owner lifetimes and same-source reference before implementation. |
-| 2 | Verify the complete compiler and cleanup | GCC ARM64/AMD64 and Clang ARM64, O1/O2, both interpreters, one/two fields, float bits, aliases, bounds, traps, cancellation, physical frees, count checks and deliberately broken observers. |
-| 3 | Measure the grouped change | Audit predicted input savings of 2N requests / 40N bytes, ownership counts, raw storage, timing, compiler costs and stack growth against the frozen limits. Preserve every outcome; accepted reductions may ship with missed timing goals explicitly open. |
-| 4 | Deliver the grouped PR | Keep code, controls, documentation and evidence together. Pass nine exact-head production jobs plus docs, audit every full/target log, then squash and verify tree/message. |
+| 1 | Freeze ownership and measurement rules | Define transferred owners, runtime uniqueness, aliases/views, callback order, exclusions and same-source reference before code. |
+| 2 | Verify both consuming operations | GCC ARM64/AMD64 and Clang ARM64; actual calls in both complete gradient forms; O1/O2, float bits, both zip slots, views/shared tails, traps, cancellation, allocation failure, physical frees and deliberately broken controls. |
+| 3 | Measure complete programs | First verify exact allocation predictions for all six cases, both result forms and workspace settings. Then measure compiler time/RSS and two timing sessions per architecture against the frozen limits. Preserve every outcome. |
+| 4 | Deliver one grouped PR | Bundle code, regression repairs, docs and evidence. Pass nine exact-head production jobs plus docs, audit all full/target logs, squash and verify tree/message. |
 
-Step 1 is frozen at `cc425aba`; the subsequent binding proof at `3ccc9bf2`
-precedes its implementation. [Step 2 passes on all three hosts](docs/measurements/packed-input-checks-2026-11-04/README.md):
-277 units, 93 integrations and 34 new native controls per host, with all logs
-and image identities audited. Earlier failures remain retained.
-Step 3's [compiler comparison passes](docs/measurements/packed-input-analysis-2026-11-04/README.md)
-on both architectures, including corrected live-work checks. The largest compiler
-time increase is 4.32%; peak RSS grows at most 0.82%, both within 5%.
-[Runtime audits also pass](docs/measurements/packed-input-time-2026-11-04/README.md):
-the largest solve saves 51,541 requests and 597 retains; peak managed storage
-falls from 19,360 to 15,232 bytes. Qualified longer solves take 14.5–23.1% less
-time. Three AMD64 timing limits remain unmet, below. Step 4 still requires final
-production gates and delivery. The
-[handoff](docs/development-state.md) records exact sources, jobs and next actions.
+Step 1 is frozen at `1c5e6a66`; the returned-owner/constructor-field extension at
+`c99451ec` precedes its implementation. Step 2's complete-program selection and
+new ownership controls pass on all three hosts. One older test still required
+only a borrowing helper; the [retained diagnosis and repair](docs/measurements/owned-numeric-selection-2026-11-04/README.md)
+now check explicit borrowing and both consuming positions. Reverification is
+running. Steps 3–4 remain open; no whole-solve savings or speedup is claimed.
+The [handoff](docs/development-state.md) identifies the current source and runs.
 
-[PR #256 is verified delivery](docs/roadmap-history.md#matched-optional-results-pr-256):
-immediately matched list results avoid a temporary option box. Each measured
-history solve saves one request, 16 bytes and one retain; peak storage is unchanged.
-Some larger cases are up to 1.95% slower within that group's frozen 2% limit.
-This is not a general speedup and does not settle older comparisons below.
+For N coordinates and U updates, predict U fewer array requests and
+N × max(U−1, 0) fewer list-cell requests per solve. The first coordinate list is
+shared with the input, so it must be copied. At 129 coordinates / 199 updates,
+that predicts **25,741 fewer requests and 819,968 fewer requested bytes**.
+Any unexplained difference stops measurement review before timing. Compiler
+time/RSS may grow at most 5%; identical-copy variation must stay within 2%.
+Long solves require at least 5% less time; small cases allow at most 2% more.
+Verified reductions may ship with timing goals explicitly open under the
+accepted policy; failed limits remain failed.
 
-## Next group: consumed numeric storage
-
-Prepare [numeric array and coordinate-list reuse](docs/measurements/owned-numeric-updates.md)
-on a separate branch while #257's final gates run. Keep one active delivery PR.
-Both operations transfer an input owner explicitly, reuse only exclusive storage,
-and preserve aliases and eager callback order. The contract fixes last-use
-selection, shared tails/views, failure cleanup, count predictions and measurement
-limits before implementation. Both operations and their focused controls are now
-implemented in preparation; native verification and measurements remain pending.
+[PR #257 is verified delivery](docs/roadmap-history.md#packed-derivative-inputs-pr-257):
+private derivative inputs use one buffer. Its measured reductions and three
+open AMD64 timing limits retain their own reference below. The new comparison
+will not retroactively settle them.
 
 ## Open performance goals
 

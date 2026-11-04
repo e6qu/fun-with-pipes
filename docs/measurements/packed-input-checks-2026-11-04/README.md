@@ -1,5 +1,10 @@
 # Packed derivative inputs: native correctness
 
+[PR #257](https://github.com/e6qu/fun-with-pipes/pull/257) is verified delivery.
+Its [nine final production gates and documentation](platforms/final-gates.json)
+pass at `519fc966`; every full and target log is retained and audited. Squash
+`30c2bad9` has the exact same tree and the required one-line message.
+
 [Run 41840527818](https://github.com/e6qu/fun-with-pipes/actions/runs/41840527818)
 passes at `ba23c6ea7226c31f626839530035e717f3ce05c7`. This verifies the compiler
 and cleanup change; performance and final production coverage remain pending.

@@ -6,6 +6,35 @@ and complete platform validation are different events. Measurements retain their
 original source and settings; old numbers are not measurements of current main.
 The linked PRs, runs and data records supply the detailed evidence.
 
+## Packed derivative inputs (PR #257)
+
+[PR #257](https://github.com/e6qu/fun-with-pipes/pull/257) merged November 4 as
+`30c2bad9b89d8086a8822f992eaa0e9331bd9bd1`. Its tree equals tested `519fc966`.
+All nine production jobs and documentation pass; every full and target log is
+audited. [Final gate identities and logs](measurements/packed-input-checks-2026-11-04/platforms/final-gates.json)
+retain original executions, carried-forward results and three initial macOS
+capacity cancellations. Only the unexecuted jobs were retried. The verified
+squash message is one line under 80 characters, without body or trailers.
+
+Known objectives can now use one private buffer for input records and their
+numeric tape IDs. Overlapping neighboring reads borrow that buffer; public lists
+stay immutable. Construction, mapping and folding remain ordered eager stages.
+[Native checks](measurements/packed-input-checks-2026-11-04/README.md) cover aliases,
+failure/cancellation, floating-point bits and broken cleanup/count controls.
+
+[Compiler costs](measurements/packed-input-analysis-2026-11-04/README.md) pass both
+architectures. [Runtime comparisons](measurements/packed-input-time-2026-11-04/README.md)
+save 51,541 allocation requests and 597 retains per 129-coordinate/199-update
+solve; peak managed storage falls from 19,360 to 15,232 bytes. Qualified longer
+solves take 14.5–23.1% less time. Three AMD64 timing limits remain open; process
+RAM does not consistently fall. Faster than the same-source reference does not
+establish parity with manual-gradient C/Rust.
+
+Final log collection takes 9.03s; squash verification 0.14s; retention 0.13s.
+Duplicate same-tree main runs `41918420647` and `41918420613` were cancelled.
+The measurement source keeps immutable tag `roadmap/packed-input-measurement-2026-11-04`.
+No completed timing was repeated.
+
 ## Matched optional results (PR #256)
 
 [PR #256](https://github.com/e6qu/fun-with-pipes/pull/256) merged November 4 as
