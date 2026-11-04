@@ -18,6 +18,15 @@ ANALYSIS = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(ANALYSIS)
 
 
+def scoped_output(name, specialized):
+    calls = 64 if name == 'repeated-scopes' else 1
+    callbacks = (0 if specialized else 1) if name == 'repeated-scopes' else 5120
+    return ('/* ---- program ---- */\nstatic V f7(V, V, V);\n'
+            '/* ad.scope2 : Scope */\nstatic V f7(V a, V b, V c) {}\n'
+            + ('{2, e8, "worker-known-objective", 0},\n' if specialized else '')
+            + 'f7(a, b, c);\n' * calls + 'V result = fwp_apply_owned(a, 1, b);\n' * callbacks)
+
+
 class CompilerCosts(unittest.TestCase):
     def setUp(self):
         self.rows = [dict(copy=name, round=number, seconds=1.0, peakCommandKiB=1000)
@@ -123,9 +132,14 @@ class CompilerCosts(unittest.TestCase):
                         '--reference-manifest', str(manifest_path), '--time', '/usr/bin/time',
                         '--machine', 'aarch64', '--source', 'test-source', '--timeout', '180',
                         '--output', str(output)]
-                commands = []
+                commands, preflight_commands = [], []
 
                 def captured(command, **options):
+                    if command[0] != '/usr/bin/time':
+                        preflight_commands.append(command)
+                        name = Path(command[-3]).stem
+                        Path(command[-1]).write_text(scoped_output(name, Path(command[0]).name.startswith('candidate')))
+                        return subprocess.CompletedProcess(command, 0, b'', b'')
                     commands.append(command)
                     if comparison in ('matched-option', 'packed-input'):
                         self.assertEqual(options['env']['FWP_VRET'], '1')
@@ -166,6 +180,7 @@ class CompilerCosts(unittest.TestCase):
                     self.assertEqual(report['executionOverrides']['FWP_VRET'], '1')
                     self.assertEqual(report['executionOverrides']['FWP_FRAME_FIELDS'], '1')
                 self.assertEqual(len(commands), 1 if fail else 336 if comparison == 'packed-input' else 240)
+                self.assertEqual(len(preflight_commands), 4 if comparison == 'packed-input' else 0)
                 for name, digest in report['files'].items():
                     self.assertEqual(hashlib.sha256((output / name).read_bytes()).hexdigest(), digest)
                 if fail:
@@ -176,6 +191,35 @@ class CompilerCosts(unittest.TestCase):
                     self.assertEqual(len(report['cases']), 7 if comparison == 'packed-input' else 5)
                     self.assertTrue(all(len(case['samples']) == 48 and not case['summary']['failures']
                                         for case in report['cases'].values()))
+
+    def test_cost_inputs_require_live_calls_and_shared_large_body(self):
+        for name, specialized in itertools.product(ANALYSIS.scoped_cost_inputs(), (False, True)):
+            emitted = scoped_output(name, specialized)
+            ANALYSIS.scoped_cost_output(name, emitted, specialized)
+            damaged = [emitted.replace('f7(a, b, c);\n', '', 1),
+                       emitted + 'V extra = fwp_apply_owned(a, 1, b);\n']
+            if specialized:
+                damaged += [emitted.replace('e8, "worker-known-objective"', '0, "worker-known-objective"'),
+                            emitted + '{2, e9, "worker-known-objective", 0},\n']
+            for source in damaged:
+                with self.subTest(name=name, specialized=specialized), self.assertRaises(AssertionError):
+                    ANALYSIS.scoped_cost_output(name, source, specialized)
+
+    def test_preflight_retains_both_failures_and_timeout_output(self):
+        for timeout in (False, True):
+            with tempfile.TemporaryDirectory() as temporary:
+                output = Path(temporary) / 'checks'
+                error = subprocess.TimeoutExpired(['compiler'], 180, output=b'partial', stderr=b'error')
+                options = dict(side_effect=error) if timeout else dict(return_value=subprocess.CompletedProcess([], 1, b'partial', b'error'))
+                with patch.object(ANALYSIS, 'run_capture', **options) as run, self.assertRaises(AssertionError):
+                    ANALYSIS.check_scoped_cost_inputs(Path('compiler'), output, {}, 180, True)
+                self.assertEqual(run.call_count, 2)
+                records = json.loads((output / 'checks.json').read_text())
+                self.assertEqual(len(records), 2)
+                self.assertTrue(all('failure' in row for row in records))
+                for name in ANALYSIS.scoped_cost_inputs():
+                    self.assertEqual((output / (name + '.stdout')).read_bytes(), b'partial')
+                    self.assertEqual((output / (name + '.stderr')).read_bytes(), b'error')
 
 
 if __name__ == '__main__':

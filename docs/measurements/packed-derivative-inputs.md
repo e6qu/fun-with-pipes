@@ -1,6 +1,6 @@
 # Private numeric inputs for derivative objectives
 
-**Implementation in progress; native correctness and performance are unverified.**
+**Three-host native correctness verified; performance and final gates pending.**
 The contract was frozen at `cc425aba` before code changes, tag
 `roadmap/packed-derivative-inputs-protocol-2026-11-04`.
 The [source review](numeric-record-inputs-2026-11-04/README.md)
@@ -69,13 +69,11 @@ Reject additional reads, escapes, unknown consumers and branch-crossing aliases.
 Straight-line aliases may qualify only when every use resolves to the same two
 windows and no resource frame anchors the representation.
 
-The [preflights](packed-input-selection-2026-11-04/README.md)
-select the real gradient inputs and pass twenty GCC ARM64 cleanup images.
-The three-host batch verifies both interpreters, O1/O2 values, one-field records
-and F32/F64 bit preservation. Its new allocation assertion omitted the exported
-return box; shallow history and invalid generated names also broke measurement
-controls. These repairs still require the grouped gate; partial checks do not
-establish performance or support on the other hosts.
+The [three-host correctness gate](packed-input-checks-2026-11-04/README.md)
+passes both interpreters, O1/O2 values, one-field records, F32/F64 bits and all
+cleanup/count controls. [Earlier failures](packed-input-selection-2026-11-04/README.md)
+remain retained. Compiler-cost input inspection required the pre-timing repairs
+below; correctness does not establish performance or final platform support.
 
 ## Ownership and failure proof
 
@@ -142,12 +140,29 @@ for missing/duplicate/changed edits. Retain both source and compiler identities.
 
 Before any measurements, the driver declares seven compiler inputs per host:
 field-owner transfer, the autodiff tutorial, 3/0, 33/199 and 129/199 gradient
-programs, 64 calls sharing one known scoped worker, and a worker exceeding the
-specialization body limit. Each gets 48 balanced compilation commands (two
+programs, 64 calls sharing one known scoped worker, and a worker calling a large
+dynamic body. Each gets 48 balanced compilation commands (two
 warmup rounds and ten measured rounds across four compiler copies). These time
 startup through C emission and report whole-command peak RSS. They do not run
-the generated programs. The grouped correctness gate compiles both new inputs
-before timing is allowed.
+the generated programs. Untimed compilation checks both inputs with candidate
+and reference before the first timed command. It verifies 64 live scope calls,
+one shared specialization and one copy of the large dynamic body.
+These four untimed checks are excluded from the elapsed/RSS ratios; the 336
+scheduled compiler commands per host remain unchanged.
+
+Inspection caught two ineffective fixtures before timing: executable builds
+ignored unused exports, and constant scope inputs lacked the expression type
+needed by this specialization. The entry now reaches all 64 calls explicitly
+and reads its numeric input from the number of input lines. No timed program
+is executed; the read keeps the value unknown during compilation.
+
+The large-case description also needed correction: the compiler moves its
+5,120 callback calls into one helper. The small wrapper may specialize, but
+that helper stays shared. This measures compile cost around a large callee;
+it does not test rejection of the wrapper.
+The separate `large_workers_keep_the_existing_body_limit` unit test directly
+checks the specialization limit. The seven-case schedule and acceptance limits
+are unchanged; fixture and observation repairs precede all timed runs.
 
 Explicit suites: `packed-input-checks` runs GCC ARM64/AMD64 and Clang ARM64;
 `packed-input-analysis` and `packed-input-time` require that completed,

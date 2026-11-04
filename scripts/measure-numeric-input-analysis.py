@@ -64,17 +64,67 @@ def sha(path):
 
 
 def scoped_cost_inputs():
-    """Repeated closed calls share one worker; a large dynamic worker is rejected."""
+    """Share a known worker and retain a large dynamic callee without copying it."""
     repeated = 'next : I64 -> I64\nnext = add 1\nworker : (I64 -> I64) -> I64 -> I64\nworker = fn step -> fn value -> step value\n'
     repeated += ''.join(f'export scope{i} : I64 -> I64\nscope{i} = fn value -> ad.scope2 worker next value\n' for i in range(64))
     term = 'value' + ' | step' * 20
     large = 'next : I64 -> I64\nnext = add 1\nworker : (I64 -> I64) -> I64 -> I64\nworker = fn step -> fn value -> [\n'
     large += ',\n'.join('    (' + term + ')' for _ in range(256)) + '\n] | sum\n'
     large += 'export scoped : I64 -> I64\nscoped = fn value -> ad.scope2 worker next value\n'
-    # Each source is also executable; export roots keep the other cases live.
-    repeated += 'main = scope0 1 | echo\n'
-    large += 'main = scoped 1 | echo\n'
+    # Executable builds root main, not every export. Reach every call explicitly
+    # and keep the input typed/dynamic at the specialization boundary.
+    repeated += 'main =\n    let value = read-lines () | length\n    in [\n'
+    repeated += ',\n'.join(f'        scope{i} value' for i in range(64)) + '\n    ] | sum | echo\n'
+    large += 'main = read-lines () | length | scoped | echo\n'
     return {'repeated-scopes': repeated, 'large-scoped-worker': large}
+
+
+def scoped_cost_output(name, emitted, specialized):
+    """Check live generated work, not names left in unused function metadata."""
+    program = emitted.split('/* ---- program ---- */', 1)[1]
+    scope, = re.findall(r'/\* ad\.scope2 : [^\n]+\*/\nstatic V f(\d+)\(', program)
+    # One prototype and one definition are not calls.
+    calls = len(re.findall(r'\bf' + scope + r'\(', program)) - 2
+    live_workers = len(re.findall(r'\{2, e\d+, "worker-known-objective",', program))
+    callbacks = len(re.findall(r' = fwp_apply_owned\(', program))
+    assert name in ('repeated-scopes', 'large-scoped-worker'), name
+    expected_calls = 64 if name == 'repeated-scopes' else 1
+    expected_callbacks = (0 if specialized else 1) if name == 'repeated-scopes' else 5120
+    assert (calls, live_workers, callbacks) == (expected_calls, int(specialized), expected_callbacks), (name, calls, live_workers, callbacks)
+    return dict(scopeCalls=calls, liveSpecializations=live_workers, dynamicCallbackCalls=callbacks)
+
+
+def check_scoped_cost_inputs(compiler, output, environment, timeout, specialized):
+    """Compile and inspect both cost fixtures before any timed commands."""
+    output.mkdir(parents=True, exist_ok=False)
+    records = []
+    for name, source in scoped_cost_inputs().items():
+        path = output / (name + '.fwp')
+        path.write_text(source)
+        emitted = output / (name + '.c')
+        command = [str(compiler), 'build', '--memory', 'dynamic', '--emit-c', '-O2',
+                   str(path), '-o', str(emitted)]
+        record = dict(name=name, command=command)
+        try:
+            result = run_capture(command, timeout=timeout, env=environment, cwd=str(ROOT),
+                                 input_data=None, input_stream=None, text=False,
+                                 encoding='utf-8', check=False)
+            (output / (name + '.stdout')).write_bytes(result.stdout)
+            (output / (name + '.stderr')).write_bytes(result.stderr)
+            (output / (name + '.status')).write_text(str(result.returncode) + '\n')
+            record['returncode'] = result.returncode
+            assert result.returncode == 0 and not result.stdout and not result.stderr, name
+            record['observed'] = scoped_cost_output(name, emitted.read_text(), specialized)
+        except subprocess.TimeoutExpired as error:
+            (output / (name + '.stdout')).write_bytes(error.output or b'')
+            (output / (name + '.stderr')).write_bytes(error.stderr or b'')
+            record.update(failure=str(error), timeout=timeout)
+        except (AssertionError, IndexError, ValueError) as error:
+            record['failure'] = str(error)
+        records.append(record)
+        (output / 'checks.json').write_text(json.dumps(records, indent=2) + '\n')
+    assert not any('failure' in record for record in records), records
+    return records
 
 
 def main():
@@ -166,7 +216,8 @@ def main():
     report = dict(source=args.source, machine=args.machine, complete=False, comparison=args.comparison,
                   scope='Entire compiler command through C emission: startup, parsing, typing, '
                         'optimization, ownership and emission. No generated-program execution. '
-                        'GNU time -v reports process peak RSS across all invocations, including warmups; '
+                        'GNU time -v reports process peak RSS across scheduled commands, including warmups; '
+                        'untimed fixture checks are excluded from the ratios. '
                         'this is not isolated analysis heap use.',
                   compilerHashes=dict(candidate=sha(args.compiler), reference=sha(args.reference)),
                   referenceManifest=reference_manifest,
@@ -194,6 +245,15 @@ def main():
                          for dimensions, updates in ((3, 0), (33, 199), (129, 199))})
         if args.comparison == 'packed-input':
             programs.update(scoped_cost_inputs())
+            report['preflight'] = {}
+            for kind, specialized in [('candidate', True), ('reference', False)]:
+                try:
+                    report['preflight'][kind] = check_scoped_cost_inputs(
+                        output / (kind + '1'), output / ('preflight-' + kind),
+                        environment, args.timeout, specialized)
+                except AssertionError as error:
+                    report['preflight'][kind] = dict(failure=str(error))
+            assert all(isinstance(rows, list) for rows in report['preflight'].values()), report['preflight']
         for name, source in programs.items():
             directory = output / name
             directory.mkdir()

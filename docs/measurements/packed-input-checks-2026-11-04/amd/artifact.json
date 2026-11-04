@@ -1,0 +1,20 @@
+{
+  "id": 13328219687,
+  "node_id": "MDg6QXJ0aWZhY3QxMzMyODIxOTY4Nw==",
+  "name": "packed-input-checks-ubuntu-latest",
+  "size_in_bytes": 127175000,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13328219687",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13328219687/zip",
+  "expired": false,
+  "digest": "sha256:5059ce6cc560ff347688b9736715e3c90a7937e0cd4b7f01715d8c194a1deb59",
+  "created_at": "2026-11-04T13:57:57Z",
+  "updated_at": "2026-11-04T13:57:57Z",
+  "expires_at": "2027-02-02T13:42:18Z",
+  "workflow_run": {
+    "id": 41840527818,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "packed-derivative-inputs",
+    "head_sha": "ba23c6ea7226c31f626839530035e717f3ce05c7"
+  }
+}

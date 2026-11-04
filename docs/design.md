@@ -597,7 +597,7 @@ timing goals.
 
 ### Private derivative input records
 
-**Implemented; grouped correctness and performance checks are still in progress.**
+**Three-host correctness verified; performance and final platform gates pending.**
 The compiler can store selected input records together instead of allocating
 one record box and one list cell per input. For three two-number records:
 
@@ -620,7 +620,7 @@ record is borrowed twice; neither read needs another owner or a copied record.
 - Preserve ordinary lists at public and escaping boundaries. This adds no syntax.
 
 See the [pass order](compiler-pipeline.md), [ownership/measurement contract](measurements/packed-derivative-inputs.md)
-and [preflight failures and repairs](measurements/packed-input-selection-2026-11-04/README.md).
+and [native correctness evidence](measurements/packed-input-checks-2026-11-04/README.md).
 Passing source selection or saving allocations alone does not prove a speedup.
 
 ### Other selected transformations
