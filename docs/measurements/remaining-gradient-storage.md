@@ -4,8 +4,10 @@ This review records remaining costs and the proofs needed to remove them.
 The [same-type conversion group](scalar-array-identities.md) is verified and merged
 in #254, separately from the [direct array-call experiment](direct-array-callbacks.md).
 Final-iteration consumption is the [current delivery](final-iteration-storage.md). The optional-result review below
-identifies a smaller remaining boundary cost; record packing and coordinate reuse
-remain unselected. Each experiment keeps its own reference and measurements.
+identifies a smaller remaining boundary cost. A [fresh source review](numeric-record-inputs-2026-11-04/README.md)
+proposes scoped-call specialization and private input-record packing next;
+its implementation contract is not yet frozen. Coordinate reuse remains unselected.
+Each experiment keeps its own reference and measurements.
 
 ## Measured costs
 
@@ -52,7 +54,9 @@ Two possible scopes have different proof costs:
 
 F128 arrays already distinguish borrowed payload reads from independently owned
 escaping values. That is a useful lifetime example, not proof that record reads
-can use the same representation unchanged. Neither approach is selected yet.
+can use the same representation unchanged. The fresh review proposes the private
+approach, with all input production preceding pair mapping and folding. General
+numeric-record arrays remain a broader alternative, not part of that proposal.
 
 **Updated coordinates:** [the ownership contract](../../src/ownership.rs) makes
 `zip-with` borrow both lists and return a fresh list spine. Its implementation

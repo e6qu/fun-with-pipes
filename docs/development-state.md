@@ -2,8 +2,8 @@
 
 **Next:** finish Intel macOS retry `126506098945`, audit its full/target logs, then
 squash [PR #255](https://github.com/e6qu/fun-with-pipes/pull/255). Eight other production
-jobs and docs already pass and are audited. Keep its head unchanged. In parallel,
-retain the completed optional-result measurements below; open its PR only after #255.
+jobs and docs already pass and are audited. Keep its head unchanged. Optional-result
+measurements are fully retained; open that PR only after #255.
 
 ## Roadmap status
 
@@ -18,8 +18,9 @@ retain the completed optional-result measurements below; open its PR only after 
 
 - Worktree/branch: `.worktrees/iteration-final-value` / `iteration-final-value`.
 - Exact head: `19b91c059d223614124773ab6e356824514f69f1`, base `379bc9d5`.
-- Production run `41796687665`, attempt 2: Intel regular macOS is running its test
-  shard. The eight other production jobs pass. Docs `41796687483`, job
+- Production run `41796687665`, attempt 2: Intel regular macOS tests, log upload
+  and Python SDK checks pass; packaging is running. The eight other production
+  jobs pass. Docs `41796687483`, job
   `126462340110`, also pass. Require all nine plus docs before merging.
 - Intended squash subject: `Return final iteration values without retaining their history`.
   Supply an empty body; verify the raw one-line message and tested tree afterward.
@@ -59,7 +60,7 @@ Cancel duplicate main checks only after confirming their tested tree and no fail
 
 Worktree/branch: `.worktrees/matched-option-fields` / `matched-option-fields`.
 No PR yet. Compiler/runtime changes and controls are implemented; remaining work
-is complete measurement retention, #255 reconciliation and final platform delivery.
+is #255 reconciliation and final platform delivery.
 
 | Evidence | Exact identity and status |
 |---|---|
@@ -116,6 +117,14 @@ visible. #255's workflow is unchanged. Audit any recovered upload error against
 the exact retry step and artifact; do not blanket-ignore diagnostics.
 
 ### Local verification and workspace
+
+- [Next source review](measurements/numeric-record-inputs-2026-11-04/README.md):
+  run `41818502246`, job `126535365251`, source `82963531` passes all 12 compilation
+  commands and 43 hashed files. Guarded collection 5.63s; archive/logs retained.
+  Proposed group: bounded known scoped-call specialization, packed indexed
+  numeric input records and overlapping reads. Preserve all three eager stages.
+  No implementation contract frozen or performance claim yet. Also corrected
+  stale #251/#252 platform status in the compiler design guide.
 
 - Latest `python3 scripts/local-guard.py python3 scripts/check-roadmap.py`: passes
   263 link sets, 106 immutable identities and four roadmap steps (2.68 seconds).
