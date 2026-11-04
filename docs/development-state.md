@@ -9,7 +9,9 @@ complete and must not be repeated for a pass.
 
 Branch/worktree: `iteration-final-value`, based on verified main `379bc9d5`.
 Head: `19b91c059d223614124773ab6e356824514f69f1`. Production run
-`41796687665` and docs run `41796687483` are queued. Keep this head intact.
+`41796687665` is running; docs run `41796687483` passes. Benchmark and ARM64
+macOS ownership jobs pass and their full logs are audited. Seven production jobs
+remain in progress with no reported failures. Keep this head intact.
 Compiler, runtime, library, tests and build inputs match
 measured `bb5433b688c26c60f0b2561a59420deb0f0e95ed` byte for byte after rebase.
 The immutable tag `roadmap/final-iteration-measurement-2026-11-04` retains that
@@ -96,7 +98,8 @@ fixtures and measurement tooling. Original source IDs remain reachable by the ta
 - Follow-up after this group's delivery: complete the
   [matched-option ownership proof](measurements/remaining-gradient-storage.md#follow-up-an-immediately-matched-optional-result).
   Saved C confirms an optional wrapper and payload retain before immediate match;
-  this is a bounded source finding, not a timing diagnosis. No implementation yet.
+  this is a bounded source finding, not a timing diagnosis. The separate next branch
+  now has an implementation awaiting native verification.
 
 ### Local checks and resume tools
 
@@ -119,11 +122,30 @@ fixtures and measurement tooling. Original source IDs remain reachable by the ta
 
 ## Prepared next ownership group
 
-`../matched-option-fields` branches from PR #255's exact head. Its
-[matched-option contract](measurements/matched-option-fields.md) records the source
-proof for owned iteration results and borrowed `last`/`nth` reads. No code or
-measurement changes yet. Freeze the contract before implementation. Preserve
-#255's passing head and keep one delivery PR; reconcile this branch after merge.
-The new comparison removes only these direct-field selections, keeps every #255
-change, and requires one fewer wrapper per present match. A single wrapper per
-solve is not a credible promise of a 5% large-solve speedup; older goals stay open.
+`../matched-option-fields` branches from PR #255's exact head. Contract frozen at
+`4ec13baa`, tag `roadmap/matched-option-fields-protocol-2026-11-04`, before code.
+No second PR. Keep #255's head intact; reconcile this branch after verified merge.
+
+Prepared implementation: shared optional-result fields; typed direct `last`/
+`nth` reads; owned iteration-field transfer; protected generic boxing; bounded
+selection using existing variant/match rules. Tests in
+`tests/support/matched_option_fields.rs` (part of `iteration_consumers`) and its
+C/fwp fixtures cover scalar/String/F128/File owners, aliases, missing/present
+results, allocation counts, tag corruption, omitted release, retain overflow,
+iteration traps/cancellation/count bounds and failed result boxing. Source cases
+compare raw/optimized interpreters and representation/reuse controls.
+
+**Native verification pending.** Guarded formatting passed (1.71s); both new
+reference controls (3 tests) and previous iteration-reference controls (5 tests)
+pass. Inventory is unchanged at 395 declarations / 374 contracts. Workflow lint
+and the 257-link-set documentation audit pass (10.82 guarded seconds together
+with inventory). No local compiler build or native execution.
+
+The same-source reference disables only the three new field selections;
+it preserves iteration fusion and all lifetime repairs. Seven saved-source
+selection checks include stored options, shared histories and both gradient forms.
+The `matched-option-checks` runner suite groups 15 integration targets, units,
+production lint, the source/representation controls and both tutorial engines on
+GCC AMD64/ARM64 and Clang ARM64. Publish and dispatch this single batch, then audit
+every failed step and completed target before a repair push. Runtime/compiler
+measurement wiring is still required; no timing claim is established.

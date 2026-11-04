@@ -1,6 +1,8 @@
 # Optional results without a temporary box
 
-**Design and ownership proof; not implemented or measured.** This follows
+**Implementation prepared; native verification and measurements are pending.**
+The contract was frozen at `4ec13baa`, tag
+`roadmap/matched-option-fields-protocol-2026-11-04`, before implementation. This follows
 [final-iteration delivery](final-iteration-storage.md). Keep PR #255's head
 unchanged while its platform checks run; open one subsequent grouped PR only
 after that delivery. The source reviewed here is `19b91c05`.

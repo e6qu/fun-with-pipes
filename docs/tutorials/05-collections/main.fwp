@@ -1,5 +1,10 @@
 text = "the quick brown fox jumps over the lazy dog the end"
 
+score : Option[I64] -> I64
+score = match
+    Some value -> value + 10
+    None -> 0
+
 main = [
     text | words | map string.length | sum | echo,
     text | words | frequencies | map.get "the" | echo,
@@ -7,5 +12,7 @@ main = [
     [1, 2, 3, 4, 5, 6] | filter (rem 2 | eq 0) | map (mul 10) | echo,
     1 | iter.iterate (mul 2) | iter.take 5 | iter.to-list | echo,
     1 | iterate 5 (mul 2) | last | echo,
+    1 | iterate 5 (mul 2) | last | score | echo,
+    [] | last | score | echo,
     ("apples", 12) | format "{}: {}" | print,
 ] | ignore

@@ -1033,19 +1033,31 @@ static V fwp_p_repeat_owned(V n, V x, void (*dup_element)(V),
     return fwp_value_finish(&result, &result_cleanup);
 }
 
-static V fwp_p_nth(V n, V xs) {
-    if ((int64_t)n < 0) return FWP_NONE;
+/* These fields borrow the list's element. The typed caller acquires its owner
+ * before releasing the list; a scalar zero is still a present payload. */
+static fwp_option_result fwp_list_nth_fields(V n, V xs) {
+    if ((int64_t)n < 0) return (fwp_option_result){0, 0};
     for (int64_t i = 0; xs != 0; i++, xs = OBJ(xs)->f[1])
-        if (i == (int64_t)n) return fwp_some(OBJ(xs)->f[0]);
-    return FWP_NONE;
+        if (i == (int64_t)n) return (fwp_option_result){1, OBJ(xs)->f[0]};
+    return (fwp_option_result){0, 0};
+}
+
+static V fwp_p_nth(V n, V xs) {
+    fwp_option_result result = fwp_list_nth_fields(n, xs);
+    return result.tag ? fwp_some(result.value) : FWP_NONE;
 }
 
 /* The typed caller keeps the list alive and retains the selected element in
  * the new Option wrapper. No reverse spine or intermediate element owner. */
-static V fwp_p_last(V xs) {
-    if (!xs) return FWP_NONE;
+static fwp_option_result fwp_list_last_fields(V xs) {
+    if (!xs) return (fwp_option_result){0, 0};
     while (OBJ(xs)->f[1]) xs = OBJ(xs)->f[1];
-    return fwp_some(OBJ(xs)->f[0]);
+    return (fwp_option_result){1, OBJ(xs)->f[0]};
+}
+
+static V fwp_p_last(V xs) {
+    fwp_option_result result = fwp_list_last_fields(xs);
+    return result.tag ? fwp_some(result.value) : FWP_NONE;
 }
 
 static V fwp_p_find(V f, V xs) {
@@ -1239,7 +1251,7 @@ static V fwp_p_iterate_owned(V n, V f, V x, void (*element_drop)(V), void (*list
 
 /* Selected only when the history has one final-value consumer and its state
  * has no observable destruction. Callback captures stay borrowed through return. */
-static V fwp_p_iterate_last_own(V n, V f, V x, void (*drop_state)(V)) {
+static fwp_option_result fwp_p_iterate_last_own(V n, V f, V x, void (*drop_state)(V)) {
     fwp_value_owner current = {x, drop_state};
     fwp_cleanup cleanup; fwp_value_protect(&current, &cleanup);
     size_t k = fwp_count_arg(n);
@@ -1247,16 +1259,15 @@ static V fwp_p_iterate_last_own(V n, V f, V x, void (*drop_state)(V)) {
     if (!k) {
         V unused = fwp_value_finish(&current, &cleanup);
         if (drop_state) drop_state(unused);
-        return FWP_NONE;
+        return (fwp_option_result){0, 0};
     }
     for (size_t i = 1; i < k; i++) {
         V argument = current.value;
         current.value = 0; /* application now owns this exact reference */
         current.value = fwp_apply_borrowed_prefix(f, 1, &argument, 1);
     }
-    V result = fwp_rc_fresh(fwp_some(current.value));
-    (void)fwp_value_finish(&current, &cleanup); /* result takes the final owner */
-    return result;
+    V result = fwp_value_finish(&current, &cleanup);
+    return (fwp_option_result){1, result}; /* fields take the final owner */
 }
 
 static V fwp_p_flat_map(V f, V xs) {
