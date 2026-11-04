@@ -32,8 +32,12 @@ misses passes. No completed timing session was repeated.
   instrumentation and evidence checks are separate. Zero updates still construct
   and print the initial vector; they do not isolate startup.
 - **Hosts/settings:** two native sessions each on four-vCPU Neoverse N2 ARM64 and
-  EPYC 7763 AMD64; GCC 13.3.0 / 15.2.0, Rust 1.99.1. Generated C uses O2 and the
-  frozen arithmetic/workspace settings. Commands and reference sources are retained.
+  EPYC 7763 AMD64; GCC 13.3.0 / 15.2.0, Rust 1.99.1. Generated C uses
+  `-O2 -std=gnu11 -fno-fast-math -ffp-contract=off -UFWP_NO_REUSE -fstack-usage -w`,
+  with `-march=armv8-a` / `-march=x86-64` respectively and `-lm -lpthread -ldl`.
+  Generation sets `FWP_LTO=0`, `FWP_AD_WORKSPACE=1`, `FWP_PACKED_ARRAYS=1`,
+  `FWP_STACK=1` and `FWP_ARRAY_FUSION=1` on both sides.
+  Commands and reference sources are retained.
   [The contract](../final-iteration-storage.md) defines every acceptance limit.
 
 ## Elapsed time
