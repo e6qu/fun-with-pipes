@@ -40,7 +40,10 @@ new ownership controls [pass on all three hosts](docs/measurements/owned-numeric
 [earlier failures and repairs](docs/measurements/owned-numeric-selection-2026-11-04/README.md)
 remain explicit. Step 3's [allocation census passes on both architectures](docs/measurements/owned-numeric-census-2026-11-05/README.md)
 from frozen source `07541ff9`; all six predicted reductions and cleanup checks
-match. Compiler-cost and runtime measurements are running. Step 4 remains open.
+match. [Compiler-cost limits pass](docs/measurements/owned-numeric-analysis-2026-11-05/README.md)
+on both architectures. [Runtime evidence is fully audited](docs/measurements/owned-numeric-time-2026-11-05/README.md):
+long solves take 3.36–10.50% less time, with four AMD64 5% targets still missed.
+All count, cleanup, copy-control and regression limits pass. Step 4 remains open.
 The [handoff](docs/development-state.md) identifies the current source and runs.
 
 For N coordinates and U updates, predict U fewer array requests and
@@ -71,6 +74,7 @@ history can be optimized away). Copy controls compare identical executable bytes
 
 | Goal and evidence | What remains; next action |
 |---|---|
+| [Consumed numeric storage](docs/measurements/owned-numeric-time-2026-11-05/README.md) | Four AMD64 5% targets remain open: session 1 3/199 current; session 2 3/199 current/history and 3/1999 current. Observed gains are 3.36–4.76%; copy controls pass. Finish production delivery, then inspect retained per-phase counts and the coordinate scratch buffer before selecting another ownership proof. |
 | [Packed derivative inputs](docs/measurements/packed-input-time-2026-11-04/README.md) | AMD64 session 1 copy variation is 2.3628% / 2.7833% on 3/199 and 3/1999; session 2 slows 3/1 current by 2.3095%, against 2% limits. [Saved samples](docs/measurements/packed-input-time-2026-11-04/amd64-sample-review.md) establish no cause. Verify the consumed-storage group next; retain these separate misses. |
 | [Final-iteration compiler cost](docs/measurements/final-iteration-analysis-2026-11-04/README.md) | AMD64 field-owner transfer copy variation is 2.043% against 2%; other observed limits pass. Inspect retained sample/setup progression before proposing a new measurement. |
 | [Final-iteration runtime](docs/measurements/final-iteration-time-2026-11-04/README.md) | Five history cases miss 5%: ARM64 3/199 and 33/199 in both sessions, plus AMD64 session 1 33/199. AMD64 session 2 slows 3/1 history by 2.79%. Compare small-case source and saved sample progression before selecting a repair. |

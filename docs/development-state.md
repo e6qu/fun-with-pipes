@@ -1,20 +1,19 @@
 # Current work
 
-**Next:** monitor and audit compiler-cost run [41926855499](https://github.com/e6qu/fun-with-pipes/actions/runs/41926855499)
-and runtime run [41926862701](https://github.com/e6qu/fun-with-pipes/actions/runs/41926862701).
-AMD64 session 1 replacement: [41927345094](https://github.com/e6qu/fun-with-pipes/actions/runs/41927345094).
-The first job `126913419469` rejected EPYC 9V74 before building or timing; the
-frozen requirement remains EPYC 7763. Its full log/qualification are retained
-in the census evidence directory. Do not repeat any collected timing session.
-Both initial runs started only after the complete untimed census passed independent raw-data
-review on both architectures. Runtime requests both frozen sessions per host.
+**Next:** run and audit the final production gates for PR #258's published head.
+Native correctness, allocation census, compiler costs and all runtime raw-data
+audits are complete. Publish the completed evidence/docs, mark the PR ready,
+then require all nine production jobs plus documentation. Inspect every full and
+target log before squash-merging with an explicit one-line subject and empty body.
+Keep the tested head unchanged while its gates run; no further focused rerun is needed.
 
 Source `07541ff956d582bb9c3936b86261e43fa25b0b2f` is frozen at immutable tag
 `roadmap/owned-numeric-measurement-2026-11-05`. The branch's later changes retain
 evidence and update docs only. Keep this source for comparisons; do not move tags.
-[Draft PR #258](https://github.com/e6qu/fun-with-pipes/pull/258), branch/worktree
+[PR #258](https://github.com/e6qu/fun-with-pipes/pull/258), branch/worktree
 `owned-numeric-updates` / `.worktrees/owned-numeric-updates`, is the only open PR.
-Full production CI remains for the completed batch; skipped draft jobs are not gates.
+Full production CI starts when this completed batch is marked ready. Earlier
+skipped draft jobs are not gates. Resolve the exact final head from PR metadata.
 
 ## Roadmap status
 
@@ -22,8 +21,8 @@ Full production CI remains for the completed batch; skipped draft jobs are not g
 |---|---|---|
 | 1 | Verified | Preserve frozen ownership, selection and measurement contracts |
 | 2 | Verified | Preserve three-host native checks and all failure/cleanup controls |
-| 3 | In progress | Allocation census verified; audit compiler costs, two timing sessions per architecture and independent review |
-| 4 | Pending | Complete grouped PR, nine exact-head production jobs plus docs, verified squash/tree |
+| 3 | Verified | All raw measurements audited; preserve four AMD64 5% misses and separate older goals |
+| 4 | In progress | Nine exact-head production jobs plus docs, all logs, verified squash/tree |
 
 ## Verified behavior
 
@@ -50,9 +49,10 @@ original sources before rebasing onto #257's squash; that rebase changed no file
 
 Documentation `41920859686` / `126892668039` passes at `07541ff9`; full-log audit
 finds only the three expected negative-runner diagnostics. Previous docs
-`41919183424` / `126886829262` also passed at `3b5adde4` and were fully audited.
+`41919183424` / `126886829262` also passed at `3b5adde4` and were fully audited. Evidence-only head `cecbaeaf`
+docs `41927585967` / `126915921557` passes with a complete log audit.
 
-## Measurements still required
+## Audited measurements
 
 The [allocation census](measurements/owned-numeric-census-2026-11-05/README.md)
 passes at `07541ff9`, run `41925013907`: ARM64 `126907012020`, AMD64
@@ -63,12 +63,29 @@ Largest eight-solve counts: 223,026 → 17,098 requests; 16,684,704 → 10,124,9
 requested bytes; peak managed 15,232 → 13,664 bytes. Retains stay 3,192;
 raw peak stays 33,904 bytes; final managed/raw storage is zero.
 
-No speedup or process-RAM reduction is claimed. Compiler/runtime runs above use
-`owned-numeric-analysis` and `owned-numeric-time` (`comparison_session=both`),
-with safety run `41920964943` as `evidence_run`. Audit all raw outcomes, then use
-`owned-numeric-report` for independent review. Workflow guards compare compiler,
-runtime, library, test and build trees. Preserve every missed limit and separate
-older timing goals. Never rerun unchanged timings to obtain a passing result.
+[Compiler costs](measurements/owned-numeric-analysis-2026-11-05/README.md) pass
+on both hosts: run `41926855499`, ARM64 `126913414500`, AMD64 `126913414809`.
+All 336 commands and six untimed checks per host are audited. Maximum time ratio
+1.005943, peak RSS ratio 1.011100, identical-copy ratio 1.010600. No failed limit
+or unexpected diagnostic; both exact references and native images verified.
+
+[Runtime results](measurements/owned-numeric-time-2026-11-05/README.md) are fully
+audited: original run `41926862701`, replacement AMD64 session 1 `41927345094`;
+independent audits `41929272270` / `126921722690` and `41929960201` /
+`126924072225` pass. Four qualified sessions and 5,336 raw-file records reconcile.
+All 48 count comparisons in both workspace modes match the untimed census.
+
+Long solves take 3.36–10.50% less time. Four AMD64 5% targets remain open:
+session 1 3/199 current ratio 0.966403; session 2 3/199 current 0.956684,
+history 0.962306; 3/1999 current 0.952365. Both ARM64 sessions pass all limits.
+All copy controls, small-case regression, count/cleanup and stack limits pass.
+Retain verified reductions under the agreed policy, with every miss explicit.
+Process RAM is not consistently lower; frame growth is at most 16 bytes;
+text-size changes −128 to +1,184 bytes. Older timing goals keep their references.
+
+The initial AMD64 session 1 job `126913419469` rejected EPYC 9V74 before building
+or timing. Its evidence remains; replacement `126915090828` qualifies as 7763.
+No collected timing was repeated. Do not rerun unchanged measurements for a pass.
 
 ## Delivery and local checks
 
@@ -89,6 +106,10 @@ No local full build, native suite or timing was run.
 - Census download/full-log audit: 28.97s; raw-data verification: 3.28s;
   exact command audit and durable retention: 3.03s. Rejected timing host
   full-log audit: 2.24s; qualification and safety retention: 3.22s.
+- Compiler-cost audits: ARM64 41.33s, AMD64 53.56s; retention 1.59s.
+- Runtime audit collection: 6.13s / 5.50s; combined retention 0.51s;
+  all runtime/census counts reconciled in 0.26s. Current docs full-log audit 2.60s.
+  Final documentation/roadmap check: 2.53s (278 link sets).
 - Exact fixture formatting with verified #257 macOS ARM64 package: 0.51s.
   Formatter/parser sources match. `../gradient-work/verified-257-compiler` is
   usable only for unchanged formatter checks, not new compiler verification or
@@ -107,3 +128,8 @@ use a new output directory per run, and leave unrelated primary/older changes al
 Census scratch: `../gradient-work/owned-numeric-census-2026-11-05`; audit and
 retention scripts are `audit-owned-census.py` / `retain-owned-census.py`. Reports
 and raw evidence are retained under the matching `docs/measurements` directory.
+
+Runtime audit helpers: `collect-owned-numeric-runtime.py` downloads a successful
+`owned-numeric-report` summary and checks all logs; `retain-owned-numeric-time.py`
+combined `owned-numeric-runtime-original` and `owned-numeric-runtime-amd1`;
+both independent audits pass. It preserves the rejected host and all missed limits.

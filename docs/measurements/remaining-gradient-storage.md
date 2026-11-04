@@ -7,7 +7,9 @@ The current group implements
 [consuming array maps and coordinate-list reuse](owned-numeric-updates.md), with
 [native checks](owned-numeric-checks-2026-11-05/README.md) and
 [exact allocation counts](owned-numeric-census-2026-11-05/README.md) verified.
-Compiler-cost, runtime and final production checks remain. [The plan](../../PLAN.md) owns acceptance.
+[Compiler-cost limits pass](owned-numeric-analysis-2026-11-05/README.md);
+[runtime results are audited](owned-numeric-time-2026-11-05/README.md), with four
+AMD64 speed targets open. Final production checks remain. [The plan](../../PLAN.md) owns acceptance.
 
 ## Measured costs
 
@@ -65,7 +67,8 @@ the [frozen contract](owned-numeric-updates.md) specifies:
   raw/optimized interpreter versus native O1/O2 checks.
 
 Both consuming operations pass native correctness and exact allocation checks.
-They are not yet verified delivery or a demonstrated speedup. At 129 coordinates
+Runtime measurements show 3.36–10.50% less time for long solves, with four AMD64
+5% targets missed. Final production gates still separate this from verified delivery. At 129 coordinates
 and 199 updates, the census confirms 25,741 fewer requests and 819,968 fewer
 requested bytes per solve. Retain counts and raw derivative storage are unchanged.
 The current packed-input proof covers private flat numeric records. F128, nested

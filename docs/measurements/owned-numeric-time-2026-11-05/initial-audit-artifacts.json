@@ -1,0 +1,45 @@
+{
+  "total_count": 2,
+  "artifacts": [
+    {
+      "id": 13370078095,
+      "node_id": "MDg6QXJ0aWZhY3QxMzM3MDA3ODA5NQ==",
+      "name": "owned-numeric-report-summary",
+      "size_in_bytes": 811686,
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13370078095",
+      "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13370078095/zip",
+      "expired": false,
+      "digest": "sha256:e60b852a8892fbb074533e3070e8ee694e609a5715078d25f5034d583bfa0d88",
+      "created_at": "2026-11-04T22:55:10Z",
+      "updated_at": "2026-11-04T22:55:10Z",
+      "expires_at": "2027-02-02T22:54:16Z",
+      "workflow_run": {
+        "id": 41929272270,
+        "repository_id": 1400763332,
+        "head_repository_id": 1400763332,
+        "head_branch": "roadmap/owned-numeric-measurement-2026-11-05",
+        "head_sha": "07541ff956d582bb9c3936b86261e43fa25b0b2f"
+      }
+    },
+    {
+      "id": 13369913711,
+      "node_id": "MDg6QXJ0aWZhY3QxMzM2OTkxMzcxMQ==",
+      "name": "owned-numeric-report-retained",
+      "size_in_bytes": 43236882,
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13369913711",
+      "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13369913711/zip",
+      "expired": false,
+      "digest": "sha256:91968e89854da504fdb0a51ab43a888f519257b075de57c45f8570d0dd44975c",
+      "created_at": "2026-11-04T22:58:00Z",
+      "updated_at": "2026-11-04T22:58:00Z",
+      "expires_at": "2027-02-02T22:54:16Z",
+      "workflow_run": {
+        "id": 41929272270,
+        "repository_id": 1400763332,
+        "head_repository_id": 1400763332,
+        "head_branch": "roadmap/owned-numeric-measurement-2026-11-05",
+        "head_sha": "07541ff956d582bb9c3936b86261e43fa25b0b2f"
+      }
+    }
+  ]
+}

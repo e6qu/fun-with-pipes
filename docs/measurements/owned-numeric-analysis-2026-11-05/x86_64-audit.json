@@ -1,0 +1,161 @@
+{
+  "source": "07541ff956d582bb9c3936b86261e43fa25b0b2f",
+  "run": 41926855499,
+  "job": {
+    "id": 126913414809,
+    "run_id": 41926855499,
+    "workflow_name": "Numerical and ownership evidence",
+    "head_branch": "roadmap/owned-numeric-measurement-2026-11-05",
+    "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/41926855499",
+    "run_attempt": 1,
+    "node_id": "CR_kwDOU33zxM8AAAAdjKEGmQ",
+    "head_sha": "07541ff956d582bb9c3936b86261e43fa25b0b2f",
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/126913414809",
+    "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41926855499/job/126913414809",
+    "status": "completed",
+    "conclusion": "success",
+    "created_at": "2026-11-04T22:37:16Z",
+    "started_at": "2026-11-04T22:37:19Z",
+    "completed_at": "2026-11-04T22:43:52Z",
+    "name": "numeric_input_analysis (ubuntu-latest)",
+    "steps": [
+      {
+        "name": "Set up job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 1,
+        "started_at": "2026-11-04T22:37:20Z",
+        "completed_at": "2026-11-04T22:37:21Z"
+      },
+      {
+        "name": "Run actions/checkout@v7",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 2,
+        "started_at": "2026-11-04T22:37:21Z",
+        "completed_at": "2026-11-04T22:37:35Z"
+      },
+      {
+        "name": "Run dtolnay/rust-toolchain@stable",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 3,
+        "started_at": "2026-11-04T22:37:35Z",
+        "completed_at": "2026-11-04T22:37:43Z"
+      },
+      {
+        "name": "Verify focused correctness and matching compiler sources",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 4,
+        "started_at": "2026-11-04T22:37:43Z",
+        "completed_at": "2026-11-04T22:37:47Z"
+      },
+      {
+        "name": "Run actions/cache@v6",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 5,
+        "started_at": "2026-11-04T22:37:47Z",
+        "completed_at": "2026-11-04T22:37:50Z"
+      },
+      {
+        "name": "Build candidate at production settings",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 6,
+        "started_at": "2026-11-04T22:37:50Z",
+        "completed_at": "2026-11-04T22:39:17Z"
+      },
+      {
+        "name": "Build and verify the selected same-source reference",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 7,
+        "started_at": "2026-11-04T22:39:17Z",
+        "completed_at": "2026-11-04T22:40:54Z"
+      },
+      {
+        "name": "Verify complete solve allocations before any timing",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 8,
+        "started_at": "2026-11-04T22:40:54Z",
+        "completed_at": "2026-11-04T22:40:54Z"
+      },
+      {
+        "name": "Measure balanced compiler commands and peak memory",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 9,
+        "started_at": "2026-11-04T22:40:54Z",
+        "completed_at": "2026-11-04T22:43:32Z"
+      },
+      {
+        "name": "Preserve complete measurements and failures",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 10,
+        "started_at": "2026-11-04T22:43:32Z",
+        "completed_at": "2026-11-04T22:43:48Z"
+      },
+      {
+        "name": "Post Run actions/cache@v6",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 19,
+        "started_at": "2026-11-04T22:43:48Z",
+        "completed_at": "2026-11-04T22:43:48Z"
+      },
+      {
+        "name": "Post Run actions/checkout@v7",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 20,
+        "started_at": "2026-11-04T22:43:48Z",
+        "completed_at": "2026-11-04T22:43:49Z"
+      },
+      {
+        "name": "Complete job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 21,
+        "started_at": "2026-11-04T22:43:49Z",
+        "completed_at": "2026-11-04T22:43:49Z"
+      }
+    ],
+    "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/126913414809",
+    "labels": [
+      "ubuntu-latest"
+    ],
+    "runner_id": 1000408239,
+    "runner_name": "GitHub Actions 1000408239",
+    "runner_group_id": 0,
+    "runner_group_name": "GitHub Actions"
+  },
+  "artifact": {
+    "id": 13369872007,
+    "node_id": "MDg6QXJ0aWZhY3QxMzM2OTg3MjAwNw==",
+    "name": "owned-numeric-analysis-X64",
+    "size_in_bytes": 142070293,
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13369872007",
+    "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13369872007/zip",
+    "expired": false,
+    "digest": "sha256:d0b4df920428f29c830d4c1ab822788b789792be8bd236357d848e745d06cdb1",
+    "created_at": "2026-11-04T22:43:48Z",
+    "updated_at": "2026-11-04T22:43:48Z",
+    "expires_at": "2027-02-02T22:37:15Z",
+    "workflow_run": {
+      "id": 41926855499,
+      "repository_id": 1400763332,
+      "head_repository_id": 1400763332,
+      "head_branch": "roadmap/owned-numeric-measurement-2026-11-05",
+      "head_sha": "07541ff956d582bb9c3936b86261e43fa25b0b2f"
+    }
+  },
+  "commands": 336,
+  "untimedChecks": 6,
+  "failures": {},
+  "referenceVerified": true,
+  "expectedDiagnostics": []
+}

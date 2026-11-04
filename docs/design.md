@@ -359,7 +359,9 @@ whole-solve memory requirements.
 
 **[Focused native verification](measurements/owned-numeric-checks-2026-11-05/README.md)
 and the [exact allocation census](measurements/owned-numeric-census-2026-11-05/README.md)
-pass; compiler/runtime timing and final platform delivery remain open.**
+pass. [Compiler costs pass](measurements/owned-numeric-analysis-2026-11-05/README.md);
+[runtime results are audited](measurements/owned-numeric-time-2026-11-05/README.md)
+with four AMD64 speed targets open. Final platform delivery remains.**
 For a dead array input, a private same-type scalar map can take its owner and
 overwrite exclusive storage. A shared array or view receives independent output.
 For an array/list zip, a private entry can consume the list and reuse only its
