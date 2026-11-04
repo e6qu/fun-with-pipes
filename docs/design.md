@@ -632,6 +632,22 @@ checks pass. [Measured results](measurements/final-iteration-time-2026-11-04/REA
 show lower peak storage and ARC traffic, with explicit timing misses. Final
 delivery gates remain open.
 
+The next [optional-field change](measurements/matched-option-fields.md) is
+implemented on the development branch but still awaits native verification.
+When `last`, `nth` or the internal final-iteration operation feeds a selected
+match, C generation can return a tag and payload directly:
+
+```text
+Before: final value → allocate Some(value) → match → value
+After:  final value → tag + owned payload  → match → value
+```
+
+List reads retain the borrowed element; iteration transfers its existing owner.
+`None` owns no payload. Existing match-use checks, resource-frame holders and
+unwind protection govern the fields. Whole-value uses still get an owned box,
+with its payload protected during allocation. This changes representation,
+not `Option` syntax or semantics; its measured benefits remain unverified.
+
 A temporary tuple or record can disappear only when its uses and child lifetimes
 permit it. Ignored fields still evaluate in their original order. Known tuple
 matches can expose direct callbacks, but multiple tested fields, whole-value uses

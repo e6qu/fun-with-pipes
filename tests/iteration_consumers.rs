@@ -6,6 +6,8 @@ use fwp::value::Value;
 use std::path::Path;
 use std::process::Command;
 
+#[path = "support/matched_option_fields.rs"]
+mod matched_option_fields;
 #[path = "support/ownership_ledger.rs"]
 mod ownership_ledger;
 #[path = "support/record_probe.rs"]

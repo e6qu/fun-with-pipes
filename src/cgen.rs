@@ -3590,6 +3590,37 @@ impl<'g, 'p> FnGen<'g, 'p, '_> {
 
     fn lookup_value_type(&self, id: FuncId) -> Option<MT> {
         let function = &self.g.prog.funcs[id];
+        if let Body::Prim(symbol) = &function.body {
+            if matches!(symbol.as_str(), "last" | "nth") {
+                let index = usize::from(symbol == "nth");
+                if function.arity as usize != index + 1
+                    || (index == 1 && function.locals.first()? != &MT::con("std::I64"))
+                {
+                    return None;
+                }
+                let MT::Con(name, fields) = function.locals.get(index)? else {
+                    return None;
+                };
+                let result = self.ret_type(id);
+                let MT::Con(result_name, result_fields) = &result else {
+                    return None;
+                };
+                let Some(TypeShape::Adt(cases)) = self.g.prog.shapes.get(&result) else {
+                    return None;
+                };
+                if name == "std::List"
+                    && fields.len() == 1
+                    && result_name == "std::Option"
+                    && result_fields == fields
+                    && cases.len() == 2
+                    && cases[0].1.is_empty()
+                    && cases[1].1 == *fields
+                {
+                    return Some(fields[0].clone());
+                }
+                return None;
+            }
+        }
         if function.arity != 2 {
             return None;
         }
@@ -3611,13 +3642,40 @@ impl<'g, 'p> FnGen<'g, 'p, '_> {
         }
     }
 
-    /// A matched Option can expose a counted handle's payload as direct fields.
-    /// Channels transfer the queued owner; task awaits duplicate the shared result.
+    /// A matched Option can expose an owned payload as direct fields.
+    /// Iteration and channels move owners; task awaits duplicate a shared result.
     fn owned_option_type(&self, id: FuncId) -> Option<MT> {
         let function = &self.g.prog.funcs[id];
         let Body::Prim(symbol) = &function.body else {
             return None;
         };
+        if symbol == "list._iterate-last" {
+            let (parameters, result) = function.ty.params(3);
+            let MT::Con(name, fields) = result else {
+                return None;
+            };
+            let Some(TypeShape::Adt(cases)) = self.g.prog.shapes.get(result) else {
+                return None;
+            };
+            if function.arity != 3
+                || parameters.len() != 3
+                || name != "std::Option"
+                || fields.len() != 1
+                || !crate::fuse::numeric_iteration_state(&fields[0])
+                || parameters[0] != &MT::con("std::I64")
+                || parameters[1]
+                    != &MT::Fun(Box::new(fields[0].clone()), Box::new(fields[0].clone()))
+                || parameters[2] != &fields[0]
+                || function.locals.len() < 3
+                || !function.locals[..3].iter().eq(parameters.iter().copied())
+                || cases.len() != 2
+                || !cases[0].1.is_empty()
+                || cases[1].1 != *fields
+            {
+                return None;
+            }
+            return Some(fields[0].clone());
+        }
         let (owner, container) = match symbol.as_str() {
             "channel.recv" if function.arity == 1 => (0, "std::Channel"),
             "channel.recv-for" if function.arity == 2 => (1, "std::Channel"),
@@ -3677,7 +3735,9 @@ impl<'g, 'p> FnGen<'g, 'p, '_> {
                 }
                 Expr::Construct(_, xs) => Some(!xs.is_empty()),
                 Expr::Call(id, args)
-                    if m == 1 && args.len() == 2 && fg.lookup_value_type(*id).is_some() =>
+                    if m == 1
+                        && args.len() == fg.g.prog.funcs[*id].arity as usize
+                        && fg.lookup_value_type(*id).is_some() =>
                 {
                     Some(true)
                 }
@@ -3757,19 +3817,31 @@ impl<'g, 'p> FnGen<'g, 'p, '_> {
                 parts(&u)
             }
             Expr::Call(id, args)
-                if m == 1 && args.len() == 2 && self.lookup_value_type(*id).is_some() =>
+                if m == 1
+                    && args.len() == self.g.prog.funcs[*id].arity as usize
+                    && self.lookup_value_type(*id).is_some() =>
             {
                 let element = self.lookup_value_type(*id).unwrap();
                 let values = self.args(args);
                 let map_lookup = matches!(&self.g.prog.funcs[*id].body, Body::Prim(symbol) if symbol == "map.get");
+                let list_lookup = matches!(&self.g.prog.funcs[*id].body, Body::Prim(symbol) if matches!(symbol.as_str(), "last" | "nth"));
                 // A bounds-checked scalar array read cannot allocate or unwind.
                 // Map comparisons and counted result duplication still can.
-                let pending = if map_lookup {
+                let pending = if map_lookup || list_lookup {
                     self.begin_call(e as *const Expr)
                 } else {
                     None
                 };
-                let (tag, value) = if map_lookup {
+                let (tag, value) = if list_lookup {
+                    let result = self.fresh();
+                    let call = if values.len() == 1 {
+                        format!("fwp_list_last_fields({})", values[0])
+                    } else {
+                        format!("fwp_list_nth_fields({}, {})", values[0], values[1])
+                    };
+                    self.line(&format!("fwp_option_result {result} = {call};"));
+                    (format!("{result}.tag"), format!("{result}.value"))
+                } else if map_lookup {
                     let key = self.g.prog.funcs[*id].locals[0].clone();
                     let descriptor = self.g.desc(&key);
                     let found = self.fresh();
@@ -3810,7 +3882,14 @@ impl<'g, 'p> FnGen<'g, 'p, '_> {
                     "NULL"
                 };
                 let result = self.fresh();
-                if matches!(&self.g.prog.funcs[*id].body, Body::Prim(symbol) if symbol == "task.await")
+                if matches!(&self.g.prog.funcs[*id].body, Body::Prim(symbol) if symbol == "list._iterate-last")
+                {
+                    let drop = self.g.value_drop(&element);
+                    self.line(&format!(
+                        "fwp_option_result {result} = fwp_p_iterate_last_own({}, {}, {}, {drop});",
+                        values[0], values[1], values[2]
+                    ));
+                } else if matches!(&self.g.prog.funcs[*id].body, Body::Prim(symbol) if symbol == "task.await")
                 {
                     self.line(&format!(
                         "fwp_option_result {result} = fwp_task_await_fields({}, {duplicate});",
@@ -7288,8 +7367,11 @@ impl<'p> Gen<'p> {
                 format!("return fwp_p_loop(l0, l1, {ops});")
             }
             "list._iterate-last" => {
-                let drop = self.value_drop(&p(2));
-                format!("return fwp_p_iterate_last(l0, l1, l2, {drop});")
+                let state = p(2);
+                let drop = self.value_drop(&state);
+                let protect = self.protect_values(&[("fields.value".into(), state)], "pending", "boxing_cleanup");
+                let finish = if protect.is_empty() { "" } else { "fwp_cleanup_pop(&boxing_cleanup);" };
+                format!("fwp_option_result fields = fwp_p_iterate_last(l0, l1, l2, {drop}); if (!fields.tag) return FWP_NONE; {protect} V result = fwp_rc_fresh(fwp_some(fields.value)); {finish} return result;")
             }
             "sort" => format!("return fwp_p_sort(l0, {});", self.desc(&elem(&p(0), 0))),
             "sort-by" => {

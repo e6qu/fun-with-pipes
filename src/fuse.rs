@@ -67,7 +67,7 @@ fn num(t: &MT) -> Option<Num> {
 
 /// These states can own storage, but releasing it has no resource-close effect.
 /// Keep this bounded: no recursive records, closures or arbitrary type expansion.
-fn numeric_iteration_state(ty: &MT) -> bool {
+pub(crate) fn numeric_iteration_state(ty: &MT) -> bool {
     num(ty).is_some()
         || matches!(ty, MT::Con(name, elements)
             if matches!(name.as_str(), "std::List" | "std::Array")

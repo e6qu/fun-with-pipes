@@ -1332,7 +1332,6 @@ static V fwp_await(fwp_task *t) {
 }
 
 /* A direct Option result uses two C fields instead of a heap box. */
-typedef struct { V tag, value; } fwp_option_result;
 static fwp_option_result fwp_task_await_fields(V handle, void (*dup)(V)) {
     fwp_tasks_init();
     fwp_task *t = (fwp_task *)(uintptr_t)handle;

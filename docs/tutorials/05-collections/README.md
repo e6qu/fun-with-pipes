@@ -42,6 +42,11 @@ compiler can keep just the current value while doubling it four times. If the
 program also uses the history list, that list must remain available. Ordinary
 `last` walks a list without making a reversed copy.
 
+The `score` function handles both possible results with `match`. For `Some 16`,
+it binds `value` to 16 and returns 26. For an empty list, `last` gives `None`, so
+`score` returns 0. The result is an ordinary integer; the `Some`/`None` choice
+has been handled. `nth 0` similarly returns the first item, or `None` if absent.
+
 ### Follow one list through a pipe
 
 ```text
@@ -61,6 +66,11 @@ the original list. For the iterator example, changing `iter.take 5` to
 ```fwp
 text = "the quick brown fox jumps over the lazy dog the end"
 
+score : Option[I64] -> I64
+score = match
+    Some value -> value + 10
+    None -> 0
+
 main = [
     text | words | map string.length | sum | echo,
     text | words | frequencies | map.get "the" | echo,
@@ -68,6 +78,8 @@ main = [
     [1, 2, 3, 4, 5, 6] | filter (rem 2 | eq 0) | map (mul 10) | echo,
     1 | iter.iterate (mul 2) | iter.take 5 | iter.to-list | echo,
     1 | iterate 5 (mul 2) | last | echo,
+    1 | iterate 5 (mul 2) | last | score | echo,
+    [] | last | score | echo,
     ("apples", 12) | format "{}: {}" | print,
 ] | ignore
 ```
@@ -83,6 +95,8 @@ Some 3
 [20, 40, 60]
 [1, 2, 4, 8, 16]
 Some 16
+26
+0
 apples: 12
 ```
 
