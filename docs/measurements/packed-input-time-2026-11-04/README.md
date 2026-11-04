@@ -133,6 +133,7 @@ reference edits, commands, native images, outputs, counts and every failed limit
 - [Audit job](initial-audit-job.json) and [full audit log](initial-audit-job.log.gz).
 - [Native correctness](../packed-input-checks-2026-11-04/README.md) and
   [compiler costs](../packed-input-analysis-2026-11-04/README.md) pass their separate
-  checks. Final nine-job production CI and documentation remain required.
+  checks. [All final production gates and documentation pass](../packed-input-checks-2026-11-04/platforms/final-gates.json)
+  at `519fc966`; squash `30c2bad9` preserves its exact tested tree.
 
 Older timing goals use different references and remain separate.

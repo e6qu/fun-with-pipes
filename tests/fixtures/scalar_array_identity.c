@@ -46,9 +46,13 @@ int main(int argc, char **argv) {
                     offset=0;
                 }
                 if(alias) fwp_rc_dup(input);
+                /* Native ownership lowering can reuse an exclusive ordinary
+                 * array even when the earlier identity rewrite is disabled.
+                 * Views, aliases and disabled reuse still require a copy. */
+                int reusable=IDENTITY_REUSE && !alias && !fwp_array_is_view(input);
                 size_t allocations=owner_ledger_allocations, retains=identity_retains;
                 V result=f2(input);
-                if(IDENTITY_SELECTED) {
+                if(IDENTITY_SELECTED || reusable) {
                     if(result!=input || owner_ledger_allocations!=allocations || identity_retains!=retains) return 81;
                 } else if(result==input || owner_ledger_allocations!=allocations+1) return 82;
                 if(fwp_array_len(result)!=length) return 83;
@@ -114,6 +118,7 @@ int main(int argc, char **argv) {
         int view=fwp_array_is_view(input);
         if(view!=(sliced && FWP_PACKED_ARRAYS)) return 96;
         if(alias) fwp_rc_dup(input);
+        int reusable=IDENTITY_REUSE && !alias && !view;
         size_t before=fwp_heap.live, allocations=owner_ledger_allocations;
         size_t retains=identity_retains;
         double charged=fwp_heap.total_alloc;
@@ -123,7 +128,7 @@ int main(int argc, char **argv) {
         size_t new_allocations=owner_ledger_allocations-allocations;
         size_t new_retains=identity_retains-retains;
         double new_charged=fwp_heap.total_alloc-charged;
-        if(IDENTITY_SELECTED) {
+        if(IDENTITY_SELECTED || reusable) {
             if(result!=input || new_allocations || new_retains || new_charged || after!=before || peak!=before) return 97;
         } else {
             if(new_allocations!=1 || new_charged<=0 || peak<=before) return 98;

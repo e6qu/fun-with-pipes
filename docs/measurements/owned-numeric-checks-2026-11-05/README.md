@@ -52,6 +52,8 @@ relabeled or discarded.
 
 These checks establish behavior and isolated reuse counts. They do not establish
 whole-solve allocation savings, speed or all-platform delivery. The separate
-[allocation census now passes](../owned-numeric-census-2026-11-05/README.md). The
-[contract](../owned-numeric-updates.md) still requires compiler/runtime comparisons
-and nine final production jobs plus documentation.
+[allocation census now passes](../owned-numeric-census-2026-11-05/README.md). [Compiler costs](../owned-numeric-analysis-2026-11-05/README.md) and
+[runtime results](../owned-numeric-time-2026-11-05/README.md) are audited, with four
+AMD64 speed targets open. Production delivery remains: its first final run found
+an [outdated identity-array test expectation](../owned-numeric-ci-repair-2026-11-05/README.md).
+The repair must pass expanded focused checks and all nine production jobs plus docs.

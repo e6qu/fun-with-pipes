@@ -99,7 +99,7 @@ jobs:
           set -o pipefail
           status=0
           cargo fmt --all -- --check 2>&1 | tee owned-numeric-checks/format.log || status=1
-          CARGO_NET_OFFLINE=true cargo clippy --locked --lib --bin fwp --test zip_unwind_ownership --test zip_map_fusion --test mapped_array_construction -- -D warnings 2>&1 | tee owned-numeric-checks/clippy.log || status=1
+          CARGO_NET_OFFLINE=true cargo clippy --locked --lib --bin fwp --test zip_unwind_ownership --test zip_map_fusion --test mapped_array_construction --test float_formats -- -D warnings 2>&1 | tee owned-numeric-checks/clippy.log || status=1
           exit "$status"
       - name: Build compiler for independent checks
         id: compiler_build
@@ -153,7 +153,7 @@ jobs:
           fold_ownership fold_unwind_ownership worker_preparation_ownership
           worker_boxing_ownership argument_preparation_ownership call_effects
           ad_tape_scopes ad_tape_ownership autodiff_nested autodiff_precision
-          autodiff_workspace iteration_consumers
+          autodiff_workspace iteration_consumers float_formats
           --idle-timeout 900 --logs owned-numeric-checks/targets
       - name: Check and retain fixture formatting
         if: ${{ !cancelled() && steps.compiler_build.outcome == 'success' }}

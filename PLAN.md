@@ -43,7 +43,10 @@ from frozen source `07541ff9`; all six predicted reductions and cleanup checks
 match. [Compiler-cost limits pass](docs/measurements/owned-numeric-analysis-2026-11-05/README.md)
 on both architectures. [Runtime evidence is fully audited](docs/measurements/owned-numeric-time-2026-11-05/README.md):
 long solves take 3.36–10.50% less time, with four AMD64 5% targets still missed.
-All count, cleanup, copy-control and regression limits pass. Step 4 remains open.
+All count, cleanup, copy-control and regression measurement limits pass.
+Production found an [outdated identity-array allocation assertion](docs/measurements/owned-numeric-ci-repair-2026-11-05/README.md);
+its repair also adds the missed target to focused checks. Reverify that regression
+before completing step 4; the measured compiler/runtime sources are unchanged.
 The [handoff](docs/development-state.md) identifies the current source and runs.
 
 For N coordinates and U updates, predict U fewer array requests and

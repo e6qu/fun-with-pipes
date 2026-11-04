@@ -1,135 +1,117 @@
 # Current work
 
-**Next:** run and audit the final production gates for PR #258's published head.
-Native correctness, allocation census, compiler costs and all runtime raw-data
-audits are complete. Publish the completed evidence/docs, mark the PR ready,
-then require all nine production jobs plus documentation. Inspect every full and
-target log before squash-merging with an explicit one-line subject and empty body.
-Keep the tested head unchanged while its gates run; no further focused rerun is needed.
+**Next:** publish the identity-array regression repair, dispatch
+`owned-numeric-checks` on GCC ARM64/AMD64 and Clang ARM64, and keep auditing the
+remaining jobs in production run `41931018786`. After focused checks pass, mark
+PR #258 ready for a new final matrix. Do not merge its failed `f71b5308` head.
 
-Source `07541ff956d582bb9c3936b86261e43fa25b0b2f` is frozen at immutable tag
-`roadmap/owned-numeric-measurement-2026-11-05`. The branch's later changes retain
-evidence and update docs only. Keep this source for comparisons; do not move tags.
-[PR #258](https://github.com/e6qu/fun-with-pipes/pull/258), branch/worktree
-`owned-numeric-updates` / `.worktrees/owned-numeric-updates`, is the only open PR.
-Full production CI starts when this completed batch is marked ready. Earlier
-skipped draft jobs are not gates. Resolve the exact final head from PR metadata.
+[PR #258](https://github.com/e6qu/fun-with-pipes/pull/258) is the only open PR,
+currently draft. Branch/worktree: `owned-numeric-updates` /
+`.worktrees/owned-numeric-updates`. Keep unrelated primary-worktree edits intact.
 
 ## Roadmap status
 
 | Step | Status | Remaining work |
 |---|---|---|
 | 1 | Verified | Preserve frozen ownership, selection and measurement contracts |
-| 2 | Verified | Preserve three-host native checks and all failure/cleanup controls |
-| 3 | Verified | All raw measurements audited; preserve four AMD64 5% misses and separate older goals |
-| 4 | In progress | Nine exact-head production jobs plus docs, all logs, verified squash/tree |
+| 2 | In progress | Verify identity-array regression repair on all three focused hosts |
+| 3 | Verified | Preserve four AMD64 5% misses and the separate older performance goals |
+| 4 | In progress | Nine exact-head production jobs plus docs; audit logs; verify squash/tree |
 
-## Verified behavior
+## Current failure and repair
 
-[Native run 41920964943](measurements/owned-numeric-checks-2026-11-05/README.md)
-passes at the frozen source: GCC ARM64 `126893053080`, GCC AMD64 `126893053575`,
-Clang ARM64 `126893053536`. Each passes 285 units (four existing ignored),
-103 integrations in eighteen targets, twelve complete-program checks and formatting.
-Every full/target log, all 660 image architectures and all 671 statuses per host
-were audited. Both real gradient forms select consuming maps and coordinate zips.
-Seven exported fixtures select their consuming entries; a later read keeps borrowing.
+[Production 41931018786](https://github.com/e6qu/fun-with-pipes/actions/runs/41931018786)
+uses `f71b53080008923ea40af8deb6c5cd6b60ca041c`. Regular macOS ARM64
+`126927610517` fails only `float_formats::scalar_array_identity_moves_owners_and_preserves_aliases`.
+All 131 target logs and the full job log were audited. The probe wrongly requires
+a fresh allocation when the earlier identity rewrite is disabled; native ownership
+lowering now safely reuses the exclusive input. Original exit 82 is reproduced.
 
-Arrays reuse storage only when ordinary and exclusive. Coordinate lists reuse
-only an exclusive prefix, after all callbacks finish. Shared roots, ancestors,
-tails and views keep aliases unchanged. Temporary results and earlier constructor
-fields retain the right owners. Tests cover O1/O2, both interpreters, float bits,
-overflow, traps, cancellation, allocation failure, disabled reuse and broken controls.
+The [repair receipt](measurements/owned-numeric-ci-repair-2026-11-05/README.md)
+retains the failure and local O1/O2 controls. Expectations now distinguish identity
+elimination, exclusive-array reuse, shared arrays/views and disabled reuse.
+The Rust harness checks actual operation selection. The focused workflow includes
+`float_formats` in lint and execution. Compiler/runtime/library code is unchanged.
+The saved crash report is the passing intentional cleanup-abort control, not a
+recurrence of the [unexplained historical abort](measurements/compiler-abort.md).
 
-[Earlier failures and repairs](measurements/owned-numeric-selection-2026-11-04/README.md)
-remain recorded: missing real-program selection, an outdated borrowing assertion
-and an older fixture's layout. All are repaired and reverified; none is hidden.
-Protocol `1c5e6a66` and extension proof `c99451ec` precede their code and retain
-immutable tags. `roadmap/owned-numeric-premerge-checks-2026-11-04` preserves the
-original sources before rebasing onto #257's squash; that rebase changed no files.
+Completed full/target-log audits: macOS ARM64 ownership `126927610766`, benchmark
+`126927610309`, docs `126928374140` (docs run `41931242053`). The other platform
+jobs are running. Interim audit also checks both Windows native archives (58 files
+each) and both macOS corpus logs; no additional failure has appeared. Continue
+checking failed steps and every newly completed target before batching repairs.
 
-Documentation `41920859686` / `126892668039` passes at `07541ff9`; full-log audit
-finds only the three expected negative-runner diagnostics. Previous docs
-`41919183424` / `126886829262` also passed at `3b5adde4` and were fully audited. Evidence-only head `cecbaeaf`
-docs `41927585967` / `126915921557` passes with a complete log audit.
+Scratch: `../gradient-work/owned-numeric-platforms-258`. Its `failure-mac-arm`
+folder holds exact C, original archives and local repaired probes; `interim`
+contains every available target/corpus artifact audited before publication.
+Use `owned-numeric-final-status.py` to poll the old run. Full collection command:
 
-## Audited measurements
+```sh
+python3 scripts/local-guard.py python3 ../gradient-work/collect-matched-option-platforms.py \
+  --run 41931018786 --source f71b53080008923ea40af8deb6c5cd6b60ca041c \
+  --docs-job 126928374140 --output ../gradient-work/owned-numeric-platforms-258
+```
 
-The [allocation census](measurements/owned-numeric-census-2026-11-05/README.md)
-passes at `07541ff9`, run `41925013907`: ARM64 `126907012020`, AMD64
-`126907012115`. Independent review verifies all 99 commands, 24 native images,
-48 executions and the exact reference per host. No unexpected diagnostics.
-All six cases, both result forms and workspace settings match the prediction.
-Largest eight-solve counts: 223,026 → 17,098 requests; 16,684,704 → 10,124,960
-requested bytes; peak managed 15,232 → 13,664 bytes. Retains stay 3,192;
-raw peak stays 33,904 bytes; final managed/raw storage is zero.
+It intentionally fails on the recorded macOS test failure. Do not relabel it.
+Use a new collection directory/source for the repaired head. Mark ready only after
+focused checks pass; draft synchronize skips are not production gates. Require all
+nine production jobs plus docs for the final head, audit every full/target log,
+then squash with an explicit subject ≤80 characters and empty body. Verify the
+raw one-line commit message and equality of merged/tested trees.
 
-[Compiler costs](measurements/owned-numeric-analysis-2026-11-05/README.md) pass
-on both hosts: run `41926855499`, ARM64 `126913414500`, AMD64 `126913414809`.
-All 336 commands and six untimed checks per host are audited. Maximum time ratio
-1.005943, peak RSS ratio 1.011100, identical-copy ratio 1.010600. No failed limit
-or unexpected diagnostic; both exact references and native images verified.
+## Completed measurements: preserve, do not repeat
 
-[Runtime results](measurements/owned-numeric-time-2026-11-05/README.md) are fully
-audited: original run `41926862701`, replacement AMD64 session 1 `41927345094`;
-independent audits `41929272270` / `126921722690` and `41929960201` /
-`126924072225` pass. Four qualified sessions and 5,336 raw-file records reconcile.
-All 48 count comparisons in both workspace modes match the untimed census.
+Frozen compiler source: `07541ff956d582bb9c3936b86261e43fa25b0b2f`, immutable tag
+`roadmap/owned-numeric-measurement-2026-11-05`. Later changes retain evidence,
+update docs and repair tests/workflow. Do not move tags or repeat unchanged timings.
 
-Long solves take 3.36–10.50% less time. Four AMD64 5% targets remain open:
-session 1 3/199 current ratio 0.966403; session 2 3/199 current 0.956684,
-history 0.962306; 3/1999 current 0.952365. Both ARM64 sessions pass all limits.
-All copy controls, small-case regression, count/cleanup and stack limits pass.
-Retain verified reductions under the agreed policy, with every miss explicit.
-Process RAM is not consistently lower; frame growth is at most 16 bytes;
-text-size changes −128 to +1,184 bytes. Older timing goals keep their references.
+| Evidence | Audited result |
+|---|---|
+| [Native checks](measurements/owned-numeric-checks-2026-11-05/README.md), run `41920964943` | Three hosts: 285 units, 103 integrations/18 targets, 660 images, 671 statuses; new regression target still needs verification |
+| [Allocation census](measurements/owned-numeric-census-2026-11-05/README.md), `41925013907` | All six inputs, both forms and workspace settings match predictions; final managed/raw storage zero |
+| [Compiler cost](measurements/owned-numeric-analysis-2026-11-05/README.md), `41926855499` | Both hosts pass time/RSS and identical-copy limits |
+| [Runtime](measurements/owned-numeric-time-2026-11-05/README.md), `41926862701` + qualified replacement `41927345094` | All four sessions independently audited by `41929272270` / `41929960201`; four AMD64 speed targets remain missed |
 
-The initial AMD64 session 1 job `126913419469` rejected EPYC 9V74 before building
-or timing. Its evidence remains; replacement `126915090828` qualifies as 7763.
-No collected timing was repeated. Do not rerun unchanged measurements for a pass.
+At 129 coordinates/199 updates, save 25,741 requests and 819,968 requested bytes
+per solve; retains and raw derivative storage are unchanged. Long solves take
+3.36–10.50% less time; process RAM is not consistently lower. Preserve all four
+missed limits and every older goal in [PLAN.md](../PLAN.md).
 
-## Delivery and local checks
+Scratch helpers live in `../gradient-work`: `collect-owned-numeric-checks.py`,
+`audit-owned-numeric-success.py`, census/analysis/runtime collectors and retained
+`owned-numeric-checks-5`, `owned-numeric-census-2026-11-05`,
+`owned-numeric-analysis-2026-11-05`. Adapt the success checker for the new nineteenth
+`float_formats` target; preserve the old 18-target receipt. Earlier failed runs
+remain in `owned-numeric-checks-2`, `-3`, `-4` and linked historical evidence.
 
-#257 is merged as `30c2bad9b89d8086a8822f992eaa0e9331bd9bd1`, tree identical to
-verified `519fc966`. All nine production jobs/docs and the one-line squash message
-are verified; duplicate same-tree main runs were cancelled. [History and final logs](roadmap-history.md#packed-derivative-inputs-pr-257)
-record its reductions and three still-open AMD64 timing limits.
+## Local checks and resources
 
-Focused local work uses `python3 scripts/local-guard.py`, serially. Limits remain
-64 GiB free disk, targets below 2 GiB, sampled RSS below 1 GiB and 180 seconds.
-No local full build, native suite or timing was run.
+All workloads use `scripts/local-guard.py`; full builds/suites/timing stay on runners.
+Repaired saved-C probes: O1 3.83s, O2 3.76s; each verifies original failure plus
+24 repaired/control executions. Rust harness formatting: 0.14s. Evidence retention:
+0.50s. Interim target audit: 7.75s. Coverage: 0.14s, all 255 native targets assigned
+and all 19 focused targets valid. Documentation audit: 2.52s before this condensation.
 
-- Compiler-selection controls/format/lint/reference/roadmap checks: 15.01s.
-  Test-repair format/lint/roadmap checks: 12.01s. Final roadmap check: 2.60s.
-- Current native collection ARM/AMD/Clang: 40.23s / 57.17s / 41.39s;
-  complete audits: 0.13s / 0.14s / 0.13s; durable retention: 2.08s.
-  Current docs full-log audit: 2.48s.
-- Census download/full-log audit: 28.97s; raw-data verification: 3.28s;
-  exact command audit and durable retention: 3.03s. Rejected timing host
-  full-log audit: 2.24s; qualification and safety retention: 3.22s.
-- Compiler-cost audits: ARM64 41.33s, AMD64 53.56s; retention 1.59s.
-- Runtime audit collection: 6.13s / 5.50s; combined retention 0.51s;
-  all runtime/census counts reconciled in 0.26s. Current docs full-log audit 2.60s.
-  Final documentation/roadmap check: 2.53s (278 link sets).
-- Exact fixture formatting with verified #257 macOS ARM64 package: 0.51s.
-  Formatter/parser sources match. `../gradient-work/verified-257-compiler` is
-  usable only for unchanged formatter checks, not new compiler verification or
-  a build dependency on an earlier fwp version.
-- Freed about 721 MiB from the clean #256 checkout after matching its merged tree.
-  Removed 778,568,743 / 791,742,404 bytes of duplicate #256/#257 Windows downloads
-  only after verifying artifact identities and all 157 retained logs per host.
-  Branches, durable evidence and dirty older worktrees remain intact.
+Archived the merged #257 checkout's only dirty handoff/patch under
+`../gradient-work/archived-packed-input-checkout-2026-11-05`, verified its tree
+against squash `30c2bad9`, then removed that duplicate checkout (0.62s). Its branch
+and evidence remain. Free disk was 65.769 GiB afterward; keep at least 64 GiB.
+Windows evidence downloads are large. Other dirty worktrees remain untouched.
+Two contradictory “pending” statements in #257's measurement pages are repaired
+in this batch; the linked completed receipts and original measurements are unchanged.
 
-Scratch: `../gradient-work/owned-numeric-checks-5` holds current full artifacts;
-`owned-numeric-checks-2`, `-3`, `-4` preserve earlier runs. Collect with
-`collect-owned-numeric-checks.py`; verify with `audit-owned-numeric-success.py`.
-`retain-owned-numeric-success.py` retains completed controls. Keep failed outcomes,
-use a new output directory per run, and leave unrelated primary/older changes alone.
+## Independent next-group preparation
 
-Census scratch: `../gradient-work/owned-numeric-census-2026-11-05`; audit and
-retention scripts are `audit-owned-census.py` / `retain-owned-census.py`. Reports
-and raw evidence are retained under the matching `docs/measurements` directory.
+No new implementation or frozen contract. Scratch review:
+`../gradient-work/owned-numeric-remaining-storage/README.md`, `inspection.json`
+and `source-predictions.json`. Untimed attribution run `41932568083` at immutable
+`07541ff9` passes both architectures; independent audits took 12.72s/12.10s.
+Archives and profiles: `../gradient-work/owned-numeric-current-attribution`.
 
-Runtime audit helpers: `collect-owned-numeric-runtime.py` downloads a successful
-`owned-numeric-report` summary and checks all logs; `retain-owned-numeric-time.py`
-combined `owned-numeric-runtime-original` and `owned-numeric-runtime-amd1`;
-both independent audits pass. It preserves the rejected host and all missed limits.
+Source formulas reconcile with all 96 observations (0.14s). One fresh solve has
+eight forward allocations per update and two retain sites. Candidate proofs cover
+scoped input borrowing, scalar fold seed/results, single-root backward seeding and
+coordinate scratch reuse. The review identifies call-convention, cache-effect,
+scalar-width and cleanup requirements before code. Seven fewer requests per update
+is an unimplemented target, not a measured saving. This fresh single-solve driver
+differs from the repeated shared-input timing driver; do not interchange their counts.

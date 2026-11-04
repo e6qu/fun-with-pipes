@@ -1,0 +1,332 @@
+{
+  "id": 126927610517,
+  "run_id": 41931018786,
+  "workflow_name": "CI",
+  "head_branch": "owned-numeric-updates",
+  "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/41931018786",
+  "run_attempt": 1,
+  "node_id": "CR_kwDOU33zxM8AAAAdjXmilQ",
+  "head_sha": "f71b53080008923ea40af8deb6c5cd6b60ca041c",
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/126927610517",
+  "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41931018786/job/126927610517",
+  "status": "completed",
+  "conclusion": "failure",
+  "created_at": "2026-11-04T23:06:35Z",
+  "started_at": "2026-11-04T23:06:40Z",
+  "completed_at": "2026-11-04T23:39:32Z",
+  "name": "macos (macos-15)",
+  "steps": [
+    {
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 1,
+      "started_at": "2026-11-04T23:06:40Z",
+      "completed_at": "2026-11-04T23:06:42Z"
+    },
+    {
+      "name": "Run actions/checkout@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 2,
+      "started_at": "2026-11-04T23:06:42Z",
+      "completed_at": "2026-11-04T23:07:01Z"
+    },
+    {
+      "name": "Run dtolnay/rust-toolchain@stable",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 3,
+      "started_at": "2026-11-04T23:07:01Z",
+      "completed_at": "2026-11-04T23:07:02Z"
+    },
+    {
+      "name": "Cache locked Rust dependencies",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 4,
+      "started_at": "2026-11-04T23:07:02Z",
+      "completed_at": "2026-11-04T23:07:03Z"
+    },
+    {
+      "name": "Fetch locked Rust dependencies before offline builds",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 5,
+      "started_at": "2026-11-04T23:07:03Z",
+      "completed_at": "2026-11-04T23:07:04Z"
+    },
+    {
+      "name": "OpenSSL 3",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 6,
+      "started_at": "2026-11-04T23:07:04Z",
+      "completed_at": "2026-11-04T23:07:06Z"
+    },
+    {
+      "name": "Measurement clock success and failure controls",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 7,
+      "started_at": "2026-11-04T23:07:06Z",
+      "completed_at": "2026-11-04T23:07:09Z"
+    },
+    {
+      "name": "Captured process deadlines and polling controls",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 8,
+      "started_at": "2026-11-04T23:07:09Z",
+      "completed_at": "2026-11-04T23:07:12Z"
+    },
+    {
+      "name": "Publish failed process controls before long tests",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 9,
+      "started_at": "2026-11-04T23:07:12Z",
+      "completed_at": "2026-11-04T23:07:12Z"
+    },
+    {
+      "name": "Publish failed clock controls before long tests",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 10,
+      "started_at": "2026-11-04T23:07:12Z",
+      "completed_at": "2026-11-04T23:07:12Z"
+    },
+    {
+      "name": "Generated standard-library docs preflight",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 11,
+      "started_at": "2026-11-04T23:07:12Z",
+      "completed_at": "2026-11-04T23:07:16Z"
+    },
+    {
+      "name": "Exact-head primitive contract inventory",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 12,
+      "started_at": "2026-11-04T23:07:16Z",
+      "completed_at": "2026-11-04T23:07:18Z"
+    },
+    {
+      "name": "Publish primitive contract inventory",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 13,
+      "started_at": "2026-11-04T23:07:18Z",
+      "completed_at": "2026-11-04T23:07:19Z"
+    },
+    {
+      "name": "fmt",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 14,
+      "started_at": "2026-11-04T23:07:19Z",
+      "completed_at": "2026-11-04T23:07:21Z"
+    },
+    {
+      "name": "clippy",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 15,
+      "started_at": "2026-11-04T23:07:21Z",
+      "completed_at": "2026-11-04T23:07:50Z"
+    },
+    {
+      "name": "Publish failed compiler diagnostics before long tests",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 16,
+      "started_at": "2026-11-04T23:07:50Z",
+      "completed_at": "2026-11-04T23:07:50Z"
+    },
+    {
+      "name": "Language formatting preflight",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 17,
+      "started_at": "2026-11-04T23:07:50Z",
+      "completed_at": "2026-11-04T23:09:24Z"
+    },
+    {
+      "name": "Regular macOS test shard",
+      "status": "completed",
+      "conclusion": "failure",
+      "number": 18,
+      "started_at": "2026-11-04T23:09:24Z",
+      "completed_at": "2026-11-04T23:36:25Z"
+    },
+    {
+      "name": "Publish individual regular test logs",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 19,
+      "started_at": "2026-11-04T23:36:25Z",
+      "completed_at": "2026-11-04T23:36:27Z"
+    },
+    {
+      "name": "Retry individual regular test log upload",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 20,
+      "started_at": "2026-11-04T23:36:27Z",
+      "completed_at": "2026-11-04T23:36:27Z"
+    },
+    {
+      "name": "Inspect array-sort ownership and wide-value controls",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 21,
+      "started_at": "2026-11-04T23:36:27Z",
+      "completed_at": "2026-11-04T23:36:29Z"
+    },
+    {
+      "name": "Inspect array construction moves and cleanup",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 22,
+      "started_at": "2026-11-04T23:36:29Z",
+      "completed_at": "2026-11-04T23:36:30Z"
+    },
+    {
+      "name": "Build compiler for Python SDK checks",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 23,
+      "started_at": "2026-11-04T23:36:30Z",
+      "completed_at": "2026-11-04T23:36:30Z"
+    },
+    {
+      "name": "Python SDK and native disassembly",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 24,
+      "started_at": "2026-11-04T23:36:30Z",
+      "completed_at": "2026-11-04T23:36:46Z"
+    },
+    {
+      "name": "Build standalone compiler",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 25,
+      "started_at": "2026-11-04T23:36:46Z",
+      "completed_at": "2026-11-04T23:38:14Z"
+    },
+    {
+      "name": "Iterator and state allocation and binary evidence",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 26,
+      "started_at": "2026-11-04T23:38:14Z",
+      "completed_at": "2026-11-04T23:38:48Z"
+    },
+    {
+      "name": "Run actions/upload-artifact@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 27,
+      "started_at": "2026-11-04T23:38:48Z",
+      "completed_at": "2026-11-04T23:38:50Z"
+    },
+    {
+      "name": "Verify separate native artifact outside checkout",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 28,
+      "started_at": "2026-11-04T23:38:50Z",
+      "completed_at": "2026-11-04T23:38:52Z"
+    },
+    {
+      "name": "Run actions/upload-artifact@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 29,
+      "started_at": "2026-11-04T23:38:52Z",
+      "completed_at": "2026-11-04T23:38:53Z"
+    },
+    {
+      "name": "Preserve failed native golden binaries and C",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 30,
+      "started_at": "2026-11-04T23:38:53Z",
+      "completed_at": "2026-11-04T23:38:53Z"
+    },
+    {
+      "name": "Run actions/upload-artifact@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 31,
+      "started_at": "2026-11-04T23:38:53Z",
+      "completed_at": "2026-11-04T23:38:53Z"
+    },
+    {
+      "name": "Package and verify ownership evidence",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 32,
+      "started_at": "2026-11-04T23:38:53Z",
+      "completed_at": "2026-11-04T23:39:21Z"
+    },
+    {
+      "name": "Upload verified ownership archive",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 33,
+      "started_at": "2026-11-04T23:39:21Z",
+      "completed_at": "2026-11-04T23:39:24Z"
+    },
+    {
+      "name": "Preserve ownership file manifest and read failures",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 34,
+      "started_at": "2026-11-04T23:39:24Z",
+      "completed_at": "2026-11-04T23:39:25Z"
+    },
+    {
+      "name": "Preserve compiler crash reports",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 35,
+      "started_at": "2026-11-04T23:39:25Z",
+      "completed_at": "2026-11-04T23:39:27Z"
+    },
+    {
+      "name": "Post Cache locked Rust dependencies",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 69,
+      "started_at": "2026-11-04T23:39:27Z",
+      "completed_at": "2026-11-04T23:39:27Z"
+    },
+    {
+      "name": "Post Run actions/checkout@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 70,
+      "started_at": "2026-11-04T23:39:27Z",
+      "completed_at": "2026-11-04T23:39:27Z"
+    },
+    {
+      "name": "Complete job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 71,
+      "started_at": "2026-11-04T23:39:27Z",
+      "completed_at": "2026-11-04T23:39:30Z"
+    }
+  ],
+  "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/126927610517",
+  "labels": [
+    "macos-15"
+  ],
+  "runner_id": 1000408365,
+  "runner_name": "GitHub Actions 1000408365",
+  "runner_group_id": 0,
+  "runner_group_name": "GitHub Actions"
+}
