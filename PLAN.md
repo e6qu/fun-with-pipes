@@ -21,7 +21,7 @@ views. It keeps immutable public lists and all three eager stages. Additional
 uses, escapes, resource anchors and branch-crossing aliases exclude packing.
 The [contract](docs/measurements/packed-derivative-inputs.md) fixes selection,
 ownership, references and limits; the [pipeline](docs/compiler-pipeline.md)
-explains the order. Coordinate-list reuse remains unselected.
+explains the order. Coordinate-list reuse is the separate next group below.
 
 | Step | Work | Completion requirement |
 |---|---|---|

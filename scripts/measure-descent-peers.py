@@ -96,7 +96,7 @@ def ownership_budget_failures(profiles, baseline):
 
 def paired_budget_failures(results, comparison):
     """Apply the selected pre-candidate limits and report every violation."""
-    assert comparison in {'scalar-recording', 'eager-captures', 'array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input'}
+    assert comparison in {'scalar-recording', 'eager-captures', 'array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric'}
     failures = []
 
     def require(case, program, metric, actual, limit):
@@ -145,7 +145,7 @@ def paired_budget_failures(results, comparison):
                 # Here the full AD solve reports traffic, raw storage, code and
                 # RSS separately; those are not substitutes for peak live bytes.
                 continue
-            if comparison in ('record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'packed-input'):
+            if comparison in ('record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'packed-input', 'owned-numeric'):
                 time_limit = 0.95 if row['updates'] >= 199 else 1.02
             else:
                 time_limit = 1.02 if comparison == 'array-lists' else 0.95 if row['updates'] else 1.02
@@ -155,7 +155,7 @@ def paired_budget_failures(results, comparison):
             if comparison == 'array-lists':
                 cells = row['dimensions'] * row['updates'] * row['solvesPerProcess']
                 savings = [('requests', cells), ('requestedBytes', 24 * cells)]
-            if comparison in ('record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'packed-input'):
+            if comparison in ('record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'packed-input', 'owned-numeric'):
                 pairs = (row['dimensions'] - 1) * row['updates'] * row['solvesPerProcess']
                 removed = (2 * pairs if comparison == 'record-zip' else
                            max(row['dimensions'] - 2, 0) * row['updates'] * row['solvesPerProcess'])
@@ -181,6 +181,12 @@ def paired_budget_failures(results, comparison):
                 if comparison == 'packed-input':
                     inputs = row['dimensions'] * row['updates'] * row['solvesPerProcess']
                     savings = [('requests', 2 * inputs), ('requestedBytes', 40 * inputs), ('retains', 0)]
+                if comparison == 'owned-numeric':
+                    updates = row['updates'] * row['solvesPerProcess']
+                    cells = row['dimensions'] * max(row['updates'] - 1, 0) * row['solvesPerProcess']
+                    savings = [('requests', cells + updates),
+                               ('requestedBytes', 24 * cells + (8 * row['dimensions'] + 8) * updates),
+                               ('retains', 0)]
                 if comparison == 'scalar-array-map':
                     savings = [('requests', 0), ('requestedBytes', 0), ('retains', 0)]
                 if not row['updates'] and current['managed'] != old['managed']:
@@ -201,7 +207,7 @@ def paired_budget_failures(results, comparison):
                     failures.append(dict(case=case, program=label, metric=key,
                                          actual=current[key], expected=old[key]))
             images = row['binaries']
-            if comparison not in ('packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'packed-input'):
+            if comparison not in ('packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'packed-input', 'owned-numeric'):
                 require(case, label, 'instruction bytes', images[label]['instructionBytes'],
                         images[reference]['instructionBytes'] + 1024)
             stacks = row['cCompilerStackUsage']
@@ -214,7 +220,7 @@ def paired_budget_failures(results, comparison):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--compiler', required=True, type=Path)
-    parser.add_argument('--comparison', required=True, choices=['current', 'eager-captures', 'array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input'])
+    parser.add_argument('--comparison', required=True, choices=['current', 'eager-captures', 'array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric'])
     parser.add_argument('--reference-compiler', type=Path)
     parser.add_argument('--reference-manifest', type=Path)
     parser.add_argument('--cc', required=True)
@@ -253,7 +259,21 @@ def main():
                 assert digest((ROOT / path).read_bytes()) == expected_hash, path
         else:
             assert reference_manifest['ownershipSha256'] == digest((ROOT / 'src/ownership.rs').read_bytes())
-        if args.comparison == 'packed-input':
+        if args.comparison == 'owned-numeric':
+            assert reference_manifest['disabledTransformation'] == 'consuming scalar array maps and exclusive coordinate-list reuse'
+            assert set(reference_manifest['candidate']) == set(reference_manifest['reference']) == {'src/cgen.rs'}
+            assert set(reference_manifest['unchanged']) == {
+                'src/ownership.rs', 'src/ir.rs', 'src/rc.rs', 'src/rc/borrows.rs',
+                'src/cgen/owned_numeric.rs', 'src/opt/scoped.rs', 'src/cgen/packed_inputs.rs',
+                'src/cgen/numeric_parameters.rs', 'src/cgen/packed_records.rs',
+                'src/cgen/range_zip.rs', 'src/fuse.rs', 'src/opt.rs',
+                'runtime/fwp_rt.c', 'runtime/fwp_rt_heap.c', 'runtime/fwp_rt_prims.c',
+                'runtime/fwp_rt_task.c', 'runtime/fwp_rt_kernel.c', 'lib/autodiff.fwp', 'lib/list.fwp',
+            }
+            for group in ('candidate', 'unchanged'):
+                for path, checksum in reference_manifest[group].items():
+                    assert digest((ROOT / path).read_bytes()) == checksum, path
+        elif args.comparison == 'packed-input':
             assert reference_manifest['disabledTransformation'] == 'scoped objective specialization and private numeric input packing'
             assert set(reference_manifest['candidate']) == set(reference_manifest['reference']) == {'src/cgen.rs', 'src/mono.rs'}
             assert set(reference_manifest['unchanged']) == {'runtime/fwp_rt_task.c', 'runtime/fwp_rt_heap.c', 'src/cgen/packed_inputs.rs', 'src/cgen/numeric_parameters.rs', 'src/fuse.rs', 'runtime/fwp_rt_prims.c', 'src/ownership.rs', 'src/opt/scoped.rs', 'runtime/fwp_rt.c', 'runtime/fwp_rt_kernel.c', 'src/opt.rs', 'lib/list.fwp', 'src/cgen/range_zip.rs', 'lib/autodiff.fwp', 'src/cgen/packed_records.rs'}
@@ -319,7 +339,7 @@ def main():
                    if not key.startswith('FWP_') and key not in ('GH_TOKEN', 'GITHUB_TOKEN')}
     environment.update(CC=args.cc, FWP_LTO='0', FWP_AD_WORKSPACE='1',
                        FWP_PACKED_ARRAYS='1', FWP_STACK='1', FWP_ARRAY_FUSION='1')
-    if args.comparison in ('matched-option', 'packed-input'):
+    if args.comparison in ('matched-option', 'packed-input', 'owned-numeric'):
         environment.update(FWP_VRET='1', FWP_FRAME_FIELDS='1')
     commands = []
     cflags = ['-O2', '-std=gnu11', '-fno-fast-math', '-ffp-contract=off', '-UFWP_NO_REUSE', '-fstack-usage', '-march=' + args.c_arch]
@@ -585,6 +605,7 @@ def main():
              'scripts/prepare-range-zip-reference.py', 'src/cgen/range_zip.rs',
              'scripts/prepare-scalar-array-map-reference.py', 'scripts/prepare-scalar-array-identity-reference.py',
              'scripts/prepare-matched-option-reference.py', 'scripts/prepare-packed-input-reference.py',
+             'scripts/prepare-owned-numeric-reference.py', 'src/cgen/owned_numeric.rs', 'src/rc.rs', 'src/rc/borrows.rs',
              'src/mono.rs', 'src/opt/scoped.rs', 'src/cgen/packed_inputs.rs', 'runtime/fwp_rt.c', 'runtime/fwp_rt_task.c',
              'scripts/prepare-final-iteration-reference.py', 'lib/list.fwp', 'src/prims_std.rs', 'runtime/fwp_rt_prims.c', 'runtime/fwp_rt_heap.c',
              'scripts/prepare-gradient-array-reference.py', 'scripts/gradient-array-candidate.patch',
@@ -607,6 +628,7 @@ def main():
         sourceHashes={name: digest((ROOT / name).read_bytes()) for name in paths}, results=results,
         scope={
             'packed-input': 'Same-source compilers differ only in known derivative objective specialization and private numeric input packing. Input preparation, neighboring-pair mapping and folding remain separate eager stages. C/Rust use manual gradients and different storage, so their ratios do not isolate language or ARC overhead. ',
+            'owned-numeric': 'Same-source compilers differ only in consuming same-type scalar array maps and exclusive coordinate-list prefix reuse. Sharing and views retain immutable values; mapping and subtraction remain separate eager stages. C/Rust use manual derivatives and different storage, so their ratios do not isolate language or ARC overhead. ',
             'matched-option': 'Same-source compilers differ only in direct fields for immediately matched list reads and final iteration results. Both retain direct last, history removal, count validation and every cleanup repair. C/Rust use manual gradients and different storage, so their ratios do not isolate language or ARC overhead. ',
             'final-iteration': 'Same-source compilers differ only in direct last and unused numeric iteration history removal. Both preserve count validation, optional-wrapper cleanup and callback order. The manual C/Rust peers use different derivative algorithms and storage; their ratios do not isolate language or ARC overhead. ',
             'current': 'Six current-source implementations and one byte-identical AD-current control. ',

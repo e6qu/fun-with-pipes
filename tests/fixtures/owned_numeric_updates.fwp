@@ -30,12 +30,16 @@ update-right = fn values -> fn coordinates ->
     zip-with subtract-right coordinates (array.to-list values)
 
 main = [
-    (array.from-list [] | mapped | array.to-list | eq []),
-    (array.from-list [1, 2, 3] | mapped | array.to-list | eq [2, 3, 4]),
-    (update-left (array.from-list []) [10, 20] | eq []),
-    (update-left (array.from-list [1, 2]) [] | eq []),
-    (update-left (array.from-list [1, 2]) [10, 20, 30] | eq [9, 18]),
-    (update-right (array.from-list [1, 2, 3]) [10, 20] | eq [9, 18]),
-    (array.from-list [1, 2] | both (mapped | array.to-list) array.to-list | eq ([2, 3], [1, 2])),
-    ([10, 20] | both (update-left (array.from-list [1, 2])) id | eq ([9, 18], [10, 20])),
+    array.from-list [] | mapped | array.to-list | eq [],
+    array.from-list [1, 2, 3] | mapped | array.to-list | eq [2, 3, 4],
+    update-left (array.from-list []) [10, 20] | eq [],
+    update-left (array.from-list [1, 2]) [] | eq [],
+    update-left (array.from-list [1, 2]) [10, 20, 30] | eq [9, 18],
+    update-right (array.from-list [1, 2, 3]) [10, 20] | eq [9, 18],
+    array.from-list [1, 2]
+    | both (mapped | array.to-list) array.to-list
+    | eq ([2, 3], [1, 2]),
+    [10, 20]
+    | both (update-left (array.from-list [1, 2])) id
+    | eq ([9, 18], [10, 20]),
 ] | all id | echo

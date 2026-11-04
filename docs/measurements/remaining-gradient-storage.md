@@ -3,8 +3,9 @@
 Private derivative-input packing is implemented and
 [its measurements are audited](packed-input-time-2026-11-04/README.md), with three
 AMD64 timing limits open. Its [contract](packed-derivative-inputs.md) is frozen;
-final production delivery is pending in PR #257. Coordinate-list reuse remains
-unselected. [The plan](../../PLAN.md) owns current work and acceptance.
+final production delivery is pending in PR #257. The following group implements
+[consuming array maps and coordinate-list reuse](owned-numeric-updates.md), with
+native checks and measurements pending. [The plan](../../PLAN.md) owns acceptance.
 
 ## Measured costs
 
@@ -16,7 +17,7 @@ for each group in one 129-coordinate, 199-update solve:
 |---|---|
 | Input derivative records | Selected private one/two-field numeric records now use a shared buffer; other uses keep their ordinary representation. |
 | List of input derivative records | The selected neighboring-pair consumer borrows overlapping windows of that buffer. |
-| Updated coordinate list | Still returns immutable coordinates. Reuse needs its own ownership proof and a fresh count at the current source. |
+| Updated coordinate list | A private consuming entry can reuse an exclusive prefix. Its frozen proof and new tests still need native verification and measured counts. |
 
 These historical totals measure allocation traffic, not live memory or process
 RAM. Do not reuse them as current measurements. For the complete packed-input
@@ -24,24 +25,26 @@ group, the [new count report](packed-input-time-2026-11-04/verified-memory-count
 verifies 51,541 fewer requests and 1,031,616 fewer requested bytes per largest
 solve. Public `grad` still returns a list.
 
-## Ownership decisions needed
+## Following group: consumed numeric storage
 
 `zip-with` borrows its input lists and returns a fresh list spine. Under that
 [ownership contract](../../src/ownership.rs), its implementation cannot overwrite
-or free an input. Reusing updated coordinates would require a compiler proof or
-an internal consuming operation. Before selecting it:
+or free an input. The next group uses separate private consuming operations;
+the [frozen contract](owned-numeric-updates.md) specifies:
 
-- Identify current allocation sites and count their cost on the measured source.
-- Prove that the old coordinate owner is consumed after its last read. Retained
-  histories, other aliases and shared tails must keep their original values.
+- Last-use selection before ownership insertion; consuming an owner does not
+  imply exclusive storage. Retained histories and aliases keep their values.
+- Array views/shared storage use independent output. List reuse stops at the
+  first shared ancestor, even when descendants have counts of one.
 - Preserve callback, arithmetic and trap order. Do not turn an eager stage into
   streaming computation across another stage's effects.
 - Release old input, scratch and partial output exactly once on failure or
   cancellation, including unequal list lengths and empty inputs.
-- Freeze selection, exclusions, same-source reference and cost limits before
-  implementation; then check both interpreters and native O1/O2 cleanup.
+- Same-source references, predicted counts, frozen timing/compiler limits and
+  raw/optimized interpreter versus native O1/O2 checks.
 
-This is a possible next group, not a selected optimization or a promised speedup.
+Both consuming operations are implemented in preparation, not verified delivery
+or a promised speedup. Allocation predictions still require observed counters.
 The current packed-input proof covers private flat numeric records. F128, nested
 `Rev`, resources and general escaping record arrays need separate representation
 and lifetime proofs; changing a public list to an array does not remove record
