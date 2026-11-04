@@ -144,8 +144,20 @@ with inventory). No local compiler build or native execution.
 The same-source reference disables only the three new field selections;
 it preserves iteration fusion and all lifetime repairs. Seven saved-source
 selection checks include stored options, shared histories and both gradient forms.
-The `matched-option-checks` runner suite groups 15 integration targets, units,
+Focused run `41803373296` at `15d94416027b4a377addef008fcee8b4ade6f6b5`
+is queued. The `matched-option-checks` runner suite groups 15 integration targets, units,
 production lint, the source/representation controls and both tutorial engines on
-GCC AMD64/ARM64 and Clang ARM64. Publish and dispatch this single batch, then audit
-every failed step and completed target before a repair push. Runtime/compiler
-measurement wiring is still required; no timing claim is established.
+GCC AMD64/ARM64 and Clang ARM64. Audit every failed step and completed target before a repair push. The scratch
+collector `../gradient-work/collect-matched-option-checks.py` retains every target,
+execution status and diagnostic, including failures; collection is not acceptance.
+
+Measurement workflows and raw auditors now recognize the `matched-option`
+comparison. The same-source reference is checked using saved literal edits,
+without executing archived Python. Limits remain the frozen 2% runtime/noise,
+5% compiler time/RSS and 128-byte frame-growth limits. All count and cleanup
+requirements remain separate from timing. Guarded controls pass: 3 reference,
+5 previous-reference, 20 budgets, 18 raw-auditor, 12 grouped-report and 7 compiler
+measurement tests, plus workflow lint (34.28s). The compiler schedule/timeout check also passes with the new protocol
+case (7 tests, 1.83 guarded seconds). No measurements
+have run; do not dispatch timing before the three-host correctness prerequisite
+passes and candidate sources are frozen.

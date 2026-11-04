@@ -68,7 +68,7 @@ def main():
     parser.add_argument('--compiler', required=True, type=Path)
     parser.add_argument('--reference', required=True, type=Path)
     parser.add_argument('--reference-manifest', required=True, type=Path)
-    parser.add_argument('--comparison', required=True, choices=('numeric-inputs', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration'))
+    parser.add_argument('--comparison', required=True, choices=('numeric-inputs', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option'))
     parser.add_argument('--time', required=True, type=Path)
     parser.add_argument('--machine', required=True, choices=('aarch64', 'x86_64'))
     parser.add_argument('--source', required=True)
@@ -91,6 +91,14 @@ def main():
             assert sha(ROOT / path) == hashes['candidateSha256'], path
         for path, digest in reference_manifest['unchanged'].items():
             assert sha(ROOT / path) == digest, path
+    elif args.comparison == 'matched-option':
+        assert reference_manifest['disabledTransformation'] == 'direct fields for matched list last, nth and final iteration results'
+        assert set(reference_manifest['candidate']) == set(reference_manifest['reference']) == {'src/cgen.rs'}
+        assert set(reference_manifest['unchanged']) == {'src/fuse.rs', 'src/prims_std.rs', 'src/ownership.rs', 'src/opt.rs', 'runtime/fwp_rt.c', 'runtime/fwp_rt_prims.c', 'runtime/fwp_rt_task.c', 'runtime/fwp_rt_heap.c', 'lib/list.fwp', 'lib/autodiff.fwp'}
+        for group in ('candidate', 'unchanged'):
+            for path, checksum in reference_manifest[group].items():
+                assert sha(ROOT / path) == checksum, path
+        assert reference_manifest['ownershipSha256'] == sha(ROOT / 'src/ownership.rs')
     elif args.comparison == 'final-iteration':
         assert reference_manifest['disabledTransformation'] == 'direct list last and unused numeric iteration history removal'
         assert set(reference_manifest['candidate']) == set(reference_manifest['reference']) == {'src/fuse.rs', 'lib/list.fwp'}

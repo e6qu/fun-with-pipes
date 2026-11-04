@@ -14,6 +14,42 @@ BASELINE = json.loads((ROOT / 'docs/measurements/array-capture-descent-2026-10-2
 
 
 class DescentBudgets(unittest.TestCase):
+    def test_matched_optional_fields_keep_all_regression_and_cleanup_limits(self):
+        for updates in (0, 1, 199, 1999):
+            row = self.recording_case(updates)
+            for label in ('fwp-ad', 'fwp-ad-history'):
+                row['medianNs'][label] = row['medianNs'][label + '-reference'] = 100
+                row['fwpProfiles'][label]['managed'] = dict(row['fwpProfiles'][label + '-reference']['managed'])
+            row['medianNs']['fwp-ad-identical'] = 100
+            # No 5% speedup or code-size goal belongs to this one-wrapper change.
+            row['binaries']['fwp-ad-history']['instructionBytes'] += 4096
+            self.assertEqual(DESCENT.paired_budget_failures({'case': row}, 'matched-option'), [])
+            for label in ('fwp-ad', 'fwp-ad-history'):
+                for metric in ('requests', 'requestedBytes', 'retains', 'finalChargedBytes'):
+                    changed = copy.deepcopy(row)
+                    changed['fwpProfiles'][label]['managed'][metric] += 1
+                    self.assertEqual([failure['metric'] for failure in
+                        DESCENT.paired_budget_failures({'case': changed}, 'matched-option')], [metric])
+                changed = copy.deepcopy(row)
+                changed['medianNs'][label] = 103
+                if label == 'fwp-ad':
+                    changed['medianNs']['fwp-ad-identical'] = 103
+                self.assertEqual([failure['metric'] for failure in
+                    DESCENT.paired_budget_failures({'case': changed}, 'matched-option')], ['candidate/reference time'])
+                changed = copy.deepcopy(row)
+                changed['fwpProfiles'][label]['rawDerivativeStorage']['finalBytes'] = 1
+                self.assertEqual([failure['metric'] for failure in
+                    DESCENT.paired_budget_failures({'case': changed}, 'matched-option')], ['final raw bytes'])
+                changed = copy.deepcopy(row)
+                reference_frame = max(entry['bytes'] for entry in changed['cCompilerStackUsage'][label + '-reference.su']['entries'])
+                changed['cCompilerStackUsage'][label + '.su']['entries'][0]['bytes'] = reference_frame + 129
+                self.assertEqual([failure['metric'] for failure in
+                    DESCENT.paired_budget_failures({'case': changed}, 'matched-option')], ['largest static stack frame'])
+            changed = copy.deepcopy(row)
+            changed['medianNs']['fwp-ad-identical'] = 103
+            self.assertEqual([failure['metric'] for failure in
+                DESCENT.paired_budget_failures({'case': changed}, 'matched-option')], ['identical median variation'])
+
     def test_final_iteration_keeps_distinct_current_and_history_limits(self):
         for dimensions in (3, 33, 129):
             for updates in (0, 1, 199, 1999):

@@ -83,6 +83,12 @@ class MatchedOptionReference(unittest.TestCase):
                         path.write_bytes(previous)
                 with mock.patch('sys.argv', verify):
                     REFERENCE.main()
+                with mock.patch('sys.argv', verify):
+                    REFERENCE.main()
+                (output / 'fwp').write_bytes(b'changed compiler')
+                with mock.patch('sys.argv', verify), self.assertRaises(AssertionError):
+                    REFERENCE.main()
+                (output / 'fwp').write_bytes(b'compiler digest fixture')
                 final = json.loads((output / 'manifest.json').read_text())
                 self.assertEqual(final.pop('compilerSha256'), REFERENCE.digest(b'compiler digest fixture'))
                 self.assertEqual(final, manifest)
