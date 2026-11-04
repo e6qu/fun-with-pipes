@@ -8,6 +8,99 @@ use std::collections::HashMap;
 use super::{size, substitute, Opt, MAX_BODY, ROUNDS};
 use crate::ir::*;
 
+/// Reassociate strict bindings only when extending their lexical scope cannot
+/// extend an observable lifetime. All initializer calls keep their order.
+/// Existing record scalar replacement can then see the constructor directly.
+fn lift_bindings(expression: Expr, optimizer: &mut Opt<'_>) -> Expr {
+    match expression {
+        Expr::Let(local, value, body) => {
+            let mut value = lift_bindings(*value, optimizer);
+            let body = lift_bindings(*body, optimizer);
+            let mut prefix = Vec::new();
+            if !crate::resource::observable_type(
+                optimizer.funcs,
+                optimizer.shapes,
+                &optimizer.locals[local as usize],
+            ) && !crate::resource::anchored(&body, local)
+            {
+                while let Expr::Let(inner, initial, rest) = value {
+                    if optimizer.budget <= 0
+                        || inner == local
+                        || super::uses(&body, inner) != 0
+                        || crate::resource::observable_type(
+                            optimizer.funcs,
+                            optimizer.shapes,
+                            &optimizer.locals[inner as usize],
+                        )
+                        || crate::resource::anchored(&rest, inner)
+                    {
+                        value = Expr::Let(inner, initial, rest);
+                        break;
+                    }
+                    optimizer.budget -= 1;
+                    prefix.push((inner, initial));
+                    value = *rest;
+                }
+            }
+            let mut result = Expr::Let(local, Box::new(value), Box::new(body));
+            for (local, initial) in prefix.into_iter().rev() {
+                result = Expr::Let(local, initial, Box::new(result));
+            }
+            result
+        }
+        Expr::Trace(span, body) => Expr::Trace(span, Box::new(lift_bindings(*body, optimizer))),
+        Expr::Call(id, args) => Expr::Call(
+            id,
+            args.into_iter()
+                .map(|e| lift_bindings(e, optimizer))
+                .collect(),
+        ),
+        Expr::Apply(function, args) => Expr::Apply(
+            Box::new(lift_bindings(*function, optimizer)),
+            args.into_iter()
+                .map(|e| lift_bindings(e, optimizer))
+                .collect(),
+        ),
+        Expr::Construct(tag, args) => Expr::Construct(
+            tag,
+            args.into_iter()
+                .map(|e| lift_bindings(e, optimizer))
+                .collect(),
+        ),
+        Expr::Record(fields) => Expr::Record(
+            fields
+                .into_iter()
+                .map(|e| lift_bindings(e, optimizer))
+                .collect(),
+        ),
+        Expr::Field(record, field) => {
+            Expr::Field(Box::new(lift_bindings(*record, optimizer)), field)
+        }
+        Expr::SetFields(record, fields) => Expr::SetFields(
+            Box::new(lift_bindings(*record, optimizer)),
+            fields
+                .into_iter()
+                .map(|(field, value)| (field, lift_bindings(value, optimizer)))
+                .collect(),
+        ),
+        Expr::Match(value, arms) => Expr::Match(
+            Box::new(lift_bindings(*value, optimizer)),
+            arms.into_iter()
+                .map(|(pattern, body)| (pattern, lift_bindings(body, optimizer)))
+                .collect(),
+        ),
+        // Never move a binding into or out of a resource region. Counted IR is
+        // not an input of this pass, and must not be normalized accidentally.
+        other @ (Expr::ResourceRegion { .. }
+        | Expr::Dup(..)
+        | Expr::Drop(..)
+        | Expr::BorrowGlobal(..)
+        | Expr::Local(_)
+        | Expr::Const(_)
+        | Expr::Func(_)) => other,
+    }
+}
+
 struct Specialize<'a> {
     program: &'a Program,
     made: Vec<Func>,
@@ -77,6 +170,7 @@ impl Specialize<'_> {
                 resource_locals: Vec::new(),
             };
             for _ in 0..ROUNDS {
+                body = lift_bindings(body, &mut optimizer);
                 body = optimizer.expr(body, 0);
             }
             let id = self.program.funcs.len() + self.made.len();
@@ -292,5 +386,66 @@ mod tests {
         program.funcs[1].body = Body::Expr(Expr::Record(vec![Expr::Local(1); MAX_BODY]));
         specialize(&mut program);
         assert_eq!(program.funcs.len(), 5);
+    }
+
+    #[test]
+    fn lifting_keeps_calls_once_in_order_and_obeys_budget_and_resource_boundaries() {
+        let program = program();
+        let expression = Expr::Let(
+            0,
+            Box::new(Expr::Let(
+                1,
+                Box::new(Expr::Call(4, vec![])),
+                Box::new(Expr::Local(1)),
+            )),
+            Box::new(Expr::Call(0, vec![Expr::Local(0)])),
+        );
+        for (budget, resource) in [(1, false), (0, false), (1, true)] {
+            let mut optimizer = Opt {
+                funcs: &program.funcs,
+                shapes: &program.shapes,
+                current: usize::MAX,
+                locals: vec![
+                    MT::con("std::I64"),
+                    MT::con(if resource { "std::File" } else { "std::I64" }),
+                ],
+                budget,
+                resource_locals: Vec::new(),
+            };
+            let result = lift_bindings(expression.clone(), &mut optimizer);
+            if budget == 0 || resource {
+                assert_eq!(format!("{result:?}"), format!("{expression:?}"));
+                assert_eq!(optimizer.budget, budget);
+            } else {
+                let Expr::Let(1, first, rest) = result else {
+                    panic!("inner initializer not exposed")
+                };
+                assert!(matches!(*first, Expr::Call(4, ref args) if args.is_empty()));
+                let Expr::Let(0, value, last) = *rest else {
+                    panic!("outer binding lost")
+                };
+                assert!(matches!(*value, Expr::Local(1)));
+                assert!(
+                    matches!(*last, Expr::Call(0, ref args) if matches!(args.as_slice(), [Expr::Local(0)]))
+                );
+                assert_eq!(optimizer.budget, 0);
+            }
+        }
+        let region = Expr::ResourceRegion {
+            parameters: vec![],
+            bindings: vec![1],
+            body: Box::new(expression),
+        };
+        let mut optimizer = Opt {
+            funcs: &program.funcs,
+            shapes: &program.shapes,
+            current: usize::MAX,
+            locals: vec![MT::con("std::I64"); 2],
+            budget: 600,
+            resource_locals: Vec::new(),
+        };
+        let result = lift_bindings(region.clone(), &mut optimizer);
+        assert_eq!(format!("{result:?}"), format!("{region:?}"));
+        assert_eq!(optimizer.budget, 600);
     }
 }

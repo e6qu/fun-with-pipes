@@ -1,9 +1,12 @@
 # Current work
 
-**Next:** implement the frozen packed-input contract while monitoring
+**Next:** run the packed-input source/proof preflight, finish native cleanup
+controls and measurement wiring, and monitor
 [PR #256](https://github.com/e6qu/fun-with-pipes/pull/256). Preserve its exact head
 `81bce309c4524058aefead68f203d6dfa3b5731a`. Production `41822132045` is running;
-documentation `41822131973`, job `126547601776`, is queued. No failed steps at
+documentation `41822131973`, job `126547601776`, and benchmark job `126547602413`
+pass and their full logs are audited (5.19s guarded collection). Other production
+jobs are running except Intel regular macOS, which is queued. No failed steps at
 the latest check. Require all nine production jobs plus docs and full/target-log
 audits before squash merge. Keep one active delivery PR.
 
@@ -11,11 +14,24 @@ Preparation worktree/branch: `.worktrees/packed-derivative-inputs` /
 `packed-derivative-inputs`. [The contract](measurements/packed-derivative-inputs.md)
 groups bounded scoped specialization, packed indexed records and overlapping
 pair reads. Frozen at `cc425aba`, immutable tag
-`roadmap/packed-derivative-inputs-protocol-2026-11-04`. Scoped specialization and
-four compiler controls are implemented; packed producer/consumer lowering and
-native controls remain. Guarded formatting check passes (1.87s). A targeted
-runner source diagnostic will verify the exposed IR shape before storage lowering;
-it is not the grouped correctness or performance gate.
+`roadmap/packed-derivative-inputs-protocol-2026-11-04`. Scoped specialization,
+packed producer/consumer lowering and eight compiler proof controls are written;
+native cleanup controls and measurement wiring remain. Guarded formatting and
+workflow lint pass; compilation/selection and proof tests are not yet verified.
+
+Source diagnostic `41824802673`, job `126556701498`, passes at `3c091d3f`: all
+12 emissions, 43 hashes and full log audited in 5.46s. It exposes the known
+objective but leaves its input producer inside a temporary record. The
+[binding proof](measurements/scoped-objective-review-2026-11-04/README.md) was
+frozen at `3ccc9bf2`, tag `roadmap/packed-input-binding-proof-2026-11-04`, before
+implementing bounded, resource-safe let reassociation. That implementation is
+included in the pending preflight; do not claim the real gradient selects yet.
+
+The updated `iteration-storage-review` suite now explicitly requires packed
+producer and pair selections for all three optimized gradient inputs, absent
+for raw/scalar/shared-history controls. It also runs both new proof-test groups
+even if source selection fails. This is a short preflight, not the grouped
+native correctness or performance gate. No runtime timings have started.
 
 ## Roadmap status
 

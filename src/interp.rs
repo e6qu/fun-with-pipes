@@ -246,7 +246,9 @@ impl<'p> Interp<'p> {
             Body::PackedRecordMap { .. }
             | Body::PackedRecordFold { .. }
             | Body::ScalarBufferMap { .. }
-            | Body::RangeZip { .. } => {
+            | Body::RangeZip { .. }
+            | Body::PackedRecordRangeZip { .. }
+            | Body::PackedRecordPairs { .. } => {
                 return trap("internal: native buffer body reached interpreter");
             }
         };
