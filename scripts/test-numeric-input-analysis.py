@@ -120,6 +120,9 @@ class CompilerCosts(unittest.TestCase):
 
                 def captured(command, **options):
                     commands.append(command)
+                    if comparison == 'matched-option':
+                        self.assertEqual(options['env']['FWP_VRET'], '1')
+                        self.assertEqual(options['env']['FWP_FRAME_FIELDS'], '1')
                     self.assertEqual(command[5:10], ['build', '--memory', 'dynamic', '--emit-c', '-O2'])
                     if fail:
                         raise subprocess.TimeoutExpired(command, 180, output=b'partial out', stderr=b'partial error')
@@ -149,6 +152,9 @@ class CompilerCosts(unittest.TestCase):
                         ANALYSIS.main()
                 report = json.loads((output / 'report.json').read_text())
                 self.assertEqual(report['complete'], not fail)
+                if comparison == 'matched-option':
+                    self.assertEqual(report['executionOverrides']['FWP_VRET'], '1')
+                    self.assertEqual(report['executionOverrides']['FWP_FRAME_FIELDS'], '1')
                 self.assertEqual(len(commands), 1 if fail else 240)
                 for name, digest in report['files'].items():
                     self.assertEqual(hashlib.sha256((output / name).read_bytes()).hexdigest(), digest)

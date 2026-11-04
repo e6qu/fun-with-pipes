@@ -14,3 +14,8 @@ The comparison uses the same compiler source with only the three field selection
 disabled in its reference. Both sides preserve earlier iteration optimizations
 and lifetime repairs. Allocation counts, elapsed time and live memory are separate
 results; none substitutes for another.
+
+Both new measurement drivers explicitly set `FWP_VRET=1` and
+`FWP_FRAME_FIELDS=1`: direct variant returns and resource-frame fields are enabled
+on both sides. Those settings are recorded and checked, rather than inherited
+from the runner. The reference disables only the three new selections in source.
