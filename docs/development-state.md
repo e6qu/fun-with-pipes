@@ -3,8 +3,11 @@
 **Next:** audit the grouped packed-input checks `41834093801` at
 `adbe92abb855dfeea5c648fb122131433a1681f3`; fix every finding before measuring.
 [PR #256](https://github.com/e6qu/fun-with-pipes/pull/256) is verified and merged.
-Reconcile this branch onto its squash, preserving the old source history and
-checking tree equality. No new delivery PR is open yet.
+The branch now starts from its squash, with byte-identical content across the
+rebase. Original history is preserved at immutable
+`roadmap/packed-input-pre-delivery-2026-11-04` (`db7ae09c`). Compiler/runtime,
+library, test and build inputs still match `adbe92ab` exactly. Publish the next
+delivery as a draft while grouped checks and measurements run.
 
 Worktree/branch: `.worktrees/packed-derivative-inputs` / `packed-derivative-inputs`.
 The [contract](measurements/packed-derivative-inputs.md) groups known scoped
@@ -76,6 +79,8 @@ Full builds, suites, benchmarks and large regeneration stay on GitHub.
 Guarded checks pass: five reference controls, twenty-one budget tests, eighteen
 raw-audit controls (19.46s), seven compiler-schedule/settings controls (2.17s),
 workflow lint (6.73s), Rust formatting (1.83s), roadmap links/identities (2.87s).
+The rewritten handoff first used unsupported `Not started` statuses; corrected
+to `Pending`, and the roadmap audit passes again (2.55s).
 The schedule fixture initially expected 240 commands; corrected to 336 for the
 seven declared inputs. The reference collector rejected a mistyped source before
 collecting the exact revision. Neither failed observation was treated as a pass.
