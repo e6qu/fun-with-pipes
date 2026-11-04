@@ -53,11 +53,15 @@ the small timing regression.
 The [ownership proof and implementation contract](docs/measurements/matched-option-fields.md)
 cover internal final-iteration results and borrowed list `last`/`nth` reads.
 Borrowed reads retain one selected owner; iteration moves its existing owner.
-Use the existing field-return and match-use checks, preserving empty results,
-aliases, callback order, resource frames and failure/cancellation. Freeze this
-contract before implementation: one fewer wrapper per selected present result,
+The implementation uses the existing field-return and match-use checks, preserving empty results,
+aliases, callback order, resource frames and failure/cancellation. The contract
+was frozen before implementation: one fewer wrapper per selected present result,
 no added ARC, correct boxing for whole-value uses, and explicit compiler,
 runtime and stack limits. No new syntax or global analysis.
+[Focused checks now pass on three native hosts](docs/measurements/matched-option-fields-2026-11-04/README.md),
+including the repaired source fixture and list/array cleanup controls. Compiler
+and runtime comparisons use an isolated same-source reference;
+full platform delivery and performance acceptance remain open.
 
 Input derivative-record packing and coordinate-list reuse remain unselected.
 [Their lifetime requirements](docs/measurements/remaining-gradient-storage.md)

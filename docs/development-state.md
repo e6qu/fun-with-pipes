@@ -8,8 +8,7 @@ complete and must not be repeated for a pass.
 ## Final iteration values
 
 Branch/worktree: `iteration-final-value`, based on verified main `379bc9d5`.
-Head: `19b91c059d223614124773ab6e356824514f69f1`. Production run
-Production `41796687665` attempt 2 is queued only for Intel macOS job
+Head: `19b91c059d223614124773ab6e356824514f69f1`. Production run `41796687665` attempt 2 is running only Intel macOS job
 `126506098945`; all other eight production jobs and docs `41796687483` pass and
 are fully audited. Keep this source head intact.
 
@@ -111,7 +110,7 @@ fixtures and measurement tooling. Original source IDs remain reachable by the ta
   [matched-option ownership proof](measurements/remaining-gradient-storage.md#follow-up-an-immediately-matched-optional-result).
   Saved C confirms an optional wrapper and payload retain before immediate match;
   this is a bounded source finding, not a timing diagnosis. The separate next branch
-  now has an implementation awaiting native verification.
+  has passed its three-host native verification; measurements are running.
 
 ### Local checks and resume tools
 
@@ -132,75 +131,77 @@ fixtures and measurement tooling. Original source IDs remain reachable by the ta
   builds/suites/benchmarks; never bypass disk, RSS, generated-data or deadline limits.
 - Preserve dirty primary and old worktrees. Keep one active delivery PR.
 
-## Prepared next ownership group
+## Next ownership group: native checks pass; measure next
 
-`../matched-option-fields` branches from #255's exact head. Contract frozen at
-`4ec13baa`, tag `roadmap/matched-option-fields-protocol-2026-11-04`, before code.
-One active PR: keep #255's head intact; reconcile this branch after verified merge.
+Branch/worktree `matched-option-fields`, one active delivery PR still #255.
+Contract: `4ec13baa`, tag `roadmap/matched-option-fields-protocol-2026-11-04`.
+Measured candidate frozen at `82963531dddb6d9a5f32ec26657dc220736f4055`, tag
+`roadmap/matched-option-measurement-2026-11-04`. Never move either tag.
 
-Implementation `15d94416` returns selected `last`, `nth` and internal final-iteration
-results as direct owned fields. Borrowed reads retain one owner; iteration moves
-its existing owner. Whole-value entries protect their payload while boxing.
-Measurement controls and workflows are published at `8efeb985`.
+**Next for this branch:** monitor compiler-cost run `41811652687` and four-session
+runtime run `41811658838`. Both compiler jobs passed and their raw audits are in
+progress. Three runtime sessions are running; AMD64 session 1 rejected an EPYC
+9V45 host before building/timing (expected EPYC 7763). Retain and audit that host
+record before replacing only this unmeasured session. Audit every completed
+measurement. Replace only a host rejected before building/timing; never repeat a
+completed noisy or failing timing session to obtain a pass. Keep #255's head
+intact and reconcile this branch after its verified merge.
 
-**Next for this branch:** monitor and audit grouped run `41808352672` at
-`fb461933` (fixture repair plus expanded container controls). All three hosts are
-queued. Inspect every completed target and failure before any repair push. No performance sessions
-before all three focused hosts pass with matching compiler/runtime/library/tests.
+[Native evidence](measurements/matched-option-fields-2026-11-04/README.md):
+run `41808352672` passes on GCC ARM64/AMD64 and Clang ARM64 at
+`fb46193306de9c377a644138df8d1480e7ca7db3`. Each host passes 268 units (four
+intentional ignores), 57 integrations across 15 targets, seven selection checks,
+40 new controls and 506 actual native image checks. All 517 statuses per host are
+audited. All 960 optional list-read, 80 optional iteration and 240 older scalar
+count rows agree across hosts. Final physical storage and aliases are checked.
+Frozen candidate compiler/runtime/library/tests/build inputs match this passing
+source byte for byte; only docs, measurement controls and CI upload handling differ.
 
-[First batch and repair](measurements/matched-option-fields-2026-11-04/README.md):
-run `41803373296` at `15d94416027b4a377addef008fcee8b4ade6f6b5` is fully audited.
-Each of GCC ARM64/AMD64 and Clang ARM64 passes 268 unit tests (four deliberate
-ignores), seven selection cases, 56 integration tests and all 22 new native owner
-controls. One source-fixture type error and its formatting fail on each host.
-Every one of the 15 target logs and 499 status records per host is retained;
-no other failure or warning was found. Do not label this batch green.
+The [first failed batch](measurements/matched-option-fields-2026-11-04/fixture-repair/README.md)
+retains all three hosts' logs, diagnostics, source/image identities and passing
+owner controls. Only explicit application and formatting in the new fixture
+needed repair. Compiler/runtime code is unchanged by that repair. Expanded
+numeric list/array release and slice-alias checks also pass in the new batch.
 
-Repair: use explicit `apply "!" (...)` for the selected function and run the
-language formatter. Compiler/runtime code is unchanged. The same batch now also
-checks physical release of numeric list/array payloads, including aliases,
-overflow, cancellation and failed boxing; a slice example checks that changing
-the selected result leaves the original array unchanged. Extended native checks are running in the new batch; acceptance remains pending.
+### Measurement scope
 
-### Checks and evidence tools
+The `matched-option` reference disables only the three new field selections,
+preserving previous iteration and lifetime work. Both drivers explicitly record
+`FWP_VRET=1` and `FWP_FRAME_FIELDS=1`. Raw audits reconstruct literal source edits
+without executing archived Python. Limits: 2% runtime/noise, 5% compiler time/RSS,
+128-byte frame growth. No timing result or complete-program memory gain yet.
 
-- Local checks use the tested #255 macOS ARM64 package, artifact `13309487060`,
-  archive SHA-256 `06c3e782d6e1aa4537fb0b40bc6ad167fb4258ecbd08692f8d5df5a4da735a36`.
-  Manifest/source and executable digest verified. Guarded formatting/type checks
-  pass (0.25s); raw/optimized interpreters agree on the extended fixture (0.36s).
-  This verifies the fixture with the existing compiler, not the new native change.
-  Rust formatting passes (1.65s). No local compiler build, full suite or benchmark.
-- Inventory remains 395 declarations / 374 contracts. Workflow lint and docs
-  passed 257 link sets (10.82s with inventory; later docs check 2.63s).
-- Measurement controls pass: 3 reference, 5 previous-reference, 20 budgets,
-  18 raw-auditor, 12 grouped-report and 7 compiler-cost tests, plus workflow lint
-  (34.28s). The new compiler protocol's schedule/timeout check also passes (1.83s).
-- The `matched-option` reference disables only these three field selections,
-  preserving all earlier iteration and lifetime work. Saved-source audits read
-  literal edits without executing archived Python. Frozen limits remain 2%
-  runtime/noise, 5% compiler time/RSS and 128-byte frame growth. No timings yet.
+Compiler audit command (substitute the recorded source/run and explicit machine):
+`python3 ../gradient-work/audit-matched-option-analysis.py --source SOURCE --run RUN --machine MACHINE --output ../gradient-work/matched-option-analysis`.
+Runtime reports use the dispatched `matched-option-report` suite, then
+`collect-matched-option-runtime.py --source SOURCE --run AUDIT_RUN --audit-source AUDIT_SOURCE --prefix PREFIX`.
+Full raw auditing stays on runners; bounded collections use the local guard.
+
+### Local checks and publication
+
+- Inventory unchanged: 395 declarations / 374 contracts. Source-reference,
+  measurement-limit, raw-audit, grouped-report and compiler schedule/timeout
+  controls pass. Explicit-setting controls pass (7 + 12 tests, 7.37s).
+- The checksum-verified #255 macOS package checked only the small fixture:
+  formatting/types 0.25s; raw/optimized outputs 0.36s. No local compiler build,
+  full suite or benchmark. Rust formatting 1.65s; latest docs audit 260 link sets,
+  106 immutable identities, four steps (2.66s).
+- Focused collections 23.67/23.26/23.14s; complete owner/image/count audit 2.34s;
+  native evidence retention 4.79s. Updated docs audit passes (260 link sets, 2.56s).
+  All guarded and within fixed limits.
+- `82963531` adds one retry to each macOS test-log upload, against the same name
+  and files. Missing logs or a second failure fail CI; both attempts remain
+  visible. Workflow lint passes (0.26s). The active #255 workflow is unchanged.
+- GitHub twice rejected publication with Internal Server Error; the subsequent
+  push succeeded through `82963531`. No commit was discarded or recreated.
 - Scratch tools in `../gradient-work`: `collect-matched-option-checks.py`,
-  `audit-matched-option-success.py`, `retain-matched-option-first.py`,
+  `audit-matched-option-success.py`, `retain-matched-option-checks.py`,
+  `audit-matched-option-analysis.py`, `collect-matched-option-runtime.py`,
   `collect-final-iteration-platforms.py`, `retain-final-iteration-delivery.py`.
-  Raw first-batch archives are in `matched-option-first`; fixture checks and the
-  verified packaged compiler are in `matched-option-local`. The cancellation
-  check refused when ARM64 had already started; no job was cancelled.
-- Preserve dirty primary/old worktrees. Batch every encountered repair; do not
-  repeat completed timing sessions to obtain a pass.
-
-Before timing, both new drivers now explicitly set and record `FWP_VRET=1` and
-`FWP_FRAME_FIELDS=1`, matching the focused checks and the existing enabled
-settings. The raw report audit checks them. Compiler schedule/timeout controls
-and grouped-report controls pass (7 + 12 tests, 7.37 guarded seconds). Old
-protocols and frozen acceptance limits are unchanged.
-
-Resume the final-gate collector **without `--attempt 1`** to select the latest
-job for each platform. Its cached eight passing production jobs and documentation
-remain valid; the Intel retry has a new job ID. Failed-attempt records are retained
-separately. Require nine passing production jobs plus docs before squash merge.
-
-The next branch also gives each macOS test-log upload exactly one retry after
-failure, against the same artifact name/files. Missing files and an exhausted
-retry fail CI; both attempt logs remain visible. This addresses the observed
-artifact-service DNS failures in #254 and #255 without rerunning whole shards.
-The active #255 workflow is unchanged. Workflow lint passes (0.26 guarded seconds).
+  Raw archives: `matched-option-first`, `matched-option-second`, `platforms-255`.
+- Resume the final-gate collector without `--attempt 1` to select the Intel retry.
+  Its other eight production jobs and documentation remain valid and cached.
+  The full Windows archive audit checks all 155 executed targets, not just the
+  early 57-log bundle. Retain failed attempt 1 separately. Require nine passing
+  production jobs plus docs before squash merge.
+- Preserve dirty primary and old worktrees; keep one active delivery PR.

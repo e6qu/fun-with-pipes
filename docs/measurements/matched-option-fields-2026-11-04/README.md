@@ -1,21 +1,63 @@
-# Matched optional results: verification in progress
+# Matched optional results: native checks pass
 
 The [contract](../matched-option-fields.md) removes the `Some(value)` allocation
 when a list read or final-iteration result immediately enters a selected match.
 List reads retain the selected element; iteration transfers its existing owner.
+The payload may still own heap storage.
 
-The first three-host batch found a fixture type error and formatting mismatch.
-[The failure record](fixture-repair/README.md) preserves every target outcome,
-including the native owner controls that passed. The fixture is repaired;
-expanded list/array controls still need native verification. No runtime or
-compiler-cost measurements have run, and this group is not accepted yet.
+[Run 41808352672](https://github.com/e6qu/fun-with-pipes/actions/runs/41808352672)
+passes at `fb46193306de9c377a644138df8d1480e7ca7db3` on Linux ARM64/AMD64
+with GCC and macOS ARM64 with Clang. Each host passes:
 
-The comparison uses the same compiler source with only the three field selections
-disabled in its reference. Both sides preserve earlier iteration optimizations
-and lifetime repairs. Allocation counts, elapsed time and live memory are separate
-results; none substitutes for another.
+- 268 compiler unit tests, with four deliberate ignores.
+- 57 integration tests across 15 targets; seven selection/exclusion checks.
+- 40 new native controls at O1/O2, including list/array payloads, aliases,
+  retain overflow, callback traps, cancellation and failed result boxing.
+- Raw/optimized interpreter agreement and boxed/direct-field native controls.
+- Actual native image checks: 506 observations plus eleven other status records.
 
-Both new measurement drivers explicitly set `FWP_VRET=1` and
-`FWP_FRAME_FIELDS=1`: direct variant returns and resource-frame fields are enabled
-on both sides. Those settings are recorded and checked, rather than inherited
-from the runner. The reference disables only the three new selections in source.
+## What the allocation checks measure
+
+Inputs, defaults and callbacks are constructed before counting the operation.
+The result and all input owners are then released; final managed storage and
+physical-allocation tracking must return to their starting values.
+
+| Operation | Boxed control | Selected fields |
+|---|---:|---:|
+| Present `last` or `nth` result | 1 wrapper allocation | 0 |
+| Missing `last` or `nth` result | 0 | 0 |
+| Selected iteration with the tested identity callback | — | 0 additional allocations |
+
+The list-read controls cover scalars, strings, F128, nested numeric lists, numeric
+arrays and files. Iteration covers scalars, F128, numeric lists and arrays at counts
+−1, 0, 1, 4 and 64. Count includes the initial value. Arbitrary callbacks may
+allocate; these zero counts are not a promise about their work.
+
+All three hosts agree on 960 list-read and 80 iteration observations, plus the
+240 earlier scalar-iteration observations. Corrupted tags and deliberately
+omitted releases fail their intended observers. An array-slice example confirms
+that changing the selected result leaves the original array unchanged.
+
+[Evidence index](native/index.json) links every full log, target log and audit.
+Compressed archives retain generated sources, actual new-control executables,
+outputs and statuses; repeated sources/images are stored once by digest.
+[The first batch](fixture-repair/README.md) preserves its repaired fixture failure.
+
+## Measurements and delivery remain open
+
+Measurement source is `82963531dddb6d9a5f32ec26657dc220736f4055`, immutable tag
+`roadmap/matched-option-measurement-2026-11-04`. Its compiler, runtime, library,
+tests and build inputs match the passing focused source byte for byte.
+
+The comparison disables only the three new field selections in its reference.
+Both sides preserve earlier iteration optimizations and lifetime repairs. Both
+measurement drivers explicitly set and record `FWP_VRET=1` and
+`FWP_FRAME_FIELDS=1`; the reference disables the selected transformations in source.
+
+Both jobs in compiler-cost run `41811652687` pass; raw auditing is in progress.
+Runtime run `41811658838` has three running sessions and one host rejected before
+building/timing: AMD EPYC 9V45 instead of the required EPYC 7763. That session
+needs a qualified replacement. No runtime acceptance is established yet.
+Allocation reductions do not close older timing goals. Final platform gates and
+delivery also remain pending; [the handoff](../../development-state.md) records
+current jobs and the one active delivery PR.

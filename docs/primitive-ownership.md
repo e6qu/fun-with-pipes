@@ -339,8 +339,9 @@ aliasing and immutable values; they do not establish complete exception or
 retained-callback ownership.
 
 The [matched-result implementation](measurements/matched-option-fields.md)
-adds direct fields for `last`, `nth` and internal final iteration; verification
-is pending. Borrowed list reads retain the selected element by its concrete
+adds direct fields for `last`, `nth` and internal final iteration. Focused checks
+pass on GCC ARM64/AMD64 and Clang ARM64; final delivery is pending.
+Borrowed list reads retain the selected element by its concrete
 type. Iteration moves its already-owned result. Original resource-frame
 references remain separate; boxing an escaping result protects its payload
 until allocation succeeds. No primitive ownership obligation is weakened.

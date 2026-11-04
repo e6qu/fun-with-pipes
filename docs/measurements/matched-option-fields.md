@@ -1,9 +1,9 @@
 # Optional results without a temporary box
 
-**Implementation prepared; fixture repair verification and measurements are pending.**
-[The first three-host batch](matched-option-fields-2026-11-04/README.md) passes
-its native owner controls but fails the source fixture and formatting; both are
-repaired locally. Expanded list/array controls still need verification.
+**Three-host focused checks pass; measurements and final delivery remain pending.**
+[The native report](matched-option-fields-2026-11-04/README.md) records values,
+owners, physical cleanup, controls and binary identities. The first batch's
+fixture failure and repair remain linked there.
 The contract was frozen at `4ec13baa`, tag
 `roadmap/matched-option-fields-protocol-2026-11-04`, before implementation. This follows
 [final-iteration delivery](final-iteration-storage.md). Keep PR #255's head
