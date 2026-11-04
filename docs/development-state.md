@@ -3,7 +3,10 @@
 **Next:** run grouped GCC/Clang verification of the implemented
 [selection extension](measurements/owned-numeric-updates.md#selection-extension-before-timing),
 including complete-solve selection and new ownership controls, before the untimed
-allocation comparison. [Saved real-program IR/C](measurements/owned-numeric-selection-2026-11-04/README.md)
+allocation comparison. [Run 41914912241](https://github.com/e6qu/fun-with-pipes/actions/runs/41914912241)
+tests `9f8ec9091c34927f978066ee40a79ca9f44e6a8c`: GCC ARM64 `126871929184`,
+GCC AMD64 `126871929203`, Clang ARM64 `126871929289` are building/linting.
+[Saved real-program IR/C](measurements/owned-numeric-selection-2026-11-04/README.md)
 at `b8404dbb` proves a gap: the current-only solve selects neither operation;
 history selects only coordinate zip. Emitted-C temporaries do not exist yet at
 selection, and owned constructor fields were excluded too broadly. No timing has
@@ -51,7 +54,8 @@ Keep [PR #257](https://github.com/e6qu/fun-with-pipes/pull/257) at `519fc966`.
 Eight production jobs and docs pass; the three unexecuted macOS jobs were retried
 once the first attempt completed. Attempt 2: Intel ownership `126845864825` is
 running its second test shard; ARM ownership `126845865096` and ARM regular
-`126845865460` pass and their full-log audits are in progress.
+`126845865460` pass. All 126/131 target logs and both full job logs pass audit
+(11.37s guarded collection). Intel ownership is the only remaining gate.
 Audit completed full logs and preserve carried-forward passing gates. Do not
 open a second PR or merge until every final-head gate passes.
 

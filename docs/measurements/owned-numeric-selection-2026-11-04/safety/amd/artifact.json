@@ -1,0 +1,20 @@
+{
+  "id": 13360807897,
+  "node_id": "MDg6QXJ0aWZhY3QxMzM2MDgwNzg5Nw==",
+  "name": "owned-numeric-checks-ubuntu-latest",
+  "size_in_bytes": 131827349,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13360807897",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13360807897/zip",
+  "expired": false,
+  "digest": "sha256:fc4d0f9adb1b9a24c92291bb45a314bd3b9523540ca3aea7badf33608cf3669c",
+  "created_at": "2026-11-04T20:42:09Z",
+  "updated_at": "2026-11-04T20:42:09Z",
+  "expires_at": "2027-02-02T20:29:17Z",
+  "workflow_run": {
+    "id": 41907057111,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "owned-numeric-updates",
+    "head_sha": "b8404dbbc2d6bb0617788829a859ff9b235cbf12"
+  }
+}
