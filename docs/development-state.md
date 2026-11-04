@@ -1,11 +1,18 @@
 # Current work
 
-**Next:** run grouped GCC/Clang verification of the implemented
-[selection extension](measurements/owned-numeric-updates.md#selection-extension-before-timing),
-including complete-solve selection and new ownership controls, before the untimed
-allocation comparison. [Run 41914912241](https://github.com/e6qu/fun-with-pipes/actions/runs/41914912241)
+**Next:** verify the repaired borrowing/consuming zip fixture on all three native
+hosts, then run the untimed allocation comparison. The
+[selection extension](measurements/owned-numeric-updates.md#selection-extension-before-timing)
+now passes complete-program and ownership controls. [Run 41914912241](https://github.com/e6qu/fun-with-pipes/actions/runs/41914912241)
 tests `9f8ec9091c34927f978066ee40a79ca9f44e6a8c`: GCC ARM64 `126871929184`,
-GCC AMD64 `126871929203`, Clang ARM64 `126871929289` are building/linting.
+GCC AMD64 `126871929203`, Clang ARM64 `126871929289` each fail the same older
+assertion requiring a borrowing zip comment. All eighteen target logs/full logs
+are audited: 285 units, 102 integrations, twelve complete-program selections,
+seven consuming exports and new ownership probes pass. The single failed test
+stops before compiling its example. Retained evidence and the strengthened repair
+are [documented together](measurements/owned-numeric-selection-2026-11-04/README.md#extension-verification-and-the-old-zip-assertion).
+No compiler/runtime change is needed for that test repair; measurements remain
+gated on successful verification.
 [Saved real-program IR/C](measurements/owned-numeric-selection-2026-11-04/README.md)
 at `b8404dbb` proves a gap: the current-only solve selects neither operation;
 history selects only coordinate zip. Emitted-C temporaries do not exist yet at

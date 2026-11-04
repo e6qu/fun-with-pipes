@@ -48,3 +48,37 @@ Each audit inventories every original artifact file. Each smaller controls archi
 retains the new native probes, all target logs, complete-solve source/IR/C and the
 isolated selection fixture. This passing run does **not** prove the later repair;
 the new complete-solve checks must reject this source, as the table above shows.
+
+## Extension verification and the old zip assertion
+
+[Run 41914912241](https://github.com/e6qu/fun-with-pipes/actions/runs/41914912241)
+tests repair `9f8ec909` on the same three hosts. All pass 285 units (four existing
+ignored), twelve complete-program checks and seven isolated consuming entries
+plus the retained-input exclusion. Both real gradient forms now reach both
+consuming operations. The new temporary-result and earlier-field ownership probes
+also pass, including failure/cancellation and allocation counts.
+
+Each job still fails one older integration test. It requires the borrowing zip
+helper's generated-C comment, but every eligible call in its fixture now consumes
+the list. It stops before compiling that example, so this is missing coverage,
+not a demonstrated value or cleanup failure. The other 102 integrations pass.
+
+The repair adds a later input read and returned alias to preserve an explicit
+borrowing case. It also requires consuming helpers for both zip argument positions,
+checks that excluded inputs select neither kind, and saves generated code/results
+before representation assertions. Raw/optimized interpreters, native O1/O2,
+stack settings, output order and final cleanup remain checked. Compiler and runtime
+code are unchanged by this test repair.
+
+All eighteen target logs and full logs per host were audited; there are no other
+warnings or failures. All 656 produced native images and 667 statuses were checked.
+Four image/status pairs are absent because the old assertion stopped that test.
+
+| Host | Failed-run audit | Retained controls and full log |
+|---|---|---|
+| GCC ARM64 | [Audit](repair-checks/arm/audit.json) | [Controls](repair-checks/arm/controls.zip), [log](repair-checks/arm/job.log.gz) |
+| GCC AMD64 | [Audit](repair-checks/amd/audit.json) | [Controls](repair-checks/amd/controls.zip), [log](repair-checks/amd/job.log.gz) |
+| Clang ARM64 | [Audit](repair-checks/mac/audit.json) | [Controls](repair-checks/mac/controls.zip), [log](repair-checks/mac/job.log.gz) |
+
+These failed runs do not authorize measurements. The repaired checks must pass
+on all three hosts first; no allocation or timing result has been accepted.

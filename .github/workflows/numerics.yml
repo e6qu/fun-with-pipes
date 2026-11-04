@@ -159,9 +159,10 @@ jobs:
         if: ${{ !cancelled() && steps.compiler_build.outcome == 'success' }}
         run: |
           set -o pipefail
-          target/debug/fwp fmt tests/fixtures/owned_numeric_updates.fwp
+          target/debug/fwp fmt tests/fixtures/owned_numeric_updates.fwp tests/fixtures/scalar_map_zip_order.fwp
           cp tests/fixtures/owned_numeric_updates.fwp owned-numeric-checks/formatted-fixture.fwp
-          git diff --exit-code -- tests/fixtures/owned_numeric_updates.fwp 2>&1 | tee owned-numeric-checks/language-format.log
+          cp tests/fixtures/scalar_map_zip_order.fwp owned-numeric-checks/formatted-order-fixture.fwp
+          git diff --exit-code -- tests/fixtures/owned_numeric_updates.fwp tests/fixtures/scalar_map_zip_order.fwp 2>&1 | tee owned-numeric-checks/language-format.log
       - name: Retain every result, generated C and native image
         if: always()
         uses: actions/upload-artifact@v7
