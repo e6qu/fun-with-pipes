@@ -35,10 +35,11 @@ explains why a node beneath a shared ancestor cannot be overwritten.
 
 Step 1 is frozen at `1c5e6a66`; the returned-owner/constructor-field extension at
 `c99451ec` precedes its implementation. Step 2's complete-program selection and
-new ownership controls pass on all three hosts. One older test still required
-only a borrowing helper; the [retained diagnosis and repair](docs/measurements/owned-numeric-selection-2026-11-04/README.md)
-now check explicit borrowing and both consuming positions. Reverification is
-running. Steps 3–4 remain open; no whole-solve savings or speedup is claimed.
+new ownership controls pass on all three hosts. The [retained diagnosis and repair](docs/measurements/owned-numeric-selection-2026-11-04/README.md)
+now check explicit borrowing and both consuming positions; all 285 units and
+103 integrations pass. The expanded formatter check found one older layout issue,
+now repaired to the exact saved output. Verify that repair before measurements.
+Steps 3–4 remain open; no whole-solve savings or speedup is claimed.
 The [handoff](docs/development-state.md) identifies the current source and runs.
 
 For N coordinates and U updates, predict U fewer array requests and

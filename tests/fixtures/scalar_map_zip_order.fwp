@@ -5,9 +5,7 @@ mapped = fn n ->
         True -> fail "map stopped"
         False -> n * 10
 subtract : I64 -> I64 -> I64 ! {IO}
-subtract = fn y -> fn x ->
-    let printed = (y, x) | echo
-    in x - y
+subtract = fn y -> fn x -> let printed = (y, x) | echo in x - y
 left : List[I64] -> List[I64] -> List[I64] ! {IO, Error[String]}
 left = fn input -> fn other ->
     let values = map mapped input

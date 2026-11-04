@@ -82,3 +82,42 @@ Four image/status pairs are absent because the old assertion stopped that test.
 
 These failed runs do not authorize measurements. The repaired checks must pass
 on all three hosts first; no allocation or timing result has been accepted.
+
+## Native checks pass; an older fixture needs formatting
+
+[Run 41917699225](https://github.com/e6qu/fun-with-pipes/actions/runs/41917699225),
+source `8fa9f890`, passes all 285 units (four ignored), 103 integrations,
+complete-program selection and ownership probes on every host. The corrected
+zip example exercises borrowing and both consuming positions and agrees with
+both interpreters at native O1/O2 and both stack settings. All eighteen target
+logs, 660 native images, 671 statuses and compiler diagnostics per host are audited.
+
+All three jobs fail only fixture formatting. The newly checked older fixture
+contains this existing definition:
+
+```fwp
+subtract = fn y -> fn x ->
+    let printed = (y, x) | echo
+    in x - y
+```
+
+The formatter puts that short expression on one line:
+
+```fwp
+subtract = fn y -> fn x -> let printed = (y, x) | echo in x - y
+```
+
+The repair matches all three saved formatter outputs byte for byte. No arithmetic,
+evaluation order, assertion or compiler/runtime code changes. Both fixtures also
+pass a bounded local formatting check using #257's verified macOS ARM64 package;
+its formatter/parser sources match this branch. This is a development check,
+not a build dependency on an earlier fwp compiler.
+
+| Host | Failed-job audit | Passing native controls and complete log |
+|---|---|---|
+| GCC ARM64 | [Audit](format-checks/arm/audit.json) | [Controls](format-checks/arm/controls.zip), [log](format-checks/arm/job.log.gz) |
+| GCC AMD64 | [Audit](format-checks/amd/audit.json) | [Controls](format-checks/amd/controls.zip), [log](format-checks/amd/job.log.gz) |
+| Clang ARM64 | [Audit](format-checks/mac/audit.json) | [Controls](format-checks/mac/controls.zip), [log](format-checks/mac/job.log.gz) |
+
+These remain failed jobs. The formatted source must pass the complete grouped
+verification before the allocation census or timing starts.
