@@ -28,6 +28,7 @@ int main(void) {
         windows_mode = mode;
         windows_phase = windows_inputs = windows_pairs = windows_folds = windows_fail_allocation = 0;
         windows_input_buffer = windows_pair_buffer = 0;
+        size_t allocations = owner_ledger_allocations;
         jmp_buf jump;
         fwp_trap_recover = windows_recover; fwp_trap_jb = &jump; fwp_trap_cleanup = 0;
         memset(&windows_task, 0, sizeof windows_task);
@@ -40,6 +41,11 @@ int main(void) {
             int expected_value = 5;
             for (int i = 0; i + 1 < count; i++) expected_value += (i + 1) * 10 + 7 + (i + 2) * 10 + 7;
             if (OBJ(result)->f[0] != expected_index || OBJ(result)->f[1] != (V)expected_value) return 241;
+            /* Two buffers, plus one boxed fold result only for a nonempty map.
+             * Caller seed/list construction is outside this observation. */
+            size_t added = owner_ledger_allocations - allocations;
+            if (added != 2 + (size_t)(count > 1)) return 248;
+            if (!round) printf("inputs=%d bounds=%u aliases=%u managed-objects=%zu\n", count, b, aliases, added);
             DROP_POINT(result);
         } else if (mode == 0) return 242;
         fwp_cur = NULL; fwp_trap_recover = NULL; fwp_trap_jb = NULL;

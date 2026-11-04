@@ -1,0 +1,20 @@
+Point = { value: I64 }
+input-point : I64 -> I64 -> Point
+input-point = fn index -> fn value -> Point { value = index + value }
+pair-point : Point -> Point -> Point
+pair-point =
+    fn left -> fn right -> Point { value = (left | .value) + (right | .value) }
+
+export transform : I64 -> I64 -> Point -> List[I64] -> Point
+transform = fn lo -> fn hi -> fn seed -> fn inputs ->
+    let records = zip-with input-point (range lo hi) inputs
+    in let pairs = zip-with pair-point (drop 1 records) records
+    in fold pair-point seed pairs
+
+main = [
+    transform 0 3 Point { value = 5 } [10, 20, 30] | .value | eq 89,
+    transform 0 2 Point { value = 5 } [10, 20, 30] | .value | eq 36,
+    transform -2 1 Point { value = 5 } [10, 20, 30] | .value | eq 81,
+    transform 0 3 Point { value = 5 } [] | .value | eq 5,
+    transform 0 3 Point { value = 5 } [10] | .value | eq 5,
+] | all id | echo

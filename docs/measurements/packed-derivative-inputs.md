@@ -69,6 +69,12 @@ Reject additional reads, escapes, unknown consumers and branch-crossing aliases.
 Straight-line aliases may qualify only when every use resolves to the same two
 windows and no resource frame anchors the representation.
 
+The [repair preflight](packed-input-selection-2026-11-04/README.md#repair-preflight)
+selects the real gradient inputs and passes twenty GCC ARM64 cleanup images.
+Two test-fixture repairs and hidden pipeline failure reporting still require
+the complete grouped gate; neither implementation nor these partial checks
+establish performance or support on the other hosts.
+
 ## Ownership and failure proof
 
 - Select only flat records of one or two machine-sized numeric fields, with a
@@ -131,6 +137,20 @@ for missing/duplicate/changed edits. Retain both source and compiler identities.
 - **Compiler/stack:** at most 5% additional compiler elapsed time or sampled
   RSS; report native text size and limit frame growth to 128 bytes. Exercise
   repeated calls and large rejected bodies to check bounded specialization.
+
+Before any measurements, the driver declares seven compiler inputs per host:
+field-owner transfer, the autodiff tutorial, 3/0, 33/199 and 129/199 gradient
+programs, 64 calls sharing one known scoped worker, and a worker exceeding the
+specialization body limit. Each gets 48 balanced compilation commands (two
+warmup rounds and ten measured rounds across four compiler copies). These time
+startup through C emission and report whole-command peak RSS. They do not run
+the generated programs. The grouped correctness gate compiles both new inputs
+before timing is allowed.
+
+Explicit suites: `packed-input-checks` runs GCC ARM64/AMD64 and Clang ARM64;
+`packed-input-analysis` and `packed-input-time` require that completed,
+source-matching gate. `packed-input-report` independently audits the saved raw
+runtime records. Keep those jobs distinct from the final production PR matrix.
 
 Preserve every failed/noisy result. Never rerun a completed timing for a pass.
 The accepted policy permits retaining verified reductions while timing goals
