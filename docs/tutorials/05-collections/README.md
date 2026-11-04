@@ -35,6 +35,13 @@ The program therefore produces `[1, 2, 4, 8, 16]` without constructing an infini
 list. Some producers prepare a successor when stepped; this is not a guarantee
 that every producer performs no lookahead.
 
+`iterate 5 (mul 2)` instead describes a finite list of five values, including
+the initial `1`. Adding `| last` asks for its final item: `Some 16`. `Some` means
+an item exists; a count of zero would give `None`. For this numeric pipeline the
+compiler can keep just the current value while doubling it four times. If the
+program also uses the history list, that list must remain available. Ordinary
+`last` walks a list without making a reversed copy.
+
 ### Follow one list through a pipe
 
 ```text
@@ -60,6 +67,7 @@ main = [
     text | words | unique | sort | take 3 | echo,
     [1, 2, 3, 4, 5, 6] | filter (rem 2 | eq 0) | map (mul 10) | echo,
     1 | iter.iterate (mul 2) | iter.take 5 | iter.to-list | echo,
+    1 | iterate 5 (mul 2) | last | echo,
     ("apples", 12) | format "{}: {}" | print,
 ] | ignore
 ```
@@ -74,6 +82,7 @@ Some 3
 ["brown", "dog", "end"]
 [20, 40, 60]
 [1, 2, 4, 8, 16]
+Some 16
 apples: 12
 ```
 

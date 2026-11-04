@@ -31,10 +31,10 @@ and returns `(result, final-state)`. Positions start at zero, so `.1` selects th
 final count and `echo` prints `3`.
 
 [`measure-list-each.py`](../../scripts/measure-list-each.py) compares both definitions
-at 10,000, 100,000 and 1,000,000 elements on Linux runners. The current protocol records eight samples
-in equally alternating order after a warmup; its new run is pending. The historical
-report below used seven samples. Timing includes process startup, input
-construction, updates, printing and cleanup.
+at 10,000, 100,000 and 1,000,000 elements on Linux runners. The current reproduction
+schedule records eight samples in equally alternating order after a warmup;
+the completed historical report below used seven samples. Timing includes
+process startup, input construction, updates, printing and cleanup.
 
 Both use the same C compiler and
 `-O2` and counted ownership. The report also records

@@ -599,6 +599,7 @@ The optimizer removes work only when doing so preserves observable behavior:
 | Scalar replacement | Building a record that is only read field by field | A whole-value use may still need the record |
 | F64 identity conversion map | A replacement array and its element traversal | Only the exact known `float.convert : F64 -> F64` primitive qualifies |
 | Direct numeric workers | Boxing and generic word conversion at suitable calls | Closures and other generic boundaries keep conversion code |
+| Final iteration value | An unused numeric history and its reverse copy | Only exact, single-use `iterate` → `last`; shared histories remain |
 | List/array fusion | Intermediate collections between eligible map/filter/consumer stages | Interleaving must preserve effects, termination and which trap occurs first |
 | Iterator specialization | Tail closures and indirect calls for known producers/consumers | Early stopping and successor lookahead remain observable |
 | Flat loop state | Rebuilding state tuples on each iteration | Unsupported shapes keep ordinary state representation |
@@ -613,6 +614,23 @@ result owner. Returning a slice can prolong its backing array's lifetime.
 [The contract](measurements/scalar-array-identities.md) and
 [verification/storage report](measurements/scalar-array-identities-2026-11-03/README.md)
 distinguish that cost from the saved allocation.
+
+The [final-iteration implementation](measurements/final-iteration-storage.md)
+also recognizes `0 | iterate 3 (add 1) | last`, whose result is `Some 2`:
+
+```text
+Ordinary history: 0 → 1 → 2 → list [0, 1, 2] → last → Some 2
+Selected path:   0 → 1 → 2 → Some 2
+```
+
+`src/fuse.rs` checks primitive identities and existing types before ownership
+insertion. The runtime moves each current numeric state into the next callback;
+only the final state survives. Numeric lists and arrays also qualify. Resource
+states and histories used elsewhere keep their ordinary storage. Callback order,
+input evaluation and count errors stay unchanged. Three-host focused native
+checks pass. [Measured results](measurements/final-iteration-time-2026-11-04/README.md)
+show lower peak storage and ARC traffic, with explicit timing misses. Final
+delivery gates remain open.
 
 A temporary tuple or record can disappear only when its uses and child lifetimes
 permit it. Ignored fields still evaluate in their original order. Known tuple

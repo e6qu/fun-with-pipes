@@ -1,0 +1,42 @@
+old-last : List[a] -> Option[a]
+old-last = reverse | head
+
+advance : I64 -> I64 ! {State[List[I64]]}
+advance = tap (Cons | modify) | add 1
+
+fail-after-one : I64 -> I64 ! {Error[String], State[List[I64]]}
+fail-after-one = tap (Cons | modify) | match
+    1 -> fail "second callback"
+    _ -> add 1
+
+choose-step : Bool -> (I64 -> I64)
+choose-step = if id (const (add 2)) (const (add 3))
+
+array-alias : () -> (List[F64], Option[List[F64]])
+array-alias = fn () ->
+    let input = array.from-list [1.0, 2.0, 3.0]
+    in let final = input | array.slice 1 2 | iterate 4 id | last
+    in let changed = final | option.and-then (array.set 0 9.0)
+    in (input | array.to-list, changed | option.map array.to-list)
+
+main = [
+    [] | list._test-ints | last | echo,
+    [7, 8] | both last old-last | echo,
+    ["first", "last"] | both id last | echo,
+    [0.1f128, 0.2f128] | both id last | echo,
+    0 | iterate -1 (add 1) | last | echo,
+    0 | iterate 0 (div 0) | last | echo,
+    0 | iterate 1 (div 0) | last | echo,
+    0 | iterate 4 (add 1) | last | echo,
+    0 | iterate 4 (add 1) | both id last | echo,
+    0 | run-state [] (iterate 4 advance | last) | echo,
+    0 | run-state [] (attempt (iterate 4 fail-after-one | last)) | echo,
+    0 | iterate 4 (tap echo | add 1) | last | echo,
+    0 | iterate 3 (choose-step (read-all () | string.length | eq 0)) | last | echo,
+    [1.0, 2.0] | iterate 4 (map (add 1.0)) | last | echo,
+    [1.0, 2.0] | both id (iterate 4 id | last) | echo,
+    [1.0, 2.0] | iterate 4 (const [3.0, 4.0]) | last | echo,
+    [1.0, 2.0] | array.from-list | iterate 4 id | last | echo,
+    array-alias () | echo,
+    0.1f128 | iterate 4 id | last | echo,
+] | ignore

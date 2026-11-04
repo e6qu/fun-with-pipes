@@ -1040,6 +1040,14 @@ static V fwp_p_nth(V n, V xs) {
     return FWP_NONE;
 }
 
+/* The typed caller keeps the list alive and retains the selected element in
+ * the new Option wrapper. No reverse spine or intermediate element owner. */
+static V fwp_p_last(V xs) {
+    if (!xs) return FWP_NONE;
+    while (OBJ(xs)->f[1]) xs = OBJ(xs)->f[1];
+    return fwp_some(OBJ(xs)->f[0]);
+}
+
 static V fwp_p_find(V f, V xs) {
     for (; xs != 0; xs = OBJ(xs)->f[1])
         if (fwp_apply1(f, OBJ(xs)->f[0]) == FWP_TRUE) return fwp_some(OBJ(xs)->f[0]);
@@ -1226,6 +1234,28 @@ static V fwp_p_iterate_owned(V n, V f, V x, void (*element_drop)(V), void (*list
     V result = fwp_map_finish_protected(&owner, &cleanup);
 
 
+    return result;
+}
+
+/* Selected only when the history has one final-value consumer and its state
+ * has no observable destruction. Callback captures stay borrowed through return. */
+static V fwp_p_iterate_last_own(V n, V f, V x, void (*drop_state)(V)) {
+    fwp_value_owner current = {x, drop_state};
+    fwp_cleanup cleanup; fwp_value_protect(&current, &cleanup);
+    size_t k = fwp_count_arg(n);
+    if (k >= SIZE_MAX / sizeof(V)) fwp_trap("iterate too large");
+    if (!k) {
+        V unused = fwp_value_finish(&current, &cleanup);
+        if (drop_state) drop_state(unused);
+        return FWP_NONE;
+    }
+    for (size_t i = 1; i < k; i++) {
+        V argument = current.value;
+        current.value = 0; /* application now owns this exact reference */
+        current.value = fwp_apply_borrowed_prefix(f, 1, &argument, 1);
+    }
+    V result = fwp_rc_fresh(fwp_some(current.value));
+    (void)fwp_value_finish(&current, &cleanup); /* result takes the final owner */
     return result;
 }
 

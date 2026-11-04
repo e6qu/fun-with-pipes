@@ -37,6 +37,12 @@ identities. Do not edit observations to make an old experiment describe new code
 
 ## Numerical applications
 
+- [Final iteration values](final-iteration-time-2026-11-04/README.md): four audited
+  sessions; largest history case uses 97.7% less peak managed storage and runs
+  5.1–5.9% faster. Five speed targets and one small-case regression remain open.
+  [Native verification](final-iteration-storage-2026-11-03/README.md) is separate
+  from final platform delivery.
+
 - [Materialized array construction](array-construction-phases-2026-11-02/README.md):
   source generator, C driver, C and Rust with separate construction/consumption
   timers; repeated ARM64 results, failed AMD64 controls and explicit storage costs.
@@ -88,6 +94,8 @@ These reports follow different versions of derivative descent. Read the variant 
 
 ## Compiler cost
 
+- [Final-iteration compiler cost](final-iteration-analysis-2026-11-04/README.md):
+  nine passing timing cases, one noisy AMD64 case and separate process-memory bounds.
 - [Ownership analysis: creation-site correctness, paired cost and size budgets](ownership-analysis.md)
 - [CI compiler build cost](ci-compiler-profiles.md)
 

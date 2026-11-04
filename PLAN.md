@@ -45,10 +45,56 @@ PR #253's verified merge and evidence are in [delivery history](docs/roadmap-his
 
 Keep older timing goals open against their original references. Do not repeat
 completed sessions for a better result. [Remaining storage candidates](docs/measurements/remaining-gradient-storage.md)
-include input records, coordinate lists and an unused iteration history. They
-remain unselected until their lifetime proof, scope and measurements are declared.
+include input records, coordinate lists and an unused iteration history. The
+next section selects the history group; the representation candidates remain unselected.
+
+## Next group: final list values without retained histories
+
+The [frozen implementation contract](docs/measurements/final-iteration-storage.md)
+groups four related changes. [The source review](docs/measurements/final-iteration-storage-2026-11-03/README.md)
+confirms the actual gradient program's iteration, reverse copy and final-item read.
+PR #254's Windows probe repair is awaiting its new final-head gates. Keep that
+head intact while they run; open the next delivery PR only after its verified merge.
+The changes below pass the grouped focused checks on Linux ARM64/AMD64 and macOS
+ARM64 at `bb5433b6`. Compiler/runtime measurements use the immutable tag
+`roadmap/final-iteration-measurement-2026-11-04`. All four runtime sessions and
+their raw audits are complete: the largest history solve uses 97.7% less peak
+managed storage and takes 5.1–5.9% less time. Five speed targets, one small-case
+regression and one compiler timing control remain open. The final delivery matrix
+is still required. The scalar control removes 2k list nodes and one temporary
+pointer buffer; the complete-program report records its own net allocation costs.
+
+| Task | Required result |
+|---|---|
+| Direct `last` | Borrow the list and return its final item in an owned option, without a reverse copy; preserve every supported element type. |
+| Remove unused iteration histories | Select exact typed, single-use `iterate` → `last` calls for numeric states and numeric lists/arrays; transfer the current owner through unchanged callback order. Retained/shared histories remain intact. |
+| Repair boundary failures | Match interpreter/native oversized-count rejection before callbacks; release a newly allocated optional wrapper if retaining its child fails. |
+| Verify and measure together | Check aliases, effects, resource exclusions, wide numbers, cancellation and physical release. Require 2k fewer list-node allocations in the scalar control and ≥80% less peak managed storage for the large history solve; keep separate timing/compiler/stack limits. |
+| Deliver | Update examples, contracts and benchmark explanations; audit all final-head native/benchmark/documentation gates before one squash merge. |
+
+Input derivative-record packing and coordinate-list reuse remain unselected.
+This group changes neither representation. Older timing goals remain open.
+After delivery, complete the [matched-option ownership proof](docs/measurements/remaining-gradient-storage.md#follow-up-an-immediately-matched-optional-result):
+saved C shows an allocated result wrapper that the caller immediately unpacks.
+Use the existing field-return machinery for the proof, then freeze the selection
+and comparison before implementing it. This is not a proven cause of the timing miss.
 
 ## Open performance goals
+
+- **Final-iteration compiler cost.** [The completed compiler comparison](docs/measurements/final-iteration-analysis-2026-11-04/README.md)
+  passes nine timing cases and all observed memory limits. AMD64 field-owner
+  transfer has 2.043% identical-copy variation against 2%, so that timing case
+  remains inconclusive. Preserve its samples and failure. Declare any further
+  sample/setup diagnostic before changing the protocol; do not repeat unchanged
+  timings for a pass.
+
+- **Final-iteration runtime.** [Four completed sessions](docs/measurements/final-iteration-time-2026-11-04/README.md)
+  miss 5% on 3/199 history in both ARM64 sessions, and on 33/199 history in both
+  ARM64 sessions and AMD64 session 1. AMD64 session 2's 3/1 history is 2.79%
+  slower against a 2% limit. Preserve all six misses and the verified memory/ARC
+  reductions. Diagnose the small-case source and saved sample progression before
+  selecting another change; do not rerun unchanged timings or infer a safety
+  failure from the timing ratio. All raw audits and identical-copy controls pass.
 
 - **Identity array-map speed.** [Four completed sessions](docs/measurements/scalar-array-identity-time-2026-11-03/README.md)
   miss every required 5% gain on 3/199, 3/1999, 33/199 and 129/199, in both forms.

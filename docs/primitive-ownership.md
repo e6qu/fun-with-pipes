@@ -297,7 +297,7 @@ paths keep specialization, callback/evaluation order and live owners
 through allocation. Scratch buffers remain owned until transfer and are
 released explicitly. Scalar bits never select a reference destructor.
 
-| Merged primitive | Arguments | Owned result and callback transfer |
+| Primitive | Arguments | Owned result and callback transfer |
 |---|---|---|
 | map; zip-with | Borrow callback and lists | Fresh spine adopts owned callback results; callback borrows typed inputs |
 | filter; take-while | Borrow predicate and list | Fresh spine retains selected elements; predicate borrows |
@@ -308,12 +308,19 @@ released explicitly. Scalar bits never select a reference destructor.
 | sort; unique | Borrow list | Copied spine retaining typed selected elements; release owned scratch; stable comparisons/first occurrence |
 | sort-by | Borrow callback/list | Evaluate each key once in input order; own typed keys and copied result, release scratch; stable ties |
 | scan; iterate | Borrow callbacks/inputs | Retain initial stored state and adopt subsequent owned callback states |
+| list._iterate-last | Borrow count/callback, consume state | Selected numeric iteration transfers each current owner into its callback and returns an owned option; no history list |
 | loop | Borrow callback, consume state | Transfer callback input; retain selected typed Step payload before releasing wrapper; reclaim typed worker/ABI wrappers |
 | zip; unzip; chunks | Borrow inputs | Counted nested spines retain typed aliases; release scratch; invalid chunk size traps before list evaluation |
 | append | Borrow both lists | Copied spine plus retained tail from argument0 |
 | drop | Borrow count/list | Retained tail of argument1 |
-| nth; find | Borrow arguments | Fresh Option retaining selected element; find borrows predicate and stops at first match |
+| nth; last; find | Borrow arguments | Fresh Option retaining selected element; last walks to the final node without copying; find borrows predicate and stops at first match |
 | index-of | Borrow key/list | Fresh Option of scalar; comparison key is read-only |
+
+The [final-iteration group](measurements/final-iteration-storage.md) adds `last`
+and the internal history-free operation. Three-host focused native checks pass;
+the full final-head platform matrix remains required.
+The optional wrapper is protected while its borrowed child is retained: a failed
+retain frees the wrapper without releasing a child it never acquired.
 
 The internal result labels describe distinct promises:
 

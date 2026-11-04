@@ -1,0 +1,20 @@
+{
+  "id": 13272669276,
+  "node_id": "MDg6QXJ0aWZhY3QxMzI3MjY2OTI3Ng==",
+  "name": "macos-ownership-tests-macos-15-intel",
+  "size_in_bytes": 42149,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13272669276",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13272669276/zip",
+  "expired": false,
+  "digest": "sha256:02b747a1858c27e871778fddfda01e16a3cb32b67b0912c2a8a69c5d384b4724",
+  "created_at": "2026-11-03T21:46:00Z",
+  "updated_at": "2026-11-03T21:46:00Z",
+  "expires_at": "2027-02-01T20:30:51Z",
+  "workflow_run": {
+    "id": 41713252299,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "scalar-array-identities",
+    "head_sha": "8bf9c65bc247bbd94903d0a31fb0823d1e335391"
+  }
+}

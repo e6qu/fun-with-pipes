@@ -454,6 +454,9 @@ chunks : I64 -> List[a] -> List[List[a]]
 iterate : I64 -> (a -> a ! e) -> a -> List[a] ! e
 head : List[a] -> Option[a]
 tail : List[a] -> Option[List[a]]
+
+# Return the final item, or `None` for an empty list. `[7, 8] | last` is `Some 8`.
+# Walks the list without constructing a reversed copy.
 last : List[a] -> Option[a]
 is-empty : List[a] -> Bool
 any : (a -> Bool ! e) -> List[a] -> Bool ! e

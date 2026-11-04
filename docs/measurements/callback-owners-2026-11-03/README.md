@@ -104,4 +104,6 @@ failure and artifact download identities. Audit logs: [original](original/audit.
 consistent, not that its failed speed targets have passed.
 
 [Compiler-cost results](../numeric-input-analysis-2026-11-03/README.md) pass their
-separate 5% time/RSS and 2% copy limits. Final platform CI is still required.
+separate 5% time/RSS and 2% copy limits. All nine production jobs and documentation
+passed before the [verified #249 merge](../../roadmap-history.md#numeric-callback-owner-transfers-pr-249);
+[gate identities and logs](final-gates.json) retain the evidence.

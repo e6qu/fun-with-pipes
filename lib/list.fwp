@@ -51,8 +51,9 @@ tail = match
     Cons -> const Some
     Nil -> None
 
-last : List[a] -> Option[a]
-last = reverse | head
+# Return the final item, or `None` for an empty list. `[7, 8] | last` is `Some 8`.
+# Walks the list without constructing a reversed copy.
+foreign "fwp" last : List[a] -> Option[a]
 
 is-empty : List[a] -> Bool
 is-empty = match

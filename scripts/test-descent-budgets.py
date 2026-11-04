@@ -14,6 +14,46 @@ BASELINE = json.loads((ROOT / 'docs/measurements/array-capture-descent-2026-10-2
 
 
 class DescentBudgets(unittest.TestCase):
+    def test_final_iteration_keeps_distinct_current_and_history_limits(self):
+        for dimensions in (3, 33, 129):
+            for updates in (0, 1, 199, 1999):
+                row = self.recording_case(updates)
+                row.update(dimensions=dimensions, solvesPerProcess=8)
+                row['medianNs']['fwp-ad'] = row['medianNs']['fwp-ad-identical'] = 100
+                row['medianNs']['fwp-ad-history'] = 95 if updates >= 199 else 100
+                for label in ('fwp-ad', 'fwp-ad-history'):
+                    old = row['fwpProfiles'][label + '-reference']['managed']
+                    old.update(requests=10000, requestedBytes=100000, retains=10000, peakChargedBytes=1000)
+                    row['fwpProfiles'][label]['managed'] = dict(old)
+                    row['binaries'][label]['instructionBytes'] += 4096
+                large = (dimensions, updates) == (129, 199)
+                row['fwpProfiles']['fwp-ad-history']['managed']['peakChargedBytes'] = 200 if large else 800
+                # Different reported raw peaks are allowed; both must clean up.
+                row['fwpProfiles']['fwp-ad-history']['rawDerivativeStorage']['peakBytes'] = 128
+                self.assertEqual(DESCENT.paired_budget_failures({'case': row}, 'final-iteration'), [])
+                for metric in ('requests', 'requestedBytes', 'retains'):
+                    changed = copy.deepcopy(row)
+                    changed['fwpProfiles']['fwp-ad']['managed'][metric] += 1
+                    self.assertEqual([failure['metric'] for failure in
+                        DESCENT.paired_budget_failures({'case': changed}, 'final-iteration')], [metric])
+                for metric, mutate in (
+                    ('candidate/reference time', lambda item: item['medianNs'].update({'fwp-ad': 103, 'fwp-ad-identical': 103})),
+                    ('candidate/reference time', lambda item: item['medianNs'].update({'fwp-ad-history': 96 if updates >= 199 else 103})),
+                    ('identical median variation', lambda item: item['medianNs'].update({'fwp-ad-identical': 103})),
+                    ('finalChargedBytes', lambda item: item['fwpProfiles']['fwp-ad-history']['managed'].update(finalChargedBytes=1)),
+                    ('final raw bytes', lambda item: item['fwpProfiles']['fwp-ad']['rawDerivativeStorage'].update(finalBytes=1)),
+                    ('largest static stack frame', lambda item: item['cCompilerStackUsage']['fwp-ad-history.su']['entries'][0].update(bytes=193)),
+                ):
+                    changed = copy.deepcopy(row)
+                    mutate(changed)
+                    self.assertEqual([failure['metric'] for failure in
+                        DESCENT.paired_budget_failures({'case': changed}, 'final-iteration')], [metric])
+                if large:
+                    changed = copy.deepcopy(row)
+                    changed['fwpProfiles']['fwp-ad-history']['managed']['peakChargedBytes'] = 201
+                    self.assertEqual([failure['metric'] for failure in
+                        DESCENT.paired_budget_failures({'case': changed}, 'final-iteration')], ['peakChargedBytes'])
+
     def recording_case(self, updates):
         row = dict(dimensions=3, updates=updates, solvesPerProcess=1,
                    medianNs={'fwp-ad-identical': 95 if updates else 100},

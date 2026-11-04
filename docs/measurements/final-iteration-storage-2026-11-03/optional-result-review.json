@@ -1,0 +1,24 @@
+{
+  "scope": "Saved three-coordinate, two-update source; this is not the one-update timing program or a causal timing diagnosis.",
+  "sources": {
+    "before": {
+      "source": "13df096288aad41300f41d76f9a4f6c58440b192",
+      "program": "descent-small.fwp",
+      "programSha256": "5ea708ac49122079ecb5330a285795427a54eafaadea1c5f8c7bc2b5b8d63cbe",
+      "generatedC": "descent-small-optimized.c",
+      "generatedCSha256": "56d907f9fcf6f12c6fbe655e20ce7867545044a08a7644370a1c53d76078e765",
+      "entryStartLine": 17239,
+      "entryC": "/* main : () */\nstatic V f0(void) {\n    V l0 = 0;\n    V l1 = 0;\n    V l2 = 0;\n    V l3 = 0;\n    V l4 = 0;\n    V l5 = 0;\n    V l6 = 0;\n    V l7 = 0;\n    V l8 = 0;\n    V l9 = 0;\n    V l10 = 0;\n    V l11 = 0;\n    V l12 = 0;\n    V l13 = 0;\n    V t3 = fwp_rc_fresh(fwp_data(1, 2, (V[]){(V)0xbff3333333333333ULL, (V)0}));\n    V t6 = fwp_rc_fresh(fwp_data(1, 2, (V[]){(V)0x3ff0000000000000ULL, t3}));\n    V t9 = fwp_rc_fresh(fwp_data(1, 2, (V[]){(V)0xbff3333333333333ULL, t6}));\n    l0 = t9;\n    V t10 = f6((V)(int64_t)3LL, PTR(&fc7), l0);\n    l9 = t10;\n    fwp_drop0(l0);\n    l1 = l9;\n    V t11 = f12(l1);\n    l10 = t11;\n    fwp_drop1(l1);\n    l2 = l10;\n    V t12 = l2;\n    fwp_u1 t13;\n    {\n        if (fwp_tag(t12) != 1) goto next2;\n        l3 = OBJ(t12)->f[0];\n        l4 = OBJ(t12)->f[1];\n        fwp_rc_dup(l3);\n        fwp_drop1(l2);\n        fwp_u1 t14 = {(V)1, {l3}};\n        t13.tag = t14.tag;\n        t13.f[0] = t14.f[0];\n        goto done1;\n    }\n    next2:;\n    {\n        if (fwp_tag(t12) != 0) goto next3;\n        fwp_drop1(l2);\n        t13.tag = (V)0;\n        t13.f[0] = 0;\n        goto done1;\n    }\n    next3:;\n    fwp_trap(\"internal: no match arm applies\");\n    done1:;\n    fwp_u1 t15 = {t13.tag, {t13.f[0]}};\n    V t16;\n    {\n        if ((uint32_t)t15.tag != 1) goto next5;\n        l7 = t15.f[0];\n        /* move matched variant payload */\n        t16 = l7;\n        goto done4;\n    }\n    next5:;\n    {\n        if ((uint32_t)t15.tag != 0) goto next6;\n        fwp_vdrop0(&t15);\n        V t17 = f159(PTR(&s0));\n        t16 = t17;\n        goto done4;\n    }\n    next6:;\n    fwp_trap(\"internal: no match arm applies\");\n    done4:;\n    l8 = t16;\n    V t18 = f3(l8);\n    l11 = t18;\n    fwp_drop0(l8);\n    l12 = l11;\n    V t19 = f4(l12);\n    l13 = t19;\n    fwp_drop2(l12);\n    return l13;\n}\n"
+    },
+    "after": {
+      "source": "bb5433b688c26c60f0b2561a59420deb0f0e95ed",
+      "program": "selection/descent-small.fwp",
+      "programSha256": "5ea708ac49122079ecb5330a285795427a54eafaadea1c5f8c7bc2b5b8d63cbe",
+      "generatedC": "selection/descent-small-optimized.c",
+      "generatedCSha256": "2e3be357815691d19f26e059cf55f92486e3e34cdae34696a19bfc11f7fdb193",
+      "entryStartLine": 17235,
+      "entryC": "/* main : () */\nstatic V f0(void) {\n    V l0 = 0;\n    V l1 = 0;\n    V l2 = 0;\n    V l3 = 0;\n    V l4 = 0;\n    V l5 = 0;\n    V l6 = 0;\n    V t3 = fwp_rc_fresh(fwp_data(1, 2, (V[]){(V)0xbff3333333333333ULL, (V)0}));\n    V t6 = fwp_rc_fresh(fwp_data(1, 2, (V[]){(V)0x3ff0000000000000ULL, t3}));\n    V t9 = fwp_rc_fresh(fwp_data(1, 2, (V[]){(V)0xbff3333333333333ULL, t6}));\n    l0 = t9;\n    V t10 = f156((V)(int64_t)3LL, PTR(&fc7), l0);\n    l1 = t10;\n    V t11 = l1;\n    V t12;\n    {\n        if (fwp_tag(t11) != 1) goto next2;\n        l2 = OBJ(t11)->f[0];\n        fwp_rc_dup(l2);\n        fwp_drop0(l1);\n        t12 = l2;\n        goto done1;\n    }\n    next2:;\n    {\n        if (fwp_tag(t11) != 0) goto next3;\n        fwp_drop0(l1);\n        V t13 = f151(PTR(&s0));\n        t12 = t13;\n        goto done1;\n    }\n    next3:;\n    fwp_trap(\"internal: no match arm applies\");\n    done1:;\n    l3 = t12;\n    V t14 = f3(l3);\n    l4 = t14;\n    fwp_drop1(l3);\n    l5 = l4;\n    V t15 = f4(l5);\n    l6 = t15;\n    fwp_drop2(l5);\n    return l6;\n}\n",
+      "runtimeHelperC": "static V fwp_p_iterate_last_own(V n, V f, V x, void (*drop_state)(V)) {\n    fwp_value_owner current = {x, drop_state};\n    fwp_cleanup cleanup; fwp_value_protect(&current, &cleanup);\n    size_t k = fwp_count_arg(n);\n    if (k >= SIZE_MAX / sizeof(V)) fwp_trap(\"iterate too large\");\n    if (!k) {\n        V unused = fwp_value_finish(&current, &cleanup);\n        if (drop_state) drop_state(unused);\n        return FWP_NONE;\n    }\n    for (size_t i = 1; i < k; i++) {\n        V argument = current.value;\n        current.value = 0; /* application now owns this exact reference */\n        current.value = fwp_apply_borrowed_prefix(f, 1, &argument, 1);\n    }\n    V result = fwp_rc_fresh(fwp_some(current.value));\n    (void)fwp_value_finish(&current, &cleanup); /* result takes the final owner */\n    return result;\n}\n"
+    }
+  }
+}
