@@ -1,6 +1,8 @@
 # Reuse consumed numeric arrays and coordinate lists
 
-**Preparation for the group after PR #257; no implementation or speed claim.**
+**Implemented in preparation after PR #257; native checks and measurements pending.**
+Contract frozen before implementation at `1c5e6a66`, immutable tag
+`roadmap/owned-numeric-updates-protocol-2026-11-04`.
 Starting source: `519fc96670b0db90ebe0f68e1263ccf85d2cf4f1`.
 The [current storage review](remaining-gradient-storage.md) identifies coordinate
 cells as remaining allocation traffic. The [packed-input measurements](packed-input-time-2026-11-04/README.md)

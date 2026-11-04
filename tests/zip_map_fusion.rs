@@ -842,7 +842,11 @@ fn array_list_zip_preserves_eager_order_slices_and_updated_aliases() {
             );
             let ordinary = std::fs::read_to_string(path).unwrap();
             assert!(
-                ordinary.matches("/* array-list-zip :").count() >= 4,
+                ordinary.matches("/* array-list-zip :").count()
+                    + ordinary
+                        .matches("/* consumed-scalar-array-list-zip :")
+                        .count()
+                    >= 4,
                 "{stack}/{opt}: both I64 slots, I8 and widened F32 inputs must select"
             );
             for reuse in [true, false] {
@@ -897,7 +901,8 @@ fn gradient_arrays_cross_scope_and_feed_updates_without_a_private_list() {
     );
     let code = std::fs::read_to_string(path).unwrap();
     assert!(
-        code.contains("/* array-list-zip :"),
+        code.contains("/* array-list-zip :")
+            || code.contains("/* consumed-scalar-array-list-zip :"),
         "the complete gradient/update path must select"
     );
     for opt in ["-O1", "-O2"] {

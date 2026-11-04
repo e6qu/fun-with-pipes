@@ -17,6 +17,7 @@ use crate::value::Value;
 
 mod field_transfers;
 mod numeric_parameters;
+mod owned_numeric;
 mod packed_inputs;
 mod packed_records;
 mod range_zip;
@@ -2573,6 +2574,34 @@ fn hof_sig(i: usize, sym: &str, k: usize) -> String {
 }
 
 impl Gen<'_> {
+    fn owned_scalar_array_map(&mut self, id: FuncId, callback: FuncId) -> String {
+        let array = self.prog.funcs[id].locals[0].clone();
+        let MT::Con(_, elements) = &array else {
+            unreachable!()
+        };
+        let descriptor = self.desc(&elements[0]);
+        let drop = self.value_drop(&array);
+        format!("    /* Consume one scalar array owner; views and aliases keep their values. */\n    fwp_value_owner input = {{l0, {drop}}};\n    fwp_cleanup input_cleanup; fwp_value_protect(&input, &input_cleanup);\n    size_t count = fwp_array_len(l0);\n    int reuse = !fwp_array_is_view(l0) && fwp_rc_unique_mut(l0);\n    V output = reuse ? l0 : fwp_array_typed_new(count, {descriptor});\n    fwp_array_builder result = {{output, 0, {descriptor}}};\n    fwp_cleanup cleanup; fwp_array_builder_protect(&result, &cleanup);\n    if (reuse) input.value = 0;\n    for (size_t i = 0; i < count; i++) {{\n        fwp_array_store(output, i, f{callback}(fwp_array_load(l0, i, {descriptor})), {descriptor});\n        result.filled++;\n    }}\n    output = fwp_array_builder_finish(&result, &cleanup);\n    {drop}(fwp_value_finish(&input, &input_cleanup));\n    return output;\n")
+    }
+
+    fn owned_scalar_buffer_zip(&mut self, id: FuncId, callback: FuncId, slot: usize) -> String {
+        let other = 1 - slot;
+        let list = self.prog.funcs[id].locals[other].clone();
+        let drop = self.value_drop(&list);
+        let array = self.prog.funcs[id].locals[slot].clone();
+        let MT::Con(_, elements) = &array else {
+            unreachable!()
+        };
+        let descriptor = self.desc(&elements[0]);
+        let value = format!("fwp_array_load(l{slot}, i, {descriptor})");
+        let arguments = if slot == 0 {
+            format!("{value}, items[i]")
+        } else {
+            format!("items[i], {value}")
+        };
+        format!("    /* Borrow array, consume list; finish all callbacks before list reuse. */\n    fwp_value_owner input = {{l{other}, {drop}}};\n    fwp_cleanup input_cleanup; fwp_value_protect(&input, &input_cleanup);\n    size_t count;\n    V *items = fwp_map_items(l{other}, &count);\n    fwp_map_owner owner = {{items, 0, 0, NULL, {drop}}};\n    fwp_cleanup cleanup; fwp_map_protect(&owner, &cleanup);\n    size_t buffered = fwp_array_len(l{slot});\n    if (buffered < count) count = buffered;\n    for (size_t i = 0; i < count; i++) {{\n        items[i] = f{callback}({arguments});\n        owner.count++;\n    }}\n    V output = fwp_map_finish_reusing_list(&input, &owner, &cleanup);\n    {drop}(fwp_value_finish(&input, &input_cleanup));\n    return output;\n")
+    }
+
     fn scalar_buffer_map(&self, callback: FuncId) -> String {
         format!("    /* Eager scalar buffer: finish every map callback before zip. */\n    size_t count = fwp_list_len(l0);\n    if (count > (SIZE_MAX - sizeof(fwp_arr)) / sizeof(V)) fwp_trap(\"map too large\");\n    V buffer = fwp_rc_fresh(fwp_arr_new(count));\n    fwp_value_owner owner = {{buffer, fwp_rc_free_arr}};\n    fwp_cleanup cleanup; fwp_value_protect(&owner, &cleanup);\n    for (size_t i = 0; i < count; i++) {{\n        ARR(buffer)->d[i] = f{callback}(OBJ(l0)->f[0]);\n        l0 = OBJ(l0)->f[1];\n    }}\n    return fwp_value_finish(&owner, &cleanup);\n")
     }
@@ -8422,6 +8451,8 @@ static inline __attribute__((always_inline)) int fs{}(fwp_loop_state{step} *st, 
                 | Body::PackedRecordFold { .. }
                 | Body::ScalarBufferMap { .. }
                 | Body::ScalarBufferZip { .. }
+                | Body::OwnedScalarArrayMap { .. }
+                | Body::OwnedScalarBufferZip { .. }
                 | Body::RangeZip { .. }
                 | Body::PackedRecordRangeZip { .. }
                 | Body::PackedRecordPairs { .. }
@@ -8471,6 +8502,12 @@ static inline __attribute__((always_inline)) int fs{}(fwp_loop_state{step} *st, 
                 slot,
             } => {
                 out.push_str(&self.range_zip(*callback, *captures, *slot));
+            }
+            Body::OwnedScalarArrayMap { callback } => {
+                out.push_str(&self.owned_scalar_array_map(id, *callback));
+            }
+            Body::OwnedScalarBufferZip { callback, slot } => {
+                out.push_str(&self.owned_scalar_buffer_zip(id, *callback, *slot));
             }
             Body::ScalarBufferMap { callback } => {
                 out.push_str(&self.scalar_buffer_map(*callback));
@@ -10506,6 +10543,7 @@ fn generate_mode(prog: &Program, mut mode: Mode) -> Result<String, String> {
     // Forwarding pair callbacks gain their field-only ABI when their numeric
     // callees are flattened. Prove packed windows against that final body.
     packed_inputs::lower(&mut numeric_program);
+    owned_numeric::lower(&mut numeric_program);
     let prog = &numeric_program;
     crate::ir::check_locals(prog)?;
     let weak_channels = crate::resource::uses_weak_channels(&prog.funcs, &prog.shapes);

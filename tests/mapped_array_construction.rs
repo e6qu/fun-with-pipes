@@ -108,15 +108,41 @@ main = array.from-list [1i8, 127i8, 2i8] | mapped | array.to-list | echo
                         .find(&format!("/* {name} :"))
                         .unwrap_or_else(|| panic!("missing exported map probe `{name}`"));
                     let body = &exported[start..start + exported[start..].find("\n}\n").unwrap()];
-                    assert_eq!(body.contains(marker), selected, "{name}: {body}");
+                    let owned = exported
+                        .match_indices("/* consumed-scalar-array-map :")
+                        .filter_map(|(start, _)| {
+                            let worker =
+                                &exported[start..start + exported[start..].find("\n}\n").unwrap()];
+                            let id = worker
+                                .split("static V f")
+                                .nth(1)
+                                .unwrap()
+                                .split('(')
+                                .next()
+                                .unwrap();
+                            body.contains(&format!("f{id}(")).then_some(worker)
+                        })
+                        .collect::<Vec<_>>();
+                    assert!(owned.len() <= 1, "ambiguous scalar map worker: {name}");
+                    assert_eq!(
+                        body.contains(marker) || !owned.is_empty(),
+                        selected,
+                        "{name}: {body}"
+                    );
                     if selected {
-                        assert!(body.contains("fwp_array_store_owned("));
-                        assert!(body.contains("fwp_array_load("));
-                        assert!(!body.contains("fwp_apply"));
+                        let implementation = owned.first().copied().unwrap_or(body);
+                        assert!(
+                            implementation.contains("fwp_array_store_owned(")
+                                || implementation.contains("fwp_array_store(")
+                        );
+                        assert!(implementation.contains("fwp_array_load("));
+                        assert!(!implementation.contains("fwp_apply"));
                     }
                 }
             } else {
-                assert!(code.contains(marker));
+                assert!(
+                    code.contains(marker) || code.contains("/* Consume one scalar array owner;")
+                );
             }
             for opt in ["-O1", "-O2"] {
                 let binary = dir.join(format!("{label}-{packing}-{opt}.exe"));

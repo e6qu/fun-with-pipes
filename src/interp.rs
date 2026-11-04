@@ -251,6 +251,9 @@ impl<'p> Interp<'p> {
             | Body::PackedRecordPairs { .. } => {
                 return trap("internal: native buffer body reached interpreter");
             }
+            Body::OwnedScalarArrayMap { .. } | Body::OwnedScalarBufferZip { .. } => {
+                return trap("internal: native consuming numeric body reached interpreter");
+            }
         };
         if f.arity == 0 {
             self.cafs.borrow_mut()[id] = Some(v.clone());
