@@ -1,14 +1,32 @@
 # Current work
 
-**Next:** publish the stale remaining-storage guide repair and monitor the
-replacement final production/docs runs for [PR #257](https://github.com/e6qu/fun-with-pipes/pull/257).
-The previous production run `41861223201` at `ee3a80a7` will be superseded:
-seven jobs are queued, Windows compiler checks are running, and no failure is
-reported. Cancel it after replacement publication to avoid redundant long tests.
-Keep the compiler and measurement sources unchanged. Audit every final-head
-full/target log before squash merge; preserve the three accepted open timing goals.
+**Next:** freeze the [consuming numeric-storage contract](measurements/owned-numeric-updates.md)
+before implementing its array-map and coordinate-list operations together.
+Keep monitoring [PR #257](https://github.com/e6qu/fun-with-pipes/pull/257) separately;
+do not open a second PR or replace its head while final gates run.
 
-Worktree `.worktrees/packed-derivative-inputs`, branch `packed-derivative-inputs`.
+Preparation worktree `.worktrees/owned-numeric-updates`, branch
+`owned-numeric-updates`, starts at `519fc96670b0db90ebe0f68e1263ccf85d2cf4f1`.
+The delivery worktree `.worktrees/packed-derivative-inputs` owns #257's live
+handoff and collector output. The roadmap table below still describes #257;
+the next group is preparation, not implemented or verified support.
+
+Final [production 41861939596](https://github.com/e6qu/fun-with-pipes/actions/runs/41861939596)
+and [docs 41861939765](https://github.com/e6qu/fun-with-pipes/actions/runs/41861939765)
+use exact head `519fc96670b0db90ebe0f68e1263ccf85d2cf4f1`. At 16:21 UTC,
+benchmark `126685788959` and docs `126685789213` pass and their full logs are
+audited (guarded collector 5.27s). Linux ARM64 and both Windows jobs run;
+remaining jobs queue. No current-head failure reported.
+
+Remaining jobs: Linux AMD64/ARM64 `126685789790` / `126685789797`;
+macOS ARM64 regular/ownership `126685789545` / `126685789311`;
+Intel regular/ownership `126685789307` / `126685789742`;
+Windows ARM64/AMD64 `126685789328` / `126685789888`.
+Collector output: `../gradient-work/platforms-257`. Earlier `41861223201`
+was cancelled; its later queued state disagreed with cancelled Windows steps,
+and force-cancel returned 409 (not in progress). Old-head states cannot pass
+final gates. Leave the primary checkout's unrelated changes alone.
+
 Immutable measurement tag `roadmap/packed-input-measurement-2026-11-04` points to
 `5f63ea1a9a7fb7a6bc1068bbd84c4224c176b106`. The pushed delivery commit contains
 only evidence/docs and an explicit workflow-selection guard; compiler, runtime,

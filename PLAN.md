@@ -50,6 +50,15 @@ history solve saves one request, 16 bytes and one retain; peak storage is unchan
 Some larger cases are up to 1.95% slower within that group's frozen 2% limit.
 This is not a general speedup and does not settle older comparisons below.
 
+## Next group: consumed numeric storage
+
+Prepare [numeric array and coordinate-list reuse](docs/measurements/owned-numeric-updates.md)
+on a separate branch while #257's final gates run. Keep one active delivery PR.
+Both operations transfer an input owner explicitly, reuse only exclusive storage,
+and preserve aliases and eager callback order. The contract fixes last-use
+selection, shared tails/views, failure cleanup, count predictions and measurement
+limits before implementation. Neither operation is implemented or verified yet.
+
 ## Open performance goals
 
 - **Packed derivative inputs.** [All four audited sessions](docs/measurements/packed-input-time-2026-11-04/README.md)
