@@ -7,7 +7,6 @@ use crate::value::Value;
 
 use super::constant_values::Constants;
 
-
 fn visit(expr: &mut Expr, constants: &mut Constants<'_>) {
     match expr {
         Expr::ResourceRegion { .. } => return,

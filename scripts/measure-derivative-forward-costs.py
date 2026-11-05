@@ -62,7 +62,7 @@ def parse_totals(stderr):
 
 def comparison_failures(report, baseline, policy):
     """Apply the selected frozen count limits to every case and storage mode."""
-    assert policy in ('record-zip', 'record-fold', 'packed-records', 'field-owners', 'numeric-inputs', 'constructor-census', 'scalar-map-zip', 'range-zip', 'gradient-array', 'gradient-call', 'packed-pair')
+    assert policy in ('record-zip', 'record-fold', 'packed-records', 'field-owners', 'numeric-inputs', 'constructor-census', 'scalar-map-zip', 'range-zip', 'gradient-array', 'gradient-call', 'packed-pair', 'scalar-constant')
     old = baseline['hosts'][report['machine']]['cases']
     assert set(report['cases']) == set(old)
     failures = []
@@ -91,6 +91,8 @@ def comparison_failures(report, baseline, policy):
             removed = 7 * updates + int(updates > 0)
             bytes_removed = (8 * dimensions + 128) * updates + 24 * int(updates > 0)
             retains = 2 * updates
+        elif policy == 'scalar-constant':
+            removed = bytes_removed = retains = 0
         elif policy == 'packed-pair':
             removed = updates
             bytes_removed = (16 * dimensions - 8) * updates
@@ -112,13 +114,13 @@ def comparison_failures(report, baseline, policy):
             else:
                 for field, saving in [('requests', removed), ('requestedBytes', bytes_removed),
                                       ('retains', retains)]:
-                    if (current[field] != before[field] - saving if policy in ('scalar-map-zip', 'range-zip', 'gradient-call', 'packed-pair')
+                    if (current[field] != before[field] - saving if policy in ('scalar-map-zip', 'range-zip', 'gradient-call', 'packed-pair', 'scalar-constant')
                             else current[field] > before[field] - saving):
-                        requirement = 'exactly' if policy in ('scalar-map-zip', 'range-zip', 'gradient-call', 'packed-pair') else 'at least'
+                        requirement = 'exactly' if policy in ('scalar-map-zip', 'range-zip', 'gradient-call', 'packed-pair', 'scalar-constant') else 'at least'
                         failures.append(f'{label}: {field} saving {before[field] - current[field]}, expected {requirement} {saving}')
                 if current['peakChargedBytes'] > before['peakChargedBytes']:
                     failures.append(label + ': peak managed charge grew')
-            if policy in ('gradient-call', 'packed-pair'):
+            if policy in ('gradient-call', 'packed-pair', 'scalar-constant'):
                 # Keep phase attribution independent of the net saving. Pair
                 # storage belongs entirely to forward recording. Gradient-call
                 # scratch reserves N+1 words outside that phase; its six forward
@@ -126,6 +128,10 @@ def comparison_failures(report, baseline, policy):
                 assert set(actual['phases']) == set(previous['phases']) == set(PROFILE.PHASES)
                 for phase, row in actual['phases'].items():
                     prior = previous['phases'][phase]
+                    if policy == 'scalar-constant':
+                        if row != prior:
+                            failures.append(f'{label}/{phase}: scalar constant lowering changed phase counts')
+                        continue
                     expected = (0, 0, 0)
                     if policy == 'packed-pair':
                         if phase == 'forwardWithRecording':
@@ -178,7 +184,7 @@ def main():
     parser.add_argument('--source', required=True)
     parser.add_argument('--timeout', required=True, type=int)
     parser.add_argument('--output', required=True, type=Path)
-    parser.add_argument('--comparison', required=True, choices=('baseline', 'record-zip', 'record-fold', 'packed-records', 'field-owners', 'numeric-inputs', 'constructor-census', 'scalar-map-zip', 'range-zip', 'gradient-array', 'gradient-call', 'packed-pair'))
+    parser.add_argument('--comparison', required=True, choices=('baseline', 'record-zip', 'record-fold', 'packed-records', 'field-owners', 'numeric-inputs', 'constructor-census', 'scalar-map-zip', 'range-zip', 'gradient-array', 'gradient-call', 'packed-pair', 'scalar-constant'))
     parser.add_argument('--baseline', type=Path)
     args = parser.parse_args()
     assert (args.comparison != 'baseline') == (args.baseline is not None)

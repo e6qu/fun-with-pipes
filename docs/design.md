@@ -560,6 +560,37 @@ jobs pass. Runtime timings have recorded misses. The [frozen contract](measureme
 and [starting census](measurements/temporary-list-census-2026-11-03/README.md)
 define the comparison.
 
+### Exact scalar constants
+
+Implementation under verification; [the contract](measurements/scalar-constant-lowering.md)
+defines the required evidence. Consider:
+
+```fwp
+unit-weight : F64
+unit-weight = one
+```
+
+`unit-weight` always contains the exact bits for `1.0f64`. The new native pass can
+replace its reads with those bits:
+
+```text
+unit-weight → One[F64].one → prim.one → exact F64 bits
+                                         ↓
+                                read without a lazy cache
+```
+
+- Reuse the packed-fold constant proof: at most 256 expression nodes per request,
+  with remembered results and cycle rejection. Never execute arbitrary user code.
+- Accept immediate fixed-width integers through 64 bits and F32/F64 literals,
+  primitive zero/one and aliases. Preserve signed zero and NaN payloads.
+- Keep arbitrary calls, effects, traps, traced/resource bodies, pointer-width
+  aliases, owned numbers and aggregate caches outside this general replacement.
+- Replacing a scalar does not remove a surrounding aggregate's owner. The earlier
+  packed-fold seed rule keeps its separate storage proof.
+
+This changes neither syntax nor tape validation. Fewer generated cache reads are
+a structural claim; [the plan](../PLAN.md) still requires runtime measurements.
+
 ### Private array results consumed by zip
 
 The gradient-array batch passed focused and full-platform checks and merged in

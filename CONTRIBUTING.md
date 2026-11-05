@@ -59,6 +59,12 @@ Its fixed limits are 1 GiB sampled aggregate RSS, 2 GiB generated target data,
 64 GiB free disk and 180 seconds. If refused, move the workload to GitHub.
 Full builds, suites, benchmarks and large regeneration belong on runners.
 
+If local limits prevent formatting, dispatch `numerics.yml` with
+`suite=source-format` and an explicit branch ref. It only runs Rust formatting;
+download its `source-format` artifact, verify `source.txt` against the dispatched
+commit and apply `format.patch`. It does not build or test the code. Keep workflow
+files below GitHub's 512,000-byte limit; large groups can use reusable workflows.
+
 Run `python3 scripts/local-guard.py python3 scripts/check-roadmap.py` for Markdown
 links, plan/handoff agreement and preparation identities. A clean clone needs
 full history and the immutable `roadmap/preparation-*` tags, fetched without

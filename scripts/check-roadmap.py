@@ -85,7 +85,17 @@ def check_handoff():
     return len(rows)
 
 
+def check_workflow_sizes():
+    """GitHub rejects an oversized workflow before any validation job can run."""
+    limit = 500 * 1024
+    oversized = [(str(path.relative_to(ROOT)), path.stat().st_size)
+                 for path in sorted((ROOT / ".github/workflows").glob("*"))
+                 if path.suffix in (".yml", ".yaml") and path.stat().st_size > limit]
+    assert not oversized, ("workflow exceeds GitHub's 512000-byte limit", oversized)
+
+
 def main():
+    check_workflow_sizes()
     files = git("ls-files", "*.md").splitlines()
     for name in files:
         check_links(name)
