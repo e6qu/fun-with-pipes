@@ -426,26 +426,50 @@ fn proved_recording_workers_reuse_only_live_tape_lookups() {
             )),
         )),
     };
+    // Admission must see a real scope even though the C probe replaces main.
+    let callback_ty = MT::Fun(Box::new(i.clone()), Box::new(i.clone()));
+    let scope = Func {
+        name: "scope".into(),
+        arity: 2,
+        ty: MT::Fun(Box::new(callback_ty.clone()), Box::new(callback_ty.clone())),
+        locals: vec![callback_ty.clone(), i.clone()],
+        body: Body::Prim("ad.scope".into()),
+    };
+    let callback = Func {
+        name: "scoped-recording".into(),
+        arity: 1,
+        ty: callback_ty,
+        locals: vec![i.clone()],
+        body: Body::Expr(Expr::Call(
+            1,
+            vec![
+                Expr::Local(0),
+                Expr::Const(Value::F64(0.5)),
+                Expr::Local(0),
+                Expr::Const(Value::F64(0.5)),
+            ],
+        )),
+    };
     let main = Func {
         name: "main".into(),
         arity: 0,
         ty: i,
         locals: vec![],
         body: Body::Expr(Expr::Call(
-            1,
-            vec![
-                Expr::Const(Value::I64(0)),
-                Expr::Const(Value::F64(0.5)),
-                Expr::Const(Value::I64(0)),
-                Expr::Const(Value::F64(0.5)),
-            ],
+            2,
+            vec![Expr::Func(3), Expr::Const(Value::I64(-1))],
         )),
     };
     let program = Program {
-        funcs: vec![push, worker, main],
-        main: Some(2),
+        funcs: vec![push, worker, scope, callback, main],
+        main: Some(4),
         ..Program::default()
     };
+    let mut unscoped = program.clone();
+    unscoped.funcs[4].body = Body::Expr(Expr::Call(3, vec![Expr::Const(Value::I64(-1))]));
+    assert!(fwp::cgen::generate(&unscoped)
+        .unwrap_err()
+        .contains("outside an autodiff scope"));
     let original = fwp::cgen::generate(&program).unwrap();
     assert_eq!(
         original

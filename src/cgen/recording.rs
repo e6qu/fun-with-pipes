@@ -303,14 +303,12 @@ mod tests {
         let wide = MT::Record(vec![("0".into(), narrow)]);
         assert!(!numeric_type(&p, &wide, &mut 32));
         let mut p = p;
-        let mut id = 2;
-        for _ in 0..64 {
+        for id in 2..66 {
             p.funcs.push(function(
                 vec![MT::con("std::I64")],
                 MT::con("std::I64"),
                 Body::Expr(Expr::Call(id + 1, vec![Expr::Local(0)])),
             ));
-            id += 1;
         }
         p.funcs.push(function(
             vec![MT::con("std::I64")],

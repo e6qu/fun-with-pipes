@@ -4,21 +4,25 @@ static fwp_tape_scope recording_scope = {-1};
 static fwp_cleanup recording_scope_owner;
 
 static int recording_trap(V a, V b, const char *message, unsigned lookups) {
+    fwp_trap_recover = recording_recover;
+    fwp_trap_jb = &recording_recovered;
     recording_lookup_calls = 0;
+    int result;
     if (!setjmp(recording_recovered)) {
         f1(a, fwp_from_f64(0.5), b, fwp_from_f64(0.5));
-        return 62;
-    }
-    if (strcmp(fwp_trap_msg, message)) return 63;
-    if (recording_lookup_calls != lookups) return 64;
-    return 0;
+        result = 62;
+    } else if (strcmp(fwp_trap_msg, message)) result = 63;
+    else if (recording_lookup_calls != lookups) result = 64;
+    else result = 0;
+    /* Recovery is valid only while this setjmp frame remains active. */
+    fwp_trap_recover = NULL;
+    fwp_trap_jb = NULL;
+    return result;
 }
 
 int main(void) {
     fwp_heap_start(); fwp_fns = fwp_fn_table; fwp_init_consts();
     size_t baseline = fwp_heap.live;
-    fwp_trap_recover = recording_recover;
-    fwp_trap_jb = &recording_recovered;
     fwp_cleanup_push(&recording_scope_owner, fwp_tape_scope_release, &recording_scope);
     fwp_trap_cleanup = &recording_scope_owner;
 
@@ -84,6 +88,8 @@ int main(void) {
     /* Trap after an append: unwind past the worker and retire every scoped tape. */
     recording_fail_after_append = 1;
     fwp_trap_cleanup = recording_scope_owner.prev;
+    fwp_trap_recover = recording_recover;
+    fwp_trap_jb = &recording_recovered;
     if (!setjmp(recording_recovered)) { f1(second, half, second, half); return 72; }
     if (strcmp(fwp_trap_msg, "recording append control") || recording_scope.head != -1
         || fwp_cleanups) return 73;

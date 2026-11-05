@@ -1,8 +1,9 @@
 # Current work
 
-**Next:** verify the bounded tape-lookup implementation and its deliberate-failure
-controls on the three focused production hosts, then complete the frozen comparison.
-Do not run the final matrix until this group and its measurement tools are ready.
+**Next:** run the repaired three-host focused checks, audit every target and
+artifact, then execute the frozen census/compiler/runtime comparison. The prior
+Linux jobs were completely reviewed before batching the repairs below. Do not run
+the final matrix until the complete group is ready.
 
 Branch: `recording-work-review`, based on verified merge `2e6e09f5`.
 Worktree: `.worktrees/scalar-constant-lowering`. Active draft:
@@ -20,36 +21,46 @@ worker that can change tape lifetime or suspend through task/service entry ticks
 | 3 | Verified | Same-source comparison and limits frozen at `bfddc31e`. |
 | 4 | In progress | Implemented bounded selection and explicit local lookup state; native controls, focused CI and measurement integration still require verification. |
 
-Current implementation: `99bf3adccc3380f761876e34830cb938a94dcadd`.
-Focused run `42125357727` is queued. Keep it: the current repair changes only
-plan/handoff wording. Compiler, runtime and test trees remain identical.
+Compiler/runtime implementation: `99bf3adccc3380f761876e34830cb938a94dcadd`.
+The next repair changes test fixtures and documentation, not production behavior.
 
-Documentation run `42125323539`, job `127587903940`, failed only because this
-handoff used the unsupported status “Complete”. Source accounting and the frozen
-contract now use “Verified”; the implemented proof still awaits native verification.
-The checker remains unchanged. The next push supplies the corrected docs gate.
+Focused run `42125357727` completed both Linux jobs: ARM64 `127588030802`,
+AMD64 `127588031265`. Each passes 24 of 25 native targets, formatting, the build,
+302 compiler unit tests (four existing ignored), primitive inventory, reference
+controls and real-program selection. Both complete job logs and preflight archives
+`13461276666` / `13461790806` were reviewed. Two failures require this repair:
 
-Measurement controls `42123056112`, job `127580112855`, pass at `895f766c`.
-The current measurement scripts are identical. All eleven control suites (97 tests)
-and the complete 234,900-byte log were audited without diagnostics; SHA-256:
-`71a5d37f29c59db1f0cf9849217c1cb540a7187fa1088323c193db1e143e610a`.
-Local audit: `python3 scripts/local-guard.py python3 /tmp/fwp-recording-audit-log.py`
-(0.13 seconds). The retained log is in `../gradient-work/`.
+- Clippy rejects a manual counter in the new depth-limit test. Iterating the same
+  IDs directly (`2..66`) removes it without changing the test.
+- The new recording probe constructed an unscoped program. Admission correctly
+  rejects it before C generation. The repaired fixture enters `ad.scope`; a
+  separate negative control still requires rejection outside that scope.
 
-The proof bounds pending expression references and parameter inspection as well
-as visited nodes, call depth and nested types. Signature recognition allocates
-no temporary vectors/type strings. Formatting passes (1.93 elapsed seconds).
-Cancelled older queued focused runs: `42121618183`, `42123050888`, `42124065984`.
-Do not launch duplicate full matrices.
+The C probe also installed a recovery target outside its active `setjmp` frame.
+Recovery hooks now exist only while that frame is active. Runtime-only Clang
+O1/O2 controls pass all 20 cases after this repair, including reuse 0/1 and
+three deliberately broken observers. Command:
+`python3 scripts/local-guard.py python3 /tmp/fwp-recording-runtime-check.py`
+(2.40 CPU seconds, 6.13 elapsed). This uses retained C and a handwritten worker;
+it does not establish Rust code generation or GCC support. Scratch evidence:
+`../gradient-work/recording-runtime-control/`.
 
-Local runtime-only Clang controls passed 20 cases: O1/O2, workspace reuse 0/1,
-ordinary and cached paths, and three deliberately broken observers (expected
-codes 61/62/63). The guard recorded 3.01 CPU seconds and 6.35 elapsed.
-Command: `python3 scripts/local-guard.py python3 /tmp/fwp-recording-runtime-check.py`.
-This combined the retained parent C with the current runtime and a handwritten
-worker. It checks the runtime/probe, not Rust code generation or GCC support.
-Scratch sources/results: `../gradient-work/recording-runtime-control/`.
-The compiler/native integration test remains required on all focused hosts.
+macOS job `127588031206` remained queued with no runner after both Linux jobs
+finished. Replace that obsolete run with the repaired source; no macOS result
+has been claimed. Formatting passes after all three repairs (1.91 seconds).
+
+[Measurement controls](measurements/recording-lookup-controls-2026-11-06/README.md)
+pass: eleven suites, 97 tests, run `42123056112`, job `127580112855`, source
+`895f766c`. Measurement scripts remain identical. The complete log, job metadata,
+digests and audit are retained; no diagnostics remain. This includes the four
+historical archive checks unavailable in the sparse local checkout.
+
+Docs run `42126502343`, job `127591947303`, passes at `29a2d73a`.
+It verifies the corrected roadmap status labels; the checker was not weakened.
+
+The proof bounds pending expression references, parameters, visited nodes, call
+depth and nested types. Signature recognition allocates no temporary vectors or
+type strings. Native/compiler checks still gate the repaired group.
 
 The new `recording-lookup-{census,analysis,time}` suites use the existing production
 measurement jobs. Census must precede timing: it checks exact parent/capacity/node
@@ -58,16 +69,11 @@ raw storage, cleanup and stack. Use the same passing focused run as `evidence_ru
 The corresponding `*-report` suites audit retained data. Runtime sessions must be
 qualified before building and must not be repeated for a passing result.
 
-Local focused tools: reference/observer controls passed 5 tests; timing budgets
-23, fresh allocation budgets 9, whole-solve census controls 10, compiler-analysis
-controls 10. The last four ran serially under the guard (combined with the archive
-control: 2.51 CPU seconds, 5.04 elapsed). The archive control has four missing-file
-errors because sparse checkout omits historical `array-lists-*.tar.xz` files;
-run its full archive checks on CI, whose checkout includes them. No test was
-removed or weakened. Actionlint passed for both changed evidence workflows.
-The changed saved-reference audit passes separately (1 test, 0.25 seconds).
-Staged doc links pass (103 links, 0.26 seconds). Rust formatting passes after
-the signature cleanup (0.98 CPU seconds, 1.89 elapsed).
+Local measurement-tool checks passed: reference/observer controls (5 tests),
+timing budgets (23), allocation budgets (9), whole-solve census (10), compiler
+analysis (10), and the changed saved-reference audit (1). Actionlint passed for
+both changed evidence workflows. Staged doc links passed (103 links). Full
+historical archive coverage is verified by the retained CI controls above.
 
 ## Completed group
 
