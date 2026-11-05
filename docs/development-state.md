@@ -1,7 +1,11 @@
 # Current work
 
-**Next:** publish the grouped draft PR and run `scalar-constant-checks`. Audit
-every native result before starting the census; fix all failures in this PR.
+**Next:** monitor focused run `42048215807` at
+`37da72171d64dbb53dd87dbc49254f61f3ebf0bd` for draft PR #261. Audit every native
+result before the census; fix all failures in this PR. Follow the latest PR docs
+gate separately; subsequent changes are documentation only. At 15:06 UTC on
+November 5, all three native jobs and docs were queued without assigned runners.
+Draft CI skip `42048220718` is not a production acceptance result.
 
 ## Roadmap status
 
@@ -13,7 +17,8 @@ every native result before starting the census; fix all failures in this PR.
 | 4 | Pending | Tool controls pass; census/stack, compiler costs and two runtime sessions per architecture remain. |
 | 5 | Pending | Nine final-head jobs, docs and full audit; squash merge. |
 
-Branch/worktree: `scalar-constant-lowering`. [The contract](measurements/scalar-constant-lowering.md)
+Draft [PR #261](https://github.com/e6qu/fun-with-pipes/pull/261),
+branch/worktree: `scalar-constant-lowering`. [The contract](measurements/scalar-constant-lowering.md)
 was frozen at `4bad4992` before code, tag
 `roadmap/scalar-constant-lowering-protocol-2026-11-05`. Keep its original identity.
 Rebased onto `a85f59d2`; all pre-rebase evidence sources remain under
@@ -47,6 +52,10 @@ sources, logs and cancelled same-tree postmerge runs. One new PR can now proceed
   roadmap controls (5), YAML syntax and five matching plan/handoff rows.
   Initial sparse-fixture failures were fixed by materializing small tracked files;
   the larger historical evidence checks passed remotely.
+- Guarded review of saved parent C also passes the new cached-reference selector:
+  `One[F64].one` reaches `caf66`, then `prim.one` reaches `caf68`; private pair
+  reuse remains selected. This checks the observer, not performance. The first
+  one-off invocation omitted the scripts import path; supplying it fixed the call.
 
 ## Next measurement sequence
 

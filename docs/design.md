@@ -570,8 +570,10 @@ unit-weight : F64
 unit-weight = one
 ```
 
-`unit-weight` always contains the exact bits for `1.0f64`. The new native pass can
-replace its reads with those bits:
+`unit-weight` is another name for `one` specialized to F64: exactly `1.0f64`.
+A lazy cache normally computes a value on its first read, stores it, and returns
+that stored result on later reads. Here the bits are already known, so the new
+native pass can replace those reads directly:
 
 ```text
 unit-weight → One[F64].one → prim.one → exact F64 bits
