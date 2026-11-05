@@ -1,22 +1,29 @@
 # Current work
 
-**Next:** trace forward objective evaluation and scalar tape recording from the
-saved generated C and current sources. Reconcile operation counts before selecting
-a transformation; follow the four steps in [PLAN.md](../PLAN.md). Do not rerun
-unchanged timings or remove runtime checks without a lifetime and trap-order proof.
+**Next:** verify the bounded tape-lookup implementation and its deliberate-failure
+controls on the three focused production hosts, then complete the frozen comparison.
+Do not run the final matrix until this group and its measurement tools are ready.
 
 Branch: `recording-work-review`, based on verified merge `2e6e09f5`.
-Worktree: `.worktrees/scalar-constant-lowering`. No active PR or outstanding CI
-failure. Bundle the next implementation with these delivery records in one PR.
+Worktree: `.worktrees/scalar-constant-lowering`. No active PR yet.
+The [contract](measurements/recording-lookups.md) was committed at `bfddc31e`
+before implementation. It preserves parent/capacity checks and excludes any
+worker that can change tape lifetime or suspend through task/service entry ticks.
 
 ## Roadmap status
 
 | Step | Status | Remaining work |
 |---|---|---|
-| 1 | In progress | Phase shares and node counts reviewed; account for the generated forward worker's individual operations. |
-| 2 | Pending | Prove which checks are invariant within the selected worker, preserving all failures. |
-| 3 | Pending | Freeze the selected transformation, reference and measurement limits. |
-| 4 | Pending | Implement the group, verify and deliver it. |
+| 1 | Complete | Generated source reconciles eight nodes per pair/update with the saved profiles. |
+| 2 | Complete | Closed numeric worker proof; registry changes, recovery and suspension excluded. |
+| 3 | Complete | Same-source comparison and limits frozen at `bfddc31e`. |
+| 4 | In progress | Implemented bounded selection and explicit local lookup state; native controls, focused CI and measurement integration still require verification. |
+
+Local `python3 scripts/local-guard.py cargo fmt --all` passed (1.00 CPU seconds,
+1.81 elapsed). No local build or native suite has run. New controls exercise both
+lookup paths, invalid/expired/mixed IDs, capacity growth, retirement/reuse,
+weight bits, gradients, unwind and deliberately broken validation observers.
+These are implemented tests, not passing evidence yet.
 
 ## Completed group
 

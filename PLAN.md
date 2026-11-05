@@ -17,8 +17,8 @@ speed targets remain open below, alongside earlier results.
 
 ## Next work: objective evaluation and recording
 
-Investigate the forward stage of the existing Rosenbrock workloads before choosing
-another transformation. The saved 129-coordinate/199-update observations put this
+The source review selected [bounded tape lookup reuse](docs/measurements/recording-lookups.md).
+Steps 1–3 are complete; step 4 is in progress. The saved 129-coordinate/199-update observations put this
 stage at 71.8–72.4% of derivative-phase time, or 45.5–47.6% of the instrumented
 process. Result-array construction is only 0.9–1.0% of phase time. These percentages
 do not isolate the cost of an individual runtime check or predict a speedup.
