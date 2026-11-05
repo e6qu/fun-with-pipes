@@ -7,7 +7,7 @@ use crate::ir::*;
 use crate::value::Value;
 
 pub(super) struct Constants<'a> {
-    program: &'a Program,
+    pub(super) program: &'a Program,
     entries: HashMap<FuncId, Option<Value>>,
 }
 

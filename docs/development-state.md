@@ -1,6 +1,6 @@
 # Current work
 
-**Next:** finish the exact scalar constant group locally while parent PR #260
+**Next:** publish the shared-proof visibility repair and rerun focused checks while PR #260
 completes production verification. Do not publish another PR or start native
 measurements until #260 is verified and merged. Parent monitoring continues in
 `.worktrees/packed-pair-storage`; its handoff has exact gates and audit steps.
@@ -11,7 +11,7 @@ measurements until #260 is verified and merged. Parent monitoring continues in
 |---|---|---|
 | 1 | Implemented | Shared bounded numeric proof; compiler/unit verification pending. |
 | 2 | Implemented | Scalar substitutions and direct root cache entries; not yet validated. |
-| 3 | In progress | Unit/native controls prepared; format-only runner passes, builds/tests have not run. |
+| 3 | In progress | Formatting passes; all three first builds fail on shared-field visibility. Repair prepared. |
 | 4 | Pending | Reference controls started; census, compiler costs, runtime and audits remain. |
 | 5 | Pending | Parent #260 must merge before another PR; this group still needs final verification. |
 
@@ -22,7 +22,7 @@ measurements until #260 is verified and merged. Parent monitoring continues in
 - [Frozen contract](measurements/scalar-constant-lowering.md).
 - Parent tested source: `ba3f0d8793dc3bbd3c21f94d06a1bca2896b6d45`.
 - Parent production: `42024634729`; documentation `42024602934` passes.
-  Benchmark and both macOS ARM64 jobs pass; six native jobs still run. Full audit and
+  Benchmark, all four macOS jobs and Windows AMD64 pass; three native jobs still run. Full audit and
   authorized squash merge remain. No parent source edits or new push.
 
 ## Implementation in progress
@@ -32,10 +32,11 @@ General numeric constant proof is extracted from `src/cgen/fold_fields.rs` to
 A new pass substitutes immediate scalar references and returns proofs for
 root/export cache entries. It does not execute arbitrary user code or alter
 runtime tape checks. Unit controls and the existing cache-ownership probe are
-being updated. Compiler code is unverified. The branch can publish a format-only runner request;
-it does not build or execute native programs. A second PR still waits for #260.
+being updated. Compiler code is unverified. A second PR still waits for #260.
 
-No builds or tests ran on this worktree. Local disk is about 17 GiB free, below the 64 GiB
+Focused correctness request `42034673196` failed at
+`d99dbacd4f0f7d24e938bde1cb17956d184804bf` on all three hosts; see the repair below.
+No local builds or tests ran. Local disk is about 17 GiB free, below the 64 GiB
 reserve: no builds, tests or large artifact downloads. Do not bypass the guard.
 The grouped compiler change is ready for focused correctness checks on its
 separate branch. Those can proceed while #260 finishes; performance measurement
@@ -69,4 +70,14 @@ Formatting of the added root-entry probe passes at request `42032825443`,
 source `d1032469fd1740f3642b67d01b505ed8533ccceb`, job `127263294058`.
 Artifact `13417091621` (991 bytes), SHA-256
 `4620fab7816fa87c53a053438ce2024e3a1f362bdce49a83528878718eb48e00`,
-was verified and applied. No Rust edits followed the patch.
+was verified and applied. The visibility repair below is the only later Rust edit.
+
+## First focused build repair
+
+Run `42034673196` fails on all three hosts with the same five E0616 field-privacy
+errors. Formatting passes; compiler/unit/native targets cannot run. Every full
+job log and all six artifacts were inspected and retained in
+[first-build evidence](measurements/scalar-constant-checks-2026-11-05/first-build/README.md).
+The shared proof's immutable `program` reference is now visible to sibling C
+backend modules. Memoized values remain private. Rerun the focused group after
+this repair is committed; the parent production run remains unaffected.
