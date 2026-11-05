@@ -290,12 +290,12 @@ is insufficient. Temporary aliases can forward that same borrow through bindings
 and matches. Generic entries still protect and consume their ordinary arguments
 when calling a specialized borrowing worker.
 
-The next [gradient-storage group](measurements/gradient-call-storage.md) adds a
+The [gradient-storage group](measurements/gradient-call-storage.md) adds a
 private direct entry for known `ad.scope` callbacks returning arrays. It keeps
 read-only list inputs borrowed only when every caller retains the input beyond
 the scope. Ordinary exported/function-value entries still own their arguments.
-The implementation is awaiting runner verification, including trap/cancellation
-cleanup; this is not yet verified platform support.
+Focused native checks cover trap/cancellation cleanup on Linux ARM64/AMD64 and
+macOS ARM64. The complete production matrix and performance checks remain.
 
 Channel borrowing preserves hidden native contexts as well as payload storage.
 It does not prove the queued graph acyclic: capture/cycle checks remain separate.

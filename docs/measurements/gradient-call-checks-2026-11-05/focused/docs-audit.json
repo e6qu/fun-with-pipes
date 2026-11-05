@@ -1,0 +1,9 @@
+{
+  "source": "8c0e4b0ef06aa9f528eeaedbfbab9461a82dd0d7",
+  "expectedDiagnostics": [
+    "2026-11-05T03:39:47.1207062Z run-native-tests.py: error: duplicate selected test target",
+    "2026-11-05T03:39:47.1216538Z run-native-tests.py: error: unknown selected test targets: ['unknown']",
+    "2026-11-05T03:39:48.4858961Z thread 'fails' (3018) panicked at tests/a.rs:1:22:",
+    "2026-11-05T03:39:48.4861137Z test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+  ]
+}

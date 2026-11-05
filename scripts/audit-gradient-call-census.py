@@ -1,0 +1,350 @@
+#!/usr/bin/env python3
+"""Verify original census evidence, then apply the corrected phase-byte rule."""
+
+import argparse
+import gzip
+import hashlib
+import importlib.util
+import json
+from pathlib import Path
+import re
+import subprocess
+import sys
+import zipfile
+
+sys.path.insert(0, str(Path("scripts").resolve()))
+SPEC = importlib.util.spec_from_file_location(
+    "census", Path("scripts/check-owned-numeric-census.py")
+)
+CENSUS = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(CENSUS)
+parser = argparse.ArgumentParser(
+    description="Re-audit frozen gradient counts after correcting scratch phase attribution; never execute saved images."
+)
+for name in ("input", "artifact", "job", "job-log", "recorded-checkout", "output"):
+    parser.add_argument("--" + name, type=Path, required=True)
+parser.add_argument("--source", required=True)
+parser.add_argument("--run", type=int, required=True)
+parser.add_argument("--machine", choices=("aarch64", "x86_64"), required=True)
+args = parser.parse_args()
+ROOT = args.output
+ROOT.mkdir(parents=True, exist_ok=False)
+SOURCE = args.source
+assert re.fullmatch("[0-9a-f]{40}", SOURCE)
+assert (
+    subprocess.check_output(
+        ["git", "-C", str(args.recorded_checkout), "rev-parse", "HEAD"], text=True
+    ).strip()
+    == SOURCE
+)
+subprocess.run(
+    ["git", "-C", str(args.recorded_checkout), "diff", "--quiet", "HEAD"],
+    check=True,
+)
+CASES = (
+    (3, 0, 32768),
+    (3, 1, 512),
+    (3, 199, 32),
+    (3, 1999, 4),
+    (33, 199, 32),
+    (129, 199, 8),
+)
+
+
+def digest(raw):
+    return hashlib.sha256(raw).hexdigest()
+
+
+machine = args.machine
+host = machine
+elf = {"aarch64": 183, "x86_64": 62}[machine]
+artifact = json.loads(args.artifact.read_text())
+assert (
+    artifact["name"]
+    == "gradient-call-census-" + {"aarch64": "ARM64", "x86_64": "X64"}[machine]
+    and not artifact["expired"]
+    and artifact["workflow_run"]["id"] == args.run
+    and artifact["workflow_run"]["head_sha"] == SOURCE
+)
+with args.input.open("rb") as stream:
+    assert (
+        artifact["digest"]
+        == "sha256:" + hashlib.file_digest(stream, "sha256").hexdigest()
+    )
+job = json.loads(args.job.read_text())
+assert (
+    job["name"]
+    == "numeric_input_analysis ("
+    + {"aarch64": "ubuntu-24.04-arm", "x86_64": "ubuntu-latest"}[machine]
+    + ")"
+    and job["head_sha"] == SOURCE
+    and job["run_id"] == args.run
+    and job["conclusion"] == "failure"
+)
+assert [step["name"] for step in job["steps"] if step["conclusion"] == "failure"] == [
+    "Verify fresh-solve savings and their exact phase attribution"
+]
+log = gzip.decompress(args.job_log.read_bytes())
+clean = re.sub(rb"\x1b\[[0-?]*[ -/]*[@-~]", b"", log)
+diagnostics = [
+    line.decode(errors="replace")
+    for line in clean.splitlines()
+    if re.search(
+        rb"\bwarning:|\berror:(?!:)|\berror\[|Traceback|##\[error\]|test result: FAILED",
+        line,
+        re.I,
+    )
+]
+assert (
+    len(diagnostics) == 3
+    and sum("Traceback" in line for line in diagnostics) == 2
+    and "##[error]Process completed with exit code 1." in diagnostics[-1]
+), diagnostics
+with zipfile.ZipFile(args.input) as z:
+    report = json.loads(z.read("numeric-analysis/report.json"))
+    assert (
+        report["source"] == SOURCE
+        and report["complete"]
+        and report["machine"] == machine
+    )
+    assert report["settings"] == {
+        "FWP_AD_WORKSPACE": "1",
+        "FWP_LTO": "0",
+        "FWP_VRET": "1",
+        "FWP_FRAME_FIELDS": "1",
+        "FWP_PACKED_ARRAYS": "1",
+        "FWP_STACK": "1",
+        "FWP_ARRAY_FUSION": "1",
+    }
+    assert len(report["commands"]) == 99 and all(
+        c["returncode"] == 0 for c in report["commands"]
+    )
+    assert len(report["cases"]) == 12
+    compilations = [
+        row["command"] for row in report["commands"] if "-std=gnu11" in row["command"]
+    ]
+    assert len(compilations) == 24
+    flags = {
+        "-O2",
+        "-std=gnu11",
+        "-fno-fast-math",
+        "-ffp-contract=off",
+        "-UFWP_NO_REUSE",
+        "-fstack-usage",
+        "-march=" + {"aarch64": "armv8-a", "x86_64": "x86-64"}[machine],
+    }
+    assert all(
+        Path(command[0]).name == "gcc" and flags <= set(command)
+        for command in compilations
+    )
+    summaries = {}
+    manifest = json.loads(z.read("numeric-analysis-reference/manifest.json"))
+    assert manifest == report["referenceManifest"] and manifest["source"] == SOURCE
+    assert (
+        set(manifest["candidate"])
+        == set(manifest["reference"])
+        == set(CENSUS.GRADIENT_REFERENCE.EDITS)
+    )
+    assert (
+        manifest["disabledTransformation"]
+        == "scoped input borrowing, numeric fold fields, single-root seeding and consumed array scratch"
+    )
+    assert (
+        digest(z.read("numeric-analysis-reference/fwp")) == manifest["compilerSha256"]
+    )
+    assert (
+        digest(z.read("numeric-analysis-reference/reference.patch"))
+        == manifest["patchSha256"]
+    )
+    expected = CENSUS.GRADIENT_REFERENCE.reference_sources(
+        {name: Path(name).read_text() for name in CENSUS.GRADIENT_REFERENCE.EDITS}
+    )
+    assert set(manifest["unchanged"]) == set(CENSUS.GRADIENT_REFERENCE.PRESERVED)
+    for name, checksum in manifest["unchanged"].items():
+        assert digest(Path(name).read_bytes()) == checksum
+    for name, source in expected.items():
+        assert digest(Path(name).read_bytes()) == manifest["candidate"][name]
+        assert z.read("numeric-analysis-reference/source/" + name) == source.encode()
+        assert digest(source.encode()) == manifest["reference"][name]
+    safety = json.loads(z.read("numeric-analysis-safety/run.json"))
+    assert safety["conclusion"] == "success" and safety["head_sha"] == SOURCE
+    pages = json.loads(z.read("numeric-analysis-safety/jobs.json"))
+    expected_jobs = {
+        "gradient_call_checks (ubuntu-24.04-arm, gcc)",
+        "gradient_call_checks (ubuntu-latest, gcc)",
+        "gradient_call_checks (macos-15, clang)",
+    }
+    jobs = [
+        job for page in pages for job in page["jobs"] if job["name"] in expected_jobs
+    ]
+    assert len(jobs) == 3 and {job["name"] for job in jobs} == expected_jobs
+    assert all(
+        job["head_sha"] == SOURCE and job["conclusion"] == "success" for job in jobs
+    )
+    for name in ("cc", "rustc", "cpu"):
+        assert z.read("numeric-analysis/" + name + ".stdout") and not z.read(
+            "numeric-analysis/" + name + ".stderr"
+        )
+    for n, u, solves in CASES:
+        for form in ("current", "history"):
+            name = f"{n}-{u}-{form}"
+            folder = "numeric-analysis/" + name + "/"
+            row = report["cases"][name]
+            assert (row["dimensions"], row["updates"], row["solves"]) == (n, u, solves)
+            assert z.read(
+                folder + "input.fwp"
+            ).decode() == CENSUS.DESCENT.BASELINE.repeat_source(
+                CENSUS.DESCENT.AD.program(n, u + 1, form == "history"), "fwp", solves
+            )
+            observations = {}
+            for kind in ("candidate", "reference"):
+                source = z.read(folder + kind + ".c").decode()
+                assert z.read(
+                    folder + kind + "-profile.c"
+                ).decode() == CENSUS.DESCENT.AD.RAW.instrument(
+                    CENSUS.DESCENT.AD.PROFILE.instrument(source)
+                )
+                image = z.read(folder + kind + "-profile")
+                assert (
+                    image[:6] == b"\x7fELF\x02\x01"
+                    and int.from_bytes(image[18:20], "little") == elf
+                )
+                assert digest(image) == row[kind + "Sha256"]
+                for stage in ("emit", "compile"):
+                    assert not z.read(folder + kind + "-" + stage + ".stderr")
+                    assert not z.read(folder + kind + "-" + stage + ".stdout")
+                for workspace in ("0", "1"):
+                    stem = folder + kind + "-workspace" + workspace
+                    CENSUS.DESCENT.verify(
+                        z.read(stem + ".stdout"),
+                        CENSUS.DESCENT.AD.analytic(n, u + 1),
+                        solves,
+                    )
+                    managed, raw = [
+                        json.loads(line)
+                        for line in z.read(stem + ".stderr").splitlines()
+                    ]
+                    raw = raw["rawDerivativeStorage"]
+                    assert managed["finalChargedBytes"] == raw["finalBytes"] == 0
+                    CENSUS.DESCENT.AD.RAW.check_profile(
+                        raw, u * solves, workspace == "1"
+                    )
+                    observations[kind + workspace] = dict(managed=managed, raw=raw)
+                    assert (
+                        observations[kind + workspace]
+                        == row["observations"][kind + workspace]
+                    )
+                assert (
+                    observations[kind + "0"]["managed"]
+                    == observations[kind + "1"]["managed"]
+                )
+            expected = dict(
+                requests=7 * u * solves + int(u > 0),
+                requestedBytes=(8 * n + 128) * u * solves + 24 * int(u > 0),
+                retains=2 * u * solves,
+            )
+            for workspace in ("0", "1"):
+                old, new = (
+                    observations["reference" + workspace],
+                    observations["candidate" + workspace],
+                )
+                assert (
+                    {key: old["managed"][key] - new["managed"][key] for key in expected}
+                    == expected
+                    == row["savings"][workspace]
+                )
+                assert new["managed"]["retains"] <= old["managed"]["retains"]
+                assert (
+                    new["managed"]["peakChargedBytes"]
+                    <= old["managed"]["peakChargedBytes"]
+                )
+                assert new["raw"] == old["raw"]
+                if not u:
+                    assert new == old
+            summaries[name] = dict(
+                solves=solves,
+                savings=expected,
+                candidate=observations["candidate1"]["managed"],
+                reference=observations["reference1"]["managed"],
+                rawPeakBytes=observations["candidate1"]["raw"]["peakBytes"],
+                finalRawBytes=0,
+            )
+    summary_spec = importlib.util.spec_from_file_location(
+        "summary",
+        args.recorded_checkout / "scripts/summarize-derivative-forward-costs.py",
+    )
+    summary = importlib.util.module_from_spec(summary_spec)
+    summary_spec.loader.exec_module(summary)
+    baseline = json.loads(gzip.decompress(z.read("fresh-baseline.json.gz")))
+    for name in ("reference", "candidate"):
+        archive = ROOT / (host + "-fresh-" + name + ".zip")
+        archive.write_bytes(z.read("fresh-" + name + ".zip"))
+    reference = summary.audit(
+        ROOT / (host + "-fresh-reference.zip"), SOURCE, machine, "baseline", None
+    )
+    assert reference == baseline["hosts"][machine]
+    assert reference["compilerSha256"] == manifest["compilerSha256"]
+    fresh = summary.audit(
+        ROOT / (host + "-fresh-candidate.zip"),
+        SOURCE,
+        machine,
+        "gradient-call",
+        baseline,
+    )
+    assert fresh == json.loads(gzip.decompress(z.read("fresh-audit.json.gz")))
+    assert fresh["compilerSha256"] == report["compilerSha256"]
+    assert len(fresh["comparisonFailures"]) == 80 and all(
+        "/outside: saving" in line or "/forwardWithRecording: saving" in line
+        for line in fresh["comparisonFailures"]
+    ), fresh["comparisonFailures"]
+    # The recorded auditor checks its original claims, every raw observation,
+    # source reconstruction, native images and stack limits. Apply the corrected
+    # phase arithmetic separately; never rewrite the original report or archive.
+    current_spec = importlib.util.spec_from_file_location(
+        "current_measure", Path("scripts/measure-derivative-forward-costs.py")
+    )
+    current = importlib.util.module_from_spec(current_spec)
+    current_spec.loader.exec_module(current)
+    with zipfile.ZipFile(ROOT / (host + "-fresh-candidate.zip")) as saved:
+        original_report = json.loads(saved.read("report.json"))
+    corrected = current.comparison_failures(original_report, baseline, "gradient-call")
+    assert not corrected, corrected
+    (ROOT / (host + "-fresh-verified.json.gz")).write_bytes(
+        gzip.compress((json.dumps(fresh, indent=2) + "\n").encode(), mtime=0)
+    )
+    (ROOT / (host + "-fresh-baseline.json.gz")).write_bytes(
+        gzip.compress((json.dumps(baseline, indent=2) + "\n").encode(), mtime=0)
+    )
+    receipt = dict(
+        source=SOURCE,
+        run=args.run,
+        machine=machine,
+        allDiagnosticsAudited=True,
+        recordedAttributionFailures=fresh["comparisonFailures"],
+        correctedComparisonFailures=corrected,
+        checkerSha256=digest(
+            Path("scripts/measure-derivative-forward-costs.py").read_bytes()
+        ),
+        recordedCheckerSha256=digest(
+            (
+                args.recorded_checkout / "scripts/measure-derivative-forward-costs.py"
+            ).read_bytes()
+        ),
+        artifact=artifact,
+        freshCases=24,
+        freshNativeImages=164,
+        verifiedCommands=99,
+        nativeImages=24,
+        verifiedExecutions=48,
+        cases=summaries,
+    )
+    (ROOT / f"{host}-verified.json").write_text(json.dumps(receipt, indent=2) + "\n")
+    print(
+        host,
+        "12 cases, 48 raw outputs/profiles, 24 native images and exact reference verified",
+        flush=True,
+    )
+    print(
+        "Fresh counts: 24 cases per compiler, both workspace settings, 164 images; corrected phase budgets pass",
+        flush=True,
+    )

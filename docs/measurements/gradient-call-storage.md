@@ -1,6 +1,6 @@
 # Remove temporary storage around gradient calls
 
-**Implementation is awaiting runner verification; measurements are pending.**
+**Focused native checks and local allocation audits pass; report-only CI and performance measurements remain.**
 This contract precedes code;
 its immutable tag is `roadmap/gradient-call-storage-protocol-2026-11-05`.
 Starting source: verified squash `68115090b161f198e11fb625946259f65f781580`.
@@ -151,9 +151,15 @@ For N coordinates and U positive updates, require these exact savings:
 
 | Location | Requests removed | Requested bytes removed | Effective retains removed |
 |---|---:|---:|---:|
-| Recording the objective | 6U + 1 | 128U + 24 | U |
-| Outside derivative phases (coordinate scratch and scope argument) | U | 8NU | U |
+| Recording the objective | 6U + 1 | 120U + 24 | U |
+| Outside derivative phases (coordinate scratch and scope argument) | U | (8N + 8)U | U |
 | Other phases | 0 | 0 | 0 |
+
+The scratch helper reserves N+1 words, including one extra word even for an
+empty input. Census `41964853201` exposed an error in the original phase table:
+eight bytes per update were assigned to recording instead of scratch. The
+whole-program prediction and every budget remain unchanged. Re-audit the saved
+observations after correcting that calculation; do not rerun the same programs.
 
 Zero updates must have identical counts. Synthetic controls reject incorrect
 phase assignment even when whole-program totals agree. Both drivers must pass
@@ -165,4 +171,13 @@ explicit `comparison_session=both` and the six repeated-solve inputs above;
 `gradient-call-report` audits those saved samples and source bytes without running
 saved binaries. The manual C/Rust programs perform the same solve with manual
 derivatives and different storage; ratios against them do not isolate ARC or
-language overhead. No measurement result exists yet.
+language overhead. [Allocation results](gradient-call-census-2026-11-05/README.md)
+pass corrected local audits; compiler/runtime timing has not run.
+
+
+Measurement source: `8c0e4b0ef06aa9f528eeaedbfbab9461a82dd0d7`, tag
+`roadmap/gradient-call-storage-measurements-2026-11-05`.
+[Focused validation](gradient-call-checks-2026-11-05/README.md#passing-focused-matrix)
+is fully audited on all three hosts. Census `41964853201` starts from that source
+with correctness run `41962981349` as its explicit prerequisite. These source
+identities do not alter any limit above.

@@ -1,0 +1,406 @@
+{
+  "source": "8c0e4b0ef06aa9f528eeaedbfbab9461a82dd0d7",
+  "run": 41964853201,
+  "machine": "aarch64",
+  "allDiagnosticsAudited": true,
+  "recordedAttributionFailures": [
+    "3-1-current-O1/workspace0/outside: saving (1, 32, 1), expected (1, 24, 1)",
+    "3-1-current-O1/workspace0/forwardWithRecording: saving (7, 144, 1), expected (7, 152, 1)",
+    "3-1-current-O1/workspace1/outside: saving (1, 32, 1), expected (1, 24, 1)",
+    "3-1-current-O1/workspace1/forwardWithRecording: saving (7, 144, 1), expected (7, 152, 1)",
+    "3-1-current-O2/workspace0/outside: saving (1, 32, 1), expected (1, 24, 1)",
+    "3-1-current-O2/workspace0/forwardWithRecording: saving (7, 144, 1), expected (7, 152, 1)",
+    "3-1-current-O2/workspace1/outside: saving (1, 32, 1), expected (1, 24, 1)",
+    "3-1-current-O2/workspace1/forwardWithRecording: saving (7, 144, 1), expected (7, 152, 1)",
+    "3-1-history-O1/workspace0/outside: saving (1, 32, 1), expected (1, 24, 1)",
+    "3-1-history-O1/workspace0/forwardWithRecording: saving (7, 144, 1), expected (7, 152, 1)",
+    "3-1-history-O1/workspace1/outside: saving (1, 32, 1), expected (1, 24, 1)",
+    "3-1-history-O1/workspace1/forwardWithRecording: saving (7, 144, 1), expected (7, 152, 1)",
+    "3-1-history-O2/workspace0/outside: saving (1, 32, 1), expected (1, 24, 1)",
+    "3-1-history-O2/workspace0/forwardWithRecording: saving (7, 144, 1), expected (7, 152, 1)",
+    "3-1-history-O2/workspace1/outside: saving (1, 32, 1), expected (1, 24, 1)",
+    "3-1-history-O2/workspace1/forwardWithRecording: saving (7, 144, 1), expected (7, 152, 1)",
+    "3-199-current-O1/workspace0/outside: saving (199, 6368, 199), expected (199, 4776, 199)",
+    "3-199-current-O1/workspace0/forwardWithRecording: saving (1195, 23904, 199), expected (1195, 25496, 199)",
+    "3-199-current-O1/workspace1/outside: saving (199, 6368, 199), expected (199, 4776, 199)",
+    "3-199-current-O1/workspace1/forwardWithRecording: saving (1195, 23904, 199), expected (1195, 25496, 199)",
+    "3-199-current-O2/workspace0/outside: saving (199, 6368, 199), expected (199, 4776, 199)",
+    "3-199-current-O2/workspace0/forwardWithRecording: saving (1195, 23904, 199), expected (1195, 25496, 199)",
+    "3-199-current-O2/workspace1/outside: saving (199, 6368, 199), expected (199, 4776, 199)",
+    "3-199-current-O2/workspace1/forwardWithRecording: saving (1195, 23904, 199), expected (1195, 25496, 199)",
+    "3-199-history-O1/workspace0/outside: saving (199, 6368, 199), expected (199, 4776, 199)",
+    "3-199-history-O1/workspace0/forwardWithRecording: saving (1195, 23904, 199), expected (1195, 25496, 199)",
+    "3-199-history-O1/workspace1/outside: saving (199, 6368, 199), expected (199, 4776, 199)",
+    "3-199-history-O1/workspace1/forwardWithRecording: saving (1195, 23904, 199), expected (1195, 25496, 199)",
+    "3-199-history-O2/workspace0/outside: saving (199, 6368, 199), expected (199, 4776, 199)",
+    "3-199-history-O2/workspace0/forwardWithRecording: saving (1195, 23904, 199), expected (1195, 25496, 199)",
+    "3-199-history-O2/workspace1/outside: saving (199, 6368, 199), expected (199, 4776, 199)",
+    "3-199-history-O2/workspace1/forwardWithRecording: saving (1195, 23904, 199), expected (1195, 25496, 199)",
+    "3-1999-current-O1/workspace0/outside: saving (1999, 63968, 1999), expected (1999, 47976, 1999)",
+    "3-1999-current-O1/workspace0/forwardWithRecording: saving (11995, 239904, 1999), expected (11995, 255896, 1999)",
+    "3-1999-current-O1/workspace1/outside: saving (1999, 63968, 1999), expected (1999, 47976, 1999)",
+    "3-1999-current-O1/workspace1/forwardWithRecording: saving (11995, 239904, 1999), expected (11995, 255896, 1999)",
+    "3-1999-current-O2/workspace0/outside: saving (1999, 63968, 1999), expected (1999, 47976, 1999)",
+    "3-1999-current-O2/workspace0/forwardWithRecording: saving (11995, 239904, 1999), expected (11995, 255896, 1999)",
+    "3-1999-current-O2/workspace1/outside: saving (1999, 63968, 1999), expected (1999, 47976, 1999)",
+    "3-1999-current-O2/workspace1/forwardWithRecording: saving (11995, 239904, 1999), expected (11995, 255896, 1999)",
+    "3-1999-history-O1/workspace0/outside: saving (1999, 63968, 1999), expected (1999, 47976, 1999)",
+    "3-1999-history-O1/workspace0/forwardWithRecording: saving (11995, 239904, 1999), expected (11995, 255896, 1999)",
+    "3-1999-history-O1/workspace1/outside: saving (1999, 63968, 1999), expected (1999, 47976, 1999)",
+    "3-1999-history-O1/workspace1/forwardWithRecording: saving (11995, 239904, 1999), expected (11995, 255896, 1999)",
+    "3-1999-history-O2/workspace0/outside: saving (1999, 63968, 1999), expected (1999, 47976, 1999)",
+    "3-1999-history-O2/workspace0/forwardWithRecording: saving (11995, 239904, 1999), expected (11995, 255896, 1999)",
+    "3-1999-history-O2/workspace1/outside: saving (1999, 63968, 1999), expected (1999, 47976, 1999)",
+    "3-1999-history-O2/workspace1/forwardWithRecording: saving (11995, 239904, 1999), expected (11995, 255896, 1999)",
+    "33-199-current-O1/workspace0/outside: saving (199, 54128, 199), expected (199, 52536, 199)",
+    "33-199-current-O1/workspace0/forwardWithRecording: saving (1195, 23904, 199), expected (1195, 25496, 199)",
+    "33-199-current-O1/workspace1/outside: saving (199, 54128, 199), expected (199, 52536, 199)",
+    "33-199-current-O1/workspace1/forwardWithRecording: saving (1195, 23904, 199), expected (1195, 25496, 199)",
+    "33-199-current-O2/workspace0/outside: saving (199, 54128, 199), expected (199, 52536, 199)",
+    "33-199-current-O2/workspace0/forwardWithRecording: saving (1195, 23904, 199), expected (1195, 25496, 199)",
+    "33-199-current-O2/workspace1/outside: saving (199, 54128, 199), expected (199, 52536, 199)",
+    "33-199-current-O2/workspace1/forwardWithRecording: saving (1195, 23904, 199), expected (1195, 25496, 199)",
+    "33-199-history-O1/workspace0/outside: saving (199, 54128, 199), expected (199, 52536, 199)",
+    "33-199-history-O1/workspace0/forwardWithRecording: saving (1195, 23904, 199), expected (1195, 25496, 199)",
+    "33-199-history-O1/workspace1/outside: saving (199, 54128, 199), expected (199, 52536, 199)",
+    "33-199-history-O1/workspace1/forwardWithRecording: saving (1195, 23904, 199), expected (1195, 25496, 199)",
+    "33-199-history-O2/workspace0/outside: saving (199, 54128, 199), expected (199, 52536, 199)",
+    "33-199-history-O2/workspace0/forwardWithRecording: saving (1195, 23904, 199), expected (1195, 25496, 199)",
+    "33-199-history-O2/workspace1/outside: saving (199, 54128, 199), expected (199, 52536, 199)",
+    "33-199-history-O2/workspace1/forwardWithRecording: saving (1195, 23904, 199), expected (1195, 25496, 199)",
+    "129-199-current-O1/workspace0/outside: saving (199, 206960, 199), expected (199, 205368, 199)",
+    "129-199-current-O1/workspace0/forwardWithRecording: saving (1195, 23904, 199), expected (1195, 25496, 199)",
+    "129-199-current-O1/workspace1/outside: saving (199, 206960, 199), expected (199, 205368, 199)",
+    "129-199-current-O1/workspace1/forwardWithRecording: saving (1195, 23904, 199), expected (1195, 25496, 199)",
+    "129-199-current-O2/workspace0/outside: saving (199, 206960, 199), expected (199, 205368, 199)",
+    "129-199-current-O2/workspace0/forwardWithRecording: saving (1195, 23904, 199), expected (1195, 25496, 199)",
+    "129-199-current-O2/workspace1/outside: saving (199, 206960, 199), expected (199, 205368, 199)",
+    "129-199-current-O2/workspace1/forwardWithRecording: saving (1195, 23904, 199), expected (1195, 25496, 199)",
+    "129-199-history-O1/workspace0/outside: saving (199, 206960, 199), expected (199, 205368, 199)",
+    "129-199-history-O1/workspace0/forwardWithRecording: saving (1195, 23904, 199), expected (1195, 25496, 199)",
+    "129-199-history-O1/workspace1/outside: saving (199, 206960, 199), expected (199, 205368, 199)",
+    "129-199-history-O1/workspace1/forwardWithRecording: saving (1195, 23904, 199), expected (1195, 25496, 199)",
+    "129-199-history-O2/workspace0/outside: saving (199, 206960, 199), expected (199, 205368, 199)",
+    "129-199-history-O2/workspace0/forwardWithRecording: saving (1195, 23904, 199), expected (1195, 25496, 199)",
+    "129-199-history-O2/workspace1/outside: saving (199, 206960, 199), expected (199, 205368, 199)",
+    "129-199-history-O2/workspace1/forwardWithRecording: saving (1195, 23904, 199), expected (1195, 25496, 199)"
+  ],
+  "correctedComparisonFailures": [],
+  "checkerSha256": "d64e631fd3bfa4153e0445099beb86834ec03143cc1e999580fac3e577c1f1a9",
+  "recordedCheckerSha256": "7d837c90f3259a0922923fc270f0a6e556e5ca55e7b2eaffaa17e195c60ffa1c",
+  "artifact": {
+    "id": 13387397660,
+    "node_id": "MDg6QXJ0aWZhY3QxMzM4NzM5NzY2MA==",
+    "name": "gradient-call-census-ARM64",
+    "size_in_bytes": 84058583,
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13387397660",
+    "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13387397660/zip",
+    "expired": false,
+    "digest": "sha256:d91e804c5fae984b3fe0270fe6355efae27239a37a49cda94a33e96c4b80fa26",
+    "created_at": "2026-11-05T04:06:37Z",
+    "updated_at": "2026-11-05T04:06:37Z",
+    "expires_at": "2027-02-03T03:58:17Z",
+    "workflow_run": {
+      "id": 41964853201,
+      "repository_id": 1400763332,
+      "head_repository_id": 1400763332,
+      "head_branch": "roadmap/gradient-call-storage-measurements-2026-11-05",
+      "head_sha": "8c0e4b0ef06aa9f528eeaedbfbab9461a82dd0d7"
+    }
+  },
+  "freshCases": 24,
+  "freshNativeImages": 164,
+  "verifiedCommands": 99,
+  "nativeImages": 24,
+  "verifiedExecutions": 48,
+  "cases": {
+    "3-0-current": {
+      "solves": 32768,
+      "savings": {
+        "requests": 0,
+        "requestedBytes": 0,
+        "retains": 0
+      },
+      "candidate": {
+        "requests": 65539,
+        "requestedBytes": 1638472,
+        "retains": 32768,
+        "peakChargedBytes": 1048704,
+        "finalChargedBytes": 0
+      },
+      "reference": {
+        "requests": 65539,
+        "requestedBytes": 1638472,
+        "retains": 32768,
+        "peakChargedBytes": 1048704,
+        "finalChargedBytes": 0
+      },
+      "rawPeakBytes": 0,
+      "finalRawBytes": 0
+    },
+    "3-0-history": {
+      "solves": 32768,
+      "savings": {
+        "requests": 0,
+        "requestedBytes": 0,
+        "retains": 0
+      },
+      "candidate": {
+        "requests": 65539,
+        "requestedBytes": 1638472,
+        "retains": 32768,
+        "peakChargedBytes": 1048704,
+        "finalChargedBytes": 0
+      },
+      "reference": {
+        "requests": 65539,
+        "requestedBytes": 1638472,
+        "retains": 32768,
+        "peakChargedBytes": 1048704,
+        "finalChargedBytes": 0
+      },
+      "rawPeakBytes": 0,
+      "finalRawBytes": 0
+    },
+    "3-1-current": {
+      "solves": 512,
+      "savings": {
+        "requests": 3585,
+        "requestedBytes": 77848,
+        "retains": 1024
+      },
+      "candidate": {
+        "requests": 4099,
+        "requestedBytes": 151624,
+        "retains": 512,
+        "peakChargedBytes": 16656,
+        "finalChargedBytes": 0
+      },
+      "reference": {
+        "requests": 7684,
+        "requestedBytes": 229472,
+        "retains": 1536,
+        "peakChargedBytes": 16688,
+        "finalChargedBytes": 0
+      },
+      "rawPeakBytes": 1792,
+      "finalRawBytes": 0
+    },
+    "3-1-history": {
+      "solves": 512,
+      "savings": {
+        "requests": 3585,
+        "requestedBytes": 77848,
+        "retains": 1024
+      },
+      "candidate": {
+        "requests": 4099,
+        "requestedBytes": 151624,
+        "retains": 512,
+        "peakChargedBytes": 16656,
+        "finalChargedBytes": 0
+      },
+      "reference": {
+        "requests": 7684,
+        "requestedBytes": 229472,
+        "retains": 1536,
+        "peakChargedBytes": 16688,
+        "finalChargedBytes": 0
+      },
+      "rawPeakBytes": 1792,
+      "finalRawBytes": 0
+    },
+    "3-199-current": {
+      "solves": 32,
+      "savings": {
+        "requests": 44577,
+        "requestedBytes": 967960,
+        "retains": 12736
+      },
+      "candidate": {
+        "requests": 19267,
+        "requestedBytes": 820584,
+        "retains": 32,
+        "peakChargedBytes": 1328,
+        "finalChargedBytes": 0
+      },
+      "reference": {
+        "requests": 63844,
+        "requestedBytes": 1788544,
+        "retains": 12768,
+        "peakChargedBytes": 1360,
+        "finalChargedBytes": 0
+      },
+      "rawPeakBytes": 1792,
+      "finalRawBytes": 0
+    },
+    "3-199-history": {
+      "solves": 32,
+      "savings": {
+        "requests": 44577,
+        "requestedBytes": 967960,
+        "retains": 12736
+      },
+      "candidate": {
+        "requests": 19267,
+        "requestedBytes": 820584,
+        "retains": 32,
+        "peakChargedBytes": 1328,
+        "finalChargedBytes": 0
+      },
+      "reference": {
+        "requests": 63844,
+        "requestedBytes": 1788544,
+        "retains": 12768,
+        "peakChargedBytes": 1360,
+        "finalChargedBytes": 0
+      },
+      "rawPeakBytes": 1792,
+      "finalRawBytes": 0
+    },
+    "3-1999-current": {
+      "solves": 4,
+      "savings": {
+        "requests": 55973,
+        "requestedBytes": 1215416,
+        "retains": 15992
+      },
+      "candidate": {
+        "requests": 24011,
+        "requestedBytes": 1024216,
+        "retains": 4,
+        "peakChargedBytes": 432,
+        "finalChargedBytes": 0
+      },
+      "reference": {
+        "requests": 79984,
+        "requestedBytes": 2239632,
+        "retains": 15996,
+        "peakChargedBytes": 464,
+        "finalChargedBytes": 0
+      },
+      "rawPeakBytes": 1792,
+      "finalRawBytes": 0
+    },
+    "3-1999-history": {
+      "solves": 4,
+      "savings": {
+        "requests": 55973,
+        "requestedBytes": 1215416,
+        "retains": 15992
+      },
+      "candidate": {
+        "requests": 24011,
+        "requestedBytes": 1024216,
+        "retains": 4,
+        "peakChargedBytes": 432,
+        "finalChargedBytes": 0
+      },
+      "reference": {
+        "requests": 79984,
+        "requestedBytes": 2239632,
+        "retains": 15996,
+        "peakChargedBytes": 464,
+        "finalChargedBytes": 0
+      },
+      "rawPeakBytes": 1792,
+      "finalRawBytes": 0
+    },
+    "33-199-current": {
+      "solves": 32,
+      "savings": {
+        "requests": 44577,
+        "requestedBytes": 2496280,
+        "retains": 12736
+      },
+      "candidate": {
+        "requests": 20257,
+        "requestedBytes": 8506840,
+        "retains": 32,
+        "peakChargedBytes": 4416,
+        "finalChargedBytes": 0
+      },
+      "reference": {
+        "requests": 64834,
+        "requestedBytes": 11003120,
+        "retains": 12768,
+        "peakChargedBytes": 4448,
+        "finalChargedBytes": 0
+      },
+      "rawPeakBytes": 8560,
+      "finalRawBytes": 0
+    },
+    "33-199-history": {
+      "solves": 32,
+      "savings": {
+        "requests": 44577,
+        "requestedBytes": 2496280,
+        "retains": 12736
+      },
+      "candidate": {
+        "requests": 20257,
+        "requestedBytes": 8506840,
+        "retains": 32,
+        "peakChargedBytes": 4416,
+        "finalChargedBytes": 0
+      },
+      "reference": {
+        "requests": 64834,
+        "requestedBytes": 11003120,
+        "retains": 12768,
+        "peakChargedBytes": 4448,
+        "finalChargedBytes": 0
+      },
+      "rawPeakBytes": 8560,
+      "finalRawBytes": 0
+    },
+    "129-199-current": {
+      "solves": 8,
+      "savings": {
+        "requests": 11145,
+        "requestedBytes": 1846744,
+        "retains": 3184
+      },
+      "candidate": {
+        "requests": 5953,
+        "requestedBytes": 8278216,
+        "retains": 8,
+        "peakChargedBytes": 13632,
+        "finalChargedBytes": 0
+      },
+      "reference": {
+        "requests": 17098,
+        "requestedBytes": 10124960,
+        "retains": 3192,
+        "peakChargedBytes": 13664,
+        "finalChargedBytes": 0
+      },
+      "rawPeakBytes": 33904,
+      "finalRawBytes": 0
+    },
+    "129-199-history": {
+      "solves": 8,
+      "savings": {
+        "requests": 11145,
+        "requestedBytes": 1846744,
+        "retains": 3184
+      },
+      "candidate": {
+        "requests": 5953,
+        "requestedBytes": 8278216,
+        "retains": 8,
+        "peakChargedBytes": 13632,
+        "finalChargedBytes": 0
+      },
+      "reference": {
+        "requests": 17098,
+        "requestedBytes": 10124960,
+        "retains": 3192,
+        "peakChargedBytes": 13664,
+        "finalChargedBytes": 0
+      },
+      "rawPeakBytes": 33904,
+      "finalRawBytes": 0
+    }
+  }
+}

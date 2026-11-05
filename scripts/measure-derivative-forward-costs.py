@@ -115,16 +115,18 @@ def comparison_failures(report, baseline, policy):
                 if current['peakChargedBytes'] > before['peakChargedBytes']:
                     failures.append(label + ': peak managed charge grew')
             if policy == 'gradient-call':
-                # Account for where the saving occurs, not just the net total.
+                # Scratch reserves N+1 words. The six forward objects total
+                # 120 bytes; the separate cached seed contributes 24 once.
+                # Keep phase attribution independent of the net byte saving.
                 assert set(actual['phases']) == set(previous['phases']) == set(PROFILE.PHASES)
                 for phase, row in actual['phases'].items():
                     prior = previous['phases'][phase]
                     expected = (0, 0, 0)
                     if phase == 'outside':
-                        expected = (updates, 8 * dimensions * updates, updates)
+                        expected = (updates, (8 * dimensions + 8) * updates, updates)
                     elif phase == 'forwardWithRecording':
                         expected = (6 * updates + int(updates > 0),
-                                    128 * updates + 24 * int(updates > 0), updates)
+                                    120 * updates + 24 * int(updates > 0), updates)
                     observed = (prior['requests'] - row['requests'],
                                 prior['requestedBytes'] - row['requestedBytes'],
                                 prior['operations']['dup']['effective'] - row['operations']['dup']['effective'])

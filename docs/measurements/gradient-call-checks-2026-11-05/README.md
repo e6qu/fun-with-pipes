@@ -1,6 +1,6 @@
 # Gradient-call verification
 
-**Not yet verified.** [PR #259](https://github.com/e6qu/fun-with-pipes/pull/259)
+**Focused checks pass; measurements and final production gates remain.** [PR #259](https://github.com/e6qu/fun-with-pipes/pull/259)
 groups scoped input borrowing, numeric fold fields, direct backward seeds and
 consumed coordinate scratch. The [contract](../gradient-call-storage.md) fixes
 selection rules, failure controls and measurement requirements.
@@ -17,7 +17,7 @@ The [full-log audit](compile-repair/audit.json) finds exactly that error twice,
 no compiler warnings and no executed native targets. The digest-checked diagnostic
 archive, full log and job metadata are retained beside it. The Linux jobs and
 docs had no assigned runner when this known-failing batch was cancelled.
-A repaired build still needs all grouped native checks; this audit is not a pass.
+This audit records the compiler failure; subsequent runs below verify its repair.
 
 ## Grouped repair
 
@@ -44,8 +44,8 @@ job logs, and archives of every target log and probe status. Documentation
 [run 41957597604](https://github.com/e6qu/fun-with-pipes/actions/runs/41957597604)
 passes; its full log contains only the expected runner negative controls.
 
-These are repairs awaiting runner verification, not passing acceptance evidence.
-Compiler diagnostics will now upload before the native queue completes.
+The following run verifies these repairs. Compiler diagnostics now upload before
+the native queue completes.
 
 ## Native repairs pass; fixture formatting remains
 
@@ -68,5 +68,27 @@ images remain in the digest-identified GitHub artifacts. Documentation
 [run 41960692624](https://github.com/e6qu/fun-with-pipes/actions/runs/41960692624)
 passes; the complete log contains only expected negative-test diagnostics.
 
-The grouped job still fails until formatting is repaired. No native allocation
-or timing measurement has started, and final production validation is pending.
+That grouped run failed only formatting; the next section records the repaired
+run. No allocation or timing measurements had started at this point.
+
+## Passing focused matrix
+
+Source `8c0e4b0ef06aa9f528eeaedbfbab9461a82dd0d7`,
+[run 41962981349](https://github.com/e6qu/fun-with-pipes/actions/runs/41962981349):
+all three hosts pass every step, including fixture formatting. Each passes 292
+compiler units and 124 native tests in 25 targets. All four reductions are selected
+in the complete programs, and deliberately missing selections are rejected.
+
+[Audit summary](focused/summary.json) records 798 checked native images and 814
+probe statuses per host. Complete job/target logs, source selections, formatter
+output and compressed inventories are retained beside it. No unexpected compiler
+warnings or errors were found. The four ignored units are the same explicit
+runner-only measurement tests described above. Documentation
+[run 41962933179](https://github.com/e6qu/fun-with-pipes/actions/runs/41962933179)
+also passes; its full log contains only expected negative controls.
+
+This source is frozen as `roadmap/gradient-call-storage-measurements-2026-11-05`.
+[Allocation census 41964853201](https://github.com/e6qu/fun-with-pipes/actions/runs/41964853201)
+uses it with this passing correctness run as its explicit prerequisite.
+The [allocation audit](../gradient-call-census-2026-11-05/README.md) passes locally
+after correcting phase-byte attribution; report-only CI is next. Timing has not run.
