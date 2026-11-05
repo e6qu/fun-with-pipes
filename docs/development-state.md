@@ -1,18 +1,18 @@
 # Current work
 
-**Next:** publish the native-probe borrow repair and completed measurement setup;
-run the focused scalar-constant checks and measurement controls on GitHub.
+**Next:** audit focused run `42037640087` and measurement controls `42037645434`
+at `943f749e`; repair every failure before collecting performance measurements.
 Keep monitoring PR #260 and merge it only after its final production audit passes.
 
 ## Roadmap status
 
 | Step | Status | Evidence still needed |
 |---|---|---|
-| 1: bounded constant proof | Implemented; 296 compiler units pass on three hosts | Full production coverage. |
-| 2: exact scalar replacement | Complete-program selection passes on three hosts | Native bit/effect/cache ownership probes. |
-| 3: correctness | Test-build repair prepared | Focused native targets and artifact audit. |
-| 4: measurements | Workflow, exact counts and parent reconciliation wired | Census/stack, compiler costs, two runtime sessions per architecture, all audits. |
-| 5: delivery | Pending | Nine final-head jobs, docs and full audit; squash merge. |
+| 1 | Implemented | Bounded proof: 296 compiler units pass on three hosts; full production coverage remains. |
+| 2 | Implemented | Complete-program selection passes; native bit/effect/cache probes remain. |
+| 3 | In progress | Test-build repair is in run 42037640087; native targets and artifact audit remain. |
+| 4 | Pending | Setup wired; census/stack, compiler costs, two runtime sessions per architecture and audits remain. |
+| 5 | Pending | Nine final-head jobs, docs and full audit; squash merge. |
 
 Branch/worktree: `scalar-constant-lowering`. The [contract](measurements/scalar-constant-lowering.md)
 was frozen at `4bad4992` before implementation, tag

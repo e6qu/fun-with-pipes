@@ -158,6 +158,7 @@ def check_archive(path, protocol):
                     'gradient-call': 'scoped input borrowing, numeric fold fields, single-root seeding and consumed array scratch',
                     'owned-numeric': 'consuming scalar array maps and exclusive coordinate-list reuse',
                     'packed-pair': 'reuse of the consumed private neighboring-record buffer',
+                    'scalar-constant': 'exact immediate scalar constants and acyclic cached aliases',
                 }[protocol]
                 assert reference['disabledTransformation'] == expected_transformation
                 assert set(reference['candidate']) == set(reference['reference']) == ({'src/cgen.rs', 'lib/autodiff.fwp'} if gradient else {'src/cgen.rs'})
@@ -169,9 +170,11 @@ def check_archive(path, protocol):
                     'runtime/fwp_rt.c', 'runtime/fwp_rt_heap.c', 'runtime/fwp_rt_prims.c',
                     'runtime/fwp_rt_task.c', 'runtime/fwp_rt_kernel.c', 'lib/autodiff.fwp', 'lib/list.fwp',
                 }
-                if protocol == 'packed-pair':
+                if protocol in ('packed-pair', 'scalar-constant'):
                     expected_preserved |= {'src/escape.rs', 'src/cgen/scoped_calls.rs',
                                            'src/cgen/fold_fields.rs', 'src/numerics.rs', 'src/interp.rs'}
+                if protocol == 'scalar-constant':
+                    expected_preserved.add('src/cgen/constant_values.rs')
                 assert set(reference['unchanged']) == expected_preserved
                 expected_files = {'fwp': reference['compilerSha256'], 'reference.patch': reference['patchSha256']}
                 for path, checksum in reference['candidate'].items():
