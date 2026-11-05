@@ -1,8 +1,10 @@
 # Current work
 
-**Next:** finish focused run `42010857359` for the single-owner cleanup repair.
-Audit every failed/completed target; after it passes, run `packed-pair-census`
-with that run as `evidence_run`. The census now checks complete-program stack
+**Next:** verify the corrected pointer observer in a new focused run.
+All three hosts of 42010857359 finished with the same formatting/observer issues;
+[the full audit and fixes](measurements/packed-pair-cleanup-checks-2026-11-05/README.md)
+retain all 25 target outcomes per host. After the corrected run passes, use it
+as `evidence_run` for `packed-pair-census`. The census now checks complete-program stack
 frames first. Do not request new runtime timing until stack/count checks pass.
 
 ## Roadmap status
@@ -45,7 +47,7 @@ These results do not verify the changed cleanup implementation.
 | [Original census](measurements/packed-pair-census-2026-11-05.md) | e4d645cd, run 42003323499; both architectures pass. Artifact audit 42008501553 passes. |
 | [Original compiler costs](measurements/packed-pair-analysis-2026-11-05/README.md) | a1f18947, run 42005106056; both pass. Full audit 42008507459 passes. |
 | [Original runtime](measurements/packed-pair-time-2026-11-05/README.md) | a1f18947, run 42005111118; three sessions, 23 speed misses and one AMD64 stack failure. Full retained-data audit 42009905049 passes. |
-| Repaired native checks | 14707729, run 42010857359; all three hosts running. |
+| Repaired native checks | 14707729, run 42010857359; each host passes 24/25 targets; common observer and formatting fixes prepared. |
 | Repaired docs | 14707729, run 42010866008 passes. Prior 54a3ae46 docs 42010422495 also pass. |
 
 Fresh 129/199 original results: 727 -> 528 requests and 1,034,366 -> 625,222
@@ -71,7 +73,7 @@ Docs 42011765327 rejected nonstandard status labels in the handoff. Both offendi
 rows now use the existing vocabulary (Verified/In progress); their explanations
 remain in the work column. The two completed audit-control scripts passed; later
 checks had not run. Full failed log: [status-label repair](measurements/packed-pair-docs-status-2026-11-05.log.gz).
-No validation rule was relaxed. Await the new-head docs check.
+No validation rule was relaxed. Repair docs 42012233154 pass.
 
 ## Repairs already verified
 

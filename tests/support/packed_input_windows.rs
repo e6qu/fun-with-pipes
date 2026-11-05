@@ -143,7 +143,12 @@ fn indexed_record_windows_release_every_owner_on_failure_and_cancellation() {
                     .next()
                     .unwrap();
                 assert!(allocating.contains("fwp_value_protect(&owner, &cleanup);"));
-                assert_eq!(pairs.matches("fwp_value_protect(&owner, &cleanup);").count(), 1);
+                assert_eq!(
+                    pairs
+                        .matches("fwp_value_protect(&owner, &cleanup);")
+                        .count(),
+                    1
+                );
             }
             assert!(!pairs.contains("fwp_rc_unique"));
 
@@ -170,8 +175,8 @@ fn indexed_record_windows_release_every_owner_on_failure_and_cancellation() {
                     "    windows_fail_allocation = windows_mode == 8;\n    V buffer =",
                 )
                 .replace(
-                    "    fwp_value_owner owner =",
-                    "    windows_pair_buffer = buffer;\n    fwp_value_owner owner =",
+                    "    for (size_t i = 0;",
+                    "    windows_pair_buffer = buffer;\n    for (size_t i = 0;",
                 )
                 .replace(
                     "        fwp_wr",
@@ -188,6 +193,13 @@ fn indexed_record_windows_release_every_owner_on_failure_and_cancellation() {
                 );
             assert_ne!(input, input_control);
             assert_ne!(pairs, pair_control);
+            // Observe either storage path before iteration, including empty input.
+            assert_eq!(
+                pair_control
+                    .matches("windows_pair_buffer = buffer;")
+                    .count(),
+                1
+            );
             assert_ne!(fold, fold_control);
             assert_eq!(
                 fold_control
