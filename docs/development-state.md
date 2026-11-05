@@ -32,3 +32,11 @@ Before publication, update PLAN.md, this handoff, design, compiler-pipeline docs
 reference construction/control scripts, focused workflow and existing callers.
 
 Keep all earlier timing misses explicit. No new native measurements have run.
+
+## Format-only workflow repair
+
+Request `42030505657` at bdc4a525 started no jobs: numerics.yml was 512,034
+bytes, above GitHub's 512,000-byte limit. The exact annotation and source are in
+[the failure receipt](measurements/scalar-constant-checks-2026-11-05/format-startup.json).
+Format and four maintenance/audit jobs now live in a reusable workflow; commands
+and explicit inputs are preserved. Reissue formatting after this source repair.
