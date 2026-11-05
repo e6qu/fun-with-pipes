@@ -65,8 +65,8 @@ fn cached_values_keep_exact_owners_and_release_typed_children() {
                 arity: 0,
                 locals: vec![],
                 ty: i64.clone(),
-                // A real computed scalar exercises lazy caching. A literal can
-                // now disappear before this ownership probe instruments C.
+                // Byte length stays a computed scalar here. Character length
+                // of literal text is already folded by the scalar-text pass.
                 body: Body::Expr(Expr::Call(
                     5,
                     vec![Expr::Const(Value::Str("inputinput".into()))],
@@ -77,7 +77,7 @@ fn cached_values_keep_exact_owners_and_release_typed_children() {
                 arity: 1,
                 locals: vec![string.clone()],
                 ty: MT::Fun(Box::new(string), Box::new(i64)),
-                body: Body::Prim("string.length".into()),
+                body: Body::Prim("string.byte-length".into()),
             },
         ],
         main: Some(3),
@@ -104,15 +104,13 @@ fn cached_values_keep_exact_owners_and_release_typed_children() {
 
     let emitted = fwp::cgen::generate(&p).unwrap();
     assert_eq!(
-        emitted
-            .matches("(V)(int64_t)fwp_utf8_count(STR(l0)->d, STR(l0)->len)")
-            .count(),
+        emitted.matches("(V)(int64_t)STR(l0)->len").count(),
         1,
         "computed scalar observation must still select one operation"
     );
     let runtime=emitted.replace("fwp_p_str_repeat(l0, l1)","observe_repeat(l0, l1)")
         .replacen("/* repeat :","static V observed; static int calls, fail_once, reenter; static V scalar_bits, reentrant_held; static V observe_repeat(V n,V s) { calls++; if(reenter){reenter=0;reentrant_held=caf0();} if(fail_once){fail_once=0;fwp_trap(\"initialization failed\");} V r=fwp_p_str_repeat(n,s);observed=r;return r; }\n/* repeat :",1)
-        .replace("(V)(int64_t)fwp_utf8_count(STR(l0)->d, STR(l0)->len)","scalar_bits")
+        .replace("(V)(int64_t)STR(l0)->len","scalar_bits")
         .replace("int main(int argc, char **argv)","int original_main(int argc, char **argv)");
     let probe = r#"
 static jmp_buf overflow; static int recover(void){return 1;}
