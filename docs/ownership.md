@@ -147,6 +147,23 @@ can move into their last consuming call. Every case needs the alias, effect and
 cleanup proof, not just syntactic last use. See the
 [compiler design](design.md) and [primitive contracts](primitive-ownership.md).
 
+### Private neighboring-record buffers: verification in progress
+
+The compiler can prove that one fresh numeric buffer feeds only a neighboring-pair
+operation. That operation now consumes the buffer. Equal-width results reuse it;
+other widths allocate their result and release the input. The original language
+values remain immutable because every other use excludes this transformation.
+
+For records A, B, C, the operation reads A/B before overwriting A, then reads the
+still-original B/C before overwriting B. All producer callbacks finish first;
+the fold starts only after every pair callback. Trap/cancellation cleanup owns
+the actual allocation throughout. Returning that allocation also counts as an
+escape from the helper, so callers must not treat its input as merely borrowed.
+
+The [contract and controls](measurements/packed-pair-storage.md) cover both storage
+paths, aliases, numeric bits and physical frees. Implementation and local source
+checks are present; native verification and measurements are still pending.
+
 ### Array construction and sorting
 
 `array.from-list` takes one list owner. Nodes before the first shared node can
