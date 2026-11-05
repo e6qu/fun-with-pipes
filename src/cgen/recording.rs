@@ -242,6 +242,75 @@ mod tests {
     }
 
     #[test]
+    fn numeric_callees_are_proved_but_do_not_add_direct_recording_sites() {
+        let mut p = program();
+        let f = MT::con("std::F64");
+        p.funcs.push(function(
+            vec![f.clone()],
+            f.clone(),
+            Body::Prim("prim.neg".into()),
+        ));
+        p.funcs.push(function(
+            vec![f.clone()],
+            f,
+            Body::Expr(Expr::Call(2, vec![Expr::Local(0)])),
+        ));
+        let Body::Expr(body) = p.funcs[1].body.clone() else {
+            unreachable!()
+        };
+        p.funcs[1].body = Body::Expr(Expr::Let(
+            1,
+            Box::new(Expr::Call(3, vec![Expr::Local(1)])),
+            Box::new(body),
+        ));
+        assert_eq!(select(&p, false), vec![false, true, false, false]);
+        let i = MT::con("std::I64");
+        p.funcs.push(function(
+            vec![i.clone(), MT::con("std::F64")],
+            i,
+            Body::Expr(Expr::Call(1, vec![Expr::Local(0), Expr::Local(1)])),
+        ));
+        assert!(!select(&p, false)[4]);
+    }
+
+    #[test]
+    fn type_and_call_depth_limits_reject_exhaustion() {
+        let p = program();
+        let narrow = MT::Record(
+            (0..31)
+                .map(|n| (n.to_string(), MT::con("std::I64")))
+                .collect(),
+        );
+        assert!(numeric_type(&p, &narrow, &mut 32));
+        let wide = MT::Record(vec![("0".into(), narrow)]);
+        assert!(!numeric_type(&p, &wide, &mut 32));
+        let mut p = p;
+        let mut id = 2;
+        for _ in 0..64 {
+            p.funcs.push(function(
+                vec![MT::con("std::I64")],
+                MT::con("std::I64"),
+                Body::Expr(Expr::Call(id + 1, vec![Expr::Local(0)])),
+            ));
+            id += 1;
+        }
+        p.funcs.push(function(
+            vec![MT::con("std::I64")],
+            MT::con("std::I64"),
+            Body::Expr(Expr::Local(0)),
+        ));
+        let Body::Expr(body) = p.funcs[1].body.clone() else {
+            unreachable!()
+        };
+        p.funcs[1].body = Body::Expr(Expr::Let(
+            2,
+            Box::new(Expr::Call(2, vec![Expr::Local(0)])),
+            Box::new(body),
+        ));
+        assert!(!select(&p, false)[1]);
+    }
+
+    #[test]
     fn transitive_tape_lifecycle_unknown_calls_and_recovery_reject_the_worker() {
         for symbol in [
             "ad.tape",

@@ -106,6 +106,13 @@ def main():
                 constants = json.loads(z.read('selection/scalar-constant-selection.json'))
                 assert len(constants) == 3 and all(row['representation'] == 'literal' for row in constants.values())
                 report['selection/scalar-constant-selection.json'] = constants
+            recording_steps = [step for step in job['steps']
+                               if step['name'] == 'Verify live bounded recording lookup selection']
+            if recording_steps and recording_steps[0]['conclusion'] == 'success':
+                recording = json.loads(z.read('selection/recording-lookup-selection.json'))
+                assert len(recording) == 3 and all(row['enabled'] and row['liveWorkers']
+                    and set(row['liveWorkers'].values()) == {6} for row in recording.values())
+                report['selection/recording-lookup-selection.json'] = recording
         if len(report['targets']) != 25 or not report['images'] or not report['probes']:
             issues.append((host, 'incomplete targets/images/probe observations'))
         if report['diagnostics']:

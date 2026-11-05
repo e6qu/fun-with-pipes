@@ -5,7 +5,8 @@ controls on the three focused production hosts, then complete the frozen compari
 Do not run the final matrix until this group and its measurement tools are ready.
 
 Branch: `recording-work-review`, based on verified merge `2e6e09f5`.
-Worktree: `.worktrees/scalar-constant-lowering`. No active PR yet.
+Worktree: `.worktrees/scalar-constant-lowering`. The implementation and measurement
+tools are being grouped into one draft PR.
 The [contract](measurements/recording-lookups.md) was committed at `bfddc31e`
 before implementation. It preserves parent/capacity checks and excludes any
 worker that can change tape lifetime or suspend through task/service entry ticks.
@@ -24,6 +25,27 @@ Local `python3 scripts/local-guard.py cargo fmt --all` passed (1.00 CPU seconds,
 lookup paths, invalid/expired/mixed IDs, capacity growth, retirement/reuse,
 weight bits, gradients, unwind and deliberately broken validation observers.
 These are implemented tests, not passing evidence yet.
+
+Focused run `42121618183` at `330612d9` remained queued without starting a job.
+The next push adds real-program selection/counter checks and two proof-boundary
+unit tests; replace that queued run with one run of the complete focused batch.
+Then dispatch `storage-measurement-controls` and keep monitoring every job.
+
+The new `recording-lookup-{census,analysis,time}` suites use the existing production
+measurement jobs. Census must precede timing: it checks exact parent/capacity/node
+counts, eight-to-three lookup reduction per pair, parent allocation reconciliation,
+raw storage, cleanup and stack. Use the same passing focused run as `evidence_run`.
+The corresponding `*-report` suites audit retained data. Runtime sessions must be
+qualified before building and must not be repeated for a passing result.
+
+Local focused tools: reference/observer controls passed 5 tests; timing budgets
+23, fresh allocation budgets 9, whole-solve census controls 10, compiler-analysis
+controls 10. The last four ran serially under the guard (combined with the archive
+control: 2.51 CPU seconds, 5.04 elapsed). The archive control has four missing-file
+errors because sparse checkout omits historical `array-lists-*.tar.xz` files;
+run its full archive checks on CI, whose checkout includes them. No test was
+removed or weakened. Actionlint passed for both changed evidence workflows.
+Rust formatting passed again (0.88 CPU seconds, 1.69 elapsed).
 
 ## Completed group
 

@@ -181,23 +181,24 @@ class PackedPairBudgets(unittest.TestCase):
 
 class ScalarConstantBudgets(unittest.TestCase):
     def test_fresh_work_and_every_phase_must_remain_unchanged(self):
-        for dimensions, updates in ((3, 0), (3, 1), (3, 199), (3, 1999), (33, 199), (129, 199)):
-            report, baseline, name = GradientCallBudgets().example(dimensions, updates, (0, 0, 0), (0, 0))
-            baseline['hosts']['aarch64']['cases'][name]['observations'] = copy.deepcopy(report['cases'][name])
-            self.assertEqual(COSTS.comparison_failures(report, baseline, 'scalar-constant'), [])
-            for mode in ('0', '1'):
-                for field in ('requests', 'requestedBytes', 'retains'):
-                    for delta in (-1, 1):
-                        changed = copy.deepcopy(report)
-                        changed['cases'][name][mode]['totals']['managed'][field] += delta
-                        self.assertTrue(COSTS.comparison_failures(changed, baseline, 'scalar-constant'))
-                changed = copy.deepcopy(report)
-                changed['cases'][name][mode]['phases']['forwardWithRecording']['requests'] += 1
-                self.assertTrue(COSTS.comparison_failures(changed, baseline, 'scalar-constant'))
-                for field in ('visits', 'raw'):
+        for protocol in ('scalar-constant', 'recording-lookup'):
+            for dimensions, updates in ((3, 0), (3, 1), (3, 199), (3, 1999), (33, 199), (129, 199)):
+                report, baseline, name = GradientCallBudgets().example(dimensions, updates, (0, 0, 0), (0, 0))
+                baseline['hosts']['aarch64']['cases'][name]['observations'] = copy.deepcopy(report['cases'][name])
+                self.assertEqual(COSTS.comparison_failures(report, baseline, protocol), [])
+                for mode in ('0', '1'):
+                    for field in ('requests', 'requestedBytes', 'retains'):
+                        for delta in (-1, 1):
+                            changed = copy.deepcopy(report)
+                            changed['cases'][name][mode]['totals']['managed'][field] += delta
+                            self.assertTrue(COSTS.comparison_failures(changed, baseline, protocol))
                     changed = copy.deepcopy(report)
-                    changed['cases'][name][mode][field] = {'changed': 1}
-                    self.assertTrue(COSTS.comparison_failures(changed, baseline, 'scalar-constant'))
+                    changed['cases'][name][mode]['phases']['forwardWithRecording']['requests'] += 1
+                    self.assertTrue(COSTS.comparison_failures(changed, baseline, protocol))
+                    for field in ('visits', 'raw'):
+                        changed = copy.deepcopy(report)
+                        changed['cases'][name][mode][field] = {'changed': 1}
+                        self.assertTrue(COSTS.comparison_failures(changed, baseline, protocol))
 
 
 if __name__ == '__main__':
