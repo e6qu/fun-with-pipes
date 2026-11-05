@@ -1,11 +1,9 @@
 # Current work
 
-**Next:** monitor focused run `42048215807` at
-`37da72171d64dbb53dd87dbc49254f61f3ebf0bd` for draft PR #261. Audit every native
-result before the census; fix all failures in this PR. Follow the latest PR docs
-gate separately; subsequent changes are documentation only. At 15:06 UTC on
-November 5, all three native jobs and docs were queued without assigned runners.
-Draft CI skip `42048220718` is not a production acceptance result.
+**Next:** publish the repaired evidence inventory and run `scalar-constant-census`
+with focused run `42048215807`. The three-host checks and their complete audit
+`42070540044` pass. Freeze this measurement source before running the census;
+then audit allocation/stack results and collect compiler/runtime measurements.
 
 ## Roadmap status
 
@@ -13,8 +11,8 @@ Draft CI skip `42048220718` is not a production acceptance result.
 |---|---|---|
 | 1 | Implemented | Bounded proof passes 296 compiler units on three hosts; final production coverage remains. |
 | 2 | Implemented | Complete-program selection and O1/O2 exact-bit/root probes pass on three hosts. |
-| 3 | In progress | One cache observer repaired; repeat focused checks and full artifact audit. |
-| 4 | Pending | Tool controls pass; census/stack, compiler costs and two runtime sessions per architecture remain. |
+| 3 | Verified | All 25 targets per host and full artifact audit pass at `37da7217`. |
+| 4 | In progress | Freeze source; census/stack, compiler costs and two runtime sessions per architecture remain. |
 | 5 | Pending | Nine final-head jobs, docs and full audit; squash merge. |
 
 Draft [PR #261](https://github.com/e6qu/fun-with-pipes/pull/261),
@@ -34,6 +32,14 @@ no body/trailers. All nine jobs, docs and full audit pass.
 sources, logs and cancelled same-tree postmerge runs. One new PR can now proceed.
 
 ## Current repair and completed checks
+
+- [Passing focused evidence](measurements/scalar-constant-checks-2026-11-05/native-passing/README.md)
+  completes 25 targets, 828 native images and 844 probe observations per host.
+  Audit `42070540044` has no unresolved issues.
+- Docs `42051839171` found a stale cache-test count (three instead of four).
+  The checker and fixture are repaired; `python3 scripts/local-guard.py python3
+  scripts/test-collection-evidence.py` passes all eight controls. Remaining docs
+  steps need the repaired gate. Superseded queued docs `42048220794` was cancelled.
 
 - [Native run 42037640087](measurements/scalar-constant-checks-2026-11-05/native-first/README.md)
   at `943f749e` completes all 25 targets per host: 24 pass and one cache-ownership

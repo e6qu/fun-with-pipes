@@ -52,7 +52,7 @@ def inspect(binary, host, llvm):
 def audit_tests(log):
     """Require every named target to finish, with its complete expected tests."""
     log = re.sub(r'\x1b\[[0-9;]*[A-Za-z]', '', log)
-    expected = {'cached_map_borrows': 3, 'caf_ownership': 3,
+    expected = {'cached_map_borrows': 3, 'caf_ownership': 4,
                 'collection_construction': 4, 'decoder_partial': 1,
                 'inline_caf_ownership': 7, 'map_set_ownership': 7,
                 'mapped_array_construction': 4, 'numeric_array_fusion': 4,
