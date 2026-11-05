@@ -95,4 +95,5 @@ are alongside them. No unchanged native measurement was rerun for the
 
 [Original results](../packed-pair-time-2026-11-05/README.md), including 23 speed
 misses and the original stack failure, remain separate. [Repaired-source runtime audits](../packed-pair-cleanup-time-2026-11-05/README.md)
-pass with 34 timing misses retained; final production verification remains.
+pass with 34 timing misses retained. [Final production verification and delivery](../packed-pair-delivery-2026-11-05/README.md)
+are complete; the timing misses remain open.

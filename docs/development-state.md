@@ -1,64 +1,63 @@
 # Current work
 
-**Next:** publish the completed PR #261 group, mark it ready, then monitor all nine
-production jobs and docs on that exact final head. Fix every failure, audit every
-completed log/artifact and squash merge only after all final gates pass. Use a
-single-line subject of at most 80 characters and an empty body; verify the merge.
+**Next:** trace forward objective evaluation and scalar tape recording from the
+saved generated C and current sources. Reconcile operation counts before selecting
+a transformation; follow the four steps in [PLAN.md](../PLAN.md). Do not rerun
+unchanged timings or remove runtime checks without a lifetime and trap-order proof.
+
+Branch: `recording-work-review`, based on verified merge `2e6e09f5`.
+Worktree: `.worktrees/scalar-constant-lowering`. No active PR or outstanding CI
+failure. Bundle the next implementation with these delivery records in one PR.
 
 ## Roadmap status
 
-| Step | Status | Evidence still needed |
+| Step | Status | Remaining work |
 |---|---|---|
-| 1 | Implemented | Bounded proof verified in focused tests; final production coverage remains. |
-| 2 | Implemented | Exact scalar reads verified; final production coverage remains. |
-| 3 | Verified | Three native hosts and complete artifact audit pass. |
-| 4 | Verified | Census/compiler/runtime audits pass; 27 timing targets remain explicitly open. |
-| 5 | In progress | Nine exact-head production jobs, docs, full audit and squash merge. |
+| 1 | In progress | Phase shares and node counts reviewed; account for the generated forward worker's individual operations. |
+| 2 | Pending | Prove which checks are invariant within the selected worker, preserving all failures. |
+| 3 | Pending | Freeze the selected transformation, reference and measurement limits. |
+| 4 | Pending | Implement the group, verify and deliver it. |
 
-[PR #261](https://github.com/e6qu/fun-with-pipes/pull/261), branch/worktree
-`scalar-constant-lowering`. Compiler/test source matches focused
-`37da72171d64dbb53dd87dbc49254f61f3ebf0bd`. Measurements use
-`76690b385514c58ad94c5591da3553fa48218535`; subsequent changes repair evidence
-checkers and docs only. No timing reruns are needed or permitted for a better result.
+## Completed group
 
-## Verified evidence
+[PR #261](https://github.com/e6qu/fun-with-pipes/pull/261) merged as
+`2e6e09f539bcdab965d062f0184b585b340b29d8`. [The delivery receipt](measurements/scalar-constant-delivery-2026-11-05/README.md)
+retains the audited logs and confirms an identical tested/merged tree and a
+50-character squash message with no body or trailers.
 
-| Check | Original run | Complete audit / records |
-|---|---|---|
-| 25 targets, 828 native images and 844 observations per host | `42048215807` | `42070540044`; [focused receipts](measurements/scalar-constant-checks-2026-11-05/native-passing/README.md) |
-| Unchanged allocations, cleanup, work and stack | `42072583890` | `42074145465`; [census](measurements/scalar-constant-census-2026-11-05/README.md) |
-| 336 compiler commands per host | `42074639596` | `42076024832`; [costs](measurements/scalar-constant-analysis-2026-11-05/README.md) |
-| ARM1/ARM2/AMD1 and rejected AMD2 host | `42074728167` | `42078637088`; [runtime](measurements/scalar-constant-time-2026-11-05/README.md) |
-| Qualified AMD2 replacement | `42075136884` | `42078654369`; same original measurement source |
+| Check | Passing run / audit |
+|---|---|
+| Nine final production jobs | `42080858908` at `80e4ee7b483d4881801eed3ff3b12c312b4ec868` |
+| Final docs | `42080855434`, job `127433175116`, same source |
+| Every final job and test-target log | `42096023194`, job `127486171834`; no unresolved issues |
+| Three-host focused native checks | `42048215807` / `42070540044` |
+| Allocation, cleanup, work and stack | `42072583890` / `42074145465` |
+| Compiler costs | `42074639596` / `42076024832` |
+| Four qualified runtime sessions | `42074728167` + `42075136884` / `42078637088` + `42078654369` |
 
-All four qualified runtime sessions measured once. Their 27 failures are long-case
-5% speed targets; all other measured limits pass. Retain the verified transformation
-under the agreed policy, with misses in PLAN.md. The rejected EPYC 9V45 host ran
-no builds/timing; its EPYC 7763 replacement is separate. No claimed C/Rust parity.
+Measurements use `76690b385514c58ad94c5591da3553fa48218535`; later changes repair
+evidence tools/docs only. All four sessions measured once. Their 27 missed 5%
+speed targets stay open under the agreed policy; all other measured limits pass.
+The wrong-CPU AMD host was rejected before builds/timing. No claimed C/Rust parity.
+Postmerge duplicates `42096524750` and `42096524644` are confirmed cancelled.
 
-## Repairs included
+## Next investigation inputs
 
-- [Native observer](measurements/scalar-constant-checks-2026-11-05/native-passing/README.md):
-  keep a computed byte length for cache-ownership instrumentation; exact-bit probes pass.
-- [Census observer](measurements/scalar-constant-checks-2026-11-05/census-observer/README.md):
-  follow live borrowed callbacks. Four controls and 21 saved programs pass.
-- [Runtime audit](measurements/scalar-constant-checks-2026-11-05/runtime-audit/README.md):
-  classify instrumented references correctly. Original samples re-audited successfully.
-- Four-session checker: keep the archive path separate from source-file paths.
-  Guarded combined audit passes; regression rejects a corrupted last reference.
-- Docs inventory: four cache tests, not three; eight controls pass. Full docs
-  passed at `26a5cbe6` and `76690b38`; the final head still needs its own gate.
-- Oversized workflow split; docs enforce GitHub's 512,000-byte limit.
+Read `lib/autodiff.fwp`, `runtime/fwp_rt_kernel.c`, saved generated objective
+workers, and the [runtime reports](measurements/scalar-constant-time-2026-11-05/README.md).
+Forward recording accounts for about 72% of observed derivative-phase time in
+129/199; these observations do not identify a particular check as the cause.
+Keep the original arithmetic order, eager callback stages and all failure controls.
 
-## Sources and resources
+The [saved phase review](measurements/recording-work-review-2026-11-05/README.md)
+identifies all four input-report hashes. Local checks used
+`python3 scripts/local-guard.py`: the phase review took 0.17 CPU seconds/0.56 elapsed;
+audit ZIP digest/job identity and merged-tree/message checks each passed under
+0.2 seconds. The saved calculation reproduces byte-for-byte (0.24 seconds).
+The staged-doc link check (`../gradient-work/check-delivery-docs.py`) verifies
+362 local links in ten Markdown files; plan/handoff and workflow-size checks pass.
+No native tests or benchmarks were rerun locally.
 
-Protocol tag: `roadmap/scalar-constant-lowering-protocol-2026-11-05` (`4bad4992`).
-Pre-rebase sources: `roadmap/scalar-constant-premerge-2026-11-05` (`5e1c51d5`).
-Original measurement setup: `roadmap/scalar-constant-measurements-2026-11-05`
-(`26a5cbe6`); repaired observer: `roadmap/scalar-constant-observer-repair-2026-11-05`
-(`76690b38`). [Parent #260 delivery](measurements/packed-pair-delivery-2026-11-05/README.md)
-is verified at `a85f59d2`.
-
-About 84 GiB remains free. User-authorized cleanup removed 1,098,786,631 bytes of
-verified duplicate downloads; receipt is in `../gradient-work/removed-verified-downloads-2026-11-05-user-cleanup.json`.
-Use the unchanged local guard. Full builds, suites and large audits stay on GitHub.
+About 83 GiB remains free. Keep the fixed resource guard; full builds, suites and
+large evidence work run on GitHub. The previous cleanup receipt remains at
+`../gradient-work/removed-verified-downloads-2026-11-05-user-cleanup.json`.

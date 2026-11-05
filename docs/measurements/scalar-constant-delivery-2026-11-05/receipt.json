@@ -1,0 +1,36 @@
+{
+  "pr": 261,
+  "source": "80e4ee7b483d4881801eed3ff3b12c312b4ec868",
+  "tree": "41f108f6a4eda36dcfe1379ff151d93031f83e41",
+  "merge": "2e6e09f539bcdab965d062f0184b585b340b29d8",
+  "message": "Replace proven scalar constants with direct values",
+  "productionRun": 42080858908,
+  "documentationRun": 42080855434,
+  "documentationJob": 127433175116,
+  "auditRun": 42096023194,
+  "auditJob": 127486171834,
+  "auditArtifact": {
+    "id": 13447686970,
+    "node_id": "MDg6QXJ0aWZhY3QxMzQ0NzY4Njk3MA==",
+    "name": "production-log-audit-all",
+    "size_in_bytes": 1159626,
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13447686970",
+    "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13447686970/zip",
+    "expired": false,
+    "digest": "sha256:9ddb671df70b7766556dec8ee0b3482f461c850f595f3286c2236681e6c33e9f",
+    "created_at": "2026-11-05T19:41:22Z",
+    "updated_at": "2026-11-05T19:41:22Z",
+    "expires_at": "2027-02-03T19:39:50Z",
+    "workflow_run": {
+      "id": 42096023194,
+      "repository_id": 1400763332,
+      "head_repository_id": 1400763332,
+      "head_branch": "scalar-constant-lowering",
+      "head_sha": "80e4ee7b483d4881801eed3ff3b12c312b4ec868"
+    }
+  },
+  "redundantPostmergeRunsCancelled": [
+    42096524750,
+    42096524644
+  ]
+}

@@ -65,4 +65,5 @@ remains separate; its parser repair changed no compiler code or measurement limi
 
 [Compiler costs](../scalar-constant-analysis-2026-11-05/README.md) pass.
 [Runtime results](../scalar-constant-time-2026-11-05/README.md) retain 27 missed
-speed targets; final production delivery remains pending.
+speed targets. [Final production verification and delivery](../scalar-constant-delivery-2026-11-05/README.md)
+are complete.

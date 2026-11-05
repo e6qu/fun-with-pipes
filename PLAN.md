@@ -5,38 +5,35 @@ and useful inference. Prefer direct values, moves and borrows; use automatic
 reference counting (ARC) only for necessary sharing. Tracing garbage collection
 has been removed. JIT compilation and backward compatibility are excluded.
 
-## Current work: exact scalar constants
+## Delivered: exact scalar constants
 
-[PR #260 is verified and merged](docs/measurements/packed-pair-delivery-2026-11-05/README.md).
-Private pair-buffer reuse reduces allocation; its 34 timing misses remain open
-below. The current group targets proved scalar constants without changing
-allocation or derivative work.
+[PR #261 is verified and merged](docs/measurements/scalar-constant-delivery-2026-11-05/README.md).
+The compiler replaces proved immediate constants and aliases with exact bits.
+For example, `one` specialized to F64 is `1.0f64`, without a lazy-cache read.
+Effects, traps, owned values and unproved calculations keep their behavior.
+All nine production jobs, docs and complete evidence audits pass. Long derivative
+solves improve by 1.7–6.3%; allocation and stack costs are unchanged. The 27 missed
+speed targets remain open below, alongside earlier results.
 
-The implemented group replaces proved immediate scalar values and aliases with exact
-bits, avoiding lazy-cache reads. For example, `one` specialized to F64 is exactly
-`1.0f64`; it does not need a mutable first-use flag. Arbitrary zero-argument
-functions still may allocate, trap or perform effects and keep their behavior.
+## Next work: objective evaluation and recording
 
-| Step | Work | Completion requirement |
+Investigate the forward stage of the existing Rosenbrock workloads before choosing
+another transformation. The saved 129-coordinate/199-update observations put this
+stage at 71.8–72.4% of derivative-phase time, or 45.5–47.6% of the instrumented
+process. Result-array construction is only 0.9–1.0% of phase time. These percentages
+do not isolate the cost of an individual runtime check or predict a speedup.
+
+| Step | Concrete work | Required result |
 |---|---|---|
-| 1 | Share the bounded constant proof | Reuse packed-fold seed analysis; exact scalar types/bits, acyclic aliases and a finite proof budget. |
-| 2 | Replace scalar reads and cache entries | Preserve evaluation order, tracing/resource boundaries and owned globals; no runtime tape-check changes. |
-| 3 | Verify bits, effects and cache ownership | Interpreter/native agreement, O1/O2 probes, deliberate broken controls, prior packed-fold and cleanup coverage on three hosts. |
-| 4 | Measure the complete programs | Unchanged allocation/node counts, parent reconciliation, compiler costs, two qualified runtime sessions per architecture and complete artifact audits. |
-| 5 | Deliver the group | Pass nine final-head production jobs plus docs, audit every result and squash merge. |
+| 1 | Trace the objective's generated scalar workers through `rev._op1`, `rev._op2` and `fwp_p_ad_push`; reconcile recorded nodes with the saved profiles. | A source-level account of arithmetic, parent validation, capacity checks and writes per update. Distinguish forward evaluation from reverse traversal. |
+| 2 | Determine which repeated recording checks can be proved once for a closed worker. | An explicit scope/alias proof covering mixed or expired tapes, invalid parents, capacity growth, nested differentiation, effects, traps and cancellation. Do not remove checks on unproved paths. |
+| 3 | Freeze one coherent transformation and its comparison before implementation. | Same-source enabled/disabled references, representative current/history workloads, exact arithmetic/trap order, and explicit time, memory, stack and compiler-cost limits. If the proof fails, record the reason and select from the measured work instead. |
+| 4 | Implement and verify the complete group. | Focused production-compiler checks during development; one final platform matrix and measurement batch after the group is ready. Retain misses and audit all artifacts before merge. |
 
-[The contract](docs/measurements/scalar-constant-lowering.md) was committed at
-`4bad4992` before implementation. Source review identified repeated scalar-cache
-reads in generated numeric workers; it does not establish their machine cost.
-C/Rust peers still use handwritten derivatives, so their whole-program comparison
-cannot isolate language or ARC overhead. Keep all previous missed timing goals.
-[The handoff](docs/development-state.md) records actual checks and the next action.
-
-Focused native checks, the [allocation/stack audit](docs/measurements/scalar-constant-census-2026-11-05/README.md)
-and [compiler-cost audit](docs/measurements/scalar-constant-analysis-2026-11-05/README.md)
-pass. [Four runtime sessions](docs/measurements/scalar-constant-time-2026-11-05/README.md)
-retain 27 missed speed targets; all other measured limits pass. Complete final
-production verification and delivery remain.
+Use existing samples for diagnosis; do not rerun unchanged timings for a pass.
+C/Rust peers use handwritten derivatives, so their complete-program ratios cannot
+isolate language or ARC overhead. [The handoff](docs/development-state.md) records
+the exact next action, source identities and current checks.
 
 ## Open performance goals
 

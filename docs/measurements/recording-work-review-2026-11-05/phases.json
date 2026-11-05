@@ -1,0 +1,178 @@
+[
+  {
+    "report": "docs/measurements/scalar-constant-time-2026-11-05/42078637088/aarch64-1.json.gz",
+    "reportSha256": "c8cd8024fafc817caabab5b2600585c2204da7230381e4addb985e1c4ff6f697",
+    "source": "76690b385514c58ad94c5591da3553fa48218535",
+    "case": "129-199",
+    "program": "fwp-ad",
+    "samples": 12,
+    "counts": {
+      "updates": 1592,
+      "inputs": 205368,
+      "nodes": 1630208
+    },
+    "medianPercentOfDerivativePhases": {
+      "setup": 0.9445691447709507,
+      "forwardWithRecording": 71.82186486141299,
+      "reverseSetup": 1.05468180428795,
+      "reverseTraversal": 24.06925368691789,
+      "resultArray": 0.9752349160537271,
+      "retirement": 1.0792311058435806
+    },
+    "medianForwardPercentOfInstrumentedProcess": 45.54414089756433
+  },
+  {
+    "report": "docs/measurements/scalar-constant-time-2026-11-05/42078637088/aarch64-1.json.gz",
+    "reportSha256": "c8cd8024fafc817caabab5b2600585c2204da7230381e4addb985e1c4ff6f697",
+    "source": "76690b385514c58ad94c5591da3553fa48218535",
+    "case": "129-199",
+    "program": "fwp-ad-history",
+    "samples": 12,
+    "counts": {
+      "updates": 1592,
+      "inputs": 205368,
+      "nodes": 1630208
+    },
+    "medianPercentOfDerivativePhases": {
+      "setup": 0.968880057967137,
+      "forwardWithRecording": 71.88228987983238,
+      "reverseSetup": 1.0702202938165382,
+      "reverseTraversal": 24.013308999088906,
+      "resultArray": 0.9551014600567052,
+      "retirement": 1.1001121929114706
+    },
+    "medianForwardPercentOfInstrumentedProcess": 45.52656665813659
+  },
+  {
+    "report": "docs/measurements/scalar-constant-time-2026-11-05/42078637088/aarch64-2.json.gz",
+    "reportSha256": "a5e75119069d2143d9f891a3b6fbf9603a6c631041f2573128088d80f56306fe",
+    "source": "76690b385514c58ad94c5591da3553fa48218535",
+    "case": "129-199",
+    "program": "fwp-ad",
+    "samples": 12,
+    "counts": {
+      "updates": 1592,
+      "inputs": 205368,
+      "nodes": 1630208
+    },
+    "medianPercentOfDerivativePhases": {
+      "setup": 0.9430161504252801,
+      "forwardWithRecording": 71.836926867502,
+      "reverseSetup": 1.046910337866585,
+      "reverseTraversal": 24.04390095387879,
+      "resultArray": 0.976669035549284,
+      "retirement": 1.0724610304207007
+    },
+    "medianForwardPercentOfInstrumentedProcess": 46.53596812878619
+  },
+  {
+    "report": "docs/measurements/scalar-constant-time-2026-11-05/42078637088/aarch64-2.json.gz",
+    "reportSha256": "a5e75119069d2143d9f891a3b6fbf9603a6c631041f2573128088d80f56306fe",
+    "source": "76690b385514c58ad94c5591da3553fa48218535",
+    "case": "129-199",
+    "program": "fwp-ad-history",
+    "samples": 12,
+    "counts": {
+      "updates": 1592,
+      "inputs": 205368,
+      "nodes": 1630208
+    },
+    "medianPercentOfDerivativePhases": {
+      "setup": 0.9970242553556176,
+      "forwardWithRecording": 71.86786663967123,
+      "reverseSetup": 1.0687059575171542,
+      "reverseTraversal": 24.008433536291793,
+      "resultArray": 0.9559388013466036,
+      "retirement": 1.1112753640759379
+    },
+    "medianForwardPercentOfInstrumentedProcess": 46.472476730460386
+  },
+  {
+    "report": "docs/measurements/scalar-constant-time-2026-11-05/42078637088/x86_64-1.json.gz",
+    "reportSha256": "3f9e1e5f658a1bedb23c478347e7f56543aa399a71c3a03ec9ee8ed5ac534b6d",
+    "source": "76690b385514c58ad94c5591da3553fa48218535",
+    "case": "129-199",
+    "program": "fwp-ad",
+    "samples": 12,
+    "counts": {
+      "updates": 1592,
+      "inputs": 205368,
+      "nodes": 1630208
+    },
+    "medianPercentOfDerivativePhases": {
+      "setup": 0.9599907778157244,
+      "forwardWithRecording": 71.88793344719576,
+      "reverseSetup": 1.3245467483385527,
+      "reverseTraversal": 23.607491692784727,
+      "resultArray": 0.9365492316628785,
+      "retirement": 1.3515023691609085
+    },
+    "medianForwardPercentOfInstrumentedProcess": 46.57134233965468
+  },
+  {
+    "report": "docs/measurements/scalar-constant-time-2026-11-05/42078637088/x86_64-1.json.gz",
+    "reportSha256": "3f9e1e5f658a1bedb23c478347e7f56543aa399a71c3a03ec9ee8ed5ac534b6d",
+    "source": "76690b385514c58ad94c5591da3553fa48218535",
+    "case": "129-199",
+    "program": "fwp-ad-history",
+    "samples": 12,
+    "counts": {
+      "updates": 1592,
+      "inputs": 205368,
+      "nodes": 1630208
+    },
+    "medianPercentOfDerivativePhases": {
+      "setup": 0.9372568018395976,
+      "forwardWithRecording": 72.4082328883376,
+      "reverseSetup": 1.3002388481458622,
+      "reverseTraversal": 23.022614136978575,
+      "resultArray": 0.8954348335184455,
+      "retirement": 1.307141380534436
+    },
+    "medianForwardPercentOfInstrumentedProcess": 47.556933375903654
+  },
+  {
+    "report": "docs/measurements/scalar-constant-time-2026-11-05/42078654369/x86_64-2.json.gz",
+    "reportSha256": "0df38423a59808e38d7e74dcdf1e33ba8aba49ed8580764dfea9e31bba9aa050",
+    "source": "76690b385514c58ad94c5591da3553fa48218535",
+    "case": "129-199",
+    "program": "fwp-ad",
+    "samples": 12,
+    "counts": {
+      "updates": 1592,
+      "inputs": 205368,
+      "nodes": 1630208
+    },
+    "medianPercentOfDerivativePhases": {
+      "setup": 0.9624938563742922,
+      "forwardWithRecording": 71.85118099010492,
+      "reverseSetup": 1.3280661316481253,
+      "reverseTraversal": 23.580958573541338,
+      "resultArray": 0.9445824682812027,
+      "retirement": 1.364767398453194
+    },
+    "medianForwardPercentOfInstrumentedProcess": 47.5631328611477
+  },
+  {
+    "report": "docs/measurements/scalar-constant-time-2026-11-05/42078654369/x86_64-2.json.gz",
+    "reportSha256": "0df38423a59808e38d7e74dcdf1e33ba8aba49ed8580764dfea9e31bba9aa050",
+    "source": "76690b385514c58ad94c5591da3553fa48218535",
+    "case": "129-199",
+    "program": "fwp-ad-history",
+    "samples": 12,
+    "counts": {
+      "updates": 1592,
+      "inputs": 205368,
+      "nodes": 1630208
+    },
+    "medianPercentOfDerivativePhases": {
+      "setup": 0.9543114824711059,
+      "forwardWithRecording": 72.3535033117513,
+      "reverseSetup": 1.3274951075911268,
+      "reverseTraversal": 23.167242002507745,
+      "resultArray": 0.9056226479875639,
+      "retirement": 1.3244218847652829
+    },
+    "medianForwardPercentOfInstrumentedProcess": 47.16768610644988
+  }
+]

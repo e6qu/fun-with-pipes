@@ -562,8 +562,8 @@ define the comparison.
 
 ### Exact scalar constants
 
-Focused native, memory and compiler-cost checks pass; final production validation
-remains. [The contract](measurements/scalar-constant-lowering.md) defines the scope. Consider:
+[PR #261 is verified and merged](measurements/scalar-constant-delivery-2026-11-05/README.md).
+[The contract](measurements/scalar-constant-lowering.md) defines the scope. Consider:
 
 ```fwp
 unit-weight : F64
@@ -716,8 +716,10 @@ Passing source selection or saving allocations alone does not prove a speedup.
 
 ### Reusing private pair storage
 
-**Focused, stack/allocation and compiler-cost checks pass. [Runtime speed targets](measurements/packed-pair-cleanup-time-2026-11-05/README.md)
-remain unmet; final platform verification is pending for [PR #260](https://github.com/e6qu/fun-with-pipes/pull/260).**
+**[PR #260 is verified and merged](measurements/packed-pair-delivery-2026-11-05/README.md).**
+Focused, stack/allocation, compiler-cost and final platform checks pass.
+The [missed runtime speed targets](measurements/packed-pair-cleanup-time-2026-11-05/README.md)
+remain open.
 For equal-width numeric records, each pair result can overwrite the earlier input
 record after both inputs have been read. For three records:
 
