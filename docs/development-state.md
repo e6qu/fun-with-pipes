@@ -1,7 +1,7 @@
 # Current work
 
-**Next:** rebase the repaired scalar-constant group onto verified main, publish
-its draft PR and rerun focused native checks. Audit that run before the census.
+**Next:** publish the grouped draft PR and run `scalar-constant-checks`. Audit
+every native result before starting the census; fix all failures in this PR.
 
 ## Roadmap status
 
@@ -16,7 +16,9 @@ its draft PR and rerun focused native checks. Audit that run before the census.
 Branch/worktree: `scalar-constant-lowering`. [The contract](measurements/scalar-constant-lowering.md)
 was frozen at `4bad4992` before code, tag
 `roadmap/scalar-constant-lowering-protocol-2026-11-05`. Keep its original identity.
-No performance measurements have run. All earlier timing misses remain in PLAN.md.
+Rebased onto `a85f59d2`; all pre-rebase evidence sources remain under
+`roadmap/scalar-constant-premerge-2026-11-05` at `5e1c51d5`. The rebase changed
+no tree bytes. No performance measurements have run. All earlier timing misses remain in PLAN.md.
 
 ## Parent delivery is verified
 
