@@ -1,0 +1,10 @@
+{
+  "run": 42030505657,
+  "source": "bdc4a5252fe0bfd0ca4dc9751829838a93bd31f2",
+  "conclusion": "startup_failure",
+  "executedJobs": 0,
+  "workflowBytes": 512034,
+  "maximumBytes": 512000,
+  "annotation": "Workflow file exceeds the maximum allowed size of 500 KB.",
+  "repair": "Move format and four maintenance/audit jobs to a reusable workflow; preserve their commands and explicit inputs."
+}
