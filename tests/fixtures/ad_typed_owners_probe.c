@@ -65,6 +65,7 @@ int main(void) {
     fwp_heap_start(); fwp_fns=fwp_fn_table; fwp_init_consts();
     fwp_fns=typed_entries;
     size_t baseline=fwp_heap.live;
+    for (int single=0; single<2; single++)
     for (int mode=0; mode<6; mode++) {
         typed_mode=mode; typed_next=3;
         memset(typed_refs,0,sizeof typed_refs); memset(typed_values,0,sizeof typed_values);
@@ -86,18 +87,20 @@ int main(void) {
             last=fwp_p_ad_push_owned(last,2,(V)(int64_t)-1,2,&typed_element);
         }
         V outputs=0,seeds=0;
-        if (count && mode!=5) {
+        if (!single && count && mode!=5) {
             for (int i=0;i<2;i++) {
                 outputs=fwp_rc_fresh(fwp_cons(last,outputs));
                 seeds=fwp_rc_fresh(fwp_cons(2,seeds));
             }
         }
-        V result=fwp_p_ad_backward_owned(base,outputs,seeds,&typed_array);
+        V result=single
+            ? fwp_p_ad_backward_owned_one(base, count && mode!=5 ? last : (V)(int64_t)-1, 2, &typed_array)
+            : fwp_p_ad_backward_owned(base,outputs,seeds,&typed_array);
         if (typed_initial_retains || typed_result_retains!=(unsigned)(count?((mode==1||mode==2||mode==5)?3:2):0)) return 181;
         if (typed_inactive_calls!=(unsigned)(count?2:0)) return 182;
         if (fwp_array_len(result)!=(size_t)count) return 183;
         for (int i=0;i<count;i++) {
-            int expected=i==0?(mode==0?4:mode==3?1:0):0;
+            int expected=i==0?(mode==0?(single?2:4):mode==3?1:0):0;
             if (typed_values[fwp_array_load(result,(size_t)i,&typed_element)]!=expected) return 183;
         }
         typed_array_drop(result);
@@ -107,6 +110,7 @@ int main(void) {
         for (int i=1;i<typed_next;i++) if (typed_refs[i]!=(i<3?1:0)) return 188;
         printf("typed owners: mode %d, init retains %u, result retains %u, final delta 0, process peak charged %zu\n",mode,typed_initial_retains,typed_result_retains,fwp_heap.peak);
     }
+    for (int single=0; single<2; single++)
     for (volatile int mode=6; mode<9; mode++) {
         typed_mode=mode; typed_next=3;
         memset(typed_refs,0,sizeof typed_refs); memset(typed_values,0,sizeof typed_values);
@@ -125,7 +129,8 @@ int main(void) {
         V seeds=fwp_rc_fresh(fwp_cons(2,0));
         fwp_trap_recover=typed_recover; fwp_trap_jb=&jump; fwp_trap_cleanup=0;
         if (!setjmp(jump)) {
-            (void)fwp_p_ad_backward_owned(base,outputs,seeds,&typed_array);
+            if (single) (void)fwp_p_ad_backward_owned_one(base,base,2,&typed_array);
+            else (void)fwp_p_ad_backward_owned(base,outputs,seeds,&typed_array);
             return 185;
         }
         fwp_cur=NULL; fwp_trap_recover=NULL; fwp_trap_jb=NULL;

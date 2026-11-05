@@ -243,7 +243,8 @@ impl<'p> Interp<'p> {
                 }
                 Value::list(result)
             }
-            Body::PackedRecordMap { .. }
+            Body::DirectAdScope { .. }
+            | Body::PackedRecordMap { .. }
             | Body::PackedRecordFold { .. }
             | Body::ScalarBufferMap { .. }
             | Body::RangeZip { .. }
@@ -567,10 +568,13 @@ impl<'p> Interp<'p> {
             }
             "ad.tape-owned" => crate::numerics::tape_owned(&a[0], &a[1]),
             "ad.push-owned" => crate::numerics::push_owned(&a),
-            "ad.backward-owned" => {
-                crate::numerics::backward_owned(&a[0], &a[1], &a[2], |f, values| {
-                    self.apply(f, values)
-                })
+            "ad.backward-owned" | "ad._backward-owned-one" => {
+                let seeds = if sym == "ad.backward-owned" {
+                    crate::numerics::BackwardSeeds::Lists(&a[1], &a[2])
+                } else {
+                    crate::numerics::BackwardSeeds::One(&a[1], &a[2])
+                };
+                crate::numerics::backward_owned(&a[0], seeds, |f, values| self.apply(f, values))
             }
             // arithmetic (data-last: `sub a b` is b - a)
             "prim.add" => arith(Op::Add, &a[1], &a[0], &result),

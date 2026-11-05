@@ -19,7 +19,7 @@ AUDIT_SPEC.loader.exec_module(AUDIT)
 CURRENT = {name: (ROOT / name).read_bytes() for name in REFERENCE.FILES}
 SELECTIONS = {
     'lib/autodiff.fwp': b'rev._backward : I64 -> List[I64] -> List[T] -> Array[T]',
-    'runtime/fwp_rt_kernel.c': b'const fwp_desc *array_type)',
+    'runtime/fwp_rt_kernel.c': b'static V fwp_ad_backward_owned(V base, V outs, V seeds, const fwp_desc *array_type,',
     'src/cgen.rs': b'fn scalar_buffer_zip(&mut self, id: FuncId,',
     'src/fuse.rs': b'array_zip::lower(prog);',
     'src/interp.rs': b'internal: array-list zip requires an array',

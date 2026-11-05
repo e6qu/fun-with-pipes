@@ -64,6 +64,14 @@ static void fwp_map_release(void *arg) {
     if (built && owner->list_drop) owner->list_drop(built);
     if (items) fwp_mem_free(items);
 }
+/* The consumed array has its own typed owner. These words are borrowed scratch,
+ * with no child owners; release only the independently built list on unwind. */
+static void fwp_map_release_borrowed_scalar_items(void *arg) {
+    fwp_map_owner *owner = arg;
+    owner->items = NULL;
+    owner->count = 0;
+    fwp_map_release(owner);
+}
 static void fwp_map_protect(fwp_map_owner *owner, fwp_cleanup *cleanup) {
 #if FWP_UNWIND
     fwp_cleanup_push(cleanup, fwp_map_release, owner);
@@ -222,7 +230,8 @@ static V fwp_value_finish(fwp_value_owner *owner, fwp_cleanup *cleanup) {
  * owns scratch and the newly built suffix. Complete all fallible allocation
  * before changing any input link. A shared ancestor forbids descendant reuse. */
 static V fwp_map_finish_reusing_list(fwp_value_owner *input,
-                                   fwp_map_owner *mapped, fwp_cleanup *cleanup) {
+                                   fwp_map_owner *mapped, fwp_cleanup *cleanup,
+                                   int borrowed_items) {
     size_t prefix = 0;
     V cursor = input->value;
     while (prefix < mapped->count && cursor && fwp_rc_unique_mut(cursor)) {
@@ -251,6 +260,8 @@ static V fwp_map_finish_reusing_list(fwp_value_owner *input,
         mapped->built = root;
         mapped->count = 0;
     }
+    /* All words have moved into list cells. Do not free an array payload. */
+    if (borrowed_items) mapped->items = NULL;
     return fwp_map_finish_protected(mapped, cleanup);
 }
 /* Move uniquely owned String-list heads into the callback and build an owned

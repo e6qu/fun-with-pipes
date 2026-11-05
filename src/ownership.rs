@@ -305,12 +305,14 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         "matrix._mul-f64" => (&[B, B, B, B, B], ResultOwnership::FreshLeaf, None, &[]),
         "ad.tape" => (&[B], ResultOwnership::Shared, None, &[]),
         "ad.push" => (&[B, B, B, B], ResultOwnership::Shared, None, &[]),
-        "ad.backward" => (&[B, B, B], ResultOwnership::FreshLeaf, None, &[]),
+        "ad.backward" | "ad._backward-one" => (&[B, B, B], ResultOwnership::FreshLeaf, None, &[]),
         // The scalar-operation tuple owns embedded callbacks until scoped tape
         // retirement. arc_scope proves these container callbacks explicitly.
         "ad.tape-owned" => (&[B, B], ResultOwnership::Shared, None, &[]),
         "ad.push-owned" => (&[B, C, B, C], ResultOwnership::Shared, None, &[]),
-        "ad.backward-owned" => (&[B, B, B], ResultOwnership::OwnedTree, None, &[]),
+        "ad.backward-owned" | "ad._backward-owned-one" => {
+            (&[B, B, B], ResultOwnership::OwnedTree, None, &[])
+        }
         "task.spawn" => (
             &[C],
             ResultOwnership::OwnedTask,

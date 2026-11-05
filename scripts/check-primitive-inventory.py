@@ -75,9 +75,9 @@ weak_channels = {
     'channel.downgrade': 'Channel[a] -> WeakChannel[a] ! {Async}',
     'channel.upgrade': 'WeakChannel[a] -> Option[Channel[a]] ! {Async}',
 }
-assert len(rows) == len(baseline['rows']) + 5 + len(scalar_math) + len(weak_channels) + 1 - len(removed_symbols)
+assert len(rows) == len(baseline['rows']) + 5 + len(scalar_math) + len(weak_channels) + 3 - len(removed_symbols)
 assert len({(row['file'], row['declared']) for row in rows}) == len(rows)
-assert len({row['symbol'] for row in rows}) == baseline['distinctSymbols'] + 5 + len(scalar_math) + len(weak_channels) + 1 - len(removed_symbols)
+assert len({row['symbol'] for row in rows}) == baseline['distinctSymbols'] + 5 + len(scalar_math) + len(weak_channels) + 3 - len(removed_symbols)
 assert sum(row['aliased'] for row in rows) == 40
 raw_symbols = {'mem.alloc', 'mem.free', 'mem.string', 'ptr.cast', 'ptr.at',
                'ptr.read', 'ptr.write', 'ptr.read-string', 'ptr.address'}
@@ -87,6 +87,8 @@ owned_tapes = {
     'ad.tape-owned': (2, 'Shared', '(t, t -> t -> t, t -> t -> t, t -> Bool) -> List[t] -> I64 where Dup[t]'),
     'ad.push-owned': (4, 'Shared', 'I64 -> t -> I64 -> t -> I64 where Dup[t]'),
     'ad.backward-owned': (3, 'OwnedTree', 'I64 -> List[I64] -> List[t] -> Array[t] where Dup[t]'),
+    'ad._backward-owned-one': (3, 'OwnedTree', 'I64 -> I64 -> t -> Array[t] where Dup[t]'),
+    'ad._backward-one': (3, 'FreshLeaf', 'I64 -> I64 -> F64 -> Array[F64]'),
 }
 service_scopes = {
     'grpc.with-gzip': (1, 'OwnedCallback', 0),

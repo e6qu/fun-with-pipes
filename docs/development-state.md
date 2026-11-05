@@ -1,9 +1,12 @@
 # Current work
 
-**Next:** implement the four-part [gradient-call storage contract](measurements/gradient-call-storage.md),
-starting with the direct scoped callback and its borrow proof. Freeze the contract
-tag before code. Batch all four parts into one PR before focused runner validation;
-run final production only after the complete group is ready.
+**Next:** finish the grouped focused-check preparation, publish a draft PR and
+run `gradient-call-checks` on GCC ARM64/AMD64 and Clang ARM64. All four parts are
+implemented locally but have not been compiled or verified on runners. Audit all
+failures together before a repair push; do not launch final production yet.
+
+Contract frozen before code at `1ed3ad99ef7263161d526cea816c33b36ac40b9b`, tag
+`roadmap/gradient-call-storage-protocol-2026-11-05`.
 
 Branch: `gradient-call-storage`, worktree `.worktrees/owned-numeric-updates`.
 No open delivery PR yet. Other dirty worktrees and the primary checkout are unrelated.
@@ -12,10 +15,10 @@ No open delivery PR yet. Other dirty worktrees and the primary checkout are unre
 
 | Step | Status | Evidence or remaining work |
 |---|---|---|
-| 1 | Pending | Direct derivative scope, word worker convention, caller-owned input proof. |
-| 2 | Pending | Numeric fold fields and bounded constant seed proof. |
-| 3 | Pending | Explicit single-root scalar/owned-weight backward peers. |
-| 4 | Pending | Consume exclusive 64-bit gradient scratch; protect other layouts/aliases. |
+| 1 | In progress | Direct derivative scope, word worker convention, caller-owned input proof. |
+| 2 | In progress | Numeric fold fields and bounded constant seed proof. |
+| 3 | In progress | Explicit single-root scalar/owned-weight backward peers. |
+| 4 | In progress | Consume exclusive 64-bit gradient scratch; protect other layouts/aliases. |
 | 5 | Pending | Grouped controls, counts and measurements, then final CI/delivery. |
 
 ## Verified previous delivery
@@ -46,7 +49,7 @@ passes on both hosts: 96 observations reconcile with source constructors.
 Fresh single-solve totals differ from the repeated shared-input timing driver.
 One fresh 129/199 solve uses 2,121 requests and 1,265,230 requested bytes;
 the proposed four-part reduction targets 727 requests and 1,034,366 bytes.
-Neither reduction is implemented or measured yet.
+The reduction is implemented but has not been compiled or measured yet.
 
 Scratch review: `../gradient-work/owned-numeric-remaining-storage/`, especially
 `scoped-call-design.md`, `inspection.json` and `source-predictions.json`.
@@ -56,7 +59,8 @@ and matching callee cleanup. Constant seed proof must explicitly admit concrete
 F64 zero/one intrinsics; arbitrary user-defined zero remains evaluated normally.
 Single-root peers need separate scalar/owned-weight layout and callback proofs.
 Scratch reuse requires 64-bit pointer-free storage and a separate owner from
-independently allocated scratch. Freeze exact reference edits before timing.
+independently allocated scratch. The reference disables `GRADIENT_CALL_STORAGE` and restores the multi-root
+selection in `rev._finish`; all preceding ownership changes stay enabled.
 
 ## Local checks and resources
 
@@ -65,9 +69,50 @@ Premerge ten-gate verification: 0.65s. Merge/tree/message verification: 1.61s.
 Delivery evidence retention: 0.13s. Final log audits: Linux AMD64/cache reconciliation
 5.05s, Windows ARM64 136.57s, Windows AMD64 142.81s; other results are retained.
 
-Last free space: 64.596 GiB. Full Windows downloads were removed only after
+Before implementation, free space was 64.596 GiB. Full Windows downloads were removed only after
 verifying all 157 retained logs and archive digests; final collection keeps the
 retirement receipts. Preserve 64 GiB; do not redownload audited full archives.
 Scratch: `../gradient-work/owned-numeric-platforms-258-final`.
 The merged #257 worktree was archived with its dirty handoff/patch before removal;
 other dirty worktrees remain untouched.
+
+
+## Current edits and focused checks
+
+- Direct scoped callbacks use explicit word workers; ordinary exported/dynamic
+  entries retain their owning convention. Borrow inference includes the continuing
+  owner through enclosing call arguments, and only proved plain list reads qualify.
+- Packed folds accept/return numeric fields. Constant seeds admit only bounded
+  literal records, nullary chains and concrete scalar zero/one primitives.
+- Backward accepts one explicit root/seed in both engines. Scalar native code
+  reads borrowed word slices; typed code uses an explicit list/single-root layout.
+  No fabricated stack array/list object or heap ownership header is needed.
+- Coordinate scratch consumes only dead I64/U64/F64 arrays. Separate cleanup
+  protects array storage and scratch, with alias/view and shared-list controls.
+
+New scope ledger tests cover normal return, retained aliases, traps, cancellation,
+allocation failures and deliberately added retains/missing frees. Existing typed
+and scalar backward controls now exercise both seed representations. Old fold and
+phase observers were moved to the shared execution sites. The historical gradient
+reference was updated to preserve single-root peers while reversing array results;
+its original measured patch remains in the immutable evidence.
+
+Guarded reference tests: 6 + 5 + 5 pass; standalone library-doc generator and
+unblessed verification pass (2.20s together). Earlier new-reference control initially
+failed because its corruption marker matched both typed entry wrappers; the marker
+now targets the shared implementation uniquely, and all six tests pass.
+
+Disk fell to 63.964 GiB and the guard refused formatting. Only the three reproducible
+`owned-numeric-checks-6` downloads were removed after digest, audit and all 472
+retained-control file checks per host. Receipts stay beside their metadata. The
+first lightweight cleanup restored the guard minimum; its sandboxed nice request
+was denied, and no compiler/check was run outside the guard. The remaining two
+cleanups ran under the guard (0.38s). Last free space: 64.344 GiB.
+
+Focused preparation also passes the three new reference controls, six historical
+gradient reference controls, three iteration observer controls and four Clang
+phase controls. The primitive inventory reports expected contract changes verified,
+including both explicit single-root peers. Cargo formatting passes. The actual
+native runner inventory covers all 255 targets; an attempted nonexistent standalone
+shard-check filename was corrected to the runner's own metadata/assignment audit.
+No Rust build or native implementation test has run locally.

@@ -209,6 +209,11 @@ pub enum Body {
     RegionEntry {
         worker: FuncId,
     },
+    /// Native-only derivative scope: borrows its inputs, calls a known word
+    /// worker with its proved convention, and retires tapes on every exit.
+    DirectAdScope {
+        callback: FuncId,
+    },
     /// Native-only constructor; the final parameter is its explicit region.
     RegionCtor(u32),
     /// Native-only eager numeric mapper. Borrows input lists and returns an
@@ -238,11 +243,13 @@ pub enum Body {
     OwnedScalarArrayMap {
         callback: FuncId,
     },
-    /// Private scalar zip: borrows the array at `slot`, consumes the other list.
-    /// Callbacks finish before reusing any exclusively owned list prefix.
+    /// Private scalar zip: consumes the list and optionally the 64-bit array
+    /// at `slot`. Callbacks finish before reusing any exclusive list prefix.
+    /// A consumed exclusive ordinary array may supply the result scratch.
     OwnedScalarBufferZip {
         callback: FuncId,
         slot: usize,
+        consume_array: bool,
     },
     /// Native-only zip: borrow a scalar callback and list; generate the I64
     /// indices from two evaluated bounds. Results own only flat numeric fields.
@@ -739,7 +746,8 @@ pub(crate) fn reachable_functions(prog: &Program, entries: &[FuncId]) -> Result<
             Body::Expr(e) => refs(e, &mut work),
             Body::Remote(r) => work.extend(r.iter_fn),
             Body::RegionEntry { worker } => work.push(*worker),
-            Body::PackedRecordMap { callback }
+            Body::DirectAdScope { callback }
+            | Body::PackedRecordMap { callback }
             | Body::PackedRecordFold { callback }
             | Body::ScalarBufferMap { callback }
             | Body::ScalarBufferZip { callback, .. }

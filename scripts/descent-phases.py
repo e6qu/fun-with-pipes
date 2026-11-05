@@ -18,8 +18,8 @@ def instrument(source, observer):
          '    descent_phase_step(DESCENT_SETUP);'),
         ('    return (V)(id << 32);',
          '    descent_phase_step(DESCENT_FORWARD);\n    return (V)(id << 32);'),
-        ('static V fwp_p_ad_backward(V base, V outs, V seeds) {',
-         'static V fwp_p_ad_backward(V base, V outs, V seeds) {\n'
+        ('                                const unsigned char *seeds, size_t count) {',
+         '                                const unsigned char *seeds, size_t count) {\n'
          '    descent_phase_step(DESCENT_REVERSE_SETUP);'),
         ('    for (int64_t i = active - 1; i >= tp.leaves; i--) {',
          '    descent_inputs += (uint64_t)tp.leaves;\n'

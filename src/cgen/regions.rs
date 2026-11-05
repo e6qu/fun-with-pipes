@@ -253,7 +253,8 @@ fn prove_cached(
             | Body::RangeZip { .. }
             | Body::PackedRecordRangeZip { .. }
             | Body::PackedRecordPairs { .. }
-            | Body::RegionEntry { .. } => {
+            | Body::RegionEntry { .. }
+            | Body::DirectAdScope { .. } => {
                 return None;
             }
         }

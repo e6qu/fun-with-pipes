@@ -232,8 +232,12 @@ fn continuing_owners(prog: &Program, live: &[bool]) -> Vec<Vec<bool>> {
                 {
                     kept[*id][j] &= retained(prog, ty, arg, after);
                 }
+                // A source owner used after this outer call also survives
+                // evaluation of every argument. ARC prepares any additional
+                // consuming argument owners independently. Do not treat uses
+                // in sibling arguments alone as a continuing owner.
                 for arg in args {
-                    visit(prog, arg, &BTreeSet::new(), kept);
+                    visit(prog, arg, after, kept);
                 }
             }
             _ => {
@@ -249,6 +253,15 @@ fn continuing_owners(prog: &Program, live: &[bool]) -> Vec<Vec<bool>> {
     for (_, f) in prog.funcs.iter().enumerate().filter(|(id, _)| live[*id]) {
         if let Body::Expr(body) = &f.body {
             visit(prog, body, &BTreeSet::new(), &mut kept);
+        }
+    }
+    // The scope itself borrows, but a callback may borrow only if every
+    // source caller also keeps that owner beyond the entire scope.
+    for (id, f) in prog.funcs.iter().enumerate().filter(|(id, _)| live[*id]) {
+        if let Body::DirectAdScope { callback } = f.body {
+            for j in 0..f.arity as usize {
+                kept[callback][j] &= kept[id][j];
+            }
         }
     }
     kept
@@ -282,6 +295,10 @@ pub(super) fn uses_only_borrows(
             let borrowed = match &prog.funcs[*id].body {
                 Body::Prim(symbol) => crate::ownership::primitive(symbol)
                     .is_some_and(|c| c.argument(j) == Argument::Borrow),
+                Body::PackedRecordRangeZip { .. } | Body::PackedRecordPairs { .. } => true,
+                Body::DirectAdScope { callback } => contracts
+                    .get(callback)
+                    .is_some_and(|ps| ps.contains(&(j as Local))),
                 Body::Expr(_) => contracts
                     .get(id)
                     .is_some_and(|ps| ps.contains(&(j as Local))),
@@ -328,6 +345,7 @@ pub(crate) fn infer(
     assert_eq!(live.len(), prog.funcs.len());
     let mut graph = vec![BTreeSet::new(); prog.funcs.len()];
     let mut values = BTreeSet::new();
+    let mut scoped_workers = BTreeSet::new();
     values.extend(prog.main);
     values.extend(prog.tests.iter().map(|(_, id)| *id));
     values.extend(prog.exports.iter().map(|(_, id)| *id));
@@ -354,6 +372,10 @@ pub(crate) fn infer(
                 graph[id].insert(*callback);
                 // Generated calls preserve the callback's original owning ABI.
                 values.insert(*callback);
+            }
+            Body::DirectAdScope { callback } => {
+                graph[id].insert(*callback);
+                scoped_workers.insert(*callback);
             }
             Body::RegionEntry { worker } => {
                 graph[id].insert(*worker);
@@ -390,7 +412,16 @@ pub(crate) fn infer(
         for &(id, f, body) in &candidates {
             for local in 0..f.arity {
                 if contracts.get(&id).is_some_and(|ps| ps.contains(&local))
-                    || !parameter_type(prog, &f.locals[local as usize])
+                    || !(parameter_type(prog, &f.locals[local as usize])
+                        || (scoped_workers.contains(&id)
+                            && matches!(&f.locals[local as usize], MT::Con(name, elements)
+                                if name == "std::List" && elements.len() == 1)
+                            && crate::tailrec::plain_data(
+                                &prog.shapes,
+                                &f.locals[local as usize],
+                                &mut HashSet::new(),
+                            )
+                            && noescape[id][local as usize]))
                     || !kept[id][local as usize]
                     || (record_fields(&prog.shapes, &f.locals[local as usize]).is_some()
                         && !noescape[id][local as usize])

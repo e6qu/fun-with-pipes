@@ -162,6 +162,7 @@ int main(void) {
     for (unsigned direction = 0; direction < 2; direction++)
     for (unsigned length = 0; length < 3; length++)
     for (unsigned array_length = 0; array_length < 4; array_length++)
+    for (unsigned array_sharing = 0; array_sharing < 3; array_sharing++)
     for (unsigned sharing = 0; sharing < 4; sharing++)
     for (volatile int mode = 0; mode < 4; mode++)
     for (int failure = 0; failure < 9; failure++) {
@@ -182,9 +183,20 @@ int main(void) {
             V child = OBJ(alias)->f[1];
             if (child && *fwp_rc_slot(child) != 1) return 249;
         }
-        V values = fwp_rc_fresh(fwp_arr_new(m));
-        for (int i = 0; i < m; i++) ARR(values)->d[i] = (V)(i + 1);
-        fwp_rc_dup(values); /* The export consumes one owner; retain an observer. */
+        int backing_count = array_sharing == 2 ? m + 2 : m;
+        V values = fwp_rc_fresh(fwp_arr_new(backing_count)), array_alias = 0;
+        for (int i = 0; i < backing_count; i++)
+            ARR(values)->d[i] = (V)(array_sharing == 2 ? i : i + 1);
+        if (array_sharing) {
+            array_alias = values;
+            fwp_rc_dup(array_alias);
+        }
+        if (array_sharing == 2) {
+            fwp_array_view *view = (fwp_array_view *)fwp_alloc_init(sizeof *view);
+            view->len = FWP_ARRAY_VIEW_FLAG | (uint64_t)m;
+            view->owner = array_alias; view->data = fwp_array_data(array_alias) + sizeof(V);
+            values = fwp_rc_fresh(PTR(view));
+        }
         size_t allocations = owner_ledger_allocations;
         jmp_buf jump;
         numeric_begin(&jump, mode, failure);
@@ -200,9 +212,10 @@ int main(void) {
             if (cursor) return 241;
             int prefix = reuse_enabled ? (shared_start < count ? shared_start : count) : 0;
             if (count && ((output == xs) != (prefix > 0))) return 242;
-            /* One scratch request plus copied suffix cells; inputs and aliases
-             * were created outside this observation. */
-            if (owner_ledger_allocations - allocations != (size_t)(1 + count - prefix)) return 243;
+            /* Exclusive ordinary arrays supply scratch; aliases/views need one
+             * independent request. Copied suffix cells remain separate. */
+            int scratch_request = !reuse_enabled || array_sharing;
+            if (owner_ledger_allocations - allocations != (size_t)(scratch_request + count - prefix)) return 243;
             if (numeric_calls != count) return 244;
             DROP_LIST(output);
         } else {
@@ -212,9 +225,12 @@ int main(void) {
             else return 245;
         }
         if (!numeric_finish(mode)) return 246;
-        if (*fwp_rc_slot(values) != 1) return 248;
-        for (int i = 0; i < m; i++) if (ARR(values)->d[i] != (V)(i + 1)) return 247;
-        DROP_ARRAY(values);
+        if (array_alias) {
+            if (*fwp_rc_slot(array_alias) != 1) return 248;
+            for (int i = 0; i < backing_count; i++)
+                if (ARR(array_alias)->d[i] != (V)(array_sharing == 2 ? i : i + 1)) return 247;
+            DROP_ARRAY(array_alias);
+        }
         if (alias) {
             V cursor = alias;
             for (int i = shared_start; i < n; i++) {

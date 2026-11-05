@@ -380,3 +380,6 @@ main = read-all () | concat "runtime-owned scope input" | make {
         assert_eq!(output.stderr, reference.stderr, "{label}");
     }
 }
+
+#[path = "support/gradient_call_storage.rs"]
+mod gradient_call_storage;

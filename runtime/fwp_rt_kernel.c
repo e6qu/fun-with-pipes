@@ -387,7 +387,11 @@ static V fwp_p_ad_push(V a, V wa, V b, V wb) {
 }
 
 /* the adjoints of the inputs, seeding the outputs; frees the tape */
-static V fwp_p_ad_backward(V base, V outs, V seeds) {
+/* The source slices borrow ordinary array payloads or a caller's two scalar
+ * words. No pointer is retained, released, or exposed to a callback. Read via
+ * memcpy: a stack word needs neither an array header nor heap ownership. */
+static V fwp_ad_backward_values(V base, const unsigned char *outs,
+                                const unsigned char *seeds, size_t count) {
     int64_t id = (int64_t)base >> 32;
     fwp_tape *t = fwp_tape_of(id);
     if (t->owned) fwp_trap(FWP_AD_REPRESENTATION);
@@ -407,9 +411,10 @@ static V fwp_p_ad_backward(V base, V outs, V seeds) {
      * cannot contribute; retain every input even when no output is active.
      * Validate before indexing and keep the detached buffers owned on traps. */
     int64_t active = tp.leaves;
-    size_t no = fwp_array_len(outs), ns = fwp_array_len(seeds), m = no < ns ? no : ns;
-    for (size_t i = 0; i < m; i++) {
-        int64_t o = (int64_t)fwp_array_load(outs, i, NULL);
+
+    for (size_t i = 0; i < count; i++) {
+        V bits; memcpy(&bits, outs + i * sizeof(V), sizeof bits);
+        int64_t o = (int64_t)bits;
         if (o < 0) continue;
         if ((o >> 32) != id) fwp_trap(FWP_AD_MIXED);
         int64_t node = o & 0xffffffff;
@@ -433,10 +438,12 @@ static V fwp_p_ad_backward(V base, V outs, V seeds) {
         fflush(NULL); _Exit(102);
     }
     if (needed) memset(adj, 0, (size_t)needed * sizeof(double));
-    for (size_t i = 0; i < m; i++) {
-        int64_t o = (int64_t)fwp_array_load(outs, i, NULL);
+    for (size_t i = 0; i < count; i++) {
+        V bits; memcpy(&bits, outs + i * sizeof(V), sizeof bits);
+        int64_t o = (int64_t)bits;
         if (o < 0) continue;
-        adj[o & 0xffffffff] += fwp_f64(fwp_array_load(seeds, i, NULL));
+        V seed; memcpy(&seed, seeds + i * sizeof(V), sizeof seed);
+        adj[o & 0xffffffff] += fwp_f64(seed);
     }
     for (int64_t i = active - 1; i >= tp.leaves; i--) {
         double a = adj[i];
@@ -450,6 +457,15 @@ static V fwp_p_ad_backward(V base, V outs, V seeds) {
     fwp_cleanup_pop(&cleanup);
     fwp_tape_buffers_release(&buffers);
     return r;
+}
+
+static V fwp_p_ad_backward(V base, V outs, V seeds) {
+    size_t no = fwp_array_len(outs), ns = fwp_array_len(seeds);
+    return fwp_ad_backward_values(base, fwp_array_data(outs), fwp_array_data(seeds), no < ns ? no : ns);
+}
+static V fwp_p_ad_backward_one(V base, V root, V seed) {
+    return fwp_ad_backward_values(base, (const unsigned char *)&root,
+                                  (const unsigned char *)&seed, 1);
 }
 
 static V fwp_p_ad_push_owned(V a, V da, V b, V db, const fwp_desc *elem) {
@@ -501,7 +517,13 @@ static V fwp_owned_tape_add(fwp_owned_tape *owner, V value, V old) {
     return result;
 }
 
-static V fwp_p_ad_backward_owned(V base, V outs, V seeds, const fwp_desc *array_type) {
+typedef enum { FWP_AD_ROOT_LIST, FWP_AD_ROOT_SINGLE } fwp_ad_root_layout;
+
+/* Both seed representations borrow their values for the complete call. The
+ * explicit layout selects list traversal or one scalar root/seed; neither
+ * stores a cursor in the tape or passes a container to scalar callbacks. */
+static V fwp_ad_backward_owned(V base, V outs, V seeds, const fwp_desc *array_type,
+                               fwp_ad_root_layout layout) {
     int64_t id = (int64_t)base >> 32;
     fwp_tape *t = fwp_tape_of(id);
     fwp_owned_tape *owner = t->owned;
@@ -520,7 +542,8 @@ static V fwp_p_ad_backward_owned(V base, V outs, V seeds, const fwp_desc *array_
     fwp_cleanup tape_cleanup, value_cleanup;
     fwp_cleanup_push(&tape_cleanup, fwp_tape_buffers_dispose, &buffers);
     fwp_cleanup_push(&value_cleanup, fwp_owned_tape_release, owner);
-    if (fwp_list_len(outs) != fwp_list_len(seeds))
+    size_t count = layout == FWP_AD_ROOT_SINGLE ? 1 : fwp_list_len(outs);
+    if (layout == FWP_AD_ROOT_LIST && count != fwp_list_len(seeds))
         fwp_trap("autodiff: seed count differs from output count");
     owner->adj = fwp_mem_alloc((size_t)(tp.len ? tp.len : 1) * sizeof(V));
     /* The tape owns zero until all slots and result transfers are finished. */
@@ -528,16 +551,18 @@ static V fwp_p_ad_backward_owned(V base, V outs, V seeds, const fwp_desc *array_
         owner->adj[i] = owner->zero; owner->nadj = i + 1;
     }
     V output_cursor = outs, seed_cursor = seeds;
-    while (output_cursor) {
-        int64_t o = (int64_t)OBJ(output_cursor)->f[0];
-        V seed = OBJ(seed_cursor)->f[0];
+    for (size_t i = 0; i < count; i++) {
+        int64_t o = (int64_t)(layout == FWP_AD_ROOT_SINGLE ? outs : OBJ(output_cursor)->f[0]);
+        V seed = layout == FWP_AD_ROOT_SINGLE ? seeds : OBJ(seed_cursor)->f[0];
         if (o >= 0) {
             if ((o >> 32) != id) fwp_trap(FWP_AD_MIXED);
             int64_t node = o & 0xffffffff;
             if (node >= tp.len) fwp_trap(FWP_AD_INVALID_NODE);
             owner->adj[node] = fwp_owned_tape_add(owner, seed, owner->adj[node]);
         }
-        output_cursor = OBJ(output_cursor)->f[1]; seed_cursor = OBJ(seed_cursor)->f[1];
+        if (layout == FWP_AD_ROOT_LIST) {
+            output_cursor = OBJ(output_cursor)->f[1]; seed_cursor = OBJ(seed_cursor)->f[1];
+        }
     }
     for (int64_t i = tp.len - 1; i >= tp.leaves; i--) {
         V a = owner->adj[i];
@@ -575,6 +600,13 @@ static V fwp_p_ad_backward_owned(V base, V outs, V seeds, const fwp_desc *array_
     fwp_cleanup_pop(&tape_cleanup); fwp_tape_buffers_dispose(&buffers);
 
     return output;
+}
+
+static V fwp_p_ad_backward_owned(V base, V outs, V seeds, const fwp_desc *array_type) {
+    return fwp_ad_backward_owned(base, outs, seeds, array_type, FWP_AD_ROOT_LIST);
+}
+static V fwp_p_ad_backward_owned_one(V base, V root, V seed, const fwp_desc *array_type) {
+    return fwp_ad_backward_owned(base, root, seed, array_type, FWP_AD_ROOT_SINGLE);
 }
 
 /* ---------------------------------------------------------------- kernels */

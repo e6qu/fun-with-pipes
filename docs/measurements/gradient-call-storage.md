@@ -1,6 +1,7 @@
 # Remove temporary storage around gradient calls
 
-**Implementation and measurements are pending.** This contract precedes code;
+**Implementation is awaiting runner verification; measurements are pending.**
+This contract precedes code;
 its immutable tag is `roadmap/gradient-call-storage-protocol-2026-11-05`.
 Starting source: verified squash `68115090b161f198e11fb625946259f65f781580`.
 The [current allocation-site report](gradient-storage-2026-11-05/README.md)

@@ -464,8 +464,8 @@ fn typed_adjoints_borrow_zero_and_transfer_results_without_extra_owners() {
     assert!(code.contains("#define FWP_UNWIND 1"));
     assert!(code.contains("#define FWP_TASK_TICKS 1"));
     for (marker, replacement) in [
-        ("static V fwp_p_ad_backward_owned(V base, V outs, V seeds, const fwp_desc *array_type) {",
-            "static void typed_begin(int);\nstatic V fwp_p_ad_backward_owned(V base, V outs, V seeds, const fwp_desc *array_type) {"),
+        ("typedef enum { FWP_AD_ROOT_LIST, FWP_AD_ROOT_SINGLE } fwp_ad_root_layout;",
+            "static void typed_begin(int);\ntypedef enum { FWP_AD_ROOT_LIST, FWP_AD_ROOT_SINGLE } fwp_ad_root_layout;"),
         ("    /* The tape owns zero until all slots and result transfers are finished. */",
             "    typed_begin(1);\n    /* The tape owns zero until all slots and result transfers are finished. */"),
         ("    V output_cursor = outs, seed_cursor = seeds;", "    typed_begin(0);\n    V output_cursor = outs, seed_cursor = seeds;"),
@@ -507,7 +507,7 @@ fn typed_adjoints_borrow_zero_and_transfer_results_without_extra_owners() {
                 record_probe::save("ad_tape_ownership", &label, source, &executable, &output);
                 assert_eq!(output.status.code(), Some(*expected), "{label}: {output:?}");
                 if *expected == 0 {
-                    assert_eq!(String::from_utf8_lossy(&output.stdout).lines().count(), 9);
+                    assert_eq!(String::from_utf8_lossy(&output.stdout).lines().count(), 18);
                     assert!(output.stderr.is_empty());
                 }
             }

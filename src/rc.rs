@@ -98,8 +98,13 @@ pub fn consumes_arg(prog: &Program, id: FuncId, j: usize) -> bool {
         Body::Ctor(_) | Body::RegionEntry { .. } => true,
         Body::PackedRecordFold { .. } => j == 0,
         Body::OwnedScalarArrayMap { .. } => j == 0,
-        Body::OwnedScalarBufferZip { slot, .. } => j == 1 - slot,
-        Body::PackedRecordMap { .. }
+        Body::OwnedScalarBufferZip {
+            slot,
+            consume_array,
+            ..
+        } => *consume_array || j == 1 - slot,
+        Body::DirectAdScope { .. }
+        | Body::PackedRecordMap { .. }
         | Body::ScalarBufferMap { .. }
         | Body::ScalarBufferZip { .. }
         | Body::RangeZip { .. }

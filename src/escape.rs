@@ -38,6 +38,7 @@ pub fn params(prog: &Program) -> Vec<Vec<bool>> {
                     matches!(
                         f.body,
                         Body::Expr(_)
+                            | Body::DirectAdScope { .. }
                             | Body::RangeZip { .. }
                             | Body::PackedRecordRangeZip { .. }
                             | Body::PackedRecordPairs { .. }
@@ -51,6 +52,15 @@ pub fn params(prog: &Program) -> Vec<Vec<bool>> {
     loop {
         let mut changed = false;
         for (id, f) in prog.funcs.iter().enumerate() {
+            if let Body::DirectAdScope { callback } = f.body {
+                for p in 0..f.arity as usize {
+                    if noesc[id][p] && !noesc[callback][p] {
+                        noesc[id][p] = false;
+                        changed = true;
+                    }
+                }
+                continue;
+            }
             let Body::Expr(body) = &f.body else {
                 continue;
             };

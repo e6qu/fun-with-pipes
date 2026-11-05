@@ -1145,6 +1145,9 @@ impl<'a> Proof<'a> {
                 Ok(self.request(*worker, scoped, None, &arguments, site))
             }
             Body::RegionCtor(_) => Ok(Targets::new()),
+            Body::DirectAdScope { callback } => {
+                Ok(self.request(*callback, scoped | AD, None, args, site))
+            }
             Body::PackedRecordMap { callback }
             | Body::PackedRecordFold { callback }
             | Body::ScalarBufferMap { callback }
@@ -1331,9 +1334,11 @@ impl<'a> Proof<'a> {
                     "ad.tape"
                         | "ad.push"
                         | "ad.backward"
+                        | "ad._backward-one"
                         | "ad.tape-owned"
                         | "ad.push-owned"
                         | "ad.backward-owned"
+                        | "ad._backward-owned-one"
                 ) =>
             {
                 if scoped & AD == 0 {
@@ -1650,7 +1655,7 @@ fn check_scheduled(
                 .iter()
                 .any(|ty| has_owner_channels(program, ty, &mut seen))
     });
-    if !queued_owners && !program.funcs.iter().any(|f| matches!(&f.body, Body::Prim(s) if matches!(s.as_str(), "task.spawn" | "ad.tape" | "ad.push" | "ad.backward" | "ad.tape-owned" | "ad.push-owned" | "ad.backward-owned" | "run-state" | "get" | "put" | "modify"))) {
+    if !queued_owners && !program.funcs.iter().any(|f| matches!(&f.body, Body::Prim(s) if matches!(s.as_str(), "task.spawn" | "ad.tape" | "ad.push" | "ad.backward" | "ad._backward-one" | "ad.tape-owned" | "ad.push-owned" | "ad.backward-owned" | "ad._backward-owned-one" | "run-state" | "get" | "put" | "modify"))) {
         return Ok(AnalysisStats::default());
     }
     let mut proof = Proof::new(program, sites);
