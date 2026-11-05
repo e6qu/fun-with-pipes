@@ -15,23 +15,32 @@ worker that can change tape lifetime or suspend through task/service entry ticks
 
 | Step | Status | Remaining work |
 |---|---|---|
-| 1 | Complete | Generated source reconciles eight nodes per pair/update with the saved profiles. |
-| 2 | Complete | Closed numeric worker proof; registry changes, recovery and suspension excluded. |
-| 3 | Complete | Same-source comparison and limits frozen at `bfddc31e`. |
+| 1 | Verified | Generated source reconciles eight nodes per pair/update with the saved profiles. |
+| 2 | Implemented | Closed numeric worker proof; registry changes, recovery and suspension excluded. |
+| 3 | Verified | Same-source comparison and limits frozen at `bfddc31e`. |
 | 4 | In progress | Implemented bounded selection and explicit local lookup state; native controls, focused CI and measurement integration still require verification. |
 
-The implementation now bounds pending expression references and parameter-count
-inspection as well as visited nodes, call depth and nested types. Signature
-recognition uses borrowed types without temporary vectors or type strings.
-Formatting passes (0.94 CPU seconds, 1.93 elapsed); workflow syntax also passes.
-The previous focused run `42124065984` at `18cf84f4` remained queued with no
-executed steps at 22:52 UTC on November 5. Replace it after publishing the final
-proof-resource fix. Measurement controls `42123056112` remain queued at `895f766c`;
-keep that run because its measurement scripts are unchanged. Docs for `18cf84f4`
-are `42123997455`; use the next push's docs as the final source check.
+Current implementation: `99bf3adccc3380f761876e34830cb938a94dcadd`.
+Focused run `42125357727` is queued. Keep it: the current repair changes only
+plan/handoff wording. Compiler, runtime and test trees remain identical.
 
-Cancelled without executing focused checks: `42121618183`, `42123050888`.
-Superseded docs `42123051265` were cancelled. Do not launch duplicate full matrices.
+Documentation run `42125323539`, job `127587903940`, failed only because this
+handoff used the unsupported status “Complete”. Source accounting and the frozen
+contract now use “Verified”; the implemented proof still awaits native verification.
+The checker remains unchanged. The next push supplies the corrected docs gate.
+
+Measurement controls `42123056112`, job `127580112855`, pass at `895f766c`.
+The current measurement scripts are identical. All eleven control suites (97 tests)
+and the complete 234,900-byte log were audited without diagnostics; SHA-256:
+`71a5d37f29c59db1f0cf9849217c1cb540a7187fa1088323c193db1e143e610a`.
+Local audit: `python3 scripts/local-guard.py python3 /tmp/fwp-recording-audit-log.py`
+(0.13 seconds). The retained log is in `../gradient-work/`.
+
+The proof bounds pending expression references and parameter inspection as well
+as visited nodes, call depth and nested types. Signature recognition allocates
+no temporary vectors/type strings. Formatting passes (1.93 elapsed seconds).
+Cancelled older queued focused runs: `42121618183`, `42123050888`, `42124065984`.
+Do not launch duplicate full matrices.
 
 Local runtime-only Clang controls passed 20 cases: O1/O2, workspace reuse 0/1,
 ordinary and cached paths, and three deliberately broken observers (expected

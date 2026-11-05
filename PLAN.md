@@ -18,7 +18,8 @@ speed targets remain open below, alongside earlier results.
 ## Next work: objective evaluation and recording
 
 The source review selected [bounded tape lookup reuse](docs/measurements/recording-lookups.md).
-Steps 1–3 are complete; step 4 is in progress. The saved 129-coordinate/199-update observations put this
+The source account and comparison contract are verified. The proof is implemented;
+step 4 must verify its selection, safety and measured costs. The saved 129-coordinate/199-update observations put this
 stage at 71.8–72.4% of derivative-phase time, or 45.5–47.6% of the instrumented
 process. Result-array construction is only 0.9–1.0% of phase time. These percentages
 do not isolate the cost of an individual runtime check or predict a speedup.
