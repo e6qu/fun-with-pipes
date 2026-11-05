@@ -445,6 +445,14 @@ def check_zip(archive):
             assert str(path) not in files, 'file and directory share an archive path'
 
 
+def scalar_image_representation(image):
+    if image == 'fwp-ad-identical':
+        return 'literal'
+    match = re.fullmatch(r'fwp-ad(?:-history)?(-reference)?(?:-profile|-phases)?', image)
+    assert match, ('unknown scalar comparison image', image)
+    return 'cached' if match[1] else 'literal'
+
+
 def check_directory(folder, source, architecture, session, protocol, reference):
     assert protocol in ('array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant')
     assert (protocol in ('record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant')) == (reference is not None)
@@ -505,7 +513,7 @@ def check_directory(folder, source, architecture, session, protocol, reference):
             assert count == metadata['instructionBytes']
             if image.startswith('fwp-'):
                 if protocol == 'scalar-constant' and row['updates'] > 0:
-                    GROUPS.DESCENT.SCALAR_SELECTION.check((case / (image + '.c')).read_text(), 'cached' if image.endswith('-reference') else 'literal')
+                    GROUPS.DESCENT.SCALAR_SELECTION.check((case / (image + '.c')).read_text(), scalar_image_representation(image))
                 symbols = (case / (image + '.symbols')).read_text()
                 assert not any(symbol in symbols for symbol in ('fwp_heap_scan', 'fwp_heap_mark_all', 'fwp_heap_sweep'))
         for name, metadata in row['cCompilerStackUsage'].items():

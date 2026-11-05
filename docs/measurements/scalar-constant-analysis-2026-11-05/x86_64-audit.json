@@ -1,0 +1,185 @@
+{
+  "source": "76690b385514c58ad94c5591da3553fa48218535",
+  "run": 42074639596,
+  "job": {
+    "id": 127411470148,
+    "run_id": 42074639596,
+    "workflow_name": "Numerical and ownership evidence",
+    "head_branch": "scalar-constant-lowering",
+    "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/42074639596",
+    "run_attempt": 1,
+    "node_id": "CR_kwDOU33zxM8AAAAdqlC_RA",
+    "head_sha": "76690b385514c58ad94c5591da3553fa48218535",
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/127411470148",
+    "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/42074639596/job/127411470148",
+    "status": "completed",
+    "conclusion": "success",
+    "created_at": "2026-11-05T17:26:32Z",
+    "started_at": "2026-11-05T17:26:48Z",
+    "completed_at": "2026-11-05T17:33:21Z",
+    "name": "numeric_input_analysis (ubuntu-latest)",
+    "steps": [
+      {
+        "name": "Set up job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 1,
+        "started_at": "2026-11-05T17:26:49Z",
+        "completed_at": "2026-11-05T17:26:49Z"
+      },
+      {
+        "name": "Run actions/checkout@v7",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 2,
+        "started_at": "2026-11-05T17:26:49Z",
+        "completed_at": "2026-11-05T17:27:03Z"
+      },
+      {
+        "name": "Run dtolnay/rust-toolchain@stable",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 3,
+        "started_at": "2026-11-05T17:27:03Z",
+        "completed_at": "2026-11-05T17:27:12Z"
+      },
+      {
+        "name": "Verify focused correctness and matching compiler sources",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 4,
+        "started_at": "2026-11-05T17:27:12Z",
+        "completed_at": "2026-11-05T17:27:16Z"
+      },
+      {
+        "name": "Run actions/cache@v6",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 5,
+        "started_at": "2026-11-05T17:27:16Z",
+        "completed_at": "2026-11-05T17:27:17Z"
+      },
+      {
+        "name": "Build candidate at production settings",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 6,
+        "started_at": "2026-11-05T17:27:17Z",
+        "completed_at": "2026-11-05T17:28:49Z"
+      },
+      {
+        "name": "Build and verify the selected same-source reference",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 7,
+        "started_at": "2026-11-05T17:28:49Z",
+        "completed_at": "2026-11-05T17:30:24Z"
+      },
+      {
+        "name": "Check complete-program stack costs before allocation and timing gates",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 8,
+        "started_at": "2026-11-05T17:30:24Z",
+        "completed_at": "2026-11-05T17:30:24Z"
+      },
+      {
+        "name": "Verify complete solve allocations before any timing",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 9,
+        "started_at": "2026-11-05T17:30:24Z",
+        "completed_at": "2026-11-05T17:30:24Z"
+      },
+      {
+        "name": "Attribute fresh-solve reference allocations to phases and source sites",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 10,
+        "started_at": "2026-11-05T17:30:24Z",
+        "completed_at": "2026-11-05T17:30:24Z"
+      },
+      {
+        "name": "Verify fresh-solve savings and their exact phase attribution",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 11,
+        "started_at": "2026-11-05T17:30:24Z",
+        "completed_at": "2026-11-05T17:30:24Z"
+      },
+      {
+        "name": "Measure balanced compiler commands and peak memory",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 12,
+        "started_at": "2026-11-05T17:30:24Z",
+        "completed_at": "2026-11-05T17:33:04Z"
+      },
+      {
+        "name": "Preserve complete measurements and failures",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 13,
+        "started_at": "2026-11-05T17:33:04Z",
+        "completed_at": "2026-11-05T17:33:19Z"
+      },
+      {
+        "name": "Post Run actions/cache@v6",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 25,
+        "started_at": "2026-11-05T17:33:19Z",
+        "completed_at": "2026-11-05T17:33:20Z"
+      },
+      {
+        "name": "Post Run actions/checkout@v7",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 26,
+        "started_at": "2026-11-05T17:33:20Z",
+        "completed_at": "2026-11-05T17:33:20Z"
+      },
+      {
+        "name": "Complete job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 27,
+        "started_at": "2026-11-05T17:33:20Z",
+        "completed_at": "2026-11-05T17:33:20Z"
+      }
+    ],
+    "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/127411470148",
+    "labels": [
+      "ubuntu-latest"
+    ],
+    "runner_id": 1000411778,
+    "runner_name": "GitHub Actions 1000411778",
+    "runner_group_id": 0,
+    "runner_group_name": "GitHub Actions"
+  },
+  "artifact": {
+    "id": 13438066526,
+    "node_id": "MDg6QXJ0aWZhY3QxMzQzODA2NjUyNg==",
+    "name": "scalar-constant-analysis-X64",
+    "size_in_bytes": 143505534,
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13438066526",
+    "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13438066526/zip",
+    "expired": false,
+    "digest": "sha256:20e60846af00bdaf6a261df084919f437c8ab82346b74ba8791fd9b3143b5e52",
+    "created_at": "2026-11-05T17:33:19Z",
+    "updated_at": "2026-11-05T17:33:19Z",
+    "expires_at": "2027-02-03T17:26:31Z",
+    "workflow_run": {
+      "id": 42074639596,
+      "repository_id": 1400763332,
+      "head_repository_id": 1400763332,
+      "head_branch": "scalar-constant-lowering",
+      "head_sha": "76690b385514c58ad94c5591da3553fa48218535"
+    }
+  },
+  "commands": 336,
+  "untimedChecks": 6,
+  "failures": {},
+  "referenceVerified": true,
+  "expectedDiagnostics": []
+}

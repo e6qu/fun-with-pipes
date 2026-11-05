@@ -1,9 +1,10 @@
 # Current work
 
-**Next:** publish the borrowed-callback observer repair, then rerun
-`scalar-constant-census` with focused run `42048215807`. Audit its complete
-allocation/stack results before timing. Compiler/test sources remain identical
-to the passing focused checks; only measurement reachability was repaired.
+**Next:** publish the instrumented-reference audit repair, then run
+`scalar-constant-report` separately for runtime runs `42074728167` and
+`42075136884`, source `76690b385514c58ad94c5591da3553fa48218535`. All four
+qualified sessions finish with 27 timing-target misses; keep them explicit.
+No timing rerun. Census and compiler-cost audits pass; final production remains.
 
 ## Roadmap status
 
@@ -12,7 +13,7 @@ to the passing focused checks; only measurement reachability was repaired.
 | 1 | Implemented | Bounded proof passes 296 compiler units on three hosts; final production coverage remains. |
 | 2 | Implemented | Complete-program selection and O1/O2 exact-bit/root probes pass on three hosts. |
 | 3 | Verified | All 25 targets per host and full artifact audit pass at `37da7217`. |
-| 4 | In progress | Freeze source; census/stack, compiler costs and two runtime sessions per architecture remain. |
+| 4 | In progress | Census/compiler audits pass; runtime samples complete, corrected full audits pending. |
 | 5 | Pending | Nine final-head jobs, docs and full audit; squash merge. |
 
 Draft [PR #261](https://github.com/e6qu/fun-with-pipes/pull/261),
@@ -32,6 +33,19 @@ no body/trailers. All nine jobs, docs and full audit pass.
 sources, logs and cancelled same-tree postmerge runs. One new PR can now proceed.
 
 ## Current repair and completed checks
+
+- [Runtime audit repair](measurements/scalar-constant-checks-2026-11-05/runtime-audit/README.md):
+  the checker misclassified reference profile/phase images as candidates. Two
+  focused controls now cover all declared names and reference-edit rejection.
+  Original audit `42077511822` fails only on that classification; re-audit samples.
+- [Census](measurements/scalar-constant-census-2026-11-05/README.md) and
+  [compiler costs](measurements/scalar-constant-analysis-2026-11-05/README.md) pass
+  completely. Compiler audit `42076024832` verifies 336 commands per host;
+  maximum time increase 1.78%, RSS increase 0.06%, copy variation 1.22%.
+- Runtime counts: ARM64 sessions 1/2 each miss eight long-case 5% targets;
+  AMD64 sessions 1/2 miss six/five. Logs show no other measurement failures.
+  First AMD64 session-2 host was rejected before building (EPYC 9V45 instead
+  of 7763); qualified replacement `42075136884` is retained separately.
 
 - [Census observer repair](measurements/scalar-constant-checks-2026-11-05/census-observer/README.md):
   `42071040601` fails on both hosts because shared reachability omitted borrowed

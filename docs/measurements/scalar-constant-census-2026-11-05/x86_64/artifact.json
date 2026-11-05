@@ -1,0 +1,20 @@
+{
+  "id": 13437870132,
+  "node_id": "MDg6QXJ0aWZhY3QxMzQzNzg3MDEzMg==",
+  "name": "scalar-constant-census-X64",
+  "size_in_bytes": 91298544,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13437870132",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13437870132/zip",
+  "expired": false,
+  "digest": "sha256:df2bf6bd61631ca8cfbb8fce39eaf70459e51de03c309ff81dabce0962a5c825",
+  "created_at": "2026-11-05T17:21:34Z",
+  "updated_at": "2026-11-05T17:21:34Z",
+  "expires_at": "2027-02-03T17:14:04Z",
+  "workflow_run": {
+    "id": 42072583890,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "scalar-constant-lowering",
+    "head_sha": "76690b385514c58ad94c5591da3553fa48218535"
+  }
+}
