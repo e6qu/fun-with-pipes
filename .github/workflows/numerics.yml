@@ -149,6 +149,19 @@ jobs:
           analysis.check_consuming_cost_input(Path('target/debug/fwp').resolve(),
               Path('gradient-call-checks/consuming-selection').resolve(), environment, 180, True)
           PYCODE
+      - name: Check and retain fixture formatting
+        if: ${{ !cancelled() && steps.compiler_build.outcome == 'success' }}
+        run: |
+          set -o pipefail
+          cp tests/fixtures/owned_numeric_updates.fwp gradient-call-checks/formatted-fixture.fwp
+          cp tests/fixtures/scalar_map_zip_order.fwp gradient-call-checks/formatted-order-fixture.fwp
+          cp tests/fixtures/gradient_call_storage.fwp gradient-call-checks/formatted-call-fixture.fwp
+          target/debug/fwp fmt gradient-call-checks/formatted-fixture.fwp gradient-call-checks/formatted-order-fixture.fwp gradient-call-checks/formatted-call-fixture.fwp
+          status=0
+          diff -u tests/fixtures/owned_numeric_updates.fwp gradient-call-checks/formatted-fixture.fwp 2>&1 | tee gradient-call-checks/language-format.log || status=1
+          diff -u tests/fixtures/scalar_map_zip_order.fwp gradient-call-checks/formatted-order-fixture.fwp 2>&1 | tee -a gradient-call-checks/language-format.log || status=1
+          diff -u tests/fixtures/gradient_call_storage.fwp gradient-call-checks/formatted-call-fixture.fwp 2>&1 | tee -a gradient-call-checks/language-format.log || status=1
+          exit "$status"
       - name: Publish compiler and selection diagnostics before native tests
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v7
@@ -168,15 +181,6 @@ jobs:
           autodiff_workspace autodiff_capacity_bounds autodiff_checkpoint autodiff_library
           iteration_consumers float_formats borrowed_callbacks caf_ownership stdlib_doc
           --idle-timeout 900 --logs gradient-call-checks/targets
-      - name: Check and retain fixture formatting
-        if: ${{ !cancelled() && steps.compiler_build.outcome == 'success' }}
-        run: |
-          set -o pipefail
-          target/debug/fwp fmt tests/fixtures/owned_numeric_updates.fwp tests/fixtures/scalar_map_zip_order.fwp tests/fixtures/gradient_call_storage.fwp
-          cp tests/fixtures/owned_numeric_updates.fwp gradient-call-checks/formatted-fixture.fwp
-          cp tests/fixtures/scalar_map_zip_order.fwp gradient-call-checks/formatted-order-fixture.fwp
-          cp tests/fixtures/gradient_call_storage.fwp gradient-call-checks/formatted-call-fixture.fwp
-          git diff --exit-code -- tests/fixtures/owned_numeric_updates.fwp tests/fixtures/scalar_map_zip_order.fwp tests/fixtures/gradient_call_storage.fwp 2>&1 | tee gradient-call-checks/language-format.log
       - name: Retain every result, generated C and native image
         if: always()
         uses: actions/upload-artifact@v7
@@ -826,6 +830,77 @@ jobs:
             --cc gcc --machine ${{ matrix.runner == 'ubuntu-24.04-arm' && 'aarch64' || 'x86_64' }} \
             --c-arch ${{ matrix.runner == 'ubuntu-24.04-arm' && 'armv8-a' || 'x86-64' }} \
             --source "$GITHUB_SHA" --timeout 180 --output numeric-analysis
+      - name: Attribute fresh-solve reference allocations to phases and source sites
+        if: inputs.suite == 'gradient-call-census'
+        env:
+          MEASUREMENT_MACHINE: ${{ matrix.runner == 'ubuntu-24.04-arm' && 'aarch64' || 'x86_64' }}
+          MEASUREMENT_ARCH: ${{ matrix.runner == 'ubuntu-24.04-arm' && 'armv8-a' || 'x86-64' }}
+        run: |
+          python3 scripts/test-gradient-array-budgets.py
+          status=0
+          python3 scripts/measure-derivative-forward-costs.py --compiler numeric-analysis-reference/fwp \
+            --cc gcc --machine "$MEASUREMENT_MACHINE" --c-arch "$MEASUREMENT_ARCH" \
+            --source "$GITHUB_SHA" --timeout 180 --output fresh-reference --comparison baseline || status=1
+          python3 - <<'PYCODE' || status=1
+          import gzip
+          import importlib.util
+          import json
+          import os
+          from pathlib import Path
+          import sys
+          import zipfile
+          sys.path.insert(0, str(Path('scripts').resolve()))
+          spec = importlib.util.spec_from_file_location('summary', 'scripts/summarize-derivative-forward-costs.py')
+          summary = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(summary)
+          folder = Path('fresh-reference')
+          archive = Path('fresh-reference.zip')
+          with zipfile.ZipFile(archive, 'w', zipfile.ZIP_DEFLATED) as saved:
+              for path in sorted(folder.rglob('*')):
+                  if path.is_file():
+                      saved.write(path, path.relative_to(folder))
+          result = summary.audit(archive, os.environ['GITHUB_SHA'], os.environ['MEASUREMENT_MACHINE'], 'baseline', None)
+          manifest = json.loads(Path('numeric-analysis-reference/manifest.json').read_text())
+          assert result['compilerSha256'] == manifest['compilerSha256']
+          baseline = dict(source=os.environ['GITHUB_SHA'], hosts={os.environ['MEASUREMENT_MACHINE']: result})
+          Path('fresh-baseline.json.gz').write_bytes(gzip.compress((json.dumps(baseline) + '\n').encode(), mtime=0))
+          PYCODE
+          exit "$status"
+      - name: Verify fresh-solve savings and their exact phase attribution
+        if: inputs.suite == 'gradient-call-census'
+        env:
+          MEASUREMENT_MACHINE: ${{ matrix.runner == 'ubuntu-24.04-arm' && 'aarch64' || 'x86_64' }}
+          MEASUREMENT_ARCH: ${{ matrix.runner == 'ubuntu-24.04-arm' && 'armv8-a' || 'x86-64' }}
+        run: |
+          status=0
+          python3 scripts/measure-derivative-forward-costs.py --compiler target/debug/fwp \
+            --cc gcc --machine "$MEASUREMENT_MACHINE" --c-arch "$MEASUREMENT_ARCH" \
+            --source "$GITHUB_SHA" --timeout 180 --output fresh-candidate \
+            --comparison gradient-call --baseline fresh-baseline.json.gz || status=1
+          python3 - <<'PYCODE' || status=1
+          import gzip
+          import importlib.util
+          import json
+          import os
+          from pathlib import Path
+          import sys
+          import zipfile
+          sys.path.insert(0, str(Path('scripts').resolve()))
+          spec = importlib.util.spec_from_file_location('summary', 'scripts/summarize-derivative-forward-costs.py')
+          summary = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(summary)
+          folder = Path('fresh-candidate')
+          archive = Path('fresh-candidate.zip')
+          with zipfile.ZipFile(archive, 'w', zipfile.ZIP_DEFLATED) as saved:
+              for path in sorted(folder.rglob('*')):
+                  if path.is_file():
+                      saved.write(path, path.relative_to(folder))
+          baseline = json.loads(gzip.decompress(Path('fresh-baseline.json.gz').read_bytes()))
+          result = summary.audit(archive, os.environ['GITHUB_SHA'], os.environ['MEASUREMENT_MACHINE'], 'gradient-call', baseline)
+          Path('fresh-audit.json.gz').write_bytes(gzip.compress((json.dumps(result) + '\n').encode(), mtime=0))
+          assert not result['comparisonFailures'], result['comparisonFailures']
+          PYCODE
+          exit "$status"
       - name: Measure balanced compiler commands and peak memory
         if: ${{ !contains(fromJSON('["owned-numeric-census","gradient-call-census"]'), inputs.suite) }}
         run: >-
@@ -842,6 +917,12 @@ jobs:
             numeric-analysis-safety/
             numeric-analysis-reference/
             numeric-analysis/
+            fresh-reference.zip
+            fresh-candidate.zip
+            fresh-baseline.json.gz
+            fresh-audit.json.gz
+            fresh-reference/report.json
+            fresh-candidate/report.json
           if-no-files-found: error
   numeric_owner_checks:
     if: inputs.suite == 'numeric-input-checks' || inputs.suite == 'numeric-input-selection'

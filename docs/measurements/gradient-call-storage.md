@@ -143,6 +143,22 @@ and 3,184 fewer effective retains. The cached seed disappears once per process,
 not once per solve. Zero-update processes must have identical storage counts.
 The reference/candidate must both finish with no managed or raw storage left.
 
+The same census job separately runs one fresh solve for each input, both forms
+and O1/O2, using ordinary execution, whole-program counters and phase/site counters.
+It builds both sides from the same source with only the four declared selections
+disabled in the reference, and audits the raw observations independently.
+For N coordinates and U positive updates, require these exact savings:
+
+| Location | Requests removed | Requested bytes removed | Effective retains removed |
+|---|---:|---:|---:|
+| Recording the objective | 6U + 1 | 128U + 24 | U |
+| Outside derivative phases (coordinate scratch and scope argument) | U | 8NU | U |
+| Other phases | 0 | 0 | 0 |
+
+Zero updates must have identical counts. Synthetic controls reject incorrect
+phase assignment even when whole-program totals agree. Both drivers must pass
+before timing; per-phase/source reports are not elapsed-time measurements.
+
 `gradient-call-analysis` uses the same correctness prerequisite and measures whole
 compiler commands through C emission on seven inputs. `gradient-call-time` uses
 explicit `comparison_session=both` and the six repeated-solve inputs above;

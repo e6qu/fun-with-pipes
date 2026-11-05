@@ -46,3 +46,27 @@ passes; its full log contains only the expected runner negative controls.
 
 These are repairs awaiting runner verification, not passing acceptance evidence.
 Compiler diagnostics will now upload before the native queue completes.
+
+## Native repairs pass; fixture formatting remains
+
+Source `cd479a9aae17f91e49fb79b106c930211636304c`,
+[run 41960705621](https://github.com/e6qu/fun-with-pipes/actions/runs/41960705621):
+all three hosts pass lint, build, 292 compiler units, all four transformation
+selections and 124 native tests across 25 targets. Four unit tests are explicitly
+runner-only measurement generators/budgets; no selected native test is ignored.
+
+The only failed step formats `gradient_call_storage.fwp`: its short `let … in …`
+fits on one line. Apply the exact formatter output, verified identical across
+hosts. The workflow now checks formatted copies before native tests and publishes
+the result early; it does not modify the checked-in fixtures.
+
+[Audit summary](format-repair/summary.json): complete job/target logs, 814 probe
+statuses per host and 798 native image headers/digests per host were checked.
+Compressed audits retain every original file hash; source selections, all
+logs/statuses and formatter output are beside them. Full generated sources and
+images remain in the digest-identified GitHub artifacts. Documentation
+[run 41960692624](https://github.com/e6qu/fun-with-pipes/actions/runs/41960692624)
+passes; the complete log contains only expected negative-test diagnostics.
+
+The grouped job still fails until formatting is repaired. No native allocation
+or timing measurement has started, and final production validation is pending.
