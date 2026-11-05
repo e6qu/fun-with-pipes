@@ -1,8 +1,8 @@
 # Current work
 
 **Next:** monitor compiler-cost run 42005106056 and runtime run 42005111118;
-retain all outcomes without timing reruns. Publish/run the census artifact audit
-preparation to retain compact observations without large local downloads. PR #259 is verified and merged;
+retain all outcomes without timing reruns. Verify the repaired census archive
+and compiler-cost artifact audit on runners. PR #259 is verified and merged;
 the next private pair-buffer implementation passes focused checks and full audits.
 Keep one active PR, group all remaining measurements/repairs before final CI.
 
@@ -15,7 +15,7 @@ Keep one active PR, group all remaining measurements/repairs before final CI.
 | 1 | Verified | Consume the private owner; borrow/escape analysis and cleanup agree. |
 | 2 | Verified | Reuse equal-width numeric storage; preserve aliases, stages and physical charge. |
 | 3 | Verified | Three focused native hosts and full log/image/probe audits pass. |
-| 4 | In progress | Repair preparation checkout; verify exact counts/peaks, compiler and runtime costs. |
+| 4 | In progress | Counts/peaks and compiler limits pass; audit compiler artifacts and finish runtime sessions. |
 | 5 | Pending | Retain evidence, pass all final production/docs gates, audit and squash merge. |
 
 ## Verified parent delivery
@@ -32,7 +32,7 @@ and complete log audit (`42000937569`, auditor f339616c) pass.
 ## Current branch and verified native checks
 
 Draft [PR #260](https://github.com/e6qu/fun-with-pipes/pull/260), branch/worktree
-`packed-pair-storage`. Current published head `a1f189478abadf0da30d8386bee2bc234e0668cf`.
+`packed-pair-storage`. Current published head `1203b457b1b467e8c8d6db726a184dacc49d3542`.
 Pre-rebase preparation head
 `f339616c639e4c55703f619cc46ca08f93f11ee8`. The [contract](measurements/packed-pair-storage.md)
 was frozen before code at `3b7954eef411b7b621d09718ae2aad41e72e744e`, retained by
@@ -53,7 +53,7 @@ was frozen before code at `3b7954eef411b7b621d09718ae2aad41e72e744e`, retained b
   `packed-pair-analysis` keeps seven inputs and 48 scheduled compiler commands.
   `packed-pair-time` / `packed-pair-report` prepare the two sessions per architecture
   and complete archived-source audits. Compiler costs `42005106056` and four
-  runtime sessions `42005111118` are queued on frozen a1f18947, tag
+  runtime sessions `42005111118` use frozen a1f18947, tag
   `roadmap/packed-pair-timing-2026-11-05`.
 - Parent delivery, focused audit, controls and exact census reconciliation pass.
   Preserve all earlier missed timing goals; no changed thresholds.
@@ -68,7 +68,7 @@ The rebase onto #259's verified squash is complete. Focused implementation and
 auditor identities are retained by `roadmap/packed-pair-checks-2026-11-05` and
 `roadmap/packed-pair-auditors-2026-11-05`; the original contract tag is unchanged.
 Repair controls `42002432263` pass all eight scripts (76 tests) on b8081559.
-Docs `42002435391` and current-head `42003321627` pass. The census now also checks the allocating
+Docs `42002435391`, `42003321627`, `42005102020` and `42006248863` pass. The census now also checks the allocating
 reference against saved parent counts/peaks: 24 fresh and 12 repeated cases,
 with mutation controls. These new controls run first in the census job.
 Draft production `42002435468` is skipped intentionally, not final acceptance.
@@ -110,21 +110,35 @@ observations and verified remote originals. Receipt:
 Before the disk drop, bounded checks passed: Rust/fixture formatting; all 14
 reference/budget scripts plus workflow syntax (14.88s); primitive inventory,
 shard assignment and syntax (1.28s). Receipts: `../gradient-work/packed-pair-reference-checks.json`
-and `../gradient-work/packed-pair-inventory.json`. Preparation controls ran on GitHub; the checkout repair awaits its focused run. Parent docs/benchmark audits remain in
+and `../gradient-work/packed-pair-inventory.json`. Preparation controls and the checkout repair pass on GitHub. Parent docs/benchmark audits remain in
 `../gradient-work/gradient-call-final-repaired/`.
 
 Old run `38888712709` has stale in-progress metadata, but all jobs completed on
 October 16 and GitHub rejects cancellation as already completed. No active runner
 or queue cause is established. Metadata: `../gradient-work/stale-paths-{run,jobs}-38888712709.json`.
 
-Audit-test repair in the next publication: capture only the mocked audit warnings/failure prints
-in `test-production-log-audit.py`, while letting assertions propagate. Otherwise
-the docs full-log audit would see synthetic warnings as real diagnostics. Actual
-production/target-log filters stay strict. Verify through the next docs/control run.
+## Current measurement runs and repairs
 
-Census retention preparation extends the existing census auditor with explicit
-`--comparison packed-pair`; the older corrected gradient-call evidence remains
-its own protocol. It verifies the original job/artifact identity, raw profiles,
-source reconstruction, native images, exact counts and saved-parent agreement.
-The runner retains compact observations and all file hashes; original images/C
-stay in their digest-identified source artifacts. This extension is not yet run.
+Compiler costs `42005106056` pass both architectures at frozen a1f18947.
+Audit their saved 336 commands and six selection checks per host with
+`storage-compiler-report`; no timing rerun is needed. Full artifacts remain on
+GitHub; the report retains inputs, generated C, resource records, logs and hashes.
+
+Runtime `42005111118`: both ARM64 sessions and AMD64 session 1 are measuring.
+AMD64 session 2 rejected EPYC 9V74 before building/timing; the contract requires
+EPYC 7763. Replacement `42008084704` rejected the same model before any build.
+Preserve both host reports; do not treat these as measurements or change the CPU
+requirement. Only the missing session may be requested again on frozen a1f18947.
+
+Census audit `42006250074` checks all counts, raw profiles, source reconstruction,
+native images and saved-parent agreement. It exposed four duplicate ZIP-member
+warnings: outer and nested archives both contain fresh report paths. Repair uses
+separate `original/` and `fresh-{reference,candidate}/` namespaces, rejects duplicate
+members and rereads retained bytes against their hashes. Re-audit original run
+42003323499/source e4d645cd; never rerun the measured programs for this repair.
+Original warning-bearing artifact 13404918559 (2,518,595 bytes), SHA-256
+`e07f839a46fb71aaa5a4558b5f7edf3d2f94f7d9e324d86394e1e5930ed45dbb`, is retained.
+
+The mocked audit-output capture is verified by docs 42005102020 and 42006248863;
+production diagnostic filters remain strict. Full native gates wait until this
+measurement/documentation group is ready. Draft skips do not establish acceptance.

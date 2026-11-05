@@ -19,7 +19,7 @@ SPEC = importlib.util.spec_from_file_location(
 CENSUS = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(CENSUS)
 parser = argparse.ArgumentParser(
-    description="Re-audit frozen gradient counts after correcting scratch phase attribution; never execute saved images."
+    description="Audit frozen gradient counts and retain observations without executing saved images."
 )
 for name in ("input", "artifact", "job", "job-log", "recorded-checkout", "output"):
     parser.add_argument("--" + name, type=Path, required=True)
@@ -335,9 +335,11 @@ with zipfile.ZipFile(args.input) as z:
             if name.endswith("/"):
                 continue
             data = z.read(name)
-            inventory[name] = digest(data)
+            key = "original/" + name
+            assert key not in inventory, ("duplicate artifact member", key)
+            inventory[key] = digest(data)
             if name.endswith((".json", ".json.gz", ".stdout", ".stderr", ".status", ".log", ".fwp", ".su", ".patch", ".txt")):
-                retained.writestr(name, data)
+                retained.writestr(key, data)
         for kind in ("reference", "candidate"):
             with zipfile.ZipFile(ROOT / (host + "-fresh-" + kind + ".zip")) as saved:
                 for name in saved.namelist():
@@ -345,9 +347,14 @@ with zipfile.ZipFile(args.input) as z:
                         continue
                     data = saved.read(name)
                     key = "fresh-" + kind + "/" + name
+                    assert key not in inventory, ("duplicate fresh member", key)
                     inventory[key] = digest(data)
                     if name.endswith((".json", ".stdout", ".stderr", ".status", ".log", ".fwp", ".su", ".txt")):
                         retained.writestr(key, data)
+    with zipfile.ZipFile(ROOT / "observations.zip") as retained:
+        assert len(retained.namelist()) == len(set(retained.namelist()))
+        for name in retained.namelist():
+            assert digest(retained.read(name)) == inventory[name], name
     (ROOT / "inventory.json.gz").write_bytes(gzip.compress((json.dumps(inventory, indent=2) + "\n").encode(), mtime=0))
     (ROOT / (host + "-fresh-verified.json.gz")).write_bytes(
         gzip.compress((json.dumps(fresh, indent=2) + "\n").encode(), mtime=0)
