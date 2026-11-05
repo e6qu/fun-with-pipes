@@ -1,6 +1,6 @@
 static void *tracked[5];
 static unsigned released[5];
-static int probe_mode;
+static int probe_mode, single_root;
 static jmp_buf recovered;
 static fwp_task cancelled_task;
 static fwp_task *saved_current;
@@ -37,6 +37,7 @@ int main(void) {
     fwp_trap_recover=recover_probe;fwp_trap_jb=&recovered;fwp_trap_cleanup=&scope_owner;
     size_t baseline=fwp_heap.live;
     for (unsigned round=0;round<32;round++) {
+    for (single_root=0;single_root<2;single_root++)
     for (probe_mode=0;probe_mode<5;probe_mode++) {
         selected_base=fwp_p_ad_tape(2);
         other_base=fwp_p_ad_tape(1);
@@ -69,13 +70,13 @@ int main(void) {
              * the scope containing the independent other computation. */
             fwp_cleanups=NULL;
             jmp_buf cancelled_task_base; cancelled_task.base = &cancelled_task_base;
-            if (!setjmp(cancelled_task_base)) { fwp_p_ad_backward(selected_base,outputs,seeds);return 34; }
+            if (!setjmp(cancelled_task_base)) { (single_root ? fwp_p_ad_backward_one(selected_base,ARR(outputs)->d[0],ARR(seeds)->d[0]) : fwp_p_ad_backward(selected_base,outputs,seeds));return 34; }
             cancelled_task.base=NULL;fwp_cur=saved_current;fwp_cleanups=&scope_owner;
             if (!cancelled_task.unwinding) return 35;
         } else if (!setjmp(recovered)) {
-            V result=fwp_rc_fresh(fwp_p_ad_backward(selected_base,outputs,seeds));
+            V result=fwp_rc_fresh((single_root ? fwp_p_ad_backward_one(selected_base,ARR(outputs)->d[0],ARR(seeds)->d[0]) : fwp_p_ad_backward(selected_base,outputs,seeds)));
             if (probe_mode!=0) return 36;
-            if (ARR(result)->len!=2 || fwp_f64(ARR(result)->d[0])!=2 || fwp_f64(ARR(result)->d[1])!=3) return 37;
+            if (ARR(result)->len!=2 || fwp_f64(ARR(result)->d[0])!=2 || fwp_f64(ARR(result)->d[1])!=(single_root?0:3)) return 37;
             fwp_rc_free_arr(result);
         } else {
             const char *expected=probe_mode==1 ? FWP_AD_MIXED :
@@ -93,7 +94,7 @@ int main(void) {
         if (probe_mode==1 || probe_mode==2) {
             if (tracked[4] || released[4]) return 41;
         } else if (!tracked[4] || released[4]!=1) return 41;
-        if (!setjmp(recovered)) { fwp_p_ad_backward(selected_base,outputs,seeds);return 42; }
+        if (!setjmp(recovered)) { (single_root ? fwp_p_ad_backward_one(selected_base,ARR(outputs)->d[0],ARR(seeds)->d[0]) : fwp_p_ad_backward(selected_base,outputs,seeds));return 42; }
         if (strcmp(fwp_trap_msg,FWP_AD_OUTSIDE)) return 43;
         // The other computation remains live, and gets its own normal teardown.
         memset(tracked,0,sizeof(tracked));
@@ -121,7 +122,9 @@ int main(void) {
     if (strcmp(fwp_trap_msg,FWP_AD_OUTSIDE)) return 48;
     if (!setjmp(recovered)) { fwp_p_ad_backward(before_wrap,outputs,seeds);return 49; }
     if (strcmp(fwp_trap_msg,FWP_AD_OUTSIDE)) return 50;
-    fwp_rc_free_arr(fwp_rc_fresh(fwp_p_ad_backward(selected_base,outputs,seeds)));
+    if (!setjmp(recovered)) { fwp_p_ad_backward_one(last_generation,(V)(int64_t)-1,fwp_from_f64(1));return 47; }
+    if (strcmp(fwp_trap_msg,FWP_AD_OUTSIDE)) return 48;
+    fwp_rc_free_arr(fwp_rc_fresh(fwp_p_ad_backward_one(selected_base,(V)(int64_t)-1,fwp_from_f64(1))));
     fwp_rc_free_arr(outputs);fwp_rc_free_arr(seeds);outputs=seeds=0;
     memset(tracked,0,sizeof(tracked));
     if(scope.head!=-1||fwp_cleanups!=&scope_owner)return 54;

@@ -1,0 +1,188 @@
+{
+  "id": 127026139438,
+  "run_id": 41960705621,
+  "workflow_name": "Numerical and ownership evidence",
+  "head_branch": "gradient-call-storage",
+  "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/41960705621",
+  "run_attempt": 1,
+  "node_id": "CR_kwDOU33zxM8AAAAdk1kRLg",
+  "head_sha": "cd479a9aae17f91e49fb79b106c930211636304c",
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/127026139438",
+  "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41960705621/job/127026139438",
+  "status": "completed",
+  "conclusion": "failure",
+  "created_at": "2026-11-05T03:18:01Z",
+  "started_at": "2026-11-05T03:18:07Z",
+  "completed_at": "2026-11-05T03:33:22Z",
+  "name": "gradient_call_checks (ubuntu-latest, gcc)",
+  "steps": [
+    {
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 1,
+      "started_at": "2026-11-05T03:18:07Z",
+      "completed_at": "2026-11-05T03:18:09Z"
+    },
+    {
+      "name": "Run actions/checkout@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 2,
+      "started_at": "2026-11-05T03:18:09Z",
+      "completed_at": "2026-11-05T03:18:23Z"
+    },
+    {
+      "name": "Record source and production toolchain",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 3,
+      "started_at": "2026-11-05T03:18:23Z",
+      "completed_at": "2026-11-05T03:18:23Z"
+    },
+    {
+      "name": "Run dtolnay/rust-toolchain@stable",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 4,
+      "started_at": "2026-11-05T03:18:23Z",
+      "completed_at": "2026-11-05T03:18:26Z"
+    },
+    {
+      "name": "macOS OpenSSL",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 5,
+      "started_at": "2026-11-05T03:18:26Z",
+      "completed_at": "2026-11-05T03:18:26Z"
+    },
+    {
+      "name": "Run actions/cache@v6",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 6,
+      "started_at": "2026-11-05T03:18:26Z",
+      "completed_at": "2026-11-05T03:18:27Z"
+    },
+    {
+      "name": "Fetch locked dependencies",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 7,
+      "started_at": "2026-11-05T03:18:27Z",
+      "completed_at": "2026-11-05T03:18:30Z"
+    },
+    {
+      "name": "Format and lint compiler and changed targets",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 8,
+      "started_at": "2026-11-05T03:18:30Z",
+      "completed_at": "2026-11-05T03:19:32Z"
+    },
+    {
+      "name": "Build compiler for independent checks",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 9,
+      "started_at": "2026-11-05T03:19:32Z",
+      "completed_at": "2026-11-05T03:21:06Z"
+    },
+    {
+      "name": "Compiler units, primitive contracts and source references",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 10,
+      "started_at": "2026-11-05T03:21:06Z",
+      "completed_at": "2026-11-05T03:22:36Z"
+    },
+    {
+      "name": "Real gradient selection and input packing",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 11,
+      "started_at": "2026-11-05T03:22:36Z",
+      "completed_at": "2026-11-05T03:22:41Z"
+    },
+    {
+      "name": "Verify all four gradient-call reductions and missing-selection controls",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 12,
+      "started_at": "2026-11-05T03:22:41Z",
+      "completed_at": "2026-11-05T03:22:41Z"
+    },
+    {
+      "name": "Verify live consuming calls and retained-input exclusion before timing",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 13,
+      "started_at": "2026-11-05T03:22:41Z",
+      "completed_at": "2026-11-05T03:22:41Z"
+    },
+    {
+      "name": "Publish compiler and selection diagnostics before native tests",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 14,
+      "started_at": "2026-11-05T03:22:41Z",
+      "completed_at": "2026-11-05T03:22:43Z"
+    },
+    {
+      "name": "Native consuming and borrowed boundaries, cleanup and autodiff",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 15,
+      "started_at": "2026-11-05T03:22:43Z",
+      "completed_at": "2026-11-05T03:33:00Z"
+    },
+    {
+      "name": "Check and retain fixture formatting",
+      "status": "completed",
+      "conclusion": "failure",
+      "number": 16,
+      "started_at": "2026-11-05T03:33:00Z",
+      "completed_at": "2026-11-05T03:33:00Z"
+    },
+    {
+      "name": "Retain every result, generated C and native image",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 17,
+      "started_at": "2026-11-05T03:33:00Z",
+      "completed_at": "2026-11-05T03:33:20Z"
+    },
+    {
+      "name": "Post Run actions/cache@v6",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 33,
+      "started_at": "2026-11-05T03:33:20Z",
+      "completed_at": "2026-11-05T03:33:20Z"
+    },
+    {
+      "name": "Post Run actions/checkout@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 34,
+      "started_at": "2026-11-05T03:33:20Z",
+      "completed_at": "2026-11-05T03:33:21Z"
+    },
+    {
+      "name": "Complete job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 35,
+      "started_at": "2026-11-05T03:33:21Z",
+      "completed_at": "2026-11-05T03:33:21Z"
+    }
+  ],
+  "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/127026139438",
+  "labels": [
+    "ubuntu-latest"
+  ],
+  "runner_id": 1000408928,
+  "runner_name": "GitHub Actions 1000408928",
+  "runner_group_id": 0,
+  "runner_group_name": "GitHub Actions"
+}

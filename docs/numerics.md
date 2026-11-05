@@ -293,6 +293,14 @@ tracks the current implementation; the earlier
 [owner-transfer results](measurements/typed-derivative-owners.md) describe its
 list-based predecessor. Neither count reduction alone establishes speed.
 
+The pending [gradient-storage group](measurements/gradient-call-storage.md)
+seeds scalar-output derivatives directly. For `x * x` at `x = 3`, the backward
+call takes the output vertex and seed `1`, producing `[6]`; it need not allocate
+one-element root/seed containers. Scalar weights and owned weights (F128 or nested
+`Rev`) have separate explicit entries. Multiple-output operations keep their
+ordered roots/seeds. Both engines implement this change; native verification and
+measurements are still pending.
+
 The vertex token encodes `(tape id << 32) | index`, with −1 for constants.
 The tape ID encodes `(generation << 16) | (slot + 1)`. Generation numbers prevent
 an old token from naming a new tape in a reused slot; slots retire after generation

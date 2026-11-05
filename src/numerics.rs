@@ -12,6 +12,7 @@
 //! elements from the left, then the block sums from the left, whatever
 //! the number of threads.
 
+use std::borrow::Cow;
 use std::rc::Rc;
 use std::sync::Mutex;
 use std::{cell::RefCell, collections::BTreeMap};
@@ -469,10 +470,14 @@ pub(crate) fn push_owned(fields: &[Value]) -> R<Value> {
     Ok(Value::I64((id << 32) | idx as i64))
 }
 
+pub(crate) enum BackwardSeeds<'a> {
+    Lists(&'a Value, &'a Value),
+    One(&'a Value, &'a Value),
+}
+
 pub(crate) fn backward_owned(
     base: &Value,
-    outs: &Value,
-    seeds: &Value,
+    seeds: BackwardSeeds<'_>,
     mut apply: impl FnMut(Value, Vec<Value>) -> R<Value>,
 ) -> R<Value> {
     let id = int(base) >> 32;
@@ -499,12 +504,20 @@ pub(crate) fn backward_owned(
     forget_scoped_tape(id);
     // Detached Rust owners survive reentrant callbacks and drop on every error.
     let mut adj = vec![owner.zero.clone(); t.leaves + t.pa.len()];
-    let outs = outs.list_items();
-    let seeds = seeds.list_items();
+    let (outs, seeds): (Cow<'_, [Value]>, Cow<'_, [Value]>) = match seeds {
+        BackwardSeeds::Lists(outs, seeds) => (
+            Cow::Owned(outs.list_items()),
+            Cow::Owned(seeds.list_items()),
+        ),
+        BackwardSeeds::One(root, seed) => (
+            Cow::Borrowed(std::slice::from_ref(root)),
+            Cow::Borrowed(std::slice::from_ref(seed)),
+        ),
+    };
     if outs.len() != seeds.len() {
         return trap("autodiff: seed count differs from output count");
     }
-    for (out, seed) in outs.iter().zip(seeds) {
+    for (out, seed) in outs.iter().zip(seeds.iter()) {
         let out = int(out);
         if out < 0 {
             continue;
@@ -516,7 +529,7 @@ pub(crate) fn backward_owned(
         if node >= adj.len() {
             return trap(INVALID_NODE);
         }
-        adj[node] = apply(owner.add.clone(), vec![seed, adj[node].clone()])?;
+        adj[node] = apply(owner.add.clone(), vec![seed.clone(), adj[node].clone()])?;
     }
     for i in (t.leaves..t.leaves + t.pa.len()).rev() {
         let a = adj[i].clone();
@@ -782,6 +795,11 @@ pub fn prim(sym: &str, a: &[Value]) -> Option<R<Value>> {
                 Value::I64(push(int(&a[0]), fl(&a[1]), int(&a[2]), fl(&a[3]))?)
             }
             "ad.backward" => f64_array(&backward(int(&a[0]), &ints(&a[1]), &f64s(&a[2]))?),
+            "ad._backward-one" => f64_array(&backward(
+                int(&a[0]),
+                &[int(&a[1])],
+                &[a[2].as_f64().unwrap()],
+            )?),
             "device.run" | "device.sum" => {
                 let threads = int(&a[0]);
                 if !(1..=256).contains(&threads) {
@@ -948,7 +966,7 @@ mod tape_validation_tests {
             let empty = Value::list(vec![]);
             let managed = tape_owned(&parameters, &empty)?;
             let index = slot(int(&managed));
-            backward_owned(&managed, &empty, &empty, |_, _| {
+            backward_owned(&managed, BackwardSeeds::Lists(&empty, &empty), |_, _| {
                 panic!("empty backward must not call scalar operations")
             })?;
             assert_eq!(slot(tape_new(0, false)?), index);

@@ -1,0 +1,39 @@
+{
+  "source": "d494dd910723303f99992610895d9784968c79e8",
+  "disabledTransformation": "scoped input borrowing, numeric fold fields, single-root seeding and consumed array scratch",
+  "candidate": {
+    "src/cgen.rs": "05d4bc14b9467068dd5544a20bcec30bf00e55d78bde2334c9781ac5d212612c",
+    "lib/autodiff.fwp": "618dab547056f3977a06b9bfc9c5f14082f355011eb20c5b7ab33540e8cb341e"
+  },
+  "reference": {
+    "src/cgen.rs": "374f917c0e61e85af7868c1795e1adf67c78597b4965d1cbeb5115288e08989b",
+    "lib/autodiff.fwp": "52b910a3a89e45b5d89ee9dddde853844dba5a78fa5564d046a849c7e9141e80"
+  },
+  "unchanged": {
+    "src/ownership.rs": "c3b85229bf9b0f8c3d7c4f5966b8fb8723b6ffd336fcb614e5fdf4dbba3543a8",
+    "src/ir.rs": "f914ac5483c4ca2d0f5ce12ba15c7f1a48f3f6ebdeac5047da85cfd30304c15b",
+    "src/rc.rs": "9d4de37b410529f6f31cdefcc80e40281c9da0f62a480c11d8af73a646afd78b",
+    "src/rc/borrows.rs": "54b0c8be25e1eab6c8220cba614826bbe0e8a4a7aec508c10588a222aff6a6d7",
+    "src/cgen/owned_numeric.rs": "b7960cb91d0506ebacad4cb8db200b79dd6501c969ff389f74e8634c986d3417",
+    "src/cgen/scoped_calls.rs": "4c7a1b2d82c9e396f7f6aec72bf5f76cae1af2ad8080a209c1d1c04e53e3f076",
+    "src/cgen/fold_fields.rs": "2f1bf2193c31de5c20ad48ade3caa9eea77c172b886fec0afeabdfe872ac4f6c",
+    "src/opt/scoped.rs": "98bcaefe45a0e2a1812a29b6285dd8f58c9d4fccbf34d5dce93bbe22fbf02358",
+    "src/cgen/packed_inputs.rs": "38f86805bceccb2d309a75f4a4900aaaeac64ab46aa6ac37119edd9db29a6e28",
+    "src/cgen/numeric_parameters.rs": "da392c52c05c25b3eabc81c9d47e97e294333772fcf8a799af08640f62e74c09",
+    "src/cgen/packed_records.rs": "199e790f7f6fbda882025935310ae5447e868afce4e6b242f82438da84588405",
+    "src/cgen/range_zip.rs": "37bae6e0728256bc04b8e59047bce3b54676c3cdd7465dfec34ffd34a6b5cc0b",
+    "src/fuse.rs": "94b7628849c9c7d1f702d0734be4802575053674e2d638331db59fef20f26772",
+    "src/opt.rs": "d64c3ad91dd89067dfb2e416d8fe13dfc4bcfc11b487f8b28a01919950726709",
+    "runtime/fwp_rt.c": "a3dacfe33d859d10f458e955ac46901a0c5c051c7ba3f8871ce488c5dfe3ba3e",
+    "runtime/fwp_rt_heap.c": "ac26a18c249847c5b6c25f02776eee417bf4eb4a98cbad60aec58f00338c5a6e",
+    "runtime/fwp_rt_prims.c": "e6e52d42ae4984c84e9429fd8db168a50e429c727d8cad662ab8841c415b4d74",
+    "runtime/fwp_rt_task.c": "5c65f5691766571fac773b9c260e753cb6280794b5362cd4b09ca822cc27e9e9",
+    "runtime/fwp_rt_kernel.c": "256a5bf2e670f5e8fc91acef121cce0e1e1cdd62d19219a6fb9b69ef10a7cc7d",
+    "src/numerics.rs": "ea6cc3289f5ed43f525231971ec214ef17a55bd3ed5e75c2db7ae1ade62e0f57",
+    "src/interp.rs": "5432ab792ab0ded0dbca4995313dc6edc3d9dd7b6b3b4309419b1c8a913e519a",
+    "lib/list.fwp": "9f4988e962654e84695944abbb5fc97b01678a37915aebfc48d286fc1e375993"
+  },
+  "ownershipSha256": "c3b85229bf9b0f8c3d7c4f5966b8fb8723b6ffd336fcb614e5fdf4dbba3543a8",
+  "patchSha256": "46c9555c6aa3232b6af82b86f3a4dc3def4d9c47ba6e4e30f3a6c0d6c29a7d36",
+  "compilerSha256": "6f188d7dcb7a9a4054efd237f2f712471ef4029c5c7406f746f76b7445e7b403"
+}

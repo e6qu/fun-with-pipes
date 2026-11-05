@@ -1,0 +1,3575 @@
+{
+  "source": "946069cd138a9be23f457c73316a3ecf5b972047",
+  "run": 41983677606,
+  "jobs": [
+    {
+      "job": {
+        "id": 127099336205,
+        "run_id": 41983677606,
+        "workflow_name": "CI",
+        "head_branch": "gradient-call-storage",
+        "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/41983677606",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOU33zxM8AAAAdl7X2DQ",
+        "head_sha": "946069cd138a9be23f457c73316a3ecf5b972047",
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/127099336205",
+        "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41983677606/job/127099336205",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "created_at": "2026-11-05T06:55:39Z",
+        "started_at": "2026-11-05T06:55:50Z",
+        "completed_at": "2026-11-05T07:12:32Z",
+        "name": "macos (macos-15-intel)",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-05T06:55:52Z",
+            "completed_at": "2026-11-05T06:55:55Z"
+          },
+          {
+            "name": "Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-05T06:55:55Z",
+            "completed_at": "2026-11-05T06:56:31Z"
+          },
+          {
+            "name": "Run dtolnay/rust-toolchain@stable",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-05T06:56:31Z",
+            "completed_at": "2026-11-05T06:56:51Z"
+          },
+          {
+            "name": "Cache locked Rust dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-11-05T06:56:51Z",
+            "completed_at": "2026-11-05T06:56:56Z"
+          },
+          {
+            "name": "Fetch locked Rust dependencies before offline builds",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-05T06:56:56Z",
+            "completed_at": "2026-11-05T06:56:56Z"
+          },
+          {
+            "name": "OpenSSL 3",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-11-05T06:56:56Z",
+            "completed_at": "2026-11-05T06:57:02Z"
+          },
+          {
+            "name": "Measurement clock success and failure controls",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-11-05T06:57:02Z",
+            "completed_at": "2026-11-05T06:57:09Z"
+          },
+          {
+            "name": "Captured process deadlines and polling controls",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-11-05T06:57:09Z",
+            "completed_at": "2026-11-05T06:57:13Z"
+          },
+          {
+            "name": "Publish failed process controls before long tests",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 9,
+            "started_at": "2026-11-05T06:57:13Z",
+            "completed_at": "2026-11-05T06:57:13Z"
+          },
+          {
+            "name": "Publish failed clock controls before long tests",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 10,
+            "started_at": "2026-11-05T06:57:13Z",
+            "completed_at": "2026-11-05T06:57:13Z"
+          },
+          {
+            "name": "Generated standard-library docs preflight",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 11,
+            "started_at": "2026-11-05T06:57:13Z",
+            "completed_at": "2026-11-05T06:57:19Z"
+          },
+          {
+            "name": "Exact-head primitive contract inventory",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 12,
+            "started_at": "2026-11-05T06:57:19Z",
+            "completed_at": "2026-11-05T06:57:21Z"
+          },
+          {
+            "name": "Publish primitive contract inventory",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 13,
+            "started_at": "2026-11-05T06:57:21Z",
+            "completed_at": "2026-11-05T06:57:23Z"
+          },
+          {
+            "name": "fmt",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 14,
+            "started_at": "2026-11-05T06:57:23Z",
+            "completed_at": "2026-11-05T06:57:30Z"
+          },
+          {
+            "name": "clippy",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 15,
+            "started_at": "2026-11-05T06:57:30Z",
+            "completed_at": "2026-11-05T06:58:49Z"
+          },
+          {
+            "name": "Publish failed compiler diagnostics before long tests",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 16,
+            "started_at": "2026-11-05T06:58:49Z",
+            "completed_at": "2026-11-05T06:58:49Z"
+          },
+          {
+            "name": "Language formatting preflight",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 17,
+            "started_at": "2026-11-05T06:58:49Z",
+            "completed_at": "2026-11-05T07:03:07Z"
+          },
+          {
+            "name": "Regular macOS test shard",
+            "status": "completed",
+            "conclusion": "cancelled",
+            "number": 18,
+            "started_at": "2026-11-05T07:03:07Z",
+            "completed_at": "2026-11-05T07:12:20Z"
+          },
+          {
+            "name": "Publish individual regular test logs",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 19,
+            "started_at": "2026-11-05T07:12:20Z",
+            "completed_at": "2026-11-05T07:12:24Z"
+          },
+          {
+            "name": "Retry individual regular test log upload",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 20,
+            "started_at": "2026-11-05T07:12:24Z",
+            "completed_at": "2026-11-05T07:12:24Z"
+          },
+          {
+            "name": "Inspect array-sort ownership and wide-value controls",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 21,
+            "started_at": "2026-11-05T07:12:24Z",
+            "completed_at": "2026-11-05T07:12:24Z"
+          },
+          {
+            "name": "Inspect array construction moves and cleanup",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 22,
+            "started_at": "2026-11-05T07:12:24Z",
+            "completed_at": "2026-11-05T07:12:24Z"
+          },
+          {
+            "name": "Build compiler for Python SDK checks",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 23,
+            "started_at": "2026-11-05T07:12:24Z",
+            "completed_at": "2026-11-05T07:12:24Z"
+          },
+          {
+            "name": "Python SDK and native disassembly",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 24,
+            "started_at": "2026-11-05T07:12:24Z",
+            "completed_at": "2026-11-05T07:12:24Z"
+          },
+          {
+            "name": "Build standalone compiler",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 25,
+            "started_at": "2026-11-05T07:12:24Z",
+            "completed_at": "2026-11-05T07:12:24Z"
+          },
+          {
+            "name": "Iterator and state allocation and binary evidence",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 26,
+            "started_at": "2026-11-05T07:12:24Z",
+            "completed_at": "2026-11-05T07:12:24Z"
+          },
+          {
+            "name": "Run actions/upload-artifact@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 27,
+            "started_at": "2026-11-05T07:12:24Z",
+            "completed_at": "2026-11-05T07:12:24Z"
+          },
+          {
+            "name": "Verify separate native artifact outside checkout",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 28,
+            "started_at": "2026-11-05T07:12:24Z",
+            "completed_at": "2026-11-05T07:12:24Z"
+          },
+          {
+            "name": "Run actions/upload-artifact@v7",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 29,
+            "started_at": "2026-11-05T07:12:24Z",
+            "completed_at": "2026-11-05T07:12:24Z"
+          },
+          {
+            "name": "Preserve failed native golden binaries and C",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 30,
+            "started_at": "2026-11-05T07:12:24Z",
+            "completed_at": "2026-11-05T07:12:24Z"
+          },
+          {
+            "name": "Run actions/upload-artifact@v7",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 31,
+            "started_at": "2026-11-05T07:12:24Z",
+            "completed_at": "2026-11-05T07:12:24Z"
+          },
+          {
+            "name": "Package and verify ownership evidence",
+            "status": "completed",
+            "conclusion": "failure",
+            "number": 32,
+            "started_at": "2026-11-05T07:12:24Z",
+            "completed_at": "2026-11-05T07:12:25Z"
+          },
+          {
+            "name": "Upload verified ownership archive",
+            "status": "completed",
+            "conclusion": "failure",
+            "number": 33,
+            "started_at": "2026-11-05T07:12:25Z",
+            "completed_at": "2026-11-05T07:12:25Z"
+          },
+          {
+            "name": "Preserve ownership file manifest and read failures",
+            "status": "completed",
+            "conclusion": "failure",
+            "number": 34,
+            "started_at": "2026-11-05T07:12:25Z",
+            "completed_at": "2026-11-05T07:12:26Z"
+          },
+          {
+            "name": "Preserve compiler crash reports",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 35,
+            "started_at": "2026-11-05T07:12:26Z",
+            "completed_at": "2026-11-05T07:12:26Z"
+          },
+          {
+            "name": "Post Cache locked Rust dependencies",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 69,
+            "started_at": "2026-11-05T07:12:26Z",
+            "completed_at": "2026-11-05T07:12:26Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 70,
+            "started_at": "2026-11-05T07:12:26Z",
+            "completed_at": "2026-11-05T07:12:27Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 71,
+            "started_at": "2026-11-05T07:12:27Z",
+            "completed_at": "2026-11-05T07:12:29Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/127099336205",
+        "labels": [
+          "macos-15-intel"
+        ],
+        "runner_id": 1000409722,
+        "runner_name": "GitHub Actions 1000409722",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      },
+      "logSha256": "e0c25f0d535ef0202e0e71782bf255ac1dbf57bda37e7234f3588da20ba4fbfd",
+      "diagnostics": [
+        "2026-11-05T06:57:02.1370150Z Warning: openssl@3 3.6.3 is already installed and up-to-date.",
+        "2026-11-05T07:12:20.4435310Z ##[error]The operation was canceled.",
+        "2026-11-05T07:12:25.4118420Z Traceback (most recent call last):",
+        "2026-11-05T07:12:25.4323540Z ##[error]Process completed with exit code 1.",
+        "2026-11-05T07:12:25.8353900Z ##[error]No files were found with the provided path: ownership-evidence-regular-macOS-X64.zip. No artifacts will be uploaded.",
+        "2026-11-05T07:12:26.2633540Z ##[error]No files were found with the provided path: ownership-evidence-regular-macOS-X64.json. No artifacts will be uploaded."
+      ]
+    },
+    {
+      "job": {
+        "id": 127099336417,
+        "run_id": 41983677606,
+        "workflow_name": "CI",
+        "head_branch": "gradient-call-storage",
+        "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/41983677606",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOU33zxM8AAAAdl7X24Q",
+        "head_sha": "946069cd138a9be23f457c73316a3ecf5b972047",
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/127099336417",
+        "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41983677606/job/127099336417",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-05T06:55:39Z",
+        "started_at": "2026-11-05T06:56:01Z",
+        "completed_at": "2026-11-05T07:00:16Z",
+        "name": "bench",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-05T06:56:02Z",
+            "completed_at": "2026-11-05T06:56:03Z"
+          },
+          {
+            "name": "Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-05T06:56:03Z",
+            "completed_at": "2026-11-05T06:56:22Z"
+          },
+          {
+            "name": "Run dtolnay/rust-toolchain@stable",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-05T06:56:22Z",
+            "completed_at": "2026-11-05T06:56:28Z"
+          },
+          {
+            "name": "Cache locked Rust dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-11-05T06:56:28Z",
+            "completed_at": "2026-11-05T06:56:30Z"
+          },
+          {
+            "name": "Fetch locked Rust dependencies before offline builds",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-05T06:56:30Z",
+            "completed_at": "2026-11-05T06:56:33Z"
+          },
+          {
+            "name": "Select the Ubuntu archive for AMD64 packages",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-11-05T06:56:33Z",
+            "completed_at": "2026-11-05T06:56:34Z"
+          },
+          {
+            "name": "OpenSSL headers (TLS)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-11-05T06:56:34Z",
+            "completed_at": "2026-11-05T06:56:41Z"
+          },
+          {
+            "name": "Benchmark build failure and metadata controls",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-11-05T06:56:41Z",
+            "completed_at": "2026-11-05T06:56:42Z"
+          },
+          {
+            "name": "Numerical measurement requirement controls",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9,
+            "started_at": "2026-11-05T06:56:42Z",
+            "completed_at": "2026-11-05T06:56:42Z"
+          },
+          {
+            "name": "Generated standard-library docs preflight",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10,
+            "started_at": "2026-11-05T06:56:42Z",
+            "completed_at": "2026-11-05T06:57:02Z"
+          },
+          {
+            "name": "Language formatting preflight",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 11,
+            "started_at": "2026-11-05T06:57:02Z",
+            "completed_at": "2026-11-05T06:58:16Z"
+          },
+          {
+            "name": "Check peer overflow order and allocation failures",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 12,
+            "started_at": "2026-11-05T06:58:16Z",
+            "completed_at": "2026-11-05T06:58:18Z"
+          },
+          {
+            "name": "benchmarks against C and Rust (docs/benchmarks.md)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 13,
+            "started_at": "2026-11-05T06:58:18Z",
+            "completed_at": "2026-11-05T06:59:29Z"
+          },
+          {
+            "name": "Inspect measured C, Rust and checked-ARC binaries",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 14,
+            "started_at": "2026-11-05T06:59:29Z",
+            "completed_at": "2026-11-05T06:59:30Z"
+          },
+          {
+            "name": "Reject incorrect benchmark claims, binaries and missing samples",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 15,
+            "started_at": "2026-11-05T06:59:30Z",
+            "completed_at": "2026-11-05T06:59:31Z"
+          },
+          {
+            "name": "Measure process memory and separate managed storage",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 16,
+            "started_at": "2026-11-05T06:59:31Z",
+            "completed_at": "2026-11-05T06:59:44Z"
+          },
+          {
+            "name": "Inspect managed-storage images and leak controls",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 17,
+            "started_at": "2026-11-05T06:59:44Z",
+            "completed_at": "2026-11-05T06:59:44Z"
+          },
+          {
+            "name": "Measure sort storage, code size and stack frames",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 18,
+            "started_at": "2026-11-05T06:59:44Z",
+            "completed_at": "2026-11-05T07:00:08Z"
+          },
+          {
+            "name": "Preserve benchmark comparisons and measured executables",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 19,
+            "started_at": "2026-11-05T07:00:08Z",
+            "completed_at": "2026-11-05T07:00:13Z"
+          },
+          {
+            "name": "Post Cache locked Rust dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 37,
+            "started_at": "2026-11-05T07:00:13Z",
+            "completed_at": "2026-11-05T07:00:13Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 38,
+            "started_at": "2026-11-05T07:00:13Z",
+            "completed_at": "2026-11-05T07:00:13Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 39,
+            "started_at": "2026-11-05T07:00:13Z",
+            "completed_at": "2026-11-05T07:00:13Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/127099336417",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "runner_id": 1000409725,
+        "runner_name": "GitHub Actions 1000409725",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      },
+      "logSha256": "1b6aa1727091187359dec6a49359b4598faf4485fdc967fcbb1574f61530c37d",
+      "diagnostics": []
+    },
+    {
+      "job": {
+        "id": 127099336443,
+        "run_id": 41983677606,
+        "workflow_name": "CI",
+        "head_branch": "gradient-call-storage",
+        "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/41983677606",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOU33zxM8AAAAdl7X2-w",
+        "head_sha": "946069cd138a9be23f457c73316a3ecf5b972047",
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/127099336443",
+        "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41983677606/job/127099336443",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "created_at": "2026-11-05T06:55:39Z",
+        "started_at": "2026-11-05T06:55:46Z",
+        "completed_at": "2026-11-05T07:12:20Z",
+        "name": "test (ubuntu-24.04-arm)",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-05T06:55:47Z",
+            "completed_at": "2026-11-05T06:55:48Z"
+          },
+          {
+            "name": "Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-05T06:55:48Z",
+            "completed_at": "2026-11-05T06:56:05Z"
+          },
+          {
+            "name": "Run dtolnay/rust-toolchain@stable",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-05T06:56:05Z",
+            "completed_at": "2026-11-05T06:56:07Z"
+          },
+          {
+            "name": "Cache locked Rust dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-11-05T06:56:07Z",
+            "completed_at": "2026-11-05T06:56:08Z"
+          },
+          {
+            "name": "Fetch locked Rust dependencies before offline builds",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-05T06:56:08Z",
+            "completed_at": "2026-11-05T06:56:08Z"
+          },
+          {
+            "name": "Run actions/setup-node@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-11-05T06:56:08Z",
+            "completed_at": "2026-11-05T06:56:08Z"
+          },
+          {
+            "name": "Select the Ubuntu archive for AMD64 packages",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 7,
+            "started_at": "2026-11-05T06:56:08Z",
+            "completed_at": "2026-11-05T06:56:08Z"
+          },
+          {
+            "name": "WebAssembly toolchain, OpenSSL headers (TLS)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-11-05T06:56:08Z",
+            "completed_at": "2026-11-05T06:56:26Z"
+          },
+          {
+            "name": "aarch64 cross compiler and qemu (tests/cross.rs)",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 9,
+            "started_at": "2026-11-05T06:56:26Z",
+            "completed_at": "2026-11-05T06:56:26Z"
+          },
+          {
+            "name": "binaryen's wasm-opt (`--wasm-async=asyncify`; tests skip without it)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10,
+            "started_at": "2026-11-05T06:56:26Z",
+            "completed_at": "2026-11-05T06:56:27Z"
+          },
+          {
+            "name": "Measurement clock success and failure controls",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 11,
+            "started_at": "2026-11-05T06:56:27Z",
+            "completed_at": "2026-11-05T06:56:28Z"
+          },
+          {
+            "name": "Publish failed clock controls before long tests",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 12,
+            "started_at": "2026-11-05T06:56:28Z",
+            "completed_at": "2026-11-05T06:56:28Z"
+          },
+          {
+            "name": "Generated standard-library docs preflight",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 13,
+            "started_at": "2026-11-05T06:56:28Z",
+            "completed_at": "2026-11-05T06:56:29Z"
+          },
+          {
+            "name": "Exact-head primitive contract inventory",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 14,
+            "started_at": "2026-11-05T06:56:29Z",
+            "completed_at": "2026-11-05T06:56:33Z"
+          },
+          {
+            "name": "Publish primitive contract inventory",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 15,
+            "started_at": "2026-11-05T06:56:33Z",
+            "completed_at": "2026-11-05T06:56:34Z"
+          },
+          {
+            "name": "fmt",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 16,
+            "started_at": "2026-11-05T06:56:34Z",
+            "completed_at": "2026-11-05T06:56:36Z"
+          },
+          {
+            "name": "clippy",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 17,
+            "started_at": "2026-11-05T06:56:36Z",
+            "completed_at": "2026-11-05T06:56:59Z"
+          },
+          {
+            "name": "clippy (WebAssembly build)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 18,
+            "started_at": "2026-11-05T06:56:59Z",
+            "completed_at": "2026-11-05T06:57:19Z"
+          },
+          {
+            "name": "Publish failed compiler diagnostics before long tests",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 19,
+            "started_at": "2026-11-05T06:57:19Z",
+            "completed_at": "2026-11-05T06:57:19Z"
+          },
+          {
+            "name": "Language formatting preflight",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 20,
+            "started_at": "2026-11-05T06:57:19Z",
+            "completed_at": "2026-11-05T06:58:14Z"
+          },
+          {
+            "name": "test",
+            "status": "completed",
+            "conclusion": "cancelled",
+            "number": 21,
+            "started_at": "2026-11-05T06:58:14Z",
+            "completed_at": "2026-11-05T07:12:14Z"
+          },
+          {
+            "name": "Inspect list-copy executables and missing-cleanup controls",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 22,
+            "started_at": "2026-11-05T07:12:14Z",
+            "completed_at": "2026-11-05T07:12:14Z"
+          },
+          {
+            "name": "Inspect array-sort ownership and wide-value controls",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 23,
+            "started_at": "2026-11-05T07:12:14Z",
+            "completed_at": "2026-11-05T07:12:14Z"
+          },
+          {
+            "name": "Inspect array construction moves and cleanup",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 24,
+            "started_at": "2026-11-05T07:12:14Z",
+            "completed_at": "2026-11-05T07:12:14Z"
+          },
+          {
+            "name": "Run actions/upload-artifact@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 25,
+            "started_at": "2026-11-05T07:12:14Z",
+            "completed_at": "2026-11-05T07:12:15Z"
+          },
+          {
+            "name": "Build compiler for Python SDK checks",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 26,
+            "started_at": "2026-11-05T07:12:15Z",
+            "completed_at": "2026-11-05T07:12:15Z"
+          },
+          {
+            "name": "Python SDK and native disassembly",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 27,
+            "started_at": "2026-11-05T07:12:15Z",
+            "completed_at": "2026-11-05T07:12:15Z"
+          },
+          {
+            "name": "Build standalone compiler",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 28,
+            "started_at": "2026-11-05T07:12:15Z",
+            "completed_at": "2026-11-05T07:12:15Z"
+          },
+          {
+            "name": "Numerical output and lifetime controls",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 29,
+            "started_at": "2026-11-05T07:12:15Z",
+            "completed_at": "2026-11-05T07:12:15Z"
+          },
+          {
+            "name": "Run actions/upload-artifact@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 30,
+            "started_at": "2026-11-05T07:12:15Z",
+            "completed_at": "2026-11-05T07:12:15Z"
+          },
+          {
+            "name": "Iterator and state allocation and binary evidence",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 31,
+            "started_at": "2026-11-05T07:12:15Z",
+            "completed_at": "2026-11-05T07:12:15Z"
+          },
+          {
+            "name": "Run actions/upload-artifact@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 32,
+            "started_at": "2026-11-05T07:12:15Z",
+            "completed_at": "2026-11-05T07:12:15Z"
+          },
+          {
+            "name": "Verify separate native artifact outside checkout",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 33,
+            "started_at": "2026-11-05T07:12:15Z",
+            "completed_at": "2026-11-05T07:12:15Z"
+          },
+          {
+            "name": "Run actions/upload-artifact@v7",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 34,
+            "started_at": "2026-11-05T07:12:15Z",
+            "completed_at": "2026-11-05T07:12:15Z"
+          },
+          {
+            "name": "Preserve failed native golden binaries and C",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 35,
+            "started_at": "2026-11-05T07:12:15Z",
+            "completed_at": "2026-11-05T07:12:15Z"
+          },
+          {
+            "name": "Run actions/upload-artifact@v7",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 36,
+            "started_at": "2026-11-05T07:12:15Z",
+            "completed_at": "2026-11-05T07:12:15Z"
+          },
+          {
+            "name": "Package and verify ownership evidence",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 37,
+            "started_at": "2026-11-05T07:12:15Z",
+            "completed_at": "2026-11-05T07:12:16Z"
+          },
+          {
+            "name": "Upload verified ownership archive",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 38,
+            "started_at": "2026-11-05T07:12:16Z",
+            "completed_at": "2026-11-05T07:12:17Z"
+          },
+          {
+            "name": "Preserve ownership file manifest and read failures",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 39,
+            "started_at": "2026-11-05T07:12:17Z",
+            "completed_at": "2026-11-05T07:12:18Z"
+          },
+          {
+            "name": "Post Run actions/setup-node@v7",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 76,
+            "started_at": "2026-11-05T07:12:18Z",
+            "completed_at": "2026-11-05T07:12:18Z"
+          },
+          {
+            "name": "Post Cache locked Rust dependencies",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 77,
+            "started_at": "2026-11-05T07:12:18Z",
+            "completed_at": "2026-11-05T07:12:18Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 78,
+            "started_at": "2026-11-05T07:12:18Z",
+            "completed_at": "2026-11-05T07:12:18Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 79,
+            "started_at": "2026-11-05T07:12:18Z",
+            "completed_at": "2026-11-05T07:12:18Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/127099336443",
+        "labels": [
+          "ubuntu-24.04-arm"
+        ],
+        "runner_id": 1000409721,
+        "runner_name": "GitHub Actions 1000409721",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      },
+      "logSha256": "49b3109e23ea6f8ee579202194888ae7908cbe331fcac46dad3ade2bc5256f24",
+      "diagnostics": [
+        "2026-11-05T07:12:14.4555109Z ##[error]The operation was canceled."
+      ]
+    },
+    {
+      "job": {
+        "id": 127099336451,
+        "run_id": 41983677606,
+        "workflow_name": "CI",
+        "head_branch": "gradient-call-storage",
+        "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/41983677606",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOU33zxM8AAAAdl7X3Aw",
+        "head_sha": "946069cd138a9be23f457c73316a3ecf5b972047",
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/127099336451",
+        "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41983677606/job/127099336451",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "created_at": "2026-11-05T06:55:39Z",
+        "started_at": "2026-11-05T06:56:19Z",
+        "completed_at": "2026-11-05T07:13:17Z",
+        "name": "macos_ownership (macos-15-intel)",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-05T06:56:20Z",
+            "completed_at": "2026-11-05T06:56:23Z"
+          },
+          {
+            "name": "Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-05T06:56:23Z",
+            "completed_at": "2026-11-05T06:56:48Z"
+          },
+          {
+            "name": "Run dtolnay/rust-toolchain@stable",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-05T06:56:48Z",
+            "completed_at": "2026-11-05T06:57:10Z"
+          },
+          {
+            "name": "Cache locked Rust dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-11-05T06:57:10Z",
+            "completed_at": "2026-11-05T06:57:14Z"
+          },
+          {
+            "name": "Fetch locked Rust dependencies before offline builds",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-05T06:57:14Z",
+            "completed_at": "2026-11-05T06:57:14Z"
+          },
+          {
+            "name": "OpenSSL 3",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-11-05T06:57:14Z",
+            "completed_at": "2026-11-05T06:57:18Z"
+          },
+          {
+            "name": "Generated standard-library docs preflight",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-11-05T06:57:18Z",
+            "completed_at": "2026-11-05T06:57:22Z"
+          },
+          {
+            "name": "Language formatting preflight",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-11-05T06:57:22Z",
+            "completed_at": "2026-11-05T07:00:36Z"
+          },
+          {
+            "name": "Full counted-ownership golden corpus",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9,
+            "started_at": "2026-11-05T07:00:36Z",
+            "completed_at": "2026-11-05T07:01:49Z"
+          },
+          {
+            "name": "Publish native-memory diagnostics before the remaining shard",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10,
+            "started_at": "2026-11-05T07:01:49Z",
+            "completed_at": "2026-11-05T07:01:51Z"
+          },
+          {
+            "name": "Second macOS test shard",
+            "status": "completed",
+            "conclusion": "cancelled",
+            "number": 11,
+            "started_at": "2026-11-05T07:01:51Z",
+            "completed_at": "2026-11-05T07:12:49Z"
+          },
+          {
+            "name": "Inspect list-copy executables and missing-cleanup controls",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 12,
+            "started_at": "2026-11-05T07:12:49Z",
+            "completed_at": "2026-11-05T07:12:49Z"
+          },
+          {
+            "name": "Publish individual ownership test logs",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 13,
+            "started_at": "2026-11-05T07:12:49Z",
+            "completed_at": "2026-11-05T07:12:51Z"
+          },
+          {
+            "name": "Retry individual ownership test log upload",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 14,
+            "started_at": "2026-11-05T07:12:51Z",
+            "completed_at": "2026-11-05T07:12:51Z"
+          },
+          {
+            "name": "Preserve failed native corpus binaries, C and statuses",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 15,
+            "started_at": "2026-11-05T07:12:51Z",
+            "completed_at": "2026-11-05T07:12:51Z"
+          },
+          {
+            "name": "Run actions/upload-artifact@v7",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 16,
+            "started_at": "2026-11-05T07:12:51Z",
+            "completed_at": "2026-11-05T07:12:51Z"
+          },
+          {
+            "name": "Package and verify ownership evidence",
+            "status": "completed",
+            "conclusion": "failure",
+            "number": 17,
+            "started_at": "2026-11-05T07:12:51Z",
+            "completed_at": "2026-11-05T07:12:53Z"
+          },
+          {
+            "name": "Upload verified ownership archive",
+            "status": "completed",
+            "conclusion": "failure",
+            "number": 18,
+            "started_at": "2026-11-05T07:12:53Z",
+            "completed_at": "2026-11-05T07:12:55Z"
+          },
+          {
+            "name": "Preserve ownership file manifest and read failures",
+            "status": "completed",
+            "conclusion": "failure",
+            "number": 19,
+            "started_at": "2026-11-05T07:12:55Z",
+            "completed_at": "2026-11-05T07:12:57Z"
+          },
+          {
+            "name": "Preserve compiler crash reports",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 20,
+            "started_at": "2026-11-05T07:12:57Z",
+            "completed_at": "2026-11-05T07:12:57Z"
+          },
+          {
+            "name": "Post Cache locked Rust dependencies",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 39,
+            "started_at": "2026-11-05T07:12:57Z",
+            "completed_at": "2026-11-05T07:12:57Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 40,
+            "started_at": "2026-11-05T07:12:57Z",
+            "completed_at": "2026-11-05T07:13:05Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 41,
+            "started_at": "2026-11-05T07:13:05Z",
+            "completed_at": "2026-11-05T07:13:15Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/127099336451",
+        "labels": [
+          "macos-15-intel"
+        ],
+        "runner_id": 1000409726,
+        "runner_name": "GitHub Actions 1000409726",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      },
+      "logSha256": "2d79cb3d2bf48acbb76fc8a2db528b700c0d34158c452b900e5fd29129f3eea4",
+      "diagnostics": [
+        "2026-11-05T06:57:18.2449070Z Warning: openssl@3 3.6.3 is already installed and up-to-date.",
+        "2026-11-05T07:12:49.0968530Z ##[error]The operation was canceled.",
+        "2026-11-05T07:12:52.4156660Z Traceback (most recent call last):",
+        "2026-11-05T07:12:53.4967860Z ##[error]Process completed with exit code 1.",
+        "2026-11-05T07:12:55.8092760Z ##[error]No files were found with the provided path: ownership-evidence-corpus-macOS-X64.zip. No artifacts will be uploaded.",
+        "2026-11-05T07:12:57.8028210Z ##[error]No files were found with the provided path: ownership-evidence-corpus-macOS-X64.json. No artifacts will be uploaded."
+      ]
+    },
+    {
+      "job": {
+        "id": 127099336466,
+        "run_id": 41983677606,
+        "workflow_name": "CI",
+        "head_branch": "gradient-call-storage",
+        "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/41983677606",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOU33zxM8AAAAdl7X3Eg",
+        "head_sha": "946069cd138a9be23f457c73316a3ecf5b972047",
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/127099336466",
+        "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41983677606/job/127099336466",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "created_at": "2026-11-05T06:55:39Z",
+        "started_at": "2026-11-05T06:56:26Z",
+        "completed_at": "2026-11-05T07:12:50Z",
+        "name": "windows / native (windows-2025)",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-05T06:56:26Z",
+            "completed_at": "2026-11-05T06:56:27Z"
+          },
+          {
+            "name": "Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-05T06:56:27Z",
+            "completed_at": "2026-11-05T06:56:52Z"
+          },
+          {
+            "name": "Captured process deadlines",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-05T06:56:52Z",
+            "completed_at": "2026-11-05T06:56:57Z"
+          },
+          {
+            "name": "Publish failed process controls before long tests",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 4,
+            "started_at": "2026-11-05T06:56:57Z",
+            "completed_at": "2026-11-05T06:56:57Z"
+          },
+          {
+            "name": "Run dtolnay/rust-toolchain@stable",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-05T06:56:57Z",
+            "completed_at": "2026-11-05T06:57:03Z"
+          },
+          {
+            "name": "Cache locked Rust dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-11-05T06:57:03Z",
+            "completed_at": "2026-11-05T06:57:06Z"
+          },
+          {
+            "name": "Fetch locked Rust dependencies before offline builds",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-11-05T06:57:06Z",
+            "completed_at": "2026-11-05T06:57:09Z"
+          },
+          {
+            "name": "Native C toolchain for foreign calls",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-11-05T06:57:09Z",
+            "completed_at": "2026-11-05T06:57:33Z"
+          },
+          {
+            "name": "Native Windows compiler check",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9,
+            "started_at": "2026-11-05T06:57:33Z",
+            "completed_at": "2026-11-05T06:58:26Z"
+          },
+          {
+            "name": "Native socket and library execution",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10,
+            "started_at": "2026-11-05T06:58:26Z",
+            "completed_at": "2026-11-05T07:10:25Z"
+          },
+          {
+            "name": "Publish failed native socket and library log",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 11,
+            "started_at": "2026-11-05T07:10:25Z",
+            "completed_at": "2026-11-05T07:10:25Z"
+          },
+          {
+            "name": "Python SDK and native disassembly",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 12,
+            "started_at": "2026-11-05T07:10:25Z",
+            "completed_at": "2026-11-05T07:10:49Z"
+          },
+          {
+            "name": "Language formatting preflight",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 13,
+            "started_at": "2026-11-05T07:10:49Z",
+            "completed_at": "2026-11-05T07:10:49Z"
+          },
+          {
+            "name": "Interpreter golden outputs and exit statuses",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 14,
+            "started_at": "2026-11-05T07:10:49Z",
+            "completed_at": "2026-11-05T07:11:45Z"
+          },
+          {
+            "name": "Queued function captures, receive ownership and callback effects",
+            "status": "completed",
+            "conclusion": "cancelled",
+            "number": 15,
+            "started_at": "2026-11-05T07:11:45Z",
+            "completed_at": "2026-11-05T07:12:41Z"
+          },
+          {
+            "name": "Publish failed queue and callback log",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 16,
+            "started_at": "2026-11-05T07:12:41Z",
+            "completed_at": "2026-11-05T07:12:41Z"
+          },
+          {
+            "name": "Generated programs with native resources and ownership stress",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 17,
+            "started_at": "2026-11-05T07:12:41Z",
+            "completed_at": "2026-11-05T07:12:41Z"
+          },
+          {
+            "name": "Inspect list-copy executables and missing-cleanup controls",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 18,
+            "started_at": "2026-11-05T07:12:41Z",
+            "completed_at": "2026-11-05T07:12:41Z"
+          },
+          {
+            "name": "Array and fold callbacks, capture storage and unwind cleanup",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 19,
+            "started_at": "2026-11-05T07:12:41Z",
+            "completed_at": "2026-11-05T07:12:41Z"
+          },
+          {
+            "name": "Inspect array-sort ownership and wide-value controls",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 20,
+            "started_at": "2026-11-05T07:12:41Z",
+            "completed_at": "2026-11-05T07:12:41Z"
+          },
+          {
+            "name": "Inspect array construction moves and cleanup",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 21,
+            "started_at": "2026-11-05T07:12:41Z",
+            "completed_at": "2026-11-05T07:12:41Z"
+          },
+          {
+            "name": "CPU kernel size validation order",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 22,
+            "started_at": "2026-11-05T07:12:41Z",
+            "completed_at": "2026-11-05T07:12:41Z"
+          },
+          {
+            "name": "Array bounds and ownership failure artifacts",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 23,
+            "started_at": "2026-11-05T07:12:41Z",
+            "completed_at": "2026-11-05T07:12:41Z"
+          },
+          {
+            "name": "Publish native diagnostics before dependency builds",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 24,
+            "started_at": "2026-11-05T07:12:41Z",
+            "completed_at": "2026-11-05T07:12:41Z"
+          },
+          {
+            "name": "Run actions/cache/restore@v6",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 25,
+            "started_at": "2026-11-05T07:12:41Z",
+            "completed_at": "2026-11-05T07:12:41Z"
+          },
+          {
+            "name": "Native OpenSSL dependencies",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 26,
+            "started_at": "2026-11-05T07:12:41Z",
+            "completed_at": "2026-11-05T07:12:41Z"
+          },
+          {
+            "name": "Run actions/cache/save@v6",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 27,
+            "started_at": "2026-11-05T07:12:41Z",
+            "completed_at": "2026-11-05T07:12:41Z"
+          },
+          {
+            "name": "Complete compiler unit tests with native TLS",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 28,
+            "started_at": "2026-11-05T07:12:41Z",
+            "completed_at": "2026-11-05T07:12:41Z"
+          },
+          {
+            "name": "Native TLS and executable ownership",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 29,
+            "started_at": "2026-11-05T07:12:41Z",
+            "completed_at": "2026-11-05T07:12:41Z"
+          },
+          {
+            "name": "Native commands, test recovery and executable cache",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 30,
+            "started_at": "2026-11-05T07:12:41Z",
+            "completed_at": "2026-11-05T07:12:41Z"
+          },
+          {
+            "name": "Publish failed native tls and executable ownership log",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 31,
+            "started_at": "2026-11-05T07:12:41Z",
+            "completed_at": "2026-11-05T07:12:41Z"
+          },
+          {
+            "name": "Remote stream and queued response lifetimes",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 32,
+            "started_at": "2026-11-05T07:12:41Z",
+            "completed_at": "2026-11-05T07:12:41Z"
+          },
+          {
+            "name": "Native nested autodiff and ownership controls",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 33,
+            "started_at": "2026-11-05T07:12:41Z",
+            "completed_at": "2026-11-05T07:12:41Z"
+          },
+          {
+            "name": "Publish failed native nested autodiff and ownership controls log",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 34,
+            "started_at": "2026-11-05T07:12:41Z",
+            "completed_at": "2026-11-05T07:12:41Z"
+          },
+          {
+            "name": "Complete native golden programs",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 35,
+            "started_at": "2026-11-05T07:12:41Z",
+            "completed_at": "2026-11-05T07:12:41Z"
+          },
+          {
+            "name": "Native reuse and string ownership",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 36,
+            "started_at": "2026-11-05T07:12:41Z",
+            "completed_at": "2026-11-05T07:12:41Z"
+          },
+          {
+            "name": "Publish native reuse diagnostics",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 37,
+            "started_at": "2026-11-05T07:12:41Z",
+            "completed_at": "2026-11-05T07:12:42Z"
+          },
+          {
+            "name": "Publish failed complete native golden programs log",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 38,
+            "started_at": "2026-11-05T07:12:42Z",
+            "completed_at": "2026-11-05T07:12:42Z"
+          },
+          {
+            "name": "Build standalone compiler with static C runtime",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 39,
+            "started_at": "2026-11-05T07:12:42Z",
+            "completed_at": "2026-11-05T07:12:42Z"
+          },
+          {
+            "name": "Run actions/upload-artifact@v7",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 40,
+            "started_at": "2026-11-05T07:12:42Z",
+            "completed_at": "2026-11-05T07:12:42Z"
+          },
+          {
+            "name": "Run actions/upload-artifact@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 41,
+            "started_at": "2026-11-05T07:12:42Z",
+            "completed_at": "2026-11-05T07:12:45Z"
+          },
+          {
+            "name": "Post Cache locked Rust dependencies",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 81,
+            "started_at": "2026-11-05T07:12:45Z",
+            "completed_at": "2026-11-05T07:12:45Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 82,
+            "started_at": "2026-11-05T07:12:45Z",
+            "completed_at": "2026-11-05T07:12:48Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 83,
+            "started_at": "2026-11-05T07:12:48Z",
+            "completed_at": "2026-11-05T07:12:48Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/127099336466",
+        "labels": [
+          "windows-2025"
+        ],
+        "runner_id": 1000409727,
+        "runner_name": "GitHub Actions 1000409727",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      },
+      "logSha256": "4c14c7592415e0bd237f65f53f745c2e2220ba3a1982e8652c13163f527a9901",
+      "diagnostics": [
+        "2026-11-05T07:10:25.6343504Z ##[group]Run python -W error::ResourceWarning -m unittest discover -s sdk/python/tests -v",
+        "2026-11-05T07:10:25.6344345Z python -W error::ResourceWarning -m unittest discover -s sdk/python/tests -v",
+        "2026-11-05T07:12:41.5794546Z ##[error]The operation was canceled."
+      ]
+    },
+    {
+      "job": {
+        "id": 127099336484,
+        "run_id": 41983677606,
+        "workflow_name": "CI",
+        "head_branch": "gradient-call-storage",
+        "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/41983677606",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOU33zxM8AAAAdl7X3JA",
+        "head_sha": "946069cd138a9be23f457c73316a3ecf5b972047",
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/127099336484",
+        "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41983677606/job/127099336484",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "created_at": "2026-11-05T06:55:39Z",
+        "started_at": "2026-11-05T06:55:43Z",
+        "completed_at": "2026-11-05T07:12:29Z",
+        "name": "macos (macos-15)",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-05T06:55:43Z",
+            "completed_at": "2026-11-05T06:55:45Z"
+          },
+          {
+            "name": "Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-05T06:55:45Z",
+            "completed_at": "2026-11-05T06:56:14Z"
+          },
+          {
+            "name": "Run dtolnay/rust-toolchain@stable",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-05T06:56:14Z",
+            "completed_at": "2026-11-05T06:56:16Z"
+          },
+          {
+            "name": "Cache locked Rust dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-11-05T06:56:16Z",
+            "completed_at": "2026-11-05T06:56:18Z"
+          },
+          {
+            "name": "Fetch locked Rust dependencies before offline builds",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-05T06:56:18Z",
+            "completed_at": "2026-11-05T06:56:19Z"
+          },
+          {
+            "name": "OpenSSL 3",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-11-05T06:56:19Z",
+            "completed_at": "2026-11-05T06:56:21Z"
+          },
+          {
+            "name": "Measurement clock success and failure controls",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-11-05T06:56:21Z",
+            "completed_at": "2026-11-05T06:56:24Z"
+          },
+          {
+            "name": "Captured process deadlines and polling controls",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-11-05T06:56:25Z",
+            "completed_at": "2026-11-05T06:56:28Z"
+          },
+          {
+            "name": "Publish failed process controls before long tests",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 9,
+            "started_at": "2026-11-05T06:56:28Z",
+            "completed_at": "2026-11-05T06:56:28Z"
+          },
+          {
+            "name": "Publish failed clock controls before long tests",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 10,
+            "started_at": "2026-11-05T06:56:28Z",
+            "completed_at": "2026-11-05T06:56:28Z"
+          },
+          {
+            "name": "Generated standard-library docs preflight",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 11,
+            "started_at": "2026-11-05T06:56:28Z",
+            "completed_at": "2026-11-05T06:56:31Z"
+          },
+          {
+            "name": "Exact-head primitive contract inventory",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 12,
+            "started_at": "2026-11-05T06:56:31Z",
+            "completed_at": "2026-11-05T06:56:33Z"
+          },
+          {
+            "name": "Publish primitive contract inventory",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 13,
+            "started_at": "2026-11-05T06:56:33Z",
+            "completed_at": "2026-11-05T06:56:34Z"
+          },
+          {
+            "name": "fmt",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 14,
+            "started_at": "2026-11-05T06:56:34Z",
+            "completed_at": "2026-11-05T06:56:36Z"
+          },
+          {
+            "name": "clippy",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 15,
+            "started_at": "2026-11-05T06:56:36Z",
+            "completed_at": "2026-11-05T06:57:09Z"
+          },
+          {
+            "name": "Publish failed compiler diagnostics before long tests",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 16,
+            "started_at": "2026-11-05T06:57:09Z",
+            "completed_at": "2026-11-05T06:57:09Z"
+          },
+          {
+            "name": "Language formatting preflight",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 17,
+            "started_at": "2026-11-05T06:57:09Z",
+            "completed_at": "2026-11-05T06:58:42Z"
+          },
+          {
+            "name": "Regular macOS test shard",
+            "status": "completed",
+            "conclusion": "cancelled",
+            "number": 18,
+            "started_at": "2026-11-05T06:58:42Z",
+            "completed_at": "2026-11-05T07:12:11Z"
+          },
+          {
+            "name": "Publish individual regular test logs",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 19,
+            "started_at": "2026-11-05T07:12:11Z",
+            "completed_at": "2026-11-05T07:12:13Z"
+          },
+          {
+            "name": "Retry individual regular test log upload",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 20,
+            "started_at": "2026-11-05T07:12:13Z",
+            "completed_at": "2026-11-05T07:12:13Z"
+          },
+          {
+            "name": "Inspect array-sort ownership and wide-value controls",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 21,
+            "started_at": "2026-11-05T07:12:13Z",
+            "completed_at": "2026-11-05T07:12:13Z"
+          },
+          {
+            "name": "Inspect array construction moves and cleanup",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 22,
+            "started_at": "2026-11-05T07:12:13Z",
+            "completed_at": "2026-11-05T07:12:13Z"
+          },
+          {
+            "name": "Build compiler for Python SDK checks",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 23,
+            "started_at": "2026-11-05T07:12:13Z",
+            "completed_at": "2026-11-05T07:12:13Z"
+          },
+          {
+            "name": "Python SDK and native disassembly",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 24,
+            "started_at": "2026-11-05T07:12:13Z",
+            "completed_at": "2026-11-05T07:12:13Z"
+          },
+          {
+            "name": "Build standalone compiler",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 25,
+            "started_at": "2026-11-05T07:12:13Z",
+            "completed_at": "2026-11-05T07:12:13Z"
+          },
+          {
+            "name": "Iterator and state allocation and binary evidence",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 26,
+            "started_at": "2026-11-05T07:12:13Z",
+            "completed_at": "2026-11-05T07:12:13Z"
+          },
+          {
+            "name": "Run actions/upload-artifact@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 27,
+            "started_at": "2026-11-05T07:12:13Z",
+            "completed_at": "2026-11-05T07:12:13Z"
+          },
+          {
+            "name": "Verify separate native artifact outside checkout",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 28,
+            "started_at": "2026-11-05T07:12:13Z",
+            "completed_at": "2026-11-05T07:12:13Z"
+          },
+          {
+            "name": "Run actions/upload-artifact@v7",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 29,
+            "started_at": "2026-11-05T07:12:13Z",
+            "completed_at": "2026-11-05T07:12:13Z"
+          },
+          {
+            "name": "Preserve failed native golden binaries and C",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 30,
+            "started_at": "2026-11-05T07:12:13Z",
+            "completed_at": "2026-11-05T07:12:13Z"
+          },
+          {
+            "name": "Run actions/upload-artifact@v7",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 31,
+            "started_at": "2026-11-05T07:12:13Z",
+            "completed_at": "2026-11-05T07:12:13Z"
+          },
+          {
+            "name": "Package and verify ownership evidence",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 32,
+            "started_at": "2026-11-05T07:12:13Z",
+            "completed_at": "2026-11-05T07:12:21Z"
+          },
+          {
+            "name": "Upload verified ownership archive",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 33,
+            "started_at": "2026-11-05T07:12:21Z",
+            "completed_at": "2026-11-05T07:12:23Z"
+          },
+          {
+            "name": "Preserve ownership file manifest and read failures",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 34,
+            "started_at": "2026-11-05T07:12:23Z",
+            "completed_at": "2026-11-05T07:12:25Z"
+          },
+          {
+            "name": "Preserve compiler crash reports",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 35,
+            "started_at": "2026-11-05T07:12:25Z",
+            "completed_at": "2026-11-05T07:12:25Z"
+          },
+          {
+            "name": "Post Cache locked Rust dependencies",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 69,
+            "started_at": "2026-11-05T07:12:25Z",
+            "completed_at": "2026-11-05T07:12:25Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 70,
+            "started_at": "2026-11-05T07:12:25Z",
+            "completed_at": "2026-11-05T07:12:25Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 71,
+            "started_at": "2026-11-05T07:12:25Z",
+            "completed_at": "2026-11-05T07:12:28Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/127099336484",
+        "labels": [
+          "macos-15"
+        ],
+        "runner_id": 1000409720,
+        "runner_name": "GitHub Actions 1000409720",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      },
+      "logSha256": "b18b1400c977f7a2fb0b6ea624627cd5102384167af9fafb75ee3ffcb23da790",
+      "diagnostics": [
+        "2026-11-05T06:56:21.8587130Z Warning: openssl@3 3.5.9 is already installed and up-to-date.",
+        "2026-11-05T07:12:11.9327320Z ##[error]The operation was canceled."
+      ]
+    },
+    {
+      "job": {
+        "id": 127099336493,
+        "run_id": 41983677606,
+        "workflow_name": "CI",
+        "head_branch": "gradient-call-storage",
+        "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/41983677606",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOU33zxM8AAAAdl7X3LQ",
+        "head_sha": "946069cd138a9be23f457c73316a3ecf5b972047",
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/127099336493",
+        "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41983677606/job/127099336493",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "created_at": "2026-11-05T06:55:39Z",
+        "started_at": "2026-11-05T06:56:40Z",
+        "completed_at": "2026-11-05T07:13:20Z",
+        "name": "test (ubuntu-latest)",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-05T06:56:41Z",
+            "completed_at": "2026-11-05T06:56:42Z"
+          },
+          {
+            "name": "Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-05T06:56:42Z",
+            "completed_at": "2026-11-05T06:57:04Z"
+          },
+          {
+            "name": "Run dtolnay/rust-toolchain@stable",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-05T06:57:04Z",
+            "completed_at": "2026-11-05T06:57:06Z"
+          },
+          {
+            "name": "Cache locked Rust dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-11-05T06:57:06Z",
+            "completed_at": "2026-11-05T06:57:08Z"
+          },
+          {
+            "name": "Fetch locked Rust dependencies before offline builds",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-05T06:57:08Z",
+            "completed_at": "2026-11-05T06:57:08Z"
+          },
+          {
+            "name": "Run actions/setup-node@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-11-05T06:57:08Z",
+            "completed_at": "2026-11-05T06:57:09Z"
+          },
+          {
+            "name": "Select the Ubuntu archive for AMD64 packages",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-11-05T06:57:09Z",
+            "completed_at": "2026-11-05T06:57:09Z"
+          },
+          {
+            "name": "WebAssembly toolchain, OpenSSL headers (TLS)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-11-05T06:57:09Z",
+            "completed_at": "2026-11-05T06:57:25Z"
+          },
+          {
+            "name": "aarch64 cross compiler and qemu (tests/cross.rs)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9,
+            "started_at": "2026-11-05T06:57:25Z",
+            "completed_at": "2026-11-05T06:57:34Z"
+          },
+          {
+            "name": "binaryen's wasm-opt (`--wasm-async=asyncify`; tests skip without it)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10,
+            "started_at": "2026-11-05T06:57:34Z",
+            "completed_at": "2026-11-05T06:57:35Z"
+          },
+          {
+            "name": "Measurement clock success and failure controls",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 11,
+            "started_at": "2026-11-05T06:57:35Z",
+            "completed_at": "2026-11-05T06:57:38Z"
+          },
+          {
+            "name": "Publish failed clock controls before long tests",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 12,
+            "started_at": "2026-11-05T06:57:38Z",
+            "completed_at": "2026-11-05T06:57:38Z"
+          },
+          {
+            "name": "Generated standard-library docs preflight",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 13,
+            "started_at": "2026-11-05T06:57:38Z",
+            "completed_at": "2026-11-05T06:57:39Z"
+          },
+          {
+            "name": "Exact-head primitive contract inventory",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 14,
+            "started_at": "2026-11-05T06:57:39Z",
+            "completed_at": "2026-11-05T06:57:41Z"
+          },
+          {
+            "name": "Publish primitive contract inventory",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 15,
+            "started_at": "2026-11-05T06:57:41Z",
+            "completed_at": "2026-11-05T06:57:42Z"
+          },
+          {
+            "name": "fmt",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 16,
+            "started_at": "2026-11-05T06:57:42Z",
+            "completed_at": "2026-11-05T06:57:45Z"
+          },
+          {
+            "name": "clippy",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 17,
+            "started_at": "2026-11-05T06:57:45Z",
+            "completed_at": "2026-11-05T06:58:12Z"
+          },
+          {
+            "name": "clippy (WebAssembly build)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 18,
+            "started_at": "2026-11-05T06:58:12Z",
+            "completed_at": "2026-11-05T06:58:33Z"
+          },
+          {
+            "name": "Publish failed compiler diagnostics before long tests",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 19,
+            "started_at": "2026-11-05T06:58:33Z",
+            "completed_at": "2026-11-05T06:58:33Z"
+          },
+          {
+            "name": "Language formatting preflight",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 20,
+            "started_at": "2026-11-05T06:58:33Z",
+            "completed_at": "2026-11-05T06:59:46Z"
+          },
+          {
+            "name": "test",
+            "status": "completed",
+            "conclusion": "cancelled",
+            "number": 21,
+            "started_at": "2026-11-05T06:59:46Z",
+            "completed_at": "2026-11-05T07:13:12Z"
+          },
+          {
+            "name": "Inspect list-copy executables and missing-cleanup controls",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 22,
+            "started_at": "2026-11-05T07:13:12Z",
+            "completed_at": "2026-11-05T07:13:12Z"
+          },
+          {
+            "name": "Inspect array-sort ownership and wide-value controls",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 23,
+            "started_at": "2026-11-05T07:13:12Z",
+            "completed_at": "2026-11-05T07:13:12Z"
+          },
+          {
+            "name": "Inspect array construction moves and cleanup",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 24,
+            "started_at": "2026-11-05T07:13:12Z",
+            "completed_at": "2026-11-05T07:13:12Z"
+          },
+          {
+            "name": "Run actions/upload-artifact@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 25,
+            "started_at": "2026-11-05T07:13:12Z",
+            "completed_at": "2026-11-05T07:13:15Z"
+          },
+          {
+            "name": "Build compiler for Python SDK checks",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 26,
+            "started_at": "2026-11-05T07:13:15Z",
+            "completed_at": "2026-11-05T07:13:15Z"
+          },
+          {
+            "name": "Python SDK and native disassembly",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 27,
+            "started_at": "2026-11-05T07:13:15Z",
+            "completed_at": "2026-11-05T07:13:15Z"
+          },
+          {
+            "name": "Build standalone compiler",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 28,
+            "started_at": "2026-11-05T07:13:15Z",
+            "completed_at": "2026-11-05T07:13:15Z"
+          },
+          {
+            "name": "Numerical output and lifetime controls",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 29,
+            "started_at": "2026-11-05T07:13:15Z",
+            "completed_at": "2026-11-05T07:13:15Z"
+          },
+          {
+            "name": "Run actions/upload-artifact@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 30,
+            "started_at": "2026-11-05T07:13:15Z",
+            "completed_at": "2026-11-05T07:13:15Z"
+          },
+          {
+            "name": "Iterator and state allocation and binary evidence",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 31,
+            "started_at": "2026-11-05T07:13:15Z",
+            "completed_at": "2026-11-05T07:13:15Z"
+          },
+          {
+            "name": "Run actions/upload-artifact@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 32,
+            "started_at": "2026-11-05T07:13:15Z",
+            "completed_at": "2026-11-05T07:13:15Z"
+          },
+          {
+            "name": "Verify separate native artifact outside checkout",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 33,
+            "started_at": "2026-11-05T07:13:15Z",
+            "completed_at": "2026-11-05T07:13:15Z"
+          },
+          {
+            "name": "Run actions/upload-artifact@v7",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 34,
+            "started_at": "2026-11-05T07:13:15Z",
+            "completed_at": "2026-11-05T07:13:15Z"
+          },
+          {
+            "name": "Preserve failed native golden binaries and C",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 35,
+            "started_at": "2026-11-05T07:13:15Z",
+            "completed_at": "2026-11-05T07:13:15Z"
+          },
+          {
+            "name": "Run actions/upload-artifact@v7",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 36,
+            "started_at": "2026-11-05T07:13:15Z",
+            "completed_at": "2026-11-05T07:13:15Z"
+          },
+          {
+            "name": "Package and verify ownership evidence",
+            "status": "completed",
+            "conclusion": "failure",
+            "number": 37,
+            "started_at": "2026-11-05T07:13:15Z",
+            "completed_at": "2026-11-05T07:13:16Z"
+          },
+          {
+            "name": "Upload verified ownership archive",
+            "status": "completed",
+            "conclusion": "failure",
+            "number": 38,
+            "started_at": "2026-11-05T07:13:16Z",
+            "completed_at": "2026-11-05T07:13:16Z"
+          },
+          {
+            "name": "Preserve ownership file manifest and read failures",
+            "status": "completed",
+            "conclusion": "failure",
+            "number": 39,
+            "started_at": "2026-11-05T07:13:16Z",
+            "completed_at": "2026-11-05T07:13:16Z"
+          },
+          {
+            "name": "Post Run actions/setup-node@v7",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 76,
+            "started_at": "2026-11-05T07:13:16Z",
+            "completed_at": "2026-11-05T07:13:16Z"
+          },
+          {
+            "name": "Post Cache locked Rust dependencies",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 77,
+            "started_at": "2026-11-05T07:13:16Z",
+            "completed_at": "2026-11-05T07:13:16Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 78,
+            "started_at": "2026-11-05T07:13:16Z",
+            "completed_at": "2026-11-05T07:13:17Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 79,
+            "started_at": "2026-11-05T07:13:17Z",
+            "completed_at": "2026-11-05T07:13:17Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/127099336493",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "runner_id": 1000409728,
+        "runner_name": "GitHub Actions 1000409728",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      },
+      "logSha256": "e19999360c91de1685e6fecae28e333bb97628cbb6c9f171a65ee34d6b0dcf2d",
+      "diagnostics": [
+        "2026-11-05T07:13:12.5045073Z ##[error]The operation was canceled.",
+        "2026-11-05T07:13:16.0885182Z Traceback (most recent call last):",
+        "2026-11-05T07:13:16.1106394Z ##[error]Process completed with exit code 1.",
+        "2026-11-05T07:13:16.4029808Z ##[error]No files were found with the provided path: ownership-evidence-linux-Linux-X64.zip. No artifacts will be uploaded.",
+        "2026-11-05T07:13:16.6281540Z ##[error]No files were found with the provided path: ownership-evidence-linux-Linux-X64.json. No artifacts will be uploaded."
+      ]
+    },
+    {
+      "job": {
+        "id": 127099336544,
+        "run_id": 41983677606,
+        "workflow_name": "CI",
+        "head_branch": "gradient-call-storage",
+        "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/41983677606",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOU33zxM8AAAAdl7X3YA",
+        "head_sha": "946069cd138a9be23f457c73316a3ecf5b972047",
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/127099336544",
+        "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41983677606/job/127099336544",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "created_at": "2026-11-05T06:55:39Z",
+        "started_at": "2026-11-05T06:55:53Z",
+        "completed_at": "2026-11-05T07:12:37Z",
+        "name": "macos_ownership (macos-15)",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-05T06:55:54Z",
+            "completed_at": "2026-11-05T06:55:55Z"
+          },
+          {
+            "name": "Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-05T06:55:55Z",
+            "completed_at": "2026-11-05T06:56:18Z"
+          },
+          {
+            "name": "Run dtolnay/rust-toolchain@stable",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-05T06:56:18Z",
+            "completed_at": "2026-11-05T06:56:19Z"
+          },
+          {
+            "name": "Cache locked Rust dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-11-05T06:56:19Z",
+            "completed_at": "2026-11-05T06:56:22Z"
+          },
+          {
+            "name": "Fetch locked Rust dependencies before offline builds",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-05T06:56:22Z",
+            "completed_at": "2026-11-05T06:56:23Z"
+          },
+          {
+            "name": "OpenSSL 3",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-11-05T06:56:23Z",
+            "completed_at": "2026-11-05T06:56:25Z"
+          },
+          {
+            "name": "Generated standard-library docs preflight",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-11-05T06:56:25Z",
+            "completed_at": "2026-11-05T06:56:28Z"
+          },
+          {
+            "name": "Language formatting preflight",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-11-05T06:56:28Z",
+            "completed_at": "2026-11-05T06:58:46Z"
+          },
+          {
+            "name": "Full counted-ownership golden corpus",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9,
+            "started_at": "2026-11-05T06:58:46Z",
+            "completed_at": "2026-11-05T06:59:47Z"
+          },
+          {
+            "name": "Publish native-memory diagnostics before the remaining shard",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10,
+            "started_at": "2026-11-05T06:59:47Z",
+            "completed_at": "2026-11-05T06:59:49Z"
+          },
+          {
+            "name": "Second macOS test shard",
+            "status": "completed",
+            "conclusion": "cancelled",
+            "number": 11,
+            "started_at": "2026-11-05T06:59:49Z",
+            "completed_at": "2026-11-05T07:12:22Z"
+          },
+          {
+            "name": "Inspect list-copy executables and missing-cleanup controls",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 12,
+            "started_at": "2026-11-05T07:12:22Z",
+            "completed_at": "2026-11-05T07:12:22Z"
+          },
+          {
+            "name": "Publish individual ownership test logs",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 13,
+            "started_at": "2026-11-05T07:12:22Z",
+            "completed_at": "2026-11-05T07:12:24Z"
+          },
+          {
+            "name": "Retry individual ownership test log upload",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 14,
+            "started_at": "2026-11-05T07:12:24Z",
+            "completed_at": "2026-11-05T07:12:24Z"
+          },
+          {
+            "name": "Preserve failed native corpus binaries, C and statuses",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 15,
+            "started_at": "2026-11-05T07:12:24Z",
+            "completed_at": "2026-11-05T07:12:24Z"
+          },
+          {
+            "name": "Run actions/upload-artifact@v7",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 16,
+            "started_at": "2026-11-05T07:12:24Z",
+            "completed_at": "2026-11-05T07:12:24Z"
+          },
+          {
+            "name": "Package and verify ownership evidence",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 17,
+            "started_at": "2026-11-05T07:12:24Z",
+            "completed_at": "2026-11-05T07:12:26Z"
+          },
+          {
+            "name": "Upload verified ownership archive",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 18,
+            "started_at": "2026-11-05T07:12:26Z",
+            "completed_at": "2026-11-05T07:12:29Z"
+          },
+          {
+            "name": "Preserve ownership file manifest and read failures",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 19,
+            "started_at": "2026-11-05T07:12:29Z",
+            "completed_at": "2026-11-05T07:12:31Z"
+          },
+          {
+            "name": "Preserve compiler crash reports",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 20,
+            "started_at": "2026-11-05T07:12:31Z",
+            "completed_at": "2026-11-05T07:12:31Z"
+          },
+          {
+            "name": "Post Cache locked Rust dependencies",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 39,
+            "started_at": "2026-11-05T07:12:31Z",
+            "completed_at": "2026-11-05T07:12:31Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 40,
+            "started_at": "2026-11-05T07:12:31Z",
+            "completed_at": "2026-11-05T07:12:32Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 41,
+            "started_at": "2026-11-05T07:12:32Z",
+            "completed_at": "2026-11-05T07:12:34Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/127099336544",
+        "labels": [
+          "macos-15"
+        ],
+        "runner_id": 1000409723,
+        "runner_name": "GitHub Actions 1000409723",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      },
+      "logSha256": "a2ff216ae85f3d94be3ba65952ecd90bef846bccb5a9fe0b300a2886d413e56e",
+      "diagnostics": [
+        "2026-11-05T06:56:25.4305040Z Warning: openssl@3 3.5.9 is already installed and up-to-date.",
+        "2026-11-05T07:12:22.7298970Z ##[error]The operation was canceled."
+      ]
+    },
+    {
+      "job": {
+        "id": 127099336548,
+        "run_id": 41983677606,
+        "workflow_name": "CI",
+        "head_branch": "gradient-call-storage",
+        "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/41983677606",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOU33zxM8AAAAdl7X3ZA",
+        "head_sha": "946069cd138a9be23f457c73316a3ecf5b972047",
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/127099336548",
+        "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41983677606/job/127099336548",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "created_at": "2026-11-05T06:55:39Z",
+        "started_at": "2026-11-05T06:55:42Z",
+        "completed_at": "2026-11-05T07:12:13Z",
+        "name": "windows / native (windows-11-arm)",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-05T06:55:43Z",
+            "completed_at": "2026-11-05T06:55:45Z"
+          },
+          {
+            "name": "Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-05T06:55:45Z",
+            "completed_at": "2026-11-05T06:56:25Z"
+          },
+          {
+            "name": "Captured process deadlines",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-05T06:56:25Z",
+            "completed_at": "2026-11-05T06:56:31Z"
+          },
+          {
+            "name": "Publish failed process controls before long tests",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 4,
+            "started_at": "2026-11-05T06:56:31Z",
+            "completed_at": "2026-11-05T06:56:31Z"
+          },
+          {
+            "name": "Run dtolnay/rust-toolchain@stable",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-05T06:56:31Z",
+            "completed_at": "2026-11-05T06:56:39Z"
+          },
+          {
+            "name": "Cache locked Rust dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-11-05T06:56:39Z",
+            "completed_at": "2026-11-05T06:56:43Z"
+          },
+          {
+            "name": "Fetch locked Rust dependencies before offline builds",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-11-05T06:56:43Z",
+            "completed_at": "2026-11-05T06:56:47Z"
+          },
+          {
+            "name": "Native C toolchain for foreign calls",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-11-05T06:56:47Z",
+            "completed_at": "2026-11-05T06:57:20Z"
+          },
+          {
+            "name": "Native Windows compiler check",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9,
+            "started_at": "2026-11-05T06:57:20Z",
+            "completed_at": "2026-11-05T06:58:21Z"
+          },
+          {
+            "name": "Native socket and library execution",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10,
+            "started_at": "2026-11-05T06:58:21Z",
+            "completed_at": "2026-11-05T07:08:02Z"
+          },
+          {
+            "name": "Publish failed native socket and library log",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 11,
+            "started_at": "2026-11-05T07:08:02Z",
+            "completed_at": "2026-11-05T07:08:02Z"
+          },
+          {
+            "name": "Python SDK and native disassembly",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 12,
+            "started_at": "2026-11-05T07:08:02Z",
+            "completed_at": "2026-11-05T07:08:20Z"
+          },
+          {
+            "name": "Language formatting preflight",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 13,
+            "started_at": "2026-11-05T07:08:20Z",
+            "completed_at": "2026-11-05T07:08:21Z"
+          },
+          {
+            "name": "Interpreter golden outputs and exit statuses",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 14,
+            "started_at": "2026-11-05T07:08:21Z",
+            "completed_at": "2026-11-05T07:09:05Z"
+          },
+          {
+            "name": "Queued function captures, receive ownership and callback effects",
+            "status": "completed",
+            "conclusion": "cancelled",
+            "number": 15,
+            "started_at": "2026-11-05T07:09:05Z",
+            "completed_at": "2026-11-05T07:11:59Z"
+          },
+          {
+            "name": "Publish failed queue and callback log",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 16,
+            "started_at": "2026-11-05T07:11:59Z",
+            "completed_at": "2026-11-05T07:11:59Z"
+          },
+          {
+            "name": "Generated programs with native resources and ownership stress",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 17,
+            "started_at": "2026-11-05T07:11:59Z",
+            "completed_at": "2026-11-05T07:11:59Z"
+          },
+          {
+            "name": "Inspect list-copy executables and missing-cleanup controls",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 18,
+            "started_at": "2026-11-05T07:11:59Z",
+            "completed_at": "2026-11-05T07:11:59Z"
+          },
+          {
+            "name": "Array and fold callbacks, capture storage and unwind cleanup",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 19,
+            "started_at": "2026-11-05T07:11:59Z",
+            "completed_at": "2026-11-05T07:11:59Z"
+          },
+          {
+            "name": "Inspect array-sort ownership and wide-value controls",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 20,
+            "started_at": "2026-11-05T07:11:59Z",
+            "completed_at": "2026-11-05T07:11:59Z"
+          },
+          {
+            "name": "Inspect array construction moves and cleanup",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 21,
+            "started_at": "2026-11-05T07:11:59Z",
+            "completed_at": "2026-11-05T07:11:59Z"
+          },
+          {
+            "name": "CPU kernel size validation order",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 22,
+            "started_at": "2026-11-05T07:11:59Z",
+            "completed_at": "2026-11-05T07:11:59Z"
+          },
+          {
+            "name": "Array bounds and ownership failure artifacts",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 23,
+            "started_at": "2026-11-05T07:11:59Z",
+            "completed_at": "2026-11-05T07:11:59Z"
+          },
+          {
+            "name": "Publish native diagnostics before dependency builds",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 24,
+            "started_at": "2026-11-05T07:11:59Z",
+            "completed_at": "2026-11-05T07:11:59Z"
+          },
+          {
+            "name": "Run actions/cache/restore@v6",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 25,
+            "started_at": "2026-11-05T07:11:59Z",
+            "completed_at": "2026-11-05T07:11:59Z"
+          },
+          {
+            "name": "Native OpenSSL dependencies",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 26,
+            "started_at": "2026-11-05T07:11:59Z",
+            "completed_at": "2026-11-05T07:11:59Z"
+          },
+          {
+            "name": "Run actions/cache/save@v6",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 27,
+            "started_at": "2026-11-05T07:11:59Z",
+            "completed_at": "2026-11-05T07:11:59Z"
+          },
+          {
+            "name": "Complete compiler unit tests with native TLS",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 28,
+            "started_at": "2026-11-05T07:11:59Z",
+            "completed_at": "2026-11-05T07:11:59Z"
+          },
+          {
+            "name": "Native TLS and executable ownership",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 29,
+            "started_at": "2026-11-05T07:11:59Z",
+            "completed_at": "2026-11-05T07:11:59Z"
+          },
+          {
+            "name": "Native commands, test recovery and executable cache",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 30,
+            "started_at": "2026-11-05T07:11:59Z",
+            "completed_at": "2026-11-05T07:11:59Z"
+          },
+          {
+            "name": "Publish failed native tls and executable ownership log",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 31,
+            "started_at": "2026-11-05T07:11:59Z",
+            "completed_at": "2026-11-05T07:11:59Z"
+          },
+          {
+            "name": "Remote stream and queued response lifetimes",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 32,
+            "started_at": "2026-11-05T07:11:59Z",
+            "completed_at": "2026-11-05T07:11:59Z"
+          },
+          {
+            "name": "Native nested autodiff and ownership controls",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 33,
+            "started_at": "2026-11-05T07:11:59Z",
+            "completed_at": "2026-11-05T07:11:59Z"
+          },
+          {
+            "name": "Publish failed native nested autodiff and ownership controls log",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 34,
+            "started_at": "2026-11-05T07:11:59Z",
+            "completed_at": "2026-11-05T07:11:59Z"
+          },
+          {
+            "name": "Complete native golden programs",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 35,
+            "started_at": "2026-11-05T07:11:59Z",
+            "completed_at": "2026-11-05T07:11:59Z"
+          },
+          {
+            "name": "Native reuse and string ownership",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 36,
+            "started_at": "2026-11-05T07:11:59Z",
+            "completed_at": "2026-11-05T07:11:59Z"
+          },
+          {
+            "name": "Publish native reuse diagnostics",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 37,
+            "started_at": "2026-11-05T07:11:59Z",
+            "completed_at": "2026-11-05T07:11:59Z"
+          },
+          {
+            "name": "Publish failed complete native golden programs log",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 38,
+            "started_at": "2026-11-05T07:11:59Z",
+            "completed_at": "2026-11-05T07:11:59Z"
+          },
+          {
+            "name": "Build standalone compiler with static C runtime",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 39,
+            "started_at": "2026-11-05T07:11:59Z",
+            "completed_at": "2026-11-05T07:11:59Z"
+          },
+          {
+            "name": "Run actions/upload-artifact@v7",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 40,
+            "started_at": "2026-11-05T07:11:59Z",
+            "completed_at": "2026-11-05T07:11:59Z"
+          },
+          {
+            "name": "Run actions/upload-artifact@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 41,
+            "started_at": "2026-11-05T07:11:59Z",
+            "completed_at": "2026-11-05T07:12:04Z"
+          },
+          {
+            "name": "Post Cache locked Rust dependencies",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 81,
+            "started_at": "2026-11-05T07:12:04Z",
+            "completed_at": "2026-11-05T07:12:04Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 82,
+            "started_at": "2026-11-05T07:12:04Z",
+            "completed_at": "2026-11-05T07:12:09Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 83,
+            "started_at": "2026-11-05T07:12:09Z",
+            "completed_at": "2026-11-05T07:12:09Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/127099336548",
+        "labels": [
+          "windows-11-arm"
+        ],
+        "runner_id": 1000409719,
+        "runner_name": "GitHub Actions 1000409719",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      },
+      "logSha256": "22940975a569a3de3cce89f6d5bfb90c7a2c6962e77f6ad0fb8b7f4534f04910",
+      "diagnostics": [
+        "2026-11-05T07:08:02.9283306Z ##[group]Run python -W error::ResourceWarning -m unittest discover -s sdk/python/tests -v",
+        "2026-11-05T07:08:02.9284360Z python -W error::ResourceWarning -m unittest discover -s sdk/python/tests -v",
+        "2026-11-05T07:11:59.0130460Z ##[error]The operation was canceled."
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact": {
+        "id": 13396175258,
+        "node_id": "MDg6QXJ0aWZhY3QxMzM5NjE3NTI1OA==",
+        "name": "macos-regular-tests-macos-15",
+        "size_in_bytes": 15973,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13396175258",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13396175258/zip",
+        "expired": false,
+        "digest": "sha256:b0bd68ff9c3db71b1e35d02767e084f54f572f283cf45a82204a066a55f996d8",
+        "created_at": "2026-11-05T07:12:13Z",
+        "updated_at": "2026-11-05T07:12:13Z",
+        "expires_at": "2027-02-03T06:55:38Z",
+        "workflow_run": {
+          "id": 41983677606,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "gradient-call-storage",
+          "head_sha": "946069cd138a9be23f457c73316a3ecf5b972047"
+        }
+      },
+      "logs": {
+        "bin-fwp.log": {
+          "sha256": "df166913f47ff1f04202cae9b31df67ed272d692d99a0023a8117dc3029100dd",
+          "summaries": [
+            "ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+          ],
+          "diagnostics": []
+        },
+        "lib-fwp.log": {
+          "sha256": "7d0fea7d63383e88689203c0dca93a26ea7ec24de9996aae92aa6bcdd588f878",
+          "summaries": [
+            "ok. 292 passed; 0 failed; 4 ignored; 0 measured; 0 filtered out; finished in 8.26s"
+          ],
+          "diagnostics": []
+        },
+        "test-aot.log": {
+          "sha256": "b035e84e3b5204584577e61ef49572f7b5b3ac474df9bdab51508470b87a1adb",
+          "summaries": [
+            "ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 78.52s"
+          ],
+          "diagnostics": []
+        },
+        "test-arc_corpus.log": {
+          "sha256": "81d444ec34738fb243093514b6365e52ec6383256442daa835289bd23f4dfcd3",
+          "summaries": [
+            "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 151.40s"
+          ],
+          "diagnostics": []
+        },
+        "test-arc_extensions.log": {
+          "sha256": "7be98bc8974d371cbb32b2f61deeedf14d03fa8bc78d106e3b539494de2c4aca",
+          "summaries": [
+            "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 42.51s"
+          ],
+          "diagnostics": []
+        },
+        "test-array_text.log": {
+          "sha256": "26370a0d7d4294ed0c180018eb4399781e1e34b40a649ef958d04ece42d8d971",
+          "summaries": [
+            "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 48.68s"
+          ],
+          "diagnostics": []
+        },
+        "test-autodiff_nested.log": {
+          "sha256": "ef8b25c7b56b7647ac77cf15a109576de2aa2f178f47eed3adc31a15e096f9ce",
+          "summaries": [
+            "ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 37.70s"
+          ],
+          "diagnostics": []
+        },
+        "test-cli.log": {
+          "sha256": "1757ba7207f9c8206e209ffc8842763c0aafc967a6e2faa0fd79991d68c21592",
+          "summaries": [
+            "ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 65.79s"
+          ],
+          "diagnostics": []
+        },
+        "test-collection_construction.log": {
+          "sha256": "fead4949e2f4a756875b45d185ec98e2ed1abcc3e8aa3f38cdcdbaaa7461383d",
+          "summaries": [
+            "ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 15.67s"
+          ],
+          "diagnostics": []
+        },
+        "test-float_formats.log": {
+          "sha256": "21334330aaa4b07882968de0337fe34df03c2a57bfc616f307b04c93c9d1476b",
+          "summaries": [
+            "ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 49.47s"
+          ],
+          "diagnostics": []
+        },
+        "test-float_linking.log": {
+          "sha256": "f97ebfb0475f0285499c986267e9f6b17eb2850f2122358daf42a88c9c172960",
+          "summaries": [
+            "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 22.54s"
+          ],
+          "diagnostics": []
+        },
+        "test-golden_check.log": {
+          "sha256": "09e26206594a389ce6512d1733280b56a592ce78391dcbfd1597416006233dbb",
+          "summaries": [
+            "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 17.94s"
+          ],
+          "diagnostics": []
+        },
+        "test-golden_run.log": {
+          "sha256": "136beca50125e30b8233df8af44bec8ec11ee2bb15137fca3225210ddb696624",
+          "summaries": [
+            "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 165.14s"
+          ],
+          "diagnostics": []
+        },
+        "test-hash_ownership.log": {
+          "sha256": "a677ede63cd9b44cf17de613c836fb043965e94cbc93739ffb29d7817b71318d",
+          "summaries": [
+            "ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 32.56s"
+          ],
+          "diagnostics": []
+        },
+        "test-integer_output.log": {
+          "sha256": "fd476562ce8b1efa6b37db0eb8ba6d6740d6c796b0d42cc91f3d13f5bb551fd1",
+          "summaries": [
+            "ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 26.80s"
+          ],
+          "diagnostics": []
+        },
+        "test-iterator_fusion.log": {
+          "sha256": "bff8bf281ba38c97fdcc1eddbaf60cf5e21b2b5a896f6aa140f999e96abf15b9",
+          "summaries": [
+            "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 37.68s"
+          ],
+          "diagnostics": []
+        },
+        "test-mapped_array_construction.log": {
+          "sha256": "f2614eaf7a8e1cd1a472a185724b3ed9a37c00ac79ef5d65c5b650ce4ec96256",
+          "summaries": [
+            "ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 26.34s"
+          ],
+          "diagnostics": []
+        },
+        "test-numeric_array_fusion.log": {
+          "sha256": "c8cbd0f90dcec4b7f354fb5f0da5000ac4ce714e133777e4dfdcf86dc6ebe2fd",
+          "summaries": [],
+          "diagnostics": []
+        },
+        "test-preempt.log": {
+          "sha256": "301078528d160f96fe8667ab3d89fef05a24c9654509da4fd6a9b51d01d58416",
+          "summaries": [
+            "ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 24.92s"
+          ],
+          "diagnostics": []
+        },
+        "test-rest.log": {
+          "sha256": "cafce6d5b83baf067e10d3ffb9b499c0eb45a4a175fcb5aed6a6b6ba4c4355f3",
+          "summaries": [
+            "ok. 27 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 242.70s"
+          ],
+          "diagnostics": []
+        },
+        "test-reuse.log": {
+          "sha256": "9b22b9ad9bd0a2c21de31626254c4c2cde8e37609848117c3207cef2e841c988",
+          "summaries": [
+            "ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 20.24s"
+          ],
+          "diagnostics": []
+        },
+        "test-services.log": {
+          "sha256": "8e0ca132efe828b96763eead37b98e3b2c8a174be8d2e8f0712a905c0e02c567",
+          "summaries": [
+            "ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 36.18s"
+          ],
+          "diagnostics": []
+        },
+        "test-state_sequence_ownership.log": {
+          "sha256": "cb389332ae1b7accf6a3d30f58e0d0eca2ef9415c4f4a6bf097a9d090a5399c5",
+          "summaries": [
+            "ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 35.18s"
+          ],
+          "diagnostics": []
+        },
+        "test-text_file_tools.log": {
+          "sha256": "d722ca92bed3be3e653c0ad54efa8017fcfa02067a37a8b685b22964fc82148d",
+          "summaries": [],
+          "diagnostics": []
+        },
+        "test-static_constants.log": {
+          "sha256": "ea3fcec2565c5c2a61da803e70c0939d8f71ced21b63bbfb89aa7e016358fe5d",
+          "summaries": [
+            "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.97s"
+          ],
+          "diagnostics": []
+        },
+        "test-wide_workers.log": {
+          "sha256": "4ba6ca255388263e33aa60d1ab78c6b75affa0cb1f8514478612cfff9e28f225",
+          "summaries": [
+            "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 18.17s"
+          ],
+          "diagnostics": []
+        },
+        "test-wasm_arc.log": {
+          "sha256": "eb372e10f182a3589edf340aefb70992d71a8066767161293f12fd9bd1970f63",
+          "summaries": [
+            "ok. 21 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.93s"
+          ],
+          "diagnostics": []
+        }
+      },
+      "retainedArchiveSha256": "dbc17a8cad106b00999a19ce4a2082bb042d80138360b910aa02c139b7c7086d"
+    },
+    {
+      "artifact": {
+        "id": 13395668069,
+        "node_id": "MDg6QXJ0aWZhY3QxMzM5NTY2ODA2OQ==",
+        "name": "native-test-logs-ubuntu-24.04-arm",
+        "size_in_bytes": 9891,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13395668069",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13395668069/zip",
+        "expired": false,
+        "digest": "sha256:9681bcbf3241a4e4b1c1a5c1b7629acf524ed2772c6fc99d16759b0657646f2d",
+        "created_at": "2026-11-05T07:12:15Z",
+        "updated_at": "2026-11-05T07:12:15Z",
+        "expires_at": "2027-02-03T06:55:38Z",
+        "workflow_run": {
+          "id": 41983677606,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "gradient-call-storage",
+          "head_sha": "946069cd138a9be23f457c73316a3ecf5b972047"
+        }
+      },
+      "logs": {
+        "bin-fwp.log": {
+          "sha256": "df166913f47ff1f04202cae9b31df67ed272d692d99a0023a8117dc3029100dd",
+          "summaries": [
+            "ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+          ],
+          "diagnostics": []
+        },
+        "lib-fwp.log": {
+          "sha256": "d0aafaf682c64bcdf8bb75e7e228bac6bf8d1bd3bdcd78dcc1b53bd0d86e4252",
+          "summaries": [
+            "ok. 292 passed; 0 failed; 4 ignored; 0 measured; 0 filtered out; finished in 10.08s"
+          ],
+          "diagnostics": []
+        },
+        "test-arc_corpus.log": {
+          "sha256": "295d5977da6bea344b00017911022ae388ecbc82113d994fc2d02a23cfe33ea0",
+          "summaries": [],
+          "diagnostics": []
+        },
+        "test-golden_run.log": {
+          "sha256": "9eaa1d2f295d4f95dd3f4e15be6a8b749e76764ba75bf2cfa3e99960740b8ded",
+          "summaries": [
+            "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 140.13s"
+          ],
+          "diagnostics": []
+        },
+        "test-rest.log": {
+          "sha256": "a8c74e10e24a95eb72edb4ec5ac6bd4eaab3474f47a9b38bc670d45f2959ac0c",
+          "summaries": [
+            "ok. 27 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 158.81s"
+          ],
+          "diagnostics": []
+        },
+        "test-server_entry_ownership.log": {
+          "sha256": "006e70ccb69748b7d9ee0e495e21dfa00375d0c3adcf334a81595e8ae8ae386e",
+          "summaries": [
+            "ok. 4 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 113.65s"
+          ],
+          "diagnostics": []
+        },
+        "test-tls.log": {
+          "sha256": "94804174971fa6750b9417a1605e47e8addea28d0e51494d33fdcadf3a050832",
+          "summaries": [
+            "ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 113.34s"
+          ],
+          "diagnostics": []
+        },
+        "test-wasm_arc.log": {
+          "sha256": "1ddff08eaec42c8ac6db3083eceabe690cbfcee1ce31930d51c635585191f934",
+          "summaries": [],
+          "diagnostics": []
+        },
+        "test-web.log": {
+          "sha256": "95547b923859724bbd80428d70849b4d609a2340206f32186ddfedb9a52b5e57",
+          "summaries": [
+            "ok. 15 passed; 0 failed; 4 ignored; 0 measured; 0 filtered out; finished in 144.49s"
+          ],
+          "diagnostics": []
+        }
+      },
+      "retainedArchiveSha256": "9b029cefb83c45043da96eaa1ef313624976088d8bfbb0de27a81eb6e0c07b6a"
+    },
+    {
+      "artifact": {
+        "id": 13395638192,
+        "node_id": "MDg6QXJ0aWZhY3QxMzM5NTYzODE5Mg==",
+        "name": "macos-regular-tests-macos-15-intel",
+        "size_in_bytes": 7857,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13395638192",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13395638192/zip",
+        "expired": false,
+        "digest": "sha256:15896a4921c61f0cb03ced15280a544cbff472f104d45ceeb1ad9c52a08f4189",
+        "created_at": "2026-11-05T07:12:24Z",
+        "updated_at": "2026-11-05T07:12:24Z",
+        "expires_at": "2027-02-03T06:55:38Z",
+        "workflow_run": {
+          "id": 41983677606,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "gradient-call-storage",
+          "head_sha": "946069cd138a9be23f457c73316a3ecf5b972047"
+        }
+      },
+      "logs": {
+        "bin-fwp.log": {
+          "sha256": "df166913f47ff1f04202cae9b31df67ed272d692d99a0023a8117dc3029100dd",
+          "summaries": [
+            "ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+          ],
+          "diagnostics": []
+        },
+        "lib-fwp.log": {
+          "sha256": "146d4cde36ce5ff845539554fdc13ad61b39f20261600c19198d935f496ebcbc",
+          "summaries": [
+            "ok. 292 passed; 0 failed; 4 ignored; 0 measured; 0 filtered out; finished in 18.61s"
+          ],
+          "diagnostics": []
+        },
+        "test-golden_run.log": {
+          "sha256": "668a043c28e9bad1e03a9c8c8f4aa3d5064b6ac2462b7f1fe423af1e61f95c8a",
+          "summaries": [],
+          "diagnostics": []
+        },
+        "test-rest.log": {
+          "sha256": "83401b208fde4c90d69495d9beec61f18c8a14c53d6cd3f234e2c975f0590d52",
+          "summaries": [],
+          "diagnostics": []
+        },
+        "test-wasm_arc.log": {
+          "sha256": "9a176042454fc992646f7672f4623c533cec7e492e556dd82b87ca4ca9e86131",
+          "summaries": [
+            "ok. 21 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 14.19s"
+          ],
+          "diagnostics": []
+        }
+      },
+      "retainedArchiveSha256": "2eb638e224308f534b87128f3bd58cd2e7cb128b489875f8d78ce8e9acd29c2e"
+    },
+    {
+      "artifact": {
+        "id": 13395573498,
+        "node_id": "MDg6QXJ0aWZhY3QxMzM5NTU3MzQ5OA==",
+        "name": "macos-ownership-tests-macos-15-intel",
+        "size_in_bytes": 1724,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13395573498",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13395573498/zip",
+        "expired": false,
+        "digest": "sha256:2c3e18c3812ed855ffcff65240bfb2f9141ced941aface43b2e4357f9e98a891",
+        "created_at": "2026-11-05T07:12:51Z",
+        "updated_at": "2026-11-05T07:12:51Z",
+        "expires_at": "2027-02-03T06:55:38Z",
+        "workflow_run": {
+          "id": 41983677606,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "gradient-call-storage",
+          "head_sha": "946069cd138a9be23f457c73316a3ecf5b972047"
+        }
+      },
+      "logs": {
+        "test-examples.log": {
+          "sha256": "b674fbdbc63c6761f1d6d8aa841b173d104c89fde4caf6a291c5119cc5d7e441",
+          "summaries": [],
+          "diagnostics": []
+        },
+        "test-server_entry_ownership.log": {
+          "sha256": "179b7f0b64f85f4e956afaf50fc773a9ce895c0a0a0dc936336db9707bf17019",
+          "summaries": [
+            "ok. 4 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 388.77s"
+          ],
+          "diagnostics": []
+        },
+        "test-tls.log": {
+          "sha256": "7979b447ab981fd5fec54038d7e4406e3bff05157474b92b3b464520fd75fcc4",
+          "summaries": [],
+          "diagnostics": []
+        },
+        "test-web.log": {
+          "sha256": "11f8babe109894284862da70d14b44cb3d2dd049778abf14ef6c397cddc487ef",
+          "summaries": [
+            "ok. 15 passed; 0 failed; 4 ignored; 0 measured; 0 filtered out; finished in 466.01s"
+          ],
+          "diagnostics": []
+        }
+      },
+      "retainedArchiveSha256": "dd2e6d2623d8140adb47a29013e1a8fc61be348faed6ab5ec1804c0c701af6a3"
+    },
+    {
+      "artifact": {
+        "id": 13395528426,
+        "node_id": "MDg6QXJ0aWZhY3QxMzM5NTUyODQyNg==",
+        "name": "windows-probe-windows-11-arm",
+        "size_in_bytes": 28706223,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13395528426",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13395528426/zip",
+        "expired": false,
+        "digest": "sha256:f6612e80ff88b3b7844017aa8d8d4046d5a157b3c81620f6693ae44dfbc98034",
+        "created_at": "2026-11-05T07:12:04Z",
+        "updated_at": "2026-11-05T07:12:04Z",
+        "expires_at": "2027-02-03T06:55:38Z",
+        "workflow_run": {
+          "id": 41983677606,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "gradient-call-storage",
+          "head_sha": "946069cd138a9be23f457c73316a3ecf5b972047"
+        }
+      },
+      "logs": {
+        "windows-probe.log": {
+          "sha256": "563f30c9c6192873af1c9a0da8f36badfdbf9866f6b1bce31ec81d01f3d53258",
+          "summaries": [],
+          "diagnostics": []
+        }
+      },
+      "retainedArchiveSha256": "b7ab9fed55ef2016ba4853eba768e3f81eefc91ffea260e37d5ff444458db553"
+    },
+    {
+      "artifact": {
+        "id": 13395508780,
+        "node_id": "MDg6QXJ0aWZhY3QxMzM5NTUwODc4MA==",
+        "name": "windows-probe-windows-2025",
+        "size_in_bytes": 11726800,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13395508780",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13395508780/zip",
+        "expired": false,
+        "digest": "sha256:3183304fcd950f9061ff9c56ac5d3a8a0bcff4a7b56626b5a46a183cd36ef0f3",
+        "created_at": "2026-11-05T07:12:45Z",
+        "updated_at": "2026-11-05T07:12:45Z",
+        "expires_at": "2027-02-03T06:55:38Z",
+        "workflow_run": {
+          "id": 41983677606,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "gradient-call-storage",
+          "head_sha": "946069cd138a9be23f457c73316a3ecf5b972047"
+        }
+      },
+      "logs": {
+        "windows-probe.log": {
+          "sha256": "daff4b0705049c58fe7c723ff70d7aa8efb16bf1da535f3195db5281e44a95c7",
+          "summaries": [],
+          "diagnostics": []
+        }
+      },
+      "retainedArchiveSha256": "290e717bd0633e5636f2434ffaebb54a1de6e68cb176ff46ca86efd4d7f0baba"
+    },
+    {
+      "artifact": {
+        "id": 13395341709,
+        "node_id": "MDg6QXJ0aWZhY3QxMzM5NTM0MTcwOQ==",
+        "name": "native-corpus-log-macos-15",
+        "size_in_bytes": 1823,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13395341709",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13395341709/zip",
+        "expired": false,
+        "digest": "sha256:97ea00a520420e1f38d3f1f40e1030c5f430c3d2f17879ceb12241e4707ab4c1",
+        "created_at": "2026-11-05T06:59:49Z",
+        "updated_at": "2026-11-05T06:59:49Z",
+        "expires_at": "2027-02-03T06:55:38Z",
+        "workflow_run": {
+          "id": 41983677606,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "gradient-call-storage",
+          "head_sha": "946069cd138a9be23f457c73316a3ecf5b972047"
+        }
+      },
+      "logs": {
+        "native-corpus.log": {
+          "sha256": "a92365dbe73560fe1a40e7066bd15bc94a003a40adac3868319f5cc3a4b850b7",
+          "summaries": [
+            "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 9 filtered out; finished in 57.63s"
+          ],
+          "diagnostics": []
+        }
+      },
+      "retainedArchiveSha256": "558b3e3b1a29acd8622cc6975bc88ac81d8a51bb8aae830ad1fada803b7e1846"
+    },
+    {
+      "artifact": {
+        "id": 13395261828,
+        "node_id": "MDg6QXJ0aWZhY3QxMzM5NTI2MTgyOA==",
+        "name": "native-corpus-log-macos-15-intel",
+        "size_in_bytes": 1837,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13395261828",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13395261828/zip",
+        "expired": false,
+        "digest": "sha256:a0d4ab9691668f6cb0433d9f71ef1a62121821e0d7b253655c6630899d1eb884",
+        "created_at": "2026-11-05T07:01:51Z",
+        "updated_at": "2026-11-05T07:01:51Z",
+        "expires_at": "2027-02-03T06:55:38Z",
+        "workflow_run": {
+          "id": 41983677606,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "gradient-call-storage",
+          "head_sha": "946069cd138a9be23f457c73316a3ecf5b972047"
+        }
+      },
+      "logs": {
+        "native-corpus.log": {
+          "sha256": "c576d7111409138859a9ba0fe33287316162c0b44a909d67d2a760ac8b848a58",
+          "summaries": [
+            "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 9 filtered out; finished in 69.36s"
+          ],
+          "diagnostics": []
+        }
+      },
+      "retainedArchiveSha256": "294db445beaa1451ea798880139726e242c1992e9ee217ad16e39dcb7da4131e"
+    },
+    {
+      "artifact": {
+        "id": 13395044735,
+        "node_id": "MDg6QXJ0aWZhY3QxMzM5NTA0NDczNQ==",
+        "name": "macos-ownership-tests-macos-15",
+        "size_in_bytes": 5075,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13395044735",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13395044735/zip",
+        "expired": false,
+        "digest": "sha256:7a9de0503d26a26e866afeb837ae1af572c05d4c254c9402ab6c7b2ad035be46",
+        "created_at": "2026-11-05T07:12:25Z",
+        "updated_at": "2026-11-05T07:12:25Z",
+        "expires_at": "2027-02-03T06:55:38Z",
+        "workflow_run": {
+          "id": 41983677606,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "gradient-call-storage",
+          "head_sha": "946069cd138a9be23f457c73316a3ecf5b972047"
+        }
+      },
+      "logs": {
+        "test-grpc.log": {
+          "sha256": "9b58c6a50cda940c65bcc078fc45f52b4bc2ab1493f5c2fda1e330432dc79d39",
+          "summaries": [
+            "ok. 8 passed; 0 failed; 5 ignored; 0 measured; 0 filtered out; finished in 153.28s"
+          ],
+          "diagnostics": []
+        },
+        "test-examples.log": {
+          "sha256": "6f492b26d12e441d07169a716222fec266412bda9c4e8f2789edbed5600541c8",
+          "summaries": [
+            "ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 140.71s"
+          ],
+          "diagnostics": []
+        },
+        "test-grpc_force_cleanup.log": {
+          "sha256": "d8937018cc1649f173402e7e4703bd775732da66dec8bbc53283974f87d926eb",
+          "summaries": [
+            "ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 63.30s"
+          ],
+          "diagnostics": []
+        },
+        "test-grpc_receive_cleanup.log": {
+          "sha256": "342a457185e8db82f62d5593e53aa7f6d863b5566ea01398c3a3ccc497832bea",
+          "summaries": [
+            "ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 74.57s"
+          ],
+          "diagnostics": []
+        },
+        "test-grpc_response_encoding.log": {
+          "sha256": "614113366f3f82e9c08350b43115960da74544287c004567f2c4e68c23f277dd",
+          "summaries": [],
+          "diagnostics": []
+        },
+        "test-server_entry_ownership.log": {
+          "sha256": "e0df095215250c094174d6e1b6d503e61b2ccd335b2d93d76d72842ce7b95e05",
+          "summaries": [
+            "ok. 4 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 168.51s"
+          ],
+          "diagnostics": []
+        },
+        "test-service_context_storage.log": {
+          "sha256": "b7c55ed7d876eaeb0f4fd93e5ada46a4b977a801e17938068c8033cf6d7da882",
+          "summaries": [],
+          "diagnostics": []
+        },
+        "test-tls.log": {
+          "sha256": "c4f60107b0a4a0eb4d81d15c33c6d02f6be413862a2aa0df888cb4be06cdc333",
+          "summaries": [
+            "ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 258.68s"
+          ],
+          "diagnostics": []
+        },
+        "test-udp_ownership.log": {
+          "sha256": "c8b567b893b40db17a537efecd46227ebc156c6ed2f45e67f0e301d1c58a4c1a",
+          "summaries": [
+            "ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 21.32s"
+          ],
+          "diagnostics": []
+        },
+        "test-vector_ownership.log": {
+          "sha256": "10e1cb27f2e36ef2fb1715ff751e391b713974efd1d2de5ecddf62487b719ea8",
+          "summaries": [
+            "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 37.75s"
+          ],
+          "diagnostics": []
+        },
+        "test-web.log": {
+          "sha256": "962339f6f4eca0ea734c2575f3d42788c5b239a6d673b88800a282ec619915b1",
+          "summaries": [
+            "ok. 15 passed; 0 failed; 4 ignored; 0 measured; 0 filtered out; finished in 216.21s"
+          ],
+          "diagnostics": []
+        },
+        "test-zip_map_fusion.log": {
+          "sha256": "50ef453d59e9b3120bee1fb84da722da3648ee8a84193336997d9bd1163dbe8f",
+          "summaries": [
+            "ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 97.58s"
+          ],
+          "diagnostics": []
+        }
+      },
+      "retainedArchiveSha256": "495670ac50888f26851631fd53db61e07079ce75a04f726dcfa6dad98c5ee33e"
+    },
+    {
+      "artifact": {
+        "id": 13394839740,
+        "node_id": "MDg6QXJ0aWZhY3QxMzM5NDgzOTc0MA==",
+        "name": "native-test-logs-ubuntu-latest",
+        "size_in_bytes": 9187,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13394839740",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13394839740/zip",
+        "expired": false,
+        "digest": "sha256:a3cc160f9fac34f1e4efee092367d2e7a0cbc7916390357312fd383c1ef5a595",
+        "created_at": "2026-11-05T07:13:14Z",
+        "updated_at": "2026-11-05T07:13:14Z",
+        "expires_at": "2027-02-03T06:55:38Z",
+        "workflow_run": {
+          "id": 41983677606,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "gradient-call-storage",
+          "head_sha": "946069cd138a9be23f457c73316a3ecf5b972047"
+        }
+      },
+      "logs": {
+        "bin-fwp.log": {
+          "sha256": "df166913f47ff1f04202cae9b31df67ed272d692d99a0023a8117dc3029100dd",
+          "summaries": [
+            "ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+          ],
+          "diagnostics": []
+        },
+        "lib-fwp.log": {
+          "sha256": "9bf1babb3e939e9f105883822195a47b6fc4c834b1c6e5db023dd335cfe163e9",
+          "summaries": [
+            "ok. 292 passed; 0 failed; 4 ignored; 0 measured; 0 filtered out; finished in 12.22s"
+          ],
+          "diagnostics": []
+        },
+        "test-golden_run.log": {
+          "sha256": "5d1dedc19d928b2f05344af92107249dc814857b5e397b9a30aae1c143c08dbc",
+          "summaries": [],
+          "diagnostics": []
+        },
+        "test-rest.log": {
+          "sha256": "4604ca27595a35b8f90e19fcb4e68651bcb267bfc13dcc93b0ff43324b6a0ef3",
+          "summaries": [
+            "ok. 27 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 205.15s"
+          ],
+          "diagnostics": []
+        },
+        "test-server_entry_ownership.log": {
+          "sha256": "31ed03f2f25c73493a57a0b3adf4d526a37b1497b00bf2e524a8f41f035acae3",
+          "summaries": [
+            "ok. 4 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 144.52s"
+          ],
+          "diagnostics": []
+        },
+        "test-wasm_arc.log": {
+          "sha256": "1ddff08eaec42c8ac6db3083eceabe690cbfcee1ce31930d51c635585191f934",
+          "summaries": [],
+          "diagnostics": []
+        },
+        "test-web.log": {
+          "sha256": "8c73b16b3e0c7c2c32389a8c5e59b2c41b4319295373d40514305ae3d0600e78",
+          "summaries": [
+            "ok. 15 passed; 0 failed; 4 ignored; 0 measured; 0 filtered out; finished in 181.06s"
+          ],
+          "diagnostics": []
+        }
+      },
+      "retainedArchiveSha256": "8dc863636dd751eb857d1519d987dce45e5302f1dd5c2cd65b2b731c02a376b9"
+    }
+  ],
+  "acceptance": "Cancelled work does not establish a passing gate; inspect every diagnostic before publication."
+}

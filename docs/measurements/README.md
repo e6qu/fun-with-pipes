@@ -37,6 +37,7 @@ identities. Do not edit observations to make an old experiment describe new code
 
 ## Numerical applications
 
+- [Gradient call storage](gradient-call-storage.md): next grouped proof for scoped input borrowing, fold fields, direct backward seeds and coordinate scratch. Implementation pending.
 - [Current gradient allocation sites](gradient-storage-2026-11-05/README.md): audited phase counts, exact remaining constructors and two retain sites after numeric-storage reuse.
 
 - [Private derivative inputs](packed-derivative-inputs.md): one buffer replaces

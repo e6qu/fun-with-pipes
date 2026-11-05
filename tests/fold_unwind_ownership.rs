@@ -266,8 +266,15 @@ transform = fn pause -> fn seed -> fn input ->
                 "    return fwp_value_finish",
                 "    packed_stage = 0;\n    return fwp_value_finish",
             );
-        let fold_control = fold.replace("        accumulator = w", "        packed_stage = 2; packed_fold_visits++;\n        accumulator = w")
-        .replace("    return fwp_rc_fresh(fwp_record(", "    packed_fail_allocation = packed_mode == 6;\n    return fwp_rc_fresh(fwp_record(");
+        let fold_control = fold
+            .replace(
+                "        accumulator = w",
+                "        packed_stage = 2; packed_fold_visits++;\n        accumulator = w",
+            )
+            .replace(
+                "    return (fwp_wr",
+                "    packed_fail_allocation = packed_mode == 6;\n    return (fwp_wr",
+            );
         assert_ne!(map, map_control);
         assert_ne!(fold, fold_control);
         let mut code = emitted[..emitted.find("int main(").unwrap()]

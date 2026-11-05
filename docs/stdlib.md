@@ -2567,6 +2567,7 @@ trait ReverseScalar[T] : Field[T], Neg[T], Dup[T] =
     rev._seed : List[T] -> (I64, List[Rev[T]])
     rev._push : I64 -> T -> I64 -> T -> I64
     rev._backward : I64 -> List[I64] -> List[T] -> Array[T]
+    rev._backward-one : I64 -> I64 -> T -> Array[T]
     rev._inactive-zero : T -> Bool
 ad.tape-owned : (t, t -> t -> t, t -> t -> t, t -> Bool) -> List[t] -> I64 where Dup[t]
 

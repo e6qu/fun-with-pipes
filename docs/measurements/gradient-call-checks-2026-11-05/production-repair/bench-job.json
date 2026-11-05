@@ -1,0 +1,204 @@
+{
+  "id": 127059783601,
+  "run_id": 41971248924,
+  "workflow_name": "CI",
+  "head_branch": "gradient-call-storage",
+  "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/41971248924",
+  "run_attempt": 1,
+  "node_id": "CR_kwDOU33zxM8AAAAdlVpvsQ",
+  "head_sha": "4160061cd0d421a55ab4e467c6ec5fb6fd88cbf6",
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/127059783601",
+  "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41971248924/job/127059783601",
+  "status": "completed",
+  "conclusion": "failure",
+  "created_at": "2026-11-05T05:00:26Z",
+  "started_at": "2026-11-05T05:06:59Z",
+  "completed_at": "2026-11-05T05:08:10Z",
+  "name": "bench",
+  "steps": [
+    {
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 1,
+      "started_at": "2026-11-05T05:07:00Z",
+      "completed_at": "2026-11-05T05:07:00Z"
+    },
+    {
+      "name": "Run actions/checkout@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 2,
+      "started_at": "2026-11-05T05:07:00Z",
+      "completed_at": "2026-11-05T05:07:17Z"
+    },
+    {
+      "name": "Run dtolnay/rust-toolchain@stable",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 3,
+      "started_at": "2026-11-05T05:07:17Z",
+      "completed_at": "2026-11-05T05:07:17Z"
+    },
+    {
+      "name": "Cache locked Rust dependencies",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 4,
+      "started_at": "2026-11-05T05:07:17Z",
+      "completed_at": "2026-11-05T05:07:18Z"
+    },
+    {
+      "name": "Fetch locked Rust dependencies before offline builds",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 5,
+      "started_at": "2026-11-05T05:07:18Z",
+      "completed_at": "2026-11-05T05:07:19Z"
+    },
+    {
+      "name": "Select the Ubuntu archive for AMD64 packages",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 6,
+      "started_at": "2026-11-05T05:07:19Z",
+      "completed_at": "2026-11-05T05:07:19Z"
+    },
+    {
+      "name": "OpenSSL headers (TLS)",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 7,
+      "started_at": "2026-11-05T05:07:19Z",
+      "completed_at": "2026-11-05T05:07:22Z"
+    },
+    {
+      "name": "Benchmark build failure and metadata controls",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 8,
+      "started_at": "2026-11-05T05:07:22Z",
+      "completed_at": "2026-11-05T05:07:24Z"
+    },
+    {
+      "name": "Numerical measurement requirement controls",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 9,
+      "started_at": "2026-11-05T05:07:24Z",
+      "completed_at": "2026-11-05T05:07:24Z"
+    },
+    {
+      "name": "Generated standard-library docs preflight",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 10,
+      "started_at": "2026-11-05T05:07:24Z",
+      "completed_at": "2026-11-05T05:07:25Z"
+    },
+    {
+      "name": "Language formatting preflight",
+      "status": "completed",
+      "conclusion": "failure",
+      "number": 11,
+      "started_at": "2026-11-05T05:07:25Z",
+      "completed_at": "2026-11-05T05:08:07Z"
+    },
+    {
+      "name": "Check peer overflow order and allocation failures",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 12,
+      "started_at": "2026-11-05T05:08:07Z",
+      "completed_at": "2026-11-05T05:08:07Z"
+    },
+    {
+      "name": "benchmarks against C and Rust (docs/benchmarks.md)",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 13,
+      "started_at": "2026-11-05T05:08:07Z",
+      "completed_at": "2026-11-05T05:08:07Z"
+    },
+    {
+      "name": "Inspect measured C, Rust and checked-ARC binaries",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 14,
+      "started_at": "2026-11-05T05:08:07Z",
+      "completed_at": "2026-11-05T05:08:07Z"
+    },
+    {
+      "name": "Reject incorrect benchmark claims, binaries and missing samples",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 15,
+      "started_at": "2026-11-05T05:08:07Z",
+      "completed_at": "2026-11-05T05:08:07Z"
+    },
+    {
+      "name": "Measure process memory and separate managed storage",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 16,
+      "started_at": "2026-11-05T05:08:07Z",
+      "completed_at": "2026-11-05T05:08:07Z"
+    },
+    {
+      "name": "Inspect managed-storage images and leak controls",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 17,
+      "started_at": "2026-11-05T05:08:07Z",
+      "completed_at": "2026-11-05T05:08:07Z"
+    },
+    {
+      "name": "Measure sort storage, code size and stack frames",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 18,
+      "started_at": "2026-11-05T05:08:07Z",
+      "completed_at": "2026-11-05T05:08:07Z"
+    },
+    {
+      "name": "Preserve benchmark comparisons and measured executables",
+      "status": "completed",
+      "conclusion": "failure",
+      "number": 19,
+      "started_at": "2026-11-05T05:08:07Z",
+      "completed_at": "2026-11-05T05:08:07Z"
+    },
+    {
+      "name": "Post Cache locked Rust dependencies",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 37,
+      "started_at": "2026-11-05T05:08:07Z",
+      "completed_at": "2026-11-05T05:08:07Z"
+    },
+    {
+      "name": "Post Run actions/checkout@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 38,
+      "started_at": "2026-11-05T05:08:07Z",
+      "completed_at": "2026-11-05T05:08:08Z"
+    },
+    {
+      "name": "Complete job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 39,
+      "started_at": "2026-11-05T05:08:08Z",
+      "completed_at": "2026-11-05T05:08:08Z"
+    }
+  ],
+  "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/127059783601",
+  "labels": [
+    "ubuntu-latest"
+  ],
+  "runner_id": 1000409362,
+  "runner_name": "GitHub Actions 1000409362",
+  "runner_group_id": 0,
+  "runner_group_name": "GitHub Actions"
+}

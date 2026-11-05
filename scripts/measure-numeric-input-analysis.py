@@ -20,6 +20,9 @@ ROOT = Path(__file__).resolve().parent.parent
 SPEC = importlib.util.spec_from_file_location('costs', ROOT / 'scripts/measure-derivative-forward-costs.py')
 COSTS = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(COSTS)
+SPEC = importlib.util.spec_from_file_location('gradient_reference', ROOT / 'scripts/prepare-gradient-call-reference.py')
+GRADIENT_REFERENCE = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(GRADIENT_REFERENCE)
 COPIES = ('candidate1', 'reference1', 'reference2', 'candidate2')
 ORDERS = (COPIES, ('reference2', 'candidate2', 'candidate1', 'reference1'))
 
@@ -190,7 +193,7 @@ def main():
     parser.add_argument('--compiler', required=True, type=Path)
     parser.add_argument('--reference', required=True, type=Path)
     parser.add_argument('--reference-manifest', required=True, type=Path)
-    parser.add_argument('--comparison', required=True, choices=('numeric-inputs', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric'))
+    parser.add_argument('--comparison', required=True, choices=('numeric-inputs', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call'))
     parser.add_argument('--time', required=True, type=Path)
     parser.add_argument('--machine', required=True, choices=('aarch64', 'x86_64'))
     parser.add_argument('--source', required=True)
@@ -213,6 +216,14 @@ def main():
             assert sha(ROOT / path) == hashes['candidateSha256'], path
         for path, digest in reference_manifest['unchanged'].items():
             assert sha(ROOT / path) == digest, path
+    elif args.comparison == 'gradient-call':
+        assert reference_manifest['disabledTransformation'] == 'scoped input borrowing, numeric fold fields, single-root seeding and consumed array scratch'
+        assert set(reference_manifest['candidate']) == set(reference_manifest['reference']) == set(GRADIENT_REFERENCE.EDITS)
+        assert set(reference_manifest['unchanged']) == set(GRADIENT_REFERENCE.PRESERVED)
+        for group in ('candidate', 'unchanged'):
+            for path, checksum in reference_manifest[group].items():
+                assert sha(ROOT / path) == checksum, path
+        assert reference_manifest['ownershipSha256'] == sha(ROOT / 'src/ownership.rs')
     elif args.comparison == 'owned-numeric':
         assert reference_manifest['disabledTransformation'] == 'consuming scalar array maps and exclusive coordinate-list reuse'
         assert set(reference_manifest['candidate']) == set(reference_manifest['reference']) == {'src/cgen.rs'}
@@ -282,9 +293,9 @@ def main():
     output.mkdir(parents=True, exist_ok=False)
     environment = {key: value for key, value in os.environ.items() if not key.startswith('FWP_')}
     environment.update(FWP_LTO='0', LC_ALL='C')
-    if args.comparison in ('matched-option', 'packed-input', 'owned-numeric'):
+    if args.comparison in ('matched-option', 'packed-input', 'owned-numeric', 'gradient-call'):
         environment.update(FWP_VRET='1', FWP_FRAME_FIELDS='1')
-    if args.comparison in ('packed-input', 'owned-numeric'):
+    if args.comparison in ('packed-input', 'owned-numeric', 'gradient-call'):
         environment.update(FWP_PACKED_ARRAYS='1', FWP_STACK='1', FWP_ARRAY_FUSION='1')
     report = dict(source=args.source, machine=args.machine, complete=False, comparison=args.comparison,
                   scope='Entire compiler command through C emission: startup, parsing, typing, '
@@ -316,10 +327,10 @@ def main():
             ('autodiff-tutorial', 'docs/tutorials/20-autodiff-and-devices/main.fwp')]}
         programs.update({f'derivative-{dimensions}-{updates}': COSTS.AD.program(dimensions, updates + 1, False)
                          for dimensions, updates in ((3, 0), (33, 199), (129, 199))})
-        if args.comparison in ('packed-input', 'owned-numeric'):
+        if args.comparison in ('packed-input', 'owned-numeric', 'gradient-call'):
             programs.update(scoped_cost_inputs())
             report['preflight'] = {}
-            for kind, specialized in [('candidate', True), ('reference', args.comparison == 'owned-numeric')]:
+            for kind, specialized in [('candidate', True), ('reference', args.comparison in ('owned-numeric', 'gradient-call'))]:
                 try:
                     report['preflight'][kind] = check_scoped_cost_inputs(
                         output / (kind + '1'), output / ('preflight-' + kind),
@@ -327,13 +338,13 @@ def main():
                 except AssertionError as error:
                     report['preflight'][kind] = dict(failure=str(error))
             assert all(isinstance(rows, list) for rows in report['preflight'].values()), report['preflight']
-        if args.comparison == 'owned-numeric':
+        if args.comparison in ('owned-numeric', 'gradient-call'):
             report['consumingPreflight'] = {}
             for kind in ('candidate', 'reference'):
                 try:
                     report['consumingPreflight'][kind] = check_consuming_cost_input(
                         output / (kind + '1'), output / ('consuming-' + kind),
-                        environment, args.timeout, kind == 'candidate')
+                        environment, args.timeout, kind == 'candidate' or args.comparison == 'gradient-call')
                 except AssertionError as error:
                     report['consumingPreflight'][kind] = dict(failure=str(error))
             assert all('observed' in row for row in report['consumingPreflight'].values()), report['consumingPreflight']

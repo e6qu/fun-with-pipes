@@ -1,0 +1,20 @@
+{
+  "id": 13389612533,
+  "node_id": "MDg6QXJ0aWZhY3QxMzM4OTYxMjUzMw==",
+  "name": "rust-checks-macOS-X64",
+  "size_in_bytes": 1268,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13389612533",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13389612533/zip",
+  "expired": false,
+  "digest": "sha256:1f332d20072984583c2e5b5a076379ce5be462a83d8d75635512f285ef6b5e7b",
+  "created_at": "2026-11-05T05:05:02Z",
+  "updated_at": "2026-11-05T05:05:02Z",
+  "expires_at": "2027-02-03T05:00:25Z",
+  "workflow_run": {
+    "id": 41971248924,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "gradient-call-storage",
+    "head_sha": "4160061cd0d421a55ab4e467c6ec5fb6fd88cbf6"
+  }
+}

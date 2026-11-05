@@ -108,7 +108,7 @@ class CompilerCosts(unittest.TestCase):
                 ANALYSIS.summarize(rows)
 
     def test_complete_schedule_and_timeout_keep_reviewable_evidence(self):
-        for comparison, fail in itertools.product(('numeric-inputs', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'matched-option', 'packed-input', 'owned-numeric'), (False, True)):
+        for comparison, fail in itertools.product(('numeric-inputs', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call'), (False, True)):
             with self.subTest(comparison=comparison, timeout=fail), tempfile.TemporaryDirectory() as temporary:
                 root = Path(temporary)
                 compiler, reference = root / 'candidate', root / 'reference'
@@ -165,6 +165,13 @@ class CompilerCosts(unittest.TestCase):
                         reference={'src/cgen.rs': 'reference-hash'},
                         ownershipSha256=ANALYSIS.sha(ANALYSIS.ROOT / 'src/ownership.rs'),
                         unchanged={path: ANALYSIS.sha(ANALYSIS.ROOT / path) for path in OWNED.PRESERVED})
+                if comparison == 'gradient-call':
+                    manifest = dict(source='test-source', compilerSha256=ANALYSIS.sha(reference),
+                        disabledTransformation='scoped input borrowing, numeric fold fields, single-root seeding and consumed array scratch',
+                        candidate={path: ANALYSIS.sha(ANALYSIS.ROOT / path) for path in ANALYSIS.GRADIENT_REFERENCE.EDITS},
+                        reference={path: 'reference-hash' for path in ANALYSIS.GRADIENT_REFERENCE.EDITS},
+                        ownershipSha256=ANALYSIS.sha(ANALYSIS.ROOT / 'src/ownership.rs'),
+                        unchanged={path: ANALYSIS.sha(ANALYSIS.ROOT / path) for path in ANALYSIS.GRADIENT_REFERENCE.PRESERVED})
                 manifest_path.write_text(json.dumps(manifest))
                 output = root / 'output'
                 argv = ['measure', '--comparison', comparison, '--compiler', str(compiler), '--reference', str(reference),
@@ -178,15 +185,15 @@ class CompilerCosts(unittest.TestCase):
                         preflight_commands.append(command)
                         name = Path(command[-3]).stem
                         candidate = Path(command[0]).name.startswith('candidate')
-                        text = consuming_output(candidate) if name == 'input' else scoped_output(
-                            name, candidate or comparison == 'owned-numeric')
+                        text = consuming_output(candidate or comparison == 'gradient-call') if name == 'input' else scoped_output(
+                            name, candidate or comparison in ('owned-numeric', 'gradient-call'))
                         Path(command[-1]).write_text(text)
                         return subprocess.CompletedProcess(command, 0, b'', b'')
                     commands.append(command)
-                    if comparison in ('matched-option', 'packed-input', 'owned-numeric'):
+                    if comparison in ('matched-option', 'packed-input', 'owned-numeric', 'gradient-call'):
                         self.assertEqual(options['env']['FWP_VRET'], '1')
                         self.assertEqual(options['env']['FWP_FRAME_FIELDS'], '1')
-                    if comparison in ('packed-input', 'owned-numeric'):
+                    if comparison in ('packed-input', 'owned-numeric', 'gradient-call'):
                         for setting in ('FWP_PACKED_ARRAYS', 'FWP_STACK', 'FWP_ARRAY_FUSION'):
                             self.assertEqual(options['env'][setting], '1')
                     self.assertEqual(command[5:10], ['build', '--memory', 'dynamic', '--emit-c', '-O2'])
@@ -218,11 +225,11 @@ class CompilerCosts(unittest.TestCase):
                         ANALYSIS.main()
                 report = json.loads((output / 'report.json').read_text())
                 self.assertEqual(report['complete'], not fail)
-                if comparison in ('matched-option', 'packed-input', 'owned-numeric'):
+                if comparison in ('matched-option', 'packed-input', 'owned-numeric', 'gradient-call'):
                     self.assertEqual(report['executionOverrides']['FWP_VRET'], '1')
                     self.assertEqual(report['executionOverrides']['FWP_FRAME_FIELDS'], '1')
-                self.assertEqual(len(commands), 1 if fail else 336 if comparison in ('packed-input', 'owned-numeric') else 240)
-                self.assertEqual(len(preflight_commands), 6 if comparison == 'owned-numeric' else 4 if comparison == 'packed-input' else 0)
+                self.assertEqual(len(commands), 1 if fail else 336 if comparison in ('packed-input', 'owned-numeric', 'gradient-call') else 240)
+                self.assertEqual(len(preflight_commands), 6 if comparison in ('owned-numeric', 'gradient-call') else 4 if comparison == 'packed-input' else 0)
                 for name, digest in report['files'].items():
                     self.assertEqual(hashlib.sha256((output / name).read_bytes()).hexdigest(), digest)
                 if fail:
@@ -230,7 +237,7 @@ class CompilerCosts(unittest.TestCase):
                     self.assertEqual(case['samples'][0]['timeout'], 180)
                     self.assertEqual((output / 'field-transfer/-2-candidate1.stderr').read_bytes(), b'partial error')
                 else:
-                    self.assertEqual(len(report['cases']), 7 if comparison in ('packed-input', 'owned-numeric') else 5)
+                    self.assertEqual(len(report['cases']), 7 if comparison in ('packed-input', 'owned-numeric', 'gradient-call') else 5)
                     self.assertTrue(all(len(case['samples']) == 48 and not case['summary']['failures']
                                         for case in report['cases'].values()))
 

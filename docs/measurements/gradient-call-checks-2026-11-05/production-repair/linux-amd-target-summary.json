@@ -1,0 +1,1548 @@
+{
+  "source": "4160061cd0d421a55ab4e467c6ec5fb6fd88cbf6",
+  "targetLogs": {
+    "bin-fwp.log": {
+      "sha256": "df166913f47ff1f04202cae9b31df67ed272d692d99a0023a8117dc3029100dd",
+      "summaries": [
+        "ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+      ]
+    },
+    "lib-fwp.log": {
+      "sha256": "caa1aca898d480383ef33d6a41c1072c9a404ce5b38c951dee33d4c1ffb350e6",
+      "summaries": [
+        "ok. 292 passed; 0 failed; 4 ignored; 0 measured; 0 filtered out; finished in 12.53s"
+      ]
+    },
+    "test-ad_tape_ownership.log": {
+      "sha256": "531606ae9a43bf24f5adf030600a54e82e303426bad26dbc1daecbafe5b25975",
+      "summaries": [
+        "ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 67.45s"
+      ]
+    },
+    "test-ad_tape_scopes.log": {
+      "sha256": "f949054f4d77d3ca1c4c464f3741392f7df6663691a6bdeda2a32acd049519eb",
+      "summaries": [
+        "ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 41.01s"
+      ]
+    },
+    "test-aot.log": {
+      "sha256": "870bcbcefbb585392bfd3b9f1207d4d239268b9773dc091295735e1b204bbe45",
+      "summaries": [
+        "ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 119.85s"
+      ]
+    },
+    "test-arc_corpus.log": {
+      "sha256": "071a119433ba73c546582e3b13ba1e9b2ac8fa6759c518d8384d81a47e15ca83",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 190.05s"
+      ]
+    },
+    "test-arc_execution.log": {
+      "sha256": "9b6144b2bccea25d00dafb0de61449814ebde1aa5f57cea891abc70a08e516f2",
+      "summaries": [
+        "ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 88.18s"
+      ]
+    },
+    "test-arc_extensions.log": {
+      "sha256": "02533d8dd326f643930cc1fec78fd9eee36c0444db9c3d2779fc9d0afdbcac58",
+      "summaries": [
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 70.63s"
+      ]
+    },
+    "test-arc_library.log": {
+      "sha256": "071270a638acbd2c459b74128692eaceb6d456db1fceb05fee1826fb01ee6637",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 14.98s"
+      ]
+    },
+    "test-arc_tasks.log": {
+      "sha256": "82fcb9b49a223bc822363566371c3c30aa8fdc66dd44a64ff9bd21ddb50337a9",
+      "summaries": [
+        "ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 65.68s"
+      ]
+    },
+    "test-argument_preparation_ownership.log": {
+      "sha256": "50804ed0ddc86ff6da52eeb954e696377278ea5888b7a98dd05ec5ce2e177906",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 18.09s"
+      ]
+    },
+    "test-array_element_ownership.log": {
+      "sha256": "69cb11e10cf206f3e400e74c440f6d60a2421a514b984498723fb97b1f16bc78",
+      "summaries": [
+        "ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 215.89s"
+      ]
+    },
+    "test-array_loop_borrows.log": {
+      "sha256": "a5e17d6553917803ed268d6827681afe4b40fa49f8076772d290f9e58391833f",
+      "summaries": [
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 15.02s"
+      ]
+    },
+    "test-array_size_limits.log": {
+      "sha256": "d08359923c99742cfdfe7b9e6a15a9fdf32f9d9c0d6b00953e6971349cc64f31",
+      "summaries": [
+        "ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 28.23s"
+      ]
+    },
+    "test-array_text.log": {
+      "sha256": "dd4b48b34ecd8424e23d28023a9da23926b5e0c88aa082a695d2bde0d53a78b8",
+      "summaries": [
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 82.38s"
+      ]
+    },
+    "test-array_unwind_ownership.log": {
+      "sha256": "71864e002385cbffee14d90a6804628699dd68a94cf3b809e46e83e5974191d5",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 10.10s"
+      ]
+    },
+    "test-autodiff_capacity_bounds.log": {
+      "sha256": "73d2560a29e5ba752145dd80a23f36656d5463053eade6587ccc494a6baf46a9",
+      "summaries": [
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 21.18s"
+      ]
+    },
+    "test-autodiff_checkpoint.log": {
+      "sha256": "1e6782e695853b5a15baa32cf130b7ea66f657d17b236383c298bcd8f12740db",
+      "summaries": [
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 30.07s"
+      ]
+    },
+    "test-autodiff_library.log": {
+      "sha256": "efa4b6d4c942024e78398358490c17fa7b937689e09df61ac1a6e533b1bcebc0",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.26s"
+      ]
+    },
+    "test-autodiff_nested.log": {
+      "sha256": "9e6e96802b11fde710faae2c676266e772935e1ff4207fd8edda9242047a52bf",
+      "summaries": [
+        "ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 59.64s"
+      ]
+    },
+    "test-autodiff_precision.log": {
+      "sha256": "535a629d37cabf31dd064c1ff2c4145acdd3e19d390fe28bb1302953c59b02cd",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 15.99s"
+      ]
+    },
+    "test-autodiff_workspace.log": {
+      "sha256": "05c40e9889d3847dcad205bed8567b3604dbe593fc613b805a12f4bd536dec62",
+      "summaries": [
+        "ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 32.05s"
+      ]
+    },
+    "test-bench.log": {
+      "sha256": "c76f04c16a18c98464d3890cf6d929d9709a203dea12a1d9b6f07e2753deb577",
+      "summaries": [
+        "ok. 0 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+      ]
+    },
+    "test-blocked_matrix.log": {
+      "sha256": "e7d60adb92892bd344065274b804d73b71ea54108d693b2ab4267fb974e52d3f",
+      "summaries": [
+        "ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 27.37s"
+      ]
+    },
+    "test-boxed_field_moves.log": {
+      "sha256": "7322b8e3d6ef3a4c33f5a4e1b387f7dc48622b2e2b90537eac68d9ff902764d9",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.01s"
+      ]
+    },
+    "test-borrowed_callbacks.log": {
+      "sha256": "92c1a4df23feba46d6c315583531c0f629ef1e9ef25eb73f4706e9e585fd4fb3",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 53.42s"
+      ]
+    },
+    "test-boxed_projection_ownership.log": {
+      "sha256": "7860f05d448ca80ae8d1d9eceb3f53485c04d5a998f64e8da0da51f48dfff38d",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 9.33s"
+      ]
+    },
+    "test-browser.log": {
+      "sha256": "b0d0f0726d31b72b912a0b052a846693cad83b717b833f7ca5f7f2c33afbe044",
+      "summaries": [
+        "FAILED. 9 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 430.94s"
+      ]
+    },
+    "test-builds.log": {
+      "sha256": "131bf903fce111289eacffa62b32fbd163047db25130560750f98ccdfe1f9c9b",
+      "summaries": [
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.16s"
+      ]
+    },
+    "test-byte_decoder_ownership.log": {
+      "sha256": "2e80a819fa1576eaddabda4a7e7ae1a620e27108db960144f6aa8228dc9e21cd",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 18.97s"
+      ]
+    },
+    "test-c-interop.log": {
+      "sha256": "df166913f47ff1f04202cae9b31df67ed272d692d99a0023a8117dc3029100dd",
+      "summaries": [
+        "ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+      ]
+    },
+    "test-cache_lifetime.log": {
+      "sha256": "5618ebb35541e73295da13a643d1fd9f74e5d6a6fcf4075f98d18a88031c9f08",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.30s"
+      ]
+    },
+    "test-cached_map_borrows.log": {
+      "sha256": "57b86abeb2fd2bba29e331e7f41cad89fa7d2e7b12d35a4c443da4950579ecca",
+      "summaries": [
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 14.61s"
+      ]
+    },
+    "test-call_effects.log": {
+      "sha256": "6a6228f7477d7e6567008c4473078bb159d6e62d38632f2c41afd14715f81c90",
+      "summaries": [
+        "ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 36.59s"
+      ]
+    },
+    "test-channel_cycle_ownership.log": {
+      "sha256": "f443f67ac97fcc348615606c67408fb241fe592ad95829b6ee3187589e7f178e",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.96s"
+      ]
+    },
+    "test-caf_ownership.log": {
+      "sha256": "6646bdfe7e3ec45bb175fc0511219b1685b4d18a7e8b8f6aee57479fe9450881",
+      "summaries": [
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 15.05s"
+      ]
+    },
+    "test-channel_transfer_costs.log": {
+      "sha256": "9987f443bf5980aa1971be8c417f2d89b350650bbb0156c7cdde23e2bdac2a6d",
+      "summaries": [
+        "ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+      ]
+    },
+    "test-channel_queue_ownership.log": {
+      "sha256": "8590765a476d0e9b59929eea68e405ff7e864e7f2555dca463945cc5a5b0105a",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 24.32s"
+      ]
+    },
+    "test-cli.log": {
+      "sha256": "e4ee94af504355924d752c7df43c72217fc3c98ddba2bf905cbeb9ccef8ae403",
+      "summaries": [
+        "ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 81.98s"
+      ]
+    },
+    "test-cli_ownership.log": {
+      "sha256": "0c796cc95437f171f75d110042e7728a32f1e238300224012d9b2200dcc29d25",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.11s"
+      ]
+    },
+    "test-clock_ownership.log": {
+      "sha256": "b8e492cce853444c7ac50d895177f117661f2ee91e0c9105d24c88b7351d3b19",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.21s"
+      ]
+    },
+    "test-closure_cleanup.log": {
+      "sha256": "19996d3a3a3946163b163d4b941ba111525c6621a6008ee164b0a6aee2949997",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.33s"
+      ]
+    },
+    "test-closure_ownership.log": {
+      "sha256": "8c9a7b0fb47f36084ce3adb36ca0ffff32aae55d5ddcddf9350e6316b46b864f",
+      "summaries": [
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 15.92s"
+      ]
+    },
+    "test-collection_construction.log": {
+      "sha256": "025771db85012bdc057d36fdb4b82426eeca609e0f6d37e44586f6860d32086e",
+      "summaries": [
+        "ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 28.77s"
+      ]
+    },
+    "test-compiler_call_liveness.log": {
+      "sha256": "9a469e4ec5ae6f00174eda7df04281054a4067eb7bcea82b1be50cecf1affdf5",
+      "summaries": [
+        "ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 51.11s"
+      ]
+    },
+    "test-compiler_diagnostics.log": {
+      "sha256": "d24ffb3ffba3619057bb490329d56add11eb60fa89ff0e37cdea3f5ee2232bad",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.15s"
+      ]
+    },
+    "test-compiler_options.log": {
+      "sha256": "9ee95097e47f4d9f0e2a67f965236aa8be86ba32ed05036e388e0bc5ef79991f",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s"
+      ]
+    },
+    "test-connect_cleanup.log": {
+      "sha256": "a7570d8dccbe19d845ede2da9bcf02208c1d9c34493ff8cc52299646f070cd9a",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 11.86s"
+      ]
+    },
+    "test-console_ownership.log": {
+      "sha256": "7d6d0b3ec1e1364dcf1917a20f2fe77e23065cec25bedc35b2a689b30e86ce17",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 26.36s"
+      ]
+    },
+    "test-constructor_type_ownership.log": {
+      "sha256": "37a608a13219b99fbf41b9e53761b4942a4465f37fd74dbd02ca242c933c3076",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 11.38s"
+      ]
+    },
+    "test-constructor_unwind_ownership.log": {
+      "sha256": "6fb438803ec821b382ef77df1c2505b96c75e3ed880d5edd712dc1374e4accea",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 10.22s"
+      ]
+    },
+    "test-cpu_kernel_ownership.log": {
+      "sha256": "e89c75ee6db868297e6ad2ef33ec8057a4ecfe31f3033320cc7fd716b31afe9a",
+      "summaries": [
+        "ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 14.04s"
+      ]
+    },
+    "test-cross.log": {
+      "sha256": "3209e4d1febf65a8d717406de0442cd9544e64c08868ecc2e95b29bfd5e946ae",
+      "summaries": [
+        "ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 179.05s"
+      ]
+    },
+    "test-debugger.log": {
+      "sha256": "b16ec787b2a83e83be20b656da81f509183fa8fa9421247ff21f8810f583efcd",
+      "summaries": [
+        "ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.09s"
+      ]
+    },
+    "test-decoder_partial.log": {
+      "sha256": "a148b19d5f5efd6bae9d12bd98a0fc27963e2131be67113ff0fea04b99228e78",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.84s"
+      ]
+    },
+    "test-device_bounds.log": {
+      "sha256": "58be7b21aeb06a7bf35adcc559510ea4ae45977937d7d7a1e7e1024c7b37c5c2",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 22.02s"
+      ]
+    },
+    "test-directory_report.log": {
+      "sha256": "9fb0c31ecf39d34c04950e57592f68f359bc82180cfac7ce0212b3d3b56c08ff",
+      "summaries": [
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 69.46s"
+      ]
+    },
+    "test-dns_ownership.log": {
+      "sha256": "8a0561996a5376e43e5bd1bb8344272a30e10f93edfccc944952e01aa2e7ab8f",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 9.77s"
+      ]
+    },
+    "test-examples.log": {
+      "sha256": "b85bc0c3f3550c039d990609ff009971404f2b6667ec7455db899d5106cbb04e",
+      "summaries": [
+        "ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 187.93s"
+      ]
+    },
+    "test-exec.log": {
+      "sha256": "dd5ce50429b3d0bc98732b4b8e1dc38ea1e9894ac4c7d105dcf19c97db556628",
+      "summaries": [
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 66.12s"
+      ]
+    },
+    "test-exec_invocation_ownership.log": {
+      "sha256": "a3d3e7c5c2918065e55873f4a4a175447e178d7e47ef4424f6e76e2e276d1b48",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 9.62s"
+      ]
+    },
+    "test-exec_protocol_ownership.log": {
+      "sha256": "6c7e9c192f07aa59c03dcb3ed093a0d7774bd2f74de1abaefdb0b505260e1df7",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 18.49s"
+      ]
+    },
+    "test-fat.log": {
+      "sha256": "88b1e3ee120890f9b1271ef5c3e5d2887a291cf6294c708392ddf21cea22b1a0",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 16.75s"
+      ]
+    },
+    "test-ffi.log": {
+      "sha256": "504e1605ee910e6de292b7db85bdaf062baec06c07f1f5236c8d0738b1b5d491",
+      "summaries": [
+        "ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.57s"
+      ]
+    },
+    "test-ffi_pointer_arithmetic.log": {
+      "sha256": "86cde86ba515c2728ae18f4e4eaad2c84c2979014fc9ca9d7ec27961b90be056",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.47s"
+      ]
+    },
+    "test-field_context_ownership.log": {
+      "sha256": "8d03b79288f6955c3e6b5bd8306db69673f8e38588be1b5fbcf4b53e5d6c5c1d",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.75s"
+      ]
+    },
+    "test-field_moves.log": {
+      "sha256": "1f7ce69931d55bb35b45c2cb5f39c68f4b0f2e2bb5f5fd4e146300e11791aff0",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.62s"
+      ]
+    },
+    "test-file_construction_disposal.log": {
+      "sha256": "82285e38e58012d1b986b657ea3294537a19d3f077e664780b0955fc2ce40d68",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.24s"
+      ]
+    },
+    "test-file_construction_ownership.log": {
+      "sha256": "fa1c9a157998f803efbdf7ff7d9ca0f8fe9f5292e2b0d796d3a67b7324623a5f",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.48s"
+      ]
+    },
+    "test-file_discard_ownership.log": {
+      "sha256": "51737f162151c94d0fbabda318138788183cd8f10da98cdd8aaccfb64070aea0",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.05s"
+      ]
+    },
+    "test-file_inline_path.log": {
+      "sha256": "06468aed6eaae5c14f8a0912b649a192057f3cb70e522de21b41cad2f2ac39ea",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.49s"
+      ]
+    },
+    "test-file_io_errors.log": {
+      "sha256": "992e01dc52b7103741da2c2edd4ce92ec3016416a6461da7310e24f9677ef4a8",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 20.93s"
+      ]
+    },
+    "test-file_read_kinds.log": {
+      "sha256": "2924bf5e14f8c757010bae9946f2d9e460019091f56804767516bd390edbe661",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.89s"
+      ]
+    },
+    "test-file_runtime_boundaries.log": {
+      "sha256": "6c43dcc5ba7dbe9d5c86be8f380a69579cceff59798e0af1ad7426c62aa6cfac",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 20.64s"
+      ]
+    },
+    "test-file_runtime_ownership.log": {
+      "sha256": "f866f8f90ef7d35aad17339781f6110330b22617336206313eb70f74c0d64f65",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.53s"
+      ]
+    },
+    "test-file_storage_disposal.log": {
+      "sha256": "dd7d2a07f9e9f07f45820e4b80aa8de604b7cef35161befa604d42213bedd8b2",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.26s"
+      ]
+    },
+    "test-file_values.log": {
+      "sha256": "46bbf5d0043787a389c72dc5f305af51ab421d74a0e05e5c53298987973de8e9",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 10.80s"
+      ]
+    },
+    "test-file_write_visibility.log": {
+      "sha256": "bff2fa164cbcd610cd28b6b7f55f60ef68f2ad825f843c714e75592f82ec9250",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.58s"
+      ]
+    },
+    "test-filter_ownership.log": {
+      "sha256": "4d85e828b0b676924d6b1a88194476f7ec013fe158c8dbddb815a2acc52c9a2c",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 8.88s"
+      ]
+    },
+    "test-float_formats.log": {
+      "sha256": "397aa06fd0c230d08f39f771cd6b47c36b70bd961f3ec91903e9415558a954b7",
+      "summaries": [
+        "ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 63.65s"
+      ]
+    },
+    "test-float_linking.log": {
+      "sha256": "0b7938d7fbb1eaf2a9aead207271cecc0ff3c65c6f43c765a55e0510229dd467",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 29.99s"
+      ]
+    },
+    "test-float_literals.log": {
+      "sha256": "76dd4a0c72cc05408825ff08ffe6b730ff47e4bd1b1b538e9629d86c4240bd94",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.39s"
+      ]
+    },
+    "test-float_math.log": {
+      "sha256": "140568dcbf0f45271a25db152b7fa6e43abb910710e92d124c1d33bd06a06d05",
+      "summaries": [
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 60.75s"
+      ]
+    },
+    "test-fmt.log": {
+      "sha256": "947d2d693ba24fbee8db80c60717263f20cd7329e14781d1116404c8e22f82a6",
+      "summaries": [
+        "FAILED. 1 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 9.41s"
+      ]
+    },
+    "test-fold_ownership.log": {
+      "sha256": "2ecf81016f36e3592023ca51aacfca0313e13397a0ecb752c528552ff592d17b",
+      "summaries": [
+        "ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 44.68s"
+      ]
+    },
+    "test-fold_unwind_ownership.log": {
+      "sha256": "86a6a4e190d00467e1aba4c6f8d24a3e932eff60a5c787a1b3a8b321ed8bf624",
+      "summaries": [
+        "ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 44.95s"
+      ]
+    },
+    "test-foreign_callback_ownership.log": {
+      "sha256": "948e17fc951842e8dadbe3b01bec186e4a4eacc858b65431ac8c7cf435751527",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 22.46s"
+      ]
+    },
+    "test-general_record_update_ownership.log": {
+      "sha256": "e4acf8992b3833085e749321b30091b5b08fb62b15b5129a028854f08da0ed14",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 14.41s"
+      ]
+    },
+    "test-golden_check.log": {
+      "sha256": "bcc75d42004457ee3bda9a32c9f44724fea05d4186615af9c90354d3867c1265",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 21.27s"
+      ]
+    },
+    "test-golden_parse.log": {
+      "sha256": "2f8959e83532b43139d5bd1ca30df5b1a711ef6a9520b46f28bb6f12889c3b11",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+      ]
+    },
+    "test-golden_run.log": {
+      "sha256": "d5d64d4386e811b05b3dc6c0f35130741554e2d0d2e3502ac25caf7e4f90f311",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 174.48s"
+      ]
+    },
+    "test-grpc.log": {
+      "sha256": "a4ed3735f96f5214facfca2998410c5567c711f16b5eb031eda007e014a3fad8",
+      "summaries": [
+        "ok. 8 passed; 0 failed; 5 ignored; 0 measured; 0 filtered out; finished in 173.14s"
+      ]
+    },
+    "test-grpc_canonical_encoding.log": {
+      "sha256": "36ccdd127acfe3ec45d7d94568b11b9b5a774f08e24e95727ebed90d46d29ea7",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 18.13s"
+      ]
+    },
+    "test-grpc_client_failure_text.log": {
+      "sha256": "aaa26a715fcb6312a076d7b4556964f60d5ad72410cce277ffb8d7961acfc6e2",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.53s"
+      ]
+    },
+    "test-grpc_capture_resources.log": {
+      "sha256": "df147ff3aebb99cf75a469de8233d824a85dc87e8e451cd6382f9621587aca4b",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 25.64s"
+      ]
+    },
+    "test-grpc_client_receive.log": {
+      "sha256": "35d3dae71b703d0f83e4caa915fefa4e75c5e1a0d8c1faa4d33907a06070d1f0",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 46.37s"
+      ]
+    },
+    "test-grpc_client_requests.log": {
+      "sha256": "033bee782cee9af6090bf675005ec12857fd783d3f0f33c26a2b9decc8d6b820",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 14.63s"
+      ]
+    },
+    "test-grpc_connect_cleanup.log": {
+      "sha256": "570d2748eb6a8eec6aeef981eccdd588ac77682cd5a51ebb7618025a7c65b56f",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 14.23s"
+      ]
+    },
+    "test-grpc_connect_startup.log": {
+      "sha256": "8e7d3ae681229ef11d811e14538ba9be99572d231766f3c58d424ada993ac69c",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 20.07s"
+      ]
+    },
+    "test-grpc_connection_addresses.log": {
+      "sha256": "f674e6a31d6a77bed0bd3ac127d7e5ae4ab314840dce85c1232ebc4af26888e6",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 9.81s"
+      ]
+    },
+    "test-grpc_context_resources.log": {
+      "sha256": "7d7bc0581ee94316b83251c0fe9ba95c5434c623ed80f142d7b3a1b7d7136da2",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 25.47s"
+      ]
+    },
+    "test-grpc_context_restore.log": {
+      "sha256": "79e004a6fff34905764409173e3645434fcaea3e363f2a97b685ae9a737c8fc1",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 9.40s"
+      ]
+    },
+    "test-grpc_environment_cache.log": {
+      "sha256": "1d5a5a29cf6aa4caa24b121bcc33199f378f798226b7142a67d0237ab55f4c56",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 18.10s"
+      ]
+    },
+    "test-grpc_force_cleanup.log": {
+      "sha256": "400a88946440207e8bfc47b771bec68847c92dcdb34a41b8172e375622f17c3c",
+      "summaries": [
+        "ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 95.73s"
+      ]
+    },
+    "test-grpc_packed_options.log": {
+      "sha256": "dc61845831cf0ba73b26a99291c18fcd4006b825066f764ea15caa43ffc64c88",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.57s"
+      ]
+    },
+    "test-grpc_peer_completion.log": {
+      "sha256": "54cf9ca71e13da87b9b3d5494fd816726b6584f4aae68f6da527e9078dde6e24",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 32.14s"
+      ]
+    },
+    "test-grpc_receive_cleanup.log": {
+      "sha256": "94331d12fbdd7525151c44ad6847b1cd51bff4106d7c4749c60d67563024a48e",
+      "summaries": [
+        "ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 110.42s"
+      ]
+    },
+    "test-grpc_render_cleanup.log": {
+      "sha256": "be84d2d2ff15cf52c11449c369bfdd0c623bdfca23893352764d6f7299e9b086",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 9.43s"
+      ]
+    },
+    "test-grpc_request_encoding.log": {
+      "sha256": "04b4c58b6ff13a8339f554ee58e72de505403cf6b58a793d499666ae24933c95",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 73.30s"
+      ]
+    },
+    "test-grpc_response_encoding.log": {
+      "sha256": "3e1c9f47c568ed745d84f441dd1ae7a9363f869bf7f8ec8c9d681d6ffe8733f1",
+      "summaries": [
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 88.99s"
+      ]
+    },
+    "test-grpc_send_cleanup.log": {
+      "sha256": "61e6a15ffa3955da9458d2de702003f31ec9162bcbe9357fbee46b591cc5c9df",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 9.06s"
+      ]
+    },
+    "test-grpc_server_connections.log": {
+      "sha256": "fa4093cb5e31d580c0601938613a54c4f4845609d3b83533d1c092116ae747ad",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 64.26s"
+      ]
+    },
+    "test-grpc_server_ownership.log": {
+      "sha256": "581c66ea9c156788f120e047c1b1e1a102333c3d380db52ce0c4980a9f076b4c",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 10.05s"
+      ]
+    },
+    "test-grpc_server_requests.log": {
+      "sha256": "124fe29ea8525274b7c6168cab4b867279a251a30c0899bbbe4838f11cd95799",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 52.14s"
+      ]
+    },
+    "test-grpc_status_cleanup.log": {
+      "sha256": "316a370f2782da95534a0448bc656e837502af8c9feb5e929f06a6f5ed497b6d",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.26s"
+      ]
+    },
+    "test-hash_ownership.log": {
+      "sha256": "287703c00c2c3012dbe82579a4afeda2e4174a608c7fa51fa63f746609b1ee66",
+      "summaries": [
+        "ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 54.53s"
+      ]
+    },
+    "test-grpc_tls_pool_identity.log": {
+      "sha256": "332034a1ba097f80d5c429870b19ba9bd7043407c5687e0f064cba5bc98b3a10",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 14.62s"
+      ]
+    },
+    "test-http2_body_roots.log": {
+      "sha256": "c056a0255e2e8be8d06dd47be21f49965285f3bed6bec66308184d698c050495",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 9.43s"
+      ]
+    },
+    "test-http2_client_ownership.log": {
+      "sha256": "7a80f4460cc59751d30f1cea4e1fa4989372fd22c1b31b146a458d404190216b",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 45.26s"
+      ]
+    },
+    "test-http2_peer_cleanup.log": {
+      "sha256": "f2c9de2d24decf6e2fc6ee9fffc8b29e411f7d57126332afab51fcd19350779f",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 9.80s"
+      ]
+    },
+    "test-http2_server_ownership.log": {
+      "sha256": "337d6300575e889537c0c41ed192cd986a0d8eb30d6e3796c3308f8a44ea7852",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 42.55s"
+      ]
+    },
+    "test-http_server.log": {
+      "sha256": "283fe5da86aa8c42f5d24e6ed6f2d21cde65a60fa015e9318702102b4d3202d9",
+      "summaries": [
+        "ok. 8 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 148.29s"
+      ]
+    },
+    "test-infix.log": {
+      "sha256": "1aab24a3957be5e569d3ef0dd3d9de5e65f71e26c2e9a1011d7f215879215b7e",
+      "summaries": [
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 8.92s"
+      ]
+    },
+    "test-inline_caf_ownership.log": {
+      "sha256": "64235150185e59222a6442b487697f506c24ecd59224394a608dc8dfb1755b1e",
+      "summaries": [
+        "ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 32.79s"
+      ]
+    },
+    "test-integer_output.log": {
+      "sha256": "e57fd1212a0b8dadb9d3c9353bb385faa5363f26cd1abb867a64380d82796213",
+      "summaries": [
+        "ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 64.27s"
+      ]
+    },
+    "test-io_error_ownership.log": {
+      "sha256": "10f7171df8954910e0e175fe2b2a35bf47603ba8b9d74d73a9af936109011102",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.79s"
+      ]
+    },
+    "test-iteration_consumers.log": {
+      "sha256": "cbbec4b721f6d25c44feb2e9bf04d78644c0564dfbd1a03f3ea9463bf67eb25a",
+      "summaries": [
+        "ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 98.34s"
+      ]
+    },
+    "test-iterator_fusion.log": {
+      "sha256": "569593b89bef6946a08596a1edb2c8b6d82bf650613c9dda6cd316350ada5025",
+      "summaries": [
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 62.93s"
+      ]
+    },
+    "test-kernel_stack_bounds.log": {
+      "sha256": "f1d69d6d95ab5acb42c0a6061d148ac2865414c92c45fd9f989b8076df5608a9",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.15s"
+      ]
+    },
+    "test-leaf_ownership.log": {
+      "sha256": "74407781f31f5c43c2690a3cb3e66de3588e73c9db34eb8d2f145b4cd4b6e2fb",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.04s"
+      ]
+    },
+    "test-library_input_ownership.log": {
+      "sha256": "393f3becc57b5ee9418df28ad91e9cfc0aa900e12e81c194657c64ef75a36666",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 10.96s"
+      ]
+    },
+    "test-library_resources.log": {
+      "sha256": "cc3743ae6cddff19543ac492761aad179b3d93ba92b4fb1a059ade817dfb6491",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 14.83s"
+      ]
+    },
+    "test-library_result_ownership.log": {
+      "sha256": "38d3f5c0f0a640707100926a61daf432c5e7b2d29d39c6821e09a7874aee7974",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.66s"
+      ]
+    },
+    "test-library_unload.log": {
+      "sha256": "58f2c141884b4c7c45d839e5c04ec43c780d29b2902c8b2f2aac68345e0e3475",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 11.90s"
+      ]
+    },
+    "test-linalg_ownership.log": {
+      "sha256": "8c5442dd883a1d39fb6b4a648b47c818da597d568afebf3a7c4c3be6c97dbecc",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 39.23s"
+      ]
+    },
+    "test-lint.log": {
+      "sha256": "5f4d297c6933eff15ff19f32e2f3ba0ee814ed706dc1b968e46378ba30b58117",
+      "summaries": [
+        "ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.05s"
+      ]
+    },
+    "test-list_applicative_ownership.log": {
+      "sha256": "9d1f5844d508b6df75666920f2d1f93ad8a410d84d538091765b3c5a3437fd3a",
+      "summaries": [
+        "ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 46.75s"
+      ]
+    },
+    "test-list_construction_cleanup.log": {
+      "sha256": "e17e8c353678eee3d81058dfd06556bb5ee34302a6dbc48aecf1e1445a50b91d",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.29s"
+      ]
+    },
+    "test-list_copy_ownership.log": {
+      "sha256": "8b84ede74b46002ecab646d7cce4702ed8c532a73730b174065c76c115df32da",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 9.16s"
+      ]
+    },
+    "test-list_generation_ownership.log": {
+      "sha256": "4a2a618b1be9977a210c1f4f27c2f72104e80d66bb01932730fa114c18fc4fe9",
+      "summaries": [
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 10.46s"
+      ]
+    },
+    "test-list_option_ownership.log": {
+      "sha256": "a74d749a2937b4ad7e50d26be2662993844d6ce39ffcb0e9f3ab602faacb8b73",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 9.30s"
+      ]
+    },
+    "test-list_order_ownership.log": {
+      "sha256": "2dfb24bba23c5bd2c67501291307dbf170a2fb04ad92681282c78523674ec9fd",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.74s"
+      ]
+    },
+    "test-list_structure_ownership.log": {
+      "sha256": "4b089e5265e071e83f16b3cec9a77ac5e1dbf44e04185ecb264b5f4fefc8449e",
+      "summaries": [
+        "ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 17.08s"
+      ]
+    },
+    "test-local_bindings.log": {
+      "sha256": "ba793479666e96b329d22ba414305b59fba03aed403dd8d19ef03b24d4c39139",
+      "summaries": [
+        "ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 76.70s"
+      ]
+    },
+    "test-loop_ownership.log": {
+      "sha256": "34598b4c0921646dde1853ecd7eb0ba922ced32f4345656d73c7d5cca6b65e1e",
+      "summaries": [
+        "ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 37.48s"
+      ]
+    },
+    "test-loop_preparation_ownership.log": {
+      "sha256": "f3c59081c1a6395a6435eeecb329f54890e697480ffad5594d4f99f635a70c2b",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.45s"
+      ]
+    },
+    "test-loop_unwind_ownership.log": {
+      "sha256": "d00ec80cf3bda3659b98f9975a52fec96a78fa0e61870f64e3a10661f1b6de5b",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 14.79s"
+      ]
+    },
+    "test-lsp.log": {
+      "sha256": "6c168ef2bd706f78f59621cd3d320b3f5d05aa00d561a25213ab2a89f5dabf14",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.52s"
+      ]
+    },
+    "test-macos.log": {
+      "sha256": "df166913f47ff1f04202cae9b31df67ed272d692d99a0023a8117dc3029100dd",
+      "summaries": [
+        "ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+      ]
+    },
+    "test-map_ownership.log": {
+      "sha256": "8f788d643e55c5d99696b2d97e7d4ba303e9e771e900d14f4a104660cb718fd6",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 8.57s"
+      ]
+    },
+    "test-map_set_ownership.log": {
+      "sha256": "76fc13068255b9de60dc5272420c54c7dabf1a11dc5b61f7bd6eacea1885c5fb",
+      "summaries": [
+        "ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 47.03s"
+      ]
+    },
+    "test-map_unwind_ownership.log": {
+      "sha256": "44d6f3e36711746a529b74955950026aa14cbe1b4a1698670b5440fd85a4bcaf",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 31.88s"
+      ]
+    },
+    "test-mapped_array_construction.log": {
+      "sha256": "22a9e35dfd672772cf8b598eacc63f59d8f896e3ccab202171b65612fa6103aa",
+      "summaries": [
+        "ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 41.76s"
+      ]
+    },
+    "test-match_context_ownership.log": {
+      "sha256": "f9feaefb9e536ed34a9bfbc48e14ead5679549837f3d94afd4a7bb5650503638",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.63s"
+      ]
+    },
+    "test-metrics_ownership.log": {
+      "sha256": "2c1e6dab35db5bc2c21fc0c5d919d59ac36464f930c7239c6b01ebdf93655183",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 10.73s"
+      ]
+    },
+    "test-native_allocator.log": {
+      "sha256": "45232d92c70567e21557f0002521ebee624661dd17e94d9d3e725d887efb74d3",
+      "summaries": [
+        "ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 10.25s"
+      ]
+    },
+    "test-native_memory.log": {
+      "sha256": "f4a632c0152eb774b5742ab6ef7696ed1bb6bf89e19bb72e13513213e4a964be",
+      "summaries": [
+        "ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 198.46s"
+      ]
+    },
+    "test-native_sockets.log": {
+      "sha256": "d8bce942596c6f29dea2fe997adf99a5eddaacc14377a1b1fe26aeb819a4eae3",
+      "summaries": [
+        "ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 26.41s"
+      ]
+    },
+    "test-nested_loop_boxing.log": {
+      "sha256": "40fb0375333b0c6a2d68d750531c182960c8bea0281e9c0f665b4bb8e8f27822",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 9.63s"
+      ]
+    },
+    "test-numeric_array_fusion.log": {
+      "sha256": "fdb6a0851fe692a570c5470d83104f541ef4f6684a2f4d5b2afeea9def346a7f",
+      "summaries": [
+        "ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 172.16s"
+      ]
+    },
+    "test-numerics.log": {
+      "sha256": "41d0160c9b9eae0a25d18d9b1bf46b480a2bf8563ed956e1d81373a1c576263c",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 18.39s"
+      ]
+    },
+    "test-ownership.log": {
+      "sha256": "fde25761ff3b180c1736c30e9318c57747d2dc37cef78ff1824c63fb33035b91",
+      "summaries": [
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.59s"
+      ]
+    },
+    "test-packed_numeric_storage.log": {
+      "sha256": "99de6317056dae5e7d3678a3d2552bf301e8b1d36fa00b4258e696dc24b6bd21",
+      "summaries": [
+        "ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 62.99s"
+      ]
+    },
+    "test-parser_workspace.log": {
+      "sha256": "348fe6e56a7ced31fae911ba836caf86eb72e2ca1483492a738511e30414c206",
+      "summaries": [
+        "ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 34.31s"
+      ]
+    },
+    "test-path_validation.log": {
+      "sha256": "caf949f3b6d8c3769a3143c1bf1507dd566bb9f9595f38dfc92a1d7acc2b3371",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.50s"
+      ]
+    },
+    "test-pipe_modes.log": {
+      "sha256": "d13dda6368e6f2417451fb719d8959df5936126adf92a9244c19f0ec1168b5fd",
+      "summaries": [
+        "ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.75s"
+      ]
+    },
+    "test-pipe_ownership.log": {
+      "sha256": "27b05f909c5559587e53e7f15cf0fceb5c5dad8ed20f44609e000a6690c5830c",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.77s"
+      ]
+    },
+    "test-preempt.log": {
+      "sha256": "19d5663826f1dd3afde4dabd40d1128b862fa428fefa56016cc43026e68b200c",
+      "summaries": [
+        "ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 34.32s"
+      ]
+    },
+    "test-prefix_ownership.log": {
+      "sha256": "d172068f9f7b75754dda2f35b20df9b7e8f20fcbce915dbe84488e384dbfa41b",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 9.45s"
+      ]
+    },
+    "test-process_exit_ownership.log": {
+      "sha256": "3e3f2701de63596048bf70e5ffa42d94f46107e17f42043c2d640811d51d7237",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 10.64s"
+      ]
+    },
+    "test-process_ownership.log": {
+      "sha256": "a99043ce892a4a577a5422d922e30e7a8079911843de1d00171b03281fa4eb7b",
+      "summaries": [
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 20.92s"
+      ]
+    },
+    "test-protocol.log": {
+      "sha256": "1293a2006c1786c3017549b4b7a41b68dbff07f29b0f4667a0548b800c2372aa",
+      "summaries": [
+        "ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 27.84s"
+      ]
+    },
+    "test-queued_functions.log": {
+      "sha256": "bd9d6e35df79a3c57de6d376815ea8c4e673be9e72ebe5036715cf83c8249eee",
+      "summaries": [
+        "ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 135.59s"
+      ]
+    },
+    "test-range_array.log": {
+      "sha256": "638f3c90d8e246ae33bf64eafe82fbafd9ff432a10d3aaf7d58684fca7600b72",
+      "summaries": [
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 20.67s"
+      ]
+    },
+    "test-range_set.log": {
+      "sha256": "f924924c447b93b67db725fad76a501dd33090d328472e53f0f3cfa7671688dc",
+      "summaries": [
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 35.56s"
+      ]
+    },
+    "test-raw_memory_ownership.log": {
+      "sha256": "e814ecd5c9225fe1fbfd3e7625782d2ecede0a7829298ee4536a10a03e1de55e",
+      "summaries": [
+        "ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.47s"
+      ]
+    },
+    "test-record_conversion_ownership.log": {
+      "sha256": "5e8c016ca8960c8b810225babafe58e8204263fb66c5be18b44d12187ef07d81",
+      "summaries": [
+        "ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 44.93s"
+      ]
+    },
+    "test-record_update_ownership.log": {
+      "sha256": "37fa347ef4a8aca580e1924b880643e2a70966e9b3be2b7a91095b035e23fa88",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 14.29s"
+      ]
+    },
+    "test-repl.log": {
+      "sha256": "7f8982cdaaec50fd3e7e3605981798102a30386493291e1b27d6f6384e204c6b",
+      "summaries": [
+        "ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 25.84s"
+      ]
+    },
+    "test-resource_frame_fields.log": {
+      "sha256": "5e2067709807e90d9d5bcc29635264fd622bdc7b2a5456248e6e32736940201a",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 10.08s"
+      ]
+    },
+    "test-resource_frame_variants.log": {
+      "sha256": "a8635344492a058fba3d6def63960ee3745b4a26db9e280285525b50ea434ff7",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 11.16s"
+      ]
+    },
+    "test-resource_match_context.log": {
+      "sha256": "733d0838211549aabad4a57cf44888a0f90f09eb6bf54750bb0b33918f5f1a93",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 11.86s"
+      ]
+    },
+    "test-resource_frames.log": {
+      "sha256": "b7aead837d5e44347d3456f41e85cb61a33a25a8f89ed23c3d1fbec44d4a550b",
+      "summaries": [
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.67s"
+      ]
+    },
+    "test-rest.log": {
+      "sha256": "116ad26bbd4f6ffbc09dd6312ec89363b33da39bf8c3c59f0452f14b64ea5eb2",
+      "summaries": [
+        "ok. 27 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 206.62s"
+      ]
+    },
+    "test-retain_unwind_ownership.log": {
+      "sha256": "bd1cabb49df33a9dd85e7d50f279e164a36a758c0eab94e28e7700c77ea4562c",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 16.34s"
+      ]
+    },
+    "test-retained_callbacks.log": {
+      "sha256": "7c0b3a9e384c2a0d6f5d8b23ed166967912d61d8a29be96f621a9a6115ab4a7e",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 19.14s"
+      ]
+    },
+    "test-retained_thunk_ownership.log": {
+      "sha256": "44a6e8c67c61c2bb5ec2945680ac20e18ee464404a6c8bf932e95a6329378a43",
+      "summaries": [
+        "ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 28.71s"
+      ]
+    },
+    "test-reuse.log": {
+      "sha256": "3894044aef70ca566e141d2cf8d3c0939664289b15a69f04b6be17c861c6ec9e",
+      "summaries": [
+        "ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 20.30s"
+      ]
+    },
+    "test-reuse_token_ownership.log": {
+      "sha256": "022ddf7e5ebfffbfdbf03d2a0889adb152cb885e1341cbe319043e7118914182",
+      "summaries": [
+        "ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 21.21s"
+      ]
+    },
+    "test-right_fold_ownership.log": {
+      "sha256": "39dbdac11e865b4a5a54faef593eef56275eea1ca88535bfe0c3419dac0dddc9",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 8.06s"
+      ]
+    },
+    "test-runtime_call_ownership.log": {
+      "sha256": "02659c24ade757913602fa8da590ae240e851304f4be88d40377f1e51e8703bc",
+      "summaries": [
+        "ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 20.72s"
+      ]
+    },
+    "test-scalar_math.log": {
+      "sha256": "43ccba16ff2eae8bf445e1b155b2488435d73f9a5e35ad759e09d50b1aa51604",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.75s"
+      ]
+    },
+    "test-scalar_traps.log": {
+      "sha256": "b75db71ad70d891e8f8d960aeef32e2ba620e13b5e77c636d04babcc688ef9d3",
+      "summaries": [
+        "ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 166.21s"
+      ]
+    },
+    "test-scope_thunk_ownership.log": {
+      "sha256": "94ae0283635980d5be97a4f58d98589c11f25bfbc4572eec4bf3958fb38d1071",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.30s"
+      ]
+    },
+    "test-selection_unwind_ownership.log": {
+      "sha256": "439325c0b6ecfa082e21c1cf1547e01f8104aa96fddd90ff6cbad59f34abce2b",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 35.91s"
+      ]
+    },
+    "test-serializer_leaf_ownership.log": {
+      "sha256": "8bf57405d607f2dbef22bcbe3feb9384e161b3d79201a8c5257f8b1adb17e95f",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.99s"
+      ]
+    },
+    "test-server_entry_ownership.log": {
+      "sha256": "23512d0608dfdbb9c4a1ffcc0960677fba1d55c8a5c8b0a4b46f8b4837516f50",
+      "summaries": [
+        "ok. 4 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 144.65s"
+      ]
+    },
+    "test-service_context_storage.log": {
+      "sha256": "7ca69a1de602d996752185bec7e132d3a648d29545efab0d0b07bc7c621b4bdc",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 112.45s"
+      ]
+    },
+    "test-service_scope_ownership.log": {
+      "sha256": "9dd7794b3c984ff2c7050fb58183ce6836eff0ff4320b8246c61884a83f30f41",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 23.28s"
+      ]
+    },
+    "test-service_value_ownership.log": {
+      "sha256": "22466fc62f0638623805dcdb9c078cd92b8323f434fad5e12b04e5c1fb74a589",
+      "summaries": [
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 19.30s"
+      ]
+    },
+    "test-services.log": {
+      "sha256": "3e3c54f2ce267df1915bf9f28d3beed4c0808ac57b050ec73027a5d214f1d045",
+      "summaries": [
+        "ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 66.04s"
+      ]
+    },
+    "test-softfloat_core.log": {
+      "sha256": "229306789fdef0136a257ad3456d0055db1296044a65c1e36c4ed9cb516b9118",
+      "summaries": [
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 18.88s"
+      ]
+    },
+    "test-sort_callback_ownership.log": {
+      "sha256": "d6b7411983cffcdf02e70105010039e56f7e424e15ede446c4dd17abc43b6e0c",
+      "summaries": [
+        "ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 60.56s"
+      ]
+    },
+    "test-stack.log": {
+      "sha256": "b099d5e7624bb8abe035c9bdb2b5845b32a329a5f9e80018b1f5ae393b309176",
+      "summaries": [
+        "ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.28s"
+      ]
+    },
+    "test-stack_match_ownership.log": {
+      "sha256": "04b347ba72cb16b1e209d5a26e57ff12dac2d9131634a482096ef7af88013132",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.89s"
+      ]
+    },
+    "test-stack_ownership.log": {
+      "sha256": "b48c4edd85da3fdbd3d8ae751ac8c5e9ea4a8adf80886edc6402e84ae5994229",
+      "summaries": [
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 28.91s"
+      ]
+    },
+    "test-state_sequence_ownership.log": {
+      "sha256": "f21f3afc28f3beea2960cbc672154d56c9d11ec8c0adf6e26857c843ff27158a",
+      "summaries": [
+        "ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 54.04s"
+      ]
+    },
+    "test-static_constants.log": {
+      "sha256": "ea3fcec2565c5c2a61da803e70c0939d8f71ced21b63bbfb89aa7e016358fe5d",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.97s"
+      ]
+    },
+    "test-static_memory.log": {
+      "sha256": "c6c35e4afa8a1017ecc5eee37fecbb670ca13fc5e95ffcc31150e3846ca833e4",
+      "summaries": [
+        "ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 123.62s"
+      ]
+    },
+    "test-std_tests.log": {
+      "sha256": "972c4e75a53369b95fceb753bf01ea6639ac94fb58a7be5b61df536348909232",
+      "summaries": [
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 32.78s"
+      ]
+    },
+    "test-stdlib_doc.log": {
+      "sha256": "cf75290838fa17da27709852532b82708a8508059e72e74bb246553af8c83215",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s"
+      ]
+    },
+    "test-string_map_ownership.log": {
+      "sha256": "bac1af9b4f9a2d35378e04677116b53e6fd0a8ded73ef6a3e0ebe1c6922acecf",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 20.24s"
+      ]
+    },
+    "test-structural_buffer.log": {
+      "sha256": "ccddbebdc760baced50052d65931b886f544ff0221cb5e9020fa4c5ea721835f",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.17s"
+      ]
+    },
+    "test-system_snapshots.log": {
+      "sha256": "ab319094b0816115290af768725578ae856a39d399a83aac01faf84bf36e31c6",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.48s"
+      ]
+    },
+    "test-tail_recursion.log": {
+      "sha256": "277a2f91ba801e6cbc38320f8526112ff84a16470f2c13c21cae8e768fbcc5f9",
+      "summaries": [
+        "ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 32.20s"
+      ]
+    },
+    "test-task_context_storage.log": {
+      "sha256": "a14829a2c69c2410e19015997fd32d030d3a6dd2698811608777fa7b628820c1",
+      "summaries": [
+        "ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 19.66s"
+      ]
+    },
+    "test-task_handle_ownership.log": {
+      "sha256": "24ff846e2a66073dd37aedd1486a03c416ac83bc8d89a3ec9b148c0a311ef9df",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 28.26s"
+      ]
+    },
+    "test-task_ownership.log": {
+      "sha256": "d4c287b555d8cc979e604bfb7059ba73a719bf520f6e8c5b7e95e7c48bb14a85",
+      "summaries": [
+        "ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 19.16s"
+      ]
+    },
+    "test-temporary_ownership.log": {
+      "sha256": "7725a70fe0f217d3e005ffcde5c83583df65cff2afb9fe8dd6fd0b55de4ffa6e",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.14s"
+      ]
+    },
+    "test-task_timer_order.log": {
+      "sha256": "244fb8ec6b6c5dc6e90f6a1f793fb56e2cc86cbd1830ad1dc49a15f92c47d8a2",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 11.38s"
+      ]
+    },
+    "test-terminal_ownership.log": {
+      "sha256": "6e126f8e75563aec2f4de2a910b0af237d0e189b92234237eaad072d0613bd58",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.34s"
+      ]
+    },
+    "test-ternary_ownership.log": {
+      "sha256": "8d775b2b55134802fd3d0ae08224b2ea82da416b421bf5c72bbd8998fd30d181",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.22s"
+      ]
+    },
+    "test-text_decoder_ownership.log": {
+      "sha256": "829d640d9d4ae83112abadb66d7468e36e72623da01e9d22748b82ba4769f679",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 10.69s"
+      ]
+    },
+    "test-text_file_tools.log": {
+      "sha256": "188133a2ad21fe57268a30b8e36a356415564dd0a77c916f2c21f6822dfbde44",
+      "summaries": [
+        "ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 300.14s"
+      ]
+    },
+    "test-text_ownership.log": {
+      "sha256": "3bc01b011ddccd26da16e2c756573e36410432baf904376022652005db5ca3ab",
+      "summaries": [
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.64s"
+      ]
+    },
+    "test-text_transform_ownership.log": {
+      "sha256": "5da665b618cb73a3d0e43d06f12396466c6ef75e85743661d7ad19bcd2a71a4a",
+      "summaries": [
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 40.15s"
+      ]
+    },
+    "test-tls.log": {
+      "sha256": "c1fa7f48ca9533baf42a42d005f0440d2dd8fe51806f6ac857c03dd97617297c",
+      "summaries": [
+        "ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 146.22s"
+      ]
+    },
+    "test-tls_alpn_roots.log": {
+      "sha256": "030c4d6ac3175c6a62bae5e4a592e8a4119f51e1165d0b34b69647eb36d3c612",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 9.35s"
+      ]
+    },
+    "test-tls_cache_ownership.log": {
+      "sha256": "313c8870115f33bda085511588720b484058835a3f17ccee49380b0701df3c7d",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 12.59s"
+      ]
+    },
+    "test-tls_listener_ownership.log": {
+      "sha256": "5b9c85ded074be41b213e912796b5e6f095c2690cd9256c754f6fc1b2a93fb45",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 33.47s"
+      ]
+    },
+    "test-tls_peer_subject_ownership.log": {
+      "sha256": "c4b310ee820168d31e7e5b7efd8d54251e28e05b4db47ad2f1758f235abc0542",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 12.40s"
+      ]
+    },
+    "test-tls_wire_ownership.log": {
+      "sha256": "d50c0c7ab47d068beee2a937bab945e39f129e674cf018042eb47ad8afb37ce4",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 11.79s"
+      ]
+    },
+    "test-transpose_ownership.log": {
+      "sha256": "9ac1baf417c5bdd3f3d893e3e04bd79c82edd41e84d1f7c5e2ee54486635592d",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 10.19s"
+      ]
+    },
+    "test-typed_state_ownership.log": {
+      "sha256": "fcf97a78021adf9b31fc76ed726330f818bfaa41c32c33324ff5f7feabafa801",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 48.62s"
+      ]
+    },
+    "test-udp_ownership.log": {
+      "sha256": "d793e9fe8686b1ff6cc9186344c69c347fa11057e0670d82aa173be5d9c0019d",
+      "summaries": [
+        "ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 33.14s"
+      ]
+    },
+    "test-unwind_cleanup.log": {
+      "sha256": "0818b7e21d4b5b3b0a0027fc48e3405a21c581beb6eb3da3dc8c699bbcc18a5c",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 18.47s"
+      ]
+    },
+    "test-unboxed_worker_locals.log": {
+      "sha256": "136796cc81adf01cfcc3c583f19e92b085c46790f41c5bea7b004e6c63b485ac",
+      "summaries": [
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.16s"
+      ]
+    },
+    "test-unzip_cleanup.log": {
+      "sha256": "71caf270ea9bcfd78add55b5fbee76bcb5f4bbc313ac05abb3cdf429df33df3d",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.70s"
+      ]
+    },
+    "test-variant_alias_ownership.log": {
+      "sha256": "07192b2576659972c3d6571078c316649c283a3d6210f7db1a87528feeb45447",
+      "summaries": [
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 11.44s"
+      ]
+    },
+    "test-variant_conversion_ownership.log": {
+      "sha256": "58bde559ff2b34a417267e5cf96c2af73954bbed55fc66dbffbd33845131a113",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 12.62s"
+      ]
+    },
+    "test-vector_ownership.log": {
+      "sha256": "5cfa9e1c4662aef94ad42863713b627e7d88fa037612b28c770147e8f1bfb116",
+      "summaries": [
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 39.23s"
+      ]
+    },
+    "test-wasm.log": {
+      "sha256": "caace6dc955dfc3fdb663ffcb1dbcab387a76f421a7d175c686c79994b51536c",
+      "summaries": [
+        "ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 258.36s"
+      ]
+    },
+    "test-wasm_arc.log": {
+      "sha256": "078f5de822785507f007278f30c3e167a9cf4f4a355b2fa0d8d11544a706d355",
+      "summaries": [
+        "ok. 21 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1696.78s"
+      ]
+    },
+    "test-wasm_resource_counts.log": {
+      "sha256": "0c37603db94c9dfdd7b11405f52f119a48fc85c3d466b2d65da57bd58c0c22f7",
+      "summaries": [
+        "ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 35.82s"
+      ]
+    },
+    "test-web.log": {
+      "sha256": "c40ba084635bb6cbdc6f67e61c27540a34dae34931914e6eb7cdb7146af9ffb5",
+      "summaries": [
+        "ok. 15 passed; 0 failed; 4 ignored; 0 measured; 0 filtered out; finished in 183.49s"
+      ]
+    },
+    "test-wide_counts.log": {
+      "sha256": "c10a37035ec891898dbcd9492bbf501bc530f4d3edfca7a9bf38f1898386ff58",
+      "summaries": [
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 14.54s"
+      ]
+    },
+    "test-wide_workers.log": {
+      "sha256": "ff27e0b3fd8162b11a91556e0e5b9339afb0b5832b6800d9f5522554055db626",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 32.61s"
+      ]
+    },
+    "test-windows_context.log": {
+      "sha256": "df166913f47ff1f04202cae9b31df67ed272d692d99a0023a8117dc3029100dd",
+      "summaries": [
+        "ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+      ]
+    },
+    "test-windows_runtime.log": {
+      "sha256": "df166913f47ff1f04202cae9b31df67ed272d692d99a0023a8117dc3029100dd",
+      "summaries": [
+        "ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+      ]
+    },
+    "test-windows_static_memory.log": {
+      "sha256": "df166913f47ff1f04202cae9b31df67ed272d692d99a0023a8117dc3029100dd",
+      "summaries": [
+        "ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+      ]
+    },
+    "test-within_thunk_ownership.log": {
+      "sha256": "618fa7ca8ed7dd01d412361e7562c7c0e608723ba5908f7f291d4eee3e9f283a",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 15.61s"
+      ]
+    },
+    "test-worker_boxing_ownership.log": {
+      "sha256": "5083fca6cb3020df27f342f0b982ad4c984cf6f525bfa2761970b7500d33cd40",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 10.24s"
+      ]
+    },
+    "test-worker_preparation_ownership.log": {
+      "sha256": "4f274cf3e400ffd01bfdd695f3af6f9c438671dd99fa7b04a6b5a61a22f0b72a",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.21s"
+      ]
+    },
+    "test-working_directory.log": {
+      "sha256": "80782155c52c041f1904601fbc95ecc388930bbc23cf63810ba857dccf17fc22",
+      "summaries": [
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 10.92s"
+      ]
+    },
+    "test-zip_map_fusion.log": {
+      "sha256": "3812378cf55d9b9ded109ec7244234619836acd4c53641187e7860d11ceebe4f",
+      "summaries": [
+        "ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 132.37s"
+      ]
+    },
+    "test-zip_ownership.log": {
+      "sha256": "c0689600bf7b21dc56badba27e503df6736f1a1fa486de22e5a1aa0925ffb36a",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 8.76s"
+      ]
+    },
+    "test-zip_unwind_ownership.log": {
+      "sha256": "37678b9c4a52ea90756f9421e37675a49d0614a2ce40cdc9f1284cf9ca22c9ab",
+      "summaries": [
+        "ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 96.12s"
+      ]
+    }
+  },
+  "fullJob": "audited; original failed conclusion preserved"
+}

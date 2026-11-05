@@ -1,0 +1,132 @@
+[
+  {
+    "command": [
+      "python3",
+      "scripts/test-scalar-map-zip-reference.py"
+    ],
+    "status": 0,
+    "seconds": 0.046203000005334616,
+    "stdout": "",
+    "stderr": "...\n----------------------------------------------------------------------\nRan 3 tests in 0.003s\n\nOK\n"
+  },
+  {
+    "command": [
+      "python3",
+      "scripts/test-range-zip-reference.py"
+    ],
+    "status": 0,
+    "seconds": 0.04254124999715714,
+    "stdout": "",
+    "stderr": "...\n----------------------------------------------------------------------\nRan 3 tests in 0.003s\n\nOK\n"
+  },
+  {
+    "command": [
+      "python3",
+      "scripts/test-gradient-array-reference.py"
+    ],
+    "status": 0,
+    "seconds": 0.5592727090042899,
+    "stdout": "",
+    "stderr": "......\n----------------------------------------------------------------------\nRan 6 tests in 0.485s\n\nOK\n"
+  },
+  {
+    "command": [
+      "python3",
+      "scripts/test-scalar-array-map-reference.py"
+    ],
+    "status": 0,
+    "seconds": 0.04326591599965468,
+    "stdout": "",
+    "stderr": "...\n----------------------------------------------------------------------\nRan 3 tests in 0.003s\n\nOK\n"
+  },
+  {
+    "command": [
+      "python3",
+      "scripts/test-scalar-array-identity-reference.py"
+    ],
+    "status": 0,
+    "seconds": 0.047544499997457024,
+    "stdout": "",
+    "stderr": "...\n----------------------------------------------------------------------\nRan 3 tests in 0.000s\n\nOK\n"
+  },
+  {
+    "command": [
+      "python3",
+      "scripts/test-final-iteration-reference.py"
+    ],
+    "status": 0,
+    "seconds": 0.2614300409986754,
+    "stdout": "",
+    "stderr": ".....\n----------------------------------------------------------------------\nRan 5 tests in 0.206s\n\nOK\n"
+  },
+  {
+    "command": [
+      "python3",
+      "scripts/test-matched-option-reference.py"
+    ],
+    "status": 0,
+    "seconds": 0.30996145799872465,
+    "stdout": "",
+    "stderr": "...\n----------------------------------------------------------------------\nRan 3 tests in 0.255s\n\nOK\n"
+  },
+  {
+    "command": [
+      "python3",
+      "scripts/test-packed-input-reference.py"
+    ],
+    "status": 0,
+    "seconds": 0.3153621250021388,
+    "stdout": "",
+    "stderr": ".....\n----------------------------------------------------------------------\nRan 5 tests in 0.259s\n\nOK\n"
+  },
+  {
+    "command": [
+      "python3",
+      "scripts/test-owned-numeric-reference.py"
+    ],
+    "status": 0,
+    "seconds": 0.3135069590061903,
+    "stdout": "",
+    "stderr": ".....\n----------------------------------------------------------------------\nRan 5 tests in 0.257s\n\nOK\n"
+  },
+  {
+    "command": [
+      "python3",
+      "scripts/test-gradient-call-reference.py"
+    ],
+    "status": 0,
+    "seconds": 0.043284708001010586,
+    "stdout": "",
+    "stderr": "...\n----------------------------------------------------------------------\nRan 3 tests in 0.003s\n\nOK\n"
+  },
+  {
+    "command": [
+      "python3",
+      "scripts/test-owned-numeric-census.py"
+    ],
+    "status": 0,
+    "seconds": 0.04558908299804898,
+    "stdout": "",
+    "stderr": "......\n----------------------------------------------------------------------\nRan 6 tests in 0.000s\n\nOK\n"
+  },
+  {
+    "command": [
+      "python3",
+      "scripts/test-iteration-storage.py"
+    ],
+    "status": 0,
+    "seconds": 0.05521829200006323,
+    "stdout": "",
+    "stderr": "...\n----------------------------------------------------------------------\nRan 3 tests in 0.007s\n\nOK\n"
+  },
+  {
+    "command": [
+      "python3",
+      "scripts/test-gradient-array-budgets.py"
+    ],
+    "status": 0,
+    "seconds": 0.051431375002721325,
+    "stdout": "",
+    "stderr": "......\n----------------------------------------------------------------------\nRan 6 tests in 0.002s\n\nOK\n"
+  }
+]

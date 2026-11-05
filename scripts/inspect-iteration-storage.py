@@ -19,11 +19,9 @@ AD = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(AD)
 
 
-def consuming_calls(emitted):
-    """Follow actual main/loop calls and used closure constants, not metadata."""
+def reachable_bodies(emitted):
+    """Generated bodies actually reached by main, direct calls and closures."""
     program = emitted.split('/* ---- program ---- */', 1)[1]
-    private = {match[2]: match[1] for match in re.finditer(
-        r'/\* (consumed-scalar-array-map|consumed-scalar-array-list-zip) : [^\n]*\*/\nstatic [^\n]*? (f\d+)\(', program)}
     bodies = {}
     for match in re.finditer(
             r'^static [^\n]*?\b((?:f|w|e|fs)\d+|fwp_(?:loop_fields|hof)\d+)\([^;\n]*\) \{\n', program, re.M):
@@ -41,6 +39,15 @@ def consuming_calls(emitted):
         calls = set(re.findall(r'\b([A-Za-z_]\w*)\(', body))
         calls.update('f' + index for index in re.findall(r'\bfc(\d+)\b', body))
         pending.extend((calls & bodies.keys()) - reached)
+    return bodies, reached
+
+
+def consuming_calls(emitted):
+    """Follow actual main/loop calls and used closure constants, not metadata."""
+    program = emitted.split('/* ---- program ---- */', 1)[1]
+    private = {match[2]: match[1] for match in re.finditer(
+        r'/\* (consumed-scalar-array-map|consumed-scalar-array-list-zip) : [^\n]*\*/\nstatic [^\n]*? (f\d+)\(', program)}
+    bodies, reached = reachable_bodies(emitted)
     return {kind: sorted(name for name, actual in private.items() if actual == kind and name in reached)
             for kind in ('consumed-scalar-array-map', 'consumed-scalar-array-list-zip')}
 

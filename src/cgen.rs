@@ -16,6 +16,7 @@ use crate::ownership::ResultOwnership;
 use crate::value::Value;
 
 mod field_transfers;
+mod fold_fields;
 mod numeric_parameters;
 mod owned_numeric;
 mod packed_inputs;
@@ -24,10 +25,15 @@ mod range_zip;
 mod regions;
 mod scalar_map_zip;
 mod scalar_text;
+mod scoped_calls;
 mod sort_keys;
 mod string_map;
 #[path = "cgen_wide.rs"]
 mod wide;
+
+// The same-source measurement reference changes this constant only, plus the
+// library's single-root selection. This is not a runtime execution setting.
+const GRADIENT_CALL_STORAGE: bool = true;
 
 const RUNTIME: &[&str] = &[
     include_str!("../runtime/fwp_rt.c"),
@@ -817,6 +823,32 @@ fn small_record(prog: &Program, t: &MT) -> Option<usize> {
 }
 
 fn abi_of(prog: &Program, f: &Func) -> Option<Abi> {
+    if GRADIENT_CALL_STORAGE {
+        if let Body::PackedRecordFold { callback } = f.body {
+            let step = &prog.funcs[callback];
+            if !matches!(step.body, Body::Expr(_)) {
+                return None;
+            }
+            let abi = abi_of(prog, step)?;
+            let width = abi.ret?;
+            let (parameters, result) = f.ty.params(2);
+            let fields = record_fields(&prog.shapes, result)?;
+            if f.arity == 2
+                && parameters[0] == result
+                && fields.len() == width
+                && fields.iter().all(|(_, ty)| scalar(ty).is_some())
+                && abi.params[0] == Some(width)
+                && abi.params[1].is_some()
+            {
+                return Some(Abi {
+                    params: vec![Some(width), None],
+                    ret: Some(width),
+                    vret: None,
+                });
+            }
+            return None;
+        }
+    }
     let Body::Expr(body) = &f.body else {
         return None;
     };
@@ -2584,7 +2616,13 @@ impl Gen<'_> {
         format!("    /* Consume one scalar array owner; views and aliases keep their values. */\n    fwp_value_owner input = {{l0, {drop}}};\n    fwp_cleanup input_cleanup; fwp_value_protect(&input, &input_cleanup);\n    size_t count = fwp_array_len(l0);\n    int reuse = !fwp_array_is_view(l0) && fwp_rc_unique_mut(l0);\n    V output = reuse ? l0 : fwp_array_typed_new(count, {descriptor});\n    fwp_array_builder result = {{output, 0, {descriptor}}};\n    fwp_cleanup cleanup; fwp_array_builder_protect(&result, &cleanup);\n    if (reuse) input.value = 0;\n    for (size_t i = 0; i < count; i++) {{\n        fwp_array_store(output, i, f{callback}(fwp_array_load(l0, i, {descriptor})), {descriptor});\n        result.filled++;\n    }}\n    output = fwp_array_builder_finish(&result, &cleanup);\n    {drop}(fwp_value_finish(&input, &input_cleanup));\n    return output;\n")
     }
 
-    fn owned_scalar_buffer_zip(&mut self, id: FuncId, callback: FuncId, slot: usize) -> String {
+    fn owned_scalar_buffer_zip(
+        &mut self,
+        id: FuncId,
+        callback: FuncId,
+        slot: usize,
+        consume_array: bool,
+    ) -> String {
         let other = 1 - slot;
         let list = self.prog.funcs[id].locals[other].clone();
         let drop = self.value_drop(&list);
@@ -2593,13 +2631,22 @@ impl Gen<'_> {
             unreachable!()
         };
         let descriptor = self.desc(&elements[0]);
+        if consume_array {
+            let array_drop = self.value_drop(&array);
+            let arguments = if slot == 0 {
+                "adjustment, coordinate"
+            } else {
+                "coordinate, adjustment"
+            };
+            return format!("    /* Consume array and list; reuse exclusive 64-bit array scratch. */\n    fwp_value_owner input = {{l{other}, {drop}}};\n    fwp_cleanup input_cleanup; fwp_value_protect(&input, &input_cleanup);\n    fwp_value_owner array_input = {{l{slot}, {array_drop}}};\n    fwp_cleanup array_cleanup; fwp_value_protect(&array_input, &array_cleanup);\n    size_t count = fwp_list_len(l{other}), buffered = fwp_array_len(l{slot});\n    int reuse_scratch = !fwp_array_is_view(l{slot}) && fwp_rc_unique_mut(l{slot});\n    V *items;\n    if (reuse_scratch) items = ARR(l{slot})->d;\n    else items = fwp_map_items(l{other}, &count);\n    fwp_map_owner owner = {{items, 0, 0, NULL, {drop}}};\n    fwp_cleanup cleanup;\n#if FWP_UNWIND\n    fwp_cleanup_push(&cleanup, reuse_scratch ? fwp_map_release_borrowed_scalar_items : fwp_map_release, &owner);\n#endif\n    if (buffered < count) count = buffered;\n    V cursor = l{other};\n    for (size_t i = 0; i < count; i++) {{\n        V adjustment = fwp_array_load(l{slot}, i, {descriptor});\n        V coordinate = OBJ(cursor)->f[0];\n        items[i] = f{callback}({arguments});\n        owner.count++;\n        cursor = OBJ(cursor)->f[1];\n    }}\n    V output = fwp_map_finish_reusing_list(&input, &owner, &cleanup, reuse_scratch);\n    {array_drop}(fwp_value_finish(&array_input, &array_cleanup));\n    {drop}(fwp_value_finish(&input, &input_cleanup));\n    return output;\n");
+        }
         let value = format!("fwp_array_load(l{slot}, i, {descriptor})");
         let arguments = if slot == 0 {
             format!("{value}, items[i]")
         } else {
             format!("items[i], {value}")
         };
-        format!("    /* Borrow array, consume list; finish all callbacks before list reuse. */\n    fwp_value_owner input = {{l{other}, {drop}}};\n    fwp_cleanup input_cleanup; fwp_value_protect(&input, &input_cleanup);\n    size_t count;\n    V *items = fwp_map_items(l{other}, &count);\n    fwp_map_owner owner = {{items, 0, 0, NULL, {drop}}};\n    fwp_cleanup cleanup; fwp_map_protect(&owner, &cleanup);\n    size_t buffered = fwp_array_len(l{slot});\n    if (buffered < count) count = buffered;\n    for (size_t i = 0; i < count; i++) {{\n        items[i] = f{callback}({arguments});\n        owner.count++;\n    }}\n    V output = fwp_map_finish_reusing_list(&input, &owner, &cleanup);\n    {drop}(fwp_value_finish(&input, &input_cleanup));\n    return output;\n")
+        format!("    /* Borrow array, consume list; finish all callbacks before list reuse. */\n    fwp_value_owner input = {{l{other}, {drop}}};\n    fwp_cleanup input_cleanup; fwp_value_protect(&input, &input_cleanup);\n    size_t count;\n    V *items = fwp_map_items(l{other}, &count);\n    fwp_map_owner owner = {{items, 0, 0, NULL, {drop}}};\n    fwp_cleanup cleanup; fwp_map_protect(&owner, &cleanup);\n    size_t buffered = fwp_array_len(l{slot});\n    if (buffered < count) count = buffered;\n    for (size_t i = 0; i < count; i++) {{\n        items[i] = f{callback}({arguments});\n        owner.count++;\n    }}\n    V output = fwp_map_finish_reusing_list(&input, &owner, &cleanup, 0);\n    {drop}(fwp_value_finish(&input, &input_cleanup));\n    return output;\n")
     }
 
     fn scalar_buffer_map(&self, callback: FuncId) -> String {
@@ -2808,6 +2855,61 @@ impl Gen<'_> {
         let drop = self.value_drop(&self.prog.funcs[id].locals[0].clone());
         format!("    /* Fold after the complete packed map; input stays borrowed. */\n    size_t words = ARR(l1)->len;\n    if (!words) return l0;\n    fwp_wr{id} accumulator = {{{}}};\n    {drop}(l0);\n    for (size_t offset = 0; offset < words; offset += {element_width}) {{\n        accumulator = w{id}({});\n    }}\n    return fwp_rc_fresh(fwp_record({width}, (V[]){{{}}}));\n",
             initial.join(", "), arguments.join(", "), result.join(", "))
+    }
+
+    fn packed_record_fold_fields(&mut self, id: FuncId, callback: FuncId, abi: &Abi) -> String {
+        let step = self
+            .record_fold_abi(callback)
+            .expect("numeric fold callback")
+            .clone();
+        let width = abi.ret.unwrap();
+        let element_width = step.params[1].unwrap();
+        let initial: Vec<_> = abi
+            .param_numbers(self.prog, id)
+            .into_iter()
+            .take(width)
+            .enumerate()
+            .map(|(i, number)| {
+                if number.is_some() {
+                    format!("al0_{i}")
+                } else {
+                    format!("l0_{i}")
+                }
+            })
+            .collect();
+        let mut arguments = step.result_words(self.prog, callback, "accumulator");
+        arguments.extend((0..element_width).map(|i| format!("ARR(l1)->d[offset + {i}]")));
+        let arguments = step.args_decode_words(self.prog, callback, arguments);
+        let result = (0..width)
+            .map(|i| format!("accumulator.f{i}"))
+            .collect::<Vec<_>>();
+        let mut out = format!("/* packed-record-fold fields : {} */\n{} {{\n    /* Fold after the complete packed map; seed and result are numeric fields. */\n    fwp_wr{callback} accumulator = {{{}}};\n    size_t words = ARR(l1)->len;\n    for (size_t offset = 0; offset < words; offset += {element_width}) {{\n        accumulator = w{callback}({});\n    }}\n    return (fwp_wr{id}){{{}}};\n}}\n",
+            self.prog.funcs[id].ty, abi.sig(self.prog, id), initial.join(", "), arguments.join(", "), result.join(", "));
+        // The owned entry still consumes its boxed seed. Copy numeric fields
+        // before dropping that owner; the input buffer remains borrowed.
+        let drop = self.value_drop(&self.prog.funcs[id].locals[0].clone());
+        let mut fields = (0..width)
+            .map(|i| format!("OBJ(l0)->f[{i}]"))
+            .collect::<Vec<_>>();
+        fields.push("l1".into());
+        let fields = abi.args_decode_words(self.prog, id, fields);
+        let names = (0..width)
+            .map(|i| format!("seed{i}"))
+            .chain(std::iter::once("l1".into()))
+            .collect::<Vec<_>>();
+        let _ = writeln!(out, "static V f{id}(V l0, V l1) {{");
+        for (i, number) in abi
+            .param_numbers(self.prog, id)
+            .into_iter()
+            .take(width)
+            .enumerate()
+        {
+            let ty = number.map_or_else(|| "V".into(), NativeNumber::c_type);
+            let _ = writeln!(out, "    {ty} seed{i} = {};", fields[i]);
+        }
+        let _ = writeln!(out, "    {drop}(l0);\n    fwp_wr{id} result = w{id}({});\n    return fwp_rc_fresh(fwp_record({width}, (V[]){{{}}}));\n}}",
+            names.join(", "), abi.result_words(self.prog, id, "result").join(", "));
+        out
     }
 
     fn record_fold_abi(&self, id: FuncId) -> Option<&Abi> {
@@ -7049,11 +7151,14 @@ impl<'p> Gen<'p> {
                 "return fwp_p_ad_push_owned(l0, l1, l2, l3, {descriptor});"
             ));
         }
-        if sym == "ad.backward-owned" {
+        if matches!(sym, "ad.backward-owned" | "ad._backward-owned-one") {
             let descriptor = self.desc(&result);
-            return Ok(format!(
-                "return fwp_p_ad_backward_owned(l0, l1, l2, {descriptor});"
-            ));
+            let helper = if sym == "ad.backward-owned" {
+                "fwp_p_ad_backward_owned"
+            } else {
+                "fwp_p_ad_backward_owned_one"
+            };
+            return Ok(format!("return {helper}(l0, l1, l2, {descriptor});"));
         }
         if matches!(
             sym,
@@ -7800,6 +7905,7 @@ impl<'p> Gen<'p> {
                     ("ad.tape", "fwp_p_ad_tape(l0)"),
                     ("ad.push", "fwp_p_ad_push(l0, l1, l2, l3)"),
                     ("ad.backward", "fwp_p_ad_backward(l0, l1, l2)"),
+                    ("ad._backward-one", "fwp_p_ad_backward_one(l0, l1, l2)"),
                     ("device.run", "fwp_p_device_run(l0, l1, l2, l3, l4)"),
                     ("device.sum", "fwp_p_device_sum(l0, l1, l2, l3, l4)"),
                     ("syntax.show", "fwp_p_syntax_show(l0)"),
@@ -8352,6 +8458,11 @@ static inline __attribute__((always_inline)) int fs{}(fwp_loop_state{step} *st, 
     }
 
     fn func(&mut self, id: FuncId) -> Result<String, String> {
+        if let Body::PackedRecordFold { callback } = self.prog.funcs[id].body {
+            if let Some(abi) = self.abis[id].clone() {
+                return Ok(self.packed_record_fold_fields(id, callback, &abi));
+            }
+        }
         if self.wide_workers[id] {
             let f = self.uncounted.funcs[id].clone();
             let mut out = wide::worker(self.uncounted, &self.wide_workers, id, self.ticks);
@@ -8447,6 +8558,7 @@ static inline __attribute__((always_inline)) int fs{}(fwp_loop_state{step} *st, 
                 | Body::Ctor(_)
                 | Body::RegionCtor(_)
                 | Body::RegionEntry { .. }
+                | Body::DirectAdScope { .. }
                 | Body::PackedRecordMap { .. }
                 | Body::PackedRecordFold { .. }
                 | Body::ScalarBufferMap { .. }
@@ -8506,8 +8618,12 @@ static inline __attribute__((always_inline)) int fs{}(fwp_loop_state{step} *st, 
             Body::OwnedScalarArrayMap { callback } => {
                 out.push_str(&self.owned_scalar_array_map(id, *callback));
             }
-            Body::OwnedScalarBufferZip { callback, slot } => {
-                out.push_str(&self.owned_scalar_buffer_zip(id, *callback, *slot));
+            Body::OwnedScalarBufferZip {
+                callback,
+                slot,
+                consume_array,
+            } => {
+                out.push_str(&self.owned_scalar_buffer_zip(id, *callback, *slot, *consume_array));
             }
             Body::ScalarBufferMap { callback } => {
                 out.push_str(&self.scalar_buffer_map(*callback));
@@ -8520,6 +8636,27 @@ static inline __attribute__((always_inline)) int fs{}(fwp_loop_state{step} *st, 
             }
             Body::PackedRecordFold { callback } => {
                 out.push_str(&self.packed_record_fold(*callback));
+            }
+            Body::DirectAdScope { callback } => {
+                let abi = self.abis[*callback].as_ref().expect("direct scope worker");
+                assert!(abi.params.iter().all(Option::is_none));
+                assert!(abi.ret.is_none() && abi.vret.is_none());
+                let inputs: Vec<_> = self.prog.funcs[*callback]
+                    .ty
+                    .params(f.arity as usize)
+                    .0
+                    .into_iter()
+                    .enumerate()
+                    .filter(|(j, _)| crate::rc::consumes_arg(self.prog, *callback, *j))
+                    .map(|(j, ty)| (format!("l{j}"), ty.clone()))
+                    .collect();
+                let prepare = self.duplicate_values(&inputs, "prepared", "preparation_cleanup");
+                let arguments = (0..f.arity)
+                    .map(|j| format!("l{j}"))
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                let _ = writeln!(out,
+                    "    /* Direct AD scope; caller keeps borrowed worker inputs. */\n    fwp_tape_scope scope = {{-1}};\n    fwp_cleanup cleanup;\n    fwp_cleanup_push(&cleanup, fwp_tape_scope_release, &scope);\n    {prepare}\n    V result = w{callback}({arguments});\n    fwp_cleanup_pop(&cleanup);\n    fwp_tape_scope_release(&scope);\n    return result;");
             }
             Body::RegionEntry { worker } => {
                 // The worker takes the ordinary input owners. No operation
@@ -10544,6 +10681,10 @@ fn generate_mode(prog: &Program, mut mode: Mode) -> Result<String, String> {
     // callees are flattened. Prove packed windows against that final body.
     packed_inputs::lower(&mut numeric_program);
     owned_numeric::lower(&mut numeric_program);
+    if GRADIENT_CALL_STORAGE {
+        fold_fields::lower(&mut numeric_program);
+        scoped_calls::lower(&mut numeric_program);
+    }
     let prog = &numeric_program;
     crate::ir::check_locals(prog)?;
     let weak_channels = crate::resource::uses_weak_channels(&prog.funcs, &prog.shapes);
@@ -10553,6 +10694,14 @@ fn generate_mode(prog: &Program, mut mode: Mode) -> Result<String, String> {
     // the calling conventions follow the bodies as they are; with counted
     // references, the code is generated from the counted bodies
     let mut abis: Vec<Option<Abi>> = prog.funcs.iter().map(|f| abi_of(prog, f)).collect();
+    for id in scoped_calls::word_workers(prog) {
+        assert!(abis[id].is_none(), "direct scope requires a word worker");
+        abis[id] = Some(Abi {
+            params: vec![None; prog.funcs[id].arity as usize],
+            ret: None,
+            vret: None,
+        });
+    }
     wide_record_returns(prog, &mut abis);
     if variant_returns_enabled() {
         variant_returns(prog, &mut abis);

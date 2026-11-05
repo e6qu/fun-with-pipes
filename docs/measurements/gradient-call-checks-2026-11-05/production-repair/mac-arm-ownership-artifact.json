@@ -1,0 +1,20 @@
+{
+  "id": 13391495551,
+  "node_id": "MDg6QXJ0aWZhY3QxMzM5MTQ5NTU1MQ==",
+  "name": "macos-ownership-tests-macos-15",
+  "size_in_bytes": 42196,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13391495551",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13391495551/zip",
+  "expired": false,
+  "digest": "sha256:d2ad1eb5daa47587604f34f382270665d2b09544673454d131b0f71744ac1662",
+  "created_at": "2026-11-05T05:32:26Z",
+  "updated_at": "2026-11-05T05:32:26Z",
+  "expires_at": "2027-02-03T05:00:25Z",
+  "workflow_run": {
+    "id": 41971248924,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "gradient-call-storage",
+    "head_sha": "4160061cd0d421a55ab4e467c6ec5fb6fd88cbf6"
+  }
+}

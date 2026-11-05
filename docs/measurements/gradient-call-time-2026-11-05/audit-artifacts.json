@@ -1,0 +1,45 @@
+{
+  "total_count": 2,
+  "artifacts": [
+    {
+      "id": 13390015134,
+      "node_id": "MDg6QXJ0aWZhY3QxMzM5MDAxNTEzNA==",
+      "name": "gradient-call-report-retained",
+      "size_in_bytes": 60427058,
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13390015134",
+      "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13390015134/zip",
+      "expired": false,
+      "digest": "sha256:2970aa9fb6de86a163d2d04a5c46ff32ffd8f9571dd46f2b48d29056bebff469",
+      "created_at": "2026-11-05T04:55:31Z",
+      "updated_at": "2026-11-05T04:55:31Z",
+      "expires_at": "2027-02-03T04:49:20Z",
+      "workflow_run": {
+        "id": 41970153152,
+        "repository_id": 1400763332,
+        "head_repository_id": 1400763332,
+        "head_branch": "roadmap/gradient-call-timing-2026-11-05",
+        "head_sha": "d494dd910723303f99992610895d9784968c79e8"
+      }
+    },
+    {
+      "id": 13388998867,
+      "node_id": "MDg6QXJ0aWZhY3QxMzM4ODk5ODg2Nw==",
+      "name": "gradient-call-report-summary",
+      "size_in_bytes": 1034777,
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13388998867",
+      "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13388998867/zip",
+      "expired": false,
+      "digest": "sha256:ad2e32574eb0916ea3e54d31806830411d660877098a8e386cc87fe1203ff88f",
+      "created_at": "2026-11-05T04:51:43Z",
+      "updated_at": "2026-11-05T04:51:43Z",
+      "expires_at": "2027-02-03T04:49:20Z",
+      "workflow_run": {
+        "id": 41970153152,
+        "repository_id": 1400763332,
+        "head_repository_id": 1400763332,
+        "head_branch": "roadmap/gradient-call-timing-2026-11-05",
+        "head_sha": "d494dd910723303f99992610895d9784968c79e8"
+      }
+    }
+  ]
+}

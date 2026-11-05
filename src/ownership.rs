@@ -148,12 +148,16 @@ impl Contract {
 
 /// Whether an argument's outer object is used only during this call. This is
 /// stronger than Borrow: borrowed inputs may otherwise be returned or retained.
+/// List length traverses links and returns an immediate count, retaining nothing.
 /// Hash only reads typed bytes and returns an immediate fingerprint. Array list
 /// display copies numeric text into a fresh string without retaining its input. Synchronous
 /// callbacks may return captured children, but never the callback object itself.
 /// Array reads return a scalar or separately owned element, never the outer array.
 pub fn borrows_without_escape(symbol: &str, index: usize) -> bool {
-    if (matches!(symbol, "hash" | "array._show-list" | "array.length") && index == 0)
+    if (matches!(
+        symbol,
+        "length" | "hash" | "array._show-list" | "array.length"
+    ) && index == 0)
         || (symbol == "array.get" && index == 1)
     {
         return true;
@@ -305,12 +309,14 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         "matrix._mul-f64" => (&[B, B, B, B, B], ResultOwnership::FreshLeaf, None, &[]),
         "ad.tape" => (&[B], ResultOwnership::Shared, None, &[]),
         "ad.push" => (&[B, B, B, B], ResultOwnership::Shared, None, &[]),
-        "ad.backward" => (&[B, B, B], ResultOwnership::FreshLeaf, None, &[]),
+        "ad.backward" | "ad._backward-one" => (&[B, B, B], ResultOwnership::FreshLeaf, None, &[]),
         // The scalar-operation tuple owns embedded callbacks until scoped tape
         // retirement. arc_scope proves these container callbacks explicitly.
         "ad.tape-owned" => (&[B, B], ResultOwnership::Shared, None, &[]),
         "ad.push-owned" => (&[B, C, B, C], ResultOwnership::Shared, None, &[]),
-        "ad.backward-owned" => (&[B, B, B], ResultOwnership::OwnedTree, None, &[]),
+        "ad.backward-owned" | "ad._backward-owned-one" => {
+            (&[B, B, B], ResultOwnership::OwnedTree, None, &[])
+        }
         "task.spawn" => (
             &[C],
             ResultOwnership::OwnedTask,
@@ -767,6 +773,8 @@ mod tests {
 
     #[test]
     fn borrowed_arguments_need_an_independent_nonescape_proof() {
+        assert!(borrows_without_escape("length", 0));
+        assert!(!borrows_without_escape("length", 1));
         assert!(borrows_without_escape("array.length", 0));
         assert!(borrows_without_escape("array.get", 1));
         assert!(borrows_without_escape("hash", 0));

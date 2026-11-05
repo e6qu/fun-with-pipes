@@ -1,4 +1,4 @@
-static int prefix_case(int64_t leaves, int constants) {
+static int prefix_case(int64_t leaves, int constants, int single) {
     V tuple=fwp_rc_fresh(fwp_record(4,(V[4]){0,0,0,0}));
     V outs=fwp_rc_fresh(fwp_arr_new(constants ? 1 : 4)), seeds=fwp_rc_fresh(fwp_arr_new(constants ? 1 : 4));
     V base=fwp_p_ad_tape((V)leaves), early=base, tail;
@@ -20,11 +20,14 @@ static int prefix_case(int64_t leaves, int constants) {
         ARR(seeds)->d[2]=fwp_from_f64(1.0);ARR(seeds)->d[3]=fwp_from_f64(NAN);
     }
     prefix_scans=0;prefix_adj_bytes=0;
-    V result=fwp_rc_fresh(fwp_p_ad_backward(base,outs,seeds));
+    V result=fwp_rc_fresh(single
+        ? fwp_p_ad_backward_one(base, constants ? (V)(int64_t)-1 : early,
+                                fwp_from_f64(constants ? NAN : 3.0))
+        : fwp_p_ad_backward(base,outs,seeds));
     if(prefix_scans!=(constants ? 0 : 1))return 241;
     if(ARR(result)->len!=(size_t)leaves)return 242;
     for(int64_t i=0;i<leaves;i++) {
-        double expected=constants ? 0.0 : i==0 ? 13.0 : i==1 ? 9.0 : 0.0;
+        double expected=constants ? 0.0 : i==0 ? (single ? 6.0 : 13.0) : i==1 ? 9.0 : 0.0;
         if(fwp_f64(ARR(result)->d[i])!=expected)return 243;
     }
     size_t expected_bytes=(size_t)(constants ? leaves : 4)*sizeof(double);
@@ -41,9 +44,11 @@ int main(void) {
     fwp_cleanup_push(&scope_owner,fwp_tape_scope_release,&scope);
     size_t baseline=fwp_heap.live;
     for(int round=0;round<32;round++) {
-    int result=prefix_case(3,0);if(result)return result;
-    result=prefix_case(3,1);if(result)return result;
-    result=prefix_case(0,1);if(result)return result;
+    for (int single=0; single<2; single++) {
+        int result=prefix_case(3,0,single);if(result)return result;
+        result=prefix_case(3,1,single);if(result)return result;
+        result=prefix_case(0,1,single);if(result)return result;
+    }
     if(fwp_heap.live!=baseline||fwp_heap.rc_wide_len)return 90;
     }
     if(fwp_tape_workspace_enabled()) {

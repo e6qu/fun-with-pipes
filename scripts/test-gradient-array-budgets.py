@@ -60,5 +60,82 @@ class GradientArrayBudgets(unittest.TestCase):
                 self.assertEqual(failures, [name + '/workspace0: constructor groups differ from exact gradient-list removal'])
 
 
+class GradientCallBudgets(unittest.TestCase):
+    def example(self, dimensions, updates, savings, phase_bytes):
+        row = dict(requests=100, requestedBytes=1000,
+                   operations={'dup': {'effective': 10}})
+        observation = dict(totals={'managed': dict(requests=700, requestedBytes=7000,
+            retains=70, peakChargedBytes=80, finalChargedBytes=0)},
+            phases={phase: copy.deepcopy(row) for phase in COSTS.PROFILE.PHASES},
+            visits={'nodes': 8}, raw={'finalBytes': 0})
+        name = f'{dimensions}-{updates}-current-O2'
+        previous = copy.deepcopy(observation)
+        for key, saving in zip(('requests', 'requestedBytes', 'retains'), savings):
+            previous['totals']['managed'][key] += saving
+        outside = previous['phases']['outside']
+        outside['requests'] += updates
+        outside['requestedBytes'] += phase_bytes[0]
+        outside['operations']['dup']['effective'] += updates
+        forward = previous['phases']['forwardWithRecording']
+        forward['requests'] += savings[0] - updates
+        forward['requestedBytes'] += phase_bytes[1]
+        forward['operations']['dup']['effective'] += updates
+        report = dict(machine='aarch64', cases={name: {mode: copy.deepcopy(observation) for mode in ('0', '1')}})
+        baseline = {'hosts': {'aarch64': {'cases': {name: {'observations':
+            {mode: copy.deepcopy(previous) for mode in ('0', '1')}}}}}}
+        return report, baseline, name
+
+    def test_all_six_fresh_solve_predictions(self):
+        # Literal whole-program and phase predictions do not repeat the checker formula.
+        for dimensions, updates, savings, phase_bytes in (
+            (3, 0, (0, 0, 0), (0, 0)), (3, 1, (8, 176, 2), (32, 144)),
+            (3, 199, (1394, 30272, 398), (6368, 23904)),
+            (3, 1999, (13994, 303872, 3998), (63968, 239904)),
+            (33, 199, (1394, 78032, 398), (54128, 23904)),
+            (129, 199, (1394, 230864, 398), (206960, 23904)),
+        ):
+            report, baseline, _ = self.example(dimensions, updates, savings, phase_bytes)
+            self.assertEqual(COSTS.comparison_failures(report, baseline, 'gradient-call'), [])
+
+    def test_extra_or_missing_savings_and_changed_memory_are_rejected(self):
+        report, baseline, name = self.example(129, 199, (1394, 230864, 398), (206960, 23904))
+        for key in ('requests', 'requestedBytes', 'retains'):
+            for delta in (-1, 1):
+                changed = copy.deepcopy(report)
+                changed['cases'][name]['0']['totals']['managed'][key] += delta
+                self.assertTrue(COSTS.comparison_failures(changed, baseline, 'gradient-call'))
+        for key in ('peakChargedBytes', 'finalChargedBytes'):
+            changed = copy.deepcopy(report)
+            changed['cases'][name]['1']['totals']['managed'][key] += 1
+            self.assertTrue(COSTS.comparison_failures(changed, baseline, 'gradient-call'))
+        for key in ('raw', 'visits'):
+            changed = copy.deepcopy(report)
+            changed['cases'][name]['0'][key] = {'changed': 1}
+            self.assertTrue(COSTS.comparison_failures(changed, baseline, 'gradient-call'))
+
+    def test_correct_totals_cannot_hide_wrong_phase_attribution(self):
+        report, baseline, name = self.example(129, 199, (1394, 230864, 398), (206960, 23904))
+        for mode in ('0', '1'):
+            changed = copy.deepcopy(report)
+            phases = changed['cases'][name][mode]['phases']
+            phases['outside']['requests'] += 1
+            phases['forwardWithRecording']['requests'] -= 1
+            failures = COSTS.comparison_failures(changed, baseline, 'gradient-call')
+            self.assertEqual(len(failures), 2)
+            self.assertTrue(all('expected' in failure for failure in failures))
+        # Moving the reserved scratch word to the forward phase preserves totals
+        # but must fail both phase checks (the original checker defect).
+        changed = copy.deepcopy(report)
+        phases = changed['cases'][name]['0']['phases']
+        phases['outside']['requestedBytes'] += 8 * 199
+        phases['forwardWithRecording']['requestedBytes'] -= 8 * 199
+        failures = COSTS.comparison_failures(changed, baseline, 'gradient-call')
+        self.assertEqual(len(failures), 2)
+        changed = copy.deepcopy(report)
+        del changed['cases'][name]['0']['phases']['outside']
+        with self.assertRaises(AssertionError):
+            COSTS.comparison_failures(changed, baseline, 'gradient-call')
+
+
 if __name__ == '__main__':
     unittest.main()

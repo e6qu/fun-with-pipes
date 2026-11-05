@@ -1,0 +1,15 @@
+{
+  "compilerSource": "35745c0b8fab61c9ac4e0a9e57efd81fd1a283bd",
+  "compilerSha256": "8d805b0f0d24dae7151a0b04d483012c451f98d8ace87f75224ac10460769cd1",
+  "checkedPaths": [
+    "src/main.rs",
+    "src/fmt.rs",
+    "src/pretty.rs",
+    "src/parser.rs",
+    "src/lexer.rs",
+    "src/ast.rs",
+    "src/syntax.rs"
+  ],
+  "formatted": "lib/autodiff.fwp",
+  "completeRepositoryFormatCheck": true
+}

@@ -1,0 +1,32 @@
+{
+  "arm": {
+    "source": "8c0e4b0ef06aa9f528eeaedbfbab9461a82dd0d7",
+    "job": 127033447496,
+    "nativeTargets": 25,
+    "nativeTests": 124,
+    "nativeImages": 798,
+    "probeStatuses": 814,
+    "conclusion": "success",
+    "formattedFixtureSha256": "243c68beb9511ff816b33f9acb6f7fbd29400bbd4951cdce015ea7925a354736"
+  },
+  "amd": {
+    "source": "8c0e4b0ef06aa9f528eeaedbfbab9461a82dd0d7",
+    "job": 127033447284,
+    "nativeTargets": 25,
+    "nativeTests": 124,
+    "nativeImages": 798,
+    "probeStatuses": 814,
+    "conclusion": "success",
+    "formattedFixtureSha256": "243c68beb9511ff816b33f9acb6f7fbd29400bbd4951cdce015ea7925a354736"
+  },
+  "mac": {
+    "source": "8c0e4b0ef06aa9f528eeaedbfbab9461a82dd0d7",
+    "job": 127033447442,
+    "nativeTargets": 25,
+    "nativeTests": 124,
+    "nativeImages": 798,
+    "probeStatuses": 814,
+    "conclusion": "success",
+    "formattedFixtureSha256": "243c68beb9511ff816b33f9acb6f7fbd29400bbd4951cdce015ea7925a354736"
+  }
+}

@@ -224,6 +224,7 @@ pub(crate) fn check(
             | Body::Ctor(_)
             | Body::RegionCtor(_)
             | Body::RegionEntry { .. }
+            | Body::DirectAdScope { .. }
             | Body::PackedRecordMap { .. }
             | Body::PackedRecordFold { .. }
             | Body::ScalarBufferMap { .. }

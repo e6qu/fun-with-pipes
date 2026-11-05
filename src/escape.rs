@@ -38,6 +38,7 @@ pub fn params(prog: &Program) -> Vec<Vec<bool>> {
                     matches!(
                         f.body,
                         Body::Expr(_)
+                            | Body::DirectAdScope { .. }
                             | Body::RangeZip { .. }
                             | Body::PackedRecordRangeZip { .. }
                             | Body::PackedRecordPairs { .. }
@@ -51,6 +52,19 @@ pub fn params(prog: &Program) -> Vec<Vec<bool>> {
     loop {
         let mut changed = false;
         for (id, f) in prog.funcs.iter().enumerate() {
+            if let Body::DirectAdScope { callback } = f.body {
+                let [scope, worker] = noesc
+                    .get_disjoint_mut([id, callback])
+                    .expect("direct scope and worker have distinct entries");
+                assert_eq!(scope.len(), worker.len());
+                for (parameter, proved) in scope.iter_mut().zip(worker.iter()) {
+                    if *parameter && !*proved {
+                        *parameter = false;
+                        changed = true;
+                    }
+                }
+                continue;
+            }
             let Body::Expr(body) = &f.body else {
                 continue;
             };

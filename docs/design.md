@@ -290,6 +290,14 @@ is insufficient. Temporary aliases can forward that same borrow through bindings
 and matches. Generic entries still protect and consume their ordinary arguments
 when calling a specialized borrowing worker.
 
+The [gradient-storage group](measurements/gradient-call-storage.md) adds a
+private direct entry for known `ad.scope` callbacks returning arrays. It keeps
+read-only list inputs borrowed only when every caller retains the input beyond
+the scope. Ordinary exported/function-value entries still own their arguments.
+Focused native checks cover trap/cancellation cleanup on Linux ARM64/AMD64 and
+macOS ARM64. Allocation and compiler-cost audits pass; runtime results retain timing misses.
+The complete production matrix remains.
+
 Channel borrowing preserves hidden native contexts as well as payload storage.
 It does not prove the queued graph acyclic: capture/cycle checks remain separate.
 The caller keeps the borrowed owner alive and releases it on failure.
@@ -457,6 +465,13 @@ seed (0, 0.5) → add (1, 1.5) → (1, 2.0) → add (2, 2.5) → (3, 4.5)
 - Use the existing direct worker, which accepts/returns separate numeric fields.
 - Exclude managed/nested fields, boxed wide numbers, captured or runtime-selected
   callbacks and right folds. Keep callback effects and evaluation order.
+
+The pending gradient-storage group also carries a packed fold's seed and result
+as fields across its call boundary. For a proved constant `(0.0, -1)` seed, no
+cached record is needed. Empty input returns those exact bits. Constant proof is
+bounded to literals, acyclic nullary definitions and concrete scalar zero/one;
+arbitrary user code still runs normally. Stored/escaping results still need
+an owned record. These additions await the grouped native checks.
 
 The [requirements and measurement protocol](measurements/derivative-record-folds.md)
 cover alias preservation, allocation failure, traps, cancellation and exact counts.

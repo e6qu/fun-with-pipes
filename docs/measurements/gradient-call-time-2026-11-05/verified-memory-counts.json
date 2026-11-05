@@ -1,0 +1,2354 @@
+[
+  {
+    "session": "aarch64-1",
+    "case": "3-0",
+    "form": "fwp-ad",
+    "solves": 32768,
+    "savedRequestsPerProcess": 0,
+    "savedRequestedBytesPerProcess": 0,
+    "savedRetainsPerProcess": 0,
+    "counts": [
+      {
+        "mode": "workspace",
+        "candidate": {
+          "requests": 65539,
+          "requestedBytes": 1638472,
+          "retains": 32768,
+          "peakChargedBytes": 1048704,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 65539,
+          "requestedBytes": 1638472,
+          "retains": 32768,
+          "peakChargedBytes": 1048704,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 0,
+        "rawFinalBytes": 0
+      },
+      {
+        "mode": "withoutWorkspace",
+        "candidate": {
+          "requests": 65539,
+          "requestedBytes": 1638472,
+          "retains": 32768,
+          "peakChargedBytes": 1048704,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 65539,
+          "requestedBytes": 1638472,
+          "retains": 32768,
+          "peakChargedBytes": 1048704,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 0,
+        "rawFinalBytes": 0
+      }
+    ]
+  },
+  {
+    "session": "aarch64-1",
+    "case": "3-0",
+    "form": "fwp-ad-history",
+    "solves": 32768,
+    "savedRequestsPerProcess": 0,
+    "savedRequestedBytesPerProcess": 0,
+    "savedRetainsPerProcess": 0,
+    "counts": [
+      {
+        "mode": "workspace",
+        "candidate": {
+          "requests": 65539,
+          "requestedBytes": 1638472,
+          "retains": 32768,
+          "peakChargedBytes": 1048704,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 65539,
+          "requestedBytes": 1638472,
+          "retains": 32768,
+          "peakChargedBytes": 1048704,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 0,
+        "rawFinalBytes": 0
+      },
+      {
+        "mode": "withoutWorkspace",
+        "candidate": {
+          "requests": 65539,
+          "requestedBytes": 1638472,
+          "retains": 32768,
+          "peakChargedBytes": 1048704,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 65539,
+          "requestedBytes": 1638472,
+          "retains": 32768,
+          "peakChargedBytes": 1048704,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 0,
+        "rawFinalBytes": 0
+      }
+    ]
+  },
+  {
+    "session": "aarch64-1",
+    "case": "3-1",
+    "form": "fwp-ad",
+    "solves": 512,
+    "savedRequestsPerProcess": 3585,
+    "savedRequestedBytesPerProcess": 77848,
+    "savedRetainsPerProcess": 1024,
+    "counts": [
+      {
+        "mode": "workspace",
+        "candidate": {
+          "requests": 4099,
+          "requestedBytes": 151624,
+          "retains": 512,
+          "peakChargedBytes": 16656,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 7684,
+          "requestedBytes": 229472,
+          "retains": 1536,
+          "peakChargedBytes": 16688,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 1792,
+        "rawFinalBytes": 0
+      },
+      {
+        "mode": "withoutWorkspace",
+        "candidate": {
+          "requests": 4099,
+          "requestedBytes": 151624,
+          "retains": 512,
+          "peakChargedBytes": 16656,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 7684,
+          "requestedBytes": 229472,
+          "retains": 1536,
+          "peakChargedBytes": 16688,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 1792,
+        "rawFinalBytes": 0
+      }
+    ]
+  },
+  {
+    "session": "aarch64-1",
+    "case": "3-1",
+    "form": "fwp-ad-history",
+    "solves": 512,
+    "savedRequestsPerProcess": 3585,
+    "savedRequestedBytesPerProcess": 77848,
+    "savedRetainsPerProcess": 1024,
+    "counts": [
+      {
+        "mode": "workspace",
+        "candidate": {
+          "requests": 4099,
+          "requestedBytes": 151624,
+          "retains": 512,
+          "peakChargedBytes": 16656,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 7684,
+          "requestedBytes": 229472,
+          "retains": 1536,
+          "peakChargedBytes": 16688,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 1792,
+        "rawFinalBytes": 0
+      },
+      {
+        "mode": "withoutWorkspace",
+        "candidate": {
+          "requests": 4099,
+          "requestedBytes": 151624,
+          "retains": 512,
+          "peakChargedBytes": 16656,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 7684,
+          "requestedBytes": 229472,
+          "retains": 1536,
+          "peakChargedBytes": 16688,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 1792,
+        "rawFinalBytes": 0
+      }
+    ]
+  },
+  {
+    "session": "aarch64-1",
+    "case": "3-199",
+    "form": "fwp-ad",
+    "solves": 32,
+    "savedRequestsPerProcess": 44577,
+    "savedRequestedBytesPerProcess": 967960,
+    "savedRetainsPerProcess": 12736,
+    "counts": [
+      {
+        "mode": "workspace",
+        "candidate": {
+          "requests": 19267,
+          "requestedBytes": 820584,
+          "retains": 32,
+          "peakChargedBytes": 1328,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 63844,
+          "requestedBytes": 1788544,
+          "retains": 12768,
+          "peakChargedBytes": 1360,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 1792,
+        "rawFinalBytes": 0
+      },
+      {
+        "mode": "withoutWorkspace",
+        "candidate": {
+          "requests": 19267,
+          "requestedBytes": 820584,
+          "retains": 32,
+          "peakChargedBytes": 1328,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 63844,
+          "requestedBytes": 1788544,
+          "retains": 12768,
+          "peakChargedBytes": 1360,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 1792,
+        "rawFinalBytes": 0
+      }
+    ]
+  },
+  {
+    "session": "aarch64-1",
+    "case": "3-199",
+    "form": "fwp-ad-history",
+    "solves": 32,
+    "savedRequestsPerProcess": 44577,
+    "savedRequestedBytesPerProcess": 967960,
+    "savedRetainsPerProcess": 12736,
+    "counts": [
+      {
+        "mode": "workspace",
+        "candidate": {
+          "requests": 19267,
+          "requestedBytes": 820584,
+          "retains": 32,
+          "peakChargedBytes": 1328,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 63844,
+          "requestedBytes": 1788544,
+          "retains": 12768,
+          "peakChargedBytes": 1360,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 1792,
+        "rawFinalBytes": 0
+      },
+      {
+        "mode": "withoutWorkspace",
+        "candidate": {
+          "requests": 19267,
+          "requestedBytes": 820584,
+          "retains": 32,
+          "peakChargedBytes": 1328,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 63844,
+          "requestedBytes": 1788544,
+          "retains": 12768,
+          "peakChargedBytes": 1360,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 1792,
+        "rawFinalBytes": 0
+      }
+    ]
+  },
+  {
+    "session": "aarch64-1",
+    "case": "3-1999",
+    "form": "fwp-ad",
+    "solves": 4,
+    "savedRequestsPerProcess": 55973,
+    "savedRequestedBytesPerProcess": 1215416,
+    "savedRetainsPerProcess": 15992,
+    "counts": [
+      {
+        "mode": "workspace",
+        "candidate": {
+          "requests": 24011,
+          "requestedBytes": 1024216,
+          "retains": 4,
+          "peakChargedBytes": 432,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 79984,
+          "requestedBytes": 2239632,
+          "retains": 15996,
+          "peakChargedBytes": 464,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 1792,
+        "rawFinalBytes": 0
+      },
+      {
+        "mode": "withoutWorkspace",
+        "candidate": {
+          "requests": 24011,
+          "requestedBytes": 1024216,
+          "retains": 4,
+          "peakChargedBytes": 432,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 79984,
+          "requestedBytes": 2239632,
+          "retains": 15996,
+          "peakChargedBytes": 464,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 1792,
+        "rawFinalBytes": 0
+      }
+    ]
+  },
+  {
+    "session": "aarch64-1",
+    "case": "3-1999",
+    "form": "fwp-ad-history",
+    "solves": 4,
+    "savedRequestsPerProcess": 55973,
+    "savedRequestedBytesPerProcess": 1215416,
+    "savedRetainsPerProcess": 15992,
+    "counts": [
+      {
+        "mode": "workspace",
+        "candidate": {
+          "requests": 24011,
+          "requestedBytes": 1024216,
+          "retains": 4,
+          "peakChargedBytes": 432,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 79984,
+          "requestedBytes": 2239632,
+          "retains": 15996,
+          "peakChargedBytes": 464,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 1792,
+        "rawFinalBytes": 0
+      },
+      {
+        "mode": "withoutWorkspace",
+        "candidate": {
+          "requests": 24011,
+          "requestedBytes": 1024216,
+          "retains": 4,
+          "peakChargedBytes": 432,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 79984,
+          "requestedBytes": 2239632,
+          "retains": 15996,
+          "peakChargedBytes": 464,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 1792,
+        "rawFinalBytes": 0
+      }
+    ]
+  },
+  {
+    "session": "aarch64-1",
+    "case": "33-199",
+    "form": "fwp-ad",
+    "solves": 32,
+    "savedRequestsPerProcess": 44577,
+    "savedRequestedBytesPerProcess": 2496280,
+    "savedRetainsPerProcess": 12736,
+    "counts": [
+      {
+        "mode": "workspace",
+        "candidate": {
+          "requests": 20257,
+          "requestedBytes": 8506840,
+          "retains": 32,
+          "peakChargedBytes": 4416,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 64834,
+          "requestedBytes": 11003120,
+          "retains": 12768,
+          "peakChargedBytes": 4448,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 8560,
+        "rawFinalBytes": 0
+      },
+      {
+        "mode": "withoutWorkspace",
+        "candidate": {
+          "requests": 20257,
+          "requestedBytes": 8506840,
+          "retains": 32,
+          "peakChargedBytes": 4416,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 64834,
+          "requestedBytes": 11003120,
+          "retains": 12768,
+          "peakChargedBytes": 4448,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 8560,
+        "rawFinalBytes": 0
+      }
+    ]
+  },
+  {
+    "session": "aarch64-1",
+    "case": "33-199",
+    "form": "fwp-ad-history",
+    "solves": 32,
+    "savedRequestsPerProcess": 44577,
+    "savedRequestedBytesPerProcess": 2496280,
+    "savedRetainsPerProcess": 12736,
+    "counts": [
+      {
+        "mode": "workspace",
+        "candidate": {
+          "requests": 20257,
+          "requestedBytes": 8506840,
+          "retains": 32,
+          "peakChargedBytes": 4416,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 64834,
+          "requestedBytes": 11003120,
+          "retains": 12768,
+          "peakChargedBytes": 4448,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 8560,
+        "rawFinalBytes": 0
+      },
+      {
+        "mode": "withoutWorkspace",
+        "candidate": {
+          "requests": 20257,
+          "requestedBytes": 8506840,
+          "retains": 32,
+          "peakChargedBytes": 4416,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 64834,
+          "requestedBytes": 11003120,
+          "retains": 12768,
+          "peakChargedBytes": 4448,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 8560,
+        "rawFinalBytes": 0
+      }
+    ]
+  },
+  {
+    "session": "aarch64-1",
+    "case": "129-199",
+    "form": "fwp-ad",
+    "solves": 8,
+    "savedRequestsPerProcess": 11145,
+    "savedRequestedBytesPerProcess": 1846744,
+    "savedRetainsPerProcess": 3184,
+    "counts": [
+      {
+        "mode": "workspace",
+        "candidate": {
+          "requests": 5953,
+          "requestedBytes": 8278216,
+          "retains": 8,
+          "peakChargedBytes": 13632,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 17098,
+          "requestedBytes": 10124960,
+          "retains": 3192,
+          "peakChargedBytes": 13664,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 33904,
+        "rawFinalBytes": 0
+      },
+      {
+        "mode": "withoutWorkspace",
+        "candidate": {
+          "requests": 5953,
+          "requestedBytes": 8278216,
+          "retains": 8,
+          "peakChargedBytes": 13632,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 17098,
+          "requestedBytes": 10124960,
+          "retains": 3192,
+          "peakChargedBytes": 13664,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 33904,
+        "rawFinalBytes": 0
+      }
+    ]
+  },
+  {
+    "session": "aarch64-1",
+    "case": "129-199",
+    "form": "fwp-ad-history",
+    "solves": 8,
+    "savedRequestsPerProcess": 11145,
+    "savedRequestedBytesPerProcess": 1846744,
+    "savedRetainsPerProcess": 3184,
+    "counts": [
+      {
+        "mode": "workspace",
+        "candidate": {
+          "requests": 5953,
+          "requestedBytes": 8278216,
+          "retains": 8,
+          "peakChargedBytes": 13632,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 17098,
+          "requestedBytes": 10124960,
+          "retains": 3192,
+          "peakChargedBytes": 13664,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 33904,
+        "rawFinalBytes": 0
+      },
+      {
+        "mode": "withoutWorkspace",
+        "candidate": {
+          "requests": 5953,
+          "requestedBytes": 8278216,
+          "retains": 8,
+          "peakChargedBytes": 13632,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 17098,
+          "requestedBytes": 10124960,
+          "retains": 3192,
+          "peakChargedBytes": 13664,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 33904,
+        "rawFinalBytes": 0
+      }
+    ]
+  },
+  {
+    "session": "aarch64-2",
+    "case": "3-0",
+    "form": "fwp-ad",
+    "solves": 32768,
+    "savedRequestsPerProcess": 0,
+    "savedRequestedBytesPerProcess": 0,
+    "savedRetainsPerProcess": 0,
+    "counts": [
+      {
+        "mode": "workspace",
+        "candidate": {
+          "requests": 65539,
+          "requestedBytes": 1638472,
+          "retains": 32768,
+          "peakChargedBytes": 1048704,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 65539,
+          "requestedBytes": 1638472,
+          "retains": 32768,
+          "peakChargedBytes": 1048704,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 0,
+        "rawFinalBytes": 0
+      },
+      {
+        "mode": "withoutWorkspace",
+        "candidate": {
+          "requests": 65539,
+          "requestedBytes": 1638472,
+          "retains": 32768,
+          "peakChargedBytes": 1048704,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 65539,
+          "requestedBytes": 1638472,
+          "retains": 32768,
+          "peakChargedBytes": 1048704,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 0,
+        "rawFinalBytes": 0
+      }
+    ]
+  },
+  {
+    "session": "aarch64-2",
+    "case": "3-0",
+    "form": "fwp-ad-history",
+    "solves": 32768,
+    "savedRequestsPerProcess": 0,
+    "savedRequestedBytesPerProcess": 0,
+    "savedRetainsPerProcess": 0,
+    "counts": [
+      {
+        "mode": "workspace",
+        "candidate": {
+          "requests": 65539,
+          "requestedBytes": 1638472,
+          "retains": 32768,
+          "peakChargedBytes": 1048704,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 65539,
+          "requestedBytes": 1638472,
+          "retains": 32768,
+          "peakChargedBytes": 1048704,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 0,
+        "rawFinalBytes": 0
+      },
+      {
+        "mode": "withoutWorkspace",
+        "candidate": {
+          "requests": 65539,
+          "requestedBytes": 1638472,
+          "retains": 32768,
+          "peakChargedBytes": 1048704,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 65539,
+          "requestedBytes": 1638472,
+          "retains": 32768,
+          "peakChargedBytes": 1048704,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 0,
+        "rawFinalBytes": 0
+      }
+    ]
+  },
+  {
+    "session": "aarch64-2",
+    "case": "3-1",
+    "form": "fwp-ad",
+    "solves": 512,
+    "savedRequestsPerProcess": 3585,
+    "savedRequestedBytesPerProcess": 77848,
+    "savedRetainsPerProcess": 1024,
+    "counts": [
+      {
+        "mode": "workspace",
+        "candidate": {
+          "requests": 4099,
+          "requestedBytes": 151624,
+          "retains": 512,
+          "peakChargedBytes": 16656,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 7684,
+          "requestedBytes": 229472,
+          "retains": 1536,
+          "peakChargedBytes": 16688,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 1792,
+        "rawFinalBytes": 0
+      },
+      {
+        "mode": "withoutWorkspace",
+        "candidate": {
+          "requests": 4099,
+          "requestedBytes": 151624,
+          "retains": 512,
+          "peakChargedBytes": 16656,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 7684,
+          "requestedBytes": 229472,
+          "retains": 1536,
+          "peakChargedBytes": 16688,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 1792,
+        "rawFinalBytes": 0
+      }
+    ]
+  },
+  {
+    "session": "aarch64-2",
+    "case": "3-1",
+    "form": "fwp-ad-history",
+    "solves": 512,
+    "savedRequestsPerProcess": 3585,
+    "savedRequestedBytesPerProcess": 77848,
+    "savedRetainsPerProcess": 1024,
+    "counts": [
+      {
+        "mode": "workspace",
+        "candidate": {
+          "requests": 4099,
+          "requestedBytes": 151624,
+          "retains": 512,
+          "peakChargedBytes": 16656,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 7684,
+          "requestedBytes": 229472,
+          "retains": 1536,
+          "peakChargedBytes": 16688,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 1792,
+        "rawFinalBytes": 0
+      },
+      {
+        "mode": "withoutWorkspace",
+        "candidate": {
+          "requests": 4099,
+          "requestedBytes": 151624,
+          "retains": 512,
+          "peakChargedBytes": 16656,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 7684,
+          "requestedBytes": 229472,
+          "retains": 1536,
+          "peakChargedBytes": 16688,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 1792,
+        "rawFinalBytes": 0
+      }
+    ]
+  },
+  {
+    "session": "aarch64-2",
+    "case": "3-199",
+    "form": "fwp-ad",
+    "solves": 32,
+    "savedRequestsPerProcess": 44577,
+    "savedRequestedBytesPerProcess": 967960,
+    "savedRetainsPerProcess": 12736,
+    "counts": [
+      {
+        "mode": "workspace",
+        "candidate": {
+          "requests": 19267,
+          "requestedBytes": 820584,
+          "retains": 32,
+          "peakChargedBytes": 1328,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 63844,
+          "requestedBytes": 1788544,
+          "retains": 12768,
+          "peakChargedBytes": 1360,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 1792,
+        "rawFinalBytes": 0
+      },
+      {
+        "mode": "withoutWorkspace",
+        "candidate": {
+          "requests": 19267,
+          "requestedBytes": 820584,
+          "retains": 32,
+          "peakChargedBytes": 1328,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 63844,
+          "requestedBytes": 1788544,
+          "retains": 12768,
+          "peakChargedBytes": 1360,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 1792,
+        "rawFinalBytes": 0
+      }
+    ]
+  },
+  {
+    "session": "aarch64-2",
+    "case": "3-199",
+    "form": "fwp-ad-history",
+    "solves": 32,
+    "savedRequestsPerProcess": 44577,
+    "savedRequestedBytesPerProcess": 967960,
+    "savedRetainsPerProcess": 12736,
+    "counts": [
+      {
+        "mode": "workspace",
+        "candidate": {
+          "requests": 19267,
+          "requestedBytes": 820584,
+          "retains": 32,
+          "peakChargedBytes": 1328,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 63844,
+          "requestedBytes": 1788544,
+          "retains": 12768,
+          "peakChargedBytes": 1360,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 1792,
+        "rawFinalBytes": 0
+      },
+      {
+        "mode": "withoutWorkspace",
+        "candidate": {
+          "requests": 19267,
+          "requestedBytes": 820584,
+          "retains": 32,
+          "peakChargedBytes": 1328,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 63844,
+          "requestedBytes": 1788544,
+          "retains": 12768,
+          "peakChargedBytes": 1360,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 1792,
+        "rawFinalBytes": 0
+      }
+    ]
+  },
+  {
+    "session": "aarch64-2",
+    "case": "3-1999",
+    "form": "fwp-ad",
+    "solves": 4,
+    "savedRequestsPerProcess": 55973,
+    "savedRequestedBytesPerProcess": 1215416,
+    "savedRetainsPerProcess": 15992,
+    "counts": [
+      {
+        "mode": "workspace",
+        "candidate": {
+          "requests": 24011,
+          "requestedBytes": 1024216,
+          "retains": 4,
+          "peakChargedBytes": 432,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 79984,
+          "requestedBytes": 2239632,
+          "retains": 15996,
+          "peakChargedBytes": 464,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 1792,
+        "rawFinalBytes": 0
+      },
+      {
+        "mode": "withoutWorkspace",
+        "candidate": {
+          "requests": 24011,
+          "requestedBytes": 1024216,
+          "retains": 4,
+          "peakChargedBytes": 432,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 79984,
+          "requestedBytes": 2239632,
+          "retains": 15996,
+          "peakChargedBytes": 464,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 1792,
+        "rawFinalBytes": 0
+      }
+    ]
+  },
+  {
+    "session": "aarch64-2",
+    "case": "3-1999",
+    "form": "fwp-ad-history",
+    "solves": 4,
+    "savedRequestsPerProcess": 55973,
+    "savedRequestedBytesPerProcess": 1215416,
+    "savedRetainsPerProcess": 15992,
+    "counts": [
+      {
+        "mode": "workspace",
+        "candidate": {
+          "requests": 24011,
+          "requestedBytes": 1024216,
+          "retains": 4,
+          "peakChargedBytes": 432,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 79984,
+          "requestedBytes": 2239632,
+          "retains": 15996,
+          "peakChargedBytes": 464,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 1792,
+        "rawFinalBytes": 0
+      },
+      {
+        "mode": "withoutWorkspace",
+        "candidate": {
+          "requests": 24011,
+          "requestedBytes": 1024216,
+          "retains": 4,
+          "peakChargedBytes": 432,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 79984,
+          "requestedBytes": 2239632,
+          "retains": 15996,
+          "peakChargedBytes": 464,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 1792,
+        "rawFinalBytes": 0
+      }
+    ]
+  },
+  {
+    "session": "aarch64-2",
+    "case": "33-199",
+    "form": "fwp-ad",
+    "solves": 32,
+    "savedRequestsPerProcess": 44577,
+    "savedRequestedBytesPerProcess": 2496280,
+    "savedRetainsPerProcess": 12736,
+    "counts": [
+      {
+        "mode": "workspace",
+        "candidate": {
+          "requests": 20257,
+          "requestedBytes": 8506840,
+          "retains": 32,
+          "peakChargedBytes": 4416,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 64834,
+          "requestedBytes": 11003120,
+          "retains": 12768,
+          "peakChargedBytes": 4448,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 8560,
+        "rawFinalBytes": 0
+      },
+      {
+        "mode": "withoutWorkspace",
+        "candidate": {
+          "requests": 20257,
+          "requestedBytes": 8506840,
+          "retains": 32,
+          "peakChargedBytes": 4416,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 64834,
+          "requestedBytes": 11003120,
+          "retains": 12768,
+          "peakChargedBytes": 4448,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 8560,
+        "rawFinalBytes": 0
+      }
+    ]
+  },
+  {
+    "session": "aarch64-2",
+    "case": "33-199",
+    "form": "fwp-ad-history",
+    "solves": 32,
+    "savedRequestsPerProcess": 44577,
+    "savedRequestedBytesPerProcess": 2496280,
+    "savedRetainsPerProcess": 12736,
+    "counts": [
+      {
+        "mode": "workspace",
+        "candidate": {
+          "requests": 20257,
+          "requestedBytes": 8506840,
+          "retains": 32,
+          "peakChargedBytes": 4416,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 64834,
+          "requestedBytes": 11003120,
+          "retains": 12768,
+          "peakChargedBytes": 4448,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 8560,
+        "rawFinalBytes": 0
+      },
+      {
+        "mode": "withoutWorkspace",
+        "candidate": {
+          "requests": 20257,
+          "requestedBytes": 8506840,
+          "retains": 32,
+          "peakChargedBytes": 4416,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 64834,
+          "requestedBytes": 11003120,
+          "retains": 12768,
+          "peakChargedBytes": 4448,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 8560,
+        "rawFinalBytes": 0
+      }
+    ]
+  },
+  {
+    "session": "aarch64-2",
+    "case": "129-199",
+    "form": "fwp-ad",
+    "solves": 8,
+    "savedRequestsPerProcess": 11145,
+    "savedRequestedBytesPerProcess": 1846744,
+    "savedRetainsPerProcess": 3184,
+    "counts": [
+      {
+        "mode": "workspace",
+        "candidate": {
+          "requests": 5953,
+          "requestedBytes": 8278216,
+          "retains": 8,
+          "peakChargedBytes": 13632,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 17098,
+          "requestedBytes": 10124960,
+          "retains": 3192,
+          "peakChargedBytes": 13664,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 33904,
+        "rawFinalBytes": 0
+      },
+      {
+        "mode": "withoutWorkspace",
+        "candidate": {
+          "requests": 5953,
+          "requestedBytes": 8278216,
+          "retains": 8,
+          "peakChargedBytes": 13632,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 17098,
+          "requestedBytes": 10124960,
+          "retains": 3192,
+          "peakChargedBytes": 13664,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 33904,
+        "rawFinalBytes": 0
+      }
+    ]
+  },
+  {
+    "session": "aarch64-2",
+    "case": "129-199",
+    "form": "fwp-ad-history",
+    "solves": 8,
+    "savedRequestsPerProcess": 11145,
+    "savedRequestedBytesPerProcess": 1846744,
+    "savedRetainsPerProcess": 3184,
+    "counts": [
+      {
+        "mode": "workspace",
+        "candidate": {
+          "requests": 5953,
+          "requestedBytes": 8278216,
+          "retains": 8,
+          "peakChargedBytes": 13632,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 17098,
+          "requestedBytes": 10124960,
+          "retains": 3192,
+          "peakChargedBytes": 13664,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 33904,
+        "rawFinalBytes": 0
+      },
+      {
+        "mode": "withoutWorkspace",
+        "candidate": {
+          "requests": 5953,
+          "requestedBytes": 8278216,
+          "retains": 8,
+          "peakChargedBytes": 13632,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 17098,
+          "requestedBytes": 10124960,
+          "retains": 3192,
+          "peakChargedBytes": 13664,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 33904,
+        "rawFinalBytes": 0
+      }
+    ]
+  },
+  {
+    "session": "x86_64-1",
+    "case": "3-0",
+    "form": "fwp-ad",
+    "solves": 32768,
+    "savedRequestsPerProcess": 0,
+    "savedRequestedBytesPerProcess": 0,
+    "savedRetainsPerProcess": 0,
+    "counts": [
+      {
+        "mode": "workspace",
+        "candidate": {
+          "requests": 65539,
+          "requestedBytes": 1638472,
+          "retains": 32768,
+          "peakChargedBytes": 1048704,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 65539,
+          "requestedBytes": 1638472,
+          "retains": 32768,
+          "peakChargedBytes": 1048704,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 0,
+        "rawFinalBytes": 0
+      },
+      {
+        "mode": "withoutWorkspace",
+        "candidate": {
+          "requests": 65539,
+          "requestedBytes": 1638472,
+          "retains": 32768,
+          "peakChargedBytes": 1048704,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 65539,
+          "requestedBytes": 1638472,
+          "retains": 32768,
+          "peakChargedBytes": 1048704,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 0,
+        "rawFinalBytes": 0
+      }
+    ]
+  },
+  {
+    "session": "x86_64-1",
+    "case": "3-0",
+    "form": "fwp-ad-history",
+    "solves": 32768,
+    "savedRequestsPerProcess": 0,
+    "savedRequestedBytesPerProcess": 0,
+    "savedRetainsPerProcess": 0,
+    "counts": [
+      {
+        "mode": "workspace",
+        "candidate": {
+          "requests": 65539,
+          "requestedBytes": 1638472,
+          "retains": 32768,
+          "peakChargedBytes": 1048704,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 65539,
+          "requestedBytes": 1638472,
+          "retains": 32768,
+          "peakChargedBytes": 1048704,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 0,
+        "rawFinalBytes": 0
+      },
+      {
+        "mode": "withoutWorkspace",
+        "candidate": {
+          "requests": 65539,
+          "requestedBytes": 1638472,
+          "retains": 32768,
+          "peakChargedBytes": 1048704,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 65539,
+          "requestedBytes": 1638472,
+          "retains": 32768,
+          "peakChargedBytes": 1048704,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 0,
+        "rawFinalBytes": 0
+      }
+    ]
+  },
+  {
+    "session": "x86_64-1",
+    "case": "3-1",
+    "form": "fwp-ad",
+    "solves": 512,
+    "savedRequestsPerProcess": 3585,
+    "savedRequestedBytesPerProcess": 77848,
+    "savedRetainsPerProcess": 1024,
+    "counts": [
+      {
+        "mode": "workspace",
+        "candidate": {
+          "requests": 4099,
+          "requestedBytes": 151624,
+          "retains": 512,
+          "peakChargedBytes": 16656,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 7684,
+          "requestedBytes": 229472,
+          "retains": 1536,
+          "peakChargedBytes": 16688,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 1792,
+        "rawFinalBytes": 0
+      },
+      {
+        "mode": "withoutWorkspace",
+        "candidate": {
+          "requests": 4099,
+          "requestedBytes": 151624,
+          "retains": 512,
+          "peakChargedBytes": 16656,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 7684,
+          "requestedBytes": 229472,
+          "retains": 1536,
+          "peakChargedBytes": 16688,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 1792,
+        "rawFinalBytes": 0
+      }
+    ]
+  },
+  {
+    "session": "x86_64-1",
+    "case": "3-1",
+    "form": "fwp-ad-history",
+    "solves": 512,
+    "savedRequestsPerProcess": 3585,
+    "savedRequestedBytesPerProcess": 77848,
+    "savedRetainsPerProcess": 1024,
+    "counts": [
+      {
+        "mode": "workspace",
+        "candidate": {
+          "requests": 4099,
+          "requestedBytes": 151624,
+          "retains": 512,
+          "peakChargedBytes": 16656,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 7684,
+          "requestedBytes": 229472,
+          "retains": 1536,
+          "peakChargedBytes": 16688,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 1792,
+        "rawFinalBytes": 0
+      },
+      {
+        "mode": "withoutWorkspace",
+        "candidate": {
+          "requests": 4099,
+          "requestedBytes": 151624,
+          "retains": 512,
+          "peakChargedBytes": 16656,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 7684,
+          "requestedBytes": 229472,
+          "retains": 1536,
+          "peakChargedBytes": 16688,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 1792,
+        "rawFinalBytes": 0
+      }
+    ]
+  },
+  {
+    "session": "x86_64-1",
+    "case": "3-199",
+    "form": "fwp-ad",
+    "solves": 32,
+    "savedRequestsPerProcess": 44577,
+    "savedRequestedBytesPerProcess": 967960,
+    "savedRetainsPerProcess": 12736,
+    "counts": [
+      {
+        "mode": "workspace",
+        "candidate": {
+          "requests": 19267,
+          "requestedBytes": 820584,
+          "retains": 32,
+          "peakChargedBytes": 1328,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 63844,
+          "requestedBytes": 1788544,
+          "retains": 12768,
+          "peakChargedBytes": 1360,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 1792,
+        "rawFinalBytes": 0
+      },
+      {
+        "mode": "withoutWorkspace",
+        "candidate": {
+          "requests": 19267,
+          "requestedBytes": 820584,
+          "retains": 32,
+          "peakChargedBytes": 1328,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 63844,
+          "requestedBytes": 1788544,
+          "retains": 12768,
+          "peakChargedBytes": 1360,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 1792,
+        "rawFinalBytes": 0
+      }
+    ]
+  },
+  {
+    "session": "x86_64-1",
+    "case": "3-199",
+    "form": "fwp-ad-history",
+    "solves": 32,
+    "savedRequestsPerProcess": 44577,
+    "savedRequestedBytesPerProcess": 967960,
+    "savedRetainsPerProcess": 12736,
+    "counts": [
+      {
+        "mode": "workspace",
+        "candidate": {
+          "requests": 19267,
+          "requestedBytes": 820584,
+          "retains": 32,
+          "peakChargedBytes": 1328,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 63844,
+          "requestedBytes": 1788544,
+          "retains": 12768,
+          "peakChargedBytes": 1360,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 1792,
+        "rawFinalBytes": 0
+      },
+      {
+        "mode": "withoutWorkspace",
+        "candidate": {
+          "requests": 19267,
+          "requestedBytes": 820584,
+          "retains": 32,
+          "peakChargedBytes": 1328,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 63844,
+          "requestedBytes": 1788544,
+          "retains": 12768,
+          "peakChargedBytes": 1360,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 1792,
+        "rawFinalBytes": 0
+      }
+    ]
+  },
+  {
+    "session": "x86_64-1",
+    "case": "3-1999",
+    "form": "fwp-ad",
+    "solves": 4,
+    "savedRequestsPerProcess": 55973,
+    "savedRequestedBytesPerProcess": 1215416,
+    "savedRetainsPerProcess": 15992,
+    "counts": [
+      {
+        "mode": "workspace",
+        "candidate": {
+          "requests": 24011,
+          "requestedBytes": 1024216,
+          "retains": 4,
+          "peakChargedBytes": 432,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 79984,
+          "requestedBytes": 2239632,
+          "retains": 15996,
+          "peakChargedBytes": 464,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 1792,
+        "rawFinalBytes": 0
+      },
+      {
+        "mode": "withoutWorkspace",
+        "candidate": {
+          "requests": 24011,
+          "requestedBytes": 1024216,
+          "retains": 4,
+          "peakChargedBytes": 432,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 79984,
+          "requestedBytes": 2239632,
+          "retains": 15996,
+          "peakChargedBytes": 464,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 1792,
+        "rawFinalBytes": 0
+      }
+    ]
+  },
+  {
+    "session": "x86_64-1",
+    "case": "3-1999",
+    "form": "fwp-ad-history",
+    "solves": 4,
+    "savedRequestsPerProcess": 55973,
+    "savedRequestedBytesPerProcess": 1215416,
+    "savedRetainsPerProcess": 15992,
+    "counts": [
+      {
+        "mode": "workspace",
+        "candidate": {
+          "requests": 24011,
+          "requestedBytes": 1024216,
+          "retains": 4,
+          "peakChargedBytes": 432,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 79984,
+          "requestedBytes": 2239632,
+          "retains": 15996,
+          "peakChargedBytes": 464,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 1792,
+        "rawFinalBytes": 0
+      },
+      {
+        "mode": "withoutWorkspace",
+        "candidate": {
+          "requests": 24011,
+          "requestedBytes": 1024216,
+          "retains": 4,
+          "peakChargedBytes": 432,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 79984,
+          "requestedBytes": 2239632,
+          "retains": 15996,
+          "peakChargedBytes": 464,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 1792,
+        "rawFinalBytes": 0
+      }
+    ]
+  },
+  {
+    "session": "x86_64-1",
+    "case": "33-199",
+    "form": "fwp-ad",
+    "solves": 32,
+    "savedRequestsPerProcess": 44577,
+    "savedRequestedBytesPerProcess": 2496280,
+    "savedRetainsPerProcess": 12736,
+    "counts": [
+      {
+        "mode": "workspace",
+        "candidate": {
+          "requests": 20257,
+          "requestedBytes": 8506840,
+          "retains": 32,
+          "peakChargedBytes": 4416,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 64834,
+          "requestedBytes": 11003120,
+          "retains": 12768,
+          "peakChargedBytes": 4448,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 8560,
+        "rawFinalBytes": 0
+      },
+      {
+        "mode": "withoutWorkspace",
+        "candidate": {
+          "requests": 20257,
+          "requestedBytes": 8506840,
+          "retains": 32,
+          "peakChargedBytes": 4416,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 64834,
+          "requestedBytes": 11003120,
+          "retains": 12768,
+          "peakChargedBytes": 4448,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 8560,
+        "rawFinalBytes": 0
+      }
+    ]
+  },
+  {
+    "session": "x86_64-1",
+    "case": "33-199",
+    "form": "fwp-ad-history",
+    "solves": 32,
+    "savedRequestsPerProcess": 44577,
+    "savedRequestedBytesPerProcess": 2496280,
+    "savedRetainsPerProcess": 12736,
+    "counts": [
+      {
+        "mode": "workspace",
+        "candidate": {
+          "requests": 20257,
+          "requestedBytes": 8506840,
+          "retains": 32,
+          "peakChargedBytes": 4416,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 64834,
+          "requestedBytes": 11003120,
+          "retains": 12768,
+          "peakChargedBytes": 4448,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 8560,
+        "rawFinalBytes": 0
+      },
+      {
+        "mode": "withoutWorkspace",
+        "candidate": {
+          "requests": 20257,
+          "requestedBytes": 8506840,
+          "retains": 32,
+          "peakChargedBytes": 4416,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 64834,
+          "requestedBytes": 11003120,
+          "retains": 12768,
+          "peakChargedBytes": 4448,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 8560,
+        "rawFinalBytes": 0
+      }
+    ]
+  },
+  {
+    "session": "x86_64-1",
+    "case": "129-199",
+    "form": "fwp-ad",
+    "solves": 8,
+    "savedRequestsPerProcess": 11145,
+    "savedRequestedBytesPerProcess": 1846744,
+    "savedRetainsPerProcess": 3184,
+    "counts": [
+      {
+        "mode": "workspace",
+        "candidate": {
+          "requests": 5953,
+          "requestedBytes": 8278216,
+          "retains": 8,
+          "peakChargedBytes": 13632,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 17098,
+          "requestedBytes": 10124960,
+          "retains": 3192,
+          "peakChargedBytes": 13664,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 33904,
+        "rawFinalBytes": 0
+      },
+      {
+        "mode": "withoutWorkspace",
+        "candidate": {
+          "requests": 5953,
+          "requestedBytes": 8278216,
+          "retains": 8,
+          "peakChargedBytes": 13632,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 17098,
+          "requestedBytes": 10124960,
+          "retains": 3192,
+          "peakChargedBytes": 13664,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 33904,
+        "rawFinalBytes": 0
+      }
+    ]
+  },
+  {
+    "session": "x86_64-1",
+    "case": "129-199",
+    "form": "fwp-ad-history",
+    "solves": 8,
+    "savedRequestsPerProcess": 11145,
+    "savedRequestedBytesPerProcess": 1846744,
+    "savedRetainsPerProcess": 3184,
+    "counts": [
+      {
+        "mode": "workspace",
+        "candidate": {
+          "requests": 5953,
+          "requestedBytes": 8278216,
+          "retains": 8,
+          "peakChargedBytes": 13632,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 17098,
+          "requestedBytes": 10124960,
+          "retains": 3192,
+          "peakChargedBytes": 13664,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 33904,
+        "rawFinalBytes": 0
+      },
+      {
+        "mode": "withoutWorkspace",
+        "candidate": {
+          "requests": 5953,
+          "requestedBytes": 8278216,
+          "retains": 8,
+          "peakChargedBytes": 13632,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 17098,
+          "requestedBytes": 10124960,
+          "retains": 3192,
+          "peakChargedBytes": 13664,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 33904,
+        "rawFinalBytes": 0
+      }
+    ]
+  },
+  {
+    "session": "x86_64-2",
+    "case": "3-0",
+    "form": "fwp-ad",
+    "solves": 32768,
+    "savedRequestsPerProcess": 0,
+    "savedRequestedBytesPerProcess": 0,
+    "savedRetainsPerProcess": 0,
+    "counts": [
+      {
+        "mode": "workspace",
+        "candidate": {
+          "requests": 65539,
+          "requestedBytes": 1638472,
+          "retains": 32768,
+          "peakChargedBytes": 1048704,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 65539,
+          "requestedBytes": 1638472,
+          "retains": 32768,
+          "peakChargedBytes": 1048704,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 0,
+        "rawFinalBytes": 0
+      },
+      {
+        "mode": "withoutWorkspace",
+        "candidate": {
+          "requests": 65539,
+          "requestedBytes": 1638472,
+          "retains": 32768,
+          "peakChargedBytes": 1048704,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 65539,
+          "requestedBytes": 1638472,
+          "retains": 32768,
+          "peakChargedBytes": 1048704,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 0,
+        "rawFinalBytes": 0
+      }
+    ]
+  },
+  {
+    "session": "x86_64-2",
+    "case": "3-0",
+    "form": "fwp-ad-history",
+    "solves": 32768,
+    "savedRequestsPerProcess": 0,
+    "savedRequestedBytesPerProcess": 0,
+    "savedRetainsPerProcess": 0,
+    "counts": [
+      {
+        "mode": "workspace",
+        "candidate": {
+          "requests": 65539,
+          "requestedBytes": 1638472,
+          "retains": 32768,
+          "peakChargedBytes": 1048704,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 65539,
+          "requestedBytes": 1638472,
+          "retains": 32768,
+          "peakChargedBytes": 1048704,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 0,
+        "rawFinalBytes": 0
+      },
+      {
+        "mode": "withoutWorkspace",
+        "candidate": {
+          "requests": 65539,
+          "requestedBytes": 1638472,
+          "retains": 32768,
+          "peakChargedBytes": 1048704,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 65539,
+          "requestedBytes": 1638472,
+          "retains": 32768,
+          "peakChargedBytes": 1048704,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 0,
+        "rawFinalBytes": 0
+      }
+    ]
+  },
+  {
+    "session": "x86_64-2",
+    "case": "3-1",
+    "form": "fwp-ad",
+    "solves": 512,
+    "savedRequestsPerProcess": 3585,
+    "savedRequestedBytesPerProcess": 77848,
+    "savedRetainsPerProcess": 1024,
+    "counts": [
+      {
+        "mode": "workspace",
+        "candidate": {
+          "requests": 4099,
+          "requestedBytes": 151624,
+          "retains": 512,
+          "peakChargedBytes": 16656,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 7684,
+          "requestedBytes": 229472,
+          "retains": 1536,
+          "peakChargedBytes": 16688,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 1792,
+        "rawFinalBytes": 0
+      },
+      {
+        "mode": "withoutWorkspace",
+        "candidate": {
+          "requests": 4099,
+          "requestedBytes": 151624,
+          "retains": 512,
+          "peakChargedBytes": 16656,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 7684,
+          "requestedBytes": 229472,
+          "retains": 1536,
+          "peakChargedBytes": 16688,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 1792,
+        "rawFinalBytes": 0
+      }
+    ]
+  },
+  {
+    "session": "x86_64-2",
+    "case": "3-1",
+    "form": "fwp-ad-history",
+    "solves": 512,
+    "savedRequestsPerProcess": 3585,
+    "savedRequestedBytesPerProcess": 77848,
+    "savedRetainsPerProcess": 1024,
+    "counts": [
+      {
+        "mode": "workspace",
+        "candidate": {
+          "requests": 4099,
+          "requestedBytes": 151624,
+          "retains": 512,
+          "peakChargedBytes": 16656,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 7684,
+          "requestedBytes": 229472,
+          "retains": 1536,
+          "peakChargedBytes": 16688,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 1792,
+        "rawFinalBytes": 0
+      },
+      {
+        "mode": "withoutWorkspace",
+        "candidate": {
+          "requests": 4099,
+          "requestedBytes": 151624,
+          "retains": 512,
+          "peakChargedBytes": 16656,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 7684,
+          "requestedBytes": 229472,
+          "retains": 1536,
+          "peakChargedBytes": 16688,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 1792,
+        "rawFinalBytes": 0
+      }
+    ]
+  },
+  {
+    "session": "x86_64-2",
+    "case": "3-199",
+    "form": "fwp-ad",
+    "solves": 32,
+    "savedRequestsPerProcess": 44577,
+    "savedRequestedBytesPerProcess": 967960,
+    "savedRetainsPerProcess": 12736,
+    "counts": [
+      {
+        "mode": "workspace",
+        "candidate": {
+          "requests": 19267,
+          "requestedBytes": 820584,
+          "retains": 32,
+          "peakChargedBytes": 1328,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 63844,
+          "requestedBytes": 1788544,
+          "retains": 12768,
+          "peakChargedBytes": 1360,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 1792,
+        "rawFinalBytes": 0
+      },
+      {
+        "mode": "withoutWorkspace",
+        "candidate": {
+          "requests": 19267,
+          "requestedBytes": 820584,
+          "retains": 32,
+          "peakChargedBytes": 1328,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 63844,
+          "requestedBytes": 1788544,
+          "retains": 12768,
+          "peakChargedBytes": 1360,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 1792,
+        "rawFinalBytes": 0
+      }
+    ]
+  },
+  {
+    "session": "x86_64-2",
+    "case": "3-199",
+    "form": "fwp-ad-history",
+    "solves": 32,
+    "savedRequestsPerProcess": 44577,
+    "savedRequestedBytesPerProcess": 967960,
+    "savedRetainsPerProcess": 12736,
+    "counts": [
+      {
+        "mode": "workspace",
+        "candidate": {
+          "requests": 19267,
+          "requestedBytes": 820584,
+          "retains": 32,
+          "peakChargedBytes": 1328,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 63844,
+          "requestedBytes": 1788544,
+          "retains": 12768,
+          "peakChargedBytes": 1360,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 1792,
+        "rawFinalBytes": 0
+      },
+      {
+        "mode": "withoutWorkspace",
+        "candidate": {
+          "requests": 19267,
+          "requestedBytes": 820584,
+          "retains": 32,
+          "peakChargedBytes": 1328,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 63844,
+          "requestedBytes": 1788544,
+          "retains": 12768,
+          "peakChargedBytes": 1360,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 1792,
+        "rawFinalBytes": 0
+      }
+    ]
+  },
+  {
+    "session": "x86_64-2",
+    "case": "3-1999",
+    "form": "fwp-ad",
+    "solves": 4,
+    "savedRequestsPerProcess": 55973,
+    "savedRequestedBytesPerProcess": 1215416,
+    "savedRetainsPerProcess": 15992,
+    "counts": [
+      {
+        "mode": "workspace",
+        "candidate": {
+          "requests": 24011,
+          "requestedBytes": 1024216,
+          "retains": 4,
+          "peakChargedBytes": 432,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 79984,
+          "requestedBytes": 2239632,
+          "retains": 15996,
+          "peakChargedBytes": 464,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 1792,
+        "rawFinalBytes": 0
+      },
+      {
+        "mode": "withoutWorkspace",
+        "candidate": {
+          "requests": 24011,
+          "requestedBytes": 1024216,
+          "retains": 4,
+          "peakChargedBytes": 432,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 79984,
+          "requestedBytes": 2239632,
+          "retains": 15996,
+          "peakChargedBytes": 464,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 1792,
+        "rawFinalBytes": 0
+      }
+    ]
+  },
+  {
+    "session": "x86_64-2",
+    "case": "3-1999",
+    "form": "fwp-ad-history",
+    "solves": 4,
+    "savedRequestsPerProcess": 55973,
+    "savedRequestedBytesPerProcess": 1215416,
+    "savedRetainsPerProcess": 15992,
+    "counts": [
+      {
+        "mode": "workspace",
+        "candidate": {
+          "requests": 24011,
+          "requestedBytes": 1024216,
+          "retains": 4,
+          "peakChargedBytes": 432,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 79984,
+          "requestedBytes": 2239632,
+          "retains": 15996,
+          "peakChargedBytes": 464,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 1792,
+        "rawFinalBytes": 0
+      },
+      {
+        "mode": "withoutWorkspace",
+        "candidate": {
+          "requests": 24011,
+          "requestedBytes": 1024216,
+          "retains": 4,
+          "peakChargedBytes": 432,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 79984,
+          "requestedBytes": 2239632,
+          "retains": 15996,
+          "peakChargedBytes": 464,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 1792,
+        "rawFinalBytes": 0
+      }
+    ]
+  },
+  {
+    "session": "x86_64-2",
+    "case": "33-199",
+    "form": "fwp-ad",
+    "solves": 32,
+    "savedRequestsPerProcess": 44577,
+    "savedRequestedBytesPerProcess": 2496280,
+    "savedRetainsPerProcess": 12736,
+    "counts": [
+      {
+        "mode": "workspace",
+        "candidate": {
+          "requests": 20257,
+          "requestedBytes": 8506840,
+          "retains": 32,
+          "peakChargedBytes": 4416,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 64834,
+          "requestedBytes": 11003120,
+          "retains": 12768,
+          "peakChargedBytes": 4448,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 8560,
+        "rawFinalBytes": 0
+      },
+      {
+        "mode": "withoutWorkspace",
+        "candidate": {
+          "requests": 20257,
+          "requestedBytes": 8506840,
+          "retains": 32,
+          "peakChargedBytes": 4416,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 64834,
+          "requestedBytes": 11003120,
+          "retains": 12768,
+          "peakChargedBytes": 4448,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 8560,
+        "rawFinalBytes": 0
+      }
+    ]
+  },
+  {
+    "session": "x86_64-2",
+    "case": "33-199",
+    "form": "fwp-ad-history",
+    "solves": 32,
+    "savedRequestsPerProcess": 44577,
+    "savedRequestedBytesPerProcess": 2496280,
+    "savedRetainsPerProcess": 12736,
+    "counts": [
+      {
+        "mode": "workspace",
+        "candidate": {
+          "requests": 20257,
+          "requestedBytes": 8506840,
+          "retains": 32,
+          "peakChargedBytes": 4416,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 64834,
+          "requestedBytes": 11003120,
+          "retains": 12768,
+          "peakChargedBytes": 4448,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 8560,
+        "rawFinalBytes": 0
+      },
+      {
+        "mode": "withoutWorkspace",
+        "candidate": {
+          "requests": 20257,
+          "requestedBytes": 8506840,
+          "retains": 32,
+          "peakChargedBytes": 4416,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 64834,
+          "requestedBytes": 11003120,
+          "retains": 12768,
+          "peakChargedBytes": 4448,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 8560,
+        "rawFinalBytes": 0
+      }
+    ]
+  },
+  {
+    "session": "x86_64-2",
+    "case": "129-199",
+    "form": "fwp-ad",
+    "solves": 8,
+    "savedRequestsPerProcess": 11145,
+    "savedRequestedBytesPerProcess": 1846744,
+    "savedRetainsPerProcess": 3184,
+    "counts": [
+      {
+        "mode": "workspace",
+        "candidate": {
+          "requests": 5953,
+          "requestedBytes": 8278216,
+          "retains": 8,
+          "peakChargedBytes": 13632,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 17098,
+          "requestedBytes": 10124960,
+          "retains": 3192,
+          "peakChargedBytes": 13664,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 33904,
+        "rawFinalBytes": 0
+      },
+      {
+        "mode": "withoutWorkspace",
+        "candidate": {
+          "requests": 5953,
+          "requestedBytes": 8278216,
+          "retains": 8,
+          "peakChargedBytes": 13632,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 17098,
+          "requestedBytes": 10124960,
+          "retains": 3192,
+          "peakChargedBytes": 13664,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 33904,
+        "rawFinalBytes": 0
+      }
+    ]
+  },
+  {
+    "session": "x86_64-2",
+    "case": "129-199",
+    "form": "fwp-ad-history",
+    "solves": 8,
+    "savedRequestsPerProcess": 11145,
+    "savedRequestedBytesPerProcess": 1846744,
+    "savedRetainsPerProcess": 3184,
+    "counts": [
+      {
+        "mode": "workspace",
+        "candidate": {
+          "requests": 5953,
+          "requestedBytes": 8278216,
+          "retains": 8,
+          "peakChargedBytes": 13632,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 17098,
+          "requestedBytes": 10124960,
+          "retains": 3192,
+          "peakChargedBytes": 13664,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 33904,
+        "rawFinalBytes": 0
+      },
+      {
+        "mode": "withoutWorkspace",
+        "candidate": {
+          "requests": 5953,
+          "requestedBytes": 8278216,
+          "retains": 8,
+          "peakChargedBytes": 13632,
+          "finalChargedBytes": 0
+        },
+        "reference": {
+          "requests": 17098,
+          "requestedBytes": 10124960,
+          "retains": 3192,
+          "peakChargedBytes": 13664,
+          "finalChargedBytes": 0
+        },
+        "rawPeakBytes": 33904,
+        "rawFinalBytes": 0
+      }
+    ]
+  }
+]

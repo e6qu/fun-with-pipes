@@ -1,0 +1,20 @@
+{
+  "id": 13389991959,
+  "node_id": "MDg6QXJ0aWZhY3QxMzM4OTk5MTk1OQ==",
+  "name": "rust-checks-Linux-X64",
+  "size_in_bytes": 1221,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13389991959",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13389991959/zip",
+  "expired": false,
+  "digest": "sha256:adef976362bf5f09d6e3ec5a80e9005cf695b2d2eed30b92cf3d6cb639789633",
+  "created_at": "2026-11-05T05:10:05Z",
+  "updated_at": "2026-11-05T05:10:05Z",
+  "expires_at": "2027-02-03T05:00:25Z",
+  "workflow_run": {
+    "id": 41971248924,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "gradient-call-storage",
+    "head_sha": "4160061cd0d421a55ab4e467c6ec5fb6fd88cbf6"
+  }
+}

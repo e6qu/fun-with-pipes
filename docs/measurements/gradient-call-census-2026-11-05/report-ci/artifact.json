@@ -1,0 +1,20 @@
+{
+  "id": 13387664496,
+  "node_id": "MDg6QXJ0aWZhY3QxMzM4NzY2NDQ5Ng==",
+  "name": "gradient-call-census-report",
+  "size_in_bytes": 271112603,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13387664496",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13387664496/zip",
+  "expired": false,
+  "digest": "sha256:ab5e3aa876ae148af9ff870f165a9e156e91b37ee953c2d0d07f5416e2ef98d9",
+  "created_at": "2026-11-05T04:25:44Z",
+  "updated_at": "2026-11-05T04:25:44Z",
+  "expires_at": "2027-02-03T04:23:07Z",
+  "workflow_run": {
+    "id": 41967470333,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "gradient-call-storage",
+    "head_sha": "d494dd910723303f99992610895d9784968c79e8"
+  }
+}

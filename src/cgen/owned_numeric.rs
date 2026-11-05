@@ -9,7 +9,7 @@ use crate::ir::*;
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 enum Operation {
     Map(FuncId, FuncId),
-    Zip(FuncId),
+    Zip(FuncId, bool),
 }
 
 fn callback(program: &Program, id: FuncId, arity: usize) -> bool {
@@ -73,7 +73,7 @@ fn selection(
                 && locals.get(*b as usize) == Some(actual[1])
                 && actual[1 - slot] == &list
                 && output == &list)
-                .then_some((Some(input), Operation::Zip(id)))
+                .then_some((Some(input), Operation::Zip(id, false)))
         }
         _ => None,
     }
@@ -101,6 +101,24 @@ impl Analysis<'_> {
                         selection(self.program, self.locals, *id, args)
                     {
                         if input.is_none_or(|local| !self.later.contains(&local)) {
+                            let operation = match operation {
+                                Operation::Zip(id, false) if super::GRADIENT_CALL_STORAGE => {
+                                    let Body::ScalarBufferZip { slot, .. } =
+                                        self.program.funcs[id].body
+                                    else {
+                                        unreachable!()
+                                    };
+                                    let Expr::Local(array) = args[slot] else {
+                                        unreachable!()
+                                    };
+                                    let word_array = matches!(&self.locals[array as usize], MT::Con(name, elements)
+                                        if name == "std::Array" && elements.len() == 1
+                                            && matches!(&elements[0], MT::Con(name, args) if args.is_empty()
+                                                && matches!(name.as_str(), "std::I64" | "std::U64" | "std::F64")));
+                                    Operation::Zip(id, word_array && !self.later.contains(&array))
+                                }
+                                other => other,
+                            };
                             self.selected
                                 .push((expr as *const Expr as usize, operation));
                         }
@@ -172,7 +190,7 @@ fn entry(program: &Program, operation: Operation) -> Func {
                 body: Body::OwnedScalarArrayMap { callback },
             }
         }
-        Operation::Zip(id) => {
+        Operation::Zip(id, consume_array) => {
             let original = &program.funcs[id];
             let Body::ScalarBufferZip { callback, slot } = original.body else {
                 unreachable!()
@@ -182,7 +200,11 @@ fn entry(program: &Program, operation: Operation) -> Func {
                 arity: original.arity,
                 locals: original.locals.clone(),
                 ty: original.ty.clone(),
-                body: Body::OwnedScalarBufferZip { callback, slot },
+                body: Body::OwnedScalarBufferZip {
+                    callback,
+                    slot,
+                    consume_array,
+                },
             }
         }
     }
@@ -374,9 +396,64 @@ mod tests {
             for parameter in 0..program.funcs[3].arity as usize {
                 assert_eq!(
                     crate::rc::consumes_arg(&program, 3, parameter),
-                    slot != Some(parameter)
+                    slot != Some(parameter) || super::super::GRADIENT_CALL_STORAGE
                 );
             }
+        }
+    }
+
+    #[test]
+    fn scratch_requires_a_dead_word_array_without_changing_list_consumption() {
+        for slot in [0, 1] {
+            for kept in [false, true] {
+                let mut p = example(Some(slot));
+                if kept {
+                    let Body::Expr(call) = p.funcs[0].body.clone() else {
+                        unreachable!()
+                    };
+                    p.funcs[0].body =
+                        Body::Expr(Expr::Record(vec![call, Expr::Local(slot as Local)]));
+                }
+                lower(&mut p);
+                assert!(
+                    matches!(p.funcs[3].body, Body::OwnedScalarBufferZip { consume_array, .. }
+                    if consume_array == !kept)
+                );
+                assert!(crate::rc::consumes_arg(&p, 3, 1 - slot));
+                assert_eq!(crate::rc::consumes_arg(&p, 3, slot), !kept);
+            }
+            let mut narrow = example(Some(slot));
+            fn replace(ty: &mut MT) {
+                match ty {
+                    MT::Con(name, args) => {
+                        if name == "std::F64" {
+                            *name = "std::F32".into();
+                        }
+                        for arg in args {
+                            replace(arg);
+                        }
+                    }
+                    MT::Fun(a, b) => {
+                        replace(a);
+                        replace(b);
+                    }
+                    _ => {}
+                }
+            }
+            for f in &mut narrow.funcs {
+                replace(&mut f.ty);
+                for local in &mut f.locals {
+                    replace(local);
+                }
+            }
+            lower(&mut narrow);
+            assert!(matches!(
+                narrow.funcs[3].body,
+                Body::OwnedScalarBufferZip {
+                    consume_array: false,
+                    ..
+                }
+            ));
         }
     }
 

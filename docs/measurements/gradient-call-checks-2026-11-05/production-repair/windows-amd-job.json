@@ -1,0 +1,380 @@
+{
+  "id": 127059784036,
+  "run_id": 41971248924,
+  "workflow_name": "CI",
+  "head_branch": "gradient-call-storage",
+  "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/41971248924",
+  "run_attempt": 1,
+  "node_id": "CR_kwDOU33zxM8AAAAdlVpxZA",
+  "head_sha": "4160061cd0d421a55ab4e467c6ec5fb6fd88cbf6",
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/127059784036",
+  "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41971248924/job/127059784036",
+  "status": "completed",
+  "conclusion": "failure",
+  "created_at": "2026-11-05T05:00:26Z",
+  "started_at": "2026-11-05T05:00:58Z",
+  "completed_at": "2026-11-05T06:37:33Z",
+  "name": "windows / native (windows-2025)",
+  "steps": [
+    {
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 1,
+      "started_at": "2026-11-05T05:00:59Z",
+      "completed_at": "2026-11-05T05:01:00Z"
+    },
+    {
+      "name": "Run actions/checkout@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 2,
+      "started_at": "2026-11-05T05:01:00Z",
+      "completed_at": "2026-11-05T05:01:24Z"
+    },
+    {
+      "name": "Captured process deadlines",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 3,
+      "started_at": "2026-11-05T05:01:24Z",
+      "completed_at": "2026-11-05T05:01:30Z"
+    },
+    {
+      "name": "Publish failed process controls before long tests",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 4,
+      "started_at": "2026-11-05T05:01:30Z",
+      "completed_at": "2026-11-05T05:01:30Z"
+    },
+    {
+      "name": "Run dtolnay/rust-toolchain@stable",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 5,
+      "started_at": "2026-11-05T05:01:30Z",
+      "completed_at": "2026-11-05T05:01:37Z"
+    },
+    {
+      "name": "Cache locked Rust dependencies",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 6,
+      "started_at": "2026-11-05T05:01:37Z",
+      "completed_at": "2026-11-05T05:01:40Z"
+    },
+    {
+      "name": "Fetch locked Rust dependencies before offline builds",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 7,
+      "started_at": "2026-11-05T05:01:40Z",
+      "completed_at": "2026-11-05T05:01:45Z"
+    },
+    {
+      "name": "Native C toolchain for foreign calls",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 8,
+      "started_at": "2026-11-05T05:01:45Z",
+      "completed_at": "2026-11-05T05:02:13Z"
+    },
+    {
+      "name": "Native Windows compiler check",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 9,
+      "started_at": "2026-11-05T05:02:13Z",
+      "completed_at": "2026-11-05T05:03:11Z"
+    },
+    {
+      "name": "Native socket and library execution",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 10,
+      "started_at": "2026-11-05T05:03:11Z",
+      "completed_at": "2026-11-05T05:15:38Z"
+    },
+    {
+      "name": "Publish failed native socket and library log",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 11,
+      "started_at": "2026-11-05T05:15:38Z",
+      "completed_at": "2026-11-05T05:15:38Z"
+    },
+    {
+      "name": "Python SDK and native disassembly",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 12,
+      "started_at": "2026-11-05T05:15:38Z",
+      "completed_at": "2026-11-05T05:16:02Z"
+    },
+    {
+      "name": "Language formatting preflight",
+      "status": "completed",
+      "conclusion": "failure",
+      "number": 13,
+      "started_at": "2026-11-05T05:16:02Z",
+      "completed_at": "2026-11-05T05:16:03Z"
+    },
+    {
+      "name": "Interpreter golden outputs and exit statuses",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 14,
+      "started_at": "2026-11-05T05:16:03Z",
+      "completed_at": "2026-11-05T05:17:03Z"
+    },
+    {
+      "name": "Queued function captures, receive ownership and callback effects",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 15,
+      "started_at": "2026-11-05T05:17:03Z",
+      "completed_at": "2026-11-05T05:21:06Z"
+    },
+    {
+      "name": "Publish failed queue and callback log",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 16,
+      "started_at": "2026-11-05T05:21:06Z",
+      "completed_at": "2026-11-05T05:21:06Z"
+    },
+    {
+      "name": "Generated programs with native resources and ownership stress",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 17,
+      "started_at": "2026-11-05T05:21:06Z",
+      "completed_at": "2026-11-05T05:38:36Z"
+    },
+    {
+      "name": "Inspect list-copy executables and missing-cleanup controls",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 18,
+      "started_at": "2026-11-05T05:38:36Z",
+      "completed_at": "2026-11-05T05:38:38Z"
+    },
+    {
+      "name": "Array and fold callbacks, capture storage and unwind cleanup",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 19,
+      "started_at": "2026-11-05T05:38:38Z",
+      "completed_at": "2026-11-05T05:44:36Z"
+    },
+    {
+      "name": "Inspect array-sort ownership and wide-value controls",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 20,
+      "started_at": "2026-11-05T05:44:36Z",
+      "completed_at": "2026-11-05T05:44:40Z"
+    },
+    {
+      "name": "Inspect array construction moves and cleanup",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 21,
+      "started_at": "2026-11-05T05:44:40Z",
+      "completed_at": "2026-11-05T05:44:44Z"
+    },
+    {
+      "name": "CPU kernel size validation order",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 22,
+      "started_at": "2026-11-05T05:44:44Z",
+      "completed_at": "2026-11-05T05:45:14Z"
+    },
+    {
+      "name": "Array bounds and ownership failure artifacts",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 23,
+      "started_at": "2026-11-05T05:45:14Z",
+      "completed_at": "2026-11-05T05:46:01Z"
+    },
+    {
+      "name": "Publish native diagnostics before dependency builds",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 24,
+      "started_at": "2026-11-05T05:46:01Z",
+      "completed_at": "2026-11-05T05:46:02Z"
+    },
+    {
+      "name": "Run actions/cache/restore@v6",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 25,
+      "started_at": "2026-11-05T05:46:02Z",
+      "completed_at": "2026-11-05T05:46:04Z"
+    },
+    {
+      "name": "Native OpenSSL dependencies",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 26,
+      "started_at": "2026-11-05T05:46:04Z",
+      "completed_at": "2026-11-05T05:46:05Z"
+    },
+    {
+      "name": "Run actions/cache/save@v6",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 27,
+      "started_at": "2026-11-05T05:46:05Z",
+      "completed_at": "2026-11-05T05:46:05Z"
+    },
+    {
+      "name": "Complete compiler unit tests with native TLS",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 28,
+      "started_at": "2026-11-05T05:46:05Z",
+      "completed_at": "2026-11-05T05:46:15Z"
+    },
+    {
+      "name": "Native TLS and executable ownership",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 29,
+      "started_at": "2026-11-05T05:46:15Z",
+      "completed_at": "2026-11-05T06:22:38Z"
+    },
+    {
+      "name": "Native commands, test recovery and executable cache",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 30,
+      "started_at": "2026-11-05T06:22:38Z",
+      "completed_at": "2026-11-05T06:24:46Z"
+    },
+    {
+      "name": "Publish failed native tls and executable ownership log",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 31,
+      "started_at": "2026-11-05T06:24:46Z",
+      "completed_at": "2026-11-05T06:24:46Z"
+    },
+    {
+      "name": "Remote stream and queued response lifetimes",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 32,
+      "started_at": "2026-11-05T06:24:46Z",
+      "completed_at": "2026-11-05T06:25:23Z"
+    },
+    {
+      "name": "Native nested autodiff and ownership controls",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 33,
+      "started_at": "2026-11-05T06:25:23Z",
+      "completed_at": "2026-11-05T06:30:30Z"
+    },
+    {
+      "name": "Publish failed native nested autodiff and ownership controls log",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 34,
+      "started_at": "2026-11-05T06:30:30Z",
+      "completed_at": "2026-11-05T06:30:30Z"
+    },
+    {
+      "name": "Complete native golden programs",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 35,
+      "started_at": "2026-11-05T06:30:30Z",
+      "completed_at": "2026-11-05T06:33:14Z"
+    },
+    {
+      "name": "Native reuse and string ownership",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 36,
+      "started_at": "2026-11-05T06:33:14Z",
+      "completed_at": "2026-11-05T06:34:18Z"
+    },
+    {
+      "name": "Publish native reuse diagnostics",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 37,
+      "started_at": "2026-11-05T06:34:18Z",
+      "completed_at": "2026-11-05T06:34:20Z"
+    },
+    {
+      "name": "Publish failed complete native golden programs log",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 38,
+      "started_at": "2026-11-05T06:34:20Z",
+      "completed_at": "2026-11-05T06:34:20Z"
+    },
+    {
+      "name": "Build standalone compiler with static C runtime",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 39,
+      "started_at": "2026-11-05T06:34:20Z",
+      "completed_at": "2026-11-05T06:36:33Z"
+    },
+    {
+      "name": "Run actions/upload-artifact@v7",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 40,
+      "started_at": "2026-11-05T06:36:33Z",
+      "completed_at": "2026-11-05T06:36:33Z"
+    },
+    {
+      "name": "Run actions/upload-artifact@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 41,
+      "started_at": "2026-11-05T06:36:33Z",
+      "completed_at": "2026-11-05T06:37:27Z"
+    },
+    {
+      "name": "Post Cache locked Rust dependencies",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 81,
+      "started_at": "2026-11-05T06:37:27Z",
+      "completed_at": "2026-11-05T06:37:27Z"
+    },
+    {
+      "name": "Post Run actions/checkout@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 82,
+      "started_at": "2026-11-05T06:37:27Z",
+      "completed_at": "2026-11-05T06:37:30Z"
+    },
+    {
+      "name": "Complete job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 83,
+      "started_at": "2026-11-05T06:37:30Z",
+      "completed_at": "2026-11-05T06:37:30Z"
+    }
+  ],
+  "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/127059784036",
+  "labels": [
+    "windows-2025"
+  ],
+  "runner_id": 1000409349,
+  "runner_name": "GitHub Actions 1000409349",
+  "runner_group_id": 0,
+  "runner_group_name": "GitHub Actions"
+}

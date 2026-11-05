@@ -177,6 +177,7 @@ trait ReverseScalar[T] : Field[T], Neg[T], Dup[T] =
     rev._seed : List[T] -> (I64, List[Rev[T]])
     rev._push : I64 -> T -> I64 -> T -> I64
     rev._backward : I64 -> List[I64] -> List[T] -> Array[T]
+    rev._backward-one : I64 -> I64 -> T -> Array[T]
     rev._inactive-zero : T -> Bool
 
 foreign "fwp" ad.tape-owned : (t, t -> t -> t, t -> t -> t, t -> Bool) -> List[t] -> I64 where Dup[t]
@@ -189,6 +190,10 @@ foreign "fwp" ad.push-owned : I64 -> t -> I64 -> t -> I64 where Dup[t]
 # Return an owned array of input derivatives and retire the tape's buffers.
 # Stored reverse-mode values still obey their enclosing derivative scope.
 foreign "fwp" ad.backward-owned : I64 -> List[I64] -> List[t] -> Array[t] where Dup[t]
+
+# One explicit root and seed; neither argument is wrapped in a singleton list.
+# The caller owns the seed throughout backward callbacks and task suspension.
+foreign "fwp" ad._backward-owned-one : I64 -> I64 -> t -> Array[t] where Dup[t]
 
 rev._push-float : I64 -> t -> I64 -> t -> I64 where Float[t]
 rev._push-float = fn parent-a -> fn weight-a -> fn parent-b -> fn weight-b ->
@@ -203,36 +208,42 @@ impl ReverseScalar[F16] =
     rev._seed = rev._seed-float
     rev._push = rev._push-float
     rev._backward = rev._backward-float
+    rev._backward-one = rev._backward-float-one
     rev._inactive-zero = eq zero
 
 impl ReverseScalar[BF16] =
     rev._seed = rev._seed-float
     rev._push = rev._push-float
     rev._backward = rev._backward-float
+    rev._backward-one = rev._backward-float-one
     rev._inactive-zero = eq zero
 
 impl ReverseScalar[F32] =
     rev._seed = rev._seed-float
     rev._push = rev._push-float
     rev._backward = rev._backward-float
+    rev._backward-one = rev._backward-float-one
     rev._inactive-zero = eq zero
 
 impl ReverseScalar[F64] =
     rev._seed = rev._seed-float
     rev._push = rev._push-float
     rev._backward = rev._backward-float
+    rev._backward-one = rev._backward-float-one
     rev._inactive-zero = eq zero
 
 impl ReverseScalar[F128] =
     rev._seed = rev._seed-owned
     rev._push = ad.push-owned
     rev._backward = ad.backward-owned
+    rev._backward-one = ad._backward-owned-one
     rev._inactive-zero = eq zero
 
 impl ReverseScalar[Rev[t]] where ReverseScalar[t] =
     rev._seed = rev._seed-owned
     rev._push = ad.push-owned
     rev._backward = ad.backward-owned
+    rev._backward-one = ad._backward-owned-one
     # A numerical zero can still have a nonzero derivative. Only constants
     # known inactive at every nested level may skip backward propagation.
     rev._inactive-zero = if (.vertex | lt 0) (.value | rev._inactive-zero) (const False)
@@ -247,6 +258,8 @@ foreign "fwp" ad.tape : I64 -> I64
 foreign "fwp" ad.push : I64 -> F64 -> I64 -> F64 -> I64
 # internal
 foreign "fwp" ad.backward : I64 -> Array[I64] -> Array[F64] -> Array[F64]
+# A single root, seeded by the explicitly supplied F64 value.
+foreign "fwp" ad._backward-one : I64 -> I64 -> F64 -> Array[F64]
 
 # a constant: no gradient flows through it
 rev.const : t -> Rev[t]
@@ -337,13 +350,17 @@ rev._backward-float = curry3 (make {
     2 = .2 | map float.convert | array.from-list,
 } | uncurry3 ad.backward | array.map float.convert)
 
+# Keep the same F64 accumulation and final result conversion as multi-root
+# backward. Conversion of the explicit seed happens only at the final call.
+rev._backward-float-one : I64 -> I64 -> t -> Array[t] where Float[t]
+rev._backward-float-one = fn base -> fn root -> fn seed ->
+    ad._backward-one base root (float.convert seed) | array.map float.convert
+
 rev._finish : (I64, Rev[t]) -> (t, Array[t]) where ReverseScalar[t], One[t], Dup[t]
 rev._finish =
     both
         (.1 | .value)
-        (both .0 (.1 | .vertex | singleton)
-            | uncurry rev._backward
-            | apply [one])
+        (both .0 (.1 | .vertex) | uncurry rev._backward-one | apply one)
 
 # The value of a scalar function and its gradient at a point, in one
 # forward and one backward pass.

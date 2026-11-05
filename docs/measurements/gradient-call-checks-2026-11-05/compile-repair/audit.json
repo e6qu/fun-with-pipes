@@ -1,0 +1,19 @@
+{
+  "source": "73261bf2d26a3c12078bc5951cba60752d38df8c",
+  "run": 41956890550,
+  "job": 127013847558,
+  "fullLogSha256": "7147fca0aa8557b610743da5d57c03f9547df63b16669f1e214e4f08e5f009c4",
+  "compilerErrors": [
+    [
+      "E0509",
+      "cannot move out of type `value::Value`, which implements the `Drop` trait"
+    ],
+    [
+      "E0509",
+      "cannot move out of type `value::Value`, which implements the `Drop` trait"
+    ]
+  ],
+  "warnings": [],
+  "nativeTargetsRun": 0,
+  "repair": "Borrow record contents in the constant proof and its unit control; retain the Value owner until reading ends."
+}

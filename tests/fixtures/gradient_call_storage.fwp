@@ -1,0 +1,11 @@
+read-input : List[F64] -> Array[F64]
+read-input = fn inputs ->
+    let base = ad.tape (length inputs) in ad._backward-one base base 3.0
+
+export scoped-input : List[F64] -> (List[F64], List[F64]) ! {Async}
+scoped-input = fn inputs ->
+    let ready = task.yield ()
+    in let derivatives = ad.scope read-input inputs
+    in (array.to-list derivatives, inputs)
+
+main = [2.0, 4.0] | scoped-input | eq ([3.0, 0.0], [2.0, 4.0]) | echo

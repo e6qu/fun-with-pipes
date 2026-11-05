@@ -169,6 +169,11 @@ fn public_tape_tokens_agree_with_raw_interpreter() {
         ("left", "main = 1 | ad.tape | (fn node -> ad.push (node + 1) 1.0 -1 0.0) | echo\n", true),
         ("right", "main = 1 | ad.tape | (fn node -> ad.push node 1.0 (node + 1) 1.0) | echo\n", true),
         ("backward", "main = 1 | ad.tape | finish | echo\n", true),
+        ("single-invalid", "main = 1 | ad.tape | (fn base -> ad._backward-one base (base + 1) 1.0) | echo\n", true),
+        ("single-owned-invalid", "main = [0.0f128] | ad.tape-owned (0.0f128, add, mul, rev._inactive-zero) | (fn base -> ad._backward-owned-one base (base + 1) 1.0f128) | echo\n", true),
+        ("single-empty", "main = 0 | ad.tape | (fn base -> ad._backward-one base -1 1.0) | echo\n", false),
+        ("single-owned-empty", "main = [] | ad.tape-owned (0.0f128, add, mul, rev._inactive-zero) | (fn base -> ad._backward-owned-one base -1 1.0f128) | echo\n", false),
+        ("single-seeded", "main = 1 | ad.tape | (fn base -> ad._backward-one base base 2.0) | echo\n", false),
         ("empty", "empty : I64 -> Array[F64]\nempty = make { 0 = id, 1 = const [] | array.from-list, 2 = const [] | array.from-list } | uncurry3 ad.backward\nmain = 0 | ad.tape | empty | echo\n", false),
         ("paired", "paired : I64 -> Array[F64]\npaired = make { 0 = id, 1 = both id (const []) | uncurry Cons | array.from-list, 2 = const [2.0] | array.from-list } | uncurry3 ad.backward\nmain = 1 | ad.tape | paired | echo\n", false),
     ];
@@ -464,8 +469,8 @@ fn typed_adjoints_borrow_zero_and_transfer_results_without_extra_owners() {
     assert!(code.contains("#define FWP_UNWIND 1"));
     assert!(code.contains("#define FWP_TASK_TICKS 1"));
     for (marker, replacement) in [
-        ("static V fwp_p_ad_backward_owned(V base, V outs, V seeds, const fwp_desc *array_type) {",
-            "static void typed_begin(int);\nstatic V fwp_p_ad_backward_owned(V base, V outs, V seeds, const fwp_desc *array_type) {"),
+        ("typedef enum { FWP_AD_ROOT_LIST, FWP_AD_ROOT_SINGLE } fwp_ad_root_layout;",
+            "static void typed_begin(int);\ntypedef enum { FWP_AD_ROOT_LIST, FWP_AD_ROOT_SINGLE } fwp_ad_root_layout;"),
         ("    /* The tape owns zero until all slots and result transfers are finished. */",
             "    typed_begin(1);\n    /* The tape owns zero until all slots and result transfers are finished. */"),
         ("    V output_cursor = outs, seed_cursor = seeds;", "    typed_begin(0);\n    V output_cursor = outs, seed_cursor = seeds;"),
@@ -507,7 +512,7 @@ fn typed_adjoints_borrow_zero_and_transfer_results_without_extra_owners() {
                 record_probe::save("ad_tape_ownership", &label, source, &executable, &output);
                 assert_eq!(output.status.code(), Some(*expected), "{label}: {output:?}");
                 if *expected == 0 {
-                    assert_eq!(String::from_utf8_lossy(&output.stdout).lines().count(), 9);
+                    assert_eq!(String::from_utf8_lossy(&output.stdout).lines().count(), 18);
                     assert!(output.stderr.is_empty());
                 }
             }
