@@ -1,0 +1,20 @@
+{
+  "id": 13385055442,
+  "node_id": "MDg6QXJ0aWZhY3QxMzM4NTA1NTQ0Mg==",
+  "name": "gradient-call-checks-ubuntu-latest",
+  "size_in_bytes": 149830440,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13385055442",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13385055442/zip",
+  "expired": false,
+  "digest": "sha256:37b16aaf6b1e3f8f9b83feb5006c30bc5f0e82d1e0ad64dd22eefc3df0374fb4",
+  "created_at": "2026-11-05T03:04:14Z",
+  "updated_at": "2026-11-05T03:04:14Z",
+  "expires_at": "2027-02-03T02:48:40Z",
+  "workflow_run": {
+    "id": 41957591695,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "gradient-call-storage",
+    "head_sha": "68f71c14226ac03818c842da0b8017ad98754c7b"
+  }
+}

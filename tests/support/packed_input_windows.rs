@@ -133,17 +133,23 @@ fn indexed_record_windows_release_every_owner_on_failure_and_cancellation() {
                 "        windows_phase = 2; windows_pairs++;\n        fwp_wr",
             );
         let fold_control = fold
-        .replace(
-            "        accumulator = w",
-            "        windows_phase = 3; windows_folds++;\n        accumulator = w",
-        )
-        .replace(
-            "    return fwp_rc_fresh(fwp_record(",
-            "    windows_fail_allocation = windows_mode == 9;\n    return fwp_rc_fresh(fwp_record(",
-        );
+            .replace(
+                "        accumulator = w",
+                "        windows_phase = 3; windows_folds++;\n        accumulator = w",
+            )
+            .replace(
+                "    return (fwp_wr",
+                "    windows_fail_allocation = windows_mode == 9;\n    return (fwp_wr",
+            );
         assert_ne!(input, input_control);
         assert_ne!(pairs, pair_control);
         assert_ne!(fold, fold_control);
+        assert_eq!(
+            fold_control
+                .matches("windows_fail_allocation = windows_mode == 9;")
+                .count(),
+            1
+        );
         let observed = ownership_ledger::instrument_native(&emitted, 256);
         let mut code = observed[..observed.find("int main(").unwrap()]
         .replace(input, &input_control).replace(pairs, &pair_control).replace(fold, &fold_control)

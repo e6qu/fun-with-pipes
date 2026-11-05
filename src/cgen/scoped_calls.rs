@@ -223,6 +223,12 @@ mod tests {
             p.funcs[4].body,
             Body::DirectAdScope { callback: 1 }
         ));
+        // A borrowed primitive can still retain its input. List length has
+        // the stronger no-escape contract needed by this worker's proof.
+        let noescape = crate::escape::params(&p);
+        assert!(noescape[3][0]);
+        assert!(noescape[1][0]);
+        assert!(noescape[4][0]);
         assert_eq!(borrowed(&p), BTreeMap::from([(1, vec![0])]));
         p.borrowed_parameters = borrowed(&p);
         let (body, locals) = crate::rc::insert(&p)[1].clone().unwrap();

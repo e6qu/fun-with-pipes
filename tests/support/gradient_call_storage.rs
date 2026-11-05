@@ -89,7 +89,15 @@ fn scoped_input_borrows_and_single_root_seeds_preserve_values_and_cleanup() {
     }
     let start = code.find("static V fwp_p_task_yield(void) {").unwrap();
     let end = start + code[start..].find("\n}\n").unwrap() + 3;
-    code.replace_range(start..end, "static V fwp_p_task_yield(void) {\n    if(storage_mode == 1) fwp_trap(\"injected scoped callback failure\");\n    if(storage_mode == 2) { fwp_cur->cancelled=1; fwp_check_cancel(); }\n    return FWP_UNIT;\n}\n");
+    // The source yields outside the pure AD callback. Inject nonlocal exits
+    // after tape creation, while the scope and caller input owners are live.
+    code.replace_range(
+        start..end,
+        "static V fwp_p_task_yield(void) {\n    return FWP_UNIT;\n}\n",
+    );
+    let backward = "static V fwp_p_ad_backward_one(V base, V root, V seed) {";
+    assert_eq!(code.matches(backward).count(), 1);
+    code = code.replace(backward, &format!("{backward}\n    if(storage_mode == 1) fwp_trap(\"injected scoped callback failure\");\n    if(storage_mode == 2) {{ fwp_cur->cancelled=1; fwp_check_cancel(); }}"));
     code += &include_str!("../fixtures/gradient_call_storage.c")
         .replace("SCOPED_ENTRY", &format!("f{id}"))
         .replace("DROP_LIST", list);

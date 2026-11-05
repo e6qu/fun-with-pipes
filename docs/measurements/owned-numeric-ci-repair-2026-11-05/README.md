@@ -83,5 +83,6 @@ uses `bc1bf40ea0c8ad7733b9042e2b552ae261970dce`, immutable tag
 | Clang ARM64 | 126947919477 | [Audit](runners/mac/verified.json), [controls](runners/mac/controls.zip), [full log](runners/mac/job.log.gz) |
 
 Documentation run `41936992630` / job `126947841108` also passes its
-[full-log audit](runners/docs-job.json). These focused results do not replace
-the nine exact-head production jobs required before merge.
+[full-log audit](runners/docs-job.json). The subsequent nine production jobs and
+docs also passed; [delivery receipts](../owned-numeric-checks-2026-11-05/platforms/final-gates.json)
+verify the tested tree and squash merge. The historical failures above remain visible.

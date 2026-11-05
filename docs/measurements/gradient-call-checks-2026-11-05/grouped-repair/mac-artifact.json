@@ -1,0 +1,20 @@
+{
+  "id": 13384417569,
+  "node_id": "MDg6QXJ0aWZhY3QxMzM4NDQxNzU2OQ==",
+  "name": "gradient-call-checks-macos-15",
+  "size_in_bytes": 143585279,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13384417569",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13384417569/zip",
+  "expired": false,
+  "digest": "sha256:490f854d3b03649422c90a15628385d13d7f733707988928a015cf934ca435d7",
+  "created_at": "2026-11-05T03:02:50Z",
+  "updated_at": "2026-11-05T03:02:50Z",
+  "expires_at": "2027-02-03T02:48:40Z",
+  "workflow_run": {
+    "id": 41957591695,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "gradient-call-storage",
+    "head_sha": "68f71c14226ac03818c842da0b8017ad98754c7b"
+  }
+}

@@ -53,9 +53,13 @@ pub fn params(prog: &Program) -> Vec<Vec<bool>> {
         let mut changed = false;
         for (id, f) in prog.funcs.iter().enumerate() {
             if let Body::DirectAdScope { callback } = f.body {
-                for p in 0..f.arity as usize {
-                    if noesc[id][p] && !noesc[callback][p] {
-                        noesc[id][p] = false;
+                let [scope, worker] = noesc
+                    .get_disjoint_mut([id, callback])
+                    .expect("direct scope and worker have distinct entries");
+                assert_eq!(scope.len(), worker.len());
+                for (parameter, proved) in scope.iter_mut().zip(worker.iter()) {
+                    if *parameter && !*proved {
+                        *parameter = false;
                         changed = true;
                     }
                 }

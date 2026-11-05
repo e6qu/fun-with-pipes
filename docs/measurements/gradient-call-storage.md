@@ -142,3 +142,11 @@ the frozen prediction is 11,145 fewer requests, 1,846,744 fewer requested bytes
 and 3,184 fewer effective retains. The cached seed disappears once per process,
 not once per solve. Zero-update processes must have identical storage counts.
 The reference/candidate must both finish with no managed or raw storage left.
+
+`gradient-call-analysis` uses the same correctness prerequisite and measures whole
+compiler commands through C emission on seven inputs. `gradient-call-time` uses
+explicit `comparison_session=both` and the six repeated-solve inputs above;
+`gradient-call-report` audits those saved samples and source bytes without running
+saved binaries. The manual C/Rust programs perform the same solve with manual
+derivatives and different storage; ratios against them do not isolate ARC or
+language overhead. No measurement result exists yet.

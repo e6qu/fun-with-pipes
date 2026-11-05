@@ -966,7 +966,7 @@ mod tape_validation_tests {
             let empty = Value::list(vec![]);
             let managed = tape_owned(&parameters, &empty)?;
             let index = slot(int(&managed));
-            backward_owned(&managed, &empty, &empty, |_, _| {
+            backward_owned(&managed, BackwardSeeds::Lists(&empty, &empty), |_, _| {
                 panic!("empty backward must not call scalar operations")
             })?;
             assert_eq!(slot(tape_new(0, false)?), index);

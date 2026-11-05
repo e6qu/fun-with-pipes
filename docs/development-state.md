@@ -1,150 +1,115 @@
 # Current work
 
-**Next:** dispatch and audit `gradient-call-checks` after the constant-proof
-compiler repair in [PR #259](https://github.com/e6qu/fun-with-pipes/pull/259).
-Check GCC ARM64/AMD64 and Clang ARM64, including every failed step and completed
-native target, before one repair push. Implementation is not yet verified;
-do not launch final production yet.
+**Next:** monitor the repaired `gradient-call-checks` run on all three hosts
+in [PR #259](https://github.com/e6qu/fun-with-pipes/pull/259). Run `41957591695` is fully audited:
+22 native targets pass and the same three fail on each host. Do not start
+measurements or final production until grouped correctness passes.
 
-Contract frozen before code at `1ed3ad99ef7263161d526cea816c33b36ac40b9b`, tag
+Branch: `gradient-call-storage`; worktree `.worktrees/owned-numeric-updates`.
+Last tested source: `68f71c14` (compiler record-borrow repair). Docs `41957597604` pass;
+its full log is audited (only the three expected negative-runner diagnostics). Other worktrees are unrelated.
+
+Contract: [gradient-call storage](measurements/gradient-call-storage.md), frozen at
+`1ed3ad99ef7263161d526cea816c33b36ac40b9b`, tag
 `roadmap/gradient-call-storage-protocol-2026-11-05`.
-
-Branch: `gradient-call-storage`, worktree `.worktrees/owned-numeric-updates`.
-PR #259 is the only active PR and remains a draft. Other dirty worktrees and the
-primary checkout are unrelated.
 
 ## Roadmap status
 
 | Step | Status | Evidence or remaining work |
 |---|---|---|
-| 1 | In progress | Direct derivative scope, word worker convention, caller-owned input proof. |
-| 2 | In progress | Numeric fold fields and bounded constant seed proof. |
-| 3 | In progress | Explicit single-root scalar/owned-weight backward peers. |
-| 4 | In progress | Consume exclusive 64-bit gradient scratch; protect other layouts/aliases. |
-| 5 | Pending | Grouped controls, counts and measurements, then final CI/delivery. |
+| 1 | In progress | Direct derivative scope and word worker; caller-owned input proof awaits native controls. |
+| 2 | In progress | Numeric fold fields and bounded constant proof; record move compiler error repaired. |
+| 3 | In progress | Explicit single-root scalar/owned-weight peers; failure, token and precision controls running. |
+| 4 | In progress | Consumed exclusive 64-bit scratch; alias/view, both zip positions and unwind controls running. |
+| 5 | Pending | Resolve focused failures; exact counts, compiler/runtime measurements, then final CI and delivery. |
 
-## Verified previous delivery
+## Current runner results
 
-[PR #258](https://github.com/e6qu/fun-with-pipes/pull/258) is merged at
-`68115090b161f198e11fb625946259f65f781580`; tree equals tested
-`35745c0b8fab61c9ac4e0a9e57efd81fd1a283bd`. Nine production jobs in
-`41939753207` and docs `41939719588` pass, with all full/target logs audited.
-[Retained gates](measurements/owned-numeric-checks-2026-11-05/platforms/final-gates.json)
-verify source, logs, tree and the one-line squash message. Redundant same-tree
-push runs `41952053890` / `41952053874` were cancelled after verification.
+| Run / source | Result |
+|---|---|
+| `41957591695` / `68f71c14` | Failed; all full logs and 75 native target logs audited. Complete repairs below. |
+| `41957597604` / `68f71c14` | Documentation passes; full-log audit complete. |
+| `41956890550` / `73261bf2` | macOS lint/build failed E0509: moving a record out of Value, which has a destructor. Both implementation and unit pattern now borrow fields. [Complete failed-job audit](measurements/gradient-call-checks-2026-11-05/README.md) retained; no native target ran. Unassigned Linux jobs/docs cancelled. |
+| `41956076516` / `6f322d1f` | Replaced before any runner started, to include direct-seed token/unwind controls and allocation predictions. |
 
-[The old failures and repair](measurements/owned-numeric-ci-repair-2026-11-05/README.md)
-remain explicit: six jobs hit the same outdated identity-array allocation assertion.
-All old full/target logs are audited; no other failing target was found.
-The expanded focused suite passes 285 units and 110 integrations/19 targets on
-three hosts, with 722 native images and 733 outcomes each.
+Current job IDs: AMD64 `127016115892`, ARM64 `127016115577`, macOS `127016115852`.
+GitHub exposes completed job logs through `gh api .../actions/jobs/ID/logs`;
+`gh run view --log` refuses until the whole run completes. API output needs
+`--allow-escape-sequences`; preserve raw bytes, strip controls only for display.
+An in-progress job log returns 404. Do not treat that as a compiler result.
+Scratch downloads: `../gradient-work/gradient-call-checks-2/`.
+[Retained failure audit](measurements/gradient-call-checks-2026-11-05/README.md#grouped-repair).
 
-[Runtime results](measurements/owned-numeric-time-2026-11-05/README.md) retain four
-missed AMD64 speed targets. No unchanged measurements should be rerun. Compiler
-source for these measurements is `07541ff956d582bb9c3936b86261e43fa25b0b2f`;
-it is unchanged through the tested merge. All older goals remain separate in PLAN.
+## Implementation and review boundaries
 
-## Implementation preparation
+- Direct scopes use a private word worker. Ordinary exported/dynamic entries
+  still own inputs. A later caller use must keep each borrowed input alive through
+  argument evaluation, return and unwind; returned/stored/resource values exclude it.
+- Fold fields admit only concrete scalar records. Constant proof accepts bounded
+  literals, acyclic nullary chains and scalar zero/one; arbitrary code stays evaluated.
+- Backward takes an explicit root/seed. Scalar code borrows word slices; typed code
+  selects list or single-root traversal explicitly. No fake stack heap objects.
+- Scratch consumes only dead I64/U64/F64 arrays. Runtime exclusivity and ordinary
+  layout are required; shared arrays/views keep independent scratch. Array storage
+  and partial list output have separate cleanup, with all callbacks before mutation.
 
-[Current allocation attribution](measurements/gradient-storage-2026-11-05/README.md)
-passes on both hosts: 96 observations reconcile with source constructors.
-Fresh single-solve totals differ from the repeated shared-input timing driver.
-One fresh 129/199 solve uses 2,121 requests and 1,265,230 requested bytes;
-the proposed four-part reduction targets 727 requests and 1,034,366 bytes.
-The reduction is implemented but has not been compiled or measured yet.
+## Repair batch
 
-Scratch review: `../gradient-work/owned-numeric-remaining-storage/`, especially
-`scoped-call-design.md`, `inspection.json` and `source-predictions.json`.
-The worker needs an explicit word-valued borrowed convention; removing a retain
-alone is unsafe. Keep AD admission, graph edges, caller ownership through unwind
-and matching callee cleanup. Constant seed proof must explicitly admit concrete
-F64 zero/one intrinsics; arbitrary user-defined zero remains evaluated normally.
-Single-root peers need separate scalar/owned-weight layout and callback proofs.
-Scratch reuse requires 64-bit pointer-free storage and a separate owner from
-independently allocated scratch. The reference disables `GRADIENT_CALL_STORAGE` and restores the multi-root
-selection in `rev._finish`; all preceding ownership changes stay enabled.
-
-## Local checks and resources
-
-All checks use `python3 scripts/local-guard.py`; full builds/suites run on runners.
-Premerge ten-gate verification: 0.65s. Merge/tree/message verification: 1.61s.
-Delivery evidence retention: 0.13s. Final log audits: Linux AMD64/cache reconciliation
-5.05s, Windows ARM64 136.57s, Windows AMD64 142.81s; other results are retained.
-
-Before implementation, free space was 64.596 GiB. Full Windows downloads were removed only after
-verifying all 157 retained logs and archive digests; final collection keeps the
-retirement receipts. Preserve 64 GiB; do not redownload audited full archives.
-Scratch: `../gradient-work/owned-numeric-platforms-258-final`.
-The merged #257 worktree was archived with its dirty handoff/patch before removal;
-other dirty worktrees remain untouched.
+All reported failures have source repairs: add list `length`'s no-escape contract;
+use paired scope/worker iterators; update the missed backward unit caller;
+correct the pure-scope and owned-weight-list fixtures; update packed-fold counts
+and move fault injection before the remaining export allocation. The borrowing
+unit now checks the contract through primitive, worker and scope. No selection
+requirement or memory/timing limit was relaxed. Native verification is pending.
 
 
-## Current edits and focused checks
+Script-only work adds `gradient-call-time` and `gradient-call-report`, including
+exact count acceptance and independent reconstruction of the saved reference.
+The original host, schedule, copy, time, memory and stack limits remain intact.
+The workflow will publish compiler/selection diagnostics before native tests so
+future root-cause analysis need not wait for the entire target queue.
+All failed jobs are audited; publish these changes as one repair batch. No native measurements have run.
 
-- Direct scoped callbacks use explicit word workers; ordinary exported/dynamic
-  entries retain their owning convention. Borrow inference includes the continuing
-  owner through enclosing call arguments, and only proved plain list reads qualify.
-- Packed folds accept/return numeric fields. Constant seeds admit only bounded
-  literal records, nullary chains and concrete scalar zero/one primitives.
-- Backward accepts one explicit root/seed in both engines. Scalar native code
-  reads borrowed word slices; typed code uses an explicit list/single-root layout.
-  No fabricated stack array/list object or heap ownership header is needed.
-- Coordinate scratch consumes only dead I64/U64/F64 arrays. Separate cleanup
-  protects array storage and scratch, with alias/view and shared-list controls.
+Prepared `gradient-call-census` requires passing focused jobs and identical
+compiler/runtime/library/test trees. It predicts 11,145 fewer requests, 1,846,744
+fewer bytes and 3,184 fewer retains for eight 129/199 solves. Zero-update counts
+must be identical. [Fresh-solve attribution](measurements/gradient-storage-2026-11-05/README.md)
+is a different driver: 2,121 → 727 requests is a prediction, not a measured result.
 
-New scope ledger tests cover normal return, retained aliases, traps, cancellation,
-allocation failures and deliberately added retains/missing frees. Existing typed
-and scalar backward controls now exercise both seed representations. Old fold and
-phase observers were moved to the shared execution sites. The historical gradient
-reference was updated to preserve single-root peers while reversing array results;
-its original measured patch remains in the immutable evidence.
+## Checks and resources
 
-Guarded reference tests: 6 + 5 + 5 pass; standalone library-doc generator and
-unblessed verification pass (2.20s together). Earlier new-reference control initially
-failed because its corruption marker matched both typed entry wrappers; the marker
-now targets the shared implementation uniquely, and all six tests pass.
+All local checks use `python3 scripts/local-guard.py`; full builds/tests stay on
+runners. Formatting, native assignment (255 targets), primitive inventory and
+roadmap links pass. Reference controls: new 3, historical gradient 6, packed 5,
+consumed storage 5. Phase controls 4; iteration selection controls 3. Generated
+library docs pass both regeneration and unblessed verification.
 
-Disk fell to 63.964 GiB and the guard refused formatting. Only the three reproducible
-`owned-numeric-checks-6` downloads were removed after digest, audit and all 472
-retained-control file checks per host. Receipts stay beside their metadata. The
-first lightweight cleanup restored the guard minimum; its sandboxed nice request
-was denied, and no compiler/check was run outside the guard. The remaining two
-cleanups ran under the guard (0.38s). Last free space: 64.344 GiB.
+Measurement controls: allocation census 6; compiler schedule/timeouts 10 (3.04s);
+runtime budgets 23; reference/evidence reconstruction 18; retention 3 (20.57s
+group); saved-session audits 12 plus workflow JSON settings (5.95s). Workflow
+syntax passes. A synthetic missing peak field was corrected before these passes.
+Documentation full-log audit: 2.32s, retained in
+`../gradient-work/gradient-call-checks-2/docs-job.{json,log.gz}`.
+Repair checks: `cargo fmt --all` passes; primitive inventory (397 declarations),
+reference controls (3 new + 6 historical), 255 native assignments and diff check
+pass (1.36s). The first inventory invocation omitted its required output path;
+the corrected invocation above passes. Staged roadmap, actionlint and format
+check pass (7.71s). Full and target-log retention passes (0.49s); both Linux
+artifact/full-log audits pass (110.41s). No local compiler build or native suite.
+Latest staged roadmap audit: 282 link sets, 106 preparation pairs, five steps.
 
-Focused preparation also passes the three new reference controls, six historical
-gradient reference controls, three iteration observer controls and four Clang
-phase controls. The primitive inventory reports expected contract changes verified,
-including both explicit single-root peers. Cargo formatting passes. The actual
-native runner inventory covers all 255 targets; an attempted nonexistent standalone
-shard-check filename was corrected to the runner's own metadata/assignment audit.
-No Rust build or native implementation test has run locally.
+Free disk at handoff rewrite: 64.950 GiB; preserve at least 64 GiB. No local full
+build was attempted. Three verified, reproducible `owned-numeric-checks-6` download
+archives were retired after guard refusal at 63.964 GiB; all retained controls,
+logs and digest receipts remain. Full audited Windows downloads from #258 are
+also retired; do not redownload them. Other dirty worktrees remain untouched.
 
-While the first three jobs wait for runners, follow-up edits extend scalar unwind
-controls to direct seeds (mixed/invalid/expired roots, allocation failure and
-cancellation), plus raw/native invalid/empty F128 seeds. The untimed allocation
-suite now has an explicit `gradient-call` comparison and six passing observer
-controls. It predicts exactly 11,145 requests / 1,846,744 bytes / 3,184 retains
-removed for eight 129/199 solves; these remain unmeasured. Formatting and workflow
-syntax pass under the guard (1.77s). The follow-up batch replaces the initial run before any runner starts.
+## Previous delivery
 
-Initial head `6f322d1f9d4ceca01d29ee45163f746d6656a3c9` had no assigned runners.
-Runs `41956076516` (focused) and `41956079358` (docs) were cancelled before
-execution to keep one expanded batch. No failed or passing implementation result
-was discarded. Local roadmap audit passes (2.67s).
-
-## First runner result and repair
-
-Expanded head `73261bf2d26a3c12078bc5951cba60752d38df8c`, run `41956890550`:
-macOS job `127013847558` failed lint/build on E0509 in the constant-seed proof.
-The implementation and its unit control now borrow record fields from their
-owning Value instead of moving them out. [Complete retained audit](measurements/gradient-call-checks-2026-11-05/README.md)
-finds that error twice and no compiler warnings; no native targets ran. Both
-Linux jobs and docs `41956897588` were cancelled while unassigned, to avoid
-compiling the same known failure. No passing gate was cancelled.
-
-Compiler-cost preparation now supports `gradient-call-analysis`: the same seven
-inputs and 48 scheduled compilations each, preserving prior reductions in both
-compilers. All ten schedule/timeout controls pass (3.04s). The failed-job evidence,
-Cargo formatting and workflow syntax checks pass together (4.12s). Runtime timing
-and its independent evidence audit still need the new comparison added. Do not
-start timing before correctness and the exact allocation census pass.
+[PR #258](https://github.com/e6qu/fun-with-pipes/pull/258) is verified and merged at
+`68115090b161f198e11fb625946259f65f781580`, tree equal to tested `35745c0b`.
+All nine production jobs `41939753207`, docs `41939719588`, and full/target audits
+pass. [Delivery receipts](measurements/owned-numeric-checks-2026-11-05/platforms/final-gates.json)
+verify tree and one-line squash message. Redundant main runs were cancelled.
+[Four AMD64 speed misses](measurements/owned-numeric-time-2026-11-05/README.md)
+remain open, separate from this comparison. Do not rerun unchanged timings.

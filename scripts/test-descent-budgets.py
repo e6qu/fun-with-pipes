@@ -14,6 +14,53 @@ BASELINE = json.loads((ROOT / 'docs/measurements/array-capture-descent-2026-10-2
 
 
 class DescentBudgets(unittest.TestCase):
+    def test_gradient_call_predictions_keep_exact_counts_and_all_timing_limits(self):
+        cases = ((3, 0, 0, 0, 0), (3, 1, 57, 1240, 16),
+                 (3, 199, 11145, 242008, 3184), (3, 1999, 111945, 2430808, 31984),
+                 (33, 199, 11145, 624088, 3184), (129, 199, 11145, 1846744, 3184))
+        for dimensions, updates, requests, byte_count, retains in cases:
+            row = self.recording_case(updates)
+            row.update(dimensions=dimensions, solvesPerProcess=8)
+            elapsed = 95 if updates >= 199 else 100
+            row['medianNs']['fwp-ad-identical'] = elapsed
+            for label in ('fwp-ad', 'fwp-ad-history'):
+                row['medianNs'][label] = elapsed
+                old = row['fwpProfiles'][label + '-reference']['managed']
+                old.update(requests=requests + 100, requestedBytes=byte_count + 1000, retains=retains + 10)
+                row['fwpProfiles'][label]['managed'] = dict(old, requests=100, requestedBytes=1000, retains=10)
+                row['binaries'][label]['instructionBytes'] += 10000
+            self.assertEqual(DESCENT.paired_budget_failures({'case': row}, 'gradient-call'), [])
+            for label in ('fwp-ad', 'fwp-ad-history'):
+                for metric in ('requests', 'requestedBytes', 'retains'):
+                    for delta in (-1, 1):
+                        changed = copy.deepcopy(row)
+                        changed['fwpProfiles'][label]['managed'][metric] += delta
+                        self.assertIn(metric, [failure['metric'] for failure in
+                            DESCENT.paired_budget_failures({'case': changed}, 'gradient-call')])
+                for metric in ('peakChargedBytes', 'finalChargedBytes'):
+                    changed = copy.deepcopy(row)
+                    changed['fwpProfiles'][label]['managed'][metric] += 1
+                    self.assertIn(metric, [failure['metric'] for failure in
+                        DESCENT.paired_budget_failures({'case': changed}, 'gradient-call')])
+                changed = copy.deepcopy(row)
+                changed['medianNs'][label] = 96 if updates >= 199 else 103
+                if label == 'fwp-ad':
+                    changed['medianNs']['fwp-ad-identical'] = changed['medianNs'][label]
+                self.assertEqual([failure['metric'] for failure in
+                    DESCENT.paired_budget_failures({'case': changed}, 'gradient-call')], ['candidate/reference time'])
+                changed = copy.deepcopy(row)
+                changed['cCompilerStackUsage'][label + '.su']['entries'][0]['bytes'] = 193
+                self.assertEqual([failure['metric'] for failure in
+                    DESCENT.paired_budget_failures({'case': changed}, 'gradient-call')], ['largest static stack frame'])
+                changed = copy.deepcopy(row)
+                changed['fwpProfiles'][label]['rawDerivativeStorage']['peakBytes'] = 999999
+                self.assertIn('rawDerivativeStorage', [failure['metric'] for failure in
+                    DESCENT.paired_budget_failures({'case': changed}, 'gradient-call')])
+            changed = copy.deepcopy(row)
+            changed['medianNs']['fwp-ad-identical'] = elapsed * 1.03
+            self.assertEqual([failure['metric'] for failure in
+                DESCENT.paired_budget_failures({'case': changed}, 'gradient-call')], ['identical median variation'])
+
     def test_consumed_storage_keeps_first_shared_coordinates_and_every_limit(self):
         # Frozen per-solve predictions: first coordinates are shared; later
         # exclusive cells and every fresh gradient-map buffer can be reused.

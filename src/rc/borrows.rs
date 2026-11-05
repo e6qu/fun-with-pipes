@@ -259,8 +259,12 @@ fn continuing_owners(prog: &Program, live: &[bool]) -> Vec<Vec<bool>> {
     // source caller also keeps that owner beyond the entire scope.
     for (id, f) in prog.funcs.iter().enumerate().filter(|(id, _)| live[*id]) {
         if let Body::DirectAdScope { callback } = f.body {
-            for j in 0..f.arity as usize {
-                kept[callback][j] &= kept[id][j];
+            let [scope, worker] = kept
+                .get_disjoint_mut([id, callback])
+                .expect("direct scope and worker have distinct entries");
+            assert_eq!(scope.len(), worker.len());
+            for (parameter, caller_keeps) in worker.iter_mut().zip(scope.iter()) {
+                *parameter &= *caller_keeps;
             }
         }
     }
