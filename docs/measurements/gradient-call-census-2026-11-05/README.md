@@ -1,7 +1,8 @@
 # Gradient-call allocation results
 
-**Both architectures pass corrected local audits. Report-only CI is next.**
-Timing has not run; these results establish allocation and reference-count
+**Both architectures pass corrected local and CI audits.**
+[Runtime results](../gradient-call-time-2026-11-05/README.md) are audited;
+these results establish allocation and reference-count
 savings, not elapsed time or whole-process memory savings.
 
 [Run 41964853201](https://github.com/e6qu/fun-with-pipes/actions/runs/41964853201)
@@ -15,6 +16,8 @@ consumed coordinate scratch. Earlier optimizations stay enabled on both sides.
 ## Work and observed savings
 
 Each program repeatedly computes a derivative and updates a coordinate list.
+Heap requests below count runtime-owned value storage; raw derivative buffers
+are tracked separately. Neither count includes every allocation made by system libraries.
 Six inputs cover 3, 33 and 129 coordinates, with zero, one, 199 or 1,999 updates.
 Both final-result and history forms run with derivative workspace reuse off/on.
 Fresh solves additionally run at GCC O1 and O2. The repeated driver uses GCC O2.
@@ -36,6 +39,25 @@ For positive updates U and coordinates N, a fresh solve saves 7U+1 requests,
 Zero-update observations remain identical. All final managed/raw bytes are zero;
 raw derivative storage is unchanged (33,904 peak bytes in the largest repeated
 case). Requested bytes describe allocator traffic, not simultaneous live memory.
+
+## Remaining storage
+
+For U updates and N coordinates, the candidate still makes:
+
+| Phase | Requests | Requested bytes |
+|---|---:|---:|
+| Forward recording | 2U | 32NU |
+| Gradient result array | U | (8N+8)U |
+
+[Checked counts](remaining-allocations.json.gz) match every fresh input, both forms,
+O1/O2 and workspace settings on both architectures. For 129/199, recording
+requests 821,472 bytes and result arrays 206,960 bytes; input construction/output
+accounts for the other 5,934 bytes. These are allocation traffic, not elapsed time.
+
+The next storage investigation should map those two recording requests to their
+producer/consumer lifetimes before choosing a transformation. Preserve evaluation
+order, aliases and failure cleanup. Separately examine the zero-update source
+and driver; these positive-update counts cannot explain its timing regression.
 
 ## Failure and correction
 
@@ -71,7 +93,9 @@ No native program or timing was rerun to obtain a passing result.
   code trees, downloads the original artifacts, and runs
   `scripts/audit-gradient-call-census.py`. It does not build benchmark programs.
 
-The original run remains failed in GitHub. The separate report-only run will
-establish whether the repaired checker accepts its retained evidence in CI.
-Compiler-cost and runtime comparisons follow that audit, before final production
-checks and merge. Older missed speed goals stay open in [PLAN.md](../../../PLAN.md).
+The original run remains failed in GitHub. The [separate report-only run](https://github.com/e6qu/fun-with-pipes/actions/runs/41967470333)
+passes on both architectures. Its [receipt](report-ci/audit.json) and complete log
+record no unexpected diagnostics.
+[Compiler-cost checks](../gradient-call-analysis-2026-11-05/README.md) now pass.
+[Runtime comparisons](../gradient-call-time-2026-11-05/README.md) are audited,
+with 17 missed timing limits retained before final production checks and merge. Older missed speed goals stay open in [PLAN.md](../../../PLAN.md).

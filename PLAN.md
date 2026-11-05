@@ -22,11 +22,11 @@ The next group removes temporary storage around the gradient calculation:
 | 5 | Verify and deliver the complete group | Selection and failure controls on three focused hosts, exact counts, compiler/runtime measurements, then nine exact-head production jobs plus docs and audited squash merge. |
 
 The [contract](docs/measurements/gradient-call-storage.md) fixes the proof and
-measurement boundaries before implementation. [Current allocation sites](docs/measurements/gradient-storage-2026-11-05/README.md)
+measurement boundaries before implementation. [Baseline allocation sites](docs/measurements/gradient-storage-2026-11-05/README.md)
 show eight forward requests per update, one scratch request and two retains.
 The four changes target seven fewer requests and two fewer retains per update,
-plus one cached record per process. [Local audits of runner observations](docs/measurements/gradient-call-census-2026-11-05/README.md)
-confirm these savings on both architectures; report-only CI is next.
+plus one cached record per process. [Audits of runner observations](docs/measurements/gradient-call-census-2026-11-05/README.md)
+confirm these savings on both architectures, locally and in report-only CI.
 For one fresh 129-coordinate / 199-update solve, the observed count is 2,121 → 727 requests
 and 1,265,230 → 1,034,366 requested bytes. This does not predict speed or process RAM.
 
@@ -46,7 +46,8 @@ history can be optimized away). Copy controls compare identical executable bytes
 
 | Goal and evidence | What remains; next action |
 |---|---|
-| [Consumed numeric storage](docs/measurements/owned-numeric-time-2026-11-05/README.md) | Four AMD64 5% targets remain open: session 1 3/199 current; session 2 3/199 current/history and 3/1999 current. Observed gains are 3.36–4.76%; copy controls pass. Use the [current allocation-site report](docs/measurements/gradient-storage-2026-11-05/README.md) to freeze one grouped proof for scoped input borrowing, fold fields, single-root seeding and coordinate scratch. Eight forward requests per update and two retains are measured; the grouped implementation passes focused checks and local count audits; compiler/runtime measurements and production gates remain. |
+| [Gradient-call storage](docs/measurements/gradient-call-time-2026-11-05/README.md) | Sixteen 33/199 and 129/199 results miss 5%; AMD64 session 2 3/0 current is 2.1822% slower, beyond 2%. All copy controls pass. Three-coordinate long solves improve 14.3–25.2%. After final delivery, map the [two remaining recording allocations](docs/measurements/gradient-call-census-2026-11-05/README.md#remaining-storage) to their producer/consumer lifetimes (2U requests, 32NU bytes), and separately review the zero-update source/driver path before declaring a new experiment. These are next investigations, not established causes. |
+| [Consumed numeric storage](docs/measurements/owned-numeric-time-2026-11-05/README.md) | Four AMD64 5% targets remain open: session 1 3/199 current; session 2 3/199 current/history and 3/1999 current. Observed gains are 3.36–4.76%; copy controls pass. The [gradient-call group](docs/measurements/gradient-call-storage.md) passes focused checks and allocation audits. Compiler/runtime results are audited; finish its production gates; a new comparison does not settle these earlier misses. |
 | [Packed derivative inputs](docs/measurements/packed-input-time-2026-11-04/README.md) | AMD64 session 1 copy variation is 2.3628% / 2.7833% on 3/199 and 3/1999; session 2 slows 3/1 current by 2.3095%, against 2% limits. [Saved samples](docs/measurements/packed-input-time-2026-11-04/amd64-sample-review.md) establish no cause. Consumed-storage delivery is verified; retain these separate misses. |
 | [Final-iteration compiler cost](docs/measurements/final-iteration-analysis-2026-11-04/README.md) | AMD64 field-owner transfer copy variation is 2.043% against 2%; other observed limits pass. Inspect retained sample/setup progression before proposing a new measurement. |
 | [Final-iteration runtime](docs/measurements/final-iteration-time-2026-11-04/README.md) | Five history cases miss 5%: ARM64 3/199 and 33/199 in both sessions, plus AMD64 session 1 33/199. AMD64 session 2 slows 3/1 history by 2.79%. Compare small-case source and saved sample progression before selecting a repair. |

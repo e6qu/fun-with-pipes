@@ -1,6 +1,6 @@
 # Gradient-call verification
 
-**Focused checks pass; measurements and final production gates remain.** [PR #259](https://github.com/e6qu/fun-with-pipes/pull/259)
+**Focused checks and measurement audits pass; timing goals stay open and final production gates remain.** [PR #259](https://github.com/e6qu/fun-with-pipes/pull/259)
 groups scoped input borrowing, numeric fold fields, direct backward seeds and
 consumed coordinate scratch. The [contract](../gradient-call-storage.md) fixes
 selection rules, failure controls and measurement requirements.
@@ -90,5 +90,7 @@ also passes; its full log contains only expected negative controls.
 This source is frozen as `roadmap/gradient-call-storage-measurements-2026-11-05`.
 [Allocation census 41964853201](https://github.com/e6qu/fun-with-pipes/actions/runs/41964853201)
 uses it with this passing correctness run as its explicit prerequisite.
-The [allocation audit](../gradient-call-census-2026-11-05/README.md) passes locally
-after correcting phase-byte attribution; report-only CI is next. Timing has not run.
+The [allocation audit](../gradient-call-census-2026-11-05/README.md) passes locally and in CI
+after correcting phase-byte attribution. [Compiler costs](../gradient-call-analysis-2026-11-05/README.md)
+pass; the [runtime audit](../gradient-call-time-2026-11-05/README.md) preserves
+17 missed timing limits. Final production gates remain.

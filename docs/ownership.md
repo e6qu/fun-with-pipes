@@ -46,28 +46,18 @@ remove a JavaScript host's collector.
 
 ### What remains
 
-- Preserve the independent [ownership diagnostics](ownership-diagnostics.md)
-  and binary checks for absent collector code as storage representations change.
-- Enforce the compiler analysis budgets in G2 as proof precision changes.
-- Preserve [direct recording and weight transfers](measurements/derivative-recording-moves.md)
-  delivered in #238 and #237's [borrowed zero adjoints and moved result owners](measurements/typed-derivative-owners.md).
-- Preserve [private gradient arrays](roadmap-history.md#private-gradient-arrays-pr-252),
-  verified across all native platforms in #252. Public list outputs, enclosing
-  derivative scopes, initialized-slot cleanup and input aliases remain protected.
-  Its [runtime speed targets](measurements/gradient-array-time-2026-11-03/README.md)
-  are still open; allocation savings do not establish faster execution.
-- Verify the [final-iteration group](measurements/final-iteration-storage.md): direct
-  `last`, removal of an unused numeric history, count validation and partial-result
-  cleanup. Three-host focused checks and all four raw measurement audits pass;
-  the largest history solve uses 97.7% less peak managed storage. Six runtime
-  timing limits and one compiler noise control remain open. Full final-head
-  platform verification is still required.
-- Preserve delivered A1–A6 and #236 call/collection reductions, including the
-  [parser workspace's limits](measurements/parser-workspace.md). Broader reductions
-  need a named workload and proof; zero retains does not mean zero allocations
-  or zero count checks on release.
-
-[PLAN.md](../PLAN.md) defines the fixtures and completion evidence.
+- Finish the [gradient-call group](measurements/gradient-call-storage.md): scoped
+  input borrowing, unboxed numeric fold state, direct backward seeds and consumed
+  coordinate scratch. Focused native checks and allocation audits pass;
+  compiler/runtime results are audited, with timing goals open. The final
+  production matrix remains.
+- Preserve delivered ownership guarantees: aliasing, trap/cancellation cleanup,
+  primitive contracts, bounded compiler analysis and checks for absent collector
+  code. [Delivery history](roadmap-history.md) records verified platform coverage.
+- Choose broader count reductions from measured costs and explicit lifetime
+  proofs. Zero retains does not mean zero allocations or zero count checks on
+  release. [PLAN.md](../PLAN.md) keeps missed timing goals separate from verified
+  storage reductions, including the delivered final-iteration work in #255.
 
 ## Stable language behavior
 
@@ -128,6 +118,14 @@ Generic entries may still take boxed tuples and counted arguments even when a
 specialized direct entry avoids them. See [direct-call borrowing](measurements/channel-direct-borrows.md),
 [local borrowing](measurements/channel-local-borrows.md), and
 [array captures](measurements/array-capture-borrows.md).
+
+The gradient-call implementation extends this to a known `ad.scope` callback
+returning an array. For example, a derivative can read coordinates while its
+caller retains them for the subsequent update. Every live caller must keep the
+same input owner; stored/returned inputs, dynamic entries and resource regions
+are excluded. The dedicated direct entry borrows; ordinary function-value and
+exported entries keep their owned calling convention. [Focused checks](measurements/gradient-call-checks-2026-11-05/README.md#passing-focused-matrix)
+cover this boundary and failure cleanup; final production verification remains.
 
 ### Cached numeric map reads
 

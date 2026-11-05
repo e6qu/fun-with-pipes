@@ -1,6 +1,6 @@
 # Remove temporary storage around gradient calls
 
-**Focused native checks and local allocation audits pass; report-only CI and performance measurements remain.**
+**Focused native checks, allocation and compiler-cost audits pass. Runtime results retain 17 missed timing limits; final production gates remain.**
 This contract precedes code;
 its immutable tag is `roadmap/gradient-call-storage-protocol-2026-11-05`.
 Starting source: verified squash `68115090b161f198e11fb625946259f65f781580`.
@@ -172,7 +172,8 @@ explicit `comparison_session=both` and the six repeated-solve inputs above;
 saved binaries. The manual C/Rust programs perform the same solve with manual
 derivatives and different storage; ratios against them do not isolate ARC or
 language overhead. [Allocation results](gradient-call-census-2026-11-05/README.md)
-pass corrected local audits; compiler/runtime timing has not run.
+pass corrected local and CI audits. [Compiler costs](gradient-call-analysis-2026-11-05/README.md)
+pass; [runtime results](gradient-call-time-2026-11-05/README.md) retain 17 timing misses.
 
 
 Measurement source: `8c0e4b0ef06aa9f528eeaedbfbab9461a82dd0d7`, tag

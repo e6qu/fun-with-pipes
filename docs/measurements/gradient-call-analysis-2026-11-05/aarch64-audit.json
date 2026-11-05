@@ -1,0 +1,177 @@
+{
+  "source": "d494dd910723303f99992610895d9784968c79e8",
+  "run": 41967900961,
+  "job": {
+    "id": 127049078568,
+    "run_id": 41967900961,
+    "workflow_name": "Numerical and ownership evidence",
+    "head_branch": "roadmap/gradient-call-timing-2026-11-05",
+    "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/41967900961",
+    "run_attempt": 1,
+    "node_id": "CR_kwDOU33zxM8AAAAdlLcXKA",
+    "head_sha": "d494dd910723303f99992610895d9784968c79e8",
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/127049078568",
+    "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41967900961/job/127049078568",
+    "status": "completed",
+    "conclusion": "success",
+    "created_at": "2026-11-05T04:27:17Z",
+    "started_at": "2026-11-05T04:29:44Z",
+    "completed_at": "2026-11-05T04:35:49Z",
+    "name": "numeric_input_analysis (ubuntu-24.04-arm)",
+    "steps": [
+      {
+        "name": "Set up job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 1,
+        "started_at": "2026-11-05T04:29:44Z",
+        "completed_at": "2026-11-05T04:29:45Z"
+      },
+      {
+        "name": "Run actions/checkout@v7",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 2,
+        "started_at": "2026-11-05T04:29:45Z",
+        "completed_at": "2026-11-05T04:29:58Z"
+      },
+      {
+        "name": "Run dtolnay/rust-toolchain@stable",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 3,
+        "started_at": "2026-11-05T04:29:58Z",
+        "completed_at": "2026-11-05T04:30:05Z"
+      },
+      {
+        "name": "Verify focused correctness and matching compiler sources",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 4,
+        "started_at": "2026-11-05T04:30:05Z",
+        "completed_at": "2026-11-05T04:30:09Z"
+      },
+      {
+        "name": "Run actions/cache@v6",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 5,
+        "started_at": "2026-11-05T04:30:09Z",
+        "completed_at": "2026-11-05T04:30:09Z"
+      },
+      {
+        "name": "Build candidate at production settings",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 6,
+        "started_at": "2026-11-05T04:30:09Z",
+        "completed_at": "2026-11-05T04:31:39Z"
+      },
+      {
+        "name": "Build and verify the selected same-source reference",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 7,
+        "started_at": "2026-11-05T04:31:39Z",
+        "completed_at": "2026-11-05T04:33:11Z"
+      },
+      {
+        "name": "Verify complete solve allocations before any timing",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 8,
+        "started_at": "2026-11-05T04:33:11Z",
+        "completed_at": "2026-11-05T04:33:11Z"
+      },
+      {
+        "name": "Attribute fresh-solve reference allocations to phases and source sites",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 9,
+        "started_at": "2026-11-05T04:33:11Z",
+        "completed_at": "2026-11-05T04:33:11Z"
+      },
+      {
+        "name": "Verify fresh-solve savings and their exact phase attribution",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 10,
+        "started_at": "2026-11-05T04:33:11Z",
+        "completed_at": "2026-11-05T04:33:11Z"
+      },
+      {
+        "name": "Measure balanced compiler commands and peak memory",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 11,
+        "started_at": "2026-11-05T04:33:11Z",
+        "completed_at": "2026-11-05T04:35:36Z"
+      },
+      {
+        "name": "Preserve complete measurements and failures",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 12,
+        "started_at": "2026-11-05T04:35:36Z",
+        "completed_at": "2026-11-05T04:35:47Z"
+      },
+      {
+        "name": "Post Run actions/cache@v6",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 23,
+        "started_at": "2026-11-05T04:35:47Z",
+        "completed_at": "2026-11-05T04:35:47Z"
+      },
+      {
+        "name": "Post Run actions/checkout@v7",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 24,
+        "started_at": "2026-11-05T04:35:47Z",
+        "completed_at": "2026-11-05T04:35:48Z"
+      },
+      {
+        "name": "Complete job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 25,
+        "started_at": "2026-11-05T04:35:48Z",
+        "completed_at": "2026-11-05T04:35:48Z"
+      }
+    ],
+    "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/127049078568",
+    "labels": [
+      "ubuntu-24.04-arm"
+    ],
+    "runner_id": 1000409216,
+    "runner_name": "GitHub Actions 1000409216",
+    "runner_group_id": 0,
+    "runner_group_name": "GitHub Actions"
+  },
+  "artifact": {
+    "id": 13388159220,
+    "node_id": "MDg6QXJ0aWZhY3QxMzM4ODE1OTIyMA==",
+    "name": "gradient-call-analysis-ARM64",
+    "size_in_bytes": 128641831,
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13388159220",
+    "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13388159220/zip",
+    "expired": false,
+    "digest": "sha256:9873faf4ec50c4b9e3fb798445aa36efe48430c4c9e4a270952b62910382e146",
+    "created_at": "2026-11-05T04:35:47Z",
+    "updated_at": "2026-11-05T04:35:47Z",
+    "expires_at": "2027-02-03T04:27:16Z",
+    "workflow_run": {
+      "id": 41967900961,
+      "repository_id": 1400763332,
+      "head_repository_id": 1400763332,
+      "head_branch": "roadmap/gradient-call-timing-2026-11-05",
+      "head_sha": "d494dd910723303f99992610895d9784968c79e8"
+    }
+  },
+  "commands": 336,
+  "untimedChecks": 6,
+  "failures": {},
+  "referenceVerified": true,
+  "expectedDiagnostics": []
+}

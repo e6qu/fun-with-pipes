@@ -295,7 +295,8 @@ private direct entry for known `ad.scope` callbacks returning arrays. It keeps
 read-only list inputs borrowed only when every caller retains the input beyond
 the scope. Ordinary exported/function-value entries still own their arguments.
 Focused native checks cover trap/cancellation cleanup on Linux ARM64/AMD64 and
-macOS ARM64. The complete production matrix and performance checks remain.
+macOS ARM64. Allocation and compiler-cost audits pass; runtime results retain timing misses.
+The complete production matrix remains.
 
 Channel borrowing preserves hidden native contexts as well as payload storage.
 It does not prove the queued graph acyclic: capture/cycle checks remain separate.
