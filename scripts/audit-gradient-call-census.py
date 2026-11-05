@@ -18,6 +18,11 @@ SPEC = importlib.util.spec_from_file_location(
 )
 CENSUS = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(CENSUS)
+STACK_SPEC = importlib.util.spec_from_file_location(
+    "pair_stack", Path("scripts/check-packed-pair-stack.py")
+)
+STACK = importlib.util.module_from_spec(STACK_SPEC)
+STACK_SPEC.loader.exec_module(STACK)
 parser = argparse.ArgumentParser(
     description="Audit frozen gradient counts and retain observations without executing saved images."
 )
@@ -126,6 +131,24 @@ with zipfile.ZipFile(args.input) as z:
         "FWP_STACK": "1",
         "FWP_ARRAY_FUSION": "1",
     }
+    stack = None
+    # Historical protocols predate this gate. The recorded source determines
+    # whether it is mandatory; a missing report never selects the old protocol.
+    stack_required = args.comparison == "packed-pair" and (
+        args.recorded_checkout / "scripts/check-packed-pair-stack.py"
+    ).is_file()
+    if stack_required:
+        step, = [row for row in job["steps"] if row["name"] ==
+                 "Check complete-program stack costs before allocation and timing gates"]
+        assert step["conclusion"] == "success"
+        stack = STACK.audit(
+            {name.removeprefix("pair-stack/"): z.read(name) for name in z.namelist()
+             if name.startswith("pair-stack/") and not name.endswith("/")},
+            SOURCE, machine, dict(candidate=report["compilerSha256"],
+                                  reference=report["referenceManifest"]["compilerSha256"]),
+        )
+    else:
+        assert not any(name.startswith("pair-stack/") for name in z.namelist())
     assert len(report["commands"]) == 99 and all(
         c["returncode"] == 0 for c in report["commands"]
     )
@@ -384,6 +407,7 @@ with zipfile.ZipFile(args.input) as z:
         nativeImages=24,
         verifiedExecutions=48,
         cases=summaries,
+        completeProgramStack=stack,
     )
     (ROOT / f"{host}-verified.json").write_text(json.dumps(receipt, indent=2) + "\n")
     print(

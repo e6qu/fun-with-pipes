@@ -68,7 +68,7 @@ jobs:
           git rev-parse HEAD > storage-measurement-controls/source.txt
           set -o pipefail
           status=0
-          for script in test-packed-pair-reference test-owned-numeric-census test-gradient-array-budgets test-numeric-input-analysis test-descent-budgets test-array-list-evidence test-retain-derivative-evidence test-production-log-audit; do
+          for script in test-packed-pair-reference test-packed-pair-stack test-owned-numeric-census test-gradient-array-budgets test-numeric-input-analysis test-descent-budgets test-array-list-evidence test-retain-derivative-evidence test-production-log-audit; do
             python3 "scripts/$script.py" 2>&1 | tee "storage-measurement-controls/$script.log" || status=1
           done
           exit "$status"
@@ -200,6 +200,7 @@ jobs:
           CENSUS_COMPARISON: ${{ inputs.suite == 'packed-pair-census-report' && 'packed-pair' || 'gradient-call' }}
         run: |
           python3 scripts/test-gradient-array-budgets.py
+          python3 scripts/test-packed-pair-stack.py
           python3 - <<'PYCODE'
           import gzip
           import json

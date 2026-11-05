@@ -1,9 +1,11 @@
 # Current work
 
-**Next:** audit corrected focused run `42013253058` and run the repaired census
-against that evidence. All three hosts pass at ecdf2476. The census checks actual
-complete-program stack frames before allocation counts; no new timing until
-stack/count checks and the full focused audit pass.
+**Next:** audit completed census `42015900941` (including every saved stack
+report), then complete compiler costs `42017186500` before new runtime timing.
+Both use frozen source `373955e82a74d8de2eb12ff2b81f6cc74c089e5e`, tag
+`roadmap/packed-pair-cleanup-census-2026-11-05`. Both census hosts pass; the
+previously failing AMD64 33/199 current frame is now 720 bytes, equal to reference
+(previously 928, allowed 848). All three focused hosts and full audit pass.
 
 ## Roadmap status
 
@@ -14,7 +16,7 @@ stack/count checks and the full focused audit pass.
 | 1 | Verified | The unchanged private helper consumes input; borrowing/escape contracts agree. |
 | 2 | Verified | Reuse with one protected owner; keep two owners only when allocating output. |
 | 3 | Verified | Aliases, both layouts, bits, traps/cancellation and physical frees pass on three hosts. |
-| 4 | In progress | Original counts/compiler limits pass; repair the observed stack excess before new timing. |
+| 4 | In progress | Repair stack/count checks pass on both architectures; audit saved data and complete compiler costs before timing. |
 | 5 | Pending | Retain evidence, pass nine final production jobs plus docs, audit and squash merge. |
 
 ## Branch and source identities
@@ -23,8 +25,9 @@ stack/count checks and the full focused audit pass.
   `.worktrees/packed-pair-storage`, branch `packed-pair-storage`.
 - Compiler repair `14707729042f3202527998296ec8c5f196615cb0`. It changes
   `src/cgen.rs`, the selection/native controls and a stack preflight in the census.
-  Current published head ecdf2476 fixes only its pointer observation/formatting
-  plus documentation. Failed-run artifact audit `42013195562` accounted for all 25 targets, 775 images
+  Observer repair ecdf2476 passes focused checks. Current published head 373955e8
+  adds audit receipts, explicit dynamic-memory stack commands and documentation;
+  compiler/runtime/library/native-test sources match ecdf2476. Failed-run artifact audit `42013195562` accounted for all 25 targets, 775 images
   and 791 probes per host; only the recorded failures were found.
 - [Repair protocol](measurements/packed-pair-cleanup-repair.md) was committed before
   code at `54a3ae468d3751d3d2ac2972777dc054da905d9d`. No thresholds changed.
@@ -49,7 +52,10 @@ These results do not verify the changed cleanup implementation.
 | [Original compiler costs](measurements/packed-pair-analysis-2026-11-05/README.md) | a1f18947, run 42005106056; both pass. Full audit 42008507459 passes. |
 | [Original runtime](measurements/packed-pair-time-2026-11-05/README.md) | a1f18947, run 42005111118; three sessions, 23 speed misses and one AMD64 stack failure. Full retained-data audit 42009905049 passes. |
 | Repaired native checks | ecdf2476, run 42013253058; all 25 targets and controls pass per host after the observer/formatting repair. |
-| Repaired docs | ecdf2476 docs 42013258857 pass; earlier repair docs 42012233154 pass. |
+| Repaired full audit | 42015894951 passes: 25 targets, 822 images and 838 probes per host. |
+| Repaired stack/counts | 373955e8, run 42015900941; both pass. Saved-data audit is next. |
+| Repaired compiler costs | 373955e8, run 42017186500; in progress. |
+| Repaired docs | 373955e8 docs 42015897792 pass; ecdf2476 docs 42013258857 pass. |
 
 Fresh 129/199 original results: 727 -> 528 requests and 1,034,366 -> 625,222
 requested bytes; peak managed storage 9,248 -> 7,200 bytes. Retains/raw derivative
@@ -58,7 +64,8 @@ committed. Large generated archives remain in their digest-identified artifacts.
 
 The first reuse implementation protected one allocation twice, then cleared one
 owner. The repair keeps the original owner through mapping and returns it directly.
-Actual stack savings still need verification. The new preflight compiles the same
+All 12 AMD64 frame maxima now equal their allocating references. Both
+architecture stack gates pass; the saved-report audit must verify them independently. The new preflight compiles the same
 six complete workloads, both forms and both compilers at GCC O2; it records all
 frame-limit failures before allocation or timing work. Source/C/images/output and
 stack reports remain in `pair-stack/` inside the census artifact.
@@ -68,7 +75,7 @@ AMD64 session 2 never measured: original run and replacements 42008084704,
 host is EPYC 7763. All host reports/logs are retained in the runtime evidence;
 stop requesting the old candidate. Never repeat unchanged timing for a pass.
 
-## Documentation repair in progress
+## Documentation repair verified
 
 Docs 42011765327 rejected nonstandard status labels in the handoff. Both offending
 rows now use the existing vocabulary (Verified/In progress); their explanations

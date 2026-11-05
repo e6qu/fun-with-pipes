@@ -33,6 +33,8 @@ pass before new stack/census work; original failed checks are not discarded.
 passes all three hosts at `ecdf2476b3095d31c7a5a88867cbc1ddcc45b3e4`.
 Formatting/all-target lint, compiler units, primitive contracts, source selection
 and all 25 native targets pass, including the corrected pointer observation.
-Documentation 42013258857 passes. Full artifact audit and complete-program
-stack/allocation checks are next; native correctness alone does not establish
-that the stack-growth failure is repaired.
+Documentation 42013258857 passes. [Full artifact audit 42015894951](https://github.com/e6qu/fun-with-pipes/actions/runs/42015894951)
+verifies all 25 targets, 822 native images and 838 probe records per host, with
+no unexpected diagnostics. [Receipt](corrected-artifact-audit.json) and adjacent
+compressed full log retain the result. Complete-program stack/allocation run
+42015900941 also passes both architectures; its saved-data audit is next.

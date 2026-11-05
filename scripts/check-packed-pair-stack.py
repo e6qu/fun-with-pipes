@@ -18,6 +18,71 @@ CASES = ((3, 0, 32768), (3, 1, 512), (3, 199, 32), (3, 1999, 4),
          (33, 199, 32), (129, 199, 8))
 
 
+def audit(files, source, machine, compiler_hashes):
+    """Recompute saved frame limits and verify every command without executing images."""
+    report = json.loads(files['report.json'])
+    assert report['source'] == source and report['machine'] == machine
+    assert report['complete'] and report['failures'] == []
+    assert report['compilerHashes'] == compiler_hashes
+    assert report['environment'] == dict(FWP_LTO='0', FWP_AD_WORKSPACE='1', FWP_VRET='1',
+                                       FWP_FRAME_FIELDS='1', FWP_PACKED_ARRAYS='1',
+                                       FWP_STACK='1', FWP_ARRAY_FUSION='1')
+    assert set(report['files']) == set(files) - {'report.json'}
+    for name, checksum in report['files'].items():
+        assert hashlib.sha256(files[name]).hexdigest() == checksum, name
+    names = {f'{n}-{u}-{form}' for n, u, _ in CASES for form in ('current', 'history')}
+    assert set(report['cases']) == names
+    commands = {row['label']: row for row in report['commands']}
+    labels = {name + '-' + kind + '-' + stage for name in names
+              for kind in ('candidate', 'reference') for stage in ('emit', 'compile', 'run')}
+    assert len(commands) == len(report['commands']) == 72 and set(commands) == labels
+    flags = ['-O2', '-std=gnu11', '-fno-fast-math', '-ffp-contract=off',
+             '-UFWP_NO_REUSE', '-fstack-usage',
+             '-march=' + {'aarch64': 'armv8-a', 'x86_64': 'x86-64'}[machine]]
+    elf = {'aarch64': 183, 'x86_64': 62}[machine]
+    summaries = {}
+    for n, u, solves in CASES:
+        for form in ('current', 'history'):
+            name = f'{n}-{u}-{form}'
+            assert files[name + '.fwp'].decode() == PEERS.BASELINE.repeat_source(
+                PEERS.AD.program(n, u + 1, form == 'history'), 'fwp', solves)
+            maxima = {}
+            for kind in ('candidate', 'reference'):
+                label = name + '-' + kind
+                emit = commands[label + '-emit']['command']
+                root = Path(emit[-1]).parent
+                code, binary = str(root / (label + '.c')), str(root / label)
+                assert Path(emit[0]).name == 'fwp'
+                assert emit[1:] == ['build', '--memory', 'dynamic', '--emit-c', '-O2',
+                                    str(root / (name + '.fwp')), '-o', code]
+                assert commands[label + '-compile']['command'] == [
+                    'gcc', *flags, '-w', code, '-o', binary, '-lm', '-lpthread', '-ldl']
+                assert commands[label + '-run']['command'] == [binary]
+                for stage in ('emit', 'compile', 'run'):
+                    command = commands[label + '-' + stage]
+                    assert set(command) == {'command', 'label', 'status'} and command['status'] == 0
+                    assert not files[label + '-' + stage + '.stderr']
+                    if stage != 'run':
+                        assert not files[label + '-' + stage + '.stdout']
+                assert files[label + '.c']
+                image = files[label]
+                assert image[:6] == b'\x7fELF\x02\x01' and int.from_bytes(image[18:20], 'little') == elf
+                PEERS.verify(files[label + '-run.stdout'], PEERS.AD.analytic(n, u + 1), solves)
+                entries = []
+                for line in files[label + '.su'].decode().splitlines():
+                    location, size, qualifier = line.split('\t')
+                    assert int(size) >= 0 and qualifier in ('static', 'dynamic,bounded'), line
+                    entries.append(dict(location=location, bytes=int(size), qualifier=qualifier))
+                assert entries
+                maximum = max(row['bytes'] for row in entries)
+                assert report['cases'][name][kind] == dict(maximumBytes=maximum, entries=entries)
+                maxima[kind] = maximum
+            assert files[name + '-candidate-run.stdout'] == files[name + '-reference-run.stdout']
+            assert maxima['candidate'] <= maxima['reference'] + 128, (name, maxima)
+            summaries[name] = maxima
+    return summaries
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--compiler', type=Path, required=True)
