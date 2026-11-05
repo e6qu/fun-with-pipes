@@ -49,4 +49,5 @@ full logs, reports and observations. Compiler binaries remain in the original
 artifacts identified by each receipt.
 
 [Allocation and stack checks](../scalar-constant-census-2026-11-05/README.md)
-also pass. Runtime measurements and final production delivery remain pending.
+also pass. [Runtime measurements](../scalar-constant-time-2026-11-05/README.md)
+retain 27 missed speed targets; final production delivery remains pending.

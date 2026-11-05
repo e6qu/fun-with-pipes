@@ -12,7 +12,7 @@ Private pair-buffer reuse reduces allocation; its 34 timing misses remain open
 below. The current group targets proved scalar constants without changing
 allocation or derivative work.
 
-The next group replaces proved immediate scalar values and aliases with exact
+The implemented group replaces proved immediate scalar values and aliases with exact
 bits, avoiding lazy-cache reads. For example, `one` specialized to F64 is exactly
 `1.0f64`; it does not need a mutable first-use flag. Arbitrary zero-argument
 functions still may allocate, trap or perform effects and keep their behavior.
@@ -32,6 +32,12 @@ C/Rust peers still use handwritten derivatives, so their whole-program compariso
 cannot isolate language or ARC overhead. Keep all previous missed timing goals.
 [The handoff](docs/development-state.md) records actual checks and the next action.
 
+Focused native checks, the [allocation/stack audit](docs/measurements/scalar-constant-census-2026-11-05/README.md)
+and [compiler-cost audit](docs/measurements/scalar-constant-analysis-2026-11-05/README.md)
+pass. [Four runtime sessions](docs/measurements/scalar-constant-time-2026-11-05/README.md)
+retain 27 missed speed targets; all other measured limits pass. Complete final
+production verification and delivery remain.
+
 ## Open performance goals
 
 Allocation reductions do not establish a speedup or lower process RAM. Preserve
@@ -44,6 +50,7 @@ history can be optimized away). Copy controls compare identical executable bytes
 
 | Goal and evidence | What remains; next action |
 |---|---|
+| [Exact scalar constants](docs/measurements/scalar-constant-time-2026-11-05/README.md) | 27 of 32 long-case 5% targets remain open: all 16 ARM64 results; both AMD64 sessions' 3/199 and 3/1999 forms; AMD1 history 33/199 and 129/199; AMD2 history 33/199. Gains are 1.7–6.3%; small-case, copy, storage, stack and compiler limits pass. Inspect objective arithmetic/recording source and saved phase/work counts before selecting another transformation. Keep these original samples; do not rerun unchanged timings. |
 | [Private pair reuse](docs/measurements/packed-pair-cleanup-time-2026-11-05/README.md) | The cleanup repair fixes the observed stack excess; all 32 long-case 5% targets remain unmet. AMD64 session 1 one-update current is 2.8315% slower; session 2 zero-update current is 2.2158% slower. Copy controls pass. Diagnose objective evaluation/recording work (73–75% of recorded phase time in the largest diagnostic case) before selecting another speed change. Remaining buffer sizes/lifetime constraints are [explicit](docs/measurements/packed-pair-cleanup-census-2026-11-05/README.md#remaining-storage-and-its-constraints). The first implementation's 23 timing misses remain separately recorded. |
 | [Gradient-call storage](docs/measurements/gradient-call-time-2026-11-05/README.md) | Sixteen 33/199 and 129/199 results miss 5%; AMD64 session 2 3/0 current is 2.1822% slower, beyond 2%. All copy controls pass. Three-coordinate long solves improve 14.3–25.2%. The current pair-buffer group addresses one of the [two remaining recording allocations](docs/measurements/gradient-call-census-2026-11-05/README.md#remaining-storage) identified by producer/consumer lifetimes (together 2U requests, 32NU bytes). Separately review the zero-update source/driver path before declaring a new experiment. These are next investigations, not established causes. |
 | [Consumed numeric storage](docs/measurements/owned-numeric-time-2026-11-05/README.md) | Four AMD64 5% targets remain open: session 1 3/199 current; session 2 3/199 current/history and 3/1999 current. Observed gains are 3.36–4.76%; copy controls pass. The [gradient-call group](docs/measurements/gradient-call-storage.md) passes focused checks and allocation audits. Compiler/runtime results and final production delivery are verified; a new comparison does not settle these earlier misses. |

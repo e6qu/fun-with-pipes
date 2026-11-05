@@ -22,9 +22,23 @@ REPEATED = json.loads(gzip.decompress((ROOT / 'docs/measurements/descent-repeate
 RECORDING_ARCHIVE = ROOT / 'docs/measurements/descent-recording-artifacts-2026-10-29.json'
 CAPTURE_ARCHIVE = ROOT / 'docs/measurements/eager-captures-artifacts-2026-10-29.json'
 RECHECK_ARCHIVE = ROOT / 'docs/measurements/eager-captures-recheck-artifacts-2026-10-29.json'
+SCALAR_ARCHIVE = ROOT / 'docs/measurements/scalar-constant-time-2026-11-05/sessions.json'
 
 
 class Evidence(unittest.TestCase):
+    def test_scalar_constants_check_all_sessions_and_the_last_reference(self):
+        CHECK.check_archive(SCALAR_ARCHIVE, 'scalar-constant')
+        with tempfile.TemporaryDirectory() as directory:
+            archive = json.loads(SCALAR_ARCHIVE.read_text())
+            for session in archive['sessions'].values():
+                for kind in ('report', 'log'):
+                    session[kind] = str(SCALAR_ARCHIVE.parent / session[kind])
+            archive['sessions']['amd-2']['referenceFiles']['source/src/cgen.rs']['sha256'] = 'changed'
+            path = Path(directory) / 'index.json'
+            path.write_text(json.dumps(archive))
+            with self.assertRaises(AssertionError):
+                CHECK.check_archive(path, 'scalar-constant')
+
     def test_capture_recheck_retains_its_failed_timing_rule(self):
         CHECK.check_archive(RECHECK_ARCHIVE, 'eager-captures')
         for change in ['decision', 'failure']:

@@ -15,7 +15,7 @@ identical candidate copy. It rejects unknown names. Focused controls cover all
 names and malformed names; the scalar reference-edit controls also pass.
 
 No compiler, measurement source, sample, count or acceptance limit changes.
-Re-audit both original runtime runs with the corrected checker; do not repeat
-timings. The [compact failure summary](summary.zip), [full log](job.log.gz) and
+Both original runs were [re-audited successfully](../../scalar-constant-time-2026-11-05/README.md)
+with the corrected checker; timings were not repeated. The [compact failure summary](summary.zip), [full log](job.log.gz) and
 [artifact identities](artifacts.json) retain all three errors and the separately
 rejected AMD64 host. The summary archive digest was verified before inspection.

@@ -28,4 +28,5 @@ callers use the repaired observer. No timing samples were collected or discarded
 [original artifact identities](artifacts.json) are retained. The original AMD64
 archive SHA-256 was verified before extracting the source. All completed steps
 and compiler diagnostics were reviewed; both jobs fail on the same missing
-reachability edge. The repaired census must still pass and be fully audited.
+reachability edge. The repaired [census and complete audit](../../scalar-constant-census-2026-11-05/README.md)
+subsequently passed.

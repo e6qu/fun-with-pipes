@@ -562,8 +562,8 @@ define the comparison.
 
 ### Exact scalar constants
 
-Implementation under verification; [the contract](measurements/scalar-constant-lowering.md)
-defines the required evidence. Consider:
+Focused native, memory and compiler-cost checks pass; final production validation
+remains. [The contract](measurements/scalar-constant-lowering.md) defines the scope. Consider:
 
 ```fwp
 unit-weight : F64
@@ -591,7 +591,9 @@ unit-weight → One[F64].one → prim.one → exact F64 bits
   packed-fold seed rule keeps its separate storage proof.
 
 This changes neither syntax nor tape validation. Fewer generated cache reads are
-a structural claim; [the plan](../PLAN.md) still requires runtime measurements.
+a structural claim. [Measured long solves](measurements/scalar-constant-time-2026-11-05/README.md)
+improve by 1.7–6.3%, while 27 of 32 comparisons miss the required 5%. The
+[plan](../PLAN.md) keeps those timing targets open.
 
 ### Private array results consumed by zip
 

@@ -21,5 +21,5 @@ failed because its collection evidence inventory still expected three cache test
 The source now contains four. The checker and fixture were updated together;
 all eight guarded collection-evidence controls pass, including rejection of an
 incomplete three-test summary. The [original full log](docs-failure.log.gz) remains
-retained. Other completed docs steps passed; later steps were skipped and still
-need the repaired documentation gate.
+retained. Other completed docs steps passed. The repaired [full documentation gate](https://github.com/e6qu/fun-with-pipes/actions/runs/42071048625)
+subsequently passed; final-head validation remains separate.

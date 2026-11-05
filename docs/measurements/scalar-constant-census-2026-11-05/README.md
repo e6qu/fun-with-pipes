@@ -63,4 +63,6 @@ Original artifacts retain generated C and executable bytes. The
 [first observer failure](../scalar-constant-checks-2026-11-05/census-observer/README.md)
 remains separate; its parser repair changed no compiler code or measurement limit.
 
-Compiler/runtime costs and final production delivery are still pending.
+[Compiler costs](../scalar-constant-analysis-2026-11-05/README.md) pass.
+[Runtime results](../scalar-constant-time-2026-11-05/README.md) retain 27 missed
+speed targets; final production delivery remains pending.

@@ -96,8 +96,8 @@ def check_frozen_host(report):
     assert report['qualification']['actual'] == expected_host
 
 
-def check_archive(path, protocol):
-    archive = json.loads(path.read_text())
+def check_archive(archive_path, protocol):
+    archive = json.loads(archive_path.read_text())
     assert set(archive['sessions']) == {'arm-1', 'arm-2', 'amd-1', 'amd-2'}
     identities = set()
     source_hashes = None
@@ -114,7 +114,7 @@ def check_archive(path, protocol):
         failed = protocol == 'recording' or (protocol in {'eager-captures', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant'} and bool(session['budgetFailures']))
         assert job['conclusion'] == ('failure' if failed else 'success')
         for kind in ['report', 'log']:
-            raw = gzip.decompress((path.parent / session[kind]).read_bytes())
+            raw = gzip.decompress((archive_path.parent / session[kind]).read_bytes())
             assert len(raw) == session[kind + 'Bytes']
             assert hashlib.sha256(raw).hexdigest() == session[kind + 'Sha256']
             if kind == 'report':

@@ -1,111 +1,64 @@
 # Current work
 
-**Next:** publish the instrumented-reference audit repair, then run
-`scalar-constant-report` separately for runtime runs `42074728167` and
-`42075136884`, source `76690b385514c58ad94c5591da3553fa48218535`. All four
-qualified sessions finish with 27 timing-target misses; keep them explicit.
-No timing rerun. Census and compiler-cost audits pass; final production remains.
+**Next:** publish the completed PR #261 group, mark it ready, then monitor all nine
+production jobs and docs on that exact final head. Fix every failure, audit every
+completed log/artifact and squash merge only after all final gates pass. Use a
+single-line subject of at most 80 characters and an empty body; verify the merge.
 
 ## Roadmap status
 
 | Step | Status | Evidence still needed |
 |---|---|---|
-| 1 | Implemented | Bounded proof passes 296 compiler units on three hosts; final production coverage remains. |
-| 2 | Implemented | Complete-program selection and O1/O2 exact-bit/root probes pass on three hosts. |
-| 3 | Verified | All 25 targets per host and full artifact audit pass at `37da7217`. |
-| 4 | In progress | Census/compiler audits pass; runtime samples complete, corrected full audits pending. |
-| 5 | Pending | Nine final-head jobs, docs and full audit; squash merge. |
+| 1 | Implemented | Bounded proof verified in focused tests; final production coverage remains. |
+| 2 | Implemented | Exact scalar reads verified; final production coverage remains. |
+| 3 | Verified | Three native hosts and complete artifact audit pass. |
+| 4 | Verified | Census/compiler/runtime audits pass; 27 timing targets remain explicitly open. |
+| 5 | In progress | Nine exact-head production jobs, docs, full audit and squash merge. |
 
-Draft [PR #261](https://github.com/e6qu/fun-with-pipes/pull/261),
-branch/worktree: `scalar-constant-lowering`. [The contract](measurements/scalar-constant-lowering.md)
-was frozen at `4bad4992` before code, tag
-`roadmap/scalar-constant-lowering-protocol-2026-11-05`. Keep its original identity.
-Rebased onto `a85f59d2`; all pre-rebase evidence sources remain under
-`roadmap/scalar-constant-premerge-2026-11-05` at `5e1c51d5`. The rebase changed
-no tree bytes. The first census stopped at a source-observer error before any timing. All earlier timing misses remain in PLAN.md.
+[PR #261](https://github.com/e6qu/fun-with-pipes/pull/261), branch/worktree
+`scalar-constant-lowering`. Compiler/test source matches focused
+`37da72171d64dbb53dd87dbc49254f61f3ebf0bd`. Measurements use
+`76690b385514c58ad94c5591da3553fa48218535`; subsequent changes repair evidence
+checkers and docs only. No timing reruns are needed or permitted for a better result.
 
-## Parent delivery is verified
+## Verified evidence
 
-PR #260 merged as `a85f59d23918c1854f43fb3a3ce2af65383ac5f9`. Its tree equals
-tested `ba3f0d8793dc3bbd3c21f94d06a1bca2896b6d45`; the one-line message has
-no body/trailers. All nine jobs, docs and full audit pass.
-[Delivery receipts](measurements/packed-pair-delivery-2026-11-05/README.md) retain
-sources, logs and cancelled same-tree postmerge runs. One new PR can now proceed.
+| Check | Original run | Complete audit / records |
+|---|---|---|
+| 25 targets, 828 native images and 844 observations per host | `42048215807` | `42070540044`; [focused receipts](measurements/scalar-constant-checks-2026-11-05/native-passing/README.md) |
+| Unchanged allocations, cleanup, work and stack | `42072583890` | `42074145465`; [census](measurements/scalar-constant-census-2026-11-05/README.md) |
+| 336 compiler commands per host | `42074639596` | `42076024832`; [costs](measurements/scalar-constant-analysis-2026-11-05/README.md) |
+| ARM1/ARM2/AMD1 and rejected AMD2 host | `42074728167` | `42078637088`; [runtime](measurements/scalar-constant-time-2026-11-05/README.md) |
+| Qualified AMD2 replacement | `42075136884` | `42078654369`; same original measurement source |
 
-## Current repair and completed checks
+All four qualified runtime sessions measured once. Their 27 failures are long-case
+5% speed targets; all other measured limits pass. Retain the verified transformation
+under the agreed policy, with misses in PLAN.md. The rejected EPYC 9V45 host ran
+no builds/timing; its EPYC 7763 replacement is separate. No claimed C/Rust parity.
 
-- [Runtime audit repair](measurements/scalar-constant-checks-2026-11-05/runtime-audit/README.md):
-  the checker misclassified reference profile/phase images as candidates. Two
-  focused controls now cover all declared names and reference-edit rejection.
-  Original audit `42077511822` fails only on that classification; re-audit samples.
-- [Census](measurements/scalar-constant-census-2026-11-05/README.md) and
-  [compiler costs](measurements/scalar-constant-analysis-2026-11-05/README.md) pass
-  completely. Compiler audit `42076024832` verifies 336 commands per host;
-  maximum time increase 1.78%, RSS increase 0.06%, copy variation 1.22%.
-- Runtime counts: ARM64 sessions 1/2 each miss eight long-case 5% targets;
-  AMD64 sessions 1/2 miss six/five. Logs show no other measurement failures.
-  First AMD64 session-2 host was rejected before building (EPYC 9V45 instead
-  of 7763); qualified replacement `42075136884` is retained separately.
+## Repairs included
 
-- [Census observer repair](measurements/scalar-constant-checks-2026-11-05/census-observer/README.md):
-  `42071040601` fails on both hosts because shared reachability omitted borrowed
-  callbacks. Four reachability and four scalar controls now pass, as do 21 saved
-  candidate/reference programs. All six measurement/auditor callers use the fix.
-- Docs `42071048625` passes completely at `26a5cbe6`; the stale test-count
-  repair is verified. No remaining failure from the previous docs run.
+- [Native observer](measurements/scalar-constant-checks-2026-11-05/native-passing/README.md):
+  keep a computed byte length for cache-ownership instrumentation; exact-bit probes pass.
+- [Census observer](measurements/scalar-constant-checks-2026-11-05/census-observer/README.md):
+  follow live borrowed callbacks. Four controls and 21 saved programs pass.
+- [Runtime audit](measurements/scalar-constant-checks-2026-11-05/runtime-audit/README.md):
+  classify instrumented references correctly. Original samples re-audited successfully.
+- Four-session checker: keep the archive path separate from source-file paths.
+  Guarded combined audit passes; regression rejects a corrupted last reference.
+- Docs inventory: four cache tests, not three; eight controls pass. Full docs
+  passed at `26a5cbe6` and `76690b38`; the final head still needs its own gate.
+- Oversized workflow split; docs enforce GitHub's 512,000-byte limit.
 
-- [Passing focused evidence](measurements/scalar-constant-checks-2026-11-05/native-passing/README.md)
-  completes 25 targets, 828 native images and 844 probe observations per host.
-  Audit `42070540044` has no unresolved issues.
-- Docs `42051839171` found a stale cache-test count (three instead of four).
-  The checker and fixture are repaired; `python3 scripts/local-guard.py python3
-  scripts/test-collection-evidence.py` passes all eight controls. The repaired full docs gate now passes. Superseded queued docs `42048220794` was cancelled.
+## Sources and resources
 
-- [Native run 42037640087](measurements/scalar-constant-checks-2026-11-05/native-first/README.md)
-  at `943f749e` completes all 25 targets per host: 24 pass and one cache-ownership
-  observer fails. Its literal character length is already folded before the new
-  scalar pass. Use byte length to keep a computed scalar, with unchanged strict
-  ownership assertions. Audit `42043247325` accounts for every target, image and
-  diagnostic; it fails only for that original observer.
-- [Measurement controls](measurements/scalar-constant-checks-2026-11-05/measurement-controls/README.md)
-  pass at `bb23f87c`, run `42038834040`: ten script groups, 91 tests. The superseded
-  request `42037645434` was cancelled while queued, before execution.
-- Earlier build repairs are retained: [shared-proof visibility](measurements/scalar-constant-checks-2026-11-05/first-build/README.md)
-  and [borrowing the interpreter result](measurements/scalar-constant-checks-2026-11-05/second-build/README.md).
-  Neither remains an unresolved compiler error.
-- Guarded local checks pass: formatting; scalar reference (4), descent budgets
-  (23), census/reconciliation (10), phase budgets (9), compiler measurements (10),
-  roadmap controls (5), YAML syntax and five matching plan/handoff rows.
-  Initial sparse-fixture failures were fixed by materializing small tracked files;
-  the larger historical evidence checks passed remotely.
-- Guarded review of saved parent C also passes the new cached-reference selector:
-  `One[F64].one` reaches `caf66`, then `prim.one` reaches `caf68`; private pair
-  reuse remains selected. This checks the observer, not performance. The first
-  one-off invocation omitted the scripts import path; supplying it fixed the call.
+Protocol tag: `roadmap/scalar-constant-lowering-protocol-2026-11-05` (`4bad4992`).
+Pre-rebase sources: `roadmap/scalar-constant-premerge-2026-11-05` (`5e1c51d5`).
+Original measurement setup: `roadmap/scalar-constant-measurements-2026-11-05`
+(`26a5cbe6`); repaired observer: `roadmap/scalar-constant-observer-repair-2026-11-05`
+(`76690b38`). [Parent #260 delivery](measurements/packed-pair-delivery-2026-11-05/README.md)
+is verified at `a85f59d2`.
 
-## Next measurement sequence
-
-1. Focused native checks and their complete artifact audit.
-2. `scalar-constant-census` and `scalar-constant-census-report`: exact unchanged
-   counts, parent reconciliation, raw/final storage and complete-program stack costs.
-3. `scalar-constant-analysis` and `scalar-constant-compiler-report`: seven inputs,
-   336 measured/warmup commands per host and unchanged frozen limits.
-4. `scalar-constant-time` with two qualified sessions per architecture, followed
-   by `scalar-constant-report`. Retain every outcome; no unchanged timing reruns.
-5. Final production/docs/audit and authorized squash merge.
-
-Reference construction disables only scalar replacement. Selection checks require
-literal candidate reads and cached reference reads, preserving prior buffer reuse.
-The native tests' source must match the sources used by measurement jobs.
-
-## Resources and workflow maintenance
-
-Free space recovered to about 85 GiB. User-authorized cleanup removed
-1,098,786,631 bytes of downloads after verifying remote originals; logs and source
-remain. Receipt: `../gradient-work/removed-verified-downloads-2026-11-05-user-cleanup.json`.
-Use the unchanged local guard; full native builds and measurements stay on CI.
-
-Numerics.yml is 508,914 bytes, below GitHub's 512,000-byte limit. The initial
-[oversize failure](measurements/scalar-constant-checks-2026-11-05/format-startup.json)
-was repaired by moving maintenance jobs into a reusable workflow. Formatting and
-measurement-control requests verify that workflow; docs now enforce the size limit.
+About 84 GiB remains free. User-authorized cleanup removed 1,098,786,631 bytes of
+verified duplicate downloads; receipt is in `../gradient-work/removed-verified-downloads-2026-11-05-user-cleanup.json`.
+Use the unchanged local guard. Full builds, suites and large audits stay on GitHub.
