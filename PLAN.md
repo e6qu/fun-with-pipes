@@ -28,7 +28,7 @@ Steps 1–3 pass [focused native checks and full evidence audits](docs/measureme
 at `3b7954eef411b7b621d09718ae2aad41e72e744e`, fixes the proof and measurement limits.
 [The allocation census](docs/measurements/packed-pair-census-2026-11-05.md) passes
 on both architectures, including agreement with saved parent counts. Compiler
-cost limits and saved-data audits also pass. Three runtime sessions expose 23
+cost limits and saved-data audits also pass. Three [runtime sessions](docs/measurements/packed-pair-time-2026-11-05/README.md) expose 23
 missed speed targets and one AMD64 stack-budget failure. Apply the
 [single-owner cleanup repair](docs/measurements/packed-pair-cleanup-repair.md),
 verify stack/storage costs before new timing, then finish production verification.
