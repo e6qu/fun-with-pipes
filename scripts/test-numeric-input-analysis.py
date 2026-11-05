@@ -16,6 +16,9 @@ from unittest.mock import patch
 SPEC = importlib.util.spec_from_file_location('analysis', Path(__file__).with_name('measure-numeric-input-analysis.py'))
 ANALYSIS = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(ANALYSIS)
+OWNED_SPEC = importlib.util.spec_from_file_location('owned_reference', Path(__file__).with_name('prepare-owned-numeric-reference.py'))
+OWNED = importlib.util.module_from_spec(OWNED_SPEC)
+OWNED_SPEC.loader.exec_module(OWNED)
 
 
 def scoped_output(name, specialized):
@@ -27,7 +30,36 @@ def scoped_output(name, specialized):
             + 'f7(a, b, c);\n' * calls + 'V result = fwp_apply_owned(a, 1, b);\n' * callbacks)
 
 
+def consuming_output(selected):
+    roots = ('mapped', 'mapped32', 'mapped64', 'update-left', 'update-right', 'mapped-produced', 'shared-first')
+    source = '/* ---- program ---- */\n'
+    for index, name in enumerate(roots):
+        private = 'consumed-scalar-array-list-zip' if name in ('update-left', 'update-right') else 'consumed-scalar-array-map'
+        if selected:
+            source += f'/* {private} : T */\nstatic V f{100 + index}(V input) {{\nreturn input;\n}}\n'
+        source += f'/* {name} : T */\nstatic V f{index}(V input) {{\nreturn f{100 + index}(input);\n}}\n'
+    source += ('/* retained : T */\nstatic V f9(V input) {\n'
+               '/* direct known scalar array map; input stays borrowed */\nreturn input;\n}\n')
+    return source
+
+
 class CompilerCosts(unittest.TestCase):
+    def test_consuming_selection_requires_live_calls_and_retained_exclusion(self):
+        roots = ('mapped', 'mapped32', 'mapped64', 'update-left', 'update-right', 'mapped-produced', 'shared-first')
+        source = consuming_output(True)
+        self.assertEqual(set(ANALYSIS.consuming_cost_output(source, True)), {*roots, 'retained'})
+        for index in range(len(roots)):
+            # Private definitions left in metadata cannot replace a live call.
+            broken = source.replace(f'return f{100 + index}(input);', 'return input;')
+            with self.assertRaises(AssertionError):
+                ANALYSIS.consuming_cost_output(broken, True)
+        borrowed = source.replace('/* direct known scalar array map; input stays borrowed */\nreturn input;',
+                                  '/* direct known scalar array map; input stays borrowed */\nreturn f100(input);')
+        with self.assertRaises(AssertionError):
+            ANALYSIS.consuming_cost_output(borrowed, True)
+        with self.assertRaises(AssertionError):
+            ANALYSIS.consuming_cost_output(source, False)
+
     def setUp(self):
         self.rows = [dict(copy=name, round=number, seconds=1.0, peakCommandKiB=1000)
                      for number in range(-2, 10) for name in ANALYSIS.ORDERS[number % 2]]
@@ -76,7 +108,7 @@ class CompilerCosts(unittest.TestCase):
                 ANALYSIS.summarize(rows)
 
     def test_complete_schedule_and_timeout_keep_reviewable_evidence(self):
-        for comparison, fail in itertools.product(('numeric-inputs', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'matched-option', 'packed-input'), (False, True)):
+        for comparison, fail in itertools.product(('numeric-inputs', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'matched-option', 'packed-input', 'owned-numeric'), (False, True)):
             with self.subTest(comparison=comparison, timeout=fail), tempfile.TemporaryDirectory() as temporary:
                 root = Path(temporary)
                 compiler, reference = root / 'candidate', root / 'reference'
@@ -126,6 +158,13 @@ class CompilerCosts(unittest.TestCase):
                         reference={path: 'reference-hash' for path in ('src/mono.rs', 'src/cgen.rs')},
                         ownershipSha256=ANALYSIS.sha(ANALYSIS.ROOT / 'src/ownership.rs'),
                         unchanged={path: ANALYSIS.sha(ANALYSIS.ROOT / path) for path in {'runtime/fwp_rt_task.c', 'src/opt.rs', 'src/ownership.rs', 'runtime/fwp_rt_kernel.c', 'src/cgen/packed_records.rs', 'runtime/fwp_rt_heap.c', 'src/cgen/packed_inputs.rs', 'src/opt/scoped.rs', 'src/cgen/numeric_parameters.rs', 'lib/autodiff.fwp', 'src/cgen/range_zip.rs', 'lib/list.fwp', 'src/fuse.rs', 'runtime/fwp_rt_prims.c', 'runtime/fwp_rt.c'}})
+                if comparison == 'owned-numeric':
+                    manifest = dict(source='test-source', compilerSha256=ANALYSIS.sha(reference),
+                        disabledTransformation='consuming scalar array maps and exclusive coordinate-list reuse',
+                        candidate={'src/cgen.rs': ANALYSIS.sha(ANALYSIS.ROOT / 'src/cgen.rs')},
+                        reference={'src/cgen.rs': 'reference-hash'},
+                        ownershipSha256=ANALYSIS.sha(ANALYSIS.ROOT / 'src/ownership.rs'),
+                        unchanged={path: ANALYSIS.sha(ANALYSIS.ROOT / path) for path in OWNED.PRESERVED})
                 manifest_path.write_text(json.dumps(manifest))
                 output = root / 'output'
                 argv = ['measure', '--comparison', comparison, '--compiler', str(compiler), '--reference', str(reference),
@@ -138,13 +177,16 @@ class CompilerCosts(unittest.TestCase):
                     if command[0] != '/usr/bin/time':
                         preflight_commands.append(command)
                         name = Path(command[-3]).stem
-                        Path(command[-1]).write_text(scoped_output(name, Path(command[0]).name.startswith('candidate')))
+                        candidate = Path(command[0]).name.startswith('candidate')
+                        text = consuming_output(candidate) if name == 'input' else scoped_output(
+                            name, candidate or comparison == 'owned-numeric')
+                        Path(command[-1]).write_text(text)
                         return subprocess.CompletedProcess(command, 0, b'', b'')
                     commands.append(command)
-                    if comparison in ('matched-option', 'packed-input'):
+                    if comparison in ('matched-option', 'packed-input', 'owned-numeric'):
                         self.assertEqual(options['env']['FWP_VRET'], '1')
                         self.assertEqual(options['env']['FWP_FRAME_FIELDS'], '1')
-                    if comparison == 'packed-input':
+                    if comparison in ('packed-input', 'owned-numeric'):
                         for setting in ('FWP_PACKED_ARRAYS', 'FWP_STACK', 'FWP_ARRAY_FUSION'):
                             self.assertEqual(options['env'][setting], '1')
                     self.assertEqual(command[5:10], ['build', '--memory', 'dynamic', '--emit-c', '-O2'])
@@ -176,11 +218,11 @@ class CompilerCosts(unittest.TestCase):
                         ANALYSIS.main()
                 report = json.loads((output / 'report.json').read_text())
                 self.assertEqual(report['complete'], not fail)
-                if comparison in ('matched-option', 'packed-input'):
+                if comparison in ('matched-option', 'packed-input', 'owned-numeric'):
                     self.assertEqual(report['executionOverrides']['FWP_VRET'], '1')
                     self.assertEqual(report['executionOverrides']['FWP_FRAME_FIELDS'], '1')
-                self.assertEqual(len(commands), 1 if fail else 336 if comparison == 'packed-input' else 240)
-                self.assertEqual(len(preflight_commands), 4 if comparison == 'packed-input' else 0)
+                self.assertEqual(len(commands), 1 if fail else 336 if comparison in ('packed-input', 'owned-numeric') else 240)
+                self.assertEqual(len(preflight_commands), 6 if comparison == 'owned-numeric' else 4 if comparison == 'packed-input' else 0)
                 for name, digest in report['files'].items():
                     self.assertEqual(hashlib.sha256((output / name).read_bytes()).hexdigest(), digest)
                 if fail:
@@ -188,7 +230,7 @@ class CompilerCosts(unittest.TestCase):
                     self.assertEqual(case['samples'][0]['timeout'], 180)
                     self.assertEqual((output / 'field-transfer/-2-candidate1.stderr').read_bytes(), b'partial error')
                 else:
-                    self.assertEqual(len(report['cases']), 7 if comparison == 'packed-input' else 5)
+                    self.assertEqual(len(report['cases']), 7 if comparison in ('packed-input', 'owned-numeric') else 5)
                     self.assertTrue(all(len(case['samples']) == 48 and not case['summary']['failures']
                                         for case in report['cases'].values()))
 

@@ -1,0 +1,20 @@
+{
+  "id": 13366356608,
+  "node_id": "MDg6QXJ0aWZhY3QxMzM2NjM1NjYwOA==",
+  "name": "owned-numeric-checks-macos-15",
+  "size_in_bytes": 126659353,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13366356608",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13366356608/zip",
+  "expired": false,
+  "digest": "sha256:d4c8f3e2ebd5dabfe1aedbef7f6d306bc485edb1d3dc4e0e58c4cc21def4f947",
+  "created_at": "2026-11-04T21:48:16Z",
+  "updated_at": "2026-11-04T21:48:16Z",
+  "expires_at": "2027-02-02T21:36:40Z",
+  "workflow_run": {
+    "id": 41917699225,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "owned-numeric-updates",
+    "head_sha": "8fa9f890eea2f0efbfa6f45d2e5fd76bda430e5f"
+  }
+}

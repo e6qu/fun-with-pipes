@@ -1,4 +1,5 @@
-# A closed callback has no saved arguments. These maps keep their input arrays.
+# A closed callback has no saved arguments. Aliases keep their original values;
+# dead, exclusive same-type arrays can now supply the output storage.
 inc-small : I8 -> I8
 inc-small = fn value -> value + 1i8
 neg-small : I16 -> I16

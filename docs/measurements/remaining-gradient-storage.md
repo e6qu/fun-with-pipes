@@ -2,46 +2,72 @@
 
 Private derivative-input packing is implemented and
 [its measurements are audited](packed-input-time-2026-11-04/README.md), with three
-AMD64 timing limits open. Its [contract](packed-derivative-inputs.md) is frozen;
-final production delivery is pending in PR #257. Coordinate-list reuse remains
-unselected. [The plan](../../PLAN.md) owns current work and acceptance.
+AMD64 timing limits open. [PR #257 is verified delivery](../roadmap-history.md#packed-derivative-inputs-pr-257).
+The current group implements
+[consuming array maps and coordinate-list reuse](owned-numeric-updates.md), with
+[native checks](owned-numeric-checks-2026-11-05/README.md) and
+[exact allocation counts](owned-numeric-census-2026-11-05/README.md) verified.
+[Compiler-cost limits pass](owned-numeric-analysis-2026-11-05/README.md);
+[runtime results are audited](owned-numeric-time-2026-11-05/README.md), with four
+AMD64 speed targets open. Final production checks remain. [The plan](../../PLAN.md) owns acceptance.
 
-## Measured costs
+## Current allocation breakdown
 
-The older [gradient-array census](gradient-array-storage-2026-11-03/README.md),
-source `1f6a4ac8`, counted 25,671 allocation requests and 616,104 requested bytes
-for each group in one 129-coordinate, 199-update solve:
+The [current source-site report](gradient-storage-2026-11-05/README.md) audits one
+fresh 129-coordinate/199-update solve: 2,121 managed requests, 1,265,230 requested
+bytes and 398 retains. Eight requests per update occur during forward recording;
+the derivative result and coordinate scratch add one each. Peak managed storage
+is 9,280 bytes; peak raw derivative storage is 33,904 bytes with workspace reuse.
+Neither counter is whole-process RAM.
 
-| Historical group | Current status |
-|---|---|
-| Input derivative records | Selected private one/two-field numeric records now use a shared buffer; other uses keep their ordinary representation. |
-| List of input derivative records | The selected neighboring-pair consumer borrows overlapping windows of that buffer. |
-| Updated coordinate list | Still returns immutable coordinates. Reuse needs its own ownership proof and a fresh count at the current source. |
+Its fresh input is exclusive. The repeated timing driver shares its initial input
+between solves, so their absolute counts differ. Use each report's own driver and
+reference. The report names the remaining fold record, singleton seed containers,
+coordinate scratch and two retain sites, with safety requirements for the next proof.
+These are measured costs and proposed work, not implemented reductions.
 
-These historical totals measure allocation traffic, not live memory or process
-RAM. Do not reuse them as current measurements. For the complete packed-input
-group, the [new count report](packed-input-time-2026-11-04/verified-memory-counts.json)
-verifies 51,541 fewer requests and 1,031,616 fewer requested bytes per largest
-solve. Public `grad` still returns a list.
+## Current group: consumed numeric storage
 
-## Ownership decisions needed
+For example, subtracting adjustments `[1, 2]` from coordinates `[10, 20, 30]`
+produces `[9, 18]`: zip stops at the shorter input. Suppose another value keeps
+the original tail `[20, 30]`. The compiler may reuse the first coordinate cell,
+but must copy the second result cell:
+
+```text
+Before: caller ──► A:10 ──► B:20 ──► C:30
+                             ▲
+        saved ───────────────┘
+
+After:  result ──► A:9 ──► D:18
+        saved  ──► B:20 ──► C:30
+```
+
+Letters identify physical cells. `A` is reused; `D` is new. `B` and `C` keep
+their original values. Even if `C` has just one incoming link, the saved tail
+can still reach it through `B`, so checking `C` alone would be unsafe. The new
+entry checks the whole prefix and stops at the first shared cell.
 
 `zip-with` borrows its input lists and returns a fresh list spine. Under that
 [ownership contract](../../src/ownership.rs), its implementation cannot overwrite
-or free an input. Reusing updated coordinates would require a compiler proof or
-an internal consuming operation. Before selecting it:
+or free an input. This group uses separate private consuming operations;
+the [frozen contract](owned-numeric-updates.md) specifies:
 
-- Identify current allocation sites and count their cost on the measured source.
-- Prove that the old coordinate owner is consumed after its last read. Retained
-  histories, other aliases and shared tails must keep their original values.
+- Last-use selection before ownership insertion; consuming an owner does not
+  imply exclusive storage. Retained histories and aliases keep their values.
+- Array views/shared storage use independent output. List reuse stops at the
+  first shared ancestor, even when descendants have counts of one.
 - Preserve callback, arithmetic and trap order. Do not turn an eager stage into
   streaming computation across another stage's effects.
 - Release old input, scratch and partial output exactly once on failure or
   cancellation, including unequal list lengths and empty inputs.
-- Freeze selection, exclusions, same-source reference and cost limits before
-  implementation; then check both interpreters and native O1/O2 cleanup.
+- Same-source references, predicted counts, frozen timing/compiler limits and
+  raw/optimized interpreter versus native O1/O2 checks.
 
-This is a possible next group, not a selected optimization or a promised speedup.
+Both consuming operations pass native correctness and exact allocation checks.
+Runtime measurements show 3.36–10.50% less time for long solves, with four AMD64
+5% targets missed. Final production gates still separate this from verified delivery. At 129 coordinates
+and 199 updates, the census confirms 25,741 fewer requests and 819,968 fewer
+requested bytes per solve. Retain counts and raw derivative storage are unchanged.
 The current packed-input proof covers private flat numeric records. F128, nested
 `Rev`, resources and general escaping record arrays need separate representation
 and lifetime proofs; changing a public list to an array does not remove record
@@ -54,7 +80,7 @@ boxes by itself.
 | [Same-type scalar conversion](scalar-array-identities.md), PR #254 | Removes a private F64 identity map; preserves float bits and independent owned results where needed. | All 32 original speed targets remain unmet. |
 | [Final iteration value](final-iteration-storage.md), PR #255 | Removes an unused history and reverse copy when only the final value is read. Resource-bearing states remain excluded. | Six runtime limits and one compiler-noise case remain open. |
 | [Immediately matched optional results](matched-option-fields.md), PR #256 | Removes a temporary option wrapper; all production gates and frozen runtime limits pass. | Peak storage is unchanged; some cases remain slightly slower within the allowed limit. |
-| [Private input packing](packed-derivative-inputs.md), PR #257 | Native correctness, compiler-cost and complete raw runtime audits pass; input packing preserves all three eager stages. | Three AMD64 timing limits and final production delivery remain open. |
+| [Private input packing](packed-derivative-inputs.md), PR #257 | Native correctness, compiler-cost, complete raw runtime audits and all final production gates pass; input packing preserves all three eager stages. | Three AMD64 timing limits remain open. |
 
 Each group keeps its own reference and measured outcomes. A gain against a newer
 reference does not settle an older comparison. [The input source review](numeric-record-inputs-2026-11-04/README.md)

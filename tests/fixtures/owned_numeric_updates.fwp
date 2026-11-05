@@ -1,0 +1,56 @@
+increment : I64 -> I64 ! {Async}
+increment = fn value -> let ready = task.yield () in value + 1
+
+subtract-left : I64 -> I64 -> I64 ! {Async}
+subtract-left = fn adjustment -> fn coordinate ->
+    let ready = task.yield () in coordinate - adjustment
+
+subtract-right : I64 -> I64 -> I64 ! {Async}
+subtract-right = fn coordinate -> fn adjustment ->
+    let ready = task.yield () in coordinate - adjustment
+
+export mapped : Array[I64] -> Array[I64] ! {Async}
+mapped = array.map increment
+
+export mapped-produced : List[I64] -> Array[I64] ! {Async}
+mapped-produced = array.from-list | array.map increment
+
+export shared-first : Array[I64] -> (Array[I64], Array[I64]) ! {Async}
+shared-first = fn values -> (values, array.map increment values)
+
+keep32 : F32 -> F32 ! {Async}
+keep32 = fn value -> let ready = task.yield () in value
+keep64 : F64 -> F64 ! {Async}
+keep64 = fn value -> let ready = task.yield () in value
+export mapped32 : Array[F32] -> Array[F32] ! {Async}
+mapped32 = array.map keep32
+export mapped64 : Array[F64] -> Array[F64] ! {Async}
+mapped64 = array.map keep64
+
+export update-left : Array[I64] -> List[I64] -> List[I64] ! {Async}
+update-left = fn values -> fn coordinates ->
+    zip-with subtract-left (array.to-list values) coordinates
+
+export update-right : Array[I64] -> List[I64] -> List[I64] ! {Async}
+update-right = fn values -> fn coordinates ->
+    zip-with subtract-right coordinates (array.to-list values)
+
+main = [
+    [1, 2, 3] | mapped-produced | array.to-list | eq [2, 3, 4],
+    array.from-list [1, 2]
+    | shared-first
+    | both (.0 | array.to-list) (.1 | array.to-list)
+    | eq ([1, 2], [2, 3]),
+    array.from-list [] | mapped | array.to-list | eq [],
+    array.from-list [1, 2, 3] | mapped | array.to-list | eq [2, 3, 4],
+    update-left (array.from-list []) [10, 20] | eq [],
+    update-left (array.from-list [1, 2]) [] | eq [],
+    update-left (array.from-list [1, 2]) [10, 20, 30] | eq [9, 18],
+    update-right (array.from-list [1, 2, 3]) [10, 20] | eq [9, 18],
+    array.from-list [1, 2]
+    | both (mapped | array.to-list) array.to-list
+    | eq ([2, 3], [1, 2]),
+    [10, 20]
+    | both (update-left (array.from-list [1, 2])) id
+    | eq ([9, 18], [10, 20]),
+] | all id | echo

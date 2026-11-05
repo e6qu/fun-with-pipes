@@ -1,0 +1,79 @@
+{
+  "source": "b8404dbbc2d6bb0617788829a859ff9b235cbf12",
+  "hosts": {
+    "arm": {
+      "job": 126844449792,
+      "artifact": {
+        "id": 13361831833,
+        "node_id": "MDg6QXJ0aWZhY3QxMzM2MTgzMTgzMw==",
+        "name": "owned-numeric-checks-ubuntu-24.04-arm",
+        "size_in_bytes": 131991561,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13361831833",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13361831833/zip",
+        "expired": false,
+        "digest": "sha256:e873edac05d14d97cb7b5b3d84aa345d70a46674f400857e54621ab692e58b21",
+        "created_at": "2026-11-04T20:41:55Z",
+        "updated_at": "2026-11-04T20:41:55Z",
+        "expires_at": "2027-02-02T20:29:17Z",
+        "workflow_run": {
+          "id": 41907057111,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "owned-numeric-updates",
+          "head_sha": "b8404dbbc2d6bb0617788829a859ff9b235cbf12"
+        }
+      },
+      "files": {
+        "selection/current-large.fwp": "5cac16438027438da6404089db432db902b89a98473769b49d81f7f04f863549",
+        "selection/current-large-optimized.ir": "36e6400d9deebe083a6c1bdc9ac884275094e8ae9da71c79488752bfd92df2ab",
+        "selection/current-large-optimized.c": "5963ec4318ef5dcaa7433223413f8223625739d4e86a3798a1173c090a31265c",
+        "selection/descent-large.fwp": "0d43957970adfefa19a4223316ec765c8c17edfce1d5cb3bf4bec06f2286f54a",
+        "selection/descent-large-optimized.ir": "8d8a262c402a98b87d8fbc4c0f91b6729913523f148e2c256b9404e0fa6872c6",
+        "selection/descent-large-optimized.c": "275bb22d5226535a25b90a6f4b1a4b0baa4fcfa6e856466de15b881fd7d2958e"
+      },
+      "selections": {
+        "current-large": [],
+        "descent-large": [
+          "consumed-scalar-array-list-zip"
+        ]
+      }
+    },
+    "amd": {
+      "job": 126844449282,
+      "artifact": {
+        "id": 13360807897,
+        "node_id": "MDg6QXJ0aWZhY3QxMzM2MDgwNzg5Nw==",
+        "name": "owned-numeric-checks-ubuntu-latest",
+        "size_in_bytes": 131827349,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13360807897",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13360807897/zip",
+        "expired": false,
+        "digest": "sha256:fc4d0f9adb1b9a24c92291bb45a314bd3b9523540ca3aea7badf33608cf3669c",
+        "created_at": "2026-11-04T20:42:09Z",
+        "updated_at": "2026-11-04T20:42:09Z",
+        "expires_at": "2027-02-02T20:29:17Z",
+        "workflow_run": {
+          "id": 41907057111,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "owned-numeric-updates",
+          "head_sha": "b8404dbbc2d6bb0617788829a859ff9b235cbf12"
+        }
+      },
+      "files": {
+        "selection/current-large.fwp": "5cac16438027438da6404089db432db902b89a98473769b49d81f7f04f863549",
+        "selection/current-large-optimized.ir": "36e6400d9deebe083a6c1bdc9ac884275094e8ae9da71c79488752bfd92df2ab",
+        "selection/current-large-optimized.c": "5963ec4318ef5dcaa7433223413f8223625739d4e86a3798a1173c090a31265c",
+        "selection/descent-large.fwp": "0d43957970adfefa19a4223316ec765c8c17edfce1d5cb3bf4bec06f2286f54a",
+        "selection/descent-large-optimized.ir": "8d8a262c402a98b87d8fbc4c0f91b6729913523f148e2c256b9404e0fa6872c6",
+        "selection/descent-large-optimized.c": "275bb22d5226535a25b90a6f4b1a4b0baa4fcfa6e856466de15b881fd7d2958e"
+      },
+      "selections": {
+        "current-large": [],
+        "descent-large": [
+          "consumed-scalar-array-list-zip"
+        ]
+      }
+    }
+  }
+}

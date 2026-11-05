@@ -1,0 +1,20 @@
+{
+  "id": 13369413531,
+  "node_id": "MDg6QXJ0aWZhY3QxMzM2OTQxMzUzMQ==",
+  "name": "owned-numeric-safety-ubuntu-latest-1",
+  "size_in_bytes": 7579,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13369413531",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13369413531/zip",
+  "expired": false,
+  "digest": "sha256:d87c7c1202aca8034f16aaa61c8592cf8e33c308ed146b7d7006396810a908a1",
+  "created_at": "2026-11-04T22:37:55Z",
+  "updated_at": "2026-11-04T22:37:55Z",
+  "expires_at": "2027-02-02T22:37:15Z",
+  "workflow_run": {
+    "id": 41926862701,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "roadmap/owned-numeric-measurement-2026-11-05",
+    "head_sha": "07541ff956d582bb9c3936b86261e43fa25b0b2f"
+  }
+}

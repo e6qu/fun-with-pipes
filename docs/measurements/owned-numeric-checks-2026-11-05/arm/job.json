@@ -1,0 +1,172 @@
+{
+  "id": 126893053080,
+  "run_id": 41920964943,
+  "workflow_name": "Numerical and ownership evidence",
+  "head_branch": "owned-numeric-updates",
+  "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/41920964943",
+  "run_attempt": 1,
+  "node_id": "CR_kwDOU33zxM8AAAAdi2pUmA",
+  "head_sha": "07541ff956d582bb9c3936b86261e43fa25b0b2f",
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/126893053080",
+  "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41920964943/job/126893053080",
+  "status": "completed",
+  "conclusion": "success",
+  "created_at": "2026-11-04T21:58:08Z",
+  "started_at": "2026-11-04T22:00:16Z",
+  "completed_at": "2026-11-04T22:11:51Z",
+  "name": "owned_numeric_checks (ubuntu-24.04-arm, gcc)",
+  "steps": [
+    {
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 1,
+      "started_at": "2026-11-04T22:00:17Z",
+      "completed_at": "2026-11-04T22:00:18Z"
+    },
+    {
+      "name": "Run actions/checkout@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 2,
+      "started_at": "2026-11-04T22:00:18Z",
+      "completed_at": "2026-11-04T22:00:32Z"
+    },
+    {
+      "name": "Record source and production toolchain",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 3,
+      "started_at": "2026-11-04T22:00:32Z",
+      "completed_at": "2026-11-04T22:00:32Z"
+    },
+    {
+      "name": "Run dtolnay/rust-toolchain@stable",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 4,
+      "started_at": "2026-11-04T22:00:32Z",
+      "completed_at": "2026-11-04T22:00:33Z"
+    },
+    {
+      "name": "macOS OpenSSL",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 5,
+      "started_at": "2026-11-04T22:00:33Z",
+      "completed_at": "2026-11-04T22:00:33Z"
+    },
+    {
+      "name": "Run actions/cache@v6",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 6,
+      "started_at": "2026-11-04T22:00:33Z",
+      "completed_at": "2026-11-04T22:00:34Z"
+    },
+    {
+      "name": "Fetch locked dependencies",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 7,
+      "started_at": "2026-11-04T22:00:34Z",
+      "completed_at": "2026-11-04T22:00:34Z"
+    },
+    {
+      "name": "Format and lint compiler and changed targets",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 8,
+      "started_at": "2026-11-04T22:00:34Z",
+      "completed_at": "2026-11-04T22:00:56Z"
+    },
+    {
+      "name": "Build compiler for independent checks",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 9,
+      "started_at": "2026-11-04T22:00:56Z",
+      "completed_at": "2026-11-04T22:02:18Z"
+    },
+    {
+      "name": "Compiler units, primitive contracts and source references",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 10,
+      "started_at": "2026-11-04T22:02:18Z",
+      "completed_at": "2026-11-04T22:03:40Z"
+    },
+    {
+      "name": "Real gradient selection and input packing",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 11,
+      "started_at": "2026-11-04T22:03:40Z",
+      "completed_at": "2026-11-04T22:03:44Z"
+    },
+    {
+      "name": "Verify live consuming calls and retained-input exclusion before timing",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 12,
+      "started_at": "2026-11-04T22:03:44Z",
+      "completed_at": "2026-11-04T22:03:45Z"
+    },
+    {
+      "name": "Native consuming and borrowed boundaries, cleanup and autodiff",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 13,
+      "started_at": "2026-11-04T22:03:45Z",
+      "completed_at": "2026-11-04T22:11:34Z"
+    },
+    {
+      "name": "Check and retain fixture formatting",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 14,
+      "started_at": "2026-11-04T22:11:34Z",
+      "completed_at": "2026-11-04T22:11:34Z"
+    },
+    {
+      "name": "Retain every result, generated C and native image",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 15,
+      "started_at": "2026-11-04T22:11:34Z",
+      "completed_at": "2026-11-04T22:11:48Z"
+    },
+    {
+      "name": "Post Run actions/cache@v6",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 29,
+      "started_at": "2026-11-04T22:11:48Z",
+      "completed_at": "2026-11-04T22:11:48Z"
+    },
+    {
+      "name": "Post Run actions/checkout@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 30,
+      "started_at": "2026-11-04T22:11:48Z",
+      "completed_at": "2026-11-04T22:11:48Z"
+    },
+    {
+      "name": "Complete job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 31,
+      "started_at": "2026-11-04T22:11:48Z",
+      "completed_at": "2026-11-04T22:11:48Z"
+    }
+  ],
+  "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/126893053080",
+  "labels": [
+    "ubuntu-24.04-arm"
+  ],
+  "runner_id": 1000408054,
+  "runner_name": "GitHub Actions 1000408054",
+  "runner_group_id": 0,
+  "runner_group_name": "GitHub Actions"
+}

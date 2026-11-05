@@ -1,0 +1,287 @@
+{
+  "source": "07541ff956d582bb9c3936b86261e43fa25b0b2f",
+  "run": 41925013907,
+  "machine": "x86_64",
+  "allDiagnosticsAudited": true,
+  "verifiedCommands": 99,
+  "nativeImages": 24,
+  "verifiedExecutions": 48,
+  "cases": {
+    "3-0-current": {
+      "solves": 32768,
+      "savings": {
+        "requests": 0,
+        "requestedBytes": 0
+      },
+      "candidate": {
+        "requests": 65539,
+        "requestedBytes": 1638472,
+        "retains": 32768,
+        "peakChargedBytes": 1048704,
+        "finalChargedBytes": 0
+      },
+      "reference": {
+        "requests": 65539,
+        "requestedBytes": 1638472,
+        "retains": 32768,
+        "peakChargedBytes": 1048704,
+        "finalChargedBytes": 0
+      },
+      "rawPeakBytes": 0,
+      "finalRawBytes": 0
+    },
+    "3-0-history": {
+      "solves": 32768,
+      "savings": {
+        "requests": 0,
+        "requestedBytes": 0
+      },
+      "candidate": {
+        "requests": 65539,
+        "requestedBytes": 1638472,
+        "retains": 32768,
+        "peakChargedBytes": 1048704,
+        "finalChargedBytes": 0
+      },
+      "reference": {
+        "requests": 65539,
+        "requestedBytes": 1638472,
+        "retains": 32768,
+        "peakChargedBytes": 1048704,
+        "finalChargedBytes": 0
+      },
+      "rawPeakBytes": 0,
+      "finalRawBytes": 0
+    },
+    "3-1-current": {
+      "solves": 512,
+      "savings": {
+        "requests": 512,
+        "requestedBytes": 16384
+      },
+      "candidate": {
+        "requests": 7684,
+        "requestedBytes": 229472,
+        "retains": 1536,
+        "peakChargedBytes": 16688,
+        "finalChargedBytes": 0
+      },
+      "reference": {
+        "requests": 8196,
+        "requestedBytes": 245856,
+        "retains": 1536,
+        "peakChargedBytes": 16688,
+        "finalChargedBytes": 0
+      },
+      "rawPeakBytes": 1792,
+      "finalRawBytes": 0
+    },
+    "3-1-history": {
+      "solves": 512,
+      "savings": {
+        "requests": 512,
+        "requestedBytes": 16384
+      },
+      "candidate": {
+        "requests": 7684,
+        "requestedBytes": 229472,
+        "retains": 1536,
+        "peakChargedBytes": 16688,
+        "finalChargedBytes": 0
+      },
+      "reference": {
+        "requests": 8196,
+        "requestedBytes": 245856,
+        "retains": 1536,
+        "peakChargedBytes": 16688,
+        "finalChargedBytes": 0
+      },
+      "rawPeakBytes": 1792,
+      "finalRawBytes": 0
+    },
+    "3-199-current": {
+      "solves": 32,
+      "savings": {
+        "requests": 25376,
+        "requestedBytes": 659968
+      },
+      "candidate": {
+        "requests": 63844,
+        "requestedBytes": 1788544,
+        "retains": 12768,
+        "peakChargedBytes": 1360,
+        "finalChargedBytes": 0
+      },
+      "reference": {
+        "requests": 89220,
+        "requestedBytes": 2448512,
+        "retains": 12768,
+        "peakChargedBytes": 1408,
+        "finalChargedBytes": 0
+      },
+      "rawPeakBytes": 1792,
+      "finalRawBytes": 0
+    },
+    "3-199-history": {
+      "solves": 32,
+      "savings": {
+        "requests": 25376,
+        "requestedBytes": 659968
+      },
+      "candidate": {
+        "requests": 63844,
+        "requestedBytes": 1788544,
+        "retains": 12768,
+        "peakChargedBytes": 1360,
+        "finalChargedBytes": 0
+      },
+      "reference": {
+        "requests": 89220,
+        "requestedBytes": 2448512,
+        "retains": 12768,
+        "peakChargedBytes": 1408,
+        "finalChargedBytes": 0
+      },
+      "rawPeakBytes": 1792,
+      "finalRawBytes": 0
+    },
+    "3-1999-current": {
+      "solves": 4,
+      "savings": {
+        "requests": 31972,
+        "requestedBytes": 831296
+      },
+      "candidate": {
+        "requests": 79984,
+        "requestedBytes": 2239632,
+        "retains": 15996,
+        "peakChargedBytes": 464,
+        "finalChargedBytes": 0
+      },
+      "reference": {
+        "requests": 111956,
+        "requestedBytes": 3070928,
+        "retains": 15996,
+        "peakChargedBytes": 512,
+        "finalChargedBytes": 0
+      },
+      "rawPeakBytes": 1792,
+      "finalRawBytes": 0
+    },
+    "3-1999-history": {
+      "solves": 4,
+      "savings": {
+        "requests": 31972,
+        "requestedBytes": 831296
+      },
+      "candidate": {
+        "requests": 79984,
+        "requestedBytes": 2239632,
+        "retains": 15996,
+        "peakChargedBytes": 464,
+        "finalChargedBytes": 0
+      },
+      "reference": {
+        "requests": 111956,
+        "requestedBytes": 3070928,
+        "retains": 15996,
+        "peakChargedBytes": 512,
+        "finalChargedBytes": 0
+      },
+      "rawPeakBytes": 1792,
+      "finalRawBytes": 0
+    },
+    "33-199-current": {
+      "solves": 32,
+      "savings": {
+        "requests": 215456,
+        "requestedBytes": 6750208
+      },
+      "candidate": {
+        "requests": 64834,
+        "requestedBytes": 11003120,
+        "retains": 12768,
+        "peakChargedBytes": 4448,
+        "finalChargedBytes": 0
+      },
+      "reference": {
+        "requests": 280290,
+        "requestedBytes": 17753328,
+        "retains": 12768,
+        "peakChargedBytes": 4864,
+        "finalChargedBytes": 0
+      },
+      "rawPeakBytes": 8560,
+      "finalRawBytes": 0
+    },
+    "33-199-history": {
+      "solves": 32,
+      "savings": {
+        "requests": 215456,
+        "requestedBytes": 6750208
+      },
+      "candidate": {
+        "requests": 64834,
+        "requestedBytes": 11003120,
+        "retains": 12768,
+        "peakChargedBytes": 4448,
+        "finalChargedBytes": 0
+      },
+      "reference": {
+        "requests": 280290,
+        "requestedBytes": 17753328,
+        "retains": 12768,
+        "peakChargedBytes": 4864,
+        "finalChargedBytes": 0
+      },
+      "rawPeakBytes": 8560,
+      "finalRawBytes": 0
+    },
+    "129-199-current": {
+      "solves": 8,
+      "savings": {
+        "requests": 205928,
+        "requestedBytes": 6559744
+      },
+      "candidate": {
+        "requests": 17098,
+        "requestedBytes": 10124960,
+        "retains": 3192,
+        "peakChargedBytes": 13664,
+        "finalChargedBytes": 0
+      },
+      "reference": {
+        "requests": 223026,
+        "requestedBytes": 16684704,
+        "retains": 3192,
+        "peakChargedBytes": 15232,
+        "finalChargedBytes": 0
+      },
+      "rawPeakBytes": 33904,
+      "finalRawBytes": 0
+    },
+    "129-199-history": {
+      "solves": 8,
+      "savings": {
+        "requests": 205928,
+        "requestedBytes": 6559744
+      },
+      "candidate": {
+        "requests": 17098,
+        "requestedBytes": 10124960,
+        "retains": 3192,
+        "peakChargedBytes": 13664,
+        "finalChargedBytes": 0
+      },
+      "reference": {
+        "requests": 223026,
+        "requestedBytes": 16684704,
+        "retains": 3192,
+        "peakChargedBytes": 15232,
+        "finalChargedBytes": 0
+      },
+      "rawPeakBytes": 33904,
+      "finalRawBytes": 0
+    }
+  }
+}

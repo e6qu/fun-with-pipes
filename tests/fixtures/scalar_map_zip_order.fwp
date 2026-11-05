@@ -5,9 +5,7 @@ mapped = fn n ->
         True -> fail "map stopped"
         False -> n * 10
 subtract : I64 -> I64 -> I64 ! {IO}
-subtract = fn y -> fn x ->
-    let printed = (y, x) | echo
-    in x - y
+subtract = fn y -> fn x -> let printed = (y, x) | echo in x - y
 left : List[I64] -> List[I64] -> List[I64] ! {IO, Error[String]}
 left = fn input -> fn other ->
     let values = map mapped input
@@ -24,6 +22,13 @@ shared : List[I64] -> (List[I64], List[I64]) ! {IO, Error[String]}
 shared = fn input ->
     let values = map mapped input
     in (zip-with subtract values [101, 202], values)
+borrowed : List[I64] -> (List[I64], List[I64]) ! {IO, Error[String]}
+borrowed = fn input ->
+    let values = map mapped input
+    in let result = zip-with subtract values input
+    in length result == length input | match
+        True -> (result, input)
+        False -> prim.trap "zip result length changed"
 main = [
     [] | attempt (fn input -> left input [101]) | show,
     [1, 2] | attempt (fn input -> left input []) | show,
@@ -33,4 +38,5 @@ main = [
     [1, 2, 3] | attempt (fn input -> left input [101]) | show,
     [1, 2] | attempt alias | show,
     [1, 2] | attempt shared | show,
+    [1, 2] | attempt borrowed | show,
 ] | each print

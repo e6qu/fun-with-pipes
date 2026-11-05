@@ -127,12 +127,70 @@ def check_scoped_cost_inputs(compiler, output, environment, timeout, specialized
     return records
 
 
+def consuming_cost_output(emitted, selected):
+    """Require calls from each exported fixture, not unused private metadata."""
+    program = emitted.split('/* ---- program ---- */', 1)[1]
+    definitions = list(re.finditer(
+        r'/\* ([-a-z0-9]+) : [^\n]*\*/\nstatic [^\n]*? ([fw]\d+)\([^\n]*\) \{', program))
+    bodies = {}
+    private = set()
+    for match in definitions:
+        end = program.index('\n}\n', match.end()) + 3
+        body = program[match.end():end]
+        if match[1] in ('consumed-scalar-array-map', 'consumed-scalar-array-list-zip'):
+            private.add(match[2])
+        else:
+            bodies[match[1]] = body
+    expected = ('mapped', 'mapped32', 'mapped64', 'update-left', 'update-right', 'mapped-produced', 'shared-first')
+    observed = {}
+    for name in (*expected, 'retained'):
+        calls = set(re.findall(r'\b(f\d+)\(', bodies[name])) & private
+        assert len(calls) == int(selected and name != 'retained'), (name, calls, selected)
+        observed[name] = sorted(calls)
+    assert 'direct known scalar array map; input stays borrowed' in bodies['retained']
+    assert bool(private) == selected
+    return observed
+
+
+def check_consuming_cost_input(compiler, output, environment, timeout, selected):
+    """Check live owning calls and a retained-input exclusion before timing."""
+    output.mkdir(parents=True, exist_ok=False)
+    source = (ROOT / 'tests/fixtures/owned_numeric_updates.fwp').read_text()
+    source += '\nexport retained : Array[I64] -> (Array[I64], List[I64]) ! {Async}\n'
+    source += ('retained = fn input ->\n    let changed = array.map increment input\n'
+               '    in (changed, array.to-list input)\n')
+    path = output / 'input.fwp'
+    path.write_text(source)
+    emitted = output / 'input.c'
+    command = [str(compiler), 'build', '--fn', 'mapped', '--memory', 'dynamic',
+               '--emit-c', '-O2', str(path), '-o', str(emitted)]
+    record = dict(command=command, sourceSha256=sha(path))
+    try:
+        result = run_capture(command, timeout=timeout, env=environment, cwd=str(ROOT),
+                             input_data=None, input_stream=None, text=False,
+                             encoding='utf-8', check=False)
+        (output / 'stdout').write_bytes(result.stdout)
+        (output / 'stderr').write_bytes(result.stderr)
+        record['returncode'] = result.returncode
+        assert result.returncode == 0 and not result.stdout and not result.stderr, record
+        record['observed'] = consuming_cost_output(emitted.read_text(), selected)
+        record['cSha256'] = sha(emitted)
+    except subprocess.TimeoutExpired as error:
+        record['timeout'] = timeout
+        (output / 'stdout').write_bytes(error.output or b'')
+        (output / 'stderr').write_bytes(error.stderr or b'')
+        raise
+    finally:
+        (output / 'record.json').write_text(json.dumps(record, indent=2) + '\n')
+    return record
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--compiler', required=True, type=Path)
     parser.add_argument('--reference', required=True, type=Path)
     parser.add_argument('--reference-manifest', required=True, type=Path)
-    parser.add_argument('--comparison', required=True, choices=('numeric-inputs', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input'))
+    parser.add_argument('--comparison', required=True, choices=('numeric-inputs', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric'))
     parser.add_argument('--time', required=True, type=Path)
     parser.add_argument('--machine', required=True, choices=('aarch64', 'x86_64'))
     parser.add_argument('--source', required=True)
@@ -155,6 +213,21 @@ def main():
             assert sha(ROOT / path) == hashes['candidateSha256'], path
         for path, digest in reference_manifest['unchanged'].items():
             assert sha(ROOT / path) == digest, path
+    elif args.comparison == 'owned-numeric':
+        assert reference_manifest['disabledTransformation'] == 'consuming scalar array maps and exclusive coordinate-list reuse'
+        assert set(reference_manifest['candidate']) == set(reference_manifest['reference']) == {'src/cgen.rs'}
+        assert set(reference_manifest['unchanged']) == {
+            'src/ownership.rs', 'src/ir.rs', 'src/rc.rs', 'src/rc/borrows.rs',
+            'src/cgen/owned_numeric.rs', 'src/opt/scoped.rs', 'src/cgen/packed_inputs.rs',
+            'src/cgen/numeric_parameters.rs', 'src/cgen/packed_records.rs',
+            'src/cgen/range_zip.rs', 'src/fuse.rs', 'src/opt.rs',
+            'runtime/fwp_rt.c', 'runtime/fwp_rt_heap.c', 'runtime/fwp_rt_prims.c',
+            'runtime/fwp_rt_task.c', 'runtime/fwp_rt_kernel.c', 'lib/autodiff.fwp', 'lib/list.fwp',
+        }
+        for group in ('candidate', 'unchanged'):
+            for path, checksum in reference_manifest[group].items():
+                assert sha(ROOT / path) == checksum, path
+        assert reference_manifest['ownershipSha256'] == sha(ROOT / 'src/ownership.rs')
     elif args.comparison == 'packed-input':
         assert reference_manifest['disabledTransformation'] == 'scoped objective specialization and private numeric input packing'
         assert set(reference_manifest['candidate']) == set(reference_manifest['reference']) == {'src/mono.rs', 'src/cgen.rs'}
@@ -209,9 +282,9 @@ def main():
     output.mkdir(parents=True, exist_ok=False)
     environment = {key: value for key, value in os.environ.items() if not key.startswith('FWP_')}
     environment.update(FWP_LTO='0', LC_ALL='C')
-    if args.comparison in ('matched-option', 'packed-input'):
+    if args.comparison in ('matched-option', 'packed-input', 'owned-numeric'):
         environment.update(FWP_VRET='1', FWP_FRAME_FIELDS='1')
-    if args.comparison == 'packed-input':
+    if args.comparison in ('packed-input', 'owned-numeric'):
         environment.update(FWP_PACKED_ARRAYS='1', FWP_STACK='1', FWP_ARRAY_FUSION='1')
     report = dict(source=args.source, machine=args.machine, complete=False, comparison=args.comparison,
                   scope='Entire compiler command through C emission: startup, parsing, typing, '
@@ -243,10 +316,10 @@ def main():
             ('autodiff-tutorial', 'docs/tutorials/20-autodiff-and-devices/main.fwp')]}
         programs.update({f'derivative-{dimensions}-{updates}': COSTS.AD.program(dimensions, updates + 1, False)
                          for dimensions, updates in ((3, 0), (33, 199), (129, 199))})
-        if args.comparison == 'packed-input':
+        if args.comparison in ('packed-input', 'owned-numeric'):
             programs.update(scoped_cost_inputs())
             report['preflight'] = {}
-            for kind, specialized in [('candidate', True), ('reference', False)]:
+            for kind, specialized in [('candidate', True), ('reference', args.comparison == 'owned-numeric')]:
                 try:
                     report['preflight'][kind] = check_scoped_cost_inputs(
                         output / (kind + '1'), output / ('preflight-' + kind),
@@ -254,6 +327,16 @@ def main():
                 except AssertionError as error:
                     report['preflight'][kind] = dict(failure=str(error))
             assert all(isinstance(rows, list) for rows in report['preflight'].values()), report['preflight']
+        if args.comparison == 'owned-numeric':
+            report['consumingPreflight'] = {}
+            for kind in ('candidate', 'reference'):
+                try:
+                    report['consumingPreflight'][kind] = check_consuming_cost_input(
+                        output / (kind + '1'), output / ('consuming-' + kind),
+                        environment, args.timeout, kind == 'candidate')
+                except AssertionError as error:
+                    report['consumingPreflight'][kind] = dict(failure=str(error))
+            assert all('observed' in row for row in report['consumingPreflight'].values()), report['consumingPreflight']
         for name, source in programs.items():
             directory = output / name
             directory.mkdir()

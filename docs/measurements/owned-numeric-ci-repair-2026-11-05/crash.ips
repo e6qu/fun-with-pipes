@@ -1,0 +1,145 @@
+{"app_name":"fwp-b12ee532931b31e1","timestamp":"2026-11-04 23:12:18.00 +0000","app_version":"","slice_uuid":"895a7dc9-c4c0-32b6-abfb-f7774650d902","build_version":"","platform":1,"share_with_app_devs":0,"is_first_party":1,"bug_type":"309","os_version":"macOS 15.8.2 (24H232)","roots_installed":0,"incident_id":"59A54A6A-E6CF-49A4-87C0-8CDB4653C336","name":"fwp-b12ee532931b31e1"}
+{
+  "uptime" : 370,
+  "procRole" : "Unspecified",
+  "version" : 2,
+  "userID" : 501,
+  "deployVersion" : 210,
+  "modelCode" : "VirtualMac2,1",
+  "coalitionID" : 767,
+  "osVersion" : {
+    "train" : "macOS 15.8.2",
+    "build" : "24H232",
+    "releaseType" : "User"
+  },
+  "captureTime" : "2026-11-04 23:12:08.0267 +0000",
+  "codeSigningMonitor" : 0,
+  "incident" : "59A54A6A-E6CF-49A4-87C0-8CDB4653C336",
+  "pid" : 10530,
+  "translated" : false,
+  "cpuType" : "ARM-64",
+  "roots_installed" : 0,
+  "bug_type" : "309",
+  "procLaunch" : "2026-11-04 23:12:08.0155 +0000",
+  "procStartAbsTime" : 9008075444,
+  "procExitAbsTime" : 9008285647,
+  "procName" : "fwp-b12ee532931b31e1",
+  "procPath" : "\/Users\/USER\/*\/fwp-b12ee532931b31e1",
+  "parentProc" : "fwp-b12ee532931b31e1",
+  "parentPid" : 9724,
+  "coalitionName" : "runner-provisioner",
+  "crashReporterKey" : "EF512140-642A-EA74-CE6C-EE906D680B25",
+  "appleIntelligenceStatus" : {"reasons":["deviceNotCapable","countryBillingIneligible","countryLocationIneligible","selectedSiriLanguageIneligible"],"state":"unavailable"},
+  "responsiblePid" : 908,
+  "responsibleProc" : "hosted-compute-agent",
+  "codeSigningID" : "fwp-b12ee532931b31e1",
+  "codeSigningTeamID" : "",
+  "codeSigningFlags" : 570556417,
+  "codeSigningValidationCategory" : 10,
+  "codeSigningTrustLevel" : 4294967295,
+  "codeSigningAuxiliaryInfo" : 0,
+  "instructionByteStream" : {"beforePC":"fyMD1f17v6n9AwCRm+D\/l78DAJH9e8Go\/w9f1sADX9YQKYDSARAA1A==","atPC":"AwEAVH8jA9X9e7+p\/QMAkZDg\/5e\/AwCR\/XvBqP8PX9bAA1\/WcAqA0g=="},
+  "bootSessionUUID" : "B85B2FD6-025A-41B5-A742-B087696038DF",
+  "sip" : "disabled",
+  "exception" : {"codes":"0x0000000000000000, 0x0000000000000000","rawCodes":[0,0],"type":"EXC_CRASH","signal":"SIGABRT"},
+  "termination" : {"flags":0,"code":6,"namespace":"SIGNAL","indicator":"Abort trap: 6","byProc":"fwp-b12ee532931b31e1","byPid":10530},
+  "asi" : {"libsystem_c.dylib":["abort() called"]},
+  "extMods" : {"caller":{"thread_create":0,"thread_set_state":0,"task_for_pid":0},"system":{"thread_create":0,"thread_set_state":0,"task_for_pid":0},"targeted":{"thread_create":0,"thread_set_state":0,"task_for_pid":0},"warnings":0},
+  "faultingThread" : 1,
+  "threads" : [{"threadState":{"x":[{"value":14},{"value":4294849004010733627},{"value":999972458},{"value":68719460488},{"value":14680198217728},{"value":6627134537728},{"value":48},{"value":0},{"value":999972458},{"value":3},{"value":13835058055282163714},{"value":959999636},{"value":1344767208},{"value":1000000000},{"value":1},{"value":2043},{"value":18446744073709551578},{"value":8422876720},{"value":0},{"value":10448274415},{"value":105553167075664},{"value":1000000000},{"value":5567963136},{"value":105553147152544},{"value":105553147152544},{"value":2},{"value":0},{"value":0},{"value":0}],"flavor":"ARM_THREAD_STATE64","lr":{"value":6558762872},"cpsr":{"value":2147487744},"fp":{"value":6160369712},"sp":{"value":6160369680},"esr":{"value":1442840704,"description":" Address size fault"},"pc":{"value":6560078792},"far":{"value":0}},"id":32879,"name":"main","queue":"com.apple.main-thread","frames":[{"imageOffset":3016,"symbol":"semaphore_timedwait_trap","symbolLocation":8,"imageIndex":1},{"imageOffset":223096,"symbol":"_dispatch_sema4_timedwait","symbolLocation":64,"imageIndex":2},{"imageOffset":16088,"symbol":"_dispatch_semaphore_wait_slow","symbolLocation":76,"imageIndex":2},{"imageOffset":5651900,"symbol":"_RNvMs_NtNtCsdnanKjkF2cC_3std6thread6threadNtB4_6Thread12park_timeout","symbolLocation":100,"imageIndex":0},{"imageOffset":5376648,"symbol":"_RNCNvMs1_NtNtNtCsdnanKjkF2cC_3std4sync4mpmc4listINtB7_7ChannelNtNtCskHxaVMEHMBi_4test5event13CompletedTestE4recvs_0B12_","symbolLocation":228,"imageIndex":0},{"imageOffset":5413740,"symbol":"_RNvMs1_NtNtNtCsdnanKjkF2cC_3std4sync4mpmc4listINtB5_7ChannelNtNtCskHxaVMEHMBi_4test5event13CompletedTestE4recvB10_","symbolLocation":428,"imageIndex":0},{"imageOffset":5452832,"symbol":"_RNvNtCskHxaVMEHMBi_4test7console17run_tests_console","symbolLocation":3580,"imageIndex":0},{"imageOffset":5389168,"symbol":"_RNvCskHxaVMEHMBi_4test16test_main_static","symbolLocation":612,"imageIndex":0},{"symbol":"_RNvYFEuINtNtNtCs3bJEMBXHbwl_4core3ops8function6FnOnceuE9call_onceCs85nmZC0IQgk_3fwp","inline":true,"imageIndex":0,"imageOffset":4581704,"symbolLocation":4,"sourceLine":250,"sourceFile":"function.rs"},{"imageOffset":4581704,"sourceLine":166,"sourceFile":"backtrace.rs","symbol":"_RINvNtNtCsdnanKjkF2cC_3std3sys9backtrace28___rust_begin_short_backtraceFEuuECs85nmZC0IQgk_3fwp","imageIndex":0,"symbolLocation":12},{"imageOffset":4344716,"symbol":"_RNCINvNtCsdnanKjkF2cC_3std2rt10lang_startuE0Cs85nmZC0IQgk_3fwp","symbolLocation":16,"imageIndex":0},{"imageOffset":5698980,"symbol":"_RNvNtCsdnanKjkF2cC_3std2rt19lang_start_internal","symbolLocation":936,"imageIndex":0},{"imageOffset":3552764,"symbol":"main","symbolLocation":52,"imageIndex":0},{"imageOffset":27544,"symbol":"start","symbolLocation":6076,"imageIndex":3}]},{"triggered":true,"id":32883,"name":"sched::lifetime_tests::cleanup_panic_aborts_before_borrowed_tas","threadState":{"x":[{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":2259089403},{"value":105553123035200},{"value":0},{"value":11069726055409310655},{"value":11069726061135571903},{"value":2},{"value":1099511627776},{"value":4294967293},{"value":0},{"value":0},{"value":0},{"value":328},{"value":8422872464},{"value":0},{"value":6},{"value":2307},{"value":6162510048},{"value":1},{"value":8},{"value":18446744073709551615},{"value":0},{"value":0},{"value":0},{"value":0}],"flavor":"ARM_THREAD_STATE64","lr":{"value":6560348232},"cpsr":{"value":1073745920},"fp":{"value":6162505712},"sp":{"value":6162505680},"esr":{"value":1442840704,"description":" Address size fault"},"pc":{"value":6560113544,"matchesCrashFrame":1},"far":{"value":0}},"frames":[{"imageOffset":37768,"symbol":"__pthread_kill","symbolLocation":8,"imageIndex":1},{"imageOffset":26696,"symbol":"pthread_kill","symbolLocation":296,"imageIndex":5},{"imageOffset":494320,"symbol":"abort","symbolLocation":124,"imageIndex":6},{"imageOffset":5985308,"symbol":"_RNvNtNtNtCsdnanKjkF2cC_3std3sys3pal4unix14abort_internal","symbolLocation":12,"imageIndex":0},{"imageOffset":5984812,"symbol":"_RNvNtCsdnanKjkF2cC_3std7process5abort","symbolLocation":12,"imageIndex":0},{"symbol":"_RNvXs_NtCs85nmZC0IQgk_3fwp5schedNtB4_22AbortIncompleteCleanupNtNtNtCs3bJEMBXHbwl_4core3ops4drop4Drop4drop","inline":true,"imageIndex":0,"imageOffset":2015204,"symbolLocation":32,"sourceLine":102,"sourceFile":"sched.rs"},{"symbol":"_RINvNtCs3bJEMBXHbwl_4core3ptr9drop_glueNtNtCs85nmZC0IQgk_3fwp5sched22AbortIncompleteCleanupEBF_","inline":true,"imageIndex":0,"imageOffset":2015204,"symbolLocation":32,"sourceLine":847,"sourceFile":"mod.rs"},{"imageOffset":2015204,"sourceLine":925,"sourceFile":"sched.rs","symbol":"_RINvMs5_NtCs85nmZC0IQgk_3fwp5schedNtNtB8_6interp6Interp9run_entryuNCNvNtB6_14lifetime_testss_49cleanup_panic_aborts_before_borrowed_tasks_escape0EB8_","imageIndex":0,"symbolLocation":1716},{"imageOffset":3852004,"sourceLine":591,"sourceFile":"sched.rs","symbol":"_RNvNtNtCs85nmZC0IQgk_3fwp5sched14lifetime_testss_49cleanup_panic_aborts_before_borrowed_tasks_escape","imageIndex":0,"symbolLocation":1568},{"symbol":"_RNCNvNtNtCs85nmZC0IQgk_3fwp5sched14lifetime_tests49cleanup_panic_aborts_before_borrowed_tasks_escape0B7_","inline":true,"imageIndex":0,"imageOffset":3523244,"symbolLocation":4,"sourceLine":565,"sourceFile":"sched.rs"},{"imageOffset":3523244,"sourceLine":250,"sourceFile":"function.rs","symbol":"_RNvYNCNvNtNtCs85nmZC0IQgk_3fwp5sched14lifetime_tests49cleanup_panic_aborts_before_borrowed_tasks_escape0INtNtNtCs3bJEMBXHbwl_4core3ops8function6FnOnceuE9call_onceBa_","imageIndex":0,"symbolLocation":20},{"imageOffset":5327576,"symbol":"_RINvCskHxaVMEHMBi_4test28___rust_begin_short_backtraceINtNtCs3bJEMBXHbwl_4core6result6ResultuNtNtCs8Hh7wWMBHrQ_5alloc6string6StringEFEBQ_EB2_","symbolLocation":24,"imageIndex":0},{"imageOffset":5373964,"symbol":"_RNCNvCskHxaVMEHMBi_4test8run_test0B3_","symbolLocation":940,"imageIndex":0},{"imageOffset":5356416,"symbol":"_RINvNtNtCsdnanKjkF2cC_3std3sys9backtrace28___rust_begin_short_backtraceNCNvCskHxaVMEHMBi_4test8run_tests_0uEB1b_","symbolLocation":132,"imageIndex":0},{"imageOffset":5383376,"symbol":"_RNSNvYNCINvNtNtCsdnanKjkF2cC_3std6thread9lifecycle15spawn_uncheckedNCNvCskHxaVMEHMBi_4test8run_tests_0uEs_0INtNtNtCs3bJEMBXHbwl_4core3ops8function6FnOnceuE9call_once6vtableB17_","symbolLocation":64,"imageIndex":0},{"imageOffset":5732296,"symbol":"_RNvNvMs0_NtNtNtCsdnanKjkF2cC_3std3sys6thread4unixNtB7_6Thread3new12thread_start","symbolLocation":392,"imageIndex":0},{"imageOffset":27592,"symbol":"_pthread_start","symbolLocation":136,"imageIndex":5},{"imageOffset":7040,"symbol":"thread_start","symbolLocation":8,"imageIndex":5}]},{"id":32884,"frames":[{"imageOffset":17356,"symbol":"__psynch_cvwait","symbolLocation":8,"imageIndex":1},{"imageOffset":28828,"symbol":"_pthread_cond_wait","symbolLocation":984,"imageIndex":5},{"symbol":"_RNvMNtNtNtNtNtCsdnanKjkF2cC_3std3sys3pal4unix4sync7condvarNtB2_7Condvar4wait","inline":true,"imageIndex":0,"imageOffset":3557080,"symbolLocation":12,"sourceLine":46,"sourceFile":"condvar.rs"},{"symbol":"_RNvMNtNtNtNtCsdnanKjkF2cC_3std3sys4sync7condvar7pthreadNtB2_7Condvar4wait","inline":true,"imageIndex":0,"imageOffset":3557080,"symbolLocation":64,"sourceLine":64,"sourceFile":"pthread.rs"},{"imageOffset":3557080,"sourceLine":128,"sourceFile":"condvar.rs","symbol":"_RINvMNtNtNtCsdnanKjkF2cC_3std4sync6poison7condvarNtB3_7Condvar4waitNtNtCs85nmZC0IQgk_3fwp5sched5TurnsEB17_","imageIndex":0,"symbolLocation":88},{"imageOffset":4656088,"symbol":"_RNvMs0_NtCs85nmZC0IQgk_3fwp5schedNtB5_5World9wait_turn","symbolLocation":104,"imageIndex":0},{"symbol":"_RNCNvMs5_NtCs85nmZC0IQgk_3fwp5schedNtNtB9_6interp6Interp10spawn_bodys0_0B9_","inline":true,"imageIndex":0,"imageOffset":4585584,"symbolLocation":140,"sourceLine":1160,"sourceFile":"sched.rs"},{"imageOffset":4585584,"sourceLine":166,"sourceFile":"backtrace.rs","symbol":"_RINvNtNtCsdnanKjkF2cC_3std3sys9backtrace28___rust_begin_short_backtraceNCNvMs5_NtCs85nmZC0IQgk_3fwp5schedNtNtB1h_6interp6Interp10spawn_bodys0_0uEB1h_","imageIndex":0,"symbolLocation":180},{"symbol":"_RNCNCINvNtNtCsdnanKjkF2cC_3std6thread9lifecycle15spawn_uncheckedNCNvMs5_NtCs85nmZC0IQgk_3fwp5schedNtNtB1a_6interp6Interp10spawn_bodys0_0uEs_00B1a_","inline":true,"imageIndex":0,"imageOffset":4625728,"symbolLocation":36,"sourceLine":70,"sourceFile":"lifecycle.rs"},{"symbol":"_RNvXsn_NtNtCs3bJEMBXHbwl_4core5panic11unwind_safeINtB5_16AssertUnwindSafeNCNCINvNtNtCsdnanKjkF2cC_3std6thread9lifecycle15spawn_uncheckedNCNvMs5_NtCs85nmZC0IQgk_3fwp5schedNtNtB2k_6interp6Interp10spawn_bodys0_0uEs_00EINtNtNtB9_3ops8function6FnOnceuE9call_onceB2k_","inline":true,"imageIndex":0,"imageOffset":4625728,"symbolLocation":68,"sourceLine":275,"sourceFile":"unwind_safe.rs"},{"symbol":"_RINvNvNtCsdnanKjkF2cC_3std9panicking12catch_unwind7do_callINtNtNtCs3bJEMBXHbwl_4core5panic11unwind_safe16AssertUnwindSafeNCNCINvNtNtB6_6thread9lifecycle15spawn_uncheckedNCNvMs5_NtCs85nmZC0IQgk_3fwp5schedNtNtB2R_6interp6Interp10spawn_bodys0_0uEs_00EuEB2R_","inline":true,"imageIndex":0,"imageOffset":4625728,"symbolLocation":92,"sourceLine":576,"sourceFile":"panicking.rs"},{"symbol":"_RINvNtCsdnanKjkF2cC_3std9panicking12catch_unwinduINtNtNtCs3bJEMBXHbwl_4core5panic11unwind_safe16AssertUnwindSafeNCNCINvNtNtB4_6thread9lifecycle15spawn_uncheckedNCNvMs5_NtCs85nmZC0IQgk_3fwp5schedNtNtB2I_6interp6Interp10spawn_bodys0_0uEs_00EEB2I_","inline":true,"imageIndex":0,"imageOffset":4625728,"symbolLocation":92,"sourceLine":544,"sourceFile":"panicking.rs"},{"symbol":"_RINvNtCsdnanKjkF2cC_3std5panic12catch_unwindINtNtNtCs3bJEMBXHbwl_4core5panic11unwind_safe16AssertUnwindSafeNCNCINvNtNtB4_6thread9lifecycle15spawn_uncheckedNCNvMs5_NtCs85nmZC0IQgk_3fwp5schedNtNtB2D_6interp6Interp10spawn_bodys0_0uEs_00EuEB2D_","inline":true,"imageIndex":0,"imageOffset":4625728,"symbolLocation":92,"sourceLine":359,"sourceFile":"panic.rs"},{"symbol":"_RNCINvNtNtCsdnanKjkF2cC_3std6thread9lifecycle15spawn_uncheckedNCNvMs5_NtCs85nmZC0IQgk_3fwp5schedNtNtB18_6interp6Interp10spawn_bodys0_0uEs_0B18_","inline":true,"imageIndex":0,"imageOffset":4625728,"symbolLocation":120,"sourceLine":68,"sourceFile":"lifecycle.rs"},{"imageOffset":4625728,"sourceLine":250,"sourceFile":"function.rs","symbol":"_RNSNvYNCINvNtNtCsdnanKjkF2cC_3std6thread9lifecycle15spawn_uncheckedNCNvMs5_NtCs85nmZC0IQgk_3fwp5schedNtNtB1d_6interp6Interp10spawn_bodys0_0uEs_0INtNtNtCs3bJEMBXHbwl_4core3ops8function6FnOnceuE9call_once6vtableB1d_","imageIndex":0,"symbolLocation":156},{"imageOffset":5732296,"symbol":"_RNvNvMs0_NtNtNtCsdnanKjkF2cC_3std3sys6thread4unixNtB7_6Thread3new12thread_start","symbolLocation":392,"imageIndex":0},{"imageOffset":27592,"symbol":"_pthread_start","symbolLocation":136,"imageIndex":5},{"imageOffset":7040,"symbol":"thread_start","symbolLocation":8,"imageIndex":5}],"threadState":{"x":[{"value":260},{"value":0},{"value":0},{"value":0},{"value":0},{"value":160},{"value":0},{"value":0},{"value":6430991480},{"value":0},{"value":0},{"value":2},{"value":2},{"value":0},{"value":0},{"value":0},{"value":305},{"value":8422872392},{"value":0},{"value":105553123034816},{"value":105553147133952},{"value":6430994656},{"value":0},{"value":0},{"value":0},{"value":1},{"value":256},{"value":0},{"value":0}],"flavor":"ARM_THREAD_STATE64","lr":{"value":6560350364},"cpsr":{"value":1610616832},"fp":{"value":6430991600},"sp":{"value":6430991456},"esr":{"value":1442840704,"description":" Address size fault"},"pc":{"value":6560093132},"far":{"value":0}}}],
+  "usedImages" : [
+  {
+    "source" : "P",
+    "arch" : "arm64",
+    "base" : 4306501632,
+    "size" : 10354688,
+    "uuid" : "895a7dc9-c4c0-32b6-abfb-f7774650d902",
+    "path" : "\/Users\/USER\/*\/fwp-b12ee532931b31e1",
+    "name" : "fwp-b12ee532931b31e1"
+  },
+  {
+    "source" : "P",
+    "arch" : "arm64e",
+    "base" : 6560075776,
+    "size" : 243188,
+    "uuid" : "d7a304d7-88f5-3ce0-aa04-f59a5ad8b4fc",
+    "path" : "\/usr\/lib\/system\/libsystem_kernel.dylib",
+    "name" : "libsystem_kernel.dylib"
+  },
+  {
+    "source" : "P",
+    "arch" : "arm64e",
+    "base" : 6558539776,
+    "size" : 288608,
+    "uuid" : "db1d6c51-05ed-35ab-a8b5-4132a24e9753",
+    "path" : "\/usr\/lib\/system\/libdispatch.dylib",
+    "name" : "libdispatch.dylib"
+  },
+  {
+    "source" : "P",
+    "arch" : "arm64e",
+    "base" : 6556516352,
+    "size" : 636312,
+    "uuid" : "a1ee9680-226e-3dba-a14c-8c93eea2e129",
+    "path" : "\/usr\/lib\/dyld",
+    "name" : "dyld"
+  },
+  {
+    "size" : 0,
+    "source" : "A",
+    "base" : 0,
+    "uuid" : "00000000-0000-0000-0000-000000000000"
+  },
+  {
+    "source" : "P",
+    "arch" : "arm64e",
+    "base" : 6560321536,
+    "size" : 51832,
+    "uuid" : "7da8fcd5-d60e-32f7-b055-6ce3f1615b9e",
+    "path" : "\/usr\/lib\/system\/libsystem_pthread.dylib",
+    "name" : "libsystem_pthread.dylib"
+  },
+  {
+    "source" : "P",
+    "arch" : "arm64e",
+    "base" : 6558842880,
+    "size" : 529228,
+    "uuid" : "06b987dd-b857-3be0-bc83-a5c72aa292b2",
+    "path" : "\/usr\/lib\/system\/libsystem_c.dylib",
+    "name" : "libsystem_c.dylib"
+  }
+],
+  "sharedCache" : {
+  "base" : 6555680768,
+  "size" : 5040275456,
+  "uuid" : "e130cba3-99f2-36e1-98c3-ddc73414b433"
+},
+  "vmSummary" : "ReadOnly portion of Libraries: Total=858.2M resident=0K(0%) swapped_out_or_unallocated=858.2M(100%)\nWritable regions: Total=916.8M written=257K(0%) resident=257K(0%) swapped_out=0K(0%) unallocated=916.5M(100%)\n\n                                VIRTUAL   REGION \nREGION TYPE                        SIZE    COUNT (non-coalesced) \n===========                     =======  ======= \nKernel Alloc Once                   32K        1 \nMALLOC                           650.1M       13 \nMALLOC guard page                   96K        6 \nSTACK GUARD                         32K        2 \nStack                            266.0M        4 \nStack Guard                       56.0M        1 \nVM_ALLOCATE                         64K        4 \nVM_ALLOCATE (reserved)             384K        3         reserved VM address space (unallocated)\n__AUTH                             822K      161 \n__AUTH_CONST                      12.8M      295 \n__DATA                            3220K      273 \n__DATA_CONST                      11.0M      296 \n__DATA_DIRTY                       453K       88 \n__FONT_DATA                        2352        1 \n__LINKEDIT                       619.4M        2 \n__OBJC_RO                         61.4M        1 \n__OBJC_RW                         2397K        1 \n__TEXT                           238.8M      305 \n__TPRO_CONST                       128K        2 \npage table in kernel               257K        1 \nshared memory                       32K        1 \n===========                     =======  ======= \nTOTAL                              1.9G     1461 \nTOTAL, minus reserved VM space     1.9G     1461 \n",
+  "legacyInfo" : {
+  "threadTriggered" : {
+    "name" : "sched::lifetime_tests::cleanup_panic_aborts_before_borrowed_tas"
+  }
+},
+  "logWritingSignature" : "fd35db3498c5f8fc3b6de32ae975b0da675a4b52",
+  "trialInfo" : {
+  "rollouts" : [
+    {
+      "rolloutId" : "645eb1d0417dab722a215927",
+      "factorPackIds" : {
+
+      },
+      "deploymentId" : 240000005
+    },
+    {
+      "rolloutId" : "67d07cd6a7affa169ae21f45",
+      "factorPackIds" : {
+
+      },
+      "deploymentId" : 240000002
+    }
+  ],
+  "experiments" : [
+
+  ]
+}
+}

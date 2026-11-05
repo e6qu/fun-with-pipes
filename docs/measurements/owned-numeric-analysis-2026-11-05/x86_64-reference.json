@@ -1,0 +1,34 @@
+{
+  "source": "07541ff956d582bb9c3936b86261e43fa25b0b2f",
+  "disabledTransformation": "consuming scalar array maps and exclusive coordinate-list reuse",
+  "candidate": {
+    "src/cgen.rs": "e397009a93d6ba9ebf9acec97b873972d8d6396e8b62147cbf5e2eefb31e8369"
+  },
+  "reference": {
+    "src/cgen.rs": "4974f16d5bb43c808e6c104603e4033e7ed74ba5fb0b6d6ddb18278ec689f223"
+  },
+  "unchanged": {
+    "src/ownership.rs": "26d7ebc592acbad1b83bd34150afb2d9b39f3c0a3691d35c8e1db6c059ac3c55",
+    "src/ir.rs": "fb4bfbe239b6feba623501130411b90adba434ecd67e2b89600ed5d5a0b14f75",
+    "src/rc.rs": "ffc59eef91c867845c6a05c21929da77afcb61c029b22fe2fe8244234e37b9c3",
+    "src/rc/borrows.rs": "8b286221908fa0e94d6c32c81ba525392dbdc457845550c5eb4995261870be3f",
+    "src/cgen/owned_numeric.rs": "e9e13a864842eac9a7262a3ac9daebd21f01a028db5b7501b9d90c2be9dc8b15",
+    "src/opt/scoped.rs": "98bcaefe45a0e2a1812a29b6285dd8f58c9d4fccbf34d5dce93bbe22fbf02358",
+    "src/cgen/packed_inputs.rs": "38f86805bceccb2d309a75f4a4900aaaeac64ab46aa6ac37119edd9db29a6e28",
+    "src/cgen/numeric_parameters.rs": "a62dfd74a91143078170d6cf3440110f3a0fcfd6009ff986135c55b8fe202da1",
+    "src/cgen/packed_records.rs": "199e790f7f6fbda882025935310ae5447e868afce4e6b242f82438da84588405",
+    "src/cgen/range_zip.rs": "37bae6e0728256bc04b8e59047bce3b54676c3cdd7465dfec34ffd34a6b5cc0b",
+    "src/fuse.rs": "94b7628849c9c7d1f702d0734be4802575053674e2d638331db59fef20f26772",
+    "src/opt.rs": "d64c3ad91dd89067dfb2e416d8fe13dfc4bcfc11b487f8b28a01919950726709",
+    "runtime/fwp_rt.c": "a3dacfe33d859d10f458e955ac46901a0c5c051c7ba3f8871ce488c5dfe3ba3e",
+    "runtime/fwp_rt_heap.c": "ac26a18c249847c5b6c25f02776eee417bf4eb4a98cbad60aec58f00338c5a6e",
+    "runtime/fwp_rt_prims.c": "5a545209567d7ecd63e4e2ca13b068327e7cdd2964ffbc44e49ecc501ba242f6",
+    "runtime/fwp_rt_task.c": "5c65f5691766571fac773b9c260e753cb6280794b5362cd4b09ca822cc27e9e9",
+    "runtime/fwp_rt_kernel.c": "a731f9e46bc03ff47a0e5107519fe13e76d1d04681c18cdb8a9ebc6855da1739",
+    "lib/autodiff.fwp": "0274942f72e8ae60bceca2ca723a8f14a8dae3346ec71209aeb1ae8bf2841440",
+    "lib/list.fwp": "9f4988e962654e84695944abbb5fc97b01678a37915aebfc48d286fc1e375993"
+  },
+  "ownershipSha256": "26d7ebc592acbad1b83bd34150afb2d9b39f3c0a3691d35c8e1db6c059ac3c55",
+  "patchSha256": "b2acf724bc3eeedae28aa57d4ddbef225a5220a25934831769ef9504c8f60926",
+  "compilerSha256": "03016902cd00798f4ece86d873b87ba10b2dcf547bbd4bf7eb5771901a71ec78"
+}

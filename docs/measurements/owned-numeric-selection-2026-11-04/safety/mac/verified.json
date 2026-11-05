@@ -1,0 +1,29 @@
+{
+  "source": "b8404dbbc2d6bb0617788829a859ff9b235cbf12",
+  "job": 126844449700,
+  "units": 282,
+  "ignored": 4,
+  "integrations": 103,
+  "targets": 18,
+  "images": 660,
+  "statuses": 671,
+  "consumingSelection": {
+    "mapped": [
+      "f36"
+    ],
+    "mapped32": [
+      "f37"
+    ],
+    "mapped64": [
+      "f38"
+    ],
+    "update-left": [
+      "f39"
+    ],
+    "update-right": [
+      "f40"
+    ],
+    "retained": []
+  },
+  "allDiagnosticsAudited": true
+}

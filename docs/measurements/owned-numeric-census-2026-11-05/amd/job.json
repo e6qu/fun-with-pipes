@@ -1,0 +1,132 @@
+{
+  "id": 126907012115,
+  "run_id": 41925013907,
+  "workflow_name": "Numerical and ownership evidence",
+  "head_branch": "roadmap/owned-numeric-measurement-2026-11-05",
+  "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/41925013907",
+  "run_attempt": 1,
+  "node_id": "CR_kwDOU33zxM8AAAAdjD9UEw",
+  "head_sha": "07541ff956d582bb9c3936b86261e43fa25b0b2f",
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/126907012115",
+  "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41925013907/job/126907012115",
+  "status": "completed",
+  "conclusion": "success",
+  "created_at": "2026-11-04T22:24:35Z",
+  "started_at": "2026-11-04T22:27:19Z",
+  "completed_at": "2026-11-04T22:30:39Z",
+  "name": "numeric_input_analysis (ubuntu-latest)",
+  "steps": [
+    {
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 1,
+      "started_at": "2026-11-04T22:27:20Z",
+      "completed_at": "2026-11-04T22:27:21Z"
+    },
+    {
+      "name": "Run actions/checkout@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 2,
+      "started_at": "2026-11-04T22:27:21Z",
+      "completed_at": "2026-11-04T22:27:34Z"
+    },
+    {
+      "name": "Run dtolnay/rust-toolchain@stable",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 3,
+      "started_at": "2026-11-04T22:27:34Z",
+      "completed_at": "2026-11-04T22:27:41Z"
+    },
+    {
+      "name": "Verify focused correctness and matching compiler sources",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 4,
+      "started_at": "2026-11-04T22:27:41Z",
+      "completed_at": "2026-11-04T22:27:44Z"
+    },
+    {
+      "name": "Run actions/cache@v6",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 5,
+      "started_at": "2026-11-04T22:27:44Z",
+      "completed_at": "2026-11-04T22:27:45Z"
+    },
+    {
+      "name": "Build candidate at production settings",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 6,
+      "started_at": "2026-11-04T22:27:45Z",
+      "completed_at": "2026-11-04T22:28:50Z"
+    },
+    {
+      "name": "Build and verify the selected same-source reference",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 7,
+      "started_at": "2026-11-04T22:28:50Z",
+      "completed_at": "2026-11-04T22:30:03Z"
+    },
+    {
+      "name": "Verify complete solve allocations before any timing",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 8,
+      "started_at": "2026-11-04T22:30:03Z",
+      "completed_at": "2026-11-04T22:30:32Z"
+    },
+    {
+      "name": "Measure balanced compiler commands and peak memory",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 9,
+      "started_at": "2026-11-04T22:30:32Z",
+      "completed_at": "2026-11-04T22:30:32Z"
+    },
+    {
+      "name": "Preserve complete measurements and failures",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 10,
+      "started_at": "2026-11-04T22:30:32Z",
+      "completed_at": "2026-11-04T22:30:36Z"
+    },
+    {
+      "name": "Post Run actions/cache@v6",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 19,
+      "started_at": "2026-11-04T22:30:36Z",
+      "completed_at": "2026-11-04T22:30:36Z"
+    },
+    {
+      "name": "Post Run actions/checkout@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 20,
+      "started_at": "2026-11-04T22:30:36Z",
+      "completed_at": "2026-11-04T22:30:37Z"
+    },
+    {
+      "name": "Complete job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 21,
+      "started_at": "2026-11-04T22:30:37Z",
+      "completed_at": "2026-11-04T22:30:37Z"
+    }
+  ],
+  "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/126907012115",
+  "labels": [
+    "ubuntu-latest"
+  ],
+  "runner_id": 1000408189,
+  "runner_name": "GitHub Actions 1000408189",
+  "runner_group_id": 0,
+  "runner_group_name": "GitHub Actions"
+}

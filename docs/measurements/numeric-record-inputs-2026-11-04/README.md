@@ -85,7 +85,7 @@ adding a type to an eligibility list is insufficient.
   rather than inventing a special empty representation.
 
 The older census measured each record/list group at 25,671 requests per
-129-coordinate, 199-update solve. Those are [historical counts](../remaining-gradient-storage.md#measured-costs),
+129-coordinate, 199-update solve. Those are [historical counts](../gradient-array-storage-2026-11-03/README.md#allocation-result),
 not a fresh measurement at this source. This review establishes the remaining
 code paths, not the eventual allocation saving or speedup. Coordinate-list reuse
 is a separate ownership question.

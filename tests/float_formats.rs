@@ -518,6 +518,11 @@ fn scalar_array_identity_moves_owners_and_preserves_aliases() {
         }
         fwp::ir::check_locals(&current).unwrap();
         let generated = fwp::cgen::generate(&current).unwrap();
+        assert_eq!(
+            generated.contains("/* consumed-scalar-array-map :"),
+            !selected,
+            "the identity rewrite removes the map; native ownership lowering consumes the remaining map"
+        );
         assert!(
             generated.contains("#define FWP_UNWIND 1"),
             "fault probe needs a task-capable program"
@@ -556,9 +561,10 @@ fn scalar_array_identity_moves_owners_and_preserves_aliases() {
             );
             for reuse in [false, true] {
                 let code = format!(
-                    "{}\n{generated}\n#define IDENTITY_SELECTED {}\n{}",
+                    "{}\n{generated}\n#define IDENTITY_SELECTED {}\n#define IDENTITY_REUSE {}\n{}",
                     if reuse { "" } else { "#define FWP_NO_REUSE 1" },
                     u8::from(selected),
+                    u8::from(reuse),
                     include_str!("fixtures/scalar_array_identity.c"),
                 );
                 for opt in ["-O1", "-O2"] {

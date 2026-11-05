@@ -346,6 +346,8 @@ pub(crate) fn infer(
             | Body::PackedRecordFold { callback }
             | Body::ScalarBufferMap { callback }
             | Body::ScalarBufferZip { callback, .. }
+            | Body::OwnedScalarArrayMap { callback }
+            | Body::OwnedScalarBufferZip { callback, .. }
             | Body::RangeZip { callback, .. }
             | Body::PackedRecordRangeZip { callback, .. }
             | Body::PackedRecordPairs { callback, .. } => {

@@ -355,6 +355,40 @@ bound compilation overhead; they do not measure generated-program speed. The
 [contract](measurements/direct-array-callbacks.md) defines separate runtime and
 whole-solve memory requirements.
 
+### Consuming numeric storage
+
+**[Focused native verification](measurements/owned-numeric-checks-2026-11-05/README.md)
+and the [exact allocation census](measurements/owned-numeric-census-2026-11-05/README.md)
+pass. [Compiler costs pass](measurements/owned-numeric-analysis-2026-11-05/README.md);
+[runtime results are audited](measurements/owned-numeric-time-2026-11-05/README.md)
+with four AMD64 speed targets open. Final platform delivery remains.**
+For a dead array input, a private same-type scalar map can take its owner and
+overwrite exclusive storage. A shared array or view receives independent output.
+For an array/list zip, a private entry can consume the list and reuse only its
+exclusive prefix. Encountering one shared node excludes its entire suffix from
+reuse, including descendants whose own reference counts are one.
+
+```text
+Finish callbacks → allocate required suffix → update exclusive prefix → return
+                                             shared aliases stay unchanged
+```
+
+`src/cgen/owned_numeric.rs` selects direct-local last uses and owned array results
+from fully applied calls. Its reverse walk includes owned record/variant fields
+before borrow inference and ARC insertion. It excludes ordinary call arguments and
+resource-anchored bodies. Private operation metadata specifies exactly which
+argument transfers; public map/zip contracts remain borrowed. Both callbacks and
+elements must satisfy the existing machine-sized scalar type checks.
+
+List construction keeps the original input protected while building any required
+fresh suffix. Only after fallible work ends does it transfer prefix links; the
+unused old tail and new result then have distinct cleanup owners. Array mapping
+protects either its reused input or fresh partial result through callback failure.
+Both use the mutation-uniqueness check, including disabled-reuse controls.
+The [contract](measurements/owned-numeric-updates.md) defines exclusions, examples,
+failure tests and measurement limits. The census verifies the predicted counts;
+reduced allocation alone does not demonstrate a speedup.
+
 ### Proving a local array has one owner
 
 `src/rc/unique.rs` checks the ownership-lowered body after a candidate allocation.
@@ -597,8 +631,8 @@ timing goals.
 
 ### Private derivative input records
 
-**Correctness and measurements audited; three AMD64 timing limits remain open.
-Final platform gates are pending.**
+**Verified delivery in [PR #257](roadmap-history.md#packed-derivative-inputs-pr-257);
+three AMD64 timing limits remain open.**
 The compiler can store selected input records together instead of allocating
 one record box and one list cell per input. For three two-number records:
 

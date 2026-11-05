@@ -233,6 +233,17 @@ pub enum Body {
         callback: FuncId,
         slot: usize,
     },
+    /// Private same-type scalar map: consumes its array, reusing only ordinary
+    /// exclusive storage. Shared arrays and views produce independent output.
+    OwnedScalarArrayMap {
+        callback: FuncId,
+    },
+    /// Private scalar zip: borrows the array at `slot`, consumes the other list.
+    /// Callbacks finish before reusing any exclusively owned list prefix.
+    OwnedScalarBufferZip {
+        callback: FuncId,
+        slot: usize,
+    },
     /// Native-only zip: borrow a scalar callback and list; generate the I64
     /// indices from two evaluated bounds. Results own only flat numeric fields.
     RangeZip {
@@ -732,6 +743,8 @@ pub(crate) fn reachable_functions(prog: &Program, entries: &[FuncId]) -> Result<
             | Body::PackedRecordFold { callback }
             | Body::ScalarBufferMap { callback }
             | Body::ScalarBufferZip { callback, .. }
+            | Body::OwnedScalarArrayMap { callback }
+            | Body::OwnedScalarBufferZip { callback, .. }
             | Body::RangeZip { callback, .. }
             | Body::PackedRecordRangeZip { callback, .. }
             | Body::PackedRecordPairs { callback, .. } => {

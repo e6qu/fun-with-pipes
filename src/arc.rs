@@ -228,6 +228,8 @@ pub(crate) fn check(
             | Body::PackedRecordFold { .. }
             | Body::ScalarBufferMap { .. }
             | Body::ScalarBufferZip { .. }
+            | Body::OwnedScalarArrayMap { .. }
+            | Body::OwnedScalarBufferZip { .. }
             | Body::RangeZip { .. }
             | Body::PackedRecordRangeZip { .. }
             | Body::PackedRecordPairs { .. } => continue,

@@ -1,0 +1,34 @@
+{
+  "arc/record-ownership/float_formats/array-identity-false-packed-false-reuse-false-O1-complete.c": {
+    "file": "array-identity-false-packed-false-reuse-false-O1-complete.c",
+    "sha256": "36b2b6b9febde856cec01fa97c1adc62f34e27901c0e4cd60ee6127a65a9289d"
+  },
+  "arc/record-ownership/float_formats/array-identity-false-packed-false-reuse-true-O1-complete.c": {
+    "file": "array-identity-false-packed-false-reuse-true-O1-complete.c",
+    "sha256": "9717508b5ee99a2b6d34e3f4da1447ce9593e486fdb691b8df08b504efe30311"
+  },
+  "arc/record-ownership/float_formats/array-identity-false-packed-true-reuse-false-O1-complete.c": {
+    "file": "array-identity-false-packed-true-reuse-false-O1-complete.c",
+    "sha256": "54fdde56fab64c34d0e73f1cf31f325a3a7cd7e5c9b80aea5365c29ab4d1e5a6"
+  },
+  "arc/record-ownership/float_formats/array-identity-false-packed-true-reuse-true-O1-complete.c": {
+    "file": "array-identity-false-packed-true-reuse-true-O1-complete.c",
+    "sha256": "15c938ce257a6df52827e6233c426429def3e3b855a0be8d406bffe9002d251a"
+  },
+  "arc/record-ownership/float_formats/array-identity-true-packed-false-reuse-false-O1-complete.c": {
+    "file": "array-identity-true-packed-false-reuse-false-O1-complete.c",
+    "sha256": "d7afba1044dea5c662024bac1501dc62cfc594dbf1f7da850385a6ef5cbfd9f0"
+  },
+  "arc/record-ownership/float_formats/array-identity-true-packed-false-reuse-true-O1-complete.c": {
+    "file": "array-identity-true-packed-false-reuse-true-O1-complete.c",
+    "sha256": "946cf1900cd3c35abe3f99637c99243a2b1a94fcbdae936b98e59911e1d323c4"
+  },
+  "arc/record-ownership/float_formats/array-identity-true-packed-true-reuse-false-O1-complete.c": {
+    "file": "array-identity-true-packed-true-reuse-false-O1-complete.c",
+    "sha256": "d399c416b19a819e255fd13ecadc8d190270ed4394953b98694130d87f956c13"
+  },
+  "arc/record-ownership/float_formats/array-identity-true-packed-true-reuse-true-O1-complete.c": {
+    "file": "array-identity-true-packed-true-reuse-true-O1-complete.c",
+    "sha256": "5af03f2e90ff6e7df4b4304efac626ffd1383c9804fdb47b39c2f24464fdf0fd"
+  }
+}

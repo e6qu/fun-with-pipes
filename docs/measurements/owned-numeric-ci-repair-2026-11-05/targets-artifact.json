@@ -1,0 +1,20 @@
+{
+  "id": 13373102222,
+  "node_id": "MDg6QXJ0aWZhY3QxMzM3MzEwMjIyMg==",
+  "name": "macos-regular-tests-macos-15",
+  "size_in_bytes": 49188,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13373102222",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13373102222/zip",
+  "expired": false,
+  "digest": "sha256:c8334d84a4127fecbd49b296041111f959b67c68d14a2a9e8e9209f0cea00055",
+  "created_at": "2026-11-04T23:36:27Z",
+  "updated_at": "2026-11-04T23:36:27Z",
+  "expires_at": "2027-02-02T23:06:34Z",
+  "workflow_run": {
+    "id": 41931018786,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "owned-numeric-updates",
+    "head_sha": "f71b53080008923ea40af8deb6c5cd6b60ca041c"
+  }
+}

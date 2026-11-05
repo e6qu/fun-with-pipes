@@ -504,20 +504,31 @@ fn scalar_map_buffers_preserve_eager_order_aliases_and_both_zip_slots() {
                     .arg(&path),
             );
             let code = std::fs::read_to_string(&path).unwrap();
-            assert!(
-                code.contains("Eager scalar buffer"),
-                "{stack}/{opt}: map not selected"
-            );
-            assert!(code.contains("Zip after the complete scalar map"));
             let executable = dir.join(format!("scalar-{stack}-{opt}.exe"));
             fwp::cgen::compile_c(&code, &executable, opt).unwrap();
-            let output = checked(Command::new(&executable).env("FWP_ALLOC_STATS", "1"));
+            let output = Command::new(&executable)
+                .env("FWP_ALLOC_STATS", "1")
+                .output()
+                .unwrap();
             record_probe::save(
                 "scalar_map_zip_order",
                 &format!("{stack}-{opt}"),
                 &code,
                 &executable,
                 &output,
+            );
+            assert!(output.status.success(), "{stack}/{opt}: {output:?}");
+            assert!(
+                code.contains("Eager scalar buffer"),
+                "{stack}/{opt}: map not selected"
+            );
+            assert!(
+                code.contains("Zip after the complete scalar map"),
+                "{stack}/{opt}: the returned input alias must keep a borrowing zip"
+            );
+            assert!(
+                code.matches("/* consumed-scalar-array-list-zip :").count() >= 2,
+                "{stack}/{opt}: both last-use zip slots must consume their list"
             );
             assert_eq!(output.stdout, reference.stdout, "{stack}/{opt}");
             let stats =
@@ -554,6 +565,10 @@ fn scalar_map_buffers_exclude_shared_results_captures_and_wide_values() {
         assert!(
             !code.contains("Zip after the complete scalar map"),
             "{name}"
+        );
+        assert!(
+            !code.contains("/* consumed-scalar-array-list-zip :"),
+            "{name}: an excluded buffer must not become a consuming zip"
         );
     }
 }
@@ -842,7 +857,11 @@ fn array_list_zip_preserves_eager_order_slices_and_updated_aliases() {
             );
             let ordinary = std::fs::read_to_string(path).unwrap();
             assert!(
-                ordinary.matches("/* array-list-zip :").count() >= 4,
+                ordinary.matches("/* array-list-zip :").count()
+                    + ordinary
+                        .matches("/* consumed-scalar-array-list-zip :")
+                        .count()
+                    >= 4,
                 "{stack}/{opt}: both I64 slots, I8 and widened F32 inputs must select"
             );
             for reuse in [true, false] {
@@ -897,7 +916,8 @@ fn gradient_arrays_cross_scope_and_feed_updates_without_a_private_list() {
     );
     let code = std::fs::read_to_string(path).unwrap();
     assert!(
-        code.contains("/* array-list-zip :"),
+        code.contains("/* array-list-zip :")
+            || code.contains("/* consumed-scalar-array-list-zip :"),
         "the complete gradient/update path must select"
     );
     for opt in ["-O1", "-O2"] {

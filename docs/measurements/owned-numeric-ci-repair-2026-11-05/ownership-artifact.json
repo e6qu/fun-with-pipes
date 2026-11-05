@@ -1,0 +1,20 @@
+{
+  "id": 13373681514,
+  "node_id": "MDg6QXJ0aWZhY3QxMzM3MzY4MTUxNA==",
+  "name": "ownership-evidence-regular-macOS-ARM64.zip",
+  "size_in_bytes": 216163046,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13373681514",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13373681514/zip",
+  "expired": false,
+  "digest": "sha256:21e6cf0155ff88ad496a72d35c5bfaa749bf50142dedacfeeccd2f449a3f169e",
+  "created_at": "2026-11-04T23:39:24Z",
+  "updated_at": "2026-11-04T23:39:24Z",
+  "expires_at": "2027-02-02T23:06:34Z",
+  "workflow_run": {
+    "id": 41931018786,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "owned-numeric-updates",
+    "head_sha": "f71b53080008923ea40af8deb6c5cd6b60ca041c"
+  }
+}

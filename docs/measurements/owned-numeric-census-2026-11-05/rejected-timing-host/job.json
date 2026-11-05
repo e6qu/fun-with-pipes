@@ -1,0 +1,243 @@
+{
+  "job": {
+    "id": 126913419469,
+    "run_id": 41926862701,
+    "workflow_name": "Numerical and ownership evidence",
+    "head_branch": "roadmap/owned-numeric-measurement-2026-11-05",
+    "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/41926862701",
+    "run_attempt": 1,
+    "node_id": "CR_kwDOU33zxM8AAAAdjKEYzQ",
+    "head_sha": "07541ff956d582bb9c3936b86261e43fa25b0b2f",
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/126913419469",
+    "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41926862701/job/126913419469",
+    "status": "completed",
+    "conclusion": "failure",
+    "created_at": "2026-11-04T22:37:17Z",
+    "started_at": "2026-11-04T22:37:19Z",
+    "completed_at": "2026-11-04T22:37:59Z",
+    "name": "descent_peers (1, ubuntu-latest)",
+    "steps": [
+      {
+        "name": "Set up job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 1,
+        "started_at": "2026-11-04T22:37:20Z",
+        "completed_at": "2026-11-04T22:37:21Z"
+      },
+      {
+        "name": "Run actions/checkout@v7",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 2,
+        "started_at": "2026-11-04T22:37:21Z",
+        "completed_at": "2026-11-04T22:37:41Z"
+      },
+      {
+        "name": "Run dtolnay/rust-toolchain@stable",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 3,
+        "started_at": "2026-11-04T22:37:41Z",
+        "completed_at": "2026-11-04T22:37:48Z"
+      },
+      {
+        "name": "Verify focused correctness and matching compiler sources",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 4,
+        "started_at": "2026-11-04T22:37:48Z",
+        "completed_at": "2026-11-04T22:37:53Z"
+      },
+      {
+        "name": "Qualify the native host before building",
+        "status": "completed",
+        "conclusion": "failure",
+        "number": 5,
+        "started_at": "2026-11-04T22:37:53Z",
+        "completed_at": "2026-11-04T22:37:53Z"
+      },
+      {
+        "name": "Preserve host qualification, including rejected hosts",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 6,
+        "started_at": "2026-11-04T22:37:53Z",
+        "completed_at": "2026-11-04T22:37:54Z"
+      },
+      {
+        "name": "Run actions/cache@v6",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 7,
+        "started_at": "2026-11-04T22:37:54Z",
+        "completed_at": "2026-11-04T22:37:54Z"
+      },
+      {
+        "name": "Fetch locked Rust dependencies",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 8,
+        "started_at": "2026-11-04T22:37:54Z",
+        "completed_at": "2026-11-04T22:37:54Z"
+      },
+      {
+        "name": "Run cargo build --locked --release --bin fwp",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 9,
+        "started_at": "2026-11-04T22:37:54Z",
+        "completed_at": "2026-11-04T22:37:54Z"
+      },
+      {
+        "name": "Type inference and derivative precision regressions",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 10,
+        "started_at": "2026-11-04T22:37:54Z",
+        "completed_at": "2026-11-04T22:37:54Z"
+      },
+      {
+        "name": "Interpreter regressions",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 11,
+        "started_at": "2026-11-04T22:37:54Z",
+        "completed_at": "2026-11-04T22:37:54Z"
+      },
+      {
+        "name": "Native nominal selection",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 12,
+        "started_at": "2026-11-04T22:37:54Z",
+        "completed_at": "2026-11-04T22:37:54Z"
+      },
+      {
+        "name": "Preserve derivative regression evidence",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 13,
+        "started_at": "2026-11-04T22:37:54Z",
+        "completed_at": "2026-11-04T22:37:54Z"
+      },
+      {
+        "name": "Check explicit derivative source formatting",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 14,
+        "started_at": "2026-11-04T22:37:54Z",
+        "completed_at": "2026-11-04T22:37:54Z"
+      },
+      {
+        "name": "Process scheduling and host qualification controls",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 15,
+        "started_at": "2026-11-04T22:37:54Z",
+        "completed_at": "2026-11-04T22:37:54Z"
+      },
+      {
+        "name": "Numerical measurement requirement controls",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 16,
+        "started_at": "2026-11-04T22:37:54Z",
+        "completed_at": "2026-11-04T22:37:54Z"
+      },
+      {
+        "name": "Derivative phase-observer controls",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 17,
+        "started_at": "2026-11-04T22:37:54Z",
+        "completed_at": "2026-11-04T22:37:54Z"
+      },
+      {
+        "name": "Compare current AD, history, explicit derivatives and C/Rust",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 18,
+        "started_at": "2026-11-04T22:37:54Z",
+        "completed_at": "2026-11-04T22:37:54Z"
+      },
+      {
+        "name": "Verify the selected same-source comparison reference",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 19,
+        "started_at": "2026-11-04T22:37:54Z",
+        "completed_at": "2026-11-04T22:37:54Z"
+      },
+      {
+        "name": "Build the same-source reference with only the selected transformation disabled",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 20,
+        "started_at": "2026-11-04T22:37:54Z",
+        "completed_at": "2026-11-04T22:37:54Z"
+      },
+      {
+        "name": "Compare the candidate with its same-source reference",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 21,
+        "started_at": "2026-11-04T22:37:54Z",
+        "completed_at": "2026-11-04T22:37:54Z"
+      },
+      {
+        "name": "Preserve the matching correctness prerequisite",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 22,
+        "started_at": "2026-11-04T22:37:54Z",
+        "completed_at": "2026-11-04T22:37:56Z"
+      },
+      {
+        "name": "Preserve reference source and compiler identities",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 23,
+        "started_at": "2026-11-04T22:37:56Z",
+        "completed_at": "2026-11-04T22:37:56Z"
+      },
+      {
+        "name": "Run actions/upload-artifact@v7",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 24,
+        "started_at": "2026-11-04T22:37:56Z",
+        "completed_at": "2026-11-04T22:37:56Z"
+      },
+      {
+        "name": "Post Run actions/checkout@v7",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 48,
+        "started_at": "2026-11-04T22:37:56Z",
+        "completed_at": "2026-11-04T22:37:57Z"
+      },
+      {
+        "name": "Complete job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 49,
+        "started_at": "2026-11-04T22:37:57Z",
+        "completed_at": "2026-11-04T22:37:57Z"
+      }
+    ],
+    "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/126913419469",
+    "labels": [
+      "ubuntu-latest"
+    ],
+    "runner_id": 1000408240,
+    "runner_name": "GitHub Actions 1000408240",
+    "runner_group_id": 0,
+    "runner_group_name": "GitHub Actions"
+  },
+  "logSha256": "b497bcf35c9492f03fea2d26ecff2f80aa1e16993f8bf57f39c60b41b5df0658",
+  "diagnostics": [
+    "2026-11-04T22:37:41.1598162Z   if [[ $attempt == 5 ]] || ! grep -Fq 'checksum failed for ' \"$log\" \\",
+    "2026-11-04T22:37:53.1153973Z ##[error]Process completed with exit code 1."
+  ]
+}

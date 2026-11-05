@@ -37,6 +37,8 @@ identities. Do not edit observations to make an old experiment describe new code
 
 ## Numerical applications
 
+- [Current gradient allocation sites](gradient-storage-2026-11-05/README.md): audited phase counts, exact remaining constructors and two retain sites after numeric-storage reuse.
+
 - [Private derivative inputs](packed-derivative-inputs.md): one buffer replaces
   private record boxes and list cells while keeping evaluation order. Native
   correctness and compiler-cost limits pass. [Runtime results](packed-input-time-2026-11-04/README.md)
@@ -171,7 +173,7 @@ These are completed experiments, not instructions to adopt or retry the candidat
 
 - [Test whether checked arithmetic hides useful numeric bounds](checked-bounds-protocol.md)
 - [Checked arithmetic experiment: no compiler change selected](checked-bounds-results.md)
-- [Forward derivative allocation and ownership accounting](derivative-forward-costs.md): next measurement protocol, not a result.
+- [Forward derivative allocation and ownership accounting](derivative-forward-costs.md): original protocol and verified #239 delivery; its failed timing limits remain open.
 - [Measuring the remaining numerical helper call](descent-call-protocol.md)
 - [Scalar helper calls: inlining did not meet the speed target](descent-call-costs.md)
 - [Measure work skipped by an already ordered sort](map-order-protocol.md)

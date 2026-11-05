@@ -1,0 +1,79 @@
+{
+  "job": {
+    "id": 126719294431,
+    "run_id": 41871437618,
+    "workflow_name": "Numerical and ownership evidence",
+    "head_branch": "owned-numeric-updates",
+    "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/41871437618",
+    "run_attempt": 1,
+    "node_id": "CR_kwDOU33zxM8AAAAdgQ773w",
+    "head_sha": "05f30383f3c95fda30abae7dbad0b63ebdbbad76",
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/126719294431",
+    "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41871437618/job/126719294431",
+    "status": "completed",
+    "conclusion": "cancelled",
+    "created_at": "2026-11-04T16:49:59Z",
+    "started_at": "2026-11-04T16:49:59Z",
+    "completed_at": "2026-11-04T17:21:55Z",
+    "name": "owned_numeric_checks (macos-15, clang)",
+    "steps": [],
+    "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/126719294431",
+    "labels": [
+      "macos-15"
+    ],
+    "runner_id": 0,
+    "runner_name": "",
+    "runner_group_id": 0,
+    "runner_group_name": ""
+  },
+  "annotations": [
+    {
+      "path": ".github",
+      "blob_href": "https://github.com/e6qu/fun-with-pipes/blob/05f30383f3c95fda30abae7dbad0b63ebdbbad76/.github",
+      "start_line": 1,
+      "start_column": null,
+      "end_line": 1,
+      "end_column": null,
+      "annotation_level": "failure",
+      "title": "",
+      "message": "The job was not acquired by Runner of type hosted even after multiple attempts",
+      "raw_details": ""
+    },
+    {
+      "path": ".github",
+      "blob_href": "https://github.com/e6qu/fun-with-pipes/blob/05f30383f3c95fda30abae7dbad0b63ebdbbad76/.github",
+      "start_line": 1,
+      "start_column": null,
+      "end_line": 1,
+      "end_column": null,
+      "annotation_level": "notice",
+      "title": "",
+      "message": "Due to capacity constraints, jobs targeting macOS arm64 runners may experience longer queue times.",
+      "raw_details": ""
+    },
+    {
+      "path": ".github",
+      "blob_href": "https://github.com/e6qu/fun-with-pipes/blob/05f30383f3c95fda30abae7dbad0b63ebdbbad76/.github",
+      "start_line": 1,
+      "start_column": null,
+      "end_line": 1,
+      "end_column": null,
+      "annotation_level": "notice",
+      "title": "",
+      "message": "Due to capacity constraints, jobs targeting macOS arm64 runners may experience longer queue times.",
+      "raw_details": ""
+    },
+    {
+      "path": ".github",
+      "blob_href": "https://github.com/e6qu/fun-with-pipes/blob/05f30383f3c95fda30abae7dbad0b63ebdbbad76/.github",
+      "start_line": 1,
+      "start_column": null,
+      "end_line": 1,
+      "end_column": null,
+      "annotation_level": "notice",
+      "title": "",
+      "message": "Due to capacity constraints, jobs targeting macOS arm64 runners may experience longer queue times.",
+      "raw_details": ""
+    }
+  ]
+}

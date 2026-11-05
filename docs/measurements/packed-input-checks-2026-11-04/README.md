@@ -1,8 +1,14 @@
 # Packed derivative inputs: native correctness
 
+[PR #257](https://github.com/e6qu/fun-with-pipes/pull/257) is verified delivery.
+Its [nine final production gates and documentation](platforms/final-gates.json)
+pass at `519fc966`; every full and target log is retained and audited. Squash
+`30c2bad9` has the exact same tree and the required one-line message.
+
 [Run 41840527818](https://github.com/e6qu/fun-with-pipes/actions/runs/41840527818)
 passes at `ba23c6ea7226c31f626839530035e717f3ce05c7`. This verifies the compiler
-and cleanup change; performance and final production coverage remain pending.
+and cleanup change. Later [performance measurements](../packed-input-time-2026-11-04/README.md)
+and the final production gates above complete its delivery record.
 [Earlier failures](../packed-input-selection-2026-11-04/README.md) remain retained.
 
 | Host | Job | Audited result |
@@ -59,9 +65,10 @@ The corrected inputs type-check, and the new checker rejects both original
 CI outputs (0.59s). An intermediate function-valued `main` was rejected locally;
 the final entry is a value, as the language requires. Nine driver controls pass
 (1.98s), including omitted calls, dead metadata, duplicated work and timeout
-output. Production verification of the corrected fixtures is still pending in
-the untimed comparison checks. No performance sample has run; the seven-case
-schedule and acceptance limits are unchanged.
+output. The corrected fixtures subsequently pass the
+[untimed checks and complete compiler-cost audit](../packed-input-analysis-2026-11-04/README.md)
+before runtime measurement. The seven-case schedule and acceptance limits stayed
+unchanged; no fixture result was accepted from an unverified workload.
 
 ## Collection
 
