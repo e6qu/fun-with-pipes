@@ -163,6 +163,8 @@ For `2 + 3 * 4`:
 | `comptime` | Evaluate a checked expression during compilation. |
 | Specialization / monomorphization | Compile a generic function for a particular type. |
 | Inlining / constant folding | Substitute a known function's operations / calculate known results during compilation. |
+| Immediate scalar / constant alias | A number stored directly in a machine word / another name for a known constant, such as `unit-weight = one` with type `F64`. No heap object is needed for that numeric value. |
+| Lazy cache / CAF | Compute a value on its first read, then reuse the stored result. CAF (constant applicative form) is the compiler's name for a zero-argument entry; its calculation may still have effects. Proving `one : F64` is exactly `1.0f64` lets native code omit its cache. |
 | Fusion | Combine eligible collection stages into one traversal, preserving effects and first failure. |
 | Scalar replacement / worker | Use separate fields instead of an aggregate / an internal specialized function entry, not a thread. |
 | Direct call / indirect dispatch | Known function target / runtime-selected callable. |

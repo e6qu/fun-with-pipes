@@ -64,8 +64,20 @@ fn cached_values_keep_exact_owners_and_release_typed_children() {
                 name: "scalar".into(),
                 arity: 0,
                 locals: vec![],
-                ty: i64,
-                body: Body::Expr(Expr::Const(Value::I64(17))),
+                ty: i64.clone(),
+                // Byte length stays a computed scalar here. Character length
+                // of literal text is already folded by the scalar-text pass.
+                body: Body::Expr(Expr::Call(
+                    5,
+                    vec![Expr::Const(Value::Str("inputinput".into()))],
+                )),
+            },
+            Func {
+                name: "scalar-input".into(),
+                arity: 1,
+                locals: vec![string.clone()],
+                ty: MT::Fun(Box::new(string), Box::new(i64)),
+                body: Body::Prim("string.byte-length".into()),
             },
         ],
         main: Some(3),
@@ -82,7 +94,7 @@ fn cached_values_keep_exact_owners_and_release_typed_children() {
             vec![
                 Value::Str("inputinput".into()),
                 Value::Str("inputinput".into()),
-                Value::I64(17)
+                Value::I64(10)
             ]
             .into()
         )
@@ -91,9 +103,14 @@ fn cached_values_keep_exact_owners_and_release_typed_children() {
     let exe = dir.join("probe.exe");
 
     let emitted = fwp::cgen::generate(&p).unwrap();
+    assert_eq!(
+        emitted.matches("(V)(int64_t)STR(l0)->len").count(),
+        1,
+        "computed scalar observation must still select one operation"
+    );
     let runtime=emitted.replace("fwp_p_str_repeat(l0, l1)","observe_repeat(l0, l1)")
         .replacen("/* repeat :","static V observed; static int calls, fail_once, reenter; static V scalar_bits, reentrant_held; static V observe_repeat(V n,V s) { calls++; if(reenter){reenter=0;reentrant_held=caf0();} if(fail_once){fail_once=0;fwp_trap(\"initialization failed\");} V r=fwp_p_str_repeat(n,s);observed=r;return r; }\n/* repeat :",1)
-        .replace("return (V)(int64_t)17LL;","return scalar_bits;")
+        .replace("(V)(int64_t)STR(l0)->len","scalar_bits")
         .replace("int main(int argc, char **argv)","int original_main(int argc, char **argv)");
     let probe = r#"
 static jmp_buf overflow; static int recover(void){return 1;}
@@ -541,4 +558,186 @@ int main(void){
     }
 
     std::fs::remove_dir_all(dir).unwrap();
+}
+
+#[test]
+fn exact_scalar_aliases_preserve_bits_without_lazy_cache_reads() {
+    fwp::cgen::set_static_memory(None);
+    let scalars = [
+        ("std::I8", Value::I8(i8::MIN), i8::MIN as u64),
+        ("std::I16", Value::I16(i16::MIN), i16::MIN as u64),
+        ("std::I32", Value::I32(i32::MIN), i32::MIN as u64),
+        ("std::I64", Value::I64(i64::MIN), i64::MIN as u64),
+        ("std::U8", Value::U8(u8::MAX), u8::MAX as u64),
+        ("std::U16", Value::U16(u16::MAX), u16::MAX as u64),
+        ("std::U32", Value::U32(u32::MAX), u32::MAX as u64),
+        ("std::U64", Value::U64(u64::MAX), u64::MAX),
+        ("std::F32", Value::F32(-0.0), 0x80000000),
+        (
+            "std::F32",
+            Value::F32(f32::from_bits(0x7fc00042)),
+            0x7fc00042,
+        ),
+        ("std::F64", Value::F64(-0.0), 0x8000000000000000),
+        (
+            "std::F64",
+            Value::F64(f64::from_bits(0x7ff8000000000042)),
+            0x7ff8000000000042,
+        ),
+        (
+            "std::F64",
+            Value::F64(f64::from_bits(0x7ff0000000000042)),
+            0x7ff0000000000042,
+        ),
+    ];
+    let mut program = Program {
+        funcs: vec![Func {
+            name: "main".into(),
+            arity: 0,
+            locals: vec![],
+            ty: MT::Record(
+                scalars
+                    .iter()
+                    .enumerate()
+                    .map(|(i, (ty, _, _))| (i.to_string(), MT::con(ty)))
+                    .collect(),
+            ),
+            body: Body::Expr(Expr::Record(
+                (0..scalars.len()).map(|i| Expr::Func(2 * i + 1)).collect(),
+            )),
+        }],
+        main: Some(0),
+        ..Program::default()
+    };
+    for (ty, value, _) in &scalars {
+        let literal = program.funcs.len() + 1;
+        for body in [Expr::Func(literal), Expr::Const(value.clone())] {
+            program.funcs.push(Func {
+                name: "numeric-value".into(),
+                arity: 0,
+                locals: vec![],
+                ty: MT::con(ty),
+                body: Body::Expr(body),
+            });
+        }
+    }
+    fwp::ir::check_locals(&program).unwrap();
+    let mut interpreter = fwp::interp::Interp::new(&program, Box::new(Vec::new())).unwrap();
+    let Value::Record(ref values) = interpreter.call_root(0, vec![]).unwrap() else {
+        panic!("numeric record")
+    };
+    for (value, (_, expected, _)) in values.iter().zip(&scalars) {
+        match (value, expected) {
+            (Value::F32(a), Value::F32(b)) => assert_eq!(a.to_bits(), b.to_bits()),
+            (Value::F64(a), Value::F64(b)) => assert_eq!(a.to_bits(), b.to_bits()),
+            _ => assert_eq!(value, expected),
+        }
+    }
+    let code = fwp::cgen::generate(&program).unwrap();
+    for id in 1..program.funcs.len() {
+        assert!(
+            !code.contains(&format!("caf{id}(")),
+            "constant cache {id} remains"
+        );
+    }
+    let runtime = code.replace(
+        "int main(int argc, char **argv)",
+        "int original_main(int argc, char **argv)",
+    );
+    let expected = scalars
+        .iter()
+        .map(|(_, _, bits)| format!("0x{bits:x}ULL"))
+        .collect::<Vec<_>>()
+        .join(", ");
+    let probe = format!(
+        r#"
+int main(void) {{
+    fwp_heap_start(); fwp_fns=fwp_fn_table; fwp_init_consts();
+    size_t baseline=fwp_heap.live;
+    const V expected[] = {{{expected}}};
+    V result=caf0();
+    for (size_t i=0;i<sizeof(expected)/sizeof(expected[0]);i++) {{
+        if (OBJ(result)->f[i] != expected[i]) return 51;
+    }}
+    fwp_rc_drop(result); fwp_caf_finish();
+    if (fwp_heap.live != baseline) return 52;
+    return 0;
+}}
+"#
+    );
+    let directory = fwp::cgen::TempDir::new("scalar-constants").unwrap();
+    let executable = directory.join("probe.exe");
+    let root_program = Program {
+        funcs: vec![Func {
+            name: "root-one".into(),
+            arity: 0,
+            locals: vec![],
+            ty: MT::con("std::F64"),
+            body: Body::Prim("prim.one".into()),
+        }],
+        main: Some(0),
+        ..Program::default()
+    };
+    let root_source = fwp::cgen::generate(&root_program).unwrap();
+    assert!(root_source.contains("static V caf0(void) { return (V)0x3ff0000000000000ULL; }"));
+    let root_source = root_source.replace(
+        "int main(int argc, char **argv)",
+        "int original_main(int argc, char **argv)",
+    );
+    let root_source = format!(
+        r#"{root_source}
+int main(void) {{
+    fwp_heap_start(); fwp_fns=fwp_fn_table; fwp_init_consts();
+    size_t baseline=fwp_heap.live;
+    if (caf0() != 0x3ff0000000000000ULL) return 53;
+    fwp_caf_finish();
+    if (fwp_heap.live != baseline) return 54;
+    return 0;
+}}
+"#
+    );
+    for opt in ["-O1", "-O2"] {
+        fwp::cgen::compile_c(&root_source, &executable, opt).unwrap();
+        let output = Command::new(&executable).output().unwrap();
+        record_probe::save(
+            "caf_ownership",
+            &format!("scalar-root{opt}"),
+            &root_source,
+            &executable,
+            &output,
+        );
+        assert!(output.status.success(), "scalar root/{opt}: {output:?}");
+        assert!(
+            output.stdout.is_empty() && output.stderr.is_empty(),
+            "{output:?}"
+        );
+        for (label, probe, status) in [
+            ("exact-bits", probe.clone(), 0),
+            (
+                "wrong-bits",
+                probe.replace("const V expected[] = {", "const V expected[] = {1 ^ "),
+                51,
+            ),
+        ] {
+            let source = format!("{runtime}\n{probe}");
+            fwp::cgen::compile_c(&source, &executable, opt).unwrap();
+            let output = Command::new(&executable).output().unwrap();
+            record_probe::save(
+                "caf_ownership",
+                &format!("scalar-{label}{opt}"),
+                &source,
+                &executable,
+                &output,
+            );
+            assert_eq!(
+                output.status.code(),
+                Some(status),
+                "{label}/{opt}: {output:?}"
+            );
+            assert!(
+                output.stdout.is_empty() && output.stderr.is_empty(),
+                "{output:?}"
+            );
+        }
+    }
 }

@@ -132,4 +132,5 @@ timing. [Rejected-host records](rejected-hosts/index.json) retain four CPU
 mismatches, including two replacement requests; every build/timing step was
 skipped. Qualified replacements measured once. The
 [first implementation's failures](../packed-pair-time-2026-11-05/README.md)
-remain separate and unchanged. Final production verification is still required.
+remain separate and unchanged. [Final production and delivery](../packed-pair-delivery-2026-11-05/README.md)
+are verified; PR #260 is merged.

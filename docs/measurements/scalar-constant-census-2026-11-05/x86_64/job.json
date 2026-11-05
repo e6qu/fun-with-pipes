@@ -1,0 +1,156 @@
+{
+  "id": 127404207465,
+  "run_id": 42072583890,
+  "workflow_name": "Numerical and ownership evidence",
+  "head_branch": "scalar-constant-lowering",
+  "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/42072583890",
+  "run_attempt": 1,
+  "node_id": "CR_kwDOU33zxM8AAAAdqeHtaQ",
+  "head_sha": "76690b385514c58ad94c5591da3553fa48218535",
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/127404207465",
+  "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/42072583890/job/127404207465",
+  "status": "completed",
+  "conclusion": "success",
+  "created_at": "2026-11-05T17:14:05Z",
+  "started_at": "2026-11-05T17:15:08Z",
+  "completed_at": "2026-11-05T17:21:37Z",
+  "name": "numeric_input_analysis (ubuntu-latest)",
+  "steps": [
+    {
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 1,
+      "started_at": "2026-11-05T17:15:08Z",
+      "completed_at": "2026-11-05T17:15:10Z"
+    },
+    {
+      "name": "Run actions/checkout@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 2,
+      "started_at": "2026-11-05T17:15:10Z",
+      "completed_at": "2026-11-05T17:15:25Z"
+    },
+    {
+      "name": "Run dtolnay/rust-toolchain@stable",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 3,
+      "started_at": "2026-11-05T17:15:25Z",
+      "completed_at": "2026-11-05T17:15:34Z"
+    },
+    {
+      "name": "Verify focused correctness and matching compiler sources",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 4,
+      "started_at": "2026-11-05T17:15:34Z",
+      "completed_at": "2026-11-05T17:15:38Z"
+    },
+    {
+      "name": "Run actions/cache@v6",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 5,
+      "started_at": "2026-11-05T17:15:38Z",
+      "completed_at": "2026-11-05T17:15:39Z"
+    },
+    {
+      "name": "Build candidate at production settings",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 6,
+      "started_at": "2026-11-05T17:15:39Z",
+      "completed_at": "2026-11-05T17:16:46Z"
+    },
+    {
+      "name": "Build and verify the selected same-source reference",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 7,
+      "started_at": "2026-11-05T17:16:46Z",
+      "completed_at": "2026-11-05T17:18:04Z"
+    },
+    {
+      "name": "Check complete-program stack costs before allocation and timing gates",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 8,
+      "started_at": "2026-11-05T17:18:04Z",
+      "completed_at": "2026-11-05T17:18:29Z"
+    },
+    {
+      "name": "Verify complete solve allocations before any timing",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 9,
+      "started_at": "2026-11-05T17:18:29Z",
+      "completed_at": "2026-11-05T17:18:55Z"
+    },
+    {
+      "name": "Attribute fresh-solve reference allocations to phases and source sites",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 10,
+      "started_at": "2026-11-05T17:18:55Z",
+      "completed_at": "2026-11-05T17:20:11Z"
+    },
+    {
+      "name": "Verify fresh-solve savings and their exact phase attribution",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 11,
+      "started_at": "2026-11-05T17:20:11Z",
+      "completed_at": "2026-11-05T17:21:29Z"
+    },
+    {
+      "name": "Measure balanced compiler commands and peak memory",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 12,
+      "started_at": "2026-11-05T17:21:29Z",
+      "completed_at": "2026-11-05T17:21:29Z"
+    },
+    {
+      "name": "Preserve complete measurements and failures",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 13,
+      "started_at": "2026-11-05T17:21:29Z",
+      "completed_at": "2026-11-05T17:21:34Z"
+    },
+    {
+      "name": "Post Run actions/cache@v6",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 25,
+      "started_at": "2026-11-05T17:21:34Z",
+      "completed_at": "2026-11-05T17:21:34Z"
+    },
+    {
+      "name": "Post Run actions/checkout@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 26,
+      "started_at": "2026-11-05T17:21:34Z",
+      "completed_at": "2026-11-05T17:21:35Z"
+    },
+    {
+      "name": "Complete job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 27,
+      "started_at": "2026-11-05T17:21:35Z",
+      "completed_at": "2026-11-05T17:21:35Z"
+    }
+  ],
+  "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/127404207465",
+  "labels": [
+    "ubuntu-latest"
+  ],
+  "runner_id": 1000411719,
+  "runner_name": "GitHub Actions 1000411719",
+  "runner_group_id": 0,
+  "runner_group_name": "GitHub Actions"
+}

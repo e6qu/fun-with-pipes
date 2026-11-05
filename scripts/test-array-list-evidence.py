@@ -36,6 +36,17 @@ REPORT = json.loads(gzip.decompress((ROOT / 'docs/measurements/array-list-first-
 
 
 class Evidence(unittest.TestCase):
+    def test_scalar_image_selection_preserves_reference_instrumentation(self):
+        for form in ('fwp-ad', 'fwp-ad-history'):
+            for suffix in ('', '-profile', '-phases'):
+                self.assertEqual(CHECK.scalar_image_representation(form + suffix), 'literal')
+                self.assertEqual(CHECK.scalar_image_representation(form + '-reference' + suffix), 'cached')
+        self.assertEqual(CHECK.scalar_image_representation('fwp-ad-identical'), 'literal')
+        for image in ('fwp-explicit', 'fwp-ad-reference-unknown', 'fwp-ad-identical-profile',
+                      'fwp-ad-reference-reference', 'fwp-ad-profile-phases'):
+            with self.subTest(image=image), self.assertRaises(AssertionError):
+                CHECK.scalar_image_representation(image)
+
     def test_matched_option_reference_reads_literals_and_rejects_partial_edits(self):
         preparation = (ROOT / 'scripts/prepare-matched-option-reference.py').read_text()
         candidates = {'src/cgen.rs': (ROOT / 'src/cgen.rs').read_text()}
@@ -60,6 +71,7 @@ class Evidence(unittest.TestCase):
             ('owned-numeric', ('src/cgen.rs',)),
             ('gradient-call', ('src/cgen.rs', 'lib/autodiff.fwp')),
             ('packed-pair', ('src/cgen.rs',)),
+            ('scalar-constant', ('src/cgen.rs',)),
         ):
             preparation = (ROOT / f'scripts/prepare-{protocol}-reference.py').read_text()
             candidates = {name: (ROOT / name).read_text() for name in paths}

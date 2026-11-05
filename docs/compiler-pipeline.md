@@ -58,6 +58,13 @@ even when inlining replaces a function call with a record literal. Unset `FWP_NO
 its presence disables the passes, even with a value of `0`. Debug builds also validate local types after
 passes and check inserted reference operations.
 
+The native scalar-constant pass in `src/cgen/constant_values.rs` is currently
+under verification. After numeric representation selection and before ownership
+insertion, it proves exact immediate constants and replaces their reads. It shares
+the packed-fold seed evaluator; it neither runs arbitrary user code nor changes
+ordinary interpreter optimization. [The rules](design.md#exact-scalar-constants)
+explain its finite budget and excluded expressions.
+
 The interpreter uses Rust-owned
 values rather than executing the generated C reference-count machinery.
 Public interpreter entries now check queue/State/autodiff lifetimes before

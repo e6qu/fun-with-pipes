@@ -1,0 +1,20 @@
+{
+  "id": 13438743631,
+  "node_id": "MDg6QXJ0aWZhY3QxMzQzODc0MzYzMQ==",
+  "name": "scalar-constant-report-retained",
+  "size_in_bytes": 15006010,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13438743631",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13438743631/zip",
+  "expired": false,
+  "digest": "sha256:30e3c61e91bf7a9c87bc1ecdc630706ef490f6d085039660d7283d2978c5088a",
+  "created_at": "2026-11-05T17:54:11Z",
+  "updated_at": "2026-11-05T17:54:11Z",
+  "expires_at": "2027-02-03T17:51:19Z",
+  "workflow_run": {
+    "id": 42078654369,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "scalar-constant-lowering",
+    "head_sha": "6bf1dfc8d3cb7b5618161cf005ed51add4cdb7c5"
+  }
+}

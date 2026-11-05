@@ -1,0 +1,36 @@
+{
+  "pr": 260,
+  "source": "ba3f0d8793dc3bbd3c21f94d06a1bca2896b6d45",
+  "tree": "e9fa7e830ed4face2ca31a054932c8db11168b26",
+  "merge": "a85f59d23918c1854f43fb3a3ce2af65383ac5f9",
+  "message": "Reuse private numeric pair buffers with one cleanup owner",
+  "productionRun": 42024634729,
+  "documentationRun": 42024602934,
+  "documentationJob": 127235545731,
+  "auditRun": 42039479158,
+  "auditJob": 127286193366,
+  "auditArtifact": {
+    "id": 13419289423,
+    "node_id": "MDg6QXJ0aWZhY3QxMzQxOTI4OTQyMw==",
+    "name": "production-log-audit-all",
+    "size_in_bytes": 1156704,
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13419289423",
+    "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13419289423/zip",
+    "expired": false,
+    "digest": "sha256:31d2006c8a874925cd04b0672e7bcda0c669da8b9c9efcd1ad8c60ea39f1430b",
+    "created_at": "2026-11-05T13:58:36Z",
+    "updated_at": "2026-11-05T13:58:36Z",
+    "expires_at": "2027-02-03T13:51:22Z",
+    "workflow_run": {
+      "id": 42039479158,
+      "repository_id": 1400763332,
+      "head_repository_id": 1400763332,
+      "head_branch": "packed-pair-storage",
+      "head_sha": "ba3f0d8793dc3bbd3c21f94d06a1bca2896b6d45"
+    }
+  },
+  "redundantPostmergeRunsCancelled": [
+    42042832930,
+    42042832783
+  ]
+}

@@ -22,7 +22,7 @@ MAP_SPEC.loader.exec_module(MAP_REPORT)
 LOG = """Running tests/cached_map_borrows.rs (target/debug/deps/borrow)
 test result: ok. 3 passed; 0 failed; 0 ignored;
 Running tests/caf_ownership.rs (target/debug/deps/caf)
-test result: ok. 3 passed; 0 failed; 0 ignored;
+test result: ok. 4 passed; 0 failed; 0 ignored;
 Running tests/collection_construction.rs (target/debug/deps/collection)
 Running tests/decoder_partial.rs (target/debug/deps/decoder)
 test result: ok. 4 passed; 0 failed; 0 ignored;
@@ -127,7 +127,7 @@ class CollectionEvidence(unittest.TestCase):
     def test_interleaved_streams_and_windows_paths(self):
         for log in [LOG, LOG.replace("tests/", "tests\\").replace(
                 "Running", "\x1b[1;32mRunning\x1b[0m")]:
-            self.assertEqual(sum(REPORT.audit_tests(log).values()), 59)
+            self.assertEqual(sum(REPORT.audit_tests(log).values()), 60)
 
     def test_expected_counts_cover_the_current_test_sources(self):
         for name, count in REPORT.audit_tests(LOG).items():

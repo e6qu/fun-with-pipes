@@ -5,47 +5,38 @@ and useful inference. Prefer direct values, moves and borrows; use automatic
 reference counting (ARC) only for necessary sharing. Tracing garbage collection
 has been removed. JIT compilation and backward compatibility are excluded.
 
-## Current work: reuse the private pair buffer
+## Current work: exact scalar constants
 
-[PR #259 is verified delivery](docs/roadmap-history.md#gradient-call-storage-pr-259):
-all nine production jobs, documentation and complete log audits pass. Its four
-changes remove temporary storage around gradient calls. The 17 timing misses
-remain open below; allocation savings do not establish speed or process RAM gains.
+[PR #260 is verified and merged](docs/measurements/packed-pair-delivery-2026-11-05/README.md).
+Private pair-buffer reuse reduces allocation; its 34 timing misses remain open
+below. The current group targets proved scalar constants without changing
+allocation or derivative work.
 
-The next group reuses the numeric input buffer after neighboring records have
-been read, instead of allocating a separate pair-result buffer:
+The implemented group replaces proved immediate scalar values and aliases with exact
+bits, avoiding lazy-cache reads. For example, `one` specialized to F64 is exactly
+`1.0f64`; it does not need a mutable first-use flag. Arbitrary zero-argument
+functions still may allocate, trap or perform effects and keep their behavior.
 
 | Step | Work | Completion requirement |
 |---|---|---|
-| 1 | Transfer the private input owner | Keep borrow inference, escape analysis and cleanup consistent with returning the allocation. |
-| 2 | Reuse equal-width numeric storage | Preserve eager callback order, immutable aliases and physical allocation charge; other widths allocate. |
-| 3 | Verify both storage paths | Both orientations, numeric bits, empty inputs, failure/cancellation, no-reuse and deliberately broken cleanup observers on three focused hosts. |
-| 4 | Measure complete work and memory | Exact repeated/fresh allocation counts, phase/overall peaks, compiler costs and two qualified runtime sessions per architecture. Reconcile the allocating reference with the parent before timing. |
-| 5 | Deliver the group | Fix all encountered issues, retain full evidence, pass nine final-head production jobs plus docs, audit logs and squash merge. |
+| 1 | Share the bounded constant proof | Reuse packed-fold seed analysis; exact scalar types/bits, acyclic aliases and a finite proof budget. |
+| 2 | Replace scalar reads and cache entries | Preserve evaluation order, tracing/resource boundaries and owned globals; no runtime tape-check changes. |
+| 3 | Verify bits, effects and cache ownership | Interpreter/native agreement, O1/O2 probes, deliberate broken controls, prior packed-fold and cleanup coverage on three hosts. |
+| 4 | Measure the complete programs | Unchanged allocation/node counts, parent reconciliation, compiler costs, two qualified runtime sessions per architecture and complete artifact audits. |
+| 5 | Deliver the group | Pass nine final-head production jobs plus docs, audit every result and squash merge. |
 
-Steps 1–3 pass [corrected focused native checks](docs/measurements/packed-pair-cleanup-checks-2026-11-05/README.md).
-The [original checks and full audits](docs/measurements/packed-pair-checks-2026-11-05.md)
-remain separate from the changed-source verification.
-[The contract](docs/measurements/packed-pair-storage.md), frozen before implementation
-at `3b7954eef411b7b621d09718ae2aad41e72e744e`, fixes the proof and measurement limits.
-[The allocation census](docs/measurements/packed-pair-census-2026-11-05.md) passes
-on both architectures, including agreement with saved parent counts. Compiler
-cost limits and saved-data audits also pass. Three [runtime sessions](docs/measurements/packed-pair-time-2026-11-05/README.md) expose 23
-missed speed targets and one AMD64 stack-budget failure. The
-[single-owner cleanup repair](docs/measurements/packed-pair-cleanup-repair.md)
-passes focused correctness, [complete stack/allocation audits](docs/measurements/packed-pair-cleanup-census-2026-11-05/README.md)
-and [compiler cost audits](docs/measurements/packed-pair-cleanup-analysis-2026-11-05/README.md).
-All four repaired-source runtime sessions complete with 32 long-case 5% misses
-and two AMD64 small-case regressions (2.22% zero-update; 2.83% one-update).
-Other measurement gates and all [runtime artifact audits](docs/measurements/packed-pair-cleanup-time-2026-11-05/README.md)
-pass. Retain the verified reductions with those timing goals open, then complete
-production verification.
+[The contract](docs/measurements/scalar-constant-lowering.md) was committed at
+`4bad4992` before implementation. Source review identified repeated scalar-cache
+reads in generated numeric workers; it does not establish their machine cost.
+C/Rust peers still use handwritten derivatives, so their whole-program comparison
+cannot isolate language or ARC overhead. Keep all previous missed timing goals.
+[The handoff](docs/development-state.md) records actual checks and the next action.
 
-For a fresh 129-coordinate/199-update solve, observed requests are 727 -> 528
-and requested bytes 1,034,366 -> 625,222. Reuse keeps the original capacity until
-the fold finishes. Overall peak managed storage does not grow; final storage is zero.
-Keep one active PR and all older missed timing goals. The [handoff](docs/development-state.md)
-records exact sources, runner requests, failures and the next action.
+Focused native checks, the [allocation/stack audit](docs/measurements/scalar-constant-census-2026-11-05/README.md)
+and [compiler-cost audit](docs/measurements/scalar-constant-analysis-2026-11-05/README.md)
+pass. [Four runtime sessions](docs/measurements/scalar-constant-time-2026-11-05/README.md)
+retain 27 missed speed targets; all other measured limits pass. Complete final
+production verification and delivery remain.
 
 ## Open performance goals
 
@@ -59,6 +50,7 @@ history can be optimized away). Copy controls compare identical executable bytes
 
 | Goal and evidence | What remains; next action |
 |---|---|
+| [Exact scalar constants](docs/measurements/scalar-constant-time-2026-11-05/README.md) | 27 of 32 long-case 5% targets remain open: all 16 ARM64 results; both AMD64 sessions' 3/199 and 3/1999 forms; AMD1 history 33/199 and 129/199; AMD2 history 33/199. Gains are 1.7–6.3%; small-case, copy, storage, stack and compiler limits pass. Inspect objective arithmetic/recording source and saved phase/work counts before selecting another transformation. Keep these original samples; do not rerun unchanged timings. |
 | [Private pair reuse](docs/measurements/packed-pair-cleanup-time-2026-11-05/README.md) | The cleanup repair fixes the observed stack excess; all 32 long-case 5% targets remain unmet. AMD64 session 1 one-update current is 2.8315% slower; session 2 zero-update current is 2.2158% slower. Copy controls pass. Diagnose objective evaluation/recording work (73–75% of recorded phase time in the largest diagnostic case) before selecting another speed change. Remaining buffer sizes/lifetime constraints are [explicit](docs/measurements/packed-pair-cleanup-census-2026-11-05/README.md#remaining-storage-and-its-constraints). The first implementation's 23 timing misses remain separately recorded. |
 | [Gradient-call storage](docs/measurements/gradient-call-time-2026-11-05/README.md) | Sixteen 33/199 and 129/199 results miss 5%; AMD64 session 2 3/0 current is 2.1822% slower, beyond 2%. All copy controls pass. Three-coordinate long solves improve 14.3–25.2%. The current pair-buffer group addresses one of the [two remaining recording allocations](docs/measurements/gradient-call-census-2026-11-05/README.md#remaining-storage) identified by producer/consumer lifetimes (together 2U requests, 32NU bytes). Separately review the zero-update source/driver path before declaring a new experiment. These are next investigations, not established causes. |
 | [Consumed numeric storage](docs/measurements/owned-numeric-time-2026-11-05/README.md) | Four AMD64 5% targets remain open: session 1 3/199 current; session 2 3/199 current/history and 3/1999 current. Observed gains are 3.36–4.76%; copy controls pass. The [gradient-call group](docs/measurements/gradient-call-storage.md) passes focused checks and allocation audits. Compiler/runtime results and final production delivery are verified; a new comparison does not settle these earlier misses. |

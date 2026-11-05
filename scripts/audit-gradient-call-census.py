@@ -28,7 +28,7 @@ parser = argparse.ArgumentParser(
 )
 for name in ("input", "artifact", "job", "job-log", "recorded-checkout", "output"):
     parser.add_argument("--" + name, type=Path, required=True)
-parser.add_argument("--comparison", choices=("gradient-call", "packed-pair"), required=True)
+parser.add_argument("--comparison", choices=("gradient-call", "packed-pair", "scalar-constant"), required=True)
 parser.add_argument("--source", required=True)
 parser.add_argument("--run", type=int, required=True)
 parser.add_argument("--machine", choices=("aarch64", "x86_64"), required=True)
@@ -113,6 +113,7 @@ else:
 reference_module, transformation = {
     "gradient-call": (CENSUS.GRADIENT_REFERENCE, "scoped input borrowing, numeric fold fields, single-root seeding and consumed array scratch"),
     "packed-pair": (CENSUS.PAIR_REFERENCE, "reuse of the consumed private neighboring-record buffer"),
+    "scalar-constant": (CENSUS.SCALAR_REFERENCE, "exact immediate scalar constants and acyclic cached aliases"),
 }[args.comparison]
 with zipfile.ZipFile(args.input) as z:
     report = json.loads(z.read("numeric-analysis/report.json"))
@@ -134,7 +135,7 @@ with zipfile.ZipFile(args.input) as z:
     stack = None
     # Historical protocols predate this gate. The recorded source determines
     # whether it is mandatory; a missing report never selects the old protocol.
-    stack_required = args.comparison == "packed-pair" and (
+    stack_required = args.comparison in ("packed-pair", "scalar-constant") and (
         args.recorded_checkout / "scripts/check-packed-pair-stack.py"
     ).is_file()
     if stack_required:
@@ -234,6 +235,8 @@ with zipfile.ZipFile(args.input) as z:
             observations = {}
             for kind in ("candidate", "reference"):
                 source = z.read(folder + kind + ".c").decode()
+                if args.comparison == "scalar-constant" and u > 0:
+                    CENSUS.DESCENT.SCALAR_SELECTION.check(source, "literal" if kind == "candidate" else "cached")
                 assert z.read(
                     folder + kind + "-profile.c"
                 ).decode() == CENSUS.DESCENT.AD.RAW.instrument(
@@ -280,6 +283,8 @@ with zipfile.ZipFile(args.input) as z:
             )
             if args.comparison == "packed-pair":
                 expected = dict(requests=u * solves, requestedBytes=(16 * n - 8) * u * solves, retains=0)
+            elif args.comparison == "scalar-constant":
+                expected = dict(requests=0, requestedBytes=0, retains=0)
             for workspace in ("0", "1"):
                 old, new = (
                     observations["reference" + workspace],
@@ -345,10 +350,15 @@ with zipfile.ZipFile(args.input) as z:
     else:
         assert not fresh["comparisonFailures"], fresh["comparisonFailures"]
         corrected = []
-        prefix = "arm" if machine == "aarch64" else "amd"
-        parent = Path("docs/measurements/gradient-call-census-2026-11-05")
-        parent_repeated = json.loads((parent / (prefix + "-verified.json")).read_text())
-        parent_fresh = json.loads(gzip.decompress((parent / (prefix + "-fresh-verified.json.gz")).read_bytes()))
+        if args.comparison == "scalar-constant":
+            parent = Path("docs/measurements/packed-pair-cleanup-census-2026-11-05") / machine / "audit"
+            parent_repeated = json.loads(gzip.decompress((parent / (machine + "-verified.json.gz")).read_bytes()))
+            parent_fresh = json.loads(gzip.decompress((parent / (machine + "-fresh-verified.json.gz")).read_bytes()))
+        else:
+            prefix = "arm" if machine == "aarch64" else "amd"
+            parent = Path("docs/measurements/gradient-call-census-2026-11-05")
+            parent_repeated = json.loads((parent / (prefix + "-verified.json")).read_text())
+            parent_fresh = json.loads(gzip.decompress((parent / (prefix + "-fresh-verified.json.gz")).read_bytes()))
         reconciliation = CENSUS.reconcile_parent(report, reference, parent_repeated, parent_fresh)
         assert reconciliation == json.loads(z.read("parent-reconciliation.json"))
         (ROOT / "parent-reconciliation.json").write_text(json.dumps(reconciliation, indent=2) + "\n")

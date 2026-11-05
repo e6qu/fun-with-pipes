@@ -16,6 +16,8 @@ BASELINE = json.loads((ROOT / 'docs/measurements/array-capture-descent-2026-10-2
 class DescentBudgets(unittest.TestCase):
     def test_storage_predictions_keep_exact_counts_and_all_timing_limits(self):
         cases = {
+            'scalar-constant': tuple((n, u, 0, 0, 0) for n, u in
+                ((3, 0), (3, 1), (3, 199), (3, 1999), (33, 199), (129, 199))),
             'gradient-call': ((3, 0, 0, 0, 0), (3, 1, 57, 1240, 16),
                 (3, 199, 11145, 242008, 3184), (3, 1999, 111945, 2430808, 31984),
                 (33, 199, 11145, 624088, 3184), (129, 199, 11145, 1846744, 3184)),

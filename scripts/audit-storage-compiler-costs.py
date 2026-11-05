@@ -14,7 +14,7 @@ import zipfile
 
 sys.path.insert(0,str(Path('scripts').resolve()))
 parser=argparse.ArgumentParser(description=__doc__)
-parser.add_argument("--comparison", required=True, choices=("gradient-call", "packed-pair"))
+parser.add_argument("--comparison", required=True, choices=("gradient-call", "packed-pair", "scalar-constant"))
 parser.add_argument("--repository", required=True)
 parser.add_argument('--source',required=True)
 parser.add_argument('--run',required=True,type=int)
@@ -130,6 +130,8 @@ with zipfile.ZipFile(path) as z:
         assert z.read(base+'program.fwp')==expected_inputs[name]
         assert check.digest(z.read(base+'program.fwp'))==report['inputs'][name]['sha256']
         for copy in measure.COPIES:
+            if args.comparison == 'scalar-constant' and name in ('derivative-33-199', 'derivative-129-199'):
+                measure.SCALAR_SELECTION.check(z.read(base+copy+'.c').decode(), 'literal' if copy.startswith('candidate') else 'cached')
             assert check.digest(z.read(base+copy+'.c'))==case['generatedCHashes']['candidate' if copy.startswith('candidate') else 'reference']
         for row in case['samples']:
             assert row['returncode']==0 and 'timeout' not in row

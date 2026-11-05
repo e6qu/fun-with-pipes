@@ -1,0 +1,182 @@
+[
+  {
+    "artifact": {
+      "id": 13418471390,
+      "node_id": "MDg6QXJ0aWZhY3QxMzQxODQ3MTM5MA==",
+      "name": "gradient-call-preflight-ubuntu-24.04-arm",
+      "size_in_bytes": 2198,
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13418471390",
+      "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13418471390/zip",
+      "expired": false,
+      "digest": "sha256:c07a32ff4559f82e8d2e3a782bb0e0dc6a038162551aa6c538fe324d0eed9676",
+      "created_at": "2026-11-05T13:20:40Z",
+      "updated_at": "2026-11-05T13:20:40Z",
+      "expires_at": "2027-02-03T13:18:55Z",
+      "workflow_run": {
+        "id": 42034673196,
+        "repository_id": 1400763332,
+        "head_repository_id": 1400763332,
+        "head_branch": "scalar-constant-lowering",
+        "head_sha": "d99dbacd4f0f7d24e938bde1cb17956d184804bf"
+      }
+    },
+    "files": {
+      "build.log": "f4340e809797ee94c38ab98f80e7199c554352a957711066b1da104ad4a8b020",
+      "clippy.log": "3c7d8814bf8c029d6d1c9a450ee8078bca4cf3c74927203476e1fa2175ae20af",
+      "c-compiler.txt": "8497f84b2b8334c413d9c6166bd39d009ba55d2ff60a8f23e66dfa5819c2b048",
+      "format.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "host.txt": "cf87f933675fd523838de37746f681eb975a9b476ebda0f73318abdbf1d9904c",
+      "source.txt": "c34e78f83324b074a6a04c8e78f163a9d77d21bddb812a7b444a87c0aa35f75f"
+    }
+  },
+  {
+    "artifact": {
+      "id": 13418396150,
+      "node_id": "MDg6QXJ0aWZhY3QxMzQxODM5NjE1MA==",
+      "name": "gradient-call-preflight-ubuntu-latest",
+      "size_in_bytes": 2177,
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13418396150",
+      "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13418396150/zip",
+      "expired": false,
+      "digest": "sha256:751e255e01d1fd64fa3950945f350248e3ab5ac4536ace88d4765e1b0e21be3a",
+      "created_at": "2026-11-05T13:20:00Z",
+      "updated_at": "2026-11-05T13:20:00Z",
+      "expires_at": "2027-02-03T13:18:55Z",
+      "workflow_run": {
+        "id": 42034673196,
+        "repository_id": 1400763332,
+        "head_repository_id": 1400763332,
+        "head_branch": "scalar-constant-lowering",
+        "head_sha": "d99dbacd4f0f7d24e938bde1cb17956d184804bf"
+      }
+    },
+    "files": {
+      "build.log": "83bba6218e0381c5af5694bba1fcee196ea15bd9242f0ee583a40c5621ab7a14",
+      "c-compiler.txt": "6e876a25bb7fdb71ab2914e8f1eeaa00cc61d20a36a6c2981ab7d4d7ceab42f8",
+      "clippy.log": "3a8f4355f729457c40f0db71da08477e285353e9a5961b1d2ab6a6e9181be7e1",
+      "format.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "host.txt": "527d6f5db4bb06acca8b06f92dee7575906f5b49d8a09ebfedc95050647b3d14",
+      "source.txt": "c34e78f83324b074a6a04c8e78f163a9d77d21bddb812a7b444a87c0aa35f75f"
+    }
+  },
+  {
+    "artifact": {
+      "id": 13417797339,
+      "node_id": "MDg6QXJ0aWZhY3QxMzQxNzc5NzMzOQ==",
+      "name": "gradient-call-checks-macos-15",
+      "size_in_bytes": 2301,
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13417797339",
+      "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13417797339/zip",
+      "expired": false,
+      "digest": "sha256:95f36c62c023709251d7d7d1d8b4bc3d6925113e00f9b639f9d1c54f69aed459",
+      "created_at": "2026-11-05T13:20:39Z",
+      "updated_at": "2026-11-05T13:20:39Z",
+      "expires_at": "2027-02-03T13:18:55Z",
+      "workflow_run": {
+        "id": 42034673196,
+        "repository_id": 1400763332,
+        "head_repository_id": 1400763332,
+        "head_branch": "scalar-constant-lowering",
+        "head_sha": "d99dbacd4f0f7d24e938bde1cb17956d184804bf"
+      }
+    },
+    "files": {
+      "build.log": "02bce986055e86ae080f75c3043e56008c9c69b33053a4fa724a020b37512f1e",
+      "c-compiler.txt": "df12815703ce3452ab4bd51ecbea4cf8155246b94b5b15113a580ff6aec2befd",
+      "clippy.log": "22b7d46b291ce696c355f589affc6f8bd17620e02f39b710b4c1a12702e4ef0c",
+      "format.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "host.txt": "abf52f5172b33544f422bf78447f4489fc2d1441a620946b74dd83a7ea73fe6f",
+      "source.txt": "c34e78f83324b074a6a04c8e78f163a9d77d21bddb812a7b444a87c0aa35f75f"
+    }
+  },
+  {
+    "artifact": {
+      "id": 13417642601,
+      "node_id": "MDg6QXJ0aWZhY3QxMzQxNzY0MjYwMQ==",
+      "name": "gradient-call-checks-ubuntu-24.04-arm",
+      "size_in_bytes": 2198,
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13417642601",
+      "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13417642601/zip",
+      "expired": false,
+      "digest": "sha256:c07a32ff4559f82e8d2e3a782bb0e0dc6a038162551aa6c538fe324d0eed9676",
+      "created_at": "2026-11-05T13:20:41Z",
+      "updated_at": "2026-11-05T13:20:41Z",
+      "expires_at": "2027-02-03T13:18:55Z",
+      "workflow_run": {
+        "id": 42034673196,
+        "repository_id": 1400763332,
+        "head_repository_id": 1400763332,
+        "head_branch": "scalar-constant-lowering",
+        "head_sha": "d99dbacd4f0f7d24e938bde1cb17956d184804bf"
+      }
+    },
+    "files": {
+      "build.log": "f4340e809797ee94c38ab98f80e7199c554352a957711066b1da104ad4a8b020",
+      "clippy.log": "3c7d8814bf8c029d6d1c9a450ee8078bca4cf3c74927203476e1fa2175ae20af",
+      "c-compiler.txt": "8497f84b2b8334c413d9c6166bd39d009ba55d2ff60a8f23e66dfa5819c2b048",
+      "format.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "host.txt": "cf87f933675fd523838de37746f681eb975a9b476ebda0f73318abdbf1d9904c",
+      "source.txt": "c34e78f83324b074a6a04c8e78f163a9d77d21bddb812a7b444a87c0aa35f75f"
+    }
+  },
+  {
+    "artifact": {
+      "id": 13417158418,
+      "node_id": "MDg6QXJ0aWZhY3QxMzQxNzE1ODQxOA==",
+      "name": "gradient-call-preflight-macos-15",
+      "size_in_bytes": 2301,
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13417158418",
+      "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13417158418/zip",
+      "expired": false,
+      "digest": "sha256:95f36c62c023709251d7d7d1d8b4bc3d6925113e00f9b639f9d1c54f69aed459",
+      "created_at": "2026-11-05T13:20:38Z",
+      "updated_at": "2026-11-05T13:20:38Z",
+      "expires_at": "2027-02-03T13:18:55Z",
+      "workflow_run": {
+        "id": 42034673196,
+        "repository_id": 1400763332,
+        "head_repository_id": 1400763332,
+        "head_branch": "scalar-constant-lowering",
+        "head_sha": "d99dbacd4f0f7d24e938bde1cb17956d184804bf"
+      }
+    },
+    "files": {
+      "build.log": "02bce986055e86ae080f75c3043e56008c9c69b33053a4fa724a020b37512f1e",
+      "c-compiler.txt": "df12815703ce3452ab4bd51ecbea4cf8155246b94b5b15113a580ff6aec2befd",
+      "clippy.log": "22b7d46b291ce696c355f589affc6f8bd17620e02f39b710b4c1a12702e4ef0c",
+      "format.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "host.txt": "abf52f5172b33544f422bf78447f4489fc2d1441a620946b74dd83a7ea73fe6f",
+      "source.txt": "c34e78f83324b074a6a04c8e78f163a9d77d21bddb812a7b444a87c0aa35f75f"
+    }
+  },
+  {
+    "artifact": {
+      "id": 13416844479,
+      "node_id": "MDg6QXJ0aWZhY3QxMzQxNjg0NDQ3OQ==",
+      "name": "gradient-call-checks-ubuntu-latest",
+      "size_in_bytes": 2177,
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13416844479",
+      "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13416844479/zip",
+      "expired": false,
+      "digest": "sha256:751e255e01d1fd64fa3950945f350248e3ab5ac4536ace88d4765e1b0e21be3a",
+      "created_at": "2026-11-05T13:20:01Z",
+      "updated_at": "2026-11-05T13:20:01Z",
+      "expires_at": "2027-02-03T13:18:55Z",
+      "workflow_run": {
+        "id": 42034673196,
+        "repository_id": 1400763332,
+        "head_repository_id": 1400763332,
+        "head_branch": "scalar-constant-lowering",
+        "head_sha": "d99dbacd4f0f7d24e938bde1cb17956d184804bf"
+      }
+    },
+    "files": {
+      "build.log": "83bba6218e0381c5af5694bba1fcee196ea15bd9242f0ee583a40c5621ab7a14",
+      "c-compiler.txt": "6e876a25bb7fdb71ab2914e8f1eeaa00cc61d20a36a6c2981ab7d4d7ceab42f8",
+      "clippy.log": "3a8f4355f729457c40f0db71da08477e285353e9a5961b1d2ab6a6e9181be7e1",
+      "format.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "host.txt": "527d6f5db4bb06acca8b06f92dee7575906f5b49d8a09ebfedc95050647b3d14",
+      "source.txt": "c34e78f83324b074a6a04c8e78f163a9d77d21bddb812a7b444a87c0aa35f75f"
+    }
+  }
+]

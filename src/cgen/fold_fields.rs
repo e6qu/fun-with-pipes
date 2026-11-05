@@ -2,70 +2,10 @@
 //! Only selected packed folds use the replacement; other cached uses keep
 //! their ordinary initialization and owned representation.
 
-use std::collections::HashMap;
-
 use crate::ir::*;
 use crate::value::Value;
 
-struct Constants<'a> {
-    program: &'a Program,
-    entries: HashMap<FuncId, Option<Value>>,
-}
-
-impl Constants<'_> {
-    fn entry(&mut self, id: FuncId, budget: &mut usize) -> Option<Value> {
-        if let Some(value) = self.entries.get(&id) {
-            return value.clone();
-        }
-        // Mark before descending: a recursive cached value cannot prove itself.
-        self.entries.insert(id, None);
-        let program = self.program;
-        let function = program.funcs.get(id)?;
-        if function.arity != 0 {
-            return None;
-        }
-        let value = match &function.body {
-            Body::Expr(body) => self.expr(body, budget),
-            Body::Prim(symbol)
-                if matches!(symbol.as_str(), "prim.zero" | "prim.one")
-                    && super::scalar(&function.ty).is_some() =>
-            {
-                crate::interp::from_i128(&function.ty, i128::from(symbol == "prim.one")).ok()
-            }
-            _ => None,
-        };
-        self.entries.insert(id, value.clone());
-        value
-    }
-
-    fn expr(&mut self, expr: &Expr, budget: &mut usize) -> Option<Value> {
-        *budget = budget.checked_sub(1)?;
-        match expr {
-            Expr::Const(
-                value @ (Value::I8(_)
-                | Value::I16(_)
-                | Value::I32(_)
-                | Value::I64(_)
-                | Value::U8(_)
-                | Value::U16(_)
-                | Value::U32(_)
-                | Value::U64(_)
-                | Value::F32(_)
-                | Value::F64(_)),
-            ) => Some(value.clone()),
-            Expr::Record(fields) if fields.len() <= super::MAX_UNBOXED => {
-                let values = fields
-                    .iter()
-                    .map(|field| self.expr(field, budget))
-                    .collect::<Option<Vec<_>>>()?;
-                Some(Value::Record(values.into()))
-            }
-            Expr::Func(id) => self.entry(*id, budget),
-            Expr::Call(id, args) if args.is_empty() => self.entry(*id, budget),
-            _ => None,
-        }
-    }
-}
+use super::constant_values::Constants;
 
 fn visit(expr: &mut Expr, constants: &mut Constants<'_>) {
     match expr {
@@ -128,10 +68,7 @@ fn visit(expr: &mut Expr, constants: &mut Constants<'_>) {
 
 pub(super) fn lower(program: &mut Program) {
     let source = program.clone();
-    let mut constants = Constants {
-        program: &source,
-        entries: HashMap::new(),
-    };
+    let mut constants = Constants::new(&source);
     for f in &mut program.funcs {
         if let Body::Expr(body) = &mut f.body {
             visit(body, &mut constants);
@@ -183,10 +120,7 @@ mod tests {
     #[test]
     fn concrete_zero_and_literal_bits_are_proved_without_running_user_code() {
         let p = constants();
-        let mut proof = Constants {
-            program: &p,
-            entries: HashMap::new(),
-        };
+        let mut proof = Constants::new(&p);
         let Some(Value::Record(ref fields)) = proof.entry(0, &mut 256) else {
             panic!("constant seed")
         };
@@ -206,7 +140,6 @@ mod tests {
             };
             assert_eq!(value.to_bits(), bits);
         }
-        assert_eq!(proof.entries.len(), 3);
     }
 
     #[test]
@@ -220,10 +153,7 @@ mod tests {
                 3 => {}
                 _ => unreachable!(),
             }
-            let mut proof = Constants {
-                program: &p,
-                entries: HashMap::new(),
-            };
+            let mut proof = Constants::new(&p);
             assert!(
                 proof
                     .entry(0, &mut if case == 3 { 1 } else { 256 })

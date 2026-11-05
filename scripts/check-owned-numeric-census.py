@@ -12,6 +12,9 @@ import subprocess
 from process_wait import run_capture
 
 ROOT = Path(__file__).resolve().parent.parent
+SCALAR_SPEC = importlib.util.spec_from_file_location('scalar_reference', ROOT / 'scripts/prepare-scalar-constant-reference.py')
+SCALAR_REFERENCE = importlib.util.module_from_spec(SCALAR_SPEC)
+SCALAR_SPEC.loader.exec_module(SCALAR_REFERENCE)
 SPEC = importlib.util.spec_from_file_location('descent', ROOT / 'scripts/measure-descent-peers.py')
 DESCENT = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(DESCENT)
@@ -36,6 +39,8 @@ def compare(candidate, reference, dimensions, updates, solves, comparison):
         expected = dict(requests=7 * maps + int(updates > 0),
                         requestedBytes=(8 * dimensions + 128) * maps + 24 * int(updates > 0),
                         retains=2 * maps)
+    elif comparison == 'scalar-constant':
+        expected = dict(requests=0, requestedBytes=0, retains=0)
     elif comparison == 'packed-pair':
         expected = dict(requests=maps, requestedBytes=(16 * dimensions - 8) * maps, retains=0)
     else:
@@ -53,8 +58,8 @@ def compare(candidate, reference, dimensions, updates, solves, comparison):
 
 
 def reconcile_parent(repeated, fresh, parent_repeated, parent_fresh):
-    """The allocating reference must reproduce the delivered parent's storage."""
-    assert repeated['complete'] and repeated['comparison'] == 'packed-pair'
+    """The same-source reference must reproduce the delivered parent's storage."""
+    assert repeated['complete'] and repeated['comparison'] in ('packed-pair', 'scalar-constant')
     assert fresh['source'] == repeated['source']
     assert fresh['machine'] == repeated['machine'] == parent_fresh['machine'] == parent_repeated['machine']
     assert parent_fresh['source'] == parent_repeated['source']
@@ -89,7 +94,7 @@ def reconcile_parent(repeated, fresh, parent_repeated, parent_fresh):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--comparison', choices=('owned-numeric', 'gradient-call', 'packed-pair'), required=True)
+    parser.add_argument('--comparison', choices=('owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant'), required=True)
     parser.add_argument('--compiler', type=Path, required=True)
     parser.add_argument('--reference', type=Path, required=True)
     parser.add_argument('--reference-manifest', type=Path, required=True)
@@ -106,10 +111,11 @@ def main():
     assert args.timeout > 0
     assert subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip() == args.source
     reference_module = {'owned-numeric': REFERENCE, 'gradient-call': GRADIENT_REFERENCE,
-                        'packed-pair': PAIR_REFERENCE}[args.comparison]
+                        'packed-pair': PAIR_REFERENCE, 'scalar-constant': SCALAR_REFERENCE}[args.comparison]
     manifest = json.loads(args.reference_manifest.read_text())
     assert manifest['source'] == args.source
     expected_transformation = {
+        'scalar-constant': 'exact immediate scalar constants and acyclic cached aliases',
         'packed-pair': 'reuse of the consumed private neighboring-record buffer',
         'owned-numeric': 'consuming scalar array maps and exclusive coordinate-list reuse',
         'gradient-call': 'scoped input borrowing, numeric fold fields, single-root seeding and consumed array scratch',
@@ -177,6 +183,8 @@ def main():
                     result = run([compiler.resolve(), 'build', '--memory', 'dynamic', '--emit-c', '-O2', path, '-o', emitted],
                                  environment, folder / (kind + '-emit'))
                     assert not result.stdout and not result.stderr
+                    if args.comparison == 'scalar-constant' and updates > 0:
+                        DESCENT.SCALAR_SELECTION.check(emitted.read_text(), 'literal' if kind == 'candidate' else 'cached')
                     profiled = folder / (kind + '-profile.c')
                     profiled.write_text(DESCENT.AD.RAW.instrument(DESCENT.AD.PROFILE.instrument(emitted.read_text())))
                     executable = folder / (kind + '-profile')

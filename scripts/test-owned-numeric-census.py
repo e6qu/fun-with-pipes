@@ -20,6 +20,18 @@ class Census(unittest.TestCase):
         self.old = copy.deepcopy(self.current)
         self.old['managed'].update(requests=25741 * 8 + 100, requestedBytes=819968 * 8 + 1000)
 
+    def test_scalar_constants_require_unchanged_counts_in_all_workloads(self):
+        for dimensions, updates, solves in CENSUS.CASES:
+            self.assertEqual(CENSUS.compare(self.current, self.current, dimensions,
+                updates, solves, 'scalar-constant'), dict(requests=0, requestedBytes=0, retains=0))
+            for field in ('requests', 'requestedBytes', 'retains'):
+                for delta in (-1, 1):
+                    changed = copy.deepcopy(self.current)
+                    changed['managed'][field] += delta
+                    with self.subTest(dimensions=dimensions, updates=updates, field=field, delta=delta):
+                        with self.assertRaises(AssertionError):
+                            CENSUS.compare(changed, self.current, dimensions, updates, solves, 'scalar-constant')
+
     def test_largest_frozen_prediction(self):
         self.assertEqual(CENSUS.compare(self.current, self.old, 129, 199, 8, 'owned-numeric'),
                          dict(requests=205928, requestedBytes=6559744))
@@ -116,6 +128,25 @@ class Census(unittest.TestCase):
         changed['source'] = 'e' * 40
         with self.assertRaises(AssertionError):
             CENSUS.reconcile_parent(repeated, changed, old_repeated, old_fresh)
+
+    def test_scalar_reference_reproduces_delivered_pair_storage(self):
+        parent = Path(__file__).resolve().parent.parent / 'docs/measurements/packed-pair-cleanup-census-2026-11-05/aarch64/audit'
+        old_fresh = json.loads(gzip.decompress((parent / 'aarch64-fresh-verified.json.gz').read_bytes()))
+        old_repeated = json.loads(gzip.decompress((parent / 'aarch64-verified.json.gz').read_bytes()))
+        fresh = copy.deepcopy(old_fresh)
+        fresh['source'] = 'f' * 40
+        repeated = dict(source=fresh['source'], machine='aarch64', complete=True,
+                        comparison='scalar-constant', cases={})
+        for name, old in old_repeated['cases'].items():
+            observation = dict(managed=copy.deepcopy(old['candidate']),
+                               raw=dict(peakBytes=old['rawPeakBytes'], finalBytes=old['finalRawBytes']))
+            repeated['cases'][name] = dict(solves=old['solves'], observations={
+                'reference' + mode: copy.deepcopy(observation) for mode in ('0', '1')})
+        receipt = CENSUS.reconcile_parent(repeated, fresh, old_repeated, old_fresh)
+        self.assertEqual(receipt['parentSource'], old_fresh['source'])
+        repeated['cases']['129-199-current']['observations']['reference1']['managed']['requests'] += 1
+        with self.assertRaises(AssertionError):
+            CENSUS.reconcile_parent(repeated, fresh, old_repeated, old_fresh)
 
     def test_zero_updates_require_identical_storage(self):
         self.assertEqual(CENSUS.compare(self.current, self.current, 3, 0, 32768, 'owned-numeric'),

@@ -560,6 +560,41 @@ jobs pass. Runtime timings have recorded misses. The [frozen contract](measureme
 and [starting census](measurements/temporary-list-census-2026-11-03/README.md)
 define the comparison.
 
+### Exact scalar constants
+
+Focused native, memory and compiler-cost checks pass; final production validation
+remains. [The contract](measurements/scalar-constant-lowering.md) defines the scope. Consider:
+
+```fwp
+unit-weight : F64
+unit-weight = one
+```
+
+`unit-weight` is another name for `one` specialized to F64: exactly `1.0f64`.
+A lazy cache normally computes a value on its first read, stores it, and returns
+that stored result on later reads. Here the bits are already known, so the new
+native pass can replace those reads directly:
+
+```text
+unit-weight → One[F64].one → prim.one → exact F64 bits
+                                         ↓
+                                read without a lazy cache
+```
+
+- Reuse the packed-fold constant proof: at most 256 expression nodes per request,
+  with remembered results and cycle rejection. Never execute arbitrary user code.
+- Accept immediate fixed-width integers through 64 bits and F32/F64 literals,
+  primitive zero/one and aliases. Preserve signed zero and NaN payloads.
+- Keep arbitrary calls, effects, traps, traced/resource bodies, pointer-width
+  aliases, owned numbers and aggregate caches outside this general replacement.
+- Replacing a scalar does not remove a surrounding aggregate's owner. The earlier
+  packed-fold seed rule keeps its separate storage proof.
+
+This changes neither syntax nor tape validation. Fewer generated cache reads are
+a structural claim. [Measured long solves](measurements/scalar-constant-time-2026-11-05/README.md)
+improve by 1.7–6.3%, while 27 of 32 comparisons miss the required 5%. The
+[plan](../PLAN.md) keeps those timing targets open.
+
 ### Private array results consumed by zip
 
 The gradient-array batch passed focused and full-platform checks and merged in

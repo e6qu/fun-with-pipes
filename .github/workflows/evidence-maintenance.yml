@@ -1,0 +1,184 @@
+name: Evidence maintenance
+
+on:
+  workflow_call:
+    inputs:
+      suite:
+        type: string
+        required: true
+      evidence_run:
+        type: string
+        required: true
+      source_revision:
+        type: string
+        required: true
+      production_attempt:
+        type: string
+        required: true
+      documentation_job:
+        type: string
+        required: true
+      audit_host:
+        type: string
+        required: true
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  source_format:
+    if: inputs.suite == 'source-format'
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - name: Format Rust source without building or testing
+        run: |
+          mkdir source-format
+          git rev-parse HEAD > source-format/source.txt
+          rustfmt --version > source-format/toolchain.txt
+          cargo fmt --all
+          git diff --binary > source-format/format.patch
+      - name: Retain source identity and exact formatting patch
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: source-format
+          path: source-format/
+          if-no-files-found: error
+  storage_measurement_controls:
+    if: inputs.suite == 'storage-measurement-controls'
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          filter: blob:limit=1m
+      - name: Retain historical review sources used by evidence controls
+        run: git fetch --filter=blob:limit=1m origin "+refs/pull/*/head:refs/remotes/origin/review/*"
+      - name: Check storage reference, counters, phase attribution and audit controls
+        run: |
+          mkdir storage-measurement-controls
+          git rev-parse HEAD > storage-measurement-controls/source.txt
+          set -o pipefail
+          status=0
+          for script in test-scalar-constant-reference test-packed-pair-reference test-packed-pair-stack test-owned-numeric-census test-gradient-array-budgets test-numeric-input-analysis test-descent-budgets test-array-list-evidence test-retain-derivative-evidence test-production-log-audit; do
+            python3 "scripts/$script.py" 2>&1 | tee "storage-measurement-controls/$script.log" || status=1
+          done
+          exit "$status"
+      - name: Retain every control result including failures
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: storage-measurement-controls
+          path: storage-measurement-controls/
+          if-no-files-found: error
+  production_log_audit:
+    if: inputs.suite == 'production-log-audit'
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v7
+      - name: Verify audit failure controls
+        run: python3 scripts/test-production-log-audit.py
+      - name: Audit exact-source completed production logs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PRODUCTION_RUN: ${{ inputs.evidence_run }}
+          PRODUCTION_SOURCE: ${{ inputs.source_revision }}
+          PRODUCTION_ATTEMPT: ${{ inputs.production_attempt }}
+          DOCUMENTATION_JOB: ${{ inputs.documentation_job }}
+          AUDIT_HOST: ${{ inputs.audit_host }}
+        run: >-
+          python3 scripts/audit-production-run.py --run "$PRODUCTION_RUN"
+          --source "$PRODUCTION_SOURCE" --attempt "$PRODUCTION_ATTEMPT"
+          --host "$AUDIT_HOST" --docs-job "$DOCUMENTATION_JOB"
+          --output production-log-audit
+      - name: Retain full logs, target logs and source receipts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: production-log-audit-${{ inputs.audit_host }}
+          path: |
+            production-log-audit/
+            !production-log-audit/*-probe.zip
+            !production-log-audit/*.part
+          if-no-files-found: error
+  focused_storage_audit:
+    if: inputs.suite == 'focused-storage-audit'
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v7
+      - name: Verify audit failure controls
+        run: python3 scripts/test-production-log-audit.py
+      - name: Audit all focused storage jobs and native image headers
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FOCUSED_RUN: ${{ inputs.evidence_run }}
+          FOCUSED_SOURCE: ${{ inputs.source_revision }}
+          FOCUSED_ATTEMPT: ${{ inputs.production_attempt }}
+        run: >-
+          python3 scripts/audit-focused-storage.py --run "$FOCUSED_RUN"
+          --source "$FOCUSED_SOURCE" --attempt "$FOCUSED_ATTEMPT"
+          --output focused-storage-audit
+      - name: Retain all logs, observations and original artifact identities
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: focused-storage-audit
+          path: |
+            focused-storage-audit/
+            !focused-storage-audit/*-evidence.zip
+          if-no-files-found: error
+  storage_compiler_report:
+    if: inputs.suite == 'storage-compiler-report' || inputs.suite == 'scalar-constant-compiler-report'
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Audit saved compiler commands and retain every result
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVIDENCE_RUN: ${{ inputs.evidence_run }}
+          SOURCE_REVISION: ${{ inputs.source_revision }}
+        run: |
+          python3 scripts/test-numeric-input-analysis.py
+          status=0
+          for machine in aarch64 x86_64; do
+            python3 scripts/audit-storage-compiler-costs.py --comparison "${{ fromJSON('{"storage-compiler-report":"packed-pair","scalar-constant-compiler-report":"scalar-constant"}')[inputs.suite] }}" \
+              --repository "$GITHUB_REPOSITORY" --run "$EVIDENCE_RUN" \
+              --source "$SOURCE_REVISION" --machine "$machine" \
+              --output compiler-cost-audit || status=1
+          done
+          exit "$status"
+      - name: Preserve audits and observations, including any failures
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ inputs.suite }}
+          path: |
+            compiler-cost-audit/
+            !compiler-cost-audit/aarch64.zip
+            !compiler-cost-audit/x86_64.zip
+            !compiler-cost-audit/*.part
+          if-no-files-found: error
+
