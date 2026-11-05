@@ -15,6 +15,7 @@ use crate::ir::*;
 use crate::ownership::ResultOwnership;
 use crate::value::Value;
 
+mod constant_values;
 mod field_transfers;
 mod fold_fields;
 mod numeric_parameters;
@@ -37,6 +38,9 @@ const GRADIENT_CALL_STORAGE: bool = true;
 
 // Same-source reference: keep consuming cleanup, disable only buffer reuse.
 const PACKED_PAIR_REUSE: bool = true;
+
+// Same-source reference disables only general exact scalar substitutions.
+const SCALAR_CONSTANT_VALUES: bool = true;
 
 const RUNTIME: &[&str] = &[
     include_str!("../runtime/fwp_rt.c"),
@@ -10716,6 +10720,11 @@ fn generate_mode(prog: &Program, mut mode: Mode) -> Result<String, String> {
         fold_fields::lower(&mut numeric_program);
         scoped_calls::lower(&mut numeric_program);
     }
+    let scalar_constants = if SCALAR_CONSTANT_VALUES {
+        constant_values::lower(&mut numeric_program)
+    } else {
+        vec![None; numeric_program.funcs.len()]
+    };
     let prog = &numeric_program;
     crate::ir::check_locals(prog)?;
     let weak_channels = crate::resource::uses_weak_channels(&prog.funcs, &prog.shapes);
@@ -11364,7 +11373,10 @@ static const fwp_exec_spec exec_spec{i} = {{
         .enumerate()
         .filter(|(id, f)| live[*id] && f.arity == 0)
     {
-        if crate::rc::needs_rc(&prog.shapes, &f.ty) {
+        if let Some(value) = &scalar_constants[id] {
+            let value = g.const_expr(value);
+            let _ = writeln!(caf_defs, "static V caf{id}(void) {{ return {value}; }}");
+        } else if crate::rc::needs_rc(&prog.shapes, &f.ty) {
             let drop = g.value_drop(&f.ty);
             // Initialization may yield and reenter. Replacing a result cached
             // during evaluation releases that cache owner, preserving callers.
