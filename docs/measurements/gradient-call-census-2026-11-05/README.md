@@ -100,4 +100,5 @@ passes on both architectures. Its [receipt](report-ci/audit.json) and complete l
 record no unexpected diagnostics.
 [Compiler-cost checks](../gradient-call-analysis-2026-11-05/README.md) now pass.
 [Runtime comparisons](../gradient-call-time-2026-11-05/README.md) are audited,
-with 17 missed timing limits retained before final production checks and merge. Older missed speed goals stay open in [PLAN.md](../../../PLAN.md).
+with 17 missed timing limits retained. [Final platform delivery is verified](../../roadmap-history.md#gradient-call-storage-pr-259).
+Older missed speed goals stay open in [PLAN.md](../../../PLAN.md).

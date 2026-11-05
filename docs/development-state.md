@@ -1,11 +1,9 @@
 # Current work
 
-**Next:** verify the corrected pointer observer in a new focused run.
-All three hosts of 42010857359 finished with the same formatting/observer issues;
-[the full audit and fixes](measurements/packed-pair-cleanup-checks-2026-11-05/README.md)
-retain all 25 target outcomes per host. After the corrected run passes, use it
-as `evidence_run` for `packed-pair-census`. The census now checks complete-program stack
-frames first. Do not request new runtime timing until stack/count checks pass.
+**Next:** audit corrected focused run `42013253058` and run the repaired census
+against that evidence. All three hosts pass at ecdf2476. The census checks actual
+complete-program stack frames before allocation counts; no new timing until
+stack/count checks and the full focused audit pass.
 
 ## Roadmap status
 
@@ -14,8 +12,8 @@ frames first. Do not request new runtime timing until stack/count checks pass.
 | Step | Status | Work |
 |---|---|---|
 | 1 | Verified | The unchanged private helper consumes input; borrowing/escape contracts agree. |
-| 2 | In progress | Reuse with one protected owner; keep two owners only when allocating output. |
-| 3 | In progress | Recheck aliases, both layouts, bits, traps/cancellation and physical frees on three hosts. |
+| 2 | Verified | Reuse with one protected owner; keep two owners only when allocating output. |
+| 3 | Verified | Aliases, both layouts, bits, traps/cancellation and physical frees pass on three hosts. |
 | 4 | In progress | Original counts/compiler limits pass; repair the observed stack excess before new timing. |
 | 5 | Pending | Retain evidence, pass nine final production jobs plus docs, audit and squash merge. |
 
@@ -23,8 +21,11 @@ frames first. Do not request new runtime timing until stack/count checks pass.
 
 - Draft [PR #260](https://github.com/e6qu/fun-with-pipes/pull/260), worktree
   `.worktrees/packed-pair-storage`, branch `packed-pair-storage`.
-- Published repair `14707729042f3202527998296ec8c5f196615cb0`. It changes
+- Compiler repair `14707729042f3202527998296ec8c5f196615cb0`. It changes
   `src/cgen.rs`, the selection/native controls and a stack preflight in the census.
+  Current published head ecdf2476 fixes only its pointer observation/formatting
+  plus documentation. Failed-run artifact audit `42013195562` accounted for all 25 targets, 775 images
+  and 791 probes per host; only the recorded failures were found.
 - [Repair protocol](measurements/packed-pair-cleanup-repair.md) was committed before
   code at `54a3ae468d3751d3d2ac2972777dc054da905d9d`. No thresholds changed.
 - Original [contract](measurements/packed-pair-storage.md) at `3b7954ee`, tag
@@ -47,8 +48,8 @@ These results do not verify the changed cleanup implementation.
 | [Original census](measurements/packed-pair-census-2026-11-05.md) | e4d645cd, run 42003323499; both architectures pass. Artifact audit 42008501553 passes. |
 | [Original compiler costs](measurements/packed-pair-analysis-2026-11-05/README.md) | a1f18947, run 42005106056; both pass. Full audit 42008507459 passes. |
 | [Original runtime](measurements/packed-pair-time-2026-11-05/README.md) | a1f18947, run 42005111118; three sessions, 23 speed misses and one AMD64 stack failure. Full retained-data audit 42009905049 passes. |
-| Repaired native checks | 14707729, run 42010857359; each host passes 24/25 targets; common observer and formatting fixes prepared. |
-| Repaired docs | 14707729, run 42010866008 passes. Prior 54a3ae46 docs 42010422495 also pass. |
+| Repaired native checks | ecdf2476, run 42013253058; all 25 targets and controls pass per host after the observer/formatting repair. |
+| Repaired docs | ecdf2476 docs 42013258857 pass; earlier repair docs 42012233154 pass. |
 
 Fresh 129/199 original results: 727 -> 528 requests and 1,034,366 -> 625,222
 requested bytes; peak managed storage 9,248 -> 7,200 bytes. Retains/raw derivative

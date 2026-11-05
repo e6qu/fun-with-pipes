@@ -21,6 +21,18 @@ trap/cancellation and alias checks. It changes test instrumentation, not the
 compiler implementation or expected outputs.
 
 [Full job results](first-results.json) and adjacent compressed logs retain all
-25 outcomes per host. A runner audit also retains all target logs, probes and
-image identities from the original artifacts. The corrected focused run must
+25 outcomes per host. [Runner audit 42013195562](https://github.com/e6qu/fun-with-pipes/actions/runs/42013195562)
+checks all target logs, 775 images and 791 probe records per host. Its rejection
+contains only the recorded formatting and observer failures. [The receipt](first-artifact-audit.json)
+and compressed full log preserve this result; the artifact retains all observations. The corrected focused run must
 pass before new stack/census work; original failed checks are not discarded.
+
+## Corrected focused result
+
+[Run 42013253058](https://github.com/e6qu/fun-with-pipes/actions/runs/42013253058)
+passes all three hosts at `ecdf2476b3095d31c7a5a88867cbc1ddcc45b3e4`.
+Formatting/all-target lint, compiler units, primitive contracts, source selection
+and all 25 native targets pass, including the corrected pointer observation.
+Documentation 42013258857 passes. Full artifact audit and complete-program
+stack/allocation checks are next; native correctness alone does not establish
+that the stack-growth failure is repaired.

@@ -23,7 +23,9 @@ been read, instead of allocating a separate pair-result buffer:
 | 4 | Measure complete work and memory | Exact repeated/fresh allocation counts, phase/overall peaks, compiler costs and two qualified runtime sessions per architecture. Reconcile the allocating reference with the parent before timing. |
 | 5 | Deliver the group | Fix all encountered issues, retain full evidence, pass nine final-head production jobs plus docs, audit logs and squash merge. |
 
-Steps 1–3 pass [focused native checks and full evidence audits](docs/measurements/packed-pair-checks-2026-11-05.md).
+Steps 1–3 pass [corrected focused native checks](docs/measurements/packed-pair-cleanup-checks-2026-11-05/README.md).
+The [original checks and full audits](docs/measurements/packed-pair-checks-2026-11-05.md)
+remain separate from the changed-source verification.
 [The contract](docs/measurements/packed-pair-storage.md), frozen before implementation
 at `3b7954eef411b7b621d09718ae2aad41e72e744e`, fixes the proof and measurement limits.
 [The allocation census](docs/measurements/packed-pair-census-2026-11-05.md) passes

@@ -122,7 +122,8 @@ job log. Its artifact digest, auditor job and full log are retained beside it.
 Every failed step is explained by the 17 frozen timing limits; there are no
 unexplained diagnostics. The original measurement run remains failed.
 
-Next: complete the final production matrix. Then investigate the measured
+[Final platform delivery is verified](../../roadmap-history.md#gradient-call-storage-pr-259).
+Remaining work investigates the measured
 [remaining allocation sites](../gradient-call-census-2026-11-05/README.md#remaining-storage)
 and the zero-update source/driver path. Neither is an established explanation
 for the timing results. [PLAN.md](../../../PLAN.md) retains these and earlier goals.

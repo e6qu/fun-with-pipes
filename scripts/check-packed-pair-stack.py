@@ -82,7 +82,7 @@ def main():
                 label = name + '-' + kind
                 code = root / (label + '.c')
                 binary = root / label
-                run([compiler.resolve(), 'build', '--emit-c', '-O2', program, '-o', code], label + '-emit')
+                run([compiler.resolve(), 'build', '--memory', 'dynamic', '--emit-c', '-O2', program, '-o', code], label + '-emit')
                 run([args.cc, *flags, '-w', code, '-o', binary, '-lm', '-lpthread', '-ldl'], label + '-compile')
                 outputs[kind] = run([binary], label + '-run')
                 PEERS.verify(outputs[kind], PEERS.AD.analytic(points, updates + 1), solves)
