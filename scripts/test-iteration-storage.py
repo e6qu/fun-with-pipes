@@ -52,6 +52,25 @@ class Selection(unittest.TestCase):
                        PROGRAM.replace('PTR(&fc3)', 'FWP_UNIT')):
             self.assertFalse(any(SELECTION.consuming_calls(source).values()))
 
+    def test_direct_borrowed_callbacks_reach_only_the_used_worker(self):
+        for kind in ('fold', 'array'):
+            callback = f'fwp_borrowed_{kind}0'
+            source = PROGRAM.replace('fwp_loop_fields7(PTR(&fc3))', 'fwp_hof0()')
+            source += f'''static V fwp_hof0(void) {{
+    return {callback}(0);
+}}
+static V {callback}(V *args) {{
+    return f3(args[0]);
+}}
+'''
+            with self.subTest(kind=kind):
+                self.assertEqual(SELECTION.consuming_calls(source), {
+                    'consumed-scalar-array-map': ['f11'],
+                    'consumed-scalar-array-list-zip': ['f12'],
+                })
+                unused = source.replace(f'return {callback}(0);', 'return 0;')
+                self.assertFalse(any(SELECTION.consuming_calls(unused).values()))
+
     def test_saved_complete_programs_expose_the_original_gap(self):
         with zipfile.ZipFile(ROOT / 'docs/measurements/owned-numeric-selection-2026-11-04/source.zip') as archive:
             for host in ('arm', 'amd'):

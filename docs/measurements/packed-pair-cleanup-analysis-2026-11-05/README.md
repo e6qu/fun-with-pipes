@@ -52,4 +52,5 @@ Compiler binaries remain in the original artifact identified by each receipt.
 The [first implementation's results](../packed-pair-analysis-2026-11-05/README.md)
 remain separate. [Stack/allocation verification](../packed-pair-cleanup-census-2026-11-05/README.md)
 also passes. [Runtime results](../packed-pair-cleanup-time-2026-11-05/README.md)
-retain 34 timing misses with all other gates passing; final production remains.
+retain 34 timing misses. [Final production and delivery](../packed-pair-delivery-2026-11-05/README.md)
+are verified; PR #260 is merged.

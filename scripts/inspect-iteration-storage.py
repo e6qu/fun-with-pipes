@@ -24,7 +24,7 @@ def reachable_bodies(emitted):
     program = emitted.split('/* ---- program ---- */', 1)[1]
     bodies = {}
     for match in re.finditer(
-            r'^static [^\n]*?\b((?:f|w|e|fs)\d+|fwp_(?:loop_fields|hof)\d+)\([^;\n]*\) \{\n', program, re.M):
+            r'^static [^\n]*?\b((?:f|w|e|fs)\d+|fwp_(?:loop_fields|hof|borrowed_fold|borrowed_array)\d+)\([^;\n]*\) \{\n', program, re.M):
         end = program.index('\n}\n', match.end())
         bodies[match[1]] = program[match.end():end]
     main = re.search(r'/\* main : [^\n]*\*/\nstatic [^\n]*? ([fw]\d+)\(', program)

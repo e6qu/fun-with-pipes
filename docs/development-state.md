@@ -1,9 +1,9 @@
 # Current work
 
-**Next:** publish the repaired evidence inventory and run `scalar-constant-census`
-with focused run `42048215807`. The three-host checks and their complete audit
-`42070540044` pass. Freeze this measurement source before running the census;
-then audit allocation/stack results and collect compiler/runtime measurements.
+**Next:** publish the borrowed-callback observer repair, then rerun
+`scalar-constant-census` with focused run `42048215807`. Audit its complete
+allocation/stack results before timing. Compiler/test sources remain identical
+to the passing focused checks; only measurement reachability was repaired.
 
 ## Roadmap status
 
@@ -21,7 +21,7 @@ was frozen at `4bad4992` before code, tag
 `roadmap/scalar-constant-lowering-protocol-2026-11-05`. Keep its original identity.
 Rebased onto `a85f59d2`; all pre-rebase evidence sources remain under
 `roadmap/scalar-constant-premerge-2026-11-05` at `5e1c51d5`. The rebase changed
-no tree bytes. No performance measurements have run. All earlier timing misses remain in PLAN.md.
+no tree bytes. The first census stopped at a source-observer error before any timing. All earlier timing misses remain in PLAN.md.
 
 ## Parent delivery is verified
 
@@ -33,13 +33,19 @@ sources, logs and cancelled same-tree postmerge runs. One new PR can now proceed
 
 ## Current repair and completed checks
 
+- [Census observer repair](measurements/scalar-constant-checks-2026-11-05/census-observer/README.md):
+  `42071040601` fails on both hosts because shared reachability omitted borrowed
+  callbacks. Four reachability and four scalar controls now pass, as do 21 saved
+  candidate/reference programs. All six measurement/auditor callers use the fix.
+- Docs `42071048625` passes completely at `26a5cbe6`; the stale test-count
+  repair is verified. No remaining failure from the previous docs run.
+
 - [Passing focused evidence](measurements/scalar-constant-checks-2026-11-05/native-passing/README.md)
   completes 25 targets, 828 native images and 844 probe observations per host.
   Audit `42070540044` has no unresolved issues.
 - Docs `42051839171` found a stale cache-test count (three instead of four).
   The checker and fixture are repaired; `python3 scripts/local-guard.py python3
-  scripts/test-collection-evidence.py` passes all eight controls. Remaining docs
-  steps need the repaired gate. Superseded queued docs `42048220794` was cancelled.
+  scripts/test-collection-evidence.py` passes all eight controls. The repaired full docs gate now passes. Superseded queued docs `42048220794` was cancelled.
 
 - [Native run 42037640087](measurements/scalar-constant-checks-2026-11-05/native-first/README.md)
   at `943f749e` completes all 25 targets per host: 24 pass and one cache-ownership
