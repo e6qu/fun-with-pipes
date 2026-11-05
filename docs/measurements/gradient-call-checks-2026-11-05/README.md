@@ -154,4 +154,5 @@ Their completed target summaries pass; partial logs establish no final support.
 Three packaging assertions and missing-archive errors occurred after cancellation
 interrupted evidence generation. The [audit](reference-repair/summary.json)
 retains every full job log, available target log, artifact identity and local
-reference-check result. All nine jobs plus docs still must pass on the final head.
+reference-check result. The later [final-head production/docs gates and full log
+audits pass](../../roadmap-history.md#gradient-call-storage-pr-259).

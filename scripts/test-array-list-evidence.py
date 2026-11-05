@@ -59,6 +59,7 @@ class Evidence(unittest.TestCase):
             ('packed-input', ('src/mono.rs', 'src/cgen.rs')),
             ('owned-numeric', ('src/cgen.rs',)),
             ('gradient-call', ('src/cgen.rs', 'lib/autodiff.fwp')),
+            ('packed-pair', ('src/cgen.rs',)),
         ):
             preparation = (ROOT / f'scripts/prepare-{protocol}-reference.py').read_text()
             candidates = {name: (ROOT / name).read_text() for name in paths}

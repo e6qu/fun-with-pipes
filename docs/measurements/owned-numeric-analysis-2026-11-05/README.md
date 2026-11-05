@@ -72,5 +72,7 @@ The evidence-only commit `cecbaeaf` also passes documentation run `41927585967`.
 Its [job receipt](docs-job.json) and full compressed log retain only the three
 expected negative-runner diagnostics.
 
-Next: audit both runtime sessions per architecture, then final production gates.
-[The handoff](../../development-state.md) tracks the active runs.
+[Runtime sessions](../owned-numeric-time-2026-11-05/README.md) and
+[final platform gates](../../roadmap-history.md#consumed-numeric-storage-pr-258)
+are verified; four AMD64 speed targets remain open.
+[The handoff](../../development-state.md) tracks the current pair-storage work.

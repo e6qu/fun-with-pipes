@@ -265,13 +265,18 @@ def check_reference(folder, report, source, architecture, protocol):
             assert data == expected[path].encode() and digest(data) == manifest['reference'][path]
             check_reference_patch(section, candidates[path], expected[path], path)
         return
-    if protocol in ('owned-numeric', 'gradient-call'):
+    if protocol in ('owned-numeric', 'gradient-call', 'packed-pair'):
         gradient = protocol == 'gradient-call'
         expected_paths = {'src/cgen.rs', 'lib/autodiff.fwp'} if gradient else {'src/cgen.rs'}
         expected_transformation = 'scoped input borrowing, numeric fold fields, single-root seeding and consumed array scratch' if gradient else 'consuming scalar array maps and exclusive coordinate-list reuse'
+        if protocol == 'packed-pair':
+            expected_transformation = 'reuse of the consumed private neighboring-record buffer'
         assert manifest['disabledTransformation'] == expected_transformation
         assert set(manifest['candidate']) == set(manifest['reference']) == expected_paths
         expected_preserved = set(('src/ownership.rs', 'src/ir.rs', 'src/rc.rs', 'src/rc/borrows.rs', 'src/cgen/owned_numeric.rs', 'src/cgen/scoped_calls.rs', 'src/cgen/fold_fields.rs', 'src/opt/scoped.rs', 'src/cgen/packed_inputs.rs', 'src/cgen/numeric_parameters.rs', 'src/cgen/packed_records.rs', 'src/cgen/range_zip.rs', 'src/fuse.rs', 'src/opt.rs', 'runtime/fwp_rt.c', 'runtime/fwp_rt_heap.c', 'runtime/fwp_rt_prims.c', 'runtime/fwp_rt_task.c', 'runtime/fwp_rt_kernel.c', 'src/numerics.rs', 'src/interp.rs', 'lib/list.fwp')) if gradient else {'src/ir.rs', 'src/rc.rs', 'src/rc/borrows.rs', 'src/cgen/owned_numeric.rs', 'runtime/fwp_rt_task.c', 'runtime/fwp_rt_heap.c', 'src/cgen/packed_inputs.rs', 'src/cgen/numeric_parameters.rs', 'src/fuse.rs', 'runtime/fwp_rt_prims.c', 'src/ownership.rs', 'src/opt/scoped.rs', 'runtime/fwp_rt.c', 'runtime/fwp_rt_kernel.c', 'src/opt.rs', 'lib/list.fwp', 'src/cgen/range_zip.rs', 'lib/autodiff.fwp', 'src/cgen/packed_records.rs'}
+        if protocol == 'packed-pair':
+            expected_preserved |= {'src/escape.rs', 'src/cgen/scoped_calls.rs',
+                                   'src/cgen/fold_fields.rs', 'src/numerics.rs', 'src/interp.rs'}
         assert set(manifest['unchanged']) == expected_preserved
         compiler = (folder / 'fwp').read_bytes()
         assert digest(compiler) == manifest['compilerSha256']
@@ -356,7 +361,7 @@ def check_reference(folder, report, source, architecture, protocol):
     if protocol == 'callback-owners':
         check_numeric_reference(folder, manifest, source, architecture)
         return
-    assert protocol in ('record-zip', 'record-fold', 'packed-records', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call')
+    assert protocol in ('record-zip', 'record-fold', 'packed-records', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair')
     if protocol == 'scalar-array-identity':
         source_path, field, saved = 'src/opt.rs', 'Optimizer', 'optimizer-reference.rs'
         transform = 'F64 identity array-map elimination'
@@ -437,8 +442,8 @@ def check_zip(archive):
 
 
 def check_directory(folder, source, architecture, session, protocol, reference):
-    assert protocol in ('array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call')
-    assert (protocol in ('record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call')) == (reference is not None)
+    assert protocol in ('array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair')
+    assert (protocol in ('record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair')) == (reference is not None)
     report = json.loads((folder / 'comparison.json').read_text())
     GROUPS.check_report(report, source, protocol)
     assert report['machine'] == architecture and report['configuration']['session'] == session
@@ -510,7 +515,7 @@ def check_directory(folder, source, architecture, session, protocol, reference):
             assert (case / (name + '.stderr')).read_text() == control['stderr']
         check_profiles(case, row)
     files = file_inventory(folder)
-    if protocol in ('record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call'):
+    if protocol in ('record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair'):
         assert len(files) == 1334
     reference_files = file_inventory(reference) if reference is not None else None
     if protocol == 'callback-owners':
@@ -520,7 +525,7 @@ def check_directory(folder, source, architecture, session, protocol, reference):
             'source/' + name for name in ('lib/autodiff.fwp', 'runtime/fwp_rt_kernel.c', 'src/cgen.rs', 'src/fuse.rs', 'src/interp.rs', 'src/ir.rs', 'src/numerics.rs')}
     elif protocol == 'gradient-call':
         assert set(reference_files) == {'manifest.json', 'fwp', 'reference.patch', 'source/src/cgen.rs', 'source/lib/autodiff.fwp'}
-    elif protocol in ('matched-option', 'owned-numeric'):
+    elif protocol in ('matched-option', 'owned-numeric', 'packed-pair'):
         assert set(reference_files) == {'manifest.json', 'fwp', 'reference.patch', 'source/src/cgen.rs'}
     elif protocol == 'packed-input':
         assert set(reference_files) == {'manifest.json', 'fwp', 'reference.patch', 'source/src/cgen.rs', 'source/src/mono.rs'}
@@ -539,7 +544,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--input', type=Path, required=True)
     parser.add_argument('--input-format', choices=['directory', 'zip'], required=True)
-    parser.add_argument('--protocol', choices=['array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call'], required=True)
+    parser.add_argument('--protocol', choices=['array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair'], required=True)
     parser.add_argument('--reference', type=Path)
     parser.add_argument('--source', required=True)
     parser.add_argument('--arch', choices=['x86_64', 'aarch64'], required=True)

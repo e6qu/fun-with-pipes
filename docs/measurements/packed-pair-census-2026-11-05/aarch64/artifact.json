@@ -1,0 +1,20 @@
+{
+  "id": 13404461436,
+  "node_id": "MDg6QXJ0aWZhY3QxMzQwNDQ2MTQzNg==",
+  "name": "packed-pair-census-ARM64",
+  "size_in_bytes": 83701182,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13404461436",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13404461436/zip",
+  "expired": false,
+  "digest": "sha256:0bf13f9a57948d24e92d56ccc44a648dd7ee1f24fee3105cff9e5674e3da1661",
+  "created_at": "2026-11-05T09:42:26Z",
+  "updated_at": "2026-11-05T09:42:26Z",
+  "expires_at": "2027-02-03T09:33:19Z",
+  "workflow_run": {
+    "id": 42003323499,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "packed-pair-storage",
+    "head_sha": "e4d645cd4c88e49ff0d7d781ec9af10095d01fd6"
+  }
+}

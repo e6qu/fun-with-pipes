@@ -63,4 +63,6 @@ Beside the audits are compressed reports/full logs, reference manifests,
 inputs, generated C, timing/resource output and selection records. Compiler
 binaries remain in the original digest-identified GitHub artifacts.
 
-Runtime measurements and the final production matrix remain in [PLAN.md](../../../PLAN.md).
+[Runtime results](../gradient-call-time-2026-11-05/README.md) retain 17 timing misses.
+[Final platform delivery is verified](../../roadmap-history.md#gradient-call-storage-pr-259);
+[PLAN.md](../../../PLAN.md) tracks the next storage work and remaining speed goals.

@@ -1,0 +1,45 @@
+{
+  "total_count": 2,
+  "artifacts": [
+    {
+      "id": 13412640905,
+      "node_id": "MDg6QXJ0aWZhY3QxMzQxMjY0MDkwNQ==",
+      "name": "packed-pair-report-retained",
+      "size_in_bytes": 28182610,
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13412640905",
+      "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13412640905/zip",
+      "expired": false,
+      "digest": "sha256:8c4dc6547026209375b2c21d8f966020bdfbdb72ec5cc715b5d0394282f0a22b",
+      "created_at": "2026-11-05T11:50:11Z",
+      "updated_at": "2026-11-05T11:50:11Z",
+      "expires_at": "2027-02-03T11:47:11Z",
+      "workflow_run": {
+        "id": 42021767931,
+        "repository_id": 1400763332,
+        "head_repository_id": 1400763332,
+        "head_branch": "packed-pair-storage",
+        "head_sha": "fa61a619f519f955653e29dbf1af275b768c26ae"
+      }
+    },
+    {
+      "id": 13411857326,
+      "node_id": "MDg6QXJ0aWZhY3QxMzQxMTg1NzMyNg==",
+      "name": "packed-pair-report-summary",
+      "size_in_bytes": 579324,
+      "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13411857326",
+      "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13411857326/zip",
+      "expired": false,
+      "digest": "sha256:86d9629d102ac65d3a7042cf036a3f545a958b2c13cd64a49593879250f126e7",
+      "created_at": "2026-11-05T11:48:30Z",
+      "updated_at": "2026-11-05T11:48:30Z",
+      "expires_at": "2027-02-03T11:47:11Z",
+      "workflow_run": {
+        "id": 42021767931,
+        "repository_id": 1400763332,
+        "head_repository_id": 1400763332,
+        "head_branch": "packed-pair-storage",
+        "head_sha": "fa61a619f519f955653e29dbf1af275b768c26ae"
+      }
+    }
+  ]
+}

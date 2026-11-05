@@ -46,11 +46,11 @@ remove a JavaScript host's collector.
 
 ### What remains
 
-- Finish the [gradient-call group](measurements/gradient-call-storage.md): scoped
-  input borrowing, unboxed numeric fold state, direct backward seeds and consumed
-  coordinate scratch. Focused native checks and allocation audits pass;
-  compiler/runtime results are audited, with timing goals open. The final
-  production matrix remains.
+- Finish [private pair-buffer reuse](measurements/packed-pair-storage.md): focused
+  correctness and exact allocation counts pass. Complete runtime comparisons,
+  retained-data audits and final platform checks. The earlier
+  [gradient-call group is delivered](roadmap-history.md#gradient-call-storage-pr-259),
+  with its missed timing limits still open.
 - Preserve delivered ownership guarantees: aliasing, trap/cancellation cleanup,
   primitive contracts, bounded compiler analysis and checks for absent collector
   code. [Delivery history](roadmap-history.md) records verified platform coverage.
@@ -125,7 +125,7 @@ caller retains them for the subsequent update. Every live caller must keep the
 same input owner; stored/returned inputs, dynamic entries and resource regions
 are excluded. The dedicated direct entry borrows; ordinary function-value and
 exported entries keep their owned calling convention. [Focused checks](measurements/gradient-call-checks-2026-11-05/README.md#passing-focused-matrix)
-cover this boundary and failure cleanup; final production verification remains.
+cover this boundary and failure cleanup; [all final platform gates pass](roadmap-history.md#gradient-call-storage-pr-259).
 
 ### Cached numeric map reads
 
@@ -146,6 +146,25 @@ whole-value and unknown-call uses may still box them. Eligible closure captures
 can move into their last consuming call. Every case needs the alias, effect and
 cleanup proof, not just syntactic last use. See the
 [compiler design](design.md) and [primitive contracts](primitive-ownership.md).
+
+### Private neighboring-record buffers: verification in progress
+
+The compiler can prove that one fresh numeric buffer feeds only a neighboring-pair
+operation. That operation now consumes the buffer. Equal-width results reuse it;
+other widths allocate their result and release the input. The original language
+values remain immutable because every other use excludes this transformation.
+
+For records A, B, C, the operation reads A/B before overwriting A, then reads the
+still-original B/C before overwriting B. All producer callbacks finish first;
+the fold starts only after every pair callback. Trap/cancellation cleanup owns
+the actual allocation throughout. Returning that allocation also counts as an
+escape from the helper, so callers must not treat its input as merely borrowed.
+
+The [contract and controls](measurements/packed-pair-storage.md) cover both storage
+paths, aliases, numeric bits and physical frees. [Focused GCC/Clang native checks and evidence audits](measurements/packed-pair-checks-2026-11-05.md)
+pass on Linux AMD64/ARM64 and macOS ARM64. The [allocation census](measurements/packed-pair-census-2026-11-05.md)
+confirms one fewer allocation per update without increasing overall peak managed
+storage. Runtime comparisons and final platform verification remain pending.
 
 ### Array construction and sorting
 

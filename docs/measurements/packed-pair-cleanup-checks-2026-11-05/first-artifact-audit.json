@@ -1,0 +1,15 @@
+{
+  "run": 42013195562,
+  "job": 127197111614,
+  "source": "14707729042f3202527998296ec8c5f196615cb0",
+  "auditorSource": "5aead0b389d09f16418a221cea83c6294eb138ac",
+  "result": "original failed jobs rejected; complete artifacts audited, only recorded formatting and pointer-observer failures found",
+  "artifact": 13408122983,
+  "bytes": 7209387,
+  "sha256": "e5c4d061579e851b376f001115e6509baef84cd7c815735fca00f85b977aa5fb",
+  "perHost": {
+    "targets": 25,
+    "nativeImages": 775,
+    "probeRecords": 791
+  }
+}

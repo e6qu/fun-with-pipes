@@ -25,6 +25,8 @@ jobs:
         run: git fetch --filter=blob:limit=1m origin "+refs/pull/*/head:refs/remotes/origin/review/*"
       - name: Documentation audit controls
         run: python3 scripts/test-roadmap.py
+      - name: Exact-source production log audit controls
+        run: python3 scripts/test-production-log-audit.py
       - name: Documentation, immutable tags and commit messages
         run: python3 scripts/check-roadmap.py
       - uses: dtolnay/rust-toolchain@stable
@@ -62,6 +64,8 @@ jobs:
           python3 scripts/test-packed-input-reference.py || status=1
           python3 scripts/test-owned-numeric-reference.py || status=1
           python3 scripts/test-gradient-call-reference.py || status=1
+          python3 scripts/test-packed-pair-reference.py || status=1
+          python3 scripts/test-packed-pair-stack.py || status=1
           python3 scripts/test-owned-numeric-census.py || status=1
           python3 scripts/test-iteration-storage.py || status=1
           python3 scripts/test-gradient-array-budgets.py || status=1

@@ -21,6 +21,9 @@ SPEC.loader.exec_module(REFERENCE)
 SPEC = importlib.util.spec_from_file_location('gradient_reference', ROOT / 'scripts/prepare-gradient-call-reference.py')
 GRADIENT_REFERENCE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(GRADIENT_REFERENCE)
+SPEC = importlib.util.spec_from_file_location('pair_reference', ROOT / 'scripts/prepare-packed-pair-reference.py')
+PAIR_REFERENCE = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(PAIR_REFERENCE)
 CASES = ((3, 0, 32768), (3, 1, 512), (3, 199, 32), (3, 1999, 4), (33, 199, 32), (129, 199, 8))
 
 
@@ -33,6 +36,8 @@ def compare(candidate, reference, dimensions, updates, solves, comparison):
         expected = dict(requests=7 * maps + int(updates > 0),
                         requestedBytes=(8 * dimensions + 128) * maps + 24 * int(updates > 0),
                         retains=2 * maps)
+    elif comparison == 'packed-pair':
+        expected = dict(requests=maps, requestedBytes=(16 * dimensions - 8) * maps, retains=0)
     else:
         assert comparison == 'owned-numeric', comparison
     actual = {key: reference['managed'][key] - candidate['managed'][key] for key in expected}
@@ -47,9 +52,44 @@ def compare(candidate, reference, dimensions, updates, solves, comparison):
     return actual
 
 
+def reconcile_parent(repeated, fresh, parent_repeated, parent_fresh):
+    """The allocating reference must reproduce the delivered parent's storage."""
+    assert repeated['complete'] and repeated['comparison'] == 'packed-pair'
+    assert fresh['source'] == repeated['source']
+    assert fresh['machine'] == repeated['machine'] == parent_fresh['machine'] == parent_repeated['machine']
+    assert parent_fresh['source'] == parent_repeated['source']
+    assert parent_repeated['allDiagnosticsAudited'] and not parent_repeated['correctedComparisonFailures']
+    assert len(fresh['cases']) == len(parent_fresh['cases']) == 24
+    assert set(fresh['cases']) == set(parent_fresh['cases'])
+    for name, case in fresh['cases'].items():
+        before = parent_fresh['cases'][name]['observations']
+        assert set(case['observations']) == set(before) == {'0', '1'}
+        for mode, observed in case['observations'].items():
+            old = before[mode]
+            assert observed['totals']['managed'] == old['totals']['managed'], (name, mode, 'managed')
+            assert observed['raw'] == old['raw'], (name, mode, 'raw')
+            assert observed['visits'] == old['visits'], (name, mode, 'derivative work')
+            assert set(observed['phases']) == set(old['phases'])
+            for phase, row in observed['phases'].items():
+                for key in ('requests', 'requestedBytes', 'peakChargedBytes'):
+                    assert row[key] == old['phases'][phase][key], (name, mode, phase, key)
+    assert len(repeated['cases']) == len(parent_repeated['cases']) == 12
+    assert set(repeated['cases']) == set(parent_repeated['cases'])
+    for name, row in repeated['cases'].items():
+        old = parent_repeated['cases'][name]
+        assert row['solves'] == old['solves'], name
+        for mode in ('0', '1'):
+            assert row['observations']['reference' + mode]['managed'] == old['candidate'], (name, mode)
+        raw = row['observations']['reference1']['raw']
+        assert raw['peakBytes'] == old['rawPeakBytes'] and raw['finalBytes'] == old['finalRawBytes'] == 0, name
+    return dict(source=repeated['source'], parentSource=parent_fresh['source'],
+                machine=fresh['machine'], freshCases=24, repeatedCases=12,
+                compared='Exact managed counts/peaks; fresh phase allocation/peaks, raw storage and derivative work; repeated workspace-on raw peak/final bytes')
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--comparison', choices=('owned-numeric', 'gradient-call'), required=True)
+    parser.add_argument('--comparison', choices=('owned-numeric', 'gradient-call', 'packed-pair'), required=True)
     parser.add_argument('--compiler', type=Path, required=True)
     parser.add_argument('--reference', type=Path, required=True)
     parser.add_argument('--reference-manifest', type=Path, required=True)
@@ -65,10 +105,12 @@ def main():
     assert args.c_arch == {'aarch64': 'armv8-a', 'x86_64': 'x86-64'}[args.machine]
     assert args.timeout > 0
     assert subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip() == args.source
-    reference_module = GRADIENT_REFERENCE if args.comparison == 'gradient-call' else REFERENCE
+    reference_module = {'owned-numeric': REFERENCE, 'gradient-call': GRADIENT_REFERENCE,
+                        'packed-pair': PAIR_REFERENCE}[args.comparison]
     manifest = json.loads(args.reference_manifest.read_text())
     assert manifest['source'] == args.source
     expected_transformation = {
+        'packed-pair': 'reuse of the consumed private neighboring-record buffer',
         'owned-numeric': 'consuming scalar array maps and exclusive coordinate-list reuse',
         'gradient-call': 'scoped input borrowing, numeric fold fields, single-root seeding and consumed array scratch',
     }[args.comparison]

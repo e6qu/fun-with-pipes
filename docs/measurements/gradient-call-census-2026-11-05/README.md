@@ -54,10 +54,11 @@ O1/O2 and workspace settings on both architectures. For 129/199, recording
 requests 821,472 bytes and result arrays 206,960 bytes; input construction/output
 accounts for the other 5,934 bytes. These are allocation traffic, not elapsed time.
 
-The next storage investigation should map those two recording requests to their
-producer/consumer lifetimes before choosing a transformation. Preserve evaluation
-order, aliases and failure cleanup. Separately examine the zero-update source
-and driver; these positive-update counts cannot explain its timing regression.
+These are parent #259 counts. [PR #260's repaired-source census](../packed-pair-cleanup-census-2026-11-05/README.md#remaining-storage-and-its-constraints)
+removes the separate pair-result buffer and identifies the remaining recording
+and gradient-result allocations. Its final delivery is still pending. The
+zero-update source/driver investigation remains separate: positive-update
+allocation savings cannot explain its timing regression.
 
 ## Failure and correction
 
@@ -100,4 +101,5 @@ passes on both architectures. Its [receipt](report-ci/audit.json) and complete l
 record no unexpected diagnostics.
 [Compiler-cost checks](../gradient-call-analysis-2026-11-05/README.md) now pass.
 [Runtime comparisons](../gradient-call-time-2026-11-05/README.md) are audited,
-with 17 missed timing limits retained before final production checks and merge. Older missed speed goals stay open in [PLAN.md](../../../PLAN.md).
+with 17 missed timing limits retained. [Final platform delivery is verified](../../roadmap-history.md#gradient-call-storage-pr-259).
+Older missed speed goals stay open in [PLAN.md](../../../PLAN.md).

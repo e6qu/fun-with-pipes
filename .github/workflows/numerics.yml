@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [gradient-call-checks, gradient-call-census-report, gradient-call-census, gradient-call-analysis, gradient-call-time, gradient-call-report, owned-numeric-census, packed-input-checks, packed-input-analysis, owned-numeric-analysis, packed-input-time, owned-numeric-time, packed-input-report, owned-numeric-report, matched-option-analysis, matched-option-time, matched-option-report, matched-option-checks, final-iteration-analysis, final-iteration-time, final-iteration-report, final-iteration-checks, iteration-storage-review, scalar-identity-checks, scalar-array-identity-analysis, scalar-array-identity-time, scalar-array-identity-report, scalar-array-map-recover, scalar-array-map-analysis, scalar-array-map-time, scalar-array-map-report, gradient-array-analysis, gradient-array-time, gradient-array-report, gradient-array-checks, range-zip-analysis, range-zip-time, range-zip-report, range-zip-checks, scalar-map-zip-analysis, scalar-map-zip-time, scalar-map-zip-report, scalar-map-zip-checks, constructor-census, numeric-input-selection, numeric-input-analysis, numeric-input-checks, callback-owners-time, callback-owners-report, packed-records-time, packed-records-report, packed-record-controls, packed-record-checks, array-observations, array-consumption, scalar-array-time, scalar-array-checks, array-construction-time, array-construction, matrix-tables, matrix-columns-report, matrix-columns, matrix-checks, current-kernel-report, current-kernels, record-fold-count-report, record-fold-time, record-fold-report, record-fold-checks, record-fold-measurements, record-zip-codegen, record-zip-report, record-zip-time, record-zip-checks, derivative-forward-costs, typed-derivative-owners, array-list-report, swift-allocation-report, swift-allocations, array-list-measurements, lexical-bindings, lexical-probes, callable-phase-paired, callable-phase-context, callable-construction-diagnosis, callable-phases, callable-phase-report, swift-peer-report, swift-peers, returned-callables, state-range-checks, scalar-fold-checks, scan-comparison, buffer-baselines, buffer-peer-checks, timing-names, timing-resources, typed-loop-state, kernel-codegen, timing-diagnostics, kernel-baselines, eager-captures, eager-capture-time, runtime-startup, decimal-count, decimal-count-repeat, decimal-count-interleaved, decimal-count-balanced, cpu-phases, cpu-baselines, functional-calls, functional-probes, parser-measurements, parser-workspace, inline-key-time, inline-key-audit, arc-cost-audit, scalar-projections, unique-arrays, unique-array-checks, arc-costs, ownership-analysis, compiler-lifetimes, array-sort, list-copy-costs, list-copy, benchmark-comparison, socket-inheritance, http-mappings, http-idle-checks, array-text, float-text, float-text-checks, float-text-costs, descent-output, coordinate-work, descent-batches, descent-call-costs, descent-peers, descent-checks, ad-depth, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, wordfreq-current, direct-strings, string-reuse, ad-application, wordfreq-baseline, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, memory-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, fixed-function-checks, server-checks, http-application, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
+        options: [storage-compiler-report, packed-pair-census-report, packed-pair-time, packed-pair-report, storage-measurement-controls, packed-pair-analysis, packed-pair-census, focused-storage-audit, production-log-audit, packed-pair-checks, gradient-call-checks, gradient-call-census-report, gradient-call-census, gradient-call-analysis, gradient-call-time, gradient-call-report, owned-numeric-census, packed-input-checks, packed-input-analysis, owned-numeric-analysis, packed-input-time, owned-numeric-time, packed-input-report, owned-numeric-report, matched-option-analysis, matched-option-time, matched-option-report, matched-option-checks, final-iteration-analysis, final-iteration-time, final-iteration-report, final-iteration-checks, iteration-storage-review, scalar-identity-checks, scalar-array-identity-analysis, scalar-array-identity-time, scalar-array-identity-report, scalar-array-map-recover, scalar-array-map-analysis, scalar-array-map-time, scalar-array-map-report, gradient-array-analysis, gradient-array-time, gradient-array-report, gradient-array-checks, range-zip-analysis, range-zip-time, range-zip-report, range-zip-checks, scalar-map-zip-analysis, scalar-map-zip-time, scalar-map-zip-report, scalar-map-zip-checks, constructor-census, numeric-input-selection, numeric-input-analysis, numeric-input-checks, callback-owners-time, callback-owners-report, packed-records-time, packed-records-report, packed-record-controls, packed-record-checks, array-observations, array-consumption, scalar-array-time, scalar-array-checks, array-construction-time, array-construction, matrix-tables, matrix-columns-report, matrix-columns, matrix-checks, current-kernel-report, current-kernels, record-fold-count-report, record-fold-time, record-fold-report, record-fold-checks, record-fold-measurements, record-zip-codegen, record-zip-report, record-zip-time, record-zip-checks, derivative-forward-costs, typed-derivative-owners, array-list-report, swift-allocation-report, swift-allocations, array-list-measurements, lexical-bindings, lexical-probes, callable-phase-paired, callable-phase-context, callable-construction-diagnosis, callable-phases, callable-phase-report, swift-peer-report, swift-peers, returned-callables, state-range-checks, scalar-fold-checks, scan-comparison, buffer-baselines, buffer-peer-checks, timing-names, timing-resources, typed-loop-state, kernel-codegen, timing-diagnostics, kernel-baselines, eager-captures, eager-capture-time, runtime-startup, decimal-count, decimal-count-repeat, decimal-count-interleaved, decimal-count-balanced, cpu-phases, cpu-baselines, functional-calls, functional-probes, parser-measurements, parser-workspace, inline-key-time, inline-key-audit, arc-cost-audit, scalar-projections, unique-arrays, unique-array-checks, arc-costs, ownership-analysis, compiler-lifetimes, array-sort, list-copy-costs, list-copy, benchmark-comparison, socket-inheritance, http-mappings, http-idle-checks, array-text, float-text, float-text-checks, float-text-costs, descent-output, coordinate-work, descent-batches, descent-call-costs, descent-peers, descent-checks, ad-depth, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, wordfreq-current, direct-strings, string-reuse, ad-application, wordfreq-baseline, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, memory-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, fixed-function-checks, server-checks, http-application, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -37,19 +37,159 @@ on:
       baseline_run:
         description: Earlier matching cost run; timing-diagnostics requires the failed derivative run
         type: string
+      audit_host:
+        description: Explicit completed production host to audit, or all final gates
+        type: choice
+        options: [all, linux-arm, linux-amd, mac-arm, mac-amd, mac-arm-ownership, mac-amd-ownership, windows-arm, windows-amd, bench, docs]
+      documentation_job:
+        description: Exact documentation job ID for production-log-audit
+        type: string
+      production_attempt:
+        description: Explicit evidence run attempt for production or focused audits
+        type: string
       application_run:
         description: Exact focused API run supplying native diagnostic executables
         type: string
 jobs:
-  gradient_call_census_report:
-    if: inputs.suite == 'gradient-call-census-report'
-    runs-on: ubuntu-latest
+  storage_measurement_controls:
+    if: inputs.suite == 'storage-measurement-controls'
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          filter: blob:limit=1m
+      - name: Retain historical review sources used by evidence controls
+        run: git fetch --filter=blob:limit=1m origin "+refs/pull/*/head:refs/remotes/origin/review/*"
+      - name: Check storage reference, counters, phase attribution and audit controls
+        run: |
+          mkdir storage-measurement-controls
+          git rev-parse HEAD > storage-measurement-controls/source.txt
+          set -o pipefail
+          status=0
+          for script in test-packed-pair-reference test-packed-pair-stack test-owned-numeric-census test-gradient-array-budgets test-numeric-input-analysis test-descent-budgets test-array-list-evidence test-retain-derivative-evidence test-production-log-audit; do
+            python3 "scripts/$script.py" 2>&1 | tee "storage-measurement-controls/$script.log" || status=1
+          done
+          exit "$status"
+      - name: Retain every control result including failures
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: storage-measurement-controls
+          path: storage-measurement-controls/
+          if-no-files-found: error
+  production_log_audit:
+    if: inputs.suite == 'production-log-audit'
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v7
+      - name: Verify audit failure controls
+        run: python3 scripts/test-production-log-audit.py
+      - name: Audit exact-source completed production logs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PRODUCTION_RUN: ${{ inputs.evidence_run }}
+          PRODUCTION_SOURCE: ${{ inputs.source_revision }}
+          PRODUCTION_ATTEMPT: ${{ inputs.production_attempt }}
+          DOCUMENTATION_JOB: ${{ inputs.documentation_job }}
+          AUDIT_HOST: ${{ inputs.audit_host }}
+        run: >-
+          python3 scripts/audit-production-run.py --run "$PRODUCTION_RUN"
+          --source "$PRODUCTION_SOURCE" --attempt "$PRODUCTION_ATTEMPT"
+          --host "$AUDIT_HOST" --docs-job "$DOCUMENTATION_JOB"
+          --output production-log-audit
+      - name: Retain full logs, target logs and source receipts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: production-log-audit-${{ inputs.audit_host }}
+          path: |
+            production-log-audit/
+            !production-log-audit/*-probe.zip
+            !production-log-audit/*.part
+          if-no-files-found: error
+  focused_storage_audit:
+    if: inputs.suite == 'focused-storage-audit'
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v7
+      - name: Verify audit failure controls
+        run: python3 scripts/test-production-log-audit.py
+      - name: Audit all focused storage jobs and native image headers
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FOCUSED_RUN: ${{ inputs.evidence_run }}
+          FOCUSED_SOURCE: ${{ inputs.source_revision }}
+          FOCUSED_ATTEMPT: ${{ inputs.production_attempt }}
+        run: >-
+          python3 scripts/audit-focused-storage.py --run "$FOCUSED_RUN"
+          --source "$FOCUSED_SOURCE" --attempt "$FOCUSED_ATTEMPT"
+          --output focused-storage-audit
+      - name: Retain all logs, observations and original artifact identities
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: focused-storage-audit
+          path: |
+            focused-storage-audit/
+            !focused-storage-audit/*-evidence.zip
+          if-no-files-found: error
+  storage_compiler_report:
+    if: inputs.suite == 'storage-compiler-report'
+    runs-on: ubuntu-24.04-arm
     timeout-minutes: 15
     permissions:
       contents: read
       actions: read
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Audit saved compiler commands and retain every result
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVIDENCE_RUN: ${{ inputs.evidence_run }}
+          SOURCE_REVISION: ${{ inputs.source_revision }}
+        run: |
+          python3 scripts/test-numeric-input-analysis.py
+          status=0
+          for machine in aarch64 x86_64; do
+            python3 scripts/audit-storage-compiler-costs.py --comparison packed-pair \
+              --repository "$GITHUB_REPOSITORY" --run "$EVIDENCE_RUN" \
+              --source "$SOURCE_REVISION" --machine "$machine" \
+              --output compiler-cost-audit || status=1
+          done
+          exit "$status"
+      - name: Preserve audits and observations, including any failures
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: storage-compiler-report
+          path: |
+            compiler-cost-audit/
+            !compiler-cost-audit/aarch64.zip
+            !compiler-cost-audit/x86_64.zip
+            !compiler-cost-audit/*.part
+          if-no-files-found: error
+
+  gradient_call_census_report:
+    if: inputs.suite == 'gradient-call-census-report' || inputs.suite == 'packed-pair-census-report'
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Check literal budgets and audit saved census on both architectures
@@ -57,8 +197,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           EVIDENCE_RUN: ${{ inputs.evidence_run }}
           SOURCE_REVISION: ${{ inputs.source_revision }}
+          CENSUS_COMPARISON: ${{ inputs.suite == 'packed-pair-census-report' && 'packed-pair' || 'gradient-call' }}
         run: |
           python3 scripts/test-gradient-array-budgets.py
+          python3 scripts/test-packed-pair-stack.py
           python3 - <<'PYCODE'
           import gzip
           import json
@@ -70,7 +212,8 @@ jobs:
           run = os.environ['EVIDENCE_RUN']
           assert re.fullmatch('[0-9a-f]{40}', source)
           assert re.fullmatch('[0-9]+', run)
-          root = Path('gradient-call-census-report')
+          comparison = os.environ['CENSUS_COMPARISON']
+          root = Path(comparison + '-census-report')
           root.mkdir()
           recorded = Path(os.environ['RUNNER_TEMP']) / 'recorded-census'
           subprocess.run(['git', 'worktree', 'add', '--detach', str(recorded), source], check=True)
@@ -83,11 +226,12 @@ jobs:
                   'repos/' + os.environ['GITHUB_REPOSITORY'] + '/' + path])
           jobs = json.loads(api('actions/runs/' + run + '/jobs?per_page=100'))['jobs']
           artifacts = json.loads(api('actions/runs/' + run + '/artifacts?per_page=100'))['artifacts']
+          audit_failures = []
           for machine, runner, arch in (('aarch64', 'ubuntu-24.04-arm', 'ARM64'), ('x86_64', 'ubuntu-latest', 'X64')):
               folder = root / machine
               folder.mkdir()
               job, = [row for row in jobs if row['name'] == 'numeric_input_analysis (' + runner + ')']
-              artifact, = [row for row in artifacts if row['name'] == 'gradient-call-census-' + arch]
+              artifact, = [row for row in artifacts if row['name'] == comparison + '-census-' + arch]
               assert not artifact['expired']
               (folder / 'job.json').write_text(json.dumps(job, indent=2) + '\n')
               (folder / 'artifact.json').write_text(json.dumps(artifact, indent=2) + '\n')
@@ -96,21 +240,27 @@ jobs:
               with archive.open('wb') as output:
                   subprocess.run(['gh', 'api', '--allow-escape-sequences', 'repos/' + os.environ['GITHUB_REPOSITORY'] +
                       '/actions/artifacts/' + str(artifact['id']) + '/zip'], stdout=output, check=True)
-              subprocess.run(['python3', 'scripts/audit-gradient-call-census.py',
-                  '--input', str(archive), '--artifact', str(folder / 'artifact.json'),
+              result = subprocess.run(['python3', 'scripts/audit-gradient-call-census.py',
+                  '--comparison', comparison, '--input', str(archive), '--artifact', str(folder / 'artifact.json'),
                   '--job', str(folder / 'job.json'), '--job-log', str(folder / 'job.log.gz'),
                   '--recorded-checkout', str(recorded), '--source', source, '--run', run,
-                  '--machine', machine, '--output', str(folder / 'audit')], check=True)
+                  '--machine', machine, '--output', str(folder / 'audit')], check=False)
+              if result.returncode != 0:
+                  audit_failures.append(machine)
+          assert not audit_failures, audit_failures
           PYCODE
       - name: Preserve original observations and corrected audits
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: gradient-call-census-report
-          path: gradient-call-census-report/
+          name: ${{ inputs.suite }}
+          path: |
+            ${{ inputs.suite }}/
+            !${{ inputs.suite }}/*/original.zip
+            !${{ inputs.suite }}/*/audit/*-fresh-*.zip
           if-no-files-found: error
   gradient_call_checks:
-    if: inputs.suite == 'gradient-call-checks'
+    if: inputs.suite == 'gradient-call-checks' || inputs.suite == 'packed-pair-checks'
     strategy:
       fail-fast: false
       matrix:
@@ -186,6 +336,7 @@ jobs:
           python3 scripts/test-packed-input-reference.py 2>&1 | tee gradient-call-checks/packed-reference.log || status=1
           python3 scripts/test-owned-numeric-reference.py 2>&1 | tee gradient-call-checks/owned-reference.log || status=1
           python3 scripts/test-gradient-call-reference.py 2>&1 | tee gradient-call-checks/call-reference.log || status=1
+          python3 scripts/test-packed-pair-reference.py 2>&1 | tee gradient-call-checks/pair-reference.log || status=1
           python3 scripts/test-descent-phases.py --cc "$CC" 2>&1 | tee gradient-call-checks/phase-controls.log || status=1
           python3 scripts/test-numeric-input-analysis.py 2>&1 | tee gradient-call-checks/analysis-controls.log || status=1
           python3 scripts/test-iteration-storage.py 2>&1 | tee gradient-call-checks/selection-controls.log || status=1
@@ -198,6 +349,9 @@ jobs:
       - name: Verify all four gradient-call reductions and missing-selection controls
         if: ${{ !cancelled() && steps.compiler_build.outcome == 'success' }}
         run: python3 scripts/check-gradient-call-selection.py --input gradient-call-checks/selection
+      - name: Verify private pair reuse and missing-selection controls
+        if: ${{ !cancelled() && steps.compiler_build.outcome == 'success' && inputs.suite == 'packed-pair-checks' }}
+        run: python3 scripts/check-packed-pair-selection.py --input gradient-call-checks/selection
       - name: Verify live consuming calls and retained-input exclusion before timing
         if: ${{ !cancelled() && steps.compiler_build.outcome == 'success' }}
         run: |
@@ -228,6 +382,7 @@ jobs:
           status=0
           set -o pipefail
           target/debug/fwp fmt --check lib examples docs/tutorials bench 2>&1 | tee gradient-call-checks/repository-format.log || status=1
+          target/debug/fwp fmt --check tests/fixtures/packed_input_windows.fwp tests/fixtures/packed_input_narrow.fwp tests/fixtures/packed_input_bits.fwp 2>&1 | tee gradient-call-checks/pair-format.log || status=1
           diff -u tests/fixtures/owned_numeric_updates.fwp gradient-call-checks/formatted-fixture.fwp 2>&1 | tee gradient-call-checks/language-format.log || status=1
           diff -u tests/fixtures/scalar_map_zip_order.fwp gradient-call-checks/formatted-order-fixture.fwp 2>&1 | tee -a gradient-call-checks/language-format.log || status=1
           diff -u tests/fixtures/gradient_call_storage.fwp gradient-call-checks/formatted-call-fixture.fwp 2>&1 | tee -a gradient-call-checks/language-format.log || status=1
@@ -800,7 +955,7 @@ jobs:
             target/debug/fwp
           if-no-files-found: error
   numeric_input_analysis:
-    if: inputs.suite == 'numeric-input-analysis' || (inputs.suite == 'scalar-map-zip-analysis' || (inputs.suite == 'range-zip-analysis' || (inputs.suite == 'gradient-array-analysis' || (inputs.suite == 'scalar-array-map-analysis' || (inputs.suite == 'scalar-array-identity-analysis' || (inputs.suite == 'final-iteration-analysis' || contains(fromJSON('["matched-option-analysis","packed-input-analysis","owned-numeric-analysis","owned-numeric-census","gradient-call-census","gradient-call-analysis"]'), inputs.suite)))))))
+    if: inputs.suite == 'numeric-input-analysis' || (inputs.suite == 'scalar-map-zip-analysis' || (inputs.suite == 'range-zip-analysis' || (inputs.suite == 'gradient-array-analysis' || (inputs.suite == 'scalar-array-map-analysis' || (inputs.suite == 'scalar-array-identity-analysis' || (inputs.suite == 'final-iteration-analysis' || contains(fromJSON('["matched-option-analysis","packed-input-analysis","owned-numeric-analysis","owned-numeric-census","gradient-call-census","gradient-call-analysis","packed-pair-census","packed-pair-analysis"]'), inputs.suite)))))))
     strategy:
       fail-fast: false
       matrix:
@@ -814,8 +969,8 @@ jobs:
       CARGO_PROFILE_DEV_DEBUG_ASSERTIONS: 'true'
       CARGO_PROFILE_DEV_OVERFLOW_CHECKS: 'true'
       FWP_LTO: '0'
-      REFERENCE_KIND: ${{ fromJSON('{"numeric-input-analysis":"numeric-input","scalar-map-zip-analysis":"scalar-map-zip","range-zip-analysis":"range-zip","gradient-array-analysis":"gradient-array","scalar-array-map-analysis":"scalar-array-map","scalar-array-identity-analysis":"scalar-array-identity","final-iteration-analysis":"final-iteration","matched-option-analysis":"matched-option","packed-input-analysis":"packed-input","owned-numeric-analysis":"owned-numeric","owned-numeric-census":"owned-numeric","gradient-call-census":"gradient-call","gradient-call-analysis":"gradient-call"}')[inputs.suite] }}
-      COMPARISON: ${{ fromJSON('{"numeric-input-analysis":"numeric-inputs","scalar-map-zip-analysis":"scalar-map-zip","range-zip-analysis":"range-zip","gradient-array-analysis":"gradient-array","scalar-array-map-analysis":"scalar-array-map","scalar-array-identity-analysis":"scalar-array-identity","final-iteration-analysis":"final-iteration","matched-option-analysis":"matched-option","packed-input-analysis":"packed-input","owned-numeric-analysis":"owned-numeric","owned-numeric-census":"owned-numeric","gradient-call-census":"gradient-call","gradient-call-analysis":"gradient-call"}')[inputs.suite] }}
+      REFERENCE_KIND: ${{ fromJSON('{"numeric-input-analysis":"numeric-input","scalar-map-zip-analysis":"scalar-map-zip","range-zip-analysis":"range-zip","gradient-array-analysis":"gradient-array","scalar-array-map-analysis":"scalar-array-map","scalar-array-identity-analysis":"scalar-array-identity","final-iteration-analysis":"final-iteration","matched-option-analysis":"matched-option","packed-input-analysis":"packed-input","owned-numeric-analysis":"owned-numeric","owned-numeric-census":"owned-numeric","gradient-call-census":"gradient-call","gradient-call-analysis":"gradient-call","packed-pair-census":"packed-pair","packed-pair-analysis":"packed-pair"}')[inputs.suite] }}
+      COMPARISON: ${{ fromJSON('{"numeric-input-analysis":"numeric-inputs","scalar-map-zip-analysis":"scalar-map-zip","range-zip-analysis":"range-zip","gradient-array-analysis":"gradient-array","scalar-array-map-analysis":"scalar-array-map","scalar-array-identity-analysis":"scalar-array-identity","final-iteration-analysis":"final-iteration","matched-option-analysis":"matched-option","packed-input-analysis":"packed-input","owned-numeric-analysis":"owned-numeric","owned-numeric-census":"owned-numeric","gradient-call-census":"gradient-call","gradient-call-analysis":"gradient-call","packed-pair-census":"packed-pair","packed-pair-analysis":"packed-pair"}')[inputs.suite] }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -839,7 +994,7 @@ jobs:
           import subprocess
           run = json.loads(Path('numeric-analysis-safety/run.json').read_text())
           pages = json.loads(Path('numeric-analysis-safety/jobs.json').read_text())
-          if os.environ['COMPARISON'] == 'gradient-call':
+          if os.environ['COMPARISON'] in ('gradient-call', 'packed-pair'):
               expected = {'gradient_call_checks (ubuntu-24.04-arm, gcc)', 'gradient_call_checks (ubuntu-latest, gcc)', 'gradient_call_checks (macos-15, clang)'}
           elif os.environ['COMPARISON'] == 'owned-numeric':
               expected = {'owned_numeric_checks (ubuntu-24.04-arm, gcc)', 'owned_numeric_checks (ubuntu-latest, gcc)', 'owned_numeric_checks (macos-15, clang)'}
@@ -872,6 +1027,12 @@ jobs:
           PYCODE
           python3 "scripts/test-$REFERENCE_KIND-reference.py"
           python3 scripts/test-numeric-input-analysis.py
+          if [[ "$COMPARISON" == owned-numeric || "$COMPARISON" == gradient-call || "$COMPARISON" == packed-pair ]]; then
+            status=0
+            python3 scripts/test-owned-numeric-census.py || status=1
+            python3 scripts/test-gradient-array-budgets.py || status=1
+            [[ "$status" == 0 ]]
+          fi
       - uses: actions/cache@v6
         with:
           path: ~/.cargo/registry
@@ -891,22 +1052,27 @@ jobs:
           CARGO_TARGET_DIR="$reference_target" CARGO_NET_OFFLINE=true cargo build --locked --bin fwp --manifest-path "$reference_checkout/Cargo.toml"
           cp "$reference_target/debug/fwp" numeric-analysis-reference/fwp
           python3 "scripts/prepare-$REFERENCE_KIND-reference.py" "${reference_scope[@]}" --verify "$reference_checkout" --output numeric-analysis-reference
+      - name: Check complete-program stack costs before allocation and timing gates
+        if: inputs.suite == 'packed-pair-census'
+        run: >-
+          python3 scripts/check-packed-pair-stack.py --compiler target/debug/fwp
+          --reference numeric-analysis-reference/fwp --cc gcc
+          --machine ${{ matrix.runner == 'ubuntu-24.04-arm' && 'aarch64' || 'x86_64' }}
+          --source "$GITHUB_SHA" --timeout 180 --output pair-stack
       - name: Verify complete solve allocations before any timing
-        if: contains(fromJSON('["owned-numeric-census","gradient-call-census"]'), inputs.suite)
+        if: contains(fromJSON('["owned-numeric-census","gradient-call-census","packed-pair-census"]'), inputs.suite)
         run: |
-          python3 scripts/test-owned-numeric-census.py
           python3 scripts/check-owned-numeric-census.py --comparison "$COMPARISON" --compiler target/debug/fwp \
             --reference numeric-analysis-reference/fwp --reference-manifest numeric-analysis-reference/manifest.json \
             --cc gcc --machine ${{ matrix.runner == 'ubuntu-24.04-arm' && 'aarch64' || 'x86_64' }} \
             --c-arch ${{ matrix.runner == 'ubuntu-24.04-arm' && 'armv8-a' || 'x86-64' }} \
             --source "$GITHUB_SHA" --timeout 180 --output numeric-analysis
       - name: Attribute fresh-solve reference allocations to phases and source sites
-        if: inputs.suite == 'gradient-call-census'
+        if: inputs.suite == 'gradient-call-census' || inputs.suite == 'packed-pair-census'
         env:
           MEASUREMENT_MACHINE: ${{ matrix.runner == 'ubuntu-24.04-arm' && 'aarch64' || 'x86_64' }}
           MEASUREMENT_ARCH: ${{ matrix.runner == 'ubuntu-24.04-arm' && 'armv8-a' || 'x86-64' }}
         run: |
-          python3 scripts/test-gradient-array-budgets.py
           status=0
           python3 scripts/measure-derivative-forward-costs.py --compiler numeric-analysis-reference/fwp \
             --cc gcc --machine "$MEASUREMENT_MACHINE" --c-arch "$MEASUREMENT_ARCH" \
@@ -934,10 +1100,21 @@ jobs:
           assert result['compilerSha256'] == manifest['compilerSha256']
           baseline = dict(source=os.environ['GITHUB_SHA'], hosts={os.environ['MEASUREMENT_MACHINE']: result})
           Path('fresh-baseline.json.gz').write_bytes(gzip.compress((json.dumps(baseline) + '\n').encode(), mtime=0))
+          if os.environ['COMPARISON'] == 'packed-pair':
+              spec = importlib.util.spec_from_file_location('census', 'scripts/check-owned-numeric-census.py')
+              census = importlib.util.module_from_spec(spec)
+              spec.loader.exec_module(census)
+              prefix = 'arm' if os.environ['MEASUREMENT_MACHINE'] == 'aarch64' else 'amd'
+              parent = Path('docs/measurements/gradient-call-census-2026-11-05')
+              repeated = json.loads(Path('numeric-analysis/report.json').read_text())
+              parent_repeated = json.loads((parent / (prefix + '-verified.json')).read_text())
+              parent_fresh = json.loads(gzip.decompress((parent / (prefix + '-fresh-verified.json.gz')).read_bytes()))
+              receipt = census.reconcile_parent(repeated, result, parent_repeated, parent_fresh)
+              Path('parent-reconciliation.json').write_text(json.dumps(receipt, indent=2) + '\n')
           PYCODE
           exit "$status"
       - name: Verify fresh-solve savings and their exact phase attribution
-        if: inputs.suite == 'gradient-call-census'
+        if: inputs.suite == 'gradient-call-census' || inputs.suite == 'packed-pair-census'
         env:
           MEASUREMENT_MACHINE: ${{ matrix.runner == 'ubuntu-24.04-arm' && 'aarch64' || 'x86_64' }}
           MEASUREMENT_ARCH: ${{ matrix.runner == 'ubuntu-24.04-arm' && 'armv8-a' || 'x86-64' }}
@@ -946,7 +1123,7 @@ jobs:
           python3 scripts/measure-derivative-forward-costs.py --compiler target/debug/fwp \
             --cc gcc --machine "$MEASUREMENT_MACHINE" --c-arch "$MEASUREMENT_ARCH" \
             --source "$GITHUB_SHA" --timeout 180 --output fresh-candidate \
-            --comparison gradient-call --baseline fresh-baseline.json.gz || status=1
+            --comparison "$COMPARISON" --baseline fresh-baseline.json.gz || status=1
           python3 - <<'PYCODE' || status=1
           import gzip
           import importlib.util
@@ -966,13 +1143,13 @@ jobs:
                   if path.is_file():
                       saved.write(path, path.relative_to(folder))
           baseline = json.loads(gzip.decompress(Path('fresh-baseline.json.gz').read_bytes()))
-          result = summary.audit(archive, os.environ['GITHUB_SHA'], os.environ['MEASUREMENT_MACHINE'], 'gradient-call', baseline)
+          result = summary.audit(archive, os.environ['GITHUB_SHA'], os.environ['MEASUREMENT_MACHINE'], os.environ['COMPARISON'], baseline)
           Path('fresh-audit.json.gz').write_bytes(gzip.compress((json.dumps(result) + '\n').encode(), mtime=0))
           assert not result['comparisonFailures'], result['comparisonFailures']
           PYCODE
           exit "$status"
       - name: Measure balanced compiler commands and peak memory
-        if: ${{ !contains(fromJSON('["owned-numeric-census","gradient-call-census"]'), inputs.suite) }}
+        if: ${{ !contains(fromJSON('["owned-numeric-census","gradient-call-census","packed-pair-census"]'), inputs.suite) }}
         run: >-
           python3 scripts/measure-numeric-input-analysis.py --comparison "$COMPARISON" --compiler target/debug/fwp
           --reference numeric-analysis-reference/fwp --reference-manifest numeric-analysis-reference/manifest.json
@@ -982,14 +1159,16 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v7
         with:
-          name: ${{ env.COMPARISON }}-${{ contains(fromJSON('["owned-numeric-census","gradient-call-census"]'), inputs.suite) && 'census' || 'analysis' }}-${{ runner.arch }}
+          name: ${{ env.COMPARISON }}-${{ contains(fromJSON('["owned-numeric-census","gradient-call-census","packed-pair-census"]'), inputs.suite) && 'census' || 'analysis' }}-${{ runner.arch }}
           path: |
             numeric-analysis-safety/
             numeric-analysis-reference/
             numeric-analysis/
+            pair-stack/
             fresh-reference.zip
             fresh-candidate.zip
             fresh-baseline.json.gz
+            parent-reconciliation.json
             fresh-audit.json.gz
             fresh-reference/report.json
             fresh-candidate/report.json
@@ -2180,7 +2359,7 @@ jobs:
           if-no-files-found: error
 
   retained_comparisons:
-    if: inputs.suite == 'array-list-report' || inputs.suite == 'swift-allocation-report' || inputs.suite == 'record-zip-report' || inputs.suite == 'record-fold-report' || inputs.suite == 'packed-records-report' || inputs.suite == 'callback-owners-report' || (inputs.suite == 'scalar-map-zip-report' || (inputs.suite == 'range-zip-report' || (inputs.suite == 'gradient-array-report' || (inputs.suite == 'scalar-array-map-report' || (inputs.suite == 'scalar-array-identity-report' || (inputs.suite == 'final-iteration-report' || contains(fromJSON('["matched-option-report","packed-input-report","owned-numeric-report","gradient-call-report"]'), inputs.suite)))))))
+    if: inputs.suite == 'array-list-report' || inputs.suite == 'swift-allocation-report' || inputs.suite == 'record-zip-report' || inputs.suite == 'record-fold-report' || inputs.suite == 'packed-records-report' || inputs.suite == 'callback-owners-report' || (inputs.suite == 'scalar-map-zip-report' || (inputs.suite == 'range-zip-report' || (inputs.suite == 'gradient-array-report' || (inputs.suite == 'scalar-array-map-report' || (inputs.suite == 'scalar-array-identity-report' || (inputs.suite == 'final-iteration-report' || contains(fromJSON('["matched-option-report","packed-input-report","owned-numeric-report","gradient-call-report","packed-pair-report"]'), inputs.suite)))))))
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 20
     permissions:
@@ -2204,7 +2383,7 @@ jobs:
           set -euo pipefail
           [[ "$EVIDENCE_RUN" =~ ^[0-9]+$ ]]
           [[ "$SOURCE_REVISION" =~ ^[0-9a-f]{40}$ ]]
-          if [[ "$REPORT_SUITE" == record-zip-report || "$REPORT_SUITE" == record-fold-report || "$REPORT_SUITE" == packed-records-report || "$REPORT_SUITE" == callback-owners-report || "$REPORT_SUITE" == scalar-map-zip-report || "$REPORT_SUITE" == range-zip-report || "$REPORT_SUITE" == gradient-array-report || "$REPORT_SUITE" == scalar-array-map-report || "$REPORT_SUITE" == scalar-array-identity-report || ( "$REPORT_SUITE" == final-iteration-report || "$REPORT_SUITE" == packed-input-report || "$REPORT_SUITE" == owned-numeric-report || "$REPORT_SUITE" == gradient-call-report || "$REPORT_SUITE" == matched-option-report ) ]]; then
+          if [[ "$REPORT_SUITE" == record-zip-report || "$REPORT_SUITE" == record-fold-report || "$REPORT_SUITE" == packed-records-report || "$REPORT_SUITE" == callback-owners-report || "$REPORT_SUITE" == scalar-map-zip-report || "$REPORT_SUITE" == range-zip-report || "$REPORT_SUITE" == gradient-array-report || "$REPORT_SUITE" == scalar-array-map-report || "$REPORT_SUITE" == scalar-array-identity-report || ( "$REPORT_SUITE" == final-iteration-report || "$REPORT_SUITE" == packed-input-report || "$REPORT_SUITE" == owned-numeric-report || "$REPORT_SUITE" == gradient-call-report || "$REPORT_SUITE" == packed-pair-report || "$REPORT_SUITE" == matched-option-report ) ]]; then
             python3 scripts/retain-derivative-evidence.py --protocol "${REPORT_SUITE%-report}" \
               --repository "$GITHUB_REPOSITORY" --run "$EVIDENCE_RUN" \
               --source "$SOURCE_REVISION" --output retained-evidence
@@ -8020,7 +8199,7 @@ jobs:
           path: descent-call-evidence/
           if-no-files-found: error
   comparison_selection:
-    if: contains(fromJSON('["descent-peers","descent-checks","eager-capture-time","record-zip-time","record-fold-time","packed-records-time","callback-owners-time","scalar-map-zip-time","range-zip-time","gradient-array-time","scalar-array-map-time","scalar-array-identity-time","final-iteration-time","matched-option-time","packed-input-time","owned-numeric-time","gradient-call-time","kernel-baselines","wordfreq-current","direct-strings","string-reuse"]'), inputs.suite) && ((!contains(fromJSON('["all","ubuntu-latest","ubuntu-24.04-arm"]'), inputs.native_runner)) || (inputs.suite != 'descent-checks' && !contains(fromJSON('["both","1","2"]'), inputs.comparison_session)))
+    if: contains(fromJSON('["descent-peers","descent-checks","eager-capture-time","record-zip-time","record-fold-time","packed-records-time","callback-owners-time","scalar-map-zip-time","range-zip-time","gradient-array-time","scalar-array-map-time","scalar-array-identity-time","final-iteration-time","matched-option-time","packed-input-time","owned-numeric-time","gradient-call-time","packed-pair-time","kernel-baselines","wordfreq-current","direct-strings","string-reuse"]'), inputs.suite) && ((!contains(fromJSON('["all","ubuntu-latest","ubuntu-24.04-arm"]'), inputs.native_runner)) || (inputs.suite != 'descent-checks' && !contains(fromJSON('["both","1","2"]'), inputs.comparison_session)))
     runs-on: ubuntu-latest
     steps:
       - name: Reject missing or unsupported comparison selections
@@ -8029,18 +8208,18 @@ jobs:
           echo 'Timing suites also require comparison_session=both, 1 or 2; no session is selected implicitly' >&2
           exit 1
   descent_peers:
-    if: (inputs.suite == 'descent-peers' || inputs.suite == 'eager-capture-time' || (inputs.suite == 'record-zip-time' || inputs.suite == 'record-fold-time' || (inputs.suite == 'packed-records-time' || inputs.suite == 'callback-owners-time' || (inputs.suite == 'scalar-map-zip-time' || (inputs.suite == 'range-zip-time' || (inputs.suite == 'gradient-array-time' || (inputs.suite == 'scalar-array-map-time' || (inputs.suite == 'scalar-array-identity-time' || (inputs.suite == 'final-iteration-time' || contains(fromJSON('["matched-option-time","packed-input-time","owned-numeric-time","gradient-call-time"]'), inputs.suite))))))))) || inputs.suite == 'descent-checks') && (inputs.native_runner == 'all' || inputs.native_runner == 'ubuntu-latest' || inputs.native_runner == 'ubuntu-24.04-arm') && (inputs.suite == 'descent-checks' || contains(fromJSON('["both","1","2"]'), inputs.comparison_session))
+    if: (inputs.suite == 'descent-peers' || inputs.suite == 'eager-capture-time' || (inputs.suite == 'record-zip-time' || inputs.suite == 'record-fold-time' || (inputs.suite == 'packed-records-time' || inputs.suite == 'callback-owners-time' || (inputs.suite == 'scalar-map-zip-time' || (inputs.suite == 'range-zip-time' || (inputs.suite == 'gradient-array-time' || (inputs.suite == 'scalar-array-map-time' || (inputs.suite == 'scalar-array-identity-time' || (inputs.suite == 'final-iteration-time' || contains(fromJSON('["matched-option-time","packed-input-time","owned-numeric-time","gradient-call-time","packed-pair-time"]'), inputs.suite))))))))) || inputs.suite == 'descent-checks') && (inputs.native_runner == 'all' || inputs.native_runner == 'ubuntu-latest' || inputs.native_runner == 'ubuntu-24.04-arm') && (inputs.suite == 'descent-checks' || contains(fromJSON('["both","1","2"]'), inputs.comparison_session))
     strategy:
       fail-fast: false
       matrix:
         session: ${{ fromJSON(inputs.suite == 'descent-checks' && '[1]' || inputs.comparison_session == 'both' && '[1,2]' || format('[{0}]', inputs.comparison_session)) }}
         runner: ${{ fromJSON(inputs.native_runner == 'all' && '["ubuntu-latest","ubuntu-24.04-arm"]' || format('["{0}"]', inputs.native_runner)) }}
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: ${{ (inputs.suite == 'eager-capture-time' || (inputs.suite == 'record-zip-time' || inputs.suite == 'record-fold-time' || (inputs.suite == 'packed-records-time' || inputs.suite == 'callback-owners-time' || (inputs.suite == 'scalar-map-zip-time' || (inputs.suite == 'range-zip-time' || (inputs.suite == 'gradient-array-time' || (inputs.suite == 'scalar-array-map-time' || (inputs.suite == 'scalar-array-identity-time' || (inputs.suite == 'final-iteration-time' || contains(fromJSON('["matched-option-time","packed-input-time","owned-numeric-time","gradient-call-time"]'), inputs.suite)))))))))) && 90 || 45 }}
+    timeout-minutes: ${{ (inputs.suite == 'eager-capture-time' || (inputs.suite == 'record-zip-time' || inputs.suite == 'record-fold-time' || (inputs.suite == 'packed-records-time' || inputs.suite == 'callback-owners-time' || (inputs.suite == 'scalar-map-zip-time' || (inputs.suite == 'range-zip-time' || (inputs.suite == 'gradient-array-time' || (inputs.suite == 'scalar-array-map-time' || (inputs.suite == 'scalar-array-identity-time' || (inputs.suite == 'final-iteration-time' || contains(fromJSON('["matched-option-time","packed-input-time","owned-numeric-time","gradient-call-time","packed-pair-time"]'), inputs.suite)))))))))) && 90 || 45 }}
     env:
       CC: gcc
-      REFERENCE_KIND: ${{ fromJSON('{"descent-peers":"","descent-checks":"","eager-capture-time":"capture","record-zip-time":"record-zip","record-fold-time":"record-fold","packed-records-time":"packed-records","callback-owners-time":"numeric-input","scalar-map-zip-time":"scalar-map-zip","range-zip-time":"range-zip","gradient-array-time":"gradient-array","scalar-array-map-time":"scalar-array-map","scalar-array-identity-time":"scalar-array-identity","final-iteration-time":"final-iteration","matched-option-time":"matched-option","packed-input-time":"packed-input","owned-numeric-time":"owned-numeric","gradient-call-time":"gradient-call"}')[inputs.suite] }}
-      COMPARISON_PROTOCOL: ${{ fromJSON('{"descent-peers":"","descent-checks":"","eager-capture-time":"eager-captures","record-zip-time":"record-zip","record-fold-time":"record-fold","packed-records-time":"packed-records","callback-owners-time":"callback-owners","scalar-map-zip-time":"scalar-map-zip","range-zip-time":"range-zip","gradient-array-time":"gradient-array","scalar-array-map-time":"scalar-array-map","scalar-array-identity-time":"scalar-array-identity","final-iteration-time":"final-iteration","matched-option-time":"matched-option","packed-input-time":"packed-input","owned-numeric-time":"owned-numeric","gradient-call-time":"gradient-call"}')[inputs.suite] }}
+      REFERENCE_KIND: ${{ fromJSON('{"descent-peers":"","descent-checks":"","eager-capture-time":"capture","record-zip-time":"record-zip","record-fold-time":"record-fold","packed-records-time":"packed-records","callback-owners-time":"numeric-input","scalar-map-zip-time":"scalar-map-zip","range-zip-time":"range-zip","gradient-array-time":"gradient-array","scalar-array-map-time":"scalar-array-map","scalar-array-identity-time":"scalar-array-identity","final-iteration-time":"final-iteration","matched-option-time":"matched-option","packed-input-time":"packed-input","owned-numeric-time":"owned-numeric","gradient-call-time":"gradient-call","packed-pair-time":"packed-pair"}')[inputs.suite] }}
+      COMPARISON_PROTOCOL: ${{ fromJSON('{"descent-peers":"","descent-checks":"","eager-capture-time":"eager-captures","record-zip-time":"record-zip","record-fold-time":"record-fold","packed-records-time":"packed-records","callback-owners-time":"callback-owners","scalar-map-zip-time":"scalar-map-zip","range-zip-time":"range-zip","gradient-array-time":"gradient-array","scalar-array-map-time":"scalar-array-map","scalar-array-identity-time":"scalar-array-identity","final-iteration-time":"final-iteration","matched-option-time":"matched-option","packed-input-time":"packed-input","owned-numeric-time":"owned-numeric","gradient-call-time":"gradient-call","packed-pair-time":"packed-pair"}')[inputs.suite] }}
       CARGO_BUILD_JOBS: 2
       FWP_AD_PRECISION_ARTIFACTS: derivative-checks/precision
       FWP_ARC_ARTIFACTS: derivative-checks/owners
@@ -8053,7 +8232,7 @@ jobs:
           toolchain: 1.99.1
           components: rustfmt
       - name: Verify focused correctness and matching compiler sources
-        if: inputs.suite == 'callback-owners-time' || (inputs.suite == 'scalar-map-zip-time' || (inputs.suite == 'range-zip-time' || (inputs.suite == 'gradient-array-time' || (inputs.suite == 'scalar-array-map-time' || (inputs.suite == 'scalar-array-identity-time' || (inputs.suite == 'final-iteration-time' || contains(fromJSON('["matched-option-time","packed-input-time","owned-numeric-time","gradient-call-time"]'), inputs.suite)))))))
+        if: inputs.suite == 'callback-owners-time' || (inputs.suite == 'scalar-map-zip-time' || (inputs.suite == 'range-zip-time' || (inputs.suite == 'gradient-array-time' || (inputs.suite == 'scalar-array-map-time' || (inputs.suite == 'scalar-array-identity-time' || (inputs.suite == 'final-iteration-time' || contains(fromJSON('["matched-option-time","packed-input-time","owned-numeric-time","gradient-call-time","packed-pair-time"]'), inputs.suite)))))))
         env:
           GH_TOKEN: ${{ github.token }}
           SAFETY_RUN: ${{ inputs.evidence_run }}
@@ -8069,7 +8248,7 @@ jobs:
           import subprocess
           run = json.loads(Path('numeric-analysis-safety/run.json').read_text())
           pages = json.loads(Path('numeric-analysis-safety/jobs.json').read_text())
-          if os.environ['COMPARISON_PROTOCOL'] == 'gradient-call':
+          if os.environ['COMPARISON_PROTOCOL'] in ('gradient-call', 'packed-pair'):
               expected = {'gradient_call_checks (ubuntu-24.04-arm, gcc)', 'gradient_call_checks (ubuntu-latest, gcc)', 'gradient_call_checks (macos-15, clang)'}
           elif os.environ['COMPARISON_PROTOCOL'] == 'owned-numeric':
               expected = {'owned_numeric_checks (ubuntu-24.04-arm, gcc)', 'owned_numeric_checks (ubuntu-latest, gcc)', 'owned_numeric_checks (macos-15, clang)'}
@@ -8103,7 +8282,7 @@ jobs:
           python3 "scripts/test-$REFERENCE_KIND-reference.py"
           python3 scripts/test-numeric-input-analysis.py
       - name: Qualify the native host before building
-        if: (inputs.suite == 'descent-peers' || inputs.suite == 'eager-capture-time' || (inputs.suite == 'record-zip-time' || inputs.suite == 'record-fold-time' || (inputs.suite == 'packed-records-time' || inputs.suite == 'callback-owners-time' || (inputs.suite == 'scalar-map-zip-time' || (inputs.suite == 'range-zip-time' || (inputs.suite == 'gradient-array-time' || (inputs.suite == 'scalar-array-map-time' || (inputs.suite == 'scalar-array-identity-time' || (inputs.suite == 'final-iteration-time' || contains(fromJSON('["matched-option-time","packed-input-time","owned-numeric-time","gradient-call-time"]'), inputs.suite))))))))))
+        if: (inputs.suite == 'descent-peers' || inputs.suite == 'eager-capture-time' || (inputs.suite == 'record-zip-time' || inputs.suite == 'record-fold-time' || (inputs.suite == 'packed-records-time' || inputs.suite == 'callback-owners-time' || (inputs.suite == 'scalar-map-zip-time' || (inputs.suite == 'range-zip-time' || (inputs.suite == 'gradient-array-time' || (inputs.suite == 'scalar-array-map-time' || (inputs.suite == 'scalar-array-identity-time' || (inputs.suite == 'final-iteration-time' || contains(fromJSON('["matched-option-time","packed-input-time","owned-numeric-time","gradient-call-time","packed-pair-time"]'), inputs.suite))))))))))
         env:
           EXPECTED_CPU: ${{ matrix.runner == 'ubuntu-latest' && 'AMD EPYC 7763 64-Core Processor' || 'Neoverse-N2' }}
           EXPECTED_MACHINE: ${{ matrix.runner == 'ubuntu-latest' && 'x86_64' || 'aarch64' }}
@@ -8114,7 +8293,7 @@ jobs:
           --rust-version 'rustc 1.99.1 (58cf8f9c3 2026-10-13)'
           --source "$GITHUB_SHA" --processors 4 --output descent-host.json
       - name: Preserve host qualification, including rejected hosts
-        if: always() && (inputs.suite == 'descent-peers' || inputs.suite == 'eager-capture-time' || (inputs.suite == 'record-zip-time' || inputs.suite == 'record-fold-time' || (inputs.suite == 'packed-records-time' || inputs.suite == 'callback-owners-time' || (inputs.suite == 'scalar-map-zip-time' || (inputs.suite == 'range-zip-time' || (inputs.suite == 'gradient-array-time' || (inputs.suite == 'scalar-array-map-time' || (inputs.suite == 'scalar-array-identity-time' || (inputs.suite == 'final-iteration-time' || contains(fromJSON('["matched-option-time","packed-input-time","owned-numeric-time","gradient-call-time"]'), inputs.suite))))))))))
+        if: always() && (inputs.suite == 'descent-peers' || inputs.suite == 'eager-capture-time' || (inputs.suite == 'record-zip-time' || inputs.suite == 'record-fold-time' || (inputs.suite == 'packed-records-time' || inputs.suite == 'callback-owners-time' || (inputs.suite == 'scalar-map-zip-time' || (inputs.suite == 'range-zip-time' || (inputs.suite == 'gradient-array-time' || (inputs.suite == 'scalar-array-map-time' || (inputs.suite == 'scalar-array-identity-time' || (inputs.suite == 'final-iteration-time' || contains(fromJSON('["matched-option-time","packed-input-time","owned-numeric-time","gradient-call-time","packed-pair-time"]'), inputs.suite))))))))))
         uses: actions/upload-artifact@v7
         with:
           name: descent-host-${{ matrix.runner }}-${{ matrix.session }}
@@ -8131,19 +8310,19 @@ jobs:
       - id: compiler
         run: cargo build --locked --release --bin fwp
       - name: Type inference and derivative precision regressions
-        if: matrix.session == 1 && inputs.suite != 'record-zip-time' && inputs.suite != 'record-fold-time' && inputs.suite != 'packed-records-time' && inputs.suite != 'callback-owners-time' && inputs.suite != 'scalar-map-zip-time' && inputs.suite != 'range-zip-time' && inputs.suite != 'gradient-array-time' && inputs.suite != 'scalar-array-map-time' && (inputs.suite != 'scalar-array-identity-time' && (inputs.suite != 'final-iteration-time' && !contains(fromJSON('["matched-option-time","packed-input-time","owned-numeric-time","gradient-call-time"]'), inputs.suite)))
+        if: matrix.session == 1 && inputs.suite != 'record-zip-time' && inputs.suite != 'record-fold-time' && inputs.suite != 'packed-records-time' && inputs.suite != 'callback-owners-time' && inputs.suite != 'scalar-map-zip-time' && inputs.suite != 'range-zip-time' && inputs.suite != 'gradient-array-time' && inputs.suite != 'scalar-array-map-time' && (inputs.suite != 'scalar-array-identity-time' && (inputs.suite != 'final-iteration-time' && !contains(fromJSON('["matched-option-time","packed-input-time","owned-numeric-time","gradient-call-time","packed-pair-time"]'), inputs.suite)))
         shell: bash
         run: |
           mkdir -p derivative-checks
           cargo test --locked --release --no-fail-fast --lib --test golden_check --test autodiff_precision --test call_effects -- --nocapture 2>&1 | tee derivative-checks/precision.log
       - name: Interpreter regressions
-        if: ${{ !cancelled() && matrix.session == 1 && inputs.suite != 'record-zip-time' && inputs.suite != 'record-fold-time' && inputs.suite != 'packed-records-time' && inputs.suite != 'callback-owners-time' && inputs.suite != 'scalar-map-zip-time' && inputs.suite != 'range-zip-time' && inputs.suite != 'gradient-array-time' && inputs.suite != 'scalar-array-map-time' && (inputs.suite != 'scalar-array-identity-time' && (inputs.suite != 'final-iteration-time' && !contains(fromJSON('["matched-option-time","packed-input-time","owned-numeric-time","gradient-call-time"]'), inputs.suite))) && steps.compiler.outcome == 'success' }}
+        if: ${{ !cancelled() && matrix.session == 1 && inputs.suite != 'record-zip-time' && inputs.suite != 'record-fold-time' && inputs.suite != 'packed-records-time' && inputs.suite != 'callback-owners-time' && inputs.suite != 'scalar-map-zip-time' && inputs.suite != 'range-zip-time' && inputs.suite != 'gradient-array-time' && inputs.suite != 'scalar-array-map-time' && (inputs.suite != 'scalar-array-identity-time' && (inputs.suite != 'final-iteration-time' && !contains(fromJSON('["matched-option-time","packed-input-time","owned-numeric-time","gradient-call-time","packed-pair-time"]'), inputs.suite))) && steps.compiler.outcome == 'success' }}
         shell: bash
         run: |
           mkdir -p derivative-checks
           cargo test --locked --release --test golden_run interpreter_snapshots -- --exact --nocapture 2>&1 | tee derivative-checks/interpreter.log
       - name: Native nominal selection
-        if: ${{ !cancelled() && matrix.session == 1 && inputs.suite != 'record-zip-time' && inputs.suite != 'record-fold-time' && inputs.suite != 'packed-records-time' && inputs.suite != 'callback-owners-time' && inputs.suite != 'scalar-map-zip-time' && inputs.suite != 'range-zip-time' && inputs.suite != 'gradient-array-time' && inputs.suite != 'scalar-array-map-time' && (inputs.suite != 'scalar-array-identity-time' && (inputs.suite != 'final-iteration-time' && !contains(fromJSON('["matched-option-time","packed-input-time","owned-numeric-time","gradient-call-time"]'), inputs.suite))) && steps.compiler.outcome == 'success' }}
+        if: ${{ !cancelled() && matrix.session == 1 && inputs.suite != 'record-zip-time' && inputs.suite != 'record-fold-time' && inputs.suite != 'packed-records-time' && inputs.suite != 'callback-owners-time' && inputs.suite != 'scalar-map-zip-time' && inputs.suite != 'range-zip-time' && inputs.suite != 'gradient-array-time' && inputs.suite != 'scalar-array-map-time' && (inputs.suite != 'scalar-array-identity-time' && (inputs.suite != 'final-iteration-time' && !contains(fromJSON('["matched-option-time","packed-input-time","owned-numeric-time","gradient-call-time","packed-pair-time"]'), inputs.suite))) && steps.compiler.outcome == 'success' }}
         shell: bash
         run: |
           mkdir -p derivative-checks
@@ -8185,10 +8364,10 @@ jobs:
           --phase-warmups 2 --phase-samples 12 --session "${{ matrix.session }}"
           --host "${{ matrix.runner }}" --qualification descent-host.json --output descent-peers-evidence
       - name: Verify the selected same-source comparison reference
-        if: (inputs.suite == 'eager-capture-time' || (inputs.suite == 'record-zip-time' || inputs.suite == 'record-fold-time' || (inputs.suite == 'packed-records-time' || inputs.suite == 'callback-owners-time' || (inputs.suite == 'scalar-map-zip-time' || (inputs.suite == 'range-zip-time' || (inputs.suite == 'gradient-array-time' || (inputs.suite == 'scalar-array-map-time' || (inputs.suite == 'scalar-array-identity-time' || (inputs.suite == 'final-iteration-time' || contains(fromJSON('["matched-option-time","packed-input-time","owned-numeric-time","gradient-call-time"]'), inputs.suite))))))))))
+        if: (inputs.suite == 'eager-capture-time' || (inputs.suite == 'record-zip-time' || inputs.suite == 'record-fold-time' || (inputs.suite == 'packed-records-time' || inputs.suite == 'callback-owners-time' || (inputs.suite == 'scalar-map-zip-time' || (inputs.suite == 'range-zip-time' || (inputs.suite == 'gradient-array-time' || (inputs.suite == 'scalar-array-map-time' || (inputs.suite == 'scalar-array-identity-time' || (inputs.suite == 'final-iteration-time' || contains(fromJSON('["matched-option-time","packed-input-time","owned-numeric-time","gradient-call-time","packed-pair-time"]'), inputs.suite))))))))))
         run: python3 scripts/test-${{ env.REFERENCE_KIND }}-reference.py
       - name: Build the same-source reference with only the selected transformation disabled
-        if: (inputs.suite == 'eager-capture-time' || (inputs.suite == 'record-zip-time' || inputs.suite == 'record-fold-time' || (inputs.suite == 'packed-records-time' || inputs.suite == 'callback-owners-time' || (inputs.suite == 'scalar-map-zip-time' || (inputs.suite == 'range-zip-time' || (inputs.suite == 'gradient-array-time' || (inputs.suite == 'scalar-array-map-time' || (inputs.suite == 'scalar-array-identity-time' || (inputs.suite == 'final-iteration-time' || contains(fromJSON('["matched-option-time","packed-input-time","owned-numeric-time","gradient-call-time"]'), inputs.suite))))))))))
+        if: (inputs.suite == 'eager-capture-time' || (inputs.suite == 'record-zip-time' || inputs.suite == 'record-fold-time' || (inputs.suite == 'packed-records-time' || inputs.suite == 'callback-owners-time' || (inputs.suite == 'scalar-map-zip-time' || (inputs.suite == 'range-zip-time' || (inputs.suite == 'gradient-array-time' || (inputs.suite == 'scalar-array-map-time' || (inputs.suite == 'scalar-array-identity-time' || (inputs.suite == 'final-iteration-time' || contains(fromJSON('["matched-option-time","packed-input-time","owned-numeric-time","gradient-call-time","packed-pair-time"]'), inputs.suite))))))))))
         shell: bash
         run: |
           git worktree add --detach "$RUNNER_TEMP/$REFERENCE_KIND-reference" "$GITHUB_SHA"
@@ -8199,7 +8378,7 @@ jobs:
           cp "$RUNNER_TEMP/$REFERENCE_KIND-reference-target/release/fwp" "$REFERENCE_KIND-reference/fwp"
           python3 "scripts/prepare-$REFERENCE_KIND-reference.py" "${reference_scope[@]}" --verify "$RUNNER_TEMP/$REFERENCE_KIND-reference" --output "$REFERENCE_KIND-reference"
       - name: Compare the candidate with its same-source reference
-        if: (inputs.suite == 'eager-capture-time' || (inputs.suite == 'record-zip-time' || inputs.suite == 'record-fold-time' || (inputs.suite == 'packed-records-time' || inputs.suite == 'callback-owners-time' || (inputs.suite == 'scalar-map-zip-time' || (inputs.suite == 'range-zip-time' || (inputs.suite == 'gradient-array-time' || (inputs.suite == 'scalar-array-map-time' || (inputs.suite == 'scalar-array-identity-time' || (inputs.suite == 'final-iteration-time' || contains(fromJSON('["matched-option-time","packed-input-time","owned-numeric-time","gradient-call-time"]'), inputs.suite))))))))))
+        if: (inputs.suite == 'eager-capture-time' || (inputs.suite == 'record-zip-time' || inputs.suite == 'record-fold-time' || (inputs.suite == 'packed-records-time' || inputs.suite == 'callback-owners-time' || (inputs.suite == 'scalar-map-zip-time' || (inputs.suite == 'range-zip-time' || (inputs.suite == 'gradient-array-time' || (inputs.suite == 'scalar-array-map-time' || (inputs.suite == 'scalar-array-identity-time' || (inputs.suite == 'final-iteration-time' || contains(fromJSON('["matched-option-time","packed-input-time","owned-numeric-time","gradient-call-time","packed-pair-time"]'), inputs.suite))))))))))
         run: >-
           python3 scripts/measure-descent-peers.py --compiler target/release/fwp --comparison ${{ env.COMPARISON_PROTOCOL }}
           --reference-compiler ${{ env.REFERENCE_KIND }}-reference/fwp
@@ -8211,7 +8390,7 @@ jobs:
           --phase-warmups 2 --phase-samples 12 --session "${{ matrix.session }}"
           --host "${{ matrix.runner }}" --qualification descent-host.json --output descent-peers-evidence
       - name: Preserve the matching correctness prerequisite
-        if: ${{ always() && (inputs.suite == 'callback-owners-time' || (inputs.suite == 'scalar-map-zip-time' || (inputs.suite == 'range-zip-time' || (inputs.suite == 'gradient-array-time' || (inputs.suite == 'scalar-array-map-time' || (inputs.suite == 'scalar-array-identity-time' || (inputs.suite == 'final-iteration-time' || contains(fromJSON('["matched-option-time","packed-input-time","owned-numeric-time","gradient-call-time"]'), inputs.suite)))))))) }}
+        if: ${{ always() && (inputs.suite == 'callback-owners-time' || (inputs.suite == 'scalar-map-zip-time' || (inputs.suite == 'range-zip-time' || (inputs.suite == 'gradient-array-time' || (inputs.suite == 'scalar-array-map-time' || (inputs.suite == 'scalar-array-identity-time' || (inputs.suite == 'final-iteration-time' || contains(fromJSON('["matched-option-time","packed-input-time","owned-numeric-time","gradient-call-time","packed-pair-time"]'), inputs.suite)))))))) }}
         uses: actions/upload-artifact@v7
         with:
           name: ${{ env.COMPARISON_PROTOCOL }}-safety-${{ matrix.runner }}-${{ matrix.session }}

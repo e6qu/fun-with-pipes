@@ -1,0 +1,47 @@
+{
+  "pr": 259,
+  "testedSource": "e3a2e1d34eaa9364ff22273ed10fef7afb98204e",
+  "merge": "cbb779446162efa71301f64350662f2c7c0d8073",
+  "tree": "3db09774419f8b81114cb60e35fe6fbe3aab82c4",
+  "mergeMessage": "Remove temporary storage around gradient calls",
+  "mergedAt": "2026-11-05T09:21:50Z",
+  "productionRun": 41986867960,
+  "productionAttempt": 1,
+  "documentationRun": 41986867893,
+  "documentationJob": 127109552583,
+  "productionJobs": [
+    127109552904,
+    127109553265,
+    127109553322,
+    127109553349,
+    127109553369,
+    127109553431,
+    127109553494,
+    127109553566,
+    127109553696
+  ],
+  "allFinalGates": "success",
+  "audit": {
+    "run": 42000937569,
+    "job": 127155669553,
+    "source": "f339616c639e4c55703f619cc46ca08f93f11ee8",
+    "conclusion": "success",
+    "artifact": 13401984098,
+    "artifactSha256": "3164b198c01963e4a897cd3085e280f7c7e063be1e0ebce6148b41c9c2ff475f",
+    "bytes": 1159002,
+    "completeJobLogs": 10,
+    "targetLogs": {
+      "linuxARM64": 257,
+      "linuxAMD64": 257,
+      "macOSARM64": 131,
+      "macOSAMD64": 131,
+      "macOSOwnershipARM64": 126,
+      "macOSOwnershipAMD64": 126,
+      "windowsEarlyARM64": 57,
+      "windowsEarlyAMD64": 57,
+      "windowsNativeARM64": 155,
+      "windowsNativeAMD64": 155
+    }
+  },
+  "localRetention": "Full audit runner log retained; original target-log archive remains in the linked runner artifact. Copy full archive into delivery evidence once disk reserve permits."
+}

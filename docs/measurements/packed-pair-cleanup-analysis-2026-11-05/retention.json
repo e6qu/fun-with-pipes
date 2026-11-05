@@ -1,0 +1,11 @@
+{
+  "source": "373955e82a74d8de2eb12ff2b81f6cc74c089e5e",
+  "run": 42017186500,
+  "auditRun": 42018554796,
+  "auditJob": 127215160148,
+  "auditorSource": "84c0eeaf44567a71fb836ef83d43af408edd4dab",
+  "artifact": 13410228080,
+  "bytes": 12311444,
+  "sha256": "3bd0266292157ec3a81960cb77a0cb571936cea6bca9a04aafd52ea5effe4ad0",
+  "result": "all scheduled commands, untimed checks and resource observations pass on both hosts"
+}

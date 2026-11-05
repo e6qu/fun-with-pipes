@@ -1,0 +1,20 @@
+{
+  "id": 13410435629,
+  "node_id": "MDg6QXJ0aWZhY3QxMzQxMDQzNTYyOQ==",
+  "name": "packed-pair-census-ARM64",
+  "size_in_bytes": 88455725,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13410435629",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13410435629/zip",
+  "expired": false,
+  "digest": "sha256:5d38e38f33c19015ad1844f7f8f450904273e617391f308afcdd754eeb899f88",
+  "created_at": "2026-11-05T11:15:12Z",
+  "updated_at": "2026-11-05T11:15:12Z",
+  "expires_at": "2027-02-03T11:04:17Z",
+  "workflow_run": {
+    "id": 42015900941,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "roadmap/packed-pair-cleanup-census-2026-11-05",
+    "head_sha": "373955e82a74d8de2eb12ff2b81f6cc74c089e5e"
+  }
+}

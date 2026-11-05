@@ -1,0 +1,177 @@
+{
+  "source": "a1f189478abadf0da30d8386bee2bc234e0668cf",
+  "run": 42005106056,
+  "job": {
+    "id": 127169767067,
+    "run_id": 42005106056,
+    "workflow_name": "Numerical and ownership evidence",
+    "head_branch": "roadmap/packed-pair-timing-2026-11-05",
+    "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/42005106056",
+    "run_attempt": 1,
+    "node_id": "CR_kwDOU33zxM8AAAAdm-immw",
+    "head_sha": "a1f189478abadf0da30d8386bee2bc234e0668cf",
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/127169767067",
+    "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/42005106056/job/127169767067",
+    "status": "completed",
+    "conclusion": "success",
+    "created_at": "2026-11-05T09:46:13Z",
+    "started_at": "2026-11-05T09:57:42Z",
+    "completed_at": "2026-11-05T10:04:00Z",
+    "name": "numeric_input_analysis (ubuntu-24.04-arm)",
+    "steps": [
+      {
+        "name": "Set up job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 1,
+        "started_at": "2026-11-05T09:57:42Z",
+        "completed_at": "2026-11-05T09:57:43Z"
+      },
+      {
+        "name": "Run actions/checkout@v7",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 2,
+        "started_at": "2026-11-05T09:57:43Z",
+        "completed_at": "2026-11-05T09:57:57Z"
+      },
+      {
+        "name": "Run dtolnay/rust-toolchain@stable",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 3,
+        "started_at": "2026-11-05T09:57:57Z",
+        "completed_at": "2026-11-05T09:58:04Z"
+      },
+      {
+        "name": "Verify focused correctness and matching compiler sources",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 4,
+        "started_at": "2026-11-05T09:58:04Z",
+        "completed_at": "2026-11-05T09:58:09Z"
+      },
+      {
+        "name": "Run actions/cache@v6",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 5,
+        "started_at": "2026-11-05T09:58:09Z",
+        "completed_at": "2026-11-05T09:58:10Z"
+      },
+      {
+        "name": "Build candidate at production settings",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 6,
+        "started_at": "2026-11-05T09:58:10Z",
+        "completed_at": "2026-11-05T09:59:39Z"
+      },
+      {
+        "name": "Build and verify the selected same-source reference",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 7,
+        "started_at": "2026-11-05T09:59:39Z",
+        "completed_at": "2026-11-05T10:01:20Z"
+      },
+      {
+        "name": "Verify complete solve allocations before any timing",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 8,
+        "started_at": "2026-11-05T10:01:20Z",
+        "completed_at": "2026-11-05T10:01:20Z"
+      },
+      {
+        "name": "Attribute fresh-solve reference allocations to phases and source sites",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 9,
+        "started_at": "2026-11-05T10:01:20Z",
+        "completed_at": "2026-11-05T10:01:20Z"
+      },
+      {
+        "name": "Verify fresh-solve savings and their exact phase attribution",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 10,
+        "started_at": "2026-11-05T10:01:20Z",
+        "completed_at": "2026-11-05T10:01:20Z"
+      },
+      {
+        "name": "Measure balanced compiler commands and peak memory",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 11,
+        "started_at": "2026-11-05T10:01:20Z",
+        "completed_at": "2026-11-05T10:03:46Z"
+      },
+      {
+        "name": "Preserve complete measurements and failures",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 12,
+        "started_at": "2026-11-05T10:03:46Z",
+        "completed_at": "2026-11-05T10:03:57Z"
+      },
+      {
+        "name": "Post Run actions/cache@v6",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 23,
+        "started_at": "2026-11-05T10:03:57Z",
+        "completed_at": "2026-11-05T10:03:57Z"
+      },
+      {
+        "name": "Post Run actions/checkout@v7",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 24,
+        "started_at": "2026-11-05T10:03:57Z",
+        "completed_at": "2026-11-05T10:03:58Z"
+      },
+      {
+        "name": "Complete job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 25,
+        "started_at": "2026-11-05T10:03:58Z",
+        "completed_at": "2026-11-05T10:03:58Z"
+      }
+    ],
+    "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/127169767067",
+    "labels": [
+      "ubuntu-24.04-arm"
+    ],
+    "runner_id": 1000410288,
+    "runner_name": "GitHub Actions 1000410288",
+    "runner_group_id": 0,
+    "runner_group_name": "GitHub Actions"
+  },
+  "artifact": {
+    "id": 13405466911,
+    "node_id": "MDg6QXJ0aWZhY3QxMzQwNTQ2NjkxMQ==",
+    "name": "packed-pair-analysis-ARM64",
+    "size_in_bytes": 128801143,
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13405466911",
+    "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13405466911/zip",
+    "expired": false,
+    "digest": "sha256:8336a141450309cd8a324a0d5a91b55c95b32662d80aa50a08d52ff6e37c37fc",
+    "created_at": "2026-11-05T10:03:57Z",
+    "updated_at": "2026-11-05T10:03:57Z",
+    "expires_at": "2027-02-03T09:46:11Z",
+    "workflow_run": {
+      "id": 42005106056,
+      "repository_id": 1400763332,
+      "head_repository_id": 1400763332,
+      "head_branch": "roadmap/packed-pair-timing-2026-11-05",
+      "head_sha": "a1f189478abadf0da30d8386bee2bc234e0668cf"
+    }
+  },
+  "commands": 336,
+  "untimedChecks": 6,
+  "failures": {},
+  "referenceVerified": true,
+  "expectedDiagnostics": []
+}

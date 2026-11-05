@@ -1,0 +1,8 @@
+{
+  "source": "e4d645cd4c88e49ff0d7d781ec9af10095d01fd6",
+  "parentSource": "8c0e4b0ef06aa9f528eeaedbfbab9461a82dd0d7",
+  "machine": "x86_64",
+  "freshCases": 24,
+  "repeatedCases": 12,
+  "compared": "Exact managed counts/peaks; fresh phase allocation/peaks, raw storage and derivative work; repeated workspace-on raw peak/final bytes"
+}

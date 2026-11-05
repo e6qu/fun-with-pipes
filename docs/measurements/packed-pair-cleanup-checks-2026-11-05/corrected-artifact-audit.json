@@ -1,0 +1,15 @@
+{
+  "run": 42015894951,
+  "job": 127206236927,
+  "source": "ecdf2476b3095d31c7a5a88867cbc1ddcc45b3e4",
+  "auditorSource": "373955e82a74d8de2eb12ff2b81f6cc74c089e5e",
+  "result": "all three complete artifacts pass without unexpected diagnostics",
+  "artifact": 13408588794,
+  "bytes": 7233631,
+  "sha256": "81530c7c9e9c4744be049138685dfd2311474b35b4d2de40c68c74f085ef99bc",
+  "perHost": {
+    "targets": 25,
+    "nativeImages": 822,
+    "probeRecords": 838
+  }
+}

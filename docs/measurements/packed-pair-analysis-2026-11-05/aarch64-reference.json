@@ -1,0 +1,39 @@
+{
+  "source": "a1f189478abadf0da30d8386bee2bc234e0668cf",
+  "disabledTransformation": "reuse of the consumed private neighboring-record buffer",
+  "candidate": {
+    "src/cgen.rs": "e7d34f47524f38a6163bfb4854f57beb234082d407f71856f1ac2e4d0f8496ce"
+  },
+  "reference": {
+    "src/cgen.rs": "434a02e9eaf95d631ceb3ffd12a788a7813b97d861cb07bfaff9a23ef5315a9a"
+  },
+  "unchanged": {
+    "src/ownership.rs": "c3b85229bf9b0f8c3d7c4f5966b8fb8723b6ffd336fcb614e5fdf4dbba3543a8",
+    "src/ir.rs": "9de839185bc0e5cc7661a9210b605da7734fa0d670491cfe295a131448d5b795",
+    "src/rc.rs": "a47ea001d0d20089fcc21a25a9e776a518f4bbc271faf1495c9132db0457e02e",
+    "src/rc/borrows.rs": "67ca4cab9801810cc75b1ad1fcbb9c0f5705a1a5948e2507fc7e7cc3e15691e8",
+    "src/escape.rs": "52c133dd71929f444c186cfd927c973c7c70742d694d504c5bcc7e96fabaf9f5",
+    "src/cgen/owned_numeric.rs": "b7960cb91d0506ebacad4cb8db200b79dd6501c969ff389f74e8634c986d3417",
+    "src/cgen/scoped_calls.rs": "4c7a1b2d82c9e396f7f6aec72bf5f76cae1af2ad8080a209c1d1c04e53e3f076",
+    "src/cgen/fold_fields.rs": "404fd7a11408522ef7db1b5959740569a01ce3f0befc437e1e40c6780b5f3931",
+    "src/opt/scoped.rs": "98bcaefe45a0e2a1812a29b6285dd8f58c9d4fccbf34d5dce93bbe22fbf02358",
+    "src/cgen/packed_inputs.rs": "3771d7f58880a7b15e9c657480261b78fd212025705992f6770a11a1f871480d",
+    "src/cgen/numeric_parameters.rs": "da392c52c05c25b3eabc81c9d47e97e294333772fcf8a799af08640f62e74c09",
+    "src/cgen/packed_records.rs": "199e790f7f6fbda882025935310ae5447e868afce4e6b242f82438da84588405",
+    "src/cgen/range_zip.rs": "37bae6e0728256bc04b8e59047bce3b54676c3cdd7465dfec34ffd34a6b5cc0b",
+    "src/fuse.rs": "94b7628849c9c7d1f702d0734be4802575053674e2d638331db59fef20f26772",
+    "src/opt.rs": "d64c3ad91dd89067dfb2e416d8fe13dfc4bcfc11b487f8b28a01919950726709",
+    "runtime/fwp_rt.c": "a3dacfe33d859d10f458e955ac46901a0c5c051c7ba3f8871ce488c5dfe3ba3e",
+    "runtime/fwp_rt_heap.c": "ac26a18c249847c5b6c25f02776eee417bf4eb4a98cbad60aec58f00338c5a6e",
+    "runtime/fwp_rt_prims.c": "e6e52d42ae4984c84e9429fd8db168a50e429c727d8cad662ab8841c415b4d74",
+    "runtime/fwp_rt_task.c": "5c65f5691766571fac773b9c260e753cb6280794b5362cd4b09ca822cc27e9e9",
+    "runtime/fwp_rt_kernel.c": "256a5bf2e670f5e8fc91acef121cce0e1e1cdd62d19219a6fb9b69ef10a7cc7d",
+    "src/numerics.rs": "ea6cc3289f5ed43f525231971ec214ef17a55bd3ed5e75c2db7ae1ade62e0f57",
+    "src/interp.rs": "5432ab792ab0ded0dbca4995313dc6edc3d9dd7b6b3b4309419b1c8a913e519a",
+    "lib/list.fwp": "9f4988e962654e84695944abbb5fc97b01678a37915aebfc48d286fc1e375993",
+    "lib/autodiff.fwp": "fbf7f37a704948c610ffe473896be5ca783d3383ea16a2df0b31804e778036ff"
+  },
+  "ownershipSha256": "c3b85229bf9b0f8c3d7c4f5966b8fb8723b6ffd336fcb614e5fdf4dbba3543a8",
+  "patchSha256": "b28afac4ddbf8b4ef81090f6341ec729d9d7fa131b7c7e0736f4df1fa5d6db87",
+  "compilerSha256": "ba68b74a618d028627e58d46adb409dc4749528da6e5eca225c94c6fcdc29da2"
+}

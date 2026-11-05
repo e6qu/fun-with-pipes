@@ -1,0 +1,11 @@
+{
+  "source": "373955e82a74d8de2eb12ff2b81f6cc74c089e5e",
+  "run": 42015900941,
+  "auditRun": 42018351007,
+  "auditJob": 127214469340,
+  "auditorSource": "84c0eeaf44567a71fb836ef83d43af408edd4dab",
+  "artifact": 13410446986,
+  "bytes": 2609520,
+  "sha256": "bbe5cbd9f1d76bbdf6e10cfc59082e84281902cda866b39acdb19e96e03df6b7",
+  "result": "both architectures pass all saved stack, repeated allocation and fresh phase audits"
+}

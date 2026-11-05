@@ -24,8 +24,9 @@ pub(crate) fn stack_enabled() -> bool {
     std::env::var("FWP_STACK").map_or(true, |v| v != "0")
 }
 
-/// For each function, whether each parameter escapes (`false`: it does
-/// not). Non-expression functions let parameters escape except primitive slots
+/// For each function, whether each parameter stays within the call (`true`
+/// means it does not escape). Non-expression functions let parameters escape
+/// except primitive slots
 /// with an explicit nonescape proof in the ownership inventory, and RangeZip,
 /// whose scalar inputs/results cannot retain the borrowed list or callback.
 pub fn params(prog: &Program) -> Vec<Vec<bool>> {
@@ -41,7 +42,6 @@ pub fn params(prog: &Program) -> Vec<Vec<bool>> {
                             | Body::DirectAdScope { .. }
                             | Body::RangeZip { .. }
                             | Body::PackedRecordRangeZip { .. }
-                            | Body::PackedRecordPairs { .. }
                     ) || matches!(&f.body, Body::Prim(s)
                             if crate::ownership::borrows_without_escape(s, j))
                 })
