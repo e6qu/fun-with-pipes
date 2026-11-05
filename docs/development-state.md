@@ -1,15 +1,17 @@
 # Current work
 
-**Next:** finish the grouped focused-check preparation, publish a draft PR and
-run `gradient-call-checks` on GCC ARM64/AMD64 and Clang ARM64. All four parts are
-implemented locally but have not been compiled or verified on runners. Audit all
-failures together before a repair push; do not launch final production yet.
+**Next:** dispatch and audit `gradient-call-checks` for the expanded head of
+[PR #259](https://github.com/e6qu/fun-with-pipes/pull/259). GCC ARM64/AMD64 and
+Clang ARM64 must verify all four changes and the additional direct-seed controls.
+Audit every failed step and completed native target before one repair push.
+Implementation is not yet verified; do not launch final production yet.
 
 Contract frozen before code at `1ed3ad99ef7263161d526cea816c33b36ac40b9b`, tag
 `roadmap/gradient-call-storage-protocol-2026-11-05`.
 
 Branch: `gradient-call-storage`, worktree `.worktrees/owned-numeric-updates`.
-No open delivery PR yet. Other dirty worktrees and the primary checkout are unrelated.
+PR #259 is the only active PR and remains a draft. Other dirty worktrees and the
+primary checkout are unrelated.
 
 ## Roadmap status
 
@@ -116,3 +118,16 @@ including both explicit single-root peers. Cargo formatting passes. The actual
 native runner inventory covers all 255 targets; an attempted nonexistent standalone
 shard-check filename was corrected to the runner's own metadata/assignment audit.
 No Rust build or native implementation test has run locally.
+
+While the first three jobs wait for runners, follow-up edits extend scalar unwind
+controls to direct seeds (mixed/invalid/expired roots, allocation failure and
+cancellation), plus raw/native invalid/empty F128 seeds. The untimed allocation
+suite now has an explicit `gradient-call` comparison and six passing observer
+controls. It predicts exactly 11,145 requests / 1,846,744 bytes / 3,184 retains
+removed for eight 129/199 solves; these remain unmeasured. Formatting and workflow
+syntax pass under the guard (1.77s). The follow-up batch replaces the initial run before any runner starts.
+
+Initial head `6f322d1f9d4ceca01d29ee45163f746d6656a3c9` had no assigned runners.
+Runs `41956076516` (focused) and `41956079358` (docs) were cancelled before
+execution to keep one expanded batch. No failed or passing implementation result
+was discarded. Local roadmap audit passes (2.67s).

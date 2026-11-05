@@ -169,6 +169,11 @@ fn public_tape_tokens_agree_with_raw_interpreter() {
         ("left", "main = 1 | ad.tape | (fn node -> ad.push (node + 1) 1.0 -1 0.0) | echo\n", true),
         ("right", "main = 1 | ad.tape | (fn node -> ad.push node 1.0 (node + 1) 1.0) | echo\n", true),
         ("backward", "main = 1 | ad.tape | finish | echo\n", true),
+        ("single-invalid", "main = 1 | ad.tape | (fn base -> ad._backward-one base (base + 1) 1.0) | echo\n", true),
+        ("single-owned-invalid", "main = 1 | ad.tape-owned (0.0f128, add, mul, rev._inactive-zero) | (fn base -> ad._backward-owned-one base (base + 1) 1.0f128) | echo\n", true),
+        ("single-empty", "main = 0 | ad.tape | (fn base -> ad._backward-one base -1 1.0) | echo\n", false),
+        ("single-owned-empty", "main = 0 | ad.tape-owned (0.0f128, add, mul, rev._inactive-zero) | (fn base -> ad._backward-owned-one base -1 1.0f128) | echo\n", false),
+        ("single-seeded", "main = 1 | ad.tape | (fn base -> ad._backward-one base base 2.0) | echo\n", false),
         ("empty", "empty : I64 -> Array[F64]\nempty = make { 0 = id, 1 = const [] | array.from-list, 2 = const [] | array.from-list } | uncurry3 ad.backward\nmain = 0 | ad.tape | empty | echo\n", false),
         ("paired", "paired : I64 -> Array[F64]\npaired = make { 0 = id, 1 = both id (const []) | uncurry Cons | array.from-list, 2 = const [2.0] | array.from-list } | uncurry3 ad.backward\nmain = 1 | ad.tape | paired | echo\n", false),
     ];

@@ -131,3 +131,14 @@ per-update savings occur eight times. Initial shared coordinates still require
 the first list copy. Count existing seed conversion and output mapping separately.
 The same-source reference must disable these four changes only. Test its edits
 against missing, duplicate and altered source patterns before collecting timings.
+
+## Measurement preparation
+
+`gradient-call-checks` runs the grouped correctness controls first.
+`gradient-call-census` accepts that passing run as `evidence_run` and verifies
+matching compiler, runtime, library and test trees before building its reference.
+It runs no timed comparison. For eight repeated 129-coordinate/199-update solves,
+the frozen prediction is 11,145 fewer requests, 1,846,744 fewer requested bytes
+and 3,184 fewer effective retains. The cached seed disappears once per process,
+not once per solve. Zero-update processes must have identical storage counts.
+The reference/candidate must both finish with no managed or raw storage left.
