@@ -162,12 +162,12 @@ jobs:
           key: cargo-registry-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Cargo.lock') }}
       - name: Fetch locked dependencies
         run: cargo fetch --locked
-      - name: Format and lint compiler and changed targets
+      - name: Format and lint all compiler and test targets
         run: |
           set -o pipefail
           status=0
           cargo fmt --all -- --check 2>&1 | tee gradient-call-checks/format.log || status=1
-          CARGO_NET_OFFLINE=true cargo clippy --locked --lib --bin fwp --test zip_unwind_ownership --test zip_map_fusion --test mapped_array_construction --test float_formats --test ad_tape_scopes --test ad_tape_ownership --test fold_unwind_ownership -- -D warnings 2>&1 | tee gradient-call-checks/clippy.log || status=1
+          CARGO_NET_OFFLINE=true cargo clippy --locked --keep-going --all-targets -- -D warnings 2>&1 | tee gradient-call-checks/clippy.log || status=1
           exit "$status"
       - name: Build compiler for independent checks
         id: compiler_build
@@ -226,6 +226,8 @@ jobs:
           cp tests/fixtures/gradient_call_storage.fwp gradient-call-checks/formatted-call-fixture.fwp
           target/debug/fwp fmt gradient-call-checks/formatted-fixture.fwp gradient-call-checks/formatted-order-fixture.fwp gradient-call-checks/formatted-call-fixture.fwp
           status=0
+          set -o pipefail
+          target/debug/fwp fmt --check lib examples docs/tutorials bench 2>&1 | tee gradient-call-checks/repository-format.log || status=1
           diff -u tests/fixtures/owned_numeric_updates.fwp gradient-call-checks/formatted-fixture.fwp 2>&1 | tee gradient-call-checks/language-format.log || status=1
           diff -u tests/fixtures/scalar_map_zip_order.fwp gradient-call-checks/formatted-order-fixture.fwp 2>&1 | tee -a gradient-call-checks/language-format.log || status=1
           diff -u tests/fixtures/gradient_call_storage.fwp gradient-call-checks/formatted-call-fixture.fwp 2>&1 | tee -a gradient-call-checks/language-format.log || status=1

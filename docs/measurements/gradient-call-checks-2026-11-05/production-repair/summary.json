@@ -1,0 +1,149 @@
+{
+  "source": "4160061cd0d421a55ab4e467c6ec5fb6fd88cbf6",
+  "run": 41971248924,
+  "conclusion": "failure",
+  "jobs": {
+    "linux-arm": {
+      "job": 127059784094,
+      "conclusion": "failure",
+      "failedSteps": [
+        "clippy",
+        "test"
+      ],
+      "fullLogSha256": "bb859202dbf89e85024f222638e39a308fe03a875c5966cbeca591eed0fcae1b",
+      "targetLogs": 257,
+      "targetFailures": {
+        "test-browser.log": [
+          "FAILED. 9 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 320.49s"
+        ],
+        "test-fmt.log": [
+          "FAILED. 1 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.92s"
+        ]
+      },
+      "expectedDiagnostics": []
+    },
+    "linux-amd": {
+      "job": 127059783985,
+      "conclusion": "failure",
+      "failedSteps": [
+        "clippy",
+        "test"
+      ],
+      "fullLogSha256": "086fa978f27322cc792516ebf55e4519eb3040d23b2d3d568e55ab0a622ce301",
+      "targetLogs": 257,
+      "targetFailures": {
+        "test-browser.log": [
+          "FAILED. 9 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 430.94s"
+        ],
+        "test-fmt.log": [
+          "FAILED. 1 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 9.41s"
+        ]
+      },
+      "expectedDiagnostics": []
+    },
+    "mac-arm": {
+      "job": 127059783872,
+      "conclusion": "failure",
+      "failedSteps": [
+        "clippy",
+        "Regular macOS test shard"
+      ],
+      "fullLogSha256": "a5df53ef67921e7fc280edd7a3850a81bb43554dff4f6f4ad4491582a82a19a9",
+      "targetLogs": 131,
+      "targetFailures": {
+        "test-fmt.log": [
+          "FAILED. 1 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.90s"
+        ]
+      },
+      "expectedDiagnostics": []
+    },
+    "mac-amd": {
+      "job": 127059783862,
+      "conclusion": "failure",
+      "failedSteps": [
+        "clippy",
+        "Regular macOS test shard"
+      ],
+      "fullLogSha256": "b079bde93b3a577155a159597583223a1f73b78b6303c2ce0ea7606e30eb864a",
+      "targetLogs": 131,
+      "targetFailures": {
+        "test-fmt.log": [
+          "FAILED. 1 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 15.28s"
+        ]
+      },
+      "expectedDiagnostics": []
+    },
+    "mac-arm-ownership": {
+      "job": 127059784017,
+      "conclusion": "failure",
+      "failedSteps": [
+        "Language formatting preflight"
+      ],
+      "fullLogSha256": "335b14d9a9e1ea3dc7affb1c6109964ba7196c491d8c29007c33fd8ffa2cb72c",
+      "targetLogs": 126,
+      "targetFailures": {},
+      "expectedDiagnostics": []
+    },
+    "mac-amd-ownership": {
+      "job": 127059783964,
+      "conclusion": "failure",
+      "failedSteps": [
+        "Language formatting preflight"
+      ],
+      "fullLogSha256": "5631896896994d6a1b9a6bc0e1671280352bbd7b44e3f9b395535183fd62d71d",
+      "targetLogs": 126,
+      "targetFailures": {},
+      "expectedDiagnostics": []
+    },
+    "windows-arm": {
+      "job": 127059784158,
+      "conclusion": "failure",
+      "failedSteps": [
+        "Language formatting preflight"
+      ],
+      "fullLogSha256": "59e401c4990c1f1e3b8b8ab566d802453edbaa8bc0f7e993d87b70dc35229eb3",
+      "targetLogs": 57,
+      "targetFailures": {},
+      "expectedDiagnostics": [],
+      "successfulNativeProbeTargets": 155,
+      "probeLogs": 157
+    },
+    "windows-amd": {
+      "job": 127059784036,
+      "conclusion": "failure",
+      "failedSteps": [
+        "Language formatting preflight"
+      ],
+      "fullLogSha256": "de130e7b0e35809c4a36590eea2bc5a9238fd4f25194a3cef0a3ed7dd9789aaf",
+      "targetLogs": 57,
+      "targetFailures": {},
+      "expectedDiagnostics": [],
+      "successfulNativeProbeTargets": 155,
+      "probeLogs": 157
+    },
+    "bench": {
+      "job": 127059783601,
+      "conclusion": "failure",
+      "benchmarksExecuted": false,
+      "failedSteps": [
+        "Language formatting preflight",
+        "Preserve benchmark comparisons and measured executables"
+      ],
+      "explanation": "Library formatting stops benchmarks; the absent-artifact failure follows."
+    }
+  },
+  "documentation": {
+    "job": 127059774586,
+    "conclusion": "success"
+  },
+  "rootCauses": [
+    "Unit-test initializer triggers clippy::field_reassign_with_default.",
+    "lib/autodiff.fwp does not match the language formatter."
+  ],
+  "repairs": [
+    "Initialize Program fields directly in the unit-test fixture.",
+    "Apply formatter output and update the exact reference marker.",
+    "Make focused preflight lint every target and format-check lib/examples/tutorials/bench."
+  ],
+  "acceptance": "Original failures remain failures. Require nine production jobs plus docs on the repaired head."
+}

@@ -88,7 +88,9 @@ No native program or timing was rerun to obtain a passing result.
 - Complete generated C and native images remain in the digest-identified GitHub
   artifacts. Local audits reconstructed the counters/source and checked 24 repeated
   images plus 164 fresh images per architecture, without executing saved binaries.
-- `gradient-call-census-report` takes explicit `evidence_run=41964853201` and
+- Run the workflow from frozen `roadmap/gradient-call-timing-2026-11-05`;
+  later source formatting or test repairs do not match its original manifests.
+  `gradient-call-census-report` takes explicit `evidence_run=41964853201` and
   `source_revision=8c0e4b0ef06aa9f528eeaedbfbab9461a82dd0d7`, verifies matching
   code trees, downloads the original artifacts, and runs
   `scripts/audit-gradient-call-census.py`. It does not build benchmark programs.

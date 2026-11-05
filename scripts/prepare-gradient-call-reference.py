@@ -13,9 +13,7 @@ EDITS = {
         'const GRADIENT_CALL_STORAGE: bool = false;\n',
     ),
     'lib/autodiff.fwp': (
-        '        (both .0 (.1 | .vertex)\n'
-        '            | uncurry rev._backward-one\n'
-        '            | apply one)',
+        '        (both .0 (.1 | .vertex) | uncurry rev._backward-one | apply one)',
         '        (both .0 (.1 | .vertex | singleton)\n'
         '            | uncurry rev._backward\n'
         '            | apply [one])',

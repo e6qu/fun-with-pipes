@@ -149,34 +149,35 @@ mod tests {
             ("value".into(), scalar.clone()),
             ("vertex".into(), MT::con("std::I64")),
         ]);
-        let mut p = Program::default();
-        p.funcs = vec![
-            Func {
-                name: "seed".into(),
-                arity: 0,
-                locals: vec![],
-                ty: record,
-                body: Body::Expr(Expr::Record(vec![
-                    Expr::Func(1),
-                    Expr::Const(Value::I64(-1)),
-                ])),
-            },
-            Func {
-                name: "zero".into(),
-                arity: 0,
-                locals: vec![],
-                ty: scalar.clone(),
-                body: Body::Expr(Expr::Call(2, vec![])),
-            },
-            Func {
-                name: "primitive".into(),
-                arity: 0,
-                locals: vec![],
-                ty: scalar,
-                body: Body::Prim("prim.zero".into()),
-            },
-        ];
-        p
+        Program {
+            funcs: vec![
+                Func {
+                    name: "seed".into(),
+                    arity: 0,
+                    locals: vec![],
+                    ty: record,
+                    body: Body::Expr(Expr::Record(vec![
+                        Expr::Func(1),
+                        Expr::Const(Value::I64(-1)),
+                    ])),
+                },
+                Func {
+                    name: "zero".into(),
+                    arity: 0,
+                    locals: vec![],
+                    ty: scalar.clone(),
+                    body: Body::Expr(Expr::Call(2, vec![])),
+                },
+                Func {
+                    name: "primitive".into(),
+                    arity: 0,
+                    locals: vec![],
+                    ty: scalar,
+                    body: Body::Prim("prim.zero".into()),
+                },
+            ],
+            ..Program::default()
+        }
     }
 
     #[test]

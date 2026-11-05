@@ -1,0 +1,20 @@
+{
+  "id": 13392662540,
+  "node_id": "MDg6QXJ0aWZhY3QxMzM5MjY2MjU0MA==",
+  "name": "macos-regular-tests-macos-15-intel",
+  "size_in_bytes": 49345,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13392662540",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13392662540/zip",
+  "expired": false,
+  "digest": "sha256:0ca6a38dbef09b86e92720953df804ffdaf11f7548892e660161bd0aa869cb09",
+  "created_at": "2026-11-05T06:10:52Z",
+  "updated_at": "2026-11-05T06:10:52Z",
+  "expires_at": "2027-02-03T05:00:25Z",
+  "workflow_run": {
+    "id": 41971248924,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "gradient-call-storage",
+    "head_sha": "4160061cd0d421a55ab4e467c6ec5fb6fd88cbf6"
+  }
+}

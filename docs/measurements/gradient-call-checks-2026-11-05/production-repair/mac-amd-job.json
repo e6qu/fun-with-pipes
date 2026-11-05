@@ -1,0 +1,332 @@
+{
+  "id": 127059783862,
+  "run_id": 41971248924,
+  "workflow_name": "CI",
+  "head_branch": "gradient-call-storage",
+  "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/41971248924",
+  "run_attempt": 1,
+  "node_id": "CR_kwDOU33zxM8AAAAdlVpwtg",
+  "head_sha": "4160061cd0d421a55ab4e467c6ec5fb6fd88cbf6",
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/127059783862",
+  "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41971248924/job/127059783862",
+  "status": "completed",
+  "conclusion": "failure",
+  "created_at": "2026-11-05T05:00:26Z",
+  "started_at": "2026-11-05T05:01:40Z",
+  "completed_at": "2026-11-05T06:16:23Z",
+  "name": "macos (macos-15-intel)",
+  "steps": [
+    {
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 1,
+      "started_at": "2026-11-05T05:01:40Z",
+      "completed_at": "2026-11-05T05:01:43Z"
+    },
+    {
+      "name": "Run actions/checkout@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 2,
+      "started_at": "2026-11-05T05:01:43Z",
+      "completed_at": "2026-11-05T05:02:26Z"
+    },
+    {
+      "name": "Run dtolnay/rust-toolchain@stable",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 3,
+      "started_at": "2026-11-05T05:02:26Z",
+      "completed_at": "2026-11-05T05:02:47Z"
+    },
+    {
+      "name": "Cache locked Rust dependencies",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 4,
+      "started_at": "2026-11-05T05:02:47Z",
+      "completed_at": "2026-11-05T05:02:49Z"
+    },
+    {
+      "name": "Fetch locked Rust dependencies before offline builds",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 5,
+      "started_at": "2026-11-05T05:02:49Z",
+      "completed_at": "2026-11-05T05:02:50Z"
+    },
+    {
+      "name": "OpenSSL 3",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 6,
+      "started_at": "2026-11-05T05:02:50Z",
+      "completed_at": "2026-11-05T05:03:01Z"
+    },
+    {
+      "name": "Measurement clock success and failure controls",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 7,
+      "started_at": "2026-11-05T05:03:01Z",
+      "completed_at": "2026-11-05T05:03:10Z"
+    },
+    {
+      "name": "Captured process deadlines and polling controls",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 8,
+      "started_at": "2026-11-05T05:03:10Z",
+      "completed_at": "2026-11-05T05:03:14Z"
+    },
+    {
+      "name": "Publish failed process controls before long tests",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 9,
+      "started_at": "2026-11-05T05:03:14Z",
+      "completed_at": "2026-11-05T05:03:14Z"
+    },
+    {
+      "name": "Publish failed clock controls before long tests",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 10,
+      "started_at": "2026-11-05T05:03:14Z",
+      "completed_at": "2026-11-05T05:03:14Z"
+    },
+    {
+      "name": "Generated standard-library docs preflight",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 11,
+      "started_at": "2026-11-05T05:03:14Z",
+      "completed_at": "2026-11-05T05:03:20Z"
+    },
+    {
+      "name": "Exact-head primitive contract inventory",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 12,
+      "started_at": "2026-11-05T05:03:20Z",
+      "completed_at": "2026-11-05T05:03:22Z"
+    },
+    {
+      "name": "Publish primitive contract inventory",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 13,
+      "started_at": "2026-11-05T05:03:22Z",
+      "completed_at": "2026-11-05T05:03:24Z"
+    },
+    {
+      "name": "fmt",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 14,
+      "started_at": "2026-11-05T05:03:24Z",
+      "completed_at": "2026-11-05T05:03:29Z"
+    },
+    {
+      "name": "clippy",
+      "status": "completed",
+      "conclusion": "failure",
+      "number": 15,
+      "started_at": "2026-11-05T05:03:29Z",
+      "completed_at": "2026-11-05T05:05:00Z"
+    },
+    {
+      "name": "Publish failed compiler diagnostics before long tests",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 16,
+      "started_at": "2026-11-05T05:05:00Z",
+      "completed_at": "2026-11-05T05:05:01Z"
+    },
+    {
+      "name": "Language formatting preflight",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 17,
+      "started_at": "2026-11-05T05:05:01Z",
+      "completed_at": "2026-11-05T05:05:01Z"
+    },
+    {
+      "name": "Regular macOS test shard",
+      "status": "completed",
+      "conclusion": "failure",
+      "number": 18,
+      "started_at": "2026-11-05T05:05:01Z",
+      "completed_at": "2026-11-05T06:10:50Z"
+    },
+    {
+      "name": "Publish individual regular test logs",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 19,
+      "started_at": "2026-11-05T06:10:50Z",
+      "completed_at": "2026-11-05T06:10:52Z"
+    },
+    {
+      "name": "Retry individual regular test log upload",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 20,
+      "started_at": "2026-11-05T06:10:52Z",
+      "completed_at": "2026-11-05T06:10:52Z"
+    },
+    {
+      "name": "Inspect array-sort ownership and wide-value controls",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 21,
+      "started_at": "2026-11-05T06:10:52Z",
+      "completed_at": "2026-11-05T06:10:55Z"
+    },
+    {
+      "name": "Inspect array construction moves and cleanup",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 22,
+      "started_at": "2026-11-05T06:10:55Z",
+      "completed_at": "2026-11-05T06:10:58Z"
+    },
+    {
+      "name": "Build compiler for Python SDK checks",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 23,
+      "started_at": "2026-11-05T06:10:58Z",
+      "completed_at": "2026-11-05T06:10:58Z"
+    },
+    {
+      "name": "Python SDK and native disassembly",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 24,
+      "started_at": "2026-11-05T06:10:58Z",
+      "completed_at": "2026-11-05T06:11:35Z"
+    },
+    {
+      "name": "Build standalone compiler",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 25,
+      "started_at": "2026-11-05T06:11:35Z",
+      "completed_at": "2026-11-05T06:14:12Z"
+    },
+    {
+      "name": "Iterator and state allocation and binary evidence",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 26,
+      "started_at": "2026-11-05T06:14:12Z",
+      "completed_at": "2026-11-05T06:15:29Z"
+    },
+    {
+      "name": "Run actions/upload-artifact@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 27,
+      "started_at": "2026-11-05T06:15:29Z",
+      "completed_at": "2026-11-05T06:15:31Z"
+    },
+    {
+      "name": "Verify separate native artifact outside checkout",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 28,
+      "started_at": "2026-11-05T06:15:31Z",
+      "completed_at": "2026-11-05T06:15:36Z"
+    },
+    {
+      "name": "Run actions/upload-artifact@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 29,
+      "started_at": "2026-11-05T06:15:36Z",
+      "completed_at": "2026-11-05T06:15:37Z"
+    },
+    {
+      "name": "Preserve failed native golden binaries and C",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 30,
+      "started_at": "2026-11-05T06:15:37Z",
+      "completed_at": "2026-11-05T06:15:37Z"
+    },
+    {
+      "name": "Run actions/upload-artifact@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 31,
+      "started_at": "2026-11-05T06:15:37Z",
+      "completed_at": "2026-11-05T06:15:37Z"
+    },
+    {
+      "name": "Package and verify ownership evidence",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 32,
+      "started_at": "2026-11-05T06:15:37Z",
+      "completed_at": "2026-11-05T06:16:12Z"
+    },
+    {
+      "name": "Upload verified ownership archive",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 33,
+      "started_at": "2026-11-05T06:16:12Z",
+      "completed_at": "2026-11-05T06:16:17Z"
+    },
+    {
+      "name": "Preserve ownership file manifest and read failures",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 34,
+      "started_at": "2026-11-05T06:16:17Z",
+      "completed_at": "2026-11-05T06:16:18Z"
+    },
+    {
+      "name": "Preserve compiler crash reports",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 35,
+      "started_at": "2026-11-05T06:16:18Z",
+      "completed_at": "2026-11-05T06:16:20Z"
+    },
+    {
+      "name": "Post Cache locked Rust dependencies",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 69,
+      "started_at": "2026-11-05T06:16:20Z",
+      "completed_at": "2026-11-05T06:16:20Z"
+    },
+    {
+      "name": "Post Run actions/checkout@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 70,
+      "started_at": "2026-11-05T06:16:20Z",
+      "completed_at": "2026-11-05T06:16:21Z"
+    },
+    {
+      "name": "Complete job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 71,
+      "started_at": "2026-11-05T06:16:21Z",
+      "completed_at": "2026-11-05T06:16:21Z"
+    }
+  ],
+  "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/127059783862",
+  "labels": [
+    "macos-15-intel"
+  ],
+  "runner_id": 1000409350,
+  "runner_name": "GitHub Actions 1000409350",
+  "runner_group_id": 0,
+  "runner_group_name": "GitHub Actions"
+}

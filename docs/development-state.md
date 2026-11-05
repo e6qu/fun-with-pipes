@@ -1,137 +1,145 @@
 # Current work
 
-**Next:** publish the complete measurement evidence and mark [PR #259](https://github.com/e6qu/fun-with-pipes/pull/259)
-ready for its nine exact-head production jobs plus docs. Keep that head unchanged
-while gates run. Audit every completed job/full target log, fix every unexplained
-failure, then squash merge with one line ≤80 characters and an empty body.
+**Next:** publish the combined repair, then monitor all nine production jobs plus
+documentation for the repaired commit. Audit full/target logs, fix every further
+finding, and squash merge only after all exact-head gates pass. Record the new
+source/run IDs here after publication; do not repeat unchanged measurements.
 
-Independent runtime audit `41970153152` passes. It verifies all four sessions of
-`41967904120`, including the 17 missed timing limits. Compiler-cost run
-`41967900961`, corrected census audit `41967470333` and docs `41967470162` also
-pass with complete log audits. Measurement head is
-`d494dd910723303f99992610895d9784968c79e8`, immutable tag
-`roadmap/gradient-call-timing-2026-11-05`. Preserve reductions with timing goals
-open under the accepted policy; do not rerun unchanged measurements.
+[PR #259](https://github.com/e6qu/fun-with-pipes/pull/259) is ready for review.
+Branch `gradient-call-storage`, worktree `.worktrees/owned-numeric-updates`.
+Other worktrees are unrelated.
 
-Branch: `gradient-call-storage`; worktree `.worktrees/owned-numeric-updates`.
-Frozen measurement source: `8c0e4b0ef06aa9f528eeaedbfbab9461a82dd0d7`, tag
-`roadmap/gradient-call-storage-measurements-2026-11-05`. The current repair changes
-measurement checks and documentation, not compiler/runtime/library/test trees.
-Other worktrees are unrelated; `../gradient-call-recorded-checker` is a clean
-sparse checkout of that frozen source for auditing its original checker.
+## First production pass: fully audited, repaired
+
+Source `4160061cd0d421a55ab4e467c6ec5fb6fd88cbf6`, production `41971248924`,
+docs `41971245959` (job `127059774586`). All nine production jobs failed;
+docs passed. [Complete reconciliation](measurements/gradient-call-checks-2026-11-05/production-repair/summary.json)
+accounts for every failed step and every target. No unexplained diagnostic remains.
+Draft run `41971246083` skipped and is not a production gate.
+
+- All four Linux/macOS lint jobs found `field_reassign_with_default` in the
+  `fold_fields.rs` unit fixture. Initialize `Program` directly. Compiler code
+  outside the test module is unchanged. Focused lint now includes all targets.
+- Format `lib/autodiff.fwp` and update the exact reference-patch marker. This
+  fixes formatter targets on both Linux/macOS hosts, the Linux browser formatter
+  check, and ownership/Windows/benchmark preflights. Focused formatting now
+  checks lib/examples/tutorials/bench as well as the new fixtures.
+- Benchmark execution never started; its absent-artifact failure follows from
+  formatting. Preserve that original failure rather than claiming benchmark
+  verification. All remaining executed checks pass.
+- Each Linux host: 257 target logs, only formatter/browser targets fail.
+  Each regular macOS host: 131 logs, only formatter fails. Each macOS ownership
+  host: all 126 targets pass. Each Windows host: 57 early logs and all 155 native
+  probe targets pass, along with golden programs and packaging.
+
+[Repair evidence](measurements/gradient-call-checks-2026-11-05/README.md#first-production-run-lint-and-formatting-repairs)
+retains complete logs, target archives, summaries and artifact identities.
+Independent final reconciliation passes (0.14s). Windows artifact audits fit the
+local guard: ARM64 127.05s, AMD64 142.02s. These are log/image-record audits, not
+local builds or repeated native tests.
+
+The repair changes a unit fixture, library formatting, its reference marker,
+focused workflow coverage and docs. It does not change the optimization or
+runtime behavior; measurements retain their original sources.
+
+## Collect the repaired head
+
+`../gradient-work/collect-gradient-call-final-platforms.py` takes explicit
+`--run`, `--source`, `--host`, `--docs-job` and `--output` arguments. Use the new
+head/run IDs after publication, one host per guarded invocation. Hosts:
+`linux-arm`, `linux-amd`, `mac-arm`, `mac-amd`, `mac-arm-ownership`,
+`mac-amd-ownership`, `windows-arm`, `windows-amd`, `bench`, `docs`.
+
+The collector retains full logs, digest-checked target archives, Windows probe
+logs and per-host audits. It deliberately exits nonzero on failed heads;
+inspect every finding. Individual job logs are available through
+`gh api .../actions/jobs/ID/logs` before the whole run finishes.
+
+First-pass scratch: `../gradient-work/gradient-call-final-first/`. All results
+are now retained in the repository; Windows outer probe downloads were removed
+after verification/retention. Do not re-fetch them to redo completed audits.
 
 ## Roadmap status
 
-| Step | Status | Evidence and remaining acceptance |
+[PLAN.md](../PLAN.md) and this table track the same five steps.
+
+| Step | Status | Work |
 |---|---|---|
-| 1 | Implemented | Scoped borrowing controls and allocation counts pass; runtime measurements are audited; production gates remain. |
-| 2 | Implemented | Numeric fold/constant-seed controls and counts pass; same remaining gates. |
-| 3 | Implemented | Scalar/owned-weight, precision, failure controls and counts pass; same remaining gates. |
-| 4 | Implemented | Scratch alias/view, both positions, unwind controls and counts pass; same remaining gates. |
-| 5 | In progress | Focused native checks pass. Corrected census audits pass locally; report-only CI passes; compiler costs pass; runtime audit passes with 17 timing misses retained; final production/docs and squash merge remain. |
+| 1 | Implemented | Borrow scoped gradient inputs; focused lifetime controls and allocation counts pass. |
+| 2 | Implemented | Pass fold fields directly; seed/order/precision controls and counts pass. |
+| 3 | Implemented | Seed backward directly; scalar/owned-weight and failure controls pass. |
+| 4 | Implemented | Consume derivative scratch; alias/view, both positions and unwind controls pass. |
+| 5 | In progress | Pass repaired production gates and full audits, then squash merge. |
 
-[Contract](measurements/gradient-call-storage.md) was frozen before implementation:
-`1ed3ad99ef7263161d526cea816c33b36ac40b9b`, tag
-`roadmap/gradient-call-storage-protocol-2026-11-05`.
+## Verified measurements
 
-## Verified checks and repaired failures
+| Evidence | Source and result |
+|---|---|
+| [Frozen contract](measurements/gradient-call-storage.md) | `1ed3ad99`, tag `roadmap/gradient-call-storage-protocol-2026-11-05`; frozen before implementation. |
+| [Focused native checks](measurements/gradient-call-checks-2026-11-05/README.md#passing-focused-matrix) | `8c0e4b0e`, run `41962981349`, docs `41962933179`: three hosts pass 292 units and 124 native tests in 25 targets; 798 images and 814 probe statuses audited per host. Four units are explicit runner-only measurements; no native test ignored. |
+| [Allocation census](measurements/gradient-call-census-2026-11-05/README.md) | Original run `41964853201`, source `8c0e4b0e`, failed phase-byte attribution. Scratch reserves N+1 words. Correct phase savings: `(8N+8)U` outside, `120U+24` during recording; unchanged total `(8N+128)U+24`. Original failures retained; corrected report-only audit `41967470333` and docs `41967470162` pass. |
+| [Compiler costs](measurements/gradient-call-analysis-2026-11-05/README.md) | `d494dd91`, run `41967900961`: 336 commands and six controls per host; all limits pass. |
+| [Runtime and memory](measurements/gradient-call-time-2026-11-05/README.md) | `d494dd91`, measurement run `41967904120`, independent audit `41970153152`: all 5,336 raw records checked; 17 timing misses remain open. No unchanged timing rerun. |
 
-[Focused run 41962981349](measurements/gradient-call-checks-2026-11-05/README.md#passing-focused-matrix)
-and docs `41962933179` pass with complete log audits. Each of three hosts passes
-292 units, all selections, formatting and 124 native tests in 25 targets;
-798 images and 814 probe statuses are checked per host. Four units are explicit
-runner-only measurement tests. No selected native test is ignored. Earlier
-compiler, ownership-fixture and formatting failures are repaired and documented
-in that evidence index; their original logs remain available.
+Full measured source: `d494dd910723303f99992610895d9784968c79e8`, tag
+`roadmap/gradient-call-timing-2026-11-05`. It changed only measurement checks/docs
+relative to `8c0e4b0ef06aa9f528eeaedbfbab9461a82dd0d7`, tag
+`roadmap/gradient-call-storage-measurements-2026-11-05`.
+`../gradient-call-recorded-checker` is a clean sparse checkout of the latter,
+including scripts/src/runtime/lib/tests/docs/tutorials. Reproduce old census
+checks from the frozen timing tag: later library formatting changes its marker.
 
-[Census 41964853201](measurements/gradient-call-census-2026-11-05/README.md)
-measured both architectures successfully but failed its phase-byte checker.
-Scratch reserves N+1 words; the original rule put eight bytes per update in
-recording instead of scratch. Correct savings: (8N+8)U outside and 120U+24 during
-recording. Total (8N+128)U+24 is unchanged. No acceptance budget was relaxed.
-
-Original-policy audits reproduce exactly 80 phase differences per host, with
-all other counts, raw storage, cleanup and frame limits passing. Corrected
-re-audits pass: AMD64 11.13s, ARM64 11.23s. The six budget controls use literal
-phase totals and reject transferring bytes between phases while preserving totals.
-`audit-gradient-call-census.py` reconstructs source/counters, checks images and
-raw output, and preserves original failures separately from corrected results.
-The report-only workflow passed on both architectures without compiling or executing
-saved programs. Full-log audit passes (3.02s), with no unexpected diagnostics.
-
-Fresh 129/199: 2,121 → 727 requests, 1,265,230 → 1,034,366 requested bytes;
-398 fewer effective retains. Eight repeated solves save 11,145 requests,
-1,846,744 bytes and 3,184 retains. Zero-update counts stay identical.
-Runtime sessions completed; see the current next action for the missed limits.
-Fewer allocations alone do not establish speed or process RAM.
-
-Compiler-cost audits pass: [seven-input results](measurements/gradient-call-analysis-2026-11-05/README.md),
-336 commands and six untimed checks per host. Maximum time/RSS ratios are
-1.004374/1.005311; largest identical-copy ratio is 1.009769. Full logs, raw samples,
-reference patches and generated sources are retained. Local guarded audits:
-AMD64 59.18s, ARM64 34.53s; retention 1.73s.
-
-## Runtime outcome and remaining delivery
-
-[Audited runtime report](measurements/gradient-call-time-2026-11-05/README.md):
-three-coordinate long solves are 14.3–25.2% faster. All sixteen 33/199 and 129/199
-comparisons miss 5%; AMD64 session 2 3/0 current is 2.1822% slower, beyond 2%.
-Copy variation is at most 1.1644%; frame growth at most 80 bytes. All 48 memory
-comparisons, with workspace reuse on/off, match the untimed census. Raw storage
-is unchanged and final bytes are zero. Process RSS varies in both directions.
-
-The independent runner audit verifies 5,336 raw-file records; its full log and all
-four original job logs have no unexplained diagnostics. Local collection/audit
-4.08s; result retention and memory reconciliation 0.74s. No native timing reran.
-Keep the 17 misses and all older goals separately in PLAN.md.
-
-1. Pass nine exact-head production jobs and docs; audit complete and target logs.
-2. Squash merge with explicit subject/empty body; verify tree and commit message.
-3. Continue with the [remaining allocation sites](measurements/gradient-call-census-2026-11-05/README.md#remaining-storage):
-   map the two forward recording requests (32N bytes per update) to their actual
-   producer/consumer lifetimes before selecting a new optimization. The result
-   array adds one request and 8N+8 bytes per update. These formulas were checked
-   against every saved fresh case on both architectures (0.13s).
-4. Separately review the zero-update source/driver and saved sample ordering.
-   No root cause is established; positive-update savings do not explain it.
-   Freeze any new experiment before collecting measurements.
+Fresh 129-coordinate/199-update solve: 2,121 → 727 requests and
+1,265,230 → 1,034,366 requested bytes; 398 fewer retains. Three-coordinate long
+solves improve 14.3–25.2%. All sixteen 33/199 and 129/199 timings miss 5%; AMD64
+session 2 3/0 current is 2.1822% slower, beyond 2%. All 48 memory comparisons
+match the census; final managed/raw bytes are zero. Process RSS is mixed.
+Keep these misses and all older goals separate under the accepted policy.
 
 ## Local checks and resources
 
-Use `python3 scripts/local-guard.py`; full builds, native tests and measurements
-stay on runners. Existing bounded checks pass: primitive inventory (397), target
-assignment (255), references, library documentation, roadmap links, measurement
-budgets and evidence reconstruction. Checker controls, Python parsing, actionlint and diff checks pass (8.80s).
-Retained archives now use distinct paths for outer reports and inner archive
-reports; a duplicate-name warning in the first retention attempt was repaired
-and the rebuilt archives pass uniqueness checks. Staged roadmap validation passes:
-283 documentation link sets, 106 preparation anchors and five steps (2.61s).
-Compiler-result docs pass the expanded 284-link check (2.63s); final runtime
-report/link and diff checks pass: 285 link sets, 106 anchors and five steps
-(2.61s). Measured compiler/runtime/library/test/script trees remain unchanged. The ownership page
-incorrectly left #255 awaiting platform verification; corrected it against its
-verified delivery record and replaced the obsolete task list with current work.
+Full builds/tests/measurements stay on runners. Bounded repair checks pass:
+Rust formatting, actionlint and test-only source comparison (6.93s); three
+reference controls and workflow/diff checks (6.47s); repository language format
+(0.51s); docs links (285 sets, 106 anchors, five steps; 2.53s). An incorrectly
+named new evidence receipt was fixed before the passing link check. The final
+handoff shortening also omitted the required five-row status table; restored it
+before publication, preserving the plan/handoff consistency check.
 
-The recorded checkout initially lacked its index and then a tutorial needed for
-source reconstruction. Populate it and include `docs/tutorials`; use quiet Git
-diff checks so an incomplete checkout cannot print a whole-repository diff.
-The disk guard stopped the first ARM64 audit below 64 GiB. Hash-verified duplicate
-extractions were removed (290 MiB), retaining both original archives and all
-receipts; the resumed audit passes. Never raise guard limits.
+The formatter is the verified PR #258 macOS ARM64 package, artifact `13376149858`;
+parser/formatter/AST/main sources match. Its binary hash and use are in the
+[receipt](measurements/gradient-call-checks-2026-11-05/production-repair/formatter-use.json).
+No local compiler build was needed. Existing inventory (397), native assignment
+(255), library docs, budget controls and evidence reconstruction checks pass;
+individual commands/results are retained in the linked evidence.
 
-Scratch: `../gradient-work/gradient-call-census-2026-11-05/` contains originals
-and corrected receipts; `gradient-call-checks-4/` contains focused audit data.
-Full generated sources/images remain in digest-identified GitHub artifacts.
-Retained repository records include all observations, logs and file hashes.
-Completed individual logs are fetched through `gh api .../actions/jobs/ID/logs`;
-`gh run view --log` can wait for the whole run.
+The guard stopped collection below 64 GiB. Removed only digest-verified duplicate
+downloads after checking preserved evidence records: 516.57 MiB, then 255.62 MiB
+(0.37s). After auditing Windows ARM64, removed its verified 382.70 MiB
+probe download (all logs/receipts preserved), then 372.50 MiB of verified prior
+focused downloads (0.38s). Removed the verified 388.10 MiB AMD64 probe download
+after retention too (0.26s), leaving 65.696 GiB free. No limits raised. Keep the
+64 GiB reserve, generated target below 2 GiB, sampled RSS below 1 GiB and 180s
+local deadline. Original sources/images remain in identified GitHub artifacts;
+repository archives retain observations, logs and file hashes.
 
-## Previous delivery
+## After verified delivery
 
-[PR #258](https://github.com/e6qu/fun-with-pipes/pull/258) merged at
-`68115090b161f198e11fb625946259f65f781580`, tree equal to tested `35745c0b`.
-All nine production jobs `41939753207`, docs `41939719588`, and full/target audits
-pass. [Delivery receipts](measurements/owned-numeric-checks-2026-11-05/platforms/final-gates.json)
-verify the tree and one-line squash message. Redundant main runs were cancelled.
-[Four AMD64 speed misses](measurements/owned-numeric-time-2026-11-05/README.md)
-remain open, separate from this comparison.
+Squash merge with an explicit one-line subject of at most 80 characters and empty
+body, then verify commit message and tree. Continue the roadmap in the next PR.
+PR #258 already merged at `68115090b161f198e11fb625946259f65f781580`, tree equal
+to tested `35745c0b`; [receipts](measurements/owned-numeric-checks-2026-11-05/platforms/final-gates.json)
+confirm all gates. Its four AMD64 timing misses remain separate.
+
+Source investigation notes: `../gradient-work/gradient-call-next-source-notes.md`;
+next proof draft: `../gradient-work/packed-pair-reuse-draft.md`. Neither is frozen
+acceptance or implemented support. They map the remaining two forward buffers
+(`32NU` bytes) to indexed-record producer → neighboring-pair map → fold. Reusing
+the first buffer requires consuming ownership, equal-width plain fields and
+complete callback-stage order, including failure/cancellation cleanup.
+
+`../gradient-work/gradient-call-zero-sample-review.json` reviews the two complete
+balanced cycles of existing zero-update samples (0.26s). Their differing ratios
+establish no cause and do not relax the failed limit. Review that source/driver
+path separately; positive-update storage savings cannot explain it. Freeze any
+new experiment before implementation or measurements.

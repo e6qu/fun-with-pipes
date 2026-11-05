@@ -1,0 +1,425 @@
+{
+  "source": "4160061cd0d421a55ab4e467c6ec5fb6fd88cbf6",
+  "targetLogs": {
+    "windows-probe.log": {
+      "sha256": "f22eb20207c39c6cd8b731f867656b8b8b5d9f496ab484f7275824cecfe9854b",
+      "summaries": []
+    },
+    "windows-native.log": {
+      "sha256": "c8cec1815f04371a9c74983f0767090800a4ff9953664f63e604fb34cb980541",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 296 filtered out; finished in 0.00s",
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 295 filtered out; finished in 0.00s",
+        "ok. 16 passed; 0 failed; 0 ignored; 0 measured; 281 filtered out; finished in 0.14s",
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 296 filtered out; finished in 0.06s",
+        "ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.74s",
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 15.74s",
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.13s",
+        "ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 28.08s",
+        "ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 14.25s",
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 21.29s",
+        "ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 174.39s",
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.51s",
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 11.20s",
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.90s",
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.15s",
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 12.27s",
+        "ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.60s",
+        "ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 12.41s",
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.90s",
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 40.80s",
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 15.40s",
+        "ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 16.70s",
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.46s",
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 16.01s",
+        "ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 54.88s",
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 22.54s",
+        "ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 8.47s",
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.09s",
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.07s",
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 10.78s",
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 8.29s",
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 8.53s",
+        "ok. 2 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 15.14s",
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 8.11s",
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.79s",
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 8.45s",
+        "ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 29.33s",
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 20.29s",
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 57.79s",
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 22.00s",
+        "ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 41.01s",
+        "ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 42.45s",
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.08s",
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.33s",
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 9.96s",
+        "ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 14.60s",
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 8.03s",
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.68s",
+        "ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 41.96s",
+        "ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 117.03s",
+        "ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 47.18s",
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 23.83s",
+        "ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 22.10s",
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.61s",
+        "ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 39.06s",
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 15.96s",
+        "ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 32.50s",
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 24.71s",
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 21.84s",
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 11.52s",
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 11.33s",
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.63s",
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.01s",
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.10s",
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 8.17s",
+        "ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 83.13s",
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 29.65s",
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.77s",
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 14.65s",
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.98s",
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.08s",
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.33s",
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 8.19s",
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 12.70s",
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 12.24s",
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 8.12s",
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 29.14s",
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.83s",
+        "ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 25.58s",
+        "ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 308.35s"
+      ]
+    },
+    "windows-resource-tests/test-cached_map_borrows.log": {
+      "sha256": "0413907e783b3fdd83fa791410d9684731e984443f3d683c7d60980c6d1c1870",
+      "summaries": [
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.61s"
+      ]
+    },
+    "windows-resource-tests/test-caf_ownership.log": {
+      "sha256": "e09bf0e1c447ce1ab4fedd6c1b00d6d99144c6d241e006157509dd13c4727f40",
+      "summaries": [
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 15.96s"
+      ]
+    },
+    "windows-resource-tests/test-collection_construction.log": {
+      "sha256": "55bcbe6af65bc9e0b9ff27ab1de01d499d98c2db6729ece3a032751a12aad0a0",
+      "summaries": [
+        "ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 22.10s"
+      ]
+    },
+    "windows-resource-tests/test-constructor_unwind_ownership.log": {
+      "sha256": "4cf56bcfc9bd0c80461c0cf6c528863ae702b8c451227a0bcc4aa2d8377c1449",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 8.12s"
+      ]
+    },
+    "windows-resource-tests/test-cpu_kernel_ownership.log": {
+      "sha256": "422ab338a74ad1fda5824976dc5e004fe19171fda4aeca3fa05904f26b234999",
+      "summaries": [
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 8.53s"
+      ]
+    },
+    "windows-resource-tests/test-dns_ownership.log": {
+      "sha256": "b81cf5de40e7939f0b9174f5fc5b07bcee6a36ad070c2b33a3b2fc555f98170f",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 8.45s"
+      ]
+    },
+    "windows-resource-tests/test-file_construction_ownership.log": {
+      "sha256": "682fd271969ff154fbc67cc3acf1a97795b2001f7a5859a7ac7610456047d266",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.77s"
+      ]
+    },
+    "windows-resource-tests/test-file_inline_path.log": {
+      "sha256": "ea8b81e54a4d3761bf4ec8d519009ca30e5d6d988174f06e9dca7e06e8e715db",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.33s"
+      ]
+    },
+    "windows-resource-tests/test-file_io_errors.log": {
+      "sha256": "b25ee2701af4ec1f15ce42a4be9586b3f4a663e40347f9f53083a92c21d3ccba",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 14.65s"
+      ]
+    },
+    "windows-resource-tests/test-file_runtime_ownership.log": {
+      "sha256": "15eeb22685d84394f1b6475dec58dad2e3ee926fcbe7b0b49fe31c3ec7c127c1",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.98s"
+      ]
+    },
+    "windows-resource-tests/test-file_storage_disposal.log": {
+      "sha256": "7cc96329488dafca744c108fa27ff124c57c287b4e5be3fefdc9a12a92e1ecea",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 8.19s"
+      ]
+    },
+    "windows-resource-tests/test-file_values.log": {
+      "sha256": "535ef55dfd821f3b5f1d5bc5d67b90cb244703e0f22a0e9062abfc83e5c27b7a",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 8.17s"
+      ]
+    },
+    "windows-resource-tests/test-file_write_visibility.log": {
+      "sha256": "322e980d8b1c0c9855ea68f588da3e873b2b68b9ff608abe57f5052aad3cf0ef",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.08s"
+      ]
+    },
+    "windows-resource-tests/test-general_record_update_ownership.log": {
+      "sha256": "af259c922bdde4a8a5dbfdf5f8d2cc8bbd47f3905ff7e940e1aedd2cc52865c9",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 12.24s"
+      ]
+    },
+    "windows-resource-tests/test-hash_ownership.log": {
+      "sha256": "97892ab8bb9730b27b8171d97aa08763b35d9c12649d9ce8b9a16b594cd6dda1",
+      "summaries": [
+        "ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 42.45s"
+      ]
+    },
+    "windows-resource-tests/test-inline_caf_ownership.log": {
+      "sha256": "36e4067e1431ae6f185b1308383e3b042ecfa5fa3a5da69f3f047e4b377a3176",
+      "summaries": [
+        "ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 32.50s"
+      ]
+    },
+    "windows-resource-tests/test-io_error_ownership.log": {
+      "sha256": "12a6a24bc511202b7bc348673fcd7c2aa285ac519c6cfb3f93f0f838d115b311",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.01s"
+      ]
+    },
+    "windows-resource-tests/test-list_construction_cleanup.log": {
+      "sha256": "7da14ff4177949e83cece957882e456b62b1287ee1d805db2c399b8c141280c7",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.33s"
+      ]
+    },
+    "windows-resource-tests/test-list_copy_ownership.log": {
+      "sha256": "92061f68b2276a15339272e70011007419777cdf12fd2307fcfa81318830c63f",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 8.03s"
+      ]
+    },
+    "windows-resource-tests/test-list_generation_ownership.log": {
+      "sha256": "a26ef4f0e9b7b5e033f9cbbe8b932c0f17ef4a9a2636cb96d3993868d7aa7fc2",
+      "summaries": [
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 9.96s"
+      ]
+    },
+    "windows-resource-tests/test-list_order_ownership.log": {
+      "sha256": "1ff36eef0ecf20ec7417e5d578c5d9d2fa2bf290e1efadca384769e634745476",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.68s"
+      ]
+    },
+    "windows-resource-tests/test-list_structure_ownership.log": {
+      "sha256": "0478397eb9c47db33c67dec64593c8c16b39091bacb67a95fbe53e794a19486d",
+      "summaries": [
+        "ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 14.60s"
+      ]
+    },
+    "windows-resource-tests/test-loop_unwind_ownership.log": {
+      "sha256": "2740c65cee6a66dd83a1d7576c8003e3f4fc16141ec84081df24de41769b108b",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 11.33s"
+      ]
+    },
+    "windows-resource-tests/test-mapped_array_construction.log": {
+      "sha256": "4bce4569d4822b3ace5dbf546b5f652b2bc9b5783fbdd81a3544255cb0616105",
+      "summaries": [
+        "ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 41.01s"
+      ]
+    },
+    "windows-resource-tests/test-map_set_ownership.log": {
+      "sha256": "77a870092d203bfb9417504ab4732f76a2a64e1aca298029d722997224d3442c",
+      "summaries": [
+        "ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 39.06s"
+      ]
+    },
+    "windows-resource-tests/test-map_unwind_ownership.log": {
+      "sha256": "b50e7cc69b66ad97c0de9e93c34a42606f0f733fd6c16960907b65ca3cea5cea",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 23.83s"
+      ]
+    },
+    "windows-resource-tests/test-metrics_ownership.log": {
+      "sha256": "e99d74abbf57e1097043b20c3e94b95e6bbd6218a9360374b2ec7535c9abe30f",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 8.11s"
+      ]
+    },
+    "windows-resource-tests/test-numerics.log": {
+      "sha256": "3488a3740e145e31e6cba708b782b3ce54c15e64264bd988d2c6a6c384de11b5",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 15.14s"
+      ]
+    },
+    "windows-resource-tests/test-parser_workspace.log": {
+      "sha256": "6384070f09870ec6e64c0e83fb096f4b80d9b731b9984495339f9beab538ac1c",
+      "summaries": [
+        "ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 25.58s"
+      ]
+    },
+    "windows-resource-tests/test-path_validation.log": {
+      "sha256": "3dcc255ae2aa2b034a934d07dfa825b9a23ef19c4d9fd9854c80e93bc4007808",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.63s"
+      ]
+    },
+    "windows-resource-tests/test-range_array.log": {
+      "sha256": "d8649716deb02e02c4055a8c876356a8b03ef3816ca6e776b09c06caa504585b",
+      "summaries": [
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 20.29s"
+      ]
+    },
+    "windows-resource-tests/test-range_set.log": {
+      "sha256": "9c9d696a8b6f15f7cf9cecbab27734238930b215dc5d54167665b9995c6ee063",
+      "summaries": [
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 22.00s"
+      ]
+    },
+    "windows-resource-tests/test-record_update_ownership.log": {
+      "sha256": "3ded7185b067eb57499a79a9d4cb2ee95b4e28d8fc251d54da70ae4a952bf0db",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 12.70s"
+      ]
+    },
+    "windows-resource-tests/test-selection_unwind_ownership.log": {
+      "sha256": "6d029fbccd3883515caf88338475384bebde2b1130b65967607a83b49497d284",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 24.71s"
+      ]
+    },
+    "windows-resource-tests/test-sort_callback_ownership.log": {
+      "sha256": "871f4a59ace69efa3bc030e02b8c3c5b8dcbf112eeb7d5d138d0dc2c9852e282",
+      "summaries": [
+        "ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 41.96s"
+      ]
+    },
+    "windows-resource-tests/test-stack_ownership.log": {
+      "sha256": "a9e105876e5284bdbe14a2584c22d61c5bf9eeaba0d362c3f00ee1f65f052358",
+      "summaries": [
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 29.14s"
+      ]
+    },
+    "windows-resource-tests/test-state_sequence_ownership.log": {
+      "sha256": "15a9b73efc1599208025a0f99d5cb24d8b0b9d0d954e5794490613589b958371",
+      "summaries": [
+        "ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 47.18s"
+      ]
+    },
+    "windows-resource-tests/test-system_snapshots.log": {
+      "sha256": "f5643a7180d9a0d99354e5f928954f351b0c5fea0455d2ecff556abe04600253",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.10s"
+      ]
+    },
+    "windows-resource-tests/test-ternary_ownership.log": {
+      "sha256": "f52abbe6ee6ad6572c77e62260142f5b26ffeb8df29043f16347f35bd6619a7d",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.79s"
+      ]
+    },
+    "windows-resource-tests/test-text_file_tools.log": {
+      "sha256": "98a1c57bcc49be9693e456082355b27377f8903987fe70771043c7232de416ff",
+      "summaries": [
+        "ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 308.35s"
+      ]
+    },
+    "windows-resource-tests/test-text_transform_ownership.log": {
+      "sha256": "3a0e09db8e61d4f0bdfc71a019136d45fb0881db4427e04a51875410c6dec533",
+      "summaries": [
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 29.65s"
+      ]
+    },
+    "windows-resource-tests/test-unzip_cleanup.log": {
+      "sha256": "b2fd651dea58f7548ce2fe5756a102c69cf78264ea55d5e31694d0ac6db9cb53",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.08s"
+      ]
+    },
+    "windows-resource-tests/test-udp_ownership.log": {
+      "sha256": "e6b4cf6aa5f1d39f8a68813ae3b31d4c6208da8bd830bc8c5dc2a303015b8abb",
+      "summaries": [
+        "ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 29.33s"
+      ]
+    },
+    "windows-resource-tests/test-vector_ownership.log": {
+      "sha256": "44e11c3d840cd0650d131a76299e60947972a8cf16fed52f4a40e4193cc22378",
+      "summaries": [
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 57.79s"
+      ]
+    },
+    "windows-resource-tests/test-wide_counts.log": {
+      "sha256": "8b6c4ac70772cad05b3aa6881bffe9d7c721e72570c9889315e51fbf75ee0d36",
+      "summaries": [
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.83s"
+      ]
+    },
+    "windows-resource-tests/test-windows_runtime.log": {
+      "sha256": "7c2f1b4263e896ca211f983507c62add54c54ff98c225d22187a31ecc47d9e54",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 21.84s"
+      ]
+    },
+    "windows-resource-tests/test-windows_static_memory.log": {
+      "sha256": "5297effade17d643c10dfcef95d1ac82e5f1ae5ab17faf4f54513676b41bcaca",
+      "summaries": [
+        "ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 11.52s"
+      ]
+    },
+    "windows-resource-tests/test-zip_map_fusion.log": {
+      "sha256": "f1ab259a090f08e7f1120c84000bb32d7d4f8d8b8656ec29acbe705a30c3c950",
+      "summaries": [
+        "ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 117.03s"
+      ]
+    },
+    "windows-resource-tests/test-zip_unwind_ownership.log": {
+      "sha256": "21429e549d99cb1f5d57cc4431241445b6a7514e568e165258a9f6d0fb06811c",
+      "summaries": [
+        "ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 83.13s"
+      ]
+    },
+    "windows-callback-tests/test-array_element_ownership.log": {
+      "sha256": "633c2c69f81c968cf52608743a50c68008bd02ee77e472d2ba20187c51ae706b",
+      "summaries": [
+        "ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 156.40s"
+      ]
+    },
+    "windows-callback-tests/test-array_unwind_ownership.log": {
+      "sha256": "8fc7480687f8482631762d5c7fc1c306efe4df5088f8f42114b2be615c10723d",
+      "summaries": [
+        "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 8.96s"
+      ]
+    },
+    "windows-callback-tests/test-fold_ownership.log": {
+      "sha256": "6df6edf155b3a1077fb8790c6e0e6816c0614dea9b4165cbbb1688d0177009aa",
+      "summaries": [
+        "ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 40.48s"
+      ]
+    },
+    "windows-callback-tests/test-fold_unwind_ownership.log": {
+      "sha256": "e2881cc1f8167a2c6568e2ba18d737b91f5fbe421d06527c14a11ba1254f7ea0",
+      "summaries": [
+        "ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 37.68s"
+      ]
+    },
+    "windows-callback-tests/test-numeric_array_fusion.log": {
+      "sha256": "171e2ae7616cb00952f9c8d18a0f0666ce5b2a773ffbb1ea942926afe322be60",
+      "summaries": [
+        "ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 150.08s"
+      ]
+    },
+    "windows-callback-tests/test-right_fold_ownership.log": {
+      "sha256": "e3634697fa3ac4088461197ca157678c0160ba2301c065557073a21522b38396",
+      "summaries": [
+        "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.02s"
+      ]
+    }
+  },
+  "fullJob": "audited; original failed conclusion preserved"
+}

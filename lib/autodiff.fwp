@@ -195,7 +195,6 @@ foreign "fwp" ad.backward-owned : I64 -> List[I64] -> List[t] -> Array[t] where 
 # The caller owns the seed throughout backward callbacks and task suspension.
 foreign "fwp" ad._backward-owned-one : I64 -> I64 -> t -> Array[t] where Dup[t]
 
-
 rev._push-float : I64 -> t -> I64 -> t -> I64 where Float[t]
 rev._push-float = fn parent-a -> fn weight-a -> fn parent-b -> fn weight-b ->
     ad.push parent-a (float.convert weight-a) parent-b (float.convert weight-b)
@@ -261,7 +260,6 @@ foreign "fwp" ad.push : I64 -> F64 -> I64 -> F64 -> I64
 foreign "fwp" ad.backward : I64 -> Array[I64] -> Array[F64] -> Array[F64]
 # A single root, seeded by the explicitly supplied F64 value.
 foreign "fwp" ad._backward-one : I64 -> I64 -> F64 -> Array[F64]
-
 
 # a constant: no gradient flows through it
 rev.const : t -> Rev[t]
@@ -362,9 +360,7 @@ rev._finish : (I64, Rev[t]) -> (t, Array[t]) where ReverseScalar[t], One[t], Dup
 rev._finish =
     both
         (.1 | .value)
-        (both .0 (.1 | .vertex)
-            | uncurry rev._backward-one
-            | apply one)
+        (both .0 (.1 | .vertex) | uncurry rev._backward-one | apply one)
 
 # The value of a scalar function and its gradient at a point, in one
 # forward and one backward pass.

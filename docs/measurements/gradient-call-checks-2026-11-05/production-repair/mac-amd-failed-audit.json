@@ -1,0 +1,524 @@
+{
+  "source": "4160061cd0d421a55ab4e467c6ec5fb6fd88cbf6",
+  "job": {
+    "id": 127059783862,
+    "run_id": 41971248924,
+    "workflow_name": "CI",
+    "head_branch": "gradient-call-storage",
+    "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/41971248924",
+    "run_attempt": 1,
+    "node_id": "CR_kwDOU33zxM8AAAAdlVpwtg",
+    "head_sha": "4160061cd0d421a55ab4e467c6ec5fb6fd88cbf6",
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/127059783862",
+    "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41971248924/job/127059783862",
+    "status": "completed",
+    "conclusion": "failure",
+    "created_at": "2026-11-05T05:00:26Z",
+    "started_at": "2026-11-05T05:01:40Z",
+    "completed_at": "2026-11-05T06:16:23Z",
+    "name": "macos (macos-15-intel)",
+    "steps": [
+      {
+        "name": "Set up job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 1,
+        "started_at": "2026-11-05T05:01:40Z",
+        "completed_at": "2026-11-05T05:01:43Z"
+      },
+      {
+        "name": "Run actions/checkout@v7",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 2,
+        "started_at": "2026-11-05T05:01:43Z",
+        "completed_at": "2026-11-05T05:02:26Z"
+      },
+      {
+        "name": "Run dtolnay/rust-toolchain@stable",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 3,
+        "started_at": "2026-11-05T05:02:26Z",
+        "completed_at": "2026-11-05T05:02:47Z"
+      },
+      {
+        "name": "Cache locked Rust dependencies",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 4,
+        "started_at": "2026-11-05T05:02:47Z",
+        "completed_at": "2026-11-05T05:02:49Z"
+      },
+      {
+        "name": "Fetch locked Rust dependencies before offline builds",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 5,
+        "started_at": "2026-11-05T05:02:49Z",
+        "completed_at": "2026-11-05T05:02:50Z"
+      },
+      {
+        "name": "OpenSSL 3",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 6,
+        "started_at": "2026-11-05T05:02:50Z",
+        "completed_at": "2026-11-05T05:03:01Z"
+      },
+      {
+        "name": "Measurement clock success and failure controls",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 7,
+        "started_at": "2026-11-05T05:03:01Z",
+        "completed_at": "2026-11-05T05:03:10Z"
+      },
+      {
+        "name": "Captured process deadlines and polling controls",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 8,
+        "started_at": "2026-11-05T05:03:10Z",
+        "completed_at": "2026-11-05T05:03:14Z"
+      },
+      {
+        "name": "Publish failed process controls before long tests",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 9,
+        "started_at": "2026-11-05T05:03:14Z",
+        "completed_at": "2026-11-05T05:03:14Z"
+      },
+      {
+        "name": "Publish failed clock controls before long tests",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 10,
+        "started_at": "2026-11-05T05:03:14Z",
+        "completed_at": "2026-11-05T05:03:14Z"
+      },
+      {
+        "name": "Generated standard-library docs preflight",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 11,
+        "started_at": "2026-11-05T05:03:14Z",
+        "completed_at": "2026-11-05T05:03:20Z"
+      },
+      {
+        "name": "Exact-head primitive contract inventory",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 12,
+        "started_at": "2026-11-05T05:03:20Z",
+        "completed_at": "2026-11-05T05:03:22Z"
+      },
+      {
+        "name": "Publish primitive contract inventory",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 13,
+        "started_at": "2026-11-05T05:03:22Z",
+        "completed_at": "2026-11-05T05:03:24Z"
+      },
+      {
+        "name": "fmt",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 14,
+        "started_at": "2026-11-05T05:03:24Z",
+        "completed_at": "2026-11-05T05:03:29Z"
+      },
+      {
+        "name": "clippy",
+        "status": "completed",
+        "conclusion": "failure",
+        "number": 15,
+        "started_at": "2026-11-05T05:03:29Z",
+        "completed_at": "2026-11-05T05:05:00Z"
+      },
+      {
+        "name": "Publish failed compiler diagnostics before long tests",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 16,
+        "started_at": "2026-11-05T05:05:00Z",
+        "completed_at": "2026-11-05T05:05:01Z"
+      },
+      {
+        "name": "Language formatting preflight",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 17,
+        "started_at": "2026-11-05T05:05:01Z",
+        "completed_at": "2026-11-05T05:05:01Z"
+      },
+      {
+        "name": "Regular macOS test shard",
+        "status": "completed",
+        "conclusion": "failure",
+        "number": 18,
+        "started_at": "2026-11-05T05:05:01Z",
+        "completed_at": "2026-11-05T06:10:50Z"
+      },
+      {
+        "name": "Publish individual regular test logs",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 19,
+        "started_at": "2026-11-05T06:10:50Z",
+        "completed_at": "2026-11-05T06:10:52Z"
+      },
+      {
+        "name": "Retry individual regular test log upload",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 20,
+        "started_at": "2026-11-05T06:10:52Z",
+        "completed_at": "2026-11-05T06:10:52Z"
+      },
+      {
+        "name": "Inspect array-sort ownership and wide-value controls",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 21,
+        "started_at": "2026-11-05T06:10:52Z",
+        "completed_at": "2026-11-05T06:10:55Z"
+      },
+      {
+        "name": "Inspect array construction moves and cleanup",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 22,
+        "started_at": "2026-11-05T06:10:55Z",
+        "completed_at": "2026-11-05T06:10:58Z"
+      },
+      {
+        "name": "Build compiler for Python SDK checks",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 23,
+        "started_at": "2026-11-05T06:10:58Z",
+        "completed_at": "2026-11-05T06:10:58Z"
+      },
+      {
+        "name": "Python SDK and native disassembly",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 24,
+        "started_at": "2026-11-05T06:10:58Z",
+        "completed_at": "2026-11-05T06:11:35Z"
+      },
+      {
+        "name": "Build standalone compiler",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 25,
+        "started_at": "2026-11-05T06:11:35Z",
+        "completed_at": "2026-11-05T06:14:12Z"
+      },
+      {
+        "name": "Iterator and state allocation and binary evidence",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 26,
+        "started_at": "2026-11-05T06:14:12Z",
+        "completed_at": "2026-11-05T06:15:29Z"
+      },
+      {
+        "name": "Run actions/upload-artifact@v7",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 27,
+        "started_at": "2026-11-05T06:15:29Z",
+        "completed_at": "2026-11-05T06:15:31Z"
+      },
+      {
+        "name": "Verify separate native artifact outside checkout",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 28,
+        "started_at": "2026-11-05T06:15:31Z",
+        "completed_at": "2026-11-05T06:15:36Z"
+      },
+      {
+        "name": "Run actions/upload-artifact@v7",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 29,
+        "started_at": "2026-11-05T06:15:36Z",
+        "completed_at": "2026-11-05T06:15:37Z"
+      },
+      {
+        "name": "Preserve failed native golden binaries and C",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 30,
+        "started_at": "2026-11-05T06:15:37Z",
+        "completed_at": "2026-11-05T06:15:37Z"
+      },
+      {
+        "name": "Run actions/upload-artifact@v7",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 31,
+        "started_at": "2026-11-05T06:15:37Z",
+        "completed_at": "2026-11-05T06:15:37Z"
+      },
+      {
+        "name": "Package and verify ownership evidence",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 32,
+        "started_at": "2026-11-05T06:15:37Z",
+        "completed_at": "2026-11-05T06:16:12Z"
+      },
+      {
+        "name": "Upload verified ownership archive",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 33,
+        "started_at": "2026-11-05T06:16:12Z",
+        "completed_at": "2026-11-05T06:16:17Z"
+      },
+      {
+        "name": "Preserve ownership file manifest and read failures",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 34,
+        "started_at": "2026-11-05T06:16:17Z",
+        "completed_at": "2026-11-05T06:16:18Z"
+      },
+      {
+        "name": "Preserve compiler crash reports",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 35,
+        "started_at": "2026-11-05T06:16:18Z",
+        "completed_at": "2026-11-05T06:16:20Z"
+      },
+      {
+        "name": "Post Cache locked Rust dependencies",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 69,
+        "started_at": "2026-11-05T06:16:20Z",
+        "completed_at": "2026-11-05T06:16:20Z"
+      },
+      {
+        "name": "Post Run actions/checkout@v7",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 70,
+        "started_at": "2026-11-05T06:16:20Z",
+        "completed_at": "2026-11-05T06:16:21Z"
+      },
+      {
+        "name": "Complete job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 71,
+        "started_at": "2026-11-05T06:16:21Z",
+        "completed_at": "2026-11-05T06:16:21Z"
+      }
+    ],
+    "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/127059783862",
+    "labels": [
+      "macos-15-intel"
+    ],
+    "runner_id": 1000409350,
+    "runner_name": "GitHub Actions 1000409350",
+    "runner_group_id": 0,
+    "runner_group_name": "GitHub Actions"
+  },
+  "logSha256": "b079bde93b3a577155a159597583223a1f73b78b6303c2ce0ea7606e30eb864a",
+  "expectedDiagnostics": [],
+  "targetLogs": {
+    "bin-fwp.log": "df166913f47ff1f04202cae9b31df67ed272d692d99a0023a8117dc3029100dd",
+    "test-aot.log": "fef2f37ebdfea9ce67f45e1bfb810d12021ef04082e194551f67b63b8a712f5c",
+    "lib-fwp.log": "bf7d208c05ce9a65093936fff2bd29b40300afb7d813137bb69fcceb8d999c1a",
+    "test-arc_corpus.log": "80b3de61eb3a7aa6b04de5c2746e26abbb114f1fb70311cd5d0100c47c14037b",
+    "test-arc_extensions.log": "bc6d65a2f7938e9eda94a597821632d2a79982fa1ab29147ae49f7165dbca66f",
+    "test-array_element_ownership.log": "a1a3eb4a7e13065373bbb7495bd8cc74cb29bbc092a179cffc53b3831e838bfa",
+    "test-array_size_limits.log": "736cb144178b78c836c66aac06593a587ce4b319c00e7b37ba648d22f6fbe0ad",
+    "test-array_text.log": "e09805421e120ce76d3c7e2510e203ce88f07dbe74d0df94d69a421a2782e62d",
+    "test-autodiff_nested.log": "81982f1746f7c0faf206f1b83a9637dd26d43cdb42bf72461ffc95a920d817d9",
+    "test-autodiff_workspace.log": "d21ddbed80298cb9e90786d58e6ed8ac96804057a692d957759b2a2b5948bf74",
+    "test-blocked_matrix.log": "edb4e5353bcbd935262299aa679430d45ac3d2888a260121c3776cf4c21ec63e",
+    "test-browser.log": "e23f6620a90b9fc84579e198debbf83fc55ada79afc032ad9c920da5796527ae",
+    "test-c-interop.log": "df166913f47ff1f04202cae9b31df67ed272d692d99a0023a8117dc3029100dd",
+    "test-cached_map_borrows.log": "bf54a4505de601a0897d0a56b557c6c0ffe8ad68ab968b1cdf0e2115638c71fe",
+    "test-caf_ownership.log": "d51a88b889890bf418280914b69506c31f7fbf91e9b55b132e6ffea492410ee0",
+    "test-channel_cycle_ownership.log": "f7bca6ba0ee115091ac0604ab65419a386e104858b8fb3e8cb116352b04c8b66",
+    "test-cli.log": "02a107954fdf21e1c0105fe07ff8ec42e032c1675a5e59a9bf06f708111ee9a7",
+    "test-collection_construction.log": "97d30032441b3e9bf66bf14b56bbcffcfb24ffe8b6d98b0819cba393add349d6",
+    "test-compiler_diagnostics.log": "2e034cdcfafb65cd6fbdc9dac2e422780465cabcf4afd013b6e64687b29e8829",
+    "test-constructor_type_ownership.log": "9f01f875dfc26efda76182c17ea0f9229911302caf59cffdf7ae9830dd56fcaf",
+    "test-constructor_unwind_ownership.log": "56fb9f6634bda73fb100f2757977c549b5c17e679ad8bfeceff67f9e42d01991",
+    "test-cross.log": "31e5d2bbddb23648aa349acbd567ce8eae87bb2f1d79fd6a16fcd39230c6491a",
+    "test-debugger.log": "c779faf8e93b925f99bfc831289c1761125357985db4252035284a8589e9b6c3",
+    "test-exec_protocol_ownership.log": "273a02c731b600d8f84b7588ad9ca41d296bd64f88872ece841229e52bea1273",
+    "test-fat.log": "d2f9b28dcbf1576dbf1474c5b4e5077460e6311fbda520e7a7116f6367ffbc82",
+    "test-ffi.log": "2bb1389faa1994887336038dcce775498e37e5a4709b89c466ba87693973cdfd",
+    "test-file_construction_disposal.log": "c411171265db73079e8949e0517fc7b384cb7a3aa28c5193fac9b6d569f0f5dd",
+    "test-file_construction_ownership.log": "2aefa42937838773136447e06c0e0b6b62d85846c1072535cd354c9140991589",
+    "test-file_io_errors.log": "70c632dcf7dadc55c83f2c1a05010fa4d66ced9de785a862dce3c9e15c151a70",
+    "test-file_runtime_ownership.log": "a34b15df13f80657529af527a0024ce2bd5fe2f03934ac1ab38dcfeebf972ce4",
+    "test-file_storage_disposal.log": "2d97d7edcd9904f7408f46bdda12ab74eb2467414359535ca6f8d35020db97f9",
+    "test-file_values.log": "a67ce8d5f3c8214a6f588893c3339ab7dea0302bb079c5284528d53140937236",
+    "test-file_write_visibility.log": "8aab080c062fdeefa89bb3356d046cc359f3affedbfb9f98204e8e233688a9b6",
+    "test-float_formats.log": "5a4acafb4dcfb4451a7ec48a55c687996cf24b49b9c031cb9611113851827f57",
+    "test-float_linking.log": "8421f9ef05b44aad9507c34ecfe757608b16ed35298c2780f2afb6eb3079275f",
+    "test-fmt.log": "cd37fa4b0ed57bba4d023b65ed919fdd724bcaac6b5934a6995dc9c028231b9c",
+    "test-foreign_callback_ownership.log": "c56de1fc61e27bdbcd47583da9f2d3e332c590ffaab63e19b721a16d4ab70257",
+    "test-golden_check.log": "c3ee90011adf4eb5bfb95e821aa0a2d1f897dea40b0fdf272e2f17e514d64a86",
+    "test-golden_parse.log": "a6f3c4a5265f1346a55a0610ca5979b2fed8df1afc95537dcb9a441174b01935",
+    "test-golden_run.log": "9192b3ccb9f439d5670f57b3f9d1d0d2b8261d2deacd7d67d4dd88d9ac66db3b",
+    "test-grpc_client_requests.log": "c5c6cf3849adb4d399fba3f64efe36cb1cf496e6eb14cd53ddbc9dc1695fb91d",
+    "test-grpc_capture_resources.log": "9372dcc6faa59b02e26e322a3424a9c7109c2dd2d26b8b042f1d182b6c1b0b82",
+    "test-grpc_connect_cleanup.log": "b50c249d0a42c5aa4a7f286530e3f55930f3592131a7efca8c88cd0ec7819fff",
+    "test-grpc_connection_addresses.log": "36d654a589d803a5d509cfd18659f209e6932cd1585096cd7a66ef11d8fc4836",
+    "test-grpc_context_resources.log": "aeadb6c5e2447df05cb058a599109f9294ec03e2e3ea27c256c141740cdd5fbe",
+    "test-grpc_context_restore.log": "d55658b007183583b6f45d0b42586c52290c0e43461e8ecbc71689197f5499af",
+    "test-grpc_peer_completion.log": "d6f10274f6a4e8e1ff4bcdce65ee44a1059e5ad2b65fa92f53dd82af8b2e680e",
+    "test-grpc_render_cleanup.log": "d698009979fd004605beb0a20e5227d0bf58bc81d1d3de71b1fa35c6588ba1eb",
+    "test-grpc_status_cleanup.log": "28636acee85e150af74663ce432819044259129a20b1db1349e18764d9058b65",
+    "test-grpc_tls_pool_identity.log": "4eab9a7c66a64bd8437f72edb68b4e3f26c24969ef574205c93c87242d2ff4e0",
+    "test-hash_ownership.log": "f7e6ac33748e4cc6719382a70add3b71806da9f7cebb78fb73ce9d4d17a98442",
+    "test-http2_body_roots.log": "46f127d34f7ac396cc9c2afb202aadd9cfb2c6f6e9020561bbeef501f3a57679",
+    "test-http2_client_ownership.log": "ec43a828da0f32bc54a8e964cf2c7a6b8b19b3a95af81e20bbc56c84048196b5",
+    "test-http2_server_ownership.log": "23169009acff4a50499634b37e2ab57da96ded0601030cfaae36db47aed8fe78",
+    "test-integer_output.log": "0839dc4014016a64193e1ae174e71d88f3d8ee506bb9f7e80ef550a452558fe3",
+    "test-io_error_ownership.log": "215f41aafa3ba1a6cc46afefeb5b793f708b42be551a0b41b9a5c25bcb433a9a",
+    "test-iteration_consumers.log": "57f6e05ab0653d8b8e5b9dfc19374d984b79398ce132aad496cc015b00811394",
+    "test-iterator_fusion.log": "ff77dad92abcb7ba0245eed1887e03baa96b5fa23aec4578fbd7d96fd5a2a752",
+    "test-leaf_ownership.log": "ed5d1f3fcecc1e4ce3177d48f070b844250bcd087eadd3acda3a60f4c4b4890e",
+    "test-library_input_ownership.log": "4cd5f1cdba857dafe2a62ab0196fa23907273d46bef3bfa9d002a4ee252069d7",
+    "test-library_resources.log": "6dab3f419803166016633d13674e9feab44ed2206555cb8b8f3a4f214e804940",
+    "test-library_result_ownership.log": "74d01280d17012f6b2cfe4a8d9390f29354f891f4d1f9282d0c8bffa1ab2e2e3",
+    "test-library_unload.log": "bfb9d56340524e4087999e033fb3b9ac145c4619107d29d67c3bbc906266ee4e",
+    "test-lint.log": "db1855c4a7fc0113b2986904e4a5a23f17c1bd8162c531db7296c0129a169041",
+    "test-list_applicative_ownership.log": "432c109d6e0aef398846a3c1856759068ada48968ad7150ed30bbd8aec173cd8",
+    "test-list_construction_cleanup.log": "78706e97166f20c2db0d8606f0550c62feecaf860def05b8b6e2fdf5be7e7a6e",
+    "test-list_generation_ownership.log": "7b4d2453a7e56e93018d5bad9a065ac67ad3bfe9a678ea3403745dddda9e41b3",
+    "test-list_order_ownership.log": "dc00d4a784b724de908497ed398a0a2b71af81f2a0ebff02ba879c804f1c60f5",
+    "test-list_structure_ownership.log": "d769b35fa05e6f64db238b6d02b52ca10059a6d8da73b24a9cdae3cd7b640135",
+    "test-loop_ownership.log": "e7ecc46c85fd09be84ea5d5f7f8cb536469bc039f994ee233a23b3c8a669ade2",
+    "test-loop_unwind_ownership.log": "9fda27bf38ad98a0423abf3b50d6a38580537ca644fdcba7f46506d57b4a2d4d",
+    "test-lsp.log": "48f79cb3f9fe5d727f3b8c1f4765a28a4973d744c194b001b8d792f72b58a4f6",
+    "test-macos.log": "193852ef246dc4d481b4ba4d32df604453dcabdb21dbbc7a809e01356abd08f0",
+    "test-map_ownership.log": "1cc6b2c954d6c7b3117857c6000da282e27834a87d2b4e90c29a23a3457a3b40",
+    "test-map_unwind_ownership.log": "31b2f2cceeda39884291104cc2eb918c4d326601053e22fda03b1e6e6b8e5e2f",
+    "test-map_set_ownership.log": "2fadd9904d87ae36365d4fafeb9c13e3745c065907eb16f36ac2aa24b38b7552",
+    "test-mapped_array_construction.log": "bc64a523c917aba2f8eeaa7c8860807497264eb9261beecfc5b56678558ae1a8",
+    "test-match_context_ownership.log": "be45d1eb9380acf9c9ba3eef4bbcaf6f6a846d878a5e24d78c9cbd50542f1df5",
+    "test-native_sockets.log": "b9ceebd2836a1958bfff060c4bc3a20ea46add85ec52a79f66cff0a1303b655a",
+    "test-nested_loop_boxing.log": "29b514d5eb7d01940f3caaa7002dac444d392c4f8127f2aef6e27ca2c7e63d82",
+    "test-numeric_array_fusion.log": "be8ea566b881108e80fa32b8132418740ced4126a757a78183fd490289de46df",
+    "test-pipe_ownership.log": "df166913f47ff1f04202cae9b31df67ed272d692d99a0023a8117dc3029100dd",
+    "test-preempt.log": "09ce85885b72273acf3521d119ec4f576d82b70ea33f76efdd5f03acbd5af80d",
+    "test-prefix_ownership.log": "ad6b2bdc493e5d230b7dd1d5a74363afdaf0c074e4e03a741504743a9591b028",
+    "test-range_array.log": "a8b0cb4b5020cb665223ea953567dfa609efdbbfb2f895084f34a0cdd717fd4b",
+    "test-range_set.log": "83e96444bc569111631d4d0d024dd73d751371277baf2e2bf16ff2ec166ea1e4",
+    "test-record_conversion_ownership.log": "cd1ed203d1b7bb686e1c1c0ff099671687920921cd2c3df8960773b43c18117e",
+    "test-record_update_ownership.log": "4170c152feb21f8bf2d6922fde4598539289bd7e70c52417dde13e61fc2137a7",
+    "test-repl.log": "6293ebaf300382e83d1beb2323c9e317d13eaecaab4889575041093e28739187",
+    "test-resource_frame_fields.log": "d30a17951eab97007612edbbc5680c76be4d7b8864677729a16294b6ccfceb36",
+    "test-resource_frames.log": "5f0ecbfb9084b6961c81ff06e5c6bb6b1f80274c264740b6b21a9ae210d28416",
+    "test-rest.log": "9b524b478f78e0b937ef0486f789f16d0c9f74705e4c530c18ab98f5436bb8fc",
+    "test-retained_callbacks.log": "9d78f3f7075ec754349d8f2004102f4cbfeb0a109ef56d5de9808587ec8058a4",
+    "test-retained_thunk_ownership.log": "0cbb444ddc3a317eeecb05e8c4b43c5e2a90f159be023582c7483db1d2ed0c2b",
+    "test-reuse.log": "2473f7399db5156bfe89da770eefebebdbbfd7cccd02738855c1912413e2f55c",
+    "test-reuse_token_ownership.log": "46249c139396a3f45bec2d3adb1171bbc1e4d524eed0f5629a278cd28a87de93",
+    "test-runtime_call_ownership.log": "4b1a53d67f1709dbcf8ce4275876123da5d73d0d0d3ac1e6a0998a8d8dc47c39",
+    "test-scalar_math.log": "179c3d6d0bd5e15d66593976264cb1524b2f889e9b41c8ad739ff03b7d67093b",
+    "test-scalar_traps.log": "f148ecbccbfdf4b3a9eb6483037ced21887027e50de534761946cb97f7fb93a9",
+    "test-services.log": "3948e44834cdf14216b2d0fe41e4980b8111372474e9c6f6e45866307787a891",
+    "test-softfloat_core.log": "53850e0bcf1d74c00dad66e462c77a55adcc4893d20fdbb0131e02c29a7baf8e",
+    "test-stack_match_ownership.log": "106ad851452367782087debec4270eb2d4e6a614e84a78210df8557ebe8d29a1",
+    "test-state_sequence_ownership.log": "a0c5de51050dc7c00c39d60ef383cd0f725d3870f0672e9614662011fd40822f",
+    "test-static_constants.log": "ac59f11052e236e09e2e62194c7100c6669b7704fb53f1d9016dc67b276dfb4e",
+    "test-stdlib_doc.log": "cf75290838fa17da27709852532b82708a8508059e72e74bb246553af8c83215",
+    "test-system_snapshots.log": "a197d95336da9e53653baf7d98d258c4e76311ce4386db086c78015f940f795d",
+    "test-tail_recursion.log": "a6049e35ee584d96a315b066214bd7d843cf6c95dbdf662533c36cbbd59f8036",
+    "test-task_context_storage.log": "df166913f47ff1f04202cae9b31df67ed272d692d99a0023a8117dc3029100dd",
+    "test-task_timer_order.log": "571cf8fe4d0f627e617a3138432220fcd8a17c5e4e087aa4c0ff2c1c555c7920",
+    "test-terminal_ownership.log": "c92884a1288513f039c5e76e098a54d8703203edb2d5aa9d10d3d5396283eb01",
+    "test-text_file_tools.log": "1430cd0679d3f60d972c94c85369f75b08362418d2fdcf018a5963ab2932990f",
+    "test-text_ownership.log": "2fe33fc22e7b88eb1fdf15d20fe70690d4204fc3429ce5ca63374554a72f2422",
+    "test-text_transform_ownership.log": "b7ec46b702c31f3c07080d185b367fb03b988efad4c204001f3b2f8c7e3c740a",
+    "test-tls_alpn_roots.log": "f6444f060a777093ba20ec126f0dcfa1844725163075f8307224c3217dcbb34f",
+    "test-tls_cache_ownership.log": "8d860d634cdbd027bc172cd438409f6a414eb7f6c797fdee36df5bd6c830f5ed",
+    "test-tls_listener_ownership.log": "31b65c2b20b6582c6b8d670dbe90ccc9166a713fe276fe226d98a1dc09d13b5e",
+    "test-tls_peer_subject_ownership.log": "42a32676dfe3d5335423af63f0237de085834fda6c5338f54eefb8cc580d045c",
+    "test-unboxed_worker_locals.log": "e638c5b3d9accd4615fcfeeca1e27603d3156a87ece71e289dc1087033ada2c0",
+    "test-variant_alias_ownership.log": "ad5905f4aca2c4a63b861fed69c56e8bdb5797b737b1272aa2fabac1275c8c66",
+    "test-variant_conversion_ownership.log": "3693ee8423f32f9cd264227034441163b8af821fa43b85e0b202ff6d48e8a8d4",
+    "test-wasm.log": "b1c6a76940cc71c2a2f12528738f365511a64210562241e178842aee19c6bc52",
+    "test-wasm_arc.log": "464305ae550edc5e30864f328fd9e42d3c9d35ff457fc069bc9438f4f2a656d3",
+    "test-wide_counts.log": "bbb8903c71187d969a0540de35f513a57dea703796c67689fdd2f78b19c0d5a4",
+    "test-wide_workers.log": "4b0e67a5a2f152678ed5e3cd6859b2c82f36d0bb268cecfeab232dd4978abd19",
+    "test-windows_context.log": "df166913f47ff1f04202cae9b31df67ed272d692d99a0023a8117dc3029100dd",
+    "test-windows_runtime.log": "df166913f47ff1f04202cae9b31df67ed272d692d99a0023a8117dc3029100dd",
+    "test-windows_static_memory.log": "df166913f47ff1f04202cae9b31df67ed272d692d99a0023a8117dc3029100dd",
+    "test-within_thunk_ownership.log": "830846c0f0e0743afd77a42772bfaa9c08b26d66228aaf906826c77a99ad5709",
+    "test-worker_preparation_ownership.log": "e3b887ccfc63cdf20563b26deaa8bc5ae478bdf0cfb80ea3b9b06efb114f1176",
+    "test-zip_ownership.log": "8ff2d4e04cf1a32a70fc97d06a57e76ae6330f9240d92f79f8ba6c778d6253fa",
+    "test-zip_unwind_ownership.log": "dc721e1662cdd49f431c5c886f3be870bd19bf285a5535e94efb7019c56ff075"
+  },
+  "artifact": {
+    "id": 13392662540,
+    "node_id": "MDg6QXJ0aWZhY3QxMzM5MjY2MjU0MA==",
+    "name": "macos-regular-tests-macos-15-intel",
+    "size_in_bytes": 49345,
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13392662540",
+    "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13392662540/zip",
+    "expired": false,
+    "digest": "sha256:0ca6a38dbef09b86e92720953df804ffdaf11f7548892e660161bd0aa869cb09",
+    "created_at": "2026-11-05T06:10:52Z",
+    "updated_at": "2026-11-05T06:10:52Z",
+    "expires_at": "2027-02-03T05:00:25Z",
+    "workflow_run": {
+      "id": 41971248924,
+      "repository_id": 1400763332,
+      "head_repository_id": 1400763332,
+      "head_branch": "gradient-call-storage",
+      "head_sha": "4160061cd0d421a55ab4e467c6ec5fb6fd88cbf6"
+    }
+  },
+  "issues": [
+    [
+      "mac-amd",
+      "job failure"
+    ],
+    [
+      "mac-amd",
+      "2026-11-05T05:04:35.2148110Z error: field assignment outside of initializer for an instance created with Default::default()"
+    ],
+    [
+      "mac-amd",
+      "2026-11-05T05:04:37.1039090Z error: could not compile `fwp` (lib test) due to 1 previous error"
+    ],
+    [
+      "mac-amd",
+      "2026-11-05T05:04:37.1040480Z warning: build failed, waiting for other jobs to finish..."
+    ],
+    [
+      "mac-amd",
+      "2026-11-05T05:05:00.2193440Z ##[error]Process completed with exit code 101."
+    ],
+    [
+      "mac-amd",
+      "2026-11-05T06:05:20.7040590Z test result: FAILED. 1 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 15.28s"
+    ],
+    [
+      "mac-amd",
+      "2026-11-05T06:10:50.5738360Z ##[error]Process completed with exit code 1."
+    ],
+    [
+      "mac-amd",
+      "test result: FAILED. 1 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 15.28s"
+    ]
+  ]
+}

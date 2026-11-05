@@ -94,3 +94,40 @@ The [allocation audit](../gradient-call-census-2026-11-05/README.md) passes loca
 after correcting phase-byte attribution. [Compiler costs](../gradient-call-analysis-2026-11-05/README.md)
 pass; the [runtime audit](../gradient-call-time-2026-11-05/README.md) preserves
 17 missed timing limits. Final production gates remain.
+
+
+## First production run: lint and formatting repairs
+
+Source `4160061cd0d421a55ab4e467c6ec5fb6fd88cbf6`,
+[run 41971248924](https://github.com/e6qu/fun-with-pipes/actions/runs/41971248924).
+All nine jobs are complete. The [full audit](production-repair/summary.json)
+accounts for every failure; the run remains failed.
+
+| Jobs | Target results | Failure and repair |
+|---|---|---|
+| Linux ARM64/AMD64 | Each: 255 targets pass; formatter and browser formatter targets fail | Initialize the unit-test `Program` directly to satisfy Clippy. Format `lib/autodiff.fwp` to fix all three failing formatting checks. |
+| Regular macOS ARM64/AMD64 | Each: 130 targets pass; formatter target fails | Same unit-test lint and library-format repairs. SDK, packaging and evidence checks pass. |
+| macOS ownership ARM64/AMD64 | All 126 targets per host pass | Library-format preflight only. |
+| Windows ARM64/AMD64 | All 155 native probe targets per host pass; golden programs and packaging pass | Library-format preflight only. |
+| C/Rust benchmarks | Execution never started | Library formatting stops the preflight; the later absent-artifact error follows. |
+
+Focused lint previously omitted unit tests. It now uses production's
+`--all-targets --keep-going`. Focused formatting now checks the library, examples,
+tutorials and benchmarks alongside the new fixtures. The library repair removes
+two blank lines and joins one short expression; its exact reference-patch marker
+is updated. Compiler code outside the unit-test module is unchanged.
+
+Complete job/target logs, per-host audits, summaries and digest-checked artifact
+receipts are retained in `production-repair/`. The
+[early audit](production-repair/early-audit.json) records the initially available
+lint and benchmark results; the full audit above completes it. Documentation
+[run 41971245959](https://github.com/e6qu/fun-with-pipes/actions/runs/41971245959)
+passes with only the [expected negative controls](production-repair/docs-audit.json).
+
+The library was formatted with PR #258's verified native compiler. Its parser and
+formatter sources match; the [receipt](production-repair/formatter-use.json)
+identifies the package and binary. Repository formatting, three reference-patch
+controls, Rust formatting and workflow syntax pass locally. Runtime measurements
+remain tied to their original sources; no native measurement was repeated.
+
+The repaired commit must pass all nine production jobs plus docs before merge.

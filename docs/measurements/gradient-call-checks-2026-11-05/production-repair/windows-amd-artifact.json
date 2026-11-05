@@ -1,0 +1,20 @@
+{
+  "id": 13392151394,
+  "node_id": "MDg6QXJ0aWZhY3QxMzM5MjE1MTM5NA==",
+  "name": "windows-native-windows-2025",
+  "size_in_bytes": 35212,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13392151394",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13392151394/zip",
+  "expired": false,
+  "digest": "sha256:374d37a1a4a8f11420a3155f5fca273ac33aa71e74e4f03d277eefad5f2d62d1",
+  "created_at": "2026-11-05T05:46:02Z",
+  "updated_at": "2026-11-05T05:46:02Z",
+  "expires_at": "2027-02-03T05:00:25Z",
+  "workflow_run": {
+    "id": 41971248924,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "gradient-call-storage",
+    "head_sha": "4160061cd0d421a55ab4e467c6ec5fb6fd88cbf6"
+  }
+}

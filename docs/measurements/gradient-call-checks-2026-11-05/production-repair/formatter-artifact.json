@@ -1,0 +1,20 @@
+{
+  "id": 13376149858,
+  "node_id": "MDg6QXJ0aWZhY3QxMzM3NjE0OTg1OA==",
+  "name": "fwp-macOS-ARM64",
+  "size_in_bytes": 4145393,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13376149858",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13376149858/zip",
+  "expired": false,
+  "digest": "sha256:cfa26270fe0e32b50788857f78573b3d6d44444379ca7a9a7229a2638bc750c6",
+  "created_at": "2026-11-05T00:45:01Z",
+  "updated_at": "2026-11-05T00:45:01Z",
+  "expires_at": "2027-02-03T00:13:45Z",
+  "workflow_run": {
+    "id": 41939753207,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "owned-numeric-updates",
+    "head_sha": "35745c0b8fab61c9ac4e0a9e57efd81fd1a283bd"
+  }
+}

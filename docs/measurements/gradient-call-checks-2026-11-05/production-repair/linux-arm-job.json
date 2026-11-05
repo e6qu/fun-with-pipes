@@ -1,0 +1,372 @@
+{
+  "id": 127059784094,
+  "run_id": 41971248924,
+  "workflow_name": "CI",
+  "head_branch": "gradient-call-storage",
+  "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/41971248924",
+  "run_attempt": 1,
+  "node_id": "CR_kwDOU33zxM8AAAAdlVpxng",
+  "head_sha": "4160061cd0d421a55ab4e467c6ec5fb6fd88cbf6",
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/127059784094",
+  "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41971248924/job/127059784094",
+  "status": "completed",
+  "conclusion": "failure",
+  "created_at": "2026-11-05T05:00:26Z",
+  "started_at": "2026-11-05T05:06:28Z",
+  "completed_at": "2026-11-05T06:30:10Z",
+  "name": "test (ubuntu-24.04-arm)",
+  "steps": [
+    {
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 1,
+      "started_at": "2026-11-05T05:06:29Z",
+      "completed_at": "2026-11-05T05:06:30Z"
+    },
+    {
+      "name": "Run actions/checkout@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 2,
+      "started_at": "2026-11-05T05:06:30Z",
+      "completed_at": "2026-11-05T05:06:46Z"
+    },
+    {
+      "name": "Run dtolnay/rust-toolchain@stable",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 3,
+      "started_at": "2026-11-05T05:06:46Z",
+      "completed_at": "2026-11-05T05:06:48Z"
+    },
+    {
+      "name": "Cache locked Rust dependencies",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 4,
+      "started_at": "2026-11-05T05:06:48Z",
+      "completed_at": "2026-11-05T05:06:50Z"
+    },
+    {
+      "name": "Fetch locked Rust dependencies before offline builds",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 5,
+      "started_at": "2026-11-05T05:06:50Z",
+      "completed_at": "2026-11-05T05:06:51Z"
+    },
+    {
+      "name": "Run actions/setup-node@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 6,
+      "started_at": "2026-11-05T05:06:51Z",
+      "completed_at": "2026-11-05T05:06:52Z"
+    },
+    {
+      "name": "Select the Ubuntu archive for AMD64 packages",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 7,
+      "started_at": "2026-11-05T05:06:52Z",
+      "completed_at": "2026-11-05T05:06:52Z"
+    },
+    {
+      "name": "WebAssembly toolchain, OpenSSL headers (TLS)",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 8,
+      "started_at": "2026-11-05T05:06:52Z",
+      "completed_at": "2026-11-05T05:07:12Z"
+    },
+    {
+      "name": "aarch64 cross compiler and qemu (tests/cross.rs)",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 9,
+      "started_at": "2026-11-05T05:07:12Z",
+      "completed_at": "2026-11-05T05:07:12Z"
+    },
+    {
+      "name": "binaryen's wasm-opt (`--wasm-async=asyncify`; tests skip without it)",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 10,
+      "started_at": "2026-11-05T05:07:12Z",
+      "completed_at": "2026-11-05T05:07:14Z"
+    },
+    {
+      "name": "Measurement clock success and failure controls",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 11,
+      "started_at": "2026-11-05T05:07:14Z",
+      "completed_at": "2026-11-05T05:07:17Z"
+    },
+    {
+      "name": "Publish failed clock controls before long tests",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 12,
+      "started_at": "2026-11-05T05:07:17Z",
+      "completed_at": "2026-11-05T05:07:17Z"
+    },
+    {
+      "name": "Generated standard-library docs preflight",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 13,
+      "started_at": "2026-11-05T05:07:17Z",
+      "completed_at": "2026-11-05T05:07:24Z"
+    },
+    {
+      "name": "Exact-head primitive contract inventory",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 14,
+      "started_at": "2026-11-05T05:07:24Z",
+      "completed_at": "2026-11-05T05:07:27Z"
+    },
+    {
+      "name": "Publish primitive contract inventory",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 15,
+      "started_at": "2026-11-05T05:07:27Z",
+      "completed_at": "2026-11-05T05:07:28Z"
+    },
+    {
+      "name": "fmt",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 16,
+      "started_at": "2026-11-05T05:07:28Z",
+      "completed_at": "2026-11-05T05:07:30Z"
+    },
+    {
+      "name": "clippy",
+      "status": "completed",
+      "conclusion": "failure",
+      "number": 17,
+      "started_at": "2026-11-05T05:07:30Z",
+      "completed_at": "2026-11-05T05:08:03Z"
+    },
+    {
+      "name": "clippy (WebAssembly build)",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 18,
+      "started_at": "2026-11-05T05:08:03Z",
+      "completed_at": "2026-11-05T05:08:03Z"
+    },
+    {
+      "name": "Publish failed compiler diagnostics before long tests",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 19,
+      "started_at": "2026-11-05T05:08:03Z",
+      "completed_at": "2026-11-05T05:08:04Z"
+    },
+    {
+      "name": "Language formatting preflight",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 20,
+      "started_at": "2026-11-05T05:08:04Z",
+      "completed_at": "2026-11-05T05:08:04Z"
+    },
+    {
+      "name": "test",
+      "status": "completed",
+      "conclusion": "failure",
+      "number": 21,
+      "started_at": "2026-11-05T05:08:04Z",
+      "completed_at": "2026-11-05T06:26:25Z"
+    },
+    {
+      "name": "Inspect list-copy executables and missing-cleanup controls",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 22,
+      "started_at": "2026-11-05T06:26:25Z",
+      "completed_at": "2026-11-05T06:26:25Z"
+    },
+    {
+      "name": "Inspect array-sort ownership and wide-value controls",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 23,
+      "started_at": "2026-11-05T06:26:25Z",
+      "completed_at": "2026-11-05T06:26:26Z"
+    },
+    {
+      "name": "Inspect array construction moves and cleanup",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 24,
+      "started_at": "2026-11-05T06:26:26Z",
+      "completed_at": "2026-11-05T06:26:27Z"
+    },
+    {
+      "name": "Run actions/upload-artifact@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 25,
+      "started_at": "2026-11-05T06:26:27Z",
+      "completed_at": "2026-11-05T06:26:28Z"
+    },
+    {
+      "name": "Build compiler for Python SDK checks",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 26,
+      "started_at": "2026-11-05T06:26:28Z",
+      "completed_at": "2026-11-05T06:26:28Z"
+    },
+    {
+      "name": "Python SDK and native disassembly",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 27,
+      "started_at": "2026-11-05T06:26:28Z",
+      "completed_at": "2026-11-05T06:26:51Z"
+    },
+    {
+      "name": "Build standalone compiler",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 28,
+      "started_at": "2026-11-05T06:26:51Z",
+      "completed_at": "2026-11-05T06:27:43Z"
+    },
+    {
+      "name": "Numerical output and lifetime controls",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 29,
+      "started_at": "2026-11-05T06:27:43Z",
+      "completed_at": "2026-11-05T06:28:06Z"
+    },
+    {
+      "name": "Run actions/upload-artifact@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 30,
+      "started_at": "2026-11-05T06:28:06Z",
+      "completed_at": "2026-11-05T06:28:11Z"
+    },
+    {
+      "name": "Iterator and state allocation and binary evidence",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 31,
+      "started_at": "2026-11-05T06:28:11Z",
+      "completed_at": "2026-11-05T06:29:10Z"
+    },
+    {
+      "name": "Run actions/upload-artifact@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 32,
+      "started_at": "2026-11-05T06:29:10Z",
+      "completed_at": "2026-11-05T06:29:12Z"
+    },
+    {
+      "name": "Verify separate native artifact outside checkout",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 33,
+      "started_at": "2026-11-05T06:29:12Z",
+      "completed_at": "2026-11-05T06:29:15Z"
+    },
+    {
+      "name": "Run actions/upload-artifact@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 34,
+      "started_at": "2026-11-05T06:29:15Z",
+      "completed_at": "2026-11-05T06:29:16Z"
+    },
+    {
+      "name": "Preserve failed native golden binaries and C",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 35,
+      "started_at": "2026-11-05T06:29:16Z",
+      "completed_at": "2026-11-05T06:29:16Z"
+    },
+    {
+      "name": "Run actions/upload-artifact@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 36,
+      "started_at": "2026-11-05T06:29:16Z",
+      "completed_at": "2026-11-05T06:29:16Z"
+    },
+    {
+      "name": "Package and verify ownership evidence",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 37,
+      "started_at": "2026-11-05T06:29:16Z",
+      "completed_at": "2026-11-05T06:30:03Z"
+    },
+    {
+      "name": "Upload verified ownership archive",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 38,
+      "started_at": "2026-11-05T06:30:03Z",
+      "completed_at": "2026-11-05T06:30:07Z"
+    },
+    {
+      "name": "Preserve ownership file manifest and read failures",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 39,
+      "started_at": "2026-11-05T06:30:07Z",
+      "completed_at": "2026-11-05T06:30:08Z"
+    },
+    {
+      "name": "Post Run actions/setup-node@v7",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 76,
+      "started_at": "2026-11-05T06:30:08Z",
+      "completed_at": "2026-11-05T06:30:08Z"
+    },
+    {
+      "name": "Post Cache locked Rust dependencies",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 77,
+      "started_at": "2026-11-05T06:30:08Z",
+      "completed_at": "2026-11-05T06:30:08Z"
+    },
+    {
+      "name": "Post Run actions/checkout@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 78,
+      "started_at": "2026-11-05T06:30:08Z",
+      "completed_at": "2026-11-05T06:30:08Z"
+    },
+    {
+      "name": "Complete job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 79,
+      "started_at": "2026-11-05T06:30:08Z",
+      "completed_at": "2026-11-05T06:30:08Z"
+    }
+  ],
+  "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/127059784094",
+  "labels": [
+    "ubuntu-24.04-arm"
+  ],
+  "runner_id": 1000409361,
+  "runner_name": "GitHub Actions 1000409361",
+  "runner_group_id": 0,
+  "runner_group_name": "GitHub Actions"
+}
