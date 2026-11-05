@@ -544,6 +544,9 @@ mod tests {
                 ));
                 assert!(matches!(program.funcs[7].body,
                     Body::PackedRecordPairs { callback: 2, tail_slot: actual } if actual == tail_slot));
+                assert!(crate::rc::consumes_arg(&program, 7, 0));
+                // Returning reused storage lets this argument escape the call.
+                assert!(!crate::escape::params(&program)[7][0]);
                 assert_eq!(program.funcs[5].locals[1], buffer());
                 let Body::Expr(Expr::Let(1, source, consumer)) = &program.funcs[5].body else {
                     panic!("producer binding lost");

@@ -97,7 +97,7 @@ pub fn consumes_arg(prog: &Program, id: FuncId, j: usize) -> bool {
             .is_some_and(|ps| ps.contains(&(j as Local))),
         Body::Ctor(_) | Body::RegionEntry { .. } => true,
         Body::PackedRecordFold { .. } => j == 0,
-        Body::OwnedScalarArrayMap { .. } => j == 0,
+        Body::OwnedScalarArrayMap { .. } | Body::PackedRecordPairs { .. } => j == 0,
         Body::OwnedScalarBufferZip {
             slot,
             consume_array,
@@ -108,8 +108,7 @@ pub fn consumes_arg(prog: &Program, id: FuncId, j: usize) -> bool {
         | Body::ScalarBufferMap { .. }
         | Body::ScalarBufferZip { .. }
         | Body::RangeZip { .. }
-        | Body::PackedRecordRangeZip { .. }
-        | Body::PackedRecordPairs { .. } => false,
+        | Body::PackedRecordRangeZip { .. } => false,
         Body::Prim(s) => prim_consumes(s, j),
         _ => false,
     }

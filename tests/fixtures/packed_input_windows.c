@@ -19,8 +19,12 @@ int main(void) {
         if ((mode == 1 || mode == 2) && count < 2) continue;
         if (mode >= 3 && mode <= 6 && count < 3) continue;
         if (mode == 9 && count < 2) continue;
+#if WINDOWS_RESULT_WIDTH == 2 && !defined(FWP_NO_REUSE)
+        /* Reused pair storage has no allocation at which to inject failure. */
+        if (mode == 8) continue;
+#endif
         size_t baseline = fwp_heap.live, live = owner_ledger_live;
-        V seed = fwp_rc_fresh(fwp_record(2, (V[]){99, 5}));
+        V seed = fwp_rc_fresh(fwp_record(WINDOWS_RESULT_WIDTH, (V[]){WINDOWS_RESULT_WIDTH == 2 ? 99 : 5, 5}));
         V xs = 0;
         for (int i = lengths[length]; i > 0; i--) xs = fwp_rc_fresh(fwp_cons((V)(i * 10), xs));
         if (aliases & 1) fwp_rc_dup(seed);
@@ -40,12 +44,19 @@ int main(void) {
             V expected_index = count > 1 ? (V)((uint64_t)bounds[b][0] + (uint64_t)(count - 2 + TAIL_OFFSET)) : 99;
             int expected_value = 5;
             for (int i = 0; i + 1 < count; i++) expected_value += (i + 1) * 10 + 7 + (i + 2) * 10 + 7;
-            if (OBJ(result)->f[0] != expected_index || OBJ(result)->f[1] != (V)expected_value) return 241;
-            /* Two buffers and the boxed export result. Internal fold state
-             * crosses its call boundary as fields, including empty input.
-             * Caller seed/list construction is outside this observation. */
+            if ((WINDOWS_RESULT_WIDTH == 2 && OBJ(result)->f[0] != expected_index)
+                || OBJ(result)->f[WINDOWS_RESULT_WIDTH - 1] != (V)expected_value) return 241;
+            /* One reused buffer plus the boxed export result; disabling reuse
+             * restores a separately allocated pair buffer. Input construction
+             * is outside this observation, including seed/list aliases. */
             size_t added = owner_ledger_allocations - allocations;
+#if WINDOWS_RESULT_WIDTH != 2 || defined(FWP_NO_REUSE)
             size_t expected_allocations = 3;
+            if (windows_input_buffer == windows_pair_buffer) return 249;
+#else
+            size_t expected_allocations = 2;
+            if (windows_input_buffer != windows_pair_buffer) return 249;
+#endif
             if (added != expected_allocations) {
                 fprintf(stderr, "packed input allocations: inputs=%d bounds=%u aliases=%u expected=%zu actual=%zu\n",
                     count, b, aliases, expected_allocations, added);
@@ -63,7 +74,9 @@ int main(void) {
         int folds = mode == 0 || mode == 9 ? pairs : (mode == 5 || mode == 6) ? 2 : 0;
         if (windows_inputs != inputs || windows_pairs != pairs || windows_folds != folds) return 244;
         if (aliases & 1) {
-            if (*fwp_rc_slot(seed) != 1 || OBJ(seed)->f[0] != 99 || OBJ(seed)->f[1] != 5) return 245;
+            if (*fwp_rc_slot(seed) != 1
+                || (WINDOWS_RESULT_WIDTH == 2 && OBJ(seed)->f[0] != 99)
+                || OBJ(seed)->f[WINDOWS_RESULT_WIDTH - 1] != 5) return 245;
             DROP_POINT(seed);
         }
         if (aliases & 2) {

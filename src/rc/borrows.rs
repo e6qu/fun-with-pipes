@@ -299,7 +299,7 @@ pub(super) fn uses_only_borrows(
             let borrowed = match &prog.funcs[*id].body {
                 Body::Prim(symbol) => crate::ownership::primitive(symbol)
                     .is_some_and(|c| c.argument(j) == Argument::Borrow),
-                Body::PackedRecordRangeZip { .. } | Body::PackedRecordPairs { .. } => true,
+                Body::PackedRecordRangeZip { .. } => true,
                 Body::DirectAdScope { callback } => contracts
                     .get(callback)
                     .is_some_and(|ps| ps.contains(&(j as Local))),

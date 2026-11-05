@@ -265,7 +265,8 @@ pub enum Body {
         captures: usize,
         slot: usize,
     },
-    /// Native-only eager map of neighboring records in one borrowed buffer.
+    /// Native-only eager map consuming its fresh, private numeric buffer.
+    /// Equal-width results may reuse it; no input ownership remains at the caller.
     /// `tail_slot` selects the callback input offset by one complete record.
     PackedRecordPairs {
         callback: FuncId,

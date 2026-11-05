@@ -35,6 +35,9 @@ mod wide;
 // library's single-root selection. This is not a runtime execution setting.
 const GRADIENT_CALL_STORAGE: bool = true;
 
+// Same-source reference: keep consuming cleanup, disable only buffer reuse.
+const PACKED_PAIR_REUSE: bool = true;
+
 const RUNTIME: &[&str] = &[
     include_str!("../runtime/fwp_rt.c"),
     include_str!("../runtime/fwp_rt_windows.c"),
@@ -2820,14 +2823,35 @@ impl Gen<'_> {
             );
         }
         let arguments = abi.args_decode_words(self.prog, id, words);
-        let mut out = format!("    /* Borrow overlapping windows; complete pair mapping before the fold. */\n    size_t count = ARR(l0)->len / {input_width};\n    if (count) count--;\n    if (count > (SIZE_MAX - sizeof(fwp_arr)) / ({width} * sizeof(V))) fwp_trap(\"map too large\");\n    V buffer = fwp_rc_fresh(fwp_arr_new(count * {width}));\n    fwp_value_owner owner = {{buffer, fwp_rc_free_arr}};\n    fwp_cleanup cleanup; fwp_value_protect(&owner, &cleanup);\n    for (size_t i = 0; i < count; i++) {{\n        fwp_wr{id} mapped = w{id}({});\n", arguments.join(", "));
+        let reuse = PACKED_PAIR_REUSE && width == input_width;
+        let mut out = format!(
+            "    /* Consume private overlapping windows; complete mapping before the fold. */\n    fwp_value_owner input = {{l0, fwp_rc_free_arr}};\n    fwp_cleanup input_cleanup; fwp_value_protect(&input, &input_cleanup);\n    size_t count = ARR(l0)->len / {input_width};\n    if (count) count--;\n    if (count > (SIZE_MAX - sizeof(fwp_arr)) / ({width} * sizeof(V))) fwp_trap(\"map too large\");\n"
+        );
+        if reuse {
+            let _ = writeln!(out, "    /* Fresh producer, removed aliases and sole consuming call prove exclusivity. */\n    V buffer = l0;\n#ifdef FWP_NO_REUSE\n    buffer = fwp_rc_fresh(fwp_arr_new(count * {width}));\n#endif");
+        } else {
+            let _ = writeln!(
+                out,
+                "    V buffer = fwp_rc_fresh(fwp_arr_new(count * {width}));"
+            );
+        }
+        out.push_str("    fwp_value_owner owner = {buffer, fwp_rc_free_arr};\n    fwp_cleanup cleanup; fwp_value_protect(&owner, &cleanup);\n");
+        if reuse {
+            out.push_str("#ifndef FWP_NO_REUSE\n    input.value = 0;\n#endif\n");
+        }
+        let _ = writeln!(
+            out,
+            "    for (size_t i = 0; i < count; i++) {{\n        fwp_wr{id} mapped = w{id}({});",
+            arguments.join(", ")
+        );
+
         for (field, word) in abi.result_words(self.prog, id, "mapped").iter().enumerate() {
             let _ = writeln!(
                 out,
                 "        ARR(buffer)->d[i * {width} + {field}] = {word};"
             );
         }
-        out.push_str("    }\n    return fwp_value_finish(&owner, &cleanup);\n");
+        let _ = writeln!(out, "    }}\n    ARR(buffer)->len = count * {width};\n    fwp_value_release(&input);\n    V result = fwp_value_finish(&owner, &cleanup);\n    (void)fwp_value_finish(&input, &input_cleanup);\n    return result;");
         out
     }
 

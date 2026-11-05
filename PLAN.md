@@ -34,6 +34,27 @@ Group all four implementations and focused runner checks before final production
 CI. Keep local checks bounded and serial. The [handoff](docs/development-state.md)
 records the next action, source IDs and actual checks.
 
+## Prepared next group: reuse the private pair buffer
+
+[The contract](docs/measurements/packed-pair-storage.md) is frozen before code at
+`3b7954eef411b7b621d09718ae2aad41e72e744e`. The separate `packed-pair-storage`
+branch prepares these related changes while PR #259 finishes verification:
+
+- Transfer the producer buffer into the pair helper; update borrowing, escape
+  analysis and cleanup together.
+- Reuse equal-width numeric storage with the static fresh/sole-use proof.
+  Different widths allocate; preserve the explicit no-reuse test control.
+- Verify both paths, both argument orders, numeric bits, aliases, failure and
+  cancellation with physical-free and deliberately broken-observer controls.
+- After parent delivery, reconcile exact counts and live memory, measure compiler
+  and runtime costs, then pass all final production/docs gates for the group.
+
+For a fresh 129/199 solve, predicted requests are 727 -> 528 and requested bytes
+1,034,366 -> 625,222. These are not observations. Reuse retains the original
+capacity until the fold finishes; check phase peaks rather than inferring lower
+live memory from fewer allocations. Keep one active PR and retain all older
+missed timing goals. No new timing measurement has started.
+
 ## Open performance goals
 
 Allocation reductions do not establish a speedup or lower process RAM. Preserve
