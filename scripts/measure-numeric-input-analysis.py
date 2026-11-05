@@ -20,6 +20,9 @@ ROOT = Path(__file__).resolve().parent.parent
 SCALAR_SPEC = importlib.util.spec_from_file_location('scalar_reference', ROOT / 'scripts/prepare-scalar-constant-reference.py')
 SCALAR_REFERENCE = importlib.util.module_from_spec(SCALAR_SPEC)
 SCALAR_SPEC.loader.exec_module(SCALAR_REFERENCE)
+SELECTION_SPEC = importlib.util.spec_from_file_location('scalar_selection', ROOT / 'scripts/check-scalar-constant-selection.py')
+SCALAR_SELECTION = importlib.util.module_from_spec(SELECTION_SPEC)
+SELECTION_SPEC.loader.exec_module(SCALAR_SELECTION)
 SPEC = importlib.util.spec_from_file_location('costs', ROOT / 'scripts/measure-derivative-forward-costs.py')
 COSTS = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(COSTS)
@@ -398,6 +401,9 @@ def main():
                     kind = 'candidate' if copy.startswith('candidate') else 'reference'
                     digest = sha(cfile)
                     assert generated_hashes.setdefault(kind, digest) == digest, (name, copy)
+                    if (args.comparison == 'scalar-constant' and round_number == -2
+                            and name in ('derivative-33-199', 'derivative-129-199')):
+                        SCALAR_SELECTION.check(cfile.read_text(), 'literal' if kind == 'candidate' else 'cached')
             report['cases'][name]['generatedCHashes'] = generated_hashes
             report['cases'][name]['summary'] = summarize(rows)
             print(name, report['cases'][name]['summary'], flush=True)

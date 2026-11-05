@@ -24,6 +24,9 @@ ROOT = Path(__file__).resolve().parent.parent
 SCALAR_SPEC = importlib.util.spec_from_file_location('scalar_reference', ROOT / 'scripts/prepare-scalar-constant-reference.py')
 SCALAR_REFERENCE = importlib.util.module_from_spec(SCALAR_SPEC)
 SCALAR_SPEC.loader.exec_module(SCALAR_REFERENCE)
+SELECTION_SPEC = importlib.util.spec_from_file_location('scalar_selection', ROOT / 'scripts/check-scalar-constant-selection.py')
+SCALAR_SELECTION = importlib.util.module_from_spec(SELECTION_SPEC)
+SELECTION_SPEC.loader.exec_module(SCALAR_SELECTION)
 PAIR_SPEC = importlib.util.spec_from_file_location('pair_reference', ROOT / 'scripts/prepare-packed-pair-reference.py')
 PAIR_REFERENCE = importlib.util.module_from_spec(PAIR_SPEC)
 PAIR_SPEC.loader.exec_module(PAIR_REFERENCE)
@@ -449,6 +452,8 @@ def main():
             text = code.read_text()
             assert 'FWP_ARC_ONLY' not in text
             assert not re.search(r'^\s*#\s*define\s+FWP_NO_REUSE\b', text, re.M)
+            if args.comparison == 'scalar-constant' and updates > 0:
+                SCALAR_SELECTION.check(text, 'cached' if label.endswith('-reference') else 'literal')
             binary = directory / label
             build([args.cc, *cflags, '-w', code, '-o', binary, '-lm', '-lpthread', '-ldl'])
             actual = run([binary], environment)
@@ -641,6 +646,8 @@ def main():
              'scripts/prepare-matched-option-reference.py', 'scripts/prepare-packed-input-reference.py',
              'scripts/prepare-packed-pair-reference.py',
              'scripts/prepare-scalar-constant-reference.py', 'src/cgen/constant_values.rs',
+             'scripts/check-scalar-constant-selection.py', 'scripts/check-packed-pair-selection.py',
+             'scripts/inspect-iteration-storage.py',
              'scripts/prepare-gradient-call-reference.py', 'src/cgen/scoped_calls.rs', 'src/cgen/fold_fields.rs',
              'scripts/prepare-owned-numeric-reference.py', 'src/cgen/owned_numeric.rs', 'src/rc.rs', 'src/rc/borrows.rs',
              'src/mono.rs', 'src/opt/scoped.rs', 'src/cgen/packed_inputs.rs', 'runtime/fwp_rt.c', 'runtime/fwp_rt_task.c',

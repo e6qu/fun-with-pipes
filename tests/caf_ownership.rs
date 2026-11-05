@@ -625,7 +625,7 @@ fn exact_scalar_aliases_preserve_bits_without_lazy_cache_reads() {
     }
     fwp::ir::check_locals(&program).unwrap();
     let mut interpreter = fwp::interp::Interp::new(&program, Box::new(Vec::new())).unwrap();
-    let Value::Record(values) = interpreter.call_root(0, vec![]).unwrap() else {
+    let Value::Record(ref values) = interpreter.call_root(0, vec![]).unwrap() else {
         panic!("numeric record")
     };
     for (value, (_, expected, _)) in values.iter().zip(&scalars) {
