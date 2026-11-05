@@ -25,17 +25,20 @@ fn numeric_type(program: &Program, ty: &MT, budget: &mut usize) -> bool {
 }
 
 pub(super) fn scalar_push(function: &Func) -> bool {
-    let (parameters, result) = function.ty.params(function.arity as usize);
-    matches!(&function.body, Body::Prim(symbol) if symbol == "ad.push")
-        && function.arity == 4
-        && parameters
-            == vec![
-                &MT::con("std::I64"),
-                &MT::con("std::F64"),
-                &MT::con("std::I64"),
-                &MT::con("std::F64"),
-            ]
-        && result == &MT::con("std::I64")
+    if function.arity != 4 || !matches!(&function.body, Body::Prim(symbol) if symbol == "ad.push") {
+        return false;
+    }
+    let mut ty = &function.ty;
+    for expected in ["std::I64", "std::F64", "std::I64", "std::F64"] {
+        let MT::Fun(parameter, result) = ty else {
+            return false;
+        };
+        if !matches!(&**parameter, MT::Con(name, args) if name == expected && args.is_empty()) {
+            return false;
+        }
+        ty = result;
+    }
+    matches!(ty, MT::Con(name, args) if name == "std::I64" && args.is_empty())
 }
 
 fn float_primitive(function: &Func) -> bool {

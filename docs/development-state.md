@@ -5,8 +5,8 @@ controls on the three focused production hosts, then complete the frozen compari
 Do not run the final matrix until this group and its measurement tools are ready.
 
 Branch: `recording-work-review`, based on verified merge `2e6e09f5`.
-Worktree: `.worktrees/scalar-constant-lowering`. The implementation and measurement
-tools are being grouped into one draft PR.
+Worktree: `.worktrees/scalar-constant-lowering`. Active draft:
+[PR #262](https://github.com/e6qu/fun-with-pipes/pull/262).
 The [contract](measurements/recording-lookups.md) was committed at `bfddc31e`
 before implementation. It preserves parent/capacity checks and excludes any
 worker that can change tape lifetime or suspend through task/service entry ticks.
@@ -20,16 +20,21 @@ worker that can change tape lifetime or suspend through task/service entry ticks
 | 3 | Complete | Same-source comparison and limits frozen at `bfddc31e`. |
 | 4 | In progress | Implemented bounded selection and explicit local lookup state; native controls, focused CI and measurement integration still require verification. |
 
-Local `python3 scripts/local-guard.py cargo fmt --all` passed (1.00 CPU seconds,
-1.81 elapsed). No local build or native suite has run. New controls exercise both
-lookup paths, invalid/expired/mixed IDs, capacity growth, retirement/reuse,
-weight bits, gradients, unwind and deliberately broken validation observers.
-These are implemented tests, not passing evidence yet.
+The first focused run `42121618183` was cancelled before any job started.
+Its replacement `42123050888`, controls `42123056112` and docs `42123051265`
+were still queued without assigned runners at 22:39 UTC on November 5.
+They use `895f766c2f78e460ce05461920d837d52f4fe102`. A final signature-check
+cleanup removes temporary compiler vectors/type strings; refresh focused checks
+for that source before measurements. Keep the controls run: its scripts are unchanged.
 
-Focused run `42121618183` at `330612d9` remained queued without starting a job.
-The next push adds real-program selection/counter checks and two proof-boundary
-unit tests; replace that queued run with one run of the complete focused batch.
-Then dispatch `storage-measurement-controls` and keep monitoring every job.
+Local runtime-only Clang controls passed 20 cases: O1/O2, workspace reuse 0/1,
+ordinary and cached paths, and three deliberately broken observers (expected
+codes 61/62/63). The guard recorded 3.01 CPU seconds and 6.35 elapsed.
+Command: `python3 scripts/local-guard.py python3 /tmp/fwp-recording-runtime-check.py`.
+This combined the retained parent C with the current runtime and a handwritten
+worker. It checks the runtime/probe, not Rust code generation or GCC support.
+Scratch sources/results: `../gradient-work/recording-runtime-control/`.
+The compiler/native integration test remains required on all focused hosts.
 
 The new `recording-lookup-{census,analysis,time}` suites use the existing production
 measurement jobs. Census must precede timing: it checks exact parent/capacity/node
@@ -45,7 +50,9 @@ control: 2.51 CPU seconds, 5.04 elapsed). The archive control has four missing-f
 errors because sparse checkout omits historical `array-lists-*.tar.xz` files;
 run its full archive checks on CI, whose checkout includes them. No test was
 removed or weakened. Actionlint passed for both changed evidence workflows.
-Rust formatting passed again (0.88 CPU seconds, 1.69 elapsed).
+The changed saved-reference audit passes separately (1 test, 0.25 seconds).
+Staged doc links pass (103 links, 0.26 seconds). Rust formatting passes after
+the signature cleanup (0.98 CPU seconds, 1.89 elapsed).
 
 ## Completed group
 
