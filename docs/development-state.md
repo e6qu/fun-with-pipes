@@ -11,8 +11,8 @@ frames first. Do not request new runtime timing until stack/count checks pass.
 
 | Step | Status | Work |
 |---|---|---|
-| 1 | Verified, unchanged | The private helper consumes input; borrowing/escape contracts agree. |
-| 2 | Repair under test | Reuse with one protected owner; keep two owners only when allocating output. |
+| 1 | Verified | The unchanged private helper consumes input; borrowing/escape contracts agree. |
+| 2 | In progress | Reuse with one protected owner; keep two owners only when allocating output. |
 | 3 | In progress | Recheck aliases, both layouts, bits, traps/cancellation and physical frees on three hosts. |
 | 4 | In progress | Original counts/compiler limits pass; repair the observed stack excess before new timing. |
 | 5 | Pending | Retain evidence, pass nine final production jobs plus docs, audit and squash merge. |
@@ -65,6 +65,14 @@ AMD64 session 2 never measured: original run and replacements 42008084704,
 host is EPYC 7763. All host reports/logs are retained in the runtime evidence;
 stop requesting the old candidate. Never repeat unchanged timing for a pass.
 
+## Documentation repair in progress
+
+Docs 42011765327 rejected nonstandard status labels in the handoff. Both offending
+rows now use the existing vocabulary (Verified/In progress); their explanations
+remain in the work column. The two completed audit-control scripts passed; later
+checks had not run. Full failed log: [status-label repair](measurements/packed-pair-docs-status-2026-11-05.log.gz).
+No validation rule was relaxed. Await the new-head docs check.
+
 ## Repairs already verified
 
 - Full-history/tag checkout fixes the five historical-source control errors:
@@ -78,7 +86,7 @@ stop requesting the old candidate. Never repeat unchanged timing for a pass.
 ## Local resource limits
 
 Free disk fell below 1 GiB; removing 399,065,683 bytes of verified duplicate
-original downloads recovered about 1.27 GiB. Keep local native checks/builds and
+original downloads recovered about 1.27 GiB. Latest free space is about 17 GiB. Keep local native checks/builds and
 large original-artifact downloads stopped below the 64 GiB reserve. Both task
 build directories are empty. Other projects remain untouched; the user was asked
 to pause other disk-heavy work/free space. Small audited retention bundles were
