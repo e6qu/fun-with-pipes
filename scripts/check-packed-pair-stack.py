@@ -47,6 +47,7 @@ def audit(files, source, machine, compiler_hashes):
             assert files[name + '.fwp'].decode() == PEERS.BASELINE.repeat_source(
                 PEERS.AD.program(n, u + 1, form == 'history'), 'fwp', solves)
             maxima = {}
+            dynamic = {}
             for kind in ('candidate', 'reference'):
                 label = name + '-' + kind
                 emit = commands[label + '-emit']['command']
@@ -71,15 +72,18 @@ def audit(files, source, machine, compiler_hashes):
                 entries = []
                 for line in files[label + '.su'].decode().splitlines():
                     location, size, qualifier = line.split('\t')
-                    assert int(size) >= 0 and qualifier in ('static', 'dynamic,bounded'), line
+                    assert int(size) >= 0 and qualifier in ('static', 'dynamic,bounded', 'dynamic'), line
                     entries.append(dict(location=location, bytes=int(size), qualifier=qualifier))
                 assert entries
                 maximum = max(row['bytes'] for row in entries)
                 assert report['cases'][name][kind] == dict(maximumBytes=maximum, entries=entries)
                 maxima[kind] = maximum
+                dynamic[kind] = [row for row in entries if row['qualifier'] == 'dynamic']
             assert files[name + '-candidate-run.stdout'] == files[name + '-reference-run.stdout']
             assert maxima['candidate'] <= maxima['reference'] + 128, (name, maxima)
-            summaries[name] = maxima
+            # A plain "dynamic" row reports only its known portion. Preserve
+            # these rows separately; this comparison is not a total stack bound.
+            summaries[name] = dict(reportedFrameBytes=maxima, dynamicEntries=dynamic)
     return summaries
 
 

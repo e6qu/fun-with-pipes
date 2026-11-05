@@ -1,7 +1,9 @@
 # Current work
 
-**Next:** audit completed census `42015900941` (including every saved stack
-report), then complete compiler costs `42017186500` before new runtime timing.
+**Next:** publish the saved-stack auditor correction and audit census
+`42015900941` on both hosts; complete compiler costs `42017186500` before timing.
+Audit 42017767534 rejected a valid GCC dynamic entry, not a changed program.
+Its full log/receipt and the precise metric are in the cleanup-checks evidence.
 Both use frozen source `373955e82a74d8de2eb12ff2b81f6cc74c089e5e`, tag
 `roadmap/packed-pair-cleanup-census-2026-11-05`. Both census hosts pass; the
 previously failing AMD64 33/199 current frame is now 720 bytes, equal to reference
@@ -64,7 +66,7 @@ committed. Large generated archives remain in their digest-identified artifacts.
 
 The first reuse implementation protected one allocation twice, then cleared one
 owner. The repair keeps the original owner through mapping and returns it directly.
-All 12 AMD64 frame maxima now equal their allocating references. Both
+All 12 reported frame maxima on each architecture equal their allocating references. Both
 architecture stack gates pass; the saved-report audit must verify them independently. The new preflight compiles the same
 six complete workloads, both forms and both compilers at GCC O2; it records all
 frame-limit failures before allocation or timing work. Source/C/images/output and

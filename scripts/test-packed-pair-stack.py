@@ -57,7 +57,19 @@ class StackEvidence(unittest.TestCase):
     def test_complete_evidence_and_exact_boundary(self):
         result = self.check(dict(self.files), copy.deepcopy(self.report))
         self.assertEqual(len(result), 12)
-        self.assertEqual(result['33-199-current'], dict(candidate=848, reference=720))
+        self.assertEqual(result['33-199-current']['reportedFrameBytes'], dict(candidate=848, reference=720))
+
+    def test_dynamic_known_portion_is_reported_without_claiming_a_bound(self):
+        files = dict(self.files)
+        report = copy.deepcopy(self.report)
+        for kind in ('candidate', 'reference'):
+            files['3-0-current-' + kind + '.su'] += b'case.c:2:1:fwp_apply\t128\tdynamic\n'
+            report['cases']['3-0-current'][kind]['entries'].append(
+                dict(location='case.c:2:1:fwp_apply', bytes=128, qualifier='dynamic'))
+        result = self.check(files, report)
+        self.assertEqual(result['3-0-current']['dynamicEntries'], {
+            kind: [dict(location='case.c:2:1:fwp_apply', bytes=128, qualifier='dynamic')]
+            for kind in ('candidate', 'reference')})
 
     def test_invalid_reports_are_rejected(self):
         for field, value in [('source', 'd' * 40), ('complete', False), ('failures', ['failure']),
@@ -86,7 +98,7 @@ class StackEvidence(unittest.TestCase):
                 self.check(dict(self.files), report)
 
     def test_saved_outputs_images_and_frames_are_checked(self):
-        for suffix, data in [('.su', b'case.c:1:1:main\t848\tdynamic\n'),
+        for suffix, data in [('.su', b'case.c:1:1:main\t848\tunknown\n'),
                              ('', b'not an executable'), ('-run.stdout', b'[]\n'),
                              ('-run.stderr', b'unexpected diagnostic'), ('.c', b'')]:
             files = dict(self.files)

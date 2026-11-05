@@ -226,6 +226,7 @@ jobs:
                   'repos/' + os.environ['GITHUB_REPOSITORY'] + '/' + path])
           jobs = json.loads(api('actions/runs/' + run + '/jobs?per_page=100'))['jobs']
           artifacts = json.loads(api('actions/runs/' + run + '/artifacts?per_page=100'))['artifacts']
+          audit_failures = []
           for machine, runner, arch in (('aarch64', 'ubuntu-24.04-arm', 'ARM64'), ('x86_64', 'ubuntu-latest', 'X64')):
               folder = root / machine
               folder.mkdir()
@@ -239,11 +240,14 @@ jobs:
               with archive.open('wb') as output:
                   subprocess.run(['gh', 'api', '--allow-escape-sequences', 'repos/' + os.environ['GITHUB_REPOSITORY'] +
                       '/actions/artifacts/' + str(artifact['id']) + '/zip'], stdout=output, check=True)
-              subprocess.run(['python3', 'scripts/audit-gradient-call-census.py',
+              result = subprocess.run(['python3', 'scripts/audit-gradient-call-census.py',
                   '--comparison', comparison, '--input', str(archive), '--artifact', str(folder / 'artifact.json'),
                   '--job', str(folder / 'job.json'), '--job-log', str(folder / 'job.log.gz'),
                   '--recorded-checkout', str(recorded), '--source', source, '--run', run,
-                  '--machine', machine, '--output', str(folder / 'audit')], check=True)
+                  '--machine', machine, '--output', str(folder / 'audit')], check=False)
+              if result.returncode != 0:
+                  audit_failures.append(machine)
+          assert not audit_failures, audit_failures
           PYCODE
       - name: Preserve original observations and corrected audits
         if: always()

@@ -43,3 +43,23 @@ frame decisions. Do not infer a cause from disassembly or relax the stack limit.
 5. Retain audits and pass all nine final production jobs plus documentation.
 
 All original proof, numerical, cleanup and measurement limits remain unchanged.
+
+## What the stack comparison establishes
+
+GCC's `.su` report lists a byte count and a qualifier for each function:
+
+- `static`: the frame has a fixed size.
+- `dynamic,bounded`: GCC can bound its variable-size storage.
+- `dynamic`: the byte count covers only the known portion.
+
+The frozen rule compares the largest reported byte count against reference +128,
+retaining every entry. It does **not** bound total call-chain stack use or the
+variable portion of a `dynamic` entry. The existing function dispatcher uses an
+argument array sized by function arity; reuse does not change that source.
+The saved-data audit lists dynamic entries explicitly rather than treating their
+reported numbers as total frame sizes. See [GCC's stack report documentation](https://gcc.gnu.org/onlinedocs/gnat_ugn/Static-Stack-Usage-Analysis.html).
+
+Run 42015900941 passes both architectures at 373955e8: all 12 largest reported
+counts equal their references. The formerly failing AMD64 33/199 current case
+is 720 bytes rather than 928. Full saved-data audit and timing remain separate
+requirements.

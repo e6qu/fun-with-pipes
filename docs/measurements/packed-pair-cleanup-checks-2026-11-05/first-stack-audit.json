@@ -1,0 +1,12 @@
+{
+  "run": 42017767534,
+  "job": 127212496886,
+  "auditorSource": "34e75c2680c94d70d9310c1c3c045cfe3c7dfb68",
+  "measuredSource": "373955e82a74d8de2eb12ff2b81f6cc74c089e5e",
+  "artifact": 13410316303,
+  "bytes": 45030,
+  "sha256": "b1c59d352ba78c9906a1417d7244d2ca62d2086e1cc7beed8a42a1b54d1d1903",
+  "failure": "New auditor rejected a valid dynamic GCC stack entry; ARM64 audit stopped at fwp_apply, AMD64 not reached",
+  "controls": "8 budget and 6 stack tests passed",
+  "repair": "Retain all recognized GCC qualifiers and list dynamic entries separately; complete both architecture audits even if one fails"
+}

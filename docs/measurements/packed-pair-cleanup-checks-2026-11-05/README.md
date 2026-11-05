@@ -38,3 +38,20 @@ verifies all 25 targets, 822 native images and 838 probe records per host, with
 no unexpected diagnostics. [Receipt](corrected-artifact-audit.json) and adjacent
 compressed full log retain the result. Complete-program stack/allocation run
 42015900941 also passes both architectures; its saved-data audit is next.
+
+## Saved-stack audit repair
+
+[Audit 42017767534](https://github.com/e6qu/fun-with-pipes/actions/runs/42017767534)
+passed its eight budget and six initial stack controls, then rejected a valid
+GCC `dynamic` entry for the existing `fwp_apply` dispatcher on ARM64. Its
+argument array has a runtime length (`runtime/fwp_rt.c`); GCC reports the known
+frame portion separately from that array. The new auditor incorrectly required
+every entry to have a statically bounded total. That was never the frozen
++128-byte comparison rule. AMD64 had not yet been audited.
+
+The correction accepts GCC's three documented qualifier combinations, keeps
+all entries and lists unbounded dynamic entries separately in the receipt.
+It still recomputes every reported byte count and the unchanged +128-byte
+limit. A new control verifies the distinction; malformed qualifiers still fail.
+Both architecture audits now run even if one fails. No native measurement is
+repeated. [Failure receipt](first-stack-audit.json) and adjacent full log remain.
