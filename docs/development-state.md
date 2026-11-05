@@ -136,7 +136,7 @@ run below the disk reserve; the workflow runs their controls before collection.
 
 Runner audit request `41992495791`, job `127127789847`, source
 `f545f5d30f1d698fa4c0e6293e6b2767635aad82`: explicit `mac-arm-ownership` selection
-for parent run `41986867960`, attempt 1. It is queued; controls/audit not yet run.
+for parent run `41986867960`, attempt 1. It was canceled while still queued after an ARM64 replacement was dispatched.
 Once all parent gates finish, request `audit_host=all` and require its full audit
 before merge. Native parent gates are still on e3a2e1d3; focused next-batch
 checks stay on 6e02c048. f545f5d3 changes only audit tooling/workflows/handoff.
@@ -147,4 +147,17 @@ and `production_attempt=1`. It checks all three hosts, every target summary,
 artifact source/digest and native image architecture, retaining all observations.
 Audit controls run first on the runner; local checks remain paused below reserve.
 Production log auditing uses ARM64 runners too; this does not replace any native
-platform test. The older AMD64 audit request has not started.
+platform test. The older AMD64 audit request was canceled without starting.
+
+Audit requests on `ed5e89867ae3b8c1ca36a3a1e7cd695228810e86`: focused
+`41997987727` / job `127145820337`; production macOS ownership `41997992690` /
+job `127145834232`. Both are queued. The next census implementation is being
+prepared with exact repeated/fresh counts and phase attribution controls; no
+measurements have started. Local controls remain unrun below the disk reserve.
+
+Prepared `packed-pair-census` now covers repeated solves and independent fresh
+O1/O2 phase observations. `packed-pair-analysis` keeps the seven compiler inputs
+and 48-command schedule. New `storage-measurement-controls` runs the reference,
+count, phase, timing-budget and evidence-rejection tests without a native compiler
+build. These additions are not yet runner-verified; dispatch the small controls
+batch first. Native measurements still require parent delivery and focused audit.

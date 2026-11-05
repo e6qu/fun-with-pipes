@@ -137,5 +137,47 @@ class GradientCallBudgets(unittest.TestCase):
             COSTS.comparison_failures(changed, baseline, 'gradient-call')
 
 
+class PackedPairBudgets(unittest.TestCase):
+    def example(self, dimensions, updates, byte_saving):
+        report, baseline, name = GradientCallBudgets().example(
+            dimensions, 0, (0, 0, 0), (0, 0))
+        old_name = name
+        name = f'{dimensions}-{updates}-current-O2'
+        report['cases'][name] = report['cases'].pop(old_name)
+        cases = baseline['hosts']['aarch64']['cases']
+        cases[name] = cases.pop(old_name)
+        for mode in ('0', '1'):
+            old = cases[name]['observations'][mode]
+            for row in (old['totals']['managed'], old['phases']['forwardWithRecording']):
+                row['requests'] += updates
+                row['requestedBytes'] += byte_saving
+        return report, baseline, name
+
+    def test_six_literal_predictions(self):
+        for dimensions, updates, byte_saving in (
+            (3, 0, 0), (3, 1, 40), (3, 199, 7960), (3, 1999, 79960),
+            (33, 199, 103480), (129, 199, 409144),
+        ):
+            report, baseline, _ = self.example(dimensions, updates, byte_saving)
+            self.assertEqual(COSTS.comparison_failures(report, baseline, 'packed-pair'), [])
+
+    def test_wrong_totals_phase_and_retains_reject(self):
+        report, baseline, name = self.example(129, 199, 409144)
+        for mode in ('0', '1'):
+            for key in ('requests', 'requestedBytes', 'retains'):
+                for delta in (-1, 1):
+                    changed = copy.deepcopy(report)
+                    changed['cases'][name][mode]['totals']['managed'][key] += delta
+                    self.assertTrue(COSTS.comparison_failures(changed, baseline, 'packed-pair'))
+            changed = copy.deepcopy(report)
+            phases = changed['cases'][name][mode]['phases']
+            phases['outside']['requests'] += 1
+            phases['forwardWithRecording']['requests'] -= 1
+            self.assertEqual(len(COSTS.comparison_failures(changed, baseline, 'packed-pair')), 2)
+            changed = copy.deepcopy(report)
+            changed['cases'][name][mode]['phases']['forwardWithRecording']['operations']['dup']['effective'] += 1
+            self.assertTrue(COSTS.comparison_failures(changed, baseline, 'packed-pair'))
+
+
 if __name__ == '__main__':
     unittest.main()

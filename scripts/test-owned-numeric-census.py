@@ -61,6 +61,26 @@ class Census(unittest.TestCase):
         self.assertEqual(CENSUS.compare(self.current, self.current, 3, 0, 32768, 'gradient-call'),
                          dict(requests=0, requestedBytes=0, retains=0))
 
+    def test_pair_reuse_repeated_counts_and_unchanged_retains(self):
+        old = copy.deepcopy(self.current)
+        expected = dict(requests=1592, requestedBytes=3273152, retains=0)
+        for key, saving in expected.items():
+            old['managed'][key] += saving
+        self.assertEqual(CENSUS.compare(self.current, old, 129, 199, 8, 'packed-pair'), expected)
+        for key in expected:
+            for delta in (-1, 1):
+                changed = copy.deepcopy(self.current)
+                changed['managed'][key] += delta
+                with self.subTest(key=key, delta=delta), self.assertRaises(AssertionError):
+                    CENSUS.compare(changed, old, 129, 199, 8, 'packed-pair')
+        for key in ('peakChargedBytes', 'finalChargedBytes'):
+            changed = copy.deepcopy(self.current)
+            changed['managed'][key] += 1
+            with self.assertRaises(AssertionError):
+                CENSUS.compare(changed, old, 129, 199, 8, 'packed-pair')
+        self.assertEqual(CENSUS.compare(self.current, self.current, 3, 0, 32768, 'packed-pair'),
+                         dict(requests=0, requestedBytes=0, retains=0))
+
     def test_zero_updates_require_identical_storage(self):
         self.assertEqual(CENSUS.compare(self.current, self.current, 3, 0, 32768, 'owned-numeric'),
                          dict(requests=0, requestedBytes=0))
