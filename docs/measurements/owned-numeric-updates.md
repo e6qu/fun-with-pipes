@@ -4,7 +4,7 @@
 [whole-solve allocation census](owned-numeric-census-2026-11-05/README.md) pass.
 [Compiler-cost limits also pass](owned-numeric-analysis-2026-11-05/README.md).
 [Runtime results are audited](owned-numeric-time-2026-11-05/README.md), with four
-AMD64 speed targets open. Final production acceptance remains.**
+AMD64 speed targets open. [Production delivery is verified](../roadmap-history.md#consumed-numeric-storage-pr-258).**
 Contract frozen before implementation at `1c5e6a66`, immutable tag
 `roadmap/owned-numeric-updates-protocol-2026-11-04`.
 Starting source: `519fc96670b0db90ebe0f68e1263ccf85d2cf4f1`.

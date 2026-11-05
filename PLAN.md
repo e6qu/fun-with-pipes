@@ -5,66 +5,33 @@ and useful inference. Prefer direct values, moves and borrows; use automatic
 reference counting (ARC) only for necessary sharing. Tracing garbage collection
 has been removed. JIT compilation and backward compatibility are excluded.
 
-## Current work: reuse consumed numeric storage
+## Current work: remove storage around gradient calls
 
-A gradient update scales a derivative array, then subtracts it from coordinates:
+[PR #258 is verified delivery](docs/roadmap-history.md#consumed-numeric-storage-pr-258):
+private gradient arrays and coordinate lists reuse exclusive storage. All nine
+production jobs and docs pass. Four AMD64 speed targets remain open below.
 
-```text
-coordinates [10, 20, 30], gradient [2, 4, 6], step size 0.5
-scale the gradient → [1, 2, 3]
-subtract it        → [9, 18, 27]
-```
-
-Reuse the gradient array when it has one owner; reuse the exclusively owned
-prefix of the coordinate list after all callbacks finish. Shared arrays, views
-and list suffixes keep their original values. “Consume” means transferring an
-owner, not assuming there are no aliases. Both operations stay separate eager
-stages. No new source syntax or public borrowing-contract change is required.
-
-The [contract](docs/measurements/owned-numeric-updates.md) fixes last-use selection,
-returned owners, constructor fields, failure cleanup and measurement limits.
-[The shared-tail example](docs/measurements/remaining-gradient-storage.md)
-explains why a node beneath a shared ancestor cannot be overwritten.
+The next group removes temporary storage around the gradient calculation:
 
 | Step | Work | Completion requirement |
 |---|---|---|
-| 1 | Freeze ownership and measurement rules | Define transferred owners, runtime uniqueness, aliases/views, callback order, exclusions and same-source reference before code. |
-| 2 | Verify both consuming operations | GCC ARM64/AMD64 and Clang ARM64; actual calls in both complete gradient forms; O1/O2, float bits, both zip slots, views/shared tails, traps, cancellation, allocation failure, physical frees and deliberately broken controls. |
-| 3 | Measure complete programs | First verify exact allocation predictions for all six cases, both result forms and workspace settings. Then measure compiler time/RSS and two timing sessions per architecture against the frozen limits. Preserve every outcome. |
-| 4 | Deliver one grouped PR | Bundle code, regression repairs, docs and evidence. Pass nine exact-head production jobs plus docs, audit all full/target logs, squash and verify tree/message. |
+| 1 | Borrow the scoped worker's read-only input | Prove caller ownership, direct calling convention, no escape and cleanup on return/trap/cancellation. |
+| 2 | Pass numeric fold state as fields | Preserve seed evaluation, empty inputs, numeric bits and callback order; eliminate only proved constant cached records. |
+| 3 | Seed one backward root directly | Scalar and owned-weight peers; explicit seed, all float representations, nested derivatives and unchanged root validation. |
+| 4 | Reuse the consumed derivative array as coordinate scratch | Exact 64-bit layout, exclusivity, both zip positions, shared/view exclusions and separate scratch cleanup. |
+| 5 | Verify and deliver the complete group | Selection and failure controls on three focused hosts, exact counts, compiler/runtime measurements, then nine exact-head production jobs plus docs and audited squash merge. |
 
-Step 1 is frozen at `1c5e6a66`; the returned-owner/constructor-field extension at
-`c99451ec` precedes its implementation. Step 2's complete-program selection and
-new ownership controls [pass on all three hosts](docs/measurements/owned-numeric-checks-2026-11-05/README.md):
-285 units, 103 integrations, real-program selection and formatting. The
-[earlier failures and repairs](docs/measurements/owned-numeric-selection-2026-11-04/README.md)
-remain explicit. Step 3's [allocation census passes on both architectures](docs/measurements/owned-numeric-census-2026-11-05/README.md)
-from frozen source `07541ff9`; all six predicted reductions and cleanup checks
-match. [Compiler-cost limits pass](docs/measurements/owned-numeric-analysis-2026-11-05/README.md)
-on both architectures. [Runtime evidence is fully audited](docs/measurements/owned-numeric-time-2026-11-05/README.md):
-long solves take 3.36–10.50% less time, with four AMD64 5% targets still missed.
-All count, cleanup, copy-control and regression measurement limits pass.
-Production found an [outdated identity-array allocation assertion](docs/measurements/owned-numeric-ci-repair-2026-11-05/README.md);
-its repair adds the missed target to focused checks. All three focused hosts now
-pass 110 integrations across 19 targets, with complete log/control audits.
-Complete step 4 on the final head; the measured compiler/runtime sources are unchanged.
-The [handoff](docs/development-state.md) identifies the current source and runs.
+The [contract](docs/measurements/gradient-call-storage.md) fixes the proof and
+measurement boundaries before implementation. [Current allocation sites](docs/measurements/gradient-storage-2026-11-05/README.md)
+show eight forward requests per update, one scratch request and two retains.
+The four changes target seven fewer requests and two fewer retains per update,
+plus one cached record per process. These are predictions, not achieved savings.
+For one fresh 129-coordinate / 199-update solve, the target is 2,121 → 727 requests
+and 1,265,230 → 1,034,366 requested bytes. This does not predict speed or process RAM.
 
-For N coordinates and U updates, predict U fewer array requests and
-N × max(U−1, 0) fewer list-cell requests per solve. The first coordinate list is
-shared with the input, so it must be copied. At 129 coordinates / 199 updates,
-the census confirms **25,741 fewer requests and 819,968 fewer requested bytes**
-per solve. ARC retain counts and raw derivative storage are unchanged.
-Any unexplained difference stops measurement review before timing. Compiler
-time/RSS may grow at most 5%; identical-copy variation must stay within 2%.
-Long solves require at least 5% less time; small cases allow at most 2% more.
-Verified reductions may ship with timing goals explicitly open under the
-accepted policy; failed limits remain failed.
-
-[PR #257 is verified delivery](docs/roadmap-history.md#packed-derivative-inputs-pr-257):
-private derivative inputs use one buffer. Its measured reductions and three
-open AMD64 timing limits retain their own reference below. The new comparison
-will not retroactively settle them.
+Group all four implementations and focused runner checks before final production
+CI. Keep local checks bounded and serial. The [handoff](docs/development-state.md)
+records the next action, source IDs and actual checks.
 
 ## Open performance goals
 
@@ -78,8 +45,8 @@ history can be optimized away). Copy controls compare identical executable bytes
 
 | Goal and evidence | What remains; next action |
 |---|---|
-| [Consumed numeric storage](docs/measurements/owned-numeric-time-2026-11-05/README.md) | Four AMD64 5% targets remain open: session 1 3/199 current; session 2 3/199 current/history and 3/1999 current. Observed gains are 3.36–4.76%; copy controls pass. Finish production delivery, then use the [current allocation-site report](docs/measurements/gradient-storage-2026-11-05/README.md) to freeze one grouped proof for scoped input borrowing, fold fields, single-root seeding and coordinate scratch. Eight forward requests per update and two retains are measured; their removal is not yet implemented. |
-| [Packed derivative inputs](docs/measurements/packed-input-time-2026-11-04/README.md) | AMD64 session 1 copy variation is 2.3628% / 2.7833% on 3/199 and 3/1999; session 2 slows 3/1 current by 2.3095%, against 2% limits. [Saved samples](docs/measurements/packed-input-time-2026-11-04/amd64-sample-review.md) establish no cause. Verify the consumed-storage group next; retain these separate misses. |
+| [Consumed numeric storage](docs/measurements/owned-numeric-time-2026-11-05/README.md) | Four AMD64 5% targets remain open: session 1 3/199 current; session 2 3/199 current/history and 3/1999 current. Observed gains are 3.36–4.76%; copy controls pass. Use the [current allocation-site report](docs/measurements/gradient-storage-2026-11-05/README.md) to freeze one grouped proof for scoped input borrowing, fold fields, single-root seeding and coordinate scratch. Eight forward requests per update and two retains are measured; their removal is not yet implemented. |
+| [Packed derivative inputs](docs/measurements/packed-input-time-2026-11-04/README.md) | AMD64 session 1 copy variation is 2.3628% / 2.7833% on 3/199 and 3/1999; session 2 slows 3/1 current by 2.3095%, against 2% limits. [Saved samples](docs/measurements/packed-input-time-2026-11-04/amd64-sample-review.md) establish no cause. Consumed-storage delivery is verified; retain these separate misses. |
 | [Final-iteration compiler cost](docs/measurements/final-iteration-analysis-2026-11-04/README.md) | AMD64 field-owner transfer copy variation is 2.043% against 2%; other observed limits pass. Inspect retained sample/setup progression before proposing a new measurement. |
 | [Final-iteration runtime](docs/measurements/final-iteration-time-2026-11-04/README.md) | Five history cases miss 5%: ARM64 3/199 and 33/199 in both sessions, plus AMD64 session 1 33/199. AMD64 session 2 slows 3/1 history by 2.79%. Compare small-case source and saved sample progression before selecting a repair. |
 | [Identity array maps](docs/measurements/scalar-array-identity-time-2026-11-03/README.md) | All 32 required 5% gains remain unmet; copy controls and small-case regression limits pass. Use remaining allocation sites and lifetime proofs to choose the next reduction. |

@@ -6,6 +6,31 @@ and complete platform validation are different events. Measurements retain their
 original source and settings; old numbers are not measurements of current main.
 The linked PRs, runs and data records supply the detailed evidence.
 
+## Consumed numeric storage (PR #258)
+
+[PR #258](https://github.com/e6qu/fun-with-pipes/pull/258) merged as
+`68115090b161f198e11fb625946259f65f781580`. Its tree equals tested `35745c0b`.
+All nine production jobs and documentation pass; every full and target log is
+audited, including 155 completed targets on each Windows architecture.
+[Final gates and retained logs](measurements/owned-numeric-checks-2026-11-05/platforms/final-gates.json)
+record the verified tree and one-line squash message with no body or trailers.
+Redundant same-tree push runs `41952053890` and `41952053874` were cancelled.
+
+Private numeric maps now reuse exclusive arrays. Coordinate updates reuse the
+exclusive list prefix after callbacks finish; shared suffixes and views preserve
+aliases. [The repaired identity-array test](measurements/owned-numeric-ci-repair-2026-11-05/README.md)
+checks this independent ownership path instead of requiring a needless allocation.
+All six old failed jobs had that same assertion; full/target audits found no other
+failure. Expanded focused checks pass on both GCC architectures and Clang ARM64.
+
+The [census](measurements/owned-numeric-census-2026-11-05/README.md) confirms 25,741
+fewer requests and 819,968 fewer requested bytes per 129-coordinate/199-update
+solve. Retain counts and raw tape storage are unchanged. [Compiler-cost limits](measurements/owned-numeric-analysis-2026-11-05/README.md)
+pass. [Long solves](measurements/owned-numeric-time-2026-11-05/README.md) take
+3.36–10.50% less time; four AMD64 5% targets remain missed. Process RAM does not
+consistently fall. C/Rust manual gradients do different work; their ratios do not
+isolate language overhead. No unchanged timing was repeated.
+
 ## Packed derivative inputs (PR #257)
 
 [PR #257](https://github.com/e6qu/fun-with-pipes/pull/257) merged November 4 as
