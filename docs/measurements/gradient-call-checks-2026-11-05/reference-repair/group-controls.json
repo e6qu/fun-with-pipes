@@ -1,0 +1,76 @@
+{
+  "workflowBlockSha256": "5b7c85a35d394f282c70010c255cd86a50db321c19f1a31f94a3f699511e118b",
+  "cases": [
+    {
+      "failedScript": "",
+      "exitCode": 0,
+      "all13Executed": true
+    },
+    {
+      "failedScript": "scripts/test-scalar-map-zip-reference.py",
+      "exitCode": 1,
+      "all13Executed": true
+    },
+    {
+      "failedScript": "scripts/test-range-zip-reference.py",
+      "exitCode": 1,
+      "all13Executed": true
+    },
+    {
+      "failedScript": "scripts/test-gradient-array-reference.py",
+      "exitCode": 1,
+      "all13Executed": true
+    },
+    {
+      "failedScript": "scripts/test-scalar-array-map-reference.py",
+      "exitCode": 1,
+      "all13Executed": true
+    },
+    {
+      "failedScript": "scripts/test-scalar-array-identity-reference.py",
+      "exitCode": 1,
+      "all13Executed": true
+    },
+    {
+      "failedScript": "scripts/test-final-iteration-reference.py",
+      "exitCode": 1,
+      "all13Executed": true
+    },
+    {
+      "failedScript": "scripts/test-matched-option-reference.py",
+      "exitCode": 1,
+      "all13Executed": true
+    },
+    {
+      "failedScript": "scripts/test-packed-input-reference.py",
+      "exitCode": 1,
+      "all13Executed": true
+    },
+    {
+      "failedScript": "scripts/test-owned-numeric-reference.py",
+      "exitCode": 1,
+      "all13Executed": true
+    },
+    {
+      "failedScript": "scripts/test-gradient-call-reference.py",
+      "exitCode": 1,
+      "all13Executed": true
+    },
+    {
+      "failedScript": "scripts/test-owned-numeric-census.py",
+      "exitCode": 1,
+      "all13Executed": true
+    },
+    {
+      "failedScript": "scripts/test-iteration-storage.py",
+      "exitCode": 1,
+      "all13Executed": true
+    },
+    {
+      "failedScript": "scripts/test-gradient-array-budgets.py",
+      "exitCode": 1,
+      "all13Executed": true
+    }
+  ],
+  "patchPayloadUnchanged": true
+}

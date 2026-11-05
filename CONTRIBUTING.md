@@ -184,8 +184,14 @@ New test targets also need the native shard-coverage check; do not omit them
 from a platform to shorten its gate.
 
 Measurement tools may read or rewrite compiler source. When changing a module
-they use, inspect those callers before launching the full matrix. For `src/opt.rs`,
-run `python3 scripts/local-guard.py python3 scripts/test-capture-reference.py`.
+they use, inspect those callers before launching the full matrix. Check every
+reference that reads the changed files, including older comparisons. Formatting
+can break patch context too: changes to `lib/autodiff.fwp` need
+`scripts/test-gradient-array-reference.py` and the complete collection-reference
+and allocation-budget group in [.github/workflows/roadmap.yml](.github/workflows/roadmap.yml).
+Keep patch matching strict; when only context changes, verify all added/removed
+lines remain identical. For `src/opt.rs`, run
+`python3 scripts/local-guard.py python3 scripts/test-capture-reference.py`.
 The comparison must disable only its named optimization and preserve every other
 current source byte. Historical results remain tied to their recorded revisions;
 they must not freeze unrelated future compiler development.

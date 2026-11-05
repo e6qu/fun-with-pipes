@@ -1,9 +1,9 @@
 # Current work
 
-**Next:** publish the combined repair, then monitor all nine production jobs plus
-documentation for the repaired commit. Audit full/target logs, fix every further
-finding, and squash merge only after all exact-head gates pass. Record the new
-source/run IDs here after publication; do not repeat unchanged measurements.
+**Next:** publish the reference-patch repair, then monitor and audit all nine
+production jobs plus documentation on that exact commit. Squash merge only after
+every gate passes. Preserve the new head while gates run; do not repeat unchanged
+measurements.
 
 [PR #259](https://github.com/e6qu/fun-with-pipes/pull/259) is ready for review.
 Branch `gradient-call-storage`, worktree `.worktrees/owned-numeric-updates`.
@@ -42,22 +42,38 @@ The repair changes a unit fixture, library formatting, its reference marker,
 focused workflow coverage and docs. It does not change the optimization or
 runtime behavior; measurements retain their original sources.
 
-## Collect the repaired head
+## Second pass: documentation repair ready
 
-`../gradient-work/collect-gradient-call-final-platforms.py` takes explicit
-`--run`, `--source`, `--host`, `--docs-job` and `--output` arguments. Use the new
-head/run IDs after publication, one host per guarded invocation. Hosts:
-`linux-arm`, `linux-amd`, `mac-arm`, `mac-amd`, `mac-arm-ownership`,
+Source `946069cd138a9be23f457c73316a3ecf5b972047`: documentation `41983677600`
+(job `127099336313`) failed five old gradient-array reference tests. Formatting
+removed a blank line used as strict patch context. Update context only, preserving
+every added/removed payload line. All 13 collection reference/budget scripts pass
+(2.18s); CI now runs all before reporting failure. The actual shell block passes
+all-success and each single-failure injection, plus actionlint/diff checks (8.43s).
+
+Production `41983677606`: benchmarks pass and are fully audited. Eight native
+jobs were deliberately canceled after the docs failure to publish the repair.
+All completed summaries in retained target logs pass; incomplete jobs establish
+no support. Three evidence-packaging assertions/missing archives followed
+cancellation before evidence directories existed. Complete/target logs and the
+[reconciliation](measurements/gradient-call-checks-2026-11-05/reference-repair/summary.json)
+are retained. No compiler, runtime, library or native-test change in this repair.
+
+For the new run, use the existing collector serially through the local guard:
+
+```sh
+python3 ../gradient-work/collect-gradient-call-final-platforms.py \
+  --run RUN --source FULL_SHA --host HOST --docs-job DOCS_JOB \
+  --output ../gradient-work/gradient-call-final-repaired
+```
+
+Hosts: `linux-arm`, `linux-amd`, `mac-arm`, `mac-amd`, `mac-arm-ownership`,
 `mac-amd-ownership`, `windows-arm`, `windows-amd`, `bench`, `docs`.
-
-The collector retains full logs, digest-checked target archives, Windows probe
-logs and per-host audits. It deliberately exits nonzero on failed heads;
-inspect every finding. Individual job logs are available through
-`gh api .../actions/jobs/ID/logs` before the whole run finishes.
-
-First-pass scratch: `../gradient-work/gradient-call-final-first/`. All results
-are now retained in the repository; Windows outer probe downloads were removed
-after verification/retention. Do not re-fetch them to redo completed audits.
+It retains full logs, digest-checked targets and Windows probe logs; failed heads
+exit nonzero deliberately. Inspect every finding. Do not mix sources in an output
+directory. Old scratch: `gradient-call-final-first` (4160061c),
+`gradient-call-final` and `gradient-call-docs-repair` (946069cd), all beneath
+`../gradient-work/`. Old audits are complete; do not repeat their downloads.
 
 ## Roadmap status
 

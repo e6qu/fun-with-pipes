@@ -131,3 +131,27 @@ controls, Rust formatting and workflow syntax pass locally. Runtime measurements
 remain tied to their original sources; no native measurement was repeated.
 
 The repaired commit must pass all nine production jobs plus docs before merge.
+
+## Second production run: reference-patch context repair
+
+Source `946069cd138a9be23f457c73316a3ecf5b972047`. Documentation
+[run 41983677600](https://github.com/e6qu/fun-with-pipes/actions/runs/41983677600)
+failed five gradient-array reference controls: the preceding library formatting
+removed a blank line used as patch context. The repair changes context only;
+all added/removed payload lines stay identical and patch matching remains strict.
+Historical results keep their recorded sources and patches.
+
+All 13 collection-reference and allocation-budget scripts pass locally (2.18s).
+The workflow now executes every script before reporting group failure. Its exact
+shell block passes an all-success control and failure injected at each of the
+13 positions: all checks execute, and any failure makes the group fail.
+Workflow syntax and whitespace checks also pass (8.43s).
+
+In production [run 41983677606](https://github.com/e6qu/fun-with-pipes/actions/runs/41983677606),
+C/Rust benchmarks passed. The eight native jobs were deliberately stopped after
+the docs failure to publish this repair without finishing a superseded run.
+Their completed target summaries pass; partial logs establish no final support.
+Three packaging assertions and missing-archive errors occurred after cancellation
+interrupted evidence generation. The [audit](reference-repair/summary.json)
+retains every full job log, available target log, artifact identity and local
+reference-check result. All nine jobs plus docs still must pass on the final head.

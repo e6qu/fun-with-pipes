@@ -51,19 +51,21 @@ jobs:
         run: python3 scripts/test-constructor-profile.py
       - name: Collection storage reference isolation and allocation budgets
         run: |
-          python3 scripts/test-scalar-map-zip-reference.py
-          python3 scripts/test-range-zip-reference.py
-          python3 scripts/test-gradient-array-reference.py
-          python3 scripts/test-scalar-array-map-reference.py
-          python3 scripts/test-scalar-array-identity-reference.py
-          python3 scripts/test-final-iteration-reference.py
-          python3 scripts/test-matched-option-reference.py
-          python3 scripts/test-packed-input-reference.py
-          python3 scripts/test-owned-numeric-reference.py
-          python3 scripts/test-gradient-call-reference.py
-          python3 scripts/test-owned-numeric-census.py
-          python3 scripts/test-iteration-storage.py
-          python3 scripts/test-gradient-array-budgets.py
+          status=0
+          python3 scripts/test-scalar-map-zip-reference.py || status=1
+          python3 scripts/test-range-zip-reference.py || status=1
+          python3 scripts/test-gradient-array-reference.py || status=1
+          python3 scripts/test-scalar-array-map-reference.py || status=1
+          python3 scripts/test-scalar-array-identity-reference.py || status=1
+          python3 scripts/test-final-iteration-reference.py || status=1
+          python3 scripts/test-matched-option-reference.py || status=1
+          python3 scripts/test-packed-input-reference.py || status=1
+          python3 scripts/test-owned-numeric-reference.py || status=1
+          python3 scripts/test-gradient-call-reference.py || status=1
+          python3 scripts/test-owned-numeric-census.py || status=1
+          python3 scripts/test-iteration-storage.py || status=1
+          python3 scripts/test-gradient-array-budgets.py || status=1
+          exit "$status"
       - name: Sorting-time evidence controls
         run: python3 scripts/test-sort-time-evidence.py
       - name: Parser measurement evidence controls

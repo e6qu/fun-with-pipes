@@ -1,0 +1,524 @@
+{
+  "id": 127099336313,
+  "run_id": 41983677600,
+  "workflow_name": "Roadmap documentation",
+  "head_branch": "gradient-call-storage",
+  "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/41983677600",
+  "run_attempt": 1,
+  "node_id": "CR_kwDOU33zxM8AAAAdl7X2eQ",
+  "head_sha": "946069cd138a9be23f457c73316a3ecf5b972047",
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/127099336313",
+  "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41983677600/job/127099336313",
+  "status": "completed",
+  "conclusion": "failure",
+  "created_at": "2026-11-05T06:55:39Z",
+  "started_at": "2026-11-05T06:56:01Z",
+  "completed_at": "2026-11-05T06:56:58Z",
+  "name": "roadmap_docs",
+  "steps": [
+    {
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 1,
+      "started_at": "2026-11-05T06:56:02Z",
+      "completed_at": "2026-11-05T06:56:03Z"
+    },
+    {
+      "name": "Run actions/checkout@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 2,
+      "started_at": "2026-11-05T06:56:03Z",
+      "completed_at": "2026-11-05T06:56:17Z"
+    },
+    {
+      "name": "Retain review heads for preparation references",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 3,
+      "started_at": "2026-11-05T06:56:17Z",
+      "completed_at": "2026-11-05T06:56:18Z"
+    },
+    {
+      "name": "Documentation audit controls",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 4,
+      "started_at": "2026-11-05T06:56:18Z",
+      "completed_at": "2026-11-05T06:56:18Z"
+    },
+    {
+      "name": "Documentation, immutable tags and commit messages",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 5,
+      "started_at": "2026-11-05T06:56:18Z",
+      "completed_at": "2026-11-05T06:56:19Z"
+    },
+    {
+      "name": "Run dtolnay/rust-toolchain@stable",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 6,
+      "started_at": "2026-11-05T06:56:19Z",
+      "completed_at": "2026-11-05T06:56:19Z"
+    },
+    {
+      "name": "Tutorial code and output copies",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 7,
+      "started_at": "2026-11-05T06:56:19Z",
+      "completed_at": "2026-11-05T06:56:21Z"
+    },
+    {
+      "name": "Measured child deadlines and polling control",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 8,
+      "started_at": "2026-11-05T06:56:21Z",
+      "completed_at": "2026-11-05T06:56:24Z"
+    },
+    {
+      "name": "Local guard sampling integration checks",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 9,
+      "started_at": "2026-11-05T06:56:24Z",
+      "completed_at": "2026-11-05T06:56:26Z"
+    },
+    {
+      "name": "Native test coverage and failure propagation",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 10,
+      "started_at": "2026-11-05T06:56:26Z",
+      "completed_at": "2026-11-05T06:56:34Z"
+    },
+    {
+      "name": "Evidence archive integrity and read-failure controls",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 11,
+      "started_at": "2026-11-05T06:56:34Z",
+      "completed_at": "2026-11-05T06:56:34Z"
+    },
+    {
+      "name": "Collection evidence completeness and memory controls",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 12,
+      "started_at": "2026-11-05T06:56:34Z",
+      "completed_at": "2026-11-05T06:56:34Z"
+    },
+    {
+      "name": "Ownership operation evidence controls",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 13,
+      "started_at": "2026-11-05T06:56:34Z",
+      "completed_at": "2026-11-05T06:56:34Z"
+    },
+    {
+      "name": "Derivative phase and source accounting controls",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 14,
+      "started_at": "2026-11-05T06:56:34Z",
+      "completed_at": "2026-11-05T06:56:55Z"
+    },
+    {
+      "name": "Constructor attribution and allocation controls",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 15,
+      "started_at": "2026-11-05T06:56:55Z",
+      "completed_at": "2026-11-05T06:56:56Z"
+    },
+    {
+      "name": "Collection storage reference isolation and allocation budgets",
+      "status": "completed",
+      "conclusion": "failure",
+      "number": 16,
+      "started_at": "2026-11-05T06:56:56Z",
+      "completed_at": "2026-11-05T06:56:56Z"
+    },
+    {
+      "name": "Sorting-time evidence controls",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 17,
+      "started_at": "2026-11-05T06:56:56Z",
+      "completed_at": "2026-11-05T06:56:56Z"
+    },
+    {
+      "name": "Parser measurement evidence controls",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 18,
+      "started_at": "2026-11-05T06:56:56Z",
+      "completed_at": "2026-11-05T06:56:56Z"
+    },
+    {
+      "name": "Recursion measurement evidence controls",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 19,
+      "started_at": "2026-11-05T06:56:56Z",
+      "completed_at": "2026-11-05T06:56:56Z"
+    },
+    {
+      "name": "Measurement clock success and failure controls",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 20,
+      "started_at": "2026-11-05T06:56:56Z",
+      "completed_at": "2026-11-05T06:56:56Z"
+    },
+    {
+      "name": "Buffer comparison schedule and compiler-report controls",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 21,
+      "started_at": "2026-11-05T06:56:56Z",
+      "completed_at": "2026-11-05T06:56:56Z"
+    },
+    {
+      "name": "Kernel result oracle and scheduling controls",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 22,
+      "started_at": "2026-11-05T06:56:56Z",
+      "completed_at": "2026-11-05T06:56:56Z"
+    },
+    {
+      "name": "Timing diagnostic observation and output controls",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 23,
+      "started_at": "2026-11-05T06:56:56Z",
+      "completed_at": "2026-11-05T06:56:56Z"
+    },
+    {
+      "name": "Child CPU and scheduling observation controls",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 24,
+      "started_at": "2026-11-05T06:56:56Z",
+      "completed_at": "2026-11-05T06:56:56Z"
+    },
+    {
+      "name": "Retained executable-name diagnostic and damaged-evidence controls",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 25,
+      "started_at": "2026-11-05T06:56:56Z",
+      "completed_at": "2026-11-05T06:56:56Z"
+    },
+    {
+      "name": "Word-frequency failure-output controls",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 26,
+      "started_at": "2026-11-05T06:56:56Z",
+      "completed_at": "2026-11-05T06:56:56Z"
+    },
+    {
+      "name": "Retained word-frequency observations and rejection controls",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 27,
+      "started_at": "2026-11-05T06:56:56Z",
+      "completed_at": "2026-11-05T06:56:56Z"
+    },
+    {
+      "name": "Rejected direct-string observations and evidence controls",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 28,
+      "started_at": "2026-11-05T06:56:56Z",
+      "completed_at": "2026-11-05T06:56:56Z"
+    },
+    {
+      "name": "Rejected unique-string observations and evidence controls",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 29,
+      "started_at": "2026-11-05T06:56:56Z",
+      "completed_at": "2026-11-05T06:56:56Z"
+    },
+    {
+      "name": "Qualified byte-search measurements and allocation budgets",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 30,
+      "started_at": "2026-11-05T06:56:56Z",
+      "completed_at": "2026-11-05T06:56:56Z"
+    },
+    {
+      "name": "Kernel baseline archive and altered-evidence controls",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 31,
+      "started_at": "2026-11-05T06:56:56Z",
+      "completed_at": "2026-11-05T06:56:56Z"
+    },
+    {
+      "name": "Derivative process scheduling and host qualification controls",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 32,
+      "started_at": "2026-11-05T06:56:56Z",
+      "completed_at": "2026-11-05T06:56:56Z"
+    },
+    {
+      "name": "Derivative baseline completeness controls",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 33,
+      "started_at": "2026-11-05T06:56:56Z",
+      "completed_at": "2026-11-05T06:56:56Z"
+    },
+    {
+      "name": "Retained derivative baseline reports",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 34,
+      "started_at": "2026-11-05T06:56:56Z",
+      "completed_at": "2026-11-05T06:56:56Z"
+    },
+    {
+      "name": "Derivative comparison limits and exact capture reference",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 35,
+      "started_at": "2026-11-05T06:56:56Z",
+      "completed_at": "2026-11-05T06:56:56Z"
+    },
+    {
+      "name": "Current kernel comparison reference, schedule and evidence controls",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 36,
+      "started_at": "2026-11-05T06:56:56Z",
+      "completed_at": "2026-11-05T06:56:56Z"
+    },
+    {
+      "name": "Matched-host evidence rejection controls",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 37,
+      "started_at": "2026-11-05T06:56:56Z",
+      "completed_at": "2026-11-05T06:56:56Z"
+    },
+    {
+      "name": "Numeric array comparison evidence controls",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 38,
+      "started_at": "2026-11-05T06:56:56Z",
+      "completed_at": "2026-11-05T06:56:56Z"
+    },
+    {
+      "name": "Derivative evidence downloads and host-rejection controls",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 39,
+      "started_at": "2026-11-05T06:56:56Z",
+      "completed_at": "2026-11-05T06:56:56Z"
+    },
+    {
+      "name": "Exact reconstruction of omitted scalar-map reference evidence",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 40,
+      "started_at": "2026-11-05T06:56:56Z",
+      "completed_at": "2026-11-05T06:56:56Z"
+    },
+    {
+      "name": "Packed temporary records and retained timing decisions",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 41,
+      "started_at": "2026-11-05T06:56:56Z",
+      "completed_at": "2026-11-05T06:56:56Z"
+    },
+    {
+      "name": "Matched grouped-process baselines and noisy controls",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 42,
+      "started_at": "2026-11-05T06:56:56Z",
+      "completed_at": "2026-11-05T06:56:56Z"
+    },
+    {
+      "name": "Repeated-solve baselines and fixed noise qualification",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 43,
+      "started_at": "2026-11-05T06:56:56Z",
+      "completed_at": "2026-11-05T06:56:56Z"
+    },
+    {
+      "name": "Preserve rejected scalar recording results",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 44,
+      "started_at": "2026-11-05T06:56:56Z",
+      "completed_at": "2026-11-05T06:56:56Z"
+    },
+    {
+      "name": "Audit accepted eager capture comparisons",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 45,
+      "started_at": "2026-11-05T06:56:56Z",
+      "completed_at": "2026-11-05T06:56:56Z"
+    },
+    {
+      "name": "Derivative depth evidence rejection controls",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 46,
+      "started_at": "2026-11-05T06:56:56Z",
+      "completed_at": "2026-11-05T06:56:56Z"
+    },
+    {
+      "name": "Retained derivative depth costs before and after stack recording",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 47,
+      "started_at": "2026-11-05T06:56:56Z",
+      "completed_at": "2026-11-05T06:56:56Z"
+    },
+    {
+      "name": "Derivative output comparison controls",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 48,
+      "started_at": "2026-11-05T06:56:56Z",
+      "completed_at": "2026-11-05T06:56:56Z"
+    },
+    {
+      "name": "Retained output comparisons and inconclusive decisions",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 49,
+      "started_at": "2026-11-05T06:56:56Z",
+      "completed_at": "2026-11-05T06:56:56Z"
+    },
+    {
+      "name": "CPU baseline completeness and budget controls",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 50,
+      "started_at": "2026-11-05T06:56:56Z",
+      "completed_at": "2026-11-05T06:56:56Z"
+    },
+    {
+      "name": "Decimal-count proof and timing controls",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 51,
+      "started_at": "2026-11-05T06:56:56Z",
+      "completed_at": "2026-11-05T06:56:56Z"
+    },
+    {
+      "name": "Preserve rejected decimal-count measurements",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 52,
+      "started_at": "2026-11-05T06:56:56Z",
+      "completed_at": "2026-11-05T06:56:56Z"
+    },
+    {
+      "name": "Preserve longer decimal sessions and their original decisions",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 53,
+      "started_at": "2026-11-05T06:56:56Z",
+      "completed_at": "2026-11-05T06:56:56Z"
+    },
+    {
+      "name": "Preserve the position-rotated experiment and its schedule limitation",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 54,
+      "started_at": "2026-11-05T06:56:56Z",
+      "completed_at": "2026-11-05T06:56:56Z"
+    },
+    {
+      "name": "Verify accepted balanced decimal comparisons",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 55,
+      "started_at": "2026-11-05T06:56:56Z",
+      "completed_at": "2026-11-05T06:56:56Z"
+    },
+    {
+      "name": "CPU execution-phase evidence controls",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 56,
+      "started_at": "2026-11-05T06:56:56Z",
+      "completed_at": "2026-11-05T06:56:56Z"
+    },
+    {
+      "name": "Verify retained CPU execution diagnostics",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 57,
+      "started_at": "2026-11-05T06:56:56Z",
+      "completed_at": "2026-11-05T06:56:56Z"
+    },
+    {
+      "name": "Scalar candidate comparison controls",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 58,
+      "started_at": "2026-11-05T06:56:56Z",
+      "completed_at": "2026-11-05T06:56:56Z"
+    },
+    {
+      "name": "Verify frozen CPU limits against all original sessions",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 59,
+      "started_at": "2026-11-05T06:56:56Z",
+      "completed_at": "2026-11-05T06:56:56Z"
+    },
+    {
+      "name": "Verify rejected scalar-bound experiments and source variants",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 60,
+      "started_at": "2026-11-05T06:56:56Z",
+      "completed_at": "2026-11-05T06:56:56Z"
+    },
+    {
+      "name": "Post Run actions/checkout@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 120,
+      "started_at": "2026-11-05T06:56:56Z",
+      "completed_at": "2026-11-05T06:56:57Z"
+    },
+    {
+      "name": "Complete job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 121,
+      "started_at": "2026-11-05T06:56:57Z",
+      "completed_at": "2026-11-05T06:56:57Z"
+    }
+  ],
+  "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/127099336313",
+  "labels": [
+    "ubuntu-24.04-arm"
+  ],
+  "runner_id": 1000409724,
+  "runner_name": "GitHub Actions 1000409724",
+  "runner_group_id": 0,
+  "runner_group_name": "GitHub Actions"
+}

@@ -26,8 +26,8 @@ diff --git a/lib/autodiff.fwp b/lib/autodiff.fwp
 -foreign "fwp" ad._backward-owned-one : I64 -> I64 -> t -> List[t] where Dup[t]
 +foreign "fwp" ad._backward-owned-one : I64 -> I64 -> t -> Array[t] where Dup[t]
  
- 
  rev._push-float : I64 -> t -> I64 -> t -> I64 where Float[t]
+ rev._push-float = fn parent-a -> fn weight-a -> fn parent-b -> fn weight-b ->
 @@ -343,20 +345,20 @@
  
  # the adjoints of a tape's inputs, seeding the given vertices (frees the

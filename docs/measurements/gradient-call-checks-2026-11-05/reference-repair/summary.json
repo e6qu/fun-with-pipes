@@ -1,0 +1,78 @@
+{
+  "source": "946069cd138a9be23f457c73316a3ecf5b972047",
+  "productionRun": 41983677606,
+  "docsRun": 41983677600,
+  "docsJob": 127099336313,
+  "docsLogSha256": "5891007e48947da77af692129f01afd93567b46d69b0f0297e9405f1d49342f3",
+  "docsFailure": "Five gradient-array reference tests fail because removed blank-line patch context no longer matches formatted lib/autodiff.fwp.",
+  "repair": "Change only patch context; all added and removed payload lines unchanged. Keep strict git apply. Run all 13 independent controls before reporting group failure.",
+  "productionConclusion": "Benchmark passes. Eight native jobs intentionally cancelled after docs failure; incomplete runs establish no support.",
+  "diagnosticReview": [
+    "All retained target test summaries pass; incomplete logs remain incomplete.",
+    "Three post-cancellation package-evidence assertions report input directories not yet generated. Subsequent missing archive errors follow from those interrupted jobs.",
+    "Installed OpenSSL notices are expected. Windows error::ResourceWarning lines are echoed command settings.",
+    "All full job logs and available target logs retained; no observed native test failure before cancellation."
+  ],
+  "targetLogs": [
+    {
+      "artifact": "macos-regular-tests-macos-15",
+      "logs": 27,
+      "completedPassing": 25,
+      "withoutFinalSummary": 2
+    },
+    {
+      "artifact": "native-test-logs-ubuntu-24.04-arm",
+      "logs": 9,
+      "completedPassing": 7,
+      "withoutFinalSummary": 2
+    },
+    {
+      "artifact": "macos-regular-tests-macos-15-intel",
+      "logs": 5,
+      "completedPassing": 3,
+      "withoutFinalSummary": 2
+    },
+    {
+      "artifact": "macos-ownership-tests-macos-15-intel",
+      "logs": 4,
+      "completedPassing": 2,
+      "withoutFinalSummary": 2
+    },
+    {
+      "artifact": "windows-probe-windows-11-arm",
+      "logs": 1,
+      "completedPassing": 0,
+      "withoutFinalSummary": 1
+    },
+    {
+      "artifact": "windows-probe-windows-2025",
+      "logs": 1,
+      "completedPassing": 0,
+      "withoutFinalSummary": 1
+    },
+    {
+      "artifact": "native-corpus-log-macos-15",
+      "logs": 1,
+      "completedPassing": 1,
+      "withoutFinalSummary": 0
+    },
+    {
+      "artifact": "native-corpus-log-macos-15-intel",
+      "logs": 1,
+      "completedPassing": 1,
+      "withoutFinalSummary": 0
+    },
+    {
+      "artifact": "macos-ownership-tests-macos-15",
+      "logs": 12,
+      "completedPassing": 10,
+      "withoutFinalSummary": 2
+    },
+    {
+      "artifact": "native-test-logs-ubuntu-latest",
+      "logs": 7,
+      "completedPassing": 5,
+      "withoutFinalSummary": 2
+    }
+  ]
+}
