@@ -20,12 +20,18 @@ worker that can change tape lifetime or suspend through task/service entry ticks
 | 3 | Complete | Same-source comparison and limits frozen at `bfddc31e`. |
 | 4 | In progress | Implemented bounded selection and explicit local lookup state; native controls, focused CI and measurement integration still require verification. |
 
-The first focused run `42121618183` was cancelled before any job started.
-Its replacement `42123050888`, controls `42123056112` and docs `42123051265`
-were still queued without assigned runners at 22:39 UTC on November 5.
-They use `895f766c2f78e460ce05461920d837d52f4fe102`. A final signature-check
-cleanup removes temporary compiler vectors/type strings; refresh focused checks
-for that source before measurements. Keep the controls run: its scripts are unchanged.
+The implementation now bounds pending expression references and parameter-count
+inspection as well as visited nodes, call depth and nested types. Signature
+recognition uses borrowed types without temporary vectors or type strings.
+Formatting passes (0.94 CPU seconds, 1.93 elapsed); workflow syntax also passes.
+The previous focused run `42124065984` at `18cf84f4` remained queued with no
+executed steps at 22:52 UTC on November 5. Replace it after publishing the final
+proof-resource fix. Measurement controls `42123056112` remain queued at `895f766c`;
+keep that run because its measurement scripts are unchanged. Docs for `18cf84f4`
+are `42123997455`; use the next push's docs as the final source check.
+
+Cancelled without executing focused checks: `42121618183`, `42123050888`.
+Superseded docs `42123051265` were cancelled. Do not launch duplicate full matrices.
 
 Local runtime-only Clang controls passed 20 cases: O1/O2, workspace reuse 0/1,
 ordinary and cached paths, and three deliberately broken observers (expected

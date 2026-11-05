@@ -236,10 +236,10 @@ jobs:
         if: ${{ !cancelled() && steps.compiler_build.outcome == 'success' }}
         run: python3 scripts/check-gradient-call-selection.py --input gradient-call-checks/selection
       - name: Verify private pair reuse and missing-selection controls
-        if: ${{ !cancelled() && steps.compiler_build.outcome == 'success' && (inputs.suite == 'packed-pair-checks' || (inputs.suite == 'scalar-constant-checks' || inputs.suite == 'recording-lookup-checks') || inputs.suite == 'recording-lookup-checks') }}
+        if: ${{ !cancelled() && steps.compiler_build.outcome == 'success' && contains(fromJSON('["packed-pair-checks","scalar-constant-checks","recording-lookup-checks"]'), inputs.suite) }}
         run: python3 scripts/check-packed-pair-selection.py --input gradient-call-checks/selection
       - name: Verify exact scalar constants in complete programs
-        if: ${{ !cancelled() && steps.compiler_build.outcome == 'success' && ((inputs.suite == 'scalar-constant-checks' || inputs.suite == 'recording-lookup-checks') || inputs.suite == 'recording-lookup-checks') }}
+        if: ${{ !cancelled() && steps.compiler_build.outcome == 'success' && contains(fromJSON('["scalar-constant-checks","recording-lookup-checks"]'), inputs.suite) }}
         run: python3 scripts/check-scalar-constant-selection.py --input gradient-call-checks/selection --representation literal
       - name: Verify live bounded recording lookup selection
         if: ${{ !cancelled() && steps.compiler_build.outcome == 'success' && inputs.suite == 'recording-lookup-checks' }}

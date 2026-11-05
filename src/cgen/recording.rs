@@ -86,6 +86,10 @@ impl Proof<'_> {
         self.facts[id] = Fact::Visiting;
         let program = self.program;
         let function = &program.funcs[id];
+        if function.arity > 4096 {
+            self.facts[id] = Fact::Rejected;
+            return None;
+        }
         let (parameters, result) = function.ty.params(function.arity as usize);
         let valid_types = parameters.len() == function.arity as usize
             && parameters
@@ -140,9 +144,17 @@ impl Proof<'_> {
                     if !numeric_type(self.program, ty, &mut 32) {
                         return None;
                     }
+                    if budget.saturating_sub(work.len()) < 2 {
+                        return None;
+                    }
                     work.extend([&**body, &**value]);
                 }
-                Expr::Record(fields) => work.extend(fields),
+                Expr::Record(fields) => {
+                    if fields.len() > budget.saturating_sub(work.len()) {
+                        return None;
+                    }
+                    work.extend(fields);
+                }
                 Expr::Field(value, _) => work.push(value),
                 Expr::Call(callee, arguments) => {
                     let function = self.program.funcs.get(*callee)?;
@@ -151,6 +163,9 @@ impl Proof<'_> {
                     }
                     let direct_push = scalar_push(function);
                     self.function(*callee, budget, depth + 1)?;
+                    if arguments.len() > budget.saturating_sub(work.len()) {
+                        return None;
+                    }
                     pushes = (pushes + u8::from(direct_push)).min(2);
                     work.extend(arguments);
                 }
