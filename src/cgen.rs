@@ -2828,7 +2828,7 @@ impl Gen<'_> {
             "    /* Consume private overlapping windows; complete mapping before the fold. */\n    fwp_value_owner input = {{l0, fwp_rc_free_arr}};\n    fwp_cleanup input_cleanup; fwp_value_protect(&input, &input_cleanup);\n    size_t count = ARR(l0)->len / {input_width};\n    if (count) count--;\n    if (count > (SIZE_MAX - sizeof(fwp_arr)) / ({width} * sizeof(V))) fwp_trap(\"map too large\");\n"
         );
         if reuse {
-            let _ = writeln!(out, "    /* Fresh producer, removed aliases and sole consuming call prove exclusivity. */\n    V buffer = l0;\n#ifdef FWP_NO_REUSE\n    buffer = fwp_rc_fresh(fwp_arr_new(count * {width}));\n#endif");
+            let _ = writeln!(out, "    /* Fresh producer, removed aliases and sole consuming call prove exclusivity. */\n    V buffer = l0;\n#ifdef FWP_NO_REUSE\n    buffer = fwp_rc_fresh(fwp_arr_new(count * {width}));");
         } else {
             let _ = writeln!(
                 out,
@@ -2837,7 +2837,7 @@ impl Gen<'_> {
         }
         out.push_str("    fwp_value_owner owner = {buffer, fwp_rc_free_arr};\n    fwp_cleanup cleanup; fwp_value_protect(&owner, &cleanup);\n");
         if reuse {
-            out.push_str("#ifndef FWP_NO_REUSE\n    input.value = 0;\n#endif\n");
+            out.push_str("#endif\n");
         }
         let _ = writeln!(
             out,
@@ -2851,7 +2851,14 @@ impl Gen<'_> {
                 "        ARR(buffer)->d[i * {width} + {field}] = {word};"
             );
         }
-        let _ = writeln!(out, "    }}\n    ARR(buffer)->len = count * {width};\n    fwp_value_release(&input);\n    V result = fwp_value_finish(&owner, &cleanup);\n    (void)fwp_value_finish(&input, &input_cleanup);\n    return result;");
+        let _ = writeln!(out, "    }}\n    ARR(buffer)->len = count * {width};");
+        if reuse {
+            out.push_str("#ifndef FWP_NO_REUSE\n    return fwp_value_finish(&input, &input_cleanup);\n#else\n");
+        }
+        out.push_str("    fwp_value_release(&input);\n    V result = fwp_value_finish(&owner, &cleanup);\n    (void)fwp_value_finish(&input, &input_cleanup);\n    return result;\n");
+        if reuse {
+            out.push_str("#endif\n");
+        }
         out
     }
 

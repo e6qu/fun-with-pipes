@@ -42,8 +42,8 @@ was frozen before code at `3b7954eef411b7b621d09718ae2aad41e72e744e`, retained b
   Equal-width numeric results reuse its sole owner without a runtime count query.
   Other widths allocate; preserve the explicit no-reuse control and physical charge.
 - Focused run `41991479079` passes Linux AMD64/ARM64 and macOS ARM64 at
-  `6e02c048019642b6f6eb52c9ae6fef5fa8f2f3f7`. Compiler/runtime/library/test sources
-  have not changed since. All-target lint, formatting, compiler units and 25 native
+  `6e02c048019642b6f6eb52c9ae6fef5fa8f2f3f7`. Those results cover the original implementation; the cleanup repair changes
+  the compiler and its controls and needs a new focused run. All-target lint, formatting, compiler units and 25 native
   targets cover both orientations/layouts, aliases, bits, failures and cancellation.
 - Full focused audit `41997987727` passes: 25 targets, 822 native images and
   838 probe records per host; source/artifact hashes and image architecture checked.
@@ -117,38 +117,28 @@ Old run `38888712709` has stale in-progress metadata, but all jobs completed on
 October 16 and GitHub rejects cancellation as already completed. No active runner
 or queue cause is established. Metadata: `../gradient-work/stale-paths-{run,jobs}-38888712709.json`.
 
-## Current measurement runs and repairs
+## Current measurement results and repair
 
-Compiler costs `42005106056` pass both architectures at frozen a1f18947.
-Audit run `42008507459` checks their saved 336 commands and six selection checks
-per host with `storage-compiler-report`; no timing rerun is needed. Full artifacts remain on
-GitHub; the report retains inputs, generated C, resource records, logs and hashes.
+- Original census 42003323499 and compiler-cost run 42005106056 pass on both
+  architectures; full artifact audits 42008501553 and 42008507459 pass.
+  Compact observations and receipts are retained under `docs/measurements/`.
+  Census archive duplicate paths are fixed and verified; initial warnings remain
+  recorded at 42006250074. Documentation 42008509366 passes at 4eb6ec6a.
+- Original runtime 42005111118 finished: three measured sessions, 23 missed 5%
+  speed targets and one AMD64 stack-budget failure. Full retained-data audit
+  42009905049 passes. Four AMD64 session-2 requests rejected EPYC 9V74/9V45 before
+  building/timing. Stop old-candidate requests; fix the stack cost first.
+- Repair protocol frozen before code at `54a3ae468d3751d3d2ac2972777dc054da905d9d`.
+  Reuse now keeps the original protected owner and returns it directly. Only the
+  allocating/no-reuse path has a second cleanup record. Selection/native controls
+  require that distinction. This removes redundant storage; the actual stack
+  benefit still needs verification.
+- Census workflow now checks the same six complete workloads and both forms at
+  GCC O2 before collecting allocations. It saves source, C, images and actual
+  stack reports, checks outputs and collects every stack-limit miss. Do not start
+  new timing until focused correctness, stack bounds and counts pass.
 
-Runtime `42005111118`: both ARM64 sessions and AMD64 session 1 are measuring.
-AMD64 session 2 rejected EPYC 9V74 before building/timing; the contract requires
-EPYC 7763. Replacement `42008084704` rejected the same model before any build.
-Preserve both host reports; do not treat these as measurements or change the CPU
-requirement. Only the missing session is requested again in `42008513001` on frozen a1f18947.
-
-Census audit `42006250074` checks all counts, raw profiles, source reconstruction,
-native images and saved-parent agreement. It exposed four duplicate ZIP-member
-warnings: outer and nested archives both contain fresh report paths. Repair uses
-separate `original/` and `fresh-{reference,candidate}/` namespaces, rejects duplicate
-members and rereads retained bytes against their hashes. Repair audit `42008501553` rechecks original run
-42003323499/source e4d645cd; never rerun the measured programs for this repair.
-Original warning-bearing artifact 13404918559 (2,518,595 bytes), SHA-256
-`e07f839a46fb71aaa5a4558b5f7edf3d2f94f7d9e324d86394e1e5930ed45dbb`, is retained.
-
-The mocked audit-output capture is verified by docs 42005102020 and 42006248863;
-production diagnostic filters remain strict. Full native gates wait until this
-measurement/documentation group is ready. Draft skips do not establish acceptance.
-
-Original census and compiler artifact audits pass (42008501553/42008507459),
-with compact observations retained in docs. Docs 42008509366 pass at 4eb6ec6a.
-Runtime 42005111118 finished: three measured sessions, 23 missed speed targets,
-one AMD64 stack limit failure; report audit 42009905049 is running. Four AMD64
-session-2 host requests rejected before timing; no old-candidate retries remain.
-The repair protocol above supersedes the original runtime next action.
 Cleanup removed 399,065,683 bytes of verified duplicate downloads; receipt
 `../gradient-work/removed-verified-downloads-2026-11-05-disk-emergency.json`.
 No local native checks/builds or large original-artifact downloads below reserve.
+All final production gates remain pending; draft skips are not acceptance.

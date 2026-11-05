@@ -129,7 +129,22 @@ fn indexed_record_windows_release_every_owner_on_failure_and_cancellation() {
             let pairs = section(&emitted, "    /* Consume private overlapping windows;");
             let fold = section(&emitted, "    /* Fold after the complete packed map;");
             assert_eq!(pairs.contains("V buffer = l0;"), result_width == 2);
-            assert_eq!(pairs.contains("input.value = 0;"), result_width == 2);
+            assert!(!pairs.contains("input.value = 0;"));
+            assert_eq!(
+                pairs.contains("return fwp_value_finish(&input, &input_cleanup);"),
+                result_width == 2
+            );
+            if result_width == 2 {
+                let allocating = pairs
+                    .split("#ifdef FWP_NO_REUSE\n")
+                    .nth(1)
+                    .unwrap()
+                    .split("#endif")
+                    .next()
+                    .unwrap();
+                assert!(allocating.contains("fwp_value_protect(&owner, &cleanup);"));
+                assert_eq!(pairs.matches("fwp_value_protect(&owner, &cleanup);").count(), 1);
+            }
             assert!(!pairs.contains("fwp_rc_unique"));
 
             let input_control = input
