@@ -504,6 +504,8 @@ def check_directory(folder, source, architecture, session, protocol, reference):
             count = sum(int(size, 16) for size in re.findall(r'^\s*\d+\s+\.text(?:\.[^\s]+)?\s+([0-9a-fA-F]+)', sections, re.M))
             assert count == metadata['instructionBytes']
             if image.startswith('fwp-'):
+                if protocol == 'scalar-constant' and row['updates'] > 0:
+                    GROUPS.DESCENT.SCALAR_SELECTION.check((case / (image + '.c')).read_text(), 'cached' if image.endswith('-reference') else 'literal')
                 symbols = (case / (image + '.symbols')).read_text()
                 assert not any(symbol in symbols for symbol in ('fwp_heap_scan', 'fwp_heap_mark_all', 'fwp_heap_sweep'))
         for name, metadata in row['cCompilerStackUsage'].items():

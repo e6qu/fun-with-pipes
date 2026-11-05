@@ -235,6 +235,8 @@ with zipfile.ZipFile(args.input) as z:
             observations = {}
             for kind in ("candidate", "reference"):
                 source = z.read(folder + kind + ".c").decode()
+                if args.comparison == "scalar-constant" and u > 0:
+                    CENSUS.DESCENT.SCALAR_SELECTION.check(source, "literal" if kind == "candidate" else "cached")
                 assert z.read(
                     folder + kind + "-profile.c"
                 ).decode() == CENSUS.DESCENT.AD.RAW.instrument(
@@ -348,10 +350,15 @@ with zipfile.ZipFile(args.input) as z:
     else:
         assert not fresh["comparisonFailures"], fresh["comparisonFailures"]
         corrected = []
-        prefix = "arm" if machine == "aarch64" else "amd"
-        parent = Path("docs/measurements/gradient-call-census-2026-11-05")
-        parent_repeated = json.loads((parent / (prefix + "-verified.json")).read_text())
-        parent_fresh = json.loads(gzip.decompress((parent / (prefix + "-fresh-verified.json.gz")).read_bytes()))
+        if args.comparison == "scalar-constant":
+            parent = Path("docs/measurements/packed-pair-cleanup-census-2026-11-05") / machine / "audit"
+            parent_repeated = json.loads(gzip.decompress((parent / (machine + "-verified.json.gz")).read_bytes()))
+            parent_fresh = json.loads(gzip.decompress((parent / (machine + "-fresh-verified.json.gz")).read_bytes()))
+        else:
+            prefix = "arm" if machine == "aarch64" else "amd"
+            parent = Path("docs/measurements/gradient-call-census-2026-11-05")
+            parent_repeated = json.loads((parent / (prefix + "-verified.json")).read_text())
+            parent_fresh = json.loads(gzip.decompress((parent / (prefix + "-fresh-verified.json.gz")).read_bytes()))
         reconciliation = CENSUS.reconcile_parent(report, reference, parent_repeated, parent_fresh)
         assert reconciliation == json.loads(z.read("parent-reconciliation.json"))
         (ROOT / "parent-reconciliation.json").write_text(json.dumps(reconciliation, indent=2) + "\n")

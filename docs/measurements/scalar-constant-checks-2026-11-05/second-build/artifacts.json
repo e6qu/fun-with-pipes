@@ -1,0 +1,122 @@
+[
+  {
+    "id": 13419056164,
+    "node_id": "MDg6QXJ0aWZhY3QxMzQxOTA1NjE2NA==",
+    "name": "gradient-call-checks-macos-15",
+    "size_in_bytes": 2182914,
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13419056164",
+    "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13419056164/zip",
+    "expired": false,
+    "digest": "sha256:674a2c0c0262c8dc14772e5c6f8ee34b4399c8231d25919fc50669fa80d406fa",
+    "created_at": "2026-11-05T13:32:52Z",
+    "updated_at": "2026-11-05T13:32:52Z",
+    "expires_at": "2027-02-03T13:27:45Z",
+    "workflow_run": {
+      "id": 42035958930,
+      "repository_id": 1400763332,
+      "head_repository_id": 1400763332,
+      "head_branch": "scalar-constant-lowering",
+      "head_sha": "b35c1c9968bfd72d37c0a05cb938012fa6b48b3a"
+    }
+  },
+  {
+    "id": 13418652999,
+    "node_id": "MDg6QXJ0aWZhY3QxMzQxODY1Mjk5OQ==",
+    "name": "gradient-call-preflight-macos-15",
+    "size_in_bytes": 2182914,
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13418652999",
+    "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13418652999/zip",
+    "expired": false,
+    "digest": "sha256:4dcb10b15d00cec57d02f653af6cdfa64a93625f6fad3bd0738bce19cb6c6558",
+    "created_at": "2026-11-05T13:32:42Z",
+    "updated_at": "2026-11-05T13:32:42Z",
+    "expires_at": "2027-02-03T13:27:45Z",
+    "workflow_run": {
+      "id": 42035958930,
+      "repository_id": 1400763332,
+      "head_repository_id": 1400763332,
+      "head_branch": "scalar-constant-lowering",
+      "head_sha": "b35c1c9968bfd72d37c0a05cb938012fa6b48b3a"
+    }
+  },
+  {
+    "id": 13418437689,
+    "node_id": "MDg6QXJ0aWZhY3QxMzQxODQzNzY4OQ==",
+    "name": "gradient-call-preflight-ubuntu-24.04-arm",
+    "size_in_bytes": 2182794,
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13418437689",
+    "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13418437689/zip",
+    "expired": false,
+    "digest": "sha256:a774dbe3b1a963998b3e9f56e61c564dd4b0872d1394b436e5743fa8aa1043ba",
+    "created_at": "2026-11-05T13:31:50Z",
+    "updated_at": "2026-11-05T13:31:50Z",
+    "expires_at": "2027-02-03T13:27:45Z",
+    "workflow_run": {
+      "id": 42035958930,
+      "repository_id": 1400763332,
+      "head_repository_id": 1400763332,
+      "head_branch": "scalar-constant-lowering",
+      "head_sha": "b35c1c9968bfd72d37c0a05cb938012fa6b48b3a"
+    }
+  },
+  {
+    "id": 13417559314,
+    "node_id": "MDg6QXJ0aWZhY3QxMzQxNzU1OTMxNA==",
+    "name": "gradient-call-checks-ubuntu-latest",
+    "size_in_bytes": 2182766,
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13417559314",
+    "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13417559314/zip",
+    "expired": false,
+    "digest": "sha256:0c25cc0a13fc79b933d54fe126b2e9510ac0e7ea989753f9279f50eae91863ff",
+    "created_at": "2026-11-05T13:32:19Z",
+    "updated_at": "2026-11-05T13:32:19Z",
+    "expires_at": "2027-02-03T13:27:45Z",
+    "workflow_run": {
+      "id": 42035958930,
+      "repository_id": 1400763332,
+      "head_repository_id": 1400763332,
+      "head_branch": "scalar-constant-lowering",
+      "head_sha": "b35c1c9968bfd72d37c0a05cb938012fa6b48b3a"
+    }
+  },
+  {
+    "id": 13417509291,
+    "node_id": "MDg6QXJ0aWZhY3QxMzQxNzUwOTI5MQ==",
+    "name": "gradient-call-checks-ubuntu-24.04-arm",
+    "size_in_bytes": 2182794,
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13417509291",
+    "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13417509291/zip",
+    "expired": false,
+    "digest": "sha256:7d489a6b111f404b1d603e811012111908519549a82f69fe3f0909968b3e1a25",
+    "created_at": "2026-11-05T13:32:01Z",
+    "updated_at": "2026-11-05T13:32:01Z",
+    "expires_at": "2027-02-03T13:27:45Z",
+    "workflow_run": {
+      "id": 42035958930,
+      "repository_id": 1400763332,
+      "head_repository_id": 1400763332,
+      "head_branch": "scalar-constant-lowering",
+      "head_sha": "b35c1c9968bfd72d37c0a05cb938012fa6b48b3a"
+    }
+  },
+  {
+    "id": 13417394472,
+    "node_id": "MDg6QXJ0aWZhY3QxMzQxNzM5NDQ3Mg==",
+    "name": "gradient-call-preflight-ubuntu-latest",
+    "size_in_bytes": 2182766,
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13417394472",
+    "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13417394472/zip",
+    "expired": false,
+    "digest": "sha256:a89415cd2ecf37e6ef103b9030db5d1b0dfc8cc29fdfae5fb2ad7494c9675fe0",
+    "created_at": "2026-11-05T13:32:06Z",
+    "updated_at": "2026-11-05T13:32:06Z",
+    "expires_at": "2027-02-03T13:27:45Z",
+    "workflow_run": {
+      "id": 42035958930,
+      "repository_id": 1400763332,
+      "head_repository_id": 1400763332,
+      "head_branch": "scalar-constant-lowering",
+      "head_sha": "b35c1c9968bfd72d37c0a05cb938012fa6b48b3a"
+    }
+  }
+]

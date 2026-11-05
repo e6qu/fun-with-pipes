@@ -58,7 +58,7 @@ def compare(candidate, reference, dimensions, updates, solves, comparison):
 
 
 def reconcile_parent(repeated, fresh, parent_repeated, parent_fresh):
-    """The allocating reference must reproduce the delivered parent's storage."""
+    """The same-source reference must reproduce the delivered parent's storage."""
     assert repeated['complete'] and repeated['comparison'] in ('packed-pair', 'scalar-constant')
     assert fresh['source'] == repeated['source']
     assert fresh['machine'] == repeated['machine'] == parent_fresh['machine'] == parent_repeated['machine']
@@ -183,6 +183,8 @@ def main():
                     result = run([compiler.resolve(), 'build', '--memory', 'dynamic', '--emit-c', '-O2', path, '-o', emitted],
                                  environment, folder / (kind + '-emit'))
                     assert not result.stdout and not result.stderr
+                    if args.comparison == 'scalar-constant' and updates > 0:
+                        DESCENT.SCALAR_SELECTION.check(emitted.read_text(), 'literal' if kind == 'candidate' else 'cached')
                     profiled = folder / (kind + '-profile.c')
                     profiled.write_text(DESCENT.AD.RAW.instrument(DESCENT.AD.PROFILE.instrument(emitted.read_text())))
                     executable = folder / (kind + '-profile')

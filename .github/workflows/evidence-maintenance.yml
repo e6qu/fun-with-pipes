@@ -145,7 +145,7 @@ jobs:
             !focused-storage-audit/*-evidence.zip
           if-no-files-found: error
   storage_compiler_report:
-    if: inputs.suite == 'storage-compiler-report'
+    if: inputs.suite == 'storage-compiler-report' || inputs.suite == 'scalar-constant-compiler-report'
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 15
     permissions:
@@ -164,7 +164,7 @@ jobs:
           python3 scripts/test-numeric-input-analysis.py
           status=0
           for machine in aarch64 x86_64; do
-            python3 scripts/audit-storage-compiler-costs.py --comparison packed-pair \
+            python3 scripts/audit-storage-compiler-costs.py --comparison "${{ fromJSON('{"storage-compiler-report":"packed-pair","scalar-constant-compiler-report":"scalar-constant"}')[inputs.suite] }}" \
               --repository "$GITHUB_REPOSITORY" --run "$EVIDENCE_RUN" \
               --source "$SOURCE_REVISION" --machine "$machine" \
               --output compiler-cost-audit || status=1
@@ -174,7 +174,7 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v7
         with:
-          name: storage-compiler-report
+          name: ${{ inputs.suite }}
           path: |
             compiler-cost-audit/
             !compiler-cost-audit/aarch64.zip
