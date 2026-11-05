@@ -296,7 +296,7 @@ read-only list inputs borrowed only when every caller retains the input beyond
 the scope. Ordinary exported/function-value entries still own their arguments.
 Focused native checks cover trap/cancellation cleanup on Linux ARM64/AMD64 and
 macOS ARM64. Allocation and compiler-cost audits pass; runtime results retain timing misses.
-The complete production matrix remains.
+[All final production gates pass](roadmap-history.md#gradient-call-storage-pr-259).
 
 Channel borrowing preserves hidden native contexts as well as payload storage.
 It does not prove the queued graph acyclic: capture/cycle checks remain separate.
@@ -369,7 +369,7 @@ whole-solve memory requirements.
 and the [exact allocation census](measurements/owned-numeric-census-2026-11-05/README.md)
 pass. [Compiler costs pass](measurements/owned-numeric-analysis-2026-11-05/README.md);
 [runtime results are audited](measurements/owned-numeric-time-2026-11-05/README.md)
-with four AMD64 speed targets open. Final platform delivery remains.**
+with four AMD64 speed targets open. [Final platform delivery is verified](roadmap-history.md#consumed-numeric-storage-pr-258).**
 For a dead array input, a private same-type scalar map can take its owner and
 overwrite exclusive storage. A shared array or view receives independent output.
 For an array/list zip, a private entry can consume the list and reuse only its
@@ -466,12 +466,12 @@ seed (0, 0.5) → add (1, 1.5) → (1, 2.0) → add (2, 2.5) → (3, 4.5)
 - Exclude managed/nested fields, boxed wide numbers, captured or runtime-selected
   callbacks and right folds. Keep callback effects and evaluation order.
 
-The pending gradient-storage group also carries a packed fold's seed and result
+The delivered gradient-storage group also carries a packed fold's seed and result
 as fields across its call boundary. For a proved constant `(0.0, -1)` seed, no
 cached record is needed. Empty input returns those exact bits. Constant proof is
 bounded to literals, acyclic nullary definitions and concrete scalar zero/one;
 arbitrary user code still runs normally. Stored/escaping results still need
-an owned record. These additions await the grouped native checks.
+an owned record. [Native checks and all final gates pass](roadmap-history.md#gradient-call-storage-pr-259).
 
 The [requirements and measurement protocol](measurements/derivative-record-folds.md)
 cover alias preservation, allocation failure, traps, cancellation and exact counts.
@@ -665,8 +665,9 @@ record is borrowed twice; neither read needs another owner or a copied record.
   in order. Unknown objectives continue through the ordinary call path.
 - Select only private one/two-field numeric records and their sole neighboring
   pair consumer. Additional uses, escapes and resource anchors exclude selection.
-- Keep one input-buffer owner until pair mapping finishes. Protect both buffers
-  during callbacks; release them on normal return, failure and cancellation.
+- The pair helper consumes the input-buffer owner. When output widths differ,
+  protect both allocations during callbacks and release the input afterwards.
+  Equal-width reuse is described below.
 - Preserve ordinary lists at public and escaping boundaries. This adds no syntax.
 
 See the [pass order](compiler-pipeline.md), [ownership/measurement contract](measurements/packed-derivative-inputs.md)
@@ -677,6 +678,31 @@ bound the observed compilation-time and peak-memory overhead.
 lower allocation/retain counts and live managed storage, with three AMD64 timing
 misses preserved. Process RAM does not consistently decrease.
 Passing source selection or saving allocations alone does not prove a speedup.
+
+### Reusing private pair storage
+
+**Focused checks and allocation counts pass; runtime and final platform acceptance
+are in progress for [PR #260](https://github.com/e6qu/fun-with-pipes/pull/260).**
+For equal-width numeric records, each pair result can overwrite the earlier input
+record after both inputs have been read. For three records:
+
+```text
+Read A and B → compute P → [P, B, C]
+Read B and C → compute Q → [P, Q, C]
+Return two records      → [P, Q]     (capacity still holds three)
+```
+
+The unused final slot remains part of the allocation until release. Logical
+length and allocated capacity differ; freeing by logical length would undercount
+storage. The allocator's metadata supplies the physical charge.
+
+The existing proof excludes aliases and other consumers. No runtime reference
+count query is needed. Finish all input callbacks before mapping pairs, and all
+pair callbacks before folding. Keep the owner protected through callbacks so
+failure or cancellation releases it exactly once. Different-width results and
+the explicit no-reuse control allocate separate output. See the
+[ownership contract](measurements/packed-pair-storage.md) and
+[observed allocation costs](measurements/packed-pair-census-2026-11-05.md).
 
 ### Other selected transformations
 

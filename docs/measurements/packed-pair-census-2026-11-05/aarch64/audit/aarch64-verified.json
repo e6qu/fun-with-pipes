@@ -1,0 +1,325 @@
+{
+  "source": "e4d645cd4c88e49ff0d7d781ec9af10095d01fd6",
+  "run": 42003323499,
+  "machine": "aarch64",
+  "allDiagnosticsAudited": true,
+  "recordedAttributionFailures": [],
+  "correctedComparisonFailures": [],
+  "checkerSha256": "4afadde53230a2e7e988065f699d255edaedd1b9f9db3b878a741672ad1a59ae",
+  "recordedCheckerSha256": "4afadde53230a2e7e988065f699d255edaedd1b9f9db3b878a741672ad1a59ae",
+  "artifact": {
+    "id": 13404461436,
+    "node_id": "MDg6QXJ0aWZhY3QxMzQwNDQ2MTQzNg==",
+    "name": "packed-pair-census-ARM64",
+    "size_in_bytes": 83701182,
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13404461436",
+    "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13404461436/zip",
+    "expired": false,
+    "digest": "sha256:0bf13f9a57948d24e92d56ccc44a648dd7ee1f24fee3105cff9e5674e3da1661",
+    "created_at": "2026-11-05T09:42:26Z",
+    "updated_at": "2026-11-05T09:42:26Z",
+    "expires_at": "2027-02-03T09:33:19Z",
+    "workflow_run": {
+      "id": 42003323499,
+      "repository_id": 1400763332,
+      "head_repository_id": 1400763332,
+      "head_branch": "packed-pair-storage",
+      "head_sha": "e4d645cd4c88e49ff0d7d781ec9af10095d01fd6"
+    }
+  },
+  "freshCases": 24,
+  "freshNativeImages": 164,
+  "verifiedCommands": 99,
+  "nativeImages": 24,
+  "verifiedExecutions": 48,
+  "cases": {
+    "3-0-current": {
+      "solves": 32768,
+      "savings": {
+        "requests": 0,
+        "requestedBytes": 0,
+        "retains": 0
+      },
+      "candidate": {
+        "requests": 65539,
+        "requestedBytes": 1638472,
+        "retains": 32768,
+        "peakChargedBytes": 1048704,
+        "finalChargedBytes": 0
+      },
+      "reference": {
+        "requests": 65539,
+        "requestedBytes": 1638472,
+        "retains": 32768,
+        "peakChargedBytes": 1048704,
+        "finalChargedBytes": 0
+      },
+      "rawPeakBytes": 0,
+      "finalRawBytes": 0
+    },
+    "3-0-history": {
+      "solves": 32768,
+      "savings": {
+        "requests": 0,
+        "requestedBytes": 0,
+        "retains": 0
+      },
+      "candidate": {
+        "requests": 65539,
+        "requestedBytes": 1638472,
+        "retains": 32768,
+        "peakChargedBytes": 1048704,
+        "finalChargedBytes": 0
+      },
+      "reference": {
+        "requests": 65539,
+        "requestedBytes": 1638472,
+        "retains": 32768,
+        "peakChargedBytes": 1048704,
+        "finalChargedBytes": 0
+      },
+      "rawPeakBytes": 0,
+      "finalRawBytes": 0
+    },
+    "3-1-current": {
+      "solves": 512,
+      "savings": {
+        "requests": 512,
+        "requestedBytes": 20480,
+        "retains": 0
+      },
+      "candidate": {
+        "requests": 3587,
+        "requestedBytes": 131144,
+        "retains": 512,
+        "peakChargedBytes": 16656,
+        "finalChargedBytes": 0
+      },
+      "reference": {
+        "requests": 4099,
+        "requestedBytes": 151624,
+        "retains": 512,
+        "peakChargedBytes": 16656,
+        "finalChargedBytes": 0
+      },
+      "rawPeakBytes": 1792,
+      "finalRawBytes": 0
+    },
+    "3-1-history": {
+      "solves": 512,
+      "savings": {
+        "requests": 512,
+        "requestedBytes": 20480,
+        "retains": 0
+      },
+      "candidate": {
+        "requests": 3587,
+        "requestedBytes": 131144,
+        "retains": 512,
+        "peakChargedBytes": 16656,
+        "finalChargedBytes": 0
+      },
+      "reference": {
+        "requests": 4099,
+        "requestedBytes": 151624,
+        "retains": 512,
+        "peakChargedBytes": 16656,
+        "finalChargedBytes": 0
+      },
+      "rawPeakBytes": 1792,
+      "finalRawBytes": 0
+    },
+    "3-199-current": {
+      "solves": 32,
+      "savings": {
+        "requests": 6368,
+        "requestedBytes": 254720,
+        "retains": 0
+      },
+      "candidate": {
+        "requests": 12899,
+        "requestedBytes": 565864,
+        "retains": 32,
+        "peakChargedBytes": 1296,
+        "finalChargedBytes": 0
+      },
+      "reference": {
+        "requests": 19267,
+        "requestedBytes": 820584,
+        "retains": 32,
+        "peakChargedBytes": 1328,
+        "finalChargedBytes": 0
+      },
+      "rawPeakBytes": 1792,
+      "finalRawBytes": 0
+    },
+    "3-199-history": {
+      "solves": 32,
+      "savings": {
+        "requests": 6368,
+        "requestedBytes": 254720,
+        "retains": 0
+      },
+      "candidate": {
+        "requests": 12899,
+        "requestedBytes": 565864,
+        "retains": 32,
+        "peakChargedBytes": 1296,
+        "finalChargedBytes": 0
+      },
+      "reference": {
+        "requests": 19267,
+        "requestedBytes": 820584,
+        "retains": 32,
+        "peakChargedBytes": 1328,
+        "finalChargedBytes": 0
+      },
+      "rawPeakBytes": 1792,
+      "finalRawBytes": 0
+    },
+    "3-1999-current": {
+      "solves": 4,
+      "savings": {
+        "requests": 7996,
+        "requestedBytes": 319840,
+        "retains": 0
+      },
+      "candidate": {
+        "requests": 16015,
+        "requestedBytes": 704376,
+        "retains": 4,
+        "peakChargedBytes": 400,
+        "finalChargedBytes": 0
+      },
+      "reference": {
+        "requests": 24011,
+        "requestedBytes": 1024216,
+        "retains": 4,
+        "peakChargedBytes": 432,
+        "finalChargedBytes": 0
+      },
+      "rawPeakBytes": 1792,
+      "finalRawBytes": 0
+    },
+    "3-1999-history": {
+      "solves": 4,
+      "savings": {
+        "requests": 7996,
+        "requestedBytes": 319840,
+        "retains": 0
+      },
+      "candidate": {
+        "requests": 16015,
+        "requestedBytes": 704376,
+        "retains": 4,
+        "peakChargedBytes": 400,
+        "finalChargedBytes": 0
+      },
+      "reference": {
+        "requests": 24011,
+        "requestedBytes": 1024216,
+        "retains": 4,
+        "peakChargedBytes": 432,
+        "finalChargedBytes": 0
+      },
+      "rawPeakBytes": 1792,
+      "finalRawBytes": 0
+    },
+    "33-199-current": {
+      "solves": 32,
+      "savings": {
+        "requests": 6368,
+        "requestedBytes": 3311360,
+        "retains": 0
+      },
+      "candidate": {
+        "requests": 13889,
+        "requestedBytes": 5195480,
+        "retains": 32,
+        "peakChargedBytes": 3904,
+        "finalChargedBytes": 0
+      },
+      "reference": {
+        "requests": 20257,
+        "requestedBytes": 8506840,
+        "retains": 32,
+        "peakChargedBytes": 4416,
+        "finalChargedBytes": 0
+      },
+      "rawPeakBytes": 8560,
+      "finalRawBytes": 0
+    },
+    "33-199-history": {
+      "solves": 32,
+      "savings": {
+        "requests": 6368,
+        "requestedBytes": 3311360,
+        "retains": 0
+      },
+      "candidate": {
+        "requests": 13889,
+        "requestedBytes": 5195480,
+        "retains": 32,
+        "peakChargedBytes": 3904,
+        "finalChargedBytes": 0
+      },
+      "reference": {
+        "requests": 20257,
+        "requestedBytes": 8506840,
+        "retains": 32,
+        "peakChargedBytes": 4416,
+        "finalChargedBytes": 0
+      },
+      "rawPeakBytes": 8560,
+      "finalRawBytes": 0
+    },
+    "129-199-current": {
+      "solves": 8,
+      "savings": {
+        "requests": 1592,
+        "requestedBytes": 3273152,
+        "retains": 0
+      },
+      "candidate": {
+        "requests": 4361,
+        "requestedBytes": 5005064,
+        "retains": 8,
+        "peakChargedBytes": 11584,
+        "finalChargedBytes": 0
+      },
+      "reference": {
+        "requests": 5953,
+        "requestedBytes": 8278216,
+        "retains": 8,
+        "peakChargedBytes": 13632,
+        "finalChargedBytes": 0
+      },
+      "rawPeakBytes": 33904,
+      "finalRawBytes": 0
+    },
+    "129-199-history": {
+      "solves": 8,
+      "savings": {
+        "requests": 1592,
+        "requestedBytes": 3273152,
+        "retains": 0
+      },
+      "candidate": {
+        "requests": 4361,
+        "requestedBytes": 5005064,
+        "retains": 8,
+        "peakChargedBytes": 11584,
+        "finalChargedBytes": 0
+      },
+      "reference": {
+        "requests": 5953,
+        "requestedBytes": 8278216,
+        "retains": 8,
+        "peakChargedBytes": 13632,
+        "finalChargedBytes": 0
+      },
+      "rawPeakBytes": 33904,
+      "finalRawBytes": 0
+    }
+  }
+}

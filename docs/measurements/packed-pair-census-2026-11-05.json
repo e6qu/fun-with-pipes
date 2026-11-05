@@ -17,5 +17,15 @@
       "bytes": 86571225
     }
   },
-  "retention": "Original full artifacts remain on GitHub; collect compact observation archives and receipts on runners before final delivery. Local disk is below reserve."
+  "retention": {
+    "run": 42008501553,
+    "job": 127181239130,
+    "source": "4eb6ec6aaf4c5bf57224235c94064bc70f4c1695",
+    "artifact": 13405128918,
+    "bytes": 2518914,
+    "sha256": "63aeebc80c33a1851bcc58d91debb8ad5f3b11b14945e589b380c88ea355af81",
+    "records": "packed-pair-census-2026-11-05/",
+    "diagnostics": [],
+    "originalWarningRun": 42006250074
+  }
 }

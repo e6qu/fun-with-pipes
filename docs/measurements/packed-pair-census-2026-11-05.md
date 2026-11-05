@@ -30,16 +30,33 @@ The checks establish exactly U fewer requests and (16N-8)U fewer requested bytes
 for N coordinates and U updates per solve. All savings belong to forward
 recording. Retain counts and raw derivative storage are unchanged; zero-update
 observations remain identical. Overall peak managed storage does not grow;
-final managed/raw storage is zero. Detailed phase peaks remain in the artifacts.
+final managed/raw storage is zero. For a fresh 129/199 current-result solve at
+GCC O2 on ARM64, peak managed storage falls from 9,248 to 7,200 bytes. Within
+forward recording it falls from 9,248 to 6,688 bytes; setup, reverse propagation,
+result construction and retirement peaks are unchanged. The saved reports cover
+both architectures, optimization levels and workspace modes.
 
 Requested bytes measure allocation traffic, not simultaneous live memory or
 process RAM. Reuse keeps the original input capacity until the fold finishes.
 Compiler costs and qualified timing sessions are still required; older timing
 misses remain separate. Full production verification follows the complete batch.
 
-## Remaining evidence retention
+## Retained observations
 
-Complete job logs are retained locally and original artifacts contain every
-observation and generated image. Before final delivery, retain compact observation
-archives and standalone audit receipts in the repository. Large downloads stay on
-runners while local free disk is below the 64 GiB reserve.
+[Archive audit 42008501553](https://github.com/e6qu/fun-with-pipes/actions/runs/42008501553)
+verifies raw profiles, exact reference sources, images and saved-parent agreement.
+It passes after fixing a retention bug: outer/nested reports previously shared ZIP
+member names. Separate namespaces now retain both, reject duplicates and reread
+bytes against their hashes. Original warning-bearing run 42006250074 is preserved.
+
+[ARM64 receipts and observations](packed-pair-census-2026-11-05/aarch64/audit/aarch64-verified.json)
+and [AMD64 receipts and observations](packed-pair-census-2026-11-05/x86_64/audit/x86_64-verified.json)
+are saved beside compressed full logs, fresh reports, parent reconciliation and
+file inventories. `observations.zip` retains `original/`, `fresh-reference/` and
+`fresh-candidate/` paths. Large generated images remain in the original artifacts.
+[Retention artifact 13405128918](https://github.com/e6qu/fun-with-pipes/actions/runs/42008501553/artifacts/13405128918):
+2,518,914 bytes; SHA-256
+`63aeebc80c33a1851bcc58d91debb8ad5f3b11b14945e589b380c88ea355af81`.
+
+These measurements precede the [cleanup-record repair](packed-pair-cleanup-repair.md).
+The repair must repeat affected correctness/storage checks before new timing.

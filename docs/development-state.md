@@ -1,10 +1,9 @@
 # Current work
 
-**Next:** monitor compiler-cost run 42005106056 and runtime run 42005111118;
-retain all outcomes without timing reruns. Verify the repaired census archive
-and compiler-cost artifact audit on runners. PR #259 is verified and merged;
-the next private pair-buffer implementation passes focused checks and full audits.
-Keep one active PR, group all remaining measurements/repairs before final CI.
+**Next:** implement and verify the [single-owner cleanup repair](measurements/packed-pair-cleanup-repair.md).
+Original runtime measurements found a stack-budget failure; keep every original
+outcome. Finish the repair, its focused/storage checks and stack preflight before
+new runtime measurements. Keep one active PR (#260), then final production CI.
 
 ## Roadmap status
 
@@ -15,7 +14,7 @@ Keep one active PR, group all remaining measurements/repairs before final CI.
 | 1 | Verified | Consume the private owner; borrow/escape analysis and cleanup agree. |
 | 2 | Verified | Reuse equal-width numeric storage; preserve aliases, stages and physical charge. |
 | 3 | Verified | Three focused native hosts and full log/image/probe audits pass. |
-| 4 | In progress | Counts/peaks and compiler limits pass; audit compiler artifacts and finish runtime sessions. |
+| 4 | In progress | Original counts/compiler limits pass; runtime exposes redundant cleanup storage and a stack failure. |
 | 5 | Pending | Retain evidence, pass all final production/docs gates, audit and squash merge. |
 
 ## Verified parent delivery
@@ -32,7 +31,8 @@ and complete log audit (`42000937569`, auditor f339616c) pass.
 ## Current branch and verified native checks
 
 Draft [PR #260](https://github.com/e6qu/fun-with-pipes/pull/260), branch/worktree
-`packed-pair-storage`. Current published head `1203b457b1b467e8c8d6db726a184dacc49d3542`.
+`packed-pair-storage`. Published auditor repair `4eb6ec6a`; compiler/runtime/library/native-test sources
+remain unchanged.
 Pre-rebase preparation head
 `f339616c639e4c55703f619cc46ca08f93f11ee8`. The [contract](measurements/packed-pair-storage.md)
 was frozen before code at `3b7954eef411b7b621d09718ae2aad41e72e744e`, retained by
@@ -101,7 +101,7 @@ phase and overall peaks rather than claiming lower live memory from fewer reques
 ## Resource limits and retained local work
 
 No local validation or large downloads below 64 GiB free. Latest observed free
-space was 31.91 GiB; task scratch is about 3.8 GiB and both build directories are
+space was about 1.27 GiB after a drop below 1 GiB; task scratch is about 3.8 GiB and both build directories are
 empty. Use runners, never raise/bypass the guard. Unrelated work remains untouched.
 Earlier verified duplicate-download cleanup removed 1,820.39 MiB, preserving logs,
 observations and verified remote originals. Receipt:
@@ -120,21 +120,21 @@ or queue cause is established. Metadata: `../gradient-work/stale-paths-{run,jobs
 ## Current measurement runs and repairs
 
 Compiler costs `42005106056` pass both architectures at frozen a1f18947.
-Audit their saved 336 commands and six selection checks per host with
-`storage-compiler-report`; no timing rerun is needed. Full artifacts remain on
+Audit run `42008507459` checks their saved 336 commands and six selection checks
+per host with `storage-compiler-report`; no timing rerun is needed. Full artifacts remain on
 GitHub; the report retains inputs, generated C, resource records, logs and hashes.
 
 Runtime `42005111118`: both ARM64 sessions and AMD64 session 1 are measuring.
 AMD64 session 2 rejected EPYC 9V74 before building/timing; the contract requires
 EPYC 7763. Replacement `42008084704` rejected the same model before any build.
 Preserve both host reports; do not treat these as measurements or change the CPU
-requirement. Only the missing session may be requested again on frozen a1f18947.
+requirement. Only the missing session is requested again in `42008513001` on frozen a1f18947.
 
 Census audit `42006250074` checks all counts, raw profiles, source reconstruction,
 native images and saved-parent agreement. It exposed four duplicate ZIP-member
 warnings: outer and nested archives both contain fresh report paths. Repair uses
 separate `original/` and `fresh-{reference,candidate}/` namespaces, rejects duplicate
-members and rereads retained bytes against their hashes. Re-audit original run
+members and rereads retained bytes against their hashes. Repair audit `42008501553` rechecks original run
 42003323499/source e4d645cd; never rerun the measured programs for this repair.
 Original warning-bearing artifact 13404918559 (2,518,595 bytes), SHA-256
 `e07f839a46fb71aaa5a4558b5f7edf3d2f94f7d9e324d86394e1e5930ed45dbb`, is retained.
@@ -142,3 +142,13 @@ Original warning-bearing artifact 13404918559 (2,518,595 bytes), SHA-256
 The mocked audit-output capture is verified by docs 42005102020 and 42006248863;
 production diagnostic filters remain strict. Full native gates wait until this
 measurement/documentation group is ready. Draft skips do not establish acceptance.
+
+Original census and compiler artifact audits pass (42008501553/42008507459),
+with compact observations retained in docs. Docs 42008509366 pass at 4eb6ec6a.
+Runtime 42005111118 finished: three measured sessions, 23 missed speed targets,
+one AMD64 stack limit failure; report audit 42009905049 is running. Four AMD64
+session-2 host requests rejected before timing; no old-candidate retries remain.
+The repair protocol above supersedes the original runtime next action.
+Cleanup removed 399,065,683 bytes of verified duplicate downloads; receipt
+`../gradient-work/removed-verified-downloads-2026-11-05-disk-emergency.json`.
+No local native checks/builds or large original-artifact downloads below reserve.
