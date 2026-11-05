@@ -37,14 +37,18 @@ it does not build or execute native programs. A second PR still waits for #260.
 
 No builds or tests ran on this worktree. Local disk is about 17 GiB free, below the 64 GiB
 reserve: no builds, tests or large artifact downloads. Do not bypass the guard.
-Use focused GitHub checks after the parent merges and the grouped work is ready.
+The grouped compiler change is ready for focused correctness checks on its
+separate branch. Those can proceed while #260 finishes; performance measurement
+and a second PR still require its verified merge.
 PLAN.md, design and compiler-pipeline docs now describe the new group.
 Reference construction and core census/runtime/compiler budget helpers accept
 `scalar-constant`. Their new controls have not run. Remaining measurement setup:
 wire scalar census/analysis/time/report workflow choices, frozen parent count
 reconciliation and all artifact auditors; verify changed recorded-source callers.
 The `scalar-constant-checks` choice uses the existing 25-target focused matrix.
-Add complete-program constant selection checks before dispatching that matrix.
+Complete-program scalar selection and negative controls are now included in
+that matrix. The count and timing artifact auditors accept the new comparison;
+measurement workflow wiring and parent reconciliation remain unfinished.
 
 Keep all earlier timing misses explicit. No new native measurements have run.
 
@@ -60,3 +64,9 @@ Artifact `13416296986` (4,143 bytes), SHA-256
 was checked against the exact source and applied. Rustfmt 1.10.0-stable
 (58cf8f9c35, 2026-10-13); no compilation or tests. A workflow-size regression
 check is prepared for the documentation audit.
+
+Formatting of the added root-entry probe passes at request `42032825443`,
+source `d1032469fd1740f3642b67d01b505ed8533ccceb`, job `127263294058`.
+Artifact `13417091621` (991 bytes), SHA-256
+`4620fab7816fa87c53a053438ce2024e3a1f362bdce49a83528878718eb48e00`,
+was verified and applied. No Rust edits followed the patch.

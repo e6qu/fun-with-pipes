@@ -686,7 +686,8 @@ int main(void) {{
         "int main(int argc, char **argv)",
         "int original_main(int argc, char **argv)",
     );
-    let root_source = format!(r#"{root_source}
+    let root_source = format!(
+        r#"{root_source}
 int main(void) {{
     fwp_heap_start(); fwp_fns=fwp_fn_table; fwp_init_consts();
     size_t baseline=fwp_heap.live;
@@ -695,7 +696,8 @@ int main(void) {{
     if (fwp_heap.live != baseline) return 54;
     return 0;
 }}
-"#);
+"#
+    );
     for opt in ["-O1", "-O2"] {
         fwp::cgen::compile_c(&root_source, &executable, opt).unwrap();
         let output = Command::new(&executable).output().unwrap();
@@ -707,7 +709,10 @@ int main(void) {{
             &output,
         );
         assert!(output.status.success(), "scalar root/{opt}: {output:?}");
-        assert!(output.stdout.is_empty() && output.stderr.is_empty(), "{output:?}");
+        assert!(
+            output.stdout.is_empty() && output.stderr.is_empty(),
+            "{output:?}"
+        );
         for (label, probe, status) in [
             ("exact-bits", probe.clone(), 0),
             (

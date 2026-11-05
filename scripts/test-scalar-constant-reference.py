@@ -3,15 +3,55 @@
 import importlib.util
 from pathlib import Path
 import unittest
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parent.parent
 SPEC = importlib.util.spec_from_file_location('reference', ROOT / 'scripts/prepare-scalar-constant-reference.py')
 REFERENCE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(REFERENCE)
 CURRENT = {name: (ROOT / name).read_text() for name in REFERENCE.EDITS}
+SPEC = importlib.util.spec_from_file_location('selection', ROOT / 'scripts/check-scalar-constant-selection.py')
+SELECTION = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(SELECTION)
 
 
 class ScalarConstantReference(unittest.TestCase):
+    def test_selection_follows_cache_aliases_and_rejects_unused_entries(self):
+        cached = """/* ---- program ---- */
+static V caf1(void) { static int st; return f1(); }
+static V caf2(void) { static int st; return f2(); }
+/* main : F64 */
+static V f0(void) {
+    return caf1();
+}
+/* One[F64].one : F64 */
+static V f1(void) {
+    return caf2();
+}
+/* prim.one : F64 */
+static V f2(void) {
+    return 0x3ff0000000000000ULL;
+}
+"""
+        literal = """/* ---- program ---- */
+/* main : F64 */
+static V f0(void) {
+    return 0x3ff0000000000000ULL;
+}
+"""
+        # Isolate scalar reachability here; real workflow probes separately
+        # require the complete private pair storage proof on generated programs.
+        with patch.object(SELECTION.PAIR, 'check', return_value={}):
+            self.assertEqual(SELECTION.check(cached, 'cached')['cachedEntries'],
+                {'One[F64].one': 'caf1', 'prim.one': 'caf2'})
+            self.assertEqual(SELECTION.check(literal, 'literal')['cachedEntries'], {})
+            for source, mode in ((cached, 'literal'), (literal, 'cached'),
+                    (cached.replace('return caf1();', 'return 0;'), 'cached'),
+                    (cached.replace('return caf2();', 'return 0;'), 'cached'),
+                    (literal.replace('0x3ff0000000000000ULL', '0'), 'literal')):
+                with self.subTest(mode=mode), self.assertRaises(AssertionError):
+                    SELECTION.check(source, mode)
+
     def test_complete_reference_is_reversible_and_preserves_prior_work(self):
         restored = REFERENCE.reference_sources(CURRENT)
         for name, (candidate, reference) in REFERENCE.EDITS.items():

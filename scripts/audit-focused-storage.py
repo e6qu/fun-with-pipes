@@ -100,6 +100,12 @@ def main():
             for member in ('selection/packed-pair-selection.json', 'selection/gradient-call-selection.json', 'consuming-selection/record.json'):
                 report[member] = json.loads(z.read(member))
             assert len(report['selection/packed-pair-selection.json']) == 3
+            constant_steps = [step for step in job['steps']
+                              if step['name'] == 'Verify exact scalar constants in complete programs']
+            if constant_steps and constant_steps[0]['conclusion'] == 'success':
+                constants = json.loads(z.read('selection/scalar-constant-selection.json'))
+                assert len(constants) == 3 and all(row['representation'] == 'literal' for row in constants.values())
+                report['selection/scalar-constant-selection.json'] = constants
         if len(report['targets']) != 25 or not report['images'] or not report['probes']:
             issues.append((host, 'incomplete targets/images/probe observations'))
         if report['diagnostics']:

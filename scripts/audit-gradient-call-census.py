@@ -28,7 +28,7 @@ parser = argparse.ArgumentParser(
 )
 for name in ("input", "artifact", "job", "job-log", "recorded-checkout", "output"):
     parser.add_argument("--" + name, type=Path, required=True)
-parser.add_argument("--comparison", choices=("gradient-call", "packed-pair"), required=True)
+parser.add_argument("--comparison", choices=("gradient-call", "packed-pair", "scalar-constant"), required=True)
 parser.add_argument("--source", required=True)
 parser.add_argument("--run", type=int, required=True)
 parser.add_argument("--machine", choices=("aarch64", "x86_64"), required=True)
@@ -113,6 +113,7 @@ else:
 reference_module, transformation = {
     "gradient-call": (CENSUS.GRADIENT_REFERENCE, "scoped input borrowing, numeric fold fields, single-root seeding and consumed array scratch"),
     "packed-pair": (CENSUS.PAIR_REFERENCE, "reuse of the consumed private neighboring-record buffer"),
+    "scalar-constant": (CENSUS.SCALAR_REFERENCE, "exact immediate scalar constants and acyclic cached aliases"),
 }[args.comparison]
 with zipfile.ZipFile(args.input) as z:
     report = json.loads(z.read("numeric-analysis/report.json"))
@@ -134,7 +135,7 @@ with zipfile.ZipFile(args.input) as z:
     stack = None
     # Historical protocols predate this gate. The recorded source determines
     # whether it is mandatory; a missing report never selects the old protocol.
-    stack_required = args.comparison == "packed-pair" and (
+    stack_required = args.comparison in ("packed-pair", "scalar-constant") and (
         args.recorded_checkout / "scripts/check-packed-pair-stack.py"
     ).is_file()
     if stack_required:
@@ -280,6 +281,8 @@ with zipfile.ZipFile(args.input) as z:
             )
             if args.comparison == "packed-pair":
                 expected = dict(requests=u * solves, requestedBytes=(16 * n - 8) * u * solves, retains=0)
+            elif args.comparison == "scalar-constant":
+                expected = dict(requests=0, requestedBytes=0, retains=0)
             for workspace in ("0", "1"):
                 old, new = (
                     observations["reference" + workspace],
