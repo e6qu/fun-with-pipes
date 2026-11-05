@@ -14,7 +14,7 @@ import zipfile
 
 sys.path.insert(0,str(Path('scripts').resolve()))
 parser=argparse.ArgumentParser(description=__doc__)
-parser.add_argument("--comparison", required=True, choices=("gradient-call", "packed-pair"))
+parser.add_argument("--comparison", required=True, choices=("gradient-call", "packed-pair", "scalar-constant"))
 parser.add_argument("--repository", required=True)
 parser.add_argument('--source',required=True)
 parser.add_argument('--run',required=True,type=int)
