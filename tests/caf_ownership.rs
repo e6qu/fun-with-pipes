@@ -104,7 +104,9 @@ fn cached_values_keep_exact_owners_and_release_typed_children() {
 
     let emitted = fwp::cgen::generate(&p).unwrap();
     assert_eq!(
-        emitted.matches("(V)(int64_t)fwp_utf8_count(STR(l0)->d, STR(l0)->len)").count(),
+        emitted
+            .matches("(V)(int64_t)fwp_utf8_count(STR(l0)->d, STR(l0)->len)")
+            .count(),
         1,
         "computed scalar observation must still select one operation"
     );
@@ -573,22 +575,38 @@ fn exact_scalar_aliases_preserve_bits_without_lazy_cache_reads() {
         ("std::U32", Value::U32(u32::MAX), u32::MAX as u64),
         ("std::U64", Value::U64(u64::MAX), u64::MAX),
         ("std::F32", Value::F32(-0.0), 0x80000000),
-        ("std::F32", Value::F32(f32::from_bits(0x7fc00042)), 0x7fc00042),
+        (
+            "std::F32",
+            Value::F32(f32::from_bits(0x7fc00042)),
+            0x7fc00042,
+        ),
         ("std::F64", Value::F64(-0.0), 0x8000000000000000),
-        ("std::F64", Value::F64(f64::from_bits(0x7ff8000000000042)), 0x7ff8000000000042),
-        ("std::F64", Value::F64(f64::from_bits(0x7ff0000000000042)), 0x7ff0000000000042),
+        (
+            "std::F64",
+            Value::F64(f64::from_bits(0x7ff8000000000042)),
+            0x7ff8000000000042,
+        ),
+        (
+            "std::F64",
+            Value::F64(f64::from_bits(0x7ff0000000000042)),
+            0x7ff0000000000042,
+        ),
     ];
     let mut program = Program {
         funcs: vec![Func {
             name: "main".into(),
             arity: 0,
             locals: vec![],
-            ty: MT::Record(scalars.iter().enumerate().map(|(i, (ty, _, _))| {
-                (i.to_string(), MT::con(ty))
-            }).collect()),
-            body: Body::Expr(Expr::Record((0..scalars.len()).map(|i| {
-                Expr::Func(2 * i + 1)
-            }).collect())),
+            ty: MT::Record(
+                scalars
+                    .iter()
+                    .enumerate()
+                    .map(|(i, (ty, _, _))| (i.to_string(), MT::con(ty)))
+                    .collect(),
+            ),
+            body: Body::Expr(Expr::Record(
+                (0..scalars.len()).map(|i| Expr::Func(2 * i + 1)).collect(),
+            )),
         }],
         main: Some(0),
         ..Program::default()
@@ -619,11 +637,22 @@ fn exact_scalar_aliases_preserve_bits_without_lazy_cache_reads() {
     }
     let code = fwp::cgen::generate(&program).unwrap();
     for id in 1..program.funcs.len() {
-        assert!(!code.contains(&format!("caf{id}(")), "constant cache {id} remains");
+        assert!(
+            !code.contains(&format!("caf{id}(")),
+            "constant cache {id} remains"
+        );
     }
-    let runtime = code.replace("int main(int argc, char **argv)", "int original_main(int argc, char **argv)");
-    let expected = scalars.iter().map(|(_, _, bits)| format!("0x{bits:x}ULL")).collect::<Vec<_>>().join(", ");
-    let probe = format!(r#"
+    let runtime = code.replace(
+        "int main(int argc, char **argv)",
+        "int original_main(int argc, char **argv)",
+    );
+    let expected = scalars
+        .iter()
+        .map(|(_, _, bits)| format!("0x{bits:x}ULL"))
+        .collect::<Vec<_>>()
+        .join(", ");
+    let probe = format!(
+        r#"
 int main(void) {{
     fwp_heap_start(); fwp_fns=fwp_fn_table; fwp_init_consts();
     size_t baseline=fwp_heap.live;
@@ -636,20 +665,76 @@ int main(void) {{
     if (fwp_heap.live != baseline) return 52;
     return 0;
 }}
-"#);
+"#
+    );
     let directory = fwp::cgen::TempDir::new("scalar-constants").unwrap();
     let executable = directory.join("probe.exe");
+    let root_program = Program {
+        funcs: vec![Func {
+            name: "root-one".into(),
+            arity: 0,
+            locals: vec![],
+            ty: MT::con("std::F64"),
+            body: Body::Prim("prim.one".into()),
+        }],
+        main: Some(0),
+        ..Program::default()
+    };
+    let root_source = fwp::cgen::generate(&root_program).unwrap();
+    assert!(root_source.contains("static V caf0(void) { return (V)0x3ff0000000000000ULL; }"));
+    let root_source = root_source.replace(
+        "int main(int argc, char **argv)",
+        "int original_main(int argc, char **argv)",
+    );
+    let root_source = format!(r#"{root_source}
+int main(void) {{
+    fwp_heap_start(); fwp_fns=fwp_fn_table; fwp_init_consts();
+    size_t baseline=fwp_heap.live;
+    if (caf0() != 0x3ff0000000000000ULL) return 53;
+    fwp_caf_finish();
+    if (fwp_heap.live != baseline) return 54;
+    return 0;
+}}
+"#);
     for opt in ["-O1", "-O2"] {
+        fwp::cgen::compile_c(&root_source, &executable, opt).unwrap();
+        let output = Command::new(&executable).output().unwrap();
+        record_probe::save(
+            "caf_ownership",
+            &format!("scalar-root{opt}"),
+            &root_source,
+            &executable,
+            &output,
+        );
+        assert!(output.status.success(), "scalar root/{opt}: {output:?}");
+        assert!(output.stdout.is_empty() && output.stderr.is_empty(), "{output:?}");
         for (label, probe, status) in [
             ("exact-bits", probe.clone(), 0),
-            ("wrong-bits", probe.replace("const V expected[] = {", "const V expected[] = {1 ^ "), 51),
+            (
+                "wrong-bits",
+                probe.replace("const V expected[] = {", "const V expected[] = {1 ^ "),
+                51,
+            ),
         ] {
             let source = format!("{runtime}\n{probe}");
             fwp::cgen::compile_c(&source, &executable, opt).unwrap();
             let output = Command::new(&executable).output().unwrap();
-            record_probe::save("caf_ownership", &format!("scalar-{label}{opt}"), &source, &executable, &output);
-            assert_eq!(output.status.code(), Some(status), "{label}/{opt}: {output:?}");
-            assert!(output.stdout.is_empty() && output.stderr.is_empty(), "{output:?}");
+            record_probe::save(
+                "caf_ownership",
+                &format!("scalar-{label}{opt}"),
+                &source,
+                &executable,
+                &output,
+            );
+            assert_eq!(
+                output.status.code(),
+                Some(status),
+                "{label}/{opt}: {output:?}"
+            );
+            assert!(
+                output.stdout.is_empty() && output.stderr.is_empty(),
+                "{output:?}"
+            );
         }
     }
 }

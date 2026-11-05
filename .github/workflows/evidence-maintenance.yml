@@ -69,7 +69,7 @@ jobs:
           git rev-parse HEAD > storage-measurement-controls/source.txt
           set -o pipefail
           status=0
-          for script in test-packed-pair-reference test-packed-pair-stack test-owned-numeric-census test-gradient-array-budgets test-numeric-input-analysis test-descent-budgets test-array-list-evidence test-retain-derivative-evidence test-production-log-audit; do
+          for script in test-scalar-constant-reference test-packed-pair-reference test-packed-pair-stack test-owned-numeric-census test-gradient-array-budgets test-numeric-input-analysis test-descent-budgets test-array-list-evidence test-retain-derivative-evidence test-production-log-audit; do
             python3 "scripts/$script.py" 2>&1 | tee "storage-measurement-controls/$script.log" || status=1
           done
           exit "$status"

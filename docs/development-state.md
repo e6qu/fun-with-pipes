@@ -5,6 +5,16 @@ completes production verification. Do not publish another PR or start native
 measurements until #260 is verified and merged. Parent monitoring continues in
 `.worktrees/packed-pair-storage`; its handoff has exact gates and audit steps.
 
+## Roadmap status
+
+| Step | Status | Work |
+|---|---|---|
+| 1 | Implemented | Shared bounded numeric proof; compiler/unit verification pending. |
+| 2 | Implemented | Scalar substitutions and direct root cache entries; not yet validated. |
+| 3 | In progress | Unit/native controls prepared; format-only runner passes, builds/tests have not run. |
+| 4 | Pending | Reference controls started; census, compiler costs, runtime and audits remain. |
+| 5 | Pending | Parent #260 must merge before another PR; this group still needs final verification. |
+
 ## Branch and scope
 
 - Branch/worktree: `scalar-constant-lowering`.
@@ -12,7 +22,7 @@ measurements until #260 is verified and merged. Parent monitoring continues in
 - [Frozen contract](measurements/scalar-constant-lowering.md).
 - Parent tested source: `ba3f0d8793dc3bbd3c21f94d06a1bca2896b6d45`.
 - Parent production: `42024634729`; documentation `42024602934` passes.
-  Benchmark job passes; eight native platform jobs still run. Full audit and
+  Benchmark and both macOS ARM64 jobs pass; six native jobs still run. Full audit and
   authorized squash merge remain. No parent source edits or new push.
 
 ## Implementation in progress
@@ -28,8 +38,13 @@ it does not build or execute native programs. A second PR still waits for #260.
 No builds or tests ran on this worktree. Local disk is about 17 GiB free, below the 64 GiB
 reserve: no builds, tests or large artifact downloads. Do not bypass the guard.
 Use focused GitHub checks after the parent merges and the grouped work is ready.
-Before publication, update PLAN.md, this handoff, design, compiler-pipeline docs,
-reference construction/control scripts, focused workflow and existing callers.
+PLAN.md, design and compiler-pipeline docs now describe the new group.
+Reference construction and core census/runtime/compiler budget helpers accept
+`scalar-constant`. Their new controls have not run. Remaining measurement setup:
+wire scalar census/analysis/time/report workflow choices, frozen parent count
+reconciliation and all artifact auditors; verify changed recorded-source callers.
+The `scalar-constant-checks` choice uses the existing 25-target focused matrix.
+Add complete-program constant selection checks before dispatching that matrix.
 
 Keep all earlier timing misses explicit. No new native measurements have run.
 
@@ -39,4 +54,9 @@ Request `42030505657` at bdc4a525 started no jobs: numerics.yml was 512,034
 bytes, above GitHub's 512,000-byte limit. The exact annotation and source are in
 [the failure receipt](measurements/scalar-constant-checks-2026-11-05/format-startup.json).
 Format and four maintenance/audit jobs now live in a reusable workflow; commands
-and explicit inputs are preserved. Reissue formatting after this source repair.
+and explicit inputs are preserved. Repair request `42031076546` passes at `5a68795746616da117e2858bb30c050485e1f3f0`.
+Artifact `13416296986` (4,143 bytes), SHA-256
+`af500d3754945698f713d8ef8ecbe7ed641c42959f2c985e7d977a3a6c6bc30f`,
+was checked against the exact source and applied. Rustfmt 1.10.0-stable
+(58cf8f9c35, 2026-10-13); no compilation or tests. A workflow-size regression
+check is prepared for the documentation audit.

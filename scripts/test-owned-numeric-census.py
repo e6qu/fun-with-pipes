@@ -20,6 +20,18 @@ class Census(unittest.TestCase):
         self.old = copy.deepcopy(self.current)
         self.old['managed'].update(requests=25741 * 8 + 100, requestedBytes=819968 * 8 + 1000)
 
+    def test_scalar_constants_require_unchanged_counts_in_all_workloads(self):
+        for dimensions, updates, solves in CENSUS.CASES:
+            self.assertEqual(CENSUS.compare(self.current, self.current, dimensions,
+                updates, solves, 'scalar-constant'), dict(requests=0, requestedBytes=0, retains=0))
+            for field in ('requests', 'requestedBytes', 'retains'):
+                for delta in (-1, 1):
+                    changed = copy.deepcopy(self.current)
+                    changed['managed'][field] += delta
+                    with self.subTest(dimensions=dimensions, updates=updates, field=field, delta=delta):
+                        with self.assertRaises(AssertionError):
+                            CENSUS.compare(changed, self.current, dimensions, updates, solves, 'scalar-constant')
+
     def test_largest_frozen_prediction(self):
         self.assertEqual(CENSUS.compare(self.current, self.old, 129, 199, 8, 'owned-numeric'),
                          dict(requests=205928, requestedBytes=6559744))

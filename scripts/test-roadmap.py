@@ -38,5 +38,22 @@ class DocumentationAnchors(unittest.TestCase):
         self.assertEqual(list(ROADMAP.markdown_headings(text)), ["Visible"])
 
 
+class WorkflowSizes(unittest.TestCase):
+    def test_limit_counts_bytes_and_rejects_every_oversized_workflow(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            workflows = root / ".github/workflows"
+            workflows.mkdir(parents=True)
+            (workflows / "limit.yml").write_bytes(b" " * (500 * 1024))
+            with patch.object(ROADMAP, "ROOT", root):
+                ROADMAP.check_workflow_sizes()
+                (workflows / "too-large.yml").write_bytes(b" " * (500 * 1024 + 1))
+                (workflows / "unicode.yaml").write_bytes(("#" + "é" * 256000).encode())
+                with self.assertRaises(AssertionError) as failure:
+                    ROADMAP.check_workflow_sizes()
+                self.assertIn("too-large.yml", str(failure.exception))
+                self.assertIn("unicode.yaml", str(failure.exception))
+
+
 if __name__ == "__main__":
     unittest.main()
