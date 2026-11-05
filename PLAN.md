@@ -5,55 +5,35 @@ and useful inference. Prefer direct values, moves and borrows; use automatic
 reference counting (ARC) only for necessary sharing. Tracing garbage collection
 has been removed. JIT compilation and backward compatibility are excluded.
 
-## Current work: remove storage around gradient calls
+## Current work: reuse the private pair buffer
 
-[PR #258 is verified delivery](docs/roadmap-history.md#consumed-numeric-storage-pr-258):
-private gradient arrays and coordinate lists reuse exclusive storage. All nine
-production jobs and docs pass. Four AMD64 speed targets remain open below.
+[PR #259 is verified delivery](docs/roadmap-history.md#gradient-call-storage-pr-259):
+all nine production jobs, documentation and complete log audits pass. Its four
+changes remove temporary storage around gradient calls. The 17 timing misses
+remain open below; allocation savings do not establish speed or process RAM gains.
 
-The next group removes temporary storage around the gradient calculation:
+The next group reuses the numeric input buffer after neighboring records have
+been read, instead of allocating a separate pair-result buffer:
 
 | Step | Work | Completion requirement |
 |---|---|---|
-| 1 | Borrow the scoped worker's read-only input | Prove caller ownership, direct calling convention, no escape and cleanup on return/trap/cancellation. |
-| 2 | Pass numeric fold state as fields | Preserve seed evaluation, empty inputs, numeric bits and callback order; eliminate only proved constant cached records. |
-| 3 | Seed one backward root directly | Scalar and owned-weight peers; explicit seed, all float representations, nested derivatives and unchanged root validation. |
-| 4 | Reuse the consumed derivative array as coordinate scratch | Exact 64-bit layout, exclusivity, both zip positions, shared/view exclusions and separate scratch cleanup. |
-| 5 | Verify and deliver the complete group | Selection and failure controls on three focused hosts, exact counts, compiler/runtime measurements, then nine exact-head production jobs plus docs and audited squash merge. |
+| 1 | Transfer the private input owner | Keep borrow inference, escape analysis and cleanup consistent with returning the allocation. |
+| 2 | Reuse equal-width numeric storage | Preserve eager callback order, immutable aliases and physical allocation charge; other widths allocate. |
+| 3 | Verify both storage paths | Both orientations, numeric bits, empty inputs, failure/cancellation, no-reuse and deliberately broken cleanup observers on three focused hosts. |
+| 4 | Measure complete work and memory | Exact repeated/fresh allocation counts, phase/overall peaks, compiler costs and two qualified runtime sessions per architecture. Reconcile the allocating reference with the parent before timing. |
+| 5 | Deliver the group | Fix all encountered issues, retain full evidence, pass nine final-head production jobs plus docs, audit logs and squash merge. |
 
-The [contract](docs/measurements/gradient-call-storage.md) fixes the proof and
-measurement boundaries before implementation. [Baseline allocation sites](docs/measurements/gradient-storage-2026-11-05/README.md)
-show eight forward requests per update, one scratch request and two retains.
-The four changes target seven fewer requests and two fewer retains per update,
-plus one cached record per process. [Audits of runner observations](docs/measurements/gradient-call-census-2026-11-05/README.md)
-confirm these savings on both architectures, locally and in report-only CI.
-For one fresh 129-coordinate / 199-update solve, the observed count is 2,121 → 727 requests
-and 1,265,230 → 1,034,366 requested bytes. This does not predict speed or process RAM.
+Steps 1–3 pass [focused native checks and full evidence audits](docs/measurements/packed-pair-checks-2026-11-05.md).
+[The contract](docs/measurements/packed-pair-storage.md), frozen before implementation
+at `3b7954eef411b7b621d09718ae2aad41e72e744e`, fixes the proof and measurement limits.
+Measurement tooling is prepared; one shallow-checkout mistake in its historical
+controls is being repaired. No new timing observations have been collected.
 
-Group all four implementations and focused runner checks before final production
-CI. Keep local checks bounded and serial. The [handoff](docs/development-state.md)
-records the next action, source IDs and actual checks.
-
-## Prepared next group: reuse the private pair buffer
-
-[The contract](docs/measurements/packed-pair-storage.md) is frozen before code at
-`3b7954eef411b7b621d09718ae2aad41e72e744e`. The separate `packed-pair-storage`
-branch prepares these related changes while PR #259 finishes verification:
-
-- Transfer the producer buffer into the pair helper; update borrowing, escape
-  analysis and cleanup together.
-- Reuse equal-width numeric storage with the static fresh/sole-use proof.
-  Different widths allocate; preserve the explicit no-reuse test control.
-- Verify both paths, both argument orders, numeric bits, aliases, failure and
-  cancellation with physical-free and deliberately broken-observer controls.
-- After parent delivery, reconcile exact counts and live memory, measure compiler
-  and runtime costs, then pass all final production/docs gates for the group.
-
-For a fresh 129/199 solve, predicted requests are 727 -> 528 and requested bytes
-1,034,366 -> 625,222. These are not observations. Reuse retains the original
-capacity until the fold finishes; check phase peaks rather than inferring lower
-live memory from fewer allocations. Keep one active PR and retain all older
-missed timing goals. No new timing measurement has started.
+For a fresh 129-coordinate/199-update solve, predicted requests are 727 -> 528
+and requested bytes 1,034,366 -> 625,222. These are not observations. Reuse keeps
+the original capacity until the fold finishes; check phase and overall peaks.
+Keep one active PR and all older missed timing goals. The [handoff](docs/development-state.md)
+records exact sources, runner requests, failures and the next action.
 
 ## Open performance goals
 
@@ -67,8 +47,8 @@ history can be optimized away). Copy controls compare identical executable bytes
 
 | Goal and evidence | What remains; next action |
 |---|---|
-| [Gradient-call storage](docs/measurements/gradient-call-time-2026-11-05/README.md) | Sixteen 33/199 and 129/199 results miss 5%; AMD64 session 2 3/0 current is 2.1822% slower, beyond 2%. All copy controls pass. Three-coordinate long solves improve 14.3–25.2%. After final delivery, map the [two remaining recording allocations](docs/measurements/gradient-call-census-2026-11-05/README.md#remaining-storage) to their producer/consumer lifetimes (2U requests, 32NU bytes), and separately review the zero-update source/driver path before declaring a new experiment. These are next investigations, not established causes. |
-| [Consumed numeric storage](docs/measurements/owned-numeric-time-2026-11-05/README.md) | Four AMD64 5% targets remain open: session 1 3/199 current; session 2 3/199 current/history and 3/1999 current. Observed gains are 3.36–4.76%; copy controls pass. The [gradient-call group](docs/measurements/gradient-call-storage.md) passes focused checks and allocation audits. Compiler/runtime results are audited; finish its production gates; a new comparison does not settle these earlier misses. |
+| [Gradient-call storage](docs/measurements/gradient-call-time-2026-11-05/README.md) | Sixteen 33/199 and 129/199 results miss 5%; AMD64 session 2 3/0 current is 2.1822% slower, beyond 2%. All copy controls pass. Three-coordinate long solves improve 14.3–25.2%. The current pair-buffer group addresses one of the [two remaining recording allocations](docs/measurements/gradient-call-census-2026-11-05/README.md#remaining-storage) identified by producer/consumer lifetimes (together 2U requests, 32NU bytes). Separately review the zero-update source/driver path before declaring a new experiment. These are next investigations, not established causes. |
+| [Consumed numeric storage](docs/measurements/owned-numeric-time-2026-11-05/README.md) | Four AMD64 5% targets remain open: session 1 3/199 current; session 2 3/199 current/history and 3/1999 current. Observed gains are 3.36–4.76%; copy controls pass. The [gradient-call group](docs/measurements/gradient-call-storage.md) passes focused checks and allocation audits. Compiler/runtime results and final production delivery are verified; a new comparison does not settle these earlier misses. |
 | [Packed derivative inputs](docs/measurements/packed-input-time-2026-11-04/README.md) | AMD64 session 1 copy variation is 2.3628% / 2.7833% on 3/199 and 3/1999; session 2 slows 3/1 current by 2.3095%, against 2% limits. [Saved samples](docs/measurements/packed-input-time-2026-11-04/amd64-sample-review.md) establish no cause. Consumed-storage delivery is verified; retain these separate misses. |
 | [Final-iteration compiler cost](docs/measurements/final-iteration-analysis-2026-11-04/README.md) | AMD64 field-owner transfer copy variation is 2.043% against 2%; other observed limits pass. Inspect retained sample/setup progression before proposing a new measurement. |
 | [Final-iteration runtime](docs/measurements/final-iteration-time-2026-11-04/README.md) | Five history cases miss 5%: ARM64 3/199 and 33/199 in both sessions, plus AMD64 session 1 33/199. AMD64 session 2 slows 3/1 history by 2.79%. Compare small-case source and saved sample progression before selecting a repair. |

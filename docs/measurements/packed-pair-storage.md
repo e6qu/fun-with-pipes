@@ -1,9 +1,9 @@
 # Reuse private neighboring-record storage
 
-Contract frozen before implementation. Parent PR #259 remains in final CI at
+Contract frozen before implementation, while parent PR #259 was in final CI at
 `e3a2e1d34eaa9364ff22273ed10fef7afb98204e`. Require its verified merge before
-publishing another PR or collecting new native measurements. No parent pass is
-claimed here. See the [allocation census](gradient-call-census-2026-11-05/README.md#remaining-storage).
+publishing another PR or collecting new native measurements. That prerequisite
+now passes: see [verified delivery](../roadmap-history.md#gradient-call-storage-pr-259). See the [allocation census](gradient-call-census-2026-11-05/README.md#remaining-storage).
 
 ## Program and intended change
 

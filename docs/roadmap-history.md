@@ -6,6 +6,26 @@ and complete platform validation are different events. Measurements retain their
 original source and settings; old numbers are not measurements of current main.
 The linked PRs, runs and data records supply the detailed evidence.
 
+## Gradient-call storage (PR #259)
+
+[PR #259](https://github.com/e6qu/fun-with-pipes/pull/259) merged November 5 as
+`cbb779446162efa71301f64350662f2c7c0d8073`. Its tree equals tested
+`e3a2e1d34eaa9364ff22273ed10fef7afb98204e`; the squash message is one line,
+with no body or trailers. All nine [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/41986867960),
+[docs](https://github.com/e6qu/fun-with-pipes/actions/runs/41986867893) and the
+[complete log audit](https://github.com/e6qu/fun-with-pipes/actions/runs/42000937569)
+pass. [Delivery identities](measurements/gradient-call-delivery-2026-11-05.json)
+record the source, tree and archived audit.
+
+Scoped gradient calls borrow read-only inputs; numeric folds pass fields directly;
+backward propagation accepts one explicit root seed; exclusive derivative arrays
+supply coordinate scratch. Fresh 129/199 solves use 727 requests instead of 2,121,
+with 230,864 fewer requested bytes and 398 fewer retains. Final managed/raw storage
+is zero. [Runtime evidence](measurements/gradient-call-time-2026-11-05/README.md)
+retains 17 missed limits: 16 larger cases miss 5%, and one AMD64 zero-update case
+slows 2.1822%. Three-coordinate long solves improve 14.3–25.2%; RSS is mixed.
+These results do not settle earlier timing goals or establish C/Rust parity.
+
 ## Consumed numeric storage (PR #258)
 
 [PR #258](https://github.com/e6qu/fun-with-pipes/pull/258) merged as

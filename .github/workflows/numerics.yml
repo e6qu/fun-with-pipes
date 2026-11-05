@@ -57,6 +57,11 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          filter: blob:limit=1m
+      - name: Retain historical review sources used by evidence controls
+        run: git fetch --filter=blob:limit=1m origin "+refs/pull/*/head:refs/remotes/origin/review/*"
       - name: Check storage reference, counters, phase attribution and audit controls
         run: |
           mkdir storage-measurement-controls

@@ -161,8 +161,9 @@ the actual allocation throughout. Returning that allocation also counts as an
 escape from the helper, so callers must not treat its input as merely borrowed.
 
 The [contract and controls](measurements/packed-pair-storage.md) cover both storage
-paths, aliases, numeric bits and physical frees. Implementation and local source
-checks are present; native verification and measurements are still pending.
+paths, aliases, numeric bits and physical frees. [Focused GCC/Clang native checks and evidence audits](measurements/packed-pair-checks-2026-11-05.md)
+pass on Linux AMD64/ARM64 and macOS ARM64. Measurements and final production
+verification for this batch remain pending.
 
 ### Array construction and sorting
 
