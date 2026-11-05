@@ -1,6 +1,6 @@
 # Current work
 
-**Next:** monitor and audit the eight remaining native jobs for PR #259, then
+**Next:** monitor and audit the remaining native gates for PR #259, then
 squash merge only if every final-head gate passes. In parallel, run the prepared
 next branch's focused correctness batch; no new timing measurements or second PR
 before parent delivery.
@@ -11,7 +11,8 @@ Head `e3a2e1d34eaa9364ff22273ed10fef7afb98204e`, branch `gradient-call-storage`,
 worktree `.worktrees/owned-numeric-updates`.
 
 - Production `41986867960`: C/Rust benchmark job `127109553431` passes; full-log
-  audit passes (3.23s). Eight native jobs remain in progress, no reported failures.
+  audit passes (3.23s). Both macOS ARM64 jobs now pass; their log audits remain.
+  Six native jobs are still running, no reported failures.
 - Documentation `41986867893`, job `127109552583`: passes; full-log audit passes
   (3.71s). Only the three expected negative-runner diagnostics occur.
 - Preserve this exact head. Final receipts stay local until the next PR.
@@ -45,9 +46,12 @@ report. Do not rerun old native measurements.
 | 4 | Implemented | Consume derivative scratch; alias/view, both positions and unwind controls pass. |
 | 5 | In progress | Audit all final production gates, then squash merge PR #259. |
 
-## Next batch: implemented draft, native checks pending
+## Next batch: grouped native checks queued
 
-Branch/worktree `packed-pair-storage`. Sparse checkout excludes large historical
+Branch/worktree `packed-pair-storage`, implementation `6e02c048019642b6f6eb52c9ae6fef5fa8f2f3f7`.
+Focused run `41991479079` requests suite `packed-pair-checks` and native runner
+`all`: Linux AMD64/ARM64 and macOS ARM64. No second PR is open; no timing started.
+Sparse checkout excludes large historical
 measurement folders; full native builds, suites and evidence generation stay on
 runners. Contract `3b7954eef411b7b621d09718ae2aad41e72e744e`, tag
 `roadmap/packed-pair-storage-protocol-2026-11-05`, precedes all implementation.
@@ -110,3 +114,19 @@ observations, verified remote original artifacts, then removed 1,820.39 MiB of
 old task-download copies. Receipt:
 `../gradient-work/removed-verified-downloads-2026-11-05-pair-preparation.json`.
 Free space afterward: 65.416 GiB. Other worktrees are unrelated.
+
+## Runner log audit after the disk guard stopped local collection
+
+Local free space fell again to 61.938 GiB after verified cleanup. The guard
+correctly refused the macOS ARM64 ownership audit; do not bypass it. Native
+builds/tests remain on runners. A new `production-log-audit` numerical-workflow
+suite runs the existing full-log/target/artifact audit on GitHub instead.
+
+Supply every input explicitly: `evidence_run=41986867960`,
+`source_revision=e3a2e1d34eaa9364ff22273ed10fef7afb98204e`,
+`production_attempt=1`, `documentation_job=127109552583`, and `audit_host`.
+Use `all` only after all gates complete; incomplete jobs make the audit fail.
+Controls reject wrong sources, failing conclusions and unexpected diagnostics.
+Large Windows probe downloads stay on runners; uploaded receipts retain full
+job/target logs, original artifact IDs and hashes. Local audit tests were not
+run below the disk reserve; the workflow runs their controls before collection.
