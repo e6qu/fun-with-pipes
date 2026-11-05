@@ -33,9 +33,10 @@ on both architectures, including agreement with saved parent counts. Compiler
 cost limits and saved-data audits also pass. Three [runtime sessions](docs/measurements/packed-pair-time-2026-11-05/README.md) expose 23
 missed speed targets and one AMD64 stack-budget failure. The
 [single-owner cleanup repair](docs/measurements/packed-pair-cleanup-repair.md)
-passes focused correctness and both stack/allocation jobs. Audit its saved
-stack/storage evidence and compiler costs before new timing, then finish
-production verification.
+passes focused correctness, [complete stack/allocation audits](docs/measurements/packed-pair-cleanup-census-2026-11-05/README.md)
+and [compiler cost audits](docs/measurements/packed-pair-cleanup-analysis-2026-11-05/README.md).
+Four repaired-source runtime sessions are requested; retain every result, then
+finish production verification.
 
 For a fresh 129-coordinate/199-update solve, observed requests are 727 -> 528
 and requested bytes 1,034,366 -> 625,222. Reuse keeps the original capacity until

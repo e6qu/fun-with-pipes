@@ -702,7 +702,7 @@ pair callbacks before folding. Keep the owner protected through callbacks so
 failure or cancellation releases it exactly once. Different-width results and
 the explicit no-reuse control allocate separate output. See the
 [ownership contract](measurements/packed-pair-storage.md) and
-[observed allocation costs](measurements/packed-pair-census-2026-11-05.md).
+[repaired-source stack and allocation costs](measurements/packed-pair-cleanup-census-2026-11-05/README.md).
 
 ### Other selected transformations
 

@@ -1,0 +1,185 @@
+{
+  "source": "373955e82a74d8de2eb12ff2b81f6cc74c089e5e",
+  "run": 42017186500,
+  "job": {
+    "id": 127210541101,
+    "run_id": 42017186500,
+    "workflow_name": "Numerical and ownership evidence",
+    "head_branch": "roadmap/packed-pair-cleanup-census-2026-11-05",
+    "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/42017186500",
+    "run_attempt": 1,
+    "node_id": "CR_kwDOU33zxM8AAAAdnlbQLQ",
+    "head_sha": "373955e82a74d8de2eb12ff2b81f6cc74c089e5e",
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/127210541101",
+    "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/42017186500/job/127210541101",
+    "status": "completed",
+    "conclusion": "success",
+    "created_at": "2026-11-05T11:13:21Z",
+    "started_at": "2026-11-05T11:16:05Z",
+    "completed_at": "2026-11-05T11:21:55Z",
+    "name": "numeric_input_analysis (ubuntu-latest)",
+    "steps": [
+      {
+        "name": "Set up job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 1,
+        "started_at": "2026-11-05T11:16:06Z",
+        "completed_at": "2026-11-05T11:16:07Z"
+      },
+      {
+        "name": "Run actions/checkout@v7",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 2,
+        "started_at": "2026-11-05T11:16:07Z",
+        "completed_at": "2026-11-05T11:16:21Z"
+      },
+      {
+        "name": "Run dtolnay/rust-toolchain@stable",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 3,
+        "started_at": "2026-11-05T11:16:21Z",
+        "completed_at": "2026-11-05T11:16:29Z"
+      },
+      {
+        "name": "Verify focused correctness and matching compiler sources",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 4,
+        "started_at": "2026-11-05T11:16:29Z",
+        "completed_at": "2026-11-05T11:16:43Z"
+      },
+      {
+        "name": "Run actions/cache@v6",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 5,
+        "started_at": "2026-11-05T11:16:43Z",
+        "completed_at": "2026-11-05T11:16:44Z"
+      },
+      {
+        "name": "Build candidate at production settings",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 6,
+        "started_at": "2026-11-05T11:16:44Z",
+        "completed_at": "2026-11-05T11:18:10Z"
+      },
+      {
+        "name": "Build and verify the selected same-source reference",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 7,
+        "started_at": "2026-11-05T11:18:10Z",
+        "completed_at": "2026-11-05T11:19:34Z"
+      },
+      {
+        "name": "Check complete-program stack costs before allocation and timing gates",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 8,
+        "started_at": "2026-11-05T11:19:34Z",
+        "completed_at": "2026-11-05T11:19:34Z"
+      },
+      {
+        "name": "Verify complete solve allocations before any timing",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 9,
+        "started_at": "2026-11-05T11:19:34Z",
+        "completed_at": "2026-11-05T11:19:34Z"
+      },
+      {
+        "name": "Attribute fresh-solve reference allocations to phases and source sites",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 10,
+        "started_at": "2026-11-05T11:19:34Z",
+        "completed_at": "2026-11-05T11:19:34Z"
+      },
+      {
+        "name": "Verify fresh-solve savings and their exact phase attribution",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 11,
+        "started_at": "2026-11-05T11:19:34Z",
+        "completed_at": "2026-11-05T11:19:34Z"
+      },
+      {
+        "name": "Measure balanced compiler commands and peak memory",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 12,
+        "started_at": "2026-11-05T11:19:34Z",
+        "completed_at": "2026-11-05T11:21:39Z"
+      },
+      {
+        "name": "Preserve complete measurements and failures",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 13,
+        "started_at": "2026-11-05T11:21:39Z",
+        "completed_at": "2026-11-05T11:21:53Z"
+      },
+      {
+        "name": "Post Run actions/cache@v6",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 25,
+        "started_at": "2026-11-05T11:21:53Z",
+        "completed_at": "2026-11-05T11:21:53Z"
+      },
+      {
+        "name": "Post Run actions/checkout@v7",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 26,
+        "started_at": "2026-11-05T11:21:53Z",
+        "completed_at": "2026-11-05T11:21:53Z"
+      },
+      {
+        "name": "Complete job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 27,
+        "started_at": "2026-11-05T11:21:53Z",
+        "completed_at": "2026-11-05T11:21:53Z"
+      }
+    ],
+    "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/127210541101",
+    "labels": [
+      "ubuntu-latest"
+    ],
+    "runner_id": 1000410593,
+    "runner_name": "GitHub Actions 1000410593",
+    "runner_group_id": 0,
+    "runner_group_name": "GitHub Actions"
+  },
+  "artifact": {
+    "id": 13409753800,
+    "node_id": "MDg6QXJ0aWZhY3QxMzQwOTc1MzgwMA==",
+    "name": "packed-pair-analysis-X64",
+    "size_in_bytes": 143479267,
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13409753800",
+    "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13409753800/zip",
+    "expired": false,
+    "digest": "sha256:83ca9b7217c8fc7ab35559757327b0b299d4e250c300d761258ac4dc8fee7b91",
+    "created_at": "2026-11-05T11:21:53Z",
+    "updated_at": "2026-11-05T11:21:53Z",
+    "expires_at": "2027-02-03T11:13:20Z",
+    "workflow_run": {
+      "id": 42017186500,
+      "repository_id": 1400763332,
+      "head_repository_id": 1400763332,
+      "head_branch": "roadmap/packed-pair-cleanup-census-2026-11-05",
+      "head_sha": "373955e82a74d8de2eb12ff2b81f6cc74c089e5e"
+    }
+  },
+  "commands": 336,
+  "untimedChecks": 6,
+  "failures": {},
+  "referenceVerified": true,
+  "expectedDiagnostics": []
+}

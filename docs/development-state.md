@@ -1,13 +1,11 @@
 # Current work
 
-**Next:** publish the saved-stack auditor correction and audit census
-`42015900941` on both hosts; complete compiler costs `42017186500` before timing.
-Audit 42017767534 rejected a valid GCC dynamic entry, not a changed program.
-Its full log/receipt and the precise metric are in the cleanup-checks evidence.
-Both use frozen source `373955e82a74d8de2eb12ff2b81f6cc74c089e5e`, tag
-`roadmap/packed-pair-cleanup-census-2026-11-05`. Both census hosts pass; the
-previously failing AMD64 33/199 current frame is now 720 bytes, equal to reference
-(previously 928, allowed 848). All three focused hosts and full audit pass.
+**Next:** monitor runtime `42018849842`, retain all four session outcomes, then
+finish final production delivery. Frozen measured source:
+`373955e82a74d8de2eb12ff2b81f6cc74c089e5e`, tag
+`roadmap/packed-pair-cleanup-census-2026-11-05`. Correctness, complete stack/count
+audit and compiler cost audit pass. Runtime requires EPYC 7763 / Neoverse-N2;
+rejected hosts must not silently replace the declared hardware.
 
 ## Roadmap status
 
@@ -18,7 +16,7 @@ previously failing AMD64 33/199 current frame is now 720 bytes, equal to referen
 | 1 | Verified | The unchanged private helper consumes input; borrowing/escape contracts agree. |
 | 2 | Verified | Reuse with one protected owner; keep two owners only when allocating output. |
 | 3 | Verified | Aliases, both layouts, bits, traps/cancellation and physical frees pass on three hosts. |
-| 4 | In progress | Repair stack/count checks pass on both architectures; audit saved data and complete compiler costs before timing. |
+| 4 | In progress | Repair stack/count and compiler audits pass; four runtime sessions requested. |
 | 5 | Pending | Retain evidence, pass nine final production jobs plus docs, audit and squash merge. |
 
 ## Branch and source identities
@@ -55,8 +53,8 @@ These results do not verify the changed cleanup implementation.
 | [Original runtime](measurements/packed-pair-time-2026-11-05/README.md) | a1f18947, run 42005111118; three sessions, 23 speed misses and one AMD64 stack failure. Full retained-data audit 42009905049 passes. |
 | Repaired native checks | ecdf2476, run 42013253058; all 25 targets and controls pass per host after the observer/formatting repair. |
 | Repaired full audit | 42015894951 passes: 25 targets, 822 images and 838 probes per host. |
-| Repaired stack/counts | 373955e8, run 42015900941; both pass. Saved-data audit is next. |
-| Repaired compiler costs | 373955e8, run 42017186500; in progress. |
+| [Repaired stack/counts](measurements/packed-pair-cleanup-census-2026-11-05/README.md) | 373955e8, run 42015900941; both pass. Full audit 42018351007 passes. |
+| [Repaired compiler costs](measurements/packed-pair-cleanup-analysis-2026-11-05/README.md) | 373955e8, run 42017186500; both pass. Full audit 42018554796 passes. |
 | Repaired docs | 373955e8 docs 42015897792 pass; ecdf2476 docs 42013258857 pass. |
 
 Fresh 129/199 original results: 727 -> 528 requests and 1,034,366 -> 625,222
@@ -67,7 +65,8 @@ committed. Large generated archives remain in their digest-identified artifacts.
 The first reuse implementation protected one allocation twice, then cleared one
 owner. The repair keeps the original owner through mapping and returns it directly.
 All 12 reported frame maxima on each architecture equal their allocating references. Both
-architecture stack gates pass; the saved-report audit must verify them independently. The new preflight compiles the same
+architecture stack gates pass; full saved-report audit 42018351007 independently verifies them. Dynamic
+entries remain explicit; reported bytes are not total call-stack bounds. The new preflight compiles the same
 six complete workloads, both forms and both compilers at GCC O2; it records all
 frame-limit failures before allocation or timing work. Source/C/images/output and
 stack reports remain in `pair-stack/` inside the census artifact.
@@ -77,13 +76,17 @@ AMD64 session 2 never measured: original run and replacements 42008084704,
 host is EPYC 7763. All host reports/logs are retained in the runtime evidence;
 stop requesting the old candidate. Never repeat unchanged timing for a pass.
 
-## Documentation repair verified
+## Documentation and audit repairs
 
 Docs 42011765327 rejected nonstandard status labels in the handoff. Both offending
 rows now use the existing vocabulary (Verified/In progress); their explanations
 remain in the work column. The two completed audit-control scripts passed; later
 checks had not run. Full failed log: [status-label repair](measurements/packed-pair-docs-status-2026-11-05.log.gz).
 No validation rule was relaxed. Repair docs 42012233154 pass.
+Saved-stack audit 42017767534 initially rejected a valid GCC dynamic entry.
+The corrected audit retains dynamic entries separately, recomputes unchanged
+limits and passes at 42018351007. Both architectures are audited even if one fails.
+Failure receipt/log and seven passing controls are in cleanup-checks evidence.
 
 ## Repairs already verified
 
