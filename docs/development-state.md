@@ -1,7 +1,8 @@
 # Current work
 
-**Next:** publish the parent-reconciliation controls and run the exact allocation
-census on both native Linux architectures. PR #259 is verified and merged;
+**Next:** publish the audit-test output repair, freeze the measurement source,
+and run compiler-cost and qualified runtime comparisons. Census 42003323499
+passes both hosts; retain compact evidence on runners before final delivery. PR #259 is verified and merged;
 the next private pair-buffer implementation passes focused checks and full audits.
 Keep one active PR, group all remaining measurements/repairs before final CI.
 
@@ -31,7 +32,7 @@ and complete log audit (`42000937569`, auditor f339616c) pass.
 ## Current branch and verified native checks
 
 Draft [PR #260](https://github.com/e6qu/fun-with-pipes/pull/260), branch/worktree
-`packed-pair-storage`. Current head `b808155995b711a687c85a4161c3733f51cd71c1`.
+`packed-pair-storage`. Current head `e4d645cd4c88e49ff0d7d781ec9af10095d01fd6`.
 Pre-rebase preparation head
 `f339616c639e4c55703f619cc46ca08f93f11ee8`. The [contract](measurements/packed-pair-storage.md)
 was frozen before code at `3b7954eef411b7b621d09718ae2aad41e72e744e`, retained by
@@ -48,30 +49,32 @@ was frozen before code at `3b7954eef411b7b621d09718ae2aad41e72e744e`, retained b
   838 probe records per host; source/artifact hashes and image architecture checked.
   [Evidence and preparation repair](measurements/packed-pair-checks-2026-11-05.md)
   identify the saved observations. Original images remain in the source artifacts.
-- `packed-pair-census` prepares repeated solves and fresh O1/O2 phase accounting.
+- `packed-pair-census` passes repeated solves and fresh O1/O2 phase accounting.
   `packed-pair-analysis` keeps seven inputs and 48 scheduled compiler commands.
   `packed-pair-time` / `packed-pair-report` prepare the two sessions per architecture
-  and complete archived-source audits. None has collected new observations yet.
-- Require the small controls below first, then parent delivery and focused audit.
-  Census must reconcile the allocating reference with the audited parent before
-  timing. Preserve all earlier missed timing goals; no changed thresholds.
+  and complete archived-source audits. Compiler/runtime timing has not started yet.
+- Parent delivery, focused audit, controls and exact census reconciliation pass.
+  Preserve all earlier missed timing goals; no changed thresholds.
 
 Small control run `42000589145` failed only historical source availability: one
 18-test script reports five missing-commit/tag errors; the other seven scripts
 pass (58 tests). All eight ran. Repair: full-history/tag checkout and historical
-PR refs, matching docs CI. Keep the tests; rerun only this small control batch.
+PR refs, matching docs CI. The repaired small batch passes; do not rerun it unchanged.
 The compiler/runtime/library/native-test sources remain identical to 6e02c048.
 
 The rebase onto #259's verified squash is complete. Focused implementation and
 auditor identities are retained by `roadmap/packed-pair-checks-2026-11-05` and
 `roadmap/packed-pair-auditors-2026-11-05`; the original contract tag is unchanged.
 Repair controls `42002432263` pass all eight scripts (76 tests) on b8081559.
-Docs `42002435391` are running. The census now also checks the allocating
+Docs `42002435391` and current-head `42003321627` pass. The census now also checks the allocating
 reference against saved parent counts/peaks: 24 fresh and 12 repeated cases,
 with mutation controls. These new controls run first in the census job.
 Draft production `42002435468` is skipped intentionally, not final acceptance.
-Dispatch `packed-pair-census` with `evidence_run=41991479079`.
-Keep timing blocked on census acceptance and reference/parent reconciliation.
+Census `42003323499` passes both native Linux architectures at e4d645cd,
+with `evidence_run=41991479079`. Its early controls include the new saved-parent
+reconciliation test before either compiler build; both hosts pass those controls
+and every repeated/fresh count, cleanup, parent-reconciliation and phase check. Source tag: `roadmap/packed-pair-census-2026-11-05`.
+Census acceptance and reference/parent reconciliation now permit timing.
 
 Redundant post-merge main production `42001754691` was canceled while queued:
 its tree equals the fully verified PR head. Main docs `42001754627` already pass.
@@ -89,8 +92,8 @@ Parent [census](measurements/gradient-call-census-2026-11-05/README.md): fresh
 Three-coordinate long solves improve 14.3–25.2%; RSS is mixed. Prior #258's four
 AMD64 misses and all other PLAN.md goals remain separate.
 
-Next predicted fresh 129/199 counts: 727 -> 528 requests, 1,034,366 -> 625,222 bytes.
-These are predictions. Reuse retains original capacity through the fold; check
+[Observed pair-reuse fresh 129/199 counts](measurements/packed-pair-census-2026-11-05.md):
+727 -> 528 requests, 1,034,366 -> 625,222 bytes. Reuse retains original capacity through the fold; check
 phase and overall peaks rather than claiming lower live memory from fewer requests.
 
 ## Resource limits and retained local work
@@ -111,3 +114,8 @@ and `../gradient-work/packed-pair-inventory.json`. Preparation controls ran on G
 Old run `38888712709` has stale in-progress metadata, but all jobs completed on
 October 16 and GitHub rejects cancellation as already completed. No active runner
 or queue cause is established. Metadata: `../gradient-work/stale-paths-{run,jobs}-38888712709.json`.
+
+Audit-test repair in the next publication: capture only the mocked audit warnings/failure prints
+in `test-production-log-audit.py`, while letting assertions propagate. Otherwise
+the docs full-log audit would see synthetic warnings as real diagnostics. Actual
+production/target-log filters stay strict. Verify through the next docs/control run.

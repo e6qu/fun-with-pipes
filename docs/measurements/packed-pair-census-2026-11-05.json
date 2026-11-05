@@ -1,0 +1,21 @@
+{
+  "source": "e4d645cd4c88e49ff0d7d781ec9af10095d01fd6",
+  "run": 42003323499,
+  "conclusion": "success",
+  "scope": "12 repeated and 24 fresh cases per architecture; both forms/workspace modes, fresh GCC O1/O2; exact reference/parent reconciliation and fresh archive audits passed in the runner job",
+  "hosts": {
+    "aarch64": {
+      "job": 127163781799,
+      "artifact": 13404461436,
+      "sha256": "0bf13f9a57948d24e92d56ccc44a648dd7ee1f24fee3105cff9e5674e3da1661",
+      "bytes": 83701182
+    },
+    "x86_64": {
+      "job": 127163782025,
+      "artifact": 13403498781,
+      "sha256": "7d80cfbb3022630a98c0c138b559de956ec99c1f5a53aa8e624d7586828e0938",
+      "bytes": 86571225
+    }
+  },
+  "retention": "Original full artifacts remain on GitHub; collect compact observation archives and receipts on runners before final delivery. Local disk is below reserve."
+}

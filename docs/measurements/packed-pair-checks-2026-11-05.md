@@ -45,6 +45,7 @@ remain available. No fwp compiler/native source changed for this repair.
 
 Follow [the frozen contract](packed-pair-storage.md): compare exact complete-solve
 counts and phase/overall live memory first, then compiler costs and qualified
-runtime sessions. No new observations or speed claim yet. Existing timing misses
+runtime sessions. [The census](packed-pair-census-2026-11-05.md) now passes; no
+speed claim yet. Existing timing misses
 remain open in [PLAN.md](../../PLAN.md). Keep large evidence on runners while the
 local disk is below its 64 GiB reserve; retain full archives before final delivery.

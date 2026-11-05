@@ -26,12 +26,13 @@ been read, instead of allocating a separate pair-result buffer:
 Steps 1–3 pass [focused native checks and full evidence audits](docs/measurements/packed-pair-checks-2026-11-05.md).
 [The contract](docs/measurements/packed-pair-storage.md), frozen before implementation
 at `3b7954eef411b7b621d09718ae2aad41e72e744e`, fixes the proof and measurement limits.
-Measurement tooling is prepared; its historical-checkout repair passes all
-eight control scripts. The census also reconciles the reference with saved parent counts. No new timing observations have been collected.
+[The allocation census](docs/measurements/packed-pair-census-2026-11-05.md) passes
+on both architectures, including agreement with saved parent counts. Compiler
+costs, runtime timing and final production verification remain.
 
-For a fresh 129-coordinate/199-update solve, predicted requests are 727 -> 528
-and requested bytes 1,034,366 -> 625,222. These are not observations. Reuse keeps
-the original capacity until the fold finishes; check phase and overall peaks.
+For a fresh 129-coordinate/199-update solve, observed requests are 727 -> 528
+and requested bytes 1,034,366 -> 625,222. Reuse keeps the original capacity until
+the fold finishes. Overall peak managed storage does not grow; final storage is zero.
 Keep one active PR and all older missed timing goals. The [handoff](docs/development-state.md)
 records exact sources, runner requests, failures and the next action.
 

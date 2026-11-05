@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Reject incomplete, wrong-source or diagnostically failing production gates."""
 import importlib.util
+import io
 import json
 from pathlib import Path
 import tempfile
@@ -50,7 +51,9 @@ class ProductionLogs(unittest.TestCase):
 
         command = ['audit', '--run', '10', '--source', SOURCE, '--attempt', '1',
                    '--host', host, '--docs-job', '200', '--output', str(output)]
-        with patch.object(AUDIT, 'api', side_effect=api), patch('sys.argv', command):
+        # The mocked warnings/failures are test input, not repository diagnostics.
+        # Keep exceptions visible while capturing this deliberately injected output.
+        with patch.object(AUDIT, 'api', side_effect=api), patch('sys.argv', command), patch('sys.stdout', io.StringIO()):
             AUDIT.main()
 
     def test_complete_benchmark_and_documentation_controls_pass(self):
