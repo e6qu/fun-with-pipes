@@ -5,7 +5,7 @@ on:
       suite:
         description: Evidence suite
         type: choice
-        options: [packed-pair-time, packed-pair-report, storage-measurement-controls, packed-pair-analysis, packed-pair-census, focused-storage-audit, production-log-audit, packed-pair-checks, gradient-call-checks, gradient-call-census-report, gradient-call-census, gradient-call-analysis, gradient-call-time, gradient-call-report, owned-numeric-census, packed-input-checks, packed-input-analysis, owned-numeric-analysis, packed-input-time, owned-numeric-time, packed-input-report, owned-numeric-report, matched-option-analysis, matched-option-time, matched-option-report, matched-option-checks, final-iteration-analysis, final-iteration-time, final-iteration-report, final-iteration-checks, iteration-storage-review, scalar-identity-checks, scalar-array-identity-analysis, scalar-array-identity-time, scalar-array-identity-report, scalar-array-map-recover, scalar-array-map-analysis, scalar-array-map-time, scalar-array-map-report, gradient-array-analysis, gradient-array-time, gradient-array-report, gradient-array-checks, range-zip-analysis, range-zip-time, range-zip-report, range-zip-checks, scalar-map-zip-analysis, scalar-map-zip-time, scalar-map-zip-report, scalar-map-zip-checks, constructor-census, numeric-input-selection, numeric-input-analysis, numeric-input-checks, callback-owners-time, callback-owners-report, packed-records-time, packed-records-report, packed-record-controls, packed-record-checks, array-observations, array-consumption, scalar-array-time, scalar-array-checks, array-construction-time, array-construction, matrix-tables, matrix-columns-report, matrix-columns, matrix-checks, current-kernel-report, current-kernels, record-fold-count-report, record-fold-time, record-fold-report, record-fold-checks, record-fold-measurements, record-zip-codegen, record-zip-report, record-zip-time, record-zip-checks, derivative-forward-costs, typed-derivative-owners, array-list-report, swift-allocation-report, swift-allocations, array-list-measurements, lexical-bindings, lexical-probes, callable-phase-paired, callable-phase-context, callable-construction-diagnosis, callable-phases, callable-phase-report, swift-peer-report, swift-peers, returned-callables, state-range-checks, scalar-fold-checks, scan-comparison, buffer-baselines, buffer-peer-checks, timing-names, timing-resources, typed-loop-state, kernel-codegen, timing-diagnostics, kernel-baselines, eager-captures, eager-capture-time, runtime-startup, decimal-count, decimal-count-repeat, decimal-count-interleaved, decimal-count-balanced, cpu-phases, cpu-baselines, functional-calls, functional-probes, parser-measurements, parser-workspace, inline-key-time, inline-key-audit, arc-cost-audit, scalar-projections, unique-arrays, unique-array-checks, arc-costs, ownership-analysis, compiler-lifetimes, array-sort, list-copy-costs, list-copy, benchmark-comparison, socket-inheritance, http-mappings, http-idle-checks, array-text, float-text, float-text-checks, float-text-costs, descent-output, coordinate-work, descent-batches, descent-call-costs, descent-peers, descent-checks, ad-depth, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, wordfreq-current, direct-strings, string-reuse, ad-application, wordfreq-baseline, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, memory-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, fixed-function-checks, server-checks, http-application, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
+        options: [packed-pair-census-report, packed-pair-time, packed-pair-report, storage-measurement-controls, packed-pair-analysis, packed-pair-census, focused-storage-audit, production-log-audit, packed-pair-checks, gradient-call-checks, gradient-call-census-report, gradient-call-census, gradient-call-analysis, gradient-call-time, gradient-call-report, owned-numeric-census, packed-input-checks, packed-input-analysis, owned-numeric-analysis, packed-input-time, owned-numeric-time, packed-input-report, owned-numeric-report, matched-option-analysis, matched-option-time, matched-option-report, matched-option-checks, final-iteration-analysis, final-iteration-time, final-iteration-report, final-iteration-checks, iteration-storage-review, scalar-identity-checks, scalar-array-identity-analysis, scalar-array-identity-time, scalar-array-identity-report, scalar-array-map-recover, scalar-array-map-analysis, scalar-array-map-time, scalar-array-map-report, gradient-array-analysis, gradient-array-time, gradient-array-report, gradient-array-checks, range-zip-analysis, range-zip-time, range-zip-report, range-zip-checks, scalar-map-zip-analysis, scalar-map-zip-time, scalar-map-zip-report, scalar-map-zip-checks, constructor-census, numeric-input-selection, numeric-input-analysis, numeric-input-checks, callback-owners-time, callback-owners-report, packed-records-time, packed-records-report, packed-record-controls, packed-record-checks, array-observations, array-consumption, scalar-array-time, scalar-array-checks, array-construction-time, array-construction, matrix-tables, matrix-columns-report, matrix-columns, matrix-checks, current-kernel-report, current-kernels, record-fold-count-report, record-fold-time, record-fold-report, record-fold-checks, record-fold-measurements, record-zip-codegen, record-zip-report, record-zip-time, record-zip-checks, derivative-forward-costs, typed-derivative-owners, array-list-report, swift-allocation-report, swift-allocations, array-list-measurements, lexical-bindings, lexical-probes, callable-phase-paired, callable-phase-context, callable-construction-diagnosis, callable-phases, callable-phase-report, swift-peer-report, swift-peers, returned-callables, state-range-checks, scalar-fold-checks, scan-comparison, buffer-baselines, buffer-peer-checks, timing-names, timing-resources, typed-loop-state, kernel-codegen, timing-diagnostics, kernel-baselines, eager-captures, eager-capture-time, runtime-startup, decimal-count, decimal-count-repeat, decimal-count-interleaved, decimal-count-balanced, cpu-phases, cpu-baselines, functional-calls, functional-probes, parser-measurements, parser-workspace, inline-key-time, inline-key-audit, arc-cost-audit, scalar-projections, unique-arrays, unique-array-checks, arc-costs, ownership-analysis, compiler-lifetimes, array-sort, list-copy-costs, list-copy, benchmark-comparison, socket-inheritance, http-mappings, http-idle-checks, array-text, float-text, float-text-checks, float-text-costs, descent-output, coordinate-work, descent-batches, descent-call-costs, descent-peers, descent-checks, ad-depth, native-commands, string-map, pointer-ownership, file-inspection, file-applications, wordfreq-repeat, wordfreq-current, direct-strings, string-reuse, ad-application, wordfreq-baseline, wordfreq, language, shutdown, repl-terminal, numerical, bundle, wide, windows, windows-full, portability, wasm, wasi-arc, wasm-hosts, iteration, autodiff, performance, syntax, library, library-results, collection-build, collection-report, large-map, map-replay, map-borrow, map-storage, artifact-paths, library-unload, solvers, array-borrow, record-moves, matrix-alias, precision, console, paths, filesystem, fields, processes, ad-metadata, ad-layout, ad-sites, mapped-arrays, mapped-array-costs, mapped-array-repeat, zip-maps, zip-windows, zip-map-costs, zip-map-repeat, integer-output-report, hash-alias, hash, hash-windows, hash-costs, hash-report, hash-specialization-repeat, hash-repeat, vectors, vector-costs, vector-repeat, byte-decoders, decoders, kernels, sockets, udp, tcp, tcp-windows, service-values, service-values-linux, task-contexts, task-cancellation, context-storage, context-owners, stream-storage, stream-owners, stream-clients, stream-repeat, connection-repeat, sender-repeat, server-repeat, server-arc, http-clients, http-server-memory, entry-checks, memory-checks, channel-proof, queued-sockets, channel-costs, scalar-text, scalar-text-memory, integer-counting, function-captures, fixed-functions, fixed-function-checks, server-checks, http-application, server-entries, server-recheck, compiler-cache, chain-cleanup, macos-shards, ci-profile]
         default: numerical
       native_runner:
         description: Native host for an early probe; all uses the suite's full matrix
@@ -144,14 +144,14 @@ jobs:
             !focused-storage-audit/*-evidence.zip
           if-no-files-found: error
   gradient_call_census_report:
-    if: inputs.suite == 'gradient-call-census-report'
-    runs-on: ubuntu-latest
+    if: inputs.suite == 'gradient-call-census-report' || inputs.suite == 'packed-pair-census-report'
+    runs-on: ubuntu-24.04-arm
     timeout-minutes: 15
     permissions:
       contents: read
       actions: read
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Check literal budgets and audit saved census on both architectures
@@ -159,6 +159,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           EVIDENCE_RUN: ${{ inputs.evidence_run }}
           SOURCE_REVISION: ${{ inputs.source_revision }}
+          CENSUS_COMPARISON: ${{ inputs.suite == 'packed-pair-census-report' && 'packed-pair' || 'gradient-call' }}
         run: |
           python3 scripts/test-gradient-array-budgets.py
           python3 - <<'PYCODE'
@@ -172,7 +173,8 @@ jobs:
           run = os.environ['EVIDENCE_RUN']
           assert re.fullmatch('[0-9a-f]{40}', source)
           assert re.fullmatch('[0-9]+', run)
-          root = Path('gradient-call-census-report')
+          comparison = os.environ['CENSUS_COMPARISON']
+          root = Path(comparison + '-census-report')
           root.mkdir()
           recorded = Path(os.environ['RUNNER_TEMP']) / 'recorded-census'
           subprocess.run(['git', 'worktree', 'add', '--detach', str(recorded), source], check=True)
@@ -189,7 +191,7 @@ jobs:
               folder = root / machine
               folder.mkdir()
               job, = [row for row in jobs if row['name'] == 'numeric_input_analysis (' + runner + ')']
-              artifact, = [row for row in artifacts if row['name'] == 'gradient-call-census-' + arch]
+              artifact, = [row for row in artifacts if row['name'] == comparison + '-census-' + arch]
               assert not artifact['expired']
               (folder / 'job.json').write_text(json.dumps(job, indent=2) + '\n')
               (folder / 'artifact.json').write_text(json.dumps(artifact, indent=2) + '\n')
@@ -199,7 +201,7 @@ jobs:
                   subprocess.run(['gh', 'api', '--allow-escape-sequences', 'repos/' + os.environ['GITHUB_REPOSITORY'] +
                       '/actions/artifacts/' + str(artifact['id']) + '/zip'], stdout=output, check=True)
               subprocess.run(['python3', 'scripts/audit-gradient-call-census.py',
-                  '--input', str(archive), '--artifact', str(folder / 'artifact.json'),
+                  '--comparison', comparison, '--input', str(archive), '--artifact', str(folder / 'artifact.json'),
                   '--job', str(folder / 'job.json'), '--job-log', str(folder / 'job.log.gz'),
                   '--recorded-checkout', str(recorded), '--source', source, '--run', run,
                   '--machine', machine, '--output', str(folder / 'audit')], check=True)
@@ -208,8 +210,11 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: gradient-call-census-report
-          path: gradient-call-census-report/
+          name: ${{ inputs.suite }}
+          path: |
+            ${{ inputs.suite }}/
+            !${{ inputs.suite }}/*/original.zip
+            !${{ inputs.suite }}/*/audit/*-fresh-*.zip
           if-no-files-found: error
   gradient_call_checks:
     if: inputs.suite == 'gradient-call-checks' || inputs.suite == 'packed-pair-checks'

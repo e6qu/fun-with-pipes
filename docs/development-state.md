@@ -1,8 +1,8 @@
 # Current work
 
-**Next:** publish the audit-test output repair, freeze the measurement source,
-and run compiler-cost and qualified runtime comparisons. Census 42003323499
-passes both hosts; retain compact evidence on runners before final delivery. PR #259 is verified and merged;
+**Next:** monitor compiler-cost run 42005106056 and runtime run 42005111118;
+retain all outcomes without timing reruns. Publish/run the census artifact audit
+preparation to retain compact observations without large local downloads. PR #259 is verified and merged;
 the next private pair-buffer implementation passes focused checks and full audits.
 Keep one active PR, group all remaining measurements/repairs before final CI.
 
@@ -32,7 +32,7 @@ and complete log audit (`42000937569`, auditor f339616c) pass.
 ## Current branch and verified native checks
 
 Draft [PR #260](https://github.com/e6qu/fun-with-pipes/pull/260), branch/worktree
-`packed-pair-storage`. Current head `e4d645cd4c88e49ff0d7d781ec9af10095d01fd6`.
+`packed-pair-storage`. Current published head `a1f189478abadf0da30d8386bee2bc234e0668cf`.
 Pre-rebase preparation head
 `f339616c639e4c55703f619cc46ca08f93f11ee8`. The [contract](measurements/packed-pair-storage.md)
 was frozen before code at `3b7954eef411b7b621d09718ae2aad41e72e744e`, retained by
@@ -52,7 +52,9 @@ was frozen before code at `3b7954eef411b7b621d09718ae2aad41e72e744e`, retained b
 - `packed-pair-census` passes repeated solves and fresh O1/O2 phase accounting.
   `packed-pair-analysis` keeps seven inputs and 48 scheduled compiler commands.
   `packed-pair-time` / `packed-pair-report` prepare the two sessions per architecture
-  and complete archived-source audits. Compiler/runtime timing has not started yet.
+  and complete archived-source audits. Compiler costs `42005106056` and four
+  runtime sessions `42005111118` are queued on frozen a1f18947, tag
+  `roadmap/packed-pair-timing-2026-11-05`.
 - Parent delivery, focused audit, controls and exact census reconciliation pass.
   Preserve all earlier missed timing goals; no changed thresholds.
 
@@ -119,3 +121,10 @@ Audit-test repair in the next publication: capture only the mocked audit warning
 in `test-production-log-audit.py`, while letting assertions propagate. Otherwise
 the docs full-log audit would see synthetic warnings as real diagnostics. Actual
 production/target-log filters stay strict. Verify through the next docs/control run.
+
+Census retention preparation extends the existing census auditor with explicit
+`--comparison packed-pair`; the older corrected gradient-call evidence remains
+its own protocol. It verifies the original job/artifact identity, raw profiles,
+source reconstruction, native images, exact counts and saved-parent agreement.
+The runner retains compact observations and all file hashes; original images/C
+stay in their digest-identified source artifacts. This extension is not yet run.
