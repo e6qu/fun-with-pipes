@@ -11,8 +11,8 @@ Head `e3a2e1d34eaa9364ff22273ed10fef7afb98204e`, branch `gradient-call-storage`,
 worktree `.worktrees/owned-numeric-updates`.
 
 - Production `41986867960`: C/Rust benchmark job `127109553431` passes; full-log
-  audit passes (3.23s). All four macOS jobs, Linux ARM64 and Windows ARM64 pass; their log audits
-  remain. Linux AMD64 and Windows AMD64 are running without reported failures.
+  audit passes (3.23s). All four macOS jobs, Linux ARM64 and both Windows jobs pass; their full log
+  audits remain. Only Linux AMD64 is running, without reported failures.
 - Documentation `41986867893`, job `127109552583`: passes; full-log audit passes
   (3.71s). Only the three expected negative-runner diagnostics occur.
 - Preserve this exact head. Final receipts stay local until the next PR.
@@ -111,7 +111,8 @@ and retain its final receipts in the next PR before new measurements.
 Keep 64 GiB free, target data below 2 GiB, workload RSS below 1 GiB and the guard's
 180s deadline. Remove only verified duplicate task downloads after evidence
 retention. Never raise limits. Current free space is close to the reserve;
-check before downloading native artifacts. Cleanup retained full audits and
+check before downloading native artifacts. Latest free space: 31.91 GiB;
+no local validation or native artifact downloads while below reserve. Cleanup retained full audits and
 observations, verified remote original artifacts, then removed 1,820.39 MiB of
 old task-download copies. Receipt:
 `../gradient-work/removed-verified-downloads-2026-11-05-pair-preparation.json`.
@@ -161,3 +162,25 @@ and 48-command schedule. New `storage-measurement-controls` runs the reference,
 count, phase, timing-budget and evidence-rejection tests without a native compiler
 build. These additions are not yet runner-verified; dispatch the small controls
 batch first. Native measurements still require parent delivery and focused audit.
+
+Measurement-control run `41998869305` at `f294c14d2af0688b91c4ddf4c419fe012d620ee2`
+is queued. It runs the initial seven small control scripts, accumulating all failures. No
+compiler build, native suite or timing repetition is requested.
+
+Queue inspection found old run `38888712709` incorrectly marked in progress;
+all six selected jobs completed on October 16. GitHub rejects cancellation
+because the run is completed. Metadata is retained in
+`../gradient-work/stale-paths-{run,jobs}-38888712709.json`; no active runner or
+causal link to the current queue is established. Do not repeatedly cancel it.
+
+Runtime preparation now includes `packed-pair-time` and `packed-pair-report`.
+The paired budget checker and archived-evidence audits require the exact private
+pair reference, unchanged raw storage, exact counts, existing 5%/2% limits and
+128-byte frame limit. Both protocols share the same negative budget controls;
+no older threshold is changed. Run the updated small controls before collecting
+new observations. Runtime measurements also require the census to pass.
+
+Runtime preparation adds archived-source reconstruction and every timing/memory
+negative control to the same batch. Publish this group and replace the still
+queued older measurement-control request with the final preparation head; no
+need to execute superseded controls. Native focused source 6e02c048 is unchanged.
