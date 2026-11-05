@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """Reject unexplained whole-solve counts and storage changes before timing."""
 import copy
+import gzip
 import importlib.util
+import json
 from pathlib import Path
 import unittest
 
@@ -80,6 +82,40 @@ class Census(unittest.TestCase):
                 CENSUS.compare(changed, old, 129, 199, 8, 'packed-pair')
         self.assertEqual(CENSUS.compare(self.current, self.current, 3, 0, 32768, 'packed-pair'),
                          dict(requests=0, requestedBytes=0, retains=0))
+
+    def test_parent_reconciliation_uses_saved_counts_and_rejects_changes(self):
+        parent = Path(__file__).resolve().parent.parent / 'docs/measurements/gradient-call-census-2026-11-05'
+        old_fresh = json.loads(gzip.decompress((parent / 'arm-fresh-verified.json.gz').read_bytes()))
+        old_repeated = json.loads((parent / 'arm-verified.json').read_text())
+        fresh = copy.deepcopy(old_fresh)
+        fresh['source'] = 'f' * 40
+        repeated = dict(source=fresh['source'], machine='aarch64', complete=True,
+                        comparison='packed-pair', cases={})
+        for name, old in old_repeated['cases'].items():
+            observation = dict(managed=copy.deepcopy(old['candidate']),
+                               raw=dict(peakBytes=old['rawPeakBytes'], finalBytes=old['finalRawBytes']))
+            repeated['cases'][name] = dict(solves=old['solves'], observations={
+                'reference' + mode: copy.deepcopy(observation) for mode in ('0', '1')})
+        receipt = CENSUS.reconcile_parent(repeated, fresh, old_repeated, old_fresh)
+        self.assertEqual((receipt['freshCases'], receipt['repeatedCases']), (24, 12))
+        name = '129-199-current-O2'
+        for key in ('requests', 'requestedBytes', 'peakChargedBytes'):
+            changed = copy.deepcopy(fresh)
+            changed['cases'][name]['observations']['1']['phases']['forwardWithRecording'][key] += 1
+            with self.subTest(key=key), self.assertRaises(AssertionError):
+                CENSUS.reconcile_parent(repeated, changed, old_repeated, old_fresh)
+        changed = copy.deepcopy(repeated)
+        changed['cases']['129-199-current']['observations']['reference0']['managed']['requests'] += 1
+        with self.assertRaises(AssertionError):
+            CENSUS.reconcile_parent(changed, fresh, old_repeated, old_fresh)
+        changed = copy.deepcopy(fresh)
+        del changed['cases'][name]
+        with self.assertRaises(AssertionError):
+            CENSUS.reconcile_parent(repeated, changed, old_repeated, old_fresh)
+        changed = copy.deepcopy(fresh)
+        changed['source'] = 'e' * 40
+        with self.assertRaises(AssertionError):
+            CENSUS.reconcile_parent(repeated, changed, old_repeated, old_fresh)
 
     def test_zero_updates_require_identical_storage(self):
         self.assertEqual(CENSUS.compare(self.current, self.current, 3, 0, 32768, 'owned-numeric'),

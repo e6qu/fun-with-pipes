@@ -26,8 +26,8 @@ been read, instead of allocating a separate pair-result buffer:
 Steps 1–3 pass [focused native checks and full evidence audits](docs/measurements/packed-pair-checks-2026-11-05.md).
 [The contract](docs/measurements/packed-pair-storage.md), frozen before implementation
 at `3b7954eef411b7b621d09718ae2aad41e72e744e`, fixes the proof and measurement limits.
-Measurement tooling is prepared; one shallow-checkout mistake in its historical
-controls is being repaired. No new timing observations have been collected.
+Measurement tooling is prepared; its historical-checkout repair passes all
+eight control scripts. The census also reconciles the reference with saved parent counts. No new timing observations have been collected.
 
 For a fresh 129-coordinate/199-update solve, predicted requests are 727 -> 528
 and requested bytes 1,034,366 -> 625,222. These are not observations. Reuse keeps

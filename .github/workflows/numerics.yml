@@ -979,6 +979,12 @@ jobs:
           PYCODE
           python3 "scripts/test-$REFERENCE_KIND-reference.py"
           python3 scripts/test-numeric-input-analysis.py
+          if [[ "$COMPARISON" == owned-numeric || "$COMPARISON" == gradient-call || "$COMPARISON" == packed-pair ]]; then
+            status=0
+            python3 scripts/test-owned-numeric-census.py || status=1
+            python3 scripts/test-gradient-array-budgets.py || status=1
+            [[ "$status" == 0 ]]
+          fi
       - uses: actions/cache@v6
         with:
           path: ~/.cargo/registry
@@ -1001,7 +1007,6 @@ jobs:
       - name: Verify complete solve allocations before any timing
         if: contains(fromJSON('["owned-numeric-census","gradient-call-census","packed-pair-census"]'), inputs.suite)
         run: |
-          python3 scripts/test-owned-numeric-census.py
           python3 scripts/check-owned-numeric-census.py --comparison "$COMPARISON" --compiler target/debug/fwp \
             --reference numeric-analysis-reference/fwp --reference-manifest numeric-analysis-reference/manifest.json \
             --cc gcc --machine ${{ matrix.runner == 'ubuntu-24.04-arm' && 'aarch64' || 'x86_64' }} \
@@ -1013,7 +1018,6 @@ jobs:
           MEASUREMENT_MACHINE: ${{ matrix.runner == 'ubuntu-24.04-arm' && 'aarch64' || 'x86_64' }}
           MEASUREMENT_ARCH: ${{ matrix.runner == 'ubuntu-24.04-arm' && 'armv8-a' || 'x86-64' }}
         run: |
-          python3 scripts/test-gradient-array-budgets.py
           status=0
           python3 scripts/measure-derivative-forward-costs.py --compiler numeric-analysis-reference/fwp \
             --cc gcc --machine "$MEASUREMENT_MACHINE" --c-arch "$MEASUREMENT_ARCH" \
@@ -1041,6 +1045,17 @@ jobs:
           assert result['compilerSha256'] == manifest['compilerSha256']
           baseline = dict(source=os.environ['GITHUB_SHA'], hosts={os.environ['MEASUREMENT_MACHINE']: result})
           Path('fresh-baseline.json.gz').write_bytes(gzip.compress((json.dumps(baseline) + '\n').encode(), mtime=0))
+          if os.environ['COMPARISON'] == 'packed-pair':
+              spec = importlib.util.spec_from_file_location('census', 'scripts/check-owned-numeric-census.py')
+              census = importlib.util.module_from_spec(spec)
+              spec.loader.exec_module(census)
+              prefix = 'arm' if os.environ['MEASUREMENT_MACHINE'] == 'aarch64' else 'amd'
+              parent = Path('docs/measurements/gradient-call-census-2026-11-05')
+              repeated = json.loads(Path('numeric-analysis/report.json').read_text())
+              parent_repeated = json.loads((parent / (prefix + '-verified.json')).read_text())
+              parent_fresh = json.loads(gzip.decompress((parent / (prefix + '-fresh-verified.json.gz')).read_bytes()))
+              receipt = census.reconcile_parent(repeated, result, parent_repeated, parent_fresh)
+              Path('parent-reconciliation.json').write_text(json.dumps(receipt, indent=2) + '\n')
           PYCODE
           exit "$status"
       - name: Verify fresh-solve savings and their exact phase attribution
@@ -1097,6 +1112,7 @@ jobs:
             fresh-reference.zip
             fresh-candidate.zip
             fresh-baseline.json.gz
+            parent-reconciliation.json
             fresh-audit.json.gz
             fresh-reference/report.json
             fresh-candidate/report.json

@@ -36,7 +36,8 @@ The remaining script ran 18 tests and reported five historical-source errors.
 Cause: its new workflow used a shallow checkout without the saved commits/tags.
 The repair fetches full history, tags and historical PR heads, matching the docs
 workflow. It preserves all historical tests and runs every script even if one
-fails. Verification of that checkout repair remains pending; the failed log and
+fails. [Repair run 42002432263](https://github.com/e6qu/fun-with-pipes/actions/runs/42002432263)
+passes all eight scripts (76 tests) at `b808155995b711a687c85a4161c3733f51cd71c1`; the failed log and
 [artifact](https://github.com/e6qu/fun-with-pipes/actions/runs/42000589145/artifacts/13402753211)
 remain available. No fwp compiler/native source changed for this repair.
 

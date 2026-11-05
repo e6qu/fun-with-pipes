@@ -1,7 +1,7 @@
 # Current work
 
-**Next:** verify the historical-checkout repair in the small measurement-control
-batch, then run the exact allocation census. PR #259 is verified and merged;
+**Next:** publish the parent-reconciliation controls and run the exact allocation
+census on both native Linux architectures. PR #259 is verified and merged;
 the next private pair-buffer implementation passes focused checks and full audits.
 Keep one active PR, group all remaining measurements/repairs before final CI.
 
@@ -30,7 +30,9 @@ and complete log audit (`42000937569`, auditor f339616c) pass.
 
 ## Current branch and verified native checks
 
-Branch/worktree `packed-pair-storage`. Pre-rebase preparation head
+Draft [PR #260](https://github.com/e6qu/fun-with-pipes/pull/260), branch/worktree
+`packed-pair-storage`. Current head `b808155995b711a687c85a4161c3733f51cd71c1`.
+Pre-rebase preparation head
 `f339616c639e4c55703f619cc46ca08f93f11ee8`. The [contract](measurements/packed-pair-storage.md)
 was frozen before code at `3b7954eef411b7b621d09718ae2aad41e72e744e`, retained by
 `roadmap/packed-pair-storage-protocol-2026-11-05`.
@@ -60,10 +62,20 @@ pass (58 tests). All eight ran. Repair: full-history/tag checkout and historical
 PR refs, matching docs CI. Keep the tests; rerun only this small control batch.
 The compiler/runtime/library/native-test sources remain identical to 6e02c048.
 
-Before publication, retain tags for focused source 6e02c048 and auditors f339616c,
-commit the repair/docs, and rebase next commits onto the actual #259 squash
-(old base e3a2e1d3). Open one draft PR while measurements run. Preserve frozen
-contracts and measured source identities; final heads require all production gates.
+The rebase onto #259's verified squash is complete. Focused implementation and
+auditor identities are retained by `roadmap/packed-pair-checks-2026-11-05` and
+`roadmap/packed-pair-auditors-2026-11-05`; the original contract tag is unchanged.
+Repair controls `42002432263` pass all eight scripts (76 tests) on b8081559.
+Docs `42002435391` are running. The census now also checks the allocating
+reference against saved parent counts/peaks: 24 fresh and 12 repeated cases,
+with mutation controls. These new controls run first in the census job.
+Draft production `42002435468` is skipped intentionally, not final acceptance.
+Dispatch `packed-pair-census` with `evidence_run=41991479079`.
+Keep timing blocked on census acceptance and reference/parent reconciliation.
+
+Redundant post-merge main production `42001754691` was canceled while queued:
+its tree equals the fully verified PR head. Main docs `42001754627` already pass.
+Keep the original final PR gates/audit as delivery evidence.
 
 ## Measurements and remaining goals
 
