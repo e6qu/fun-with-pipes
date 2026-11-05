@@ -1,10 +1,10 @@
 # Current work
 
-**Next:** dispatch and audit `gradient-call-checks` for the expanded head of
-[PR #259](https://github.com/e6qu/fun-with-pipes/pull/259). GCC ARM64/AMD64 and
-Clang ARM64 must verify all four changes and the additional direct-seed controls.
-Audit every failed step and completed native target before one repair push.
-Implementation is not yet verified; do not launch final production yet.
+**Next:** dispatch and audit `gradient-call-checks` after the constant-proof
+compiler repair in [PR #259](https://github.com/e6qu/fun-with-pipes/pull/259).
+Check GCC ARM64/AMD64 and Clang ARM64, including every failed step and completed
+native target, before one repair push. Implementation is not yet verified;
+do not launch final production yet.
 
 Contract frozen before code at `1ed3ad99ef7263161d526cea816c33b36ac40b9b`, tag
 `roadmap/gradient-call-storage-protocol-2026-11-05`.
@@ -131,3 +131,20 @@ Initial head `6f322d1f9d4ceca01d29ee45163f746d6656a3c9` had no assigned runners.
 Runs `41956076516` (focused) and `41956079358` (docs) were cancelled before
 execution to keep one expanded batch. No failed or passing implementation result
 was discarded. Local roadmap audit passes (2.67s).
+
+## First runner result and repair
+
+Expanded head `73261bf2d26a3c12078bc5951cba60752d38df8c`, run `41956890550`:
+macOS job `127013847558` failed lint/build on E0509 in the constant-seed proof.
+The implementation and its unit control now borrow record fields from their
+owning Value instead of moving them out. [Complete retained audit](measurements/gradient-call-checks-2026-11-05/README.md)
+finds that error twice and no compiler warnings; no native targets ran. Both
+Linux jobs and docs `41956897588` were cancelled while unassigned, to avoid
+compiling the same known failure. No passing gate was cancelled.
+
+Compiler-cost preparation now supports `gradient-call-analysis`: the same seven
+inputs and 48 scheduled compilations each, preserving prior reductions in both
+compilers. All ten schedule/timeout controls pass (3.04s). The failed-job evidence,
+Cargo formatting and workflow syntax checks pass together (4.12s). Runtime timing
+and its independent evidence audit still need the new comparison added. Do not
+start timing before correctness and the exact allocation census pass.

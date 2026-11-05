@@ -60,6 +60,7 @@ jobs:
           python3 scripts/test-matched-option-reference.py
           python3 scripts/test-packed-input-reference.py
           python3 scripts/test-owned-numeric-reference.py
+          python3 scripts/test-gradient-call-reference.py
           python3 scripts/test-owned-numeric-census.py
           python3 scripts/test-iteration-storage.py
           python3 scripts/test-gradient-array-budgets.py

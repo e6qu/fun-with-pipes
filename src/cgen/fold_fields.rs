@@ -113,7 +113,7 @@ fn visit(expr: &mut Expr, constants: &mut Constants<'_>) {
     {
         return;
     }
-    let Some(Value::Record(values)) = constants.expr(&args[0], &mut 256) else {
+    let Some(Value::Record(ref values)) = constants.expr(&args[0], &mut 256) else {
         return;
     };
     let fields = record_fields(
@@ -186,7 +186,7 @@ mod tests {
             program: &p,
             entries: HashMap::new(),
         };
-        let Some(Value::Record(fields)) = proof.entry(0, &mut 256) else {
+        let Some(Value::Record(ref fields)) = proof.entry(0, &mut 256) else {
             panic!("constant seed")
         };
         assert!(
