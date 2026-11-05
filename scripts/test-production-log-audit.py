@@ -10,6 +10,9 @@ from unittest.mock import patch
 SPEC = importlib.util.spec_from_file_location('audit', Path(__file__).with_name('audit-production-run.py'))
 AUDIT = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(AUDIT)
+FOCUSED_SPEC = importlib.util.spec_from_file_location('focused', Path(__file__).with_name('audit-focused-storage.py'))
+FOCUSED = importlib.util.module_from_spec(FOCUSED_SPEC)
+FOCUSED_SPEC.loader.exec_module(FOCUSED)
 SOURCE = 'a' * 40
 DOC_LOG = (
     b'intentional runner control\n'
@@ -74,6 +77,21 @@ class ProductionLogs(unittest.TestCase):
                 with self.assertRaises(AssertionError):
                     self.run_audit(Path(temporary), host, conclusion=conclusion,
                                    status=status, source=source, log=log)
+
+    def test_native_image_headers_require_the_requested_architecture(self):
+        for host, machine in [('arm', 183), ('amd', 62)]:
+            image = bytearray(64)
+            image[:6] = b'\x7fELF\x02\x01'
+            image[18:20] = machine.to_bytes(2, 'little')
+            self.assertTrue(FOCUSED.native_header(host, image))
+            self.assertFalse(FOCUSED.native_header('amd' if host == 'arm' else 'arm', image))
+            self.assertFalse(FOCUSED.native_header(host, image[:20]))
+        image = bytearray(32)
+        image[:4] = b'\xcf\xfa\xed\xfe'
+        image[4:8] = (0x100000c).to_bytes(4, 'little')
+        self.assertTrue(FOCUSED.native_header('mac', image))
+        image[4:8] = (0x1000007).to_bytes(4, 'little')
+        self.assertFalse(FOCUSED.native_header('mac', image))
 
     def test_error_warning_filter_preserves_real_errors(self):
         self.assertEqual(AUDIT.diagnostics(b'python -W error::ResourceWarning -m unittest'), [])

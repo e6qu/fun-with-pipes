@@ -11,8 +11,8 @@ Head `e3a2e1d34eaa9364ff22273ed10fef7afb98204e`, branch `gradient-call-storage`,
 worktree `.worktrees/owned-numeric-updates`.
 
 - Production `41986867960`: C/Rust benchmark job `127109553431` passes; full-log
-  audit passes (3.23s). Both macOS ARM64 jobs now pass; their log audits remain.
-  Six native jobs are still running, no reported failures.
+  audit passes (3.23s). All four macOS jobs, Linux ARM64 and Windows ARM64 pass; their log audits
+  remain. Linux AMD64 and Windows AMD64 are running without reported failures.
 - Documentation `41986867893`, job `127109552583`: passes; full-log audit passes
   (3.71s). Only the three expected negative-runner diagnostics occur.
 - Preserve this exact head. Final receipts stay local until the next PR.
@@ -46,11 +46,13 @@ report. Do not rerun old native measurements.
 | 4 | Implemented | Consume derivative scratch; alias/view, both positions and unwind controls pass. |
 | 5 | In progress | Audit all final production gates, then squash merge PR #259. |
 
-## Next batch: grouped native checks queued
+## Next batch: grouped native checks running
 
 Branch/worktree `packed-pair-storage`, implementation `6e02c048019642b6f6eb52c9ae6fef5fa8f2f3f7`.
 Focused run `41991479079` requests suite `packed-pair-checks` and native runner
-`all`: Linux AMD64/ARM64 and macOS ARM64. No second PR is open; no timing started.
+`all`: Linux AMD64/ARM64 and macOS ARM64. All three jobs pass: ARM64 `127124490103`, AMD64 `127124489898` and macOS
+`127124490467`. Full-log, target and native-image audits remain.
+No second PR is open; no timing started.
 Sparse checkout excludes large historical
 measurement folders; full native builds, suites and evidence generation stay on
 runners. Contract `3b7954eef411b7b621d09718ae2aad41e72e744e`, tag
@@ -117,7 +119,8 @@ Free space afterward: 65.416 GiB. Other worktrees are unrelated.
 
 ## Runner log audit after the disk guard stopped local collection
 
-Local free space fell again to 61.938 GiB after verified cleanup. The guard
+Local free space fell again below the 64 GiB reserve after verified cleanup
+(39.26 GiB at the latest check). The guard
 correctly refused the macOS ARM64 ownership audit; do not bypass it. Native
 builds/tests remain on runners. A new `production-log-audit` numerical-workflow
 suite runs the existing full-log/target/artifact audit on GitHub instead.
@@ -130,3 +133,18 @@ Controls reject wrong sources, failing conclusions and unexpected diagnostics.
 Large Windows probe downloads stay on runners; uploaded receipts retain full
 job/target logs, original artifact IDs and hashes. Local audit tests were not
 run below the disk reserve; the workflow runs their controls before collection.
+
+Runner audit request `41992495791`, job `127127789847`, source
+`f545f5d30f1d698fa4c0e6293e6b2767635aad82`: explicit `mac-arm-ownership` selection
+for parent run `41986867960`, attempt 1. It is queued; controls/audit not yet run.
+Once all parent gates finish, request `audit_host=all` and require its full audit
+before merge. Native parent gates are still on e3a2e1d3; focused next-batch
+checks stay on 6e02c048. f545f5d3 changes only audit tooling/workflows/handoff.
+
+The focused audit now runs on GitHub too: `focused-storage-audit`, with explicit
+`evidence_run=41991479079`, `source_revision=6e02c048019642b6f6eb52c9ae6fef5fa8f2f3f7`
+and `production_attempt=1`. It checks all three hosts, every target summary,
+artifact source/digest and native image architecture, retaining all observations.
+Audit controls run first on the runner; local checks remain paused below reserve.
+Production log auditing uses ARM64 runners too; this does not replace any native
+platform test. The older AMD64 audit request has not started.
