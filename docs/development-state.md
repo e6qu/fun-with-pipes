@@ -1,11 +1,16 @@
 # Current work
 
-**Next:** monitor runtime `42018849842`, retain all four session outcomes, then
-finish final production delivery. Frozen measured source:
-`373955e82a74d8de2eb12ff2b81f6cc74c089e5e`, tag
-`roadmap/packed-pair-cleanup-census-2026-11-05`. Correctness, complete stack/count
-audit and compiler cost audit pass. Runtime requires EPYC 7763 / Neoverse-N2;
-rejected hosts must not silently replace the declared hardware.
+**Next:** publish the complete evidence/documentation head, mark PR #260 ready,
+then monitor its nine exact-head production jobs plus docs. All focused and
+saved-data audits pass. Runtime measured source:
+`373955e82a74d8de2eb12ff2b81f6cc74c089e5e` (tag
+`roadmap/packed-pair-cleanup-census-2026-11-05`). All four sessions completed;
+retain the 34 timing misses under the agreed policy. Do not repeat measurements.
+
+Runtime `42018849842` supplies ARM64 session 1 and AMD64 session 2 (audit
+`42021767931` passes); `42020017429` supplies ARM64 session 2 (audit
+`42022105422` passes); `42020313941` supplies AMD64 session 1 (audit
+`42023850878` passes). Rejected hosts never built/timed; all records are retained.
 
 ## Roadmap status
 
@@ -16,8 +21,8 @@ rejected hosts must not silently replace the declared hardware.
 | 1 | Verified | The unchanged private helper consumes input; borrowing/escape contracts agree. |
 | 2 | Verified | Reuse with one protected owner; keep two owners only when allocating output. |
 | 3 | Verified | Aliases, both layouts, bits, traps/cancellation and physical frees pass on three hosts. |
-| 4 | In progress | Repair stack/count and compiler audits pass; four runtime sessions requested. |
-| 5 | Pending | Retain evidence, pass nine final production jobs plus docs, audit and squash merge. |
+| 4 | Verified | Four complete sessions and full audits; 34 timing misses remain open, all other measurement gates pass. |
+| 5 | In progress | Evidence retained; publish final head, pass nine production jobs plus docs, audit and squash merge. |
 
 ## Branch and source identities
 
@@ -25,9 +30,10 @@ rejected hosts must not silently replace the declared hardware.
   `.worktrees/packed-pair-storage`, branch `packed-pair-storage`.
 - Compiler repair `14707729042f3202527998296ec8c5f196615cb0`. It changes
   `src/cgen.rs`, the selection/native controls and a stack preflight in the census.
-  Observer repair ecdf2476 passes focused checks. Current published head 373955e8
-  adds audit receipts, explicit dynamic-memory stack commands and documentation;
-  compiler/runtime/library/native-test sources match ecdf2476. Failed-run artifact audit `42013195562` accounted for all 25 targets, 775 images
+  Observer repair ecdf2476 passes focused checks. Measured head 373955e8
+  adds explicit dynamic-memory stack commands; later commits through fa61a619
+  add audits, controls, retained observations and docs. Compiler/runtime/library/
+  native-test sources still match ecdf2476. Failed-run artifact audit `42013195562` accounted for all 25 targets, 775 images
   and 791 probes per host; only the recorded failures were found.
 - [Repair protocol](measurements/packed-pair-cleanup-repair.md) was committed before
   code at `54a3ae468d3751d3d2ac2972777dc054da905d9d`. No thresholds changed.
@@ -40,11 +46,8 @@ rejected hosts must not silently replace the declared hardware.
 
 ## Verification and measurements
 
-Original focused source `6e02c048` passes run `41991479079` on Linux ARM64/AMD64
-and macOS ARM64. Full audit `41997987727` checks 25 native targets, 822 images and
-838 probe records per host. [Details](measurements/packed-pair-checks-2026-11-05.md)
-include the historical-checkout repair and its eight passing control scripts.
-These results do not verify the changed cleanup implementation.
+Original [focused results](measurements/packed-pair-checks-2026-11-05.md) and
+measurements remain separate from the repaired implementation below.
 
 | Evidence | Source and result |
 |---|---|
@@ -55,18 +58,20 @@ These results do not verify the changed cleanup implementation.
 | Repaired full audit | 42015894951 passes: 25 targets, 822 images and 838 probes per host. |
 | [Repaired stack/counts](measurements/packed-pair-cleanup-census-2026-11-05/README.md) | 373955e8, run 42015900941; both pass. Full audit 42018351007 passes. |
 | [Repaired compiler costs](measurements/packed-pair-cleanup-analysis-2026-11-05/README.md) | 373955e8, run 42017186500; both pass. Full audit 42018554796 passes. |
-| Repaired docs | 373955e8 docs 42015897792 pass; ecdf2476 docs 42013258857 pass. |
+| [Repaired runtime](measurements/packed-pair-cleanup-time-2026-11-05/README.md) | Four sessions complete, all audits pass; 32 long-case misses plus AMD64 zero-update 2.2158% and one-update 2.8315% regressions. |
+| Repaired docs | 84c0eeaf run 42018338260 passes. Evidence head fa61a619 run 42019150880 passes. |
 
-Fresh 129/199 original results: 727 -> 528 requests and 1,034,366 -> 625,222
+Fresh 129/199 results, independently reproduced after the repair: 727 -> 528 requests and 1,034,366 -> 625,222
 requested bytes; peak managed storage 9,248 -> 7,200 bytes. Retains/raw derivative
 storage are unchanged; final storage is zero. Compact reports/observations are
 committed. Large generated archives remain in their digest-identified artifacts.
 
 The first reuse implementation protected one allocation twice, then cleared one
 owner. The repair keeps the original owner through mapping and returns it directly.
-All 12 reported frame maxima on each architecture equal their allocating references. Both
-architecture stack gates pass; full saved-report audit 42018351007 independently verifies them. Dynamic
-entries remain explicit; reported bytes are not total call-stack bounds. The new preflight compiles the same
+All 12 reported frame maxima on each architecture equal their allocating
+references. Full audit 42018351007 independently verifies them. Dynamic entries
+remain explicit; reported bytes are not total call-stack bounds. The preflight
+compiles the same
 six complete workloads, both forms and both compilers at GCC O2; it records all
 frame-limit failures before allocation or timing work. Source/C/images/output and
 stack reports remain in `pair-stack/` inside the census artifact.

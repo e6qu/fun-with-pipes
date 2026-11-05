@@ -35,8 +35,11 @@ missed speed targets and one AMD64 stack-budget failure. The
 [single-owner cleanup repair](docs/measurements/packed-pair-cleanup-repair.md)
 passes focused correctness, [complete stack/allocation audits](docs/measurements/packed-pair-cleanup-census-2026-11-05/README.md)
 and [compiler cost audits](docs/measurements/packed-pair-cleanup-analysis-2026-11-05/README.md).
-Four repaired-source runtime sessions are requested; retain every result, then
-finish production verification.
+All four repaired-source runtime sessions complete with 32 long-case 5% misses
+and two AMD64 small-case regressions (2.22% zero-update; 2.83% one-update).
+Other measurement gates and all [runtime artifact audits](docs/measurements/packed-pair-cleanup-time-2026-11-05/README.md)
+pass. Retain the verified reductions with those timing goals open, then complete
+production verification.
 
 For a fresh 129-coordinate/199-update solve, observed requests are 727 -> 528
 and requested bytes 1,034,366 -> 625,222. Reuse keeps the original capacity until
@@ -56,6 +59,7 @@ history can be optimized away). Copy controls compare identical executable bytes
 
 | Goal and evidence | What remains; next action |
 |---|---|
+| [Private pair reuse](docs/measurements/packed-pair-cleanup-time-2026-11-05/README.md) | The cleanup repair fixes the observed stack excess; all 32 long-case 5% targets remain unmet. AMD64 session 1 one-update current is 2.8315% slower; session 2 zero-update current is 2.2158% slower. Copy controls pass. Diagnose objective evaluation/recording work (73–75% of recorded phase time in the largest diagnostic case) before selecting another speed change. Remaining buffer sizes/lifetime constraints are [explicit](docs/measurements/packed-pair-cleanup-census-2026-11-05/README.md#remaining-storage-and-its-constraints). The first implementation's 23 timing misses remain separately recorded. |
 | [Gradient-call storage](docs/measurements/gradient-call-time-2026-11-05/README.md) | Sixteen 33/199 and 129/199 results miss 5%; AMD64 session 2 3/0 current is 2.1822% slower, beyond 2%. All copy controls pass. Three-coordinate long solves improve 14.3–25.2%. The current pair-buffer group addresses one of the [two remaining recording allocations](docs/measurements/gradient-call-census-2026-11-05/README.md#remaining-storage) identified by producer/consumer lifetimes (together 2U requests, 32NU bytes). Separately review the zero-update source/driver path before declaring a new experiment. These are next investigations, not established causes. |
 | [Consumed numeric storage](docs/measurements/owned-numeric-time-2026-11-05/README.md) | Four AMD64 5% targets remain open: session 1 3/199 current; session 2 3/199 current/history and 3/1999 current. Observed gains are 3.36–4.76%; copy controls pass. The [gradient-call group](docs/measurements/gradient-call-storage.md) passes focused checks and allocation audits. Compiler/runtime results and final production delivery are verified; a new comparison does not settle these earlier misses. |
 | [Packed derivative inputs](docs/measurements/packed-input-time-2026-11-04/README.md) | AMD64 session 1 copy variation is 2.3628% / 2.7833% on 3/199 and 3/1999; session 2 slows 3/1 current by 2.3095%, against 2% limits. [Saved samples](docs/measurements/packed-input-time-2026-11-04/amd64-sample-review.md) establish no cause. Consumed-storage delivery is verified; retain these separate misses. |

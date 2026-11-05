@@ -37,7 +37,9 @@ Documentation 42013258857 passes. [Full artifact audit 42015894951](https://gith
 verifies all 25 targets, 822 native images and 838 probe records per host, with
 no unexpected diagnostics. [Receipt](corrected-artifact-audit.json) and adjacent
 compressed full log retain the result. Complete-program stack/allocation run
-42015900941 also passes both architectures; its saved-data audit is next.
+42015900941 also passes both architectures; [full audit 42018351007](../packed-pair-cleanup-census-2026-11-05/README.md)
+verifies saved stack/count evidence. All four [runtime audits](../packed-pair-cleanup-time-2026-11-05/README.md)
+pass while preserving the measured timing misses.
 
 ## Saved-stack audit repair
 

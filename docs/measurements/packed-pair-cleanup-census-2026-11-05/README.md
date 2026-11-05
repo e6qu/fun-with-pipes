@@ -57,6 +57,32 @@ bytes per solve, all during forward recording. Retains and raw derivative storag
 are unchanged. Zero-update observations are identical; final managed/raw storage
 is zero. Allocation traffic and managed peaks do not establish process RSS or speed.
 
+## Remaining storage and its constraints
+
+For N coordinates and U updates, the saved fresh profiles retain:
+
+| Storage | Requests | Requested bytes |
+|---|---:|---:|
+| Numeric input records, later overwritten by pair results | U | (16N+8)U |
+| Gradient result array | U | (8N+8)U |
+
+Both forms, O1/O2, workspace policies and architectures have these counts.
+For 129/199, they account for 412,328 and 206,960 bytes respectively; the
+other 5,934 bytes belong to input construction/output. These are traffic,
+not simultaneous live memory.
+
+The input-record buffer is allocated by `packed_record_range_zip` in
+[src/cgen.rs](../../../src/cgen.rs). All input callbacks finish before pair
+mapping; pair mapping finishes before the fold. Reusing storage across updates
+or placing it on the stack would need a lifetime proof covering all three stages
+and failure cleanup. Interleaving their callbacks is not a valid shortcut.
+
+The gradient array is built after reverse differentiation and then consumed by
+the coordinate update. Removing it would require proving where those results
+can be written or consumed without changing aliases, output order or cleanup.
+Neither further transformation is implemented by this PR; these counts identify
+specific remaining work, not an accepted optimization or speed prediction.
+
 ## Retained evidence
 
 Each host's `audit/observations.zip` contains the original reports, commands,
@@ -68,5 +94,5 @@ are alongside them. No unchanged native measurement was rerun for the
 [auditor correction](../packed-pair-cleanup-checks-2026-11-05/README.md#saved-stack-audit-repair).
 
 [Original results](../packed-pair-time-2026-11-05/README.md), including 23 speed
-misses and the original stack failure, remain separate. Repaired-source runtime
-and final production verification still remain.
+misses and the original stack failure, remain separate. [Repaired-source runtime audits](../packed-pair-cleanup-time-2026-11-05/README.md)
+pass with 34 timing misses retained; final production verification remains.

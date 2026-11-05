@@ -61,5 +61,6 @@ reported numbers as total frame sizes. See [GCC's stack report documentation](ht
 
 Run 42015900941 passes both architectures at 373955e8: all 12 largest reported
 counts equal their references. The formerly failing AMD64 33/199 current case
-is 720 bytes rather than 928. Full saved-data audit and timing remain separate
-requirements.
+is 720 bytes rather than 928. [Full stack/count audit](packed-pair-cleanup-census-2026-11-05/README.md)
+and all [runtime audits](packed-pair-cleanup-time-2026-11-05/README.md) pass.
+The repair retains 34 measured timing misses; final production verification remains.

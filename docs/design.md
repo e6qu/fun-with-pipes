@@ -681,8 +681,8 @@ Passing source selection or saving allocations alone does not prove a speedup.
 
 ### Reusing private pair storage
 
-**Focused checks and allocation counts pass; runtime and final platform acceptance
-are in progress for [PR #260](https://github.com/e6qu/fun-with-pipes/pull/260).**
+**Focused, stack/allocation and compiler-cost checks pass. [Runtime speed targets](measurements/packed-pair-cleanup-time-2026-11-05/README.md)
+remain unmet; final platform verification is pending for [PR #260](https://github.com/e6qu/fun-with-pipes/pull/260).**
 For equal-width numeric records, each pair result can overwrite the earlier input
 record after both inputs have been read. For three records:
 
