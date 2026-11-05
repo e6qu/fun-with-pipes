@@ -1,0 +1,263 @@
+{
+  "source": "07541ff956d582bb9c3936b86261e43fa25b0b2f",
+  "run": 41932568083,
+  "job": {
+    "id": 126932900347,
+    "run_id": 41932568083,
+    "workflow_name": "Numerical and ownership evidence",
+    "head_branch": "roadmap/owned-numeric-measurement-2026-11-05",
+    "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/41932568083",
+    "run_attempt": 1,
+    "node_id": "CR_kwDOU33zxM8AAAAdjcpZ-w",
+    "head_sha": "07541ff956d582bb9c3936b86261e43fa25b0b2f",
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/126932900347",
+    "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/41932568083/job/126932900347",
+    "status": "completed",
+    "conclusion": "success",
+    "created_at": "2026-11-04T23:17:48Z",
+    "started_at": "2026-11-04T23:17:52Z",
+    "completed_at": "2026-11-04T23:21:49Z",
+    "name": "derivative_forward_costs (ubuntu-24.04-arm, aarch64, armv8-a)",
+    "steps": [
+      {
+        "name": "Set up job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 1,
+        "started_at": "2026-11-04T23:17:53Z",
+        "completed_at": "2026-11-04T23:17:55Z"
+      },
+      {
+        "name": "Run actions/checkout@v7",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 2,
+        "started_at": "2026-11-04T23:17:55Z",
+        "completed_at": "2026-11-04T23:18:06Z"
+      },
+      {
+        "name": "Require the verified production compiler for the diagnostic census",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 3,
+        "started_at": "2026-11-04T23:18:06Z",
+        "completed_at": "2026-11-04T23:18:06Z"
+      },
+      {
+        "name": "Run dtolnay/rust-toolchain@stable",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 4,
+        "started_at": "2026-11-04T23:18:06Z",
+        "completed_at": "2026-11-04T23:18:07Z"
+      },
+      {
+        "name": "Observer and phase boundary controls",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 5,
+        "started_at": "2026-11-04T23:18:07Z",
+        "completed_at": "2026-11-04T23:18:29Z"
+      },
+      {
+        "name": "Run actions/cache@v6",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 6,
+        "started_at": "2026-11-04T23:18:29Z",
+        "completed_at": "2026-11-04T23:18:30Z"
+      },
+      {
+        "name": "Fetch locked dependencies and build the current compiler",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 7,
+        "started_at": "2026-11-04T23:18:30Z",
+        "completed_at": "2026-11-04T23:19:55Z"
+      },
+      {
+        "name": "Scalar buffer formatting, reference isolation and all-target lint",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 8,
+        "started_at": "2026-11-04T23:19:55Z",
+        "completed_at": "2026-11-04T23:19:55Z"
+      },
+      {
+        "name": "Scalar buffer admission, aliases and bounded analysis",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 9,
+        "started_at": "2026-11-04T23:19:55Z",
+        "completed_at": "2026-11-04T23:19:55Z"
+      },
+      {
+        "name": "Scalar map and zip GCC semantics, cleanup and existing fold regressions",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 10,
+        "started_at": "2026-11-04T23:19:55Z",
+        "completed_at": "2026-11-04T23:19:55Z"
+      },
+      {
+        "name": "Scalar map and zip Clang semantics and cleanup",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 11,
+        "started_at": "2026-11-04T23:19:55Z",
+        "completed_at": "2026-11-04T23:19:55Z"
+      },
+      {
+        "name": "Preserve scalar buffer source, native probes and target diagnostics",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 12,
+        "started_at": "2026-11-04T23:19:55Z",
+        "completed_at": "2026-11-04T23:19:55Z"
+      },
+      {
+        "name": "Packed record compiler and affected target lint",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 13,
+        "started_at": "2026-11-04T23:19:55Z",
+        "completed_at": "2026-11-04T23:19:55Z"
+      },
+      {
+        "name": "Packed record evaluation order, aliases and existing unwind regressions",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 14,
+        "started_at": "2026-11-04T23:19:55Z",
+        "completed_at": "2026-11-04T23:19:55Z"
+      },
+      {
+        "name": "Packed record controls with Clang",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 15,
+        "started_at": "2026-11-04T23:19:55Z",
+        "completed_at": "2026-11-04T23:19:55Z"
+      },
+      {
+        "name": "Record eligibility and affected target lint",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 16,
+        "started_at": "2026-11-04T23:19:55Z",
+        "completed_at": "2026-11-04T23:19:55Z"
+      },
+      {
+        "name": "Record pair values, aliases, failures, cancellation and derivative controls",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 17,
+        "started_at": "2026-11-04T23:19:55Z",
+        "completed_at": "2026-11-04T23:19:55Z"
+      },
+      {
+        "name": "Record fold nonlocal cleanup and cancellation controls",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 18,
+        "started_at": "2026-11-04T23:19:55Z",
+        "completed_at": "2026-11-04T23:19:55Z"
+      },
+      {
+        "name": "Native known-work controls and all six derivative inputs",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 19,
+        "started_at": "2026-11-04T23:19:55Z",
+        "completed_at": "2026-11-04T23:21:41Z"
+      },
+      {
+        "name": "Independently reconstruct every constructor source and count",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 20,
+        "started_at": "2026-11-04T23:21:41Z",
+        "completed_at": "2026-11-04T23:21:41Z"
+      },
+      {
+        "name": "Preserve the constructor audit and its exact archive",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 21,
+        "started_at": "2026-11-04T23:21:41Z",
+        "completed_at": "2026-11-04T23:21:41Z"
+      },
+      {
+        "name": "Preserve complete and rejected observations",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 22,
+        "started_at": "2026-11-04T23:21:41Z",
+        "completed_at": "2026-11-04T23:21:46Z"
+      },
+      {
+        "name": "Preserve focused record ownership probes and target logs",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 23,
+        "started_at": "2026-11-04T23:21:46Z",
+        "completed_at": "2026-11-04T23:21:46Z"
+      },
+      {
+        "name": "Post Run actions/cache@v6",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 45,
+        "started_at": "2026-11-04T23:21:46Z",
+        "completed_at": "2026-11-04T23:21:46Z"
+      },
+      {
+        "name": "Post Run actions/checkout@v7",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 46,
+        "started_at": "2026-11-04T23:21:46Z",
+        "completed_at": "2026-11-04T23:21:46Z"
+      },
+      {
+        "name": "Complete job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 47,
+        "started_at": "2026-11-04T23:21:46Z",
+        "completed_at": "2026-11-04T23:21:46Z"
+      }
+    ],
+    "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/126932900347",
+    "labels": [
+      "ubuntu-24.04-arm"
+    ],
+    "runner_id": 1000408391,
+    "runner_name": "GitHub Actions 1000408391",
+    "runner_group_id": 0,
+    "runner_group_name": "GitHub Actions"
+  },
+  "artifact": {
+    "id": 13371304171,
+    "node_id": "MDg6QXJ0aWZhY3QxMzM3MTMwNDE3MQ==",
+    "name": "derivative-forward-evidence-aarch64",
+    "size_in_bytes": 25503951,
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13371304171",
+    "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13371304171/zip",
+    "expired": false,
+    "digest": "sha256:a5863c9fe9da8f33404eecff47b3c0f52211224bbbe50170d92f18e36f6d4fc7",
+    "created_at": "2026-11-04T23:21:46Z",
+    "updated_at": "2026-11-04T23:21:46Z",
+    "expires_at": "2027-02-02T23:17:47Z",
+    "workflow_run": {
+      "id": 41932568083,
+      "repository_id": 1400763332,
+      "head_repository_id": 1400763332,
+      "head_branch": "roadmap/owned-numeric-measurement-2026-11-05",
+      "head_sha": "07541ff956d582bb9c3936b86261e43fa25b0b2f"
+    }
+  },
+  "logSha256": "69f8182dd2b0c534f5875085ab462e1ae588e4349f159ad520208120fe918b7e",
+  "unexpectedDiagnostics": [],
+  "cases": 24
+}

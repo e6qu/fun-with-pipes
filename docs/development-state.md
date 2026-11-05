@@ -1,12 +1,17 @@
 # Current work
 
-**Next:** publish the identity-array regression repair, dispatch
-`owned-numeric-checks` on GCC ARM64/AMD64 and Clang ARM64, and keep auditing the
-remaining jobs in production run `41931018786`. After focused checks pass, mark
-PR #258 ready for a new final matrix. Do not merge its failed `f71b5308` head.
+**Next:** watch the final production matrix for PR #258’s latest published head;
+audit every completed job and repair any new failure before merge. The retained
+evidence batch is ready for publication and `ready_for_review` dispatch. Also
+finish auditing old production run `41931018786`.
+All expanded focused checks at repair `bc1bf40ea0c8ad7733b9042e2b552ae261970dce`
+([run 41937012404](https://github.com/e6qu/fun-with-pipes/actions/runs/41937012404))
+pass their full log, source-selection, native-image and control audits.
+Do not merge the failed `f71b5308` head.
 
 [PR #258](https://github.com/e6qu/fun-with-pipes/pull/258) is the only open PR,
-currently draft. Branch/worktree: `owned-numeric-updates` /
+Focused verification is complete; final production delivery is pending.
+Branch/worktree: `owned-numeric-updates` /
 `.worktrees/owned-numeric-updates`. Keep unrelated primary-worktree edits intact.
 
 ## Roadmap status
@@ -14,7 +19,7 @@ currently draft. Branch/worktree: `owned-numeric-updates` /
 | Step | Status | Remaining work |
 |---|---|---|
 | 1 | Verified | Preserve frozen ownership, selection and measurement contracts |
-| 2 | In progress | Verify identity-array regression repair on all three focused hosts |
+| 2 | Verified | Three hosts: 110 integrations, 722 images and 733 recorded outcomes each |
 | 3 | Verified | Preserve four AMD64 5% misses and the separate older performance goals |
 | 4 | In progress | Nine exact-head production jobs plus docs; audit logs; verify squash/tree |
 
@@ -35,11 +40,15 @@ The Rust harness checks actual operation selection. The focused workflow include
 The saved crash report is the passing intentional cleanup-abort control, not a
 recurrence of the [unexplained historical abort](measurements/compiler-abort.md).
 
-Completed full/target-log audits: macOS ARM64 ownership `126927610766`, benchmark
-`126927610309`, docs `126928374140` (docs run `41931242053`). The other platform
-jobs are running. Interim audit also checks both Windows native archives (58 files
-each) and both macOS corpus logs; no additional failure has appeared. Continue
-checking failed steps and every newly completed target before batching repairs.
+Completed passing full/target-log audits: both macOS ownership jobs
+`126927610766` / `126927610478`, benchmark `126927610309`, docs `126928374140`
+(docs run `41931242053`). Windows AMD64 `126927610561` finished: 154 target
+commands pass, only `float_formats` fails. Both Windows TLS archives (100 logs
+each) and regular macOS Intel's 131 logs report the same eight exit-82 probes;
+no separate failure was found. All currently published target/corpus logs are
+audited. Linux jobs and Windows ARM64/regular macOS Intel are still running.
+Continue checking every newly completed target; old results cannot qualify the
+repaired final head.
 
 Scratch: `../gradient-work/owned-numeric-platforms-258`. Its `failure-mac-arm`
 folder holds exact C, original archives and local repaired probes; `interim`
@@ -77,11 +86,14 @@ per solve; retains and raw derivative storage are unchanged. Long solves take
 3.36–10.50% less time; process RAM is not consistently lower. Preserve all four
 missed limits and every older goal in [PLAN.md](../PLAN.md).
 
-Scratch helpers live in `../gradient-work`: `collect-owned-numeric-checks.py`,
-`audit-owned-numeric-success.py`, census/analysis/runtime collectors and retained
+Scratch helpers live in `../gradient-work`. Collect new focused evidence serially
+with `collect-owned-numeric-regression.py --run 41937012404 --source bc1bf40ea0c8ad7733b9042e2b552ae261970dce
+--host arm|amd|mac --output ../gradient-work/owned-numeric-checks-6`. Older helpers:
+`collect-owned-numeric-checks.py`, `audit-owned-numeric-success.py`, census/analysis/runtime collectors and retained
 `owned-numeric-checks-5`, `owned-numeric-census-2026-11-05`,
-`owned-numeric-analysis-2026-11-05`. Adapt the success checker for the new nineteenth
-`float_formats` target; preserve the old 18-target receipt. Earlier failed runs
+`owned-numeric-analysis-2026-11-05`. Use `audit-owned-numeric-regression.py` for the expanded nineteenth
+`float_formats` target: 110 integrations, 722 images and 733 statuses, including
+all 62 new float-format probe outcomes. Preserve the old 18-target receipt. Earlier failed runs
 remain in `owned-numeric-checks-2`, `-3`, `-4` and linked historical evidence.
 
 ## Local checks and resources
@@ -90,7 +102,7 @@ All workloads use `scripts/local-guard.py`; full builds/suites/timing stay on ru
 Repaired saved-C probes: O1 3.83s, O2 3.76s; each verifies original failure plus
 24 repaired/control executions. Rust harness formatting: 0.14s. Evidence retention:
 0.50s. Interim target audit: 7.75s. Coverage: 0.14s, all 255 native targets assigned
-and all 19 focused targets valid. Documentation audit: 2.52s before this condensation.
+and all 19 focused targets valid. Documentation audit after condensation: 2.42s; 279 link sets pass.
 
 Archived the merged #257 checkout's only dirty handoff/patch under
 `../gradient-work/archived-packed-input-checkout-2026-11-05`, verified its tree
@@ -106,7 +118,11 @@ No new implementation or frozen contract. Scratch review:
 `../gradient-work/owned-numeric-remaining-storage/README.md`, `inspection.json`
 and `source-predictions.json`. Untimed attribution run `41932568083` at immutable
 `07541ff9` passes both architectures; independent audits took 12.72s/12.10s.
-Archives and profiles: `../gradient-work/owned-numeric-current-attribution`.
+The [current source-site report](measurements/gradient-storage-2026-11-05/README.md)
+retains audited records and identifies the originals. Complete scratch archives:
+`../gradient-work/owned-numeric-current-attribution`. Retention took 1.47s.
+The historical index wording and one moved-anchor link were corrected; all
+280 documentation link sets and four plan steps pass (2.42s).
 
 Source formulas reconcile with all 96 observations (0.14s). One fresh solve has
 eight forward allocations per update and two retain sites. Candidate proofs cover
@@ -115,3 +131,17 @@ coordinate scratch reuse. The review identifies call-convention, cache-effect,
 scalar-width and cleanup requirements before code. Seven fewer requests per update
 is an unimplemented target, not a measured saving. This fresh single-solve driver
 differs from the repeated shared-input timing driver; do not interchange their counts.
+
+Repair documentation `41936992630` / `126947841108` passes its complete-log audit
+(2.49s); only the three expected native-runner negative diagnostics appear.
+All three focused jobs and full evidence audits pass. Collection took
+65.72s / 45.32s / 43.76s (ARM GCC / AMD GCC / Clang); verification took
+0.14s / 0.14s / 0.13s. Runner receipts and the Windows failure logs are retained
+in the repair report. Production gates remain outstanding.
+
+Additional old-job collection took 9.81s (expected failure on the known test);
+interim audit 4.66s; retention 0.13s after correcting POSIX status decoding
+(20992 means exit 82). Three-host evidence retention took 6.84s.
+
+Final documentation link/source audit passes (280 link sets, 106 immutable
+preparation pairs, four plan steps; 2.67s).

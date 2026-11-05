@@ -1,0 +1,20 @@
+{
+  "id": 13374988177,
+  "node_id": "MDg6QXJ0aWZhY3QxMzM3NDk4ODE3Nw==",
+  "name": "owned-numeric-checks-macos-15",
+  "size_in_bytes": 137525272,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13374988177",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13374988177/zip",
+  "expired": false,
+  "digest": "sha256:3086364e977553b3772ccbdc521311a560cdc001c9aa83ad87c00bfcf6f7b793",
+  "created_at": "2026-11-05T00:02:48Z",
+  "updated_at": "2026-11-05T00:02:48Z",
+  "expires_at": "2027-02-02T23:51:52Z",
+  "workflow_run": {
+    "id": 41937012404,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "roadmap/owned-numeric-regression-2026-11-05",
+    "head_sha": "bc1bf40ea0c8ad7733b9042e2b552ae261970dce"
+  }
+}

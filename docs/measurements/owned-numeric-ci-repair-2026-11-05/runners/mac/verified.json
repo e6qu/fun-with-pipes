@@ -1,0 +1,37 @@
+{
+  "source": "bc1bf40ea0c8ad7733b9042e2b552ae261970dce",
+  "job": 126947919477,
+  "units": 285,
+  "ignored": 4,
+  "integrations": 110,
+  "targets": 19,
+  "images": 722,
+  "statuses": 733,
+  "completeProgramChecks": 12,
+  "consumingSelection": {
+    "mapped": [
+      "f41"
+    ],
+    "mapped32": [
+      "f42"
+    ],
+    "mapped64": [
+      "f43"
+    ],
+    "update-left": [
+      "f44"
+    ],
+    "update-right": [
+      "f45"
+    ],
+    "mapped-produced": [
+      "f41"
+    ],
+    "shared-first": [
+      "f41"
+    ],
+    "retained": []
+  },
+  "allDiagnosticsAudited": true,
+  "formattingMatches": true
+}

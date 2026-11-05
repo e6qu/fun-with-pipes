@@ -11,23 +11,20 @@ The current group implements
 [runtime results are audited](owned-numeric-time-2026-11-05/README.md), with four
 AMD64 speed targets open. Final production checks remain. [The plan](../../PLAN.md) owns acceptance.
 
-## Measured costs
+## Current allocation breakdown
 
-The older [gradient-array census](gradient-array-storage-2026-11-03/README.md),
-source `1f6a4ac8`, counted 25,671 allocation requests and 616,104 requested bytes
-for each group in one 129-coordinate, 199-update solve:
+The [current source-site report](gradient-storage-2026-11-05/README.md) audits one
+fresh 129-coordinate/199-update solve: 2,121 managed requests, 1,265,230 requested
+bytes and 398 retains. Eight requests per update occur during forward recording;
+the derivative result and coordinate scratch add one each. Peak managed storage
+is 9,280 bytes; peak raw derivative storage is 33,904 bytes with workspace reuse.
+Neither counter is whole-process RAM.
 
-| Historical group | Current status |
-|---|---|
-| Input derivative records | Selected private one/two-field numeric records now use a shared buffer; other uses keep their ordinary representation. |
-| List of input derivative records | The selected neighboring-pair consumer borrows overlapping windows of that buffer. |
-| Updated coordinate list | A private consuming entry can reuse an exclusive prefix. Native checks and the whole-solve census verify its reuse and cleanup. |
-
-These historical totals measure allocation traffic, not live memory or process
-RAM. Do not reuse them as current measurements. For the complete packed-input
-group, the [new count report](packed-input-time-2026-11-04/verified-memory-counts.json)
-verifies 51,541 fewer requests and 1,031,616 fewer requested bytes per largest
-solve. Public `grad` still returns a list.
+Its fresh input is exclusive. The repeated timing driver shares its initial input
+between solves, so their absolute counts differ. Use each report's own driver and
+reference. The report names the remaining fold record, singleton seed containers,
+coordinate scratch and two retain sites, with safety requirements for the next proof.
+These are measured costs and proposed work, not implemented reductions.
 
 ## Current group: consumed numeric storage
 
