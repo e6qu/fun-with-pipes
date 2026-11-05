@@ -1,0 +1,20 @@
+{
+  "id": 13420428166,
+  "node_id": "MDg6QXJ0aWZhY3QxMzQyMDQyODE2Ng==",
+  "name": "storage-measurement-controls",
+  "size_in_bytes": 2056,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13420428166",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13420428166/zip",
+  "expired": false,
+  "digest": "sha256:ffb96feb4fe12ec0d3682cab625d7cca248a7c561cd2d698b791bbe21d1e8dc6",
+  "created_at": "2026-11-05T13:58:15Z",
+  "updated_at": "2026-11-05T13:58:15Z",
+  "expires_at": "2027-02-03T13:47:05Z",
+  "workflow_run": {
+    "id": 42038834040,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "scalar-constant-lowering",
+    "head_sha": "bb23f87c1236b8d6e7823b1e88b5c041bb6a9f3c"
+  }
+}

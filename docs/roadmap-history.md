@@ -6,6 +6,23 @@ and complete platform validation are different events. Measurements retain their
 original source and settings; old numbers are not measurements of current main.
 The linked PRs, runs and data records supply the detailed evidence.
 
+## Private pair-buffer reuse (PR #260)
+
+[PR #260](https://github.com/e6qu/fun-with-pipes/pull/260) merged November 5 as
+`a85f59d23918c1854f43fb3a3ce2af65383ac5f9`, with the identical tested tree.
+All nine production jobs, documentation and the complete log/artifact audit pass.
+[Delivery records](measurements/packed-pair-delivery-2026-11-05/README.md) retain
+those gates and verify the one-line squash message without body or trailers.
+
+A private neighboring-pair buffer now reuses its consumed input allocation and
+keeps one cleanup owner. Shared/public inputs remain immutable. For a fresh solve
+with 129 coordinates and 199 updates, requests fall from 727 to 528; peak managed
+storage falls from 9,248 to 7,200 bytes. Final managed/raw storage is zero.
+The cleanup repair removes the observed extra stack cost. Compiler-cost limits
+pass; [runtime evidence](measurements/packed-pair-cleanup-time-2026-11-05/README.md)
+retains 34 timing misses. Allocation reductions do not prove faster execution,
+lower process RAM or parity with the manual-gradient C/Rust programs.
+
 ## Gradient-call storage (PR #259)
 
 [PR #259](https://github.com/e6qu/fun-with-pipes/pull/259) merged November 5 as

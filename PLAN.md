@@ -7,10 +7,10 @@ has been removed. JIT compilation and backward compatibility are excluded.
 
 ## Current work: exact scalar constants
 
-PR #260 finishes private pair-buffer reuse. Its focused checks and measurement
-audits pass; final production CI and the complete audit still gate its merge.
-Its 34 timing misses remain open below. Do not publish a second PR or start the
-next group's native measurements until that delivery is verified.
+[PR #260 is verified and merged](docs/measurements/packed-pair-delivery-2026-11-05/README.md).
+Private pair-buffer reuse reduces allocation; its 34 timing misses remain open
+below. The current group targets proved scalar constants without changing
+allocation or derivative work.
 
 The next group replaces proved immediate scalar values and aliases with exact
 bits, avoiding lazy-cache reads. For example, `one` specialized to F64 is exactly
