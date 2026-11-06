@@ -8,6 +8,8 @@ from pathlib import Path
 import subprocess
 import zipfile
 
+from github_records import records
+
 
 def api(path):
     return subprocess.check_output(['gh', 'api', '--allow-escape-sequences',
@@ -21,7 +23,7 @@ def main():
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=False)
-    artifacts = json.loads(api(f'actions/runs/{args.run}/artifacts?per_page=100'))['artifacts']
+    artifacts = records(api, f'actions/runs/{args.run}/artifacts', 'artifacts')
     artifact, = [a for a in artifacts if a['name'] == 'gradient-call-checks-ubuntu-latest']
     assert artifact['workflow_run']['head_sha'] == args.source and not artifact['expired']
     archive = args.output / 'original.zip'

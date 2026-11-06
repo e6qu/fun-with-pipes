@@ -1,6 +1,7 @@
 # Numeric recording scopes: verification
 
-Source: `b9de738671732289a6263a8db3c1a36e54a8cfd9`.
+Initial source: `b9de738671732289a6263a8db3c1a36e54a8cfd9`.
+The repaired fixture checks below use `49371e06f5bba4598273a1b807140775dde64c57`.
 [The contract](../recording-context-scopes.md) defines the lifetime boundaries and
 measurement rules. These checks do not establish a runtime speedup.
 
@@ -92,3 +93,26 @@ Six local audit controls pass, including complete 128-record job/artifact lists,
 empty lists and rejected malformed pages. A guarded metadata-only check reads
 all 128 actual jobs. These checks took 0.13 s and 2.63 s respectively; they do not
 replace the pending native runs or the complete artifact audit.
+
+## Repaired fixture: reference and documentation
+
+The reference comparison passes again with the explicit recovery boundary:
+[report](parent-repaired-report.json), [job](parent-repaired-job.json),
+[complete log](parent-repaired-job.log.gz), [archive](parent-repaired.zip) and
+[artifact identity](parent-repaired-artifact.json). Run `42213046373`, job
+`127876155092`; artifact `13502800917`, 2,642,670 bytes, SHA-256
+`7e71e9f876276a965796d19d325f235dec790e48d48ea4a043b61af66db123df`.
+The guarded audit verified the archive, source and all sixteen C-file hashes;
+the eight paired outputs match and the full log is clean (0.13 s).
+
+[Documentation](docs-native-repair.log.gz) passes at the same source: run
+`42213039124`, job `127876122034`. Its complete log contains only the three
+expected test-runner failure controls (guarded audit, 0.12 s).
+
+The pagination repair also covers census, compiler-cost, diagnostic and HTTP
+artifact readers. Shared audit logic lives in `scripts/github_records.py`;
+requests are explicit, and raw log/archive downloads retain their existing APIs.
+Six controls pass after integration. Actionlint syntax/expressions, changed
+Python and embedded workflow syntax, and workflow-size checks pass (0.13 s each;
+shellcheck/pyflakes were disabled). Native sources and measurement settings are
+unchanged by these reader fixes.

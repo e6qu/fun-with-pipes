@@ -10,6 +10,8 @@ import re
 import subprocess
 import zipfile
 
+from github_records import records
+
 SPEC = importlib.util.spec_from_file_location('production_audit', Path(__file__).with_name('audit-production-run.py'))
 PRODUCTION = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(PRODUCTION)
@@ -36,8 +38,8 @@ def main():
     args = parser.parse_args()
     assert args.attempt > 0 and re.fullmatch(r'[0-9a-f]{40}', args.source)
     args.output.mkdir(parents=True, exist_ok=True)
-    jobs = PRODUCTION.records(f'actions/runs/{args.run}/attempts/{args.attempt}/jobs', 'jobs')
-    artifacts = PRODUCTION.records(f'actions/runs/{args.run}/artifacts', 'artifacts')
+    jobs = records(PRODUCTION.api, f'actions/runs/{args.run}/attempts/{args.attempt}/jobs', 'jobs')
+    artifacts = records(PRODUCTION.api, f'actions/runs/{args.run}/artifacts', 'artifacts')
     PRODUCTION.save(args.output / 'jobs.json', jobs)
     PRODUCTION.save(args.output / 'artifacts.json', artifacts)
     issues, summary = [], {}

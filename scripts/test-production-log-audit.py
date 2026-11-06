@@ -8,6 +8,8 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
+from github_records import records
+
 SPEC = importlib.util.spec_from_file_location('audit', Path(__file__).with_name('audit-production-run.py'))
 AUDIT = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(AUDIT)
@@ -107,11 +109,11 @@ class ProductionLogs(unittest.TestCase):
                 pages = [json.dumps(dict(total_count=128, **{field: batch})).encode()
                          for batch in (expected[:100], expected[100:])]
                 with patch.object(AUDIT, 'api', side_effect=pages) as api:
-                    self.assertEqual(AUDIT.records('actions/list', field), expected)
+                    self.assertEqual(records(AUDIT.api, 'actions/list', field), expected)
                 self.assertEqual([call.args[0] for call in api.call_args_list], [
                     'actions/list?per_page=100&page=1', 'actions/list?per_page=100&page=2'])
         with patch.object(AUDIT, 'api', return_value=b'{"total_count":0,"jobs":[]}') as api:
-            self.assertEqual(AUDIT.records('actions/list', 'jobs'), [])
+            self.assertEqual(records(AUDIT.api, 'actions/list', 'jobs'), [])
             api.assert_called_once()
 
     def test_incomplete_duplicate_or_changing_listings_fail(self):
@@ -125,7 +127,7 @@ class ProductionLogs(unittest.TestCase):
             with self.subTest(last=last), patch.object(AUDIT, 'api', side_effect=[
                 json.dumps(first).encode(), json.dumps(last).encode()
             ]), self.assertRaises(AssertionError):
-                AUDIT.records('actions/list', 'jobs')
+                records(AUDIT.api, 'actions/list', 'jobs')
 
 
 if __name__ == '__main__':

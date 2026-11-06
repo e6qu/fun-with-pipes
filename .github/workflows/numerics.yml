@@ -96,6 +96,8 @@ jobs:
           from pathlib import Path
           import re
           import subprocess
+
+          from scripts.github_records import records
           source = os.environ['SOURCE_REVISION']
           run = os.environ['EVIDENCE_RUN']
           assert re.fullmatch('[0-9a-f]{40}', source)
@@ -112,8 +114,8 @@ jobs:
           def api(path):
               return subprocess.check_output(['gh', 'api', '--allow-escape-sequences',
                   'repos/' + os.environ['GITHUB_REPOSITORY'] + '/' + path])
-          jobs = json.loads(api('actions/runs/' + run + '/jobs?per_page=100'))['jobs']
-          artifacts = json.loads(api('actions/runs/' + run + '/artifacts?per_page=100'))['artifacts']
+          jobs = records(api, 'actions/runs/' + run + '/jobs', 'jobs')
+          artifacts = records(api, 'actions/runs/' + run + '/artifacts', 'artifacts')
           audit_failures = []
           for machine, runner, arch in (('aarch64', 'ubuntu-24.04-arm', 'ARM64'), ('x86_64', 'ubuntu-latest', 'X64')):
               folder = root / machine
@@ -4527,7 +4529,8 @@ jobs:
           host = os.environ['APPLICATION_HOST']
           assert run.isdigit() and re.fullmatch('[0-9a-f]{40}', source)
           output = Path('mapping-evidence'); output.mkdir()
-          artifacts = json.loads(subprocess.check_output(['gh', 'api', f'repos/e6qu/fun-with-pipes/actions/runs/{run}/artifacts?per_page=100']))['artifacts']
+          pages = json.loads(subprocess.check_output(['gh', 'api', '--paginate', '--slurp', f'repos/e6qu/fun-with-pipes/actions/runs/{run}/artifacts?per_page=100']))
+          artifacts = [artifact for page in pages for artifact in page['artifacts']]
           artifact, = [item for item in artifacts if item['name'] == f'http-application-{host}-checks']
           assert not artifact['expired'] and artifact['workflow_run']['head_sha'] == source
           archive = output / 'application.zip'

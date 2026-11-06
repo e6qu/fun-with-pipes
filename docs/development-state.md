@@ -1,9 +1,11 @@
 # Current work
 
-**Next:** monitor repaired focused run `42213041403`, parent comparison
-`42213046373` and docs `42213039124`, all at `49371e06f5bba4598273a1b807140775dde64c57`. The compiler is unchanged; the loop fixture
-now declares a real attempt boundary and asserts FWP_UNWIND=1 before trap probes.
-No timing session has run. Audit every result before dispatching measurements.
+**Next:** monitor all three hosts in focused run `42213041403` at
+`49371e06f5bba4598273a1b807140775dde64c57`. The repaired fixture requires a real
+recovery boundary. All hosts are running; no failed step has appeared. Reference
+comparison `42213046373` and docs `42213039124` pass, complete logs reviewed.
+After native checks pass, audit every result before dispatching the measurement
+batch. No timing session has run.
 
 Branch `recording-context-scopes`, worktree `.worktrees/recording-capacity-gate`.
 Base `d992a5734a12cf976c1ca20f75e9829a18bde0cc`.
@@ -13,14 +15,14 @@ Reference preparer `5bfdc2c23`; combined compiler repair
 `b9de738671732289a6263a8db3c1a36e54a8cfd9`; `13aa113ae` added only the diagnostic and retained reference/tool checks.
 Native repair source `49371e06f5bba4598273a1b807140775dde64c57` repairs the fixture.
 The pagination repair changes only audit tools and verification records.
-Docs `42211603024` passed; its replacement for the repair is queued.
-The five queued checks have no runner assignment or explanatory annotations.
+The native-source docs replacement passes. The latest audit-tool/docs commit
+requires its own docs gate; no native source changed after `49371e06f`.
 
 | Current repair run | Check | Last status |
 |---|---|---|
-| `42213041403` | Native checks: AMD `127876137274`, ARM `127876137456`, mac `127876137522` | Queued |
-| `42213046373` | Reference C comparison for the repaired fixture | Queued |
-| `42213039124` | Documentation | Queued |
+| `42213041403` | Native checks: AMD `127876137274`, ARM `127876137456`, mac `127876137522` | Running |
+| `42213046373` / `127876155092` | Eight raw/optimized reference C comparisons | Passed |
+| `42213039124` / `127876122034` | Native-repair documentation; full log clean | Passed |
 
 Earlier results at compiler source `b9de738671732289a6263a8db3c1a36e54a8cfd9`:
 
@@ -142,12 +144,15 @@ unchanged; compiler comparisons pass. Preserve every earlier miss in PLAN.md.
 
 ## Audit pagination repair
 
-The actual focused run has 128 jobs. Both artifact auditors previously read only
+The actual focused run has 128 jobs. The focused and production artifact auditors previously read only
 one 100-job page; today's three native jobs happen to be on that page. They now
 read every page, rejecting truncated, duplicate or changing listings. All six
 production-audit controls pass under the local guard (0.13 s); the guarded actual
 metadata check reads all 128 jobs (2.63 s). No artifacts were downloaded for it.
-Affected callers and both audit workflows were reviewed. Docs CI also runs these
+Affected census, compiler-cost, diagnostic and HTTP artifact readers are also
+repaired. Shared pagination logic takes an explicit request function; imports
+come from its defining module. Six controls and Python/embedded-program syntax
+pass; Actionlint syntax/expressions pass with shellcheck/pyflakes disabled. Docs CI also runs these
 controls; this tool-only repair needs no repeated native build.
 
 Changed document links, handoff steps and workflow sizes pass under the guard
@@ -156,7 +161,9 @@ its original source; it does not include the two new pagination controls.
 
 ## Queue observations
 
-The repair runs created at 11:49 UTC remain queued without assigned runners.
+The repair runs queued at 11:49 UTC began receiving runners around 12:29 UTC.
+All three native hosts are now active; the reference/docs jobs passed. The cause
+of the queue delay is unknown. Do not restart completed or active native work.
 An unrelated October 16 run `38888712709` on owned-cpu-kernels is inconsistently
 listed in_progress, but all 24 job records are complete (six failed, others
 skipped). It has no reference in the current plan/handoff/history/queue and no

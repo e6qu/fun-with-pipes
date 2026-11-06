@@ -12,6 +12,8 @@ import subprocess
 import sys
 import zipfile
 
+from github_records import records
+
 sys.path.insert(0,str(Path('scripts').resolve()))
 parser=argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--comparison", required=True, choices=("gradient-call", "packed-pair", "scalar-constant", "recording-lookup", 'recording-inline', 'recording-capacity', 'recording-context'))
@@ -43,10 +45,10 @@ def module(name):
 
 measure = module('measure-numeric-input-analysis')
 check = module('check-array-list-evidence')
-pages=json.loads(subprocess.check_output(['gh','api','--paginate','--slurp',repo+f'actions/runs/{run}/jobs?per_page=100']))
-job,=[job for page in pages for job in page['jobs'] if job['name']==f'numeric_input_analysis ({runner})']
+jobs=records(api, f'actions/runs/{run}/jobs', 'jobs')
+job,=[job for job in jobs if job['name']==f'numeric_input_analysis ({runner})']
 assert job['head_sha']==source and job['status']=='completed' and job['run_id']==run
-artifacts=json.loads(api(f'actions/runs/{run}/artifacts?per_page=100'))['artifacts']
+artifacts=records(api, f'actions/runs/{run}/artifacts', 'artifacts')
 artifact,=[a for a in artifacts if a['name']==args.comparison+'-analysis-'+arch and not a['expired']]
 assert artifact['workflow_run']['head_sha']==source
 path=root/(machine+'.zip')
