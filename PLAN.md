@@ -5,55 +5,46 @@ and useful inference. Prefer direct values, moves and borrows; use automatic
 reference counting (ARC) only for necessary sharing. Tracing garbage collection
 has been removed. JIT compilation and backward compatibility are excluded.
 
-## Delivered: checked scalar append inlining
+## Delivered: checked tape capacity calls
 
-[PR #263 is verified and merged](docs/measurements/recording-inline-delivery-2026-11-06/README.md).
-The compiler inlines the existing checked derivative-recording body. Validation,
-allocation and cleanup are unchanged. All nine production jobs, documentation
-and complete artifact/log audits pass; the merged tree matches the tested tree.
+[PR #264 is verified and merged](docs/measurements/recording-capacity-delivery-2026-11-06/README.md).
+The compiler keeps the checked no-growth path at its caller and shares the
+unchanged buffer-growth body. All nine production jobs, docs and complete audits
+pass. The merge tree equals the tested tree; the squash message is one line.
 
-Long measured solves use 2.26–8.12% less elapsed time. Thirteen of 32 results meet
-the frozen 5% target; 19 remain open. Small-case and copy limits pass. Allocations
-and live storage are unchanged; maximum reported frame growth is 16 bytes on
-ARM64 and zero on AMD64. One compiler-time copy control remains inconclusive.
+Long measured solves improve by 1.86–14.02%. Seventeen of 32 speed targets meet
+5%; fifteen remain open, along with one AMD64 identical-copy limit. Allocation,
+validation and live-storage counts are unchanged. All compiler comparisons pass;
+maximum reported frames are unchanged. These results do not close earlier misses.
 
-## Current group: checked capacity calls
+## Current group: share validated tape access inside numeric calls and loops
 
-A derivative tape stores operations for the backward pass. Its buffers often
-already have room for the next operation. The [saved native reports](docs/measurements/recording-inline-images-2026-11-06/README.md)
-show that the capacity routine still requires a separate call in this case.
-This is an observed call cost, not an established cause of earlier timing misses.
+A derivative tape records operations for the backward pass. The current code
+still validates its registry entry three times per neighboring input pair and
+update. [Retained source and counts](docs/measurements/recording-capacity-census-2026-11-06/README.md)
+locate this work in the map callback, its nested addition and the fold callback.
+This is an observed cost, not an established cause of earlier timing misses.
 
-The [frozen contract](docs/measurements/recording-capacity.md) keeps the checked
-no-growth path at the caller and shares the existing growth body. It preserves
-both numeric and typed recording, bounds, allocation order and failure recovery.
-The same-source reference reconstructs the previous runtime byte for byte.
-
-[Focused native checks](docs/measurements/recording-capacity-checks-2026-11-06/README.md)
-and complete audits pass. The [memory census](docs/measurements/recording-capacity-census-2026-11-06/README.md)
-confirms unchanged work/storage and maximum frames. All 14
-[compiler-cost comparisons](docs/measurements/recording-capacity-analysis-2026-11-06/README.md)
-pass. [Runtime](docs/measurements/recording-capacity-time-2026-11-06/README.md)
-shows 1.86–14.02% less elapsed time, with 17/32 long-case targets met. Fifteen
-speed targets and one AMD64 copy control remain open; no timing was repeated.
-The [audit repair](docs/measurements/recording-capacity-audit-repair-2026-11-06/README.md)
-is verified by [116 tool tests](docs/measurements/recording-capacity-repair-controls-2026-11-06/README.md).
-[Native verification](docs/measurements/recording-capacity-images-2026-11-06/README.md)
-reproduces all 48 measured images and confirms capacity inlining. Next: final
-production/documentation gates, complete audits and verified squash merge.
+The [new contract](docs/measurements/recording-context-scopes.md) combines direct
+numeric-call forwarding with separate scopes around the packed pair-map and
+numeric fold loops. Each scope borrows validated access; it owns no tape storage.
+Unknown calls, task ticks, tape lifecycle operations and reentry remain excluded.
+Changing tape IDs still requires validation. No implementation is verified yet.
 
 | Step | Concrete work | Required result |
 |---|---|---|
-| 1 | Retain PR #263 delivery and freeze the capacity-call change. | Verified merge tree/message, source safety proof and fixed comparison/limits before production edits. |
-| 2 | Implement the checked gate, growth/failure controls and complete measurement tools. | Byte-exact reference reconstruction; clean format/lint; all focused GCC ARM64/AMD64 and macOS Clang checks plus complete artifact audits. |
-| 3 | Run the combined memory, compiler and runtime comparison; verify native inlining. | All six cases and both forms; fixed qualified-host sessions, unchanged memory/work checks, compiler costs, original image hashes and complete audits. Retain every miss. |
-| 4 | Deliver the complete group. | All nine final-head production jobs and docs pass; complete logs/artifacts audited; squash merge and actual tree/message verified. |
+| 1 | Retain #264 delivery and freeze the combined call/loop contract. | Verified merge tree/message; explicit lifetime boundary, reference and fixed measurement limits before edits. |
+| 2 | Extend the bounded proof and all affected worker calls; scope state around the selected map/fold loops. | Direct and boxed entries agree; preserve evaluation/trap order, ID changes and cleanup. Extend existing tests and negative controls; no public syntax or compatibility wrappers. |
+| 3 | Verify the complete group, then measure it once. | Focused production GCC/Clang checks and audits; same-source reference controls; allocation/lookup census, compiler/runtime costs, original native images and all missed limits retained. |
+| 4 | Deliver together. | Nine exact-final-head production jobs, docs and complete audits pass; squash merge and actual tree/message verified. |
 
-Run each qualified timing session once. Keep every older missed limit below;
-a new reference cannot settle an earlier failed comparison. C/Rust peers use
-handwritten derivatives, so their whole-program ratios do not isolate language
-or ARC overhead. [The handoff](docs/development-state.md) records the exact next
-action, source identities, current jobs and unresolved findings.
+For the measured single-tape objective, test whether lookups fall from
+`3 × (coordinates − 1)` to two per positive update: one map scope and one fold
+scope. This is a target, not a measured result. Allocation/retain counts, eight
+nodes per pair, parent/capacity checks and final storage must remain unchanged.
+Run each qualified timing session once after the whole group and focused checks;
+replace only hosts rejected before building/timing. [The handoff](docs/development-state.md)
+records the next action and actual verification.
 
 ## Open performance goals
 
@@ -67,8 +58,8 @@ history can be optimized away). Copy controls compare identical executable bytes
 
 | Goal and evidence | What remains; next action |
 |---|---|
-| [Capacity runtime](docs/measurements/recording-capacity-time-2026-11-06/README.md) | Fifteen three-coordinate long results miss 5%; only AMD2 3/1999 history meets it. All 16 larger-coordinate results pass. AMD2 3/1999 current has 2.2188% identical-copy variation against 2%, so that timing is inconclusive. All small-case limits pass. [Saved samples](docs/measurements/recording-capacity-time-2026-11-06/copy-review.json) show identical images and balanced positions, but the copy gap reverses between the two 49-round halves (1.02979 then 0.99344). Source/driver review must precede a new diagnostic; no cause or unchanged rerun is justified. Native inlining is verified; complete final delivery before choosing the next transformation. |
-| [Scalar append runtime](docs/measurements/recording-inline-time-2026-11-06/README.md) | 19/32 long-case targets miss 5%: both architectures’ 3/199 and 3/1999 forms in both sessions, plus AMD64 history 33/199 in session 1 and 129/199 in both. Long gains are 2.26–8.12%; small-case/copy limits pass. Native inlining and final delivery are verified. The current capacity-call group follows the saved source/compiler review; its new comparison does not close these misses. No unchanged timing reruns. |
+| [Capacity runtime](docs/measurements/recording-capacity-time-2026-11-06/README.md) | Fifteen three-coordinate long results miss 5%; only AMD2 3/1999 history meets it. All 16 larger-coordinate results pass. AMD2 3/1999 current has 2.2188% identical-copy variation against 2%, so that timing is inconclusive. All small-case limits pass. [Saved samples](docs/measurements/recording-capacity-time-2026-11-06/copy-review.json) show identical images and balanced positions, but the copy gap reverses between the two 49-round halves (1.02979 then 0.99344). Source/driver review must precede a new diagnostic; no cause or unchanged rerun is justified. Native inlining and final delivery are verified. The combined numeric call/loop group follows the source review; it cannot settle these original timing limits. |
+| [Scalar append runtime](docs/measurements/recording-inline-time-2026-11-06/README.md) | 19/32 long-case targets miss 5%: both architectures’ 3/199 and 3/1999 forms in both sessions, plus AMD64 history 33/199 in session 1 and 129/199 in both. Long gains are 2.26–8.12%; small-case/copy limits pass. Native inlining and final delivery are verified. The delivered capacity-call group followed the saved source/compiler review; its comparison does not close these misses. No unchanged timing reruns. |
 | [Scalar append compiler time](docs/measurements/recording-inline-analysis-2026-11-06/README.md) | AMD64 zero-update reference copies differ by 2.0494%, above 2%; all observed time/RSS ratios are below 1.05. Saved samples rise later in all four copies; copy identity and position are partly confounded. Preserve this inconclusive result. A future diagnostic must separate those factors; do not rerun unchanged timings for a pass. |
 | [Recording lookup runtime](docs/measurements/recording-lookup-time-2026-11-06/README.md) | All 32 long-case 5% targets remain unmet. ARM64 ranges from 0.14% slower to 2.33% faster; AMD64 current-result cases slow by 1.13–3.90%, while history ranges from 0.40% slower to 1.80% faster. Small-case and copy limits pass. Lookup counts fall 8→3 per pair/update; allocations, live storage and reported frames stay unchanged. [Source and GCC review](docs/measurements/recording-call-analysis-2026-11-06/README.md) is complete; append-body inlining is delivered with its own separately recorded results. Preserve the original timings; the slowdown has no established cause. |
 | [Recording lookup compiler time](docs/measurements/recording-lookup-analysis-2026-11-06/README.md) | AMD64 large callback worker is inconclusive: identical candidate copies differ by 2.854%, above 2%. All observed time/RSS ratios are below 1.05. Saved samples show later timings rising for all four copies; the two-order schedule partly confounds copy identity and position. Preserve the original failure. A future diagnostic must separate those factors before changing the setup; do not rerun unchanged timings for a pass. |

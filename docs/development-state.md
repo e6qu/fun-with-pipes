@@ -1,103 +1,62 @@
 # Current work
 
-**Next:** publish the native receipts and archive storage repair, mark PR #264
-ready, and monitor all nine production jobs plus documentation on that exact head.
-Audit every failure and completed target before one repair push. Once all final
-jobs pass, run `production-log-audit` with exact source, run attempt and docs job;
-verify its complete receipt before the authorized one-line squash merge.
+**Next:** implement the combined [numeric call/loop contract](measurements/recording-context-scopes.md),
+starting with the bounded proof and explicit internal worker arguments. Update
+all direct-call paths and selected pair-map/fold loops together, then run one
+focused native batch. No production code changed or new measurement dispatched.
 
-Branch `recording-capacity-gate`, worktree `.worktrees/recording-capacity-gate`.
-[PR #264](https://github.com/e6qu/fun-with-pipes/pull/264) is the only active PR,
-currently draft. Current pushed head `65b253e64a8cd5008274f2c8d1aee1f9fecc74bc`;
-all measurement receipts and the explicit native plan are published.
+Branch `recording-context-scopes`, worktree `.worktrees/recording-capacity-gate`.
+Base `d992a5734a12cf976c1ca20f75e9829a18bde0cc`. No active PR; open one coherent
+draft after the combined implementation and controls are ready.
 
-## Roadmap status
+## Plan status
 
-| Step | Status | Remaining work |
+| Step | Status | Next result |
 |---|---|---|
-| 1 | Verified | PR #263 delivery retained; capacity contract frozen before edits. |
-| 2 | Verified | Corrected three-host checks, full audits and 116 tool controls pass. |
-| 3 | Verified | Memory/compiler/runtime results audited; all 48 original images and capacity inlining verified. Timing misses retained. |
-| 4 | In progress | Publish final receipts; run nine-job matrix/docs, full audits and verified squash merge. |
+| 1 | Prepared | Commit the contract and verified #264 delivery before production edits. |
+| 2 | Next | Bounded numeric proof, explicit context forwarding, pair-map/fold scopes and failure controls. |
+| 3 | Pending | Focused GCC/Clang checks, reference controls, one combined measurement batch and complete audits. |
+| 4 | Pending | Nine exact-head jobs/docs, complete final audit and verified squash merge. |
 
-## Sources and completed checks
+## Verified delivery: PR #264
 
-- PR #263 merge `53bd2d78e7a19afc5c7f697bf22ee380c4f9b2ac` exactly matches tested
-  tree `c7bef970b64dc07dc487592a14402b8d46ccf388`; subject is one line, 42 chars.
-  [Delivery receipt](measurements/recording-inline-delivery-2026-11-06/README.md).
-- Capacity [contract](measurements/recording-capacity.md) frozen at
-  `10b275c0eec9b7cb51921bce282ea4cf758d0a84` before edits. The reference recreates
-  the old runtime byte for byte; growth/check order and failure cleanup remain.
-- Initial source `4e8fbfd9` remains tagged
-  `evidence/recording-capacity-initial-2026-11-06`. Its full audit found only
-  Rust line wrapping; all native targets passed. [Initial receipt](measurements/recording-capacity-initial-2026-11-06/README.md).
-- Corrected source `51edfc0e7884e1a75201bc9876fd13cb8ca25eee` passes focused run
-  `42177517863`: AMD `127759292851`, ARM `127759293082`, mac `127759293154`.
-  Full audit `42179352168` / `127765102666` passes. All 25 targets, 864 images
-  and 880 observations per host, plus 8,304 retained records verified.
-  [Corrected receipt](measurements/recording-capacity-checks-2026-11-06/README.md).
+[Delivery receipt](measurements/recording-capacity-delivery-2026-11-06/README.md)
+retains complete logs, archive identities and the actual merge message/tree.
 
-## Combined measurements: original source 51edfc0e
+- Tested head `d453662e4226dbf613b5c8accc467a67fa12a359`.
+- Merge `d992a5734a12cf976c1ca20f75e9829a18bde0cc`; identical tested/merged tree
+  `7f2f64e1e45114c0e8b42a324254fe7f7f4939b3`.
+- Exact squash subject `Inline derivative tape capacity checks`: 38 characters,
+  one line, empty body and no trailers.
+- All nine production jobs `42186095529` attempt 1 pass. Docs
+  `42186063070` / `127786559808` passes. Every complete producer log reviewed.
+- Complete audit `42197602289` / `127824662178` passes. Artifact `13493958793`,
+  1,162,047 bytes, SHA-256
+  `32800cd03a63f4c7d94aa5fa0017b85ee44e7e3910787d141c7ed4d2e35a0049`.
+  All ten source receipts and every retained log hash verified (guard 0.13s).
+- Duplicate postmerge runs `42201736811` / `42201737242` confirmed cancelled
+  after tree equality. Initial receipt attempt correctly refused while the CI
+  cancellation was pending; retention passed once cancellation completed.
+- Long gains 1.86–14.02%; 17/32 meet 5%. Fifteen targets and one AMD64 copy limit
+  stay open. Allocation/validation/live storage/maximum frames unchanged;
+  all compiler comparisons pass. Every older missed limit stays in PLAN.md.
 
-- [Memory](measurements/recording-capacity-census-2026-11-06/README.md): producer
-  `42179964294` jobs AMD `127767049412`, ARM `127767049900` pass. Full audit
-  `42181326578` / `127771398833` passes. Counts, peaks and largest frames
-  unchanged; final storage zero. All 4,038 retained record hashes verified.
-- [Compiler](measurements/recording-capacity-analysis-2026-11-06/README.md):
-  producer `42179974129`, AMD `127767078406`, ARM `127767078878`, passes.
-  Repaired audit `42182313740` / `127774534662` passes: all 14 comparisons
-  qualify, 672 commands and 2,162 retained records verified.
-- [Runtime](measurements/recording-capacity-time-2026-11-06/README.md):
-  producer `42179983250`, AMD1/2 `127767111308` / `127767111269`, ARM1/2
-  `127767111350` / `127767111433`. All hosts qualified; none replaced.
-  Full audit `42183074888` / `127776942929` passes, preserving four failed
-  producer jobs. All report/log hashes, archive digests and budgets verified.
-- Long gains 1.86–14.02%; 17/32 meet 5%. Fifteen three-coordinate results miss;
-  only AMD2 3/1999 history meets 5%. All larger cases pass. AMD2 3/1999 current
-  has 2.2188% copy variation (limit 2%), so remains inconclusive. Small-case
-  maximum regression 1.153%; no qualified timing repeated. All older limits
-  in PLAN.md remain open. C/Rust peers use handwritten derivatives.
+## Implementation map
 
-## Audit repair and local verification
+- `src/cgen/recording.rs`: closed numeric proof, depth 64/expression 4096/type 32
+  bounds, rejects lifecycle/reentry/ticks. Current admission counts direct pushes.
+- `src/cgen.rs`: `Abi::sig`, worker/boxed entries, `FnGen::call`, `expr_fields`
+  and other direct worker calls; packed pair-map/fold generation. Forwarding must
+  cover all these callers. Reconcile uncounted proof with ownership lowering.
+- `tests/ad_tape_scopes.rs` and `fixtures/ad_recording_lookup_probe.c`: existing
+  O0/O1/O2 lookup, parent/trap order, ID-switch, reuse and unwind controls.
+- Reference selector disables only new scopes, preserving previous lookup reuse,
+  append inlining and capacity inlining. No old compiler binary dependency.
+- Read-only source notes: `/tmp/fwp-capacity-next-source-review.md`; initial
+  contract draft `/tmp/fwp-recording-context-contract-draft.md`. The committed
+  contract governs implementation; neither scratch file is acceptance evidence.
 
-First compiler audit `42181226529` / `127771091070` failed on both architectures:
-Git and difflib align repeated braces differently. Repair `a7665661` validates
-exact patch input/output, hunk positions/counts and newline markers. The complete
-reference test now uses real Git diff. Production and measured compilers unchanged.
-[Failed evidence and repair](measurements/recording-capacity-audit-repair-2026-11-06/README.md).
-
-[Repair controls](measurements/recording-capacity-repair-controls-2026-11-06/README.md)
-`42182321875` / `127774561016`: 15 suites / 116 tests pass, including historical
-archives omitted from this sparse local checkout. All suite/full logs and digest
-verified. Docs `42182289922` / `127774447845` pass; complete log has exactly the
-three deliberate runner-failure controls. Draft CI `42182289841` is skipped,
-not native platform evidence. Initial 114 controls also remain retained.
-
-Guarded local checks: 4 complete reference tests (0.85s), 20 focused shared-reader
-controls (0.94s), compiler/census receipt hashes (0.23/0.25s), runtime retention
-and budget reconciliation (0.24/0.47s), docs links (0.13s). A local full Python
-control target lacked four historical archives; its full CI run now passes.
-No native build, full suite or benchmark ran locally. Last free disk about 78 GiB.
-
-Scratch: `../gradient-work/capacity-*`, `../gradient-work/recording-capacity-*`,
-`/tmp/fwp-capacity-*`, `/tmp/fwp-retain-capacity-*`. Do not rerun one-shot source
-edit helpers. Keep status-only edits local while final-head gates run.
-
-## Native verification and storage repair
-
-[Native run](measurements/recording-capacity-images-2026-11-06/README.md)
-`42184258186` at `65b253e6`: AMD64 `127780749478`, ARM64 `127780749617` pass.
-All 48 original executable hashes and every source/report/stack hash verified.
-Every positive-update candidate has capacity inlining and no final rejection.
-No new timings or native execution. Local guarded artifact check: 0.12s.
-
-GitHub warned about the 53.58 MiB retained runtime archive. It is now two <=32 MiB
-parts; the manifest records sizes/hashes and the original checksum. Concatenated
-bytes exactly match the original, with no regeneration (guarded check 0.24s).
-Publish this storage-only repair with the native receipts. Free disk about 77 GiB.
-
-Saved copy review confirms identical executable bytes and balanced positions;
-ratios reverse across the two 49-round halves (1.02979 then 0.99344). No cause
-established; the failed 2% limit remains open. Reproduction takes 0.13s guarded.
-Docs `42184176197` / `127780471090` still running at 65b253e6; final head needs
-its own docs gate. No final production support is claimed yet.
+Use the local guard for serial focused checks. Full builds/tests/benchmarks and
+large audits run on GitHub. Last free space 76 GiB. No native build/full suite or
+benchmark ran locally. Current delivery scratch: `../gradient-work/capacity-*`;
+one-shot retention helper `/tmp/fwp-retain-capacity-delivery.py` already ran.

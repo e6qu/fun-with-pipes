@@ -335,8 +335,13 @@ and largest reported frames are unchanged; all compiler-cost limits pass.
 [Runtime](measurements/recording-capacity-time-2026-11-06/README.md) improves
 1.86–14.02%, with 15/32 long speed targets and one copy control still open.
 [Native verification](measurements/recording-capacity-images-2026-11-06/README.md)
-reproduces all 48 measured images and confirms capacity inlining. Final platform
-validation remains pending.
+reproduces all 48 measured images and confirms capacity inlining.
+[Final platform gates and complete audits pass](measurements/recording-capacity-delivery-2026-11-06/README.md).
+
+The next [numeric call/loop contract](measurements/recording-context-scopes.md)
+extends this local lookup proof across eligible direct calls and separate packed
+map/fold loops. It has no verified implementation yet; tape-ID changes, task
+switches, reentry and retirement remain explicit lifetime boundaries.
 
 Channel borrowing preserves hidden native contexts as well as payload storage.
 It does not prove the queued graph acyclic: capture/cycle checks remain separate.
