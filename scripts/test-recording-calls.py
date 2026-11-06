@@ -20,6 +20,10 @@ class RecordingCalls(unittest.TestCase):
                                dict(name='reference', suffix='-reference', inlining='observe')])
         plan = dict(contractCommit='b' * 40, architectures={arch: [copy.deepcopy(group)] for arch in ('aarch64', 'x86_64')})
         self.assertEqual(CALLS.check_plan(plan, 'aarch64'), [group])
+        capacity = copy.deepcopy(plan)
+        for groups in capacity['architectures'].values():
+            groups[0]['protocol'] = 'recording-capacity'
+        self.assertEqual(CALLS.check_plan(capacity, 'x86_64'), capacity['architectures']['x86_64'])
         for mode in ('missing-setting', 'duplicate', 'bad-source', 'wrong-suffix', 'wrong-protocol', 'outside-index', 'missing-arch', 'missing-variant'):
             altered = copy.deepcopy(plan)
             selected = altered['architectures']['aarch64'][0]
@@ -48,7 +52,12 @@ class RecordingCalls(unittest.TestCase):
             'sample.c:10:5: optimized: Inlining fwp_p_ad_push/1022 into w120/1110.\n'
             'sample.c:11:5: optimized: Inlined fwp_f64/74 into w120/1110.\n'
             'sample.c:12:5: missed: not inlinable: w120/1110 -> fwp_p_ad_push.constprop/1619, size limit\n')
-        self.assertEqual(CALLS.inline_decisions(report), dict(inlined=1, rejected=1))
+        self.assertEqual(CALLS.inline_decisions(report, 'fwp_p_ad_push'), dict(inlined=1, rejected=1))
+        self.assertEqual(CALLS.inline_decisions(report, 'fwp_tape_reserve'), dict(inlined=0, rejected=0))
+        reserve = report.replace('fwp_p_ad_push', 'fwp_tape_reserve')
+        self.assertEqual(CALLS.inline_decisions(reserve, 'fwp_tape_reserve'), dict(inlined=1, rejected=1))
+        self.assertEqual(CALLS.inline_decisions(reserve.replace('fwp_tape_reserve', 'fwp_tape_reserve_other'),
+                                               'fwp_tape_reserve'), dict(inlined=0, rejected=0))
 
     def test_recorded_command_rejects_changed_flags_duplicate_and_failure(self):
         command = CALLS.expected_command('aarch64', '3-199', 'fwp-ad')
@@ -62,7 +71,7 @@ class RecordingCalls(unittest.TestCase):
     def test_corrupt_source_is_rejected_before_compiler(self):
         with tempfile.TemporaryDirectory() as temp, patch.object(CALLS, 'execute') as execute:
             with self.assertRaisesRegex(ValueError, 'saved source'):
-                CALLS.compile_one([], b'changed', {'sourceSha256': CALLS.digest(b'original')}, Path(temp) / 'out')
+                CALLS.compile_one([], b'changed', {'sourceSha256': CALLS.digest(b'original')}, Path(temp) / 'out', 'fwp_tape_reserve')
             execute.assert_not_called()
 
     def test_compilation_never_reuses_stale_image_or_report(self):
@@ -92,11 +101,12 @@ class RecordingCalls(unittest.TestCase):
 
                 with patch.object(CALLS, 'execute', side_effect=compiler) as execute:
                     if mode == 'pass':
-                        result = CALLS.compile_one(command, b'source', metadata, root / 'out')
+                        result = CALLS.compile_one(command, b'source', metadata, root / 'out', 'fwp_tape_reserve')
                         self.assertEqual(result['imageSha256'], metadata['sha256'])
+                        self.assertEqual(result['inliningTarget'], 'fwp_tape_reserve')
                     else:
                         with self.assertRaises((ValueError, FileNotFoundError)):
-                            CALLS.compile_one(command, b'source', metadata, root / 'out')
+                            CALLS.compile_one(command, b'source', metadata, root / 'out', 'fwp_tape_reserve')
                     execute.assert_called_once()
                 self.assertTrue((root / 'out/result.json').is_file())
                 self.assertEqual((root / 'out/source.c').read_bytes(), b'source')
@@ -108,7 +118,7 @@ class RecordingCalls(unittest.TestCase):
             command[9], command[11] = str(root / 'source.c'), str(root / 'image')
             error = subprocess.TimeoutExpired(command, 120, output=b'partial', stderr=b'diagnostic')
             with patch.object(CALLS, 'execute', side_effect=error), self.assertRaises(subprocess.TimeoutExpired):
-                CALLS.compile_one(command, b'source', {'sourceSha256': CALLS.digest(b'source')}, root / 'out')
+                CALLS.compile_one(command, b'source', {'sourceSha256': CALLS.digest(b'source')}, root / 'out', 'fwp_tape_reserve')
             self.assertEqual((root / 'out/stdout').read_bytes(), b'partial')
             self.assertEqual((root / 'out/stderr').read_bytes(), b'diagnostic')
 

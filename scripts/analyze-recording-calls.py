@@ -64,7 +64,7 @@ def check_result(result, binary, inline, expected):
     require_hash(binary.read_bytes(), expected, 'rebuilt executable')
 
 
-def compile_one(command, source, metadata, output):
+def compile_one(command, source, metadata, output, symbol):
     output.mkdir(parents=True, exist_ok=False)
     require_hash(source, metadata['sourceSha256'], 'saved source')
     source_path = Path(command[9])
@@ -87,7 +87,7 @@ def compile_one(command, source, metadata, output):
         raise
     (output / 'stdout').write_bytes(result.stdout)
     (output / 'stderr').write_bytes(result.stderr)
-    record = {'status': result.returncode, 'sourceSha256': digest(source),
+    record = {'status': result.returncode, 'sourceSha256': digest(source), 'inliningTarget': symbol,
               'expectedImageSha256': metadata['sha256']}
     for name, path in [('image', binary), ('stack', stack), ('inline', inline)]:
         if path.is_file():
@@ -97,7 +97,7 @@ def compile_one(command, source, metadata, output):
             if name != 'inline':
                 (output / name).write_bytes(data)
     if inline.is_file():
-        record['inlineDecisions'] = inline_decisions(inline.read_text())
+        record['inlineDecisions'] = inline_decisions(inline.read_text(), symbol)
     (output / 'result.json').write_text(json.dumps(record, indent=2) + '\n')
     check_result(result, binary, inline, metadata['sha256'])
     if not stack.is_file() or not stack.stat().st_size:
@@ -139,10 +139,12 @@ def load_session(index_path, arch, source, protocol, output):
     return report, archive
 
 
-def inline_decisions(text):
+def inline_decisions(text, symbol):
+    assert symbol in ('fwp_p_ad_push', 'fwp_tape_reserve')
     lines = text.splitlines()
-    return dict(inlined=sum(bool(re.search(r'optimized:.*\bInlin(?:ing|ed) fwp_p_ad_push[./]', line)) for line in lines),
-                rejected=sum('not inlinable:' in line and bool(re.search(r'-> fwp_p_ad_push[./]', line)) for line in lines))
+    name = re.escape(symbol)
+    return dict(inlined=sum(bool(re.search(r'optimized:.*\bInlin(?:ing|ed) ' + name + r'[./]', line)) for line in lines),
+                rejected=sum('not inlinable:' in line and bool(re.search(r'-> ' + name + r'[./]', line)) for line in lines))
 
 
 def check_plan(plan, arch):
@@ -150,18 +152,19 @@ def check_plan(plan, arch):
     assert re.fullmatch('[0-9a-f]{40}', plan['contractCommit'])
     assert set(plan['architectures']) == {'aarch64', 'x86_64'}
     groups = plan['architectures'][arch]
-    assert [group['protocol'] for group in groups] in (['scalar-constant', 'recording-lookup'], ['recording-inline'])
+    assert [group['protocol'] for group in groups] in (['scalar-constant', 'recording-lookup'], ['recording-inline'], ['recording-capacity'])
     seen = set()
     for group in groups:
         assert set(group) == {'name', 'index', 'source', 'protocol', 'variants'}
         assert re.fullmatch('[a-z][a-z-]+', group['name'])
         assert re.fullmatch('[0-9a-f]{40}', group['source'])
-        assert group['protocol'] in ('scalar-constant', 'recording-lookup', 'recording-inline')
+        assert group['protocol'] in ('scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity')
         assert group['index'].startswith('docs/measurements/') and '..' not in Path(group['index']).parts
         expected_variants = {
             'scalar-constant': {'previous': ('', 'observe')},
             'recording-lookup': {'reference': ('-reference', 'observe'), 'candidate': ('', 'observe')},
             'recording-inline': {'reference': ('-reference', 'observe'), 'candidate': ('', 'require')},
+            'recording-capacity': {'reference': ('-reference', 'observe'), 'candidate': ('', 'require')},
         }[group['protocol']]
         assert len(group['variants']) == len(expected_variants)
         assert all(set(variant) == {'name', 'suffix', 'inlining'} for variant in group['variants'])
@@ -174,7 +177,7 @@ def check_plan(plan, arch):
             assert variant['suffix'] in ('', '-reference')
             assert variant['inlining'] in ('observe', 'require')
             if variant['inlining'] == 'require':
-                assert group['protocol'] == 'recording-inline' and variant['suffix'] == ''
+                assert group['protocol'] in ('recording-inline', 'recording-capacity') and variant['suffix'] == ''
     return groups
 
 
@@ -204,6 +207,8 @@ def main():
                'compilations': [], 'errors': []}
     try:
         for group in groups:
+            symbol = {'scalar-constant': 'fwp_p_ad_push', 'recording-lookup': 'fwp_p_ad_push',
+                      'recording-inline': 'fwp_p_ad_push', 'recording-capacity': 'fwp_tape_reserve'}[group['protocol']]
             report, archive = load_session(group['index'], args.arch, group['source'], group['protocol'], output / group['name'])
             with zipfile.ZipFile(archive) as saved:
                 if len(saved.namelist()) != len(set(saved.namelist())):
@@ -218,12 +223,14 @@ def main():
                                 data = saved.read(f'{case}/{program}.c')
                                 require_hash(saved.read(f'{case}/{program}'), metadata['sha256'], 'original image')
                                 command = recorded_command(report, args.arch, case, program)
-                                result = compile_one(command, data, metadata, output / label)
+                                result = compile_one(command, data, metadata, output / label, symbol)
                                 if variant['inlining'] == 'require':
-                                    assert data.count(b'static inline __attribute__((always_inline)) V fwp_p_ad_push(') == 1, 'forced append declaration missing or duplicated'
-                                    assert result['inlineDecisions']['rejected'] == 0, 'GCC rejected forced append inlining'
+                                    declaration = {'fwp_p_ad_push': b'static inline __attribute__((always_inline)) V fwp_p_ad_push(',
+                                                   'fwp_tape_reserve': b'static inline __attribute__((always_inline)) void fwp_tape_reserve('}[symbol]
+                                    assert data.count(declaration) == 1, 'forced declaration missing or duplicated: ' + symbol
+                                    assert result['inlineDecisions']['rejected'] == 0, 'GCC rejected forced inlining: ' + symbol
                                     if case != '3-0':
-                                        assert result['inlineDecisions']['inlined'] > 0, 'no append inlining reported in a positive-update program'
+                                        assert result['inlineDecisions']['inlined'] > 0, 'no inlining reported in a positive-update program: ' + symbol
                                 summary['compilations'].append({'case': label, **result})
                                 print('verified', label, flush=True)
                             except (AssertionError, ValueError, OSError, KeyError, subprocess.SubprocessError) as error:
