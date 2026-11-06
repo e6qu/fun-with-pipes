@@ -45,6 +45,7 @@ const SCALAR_CONSTANT_VALUES: bool = true;
 
 // Same-source reference disables only proved per-worker tape lookup reuse.
 const AD_RECORDING_LOOKUPS: bool = true;
+const AD_RECORDING_SCOPES: bool = true;
 
 const RUNTIME: &[&str] = &[
     include_str!("../runtime/fwp_rt.c"),
@@ -481,7 +482,7 @@ struct Gen<'p> {
     /// Whether functions are safe points for preemption (programs with
     /// tasks): their entries spend the running task's budget.
     ticks: bool,
-    recording_workers: Vec<bool>,
+    recording_workers: Vec<recording::Mode>,
     /// The runtime may return through an Error handler or task cancellation.
     unwind: bool,
     /// Step functions of `loop`s compiled to C loops with their state in
@@ -564,6 +565,28 @@ fn variant_returns_enabled() -> bool {
 }
 
 impl Gen<'_> {
+    fn recording_worker(&self, id: FuncId) -> bool {
+        self.recording_workers[id] == recording::Mode::Forward && self.abis[id].is_some()
+    }
+
+    fn recording_args(&self, id: FuncId, mut args: Vec<String>, context: &str) -> Vec<String> {
+        if self.recording_worker(id) {
+            args.push(context.into());
+        }
+        args
+    }
+
+    fn recording_scope(&self, callback: FuncId) -> (&'static str, &'static str) {
+        if self.recording_worker(callback) {
+            (
+                "    fwp_ad_recording recording = {-1, NULL};\n",
+                "&recording",
+            )
+        } else {
+            ("", recording::FRESH)
+        }
+    }
+
     fn value_dup(&self, ty: &MT) -> &'static str {
         if matches!(ty, MT::Con(n, _) if n == "std::File") {
             "fwp_file_dup"
@@ -1215,7 +1238,7 @@ impl Abi {
         NativeNumber::of(f.ty.params(f.arity as usize).1)
     }
 
-    fn sig(&self, prog: &Program, id: FuncId) -> String {
+    fn sig(&self, prog: &Program, id: FuncId, recording: bool) -> String {
         let mut names = Vec::new();
         for (i, p) in self.params.iter().enumerate() {
             match p {
@@ -1223,7 +1246,7 @@ impl Abi {
                 None => names.push(format!("l{i}")),
             }
         }
-        let ps: Vec<_> = names
+        let mut ps: Vec<_> = names
             .into_iter()
             .zip(self.param_numbers(prog, id))
             .map(|(name, n)| match n {
@@ -1238,6 +1261,9 @@ impl Abi {
                 .scalar_result(prog, id)
                 .map_or_else(|| "V".into(), NativeNumber::c_type),
         };
+        if recording {
+            ps.push("fwp_ad_recording *recording".into());
+        }
         format!("static {} w{}({})", ret, id, ps.join(", "))
     }
 }
@@ -2497,8 +2523,8 @@ struct FnGen<'g, 'p, 'e> {
     root: &'e Expr,
     /// Built lazily once for this emission; never shared across cloned bodies.
     field_last_uses: Option<HashMap<Local, *const Expr>>,
-    /// This emission declared the proved worker's stack-local lookup state.
-    recording: bool,
+    /// Explicit borrowed state, or the address of this invocation's local state.
+    recording: Option<&'static str>,
     g: &'g mut Gen<'p>,
     out: String,
     tmp: usize,
@@ -2767,6 +2793,7 @@ impl Gen<'_> {
             }
         }
         let arguments = abi.args_decode_words(self.prog, id, prepared);
+        let arguments = self.recording_args(id, arguments, recording::FRESH);
         let _ = writeln!(
             out,
             "        fwp_wr{id} mapped = w{id}({});",
@@ -2806,6 +2833,7 @@ impl Gen<'_> {
             });
         }
         let arguments = abi.args_decode_words(self.prog, id, words);
+        let arguments = self.recording_args(id, arguments, recording::FRESH);
         let mut out = format!("    /* Finish indexed input records before any neighboring-pair callback. */\n    size_t count = fwp_list_len(l{other});\n    if (count >= SIZE_MAX / sizeof(V)) fwp_trap(\"map too large\");\n    int64_t lo = (int64_t)l{lo}, hi = (int64_t)l{hi};\n    uint64_t available = hi > lo ? (uint64_t)hi - (uint64_t)lo : 0;\n    if (available < count) count = (size_t)available;\n    if (count > (SIZE_MAX - sizeof(fwp_arr)) / ({width} * sizeof(V))) fwp_trap(\"map too large\");\n    V buffer = fwp_rc_fresh(fwp_arr_new(count * {width}));\n    fwp_value_owner owner = {{buffer, fwp_rc_free_arr}};\n    fwp_cleanup cleanup; fwp_value_protect(&owner, &cleanup);\n    for (size_t i = 0; i < count; i++) {{\n        V index = (V)((uint64_t)lo + (uint64_t)i);\n        fwp_wr{id} mapped = w{id}({});\n", arguments.join(", "));
         for (field, word) in abi.result_words(self.prog, id, "mapped").iter().enumerate() {
             let _ = writeln!(
@@ -2834,6 +2862,8 @@ impl Gen<'_> {
             );
         }
         let arguments = abi.args_decode_words(self.prog, id, words);
+        let (recording_setup, context) = self.recording_scope(id);
+        let arguments = self.recording_args(id, arguments, context);
         let reuse = PACKED_PAIR_REUSE && width == input_width;
         let mut out = format!(
             "    /* Consume private overlapping windows; complete mapping before the fold. */\n    fwp_value_owner input = {{l0, fwp_rc_free_arr}};\n    fwp_cleanup input_cleanup; fwp_value_protect(&input, &input_cleanup);\n    size_t count = ARR(l0)->len / {input_width};\n    if (count) count--;\n    if (count > (SIZE_MAX - sizeof(fwp_arr)) / ({width} * sizeof(V))) fwp_trap(\"map too large\");\n"
@@ -2852,7 +2882,7 @@ impl Gen<'_> {
         }
         let _ = writeln!(
             out,
-            "    for (size_t i = 0; i < count; i++) {{\n        fwp_wr{id} mapped = w{id}({});",
+            "{recording_setup}    for (size_t i = 0; i < count; i++) {{\n        fwp_wr{id} mapped = w{id}({});",
             arguments.join(", ")
         );
 
@@ -2893,9 +2923,11 @@ impl Gen<'_> {
         let mut arguments = abi.result_words(self.prog, id, "accumulator");
         arguments.extend((0..element_width).map(|i| format!("ARR(l1)->d[offset + {i}]")));
         let arguments = abi.args_decode_words(self.prog, id, arguments);
+        let (recording_setup, context) = self.recording_scope(id);
+        let arguments = self.recording_args(id, arguments, context);
         let result = abi.result_words(self.prog, id, "accumulator");
         let drop = self.value_drop(&self.prog.funcs[id].locals[0].clone());
-        format!("    /* Fold after the complete packed map; input stays borrowed. */\n    size_t words = ARR(l1)->len;\n    if (!words) return l0;\n    fwp_wr{id} accumulator = {{{}}};\n    {drop}(l0);\n    for (size_t offset = 0; offset < words; offset += {element_width}) {{\n        accumulator = w{id}({});\n    }}\n    return fwp_rc_fresh(fwp_record({width}, (V[]){{{}}}));\n",
+        format!("    /* Fold after the complete packed map; input stays borrowed. */\n    size_t words = ARR(l1)->len;\n    if (!words) return l0;\n    fwp_wr{id} accumulator = {{{}}};\n    {drop}(l0);\n{recording_setup}    for (size_t offset = 0; offset < words; offset += {element_width}) {{\n        accumulator = w{id}({});\n    }}\n    return fwp_rc_fresh(fwp_record({width}, (V[]){{{}}}));\n",
             initial.join(", "), arguments.join(", "), result.join(", "))
     }
 
@@ -2922,11 +2954,13 @@ impl Gen<'_> {
         let mut arguments = step.result_words(self.prog, callback, "accumulator");
         arguments.extend((0..element_width).map(|i| format!("ARR(l1)->d[offset + {i}]")));
         let arguments = step.args_decode_words(self.prog, callback, arguments);
+        let (recording_setup, context) = self.recording_scope(callback);
+        let arguments = self.recording_args(callback, arguments, context);
         let result = (0..width)
             .map(|i| format!("accumulator.f{i}"))
             .collect::<Vec<_>>();
-        let mut out = format!("/* packed-record-fold fields : {} */\n{} {{\n    /* Fold after the complete packed map; seed and result are numeric fields. */\n    fwp_wr{callback} accumulator = {{{}}};\n    size_t words = ARR(l1)->len;\n    for (size_t offset = 0; offset < words; offset += {element_width}) {{\n        accumulator = w{callback}({});\n    }}\n    return (fwp_wr{id}){{{}}};\n}}\n",
-            self.prog.funcs[id].ty, abi.sig(self.prog, id), initial.join(", "), arguments.join(", "), result.join(", "));
+        let mut out = format!("/* packed-record-fold fields : {} */\n{} {{\n    /* Fold after the complete packed map; seed and result are numeric fields. */\n    fwp_wr{callback} accumulator = {{{}}};\n    size_t words = ARR(l1)->len;\n{recording_setup}    for (size_t offset = 0; offset < words; offset += {element_width}) {{\n        accumulator = w{callback}({});\n    }}\n    return (fwp_wr{id}){{{}}};\n}}\n",
+            self.prog.funcs[id].ty, abi.sig(self.prog, id, self.recording_worker(id)), initial.join(", "), arguments.join(", "), result.join(", "));
         // The owned entry still consumes its boxed seed. Copy numeric fields
         // before dropping that owner; the input buffer remains borrowed.
         let drop = self.value_drop(&self.prog.funcs[id].locals[0].clone());
@@ -2939,6 +2973,7 @@ impl Gen<'_> {
             .map(|i| format!("seed{i}"))
             .chain(std::iter::once("l1".into()))
             .collect::<Vec<_>>();
+        let names = self.recording_args(id, names, recording::FRESH);
         let _ = writeln!(out, "static V f{id}(V l0, V l1) {{");
         for (i, number) in abi
             .param_numbers(self.prog, id)
@@ -3006,6 +3041,7 @@ impl Gen<'_> {
             None => arguments.push("element".into()),
         }
         let arguments = abi.args_decode_words(self.prog, id, arguments);
+        let arguments = self.recording_args(id, arguments, recording::FRESH);
         let result = abi.result_words(self.prog, id, "accumulator");
         let accumulator_type = self.prog.funcs[id].locals[0].clone();
         let drop = self.value_drop(&accumulator_type);
@@ -3565,7 +3601,11 @@ impl<'g, 'p> FnGen<'g, 'p, '_> {
                 None => out.push(self.arg(g, j, a)),
             }
         }
-        abi.args_decode_words(self.g.prog, g, out)
+        self.g.recording_args(
+            g,
+            abi.args_decode_words(self.g.prog, g, out),
+            self.recording.unwrap_or(recording::FRESH),
+        )
     }
 
     /// In a loop's step, a field of the state kept as its own fields: its
@@ -6164,6 +6204,7 @@ impl<'g, 'p> FnGen<'g, 'p, '_> {
                         .map(|j| format!("arguments[{j}]"))
                         .collect(),
                 );
+                let arguments = self.g.recording_args(g, arguments, recording::FRESH);
                 let values = abi.result_words(self.g.prog, g, "pair");
                 ("numeric map: direct callback fields", format!("{prepare}\n            fwp_wr{g} pair = w{g}({});\n            keys[i] = {}; vals[i] = {};", arguments.join(", "), values[0], values[1]))
             } else {
@@ -6485,14 +6526,17 @@ impl<'g, 'p> FnGen<'g, 'p, '_> {
             self.tail_tokens(tail);
             return self.bind(format!("(V)(int64_t)({})", n));
         }
-        if self.recording && recording::scalar_push(&self.g.prog.funcs[id]) {
+        if let Some(context) = self
+            .recording
+            .filter(|_| recording::scalar_push(&self.g.prog.funcs[id]))
+        {
             let xs: Vec<_> = args
                 .iter()
                 .enumerate()
                 .map(|(j, a)| self.arg(id, j, a))
                 .collect();
             self.tail_tokens(tail);
-            return self.bind_call(key, format!("fwp_p_ad_push({}, &recording)", xs.join(", ")));
+            return self.bind_call(key, format!("fwp_p_ad_push({}, {context})", xs.join(", ")));
         }
         if let Some(abi) = self.g.abis[id].clone() {
             let xs = self.worker_args(id, &abi, args);
@@ -8187,7 +8231,7 @@ impl<'p> Gen<'p> {
         let mut fg = FnGen {
             root: &body,
             field_last_uses: None,
-            recording: false,
+            recording: None,
             live_calls,
             g: self,
             out: String::new(),
@@ -8358,7 +8402,7 @@ static inline __attribute__((always_inline)) int fs{}(fwp_loop_state{step} *st, 
         let mut fg = FnGen {
             root: e,
             field_last_uses: None,
-            recording: false,
+            recording: None,
             live_calls,
             g: self,
             out: String::new(),
@@ -8704,9 +8748,12 @@ static inline __attribute__((always_inline)) int fs{}(fwp_loop_state{step} *st, 
                     .map(|(j, ty)| (format!("l{j}"), ty.clone()))
                     .collect();
                 let prepare = self.duplicate_values(&inputs, "prepared", "preparation_cleanup");
-                let arguments = (0..f.arity)
-                    .map(|j| format!("l{j}"))
-                    .collect::<Vec<_>>()
+                let arguments = self
+                    .recording_args(
+                        *callback,
+                        (0..f.arity).map(|j| format!("l{j}")).collect(),
+                        recording::FRESH,
+                    )
                     .join(", ");
                 let _ = writeln!(out,
                     "    /* Direct AD scope; caller keeps borrowed worker inputs. */\n    fwp_tape_scope scope = {{-1}};\n    fwp_cleanup cleanup;\n    fwp_cleanup_push(&cleanup, fwp_tape_scope_release, &scope);\n    {prepare}\n    V result = w{callback}({arguments});\n    fwp_cleanup_pop(&cleanup);\n    fwp_tape_scope_release(&scope);\n    return result;");
@@ -9519,7 +9566,7 @@ static inline __attribute__((always_inline)) int fs{}(fwp_loop_state{step} *st, 
         let mut fg = FnGen {
             root: e,
             field_last_uses: None,
-            recording: false,
+            recording: None,
             live_calls: self.live_calls(id, e),
             g: self,
             out: String::new(),
@@ -9551,8 +9598,8 @@ static inline __attribute__((always_inline)) int fs{}(fwp_loop_state{step} *st, 
                 .cloned()
                 .unwrap_or_default();
         fg.entry_tick(fg.g.prog.funcs[fg.me].arity, &borrowed);
-        fg.recording = fg.g.recording_workers[id];
-        if fg.recording {
+        if fg.g.recording_workers[id] != recording::Mode::None {
+            fg.recording = Some("&recording");
             fg.line("fwp_ad_recording recording = {-1, NULL};");
         }
         let r = fg.expr(e);
@@ -9569,7 +9616,7 @@ static inline __attribute__((always_inline)) int fs{}(fwp_loop_state{step} *st, 
             "/* {} : {} */\n{} {{\n",
             f.name,
             f.ty,
-            abi.sig(self.prog, id)
+            abi.sig(self.prog, id, self.recording_worker(id))
         );
         if let Some(parameters) = self.prog.borrowed_parameters.get(&id) {
             let parameters = parameters
@@ -9606,7 +9653,7 @@ static inline __attribute__((always_inline)) int fs{}(fwp_loop_state{step} *st, 
         let mut fg = FnGen {
             root: e,
             field_last_uses: None,
-            recording: false,
+            recording: None,
             live_calls: self.live_calls(id, e),
             g: self,
             out: String::new(),
@@ -9638,9 +9685,13 @@ static inline __attribute__((always_inline)) int fs{}(fwp_loop_state{step} *st, 
                 .cloned()
                 .unwrap_or_default();
         fg.entry_tick(fg.g.prog.funcs[fg.me].arity, &borrowed);
-        fg.recording = fg.g.recording_workers[id];
-        if fg.recording {
-            fg.line("fwp_ad_recording recording = {-1, NULL};");
+        match fg.g.recording_workers[id] {
+            recording::Mode::Forward => fg.recording = Some("recording"),
+            recording::Mode::Local => {
+                fg.recording = Some("&recording");
+                fg.line("fwp_ad_recording recording = {-1, NULL};");
+            }
+            recording::Mode::None => {}
         }
         let ret = match (abi.ret, abi.vret) {
             (Some(n), _) => {
@@ -9727,6 +9778,7 @@ static inline __attribute__((always_inline)) int fs{}(fwp_loop_state{step} *st, 
             }
         }
         let args = abi.args_decode_words(self.prog, id, args);
+        let args = self.recording_args(id, args, recording::FRESH);
         let call = format!("w{}({})", id, args.join(", "));
         // A unique record transfers its fields; shared records duplicate them.
         // Keep the original boxes owned through the call, clearing only fields
@@ -10528,6 +10580,7 @@ impl Gen<'_> {
             // The worker already returns fields. Transfer those owners
             // directly into the C result rather than boxing then unpacking.
             let args = abi.args_decode_words(prog, fid, args.clone());
+            let args = self.recording_args(fid, args, recording::FRESH);
             let _ = writeln!(
                 out,
                 "    fwp_wr{fid} result = w{fid}({});\n{finish_inputs}",
@@ -10795,9 +10848,9 @@ fn generate_mode(prog: &Program, mut mode: Mode) -> Result<String, String> {
     let uncounted = &borrowing;
     let ticks = uses_async(uncounted) || uses_services(uncounted);
     let recording_workers = if AD_RECORDING_LOOKUPS {
-        recording::select(uncounted, ticks)
+        recording::select(uncounted, ticks, AD_RECORDING_SCOPES)
     } else {
-        vec![false; uncounted.funcs.len()]
+        vec![recording::Mode::None; uncounted.funcs.len()]
     };
     let counted = counted_program(uncounted);
     let prog = &counted;
@@ -11624,7 +11677,7 @@ static const fwp_exec_spec exec_spec{i} = {{
     }
     for (id, abi) in g.abis.iter().enumerate() {
         if let Some(abi) = abi.as_ref().filter(|_| live[id]) {
-            let _ = writeln!(out, "{};", abi.sig(prog, id));
+            let _ = writeln!(out, "{};", abi.sig(prog, id, g.recording_worker(id)));
         }
     }
     out.push_str(&wide::declarations(g.uncounted, &g.wide_workers));

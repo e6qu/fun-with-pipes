@@ -1,0 +1,28 @@
+Point = { node: I64, value: F64 }
+
+input-point : I64 -> Point
+input-point = fn node -> Point { node = node, value = 1.0 }
+
+pair-point : Point -> Point -> Point
+pair-point = fn left -> fn right -> Point {
+    node = ad.push (right | .node) 1.0 -1 0.0,
+    value = (left | .value) + (right | .value),
+}
+
+sum-point : Point -> Point -> Point
+sum-point = fn total -> fn point -> Point {
+    node = ad.push (point | .node) 1.0 -1 0.0,
+    value = (total | .value) + (point | .value),
+}
+
+export transform : List[I64] -> Point
+transform = ad.scope (fn inputs ->
+    let records = map input-point inputs
+    in let pairs = zip-with pair-point (drop 1 records) records
+    in fold sum-point (Point { node = -1, value = 0.0 }) pairs)
+
+main = [
+    [] | transform | .value | eq 0.0,
+    [-1] | transform | .node | eq -1,
+    [-1, -1, -1] | transform | .value | eq 4.0,
+] | all id | echo

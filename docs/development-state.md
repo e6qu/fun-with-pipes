@@ -1,20 +1,20 @@
 # Current work
 
-**Next:** implement the combined [numeric call/loop contract](measurements/recording-context-scopes.md),
-starting with the bounded proof and explicit internal worker arguments. Update
-all direct-call paths and selected pair-map/fold loops together, then run one
-focused native batch. No production code changed or new measurement dispatched.
+**Next:** publish the combined call/loop implementation as one draft PR and
+run `gradient-call-checks` on its exact source. Audit all three hosts and every
+completed target before batching repairs. Build the new measurement/reference
+controls while these checks run; do not dispatch timings yet.
 
 Branch `recording-context-scopes`, worktree `.worktrees/recording-capacity-gate`.
-Base `d992a5734a12cf976c1ca20f75e9829a18bde0cc`. No active PR; open one coherent
-draft after the combined implementation and controls are ready.
+Base `d992a5734a12cf976c1ca20f75e9829a18bde0cc`. No active PR yet; the combined production changes and native probes are ready
+for the first focused batch. Measurement tooling remains to be completed.
 
 ## Plan status
 
 | Step | Status | Next result |
 |---|---|---|
-| 1 | Prepared | Commit the contract and verified #264 delivery before production edits. |
-| 2 | Next | Bounded numeric proof, explicit context forwarding, pair-map/fold scopes and failure controls. |
+| 1 | Frozen | Contract and #264 delivery committed as `5dc8efd02` before production edits. |
+| 2 | Implemented, unverified | Extended bounded proof, explicit worker arguments, pair-map/fold scopes and negative probes; run focused native checks. |
 | 3 | Pending | Focused GCC/Clang checks, reference controls, one combined measurement batch and complete audits. |
 | 4 | Pending | Nine exact-head jobs/docs, complete final audit and verified squash merge. |
 
@@ -57,6 +57,20 @@ retains complete logs, archive identities and the actual merge message/tree.
   contract governs implementation; neither scratch file is acceptance evidence.
 
 Use the local guard for serial focused checks. Full builds/tests/benchmarks and
-large audits run on GitHub. Last free space 76 GiB. No native build/full suite or
-benchmark ran locally. Current delivery scratch: `../gradient-work/capacity-*`;
+large audits run on GitHub. Last free space 76 GiB. Rust formatting passed under the guard (0.25s and 0.13s); no native build/full
+suite or benchmark ran locally. Current delivery scratch: `../gradient-work/capacity-*`;
 one-shot retention helper `/tmp/fwp-retain-capacity-delivery.py` already ran.
+
+## Current implementation
+
+`AD_RECORDING_SCOPES` enables transitive numeric selection and explicit borrowed
+worker state. Ordinary entries use a fresh C compound literal; no runtime wrapper
+or optional public argument is added. Separate map/fold states end at their loop.
+The disabled reference keeps the earlier local-worker rule and generated calls.
+
+Proof tests cover nested single-append calls, zero-argument calls and all earlier
+rejections in both modes. The existing tape-scope probe now calls a nested worker
+and deliberately breaks forwarding. A new module under the same native target
+checks empty/singleton/large loops, alternating IDs, preserved list aliases,
+map/fold traps, workspace on/off, reuse on/off and deliberate lost-scope/ID bugs.
+These tests have only been formatted; no native or Rust compile result exists yet.
