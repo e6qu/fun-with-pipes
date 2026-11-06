@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """Reject incomplete, wrong-source or diagnostically failing production gates."""
 import importlib.util
+import hashlib
 import io
 import json
 from pathlib import Path
 import tempfile
 import unittest
 from unittest.mock import patch
+import zipfile
 
 from github_records import records
 
@@ -128,6 +130,75 @@ class ProductionLogs(unittest.TestCase):
                 json.dumps(first).encode(), json.dumps(last).encode()
             ]), self.assertRaises(AssertionError):
                 records(AUDIT.api, 'actions/list', 'jobs')
+
+    def test_focused_entry_audits_later_page_jobs_and_rejects_missing_targets(self):
+        for target_count in (25, 24):
+            with self.subTest(target_count=target_count), tempfile.TemporaryDirectory() as temporary:
+                jobs = [dict(id=i, name='skipped control') for i in range(100)]
+                artifacts, downloads, logs = [], {}, {}
+                for index, (host, (name, runner)) in enumerate(FOCUSED.HOSTS.items()):
+                    job_id, artifact_id = 200 + index, 300 + index
+                    jobs.append(dict(id=job_id, name=name, head_sha=SOURCE,
+                                     status='completed', conclusion='success', steps=[]))
+                    image = bytearray(64)
+                    if host == 'mac':
+                        image[:4] = b'\xcf\xfa\xed\xfe'
+                        image[4:8] = (0x100000c).to_bytes(4, 'little')
+                    else:
+                        image[:6] = b'\x7fELF\x02\x01'
+                        image[18:20] = (183 if host == 'arm' else 62).to_bytes(2, 'little')
+                    buffer = io.BytesIO()
+                    with zipfile.ZipFile(buffer, 'w', zipfile.ZIP_DEFLATED) as archive:
+                        archive.writestr('source.txt', SOURCE + '\n')
+                        for target in range(target_count):
+                            archive.writestr(f'targets/test-{target}.log',
+                                            'test result: ok. 1 passed; 0 failed; 0 ignored;\n')
+                        archive.writestr('owners/probe.exe', image)
+                        archive.writestr('owners/probe.status', 'Some(0)\n')
+                        archive.writestr('selection/packed-pair-selection.json', '[{}, {}, {}]')
+                        archive.writestr('selection/gradient-call-selection.json', '{}')
+                        archive.writestr('consuming-selection/record.json', '{}')
+                    raw = buffer.getvalue()
+                    artifact_name = 'gradient-call-checks-' + runner
+                    artifacts.append(dict(id=artifact_id, name=artifact_name, expired=False,
+                                          workflow_run=dict(head_sha=SOURCE),
+                                          digest='sha256:' + hashlib.sha256(raw).hexdigest()))
+                    downloads[f'repos/e6qu/fun-with-pipes/actions/artifacts/{artifact_id}/zip'] = raw
+                    logs[f'actions/jobs/{job_id}/logs'] = (
+                        f'Artifact {artifact_name} successfully finalized. Artifact ID {artifact_id}\n'.encode())
+
+                def api(path):
+                    if path.startswith('actions/runs/10/attempts/1/jobs?per_page=100&page='):
+                        page = int(path.rsplit('=', 1)[1])
+                        return json.dumps(dict(total_count=len(jobs), jobs=jobs[(page-1)*100:page*100])).encode()
+                    if path == 'actions/runs/10/artifacts?per_page=100&page=1':
+                        return json.dumps(dict(total_count=len(artifacts), artifacts=artifacts)).encode()
+                    return logs[path]
+
+                def download(command, *, stdout, check):
+                    self.assertEqual(command[:3], ['gh', 'api', '--allow-escape-sequences'])
+                    self.assertTrue(check)
+                    stdout.write(downloads[command[3]])
+
+                output = Path(temporary) / 'audit'
+                command = ['audit', '--run', '10', '--source', SOURCE, '--attempt', '1',
+                           '--output', str(output)]
+                with patch.object(FOCUSED.PRODUCTION, 'api', side_effect=api), \
+                        patch.object(FOCUSED.subprocess, 'run', side_effect=download), \
+                        patch('sys.argv', command), patch('sys.stdout', io.StringIO()):
+                    if target_count == 25:
+                        FOCUSED.main()
+                    else:
+                        with self.assertRaises(AssertionError):
+                            FOCUSED.main()
+                report = json.loads((output / 'summary.json').read_text())
+                self.assertEqual(len(report['hosts']), 3)
+                self.assertEqual(bool(report['issues']), target_count != 25)
+                self.assertEqual(len(json.loads((output / 'jobs.json').read_text())), 103)
+                for host in FOCUSED.HOSTS:
+                    with zipfile.ZipFile(output / (host + '-records.zip')) as retained:
+                        self.assertEqual(retained.read('owners/probe.status'), b'Some(0)\n')
+                        self.assertNotIn('owners/probe.exe', retained.namelist())
 
 
 if __name__ == '__main__':

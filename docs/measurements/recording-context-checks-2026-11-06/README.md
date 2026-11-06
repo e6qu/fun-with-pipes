@@ -53,7 +53,7 @@ Commit `49371e06f5bba4598273a1b807140775dde64c57` gives the fixture an explicit,
 typed `attempt` boundary and requires `FWP_UNWIND=1` before injecting failures.
 `attempt` handles language errors; the C hook still supplies the injected trap
 recovery. All release, alias and lookup assertions remain. The compiler/runtime
-are unchanged. Native verification of this repair is pending.
+are unchanged. All three focused native jobs now pass; the complete artifact audit is pending.
 
 [The small diagnostic archive](release-diagnostic.zip) preserves both C versions,
 executables and outputs; [the complete job log](release-diagnostic-job.log.gz)
@@ -116,3 +116,39 @@ Six controls pass after integration. Actionlint syntax/expressions, changed
 Python and embedded workflow syntax, and workflow-size checks pass (0.13 s each;
 shellcheck/pyflakes were disabled). Native sources and measurement settings are
 unchanged by these reader fixes.
+
+## Repaired fixture: native results
+
+Run `42213041403` at `49371e06f5bba4598273a1b807140775dde64c57` passes:
+
+| Host | Job | Native targets | Compiler units |
+|---|---|---|---|
+| Linux ARM64, GCC | `127876137456` | 25/25 pass | 305 pass, four existing runner-only exclusions |
+| Linux AMD64, GCC | `127876137274` | 25/25 pass | Same |
+| macOS ARM64, Clang | `127876137522` | 25/25 pass | Same |
+
+Every complete job log is clean: [ARM64](repaired-arm-job.log.gz),
+[AMD64](repaired-amd-job.log.gz), [macOS](repaired-mac-job.log.gz);
+[all target results](repaired-log-review.json). The repaired loop probe passes on all three
+hosts, including nested failure cleanup, aliases, ID changes and deliberate
+broken-scope/ID controls. The complete artifact/image audit is run `42220789909`;
+it failed in the audit entry point, as explained below. This is focused verification, not final platform
+acceptance or a measured performance gain.
+
+Documentation and audit controls also pass at tool source
+`3809353824e19f53117fcf7e8eaa56752dafa234`: run `42218866499`, job `127895597129`.
+Its complete log contains only the three expected test-runner failure controls.
+
+## Audit entry-point repair
+
+[Audit log](focused-audit-failure.log.gz), run `42220789909`, job `127902024671`:
+the imported pagination function `records` collided with a ZIP-writer local of
+the same name. Python therefore stopped before reading evidence; the upload
+step then had no files to retain. This was an audit integration error. Native
+results and [latest documentation results](latest-docs-job.log.gz) stay valid.
+
+The ZIP writer is now named `retained_files`. A new small integration control
+calls the actual focused audit entry point with three native jobs on page two,
+synthetic native headers, 25 passing target logs and retained records. It also
+rejects a missing target. All seven audit controls pass locally (guard: 0.13 s).
+The full runner audit must still pass before measurements start.

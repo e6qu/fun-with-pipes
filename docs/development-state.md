@@ -1,11 +1,13 @@
 # Current work
 
-**Next:** monitor all three hosts in focused run `42213041403` at
-`49371e06f5bba4598273a1b807140775dde64c57`. The repaired fixture requires a real
-recovery boundary. All hosts are running; no failed step has appeared. Reference
-comparison `42213046373` and docs `42213039124` pass, complete logs reviewed.
-After native checks pass, audit every result before dispatching the measurement
-batch. No timing session has run.
+**Next:** publish the audit entry-point repair, then dispatch only
+`focused-storage-audit` again with `evidence_run=42213041403`,
+`source_revision=49371e06f5bba4598273a1b807140775dde64c57` and
+`production_attempt=1`. All three native jobs pass; do not repeat those suites.
+All 75 target logs and 305 compiler units per host are reviewed and clean.
+After the full artifact audit passes, dispatch one context census/compiler/runtime
+batch with that native evidence run; runtime uses `comparison_session=both`.
+No timing session has run. No native source changed after `49371e06f`.
 
 Branch `recording-context-scopes`, worktree `.worktrees/recording-capacity-gate`.
 Base `d992a5734a12cf976c1ca20f75e9829a18bde0cc`.
@@ -15,12 +17,13 @@ Reference preparer `5bfdc2c23`; combined compiler repair
 `b9de738671732289a6263a8db3c1a36e54a8cfd9`; `13aa113ae` added only the diagnostic and retained reference/tool checks.
 Native repair source `49371e06f5bba4598273a1b807140775dde64c57` repairs the fixture.
 The pagination repair changes only audit tools and verification records.
-The native-source docs replacement passes. The latest audit-tool/docs commit
-requires its own docs gate; no native source changed after `49371e06f`.
+The native-source docs replacement passes. Latest remote `3809353824e19f53117fcf7e8eaa56752dafa234` has docs run
+`42218866499` / `127895597129` passed. Superseded queued docs `42217822914`
+was confirmed cancelled. No native source changed after `49371e06f`.
 
 | Current repair run | Check | Last status |
 |---|---|---|
-| `42213041403` | Native checks: AMD `127876137274`, ARM `127876137456`, mac `127876137522` | Running |
+| `42213041403` | Native checks: AMD `127876137274`, ARM `127876137456`, mac `127876137522` | Passed |
 | `42213046373` / `127876155092` | Eight raw/optimized reference C comparisons | Passed |
 | `42213039124` / `127876122034` | Native-repair documentation; full log clean | Passed |
 
@@ -41,14 +44,14 @@ acceptance gate. All final-head production jobs remain required.
 | Step | Status | Next result |
 |---|---|---|
 | 1 | Verified | Contract and #264 delivery committed as `5dc8efd02` before production edits. |
-| 2 | Implemented | Call forwarding and loop scopes; verify tightened admission and repaired probes. |
-| 3 | In progress | Focused GCC/Clang checks, reference controls, one measurement batch and complete audits. |
+| 2 | Implemented | Call forwarding and loop scopes pass all focused checks; final matrix pending. |
+| 3 | In progress | Focused/reference checks pass; repair audit entry point, finish artifact audit, then one measurement batch. |
 | 4 | Pending | Nine exact-head production jobs/docs, complete audit and verified squash merge. |
 
-## Repair awaiting native verification
+## Verified repair
 
-All 75 target results reviewed: 24/25 targets pass on each host. ad_tape_scopes
-has six passes and one failure: the new loop probe returns 92 at O1, reuse on,
+Earlier run `42209117885`: 24/25 targets passed on each host. ad_tape_scopes
+had six passes and one failure: the new loop probe returns 92 at O1, reuse on,
 workspace off. Jobs: AMD `127863094516`, ARM `127863094512`, mac `127863094225`.
 Complete logs: `/tmp/fwp-context-{amd,arm,mac}-second-job.log`.
 
@@ -64,7 +67,7 @@ in src/cgen.rs and runtime value protection correctly omit exceptional frames in
 that mode. The test now uses attempt in main and requires FWP_UNWIND=1 before
 injecting traps. Keep all storage/alias/count assertions. The release failure
 also prints its case and counters for future diagnostics. No production compiler
-or runtime change is justified by this harness error. Verification is pending.
+or runtime change is justified by this harness error. Focused verification passes on all three hosts; final production gates remain pending.
 
 Small completed reference/tool evidence is in
 [the verification record](measurements/recording-context-checks-2026-11-06/README.md).
@@ -142,6 +145,21 @@ Long gains 1.86–14.02%; 17/32 meet 5%. Fifteen speed targets and one AMD64 cop
 limit remain open. Allocations, validation, live storage and maximum frames are
 unchanged; compiler comparisons pass. Preserve every earlier miss in PLAN.md.
 
+## Completed preflight review
+
+All three repaired-source preflight archives have verified hashes/source and
+clean complete logs: 305 compiler units pass per host; four existing runner-only
+exclusions remain. All three programs select the required two loop scopes and
+forwarded numeric calls on each host. All 75 native target results also pass. Complete logs and the guarded review are
+`/tmp/fwp-context-repaired-{arm,amd,mac}-job.log` and
+`/tmp/fwp-context-repaired-log-review.json` (0.12 s).
+
+Artifacts: ARM `13502810649`, AMD `13502771014`, mac `13502921267` (about 2.2 MB
+each). Local archives: `/tmp/fwp-context-repaired-preflight-{arm,amd,mac}.zip`;
+review: `/tmp/fwp-context-repaired-preflight-review.json`. Guarded reviews took
+0.12–0.13 s. The first scratch review incorrectly expected the earlier 304-unit
+count; it was corrected to validate and retain the actual passing result.
+
 ## Audit pagination repair
 
 The actual focused run has 128 jobs. The focused and production artifact auditors previously read only
@@ -162,7 +180,7 @@ its original source; it does not include the two new pagination controls.
 ## Queue observations
 
 The repair runs queued at 11:49 UTC began receiving runners around 12:29 UTC.
-All three native hosts are now active; the reference/docs jobs passed. The cause
+All three native hosts and the reference/docs jobs have passed. The cause
 of the queue delay is unknown. Do not restart completed or active native work.
 An unrelated October 16 run `38888712709` on owned-cpu-kernels is inconsistently
 listed in_progress, but all 24 job records are complete (six failed, others
@@ -170,3 +188,23 @@ skipped). It has no reference in the current plan/handoff/history/queue and no
 associated PR. Normal and force-cancel endpoints both returned HTTP 409,
 "not in progress". No jobs/artifacts were deleted. This is not evidence that the
 old run causes the current queue delay; keep monitoring the active repair runs.
+
+The user confirmed a free GitHub account with a 20-job parallel limit. Allow
+for occupied hosted runners; do not infer an account restriction from queue time
+alone. Wait on existing jobs instead of restarting them.
+
+## Artifact audit entry-point repair
+
+Audit `42220789909` / `127902024671` failed before reading evidence: the existing
+ZIP writer local `records` shadowed the new imported pagination function.
+This was introduced by the audit integration, not a native failure. The upload
+step then failed because the output directory had no files. Complete log checked;
+there are no other failed steps or diagnostics to repair.
+
+Rename the ZIP writer `retained_files`. The new integration control calls the
+real focused entry point with three later-page jobs, native artifact headers,
+all 25 targets and retained records; it also rejects a missing target. All seven
+audit controls pass under the guard (0.13 s). Other helper callers were checked
+for name collisions. Retained failure log and all three passing native logs are
+in the verification record. Only the artifact audit and changed docs need new
+runs; the exact native source remains unchanged.

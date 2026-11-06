@@ -75,7 +75,7 @@ def main():
         with archive.open('rb') as data:
             assert artifact['digest'] == 'sha256:' + hashlib.file_digest(data, 'sha256').hexdigest()
         retained = args.output / (host + '-records.zip')
-        with zipfile.ZipFile(archive) as z, zipfile.ZipFile(retained, 'w', zipfile.ZIP_DEFLATED) as records:
+        with zipfile.ZipFile(archive) as z, zipfile.ZipFile(retained, 'w', zipfile.ZIP_DEFLATED) as retained_files:
             assert z.read('source.txt').decode().strip() == args.source
             for name in z.namelist():
                 if name.endswith('/'):
@@ -98,7 +98,7 @@ def main():
                 if name.endswith('.status'):
                     report['probes'][name] = raw.decode().strip()
                 if not name.endswith('.exe') and (not name.endswith('.c') or name.startswith(('selection/', 'consuming-selection/'))):
-                    records.writestr(name, raw)
+                    retained_files.writestr(name, raw)
             for member in ('selection/packed-pair-selection.json', 'selection/gradient-call-selection.json', 'consuming-selection/record.json'):
                 report[member] = json.loads(z.read(member))
             assert len(report['selection/packed-pair-selection.json']) == 3
