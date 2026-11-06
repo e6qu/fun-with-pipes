@@ -341,13 +341,14 @@ reproduces all 48 measured images and confirms capacity inlining.
 The [numeric call/loop change](measurements/recording-context-scopes.md) extends
 this local lookup proof across eligible direct calls and separate packed map/fold
 loops. [Focused native checks and the complete artifact audit pass](measurements/recording-context-checks-2026-11-06/README.md);
-both ARM64 timing sessions miss the 5% long-case target, with small-case and
-identical-copy limits passing. [Census](measurements/recording-context-census-2026-11-06/README.md)
+all four runtime sessions are complete, with thirty of 32 long-case 5% targets
+unmet, two AMD small-case regressions and one inconclusive AMD copy control.
+[Census](measurements/recording-context-census-2026-11-06/README.md)
 confirms two lookups per positive update with unchanged allocation/peak storage.
 [Runtime audits](measurements/recording-context-time-2026-11-06/README.md) preserve
 all misses and host rejections. The approved EPYC 7763/9V74/9V45 policy permits
-matched AMD sessions; missing AMD timings, original
-measured-image checks and final platform gates remain pending. Tape-ID changes, task
+matched AMD sessions; original measured-image checks and final platform gates
+remain pending. Tape-ID changes, task
 switches, reentry and retirement remain explicit lifetime boundaries.
 
 Channel borrowing preserves hidden native contexts as well as payload storage.
