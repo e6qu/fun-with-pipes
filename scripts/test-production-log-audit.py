@@ -132,11 +132,13 @@ class ProductionLogs(unittest.TestCase):
                 records(AUDIT.api, 'actions/list', 'jobs')
 
     def test_focused_entry_audits_later_page_jobs_and_rejects_missing_targets(self):
-        for target_count in (25, 24):
-            with self.subTest(target_count=target_count), tempfile.TemporaryDirectory() as temporary:
+        for group, target_count, defect in (('shared-storage', 25, ''), ('shared-storage', 24, ''),
+                ('tape-records', 10, ''), ('tape-records', 9, ''), ('tape-records', 10, 'missing-wasm'),
+                ('tape-records', 10, 'ignored-unit'), ('tape-records', 10, 'wrong-target')):
+            with self.subTest(group=group, target_count=target_count, defect=defect), tempfile.TemporaryDirectory() as temporary:
                 jobs = [dict(id=i, name='skipped control') for i in range(100)]
                 artifacts, downloads, logs = [], {}, {}
-                for index, (host, (name, runner)) in enumerate(FOCUSED.HOSTS.items()):
+                for index, (host, (name, runner)) in enumerate((FOCUSED.RECORD_HOSTS if group == 'tape-records' else FOCUSED.HOSTS).items()):
                     job_id, artifact_id = 200 + index, 300 + index
                     jobs.append(dict(id=job_id, name=name, head_sha=SOURCE,
                                      status='completed', conclusion='success', steps=[]))
@@ -151,15 +153,19 @@ class ProductionLogs(unittest.TestCase):
                     with zipfile.ZipFile(buffer, 'w', zipfile.ZIP_DEFLATED) as archive:
                         archive.writestr('source.txt', SOURCE + '\n')
                         for target in range(target_count):
-                            archive.writestr(f'targets/test-{target}.log',
+                            archive.writestr('targets/test-' + ('wrong' if defect == 'wrong-target' and target == 0 else FOCUSED.RECORD_TARGETS[target] if group == 'tape-records' else str(target)) + '.log',
                                             'test result: ok. 1 passed; 0 failed; 0 ignored;\n')
+                        ignored = ''.join('test ' + name + ' ... ignored, separate measurement\n' for name in sorted(FOCUSED.UNIT_MEASUREMENTS))
+                        archive.writestr('unit.log', ignored + 'test result: ok. 305 passed; 0 failed; ' + ('5' if defect == 'ignored-unit' else '4') + ' ignored; 0 measured; 0 filtered out; finished in 1s\n')
+                        if host == 'arm' and defect != 'missing-wasm':
+                            archive.writestr('wasm.log', 'test result: ok. 1 passed; 0 failed; 0 ignored;\n')
                         archive.writestr('owners/probe.exe', image)
                         archive.writestr('owners/probe.status', 'Some(0)\n')
                         archive.writestr('selection/packed-pair-selection.json', '[{}, {}, {}]')
                         archive.writestr('selection/gradient-call-selection.json', '{}')
                         archive.writestr('consuming-selection/record.json', '{}')
                     raw = buffer.getvalue()
-                    artifact_name = 'gradient-call-checks-' + runner
+                    artifact_name = ('tape-record-checks-' if group == 'tape-records' else 'gradient-call-checks-') + runner
                     artifacts.append(dict(id=artifact_id, name=artifact_name, expired=False,
                                           workflow_run=dict(head_sha=SOURCE),
                                           digest='sha256:' + hashlib.sha256(raw).hexdigest()))
@@ -181,19 +187,19 @@ class ProductionLogs(unittest.TestCase):
                     stdout.write(downloads[command[3]])
 
                 output = Path(temporary) / 'audit'
-                command = ['audit', '--run', '10', '--source', SOURCE, '--attempt', '1',
+                command = ['audit', '--group', group, '--run', '10', '--source', SOURCE, '--attempt', '1',
                            '--output', str(output)]
                 with patch.object(FOCUSED.PRODUCTION, 'api', side_effect=api), \
                         patch.object(FOCUSED.subprocess, 'run', side_effect=download), \
                         patch('sys.argv', command), patch('sys.stdout', io.StringIO()):
-                    if target_count == 25:
+                    if target_count == (10 if group == 'tape-records' else 25) and not defect:
                         FOCUSED.main()
                     else:
                         with self.assertRaises(AssertionError):
                             FOCUSED.main()
                 report = json.loads((output / 'summary.json').read_text())
                 self.assertEqual(len(report['hosts']), 3)
-                self.assertEqual(bool(report['issues']), target_count != 25)
+                self.assertEqual(bool(report['issues']), target_count != (10 if group == 'tape-records' else 25) or bool(defect))
                 self.assertEqual(len(json.loads((output / 'jobs.json').read_text())), 103)
                 for host in FOCUSED.HOSTS:
                     with zipfile.ZipFile(output / (host + '-records.zip')) as retained:

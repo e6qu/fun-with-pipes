@@ -1,0 +1,14 @@
+{
+  "arm": {
+    "job": 128142085462,
+    "source": "b4b291e3184cae5046d7a1eba27e777c67b1884a",
+    "logBytes": 318746,
+    "logSha256": "1feb5135a67d61af1912f922014ef63f4dbb3536c8364023cc5e7fcdd6b48296"
+  },
+  "amd": {
+    "job": 128142085029,
+    "source": "b4b291e3184cae5046d7a1eba27e777c67b1884a",
+    "logBytes": 304494,
+    "logSha256": "2e13ed57b275fa2902ba6fec8b7d7b6c56833d93aa4964fafb845aac42cb3c15"
+  }
+}

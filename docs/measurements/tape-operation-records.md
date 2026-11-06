@@ -63,6 +63,7 @@ The `numerics.yml` dispatcher provides these explicit suites:
 | Suite | Work |
 |---|---|
 | `tape-record-checks` | GCC on Linux ARM64/AMD64, Clang on macOS ARM64, and actual wasm32 bounds. |
+| `tape-record-audit` | Complete focused job/target logs, native-image architectures, unit results and wasm32 evidence. |
 | `tape-record-analysis` | Seven compiler workloads on each Linux architecture; compiler time and peak process memory. |
 | `tape-record-time` | Two sessions per Linux architecture, each with all six inputs and current/history forms. |
 | `tape-records-compiler-report` | Audit every compiler sample, reference, command and host identity. |

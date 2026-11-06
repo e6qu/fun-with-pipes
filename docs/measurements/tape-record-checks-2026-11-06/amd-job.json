@@ -1,0 +1,164 @@
+{
+  "id": 128142085029,
+  "run_id": 42290415866,
+  "workflow_name": "Numerical and ownership evidence",
+  "head_branch": "tape-operation-records",
+  "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/42290415866",
+  "run_attempt": 1,
+  "node_id": "CR_kwDOU33zxM8AAAAd1d0LpQ",
+  "head_sha": "b4b291e3184cae5046d7a1eba27e777c67b1884a",
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/128142085029",
+  "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/42290415866/job/128142085029",
+  "status": "completed",
+  "conclusion": "success",
+  "created_at": "2026-11-06T20:41:07Z",
+  "started_at": "2026-11-06T21:00:32Z",
+  "completed_at": "2026-11-06T21:09:12Z",
+  "name": "tape_records / records (ubuntu-latest, gcc, x86-64)",
+  "steps": [
+    {
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 1,
+      "started_at": "2026-11-06T21:00:32Z",
+      "completed_at": "2026-11-06T21:00:34Z"
+    },
+    {
+      "name": "Run actions/checkout@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 2,
+      "started_at": "2026-11-06T21:00:34Z",
+      "completed_at": "2026-11-06T21:00:55Z"
+    },
+    {
+      "name": "Run dtolnay/rust-toolchain@stable",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 3,
+      "started_at": "2026-11-06T21:00:55Z",
+      "completed_at": "2026-11-06T21:00:56Z"
+    },
+    {
+      "name": "Run actions/cache@v6",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 4,
+      "started_at": "2026-11-06T21:00:56Z",
+      "completed_at": "2026-11-06T21:00:57Z"
+    },
+    {
+      "name": "Source and toolchain",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 5,
+      "started_at": "2026-11-06T21:00:57Z",
+      "completed_at": "2026-11-06T21:00:57Z"
+    },
+    {
+      "name": "macOS OpenSSL",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 6,
+      "started_at": "2026-11-06T21:00:57Z",
+      "completed_at": "2026-11-06T21:00:57Z"
+    },
+    {
+      "name": "Format, lint and primitive inventory",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 7,
+      "started_at": "2026-11-06T21:00:57Z",
+      "completed_at": "2026-11-06T21:01:34Z"
+    },
+    {
+      "name": "Compiler build and unit checks",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 8,
+      "started_at": "2026-11-06T21:01:34Z",
+      "completed_at": "2026-11-06T21:04:25Z"
+    },
+    {
+      "name": "Native storage, arithmetic, failure and lifetime checks",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 9,
+      "started_at": "2026-11-06T21:04:25Z",
+      "completed_at": "2026-11-06T21:08:35Z"
+    },
+    {
+      "name": "Raw storage observers and numerical output controls",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 10,
+      "started_at": "2026-11-06T21:08:35Z",
+      "completed_at": "2026-11-06T21:08:55Z"
+    },
+    {
+      "name": "Actual wasm32 toolchain",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 11,
+      "started_at": "2026-11-06T21:08:55Z",
+      "completed_at": "2026-11-06T21:08:55Z"
+    },
+    {
+      "name": "Run actions/setup-node@v6",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 12,
+      "started_at": "2026-11-06T21:08:55Z",
+      "completed_at": "2026-11-06T21:08:55Z"
+    },
+    {
+      "name": "Actual wasm32 allocation bounds",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 13,
+      "started_at": "2026-11-06T21:08:55Z",
+      "completed_at": "2026-11-06T21:08:55Z"
+    },
+    {
+      "name": "Preserve all results and generated probes",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 14,
+      "started_at": "2026-11-06T21:08:55Z",
+      "completed_at": "2026-11-06T21:09:10Z"
+    },
+    {
+      "name": "Post Run actions/cache@v6",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 27,
+      "started_at": "2026-11-06T21:09:10Z",
+      "completed_at": "2026-11-06T21:09:10Z"
+    },
+    {
+      "name": "Post Run actions/checkout@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 28,
+      "started_at": "2026-11-06T21:09:10Z",
+      "completed_at": "2026-11-06T21:09:10Z"
+    },
+    {
+      "name": "Complete job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 29,
+      "started_at": "2026-11-06T21:09:10Z",
+      "completed_at": "2026-11-06T21:09:10Z"
+    }
+  ],
+  "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/128142085029",
+  "labels": [
+    "ubuntu-latest"
+  ],
+  "runner_id": 1000417878,
+  "runner_name": "GitHub Actions 1000417878",
+  "runner_group_id": 0,
+  "runner_group_name": "GitHub Actions"
+}

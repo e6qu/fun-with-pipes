@@ -216,7 +216,7 @@ jobs:
             !production-log-audit/*.part
           if-no-files-found: error
   focused_storage_audit:
-    if: inputs.suite == 'focused-storage-audit'
+    if: inputs.suite == 'focused-storage-audit' || inputs.suite == 'tape-record-audit'
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 20
     permissions:
@@ -233,7 +233,8 @@ jobs:
           FOCUSED_SOURCE: ${{ inputs.source_revision }}
           FOCUSED_ATTEMPT: ${{ inputs.production_attempt }}
         run: >-
-          python3 scripts/audit-focused-storage.py --run "$FOCUSED_RUN"
+          python3 scripts/audit-focused-storage.py
+          --group "${{ inputs.suite == 'tape-record-audit' && 'tape-records' || 'shared-storage' }}" --run "$FOCUSED_RUN"
           --source "$FOCUSED_SOURCE" --attempt "$FOCUSED_ATTEMPT"
           --output focused-storage-audit
       - name: Retain all logs, observations and original artifact identities
