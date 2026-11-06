@@ -1,0 +1,122 @@
+[
+  {
+    "id": 13464720698,
+    "node_id": "MDg6QXJ0aWZhY3QxMzQ2NDcyMDY5OA==",
+    "name": "gradient-call-preflight-macos-15",
+    "size_in_bytes": 2186636,
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13464720698",
+    "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13464720698/zip",
+    "expired": false,
+    "digest": "sha256:ced74543b25b23e13b3c78f3e6b1ac16f5f1e86e80d1daa46a41e29451aa6f27",
+    "created_at": "2026-11-05T23:52:26Z",
+    "updated_at": "2026-11-05T23:52:26Z",
+    "expires_at": "2027-02-03T23:26:23Z",
+    "workflow_run": {
+      "id": 42129223759,
+      "repository_id": 1400763332,
+      "head_repository_id": 1400763332,
+      "head_branch": "recording-work-review",
+      "head_sha": "6a0ae280c4616f791df507b44cbd31935a16cd67"
+    }
+  },
+  {
+    "id": 13464610977,
+    "node_id": "MDg6QXJ0aWZhY3QxMzQ2NDYxMDk3Nw==",
+    "name": "gradient-call-preflight-ubuntu-24.04-arm",
+    "size_in_bytes": 2186522,
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13464610977",
+    "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13464610977/zip",
+    "expired": false,
+    "digest": "sha256:f8a605ae39141c74bb1cda70774fedeea90498780d92c2d1e8ab28ecf2fad141",
+    "created_at": "2026-11-05T23:52:21Z",
+    "updated_at": "2026-11-05T23:52:21Z",
+    "expires_at": "2027-02-03T23:26:23Z",
+    "workflow_run": {
+      "id": 42129223759,
+      "repository_id": 1400763332,
+      "head_repository_id": 1400763332,
+      "head_branch": "recording-work-review",
+      "head_sha": "6a0ae280c4616f791df507b44cbd31935a16cd67"
+    }
+  },
+  {
+    "id": 13464518077,
+    "node_id": "MDg6QXJ0aWZhY3QxMzQ2NDUxODA3Nw==",
+    "name": "gradient-call-checks-ubuntu-latest",
+    "size_in_bytes": 166999117,
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13464518077",
+    "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13464518077/zip",
+    "expired": false,
+    "digest": "sha256:60f29c18fdeed1bf1286ab6b409e9c062097a5f9edd5b2e14da0a3bbf72ba260",
+    "created_at": "2026-11-06T00:03:24Z",
+    "updated_at": "2026-11-06T00:03:24Z",
+    "expires_at": "2027-02-03T23:26:23Z",
+    "workflow_run": {
+      "id": 42129223759,
+      "repository_id": 1400763332,
+      "head_repository_id": 1400763332,
+      "head_branch": "recording-work-review",
+      "head_sha": "6a0ae280c4616f791df507b44cbd31935a16cd67"
+    }
+  },
+  {
+    "id": 13464306516,
+    "node_id": "MDg6QXJ0aWZhY3QxMzQ2NDMwNjUxNg==",
+    "name": "gradient-call-preflight-ubuntu-latest",
+    "size_in_bytes": 2186495,
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13464306516",
+    "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13464306516/zip",
+    "expired": false,
+    "digest": "sha256:7bb3217d0a6036f235be773d97c33825361bf75750302fa32473088dca24b7aa",
+    "created_at": "2026-11-05T23:52:25Z",
+    "updated_at": "2026-11-05T23:52:25Z",
+    "expires_at": "2027-02-03T23:26:23Z",
+    "workflow_run": {
+      "id": 42129223759,
+      "repository_id": 1400763332,
+      "head_repository_id": 1400763332,
+      "head_branch": "recording-work-review",
+      "head_sha": "6a0ae280c4616f791df507b44cbd31935a16cd67"
+    }
+  },
+  {
+    "id": 13464173354,
+    "node_id": "MDg6QXJ0aWZhY3QxMzQ2NDE3MzM1NA==",
+    "name": "gradient-call-checks-ubuntu-24.04-arm",
+    "size_in_bytes": 167164508,
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13464173354",
+    "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13464173354/zip",
+    "expired": false,
+    "digest": "sha256:1f29aa8716e6bbcab590d3f49d730eaf595468d43a31a3a4513501cb40daa866",
+    "created_at": "2026-11-06T00:02:01Z",
+    "updated_at": "2026-11-06T00:02:01Z",
+    "expires_at": "2027-02-03T23:26:23Z",
+    "workflow_run": {
+      "id": 42129223759,
+      "repository_id": 1400763332,
+      "head_repository_id": 1400763332,
+      "head_branch": "recording-work-review",
+      "head_sha": "6a0ae280c4616f791df507b44cbd31935a16cd67"
+    }
+  },
+  {
+    "id": 13463494329,
+    "node_id": "MDg6QXJ0aWZhY3QxMzQ2MzQ5NDMyOQ==",
+    "name": "gradient-call-checks-macos-15",
+    "size_in_bytes": 160181516,
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13463494329",
+    "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13463494329/zip",
+    "expired": false,
+    "digest": "sha256:8a1671020ecf7fdc958c98922f1163eee00422dafef19a81d872531583ac0c07",
+    "created_at": "2026-11-06T00:00:21Z",
+    "updated_at": "2026-11-06T00:00:21Z",
+    "expires_at": "2027-02-03T23:26:23Z",
+    "workflow_run": {
+      "id": 42129223759,
+      "repository_id": 1400763332,
+      "head_repository_id": 1400763332,
+      "head_branch": "recording-work-review",
+      "head_sha": "6a0ae280c4616f791df507b44cbd31935a16cd67"
+    }
+  }
+]

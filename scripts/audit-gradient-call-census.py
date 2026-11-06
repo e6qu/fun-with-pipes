@@ -173,6 +173,7 @@ with zipfile.ZipFile(args.input) as z:
         for command in compilations
     )
     summaries = {}
+    verified_executions = 0
     manifest = json.loads(z.read("numeric-analysis-reference/manifest.json"))
     assert manifest == report["referenceManifest"] and manifest["source"] == SOURCE
     assert (
@@ -249,6 +250,7 @@ with zipfile.ZipFile(args.input) as z:
                     for workspace in ("0", "1"):
                         stem = folder + kind + "-lookup-workspace" + workspace
                         CENSUS.DESCENT.verify(z.read(stem + ".stdout"), CENSUS.DESCENT.AD.analytic(n, u + 1), solves)
+                        verified_executions += 1
                         counts = json.loads(z.read(stem + ".stderr"))
                         CENSUS.DESCENT.RECORDING_SELECTION.check_counts(counts, n, u, solves, kind == "candidate")
                         assert counts == row["lookupObservations"][kind][workspace]
@@ -273,6 +275,7 @@ with zipfile.ZipFile(args.input) as z:
                         CENSUS.DESCENT.AD.analytic(n, u + 1),
                         solves,
                     )
+                    verified_executions += 1
                     managed, raw = [
                         json.loads(line)
                         for line in z.read(stem + ".stderr").splitlines()
@@ -326,6 +329,11 @@ with zipfile.ZipFile(args.input) as z:
                 rawPeakBytes=observations["candidate1"]["raw"]["peakBytes"],
                 finalRawBytes=0,
             )
+            if args.comparison == "recording-lookup":
+                summaries[name]["recordingChecks"] = {
+                    kind: row["lookupObservations"][kind]["1"]
+                    for kind in ("candidate", "reference")
+                }
     summary_spec = importlib.util.spec_from_file_location(
         "summary",
         args.recorded_checkout / "scripts/summarize-derivative-forward-costs.py",
@@ -432,16 +440,17 @@ with zipfile.ZipFile(args.input) as z:
         artifact=artifact,
         freshCases=24,
         freshNativeImages=164,
-        verifiedCommands=99,
-        nativeImages=24,
-        verifiedExecutions=48,
+        verifiedCommands=len(report["commands"]),
+        nativeImages=len(compilations),
+        verifiedExecutions=verified_executions,
         cases=summaries,
         completeProgramStack=stack,
     )
     (ROOT / f"{host}-verified.json").write_text(json.dumps(receipt, indent=2) + "\n")
     print(
         host,
-        "12 cases, 48 raw outputs/profiles, 24 native images and exact reference verified",
+        f"{len(summaries)} cases, {verified_executions} executions, "
+        f"{len(compilations)} native images and exact reference verified",
         flush=True,
     )
     print(

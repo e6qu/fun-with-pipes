@@ -1,0 +1,20 @@
+{
+  "id": 13465711084,
+  "node_id": "MDg6QXJ0aWZhY3QxMzQ2NTcxMTA4NA==",
+  "name": "recording-lookup-compiler-report",
+  "size_in_bytes": 12329279,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13465711084",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13465711084/zip",
+  "expired": false,
+  "digest": "sha256:fbb25c9db2caaeb568d442f729f91651accf64014d214bf538ca6a3464ee3faa",
+  "created_at": "2026-11-06T00:16:59Z",
+  "updated_at": "2026-11-06T00:16:59Z",
+  "expires_at": "2027-02-04T00:15:21Z",
+  "workflow_run": {
+    "id": 42135475969,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "recording-work-review",
+    "head_sha": "6a0ae280c4616f791df507b44cbd31935a16cd67"
+  }
+}
