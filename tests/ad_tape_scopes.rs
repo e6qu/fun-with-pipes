@@ -488,7 +488,9 @@ fn proved_recording_workers_reuse_only_live_tape_lookups() {
         .replace("int main(int argc, char **argv)", "int original_main(int argc, char **argv)");
     let parent = "    if ((ra & 0xffffffff) >= idx || (rb >= 0 && (rb & 0xffffffff) >= idx))\n        fwp_trap(FWP_AD_INVALID_NODE);\n";
     let full = "    if (idx >= fwp_tape_limit()) fwp_trap(\"autodiff: the tape is full\");\n";
-    let start = runtime.find("static V fwp_p_ad_push(").unwrap();
+    let start = runtime
+        .find("static inline __attribute__((always_inline)) V fwp_p_ad_push(")
+        .unwrap();
     let end = start + runtime[start..].find("/* the adjoints").unwrap();
     let push = &runtime[start..end];
     assert_eq!(push.matches(parent).count(), 1);
@@ -505,9 +507,14 @@ fn proved_recording_workers_reuse_only_live_tape_lookups() {
         push.replace(&format!("{full}{parent}"), &format!("{parent}{full}")),
         &runtime[end..]
     );
+    let non_inlined = runtime.replace(
+        "static inline __attribute__((always_inline)) V fwp_p_ad_push(",
+        "static V fwp_p_ad_push(",
+    );
     let ordinary = runtime.replace(", &recording)", ", NULL)");
     for (label, source, lookups, expected) in [
         ("proved", runtime, 1, 0),
+        ("non-inlined", non_inlined, 1, 0),
         ("ordinary", ordinary.clone(), 2, 0),
         ("broken-lookup-observer", ordinary, 1, 61),
         ("broken-parent-validation", no_parent, 1, 62),
@@ -517,7 +524,10 @@ fn proved_recording_workers_reuse_only_live_tape_lookups() {
             "{source}\n#define EXPECTED_LOOKUPS {lookups}\n{}",
             include_str!("fixtures/ad_recording_lookup_probe.c")
         );
-        for opt in ["-O1", "-O2"] {
+        for opt in ["-O0", "-O1", "-O2"] {
+            if opt == "-O0" && label != "proved" && label != "non-inlined" {
+                continue;
+            }
             let executable = scratch.0.join(format!("{label}{opt}.exe"));
             fwp::cgen::compile_c(&code, &executable, opt).unwrap();
             for reuse in ["0", "1"] {

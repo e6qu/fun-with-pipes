@@ -223,6 +223,7 @@ jobs:
           python3 scripts/test-packed-pair-reference.py 2>&1 | tee gradient-call-checks/pair-reference.log || status=1
           python3 scripts/test-scalar-constant-reference.py 2>&1 | tee gradient-call-checks/scalar-reference.log || status=1
           python3 scripts/test-recording-lookup-reference.py 2>&1 | tee gradient-call-checks/recording-reference.log || status=1
+          python3 scripts/test-recording-inline-reference.py 2>&1 | tee gradient-call-checks/inline-reference.log || status=1
           python3 scripts/test-descent-phases.py --cc "$CC" 2>&1 | tee gradient-call-checks/phase-controls.log || status=1
           python3 scripts/test-numeric-input-analysis.py 2>&1 | tee gradient-call-checks/analysis-controls.log || status=1
           python3 scripts/test-iteration-storage.py 2>&1 | tee gradient-call-checks/selection-controls.log || status=1

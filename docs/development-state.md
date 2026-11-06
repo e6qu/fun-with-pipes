@@ -1,8 +1,9 @@
 # Current work
 
-**Next:** implement the frozen [scalar append inlining](measurements/recording-inline.md)
-and update every declaration-sensitive probe. Prepare its same-source comparison
-and focused checks before running the final measurement/platform batch.
+**Next:** run focused native correctness for [scalar append inlining](measurements/recording-inline.md)
+on Linux ARM64/AMD64 and macOS ARM64, while finishing the same-source measurement
+tools. Audit every failure before batching repairs. Final timing/platform work
+waits until the complete group is ready.
 
 Branch `recording-call-costs`, worktree `.worktrees/scalar-constant-lowering`.
 Draft [PR #263](https://github.com/e6qu/fun-with-pipes/pull/263). Base: [verified PR #262](measurements/recording-lookup-delivery-2026-11-06/README.md),
@@ -19,7 +20,7 @@ confirming tree equality; they are not additional validation.
 | 1 | Verified | Delivery receipt and all four sessions' generated-source hashes agree. |
 | 2 | Verified | All 72 native diagnostic images reproduce their originals; complete reports/logs audited. |
 | 3 | Verified | Freeze explicit scalar append inlining; preserve checks, same-source reference and original measurement limits. |
-| 4 | Pending | Implement the related group and run its final measurement/platform batch once ready. |
+| 4 | In progress | Append declaration and all affected probes updated; native correctness and measurement tools remain. |
 
 ## Evidence and limits
 
@@ -68,3 +69,11 @@ testing explicit body inlining, not a claim about the previous slowdown's cause.
 Docs run `42155558291` passes at that source. No runtime timing was repeated.
 Full source/report audit and summary each took 0.13 seconds; 351 documentation
 links and all four plan/handoff rows pass (0.25 seconds).
+
+Scalar append contract frozen at `29f99b70`. The only runtime behavior-related
+edit marks the existing checked append body always-inline; no checks or allocation
+paths changed. Declaration-sensitive ownership/scoped probes and counter readers
+are updated. Native scoped controls now compare forced/non-forced bodies at
+O1/O2 and their O0 behavior. Three new reference controls and five existing lookup
+controls pass locally, each 0.13 seconds. Formatting found one long Rust line;
+it was corrected before publication. No local native build was run.

@@ -302,8 +302,8 @@ fn scalar_recording_passes_direct_arguments_without_heap_records() {
                 "static uint64_t recording_records, recording_calls;\nstatic V fwp_record(uint32_t n, const V *f) {\nif (n == 4) recording_records++;".to_owned(),
             ),
             (
-                "static V fwp_p_ad_push(V a, V wa, V b, V wb, fwp_ad_recording *recording) {".to_owned(),
-                "static V fwp_p_ad_push(V a, V wa, V b, V wb, fwp_ad_recording *recording) {\nrecording_calls++;".to_owned(),
+                "static inline __attribute__((always_inline)) V fwp_p_ad_push(V a, V wa, V b, V wb, fwp_ad_recording *recording) {".to_owned(),
+                "static inline __attribute__((always_inline)) V fwp_p_ad_push(V a, V wa, V b, V wb, fwp_ad_recording *recording) {\nrecording_calls++;".to_owned(),
             ),
             (
                 "    /* Ownership observation point: before runtime teardown. */".to_owned(),

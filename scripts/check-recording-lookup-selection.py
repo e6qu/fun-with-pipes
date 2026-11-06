@@ -14,7 +14,10 @@ STATE = 'fwp_ad_recording recording = {-1, NULL};'
 
 
 def instrument(source):
-    start = source.index('static V fwp_p_ad_push(')
+    declarations = list(re.finditer(
+        r'^static (?:inline __attribute__\(\(always_inline\)\) )?V fwp_p_ad_push\(', source, re.M))
+    assert len(declarations) == 1, 'expected exactly one scalar append declaration'
+    start = declarations[0].start()
     end = source.index('/* the adjoints', start)
     body = source[start:end]
     for marker, counter in (
