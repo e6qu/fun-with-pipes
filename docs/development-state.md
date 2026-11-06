@@ -1,9 +1,9 @@
 # Current work
 
-**Next:** run focused native correctness for [scalar append inlining](measurements/recording-inline.md)
-on Linux ARM64/AMD64 and macOS ARM64, while finishing the same-source measurement
-tools. Audit every failure before batching repairs. Final timing/platform work
-waits until the complete group is ready.
+**Next:** finish focused native run `42156552424` and the measurement-tool controls.
+Then dispatch the `recording-inline-census` and `recording-inline-analysis` suites
+with that correctness run as `evidence_run`. Audit both before the single qualified
+runtime batch. Production code remains at `39a9f806`; no timing has run for this change.
 
 Branch `recording-call-costs`, worktree `.worktrees/scalar-constant-lowering`.
 Draft [PR #263](https://github.com/e6qu/fun-with-pipes/pull/263). Base: [verified PR #262](measurements/recording-lookup-delivery-2026-11-06/README.md),
@@ -77,3 +77,26 @@ are updated. Native scoped controls now compare forced/non-forced bodies at
 O1/O2 and their O0 behavior. Three new reference controls and five existing lookup
 controls pass locally, each 0.13 seconds. Formatting found one long Rust line;
 it was corrected before publication. No local native build was run.
+
+## Inlining validation in progress
+
+Focused source `39a9f806891b524042b391b85480cbafc022afbc`, run `42156552424`:
+Linux ARM64 job `127691972751`, Linux AMD64 `127691973009`, macOS ARM64
+`127691973129`. All are running with no failed steps at the last check. Docs
+`42156556915` passes. Draft-only CI is skipped and is not platform evidence.
+
+Measurement tools now support the `recording-inline` reference: only the runtime
+append declaration differs; both versions keep lookup reuse. The census expects
+identical counts/storage and reconciles against PR #262's saved candidate.
+Six explicit workflow routes cover census, compiler/runtime measurements and
+complete audits. Shared prerequisite checks replace duplicated workflow Python;
+they still require all native correctness jobs and identical production trees.
+The numerical workflow is 503,986 bytes, below GitHub's 512,000-byte limit.
+
+Focused local checks pass: 10 census controls (0.25 seconds), 10 compiler-cost
+controls (2.78 seconds), 9 phase-budget controls (0.12 seconds), 23 runtime-budget
+controls (0.13 seconds), 3 declaration/reference controls (0.13 seconds), 3 safety
+prerequisite controls (0.13 seconds), changed Python syntax and workflow checks
+(0.13 seconds each). Missing sparse fixtures initially prevented two control
+suites from loading; restoring their exact tracked JSON/gzip files fixed that.
+Broader artifact-reader controls run on GitHub, not in a large local checkout.

@@ -102,7 +102,7 @@ jobs:
           git rev-parse HEAD > storage-measurement-controls/source.txt
           set -o pipefail
           status=0
-          for script in test-recording-lookup-reference test-scalar-constant-reference test-packed-pair-reference test-packed-pair-stack test-owned-numeric-census test-gradient-array-budgets test-numeric-input-analysis test-descent-budgets test-array-list-evidence test-retain-derivative-evidence test-production-log-audit; do
+          for script in test-measurement-safety test-recording-inline-reference test-recording-calls test-recording-lookup-reference test-scalar-constant-reference test-packed-pair-reference test-packed-pair-stack test-owned-numeric-census test-gradient-array-budgets test-numeric-input-analysis test-descent-budgets test-array-list-evidence test-retain-derivative-evidence test-production-log-audit; do
             python3 "scripts/$script.py" 2>&1 | tee "storage-measurement-controls/$script.log" || status=1
           done
           exit "$status"
@@ -178,7 +178,7 @@ jobs:
             !focused-storage-audit/*-evidence.zip
           if-no-files-found: error
   storage_compiler_report:
-    if: inputs.suite == 'storage-compiler-report' || (inputs.suite == 'scalar-constant-compiler-report' || inputs.suite == 'recording-lookup-compiler-report')
+    if: inputs.suite == 'storage-compiler-report' || (inputs.suite == 'scalar-constant-compiler-report' || contains(fromJSON('["recording-lookup-compiler-report","recording-inline-compiler-report"]'), inputs.suite))
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 15
     permissions:
@@ -197,7 +197,7 @@ jobs:
           python3 scripts/test-numeric-input-analysis.py
           status=0
           for machine in aarch64 x86_64; do
-            python3 scripts/audit-storage-compiler-costs.py --comparison "${{ fromJSON('{"storage-compiler-report":"packed-pair","scalar-constant-compiler-report":"scalar-constant","recording-lookup-compiler-report":"recording-lookup"}')[inputs.suite] }}" \
+            python3 scripts/audit-storage-compiler-costs.py --comparison "${{ fromJSON('{"storage-compiler-report":"packed-pair","scalar-constant-compiler-report":"scalar-constant","recording-lookup-compiler-report":"recording-lookup","recording-inline-compiler-report":"recording-inline"}')[inputs.suite] }}" \
               --repository "$GITHUB_REPOSITORY" --run "$EVIDENCE_RUN" \
               --source "$SOURCE_REVISION" --machine "$machine" \
               --output compiler-cost-audit || status=1

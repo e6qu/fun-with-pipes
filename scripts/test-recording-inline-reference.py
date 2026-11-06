@@ -23,6 +23,11 @@ class RecordingInlineReference(unittest.TestCase):
         self.assertIn('src/cgen.rs', REFERENCE.PRESERVED)
         self.assertIn('src/cgen/recording.rs', REFERENCE.PRESERVED)
         self.assertNotIn(name, REFERENCE.PRESERVED)
+        SELECTION.check_inline_declaration(current[name], True)
+        SELECTION.check_inline_declaration(result[name], False)
+        for source, forced in [(current[name], False), (result[name], True), ('', True)]:
+            with self.assertRaises(AssertionError):
+                SELECTION.check_inline_declaration(source, forced)
         marker = '    /* Ownership observation point: before runtime teardown. */\n'
         candidate = SELECTION.instrument(current[name] + marker)
         reference = SELECTION.instrument(result[name] + marker)

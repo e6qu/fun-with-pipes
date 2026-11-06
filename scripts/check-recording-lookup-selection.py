@@ -38,6 +38,14 @@ def instrument(source):
     return source.replace(marker, report + marker)
 
 
+def check_inline_declaration(source, forced):
+    plain = 'static V fwp_p_ad_push('
+    inline = 'static inline __attribute__((always_inline)) V fwp_p_ad_push('
+    expected, excluded = (inline, plain) if forced else (plain, inline)
+    assert source.count(expected) == 1 and excluded not in source, 'wrong scalar append inlining'
+    return dict(forced=forced)
+
+
 def check_counts(observed, dimensions, updates, solves, enabled):
     pairs = (dimensions - 1) * updates * solves
     expected = dict(lookups=(3 if enabled else 8) * pairs,
