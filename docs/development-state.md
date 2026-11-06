@@ -1,17 +1,17 @@
 # Current work
 
-**Next:** publish and dispatch recording-context-diagnostic against run
-`42209117885` / source `b9de738671732289a6263a8db3c1a36e54a8cfd9`. It rebuilds the
-saved AMD64 probe, reproduces exit 92 and prints the retained-storage counters.
-Inspect that source/result before repairing ownership or the harness. No timing
-session has run; do not dispatch measurements while the release check fails.
+**Next:** publish the recovery-boundary repair and run recording-context-checks
+plus recording-context-parent once. The compiler is unchanged; the loop fixture
+now declares a real attempt boundary and asserts FWP_UNWIND=1 before trap probes.
+No timing session has run. Audit every result before dispatching measurements.
 
 Branch `recording-context-scopes`, worktree `.worktrees/recording-capacity-gate`.
 Base `d992a5734a12cf976c1ca20f75e9829a18bde0cc`.
 [PR #265](https://github.com/e6qu/fun-with-pipes/pull/265) is the only active PR,
 draft. First tested head `eab39aa9169d9245ba39eed0cb5cdd50f98f834a`;
-Reference preparer `5bfdc2c23`; combined repair/current remote head
-`b9de738671732289a6263a8db3c1a36e54a8cfd9`.
+Reference preparer `5bfdc2c23`; combined compiler repair
+`b9de738671732289a6263a8db3c1a36e54a8cfd9`; current remote `13aa113ae` adds only
+the diagnostic and retained reference/tool checks. Docs `42211603024` is queued.
 
 | Current run | Check | Last status |
 |---|---|---|
@@ -34,18 +34,28 @@ Draft production run `42209102490` skipped; it is not an acceptance gate.
 ## Current native failure
 
 All 75 target results reviewed: 24/25 targets pass on each host. ad_tape_scopes
-has six passes and one failure: recording_context returns 92 in the first O1,
-reuse-enabled/workspace-disabled probe. That code checks final heap/registry
-release. It does not yet identify which counter differs; no cause is established.
-The earlier nested-call probe and all preflight checks now pass on all hosts.
-
-Current jobs: AMD `127863094516`, ARM `127863094512`, mac `127863094225`.
+has six passes and one failure: the new loop probe returns 92 at O1, reuse on,
+workspace off. Jobs: AMD `127863094516`, ARM `127863094512`, mac `127863094225`.
 Complete logs: `/tmp/fwp-context-{amd,arm,mac}-second-job.log`.
-The saved AMD artifact `13498354483` is 172,055,631 bytes; keep its full download
-and diagnostic rebuild on a runner. The diagnostic must reproduce the original
-failure before reporting counters; its success is not a passing safety gate.
+
+Diagnostic `42211595925` / `127871298573` reproduces the original 92 before
+instrumentation. At count=4, invalid-parent mode=2, alias=0: managed live=208,
+baseline=0; registry/capacity/cache/wide counts are zero. Artifact `13499112406`,
+378,998 bytes, hash `3234f7efa56548fe0090b1913bb299ad51a18dff8033710eb85e26f33fdde69d`,
+verified locally; source `/tmp/fwp-context-failed.c`.
+
+Root cause: the fixture's main had no recoverable boundary and generated
+FWP_UNWIND=0. The C harness installed longjmp recovery anyway. Cleanup generation
+in src/cgen.rs and runtime value protection correctly omit exceptional frames in
+that mode. The test now uses attempt in main and requires FWP_UNWIND=1 before
+injecting traps. Keep all storage/alias/count assertions. The release failure
+also prints its case and counters for future diagnostics. No production compiler
+or runtime change is justified by this harness error. Verification is pending.
+
 Small completed reference/tool evidence is in
 [the verification record](measurements/recording-context-checks-2026-11-06/README.md).
+The full 172 MB failed artifact stayed on a runner; only the 379 KB diagnostic
+was downloaded. No disassembly or timing was used to diagnose this failure.
 
 ## First focused run and repairs
 

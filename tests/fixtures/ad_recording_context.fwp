@@ -21,8 +21,13 @@ transform = ad.scope (fn inputs ->
     in let pairs = zip-with pair-point (drop 1 records) records
     in fold sum-point (Point { node = -1, value = 0.0 }) pairs)
 
+# The native harness recovers injected traps; keep a real recovery boundary
+# so code generation includes exceptional cleanup for the same program.
+checked : List[I64] -> Result[Point, String]
+checked = attempt transform
+
 main = [
-    [] | transform | .value | eq 0.0,
-    [-1] | transform | .node | eq -1,
-    [-1, -1, -1] | transform | .value | eq 4.0,
+    [] | checked | result.map .value | eq (Ok 0.0),
+    [-1] | checked | result.map .node | eq (Ok -1),
+    [-1, -1, -1] | checked | result.map .value | eq (Ok 4.0),
 ] | all id | echo

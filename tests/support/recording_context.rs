@@ -19,6 +19,7 @@ fn recording_loops_validate_id_changes_and_release_owners_on_nested_failure() {
         assert!(result.stderr.is_empty());
     }
     let original = exported_probe::generate(&input);
+    assert!(original.contains("#define FWP_UNWIND 1\n"));
     assert!(original.contains("/* Consume private overlapping windows;"));
     assert!(original.contains("/* Fold after the complete packed map;"));
     assert_eq!(

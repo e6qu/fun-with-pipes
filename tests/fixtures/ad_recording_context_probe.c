@@ -66,7 +66,13 @@ int main(void) {
         if (fwp_cleanups || loop_scope.head != -1) return 91;
         fwp_tape_finish(); fwp_caf_finish();
         if (fwp_tapes || fwp_ntapes || fwp_tapes_cap || fwp_tape_cached_bytes
-            || fwp_heap.live != baseline || fwp_heap.rc_wide_len) return 92;
+            || fwp_heap.live != baseline || fwp_heap.rc_wide_len) {
+            fprintf(stderr, "release failure: count=%d mode=%d alias=%d baseline=%zu live=%zu ntapes=%lld capacity=%lld cached=%zu wide=%zu\n",
+                    count, mode, alias, baseline, fwp_heap.live,
+                    (long long)fwp_ntapes, (long long)fwp_tapes_cap,
+                    fwp_tape_cached_bytes, fwp_heap.rc_wide_len);
+            return 92;
+        }
     }
     return 0;
 }
