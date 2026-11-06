@@ -39,8 +39,8 @@ source/image/stack/inlining record. Adjacent `*-artifact.json`, `*-job.json` and
 local check verified every nested record hash and every image equality, plus
 both downloaded archive digests and all job diagnostics (0.13s).
 
-These diagnostics confirm GCC's native output. The final nine-job platform gate
-and complete production/doc audit are still required before merge. The 19 missed
+These diagnostics confirm GCC's native output. [The final nine-job platform gate
+and complete production/doc audit pass](../recording-inline-delivery-2026-11-06/README.md). The 19 missed
 runtime speed targets and one inconclusive compiler control remain open.
 
 [Contract](../recording-inline.md) · [Handoff](../../development-state.md)

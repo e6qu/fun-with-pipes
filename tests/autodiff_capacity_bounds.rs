@@ -166,7 +166,8 @@ fn tape_capacity_checks_and_realloc_failures_preserve_owners() {
         let shortcut = "    if (n <= t->cap) return;\n";
         assert_eq!(code.matches(&format!("{bound}{shortcut}")).count(), 1);
         let missing_reserve_bound = code.replace(bound, "");
-        let early_shortcut = code.replace(&format!("{bound}{shortcut}"), &format!("{shortcut}{bound}"));
+        let early_shortcut =
+            code.replace(&format!("{bound}{shortcut}"), &format!("{shortcut}{bound}"));
         let declaration = "static inline __attribute__((always_inline)) void fwp_tape_reserve(";
         assert_eq!(code.matches(declaration).count(), 1);
         let ordinary = code.replace(declaration, "static void fwp_tape_reserve(");

@@ -86,4 +86,4 @@ Only saved evidence was re-audited. Original timings and every missed limit rema
 The [48-image diagnostic](../recording-inline-images-2026-11-06/README.md) passes:
 saved candidate/reference C reproduces every original executable byte for byte,
 and GCC reports the required candidate append inlining. No native program was
-executed and no timing repeated. Final platform verification remains required.
+executed and no timing repeated. [Final platform delivery is verified](../recording-inline-delivery-2026-11-06/README.md).
