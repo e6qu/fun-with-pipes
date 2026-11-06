@@ -35,7 +35,10 @@ The measurement batch has finished. Both ARM64 runtime sessions miss the 5%
 long-case target; small-case and identical-copy limits pass. AMD64 runtime hosts
 were rejected before building or timing. [Compiler-cost observations](docs/measurements/recording-context-analysis-2026-11-06/README.md)
 pass their numeric limits, but AMD64 hardware qualification remains unresolved.
-Census/runtime archive audits and final platform acceptance remain pending.
+[Census](docs/measurements/recording-context-census-2026-11-06/README.md) and
+[runtime archive audits](docs/measurements/recording-context-time-2026-11-06/README.md)
+pass, preserving all timing misses and host rejections. AMD runtime measurements,
+original measured-image checks and final platform acceptance remain pending.
 
 | Step | Concrete work | Required result |
 |---|---|---|
@@ -44,10 +47,11 @@ Census/runtime archive audits and final platform acceptance remain pending.
 | 3 | Verify the complete group, then measure it once. | Focused production GCC/Clang checks and audits; same-source reference controls; allocation/lookup census, compiler/runtime costs, original native images and all missed limits retained. |
 | 4 | Deliver together. | Nine exact-final-head production jobs, docs and complete audits pass; squash merge and actual tree/message verified. |
 
-For the measured single-tape objective, test whether lookups fall from
+For the measured single-tape objective, lookups fall from
 `3 × (coordinates − 1)` to two per positive update: one map scope and one fold
-scope. This is a target, not a measured result. Allocation/retain counts, eight
-nodes per pair, parent/capacity checks and final storage must remain unchanged.
+scope. Allocation/retain counts, eight nodes per pair, parent/capacity checks,
+peak tracked storage and maximum reported frames remain unchanged. Both versions
+release all tracked storage.
 Run each qualified timing session once after the whole group and focused checks;
 replace only hosts rejected before building/timing. [The handoff](docs/development-state.md)
 records the next action and actual verification.
@@ -64,7 +68,7 @@ history can be optimized away). Copy controls compare identical executable bytes
 
 | Goal and evidence | What remains; next action |
 |---|---|
-| Shared tape access, current group | All 16 ARM64 long-case 5% targets remain unmet: session 1 ranges from 2.09% slower to 2.37% faster; session 2 from 1.96% slower to 2.48% faster. Small-case and identical-copy limits pass. Complete the queued archive audits without repeating these sessions. No AMD64 runtime samples exist: both original and replacement hosts failed the frozen CPU qualification before building. Resolve the explicit CPU-policy question before further AMD64 timings. The [compiler-cost report](docs/measurements/recording-context-analysis-2026-11-06/README.md) retains all fourteen passing numeric comparisons and the AMD64 9V74 hardware caveat. |
+| [Shared tape access, current group](docs/measurements/recording-context-time-2026-11-06/README.md) | All 16 ARM64 long-case 5% targets remain unmet: session 1 ranges from 2.09% slower to 2.37% faster; session 2 from 1.96% slower to 2.48% faster. Small-case and identical-copy limits pass. Complete archive audits pass; do not repeat these sessions. No AMD64 runtime samples exist: both original and replacement hosts failed the frozen CPU qualification before building. Resolve the explicit CPU-policy question before further AMD64 timings. The [compiler-cost report](docs/measurements/recording-context-analysis-2026-11-06/README.md) retains all fourteen passing numeric comparisons and the AMD64 9V74 hardware caveat. |
 | [Capacity runtime](docs/measurements/recording-capacity-time-2026-11-06/README.md) | Fifteen three-coordinate long results miss 5%; only AMD2 3/1999 history meets it. All 16 larger-coordinate results pass. AMD2 3/1999 current has 2.2188% identical-copy variation against 2%, so that timing is inconclusive. All small-case limits pass. [Saved samples](docs/measurements/recording-capacity-time-2026-11-06/copy-review.json) show identical images and balanced positions, but the copy gap reverses between the two 49-round halves (1.02979 then 0.99344). Source/driver review must precede a new diagnostic; no cause or unchanged rerun is justified. Native inlining and final delivery are verified. The combined numeric call/loop group follows the source review; it cannot settle these original timing limits. |
 | [Scalar append runtime](docs/measurements/recording-inline-time-2026-11-06/README.md) | 19/32 long-case targets miss 5%: both architectures’ 3/199 and 3/1999 forms in both sessions, plus AMD64 history 33/199 in session 1 and 129/199 in both. Long gains are 2.26–8.12%; small-case/copy limits pass. Native inlining and final delivery are verified. The delivered capacity-call group followed the saved source/compiler review; its comparison does not close these misses. No unchanged timing reruns. |
 | [Scalar append compiler time](docs/measurements/recording-inline-analysis-2026-11-06/README.md) | AMD64 zero-update reference copies differ by 2.0494%, above 2%; all observed time/RSS ratios are below 1.05. Saved samples rise later in all four copies; copy identity and position are partly confounded. Preserve this inconclusive result. A future diagnostic must separate those factors; do not rerun unchanged timings for a pass. |

@@ -1,0 +1,20 @@
+{
+  "id": 13506473680,
+  "node_id": "MDg6QXJ0aWZhY3QxMzUwNjQ3MzY4MA==",
+  "name": "recording-context-census-X64",
+  "size_in_bytes": 96405720,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13506473680",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13506473680/zip",
+  "expired": false,
+  "digest": "sha256:11a35897a70c38ee744550021dd3c76248bcbe44cec9f4d39253f8676d013218",
+  "created_at": "2026-11-06T13:46:25Z",
+  "updated_at": "2026-11-06T13:46:25Z",
+  "expires_at": "2027-02-04T13:20:03Z",
+  "workflow_run": {
+    "id": 42224646191,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "recording-context-scopes",
+    "head_sha": "319782736b0a983022f2a48879b35c9e57992949"
+  }
+}

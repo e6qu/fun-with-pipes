@@ -1,20 +1,20 @@
 # Current work
 
-**Next:** finish the census/runtime evidence audits and resolve the pending
-CPU-policy question before requesting more AMD64 timings. Source for every run is
+**Next:** resolve the pending CPU-policy question before requesting more AMD64
+timings. Census/compiler/runtime audits now pass. Source for their producer runs is
 `319782736b0a983022f2a48879b35c9e57992949`. Audit every failed job and completed
 result; do not repeat qualified timings or passing native suites.
 
 | Run | Suite | Last result |
 |---|---|---|
-| `42224646191` | recording-context-census | Both passed; full producer logs clean. Complete archive audit queued below. |
+| `42224646191` | recording-context-census | Both passed; full producer logs clean. Complete archive audit passes. |
 | `42224658244` | recording-context-analysis | Both reported time/RSS/copy limits pass; full audit passes. AMD CPU was 9V74, so frozen-host acceptance is pending the policy decision. |
 | `42224669329` | recording-context-time | Both ARM sessions complete with eight long-case speed misses each; small/copy limits pass. Both AMD hosts rejected before building/timing. |
 | `42228557375` | recording-context-time, AMD replacements only | Both rejected before build/timing: 9V74 and 9V45 again. No AMD samples exist. |
 | `42228884598` | recording-context-compiler-report | Passed; full log and 12.3 MB audit archive verified. Records retained in recording-context-analysis-2026-11-06. |
-| `42229061410` | recording-context-census-report | Dispatched for the completed census run. |
-| `42230424553` | recording-context-report | Dispatched for original ARM sessions and rejected AMD hosts. |
-| `42231927387` | recording-context-report | Dispatched for replacement AMD host rejections. |
+| `42229061410` / `127929948850` | recording-context-census-report | Pass; two lookups/update, unchanged allocations, peaks and largest frames, zero final storage. |
+| `42230424553` / `127934609454` | recording-context-report | Pass; both ARM sessions retain eight speed misses each; both AMD hosts rejected. |
+| `42231927387` / `127939715479` | recording-context-report | Pass; both replacement AMD hosts rejected before build/timing. |
 
 Initial job IDs: census ARM `127914973561`, AMD `127914973641`; compiler analysis
 ARM `127915006870`, AMD `127915007195`; time ARM sessions 1/2
@@ -43,9 +43,19 @@ never enforced the runtime CPU filter, and its AMD report is 9V74. The new READM
 labels those results observations pending this decision. Do not quietly treat
 that hardware requirement as met or change the protocol without an answer.
 
-Next: finish the report audits, runtime report for each completed
-original/replacement run, then original-image checks on runners. Retain all
-limits/misses before final production delivery. Large originals stay on runners.
+After the decision: explicitly implement any accepted host-policy change in both
+producer and reader, preserving old results; request only missing AMD runtime
+sessions. Then commit a recording-context image input plan with session 1 per
+architecture and run original-image reconstruction on GitHub. Keep the reference
+and candidate append-inlining requirement, exact GCC flags and executable hashes;
+no program execution or retiming. Finish the exact-head production gates/audit.
+Large originals stay on runners.
+
+[Census records](measurements/recording-context-census-2026-11-06/README.md) retain
+all 4,038 compact observations and hashes. [Runtime records](measurements/recording-context-time-2026-11-06/README.md)
+retain the two reports, six complete producer logs, CPU records and decisions.
+Archive digests, every retained census hash, six log hashes and two runtime
+report hashes pass guarded checks (0.25 s each). All audit logs are clean.
 
 [Draft PR #265](https://github.com/e6qu/fun-with-pipes/pull/265) is the only active PR.
 Worktree `.worktrees/recording-capacity-gate`, branch `recording-context-scopes`.
@@ -54,6 +64,9 @@ Native source: `49371e06f5bba4598273a1b807140775dde64c57`; subsequent commits
 change only evidence readers and docs. Base: `d992a5734a12cf976c1ca20f75e9829a18bde0cc`.
 Documentation/evidence updates retain the passing full focused audit, compiler
 cost observations with their CPU caveat and the observed ARM timing misses.
+Check the PR's latest evidence-only head for its documentation gate. The earlier
+queued docs run `42233681205` at `47c2de90c` is superseded by these census/runtime
+records; cancel that old run once the new head is published.
 
 ## Roadmap status
 
@@ -61,7 +74,7 @@ cost observations with their CPU caveat and the observed ARM timing misses.
 |---|---|---|
 | 1 | Verified | Contract and #264 delivery frozen in `5dc8efd02` before production edits. |
 | 2 | Implemented | Numeric call forwarding and loop scopes pass focused checks. Final matrix pending. |
-| 3 | In progress | Focused/reference checks and full audit pass. Single measurement batch dispatched. |
+| 3 | In progress | Focused/reference and census/compiler/runtime audits pass. AMD runtime and original-image verification remain. |
 | 4 | Pending | Nine final-head production jobs/docs, complete audit and verified squash merge. |
 
 ## Passing verification
@@ -75,7 +88,7 @@ cost observations with their CPU caveat and the observed ARM timing misses.
 | `42213039124` / `127876122034` | Native-source docs pass; only expected failure-control diagnostics. |
 | `42218866499` / `127895597129` | Earlier pagination-tool docs pass; full log reviewed. |
 | `42221400241` / `127904076811` | Full focused audit passes: 75 targets, 2,682 native images, 2,730 probe observations; no issues. |
-| `42221406301` / `127904085671` | Current docs pass; seven audit controls and clean complete log. |
+| `42221406301` / `127904085671` | Tool-source docs pass; seven audit controls and clean complete log. |
 
 Full audit artifact `13503834185`, 7,293,923 bytes, hash
 `20e47ac1fab25227ae167f7b6dae717e1645eb01f0052efb12e3cd2c66da0c35`.
@@ -108,10 +121,10 @@ Tape-ID changes still validate. No runtime wrapper or public setting was added.
 
 The contract specifies native Neoverse N2/EPYC 7763 with fixed inputs, flags,
 sessions and limits; any AMD CPU change awaits the explicit decision above.
-Target two registry lookups per positive update instead of 3*(N-1); the complete
-census archive audit is queued. ARM runtime limits are reported above.
-Allocation/retain counts, eight nodes per pair, validation and final storage
-must stay unchanged.
+Census verifies two registry lookups per positive update instead of 3*(N-1).
+Allocation/retain counts, eight nodes per pair, parent/capacity checks, peaks and
+largest reported frames are unchanged; final tracked storage is zero. ARM runtime
+limits remain open as reported above.
 
 Retain all timing misses and inconclusive copy controls. Replace only hosts
 rejected before building/timing; never rerun qualified unchanged samples for a
@@ -132,6 +145,9 @@ small tracked targets were restored unchanged from HEAD, then all changed-docume
 checks passed. Git restore needed normal authorized index access.
 A scratch preflight review expected the earlier 304-unit count; corrected to
 retain the actual 305 passing units. No native assertion was weakened.
+A scratch census preview treated keyed cases as a list; corrected the preview
+to use the actual schema. The retention check then verified every case formula,
+memory invariant and saved-record hash; no production check changed.
 
 Source lifetime review found no additional defect: numeric-only proof, separate
 map/fold state after setup, fresh ordinary/exported entries, preserved ID checks

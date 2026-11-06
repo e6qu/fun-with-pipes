@@ -1,0 +1,592 @@
+{
+  "protocol": "recording-context",
+  "source": "319782736b0a983022f2a48879b35c9e57992949",
+  "run": 42228557375,
+  "sessions": {
+    "x86_64-1": {
+      "source": "319782736b0a983022f2a48879b35c9e57992949",
+      "run": 42228557375,
+      "architecture": "x86_64",
+      "session": 1,
+      "job": {
+        "id": 127928229175,
+        "run_id": 42228557375,
+        "workflow_name": "Numerical and ownership evidence",
+        "head_branch": "recording-context-scopes",
+        "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/42228557375",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOU33zxM8AAAAdyR3dNw",
+        "head_sha": "319782736b0a983022f2a48879b35c9e57992949",
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/127928229175",
+        "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/42228557375/job/127928229175",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-11-06T13:49:07Z",
+        "started_at": "2026-11-06T14:05:26Z",
+        "completed_at": "2026-11-06T14:06:06Z",
+        "name": "descent_peers (1, ubuntu-latest)",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-06T14:05:26Z",
+            "completed_at": "2026-11-06T14:05:27Z"
+          },
+          {
+            "name": "Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-06T14:05:27Z",
+            "completed_at": "2026-11-06T14:05:46Z"
+          },
+          {
+            "name": "Run dtolnay/rust-toolchain@stable",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-06T14:05:46Z",
+            "completed_at": "2026-11-06T14:05:55Z"
+          },
+          {
+            "name": "Verify focused correctness and matching compiler sources",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-11-06T14:05:55Z",
+            "completed_at": "2026-11-06T14:06:02Z"
+          },
+          {
+            "name": "Qualify the native host before building",
+            "status": "completed",
+            "conclusion": "failure",
+            "number": 5,
+            "started_at": "2026-11-06T14:06:02Z",
+            "completed_at": "2026-11-06T14:06:02Z"
+          },
+          {
+            "name": "Preserve host qualification, including rejected hosts",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-11-06T14:06:02Z",
+            "completed_at": "2026-11-06T14:06:03Z"
+          },
+          {
+            "name": "Run actions/cache@v6",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 7,
+            "started_at": "2026-11-06T14:06:03Z",
+            "completed_at": "2026-11-06T14:06:03Z"
+          },
+          {
+            "name": "Fetch locked Rust dependencies",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 8,
+            "started_at": "2026-11-06T14:06:03Z",
+            "completed_at": "2026-11-06T14:06:03Z"
+          },
+          {
+            "name": "Run cargo build --locked --release --bin fwp",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 9,
+            "started_at": "2026-11-06T14:06:03Z",
+            "completed_at": "2026-11-06T14:06:03Z"
+          },
+          {
+            "name": "Type inference and derivative precision regressions",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 10,
+            "started_at": "2026-11-06T14:06:03Z",
+            "completed_at": "2026-11-06T14:06:03Z"
+          },
+          {
+            "name": "Interpreter regressions",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 11,
+            "started_at": "2026-11-06T14:06:03Z",
+            "completed_at": "2026-11-06T14:06:03Z"
+          },
+          {
+            "name": "Native nominal selection",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 12,
+            "started_at": "2026-11-06T14:06:03Z",
+            "completed_at": "2026-11-06T14:06:03Z"
+          },
+          {
+            "name": "Preserve derivative regression evidence",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 13,
+            "started_at": "2026-11-06T14:06:03Z",
+            "completed_at": "2026-11-06T14:06:03Z"
+          },
+          {
+            "name": "Check explicit derivative source formatting",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 14,
+            "started_at": "2026-11-06T14:06:03Z",
+            "completed_at": "2026-11-06T14:06:03Z"
+          },
+          {
+            "name": "Process scheduling and host qualification controls",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 15,
+            "started_at": "2026-11-06T14:06:03Z",
+            "completed_at": "2026-11-06T14:06:03Z"
+          },
+          {
+            "name": "Numerical measurement requirement controls",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 16,
+            "started_at": "2026-11-06T14:06:03Z",
+            "completed_at": "2026-11-06T14:06:03Z"
+          },
+          {
+            "name": "Derivative phase-observer controls",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 17,
+            "started_at": "2026-11-06T14:06:03Z",
+            "completed_at": "2026-11-06T14:06:03Z"
+          },
+          {
+            "name": "Compare current AD, history, explicit derivatives and C/Rust",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 18,
+            "started_at": "2026-11-06T14:06:03Z",
+            "completed_at": "2026-11-06T14:06:03Z"
+          },
+          {
+            "name": "Verify the selected same-source comparison reference",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 19,
+            "started_at": "2026-11-06T14:06:03Z",
+            "completed_at": "2026-11-06T14:06:03Z"
+          },
+          {
+            "name": "Build the same-source reference with only the selected transformation disabled",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 20,
+            "started_at": "2026-11-06T14:06:03Z",
+            "completed_at": "2026-11-06T14:06:03Z"
+          },
+          {
+            "name": "Compare the candidate with its same-source reference",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 21,
+            "started_at": "2026-11-06T14:06:03Z",
+            "completed_at": "2026-11-06T14:06:03Z"
+          },
+          {
+            "name": "Preserve the matching correctness prerequisite",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 22,
+            "started_at": "2026-11-06T14:06:03Z",
+            "completed_at": "2026-11-06T14:06:04Z"
+          },
+          {
+            "name": "Preserve reference source and compiler identities",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 23,
+            "started_at": "2026-11-06T14:06:04Z",
+            "completed_at": "2026-11-06T14:06:04Z"
+          },
+          {
+            "name": "Run actions/upload-artifact@v7",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 24,
+            "started_at": "2026-11-06T14:06:04Z",
+            "completed_at": "2026-11-06T14:06:04Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 48,
+            "started_at": "2026-11-06T14:06:04Z",
+            "completed_at": "2026-11-06T14:06:04Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 49,
+            "started_at": "2026-11-06T14:06:04Z",
+            "completed_at": "2026-11-06T14:06:04Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/127928229175",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "runner_id": 1000416402,
+        "runner_name": "GitHub Actions 1000416402",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      },
+      "log": "x86_64-1.log.gz",
+      "logBytes": 231789,
+      "logSha256": "5db88a27ed4ef499a52fa8b633ccb6893afeab6c930c406353faaf2d09fadcdb",
+      "artifacts": {
+        "descent-host-ubuntu-latest-1": {
+          "id": 13508825135,
+          "node_id": "MDg6QXJ0aWZhY3QxMzUwODgyNTEzNQ==",
+          "name": "descent-host-ubuntu-latest-1",
+          "size_in_bytes": 1603,
+          "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13508825135",
+          "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13508825135/zip",
+          "expired": false,
+          "digest": "sha256:002cc4d974de2231fb6c4eccd110362e4f07705acd3930ec92a33d70115a3900",
+          "created_at": "2026-11-06T14:06:03Z",
+          "updated_at": "2026-11-06T14:06:03Z",
+          "expires_at": "2027-02-04T13:49:06Z",
+          "workflow_run": {
+            "id": 42228557375,
+            "repository_id": 1400763332,
+            "head_repository_id": 1400763332,
+            "head_branch": "recording-context-scopes",
+            "head_sha": "319782736b0a983022f2a48879b35c9e57992949"
+          }
+        }
+      },
+      "qualification": {
+        "source": "319782736b0a983022f2a48879b35c9e57992949",
+        "actual": {
+          "system": "Linux",
+          "machine": "x86_64",
+          "cpu": "AMD EPYC 9V74 80-Core Processor",
+          "processors": 4,
+          "cVersion": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+          "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+        },
+        "expected": {
+          "system": "Linux",
+          "machine": "x86_64",
+          "cpu": "AMD EPYC 7763 64-Core Processor",
+          "processors": 4,
+          "cVersion": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+          "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+        },
+        "lscpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 9V74 80-Core Processor\nCPU family:                              25\nModel:                                   17\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                5192.28\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves user_shstk avx512_bf16 clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               64 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                2 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Vulnerable: No microcode\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+        "failures": [
+          "cpu: expected 'AMD EPYC 7763 64-Core Processor', observed 'AMD EPYC 9V74 80-Core Processor'"
+        ],
+        "qualified": false
+      },
+      "decision": "host-rejected-before-building-or-timing"
+    },
+    "x86_64-2": {
+      "source": "319782736b0a983022f2a48879b35c9e57992949",
+      "run": 42228557375,
+      "architecture": "x86_64",
+      "session": 2,
+      "job": {
+        "id": 127928229350,
+        "run_id": 42228557375,
+        "workflow_name": "Numerical and ownership evidence",
+        "head_branch": "recording-context-scopes",
+        "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/42228557375",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOU33zxM8AAAAdyR3d5g",
+        "head_sha": "319782736b0a983022f2a48879b35c9e57992949",
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/127928229350",
+        "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/42228557375/job/127928229350",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-11-06T13:49:07Z",
+        "started_at": "2026-11-06T14:05:27Z",
+        "completed_at": "2026-11-06T14:06:13Z",
+        "name": "descent_peers (2, ubuntu-latest)",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-06T14:05:28Z",
+            "completed_at": "2026-11-06T14:05:29Z"
+          },
+          {
+            "name": "Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-06T14:05:29Z",
+            "completed_at": "2026-11-06T14:05:52Z"
+          },
+          {
+            "name": "Run dtolnay/rust-toolchain@stable",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-06T14:05:52Z",
+            "completed_at": "2026-11-06T14:06:02Z"
+          },
+          {
+            "name": "Verify focused correctness and matching compiler sources",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-11-06T14:06:02Z",
+            "completed_at": "2026-11-06T14:06:08Z"
+          },
+          {
+            "name": "Qualify the native host before building",
+            "status": "completed",
+            "conclusion": "failure",
+            "number": 5,
+            "started_at": "2026-11-06T14:06:08Z",
+            "completed_at": "2026-11-06T14:06:08Z"
+          },
+          {
+            "name": "Preserve host qualification, including rejected hosts",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-11-06T14:06:08Z",
+            "completed_at": "2026-11-06T14:06:09Z"
+          },
+          {
+            "name": "Run actions/cache@v6",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 7,
+            "started_at": "2026-11-06T14:06:09Z",
+            "completed_at": "2026-11-06T14:06:09Z"
+          },
+          {
+            "name": "Fetch locked Rust dependencies",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 8,
+            "started_at": "2026-11-06T14:06:09Z",
+            "completed_at": "2026-11-06T14:06:09Z"
+          },
+          {
+            "name": "Run cargo build --locked --release --bin fwp",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 9,
+            "started_at": "2026-11-06T14:06:09Z",
+            "completed_at": "2026-11-06T14:06:09Z"
+          },
+          {
+            "name": "Type inference and derivative precision regressions",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 10,
+            "started_at": "2026-11-06T14:06:09Z",
+            "completed_at": "2026-11-06T14:06:09Z"
+          },
+          {
+            "name": "Interpreter regressions",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 11,
+            "started_at": "2026-11-06T14:06:09Z",
+            "completed_at": "2026-11-06T14:06:09Z"
+          },
+          {
+            "name": "Native nominal selection",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 12,
+            "started_at": "2026-11-06T14:06:09Z",
+            "completed_at": "2026-11-06T14:06:09Z"
+          },
+          {
+            "name": "Preserve derivative regression evidence",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 13,
+            "started_at": "2026-11-06T14:06:09Z",
+            "completed_at": "2026-11-06T14:06:09Z"
+          },
+          {
+            "name": "Check explicit derivative source formatting",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 14,
+            "started_at": "2026-11-06T14:06:09Z",
+            "completed_at": "2026-11-06T14:06:09Z"
+          },
+          {
+            "name": "Process scheduling and host qualification controls",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 15,
+            "started_at": "2026-11-06T14:06:09Z",
+            "completed_at": "2026-11-06T14:06:09Z"
+          },
+          {
+            "name": "Numerical measurement requirement controls",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 16,
+            "started_at": "2026-11-06T14:06:09Z",
+            "completed_at": "2026-11-06T14:06:09Z"
+          },
+          {
+            "name": "Derivative phase-observer controls",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 17,
+            "started_at": "2026-11-06T14:06:09Z",
+            "completed_at": "2026-11-06T14:06:09Z"
+          },
+          {
+            "name": "Compare current AD, history, explicit derivatives and C/Rust",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 18,
+            "started_at": "2026-11-06T14:06:09Z",
+            "completed_at": "2026-11-06T14:06:09Z"
+          },
+          {
+            "name": "Verify the selected same-source comparison reference",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 19,
+            "started_at": "2026-11-06T14:06:09Z",
+            "completed_at": "2026-11-06T14:06:09Z"
+          },
+          {
+            "name": "Build the same-source reference with only the selected transformation disabled",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 20,
+            "started_at": "2026-11-06T14:06:09Z",
+            "completed_at": "2026-11-06T14:06:09Z"
+          },
+          {
+            "name": "Compare the candidate with its same-source reference",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 21,
+            "started_at": "2026-11-06T14:06:09Z",
+            "completed_at": "2026-11-06T14:06:09Z"
+          },
+          {
+            "name": "Preserve the matching correctness prerequisite",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 22,
+            "started_at": "2026-11-06T14:06:09Z",
+            "completed_at": "2026-11-06T14:06:11Z"
+          },
+          {
+            "name": "Preserve reference source and compiler identities",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 23,
+            "started_at": "2026-11-06T14:06:11Z",
+            "completed_at": "2026-11-06T14:06:11Z"
+          },
+          {
+            "name": "Run actions/upload-artifact@v7",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 24,
+            "started_at": "2026-11-06T14:06:11Z",
+            "completed_at": "2026-11-06T14:06:11Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 48,
+            "started_at": "2026-11-06T14:06:11Z",
+            "completed_at": "2026-11-06T14:06:11Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 49,
+            "started_at": "2026-11-06T14:06:11Z",
+            "completed_at": "2026-11-06T14:06:11Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/127928229350",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "runner_id": 1000416403,
+        "runner_name": "GitHub Actions 1000416403",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      },
+      "log": "x86_64-2.log.gz",
+      "logBytes": 231419,
+      "logSha256": "420ced0faafa0da5a867ca37ab0c4861432f269331aae626ff0647dd125889b1",
+      "artifacts": {
+        "descent-host-ubuntu-latest-2": {
+          "id": 13507344131,
+          "node_id": "MDg6QXJ0aWZhY3QxMzUwNzM0NDEzMQ==",
+          "name": "descent-host-ubuntu-latest-2",
+          "size_in_bytes": 1612,
+          "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13507344131",
+          "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13507344131/zip",
+          "expired": false,
+          "digest": "sha256:a0cfe21246d125c2ae68ac212f5d6552f78d187fb5bc57b89efdd54550aee269",
+          "created_at": "2026-11-06T14:06:09Z",
+          "updated_at": "2026-11-06T14:06:09Z",
+          "expires_at": "2027-02-04T13:49:06Z",
+          "workflow_run": {
+            "id": 42228557375,
+            "repository_id": 1400763332,
+            "head_repository_id": 1400763332,
+            "head_branch": "recording-context-scopes",
+            "head_sha": "319782736b0a983022f2a48879b35c9e57992949"
+          }
+        }
+      },
+      "qualification": {
+        "source": "319782736b0a983022f2a48879b35c9e57992949",
+        "actual": {
+          "system": "Linux",
+          "machine": "x86_64",
+          "cpu": "AMD EPYC 9V45 96-Core Processor",
+          "processors": 4,
+          "cVersion": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+          "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+        },
+        "expected": {
+          "system": "Linux",
+          "machine": "x86_64",
+          "cpu": "AMD EPYC 7763 64-Core Processor",
+          "processors": 4,
+          "cVersion": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+          "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+        },
+        "lscpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 9V45 96-Core Processor\nCPU family:                              26\nModel:                                   2\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                5192.23\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves user_shstk avx_vnni avx512_bf16 clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm avx512_vp2intersect\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               96 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                2 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+        "failures": [
+          "cpu: expected 'AMD EPYC 7763 64-Core Processor', observed 'AMD EPYC 9V45 96-Core Processor'"
+        ],
+        "qualified": false
+      },
+      "decision": "host-rejected-before-building-or-timing"
+    }
+  },
+  "auditErrors": []
+}
