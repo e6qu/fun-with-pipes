@@ -345,7 +345,8 @@ both ARM64 timing sessions miss the 5% long-case target, with small-case and
 identical-copy limits passing. [Census](measurements/recording-context-census-2026-11-06/README.md)
 confirms two lookups per positive update with unchanged allocation/peak storage.
 [Runtime audits](measurements/recording-context-time-2026-11-06/README.md) preserve
-all misses and host rejections. AMD64 runtime hardware qualification, original
+all misses and host rejections. The approved EPYC 7763/9V74/9V45 policy permits
+matched AMD sessions; missing AMD timings, original
 measured-image checks and final platform gates remain pending. Tape-ID changes, task
 switches, reentry and retirement remain explicit lifetime boundaries.
 

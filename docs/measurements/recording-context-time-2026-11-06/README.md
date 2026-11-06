@@ -7,7 +7,10 @@ was repeated. These results do not settle earlier comparisons' missed targets.
 
 **No AMD64 runtime measurements exist.** The original and replacement sessions
 each received EPYC 9V74 and 9V45 hosts, while the frozen protocol requires 7763.
-All four stopped before building or timing. The CPU-policy decision is pending.
+All four stopped before building or timing. The user subsequently approved
+[all three named EPYC models](../recording-context-scopes.md#approved-hardware-amendment-6-november-2026)
+for matched sessions. The two missing AMD sessions remain to be measured; the
+original rejections and completed ARM timings stay unchanged.
 
 ## What was timed
 
@@ -91,6 +94,6 @@ bytes 143,432→143,448. All case/form code costs remain in the session summary.
   were not downloaded or re-audited locally.
 
 The successful audits preserve producer failures; they do not accept missed
-timing limits. Resolve AMD hardware qualification, check original measured images
+timing limits. Complete AMD timing under the approved policy, check original measured images
 and finish all nine final-head production gates plus docs before merge.
 [Contract](../recording-context-scopes.md) · [Current plan](../../../PLAN.md).

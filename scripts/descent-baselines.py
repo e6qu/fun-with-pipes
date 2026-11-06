@@ -80,7 +80,9 @@ def measure_round(order, binaries, outputs, environment, run, destination):
 
 def host_failures(actual, expected):
     return [f'{key}: expected {value!r}, observed {actual.get(key)!r}'
-            for key, value in expected.items() if actual.get(key) != value]
+            for key, value in expected.items()
+            if (actual.get(key) not in value if key == 'cpu' and isinstance(value, list)
+                else actual.get(key) != value)]
 
 
 def host_details(cc, rustc):
@@ -95,15 +97,20 @@ def host_details(cc, rustc):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    for name in ['cpu', 'machine', 'cc', 'rustc', 'c-version', 'rust-version', 'source']:
+    parser.add_argument('--cpu', action='append', required=True,
+                        help='Allowed CPU model; repeat for an explicit set of peer models')
+    for name in ['machine', 'cc', 'rustc', 'c-version', 'rust-version', 'source']:
         parser.add_argument('--' + name, required=True)
     parser.add_argument('--processors', type=int, required=True)
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
+    if len(set(args.cpu)) != len(args.cpu) or not all(args.cpu):
+        parser.error('CPU models must be nonempty and distinct')
     assert os.environ.get('GITHUB_ACTIONS') == 'true' and platform.system() == 'Linux'
     assert subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip() == args.source
     actual, cpu = host_details(args.cc, args.rustc)
-    expected = dict(system='Linux', machine=args.machine, cpu=args.cpu, processors=args.processors,
+    expected = dict(system='Linux', machine=args.machine,
+                    cpu=args.cpu[0] if len(args.cpu) == 1 else args.cpu, processors=args.processors,
                     cVersion=args.c_version, rustVersion=args.rust_version)
     failures = host_failures(actual, expected)
     report = dict(source=args.source, actual=actual, expected=expected, lscpu=cpu,

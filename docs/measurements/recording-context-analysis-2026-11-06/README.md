@@ -4,11 +4,13 @@ All fourteen observed input/architecture comparisons pass the 5% time/RSS and
 2% identical-copy limits. The largest time increase is 1.31%; the largest peak
 RSS increase is 0.29%. These measure the compiler, not the generated program.
 
-**Hardware qualification remains explicit:** ARM64 records implementer `0x41`,
+**Hardware:** ARM64 records implementer `0x41`,
 part `0xd49` (Neoverse N2); AMD64 used **EPYC 9V74**, not EPYC 7763. The compiler
 workflow recorded hardware but did not apply the runtime host filter. The 9V74
-results are retained as observations while the host-policy decision is pending;
-they do not verify the frozen EPYC 7763 requirement.
+results are accepted under the user's [6 November hardware amendment](../recording-context-scopes.md#approved-hardware-amendment-6-november-2026),
+which allows 7763, 9V74 and 9V45 with matched sessions. They do not establish
+performance on 7763. The new workflow qualifies future compiler-cost hosts
+before building; this completed comparison is not repeated.
 
 ## What was compared
 
