@@ -46,6 +46,29 @@ def check_inline_declaration(source, forced):
     return dict(forced=forced)
 
 
+def check_capacity_gate(source, split):
+    plain = 'static void fwp_tape_reserve(fwp_tape *t, int64_t n) {'
+    inline = 'static inline __attribute__((always_inline)) void fwp_tape_reserve(fwp_tape *t, int64_t n) {'
+    expected, excluded = (inline, plain) if split else (plain, inline)
+    assert source.count(expected) == 1 and excluded not in source, 'wrong reserve gate declaration'
+    body = source.split(expected, 1)[1].split('\n}', 1)[0]
+    prefix = '''
+    int64_t limit = fwp_tape_limit();
+    if (n < 0 || n > limit) fwp_trap("autodiff: the tape is full");
+    if (n <= t->cap) return;
+'''
+    assert body.startswith(prefix), 'reserve checks missing or reordered'
+    grow = 'static void fwp_tape_grow(fwp_tape *t, int64_t n, int64_t limit) {'
+    if split:
+        assert body == prefix + '    fwp_tape_grow(t, n, limit);'
+        assert source.count(grow) == 1 and source.count('fwp_tape_grow(') == 2
+    else:
+        assert 'fwp_tape_grow(' not in source
+        assert body[len(prefix):].startswith('    int64_t cap = t->cap ? t->cap : (limit < 64 ? limit : 64);')
+    check_inline_declaration(source, True)
+    return dict(split=split)
+
+
 def check_counts(observed, dimensions, updates, solves, enabled):
     pairs = (dimensions - 1) * updates * solves
     expected = dict(lookups=(3 if enabled else 8) * pairs,

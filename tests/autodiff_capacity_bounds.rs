@@ -67,7 +67,7 @@ fn paired_metadata_preserves_values_alignment_and_recoverable_growth() {
                 "{runtime}\n{}",
                 include_str!("fixtures/autodiff_pairs_probe.c")
             );
-            let binary = directory.join(name);
+            let binary = directory.join(format!("{name}.exe"));
             fwp::cgen::compile_c(&source, &binary, opt).unwrap();
             for cache in ["0", "1"] {
                 let output = Command::new(&binary)
@@ -162,13 +162,27 @@ fn tape_capacity_checks_and_realloc_failures_preserve_owners() {
         assert_ne!(missing_input_bound, code);
         assert_ne!(missing_release, code);
         assert_ne!(missing_registry_owner, code);
-        for opt in ["-O1", "-O2"] {
+        let bound = "    if (n < 0 || n > limit) fwp_trap(\"autodiff: the tape is full\");\n";
+        let shortcut = "    if (n <= t->cap) return;\n";
+        assert_eq!(code.matches(&format!("{bound}{shortcut}")).count(), 1);
+        let missing_reserve_bound = code.replace(bound, "");
+        let early_shortcut = code.replace(&format!("{bound}{shortcut}"), &format!("{shortcut}{bound}"));
+        let declaration = "static inline __attribute__((always_inline)) void fwp_tape_reserve(";
+        assert_eq!(code.matches(declaration).count(), 1);
+        let ordinary = code.replace(declaration, "static void fwp_tape_reserve(");
+        for opt in ["-O0", "-O1", "-O2"] {
             for (label, source, expected) in [
                 ("checked", &code, 0),
+                ("ordinary", &ordinary, 0),
                 ("missing-bound", &missing_input_bound, 182),
                 ("missing-release", &missing_release, 184),
                 ("missing-registry-owner", &missing_registry_owner, 186),
+                ("missing-reserve-bound", &missing_reserve_bound, 191),
+                ("early-shortcut", &early_shortcut, 191),
             ] {
+                if opt == "-O0" && expected != 0 {
+                    continue;
+                }
                 let executable = directory.join(format!("{label}{}.exe", &opt[1..]));
                 fwp::cgen::compile_c(source, &executable, opt).unwrap();
 

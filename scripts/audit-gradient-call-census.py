@@ -28,7 +28,7 @@ parser = argparse.ArgumentParser(
 )
 for name in ("input", "artifact", "job", "job-log", "recorded-checkout", "output"):
     parser.add_argument("--" + name, type=Path, required=True)
-parser.add_argument("--comparison", choices=("gradient-call", "packed-pair", "scalar-constant", "recording-lookup", 'recording-inline'), required=True)
+parser.add_argument("--comparison", choices=("gradient-call", "packed-pair", "scalar-constant", "recording-lookup", 'recording-inline', 'recording-capacity'), required=True)
 parser.add_argument("--source", required=True)
 parser.add_argument("--run", type=int, required=True)
 parser.add_argument("--machine", choices=("aarch64", "x86_64"), required=True)
@@ -116,6 +116,7 @@ reference_module, transformation = {
     "scalar-constant": (CENSUS.SCALAR_REFERENCE, "exact immediate scalar constants and acyclic cached aliases"),
     "recording-lookup": (CENSUS.RECORDING_REFERENCE, "validated tape lookup reuse within bounded nonsuspending numeric workers"),
     "recording-inline": (CENSUS.INLINE_REFERENCE, "forced inlining of the checked F64 scalar append body"),
+    "recording-capacity": (CENSUS.CAPACITY_REFERENCE, "inlined checked reserve gate with shared tape growth"),
 }[args.comparison]
 with zipfile.ZipFile(args.input) as z:
     report = json.loads(z.read("numeric-analysis/report.json"))
@@ -137,7 +138,7 @@ with zipfile.ZipFile(args.input) as z:
     stack = None
     # Historical protocols predate this gate. The recorded source determines
     # whether it is mandatory; a missing report never selects the old protocol.
-    stack_required = args.comparison in ("packed-pair", "scalar-constant", "recording-lookup", 'recording-inline') and (
+    stack_required = args.comparison in ("packed-pair", "scalar-constant", "recording-lookup", 'recording-inline', 'recording-capacity') and (
         args.recorded_checkout / "scripts/check-packed-pair-stack.py"
     ).is_file()
     if stack_required:
@@ -152,14 +153,14 @@ with zipfile.ZipFile(args.input) as z:
         )
     else:
         assert not any(name.startswith("pair-stack/") for name in z.namelist())
-    assert len(report["commands"]) == (171 if args.comparison in ("recording-lookup", "recording-inline") else 99) and all(
+    assert len(report["commands"]) == (171 if args.comparison in ("recording-lookup", "recording-inline", 'recording-capacity') else 99) and all(
         c["returncode"] == 0 for c in report["commands"]
     )
     assert len(report["cases"]) == 12
     compilations = [
         row["command"] for row in report["commands"] if "-std=gnu11" in row["command"]
     ]
-    assert len(compilations) == (48 if args.comparison in ("recording-lookup", "recording-inline") else 24)
+    assert len(compilations) == (48 if args.comparison in ("recording-lookup", "recording-inline", 'recording-capacity') else 24)
     flags = {
         "-O2",
         "-std=gnu11",
@@ -240,11 +241,13 @@ with zipfile.ZipFile(args.input) as z:
                 source = z.read(folder + kind + ".c").decode()
                 if args.comparison == "recording-inline":
                     CENSUS.DESCENT.RECORDING_SELECTION.check_inline_declaration(source, kind == "candidate")
-                if args.comparison in ("recording-lookup", "recording-inline") and u > 0:
-                    CENSUS.DESCENT.RECORDING_SELECTION.check(source, kind == "candidate" or args.comparison == "recording-inline")
+                if args.comparison == "recording-capacity":
+                    CENSUS.DESCENT.RECORDING_SELECTION.check_capacity_gate(source, kind == "candidate")
+                if args.comparison in ("recording-lookup", "recording-inline", 'recording-capacity') and u > 0:
+                    CENSUS.DESCENT.RECORDING_SELECTION.check(source, kind == "candidate" or args.comparison in ('recording-inline', 'recording-capacity'))
                 if args.comparison == "scalar-constant" and u > 0:
                     CENSUS.DESCENT.SCALAR_SELECTION.check(source, "literal" if kind == "candidate" else "cached")
-                if args.comparison in ("recording-lookup", "recording-inline"):
+                if args.comparison in ("recording-lookup", "recording-inline", 'recording-capacity'):
                     assert z.read(folder + kind + "-lookup.c").decode() == CENSUS.DESCENT.RECORDING_SELECTION.instrument(source)
                     image = z.read(folder + kind + "-lookup")
                     assert image[:6] == b"\x7fELF\x02\x01" and int.from_bytes(image[18:20], "little") == elf
@@ -255,7 +258,7 @@ with zipfile.ZipFile(args.input) as z:
                         CENSUS.DESCENT.verify(z.read(stem + ".stdout"), CENSUS.DESCENT.AD.analytic(n, u + 1), solves)
                         verified_executions += 1
                         counts = json.loads(z.read(stem + ".stderr"))
-                        CENSUS.DESCENT.RECORDING_SELECTION.check_counts(counts, n, u, solves, kind == "candidate" or args.comparison == "recording-inline")
+                        CENSUS.DESCENT.RECORDING_SELECTION.check_counts(counts, n, u, solves, kind == "candidate" or args.comparison in ('recording-inline', 'recording-capacity'))
                         assert counts == row["lookupObservations"][kind][workspace]
                 assert z.read(
                     folder + kind + "-profile.c"
@@ -304,7 +307,7 @@ with zipfile.ZipFile(args.input) as z:
             )
             if args.comparison == "packed-pair":
                 expected = dict(requests=u * solves, requestedBytes=(16 * n - 8) * u * solves, retains=0)
-            elif args.comparison in ("scalar-constant", "recording-lookup", 'recording-inline'):
+            elif args.comparison in ("scalar-constant", "recording-lookup", 'recording-inline', 'recording-capacity'):
                 expected = dict(requests=0, requestedBytes=0, retains=0)
             for workspace in ("0", "1"):
                 old, new = (
@@ -332,7 +335,7 @@ with zipfile.ZipFile(args.input) as z:
                 rawPeakBytes=observations["candidate1"]["raw"]["peakBytes"],
                 finalRawBytes=0,
             )
-            if args.comparison in ("recording-lookup", "recording-inline"):
+            if args.comparison in ("recording-lookup", "recording-inline", 'recording-capacity'):
                 summaries[name]["recordingChecks"] = {
                     kind: row["lookupObservations"][kind]["1"]
                     for kind in ("candidate", "reference")
@@ -376,7 +379,11 @@ with zipfile.ZipFile(args.input) as z:
     else:
         assert not fresh["comparisonFailures"], fresh["comparisonFailures"]
         corrected = []
-        if args.comparison == "recording-inline":
+        if args.comparison == "recording-capacity":
+            parent = Path("docs/measurements/recording-inline-census-2026-11-06") / machine / "audit"
+            parent_repeated = json.loads((parent / (machine + "-verified.json")).read_text())
+            parent_fresh = json.loads(gzip.decompress((parent / (machine + "-fresh-verified.json.gz")).read_bytes()))
+        elif args.comparison == "recording-inline":
             parent = Path("docs/measurements/recording-lookup-census-2026-11-06") / machine / "audit"
             parent_repeated = json.loads((parent / (machine + "-verified.json")).read_text())
             parent_fresh = json.loads(gzip.decompress((parent / (machine + "-fresh-verified.json.gz")).read_bytes()))

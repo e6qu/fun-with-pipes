@@ -4,6 +4,7 @@ static int capacity_oversized,capacity_exit_code;
 static jmp_buf capacity_oom,capacity_trap;
 static V capacity_base;
 static fwp_tape *capacity_registry;
+static int64_t capacity_saved_cap,capacity_request;
 static fwp_tape_scope capacity_scope = {-1};
 static fwp_cleanup capacity_scope_owner;
 static void *capacity_realloc(void *old,size_t n) {
@@ -60,6 +61,20 @@ int main(void) {
     if(capacity_exit_code!=102 || fwp_tapes!=capacity_registry || fwp_ntapes!=1 || fwp_tapes_cap!=1 || fwp_tape_next_slot!=1 || capacity_live!=3 ||
        fwp_tape_of((int64_t)capacity_base>>32)!=capacity_registry)return 186;
     capacity_fail=0;capacity_calls=0;
+    capacity_saved_cap=capacity_registry->cap;
+    fwp_tape_reserve(capacity_registry,0);
+    fwp_tape_reserve(capacity_registry,capacity_saved_cap);
+    if(capacity_calls || capacity_registry->cap!=capacity_saved_cap)return 192;
+    /* Even an already-large capacity must not hide an invalid request. The
+     * fake capacity is never used for allocation or access; restore it before
+     * retiring the real buffers. Negative requests exercise the same gate. */
+    capacity_registry->cap=fwp_tape_limit()+1;
+    for(capacity_request=-1;capacity_request<=fwp_tape_limit()+1;
+        capacity_request+=fwp_tape_limit()+2) {
+        if(!setjmp(capacity_trap)){fwp_tape_reserve(capacity_registry,capacity_request);return 191;}
+        if(strcmp(fwp_trap_msg,"autodiff: the tape is full") || capacity_calls || capacity_oversized)return 191;
+    }
+    capacity_registry->cap=capacity_saved_cap;
     if(!setjmp(capacity_trap)){fwp_tape_reserve(capacity_registry,fwp_tape_limit()+1);return 187;}
     if(strcmp(fwp_trap_msg,"autodiff: the tape is full") || capacity_calls || capacity_oversized)return 188;
     capacity_dispose();if(capacity_live)return 189;
