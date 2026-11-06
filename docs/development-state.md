@@ -1,9 +1,10 @@
 # Current work
 
-**Next:** finish focused native run `42156552424` and the measurement-tool controls.
-Then dispatch the `recording-inline-census` and `recording-inline-analysis` suites
-with that correctness run as `evidence_run`. Audit both before the single qualified
-runtime batch. Production code remains at `39a9f806`; no timing has run for this change.
+**Next:** dispatch the `recording-inline-census` and `recording-inline-analysis`
+suites with passing correctness run `42156552424` as `evidence_run`. Monitor the
+complete focused audit `42158479402` (explicit attempt 1) alongside them. Audit
+census/compiler results before the single qualified runtime batch. Production
+code remains at `39a9f806`; no timing has run for this change.
 
 Branch `recording-call-costs`, worktree `.worktrees/scalar-constant-lowering`.
 Draft [PR #263](https://github.com/e6qu/fun-with-pipes/pull/263). Base: [verified PR #262](measurements/recording-lookup-delivery-2026-11-06/README.md),
@@ -82,7 +83,7 @@ it was corrected before publication. No local native build was run.
 
 Focused source `39a9f806891b524042b391b85480cbafc022afbc`, run `42156552424`:
 Linux ARM64 job `127691972751`, Linux AMD64 `127691973009`, macOS ARM64
-`127691973129`. All are running with no failed steps at the last check. Docs
+`127691973129`. All three pass, and every complete job log has no unexpected diagnostics. Docs
 `42156556915` passes. Draft-only CI is skipped and is not platform evidence.
 
 Measurement tools now support the `recording-inline` reference: only the runtime
@@ -100,3 +101,18 @@ prerequisite controls (0.13 seconds), changed Python syntax and workflow checks
 (0.13 seconds each). Missing sparse fixtures initially prevented two control
 suites from loading; restoring their exact tracked JSON/gzip files fixed that.
 Broader artifact-reader controls run on GitHub, not in a large local checkout.
+
+[Measurement controls](measurements/recording-inline-controls-2026-11-06/README.md)
+pass: 14 suites / 107 tests at `a029797e3a158f9cbb2aaa3ff0ba78fbf3d62d84`,
+run `42157525720`, job `127695118390`. Every suite log, source identity and artifact
+digest is retained and verified. Docs `42157531749` also passes at that head.
+A new complete-reference unit check additionally rejects a missing preserved
+source, altered append body and altered patch; all four reference tests pass
+locally (0.72 seconds). The native image decoder is mocked only in this metadata
+unit test; real binary verification remains in the complete native audits.
+
+First focused audit `42158262680`, job `127697500689`, failed because the dispatch
+omitted `production_attempt`; argument parsing stopped before any audit output,
+so upload also failed. Corrected dispatch `42158479402`, job `127698194745`,
+explicitly uses attempt 1 and is queued. Both failed steps were inspected; no
+native test or timing was rerun. Keep this correction in the final receipt.
