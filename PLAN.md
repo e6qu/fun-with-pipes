@@ -17,56 +17,31 @@ Long measured solves improve by 1.86–14.02%. Seventeen of 32 speed targets mee
 validation and live-storage counts are unchanged. All compiler comparisons pass;
 maximum reported frames are unchanged. These results do not close earlier misses.
 
-## Current group: complete shared tape access verification
+## Current group: contiguous tape operation records
 
-A derivative tape records operations for the backward pass. Before PR #265, the
-code validated its registry entry three times per neighboring input pair and
-update. [Retained source and counts](docs/measurements/recording-capacity-census-2026-11-06/README.md)
-locate this work in the map callback, its nested addition and the fold callback.
-This is an observed cost, not an established cause of earlier timing misses.
+The shared-access group (#265–#266) is merged. All four runtime sessions and
+archive audits are complete; 30 of 32 long-case targets remain open, alongside
+two AMD small-case regressions and one inconclusive copy comparison. All 48
+original images reproduce exactly. The compiler-change production run passed
+all nine jobs; its complete artifact audit and #266's merged-source CI are still
+being retained. A merge alone does not establish final platform acceptance.
 
-The [implemented contract](docs/measurements/recording-context-scopes.md) combines direct
-numeric-call forwarding with separate scopes around the packed pair-map and
-numeric fold loops. Each scope borrows validated access; it owns no tape storage.
-Unknown calls, task ticks, tape lifecycle operations and reentry remain excluded.
-Changing tape IDs still requires validation. [Focused native checks, the disabled
-reference and complete artifact audit pass](docs/measurements/recording-context-checks-2026-11-06/README.md).
-All four qualified runtime sessions have finished. Thirty of 32 long-case 5%
-targets remain open; AMD has two small-case regressions and one inconclusive
-copy control. [Compiler-cost observations](docs/measurements/recording-context-analysis-2026-11-06/README.md)
-pass all fourteen comparisons. The user approved EPYC 7763/9V74/9V45 as matched
-session peers; the completed 9V74 compiler-cost results are now accepted under
-that explicit amendment. Keep all other frozen settings and limits unchanged.
-[Census](docs/measurements/recording-context-census-2026-11-06/README.md) and
-[runtime archive audits](docs/measurements/recording-context-time-2026-11-06/README.md)
-pass, preserving all timing misses and historical host rejections. Original
-measured-image checks and final platform acceptance remain pending.
-The user merged #265 as `e187b92d75bf936bc7191ea11eeca0c573005399`; its tree
-matches the reviewed head. The merge's production run is running. A merge alone
-does not establish the remaining platform/performance acceptance.
+The [new experiment](docs/measurements/tape-operation-records.md) stores each
+numeric tape operation's parents and weights together. The [source investigation](docs/measurements/recording-context-next-layout.md)
+identifies four columns, two allocations and growth-time column moves. Saved
+large-case phases locate most derivative work in recording and reverse traversal;
+they do not prove a cache problem or a layout speedup.
 
 | Step | Concrete work | Required result |
 |---|---|---|
-| 1 | Implement the approved CPU policy in qualification, timing and evidence readers. | Accept only the three named AMD models; preserve exact-host sessions, every other requirement and historical outcomes. Add rejection controls; qualify future compiler-cost hosts before building. |
-| 2 | Complete the two missing AMD runtime sessions and their archive audit. | No ARM or compiler timing repeats. Retain every speed/copy miss, absolute time, process memory and C/Rust cost. |
-| 3 | Reconstruct original measured images and review remaining work. | Session 1 per architecture, exact C/flags and image hashes; require append inlining in both versions. Use saved source/phase counts to select the next optimization; do not infer a cause from disassembly. |
-| 4 | Finish platform verification and deliver repairs/evidence together. | Audit the merged source's jobs and repair every failure. Nine exact-final-head production jobs, docs and complete audits pass before the next squash merge; verify its tree/message. |
+| 1 | Implement numeric records and typed parent pairs with explicit owners. | 24-byte numeric and 8-byte parent records, checked operation capacities, unchanged arithmetic and failure order. |
+| 2 | Update allocation, moving-growth, cleanup and wasm32 probes; run the affected group once. | Interpreter/native parity, exact ownership on return/trap/cancellation, negative controls and complete target audits. |
+| 3 | Measure candidate/reference storage, runtime and compiler costs after correctness passes. | Frozen sources; unchanged representative inputs/flags/limits; report absolute C/Rust costs and preserve all misses. |
+| 4 | Verify measured binaries, final platforms and documentation, including carried repairs. | Nine final-head production jobs, docs and complete audits pass; verify squash tree and one-line message. |
 
-For the measured single-tape objective, lookups fall from
-`3 × (coordinates − 1)` to two per positive update: one map scope and one fold
-scope. Allocation/retain counts, eight nodes per pair, parent/capacity checks,
-peak tracked storage and maximum reported frames remain unchanged. Both versions
-release all tracked storage.
-Run each qualified timing session once after the whole group and focused checks;
-replace only hosts rejected before building/timing. [The handoff](docs/development-state.md)
-records the next action and actual verification.
-
-The [next layout candidate](docs/measurements/recording-context-next-layout.md)
-comes from the saved phase counts and runtime source: store each numeric tape
-operation's two parent indices and two weights together. First finish this
-verification group and review AMD results. Freeze alignment, overflow, typed
-ownership and exact arithmetic requirements before any layout implementation;
-no speed benefit is established yet.
+Keep the completed shared-access measurements unchanged. Its numeric-call and
+loop scopes remain enabled in both versions. [The handoff](docs/development-state.md)
+records exact source/run identities and the current next action.
 
 ## Open performance goals
 
