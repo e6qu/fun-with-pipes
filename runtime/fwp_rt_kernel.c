@@ -243,10 +243,7 @@ static int64_t fwp_tape_limit(void) {
     return limit < (size_t)INT32_MAX ? (int64_t)limit : INT32_MAX;
 }
 
-static void fwp_tape_reserve(fwp_tape *t, int64_t n) {
-    int64_t limit = fwp_tape_limit();
-    if (n < 0 || n > limit) fwp_trap("autodiff: the tape is full");
-    if (n <= t->cap) return;
+static void fwp_tape_grow(fwp_tape *t, int64_t n, int64_t limit) {
     int64_t cap = t->cap ? t->cap : (limit < 64 ? limit : 64);
     while (cap < n) cap = cap > limit / 2 ? limit : cap * 2;
     /* Each pair fits size_t even at the existing PTRDIFF_MAX/8 node bound.
@@ -279,6 +276,15 @@ oom:
     t->live = 0;t->len = t->cap = t->leaves = t->adjcap = 0;
     fprintf(stderr, "fwp: out of memory\n");
     fflush(NULL); _Exit(102);
+}
+
+/* Keep the usual no-growth path at the caller, without duplicating buffer
+ * allocation and recovery. Validate before taking the capacity shortcut. */
+static inline __attribute__((always_inline)) void fwp_tape_reserve(fwp_tape *t, int64_t n) {
+    int64_t limit = fwp_tape_limit();
+    if (n < 0 || n > limit) fwp_trap("autodiff: the tape is full");
+    if (n <= t->cap) return;
+    fwp_tape_grow(t, n, limit);
 }
 
 static V fwp_ad_tape_new(V nv, fwp_owned_tape *owned) {

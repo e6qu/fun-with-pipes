@@ -1,18 +1,18 @@
 # Current work
 
-**Next:** publish the final native-image receipt, mark PR #263 ready and monitor
-all nine production jobs plus documentation for that exact head. Audit every
-completed job/target and fix all failures together. When all final-head gates and
-complete audits pass, squash-merge with an empty body and subject
-`Inline checked scalar derivative recording`; verify the actual message and tree.
-Do not rerun
-qualified measurements or the completed native diagnostics.
+**Next:** monitor final production run `42166013453` (nine jobs) and documentation
+run `42166011721`, job `127722548913`, at exact head
+`a90f793e485aa91736156ae87dfc3ae36ec9cbad`. Audit every completed job/target and
+fix all failures together. Once final gates and complete audits pass, squash-merge
+with empty body and subject `Inline checked scalar derivative recording`;
+verify the actual message and tree. Do not rerun completed measurements.
 
 Branch `recording-call-costs`, worktree `.worktrees/scalar-constant-lowering`;
-draft [PR #263](https://github.com/e6qu/fun-with-pipes/pull/263).
+[PR #263](https://github.com/e6qu/fun-with-pipes/pull/263), ready for review.
 Measurement/input publication: `48c2ae70ab58813bc04ab7bda4b8d7845ccef852`.
-The next commit retains only its native-image receipt and documentation; use the
-exact resulting PR head for final production gates.
+Final head `a90f793e485aa91736156ae87dfc3ae36ec9cbad` retains only the native-image
+receipt/docs; tree `c7bef970b64dc07dc487592a14402b8d46ccf388`. Keep this status update
+local until delivery is recorded, so final gates continue against the frozen head.
 Production code/tests: `39a9f806891b524042b391b85480cbafc022afbc`;
 subsequent production trees are identical. Base is [verified PR #262](measurements/recording-lookup-delivery-2026-11-06/README.md),
 merge `9a9dc49c53212b562cd9de06f908248ceb6109af`, tree
@@ -35,7 +35,7 @@ The same-source reference removes only that declaration attribute; both versions
 keep lookup reuse. The earlier 72-image diagnostic motivated this candidate but
 did not establish the previous AMD64 slowdown's cause.
 
-| Gate | Source / run | Verified result |
+| Gate | Source / run | Result |
 |---|---|---|
 | [Focused correctness](measurements/recording-inline-checks-2026-11-06/README.md) | `39a9f806` / `42156552424`; audit `42158479402` | Three hosts, each 25 targets, 856 images and 872 observations. Complete logs/hashes pass. |
 | [Measurement controls](measurements/recording-inline-controls-2026-11-06/README.md) | `a029797e` / `42157525720` | 14 suites, 107 tests; complete logs retained. Later reference/file-list controls also pass. |
@@ -43,7 +43,8 @@ did not establish the previous AMD64 slowdown's cause.
 | [Compiler costs](measurements/recording-inline-analysis-2026-11-06/README.md) | `ecfd740b` / `42158777078`; audit `42160109377` | All 672 commands succeed; 13/14 cases qualify. AMD64 zero-update copy control remains inconclusive. |
 | [Runtime](measurements/recording-inline-time-2026-11-06/README.md) | ARM `7dba6db7` / `42162092035`; AMD `1c6ee1ef` / `42162639619`, `42162975545` | Four qualified sessions; audits `42164603033`, `42164773822`, `42164952097` pass. 13/32 long targets pass, 19 remain open. |
 | [Native inlining](measurements/recording-inline-images-2026-11-06/README.md) | `48c2ae70` / `42165452140` | Both jobs pass; all 48 measured images identical, candidate inlining verified, complete hashes/logs retained. |
-| Docs | `66aed9ac` / `42164607195`, job `127718027559` | Full controls pass, including historical archives and the inventory repair. |
+| Docs | `a90f793e` / `42166011721`, job `127722548913` | Final-head full controls pass. Complete log has only the three deliberate runner-failure controls. |
+| Final platforms | `a90f793e` / `42166013453`, attempt 1 | Benchmarks, Linux AMD64 and all four macOS jobs pass; Linux ARM64 and both Windows jobs continue, no failed steps. Completed logs have no unexpected diagnostics. Full artifact audit follows all nine jobs. |
 
 Runtime producer heads have identical production, benchmark and recorded source
 hashes. Long cases use 2.26–8.12% less elapsed time. Small-case slowdown peaks at
@@ -67,9 +68,8 @@ All failure/rejection records remain linked in the runtime receipts.
 
 The [new input plan](measurements/recording-inline-call-inputs.json) selects each
 architecture's audited session 1, both forms, six cases and both versions. All original image hashes and candidate append inlining pass; no program
-executed during this diagnostic. Do not rerun the original 72-image diagnostic. The final exact-head
-nine-job matrix and complete production/doc audits have not run. Draft-only skipped
-CI is not platform evidence. Squash-merge only after final gates pass, with one
+executed during this diagnostic. Do not rerun the original 72-image diagnostic. The final exact-head nine-job matrix and docs are running; complete production/doc
+audits follow. Earlier draft-only skipped CI is not platform evidence. Squash-merge only after final gates pass, with one
 subject at most 80 characters and empty body, then verify tree/message identity.
 
 Local guarded checks: measurement receipt hashes 0.50s; saved compiler review
@@ -78,3 +78,31 @@ reconciliation 0.49s; complete native-image record hashes 0.13s. Sparse historic
 full documentation gate. Scratch report generation needed explicit `PYTHONPATH=scripts`;
 no product change. Full builds, large audits and benchmarks stay on GitHub.
 About 78 GiB free at last check. Scratch: `/tmp/fwp-inline-*`, `../gradient-work/`.
+
+## Next candidate review
+
+Read-only review during final CI: the saved GCC reports leave
+`fwp_tape_reserve` out of line after append inlining. Its two runtime callers are
+ordinary F64 append and typed append. Each checks the node/parents first; reserve
+then checks the requested bound before returning when capacity is sufficient.
+The growth body owns paired parent/weight reallocations and typed-weight recovery.
+The next group is isolated in `.worktrees/recording-capacity-gate`, branch
+`recording-capacity-gate`; no second PR is open. Contract commit `10b275c0` froze
+the checked inline gate/shared growth change before edits. Its source proof
+reconstructs the previous runtime byte for byte. Two focused reference/corruption
+controls pass under the guard (0.13s), as does that reconstruction (0.13s).
+Runtime and capacity boundary/failure controls are implemented but not yet native
+validated. Explicit runtime/memory/compiler protocols and workflow choices are
+wired. Complete reference controls are added; run them after committing this
+source so the archived-source test can read its exact Git revision. The three
+source/gate controls, 23 runtime budget controls, nine phase/memory controls and
+the focused all-workload census control pass under the guard. Workflow syntax
+passes actionlint with shellcheck/pyflakes disabled. A missing 5 MB historical
+fixture was restored before the 23-test budget check passed. No native builds or
+timings have run. Native compiler-report support for the capacity gate and the
+complete focused/control batch still remain; do not dispatch measurements yet.
+After PR #263 delivery, rebase this branch onto its verified squash merge, retain
+the delivery receipt and update PLAN/history. Do not publish a second active PR.
+Scratch review: `/tmp/fwp-capacity-review.md`; frozen contract is
+`docs/measurements/recording-capacity.md` on that branch. No cause for earlier
+timing misses or speedup from the next change is established.
