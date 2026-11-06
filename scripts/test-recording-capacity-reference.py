@@ -1,5 +1,4 @@
 """Keep reserve reconstruction exact and preserve recording observers."""
-import difflib
 import hashlib
 import importlib.util
 import json
@@ -67,9 +66,18 @@ class RecordingCapacityReference(unittest.TestCase):
         name = 'runtime/fwp_rt_kernel.c'
         current = subprocess.check_output(['git', 'show', revision + ':' + name], cwd=ROOT, text=True)
         reference = REFERENCE.reference_sources({name: current})[name]
-        differences = ''.join(difflib.unified_diff(current.splitlines(True), reference.splitlines(True),
-                              fromfile='a/' + name, tofile='b/' + name))
-        delta = f'diff --git a/{name} b/{name}\nindex 0000000..1111111 100644\n' + differences
+        # Use the producer's actual diff implementation. Git and difflib align
+        # the repeated closing braces differently in this runtime change.
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / 'candidate').write_text(current)
+            (root / 'reference').write_text(reference)
+            result = subprocess.run(['git', 'diff', '--no-index', '--', 'candidate', 'reference'],
+                                    cwd=root, text=True, capture_output=True)
+            self.assertEqual(result.returncode, 1, result.stderr)
+            lines = result.stdout.splitlines(keepends=True)
+            delta = (f'diff --git a/{name} b/{name}\n' + lines[1]
+                     + f'--- a/{name}\n+++ b/{name}\n' + ''.join(lines[4:]))
         sha = lambda data: hashlib.sha256(data).hexdigest()
         manifest = dict(source=revision,
                         disabledTransformation='inlined checked reserve gate with shared tape growth',

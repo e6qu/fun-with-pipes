@@ -13,9 +13,9 @@ format-step exit diagnostics. The full log/record hashes and each format diff
 were checked locally; no native test failure was hidden behind formatting.
 
 The repair wraps `early_shortcut` in `tests/autodiff_capacity_bounds.rs`;
-the focused local format check passes. The corrected source must pass a new
-three-host run before measurements. No production algorithm change is required
-by this finding. The initial source remains reachable through
+the focused local format check passes. The
+[corrected three-host run and complete audit](../recording-capacity-checks-2026-11-06/README.md)
+now pass. No production algorithm change was required by this finding. The initial source remains reachable through
 `evidence/recording-capacity-initial-2026-11-06` after rebasing onto PR #263.
 
 [Summary](summary.json), [artifact](artifact.json), `audit.zip`,

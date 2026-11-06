@@ -30,11 +30,15 @@ both numeric and typed recording, bounds, allocation order and failure recovery.
 The same-source reference reconstructs the previous runtime byte for byte.
 
 [Measurement controls](docs/measurements/recording-capacity-controls-2026-11-06/README.md)
-pass: 15 suites, 114 tests. The [first native run](docs/measurements/recording-capacity-initial-2026-11-06/README.md)
-passed 25 targets on each of three hosts, but all jobs failed one formatting
-check. The complete audit confirms no other failure. Repair that line wrapping
-and verify the corrected source before measurements; do not call the failed run
-a passing correctness gate.
+pass: 15 suites, 114 tests. The
+[corrected native run and complete audit](docs/measurements/recording-capacity-checks-2026-11-06/README.md)
+pass all 25 targets on each of three hosts. Every retained record is verified.
+The [initial formatting failure](docs/measurements/recording-capacity-initial-2026-11-06/README.md)
+is repaired and retained. [Memory measurements and their full audit](docs/measurements/recording-capacity-census-2026-11-06/README.md)
+pass: counts, storage and maximum frames are unchanged. Compiler jobs pass, but
+a [patch-format audit defect](docs/measurements/recording-capacity-audit-repair-2026-11-06/README.md)
+needs repair and re-audit of saved results. Runtime measurements continue; no
+speedup or memory reduction is claimed yet.
 
 | Step | Concrete work | Required result |
 |---|---|---|

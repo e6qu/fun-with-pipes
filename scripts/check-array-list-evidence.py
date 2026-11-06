@@ -3,7 +3,6 @@
 import argparse
 import ast
 from contextlib import ExitStack
-import difflib
 import hashlib
 import importlib.util
 import json
@@ -459,16 +458,44 @@ def check_reference(folder, report, source, architecture, protocol):
 
 
 def check_reference_patch(patch, candidate, reference, source_path):
+    """Validate a unified patch by its exact input/output, not diff alignment."""
     lines = patch.splitlines(keepends=True)
-    assert len(lines) >= 4
+    assert len(lines) > 4
     assert lines[0] == f'diff --git a/{source_path} b/{source_path}\n'
     assert re.fullmatch(r'index [0-9a-f]+\.\.[0-9a-f]+ 100644\n', lines[1])
-    # Git appends a function context to hunk headers; difflib does not.
-    actual = [re.sub(r'^(@@ -\d+(?:,\d+)? \+\d+(?:,\d+)? @@)[^\n]*', r'\1', line)
-              if line.startswith('@@ ') else line for line in lines[2:]]
-    expected = list(difflib.unified_diff(candidate.splitlines(keepends=True),
-                    reference.splitlines(keepends=True), fromfile='a/' + source_path, tofile='b/' + source_path))
-    assert actual == expected, 'reference patch changes more than the selected eligibility block'
+    assert lines[2:4] == [f'--- a/{source_path}\n', f'+++ b/{source_path}\n']
+    original = candidate.splitlines(keepends=True)
+    result, cursor, position = [], 0, 4
+    while position < len(lines):
+        header = re.fullmatch(r'@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@[^\n]*\n', lines[position])
+        assert header, 'invalid reference patch hunk'
+        old_start, old_count, new_start, new_count = header.groups()
+        old_count = int(old_count) if old_count is not None else 1
+        new_count = int(new_count) if new_count is not None else 1
+        old_start = int(old_start) - (old_count != 0)
+        new_start = int(new_start) - (new_count != 0)
+        assert cursor <= old_start <= len(original), 'overlapping or out-of-range hunk'
+        result.extend(original[cursor:old_start])
+        assert len(result) == new_start, 'wrong reference patch output position'
+        position += 1
+        body = []
+        while position < len(lines) and not lines[position].startswith('@@ '):
+            line = lines[position]
+            if line == '\\ No newline at end of file\n':
+                assert body and body[-1].endswith('\n'), 'invalid newline marker'
+                body[-1] = body[-1][:-1]
+            else:
+                assert line[0] in ' +-' and line.endswith('\n'), 'invalid reference patch line'
+                body.append(line)
+            position += 1
+        before = [line[1:] for line in body if line[0] in ' -']
+        after = [line[1:] for line in body if line[0] in ' +']
+        assert len(before) == old_count and len(after) == new_count, 'wrong reference patch counts'
+        assert original[old_start:old_start + old_count] == before, 'reference patch input mismatch'
+        result.extend(after)
+        cursor = old_start + old_count
+    result.extend(original[cursor:])
+    assert ''.join(result) == reference, 'reference patch does not reconstruct the selected reference'
 
 
 def file_inventory(folder):

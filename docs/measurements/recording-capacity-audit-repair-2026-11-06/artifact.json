@@ -1,0 +1,20 @@
+{
+  "id": 13484809053,
+  "node_id": "MDg6QXJ0aWZhY3QxMzQ4NDgwOTA1Mw==",
+  "name": "recording-capacity-compiler-report",
+  "size_in_bytes": 81932,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13484809053",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13484809053/zip",
+  "expired": false,
+  "digest": "sha256:807a9d5f64db83423f8c5e25ffbc64a646f6826085d6b957e31018da4cc2bee5",
+  "created_at": "2026-11-06T07:30:32Z",
+  "updated_at": "2026-11-06T07:30:32Z",
+  "expires_at": "2027-02-04T07:29:43Z",
+  "workflow_run": {
+    "id": 42181226529,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "recording-capacity-gate",
+    "head_sha": "51edfc0e7884e1a75201bc9876fd13cb8ca25eee"
+  }
+}

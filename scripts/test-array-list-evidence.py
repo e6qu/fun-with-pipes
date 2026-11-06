@@ -36,6 +36,39 @@ REPORT = json.loads(gzip.decompress((ROOT / 'docs/measurements/array-list-first-
 
 
 class Evidence(unittest.TestCase):
+    def test_patch_alignment_and_corruption(self):
+        header = ('diff --git a/source.c b/source.c\nindex 1234567..2345678 100644\n'
+                  '--- a/source.c\n+++ b/source.c\n')
+        candidate = 'start\nsame\nsame\nend\n'
+        reference = 'start\nsame\nend\n'
+        first = '@@ -1,4 +1,3 @@ function context\n start\n-same\n same\n end\n'
+        second = '@@ -1,4 +1,3 @@\n start\n same\n-same\n end\n'
+        for body in (first, second):
+            CHECK.check_reference_patch(header + body, candidate, reference, 'source.c')
+        for body in (first.replace('-1,4', '-1,3'), first.replace('+1,3', '+2,3'),
+                     first.replace('-1,4', '-9,4'), first.replace('-same', '-wrong'),
+                     first.replace(' end', ' wrong'), first + first,
+                     first + '\n', first + 'garbage\n', first + header,
+                     first.replace('-same\n', '-same\n+extra\n'), first[:-1]):
+            with self.subTest(body=body), self.assertRaises(AssertionError):
+                CHECK.check_reference_patch(header + body, candidate, reference, 'source.c')
+
+    def test_patch_insert_delete_and_unterminated_lines(self):
+        header = ('diff --git a/source.c b/source.c\nindex 1234567..2345678 100644\n'
+                  '--- a/source.c\n+++ b/source.c\n')
+        for candidate, reference, body in (
+            ('', 'new\n', '@@ -0,0 +1 @@\n+new\n'),
+            ('old\n', '', '@@ -1 +0,0 @@\n-old\n'),
+            ('old', 'new', '@@ -1 +1 @@\n-old\n\\ No newline at end of file\n+new\n\\ No newline at end of file\n'),
+            ('old\nend\n', 'old\nnew\nend\n', '@@ -1,0 +2 @@\n+new\n'),
+        ):
+            with self.subTest(body=body):
+                CHECK.check_reference_patch(header + body, candidate, reference, 'source.c')
+        for body in ('@@ -1 +1 @@\n\\ No newline at end of file\n-old\n+new\n',
+                     '@@ -1 +1 @@\n-old\n\\ No newline at end of file\n\\ No newline at end of file\n+new\n'):
+            with self.subTest(body=body), self.assertRaises(AssertionError):
+                CHECK.check_reference_patch(header + body, 'old', 'new\n', 'source.c')
+
     def test_scalar_image_selection_preserves_reference_instrumentation(self):
         for form in ('fwp-ad', 'fwp-ad-history'):
             for suffix in ('', '-profile', '-phases'):

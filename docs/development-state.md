@@ -1,19 +1,31 @@
 # Current work
 
-**Next:** publish the single formatting repair and updated delivery/plan records,
-open one draft PR for the capacity-call group, and run `recording-capacity-checks`
-on all three hosts at that repaired source. Audit all results before measurements.
+**Next:** publish the reference-patch audit repair, then rerun
+`recording-capacity-compiler-report` against saved run `42179974129`, source
+`51edfc0e7884e1a75201bc9876fd13cb8ca25eee`. Run full measurement-tool controls
+on CI. Keep runtime `42179983250` running; all four qualified sessions are
+measuring. Audit its saved samples with the repaired checker, without retiming.
 
 Branch `recording-capacity-gate`, worktree `.worktrees/recording-capacity-gate`.
-PR #263 is merged; no new PR is open yet. Keep status-only edits local during CI.
+[PR #264](https://github.com/e6qu/fun-with-pipes/pull/264) is the only active PR,
+currently draft. PR #263 is verified and merged. Keep status-only edits local during CI.
+
+[Corrected checks and complete audit](measurements/recording-capacity-checks-2026-11-06/README.md)
+pass: run `42177517863`, audit `42179352168` / job `127765102666`.
+Each host passes 25 targets, 864 images and 880 observations; no diagnostics.
+Artifact `13485166212` digest and all 8,304 retained records pass verification.
+Corrected native jobs: `127759292851` (AMD64 GCC), `127759293082` (ARM64 GCC),
+`127759293154` (macOS Clang). All three jobs pass, including formatting/lint and native checks. Docs `42177514724` / job `127759276595` pass; the complete
+log has only its three deliberate runner-failure controls. Draft-only CI
+`42177514756` is skipped, not native platform evidence.
 
 ## Roadmap status
 
 | Step | Status | Remaining work |
 |---|---|---|
 | 1 | Verified | PR #263 delivery retained; capacity contract frozen before edits. |
-| 2 | In progress | Implementation/tools complete. Initial native targets pass, but formatting failed; verify the repaired source and complete artifacts. |
-| 3 | Pending | Combined memory/compiler/runtime batch, then original-image and capacity-inlining verification; retain every miss. |
+| 2 | Verified | Corrected three-host checks and complete artifact/log audit pass; all 8,304 retained records verified. |
+| 3 | In progress | Combined memory/compiler/runtime batch dispatched; original-image and capacity-inlining verification follows audited results. Retain every miss. |
 | 4 | Pending | Final nine-job matrix, docs, complete audits and verified squash merge. |
 
 ## Verified previous delivery
@@ -59,8 +71,8 @@ library and measurement scripts remain unchanged.
   retained records pass verification. Its only findings are the three format-step
   failures; clippy, native targets and image checks pass.
 - Repair: wrap `early_shortcut` in `autodiff_capacity_bounds.rs`. Local guarded
-  `rustfmt --check` passes. Rerun the focused matrix before measurements; the
-  failed source does not establish a passing correctness gate.
+  `rustfmt --check` passes. The corrected focused matrix and complete audit now pass; the
+  original failed source remains recorded separately.
 
 Local guarded checks pass: four complete reference/corruption tests (0.73s), six
 compiler-report controls, 23 runtime-budget tests, nine phase/memory tests,
@@ -69,12 +81,39 @@ syntax passes actionlint with shellcheck/pyflakes disabled. Two tracked fixtures
 were restored for sparse-checkout tests. No local native build, full suite or
 benchmark ran. About 79 GiB free at last check.
 
-After focused checks/audit pass, dispatch `recording-capacity-census`,
-`recording-capacity-analysis` and `recording-capacity-time` with explicit source,
-correctness run, all hosts and both timing sessions. Preserve qualified samples;
-replace only hosts rejected before building/timing. Freeze the image input plan
-from audited session 1 results before `recording-call-analysis`. No speedup is
-established yet. Final production/doc gates and complete audits still follow.
+## Combined measurement batch
+
+- Census `42179964294`: AMD64 `127767049412`, ARM64 `127767049900` pass.
+  Complete-log diagnostics pass. Full audit `42181326578` / `127771398833` passes; all 4,038 retained
+  record hashes pass. Allocation/work counts and maximum frames are unchanged.
+- Compiler `42179974129`: AMD64 `127767078406`, ARM64 `127767078878` pass.
+  Complete-log diagnostics pass. Full audit `42181226529` / `127771091070`
+  failed on both architectures because Git and difflib align repeated braces
+  differently. The patch reader now validates exact input/output and hunk
+  counts/positions instead of one diff presentation. Numerical acceptance
+  awaits the repaired audit of the original samples.
+- Runtime `42179983250`: AMD64 session 2 `127767111269`, ARM64 sessions 1/2
+  `127767111350` / `127767111433` qualified and are measuring. AMD64 session 1
+  `127767111308` also qualified and is measuring. No timing rerun or replacement dispatched.
+
+The batch uses explicit source and correctness run, all hosts and both timing
+sessions. Preserve qualified samples; replace only hosts rejected before
+building/timing. Freeze the image input plan from audited session 1 results before
+`recording-call-analysis`. No speedup is established yet. Final production/doc
+gates and complete audits still follow.
+
+Local receipt verification passed all 8,304 records (0.13s); 59 links in four
+updated Markdown files pass (0.13s). Complete census/compiler logs pass diagnostic
+checks (0.13s each pair). No local build, full suite or benchmark ran.
 
 Scratch: `../gradient-work/capacity-*`, `/tmp/fwp-capacity-*`,
 `/tmp/fwp-retain-capacity-*`, `/tmp/fwp-retain-inline-delivery.py`.
+
+[Audit defect and repair](measurements/recording-capacity-audit-repair-2026-11-06/README.md):
+original failed artifact/log retained and digest checked. Local guarded checks:
+four complete reference controls using a real Git diff pass (0.85s); 20 focused
+shared-reader controls pass (0.94s), including alternate valid alignments and
+malformed hunks/newline markers. A full local Python target encountered four
+missing historical archives in the sparse checkout; leave that archive audit to
+CI. No test assertion was disabled. Its other 20 controls pass. The small JSON
+fixture was restored; no large archive or native build was downloaded/run.
