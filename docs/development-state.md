@@ -44,7 +44,7 @@ did not establish the previous AMD64 slowdown's cause.
 | [Runtime](measurements/recording-inline-time-2026-11-06/README.md) | ARM `7dba6db7` / `42162092035`; AMD `1c6ee1ef` / `42162639619`, `42162975545` | Four qualified sessions; audits `42164603033`, `42164773822`, `42164952097` pass. 13/32 long targets pass, 19 remain open. |
 | [Native inlining](measurements/recording-inline-images-2026-11-06/README.md) | `48c2ae70` / `42165452140` | Both jobs pass; all 48 measured images identical, candidate inlining verified, complete hashes/logs retained. |
 | Docs | `a90f793e` / `42166011721`, job `127722548913` | Final-head full controls pass. Complete log has only the three deliberate runner-failure controls. |
-| Final platforms | `a90f793e` / `42166013453`, attempt 1 | Benchmarks, Linux AMD64 and all four macOS jobs pass; Linux ARM64 and both Windows jobs continue, no failed steps. Completed logs have no unexpected diagnostics. Full artifact audit follows all nine jobs. |
+| Final platforms | `a90f793e` / `42166013453`, attempt 1 | Seven jobs pass; Linux ARM64 and Windows AMD64 continue, no failed steps. Completed logs have no unexpected diagnostics. Full artifact audit follows all nine jobs. |
 
 Runtime producer heads have identical production, benchmark and recorded source
 hashes. Long cases use 2.26–8.12% less elapsed time. Small-case slowdown peaks at
@@ -93,14 +93,18 @@ reconstructs the previous runtime byte for byte. Two focused reference/corruptio
 controls pass under the guard (0.13s), as does that reconstruction (0.13s).
 Runtime and capacity boundary/failure controls are implemented but not yet native
 validated. Explicit runtime/memory/compiler protocols and workflow choices are
-wired. Complete reference controls are added; run them after committing this
-source so the archived-source test can read its exact Git revision. The three
-source/gate controls, 23 runtime budget controls, nine phase/memory controls and
-the focused all-workload census control pass under the guard. Workflow syntax
+wired at `7b4b34fb`. All four complete source/reference controls pass under the
+guard (0.73s), including full inventories and corruption cases. The 23 runtime
+budget controls, nine phase/memory controls and the focused all-workload census
+control also pass. Workflow syntax
 passes actionlint with shellcheck/pyflakes disabled. A missing 5 MB historical
 fixture was restored before the 23-test budget check passed. No native builds or
-timings have run. Native compiler-report support for the capacity gate and the
-complete focused/control batch still remain; do not dispatch measurements yet.
+timings have run. Native compiler-report support now takes an explicit target;
+six controls pass, including capacity plans and similarly named functions. The
+existing literal-reference reader control passes after restoring its 212 KB
+fixture. Publish this isolated branch and run `recording-capacity-checks` on all
+three hosts plus `storage-measurement-controls`; do not dispatch measurements
+until those exact-production-source checks pass. No second PR until #263 merges.
 After PR #263 delivery, rebase this branch onto its verified squash merge, retain
 the delivery receipt and update PLAN/history. Do not publish a second active PR.
 Scratch review: `/tmp/fwp-capacity-review.md`; frozen contract is
