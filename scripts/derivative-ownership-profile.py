@@ -52,7 +52,7 @@ def allocation_sites(code):
 
 def instrument(source):
     """Return diagnostic C, site tables and the exact source for each site table."""
-    allocation_base = RAW.instrument(ARC.PROFILE.instrument(source))
+    allocation_base = RAW.instrument(ARC.PROFILE.instrument(source), 'records')
     ownership_base, allocations = allocation_sites(allocation_base)
     code, ownership = ARC.OWNERSHIP.instrument(ownership_base)
     declarations = f'''

@@ -268,7 +268,7 @@ with zipfile.ZipFile(args.input) as z:
                 assert z.read(
                     folder + kind + "-profile.c"
                 ).decode() == CENSUS.DESCENT.AD.RAW.instrument(
-                    CENSUS.DESCENT.AD.PROFILE.instrument(source)
+                    CENSUS.DESCENT.AD.PROFILE.instrument(source), 'records' if 'fwp_tape_op;' in source else 'columns'
                 )
                 image = z.read(folder + kind + "-profile")
                 assert (

@@ -14,6 +14,40 @@ BASELINE = json.loads((ROOT / 'docs/measurements/array-capture-descent-2026-10-2
 
 
 class DescentBudgets(unittest.TestCase):
+    def test_tape_records_keep_timing_and_managed_limits(self):
+        for updates in (0, 1, 199, 1999):
+            row = self.recording_case(updates)
+            elapsed = 95 if updates >= 199 else 100
+            row['medianNs']['fwp-ad-identical'] = elapsed
+            for label in ('fwp-ad', 'fwp-ad-history'):
+                row['medianNs'][label] = elapsed
+                current = row['fwpProfiles'][label]
+                old = row['fwpProfiles'][label + '-reference']
+                current['managed'] = copy.deepcopy(old['managed'])
+                block = lambda count, size: dict(requests=count, requestedBytes=size, peakBytes=size)
+                current['rawDerivativeStorage'] = dict(kinds=dict(
+                    registry=block(1, 88), parents=block(0, 0), operations=block(1, 1536),
+                    adjoints=block(1, 512)), peakBytes=2136, beforeShutdownBytes=2136, finalBytes=0)
+                old['rawDerivativeStorage'] = dict(kinds=dict(
+                    registry=block(1, 104), parents=block(1, 512), partials=block(1, 1024),
+                    adjoints=block(1, 512)), peakBytes=2152, beforeShutdownBytes=2152, finalBytes=0)
+            self.assertEqual(DESCENT.paired_budget_failures({'case': row}, 'tape-records'), [])
+            for metric, mutate in (
+                ('candidate/reference time', lambda item: item['medianNs'].update(
+                    {'fwp-ad-history': 96 if updates >= 199 else 103})),
+                ('identical median variation', lambda item: item['medianNs'].update(
+                    {'fwp-ad-identical': elapsed * 1.03})),
+                ('largest static stack frame', lambda item: item['cCompilerStackUsage'][
+                    'fwp-ad.su']['entries'][0].update(bytes=193)),
+                ('requests', lambda item: item['fwpProfiles']['fwp-ad']['managed'].update(requests=9999)),
+                ('numeric growth requests', lambda item: item['fwpProfiles']['fwp-ad'][
+                    'rawDerivativeStorage']['kinds']['operations'].update(requests=2)),
+            ):
+                changed = copy.deepcopy(row)
+                mutate(changed)
+                failures = DESCENT.paired_budget_failures({'case': changed}, 'tape-records')
+                self.assertIn(metric, [failure['metric'] for failure in failures])
+
     def test_storage_predictions_keep_exact_counts_and_all_timing_limits(self):
         cases = {
             'scalar-constant': tuple((n, u, 0, 0, 0) for n, u in

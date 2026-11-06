@@ -139,7 +139,7 @@ def main():
             profile_code = profile_code.replace(marker, '''    if(fwp_owned_tapes)exit(230);
     for(int64_t i=0;i<fwp_ntapes;i++)if(fwp_tapes[i].live)exit(231);
 ''' + marker)
-            profile_code = RAW.instrument(profile_code)
+            profile_code = RAW.instrument(profile_code, 'records')
             profiled = directory / (label + '-profile.c')
             profiled.write_text(profile_code)
             binary = directory / label

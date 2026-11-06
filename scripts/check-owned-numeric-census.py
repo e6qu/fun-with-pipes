@@ -229,7 +229,7 @@ def main():
                             selection.check_counts(counts, dimensions, updates, solves, kind == 'candidate' or args.comparison in ('recording-inline', 'recording-capacity'))
                             row['lookupObservations'][kind][workspace] = counts
                     profiled = folder / (kind + '-profile.c')
-                    profiled.write_text(DESCENT.AD.RAW.instrument(DESCENT.AD.PROFILE.instrument(emitted.read_text())))
+                    profiled.write_text(DESCENT.AD.RAW.instrument(DESCENT.AD.PROFILE.instrument(emitted.read_text()), 'records'))
                     executable = folder / (kind + '-profile')
                     result = run([args.cc, '-O2', '-std=gnu11', '-fno-fast-math', '-ffp-contract=off',
                                   '-UFWP_NO_REUSE', '-fstack-usage', '-march=' + args.c_arch, '-w',

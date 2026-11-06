@@ -5,6 +5,7 @@ from pathlib import Path
 import subprocess
 
 GROUPS = {
+    'tape-records': 'tape_records / records',
     **dict.fromkeys(('gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context'),
                    'gradient_call_checks'),
     'owned-numeric': 'owned_numeric_checks', 'packed-input': 'packed_input_checks',
@@ -26,6 +27,9 @@ def check_jobs(run, pages, comparison):
         variants = ('ubuntu-24.04-arm, aarch64, armv8-a', 'ubuntu-latest, x86_64, x86-64')
     elif group == 'numeric_owner_checks':
         variants = ('ubuntu-latest', 'ubuntu-24.04-arm')
+    elif group == 'tape_records / records':
+        variants = ('ubuntu-latest, gcc, x86-64', 'ubuntu-24.04-arm, gcc, armv8-a',
+                    'macos-15, clang, armv8-a')
     expected = {f'{group} ({variant})' for variant in variants}
     jobs = [job for page in pages for job in page['jobs'] if job['name'] in expected]
     assert len(jobs) == len(expected) and {job['name'] for job in jobs} == expected

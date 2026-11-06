@@ -1,9 +1,9 @@
 # Current work
 
-**Next:** run the complete focused group (`numerics.yml`, suite=tape-record-checks)
-after publishing the runtime/probe batch. Audit all three hosts and all targets,
-then batch any repairs. Keep local work serial and guarded. No new timings until the
-whole implementation and correctness batch is ready.
+**Next:** finish the measurement workflow and compiler-cost/archive audit integration
+for `tape-records` while focused run `42290415866` waits for runners. Audit all
+three hosts and all targets when they complete, then batch repairs. No timing
+dispatch until correctness passes and the measurement readers are verified.
 
 Branch `tape-operation-records`, worktree `.worktrees/recording-capacity-gate`.
 Reference/user merge `ef0a54a1da660fcc4c4e094e96c30c1adbe0fb5d` (#266), identical
@@ -17,6 +17,23 @@ raw storage observers and actual wasm32 probes. Added duplicate-parent arithmeti
 order checks in interpreter/native code and a deliberately reversed native control.
 The old metadata driver now compares records with the fixed #266 column runtime;
 obsolete separate/interleaved choices were removed. No measurements have run.
+Draft [PR #267](https://github.com/e6qu/fun-with-pipes/pull/267), native source
+`b4b291e31`: focused jobs AMD `128142085029`, mac ARM `128142085304`, Linux ARM
+`128142085462` are queued. PR docs `42290418816` are queued; draft production
+skips do not establish acceptance.
+
+Reference preparation now substitutes only the frozen #266 tape section. Its
+fixture hash is checked; the current compiler and all surrounding runtime source
+remain identical. The raw storage observer requires an explicit records/columns
+choice; missing allocation/free hooks fail. The runtime and compiler-cost producers
+accept `tape-records`; runtime acceptance checks one numeric growth request versus
+two, equal payload bytes, unchanged managed counts, exact cleanup and the existing
+time/copy/stack limits. Both versions keep numeric call/loop sharing. The runtime
+producer also requires generated C to be identical outside the tape section.
+Archived reference preparation is parsed as literal data, never executed.
+Workflow dispatch and the full compiler-cost audit still need integration; no
+new measurement has been launched. Keep the frozen reference fixture under
+`scripts/fixtures`, so measurement preparation does not change native test sources.
 
 ## Roadmap status
 
@@ -25,14 +42,17 @@ obsolete separate/interleaved choices were removed. No measurements have run.
 | 1 | Implemented | Numeric records, typed parent pairs and matching interpreter operation limits; native acceptance pending. |
 | 2 | In progress | Updated affected probes/readers and prepared one three-host runner batch, including actual wasm32 bounds on ARM. |
 | 3 | Pending | Same-source storage/reference preparation and one complete measurement batch after correctness. |
-| 4 | In progress | Retain previous full production audit; monitor merged-source CI and carry repairs into this PR. Final new-head gates remain required. |
+| 4 | In progress | Previous full production audit retained; monitor merged-source CI and carry repairs into this PR. Final new-head gates remain required. |
 
 ## Carried verification
 
 - Shared-access production `42248510976` at `e187b92d75bf936bc7191ea11eeca0c573005399`:
   all nine jobs pass. Complete runner artifact/log audit `42288455657` / `128135316320` passes
   from main, source=e187..., attempt=1, docs-job=127996978359, audit-host=all.
-- #266 merge CI `42288270547` and docs `42288270157` queued. Inspect all failures.
+  [Retained archive](measurements/recording-context-delivery-2026-11-06/README.md):
+  ten job logs and 1,456 target/probe logs have verified hashes (guarded, 0.12 s).
+- #266 merge CI `42288270547`: benchmarks pass; Linux and Windows running, macOS
+  queued. Docs `42288270157` pass. Inspect all failures.
 - Original-image run `42256902374`, tool `3595f4b0...`: ARM `128026386626`, AMD
   `128026386739`, both pass. All 48 source/image/stack/inlining hashes, original
   commands and complete logs locally verified under the guard (0.25/0.90 s).
@@ -93,6 +113,13 @@ derivative ownership profiles, depth and retained timing groups. The first run
 found missing historical fixture files in this sparse worktree; restored only
 their small tracked reports/logs and reran the affected controls (19.06 s,
 9.55 s sampled CPU). No fixture data or acceptance limits were changed.
+The new tool batch passes 69 focused controls: tape references/observers (8),
+context references (5), runtime budgets (24), historical groups (13), compiler
+costs (11), depth (5), and correctness prerequisites (3). Commands ran serially
+under `scripts/local-guard.py`; longest group took 10.02 s (5.02 s sampled CPU).
+The budget fixture was initially absent from the sparse checkout; restored the
+tracked 5 MB JSON and reran that check. New controls were rerun after edits (0.25 s).
+No native source changed after the focused runner dispatch. Last free disk 72 GiB.
 
 Use `python3 scripts/local-guard.py COMMAND...` for focused checks. No local full
 builds, suites, benchmarks or large regeneration. Last free disk 73 GiB; retain

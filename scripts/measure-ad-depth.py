@@ -68,7 +68,7 @@ def digest(data):
 
 
 def instrument(code):
-    observed = RAW.instrument(PROFILE.instrument(code))
+    observed = RAW.instrument(PROFILE.instrument(code), 'records')
     return RAW.replace_once(observed, '    iteration_active=0;',
         '    if(fwp_owned_tapes)exit(231);\n'
         '    for(int64_t i=0;i<fwp_ntapes;i++)if(fwp_tapes[i].live)exit(231);\n'

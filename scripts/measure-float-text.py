@@ -123,7 +123,7 @@ def main():
             OUTPUT.COORDINATE.check_vectors(actual.stdout, expected, repetitions)
             if language == 'fwp':
                 assert actual.stdout == reference.stdout * repetitions
-                instrumented = BATCHES.PEERS.AD.RAW.instrument(BATCHES.PEERS.AD.PROFILE.instrument(code))
+                instrumented = BATCHES.PEERS.AD.RAW.instrument(BATCHES.PEERS.AD.PROFILE.instrument(code), 'records')
                 instrumented = BATCHES.observe_solves(BATCHES.edit_source(instrumented, language, repetitions), 'checked')
             else:
                 instrumented = OUTPUT.peer_profile(repeated, language, False)
