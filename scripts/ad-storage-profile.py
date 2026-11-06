@@ -16,10 +16,10 @@ def instrument(source):
     probe = (ROOT / 'tests/fixtures/ad_raw_storage_probe.c').read_text()
     source = replace_once(source, marker, probe + '\n' + marker)
     for old, new in [
-        ('realloc(t->pa, (size_t)cap * (2 * sizeof(int32_t)))',
-         'ad_raw_realloc(t->pa, (size_t)cap * (2 * sizeof(int32_t)), AD_PARENTS)'),
-        ('realloc(t->da, (size_t)cap * (2 * sizeof(double)))',
-         'ad_raw_realloc(t->da, (size_t)cap * (2 * sizeof(double)), AD_PARTIALS)'),
+        ('realloc(t->parents, (size_t)cap * sizeof(fwp_tape_parents))',
+         'ad_raw_realloc(t->parents, (size_t)cap * sizeof(fwp_tape_parents), AD_PARENTS)'),
+        ('realloc(t->ops, (size_t)cap * sizeof(fwp_tape_op))',
+         'ad_raw_realloc(t->ops, (size_t)cap * sizeof(fwp_tape_op), AD_OPERATIONS)'),
         ('realloc(fwp_tapes, (size_t)cap * sizeof(fwp_tape))',
          'ad_raw_realloc(fwp_tapes, (size_t)cap * sizeof(fwp_tape), AD_REGISTRY)'),
         ('realloc(buffers.adj, (size_t)capacity * sizeof(double))',
@@ -28,7 +28,7 @@ def instrument(source):
          'ad_raw_calloc((size_t)capacity, sizeof(double), AD_ADJOINTS)'),
     ]:
         source = replace_once(source, old, new)
-    for pointer in ['b->pa', 'b->da', 'b->adj', 't->pa', 't->da', 't->adj', 'fwp_tapes']:
+    for pointer in ['b->ops', 'b->parents', 'b->adj', 't->ops', 't->parents', 't->adj', 'fwp_tapes']:
         source = replace_once(source, f'free({pointer});', f'ad_raw_free({pointer});')
     source = replace_once(source, '} else fwp_tape_buffers_dispose(b);\n}',
                           '} else fwp_tape_buffers_dispose(b);\n'

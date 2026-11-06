@@ -544,9 +544,8 @@ fn autodiff_capacity_bounds_precede_actual_wasm32_allocation() {
             );
         }
     }
-    // Probe both real paired request expressions at the actual wasm32 node
-    // bound. The allocator supplies a tiny placeholder before failing the
-    // second request; no huge allocation or metadata access takes place.
+    // Check the real record request at the wasm32 allocation bound. The
+    // observer rejects allocation immediately; no giant buffer is allocated.
     let source = tmp.join("pairs.fwp");
     let emitted = tmp.join("pairs.c");
     std::fs::write(&source, "main = echo \"pairs\"\n").unwrap();
@@ -558,23 +557,23 @@ fn autodiff_capacity_bounds_precede_actual_wasm32_allocation() {
         .unwrap();
     assert!(output.status.success(), "{output:?}");
     let original = std::fs::read_to_string(emitted).unwrap();
-    for name in ["pa", "da"] {
+    for name in ["ops", "parents"] {
         assert_eq!(original.matches(&format!("realloc(t->{name},")).count(), 1);
     }
     let code = original
         .replace("/* ------------------------------------------------------------------ tapes */",
                  "static void *wasm_pair_realloc(void *,size_t);\n/* ------------------------------------------------------------------ tapes */")
-        .replace("realloc(t->pa,", "wasm_pair_realloc(t->pa,")
-        .replace("realloc(t->da,", "wasm_pair_realloc(t->da,")
+        .replace("realloc(t->ops,", "wasm_pair_realloc(t->ops,")
+        .replace("realloc(t->parents,", "wasm_pair_realloc(t->parents,")
         .replace("int main(int argc, char **argv)", "int original_main(int argc, char **argv)");
     let oversized = code.replace(
-        "(size_t)cap * (2 * sizeof(double))",
-        "(size_t)cap * (3 * sizeof(double))",
+        "(size_t)cap * sizeof(fwp_tape_op)",
+        "(size_t)cap * (sizeof(fwp_tape_op) + 1)",
     );
     assert_ne!(oversized, code);
     for opt in ["-O1", "-O2"] {
         for (label, code, expected) in [
-            ("paired", &code, "paired wasm32 allocation sizes do not wrap\n--- stderr\nfwp: out of memory\n--- exit 102\n"),
+            ("paired", &code, "wasm32 operation record allocation fits PTRDIFF_MAX\n--- stderr\nfwp: out of memory\n--- exit 102\n"),
             ("overflow-control", &oversized, "--- exit 222\n"),
         ] {
             let wasm = tmp.join(format!("{label}-{opt}.wasm"));

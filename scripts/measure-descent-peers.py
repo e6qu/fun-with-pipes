@@ -530,8 +530,8 @@ def main():
                 assert no_managed == managed, 'workspace selection changed managed ownership'
                 if label == 'fwp-ad' and updates == 1:
                     broken_sources = {
-                        'missing-parent-free': (AD.RAW.replace_once(profiles_code,
-                            'ad_raw_free(b->pa);', '/* deliberate missing physical release */'),
+                        'missing-operation-free': (AD.RAW.replace_once(profiles_code,
+                            'ad_raw_free(b->ops);', '/* deliberate missing physical release */'),
                             232, b'unreleased raw derivative storage'),
                         'missing-result-phase': (AD.RAW.replace_once(phase_code.read_text(),
                             '    descent_phase_step(DESCENT_RESULT);', ''),

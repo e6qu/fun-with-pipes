@@ -214,7 +214,7 @@ def main():
                             assert not executed.stderr
                     if variant == 'ad' and number == 1 and (scalar, depth) in [('F64', 1), ('F128', 2)]:
                         if scalar == 'F64':
-                            broken = RAW.replace_once(observed, 'ad_raw_free(b->pa);', '(void)b->pa;')
+                            broken = RAW.replace_once(observed, 'ad_raw_free(b->ops);', '(void)b->ops;')
                             expected_status = 232
                         else:
                             broken = RAW.replace_once(observed, 'fwp_mem_free(owner->weights);', '(void)owner->weights;')

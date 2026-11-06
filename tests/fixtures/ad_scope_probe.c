@@ -1,5 +1,5 @@
-static void *scope_tracked[9];
-static unsigned scope_released[9];
+static void *scope_tracked[3];
+static unsigned scope_released[3];
 static int scope_mode, scope_error;
 static V scope_base, scope_inner, scope_outputs, scope_seeds;
 static jmp_buf scope_recovered;
@@ -7,24 +7,23 @@ static fwp_task scope_cancelled_task;
 static fwp_task *scope_saved_task;
 static int scope_recover(void) { return 1; }
 static void scope_probe_free(void *p) {
-    for (int i=0;i<9;i++) if (p && p==scope_tracked[i]) scope_released[i]++;
+    for (int i=0;i<3;i++) if (p && p==scope_tracked[i]) scope_released[i]++;
     free(p);
 }
 static void *scope_probe_calloc(size_t n,size_t size) {
-    void *p=calloc(n,size);scope_tracked[8]=p;return p;
+    void *p=calloc(n,size);scope_tracked[2]=p;return p;
 }
 static void scope_record_and_observe(V base,int offset) {
     /* Scope cleanup must own real operation buffers, not input placeholders. */
     struct { uint32_t tag,n; V fields[4]; } tuple={0,4,{base,fwp_from_f64(1),(V)(int64_t)-1,0}};
     fwp_p_ad_push(OBJ(PTR(&tuple))->f[0], OBJ(PTR(&tuple))->f[1], OBJ(PTR(&tuple))->f[2], OBJ(PTR(&tuple))->f[3], NULL);
     fwp_tape *t=fwp_tape_of((int64_t)base>>32);
-    scope_tracked[offset]=t->pa;scope_tracked[offset+1]=t->pb;
-    scope_tracked[offset+2]=t->da;scope_tracked[offset+3]=t->db;
+    scope_tracked[offset]=t->ops;
 }
 static fwp_clo inner_scope_callback={1,0};
 static V scope_inner_entry(V *args) {
     (void)args;
-    scope_inner=fwp_p_ad_tape(3);scope_record_and_observe(scope_inner,4);
+    scope_inner=fwp_p_ad_tape(3);scope_record_and_observe(scope_inner,1);
     return 11;
 }
 static V scope_outer_entry(V *args) {
@@ -40,7 +39,7 @@ static V scope_outer_entry(V *args) {
     }
     if (scope_mode==4 && fwp_p_ad_scope(PTR(&inner_scope_callback), FWP_UNIT)!=11) scope_error=66;
     if (scope_mode==5) {
-        scope_inner=fwp_p_ad_tape(3);scope_record_and_observe(scope_inner,4);
+        scope_inner=fwp_p_ad_tape(3);scope_record_and_observe(scope_inner,1);
     }
     return 7;
 }
@@ -72,12 +71,11 @@ int main(void) {
         } else if (scope_mode!=1 || strcmp(fwp_trap_msg,"gradient callback control")) return 68;
         if (scope_error) return scope_error;
         if (fwp_cleanups) return 69;
-        /* Paired arrays have owning bases at even indices and borrowed
-         * interior regions at odd indices, for both outer and nested tapes. */
-        for (int i=0;i<4;i++) if (!scope_tracked[i] || scope_released[i]!=(i%2==0?1u:0u)) return 61;
-        if (scope_mode==3 && (!scope_tracked[8] || scope_released[8]!=1)) return 70;
-        if (scope_mode==4 || scope_mode==5)
-            for (int i=4;i<8;i++) if (!scope_tracked[i] || scope_released[i]!=(i%2==0?1u:0u)) return 71;
+        /* One owning operation buffer per tape, plus a detached adjoint buffer. */
+        if (!scope_tracked[0] || scope_released[0]!=1) return 61;
+        if (scope_mode==3 && (!scope_tracked[2] || scope_released[2]!=1)) return 70;
+        if ((scope_mode==4 || scope_mode==5) &&
+            (!scope_tracked[1] || scope_released[1]!=1)) return 71;
         if (!setjmp(scope_recovered)) { fwp_p_ad_backward(scope_base,scope_outputs,scope_seeds);return 72; }
         if (strcmp(fwp_trap_msg,FWP_AD_OUTSIDE)) return 73;
         if (scope_inner) {

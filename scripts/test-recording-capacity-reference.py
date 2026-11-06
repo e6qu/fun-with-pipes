@@ -61,6 +61,21 @@ class RecordingCapacityReference(unittest.TestCase):
             with self.assertRaises(AssertionError):
                 EVIDENCE.recorded_capacity_reference(bad, preparation, paths)
 
+    def test_record_bound_cannot_be_mistaken_for_historical_column_gate(self):
+        source = (ROOT / 'runtime/fwp_rt_kernel.c').read_text()
+        bound = '''    size_t stride = t->owned ? 2 * sizeof(V) : sizeof(fwp_tape_op);
+    size_t records = (size_t)PTRDIFF_MAX / stride;
+    if ((uint64_t)limit > records) limit = (int64_t)records;
+'''
+        self.assertEqual(source.count(bound), 1)
+        SELECTION.check_capacity_gate(source, True)
+        for broken in (source.replace(bound, ''),
+                       source.replace('PTRDIFF_MAX / stride', 'SIZE_MAX / stride'),
+                       source.replace(bound, '').replace('    if (n <= t->cap) return;\n',
+                                                          '    if (n <= t->cap) return;\n' + bound)):
+            with self.assertRaises(AssertionError):
+                SELECTION.check_capacity_gate(broken, True)
+
     def test_complete_runtime_reference_manifest_and_corruption(self):
         revision = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
         name = 'runtime/fwp_rt_kernel.c'

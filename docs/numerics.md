@@ -315,11 +315,14 @@ Forward evaluation still runs in full, including possible failures. Nested tapes
 skip only recursively inactive constant zeros; a numeric zero with an active
 derivative must still propagate.
 
-Native parent arrays share one allocation; numeric derivative arrays share another.
-Growth preserves initialized entries and alignment, and only base pointers free
-storage. This reduces allocation requests, not the 24-byte payload per operation.
-Moving the second regions during growth adds copying, which can offset allocation
-savings. The interpreter keeps its independent vector representation.
+The current [layout experiment](measurements/tape-operation-records.md) stores
+each numeric operation's two parents and two weights together in 24 bytes.
+One buffer grows without shifting columns. Typed F128/nested tapes store 8-byte
+parent pairs and separately owned weights. Growth preserves alignment and scalar
+bits; only allocation bases own storage. Native validation and performance
+acceptance are still pending. The interpreter keeps its independent vectors.
+Both implementations check the operation limit before allocation: 24 bytes per
+numeric record or 16 bytes per typed weight pair must fit the address-size bound.
 
 The active-tape table doubles capacity up to its slot limit. A cursor skips slots
 known to be unavailable, while earlier released slots move it back. It preserves

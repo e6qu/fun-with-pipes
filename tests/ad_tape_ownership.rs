@@ -92,7 +92,7 @@ fn detached_tape_buffers_release_on_return_trap_and_cancellation() {
     let unchecked = runtime.replace(
         "    if ((ra & 0xffffffff) >= idx || (rb >= 0 && (rb & 0xffffffff) >= idx))\n        fwp_trap(FWP_AD_INVALID_NODE);\n", "");
     assert_ne!(unchecked, runtime);
-    let missing_release = runtime.replace("probe_free(b->pa);", "(void)b->pa;");
+    let missing_release = runtime.replace("probe_free(b->ops);", "(void)b->ops;");
     // Bypass the cursor too: exhausted generations are excluded by both the
     // release cursor and the scan predicate. This control must actually wrap.
     assert_eq!(

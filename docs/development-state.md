@@ -1,29 +1,36 @@
 # Current work
 
-**Next:** implement the [operation-record contract](measurements/tape-operation-records.md),
-update all affected probes and measurement readers, then run the complete focused
-group on GitHub. Keep local work serial and guarded. No new timings until the
+**Next:** run the complete focused group (`numerics.yml`, suite=tape-record-checks)
+after publishing the runtime/probe batch. Audit all three hosts and all targets,
+then batch any repairs. Keep local work serial and guarded. No new timings until the
 whole implementation and correctness batch is ready.
 
 Branch `tape-operation-records`, worktree `.worktrees/recording-capacity-gate`.
 Reference/user merge `ef0a54a1da660fcc4c4e094e96c30c1adbe0fb5d` (#266), identical
 in tree to `3595f4b0cec1e37bc7874fca5e09bb176c87a1af`. Squash subject:
 Finish tape-scope measurements on approved AMD hosts (#266). No body/trailers.
-No active PR yet. AMD 7763/9V74/9V45 approval persists; no decision is pending.
+AMD 7763/9V74/9V45 approval persists; no decision is pending.
+Contract commit `036662872` preceded implementation. The new runtime/probe batch
+uses 24-byte numeric records, 8-byte typed parents and checked operation bounds.
+Updated moving-allocation, partial typed growth, cancellation, registry, workspace,
+raw storage observers and actual wasm32 probes. Added duplicate-parent arithmetic
+order checks in interpreter/native code and a deliberately reversed native control.
+The old metadata driver now compares records with the fixed #266 column runtime;
+obsolete separate/interleaved choices were removed. No measurements have run.
 
 ## Roadmap status
 
 | Step | Status | Next result |
 |---|---|---|
-| 1 | In progress | Contract fixed before implementation; numeric records and typed parent pairs next. |
-| 2 | Pending | Update every affected probe/reader, then one focused runner batch with complete audits. |
+| 1 | Implemented | Numeric records, typed parent pairs and matching interpreter operation limits; native acceptance pending. |
+| 2 | In progress | Updated affected probes/readers and prepared one three-host runner batch, including actual wasm32 bounds on ARM. |
 | 3 | Pending | Same-source storage/reference preparation and one complete measurement batch after correctness. |
 | 4 | In progress | Retain previous full production audit; monitor merged-source CI and carry repairs into this PR. Final new-head gates remain required. |
 
 ## Carried verification
 
 - Shared-access production `42248510976` at `e187b92d75bf936bc7191ea11eeca0c573005399`:
-  all nine jobs pass. Complete runner artifact/log audit `42288455657` dispatched
+  all nine jobs pass. Complete runner artifact/log audit `42288455657` / `128135316320` passes
   from main, source=e187..., attempt=1, docs-job=127996978359, audit-host=all.
 - #266 merge CI `42288270547` and docs `42288270157` queued. Inspect all failures.
 - Original-image run `42256902374`, tool `3595f4b0...`: ARM `128026386626`, AMD
@@ -76,6 +83,16 @@ checks (0.25 s each). Large original archives stayed on runners.
   the imported `records` function. All three repairs are verified and retained.
 
 ## Local and delivery rules
+
+Guarded focused Rust formatting passes (0.13 s). Python syntax, actual raw
+allocation hooks/missing-hook rejection, workflow sizes, plan/handoff and contract
+subject checks pass (0.13 s). Actionlint syntax/expressions pass (0.13 s;
+shellcheck/pyflakes disabled). No local native builds, suites or timing runs.
+All 49 focused Python controls pass: capacity/context/lookup reference readers,
+derivative ownership profiles, depth and retained timing groups. The first run
+found missing historical fixture files in this sparse worktree; restored only
+their small tracked reports/logs and reran the affected controls (19.06 s,
+9.55 s sampled CPU). No fixture data or acceptance limits were changed.
 
 Use `python3 scripts/local-guard.py COMMAND...` for focused checks. No local full
 builds, suites, benchmarks or large regeneration. Last free disk 73 GiB; retain

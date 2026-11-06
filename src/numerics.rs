@@ -48,6 +48,10 @@ fn f64_array(xs: &[f64]) -> Value {
 
 // ------------------------------------------------------------------ tapes
 
+const NUMERIC_OPERATION_BYTES: usize =
+    2 * std::mem::size_of::<i32>() + 2 * std::mem::size_of::<f64>();
+const OWNED_WEIGHT_PAIR_BYTES: usize = 2 * std::mem::size_of::<u64>();
+
 #[derive(Default)]
 struct Tape {
     gen: u32,
@@ -315,6 +319,10 @@ fn push(ra: i64, da: f64, rb: i64, db: f64) -> R<i64> {
     if (ra & 0xffff_ffff) as usize >= idx || (rb >= 0 && (rb & 0xffff_ffff) as usize >= idx) {
         return trap(INVALID_NODE);
     }
+    // Match the native 24-byte operation record before allocating any fields.
+    if t.pa.len() >= isize::MAX as usize / NUMERIC_OPERATION_BYTES {
+        return trap("autodiff: the tape is full");
+    }
     reserve_nodes(t, t.pa.len() + 1);
     t.pa.push((ra & 0xffff_ffff) as i32);
     t.da.push(da);
@@ -451,6 +459,10 @@ pub(crate) fn push_owned(fields: &[Value]) -> R<Value> {
         };
         if owner.fiber != tape_fiber() {
             return trap("autodiff: managed tape belongs to another task");
+        }
+        // Native typed weights use two eight-byte words per operation.
+        if t.pa.len() >= isize::MAX as usize / OWNED_WEIGHT_PAIR_BYTES {
+            return trap("autodiff: the tape is full");
         }
         owner.da.push(fields[1].clone());
         owner.db.push(fields[3].clone());
@@ -1079,6 +1091,13 @@ mod tape_validation_tests {
     #[test]
     fn backward_ignores_unseeded_suffix_and_preserves_input_and_seed_order() {
         let _serial = TAPE_TEST_LOCK.lock().unwrap();
+        *TAPE_WORKSPACE.lock().unwrap() = None;
+        let ordered = tape_new(1, false).unwrap();
+        let node = push(ordered, -1e16, ordered, 1.0).unwrap();
+        assert_eq!(
+            backward(ordered, &[ordered, node], &[1e16, 1.0]).unwrap(),
+            vec![1.0]
+        );
         *TAPE_WORKSPACE.lock().unwrap() = None;
         let base = tape_new(3, false).unwrap();
         let early = push(base, 2.0, base + 1, 3.0).unwrap();

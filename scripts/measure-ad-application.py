@@ -194,7 +194,7 @@ def main():
                 # An orphaned allocation is absent from the runtime's tape
                 # pointers. The physical ledger must still detect it.
                 for control_name, release in [
-                    ('missing-parent-free', 'ad_raw_free(b->pa);'),
+                    ('missing-operation-free', 'ad_raw_free(b->ops);'),
                     ('missing-registry-free', 'ad_raw_free(fwp_tapes);'),
                 ]:
                     broken = directory / (control_name + '.c')

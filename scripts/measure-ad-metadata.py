@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Runner-only paired AD metadata allocation and native binary evidence."""
+"""Runner-only numeric operation records versus the frozen column layout."""
 import argparse
 import hashlib
 import importlib.util
@@ -13,7 +13,7 @@ import sys
 import time
 
 ROOT = Path(__file__).resolve().parent.parent
-BASELINE = '09f1a029c139d06ac3a11623c70f1de959624fbb'
+BASELINE = 'ef0a54a1da660fcc4c4e094e96c30c1adbe0fb5d'
 START = '/* ------------------------------------------------------------------ tapes */'
 END = '/* ---------------------------------------------------------------- kernels */'
 sys.dont_write_bytecode = True
@@ -38,7 +38,7 @@ CASES = {
 
 def instrument(code):
     code = checkpoint.instrument(code)
-    code = re.sub(r'checkpoint_realloc\(t->(pa|pb|da|db),', r'metadata_realloc(t->\1,', code)
+    code = re.sub(r'checkpoint_realloc\(t->(pa|pb|da|db|ops|parents),', r'metadata_realloc(t->\1,', code)
     code = re.sub(r'\bmemmove\(t->', 'metadata_move(t->', code)
     helpers = r'''
 static uint64_t metadata_requests, metadata_bytes, metadata_moved;
@@ -60,46 +60,20 @@ static void *metadata_move(void *to,const void *from,size_t bytes) {
     return code.replace(marker, report + marker)
 
 
-def interleaved(code):
-    """Pair the two parents/weights of each operation within the same blocks."""
-    start, end = code.index(START), code.index(END)
-    tape = code[start:end]
-    for field, base in [('pb', 'pa'), ('db', 'da')]:
-        for capacity in ['t->cap', 'cap']:
-            before = f't->{field} = t->{base} + {capacity};'
-            assert tape.count(before) == 1, before
-            tape = tape.replace(before, f't->{field} = t->{base} + 1;')
-    before = '    size_t used = (size_t)(t->len - t->leaves);\n'
-    assert tape.count(before) == 1
-    tape = tape.replace(before, '')
-    for before in [
-        '        if (used) memmove(t->da + cap, t->db, used * sizeof(double));\n',
-        '    if (used) memmove(t->pa + cap, t->pb, used * sizeof(int32_t));\n',
-    ]:
-        assert tape.count(before) == 1, before
-        tape = tape.replace(before, '')
-    tape, changed = re.subn(r'((?:t->|tp\.)(?:pa|pb|da|db))\[op\]', r'\1[2 * op]', tape)
-    assert changed == 14, changed
-    return code[:start] + tape + code[end:]
-
-
 def main():
     assert os.environ.get('GITHUB_ACTIONS') == 'true', 'full evidence runs on GitHub'
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', type=Path, required=True)
-    parser.add_argument('--comparison', choices=['separate', 'interleaved'], default='separate')
     args = parser.parse_args()
     out = args.output.resolve()
-    other_label = 'separate-control' if args.comparison == 'separate' else 'interleaved'
+    other_label = 'column-reference'
     out.mkdir(parents=True, exist_ok=True)
     compiler = ROOT / 'target/release/fwp'
     cc = os.environ.get('CC', 'cc')
     environment = dict(os.environ)
     environment.pop('FWP_NO_OPT', None)
-    baseline_tape = None
-    if args.comparison == 'separate':
-        baseline = run(['git', 'show', BASELINE + ':runtime/fwp_rt_kernel.c']).stdout
-        baseline_tape = baseline[baseline.index(START):baseline.index(END)]
+    baseline = run(['git', 'show', BASELINE + ':runtime/fwp_rt_kernel.c']).stdout
+    baseline_tape = baseline[baseline.index(START):baseline.index(END)]
     results = {}
     for name, (program, expected) in CASES.items():
         source = out / (name + '.fwp')
@@ -109,10 +83,9 @@ def main():
         emitted = out / (name + '.c')
         run([compiler, 'build', '--emit-c', '-o', emitted, source], environment)
         original = emitted.read_text()
-        control = (original[:original.index(START)] + baseline_tape + original[original.index(END):]
-                   if baseline_tape is not None else interleaved(original))
+        control = original[:original.index(START)] + baseline_tape + original[original.index(END):]
         variants = {}
-        for label, code in [('paired', original), (other_label, control)]:
+        for label, code in [('records', original), (other_label, control)]:
             stem = name + '-' + label
             cfile, profile = out / (stem + '.c'), out / (stem + '-profile.c')
             cfile.write_text(code)
@@ -143,7 +116,7 @@ def main():
                                    assemblySha256=hashlib.sha256(asmfile.read_bytes()).hexdigest())
         for cache in ['0', '1']:
             env = dict(environment, FWP_AD_WORKSPACE=cache)
-            labels = ['paired', other_label]
+            labels = ['records', other_label]
             for label in labels:
                 warmup = run([out / (name + '-' + label)], env)
                 assert warmup.stdout == expected and not warmup.stderr
@@ -159,39 +132,30 @@ def main():
             for variant in variants.values():
                 values = variant['caches'][cache]
                 values['medianProcessWallNs'] = statistics.median(values['processWallNs'])
-            paired = variants['paired']['caches'][cache]
+            paired = variants['records']['caches'][cache]
             other = variants[other_label]['caches'][cache]
-            multiplier = 2 if args.comparison == 'separate' else 1
-            assert paired['metadata']['metadataRequests'] * multiplier == other['metadata']['metadataRequests']
+            assert paired['metadata']['metadataRequests'] <= other['metadata']['metadataRequests']
             assert paired['metadata']['metadataRequestedBytes'] == other['metadata']['metadataRequestedBytes']
-            for field in ['tapeRequestedBytes', 'peakTapeBytes', 'finalTapeBytes']:
-                assert paired['tape'][field] == other['tape'][field], (name, cache, field)
-            assert other['tape']['tapeRequests'] - paired['tape']['tapeRequests'] == (
-                paired['metadata']['metadataRequests'] if args.comparison == 'separate' else 0)
+            assert paired['tape']['finalTapeBytes'] == other['tape']['finalTapeBytes'] == 0
             assert paired['managed'] == other['managed']
-            assert other['metadata']['explicitMovedBytes'] == 0
+            assert paired['metadata']['explicitMovedBytes'] == 0
+            if name not in ('identity', 'nested'):
+                assert 2 * paired['metadata']['metadataRequests'] == other['metadata']['metadataRequests']
             if name != 'identity':
                 assert paired['metadata']['metadataRequests'] > 0
         results[name] = dict(source=program, sourceSha256=hashlib.sha256(source.read_bytes()).hexdigest(), variants=variants)
         if name in ['repeated-map', 'sustained-map']:
             for variant in variants.values():
                 assert variant['caches']['1']['metadata']['metadataRequests'] < variant['caches']['0']['metadata']['metadataRequests']
-    report = dict(head=run(['git', 'rev-parse', 'HEAD']).stdout.strip(), baseline=BASELINE if args.comparison == 'separate' else None,
-                  comparison=args.comparison,
+    report = dict(head=run(['git', 'rev-parse', 'HEAD']).stdout.strip(), baseline=BASELINE,
+                  comparison='operation-records',
                   hardware=platform.uname()._asdict(),
                   cpu=run(['sysctl', '-n', 'machdep.cpu.brand_string'] if platform.system() == 'Darwin' else ['lscpu']).stdout,
                   cc=run([cc, '--version']).stdout, rustc=run(['rustc', '-vV']).stdout,
                   sampling='One unmeasured process warmup per variant/cache; eight alternating paired/control process samples, each variant first four times.',
-                  results=results, scope=('Same ARC program and compiler; control substitutes the accepted baseline tape runtime. '
-                  if args.comparison == 'separate' else
-                  'Same ARC program/compiler/runtime; candidate interleaves each operation parent/weight pair, '
-                  'keeps both block sizes and removes explicit region moves during growth. ') +
-                  'Both workspace settings are explicit. Eight process samples include startup/output, with no speedup threshold. '
-                  'The sustained-map case repeats 512 derivative calculations to reduce the relative contribution of startup. '
-                  'Profiles separately count native tape payloads and charged managed storage; allocator metadata, '
-                  'transient realloc copies and OS reservations are excluded. Paired growth explicitly moves initialized '
-                  'second regions; that count excludes allocator-internal copies in both variants. '
-                  'The Rust interpreter supplies semantic reference results, not a storage or timing comparison.')
+                  results=results, scope=('Same generated program and compiler; reference substitutes the frozen column tape runtime. '
+                  'Current numeric records use one 24-byte allocation per capacity slot; typed parent pairs remain separate from owned weights. '
+                  'Retain raw allocator, managed, stack and image costs. Eight process samples are diagnostic observations, not the frozen Rosenbrock speed acceptance.'))
     (out / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
     print(json.dumps({name: {label: value['caches'] for label, value in row['variants'].items()}
                       for name, row in results.items()}, indent=2))

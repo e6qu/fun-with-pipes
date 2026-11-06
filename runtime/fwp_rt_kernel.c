@@ -68,14 +68,22 @@ typedef struct {
     int32_t head;
 } fwp_tape_scope;
 
+/* Numeric and typed tapes have distinct record layouts and owners. */
+typedef struct { int32_t pa, pb; double da, db; } fwp_tape_op;
+typedef struct { int32_t pa, pb; } fwp_tape_parents;
+_Static_assert(sizeof(fwp_tape_op) == 24, "numeric tape record size");
+_Static_assert(sizeof(fwp_tape_parents) == 8, "typed parent record size");
+_Static_assert(_Alignof(fwp_tape_op) == _Alignof(double), "numeric tape alignment");
+
 typedef struct {
     uint32_t gen;
     int live;
     int64_t leaves, len, cap;
     /* Operation offsets exclude inputs; parent values remain node indices.
-     * pa/pb share one allocation; numeric da/db share another. */
-    int32_t *pa, *pb;
-    double *da, *db, *adj;
+     * Numeric records own their weights; typed records own only parents. */
+    fwp_tape_op *ops;
+    fwp_tape_parents *parents;
+    double *adj;
     int64_t adjcap;
     fwp_tape_scope *scope;
     int32_t scope_prev, scope_next;
@@ -156,8 +164,9 @@ static const char *FWP_AD_INVALID_NODE = "autodiff: invalid node index";
 
 /* Own detached tape buffers until backward returns or unwinds. */
 typedef struct {
-    int32_t *pa, *pb;
-    double *da, *db, *adj;
+    fwp_tape_op *ops;
+    fwp_tape_parents *parents;
+    double *adj;
     int64_t cap, adjcap;
 } fwp_tape_buffers;
 
@@ -171,14 +180,14 @@ static int fwp_tape_workspace_enabled(void) {
 }
 static void fwp_tape_buffers_dispose(void *pointer) {
     fwp_tape_buffers *b = pointer;
-    free(b->pa);
-    free(b->da);
+    free(b->ops);
+    free(b->parents);
     free(b->adj);
     memset(b, 0, sizeof *b);
 }
 static size_t fwp_tape_workspace_size(const fwp_tape_buffers *b) {
-    if (b->cap < 0 || b->adjcap < 0 || (uint64_t)b->cap > FWP_AD_WORKSPACE_BUDGET / 24) return SIZE_MAX;
-    size_t nodes = (size_t)b->cap * 24;
+    if (b->cap < 0 || b->adjcap < 0 || (uint64_t)b->cap > FWP_AD_WORKSPACE_BUDGET / sizeof(fwp_tape_op)) return SIZE_MAX;
+    size_t nodes = (size_t)b->cap * sizeof(fwp_tape_op);
     if ((uint64_t)b->adjcap > (FWP_AD_WORKSPACE_BUDGET - nodes) / sizeof(double)) return SIZE_MAX;
     return nodes + (size_t)b->adjcap * sizeof(double);
 }
@@ -193,9 +202,9 @@ static void fwp_tape_buffers_release(void *arg) {
     } else fwp_tape_buffers_dispose(b);
 }
 static void fwp_tape_retire(fwp_tape *t) {
-    fwp_tape_buffers buffers = {t->pa, t->pb, t->da, t->db, t->adj, t->cap, t->adjcap};
+    fwp_tape_buffers buffers = {t->ops, t->parents, t->adj, t->cap, t->adjcap};
     fwp_owned_tape *owned = t->owned; t->owned = NULL;
-    t->pa = t->pb = 0;t->da = t->db = t->adj = 0;
+    t->ops = NULL;t->parents = NULL;t->adj = NULL;
     t->live = 0;t->len = t->cap = t->leaves = t->adjcap = 0;
     if (t->gen < 32767 && t - fwp_tapes < fwp_tape_next_slot)
         fwp_tape_next_slot = t - fwp_tapes;
@@ -210,7 +219,7 @@ static void fwp_tape_finish(void) {
     for (int64_t i = 0; i < fwp_ntapes; i++) {
         fwp_tape *t = &fwp_tapes[i];
         fwp_tape_unlink_scope(t);
-        fwp_tape_buffers buffers = {t->pa, t->pb, t->da, t->db, t->adj, t->cap, t->adjcap};
+        fwp_tape_buffers buffers = {t->ops, t->parents, t->adj, t->cap, t->adjcap};
         fwp_tape_buffers_dispose(&buffers);
         fwp_owned_tape_release(t->owned); t->owned = NULL;
     }
@@ -246,33 +255,27 @@ static int64_t fwp_tape_limit(void) {
 static void fwp_tape_grow(fwp_tape *t, int64_t n, int64_t limit) {
     int64_t cap = t->cap ? t->cap : (limit < 64 ? limit : 64);
     while (cap < n) cap = cap > limit / 2 ? limit : cap * 2;
-    /* Each pair fits size_t even at the existing PTRDIFF_MAX/8 node bound.
-     * Keep old offsets until all allocations succeed: managed weight growth
-     * can trap, leaving the live tape usable with its original capacity. */
+    /* Each allocation fits PTRDIFF_MAX. A moving parent realloc is published
+     * before managed growth, but capacity commits only after both succeed.
+     * A recovered typed-weight trap therefore keeps every old record valid. */
     fwp_owned_tape *owned = t->owned;
-    size_t used = (size_t)(t->len - t->leaves);
-    void *next = realloc(t->pa, (size_t)cap * (2 * sizeof(int32_t)));
-    if (!next) goto oom;
-    t->pa = (int32_t *)next;
-    t->pb = t->pa + t->cap;
+    void *next;
     if (owned) {
+        next = realloc(t->parents, (size_t)cap * sizeof(fwp_tape_parents));
+        if (!next) goto oom;
+        t->parents = next;
         fwp_owned_tape_reserve(owned, cap);
     } else {
-        next = realloc(t->da, (size_t)cap * (2 * sizeof(double)));
+        next = realloc(t->ops, (size_t)cap * sizeof(fwp_tape_op));
         if (!next) goto oom;
-        t->da = (double *)next;
-        t->db = t->da + t->cap;
-        if (used) memmove(t->da + cap, t->db, used * sizeof(double));
-        t->db = t->da + cap;
+        t->ops = next;
     }
-    if (used) memmove(t->pa + cap, t->pb, used * sizeof(int32_t));
-    t->pb = t->pa + cap;
     t->cap = cap;
     return;
 oom:
     fwp_tape_unlink_scope(t);
-    free(t->pa);free(t->da);free(t->adj);
-    t->pa = t->pb = 0;t->da = t->db = t->adj = 0;
+    free(t->ops);free(t->parents);free(t->adj);
+    t->ops = NULL;t->parents = NULL;t->adj = NULL;
     t->live = 0;t->len = t->cap = t->leaves = t->adjcap = 0;
     fprintf(stderr, "fwp: out of memory\n");
     fflush(NULL); _Exit(102);
@@ -282,6 +285,9 @@ oom:
  * allocation and recovery. Validate before taking the capacity shortcut. */
 static inline __attribute__((always_inline)) void fwp_tape_reserve(fwp_tape *t, int64_t n) {
     int64_t limit = fwp_tape_limit();
+    size_t stride = t->owned ? 2 * sizeof(V) : sizeof(fwp_tape_op);
+    size_t records = (size_t)PTRDIFF_MAX / stride;
+    if ((uint64_t)limit > records) limit = (int64_t)records;
     if (n < 0 || n > limit) fwp_trap("autodiff: the tape is full");
     if (n <= t->cap) return;
     fwp_tape_grow(t, n, limit);
@@ -318,8 +324,8 @@ static V fwp_ad_tape_new(V nv, fwp_owned_tape *owned) {
     fwp_tape *t = &fwp_tapes[slot];
     t->owned = owned;
     if (!owned && fwp_tape_workspace_enabled() && fwp_tape_cached_bytes) {
-        t->pa = fwp_tape_workspace.pa;t->pb = fwp_tape_workspace.pb;
-        t->da = fwp_tape_workspace.da;t->db = fwp_tape_workspace.db;t->adj = fwp_tape_workspace.adj;
+        t->ops = fwp_tape_workspace.ops;t->parents = fwp_tape_workspace.parents;
+        t->adj = fwp_tape_workspace.adj;
         t->cap = fwp_tape_workspace.cap;t->adjcap = fwp_tape_workspace.adjcap;
         memset(&fwp_tape_workspace, 0, sizeof fwp_tape_workspace);fwp_tape_cached_bytes = 0;
     }
@@ -405,10 +411,8 @@ static inline __attribute__((always_inline)) V fwp_p_ad_push(V a, V wa, V b, V w
         fwp_trap(FWP_AD_INVALID_NODE);
     int64_t op = idx - t->leaves;
     fwp_tape_reserve(t, op + 1);
-    t->pa[op] = (int32_t)(ra & 0xffffffff);
-    t->da[op] = da;
-    t->pb[op] = rb < 0 ? -1 : (int32_t)(rb & 0xffffffff);
-    t->db[op] = db;
+    t->ops[op] = (fwp_tape_op){(int32_t)(ra & 0xffffffff),
+        rb < 0 ? -1 : (int32_t)(rb & 0xffffffff), da, db};
     t->len = idx + 1;
     return (V)((id << 32) | idx);
 }
@@ -428,10 +432,9 @@ static V fwp_ad_backward_values(V base, const unsigned char *outs,
     int64_t slot = (id & 0xffff) - 1;
     if (t->gen < 32767 && slot < fwp_tape_next_slot)
         fwp_tape_next_slot = slot;
-    t->pa = t->pb = 0;
-    t->da = t->db = t->adj = 0;
+    t->ops = NULL;t->parents = NULL;t->adj = NULL;
     t->len = t->cap = t->leaves = t->adjcap = 0;
-    fwp_tape_buffers buffers = {tp.pa, tp.pb, tp.da, tp.db, tp.adj, tp.cap, tp.adjcap};
+    fwp_tape_buffers buffers = {tp.ops, tp.parents, tp.adj, tp.cap, tp.adjcap};
     fwp_cleanup cleanup;
     fwp_cleanup_push(&cleanup, fwp_tape_buffers_release, &buffers);
     /* Parents precede their children. Nodes after the last seeded output
@@ -476,8 +479,9 @@ static V fwp_ad_backward_values(V base, const unsigned char *outs,
         double a = adj[i];
         if (a == 0.0) continue;
         int64_t op = i - tp.leaves;
-        if (tp.pa[op] >= 0) adj[tp.pa[op]] += a * tp.da[op];
-        if (tp.pb[op] >= 0) adj[tp.pb[op]] += a * tp.db[op];
+        const fwp_tape_op *node = &tp.ops[op];
+        if (node->pa >= 0) adj[node->pa] += a * node->da;
+        if (node->pb >= 0) adj[node->pb] += a * node->db;
     }
     V r = fwp_arr_new((size_t)tp.leaves);
     for (int64_t i = 0; i < tp.leaves; i++) ARR(r)->d[i] = fwp_from_f64(adj[i]);
@@ -521,8 +525,8 @@ static V fwp_p_ad_push_owned(V a, V da, V b, V db, const fwp_desc *elem) {
     int64_t op = idx - t->leaves;
     fwp_tape_reserve(t, op + 1);
     owner->weights[2*op] = da; owner->weights[2*op+1] = db;
-    t->pa[op] = ra < 0 ? -1 : (int32_t)(ra & 0xffffffff);
-    t->pb[op] = rb < 0 ? -1 : (int32_t)(rb & 0xffffffff);
+    t->parents[op].pa = ra < 0 ? -1 : (int32_t)(ra & 0xffffffff);
+    t->parents[op].pb = rb < 0 ? -1 : (int32_t)(rb & 0xffffffff);
     /* No failure point lies between removing these guards and publication. */
     fwp_cleanup_pop(&right_cleanup);
     fwp_cleanup_pop(&left_cleanup);
@@ -563,9 +567,9 @@ static V fwp_ad_backward_owned(V base, V outs, V seeds, const fwp_desc *array_ty
     int64_t slot = (id & 0xffff) - 1;
     if (t->gen < 32767 && slot < fwp_tape_next_slot)
         fwp_tape_next_slot = slot;
-    t->pa = t->pb = NULL; t->da = t->db = t->adj = NULL;
+    t->ops = NULL;t->parents = NULL;t->adj = NULL;
     t->len = t->cap = t->leaves = t->adjcap = 0;
-    fwp_tape_buffers buffers = {tp.pa, tp.pb, tp.da, tp.db, tp.adj, tp.cap, tp.adjcap};
+    fwp_tape_buffers buffers = {tp.ops, tp.parents, tp.adj, tp.cap, tp.adjcap};
     fwp_cleanup tape_cleanup, value_cleanup;
     fwp_cleanup_push(&tape_cleanup, fwp_tape_buffers_dispose, &buffers);
     fwp_cleanup_push(&value_cleanup, fwp_owned_tape_release, owner);
@@ -596,7 +600,7 @@ static V fwp_ad_backward_owned(V base, V outs, V seeds, const fwp_desc *array_ty
         if (fwp_apply_borrowed(owner->inactive_zero, 1, &a) == FWP_TRUE) continue;
         int64_t op = i - tp.leaves;
         for (int side = 0; side < 2; side++) {
-            int32_t parent = side ? tp.pb[op] : tp.pa[op];
+            int32_t parent = side ? tp.parents[op].pb : tp.parents[op].pa;
             if (parent < 0) continue;
             V args[2] = {owner->weights[2*op+side], a};
             fwp_value_owner product = {fwp_apply_borrowed(owner->mul, 2, args), owner->elem->drop};

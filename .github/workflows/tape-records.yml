@@ -1,0 +1,118 @@
+name: Tape operation record checks
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  records:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            cc: gcc
+            march: x86-64
+          - runner: ubuntu-24.04-arm
+            cc: gcc
+            march: armv8-a
+          - runner: macos-15
+            cc: clang
+            march: armv8-a
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 90
+    env:
+      CC: ${{ matrix.cc }}
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+      CARGO_PROFILE_DEV_OPT_LEVEL: '1'
+      CARGO_PROFILE_DEV_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_DEV_OVERFLOW_CHECKS: 'true'
+      CARGO_PROFILE_TEST_OPT_LEVEL: '1'
+      CARGO_PROFILE_TEST_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_TEST_OVERFLOW_CHECKS: 'true'
+      FWP_LTO: '0'
+      FWP_VRET: '1'
+      FWP_FRAME_FIELDS: '1'
+      FWP_PACKED_ARRAYS: '1'
+      FWP_STACK: '1'
+      FWP_ARRAY_FUSION: '1'
+      MallocDebugReport: stderr
+      FWP_ARC_ARTIFACTS: tape-record-checks/owners
+      FWP_AD_WORKSPACE_ARTIFACTS: tape-record-checks/workspaces
+      FWP_AD_SCOPE_ARTIFACTS: tape-record-checks/scopes
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cargo/registry
+          key: cargo-registry-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Cargo.lock') }}
+      - name: Source and toolchain
+        run: |
+          mkdir tape-record-checks
+          git rev-parse HEAD > tape-record-checks/source.txt
+          uname -a > tape-record-checks/host.txt
+          "$CC" --version > tape-record-checks/c-compiler.txt
+          rustc -vV > tape-record-checks/rust-compiler.txt
+          cargo fetch --locked
+          echo 'CARGO_NET_OFFLINE=true' >> "$GITHUB_ENV"
+      - name: macOS OpenSSL
+        if: runner.os == 'macOS'
+        run: echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
+      - name: Format, lint and primitive inventory
+        run: |
+          set -o pipefail
+          status=0
+          cargo fmt --all -- --check 2>&1 | tee tape-record-checks/format.log || status=1
+          cargo clippy --locked --keep-going --all-targets -- -D warnings 2>&1 | tee tape-record-checks/clippy.log || status=1
+          python3 scripts/check-primitive-inventory.py --baseline tests/fixtures/primitive-inventory-baseline.json --output tape-record-checks/inventory.json 2>&1 | tee tape-record-checks/inventory.log || status=1
+          exit "$status"
+      - name: Compiler build and unit checks
+        id: compiler
+        if: ${{ !cancelled() }}
+        run: |
+          set -o pipefail
+          cargo build --locked --bin fwp 2>&1 | tee tape-record-checks/build.log
+          cargo test --locked --lib -- --nocapture 2>&1 | tee tape-record-checks/unit.log
+      - name: Native storage, arithmetic, failure and lifetime checks
+        if: ${{ !cancelled() && steps.compiler.outcome == 'success' }}
+        run: >-
+          python3 scripts/run-native-tests.py --targets
+          autodiff_capacity_bounds autodiff_workspace ad_tape_ownership ad_tape_scopes
+          autodiff_nested autodiff_precision autodiff_checkpoint autodiff_library
+          grpc_receive_cleanup float_formats
+          --idle-timeout 900 --logs tape-record-checks/targets
+      - name: Raw storage observers and numerical output controls
+        if: ${{ !cancelled() && steps.compiler.outcome == 'success' && runner.os == 'Linux' }}
+        run: >-
+          python3 scripts/test-descent-output.py --compiler target/debug/fwp
+          --output tape-record-checks/output-controls --cc gcc --rustc rustc
+          --ar ar --c-arch '${{ matrix.march }}' --objdump objdump --nm nm
+      - name: Actual wasm32 toolchain
+        if: ${{ !cancelled() && steps.compiler.outcome == 'success' && matrix.runner == 'ubuntu-24.04-arm' }}
+        run: bash scripts/setup-wasi-linux.sh
+      - uses: actions/setup-node@v6
+        if: ${{ !cancelled() && steps.compiler.outcome == 'success' && matrix.runner == 'ubuntu-24.04-arm' }}
+        with:
+          node-version: '24'
+      - name: Actual wasm32 allocation bounds
+        if: ${{ !cancelled() && steps.compiler.outcome == 'success' && matrix.runner == 'ubuntu-24.04-arm' }}
+        env:
+          FWP_REQUIRE_WASI_COUNTS: '1'
+        run: |
+          set -o pipefail
+          cargo test --locked --test wasm autodiff_capacity_bounds_precede_actual_wasm32_allocation -- --exact --nocapture 2>&1 | tee tape-record-checks/wasm.log
+      - name: Preserve all results and generated probes
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: tape-record-checks-${{ matrix.runner }}
+          path: tape-record-checks/
+          if-no-files-found: error

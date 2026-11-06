@@ -27,7 +27,6 @@ compiler decisions, not executed call counts or elapsed time.
 | Architecture | Results | Full log | Artifact |
 |---|---|---|---|
 | ARM64 | [summary](aarch64-summary.json) | [log](aarch64-job.log.gz) | [identity](aarch64-artifact.json) |
-
 | AMD64 | [summary](x86_64-summary.json) | [log](x86_64-job.log.gz) | [identity](x86_64-artifact.json) |
 
 `aarch64.zip` and `x86_64.zip` retain every source, image, command and compiler report.
