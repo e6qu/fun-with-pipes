@@ -30,6 +30,29 @@ permissions:
   actions: read
 
 jobs:
+  recording_context_diagnostic:
+    if: inputs.suite == 'recording-context-diagnostic'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - name: Reproduce the saved release failure and print its counters
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PROBE_RUN: ${{ inputs.evidence_run }}
+          PROBE_SOURCE: ${{ inputs.source_revision }}
+        run: >-
+          python3 scripts/inspect-recording-context-failure.py --run "$PROBE_RUN"
+          --source "$PROBE_SOURCE" --output recording-context-diagnostic
+      - name: Retain source and diagnostics without the large original archive
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: recording-context-diagnostic
+          path: |
+            recording-context-diagnostic/
+            !recording-context-diagnostic/original.zip
+          if-no-files-found: error
   recording_context_parent:
     if: inputs.suite == 'recording-context-parent'
     runs-on: ubuntu-24.04-arm
