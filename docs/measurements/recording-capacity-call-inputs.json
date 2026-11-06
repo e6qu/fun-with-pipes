@@ -1,0 +1,45 @@
+{
+  "contractCommit": "10b275c0eec9b7cb51921bce282ea4cf758d0a84",
+  "architectures": {
+    "aarch64": [
+      {
+        "name": "capacity",
+        "index": "docs/measurements/recording-capacity-time-2026-11-06/run-42179983250/summary/index.json",
+        "source": "51edfc0e7884e1a75201bc9876fd13cb8ca25eee",
+        "protocol": "recording-capacity",
+        "variants": [
+          {
+            "name": "reference",
+            "suffix": "-reference",
+            "inlining": "observe"
+          },
+          {
+            "name": "candidate",
+            "suffix": "",
+            "inlining": "require"
+          }
+        ]
+      }
+    ],
+    "x86_64": [
+      {
+        "name": "capacity",
+        "index": "docs/measurements/recording-capacity-time-2026-11-06/run-42179983250/summary/index.json",
+        "source": "51edfc0e7884e1a75201bc9876fd13cb8ca25eee",
+        "protocol": "recording-capacity",
+        "variants": [
+          {
+            "name": "reference",
+            "suffix": "-reference",
+            "inlining": "observe"
+          },
+          {
+            "name": "candidate",
+            "suffix": "",
+            "inlining": "require"
+          }
+        ]
+      }
+    ]
+  }
+}

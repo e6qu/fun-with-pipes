@@ -1,0 +1,170 @@
+{
+  "protocol": "recording-capacity",
+  "sessions": {
+    "amd-2": {
+      "source": "51edfc0e7884e1a75201bc9876fd13cb8ca25eee",
+      "run": 42179983250,
+      "job": 127767111269,
+      "auditRun": 42183074888,
+      "index": "run-42179983250/summary/index.json",
+      "record": "x86_64-2",
+      "report": "run-42179983250/summary/x86_64-2.json.gz",
+      "reportSha256": "7286c5ca8dabaf2f9244dc102e6b0f0d95d579a977beee3526fd9b71e5fcbac9",
+      "budgetFailures": [
+        {
+          "case": "3-199",
+          "program": "fwp-ad",
+          "metric": "candidate/reference time",
+          "actual": 0.9753929310568327,
+          "limit": 0.95
+        },
+        {
+          "case": "3-199",
+          "program": "fwp-ad-history",
+          "metric": "candidate/reference time",
+          "actual": 0.9564579527148022,
+          "limit": 0.95
+        },
+        {
+          "case": "3-1999",
+          "program": "fwp-ad",
+          "metric": "identical median variation",
+          "actual": 1.0221875584794344,
+          "limit": 1.02
+        },
+        {
+          "case": "3-1999",
+          "program": "fwp-ad",
+          "metric": "candidate/reference time",
+          "actual": 0.9674746620225912,
+          "limit": 0.95
+        }
+      ],
+      "decision": "not-accepted"
+    },
+    "amd-1": {
+      "source": "51edfc0e7884e1a75201bc9876fd13cb8ca25eee",
+      "run": 42179983250,
+      "job": 127767111308,
+      "auditRun": 42183074888,
+      "index": "run-42179983250/summary/index.json",
+      "record": "x86_64-1",
+      "report": "run-42179983250/summary/x86_64-1.json.gz",
+      "reportSha256": "80b3ddedce52fc8fc9590b2b4a90b9527af9d31a1f6d43fa77d7022b72d07e24",
+      "budgetFailures": [
+        {
+          "case": "3-199",
+          "program": "fwp-ad",
+          "metric": "candidate/reference time",
+          "actual": 0.9639875767171455,
+          "limit": 0.95
+        },
+        {
+          "case": "3-199",
+          "program": "fwp-ad-history",
+          "metric": "candidate/reference time",
+          "actual": 0.9624799543566788,
+          "limit": 0.95
+        },
+        {
+          "case": "3-1999",
+          "program": "fwp-ad",
+          "metric": "candidate/reference time",
+          "actual": 0.9685941467762402,
+          "limit": 0.95
+        },
+        {
+          "case": "3-1999",
+          "program": "fwp-ad-history",
+          "metric": "candidate/reference time",
+          "actual": 0.9794749253643598,
+          "limit": 0.95
+        }
+      ],
+      "decision": "not-accepted"
+    },
+    "arm-1": {
+      "source": "51edfc0e7884e1a75201bc9876fd13cb8ca25eee",
+      "run": 42179983250,
+      "job": 127767111350,
+      "auditRun": 42183074888,
+      "index": "run-42179983250/summary/index.json",
+      "record": "aarch64-1",
+      "report": "run-42179983250/summary/aarch64-1.json.gz",
+      "reportSha256": "b31a749475cb32f663c01488ebb0df1c56dcce6d85eefeb1492f5b6c594b70c0",
+      "budgetFailures": [
+        {
+          "case": "3-199",
+          "program": "fwp-ad",
+          "metric": "candidate/reference time",
+          "actual": 0.9623518661305959,
+          "limit": 0.95
+        },
+        {
+          "case": "3-199",
+          "program": "fwp-ad-history",
+          "metric": "candidate/reference time",
+          "actual": 0.9725397285927935,
+          "limit": 0.95
+        },
+        {
+          "case": "3-1999",
+          "program": "fwp-ad",
+          "metric": "candidate/reference time",
+          "actual": 0.9765316881422405,
+          "limit": 0.95
+        },
+        {
+          "case": "3-1999",
+          "program": "fwp-ad-history",
+          "metric": "candidate/reference time",
+          "actual": 0.9743714649499349,
+          "limit": 0.95
+        }
+      ],
+      "decision": "not-accepted"
+    },
+    "arm-2": {
+      "source": "51edfc0e7884e1a75201bc9876fd13cb8ca25eee",
+      "run": 42179983250,
+      "job": 127767111433,
+      "auditRun": 42183074888,
+      "index": "run-42179983250/summary/index.json",
+      "record": "aarch64-2",
+      "report": "run-42179983250/summary/aarch64-2.json.gz",
+      "reportSha256": "5f844301b5ec8b95c90f5d22ef31a1021c2143a9a1e562d3c27360abdaa78517",
+      "budgetFailures": [
+        {
+          "case": "3-199",
+          "program": "fwp-ad",
+          "metric": "candidate/reference time",
+          "actual": 0.9679275754393128,
+          "limit": 0.95
+        },
+        {
+          "case": "3-199",
+          "program": "fwp-ad-history",
+          "metric": "candidate/reference time",
+          "actual": 0.9813576703066889,
+          "limit": 0.95
+        },
+        {
+          "case": "3-1999",
+          "program": "fwp-ad",
+          "metric": "candidate/reference time",
+          "actual": 0.9736166476504385,
+          "limit": 0.95
+        },
+        {
+          "case": "3-1999",
+          "program": "fwp-ad-history",
+          "metric": "candidate/reference time",
+          "actual": 0.9763536414420819,
+          "limit": 0.95
+        }
+      ],
+      "decision": "not-accepted"
+    }
+  },
+  "rejectedHosts": []
+}

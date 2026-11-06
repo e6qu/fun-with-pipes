@@ -1,0 +1,17 @@
+{
+  "test-array-list-evidence.log": 21,
+  "test-descent-budgets.log": 23,
+  "test-gradient-array-budgets.log": 9,
+  "test-measurement-safety.log": 3,
+  "test-numeric-input-analysis.log": 10,
+  "test-owned-numeric-census.log": 10,
+  "test-packed-pair-reference.log": 3,
+  "test-packed-pair-stack.log": 7,
+  "test-production-log-audit.log": 4,
+  "test-recording-calls.log": 6,
+  "test-recording-capacity-reference.log": 4,
+  "test-recording-inline-reference.log": 4,
+  "test-recording-lookup-reference.log": 5,
+  "test-retain-derivative-evidence.log": 3,
+  "test-scalar-constant-reference.log": 4
+}

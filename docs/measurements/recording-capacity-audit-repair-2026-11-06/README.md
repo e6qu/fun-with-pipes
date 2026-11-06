@@ -16,8 +16,9 @@ derived reference source. Wrong paths, altered source, missing/extra lines,
 overlapping hunks and malformed newline markers remain rejected. The complete
 reference test now uses Git's actual diff, matching the producer.
 
-The saved compiler and runtime results will be audited with the repaired checker;
-no compiler or runtime timing is repeated. The source/runtime transformation is
+The [repaired compiler audit](../recording-capacity-analysis-2026-11-06/README.md)
+passes on the original samples. Runtime results will use the same repaired
+checker; no compiler or runtime timing is repeated. The source/runtime transformation is
 unchanged. The [contract](../recording-capacity.md) and frozen limits still apply.
 
 [Artifact identity](artifact.json), [job](job.json), [full log](job.log.gz) and

@@ -29,16 +29,16 @@ no-growth path at the caller and shares the existing growth body. It preserves
 both numeric and typed recording, bounds, allocation order and failure recovery.
 The same-source reference reconstructs the previous runtime byte for byte.
 
-[Measurement controls](docs/measurements/recording-capacity-controls-2026-11-06/README.md)
-pass: 15 suites, 114 tests. The
-[corrected native run and complete audit](docs/measurements/recording-capacity-checks-2026-11-06/README.md)
-pass all 25 targets on each of three hosts. Every retained record is verified.
-The [initial formatting failure](docs/measurements/recording-capacity-initial-2026-11-06/README.md)
-is repaired and retained. [Memory measurements and their full audit](docs/measurements/recording-capacity-census-2026-11-06/README.md)
-pass: counts, storage and maximum frames are unchanged. Compiler jobs pass, but
-a [patch-format audit defect](docs/measurements/recording-capacity-audit-repair-2026-11-06/README.md)
-needs repair and re-audit of saved results. Runtime measurements continue; no
-speedup or memory reduction is claimed yet.
+[Focused native checks](docs/measurements/recording-capacity-checks-2026-11-06/README.md)
+and complete audits pass. The [memory census](docs/measurements/recording-capacity-census-2026-11-06/README.md)
+confirms unchanged work/storage and maximum frames. All 14
+[compiler-cost comparisons](docs/measurements/recording-capacity-analysis-2026-11-06/README.md)
+pass. [Runtime](docs/measurements/recording-capacity-time-2026-11-06/README.md)
+shows 1.86–14.02% less elapsed time, with 17/32 long-case targets met. Fifteen
+speed targets and one AMD64 copy control remain open; no timing was repeated.
+The [audit repair](docs/measurements/recording-capacity-audit-repair-2026-11-06/README.md)
+is verified by [116 tool tests](docs/measurements/recording-capacity-repair-controls-2026-11-06/README.md).
+Next: native image/inlining checks, then final delivery.
 
 | Step | Concrete work | Required result |
 |---|---|---|
@@ -65,6 +65,7 @@ history can be optimized away). Copy controls compare identical executable bytes
 
 | Goal and evidence | What remains; next action |
 |---|---|
+| [Capacity runtime](docs/measurements/recording-capacity-time-2026-11-06/README.md) | Fifteen three-coordinate long results miss 5%; only AMD2 3/1999 history meets it. All 16 larger-coordinate results pass. AMD2 3/1999 current has 2.2188% identical-copy variation against 2%, so that timing is inconclusive. All small-case limits pass. Source and sample-position review must precede a new diagnostic; no cause or unchanged rerun is justified. Verify native inlining and final delivery before choosing the next transformation. |
 | [Scalar append runtime](docs/measurements/recording-inline-time-2026-11-06/README.md) | 19/32 long-case targets miss 5%: both architectures’ 3/199 and 3/1999 forms in both sessions, plus AMD64 history 33/199 in session 1 and 129/199 in both. Long gains are 2.26–8.12%; small-case/copy limits pass. Native inlining and final delivery are verified. The current capacity-call group follows the saved source/compiler review; its new comparison does not close these misses. No unchanged timing reruns. |
 | [Scalar append compiler time](docs/measurements/recording-inline-analysis-2026-11-06/README.md) | AMD64 zero-update reference copies differ by 2.0494%, above 2%; all observed time/RSS ratios are below 1.05. Saved samples rise later in all four copies; copy identity and position are partly confounded. Preserve this inconclusive result. A future diagnostic must separate those factors; do not rerun unchanged timings for a pass. |
 | [Recording lookup runtime](docs/measurements/recording-lookup-time-2026-11-06/README.md) | All 32 long-case 5% targets remain unmet. ARM64 ranges from 0.14% slower to 2.33% faster; AMD64 current-result cases slow by 1.13–3.90%, while history ranges from 0.40% slower to 1.80% faster. Small-case and copy limits pass. Lookup counts fall 8→3 per pair/update; allocations, live storage and reported frames stay unchanged. [Source and GCC review](docs/measurements/recording-call-analysis-2026-11-06/README.md) is complete; append-body inlining is delivered with its own separately recorded results. Preserve the original timings; the slowdown has no established cause. |

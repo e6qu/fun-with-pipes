@@ -8,8 +8,10 @@ every retained suite result and source identity were verified locally.
 
 These controls check reference reconstruction, source inventories, corrupted
 artifacts, failed limits, work/memory budgets and evidence retention. They do not
-establish native correctness or a performance improvement. The separate native
-run's formatting failure still needs repair and complete validation.
+establish native correctness or a performance improvement. The
+[corrected native checks](../recording-capacity-checks-2026-11-06/README.md) pass.
+After the patch-reader repair, [15 suites / 116 tests](../recording-capacity-repair-controls-2026-11-06/README.md)
+pass, including the full historical archive checks.
 
 `controls.zip` contains every suite log; [counts](counts.json),
 [artifact identity](artifact.json), [job metadata](job.json) and the
