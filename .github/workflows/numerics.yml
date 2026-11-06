@@ -900,6 +900,27 @@ jobs:
             python3 scripts/test-gradient-array-budgets.py || status=1
             [[ "$status" == 0 ]]
           fi
+      - name: Qualify recording-context compiler timing host
+        if: inputs.suite == 'recording-context-analysis'
+        env:
+          EXPECTED_MACHINE: ${{ matrix.runner == 'ubuntu-latest' && 'x86_64' || 'aarch64' }}
+          EXPECTED_CC: ${{ matrix.runner == 'ubuntu-latest' && 'gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0' || 'gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0' }}
+        run: |
+          cpus=(--cpu Neoverse-N2)
+          if [[ "$EXPECTED_MACHINE" == x86_64 ]]; then
+            cpus=(--cpu 'AMD EPYC 7763 64-Core Processor' --cpu 'AMD EPYC 9V74 80-Core Processor' --cpu 'AMD EPYC 9V45 96-Core Processor')
+          fi
+          python3 scripts/descent-baselines.py "${cpus[@]}" --machine "$EXPECTED_MACHINE" \
+            --cc gcc --rustc rustc --c-version "$EXPECTED_CC" \
+            --rust-version 'rustc 1.99.1 (58cf8f9c3 2026-10-13)' \
+            --source "$GITHUB_SHA" --processors 4 --output compiler-cost-host.json
+      - name: Preserve compiler timing host qualification
+        if: always() && inputs.suite == 'recording-context-analysis'
+        uses: actions/upload-artifact@v7
+        with:
+          name: recording-context-analysis-host-${{ runner.arch }}
+          path: compiler-cost-host.json
+          if-no-files-found: error
       - uses: actions/cache@v6
         with:
           path: ~/.cargo/registry
@@ -8144,11 +8165,15 @@ jobs:
           EXPECTED_CPU: ${{ matrix.runner == 'ubuntu-latest' && 'AMD EPYC 7763 64-Core Processor' || 'Neoverse-N2' }}
           EXPECTED_MACHINE: ${{ matrix.runner == 'ubuntu-latest' && 'x86_64' || 'aarch64' }}
           EXPECTED_CC: ${{ matrix.runner == 'ubuntu-latest' && 'gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0' || 'gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0' }}
-        run: >-
-          python3 scripts/descent-baselines.py --cpu "$EXPECTED_CPU" --machine "$EXPECTED_MACHINE"
-          --cc gcc --rustc rustc --c-version "$EXPECTED_CC"
-          --rust-version 'rustc 1.99.1 (58cf8f9c3 2026-10-13)'
-          --source "$GITHUB_SHA" --processors 4 --output descent-host.json
+        run: |
+          cpus=(--cpu "$EXPECTED_CPU")
+          if [[ "$COMPARISON_PROTOCOL" == recording-context && "$EXPECTED_MACHINE" == x86_64 ]]; then
+            cpus+=(--cpu 'AMD EPYC 9V74 80-Core Processor' --cpu 'AMD EPYC 9V45 96-Core Processor')
+          fi
+          python3 scripts/descent-baselines.py "${cpus[@]}" --machine "$EXPECTED_MACHINE" \
+            --cc gcc --rustc rustc --c-version "$EXPECTED_CC" \
+            --rust-version 'rustc 1.99.1 (58cf8f9c3 2026-10-13)' \
+            --source "$GITHUB_SHA" --processors 4 --output descent-host.json
       - name: Preserve host qualification, including rejected hosts
         if: always() && (inputs.suite == 'descent-peers' || inputs.suite == 'eager-capture-time' || (inputs.suite == 'record-zip-time' || inputs.suite == 'record-fold-time' || (inputs.suite == 'packed-records-time' || inputs.suite == 'callback-owners-time' || (inputs.suite == 'scalar-map-zip-time' || (inputs.suite == 'range-zip-time' || (inputs.suite == 'gradient-array-time' || (inputs.suite == 'scalar-array-map-time' || (inputs.suite == 'scalar-array-identity-time' || (inputs.suite == 'final-iteration-time' || contains(fromJSON('["matched-option-time","packed-input-time","owned-numeric-time","gradient-call-time","packed-pair-time","scalar-constant-time","recording-lookup-time","recording-inline-time","recording-capacity-time","recording-context-time"]'), inputs.suite))))))))))
         uses: actions/upload-artifact@v7

@@ -664,5 +664,648 @@
         "cpu: expected 'AMD EPYC 7763 64-Core Processor', observed 'AMD EPYC 9V45 96-Core Processor'"
       ]
     }
+  },
+  "42251223529": {
+    "x86_64-1": {
+      "decision": "not-accepted",
+      "cpu": "AMD EPYC 9V45 96-Core Processor",
+      "qualificationFailures": [],
+      "budgetFailures": [
+        {
+          "case": "3-0",
+          "program": "fwp-ad-history",
+          "metric": "candidate/reference time",
+          "actual": 1.02672784666853,
+          "limit": 1.02
+        },
+        {
+          "case": "3-199",
+          "program": "fwp-ad",
+          "metric": "candidate/reference time",
+          "actual": 1.0027771077429335,
+          "limit": 0.95
+        },
+        {
+          "case": "3-199",
+          "program": "fwp-ad-history",
+          "metric": "candidate/reference time",
+          "actual": 1.0387725786485116,
+          "limit": 0.95
+        },
+        {
+          "case": "3-1999",
+          "program": "fwp-ad",
+          "metric": "candidate/reference time",
+          "actual": 1.0126574700615252,
+          "limit": 0.95
+        },
+        {
+          "case": "3-1999",
+          "program": "fwp-ad-history",
+          "metric": "candidate/reference time",
+          "actual": 1.0198710029292315,
+          "limit": 0.95
+        },
+        {
+          "case": "33-199",
+          "program": "fwp-ad",
+          "metric": "candidate/reference time",
+          "actual": 0.9789321861994327,
+          "limit": 0.95
+        },
+        {
+          "case": "129-199",
+          "program": "fwp-ad",
+          "metric": "candidate/reference time",
+          "actual": 0.9699585906091269,
+          "limit": 0.95
+        }
+      ],
+      "cases": {
+        "3-0": {
+          "solvesPerProcess": 32768,
+          "processesPerSample": 7,
+          "forms": {
+            "fwp-ad": {
+              "candidateReference": 0.975908356045695,
+              "medianNs": 161421524.5,
+              "referenceMedianNs": 165406437.5,
+              "peakProcessRssBytes": 3260416,
+              "referencePeakProcessRssBytes": 3260416,
+              "instructionBytes": 28658,
+              "referenceInstructionBytes": 28242,
+              "executableBytes": 72048,
+              "referenceExecutableBytes": 72024,
+              "versusC": 2.2826659804875193,
+              "versusRust": 1.0845964691692507
+            },
+            "fwp-ad-history": {
+              "candidateReference": 1.02672784666853,
+              "medianNs": 166196992.0,
+              "referenceMedianNs": 161870541.0,
+              "peakProcessRssBytes": 3268608,
+              "referencePeakProcessRssBytes": 3203072,
+              "instructionBytes": 35650,
+              "referenceInstructionBytes": 35138,
+              "executableBytes": 80680,
+              "referenceExecutableBytes": 80664,
+              "versusC": 2.350195990732056,
+              "versusRust": 1.1166829905001312
+            }
+          },
+          "peers": {
+            "c-explicit": {
+              "medianNs": 70716226.5,
+              "peakProcessRssBytes": 1581056
+            },
+            "rust-explicit": {
+              "medianNs": 148830951.5,
+              "peakProcessRssBytes": 2342912
+            }
+          }
+        },
+        "3-1": {
+          "solvesPerProcess": 512,
+          "processesPerSample": 7,
+          "forms": {
+            "fwp-ad": {
+              "candidateReference": 1.0146214437339054,
+              "medianNs": 35648625.5,
+              "referenceMedianNs": 35134902.5,
+              "peakProcessRssBytes": 2150400,
+              "referencePeakProcessRssBytes": 2211840,
+              "instructionBytes": 33842,
+              "referenceInstructionBytes": 33442,
+              "executableBytes": 76224,
+              "referenceExecutableBytes": 76200,
+              "versusC": 6.127717119920352,
+              "versusRust": 4.02193312954001
+            },
+            "fwp-ad-history": {
+              "candidateReference": 1.003757888547403,
+              "medianNs": 36029646.5,
+              "referenceMedianNs": 35894758.0,
+              "peakProcessRssBytes": 1871872,
+              "referencePeakProcessRssBytes": 2154496,
+              "instructionBytes": 38066,
+              "referenceInstructionBytes": 37554,
+              "executableBytes": 80720,
+              "referenceExecutableBytes": 80696,
+              "versusC": 6.193211619974756,
+              "versusRust": 4.06492050875749
+            }
+          },
+          "peers": {
+            "c-explicit": {
+              "medianNs": 5817603.0,
+              "peakProcessRssBytes": 1581056
+            },
+            "rust-explicit": {
+              "medianNs": 8863555.0,
+              "peakProcessRssBytes": 2199552
+            }
+          }
+        },
+        "3-199": {
+          "solvesPerProcess": 32,
+          "processesPerSample": 7,
+          "forms": {
+            "fwp-ad": {
+              "candidateReference": 1.0027771077429335,
+              "medianNs": 18464357.0,
+              "referenceMedianNs": 18413221.5,
+              "peakProcessRssBytes": 1802240,
+              "referencePeakProcessRssBytes": 1802240,
+              "instructionBytes": 34098,
+              "referenceInstructionBytes": 33682,
+              "executableBytes": 76224,
+              "referenceExecutableBytes": 76200,
+              "versusC": 3.712799853212116,
+              "versusRust": 2.8324646575793007
+            },
+            "fwp-ad-history": {
+              "candidateReference": 1.0387725786485116,
+              "medianNs": 19201708.0,
+              "referenceMedianNs": 18484997.0,
+              "peakProcessRssBytes": 1806336,
+              "referencePeakProcessRssBytes": 1806336,
+              "instructionBytes": 38002,
+              "referenceInstructionBytes": 37490,
+              "executableBytes": 80720,
+              "referenceExecutableBytes": 80696,
+              "versusC": 3.86106587106293,
+              "versusRust": 2.945575590590981
+            }
+          },
+          "peers": {
+            "c-explicit": {
+              "medianNs": 4973162.5,
+              "peakProcessRssBytes": 1581056
+            },
+            "rust-explicit": {
+              "medianNs": 6518830.5,
+              "peakProcessRssBytes": 2195456
+            }
+          }
+        },
+        "3-1999": {
+          "solvesPerProcess": 4,
+          "processesPerSample": 7,
+          "forms": {
+            "fwp-ad": {
+              "candidateReference": 1.0126574700615252,
+              "medianNs": 18006704.5,
+              "referenceMedianNs": 17781634.0,
+              "peakProcessRssBytes": 2064384,
+              "referencePeakProcessRssBytes": 1802240,
+              "instructionBytes": 34098,
+              "referenceInstructionBytes": 33682,
+              "executableBytes": 76224,
+              "referenceExecutableBytes": 76200,
+              "versusC": 3.654130664051283,
+              "versusRust": 2.949201395664863
+            },
+            "fwp-ad-history": {
+              "candidateReference": 1.0198710029292315,
+              "medianNs": 18983630.0,
+              "referenceMedianNs": 18613756.0,
+              "peakProcessRssBytes": 1806336,
+              "referencePeakProcessRssBytes": 1806336,
+              "instructionBytes": 38002,
+              "referenceInstructionBytes": 37490,
+              "executableBytes": 80720,
+              "referenceExecutableBytes": 80696,
+              "versusC": 3.85237978987237,
+              "versusRust": 3.1092056900686833
+            }
+          },
+          "peers": {
+            "c-explicit": {
+              "medianNs": 4927767.0,
+              "peakProcessRssBytes": 1581056
+            },
+            "rust-explicit": {
+              "medianNs": 6105620.5,
+              "peakProcessRssBytes": 2334720
+            }
+          }
+        },
+        "33-199": {
+          "solvesPerProcess": 32,
+          "processesPerSample": 7,
+          "forms": {
+            "fwp-ad": {
+              "candidateReference": 0.9789321861994327,
+              "medianNs": 82533267.0,
+              "referenceMedianNs": 84309483.5,
+              "peakProcessRssBytes": 2355200,
+              "referencePeakProcessRssBytes": 2224128,
+              "instructionBytes": 40018,
+              "referenceInstructionBytes": 39474,
+              "executableBytes": 84536,
+              "referenceExecutableBytes": 84520,
+              "versusC": 12.016169866071525,
+              "versusRust": 10.272592164798068
+            },
+            "fwp-ad-history": {
+              "candidateReference": 0.9413162380767438,
+              "medianNs": 82259140.5,
+              "referenceMedianNs": 87387359.5,
+              "peakProcessRssBytes": 2224128,
+              "referencePeakProcessRssBytes": 2158592,
+              "instructionBytes": 42034,
+              "referenceInstructionBytes": 41586,
+              "executableBytes": 84840,
+              "referenceExecutableBytes": 84824,
+              "versusC": 11.976259285665304,
+              "versusRust": 10.238472714079323
+            }
+          },
+          "peers": {
+            "c-explicit": {
+              "medianNs": 6868517.0,
+              "peakProcessRssBytes": 1581056
+            },
+            "rust-explicit": {
+              "medianNs": 8034317.5,
+              "peakProcessRssBytes": 2203648
+            }
+          }
+        },
+        "129-199": {
+          "solvesPerProcess": 8,
+          "processesPerSample": 7,
+          "forms": {
+            "fwp-ad": {
+              "candidateReference": 0.9699585906091269,
+              "medianNs": 78805083.0,
+              "referenceMedianNs": 81245822.0,
+              "peakProcessRssBytes": 2162688,
+              "referencePeakProcessRssBytes": 2359296,
+              "instructionBytes": 45106,
+              "referenceInstructionBytes": 44498,
+              "executableBytes": 88672,
+              "referenceExecutableBytes": 88648,
+              "versusC": 12.212465054146701,
+              "versusRust": 10.211878006510819
+            },
+            "fwp-ad-history": {
+              "candidateReference": 0.9490863403057711,
+              "medianNs": 78760553.5,
+              "referenceMedianNs": 82985657.0,
+              "peakProcessRssBytes": 2228224,
+              "referencePeakProcessRssBytes": 2228224,
+              "instructionBytes": 47202,
+              "referenceInstructionBytes": 46818,
+              "executableBytes": 89016,
+              "referenceExecutableBytes": 89000,
+              "versusC": 12.205564294171248,
+              "versusRust": 10.206107695708774
+            }
+          },
+          "peers": {
+            "c-explicit": {
+              "medianNs": 6452840.0,
+              "peakProcessRssBytes": 1581056
+            },
+            "rust-explicit": {
+              "medianNs": 7717002.0,
+              "peakProcessRssBytes": 2195456
+            }
+          }
+        }
+      }
+    },
+    "x86_64-2": {
+      "decision": "not-accepted",
+      "cpu": "AMD EPYC 7763 64-Core Processor",
+      "qualificationFailures": [],
+      "budgetFailures": [
+        {
+          "case": "3-1",
+          "program": "fwp-ad-history",
+          "metric": "candidate/reference time",
+          "actual": 1.0329223983484968,
+          "limit": 1.02
+        },
+        {
+          "case": "3-199",
+          "program": "fwp-ad",
+          "metric": "candidate/reference time",
+          "actual": 1.0073134098563055,
+          "limit": 0.95
+        },
+        {
+          "case": "3-199",
+          "program": "fwp-ad-history",
+          "metric": "candidate/reference time",
+          "actual": 1.0186699193734459,
+          "limit": 0.95
+        },
+        {
+          "case": "3-1999",
+          "program": "fwp-ad",
+          "metric": "identical median variation",
+          "actual": 1.0200913541337842,
+          "limit": 1.02
+        },
+        {
+          "case": "3-1999",
+          "program": "fwp-ad",
+          "metric": "candidate/reference time",
+          "actual": 1.0174118263004914,
+          "limit": 0.95
+        },
+        {
+          "case": "3-1999",
+          "program": "fwp-ad-history",
+          "metric": "candidate/reference time",
+          "actual": 1.0129560569007041,
+          "limit": 0.95
+        },
+        {
+          "case": "33-199",
+          "program": "fwp-ad",
+          "metric": "candidate/reference time",
+          "actual": 0.9973846107050591,
+          "limit": 0.95
+        },
+        {
+          "case": "33-199",
+          "program": "fwp-ad-history",
+          "metric": "candidate/reference time",
+          "actual": 0.9960559995177191,
+          "limit": 0.95
+        },
+        {
+          "case": "129-199",
+          "program": "fwp-ad",
+          "metric": "candidate/reference time",
+          "actual": 0.9913441541799042,
+          "limit": 0.95
+        },
+        {
+          "case": "129-199",
+          "program": "fwp-ad-history",
+          "metric": "candidate/reference time",
+          "actual": 0.9986710166267804,
+          "limit": 0.95
+        }
+      ],
+      "cases": {
+        "3-0": {
+          "solvesPerProcess": 32768,
+          "processesPerSample": 7,
+          "forms": {
+            "fwp-ad": {
+              "candidateReference": 1.0083017361247644,
+              "medianNs": 337058219.5,
+              "referenceMedianNs": 334283089.5,
+              "peakProcessRssBytes": 3502080,
+              "referencePeakProcessRssBytes": 3502080,
+              "instructionBytes": 28658,
+              "referenceInstructionBytes": 28242,
+              "executableBytes": 72048,
+              "referenceExecutableBytes": 72024,
+              "versusC": 2.4335930545438944,
+              "versusRust": 1.5127580571650574
+            },
+            "fwp-ad-history": {
+              "candidateReference": 0.9960712170076993,
+              "medianNs": 332062445.5,
+              "referenceMedianNs": 333372192.5,
+              "peakProcessRssBytes": 3203072,
+              "referencePeakProcessRssBytes": 3203072,
+              "instructionBytes": 35650,
+              "referenceInstructionBytes": 35138,
+              "executableBytes": 80680,
+              "referenceExecutableBytes": 80664,
+              "versusC": 2.3975230814499113,
+              "versusRust": 1.4903364192014839
+            }
+          },
+          "peers": {
+            "c-explicit": {
+              "medianNs": 138502293.5,
+              "peakProcessRssBytes": 1576960
+            },
+            "rust-explicit": {
+              "medianNs": 222810394.5,
+              "peakProcessRssBytes": 2203648
+            }
+          }
+        },
+        "3-1": {
+          "solvesPerProcess": 512,
+          "processesPerSample": 7,
+          "forms": {
+            "fwp-ad": {
+              "candidateReference": 0.9954638142889749,
+              "medianNs": 66670632.0,
+              "referenceMedianNs": 66974440.5,
+              "peakProcessRssBytes": 2215936,
+              "referencePeakProcessRssBytes": 2215936,
+              "instructionBytes": 33842,
+              "referenceInstructionBytes": 33442,
+              "executableBytes": 76224,
+              "referenceExecutableBytes": 76200,
+              "versusC": 7.885737258880079,
+              "versusRust": 5.510388103030304
+            },
+            "fwp-ad-history": {
+              "candidateReference": 1.0329223983484968,
+              "medianNs": 69035729.5,
+              "referenceMedianNs": 66835349.5,
+              "peakProcessRssBytes": 2154496,
+              "referencePeakProcessRssBytes": 2215936,
+              "instructionBytes": 38066,
+              "referenceInstructionBytes": 37554,
+              "executableBytes": 80720,
+              "referenceExecutableBytes": 80696,
+              "versusC": 8.165478682009743,
+              "versusRust": 5.705865552929185
+            }
+          },
+          "peers": {
+            "c-explicit": {
+              "medianNs": 8454584.5,
+              "peakProcessRssBytes": 1576960
+            },
+            "rust-explicit": {
+              "medianNs": 12099081.0,
+              "peakProcessRssBytes": 2363392
+            }
+          }
+        },
+        "3-199": {
+          "solvesPerProcess": 32,
+          "processesPerSample": 7,
+          "forms": {
+            "fwp-ad": {
+              "candidateReference": 1.0073134098563055,
+              "medianNs": 30939854.0,
+              "referenceMedianNs": 30715221.0,
+              "peakProcessRssBytes": 1802240,
+              "referencePeakProcessRssBytes": 1851392,
+              "instructionBytes": 34098,
+              "referenceInstructionBytes": 33682,
+              "executableBytes": 76224,
+              "referenceExecutableBytes": 76200,
+              "versusC": 4.269513850629098,
+              "versusRust": 3.4634794296448597
+            },
+            "fwp-ad-history": {
+              "candidateReference": 1.0186699193734459,
+              "medianNs": 31220731.0,
+              "referenceMedianNs": 30648525.5,
+              "peakProcessRssBytes": 1806336,
+              "referencePeakProcessRssBytes": 1806336,
+              "instructionBytes": 38002,
+              "referenceInstructionBytes": 37490,
+              "executableBytes": 80720,
+              "referenceExecutableBytes": 80696,
+              "versusC": 4.308273188078561,
+              "versusRust": 3.4949214562219844
+            }
+          },
+          "peers": {
+            "c-explicit": {
+              "medianNs": 7246692.5,
+              "peakProcessRssBytes": 1581056
+            },
+            "rust-explicit": {
+              "medianNs": 8933171.0,
+              "peakProcessRssBytes": 2293760
+            }
+          }
+        },
+        "3-1999": {
+          "solvesPerProcess": 4,
+          "processesPerSample": 7,
+          "forms": {
+            "fwp-ad": {
+              "candidateReference": 1.0174118263004914,
+              "medianNs": 32056330.0,
+              "referenceMedianNs": 31507723.0,
+              "peakProcessRssBytes": 2150400,
+              "referencePeakProcessRssBytes": 1802240,
+              "instructionBytes": 34098,
+              "referenceInstructionBytes": 33682,
+              "executableBytes": 76224,
+              "referenceExecutableBytes": 76200,
+              "versusC": 4.351165108293434,
+              "versusRust": 3.6922171970248563
+            },
+            "fwp-ad-history": {
+              "candidateReference": 1.0129560569007041,
+              "medianNs": 32392794.5,
+              "referenceMedianNs": 31978479.5,
+              "peakProcessRssBytes": 2220032,
+              "referencePeakProcessRssBytes": 1761280,
+              "instructionBytes": 38002,
+              "referenceInstructionBytes": 37490,
+              "executableBytes": 80720,
+              "referenceExecutableBytes": 80696,
+              "versusC": 4.396835108339584,
+              "versusRust": 3.730970853887272
+            }
+          },
+          "peers": {
+            "c-explicit": {
+              "medianNs": 7367298.0,
+              "peakProcessRssBytes": 1581056
+            },
+            "rust-explicit": {
+              "medianNs": 8682135.5,
+              "peakProcessRssBytes": 2326528
+            }
+          }
+        },
+        "33-199": {
+          "solvesPerProcess": 32,
+          "processesPerSample": 7,
+          "forms": {
+            "fwp-ad": {
+              "candidateReference": 0.9973846107050591,
+              "medianNs": 152917297.5,
+              "referenceMedianNs": 153318284.5,
+              "peakProcessRssBytes": 2224128,
+              "referencePeakProcessRssBytes": 2224128,
+              "instructionBytes": 40018,
+              "referenceInstructionBytes": 39474,
+              "executableBytes": 84536,
+              "referenceExecutableBytes": 84520,
+              "versusC": 14.483774135511684,
+              "versusRust": 13.645280027876412
+            },
+            "fwp-ad-history": {
+              "candidateReference": 0.9960559995177191,
+              "medianNs": 152766282.0,
+              "referenceMedianNs": 153371178.0,
+              "peakProcessRssBytes": 2224128,
+              "referencePeakProcessRssBytes": 2224128,
+              "instructionBytes": 42034,
+              "referenceInstructionBytes": 41586,
+              "executableBytes": 84840,
+              "referenceExecutableBytes": 84824,
+              "versusC": 14.469470492766746,
+              "versusRust": 13.63180445107942
+            }
+          },
+          "peers": {
+            "c-explicit": {
+              "medianNs": 10557835.0,
+              "peakProcessRssBytes": 1581056
+            },
+            "rust-explicit": {
+              "medianNs": 11206607.5,
+              "peakProcessRssBytes": 2068480
+            }
+          }
+        },
+        "129-199": {
+          "solvesPerProcess": 8,
+          "processesPerSample": 7,
+          "forms": {
+            "fwp-ad": {
+              "candidateReference": 0.9913441541799042,
+              "medianNs": 146020288.0,
+              "referenceMedianNs": 147295253.0,
+              "peakProcessRssBytes": 2158592,
+              "referencePeakProcessRssBytes": 2228224,
+              "instructionBytes": 45106,
+              "referenceInstructionBytes": 44498,
+              "executableBytes": 88672,
+              "referenceExecutableBytes": 88648,
+              "versusC": 14.588336916387124,
+              "versusRust": 13.610601931458236
+            },
+            "fwp-ad-history": {
+              "candidateReference": 0.9986710166267804,
+              "medianNs": 146562629.0,
+              "referenceMedianNs": 146757667.5,
+              "peakProcessRssBytes": 2162688,
+              "referencePeakProcessRssBytes": 2228224,
+              "instructionBytes": 47202,
+              "referenceInstructionBytes": 46818,
+              "executableBytes": 89016,
+              "referenceExecutableBytes": 89000,
+              "versusC": 14.642520162701297,
+              "versusRust": 13.661153725070019
+            }
+          },
+          "peers": {
+            "c-explicit": {
+              "medianNs": 10009385.5,
+              "peakProcessRssBytes": 1581056
+            },
+            "rust-explicit": {
+              "medianNs": 10728422.5,
+              "peakProcessRssBytes": 2211840
+            }
+          }
+        }
+      }
+    }
   }
 }

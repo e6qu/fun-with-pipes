@@ -107,3 +107,28 @@ measured C and flags; new native inspection does not create new timing samples.
 
 Finish with all nine final-head production jobs, docs, complete artifact/log
 audits, and verified squash merge with one line <=80 characters and empty body.
+
+## Approved hardware amendment, 6 November 2026
+
+The user explicitly approved EPYC **7763, 9V74 and 9V45** as AMD64 peer models.
+Record the exact model in each session and compare candidate/reference on that
+same host. Recheck the recorded model before timing; another allowed model may
+not replace it within a session. Neoverse N2 remains the ARM64 requirement.
+Core count, toolchains, inputs, flags, sample counts and every limit above stay
+fixed. This changes hardware qualification, not the speed acceptance rule.
+
+- Retain both completed ARM sessions and their sixteen 5% misses; do not rerun.
+- Retain all four rejected AMD hosts as pre-build/pre-timing rejections. They
+  contain no samples and do not become successful sessions retroactively.
+- The completed compiler-cost AMD session used 9V74. Its seven passing numeric
+  comparisons are accepted under this amendment, alongside the seven ARM results.
+- Request only the two missing AMD runtime sessions. Finish their complete
+  archive audits and reconstruct session 1's original images on each architecture.
+- Future compiler-cost runs must qualify hardware before building. The earlier
+  workflow recorded the CPU but did not enforce that requirement; the new guard
+  fixes this without repeating the completed comparison.
+
+PR #265 was user-merged as `e187b92d75bf936bc7191ea11eeca0c573005399` before
+the final production matrix completed. Its tree equals review head
+`db94106b3ad2e8c65a384379c653bd395069b5fb`; the squash message is one line.
+The next PR finishes outstanding verification and any discovered repairs.

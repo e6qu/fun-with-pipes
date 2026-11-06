@@ -1,0 +1,45 @@
+{
+  "contractCommit": "1720c3b8cd06d7756295186233181cd64544bf44",
+  "architectures": {
+    "aarch64": [
+      {
+        "name": "context",
+        "index": "docs/measurements/recording-context-time-2026-11-06/run-42224669329/summary/index.json",
+        "source": "319782736b0a983022f2a48879b35c9e57992949",
+        "protocol": "recording-context",
+        "variants": [
+          {
+            "name": "reference",
+            "suffix": "-reference",
+            "inlining": "require"
+          },
+          {
+            "name": "candidate",
+            "suffix": "",
+            "inlining": "require"
+          }
+        ]
+      }
+    ],
+    "x86_64": [
+      {
+        "name": "context",
+        "index": "docs/measurements/recording-context-time-2026-11-06/run-42251223529/summary/index.json",
+        "source": "1720c3b8cd06d7756295186233181cd64544bf44",
+        "protocol": "recording-context",
+        "variants": [
+          {
+            "name": "reference",
+            "suffix": "-reference",
+            "inlining": "require"
+          },
+          {
+            "name": "candidate",
+            "suffix": "",
+            "inlining": "require"
+          }
+        ]
+      }
+    ]
+  }
+}

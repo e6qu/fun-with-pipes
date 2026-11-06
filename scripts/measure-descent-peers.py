@@ -389,9 +389,11 @@ def main():
     qualification = json.loads(args.qualification.read_text())
     assert qualification['qualified'] and not qualification['failures']
     assert qualification['source'] == os.environ['GITHUB_SHA']
-    assert qualification['actual'] == qualification['expected']
+    assert not BASELINE.host_failures(qualification['actual'], qualification['expected'])
     current_host, _ = BASELINE.host_details(args.cc, args.rustc)
-    assert not BASELINE.host_failures(current_host, qualification['expected'])
+    # Qualification may allow several peer models, but both compilers and all
+    # samples in this session must remain on the exact host that qualified.
+    assert not BASELINE.host_failures(current_host, qualification['actual'])
     out = args.output.resolve()
     out.mkdir(parents=True, exist_ok=False)
     environment = {key: value for key, value in os.environ.items()

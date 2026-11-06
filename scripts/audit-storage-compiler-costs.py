@@ -45,10 +45,52 @@ def module(name):
 
 measure = module('measure-numeric-input-analysis')
 check = module('check-array-list-evidence')
+baseline = module('descent-baselines')
 jobs=records(api, f'actions/runs/{run}/jobs', 'jobs')
 job,=[job for job in jobs if job['name']==f'numeric_input_analysis ({runner})']
 assert job['head_sha']==source and job['status']=='completed' and job['run_id']==run
 artifacts=records(api, f'actions/runs/{run}/artifacts', 'artifacts')
+log=api(f"actions/jobs/{job['id']}/logs")
+(root/(machine+'-job.log.gz')).write_bytes(gzip.compress(log,mtime=0))
+clean=re.sub(rb'\x1b\[[0-?]*[ -/]*[@-~]',b'',log)
+diagnostics=[line for line in clean.decode(errors='replace').splitlines() if re.search(r'warning:|error:(?!:)|error\[|Traceback|##\[error\]',line,re.I)]
+failed_steps = [step['name'] for step in job['steps'] if step['conclusion'] == 'failure']
+if args.comparison == 'recording-context' and failed_steps == ['Qualify recording-context compiler timing host']:
+    assert job['conclusion'] == 'failure'
+    host_artifact, = [item for item in artifacts if item['name'] == 'recording-context-analysis-host-' + arch and not item['expired']]
+    assert host_artifact['workflow_run']['head_sha'] == source
+    host_zip = api('actions/artifacts/' + str(host_artifact['id']) + '/zip')
+    assert 'sha256:' + hashlib.sha256(host_zip).hexdigest() == host_artifact['digest']
+    host_path = root / (machine + '-rejected-host.zip')
+    host_path.write_bytes(host_zip)
+    with zipfile.ZipFile(host_path) as saved:
+        assert saved.namelist() == ['compiler-cost-host.json']
+        host = json.loads(saved.read('compiler-cost-host.json'))
+    assert host['source'] == source and host['actual']['machine'] == machine
+    assert host['qualified'] is False and host['failures']
+    assert host['failures'] == baseline.host_failures(host['actual'], host['expected'])
+    for name in ('Build candidate at production settings', 'Build and verify the selected same-source reference',
+                 'Measure balanced compiler commands and peak memory'):
+        step, = [step for step in job['steps'] if step['name'] == name]
+        assert step['conclusion'] == 'skipped', step
+    # The always-run uploader still retains preflight metadata. Verify that it
+    # contains only that metadata, not a partial build or timing session.
+    safety_artifact, = [item for item in artifacts if item['name'] == args.comparison + '-analysis-' + arch and not item['expired']]
+    assert safety_artifact['workflow_run']['head_sha'] == source
+    safety_zip = api('actions/artifacts/' + str(safety_artifact['id']) + '/zip')
+    assert 'sha256:' + hashlib.sha256(safety_zip).hexdigest() == safety_artifact['digest']
+    safety_path = root / (machine + '-rejected-preflight.zip')
+    safety_path.write_bytes(safety_zip)
+    with zipfile.ZipFile(safety_path) as saved:
+        check.check_zip(saved)
+        assert saved.namelist() and all(name.startswith('numeric-analysis-safety/') for name in saved.namelist())
+    assert len(diagnostics) == 1 and '##[error]Process completed with exit code 1.' in diagnostics[0], diagnostics
+    record = dict(source=source, run=run, job=job, artifact=host_artifact, safetyArtifact=safety_artifact,
+                  qualification=host, expectedDiagnostics=diagnostics, complete=False,
+                  decision='host-rejected-before-building-or-timing')
+    (root / (machine + '-host-rejected.json')).write_text(json.dumps(record, indent=2) + '\n')
+    print(machine, record['decision'], flush=True)
+    sys.exit(0)
 artifact,=[a for a in artifacts if a['name']==args.comparison+'-analysis-'+arch and not a['expired']]
 assert artifact['workflow_run']['head_sha']==source
 path=root/(machine+'.zip')
@@ -58,11 +100,7 @@ if not path.exists():
     with partial.open('rb') as stream:assert artifact['digest']=='sha256:'+hashlib.file_digest(stream,'sha256').hexdigest()
     partial.rename(path)
 with path.open('rb') as stream:assert artifact['digest']=='sha256:'+hashlib.file_digest(stream,'sha256').hexdigest()
-log=api(f"actions/jobs/{job['id']}/logs")
-(root/(machine+'-job.log.gz')).write_bytes(gzip.compress(log,mtime=0))
 assert str(artifact['id']).encode() in log, 'artifact not identified in original job log'
-clean=re.sub(rb'\x1b\[[0-?]*[ -/]*[@-~]',b'',log)
-diagnostics=[line for line in clean.decode(errors='replace').splitlines() if re.search(r'warning:|error:(?!:)|error\[|Traceback|##\[error\]',line,re.I)]
 expected_diagnostics = []
 if job['conclusion'] == 'failure':
     expected_diagnostics = diagnostics

@@ -73,11 +73,11 @@ def check_report(report, source, protocol):
             config['phase_samples'], config['phase_warmups']) == (samples, 2, seed, 12, 2)
     host = report['qualification']
     assert host['source'] == source and host['qualified'] and not host['failures']
-    assert host['actual'] == host['expected']
     if protocol == 'array-lists':
         # This protocol records each native host before building; unlike the
         # older repeated-solve baseline, it did not freeze one CPU model.
         actual = host['actual']
+        assert actual == host['expected']
         assert report['machine'] in {'aarch64', 'x86_64'}
         assert actual['system'] == 'Linux' and actual['machine'] == report['machine']
         assert actual['processors'] == 4
@@ -87,7 +87,7 @@ def check_report(report, source, protocol):
         assert report['rustCompiler'].splitlines()[0] == actual['rustVersion']
         assert config['comparison'] == protocol and report['referenceCompiler'] is None
     else:
-        check_frozen_host(report)
+        check_frozen_host(report, protocol)
     assert report['commands'] and all(c['status'] == 0 and not c['stderr'] for c in report['commands'])
     assert set(report['results']) == set(GROUPS)
     for name, row in report['results'].items():
@@ -119,7 +119,7 @@ def check_report(report, source, protocol):
         assert config['comparison'] == protocol
 
 
-def check_frozen_host(report):
+def check_frozen_host(report, protocol):
     expected_host = dict(system='Linux', machine=report['machine'], processors=4,
                         rustVersion='rustc 1.99.1 (58cf8f9c3 2026-10-13)')
     if report['machine'] == 'aarch64':
@@ -127,7 +127,20 @@ def check_frozen_host(report):
     else:
         assert report['machine'] == 'x86_64'
         expected_host.update(cpu='AMD EPYC 7763 64-Core Processor', cVersion='gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0')
-    assert report['qualification']['actual'] == expected_host
+        if protocol == 'recording-context':
+            expected_host['cpu'] = ['AMD EPYC 7763 64-Core Processor',
+                                    'AMD EPYC 9V74 80-Core Processor',
+                                    'AMD EPYC 9V45 96-Core Processor']
+    actual = report['qualification']['actual']
+    declared = report['qualification']['expected']
+    assert not SCHEDULE.host_failures(actual, declared)
+    # Preserve the original exact-host records; the amended protocol must name
+    # the complete approved set rather than silently widening its own policy.
+    assert declared == expected_host or (
+        protocol == 'recording-context' and report['machine'] == 'x86_64'
+        and declared == expected_host | {'cpu': 'AMD EPYC 7763 64-Core Processor'})
+    assert set(actual) == set(expected_host)
+    assert not SCHEDULE.host_failures(actual, expected_host)
 
 
 def check_archive(archive_path, protocol):
