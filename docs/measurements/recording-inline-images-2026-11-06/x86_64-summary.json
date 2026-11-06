@@ -1,0 +1,393 @@
+{
+  "source": "48c2ae70ab58813bc04ab7bda4b8d7845ccef852",
+  "architecture": "x86_64",
+  "protocolCommit": "29f99b709579b6e3d0b07cac9e8863113f04a9bd",
+  "planSha256": "f9ed9c96e584dd5c453160ce12e84ba53d85b0ca86a63939dff0969242023ad2",
+  "compilations": [
+    {
+      "case": "reference/3-0/fwp-ad",
+      "status": 0,
+      "sourceSha256": "ebfc0652d847887bc0180c56c7b919468c2cc7022fbf578e892e3461dbb7fc23",
+      "expectedImageSha256": "ba56db5e0878c30690b6ed0380432dcc84889401e15a704a84180fd6b85f6e0d",
+      "imageSha256": "ba56db5e0878c30690b6ed0380432dcc84889401e15a704a84180fd6b85f6e0d",
+      "imageBytes": 72016,
+      "stackSha256": "2d5526dc72d717fd098d6fed42bdf7c2781a7f9081e40bc9820e3257b7f8f427",
+      "stackBytes": 8036,
+      "inlineSha256": "3a4606bccf870de97b6e2ba3a0e6eed7f8c98483094b41b2515a6d7d702e5a44",
+      "inlineBytes": 281539,
+      "inlineDecisions": {
+        "inlined": 0,
+        "rejected": 7
+      }
+    },
+    {
+      "case": "reference/3-0/fwp-ad-history",
+      "status": 0,
+      "sourceSha256": "d60a16add729e0aaaabe46441e63217b56f1d7fb9ba70b36dfef176117114698",
+      "expectedImageSha256": "bce0cc66160d793e38be9d67f33a4b8fc2ac90d333e38b52a8daa135fa2c96cb",
+      "imageSha256": "bce0cc66160d793e38be9d67f33a4b8fc2ac90d333e38b52a8daa135fa2c96cb",
+      "imageBytes": 76552,
+      "stackSha256": "6b163f951b9413c198d4d78a9ec33bc7fe1492877e29823c92bb61580fc64186",
+      "stackBytes": 9457,
+      "inlineSha256": "93a12ff2a4be010383f5b851c00a9e33ea85b1dd6d4dfb99919bf09fb7c96e7b",
+      "inlineBytes": 310166,
+      "inlineDecisions": {
+        "inlined": 0,
+        "rejected": 7
+      }
+    },
+    {
+      "case": "reference/3-1/fwp-ad",
+      "status": 0,
+      "sourceSha256": "1932b7ddc036d73398ca1f2ab530bc0a2b28b716b6fa8d512c14b86690a0c7b6",
+      "expectedImageSha256": "a9e6fc2d54132b69958e78795d0b7608167455ff08db729bc4e1ac2f7d73c8a6",
+      "imageSha256": "a9e6fc2d54132b69958e78795d0b7608167455ff08db729bc4e1ac2f7d73c8a6",
+      "imageBytes": 76192,
+      "stackSha256": "53d2cfff00324918f6a7b535c69d51c3eaeef63e6b5aaf68de84d68c3a8c88dc",
+      "stackBytes": 8036,
+      "inlineSha256": "fd7b303ba63f025fbfce4cbbb55c03f6ae57a76926a407a30e69c3ead57c6a5e",
+      "inlineBytes": 281539,
+      "inlineDecisions": {
+        "inlined": 0,
+        "rejected": 7
+      }
+    },
+    {
+      "case": "reference/3-1/fwp-ad-history",
+      "status": 0,
+      "sourceSha256": "3f85173d4ea2d4d6bbc67c0e9ff3a7b77290e6e6c2f0923638e5b034e7333f53",
+      "expectedImageSha256": "47fd56691aa4a0949e1ea447b534b4b840d1cb6e7cc2ce1af2ea54dd600a24f0",
+      "imageSha256": "47fd56691aa4a0949e1ea447b534b4b840d1cb6e7cc2ce1af2ea54dd600a24f0",
+      "imageBytes": 80688,
+      "stackSha256": "a8413e5bdeada5823b2db778fb947c356d2a8f12a6098467e33f460b63d43f7a",
+      "stackBytes": 9458,
+      "inlineSha256": "c445edb192d4b969fd49c21b79c6f5f440995455a4eb0a6bb31c3e684d402218",
+      "inlineBytes": 310166,
+      "inlineDecisions": {
+        "inlined": 0,
+        "rejected": 7
+      }
+    },
+    {
+      "case": "reference/3-199/fwp-ad",
+      "status": 0,
+      "sourceSha256": "86354b92c33bfe2c6effd6b0808a5a81b1d7714e9ab4d07c5843b7ccb67900b8",
+      "expectedImageSha256": "db2d8c6c087583ba2017b9d8b8bf80b72027383dc7e8b80b84b6d4067ff6de4c",
+      "imageSha256": "db2d8c6c087583ba2017b9d8b8bf80b72027383dc7e8b80b84b6d4067ff6de4c",
+      "imageBytes": 76192,
+      "stackSha256": "a93c6539a8c31fb668f05f94bf914f30f9a7fc5a85556f33de08d434ee2be0b5",
+      "stackBytes": 8162,
+      "inlineSha256": "09e472c2b5de61cf6b2da88afda46da48c9adcb26bdd50a5777dae6a857521aa",
+      "inlineBytes": 284083,
+      "inlineDecisions": {
+        "inlined": 0,
+        "rejected": 7
+      }
+    },
+    {
+      "case": "reference/3-199/fwp-ad-history",
+      "status": 0,
+      "sourceSha256": "1ef2a3371f5e406ce025e74569ec2f555c9a72ee05eae5ba90a8b0e06b58982a",
+      "expectedImageSha256": "c1b38241b25ce55b8a8eeb16f6ba3e57dd988e719b309449eaddd10a2668e3a6",
+      "imageSha256": "c1b38241b25ce55b8a8eeb16f6ba3e57dd988e719b309449eaddd10a2668e3a6",
+      "imageBytes": 80688,
+      "stackSha256": "578f93cbd3febcae287b1d40e81701ae7e72e108c03a059c7b111bd4fac26827",
+      "stackBytes": 9598,
+      "inlineSha256": "29671af977a1623faa980d7fb00eaaa90f942bfa7d709efd1ccbc112d54affc1",
+      "inlineBytes": 312862,
+      "inlineDecisions": {
+        "inlined": 0,
+        "rejected": 7
+      }
+    },
+    {
+      "case": "reference/3-1999/fwp-ad",
+      "status": 0,
+      "sourceSha256": "a1a7e9a4f8f7967039065dcab656cf39d05dbd040662b97a8d31f890c66bb349",
+      "expectedImageSha256": "de0f3f133b63353c1908934f68081b6958c9c2089ddc8f17e4fb3683caa7ede0",
+      "imageSha256": "de0f3f133b63353c1908934f68081b6958c9c2089ddc8f17e4fb3683caa7ede0",
+      "imageBytes": 76192,
+      "stackSha256": "2fc0bd0d2b52e6a95648cdf2da44ab48cb6ce0a4d69c1afa997954d30970921e",
+      "stackBytes": 8225,
+      "inlineSha256": "c077e5f285fa92065745868e297a3610e7fc0bff874e6ba94d43710e685514a9",
+      "inlineBytes": 285355,
+      "inlineDecisions": {
+        "inlined": 0,
+        "rejected": 7
+      }
+    },
+    {
+      "case": "reference/3-1999/fwp-ad-history",
+      "status": 0,
+      "sourceSha256": "d96b409e6966adcc0ddb2bf4ca75e6f83268cce4895015a1d7d6b89f1128fc31",
+      "expectedImageSha256": "4b9df7544be08ec0dd5ba1d353892dfa4b6961caf82a88056d248e8fdef913e8",
+      "imageSha256": "4b9df7544be08ec0dd5ba1d353892dfa4b6961caf82a88056d248e8fdef913e8",
+      "imageBytes": 80688,
+      "stackSha256": "5bba2a665e41cfe121172aeba878f543a5e6c1803df5fb22a1bbd43b3683e3be",
+      "stackBytes": 9668,
+      "inlineSha256": "8e32c30c4ac4e04dbde8c7bd49ce20caab768fe175d7bf9bb53c04fa98fa69df",
+      "inlineBytes": 314210,
+      "inlineDecisions": {
+        "inlined": 0,
+        "rejected": 7
+      }
+    },
+    {
+      "case": "reference/33-199/fwp-ad",
+      "status": 0,
+      "sourceSha256": "8d6790c4bef027458e65fd74ed8646e8a1b592caa33458fb85887b08fba2860c",
+      "expectedImageSha256": "0b3ead130aca07ae7c419394488d64b1d2ca1fbbc00847e49fee03a2b5a77e02",
+      "imageSha256": "0b3ead130aca07ae7c419394488d64b1d2ca1fbbc00847e49fee03a2b5a77e02",
+      "imageBytes": 80408,
+      "stackSha256": "bc3af65f49a4ce8c2042dfef617364a8737f109916f07fdcacafb82c7db19cfe",
+      "stackBytes": 8481,
+      "inlineSha256": "a9e47e845f331532a33b83e2e2e11000505a5596103ad80f94d5b0fe050be8ae",
+      "inlineBytes": 305217,
+      "inlineDecisions": {
+        "inlined": 0,
+        "rejected": 7
+      }
+    },
+    {
+      "case": "reference/33-199/fwp-ad-history",
+      "status": 0,
+      "sourceSha256": "d800b0e39b49bcf157e27a42beeff4898479070576160cf983f221fd41dd1519",
+      "expectedImageSha256": "67bf774c2ad3ca54fc459322fa4ef59b7a887ef09b18d410169d7c5cc152c7cc",
+      "imageSha256": "67bf774c2ad3ca54fc459322fa4ef59b7a887ef09b18d410169d7c5cc152c7cc",
+      "imageBytes": 84808,
+      "stackSha256": "38dc54c5002164ef3875869b075a5ea89f545a8b9e1dd8184373193ecbb64366",
+      "stackBytes": 9796,
+      "inlineSha256": "b61c2e577e4286bccf66cd3b0dde79fcbe107920f5d3bdb484122a9207593272",
+      "inlineBytes": 331086,
+      "inlineDecisions": {
+        "inlined": 0,
+        "rejected": 7
+      }
+    },
+    {
+      "case": "reference/129-199/fwp-ad",
+      "status": 0,
+      "sourceSha256": "08ce6c3bc9018809383d3462f27c29cb12df40cb1010c9d1edb7381e24c85637",
+      "expectedImageSha256": "6bd6ade909367f1a3281b5e81562fa9f63353cce962db3ac991ecd2e71a85ce4",
+      "imageSha256": "6bd6ade909367f1a3281b5e81562fa9f63353cce962db3ac991ecd2e71a85ce4",
+      "imageBytes": 88640,
+      "stackSha256": "d771f6a17895cd08d24477492d87170e0e39f84c45871fba71f3eaa822c8d1c6",
+      "stackBytes": 8676,
+      "inlineSha256": "58f51fb0fb1d72e1b627ecc4554e9866c19a765fb601ddff002d5a6e968007a7",
+      "inlineBytes": 372744,
+      "inlineDecisions": {
+        "inlined": 0,
+        "rejected": 7
+      }
+    },
+    {
+      "case": "reference/129-199/fwp-ad-history",
+      "status": 0,
+      "sourceSha256": "6fa550ce03d736da7b997211315fefd91e5994cf307e252e3b7223875ca3461f",
+      "expectedImageSha256": "deeeb10cc4daf33b21c699cc67c08249734897ed991ebdb8b9b68e0074629cc3",
+      "imageSha256": "deeeb10cc4daf33b21c699cc67c08249734897ed991ebdb8b9b68e0074629cc3",
+      "imageBytes": 88984,
+      "stackSha256": "f7d30cbe61d896a273a732ca48401594d8f6e99540576425b2deb2a339e88dc6",
+      "stackBytes": 10150,
+      "inlineSha256": "c1de946b029ead92ca31adf956065d1eb85b1cc7b59992a7a7156ad4fa5e9b61",
+      "inlineBytes": 401420,
+      "inlineDecisions": {
+        "inlined": 0,
+        "rejected": 7
+      }
+    },
+    {
+      "case": "candidate/3-0/fwp-ad",
+      "status": 0,
+      "sourceSha256": "f2ead07db2161995492bcfa96500d827846f866bc5feb272d9728b7b435cd85b",
+      "expectedImageSha256": "616c0dbe8953ad1dbeb280db9182d92a4842673dad83b52a00c5d74359f2b191",
+      "imageSha256": "616c0dbe8953ad1dbeb280db9182d92a4842673dad83b52a00c5d74359f2b191",
+      "imageBytes": 72008,
+      "stackSha256": "7ea05b25b80de8181740621985e1c766ed38ebecd5ba1d54959e3769245e51d5",
+      "stackBytes": 7408,
+      "inlineSha256": "e50f9965cf6d80727d76d6574114cbcf376bca066dda78b5b759dc9423963456",
+      "inlineBytes": 280473,
+      "inlineDecisions": {
+        "inlined": 7,
+        "rejected": 0
+      }
+    },
+    {
+      "case": "candidate/3-0/fwp-ad-history",
+      "status": 0,
+      "sourceSha256": "2de1fb9f09b69e2455932ef1a8112cc883b51e8d1b55b0d35a4ee63fadabed9a",
+      "expectedImageSha256": "fa598db705f9f43da57f0839e5d7fb416693d36a24823f0ee6f53c0212053929",
+      "imageSha256": "fa598db705f9f43da57f0839e5d7fb416693d36a24823f0ee6f53c0212053929",
+      "imageBytes": 76544,
+      "stackSha256": "e02ee82ef383059b1a2a71a74150a38cfd37c08a7f224b978b6f5874c56fa90a",
+      "stackBytes": 8759,
+      "inlineSha256": "abdb13a7339680aa71269c9fd6dc991d3ceb7d738884336b2765b64302f4cb19",
+      "inlineBytes": 308835,
+      "inlineDecisions": {
+        "inlined": 7,
+        "rejected": 0
+      }
+    },
+    {
+      "case": "candidate/3-1/fwp-ad",
+      "status": 0,
+      "sourceSha256": "e48fa0f51a700b53d489a128ad524078a2cb7c80cef63a2c8fb2a8f47bfca276",
+      "expectedImageSha256": "6d9e68352907bb1766996cf8dadc4a519ea76ffb8be777799b60389d05d4f83e",
+      "imageSha256": "6d9e68352907bb1766996cf8dadc4a519ea76ffb8be777799b60389d05d4f83e",
+      "imageBytes": 76184,
+      "stackSha256": "1d918fcb3e12ea5d38968a11b085cfad5e089520f645ff6466349a39e74248ab",
+      "stackBytes": 7408,
+      "inlineSha256": "2faad028e458d99f0a41f50f57684fa9835e7c494b1bc605f6b59cac92fc813a",
+      "inlineBytes": 280473,
+      "inlineDecisions": {
+        "inlined": 7,
+        "rejected": 0
+      }
+    },
+    {
+      "case": "candidate/3-1/fwp-ad-history",
+      "status": 0,
+      "sourceSha256": "0f462460fe1005d69d3cdca6a285979b23e311bee9c9e9ee9610ba4e42329f2a",
+      "expectedImageSha256": "8c37ce8e4fee36b19ce248b8be0d512a906e79d217ece6f695ecf58a41cbc8d9",
+      "imageSha256": "8c37ce8e4fee36b19ce248b8be0d512a906e79d217ece6f695ecf58a41cbc8d9",
+      "imageBytes": 80680,
+      "stackSha256": "fdcc4de9ed68a9a9fb142e138349f6f016124a0538ac3c549c3e8d2f63830122",
+      "stackBytes": 8760,
+      "inlineSha256": "4a6bf43437558a6153e55b1520d4b06c92ed00c71cf118f809c3cdbb7e45fe7f",
+      "inlineBytes": 308835,
+      "inlineDecisions": {
+        "inlined": 7,
+        "rejected": 0
+      }
+    },
+    {
+      "case": "candidate/3-199/fwp-ad",
+      "status": 0,
+      "sourceSha256": "3b2c217e0a6707f297b054cc9719de1e95b951595f14b43330f4498f32788d4a",
+      "expectedImageSha256": "40fc86f4dfe63dc33e4ff6ab5603f061c17441091b4d3c7aa1dcdfde5d681b75",
+      "imageSha256": "40fc86f4dfe63dc33e4ff6ab5603f061c17441091b4d3c7aa1dcdfde5d681b75",
+      "imageBytes": 76184,
+      "stackSha256": "2cfb8163f79780b30b45af14c33c1c0847b055e742213a5ca473a8ab6d3a55b2",
+      "stackBytes": 7534,
+      "inlineSha256": "795367ce9615772e5379d90df823193c6cf18f0bd6b5089060b79667db77964e",
+      "inlineBytes": 283141,
+      "inlineDecisions": {
+        "inlined": 7,
+        "rejected": 0
+      }
+    },
+    {
+      "case": "candidate/3-199/fwp-ad-history",
+      "status": 0,
+      "sourceSha256": "737bd7d1cfefefc8c04cb27c8f2e8312a47c874f970a6bcb48bc90946b43e6d5",
+      "expectedImageSha256": "fcc143ff0be94646a4df954a29a8f58d02a6b76d51f4ead0808d444ec81a0e42",
+      "imageSha256": "fcc143ff0be94646a4df954a29a8f58d02a6b76d51f4ead0808d444ec81a0e42",
+      "imageBytes": 80680,
+      "stackSha256": "37560cd71a1bb46daa2b671fb8b16e89ca110adf1e73320e44f7985a413617d6",
+      "stackBytes": 8900,
+      "inlineSha256": "c4e7d7017c929e924fa1b4338e34674a73e44a1fa1e6a56c8be55caeb266ba8b",
+      "inlineBytes": 311655,
+      "inlineDecisions": {
+        "inlined": 7,
+        "rejected": 0
+      }
+    },
+    {
+      "case": "candidate/3-1999/fwp-ad",
+      "status": 0,
+      "sourceSha256": "955ee4a1bf54b355f075ab1a1c08528d147a3f6589ce7e0d3d785977970faa92",
+      "expectedImageSha256": "fdf0f46c734e21bf9a863bfd324bef7ed9a309a00ac59bf251deaa5fd2fcb6a3",
+      "imageSha256": "fdf0f46c734e21bf9a863bfd324bef7ed9a309a00ac59bf251deaa5fd2fcb6a3",
+      "imageBytes": 76184,
+      "stackSha256": "2881ac92f15301afe693665e537c8340c235fcd33d8d343302444a2f710082ac",
+      "stackBytes": 7597,
+      "inlineSha256": "2ed8532b4409dc78cb453fe40408e9cf9b9ae99e9baa22c6cafef3fce14bc41b",
+      "inlineBytes": 284475,
+      "inlineDecisions": {
+        "inlined": 7,
+        "rejected": 0
+      }
+    },
+    {
+      "case": "candidate/3-1999/fwp-ad-history",
+      "status": 0,
+      "sourceSha256": "d416775bddf9ffb3d85d4eda612c427a7817f233a03b5101c33b0bb81298a1cd",
+      "expectedImageSha256": "298befb00cf94f2bbc2cff8f6d84de49e226e367bd0b2bd6b88094bbcf5e2cfd",
+      "imageSha256": "298befb00cf94f2bbc2cff8f6d84de49e226e367bd0b2bd6b88094bbcf5e2cfd",
+      "imageBytes": 80680,
+      "stackSha256": "40642fbd957067836dfdfc140c13c9057f0d43084b5e785a0347d0e025dfa248",
+      "stackBytes": 8970,
+      "inlineSha256": "a3fdf2523d681f6d14f2f1afe1bc57ad3c53d2eb90ff4e1df02de196c449b9d6",
+      "inlineBytes": 313065,
+      "inlineDecisions": {
+        "inlined": 7,
+        "rejected": 0
+      }
+    },
+    {
+      "case": "candidate/33-199/fwp-ad",
+      "status": 0,
+      "sourceSha256": "1f4d73c7bcf149e4d7ff03d09fdafda2d396d8e8af89e39bec42d5462e2d3e53",
+      "expectedImageSha256": "fdb259b55e72dd5c9f5544e1bb17fac1ceb6d796af2cfe3f98d83aa2cb1742fa",
+      "imageSha256": "fdb259b55e72dd5c9f5544e1bb17fac1ceb6d796af2cfe3f98d83aa2cb1742fa",
+      "imageBytes": 84496,
+      "stackSha256": "b4ce1aa768cd117ff635130ca3b2342658101b5c3aca9f453fa68795c175fd7e",
+      "stackBytes": 7833,
+      "inlineSha256": "8b36df20f02dae8daddb8286864ea43dc16d6f057caf44e85d0773ed2c19e491",
+      "inlineBytes": 303487,
+      "inlineDecisions": {
+        "inlined": 7,
+        "rejected": 0
+      }
+    },
+    {
+      "case": "candidate/33-199/fwp-ad-history",
+      "status": 0,
+      "sourceSha256": "9fc23def6b90e56c6fd8edeb83f1c0290d69651d8ad4bc7003394708ffb3a697",
+      "expectedImageSha256": "fbde6273d16422ce0d4f271045476e87a3c5de3208a73ce10b74d4bc8a8d0201",
+      "imageSha256": "fbde6273d16422ce0d4f271045476e87a3c5de3208a73ce10b74d4bc8a8d0201",
+      "imageBytes": 84800,
+      "stackSha256": "2fa8295589533efd73d2310636b40f6385b14752c0ac4ee8fe24dbfa4585c44a",
+      "stackBytes": 9088,
+      "inlineSha256": "abe5d50c41127910f7cf562735d4db1a4f7ed9f338a24fea0c418bd2143c9395",
+      "inlineBytes": 329241,
+      "inlineDecisions": {
+        "inlined": 7,
+        "rejected": 0
+      }
+    },
+    {
+      "case": "candidate/129-199/fwp-ad",
+      "status": 0,
+      "sourceSha256": "b78acd9df9f2768a34cde680ee6943900e7b8786ea437158a0ad0c92155b82dd",
+      "expectedImageSha256": "bd703f287013bd593cbbd8f748d967fa1afab9c4a89eee425cc9f9ae4caf9a9f",
+      "imageSha256": "bd703f287013bd593cbbd8f748d967fa1afab9c4a89eee425cc9f9ae4caf9a9f",
+      "imageBytes": 88632,
+      "stackSha256": "23368601c657bda844066f616302eca7c919879468e6f1a904794084c46bf1de",
+      "stackBytes": 8018,
+      "inlineSha256": "b38a576743e1a7bb8ce41e4cdc9e7c526305261ddfd24c5df5608f8be4b18a10",
+      "inlineBytes": 368196,
+      "inlineDecisions": {
+        "inlined": 7,
+        "rejected": 0
+      }
+    },
+    {
+      "case": "candidate/129-199/fwp-ad-history",
+      "status": 0,
+      "sourceSha256": "02f82e87fe3715ed0e58cf472642a49ba2359f3b29879236418e827ce9c37408",
+      "expectedImageSha256": "15ba50d1324db2da5d5575e71c525358d6ea30edf8122f2431c634e384b80f3f",
+      "imageSha256": "15ba50d1324db2da5d5575e71c525358d6ea30edf8122f2431c634e384b80f3f",
+      "imageBytes": 88976,
+      "stackSha256": "f10caf4b96bcdd39c517dccd90113f49c7acf1c500956ee0bfbc10a9d3267f63",
+      "stackBytes": 9422,
+      "inlineSha256": "917d96510a8ba3794efe227a62fd9785e79afb59b9a237c64bc05628b428294b",
+      "inlineBytes": 396737,
+      "inlineDecisions": {
+        "inlined": 7,
+        "rejected": 0
+      }
+    }
+  ],
+  "errors": []
+}

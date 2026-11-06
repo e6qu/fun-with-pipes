@@ -1,0 +1,20 @@
+{
+  "id": 13477983971,
+  "node_id": "MDg6QXJ0aWZhY3QxMzQ3Nzk4Mzk3MQ==",
+  "name": "recording-call-analysis-x86_64",
+  "size_in_bytes": 5455861,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13477983971",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13477983971/zip",
+  "expired": false,
+  "digest": "sha256:a9b7aebc5aa65eda9d9875de485afe5cd2c57907a2855738c6ad44865302d481",
+  "created_at": "2026-11-06T04:59:40Z",
+  "updated_at": "2026-11-06T04:59:40Z",
+  "expires_at": "2027-02-04T04:56:44Z",
+  "workflow_run": {
+    "id": 42165452140,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "recording-call-costs",
+    "head_sha": "48c2ae70ab58813bc04ab7bda4b8d7845ccef852"
+  }
+}

@@ -81,10 +81,9 @@ obsolete reference-file path and failed. The repair checks the correct runtime
 file through the complete reference validator, including extra/wrong-file controls.
 Only saved evidence was re-audited. Original timings and every missed limit remain.
 
-## Next check
+## Native verification
 
-Rebuild the saved candidate/reference C with GCC inlining reports, require
-byte-identical native images, and verify the intended append inlining. The
-[explicit input plan](../recording-inline-call-inputs.json) selects these audited
-sessions. This diagnostic executes no native program and takes no new timings.
-Final platform verification follows the completed group.
+The [48-image diagnostic](../recording-inline-images-2026-11-06/README.md) passes:
+saved candidate/reference C reproduces every original executable byte for byte,
+and GCC reports the required candidate append inlining. No native program was
+executed and no timing repeated. Final platform verification remains required.

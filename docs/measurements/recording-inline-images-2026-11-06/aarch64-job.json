@@ -1,0 +1,84 @@
+{
+  "id": 127720749935,
+  "run_id": 42165452140,
+  "workflow_name": "Numerical and ownership evidence",
+  "head_branch": "recording-call-costs",
+  "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/42165452140",
+  "run_attempt": 1,
+  "node_id": "CR_kwDOU33zxM8AAAAdvL_7bw",
+  "head_sha": "48c2ae70ab58813bc04ab7bda4b8d7845ccef852",
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/127720749935",
+  "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/42165452140/job/127720749935",
+  "status": "completed",
+  "conclusion": "success",
+  "created_at": "2026-11-06T04:56:44Z",
+  "started_at": "2026-11-06T04:59:00Z",
+  "completed_at": "2026-11-06T04:59:45Z",
+  "name": "evidence_maintenance / recording_calls (ubuntu-24.04-arm, aarch64)",
+  "steps": [
+    {
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 1,
+      "started_at": "2026-11-06T04:59:01Z",
+      "completed_at": "2026-11-06T04:59:02Z"
+    },
+    {
+      "name": "Run actions/checkout@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 2,
+      "started_at": "2026-11-06T04:59:02Z",
+      "completed_at": "2026-11-06T04:59:08Z"
+    },
+    {
+      "name": "Verify diagnostic failure controls",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 3,
+      "started_at": "2026-11-06T04:59:08Z",
+      "completed_at": "2026-11-06T04:59:08Z"
+    },
+    {
+      "name": "Rebuild saved measured C and retain GCC call decisions",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 4,
+      "started_at": "2026-11-06T04:59:08Z",
+      "completed_at": "2026-11-06T04:59:40Z"
+    },
+    {
+      "name": "Preserve every report and failure",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 5,
+      "started_at": "2026-11-06T04:59:40Z",
+      "completed_at": "2026-11-06T04:59:43Z"
+    },
+    {
+      "name": "Post Run actions/checkout@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 10,
+      "started_at": "2026-11-06T04:59:43Z",
+      "completed_at": "2026-11-06T04:59:43Z"
+    },
+    {
+      "name": "Complete job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 11,
+      "started_at": "2026-11-06T04:59:43Z",
+      "completed_at": "2026-11-06T04:59:43Z"
+    }
+  ],
+  "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/127720749935",
+  "labels": [
+    "ubuntu-24.04-arm"
+  ],
+  "runner_id": 1000414455,
+  "runner_name": "GitHub Actions 1000414455",
+  "runner_group_id": 0,
+  "runner_group_name": "GitHub Actions"
+}
