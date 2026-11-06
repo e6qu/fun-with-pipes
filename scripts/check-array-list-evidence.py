@@ -266,7 +266,7 @@ def check_reference(folder, report, source, architecture, protocol):
         assert set(reference_files) == {'manifest.json', 'fwp', 'reference.patch', 'source/src/cgen.rs', 'source/lib/autodiff.fwp'}
     elif protocol in ('recording-inline', 'recording-capacity'):
         assert set(reference_files) == {'manifest.json', 'fwp', 'reference.patch', 'source/runtime/fwp_rt_kernel.c'}
-    elif protocol in ('matched-option', 'owned-numeric', 'packed-pair', 'scalar-constant', 'recording-lookup'):
+    elif protocol in ('matched-option', 'owned-numeric', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-context'):
         assert set(reference_files) == {'manifest.json', 'fwp', 'reference.patch', 'source/src/cgen.rs'}
     elif protocol == 'packed-input':
         assert set(reference_files) == {'manifest.json', 'fwp', 'reference.patch', 'source/src/cgen.rs', 'source/src/mono.rs'}
@@ -305,35 +305,10 @@ def check_reference(folder, report, source, architecture, protocol):
             assert data == expected[path].encode() and digest(data) == manifest['reference'][path]
             check_reference_patch(section, candidates[path], expected[path], path)
         return
-    if protocol in ('owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity'):
-        gradient = protocol == 'gradient-call'
-        expected_paths = {'src/cgen.rs', 'lib/autodiff.fwp'} if gradient else {'src/cgen.rs'}
-        expected_transformation = 'scoped input borrowing, numeric fold fields, single-root seeding and consumed array scratch' if gradient else 'consuming scalar array maps and exclusive coordinate-list reuse'
-        if protocol == 'packed-pair':
-            expected_transformation = 'reuse of the consumed private neighboring-record buffer'
-        if protocol == 'scalar-constant':
-            expected_transformation = 'exact immediate scalar constants and acyclic cached aliases'
-        if protocol == 'recording-lookup':
-            expected_transformation = 'validated tape lookup reuse within bounded nonsuspending numeric workers'
-        if protocol == 'recording-inline':
-            expected_paths = {'runtime/fwp_rt_kernel.c'}
-            expected_transformation = 'forced inlining of the checked F64 scalar append body'
-        if protocol == 'recording-capacity':
-            expected_paths = {'runtime/fwp_rt_kernel.c'}
-            expected_transformation = 'inlined checked reserve gate with shared tape growth'
+    if protocol in ('owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context'):
+        expected_transformation, expected_paths, expected_preserved = GROUPS.reference_contract(protocol)
         assert manifest['disabledTransformation'] == expected_transformation
         assert set(manifest['candidate']) == set(manifest['reference']) == expected_paths
-        expected_preserved = set(('src/ownership.rs', 'src/ir.rs', 'src/rc.rs', 'src/rc/borrows.rs', 'src/cgen/owned_numeric.rs', 'src/cgen/scoped_calls.rs', 'src/cgen/fold_fields.rs', 'src/opt/scoped.rs', 'src/cgen/packed_inputs.rs', 'src/cgen/numeric_parameters.rs', 'src/cgen/packed_records.rs', 'src/cgen/range_zip.rs', 'src/fuse.rs', 'src/opt.rs', 'runtime/fwp_rt.c', 'runtime/fwp_rt_heap.c', 'runtime/fwp_rt_prims.c', 'runtime/fwp_rt_task.c', 'runtime/fwp_rt_kernel.c', 'src/numerics.rs', 'src/interp.rs', 'lib/list.fwp')) if gradient else {'src/ir.rs', 'src/rc.rs', 'src/rc/borrows.rs', 'src/cgen/owned_numeric.rs', 'runtime/fwp_rt_task.c', 'runtime/fwp_rt_heap.c', 'src/cgen/packed_inputs.rs', 'src/cgen/numeric_parameters.rs', 'src/fuse.rs', 'runtime/fwp_rt_prims.c', 'src/ownership.rs', 'src/opt/scoped.rs', 'runtime/fwp_rt.c', 'runtime/fwp_rt_kernel.c', 'src/opt.rs', 'lib/list.fwp', 'src/cgen/range_zip.rs', 'lib/autodiff.fwp', 'src/cgen/packed_records.rs'}
-        if protocol in ('packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity'):
-            expected_preserved |= {'src/escape.rs', 'src/cgen/scoped_calls.rs',
-                                   'src/cgen/fold_fields.rs', 'src/numerics.rs', 'src/interp.rs'}
-        if protocol in ('scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity'):
-            expected_preserved.add('src/cgen/constant_values.rs')
-        if protocol in ('recording-lookup', 'recording-inline', 'recording-capacity'):
-            expected_preserved.add('src/cgen/recording.rs')
-        if protocol in ('recording-inline', 'recording-capacity'):
-            expected_preserved.remove('runtime/fwp_rt_kernel.c')
-            expected_preserved.add('src/cgen.rs')
         assert set(manifest['unchanged']) == expected_preserved
         compiler = (folder / 'fwp').read_bytes()
         assert digest(compiler) == manifest['compilerSha256']
@@ -420,7 +395,7 @@ def check_reference(folder, report, source, architecture, protocol):
     if protocol == 'callback-owners':
         check_numeric_reference(folder, manifest, source, architecture)
         return
-    assert protocol in ('record-zip', 'record-fold', 'packed-records', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity')
+    assert protocol in ('record-zip', 'record-fold', 'packed-records', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context')
     if protocol == 'scalar-array-identity':
         source_path, field, saved = 'src/opt.rs', 'Optimizer', 'optimizer-reference.rs'
         transform = 'F64 identity array-map elimination'
@@ -537,8 +512,8 @@ def scalar_image_representation(image):
 
 
 def check_directory(folder, source, architecture, session, protocol, reference):
-    assert protocol in ('array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity')
-    assert (protocol in ('record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity')) == (reference is not None)
+    assert protocol in ('array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context')
+    assert (protocol in ('record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context')) == (reference is not None)
     report = json.loads((folder / 'comparison.json').read_text())
     GROUPS.check_report(report, source, protocol)
     assert report['machine'] == architecture and report['configuration']['session'] == session
@@ -603,6 +578,10 @@ def check_directory(folder, source, architecture, session, protocol, reference):
                     GROUPS.DESCENT.RECORDING_SELECTION.check_capacity_gate((case / (image + '.c')).read_text(), scalar_image_representation(image) == 'literal')
                     if row['updates'] > 0:
                         GROUPS.DESCENT.RECORDING_SELECTION.check((case / (image + '.c')).read_text(), True)
+                if protocol == 'recording-context':
+                    GROUPS.DESCENT.RECORDING_SELECTION.check_capacity_gate((case / (image + '.c')).read_text(), True)
+                    if row['updates'] > 0:
+                        GROUPS.DESCENT.CONTEXT_SELECTION.check((case / (image + '.c')).read_text(), scalar_image_representation(image) == 'literal')
                 if protocol == 'recording-lookup' and row['updates'] > 0:
                     GROUPS.DESCENT.RECORDING_SELECTION.check((case / (image + '.c')).read_text(), scalar_image_representation(image) == 'literal')
                 if protocol == 'scalar-constant' and row['updates'] > 0:
@@ -622,7 +601,7 @@ def check_directory(folder, source, architecture, session, protocol, reference):
             assert (case / (name + '.stderr')).read_text() == control['stderr']
         check_profiles(case, row)
     files = file_inventory(folder)
-    if protocol in ('record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity'):
+    if protocol in ('record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context'):
         assert len(files) == 1334
     reference_files = file_inventory(reference) if reference is not None else None
     return dict(source=source, architecture=architecture, session=session, files=files,
@@ -634,7 +613,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--input', type=Path, required=True)
     parser.add_argument('--input-format', choices=['directory', 'zip'], required=True)
-    parser.add_argument('--protocol', choices=['array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity'], required=True)
+    parser.add_argument('--protocol', choices=['array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context'], required=True)
     parser.add_argument('--reference', type=Path)
     parser.add_argument('--source', required=True)
     parser.add_argument('--arch', choices=['x86_64', 'aarch64'], required=True)

@@ -335,8 +335,19 @@ and largest reported frames are unchanged; all compiler-cost limits pass.
 [Runtime](measurements/recording-capacity-time-2026-11-06/README.md) improves
 1.86–14.02%, with 15/32 long speed targets and one copy control still open.
 [Native verification](measurements/recording-capacity-images-2026-11-06/README.md)
-reproduces all 48 measured images and confirms capacity inlining. Final platform
-validation remains pending.
+reproduces all 48 measured images and confirms capacity inlining.
+[Final platform gates and complete audits pass](measurements/recording-capacity-delivery-2026-11-06/README.md).
+
+The [numeric call/loop change](measurements/recording-context-scopes.md) extends
+this local lookup proof across eligible direct calls and separate packed map/fold
+loops. [Focused native checks and the complete artifact audit pass](measurements/recording-context-checks-2026-11-06/README.md);
+both ARM64 timing sessions miss the 5% long-case target, with small-case and
+identical-copy limits passing. [Census](measurements/recording-context-census-2026-11-06/README.md)
+confirms two lookups per positive update with unchanged allocation/peak storage.
+[Runtime audits](measurements/recording-context-time-2026-11-06/README.md) preserve
+all misses and host rejections. AMD64 runtime hardware qualification, original
+measured-image checks and final platform gates remain pending. Tape-ID changes, task
+switches, reentry and retirement remain explicit lifetime boundaries.
 
 Channel borrowing preserves hidden native contexts as well as payload storage.
 It does not prove the queued graph acyclic: capture/cycle checks remain separate.

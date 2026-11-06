@@ -1,0 +1,737 @@
+{
+  "source": "319782736b0a983022f2a48879b35c9e57992949",
+  "run": 42224646191,
+  "machine": "aarch64",
+  "allDiagnosticsAudited": true,
+  "recordedAttributionFailures": [],
+  "correctedComparisonFailures": [],
+  "checkerSha256": "d8e9b276f650ef550aca2f86253b842d6a9c584934540a9a02772813b97e63ee",
+  "recordedCheckerSha256": "d8e9b276f650ef550aca2f86253b842d6a9c584934540a9a02772813b97e63ee",
+  "artifact": {
+    "id": 13506459519,
+    "node_id": "MDg6QXJ0aWZhY3QxMzUwNjQ1OTUxOQ==",
+    "name": "recording-context-census-ARM64",
+    "size_in_bytes": 93574510,
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13506459519",
+    "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13506459519/zip",
+    "expired": false,
+    "digest": "sha256:9e06df9331adb8a93addbcbf9ca5915deacd987beb0d255a8376541254be5c53",
+    "created_at": "2026-11-06T13:51:39Z",
+    "updated_at": "2026-11-06T13:51:39Z",
+    "expires_at": "2027-02-04T13:20:03Z",
+    "workflow_run": {
+      "id": 42224646191,
+      "repository_id": 1400763332,
+      "head_repository_id": 1400763332,
+      "head_branch": "recording-context-scopes",
+      "head_sha": "319782736b0a983022f2a48879b35c9e57992949"
+    }
+  },
+  "freshCases": 24,
+  "freshNativeImages": 164,
+  "verifiedCommands": 171,
+  "nativeImages": 48,
+  "verifiedExecutions": 96,
+  "cases": {
+    "3-0-current": {
+      "solves": 32768,
+      "savings": {
+        "requests": 0,
+        "requestedBytes": 0,
+        "retains": 0
+      },
+      "candidate": {
+        "requests": 65539,
+        "requestedBytes": 1638472,
+        "retains": 32768,
+        "peakChargedBytes": 1048704,
+        "finalChargedBytes": 0
+      },
+      "reference": {
+        "requests": 65539,
+        "requestedBytes": 1638472,
+        "retains": 32768,
+        "peakChargedBytes": 1048704,
+        "finalChargedBytes": 0
+      },
+      "rawPeakBytes": 0,
+      "finalRawBytes": 0,
+      "recordingChecks": {
+        "candidate": {
+          "lookups": 0,
+          "parents": 0,
+          "capacities": 0,
+          "nodes": 0
+        },
+        "reference": {
+          "lookups": 0,
+          "parents": 0,
+          "capacities": 0,
+          "nodes": 0
+        }
+      }
+    },
+    "3-0-history": {
+      "solves": 32768,
+      "savings": {
+        "requests": 0,
+        "requestedBytes": 0,
+        "retains": 0
+      },
+      "candidate": {
+        "requests": 65539,
+        "requestedBytes": 1638472,
+        "retains": 32768,
+        "peakChargedBytes": 1048704,
+        "finalChargedBytes": 0
+      },
+      "reference": {
+        "requests": 65539,
+        "requestedBytes": 1638472,
+        "retains": 32768,
+        "peakChargedBytes": 1048704,
+        "finalChargedBytes": 0
+      },
+      "rawPeakBytes": 0,
+      "finalRawBytes": 0,
+      "recordingChecks": {
+        "candidate": {
+          "lookups": 0,
+          "parents": 0,
+          "capacities": 0,
+          "nodes": 0
+        },
+        "reference": {
+          "lookups": 0,
+          "parents": 0,
+          "capacities": 0,
+          "nodes": 0
+        }
+      }
+    },
+    "3-1-current": {
+      "solves": 512,
+      "savings": {
+        "requests": 0,
+        "requestedBytes": 0,
+        "retains": 0
+      },
+      "candidate": {
+        "requests": 3587,
+        "requestedBytes": 131144,
+        "retains": 512,
+        "peakChargedBytes": 16656,
+        "finalChargedBytes": 0
+      },
+      "reference": {
+        "requests": 3587,
+        "requestedBytes": 131144,
+        "retains": 512,
+        "peakChargedBytes": 16656,
+        "finalChargedBytes": 0
+      },
+      "rawPeakBytes": 1792,
+      "finalRawBytes": 0,
+      "recordingChecks": {
+        "candidate": {
+          "lookups": 1024,
+          "parents": 8192,
+          "capacities": 8192,
+          "nodes": 8192
+        },
+        "reference": {
+          "lookups": 3072,
+          "parents": 8192,
+          "capacities": 8192,
+          "nodes": 8192
+        }
+      }
+    },
+    "3-1-history": {
+      "solves": 512,
+      "savings": {
+        "requests": 0,
+        "requestedBytes": 0,
+        "retains": 0
+      },
+      "candidate": {
+        "requests": 3587,
+        "requestedBytes": 131144,
+        "retains": 512,
+        "peakChargedBytes": 16656,
+        "finalChargedBytes": 0
+      },
+      "reference": {
+        "requests": 3587,
+        "requestedBytes": 131144,
+        "retains": 512,
+        "peakChargedBytes": 16656,
+        "finalChargedBytes": 0
+      },
+      "rawPeakBytes": 1792,
+      "finalRawBytes": 0,
+      "recordingChecks": {
+        "candidate": {
+          "lookups": 1024,
+          "parents": 8192,
+          "capacities": 8192,
+          "nodes": 8192
+        },
+        "reference": {
+          "lookups": 3072,
+          "parents": 8192,
+          "capacities": 8192,
+          "nodes": 8192
+        }
+      }
+    },
+    "3-199-current": {
+      "solves": 32,
+      "savings": {
+        "requests": 0,
+        "requestedBytes": 0,
+        "retains": 0
+      },
+      "candidate": {
+        "requests": 12899,
+        "requestedBytes": 565864,
+        "retains": 32,
+        "peakChargedBytes": 1296,
+        "finalChargedBytes": 0
+      },
+      "reference": {
+        "requests": 12899,
+        "requestedBytes": 565864,
+        "retains": 32,
+        "peakChargedBytes": 1296,
+        "finalChargedBytes": 0
+      },
+      "rawPeakBytes": 1792,
+      "finalRawBytes": 0,
+      "recordingChecks": {
+        "candidate": {
+          "lookups": 12736,
+          "parents": 101888,
+          "capacities": 101888,
+          "nodes": 101888
+        },
+        "reference": {
+          "lookups": 38208,
+          "parents": 101888,
+          "capacities": 101888,
+          "nodes": 101888
+        }
+      }
+    },
+    "3-199-history": {
+      "solves": 32,
+      "savings": {
+        "requests": 0,
+        "requestedBytes": 0,
+        "retains": 0
+      },
+      "candidate": {
+        "requests": 12899,
+        "requestedBytes": 565864,
+        "retains": 32,
+        "peakChargedBytes": 1296,
+        "finalChargedBytes": 0
+      },
+      "reference": {
+        "requests": 12899,
+        "requestedBytes": 565864,
+        "retains": 32,
+        "peakChargedBytes": 1296,
+        "finalChargedBytes": 0
+      },
+      "rawPeakBytes": 1792,
+      "finalRawBytes": 0,
+      "recordingChecks": {
+        "candidate": {
+          "lookups": 12736,
+          "parents": 101888,
+          "capacities": 101888,
+          "nodes": 101888
+        },
+        "reference": {
+          "lookups": 38208,
+          "parents": 101888,
+          "capacities": 101888,
+          "nodes": 101888
+        }
+      }
+    },
+    "3-1999-current": {
+      "solves": 4,
+      "savings": {
+        "requests": 0,
+        "requestedBytes": 0,
+        "retains": 0
+      },
+      "candidate": {
+        "requests": 16015,
+        "requestedBytes": 704376,
+        "retains": 4,
+        "peakChargedBytes": 400,
+        "finalChargedBytes": 0
+      },
+      "reference": {
+        "requests": 16015,
+        "requestedBytes": 704376,
+        "retains": 4,
+        "peakChargedBytes": 400,
+        "finalChargedBytes": 0
+      },
+      "rawPeakBytes": 1792,
+      "finalRawBytes": 0,
+      "recordingChecks": {
+        "candidate": {
+          "lookups": 15992,
+          "parents": 127936,
+          "capacities": 127936,
+          "nodes": 127936
+        },
+        "reference": {
+          "lookups": 47976,
+          "parents": 127936,
+          "capacities": 127936,
+          "nodes": 127936
+        }
+      }
+    },
+    "3-1999-history": {
+      "solves": 4,
+      "savings": {
+        "requests": 0,
+        "requestedBytes": 0,
+        "retains": 0
+      },
+      "candidate": {
+        "requests": 16015,
+        "requestedBytes": 704376,
+        "retains": 4,
+        "peakChargedBytes": 400,
+        "finalChargedBytes": 0
+      },
+      "reference": {
+        "requests": 16015,
+        "requestedBytes": 704376,
+        "retains": 4,
+        "peakChargedBytes": 400,
+        "finalChargedBytes": 0
+      },
+      "rawPeakBytes": 1792,
+      "finalRawBytes": 0,
+      "recordingChecks": {
+        "candidate": {
+          "lookups": 15992,
+          "parents": 127936,
+          "capacities": 127936,
+          "nodes": 127936
+        },
+        "reference": {
+          "lookups": 47976,
+          "parents": 127936,
+          "capacities": 127936,
+          "nodes": 127936
+        }
+      }
+    },
+    "33-199-current": {
+      "solves": 32,
+      "savings": {
+        "requests": 0,
+        "requestedBytes": 0,
+        "retains": 0
+      },
+      "candidate": {
+        "requests": 13889,
+        "requestedBytes": 5195480,
+        "retains": 32,
+        "peakChargedBytes": 3904,
+        "finalChargedBytes": 0
+      },
+      "reference": {
+        "requests": 13889,
+        "requestedBytes": 5195480,
+        "retains": 32,
+        "peakChargedBytes": 3904,
+        "finalChargedBytes": 0
+      },
+      "rawPeakBytes": 8560,
+      "finalRawBytes": 0,
+      "recordingChecks": {
+        "candidate": {
+          "lookups": 12736,
+          "parents": 1630208,
+          "capacities": 1630208,
+          "nodes": 1630208
+        },
+        "reference": {
+          "lookups": 611328,
+          "parents": 1630208,
+          "capacities": 1630208,
+          "nodes": 1630208
+        }
+      }
+    },
+    "33-199-history": {
+      "solves": 32,
+      "savings": {
+        "requests": 0,
+        "requestedBytes": 0,
+        "retains": 0
+      },
+      "candidate": {
+        "requests": 13889,
+        "requestedBytes": 5195480,
+        "retains": 32,
+        "peakChargedBytes": 3904,
+        "finalChargedBytes": 0
+      },
+      "reference": {
+        "requests": 13889,
+        "requestedBytes": 5195480,
+        "retains": 32,
+        "peakChargedBytes": 3904,
+        "finalChargedBytes": 0
+      },
+      "rawPeakBytes": 8560,
+      "finalRawBytes": 0,
+      "recordingChecks": {
+        "candidate": {
+          "lookups": 12736,
+          "parents": 1630208,
+          "capacities": 1630208,
+          "nodes": 1630208
+        },
+        "reference": {
+          "lookups": 611328,
+          "parents": 1630208,
+          "capacities": 1630208,
+          "nodes": 1630208
+        }
+      }
+    },
+    "129-199-current": {
+      "solves": 8,
+      "savings": {
+        "requests": 0,
+        "requestedBytes": 0,
+        "retains": 0
+      },
+      "candidate": {
+        "requests": 4361,
+        "requestedBytes": 5005064,
+        "retains": 8,
+        "peakChargedBytes": 11584,
+        "finalChargedBytes": 0
+      },
+      "reference": {
+        "requests": 4361,
+        "requestedBytes": 5005064,
+        "retains": 8,
+        "peakChargedBytes": 11584,
+        "finalChargedBytes": 0
+      },
+      "rawPeakBytes": 33904,
+      "finalRawBytes": 0,
+      "recordingChecks": {
+        "candidate": {
+          "lookups": 3184,
+          "parents": 1630208,
+          "capacities": 1630208,
+          "nodes": 1630208
+        },
+        "reference": {
+          "lookups": 611328,
+          "parents": 1630208,
+          "capacities": 1630208,
+          "nodes": 1630208
+        }
+      }
+    },
+    "129-199-history": {
+      "solves": 8,
+      "savings": {
+        "requests": 0,
+        "requestedBytes": 0,
+        "retains": 0
+      },
+      "candidate": {
+        "requests": 4361,
+        "requestedBytes": 5005064,
+        "retains": 8,
+        "peakChargedBytes": 11584,
+        "finalChargedBytes": 0
+      },
+      "reference": {
+        "requests": 4361,
+        "requestedBytes": 5005064,
+        "retains": 8,
+        "peakChargedBytes": 11584,
+        "finalChargedBytes": 0
+      },
+      "rawPeakBytes": 33904,
+      "finalRawBytes": 0,
+      "recordingChecks": {
+        "candidate": {
+          "lookups": 3184,
+          "parents": 1630208,
+          "capacities": 1630208,
+          "nodes": 1630208
+        },
+        "reference": {
+          "lookups": 611328,
+          "parents": 1630208,
+          "capacities": 1630208,
+          "nodes": 1630208
+        }
+      }
+    }
+  },
+  "completeProgramStack": {
+    "3-0-current": {
+      "reportedFrameBytes": {
+        "candidate": 704,
+        "reference": 704
+      },
+      "dynamicEntries": {
+        "candidate": [],
+        "reference": []
+      }
+    },
+    "3-0-history": {
+      "reportedFrameBytes": {
+        "candidate": 704,
+        "reference": 704
+      },
+      "dynamicEntries": {
+        "candidate": [
+          {
+            "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/pair-stack/3-0-history-candidate.c:597:10:fwp_apply",
+            "bytes": 128,
+            "qualifier": "dynamic"
+          }
+        ],
+        "reference": [
+          {
+            "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/pair-stack/3-0-history-reference.c:597:10:fwp_apply",
+            "bytes": 128,
+            "qualifier": "dynamic"
+          }
+        ]
+      }
+    },
+    "3-1-current": {
+      "reportedFrameBytes": {
+        "candidate": 704,
+        "reference": 704
+      },
+      "dynamicEntries": {
+        "candidate": [],
+        "reference": []
+      }
+    },
+    "3-1-history": {
+      "reportedFrameBytes": {
+        "candidate": 704,
+        "reference": 704
+      },
+      "dynamicEntries": {
+        "candidate": [
+          {
+            "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/pair-stack/3-1-history-candidate.c:597:10:fwp_apply",
+            "bytes": 128,
+            "qualifier": "dynamic"
+          },
+          {
+            "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/pair-stack/3-1-history-candidate.c:18240:14:fwp_main_thread",
+            "bytes": 496,
+            "qualifier": "dynamic"
+          }
+        ],
+        "reference": [
+          {
+            "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/pair-stack/3-1-history-reference.c:597:10:fwp_apply",
+            "bytes": 128,
+            "qualifier": "dynamic"
+          },
+          {
+            "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/pair-stack/3-1-history-reference.c:18239:14:fwp_main_thread",
+            "bytes": 496,
+            "qualifier": "dynamic"
+          }
+        ]
+      }
+    },
+    "3-199-current": {
+      "reportedFrameBytes": {
+        "candidate": 704,
+        "reference": 704
+      },
+      "dynamicEntries": {
+        "candidate": [],
+        "reference": []
+      }
+    },
+    "3-199-history": {
+      "reportedFrameBytes": {
+        "candidate": 704,
+        "reference": 704
+      },
+      "dynamicEntries": {
+        "candidate": [
+          {
+            "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/pair-stack/3-199-history-candidate.c:597:10:fwp_apply",
+            "bytes": 128,
+            "qualifier": "dynamic"
+          },
+          {
+            "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/pair-stack/3-199-history-candidate.c:18240:14:fwp_main_thread",
+            "bytes": 512,
+            "qualifier": "dynamic"
+          }
+        ],
+        "reference": [
+          {
+            "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/pair-stack/3-199-history-reference.c:597:10:fwp_apply",
+            "bytes": 128,
+            "qualifier": "dynamic"
+          },
+          {
+            "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/pair-stack/3-199-history-reference.c:18239:14:fwp_main_thread",
+            "bytes": 512,
+            "qualifier": "dynamic"
+          }
+        ]
+      }
+    },
+    "3-1999-current": {
+      "reportedFrameBytes": {
+        "candidate": 704,
+        "reference": 704
+      },
+      "dynamicEntries": {
+        "candidate": [],
+        "reference": []
+      }
+    },
+    "3-1999-history": {
+      "reportedFrameBytes": {
+        "candidate": 704,
+        "reference": 704
+      },
+      "dynamicEntries": {
+        "candidate": [
+          {
+            "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/pair-stack/3-1999-history-candidate.c:597:10:fwp_apply",
+            "bytes": 128,
+            "qualifier": "dynamic"
+          },
+          {
+            "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/pair-stack/3-1999-history-candidate.c:18240:14:fwp_main_thread",
+            "bytes": 512,
+            "qualifier": "dynamic"
+          }
+        ],
+        "reference": [
+          {
+            "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/pair-stack/3-1999-history-reference.c:597:10:fwp_apply",
+            "bytes": 128,
+            "qualifier": "dynamic"
+          },
+          {
+            "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/pair-stack/3-1999-history-reference.c:18239:14:fwp_main_thread",
+            "bytes": 512,
+            "qualifier": "dynamic"
+          }
+        ]
+      }
+    },
+    "33-199-current": {
+      "reportedFrameBytes": {
+        "candidate": 720,
+        "reference": 720
+      },
+      "dynamicEntries": {
+        "candidate": [],
+        "reference": []
+      }
+    },
+    "33-199-history": {
+      "reportedFrameBytes": {
+        "candidate": 816,
+        "reference": 816
+      },
+      "dynamicEntries": {
+        "candidate": [
+          {
+            "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/pair-stack/33-199-history-candidate.c:597:10:fwp_apply",
+            "bytes": 128,
+            "qualifier": "dynamic"
+          },
+          {
+            "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/pair-stack/33-199-history-candidate.c:17298:10:f0",
+            "bytes": 816,
+            "qualifier": "dynamic"
+          }
+        ],
+        "reference": [
+          {
+            "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/pair-stack/33-199-history-reference.c:597:10:fwp_apply",
+            "bytes": 128,
+            "qualifier": "dynamic"
+          },
+          {
+            "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/pair-stack/33-199-history-reference.c:17298:10:f0",
+            "bytes": 816,
+            "qualifier": "dynamic"
+          }
+        ]
+      }
+    },
+    "129-199-current": {
+      "reportedFrameBytes": {
+        "candidate": 2256,
+        "reference": 2256
+      },
+      "dynamicEntries": {
+        "candidate": [],
+        "reference": []
+      }
+    },
+    "129-199-history": {
+      "reportedFrameBytes": {
+        "candidate": 2256,
+        "reference": 2256
+      },
+      "dynamicEntries": {
+        "candidate": [
+          {
+            "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/pair-stack/129-199-history-candidate.c:597:10:fwp_apply",
+            "bytes": 128,
+            "qualifier": "dynamic"
+          },
+          {
+            "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/pair-stack/129-199-history-candidate.c:18345:10:fwp_hof0.constprop",
+            "bytes": 224,
+            "qualifier": "dynamic"
+          }
+        ],
+        "reference": [
+          {
+            "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/pair-stack/129-199-history-reference.c:597:10:fwp_apply",
+            "bytes": 128,
+            "qualifier": "dynamic"
+          },
+          {
+            "location": "/home/runner/work/fun-with-pipes/fun-with-pipes/pair-stack/129-199-history-reference.c:18344:10:fwp_hof0.constprop",
+            "bytes": 224,
+            "qualifier": "dynamic"
+          }
+        ]
+      }
+    }
+  }
+}

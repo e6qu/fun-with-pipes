@@ -1,0 +1,37 @@
+{
+  "pr": 264,
+  "source": "d453662e4226dbf613b5c8accc467a67fa12a359",
+  "tree": "7f2f64e1e45114c0e8b42a324254fe7f7f4939b3",
+  "merge": "d992a5734a12cf976c1ca20f75e9829a18bde0cc",
+  "message": "Inline derivative tape capacity checks",
+  "productionRun": 42186095529,
+  "productionAttempt": 1,
+  "documentationRun": 42186063070,
+  "documentationJob": 127786559808,
+  "auditRun": 42197602289,
+  "auditJob": 127824662178,
+  "auditArtifact": {
+    "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13493958793/zip",
+    "created_at": "2026-11-06T10:17:11Z",
+    "digest": "sha256:32800cd03a63f4c7d94aa5fa0017b85ee44e7e3910787d141c7ed4d2e35a0049",
+    "expired": false,
+    "expires_at": "2027-02-04T09:46:49Z",
+    "id": 13493958793,
+    "name": "production-log-audit-all",
+    "node_id": "MDg6QXJ0aWZhY3QxMzQ5Mzk1ODc5Mw==",
+    "size_in_bytes": 1162047,
+    "updated_at": "2026-11-06T10:17:11Z",
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13493958793",
+    "workflow_run": {
+      "head_branch": "recording-capacity-gate",
+      "head_repository_id": 1400763332,
+      "head_sha": "d453662e4226dbf613b5c8accc467a67fa12a359",
+      "id": 42197602289,
+      "repository_id": 1400763332
+    }
+  },
+  "redundantPostmergeRunsCancelled": [
+    42201737242,
+    42201736811
+  ]
+}

@@ -12,9 +12,11 @@ import subprocess
 import sys
 import zipfile
 
+from github_records import records
+
 sys.path.insert(0,str(Path('scripts').resolve()))
 parser=argparse.ArgumentParser(description=__doc__)
-parser.add_argument("--comparison", required=True, choices=("gradient-call", "packed-pair", "scalar-constant", "recording-lookup", 'recording-inline', 'recording-capacity'))
+parser.add_argument("--comparison", required=True, choices=("gradient-call", "packed-pair", "scalar-constant", "recording-lookup", 'recording-inline', 'recording-capacity', 'recording-context'))
 parser.add_argument("--repository", required=True)
 parser.add_argument('--source',required=True)
 parser.add_argument('--run',required=True,type=int)
@@ -43,10 +45,10 @@ def module(name):
 
 measure = module('measure-numeric-input-analysis')
 check = module('check-array-list-evidence')
-pages=json.loads(subprocess.check_output(['gh','api','--paginate','--slurp',repo+f'actions/runs/{run}/jobs?per_page=100']))
-job,=[job for page in pages for job in page['jobs'] if job['name']==f'numeric_input_analysis ({runner})']
+jobs=records(api, f'actions/runs/{run}/jobs', 'jobs')
+job,=[job for job in jobs if job['name']==f'numeric_input_analysis ({runner})']
 assert job['head_sha']==source and job['status']=='completed' and job['run_id']==run
-artifacts=json.loads(api(f'actions/runs/{run}/artifacts?per_page=100'))['artifacts']
+artifacts=records(api, f'actions/runs/{run}/artifacts', 'artifacts')
 artifact,=[a for a in artifacts if a['name']==args.comparison+'-analysis-'+arch and not a['expired']]
 assert artifact['workflow_run']['head_sha']==source
 path=root/(machine+'.zip')
@@ -134,6 +136,10 @@ with zipfile.ZipFile(path) as z:
                 measure.RECORDING_SELECTION.check_inline_declaration(z.read(base + copy + '.c').decode(), copy.startswith('candidate'))
                 if name in ('derivative-33-199', 'derivative-129-199'):
                     measure.RECORDING_SELECTION.check(z.read(base + copy + '.c').decode(), True)
+            if args.comparison == 'recording-context':
+                measure.RECORDING_SELECTION.check_capacity_gate(z.read(base + copy + '.c').decode(), True)
+                if name in ('derivative-33-199', 'derivative-129-199'):
+                    measure.CONTEXT_SELECTION.check(z.read(base + copy + '.c').decode(), copy.startswith('candidate'))
             if args.comparison == 'recording-capacity':
                 measure.RECORDING_SELECTION.check_capacity_gate(z.read(base + copy + '.c').decode(), copy.startswith('candidate'))
                 if name in ('derivative-33-199', 'derivative-129-199'):

@@ -1,10 +1,7 @@
 //! Observe scoped caller ownership through normal return and nonlocal exits.
 use std::process::Command;
 
-use super::{checked, record_probe, Scratch};
-
-#[path = "exported_probe.rs"]
-mod exported_probe;
+use super::{checked, exported_probe, record_probe, Scratch};
 #[path = "ownership_ledger.rs"]
 mod ownership_ledger;
 

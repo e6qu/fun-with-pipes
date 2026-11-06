@@ -6,6 +6,19 @@ and complete platform validation are different events. Measurements retain their
 original source and settings; old numbers are not measurements of current main.
 The linked PRs, runs and data records supply the detailed evidence.
 
+## Checked capacity calls (PR #264)
+
+[PR #264](https://github.com/e6qu/fun-with-pipes/pull/264) keeps tape capacity
+checks at the caller and shares the unchanged growth body. All nine production
+jobs, documentation and complete audits pass. [Delivery records](measurements/recording-capacity-delivery-2026-11-06/README.md)
+verify merge `d992a573` against the tested tree and its one-line squash message.
+
+Long solves improve 1.86–14.02%; 17/32 meet 5%. Fifteen speed targets and one
+AMD64 copy control remain open. Allocation, validation, live storage and maximum
+reported frames are unchanged; all 14 compiler comparisons pass. The group also
+repairs exact reference-patch validation when Git and difflib align repeated
+braces differently, with all 116 measurement-tool controls passing.
+
 ## Checked scalar append inlining (PR #263)
 
 [PR #263](https://github.com/e6qu/fun-with-pipes/pull/263) places the existing

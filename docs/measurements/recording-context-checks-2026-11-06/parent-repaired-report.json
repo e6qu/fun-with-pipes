@@ -1,0 +1,18 @@
+{
+  "source": "49371e06f5bba4598273a1b807140775dde64c57",
+  "parentSource": "d992a5734a12cf976c1ca20f75e9829a18bde0cc",
+  "cases": {
+    "direct-raw": "7ae6d004d35492ff2e7a0d645078b9174b8ec20f56a8966c3e970af5585a0565",
+    "direct-optimized": "261a8a2d44a2539f57b277f7b01aefb203676ed4bf48147d2b8855a7033f32fa",
+    "nested-raw": "c619f1ea146bd307822cc8257a586dc7264b92613d03c651f07636d165e259e2",
+    "nested-optimized": "c6dbf984f0f7a377c640085826a4f66316cee3654c62fa37c38c1bbb07631bef",
+    "branch-raw": "0aa228d61d0a1f6d595f85e7d77882d74205920147d7e648a92464cffd9e2d45",
+    "branch-optimized": "c078a11bc0ea3da5d00a2c9029fd2e00eafec43f6bc8fafd6c3e6b649aca7e8f",
+    "loops-raw": "cbdd9174956bb461459dc66eeaa422d05e45a5b697e248fb1d3f50572a80efdf",
+    "loops-optimized": "a4828f89fea281ef0ad37f80bff61c48a8105e8c8fc7ba59eb39d07f75d1df43"
+  },
+  "compilers": {
+    "parent": "01a68104aca99f74251477e524b126823a80fcfe65f91263bb8acff8092a6803",
+    "reference": "d5036a50d3a2ee7447daef32172efa1444ca2776fa54bcacb4efd1d9d074e6f5"
+  }
+}

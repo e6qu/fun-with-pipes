@@ -6,6 +6,9 @@ use std::path::PathBuf;
 mod c_instrument;
 use std::process::{Command, Output};
 
+#[path = "support/exported_probe.rs"]
+mod exported_probe;
+
 #[path = "support/record_probe.rs"]
 mod record_probe;
 struct Scratch(PathBuf);
@@ -405,6 +408,11 @@ fn proved_recording_workers_reuse_only_live_tape_lookups() {
         locals: parameters.clone(),
         body: Body::Prim("ad.push".into()),
     };
+    let helper = Func {
+        name: "record-one".into(),
+        body: Body::Expr(Expr::Call(0, (0..4).map(Expr::Local).collect())),
+        ..push.clone()
+    };
     let mut locals = parameters;
     locals.push(i.clone());
     let worker = Func {
@@ -416,7 +424,7 @@ fn proved_recording_workers_reuse_only_live_tape_lookups() {
             4,
             Box::new(Expr::Call(0, (0..4).map(Expr::Local).collect())),
             Box::new(Expr::Call(
-                0,
+                5,
                 vec![
                     Expr::Local(4),
                     Expr::Local(1),
@@ -461,7 +469,7 @@ fn proved_recording_workers_reuse_only_live_tape_lookups() {
         )),
     };
     let program = Program {
-        funcs: vec![push, worker, scope, callback, main],
+        funcs: vec![push, worker, scope, callback, main, helper],
         main: Some(4),
         ..Program::default()
     };
@@ -471,13 +479,9 @@ fn proved_recording_workers_reuse_only_live_tape_lookups() {
         .unwrap_err()
         .contains("outside an autodiff scope"));
     let original = fwp::cgen::generate(&program).unwrap();
-    assert_eq!(
-        original
-            .matches("fwp_ad_recording recording = {-1, NULL};")
-            .count(),
-        1
-    );
-    assert_eq!(original.matches(", &recording)").count(), 2);
+    assert!(!original.contains("fwp_ad_recording recording = {-1, NULL};"));
+    assert!(original.contains(", recording)"));
+    assert!(original.contains(", &(fwp_ad_recording){-1, NULL})"));
     let lookup = "static fwp_tape *fwp_tape_of(int64_t id) {";
     let append = "    t->len = idx + 1;\n";
     assert_eq!(original.matches(lookup).count(), 1);
@@ -511,12 +515,21 @@ fn proved_recording_workers_reuse_only_live_tape_lookups() {
         "static inline __attribute__((always_inline)) V fwp_p_ad_push(",
         "static V fwp_p_ad_push(",
     );
-    let ordinary = runtime.replace(", &recording)", ", NULL)");
+    let ordinary = runtime.replace(", recording)", ", NULL)");
+    let child_call = runtime
+        .lines()
+        .find(|line| line.contains("w5(") && line.contains(", recording)"))
+        .expect("direct nested recording call");
+    let no_forward = runtime.replace(
+        child_call,
+        &child_call.replace(", recording)", ", &(fwp_ad_recording){-1, NULL})"),
+    );
     for (label, source, lookups, expected) in [
         ("proved", runtime, 1, 0),
         ("non-inlined", non_inlined, 1, 0),
         ("ordinary", ordinary.clone(), 2, 0),
         ("broken-lookup-observer", ordinary, 1, 61),
+        ("broken-context-forwarding", no_forward, 1, 61),
         ("broken-parent-validation", no_parent, 1, 62),
         ("broken-validation-order", wrong_order, 1, 63),
     ] {
@@ -544,3 +557,6 @@ fn proved_recording_workers_reuse_only_live_tape_lookups() {
         }
     }
 }
+
+#[path = "support/recording_context.rs"]
+mod recording_context;

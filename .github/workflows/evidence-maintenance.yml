@@ -30,6 +30,70 @@ permissions:
   actions: read
 
 jobs:
+  recording_context_diagnostic:
+    if: inputs.suite == 'recording-context-diagnostic'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - name: Reproduce the saved release failure and print its counters
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PROBE_RUN: ${{ inputs.evidence_run }}
+          PROBE_SOURCE: ${{ inputs.source_revision }}
+        run: >-
+          python3 scripts/inspect-recording-context-failure.py --run "$PROBE_RUN"
+          --source "$PROBE_SOURCE" --output recording-context-diagnostic
+      - name: Retain source and diagnostics without the large original archive
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: recording-context-diagnostic
+          path: |
+            recording-context-diagnostic/
+            !recording-context-diagnostic/original.zip
+          if-no-files-found: error
+  recording_context_parent:
+    if: inputs.suite == 'recording-context-parent'
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    env:
+      CC: gcc
+      CXX: g++
+      CARGO_BUILD_JOBS: 2
+      PARENT_SOURCE: d992a5734a12cf976c1ca20f75e9829a18bde0cc
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          filter: blob:limit=1m
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Build delivered and same-source reference compilers
+        run: |
+          git worktree add --detach "$RUNNER_TEMP/context-reference" "$GITHUB_SHA"
+          python3 scripts/prepare-recording-context-reference.py --checkout "$RUNNER_TEMP/context-reference" --output context-reference
+          cargo build --locked --release --bin fwp --manifest-path "$RUNNER_TEMP/context-reference/Cargo.toml" --target-dir "$RUNNER_TEMP/context-reference-target"
+          cp "$RUNNER_TEMP/context-reference-target/release/fwp" context-reference/fwp
+          python3 scripts/prepare-recording-context-reference.py --verify "$RUNNER_TEMP/context-reference" --output context-reference
+          git worktree add --detach "$RUNNER_TEMP/context-parent" "$PARENT_SOURCE"
+          cargo build --locked --release --bin fwp --manifest-path "$RUNNER_TEMP/context-parent/Cargo.toml" --target-dir "$RUNNER_TEMP/context-parent-target"
+      - name: Require identical emitted C with new scopes disabled
+        run: >-
+          python3 scripts/check-recording-context-parent.py
+          --parent "$RUNNER_TEMP/context-parent-target/release/fwp"
+          --reference context-reference/fwp --parent-source "$PARENT_SOURCE"
+          --output context-parent-check
+      - name: Retain complete C comparisons and reference identity
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: recording-context-parent
+          path: |
+            context-parent-check/
+            context-reference/manifest.json
+            context-reference/reference.patch
+            context-reference/source/
+          if-no-files-found: error
   recording_calls:
     if: inputs.suite == 'recording-call-analysis'
     strategy:
@@ -106,7 +170,7 @@ jobs:
           git rev-parse HEAD > storage-measurement-controls/source.txt
           set -o pipefail
           status=0
-          for script in test-measurement-safety test-recording-capacity-reference test-recording-inline-reference test-recording-calls test-recording-lookup-reference test-scalar-constant-reference test-packed-pair-reference test-packed-pair-stack test-owned-numeric-census test-gradient-array-budgets test-numeric-input-analysis test-descent-budgets test-array-list-evidence test-retain-derivative-evidence test-production-log-audit; do
+          for script in test-measurement-safety test-recording-context-reference test-recording-capacity-reference test-recording-inline-reference test-recording-calls test-recording-lookup-reference test-scalar-constant-reference test-packed-pair-reference test-packed-pair-stack test-owned-numeric-census test-gradient-array-budgets test-numeric-input-analysis test-descent-budgets test-array-list-evidence test-retain-derivative-evidence test-production-log-audit; do
             python3 "scripts/$script.py" 2>&1 | tee "storage-measurement-controls/$script.log" || status=1
           done
           exit "$status"
@@ -182,7 +246,7 @@ jobs:
             !focused-storage-audit/*-evidence.zip
           if-no-files-found: error
   storage_compiler_report:
-    if: inputs.suite == 'storage-compiler-report' || (inputs.suite == 'scalar-constant-compiler-report' || contains(fromJSON('["recording-lookup-compiler-report","recording-inline-compiler-report","recording-capacity-compiler-report"]'), inputs.suite))
+    if: inputs.suite == 'storage-compiler-report' || (inputs.suite == 'scalar-constant-compiler-report' || contains(fromJSON('["recording-lookup-compiler-report","recording-inline-compiler-report","recording-capacity-compiler-report","recording-context-compiler-report"]'), inputs.suite))
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 15
     permissions:
@@ -201,7 +265,7 @@ jobs:
           python3 scripts/test-numeric-input-analysis.py
           status=0
           for machine in aarch64 x86_64; do
-            python3 scripts/audit-storage-compiler-costs.py --comparison "${{ fromJSON('{"storage-compiler-report":"packed-pair","scalar-constant-compiler-report":"scalar-constant","recording-lookup-compiler-report":"recording-lookup","recording-inline-compiler-report":"recording-inline","recording-capacity-compiler-report":"recording-capacity"}')[inputs.suite] }}" \
+            python3 scripts/audit-storage-compiler-costs.py --comparison "${{ fromJSON('{"storage-compiler-report":"packed-pair","scalar-constant-compiler-report":"scalar-constant","recording-lookup-compiler-report":"recording-lookup","recording-inline-compiler-report":"recording-inline","recording-capacity-compiler-report":"recording-capacity","recording-context-compiler-report":"recording-context"}')[inputs.suite] }}" \
               --repository "$GITHUB_REPOSITORY" --run "$EVIDENCE_RUN" \
               --source "$SOURCE_REVISION" --machine "$machine" \
               --output compiler-cost-audit || status=1

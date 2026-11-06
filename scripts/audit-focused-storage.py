@@ -10,6 +10,8 @@ import re
 import subprocess
 import zipfile
 
+from github_records import records
+
 SPEC = importlib.util.spec_from_file_location('production_audit', Path(__file__).with_name('audit-production-run.py'))
 PRODUCTION = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(PRODUCTION)
@@ -36,8 +38,8 @@ def main():
     args = parser.parse_args()
     assert args.attempt > 0 and re.fullmatch(r'[0-9a-f]{40}', args.source)
     args.output.mkdir(parents=True, exist_ok=True)
-    jobs = json.loads(PRODUCTION.api(f'actions/runs/{args.run}/attempts/{args.attempt}/jobs?per_page=100'))['jobs']
-    artifacts = json.loads(PRODUCTION.api(f'actions/runs/{args.run}/artifacts?per_page=100'))['artifacts']
+    jobs = records(PRODUCTION.api, f'actions/runs/{args.run}/attempts/{args.attempt}/jobs', 'jobs')
+    artifacts = records(PRODUCTION.api, f'actions/runs/{args.run}/artifacts', 'artifacts')
     PRODUCTION.save(args.output / 'jobs.json', jobs)
     PRODUCTION.save(args.output / 'artifacts.json', artifacts)
     issues, summary = [], {}
@@ -73,7 +75,7 @@ def main():
         with archive.open('rb') as data:
             assert artifact['digest'] == 'sha256:' + hashlib.file_digest(data, 'sha256').hexdigest()
         retained = args.output / (host + '-records.zip')
-        with zipfile.ZipFile(archive) as z, zipfile.ZipFile(retained, 'w', zipfile.ZIP_DEFLATED) as records:
+        with zipfile.ZipFile(archive) as z, zipfile.ZipFile(retained, 'w', zipfile.ZIP_DEFLATED) as retained_files:
             assert z.read('source.txt').decode().strip() == args.source
             for name in z.namelist():
                 if name.endswith('/'):
@@ -96,7 +98,7 @@ def main():
                 if name.endswith('.status'):
                     report['probes'][name] = raw.decode().strip()
                 if not name.endswith('.exe') and (not name.endswith('.c') or name.startswith(('selection/', 'consuming-selection/'))):
-                    records.writestr(name, raw)
+                    retained_files.writestr(name, raw)
             for member in ('selection/packed-pair-selection.json', 'selection/gradient-call-selection.json', 'consuming-selection/record.json'):
                 report[member] = json.loads(z.read(member))
             assert len(report['selection/packed-pair-selection.json']) == 3
@@ -113,6 +115,15 @@ def main():
                 assert len(recording) == 3 and all(row['enabled'] and row['liveWorkers']
                     and set(row['liveWorkers'].values()) == {6} for row in recording.values())
                 report['selection/recording-lookup-selection.json'] = recording
+            context_steps = [step for step in job['steps']
+                             if step['name'] == 'Verify live numeric call and loop recording scopes']
+            if context_steps and context_steps[0]['conclusion'] == 'success':
+                context = json.loads(z.read('selection/recording-context-selection.json'))
+                assert len(context) == 3
+                assert all(row['enabled'] and len(row['loopScopes']) == 2
+                           and sorted(n for n in row['liveWorkers'].values() if n) == [1, 6]
+                           and any(row['forwardedCalls'].values()) for row in context.values())
+                report['selection/recording-context-selection.json'] = context
         if len(report['targets']) != 25 or not report['images'] or not report['probes']:
             issues.append((host, 'incomplete targets/images/probe observations'))
         if report['diagnostics']:

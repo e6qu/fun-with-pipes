@@ -10,6 +10,8 @@ import re
 import subprocess
 import zipfile
 
+from github_records import records
+
 CONFIG = {
     'linux-arm': ('test (ubuntu-24.04-arm)', 'native-test-logs-ubuntu-24.04-arm', 257),
     'linux-amd': ('test (ubuntu-latest)', 'native-test-logs-ubuntu-latest', 257),
@@ -74,10 +76,10 @@ def main():
     RUN = args.run
     SOURCE = args.source
     jobs_path = f'actions/runs/{RUN}' + (f'/attempts/{args.attempt}' if args.attempt else '')
-    jobs = json.loads(api(jobs_path + '/jobs?per_page=100'))['jobs']
+    jobs = records(api, jobs_path + '/jobs', 'jobs')
     assert len(jobs) == 9
     jobs.append(json.loads(api(f'actions/jobs/{args.docs_job}')))
-    artifacts = json.loads(api(f'actions/runs/{RUN}/artifacts?per_page=100'))['artifacts']
+    artifacts = records(api, f'actions/runs/{RUN}/artifacts', 'artifacts')
     save(ROOT / 'jobs.json', jobs)
     save(ROOT / 'artifacts.json', artifacts)
     issues = []

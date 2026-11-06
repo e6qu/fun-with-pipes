@@ -3,6 +3,18 @@
 use crate::ir::*;
 use crate::value::Value;
 
+/// An ordinary call starts an independent state; it never borrows across a
+/// caller whose complete lifetime proof is unknown. This C initializer has no
+/// allocation, validation or observable effect of its own.
+pub(super) const FRESH: &str = "&(fwp_ad_recording){-1, NULL}";
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(super) enum Mode {
+    None,
+    Local,
+    Forward,
+}
+
 #[derive(Clone, Copy)]
 enum Fact {
     Unknown,
@@ -70,6 +82,7 @@ fn float_primitive(function: &Func) -> bool {
 struct Proof<'a> {
     program: &'a Program,
     facts: Vec<Fact>,
+    scopes: bool,
 }
 
 impl Proof<'_> {
@@ -162,15 +175,23 @@ impl Proof<'_> {
                         return None;
                     }
                     let direct_push = scalar_push(function);
-                    self.function(*callee, budget, depth + 1)?;
+                    let nested = self.function(*callee, budget, depth + 1)?;
                     if arguments.len() > budget.saturating_sub(work.len()) {
                         return None;
                     }
-                    pushes = (pushes + u8::from(direct_push)).min(2);
+                    let added = if self.scopes && !direct_push {
+                        nested
+                    } else {
+                        u8::from(direct_push)
+                    };
+                    pushes = (pushes + added).min(2);
                     work.extend(arguments);
                 }
                 Expr::Func(callee) if self.program.funcs.get(*callee)?.arity == 0 => {
-                    self.function(*callee, budget, depth + 1)?;
+                    let nested = self.function(*callee, budget, depth + 1)?;
+                    if self.scopes {
+                        pushes = (pushes + nested).min(2);
+                    }
                 }
                 // Unknown calls, trace hooks and resource cleanup can reenter.
                 // Keep branches and recursive workers outside this first proof.
@@ -181,26 +202,80 @@ impl Proof<'_> {
     }
 }
 
-pub(super) fn select(program: &Program, ticks: bool) -> Vec<bool> {
+pub(super) fn select(program: &Program, ticks: bool, scopes: bool) -> Vec<Mode> {
     if ticks {
-        return vec![false; program.funcs.len()];
+        return vec![Mode::None; program.funcs.len()];
     }
     let mut proof = Proof {
         program,
         facts: vec![Fact::Unknown; program.funcs.len()],
+        scopes,
     };
-    (0..program.funcs.len())
-        .map(|id| {
-            proof
-                .function(id, &mut 4096, 0)
-                .is_some_and(|pushes| pushes >= 2)
-        })
-        .collect()
+    if !scopes {
+        return (0..program.funcs.len())
+            .map(|id| match proof.function(id, &mut 4096, 0) {
+                Some(2..) => Mode::Local,
+                _ => Mode::None,
+            })
+            .collect();
+    }
+    let mut pending = Vec::new();
+    for id in 0..program.funcs.len() {
+        if matches!(proof.function(id, &mut 4096, 0), Some(2..)) {
+            pending.push(id);
+        }
+        match &program.funcs[id].body {
+            Body::PackedRecordPairs { callback, .. } | Body::PackedRecordFold { callback } => {
+                pending.push(*callback);
+            }
+            _ => {}
+        }
+    }
+    // A standalone single append cannot reuse a lookup. Only repeated workers
+    // and the selected loops start scopes; their numeric callees borrow them.
+    let mut modes = vec![Mode::None; program.funcs.len()];
+    while let Some(id) = pending.pop() {
+        if !matches!(proof.facts.get(id), Some(Fact::Numeric(1..))) || modes[id] == Mode::Forward {
+            continue;
+        }
+        modes[id] = Mode::Forward;
+        let Body::Expr(body) = &program.funcs[id].body else {
+            unreachable!("only expression bodies have recording sites")
+        };
+        let mut work = vec![body];
+        while let Some(expr) = work.pop() {
+            match expr {
+                Expr::Call(callee, arguments) => {
+                    pending.push(*callee);
+                    work.extend(arguments);
+                }
+                Expr::Func(callee) => pending.push(*callee),
+                Expr::Let(_, value, body) => work.extend([&**value, &**body]),
+                Expr::Record(fields) => work.extend(fields),
+                Expr::Field(value, _) => work.push(value),
+                _ => {}
+            }
+        }
+    }
+    modes
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn select(program: &Program, ticks: bool) -> Vec<bool> {
+        super::select(program, ticks, false)
+            .into_iter()
+            .map(|mode| mode != Mode::None)
+            .collect()
+    }
+
+    fn rejected(program: &Program, id: FuncId) {
+        for scopes in [false, true] {
+            assert_eq!(super::select(program, false, scopes)[id], Mode::None);
+        }
+    }
 
     fn function(parameters: Vec<MT>, result: MT, body: Body) -> Func {
         let ty = parameters.iter().rev().fold(result, |result, parameter| {
@@ -292,6 +367,123 @@ mod tests {
     }
 
     #[test]
+    fn nested_single_append_calls_forward_only_with_scopes_enabled() {
+        let mut p = program();
+        let Body::Expr(Expr::Let(_, first, _)) = p.funcs[1].body.clone() else {
+            unreachable!()
+        };
+        p.funcs[1].body = Body::Expr(*first);
+        for callee in [1, 2, 1] {
+            p.funcs.push(function(
+                vec![MT::con("std::I64"), MT::con("std::F64")],
+                MT::con("std::I64"),
+                Body::Expr(Expr::Call(callee, vec![Expr::Local(0), Expr::Local(1)])),
+            ));
+        }
+        assert_eq!(super::select(&p, false, false), vec![Mode::None; 5]);
+        assert_eq!(super::select(&p, false, true), vec![Mode::None; 5]);
+        let call = |id| Expr::Call(id, vec![Expr::Local(0), Expr::Local(1)]);
+        p.funcs.push(function(
+            vec![MT::con("std::I64"), MT::con("std::F64")],
+            MT::con("std::I64"),
+            Body::Expr(Expr::Let(0, Box::new(call(3)), Box::new(call(4)))),
+        ));
+        assert_eq!(super::select(&p, false, false), vec![Mode::None; 6]);
+        assert_eq!(
+            super::select(&p, false, true),
+            vec![
+                Mode::None,
+                Mode::Forward,
+                Mode::Forward,
+                Mode::Forward,
+                Mode::Forward,
+                Mode::Forward
+            ]
+        );
+        assert_eq!(super::select(&p, true, true), vec![Mode::None; 6]);
+    }
+
+    #[test]
+    fn zero_argument_numeric_calls_are_proved_without_changing_cache_semantics() {
+        let mut p = program();
+        p.funcs.push(function(
+            vec![],
+            MT::con("std::I64"),
+            Body::Expr(Expr::Call(
+                0,
+                vec![
+                    Expr::Const(Value::I64(-1)),
+                    Expr::Const(Value::F64(0.5)),
+                    Expr::Const(Value::I64(-1)),
+                    Expr::Const(Value::F64(0.5)),
+                ],
+            )),
+        ));
+        p.funcs.push(function(
+            vec![],
+            MT::con("std::I64"),
+            Body::Expr(Expr::Func(2)),
+        ));
+        assert_eq!(
+            super::select(&p, false, false),
+            vec![Mode::None, Mode::Local, Mode::None, Mode::None]
+        );
+        assert_eq!(
+            super::select(&p, false, true),
+            vec![Mode::None, Mode::Forward, Mode::None, Mode::None]
+        );
+        let mut repeated = function(
+            vec![],
+            MT::con("std::I64"),
+            Body::Expr(Expr::Let(
+                0,
+                Box::new(Expr::Func(3)),
+                Box::new(Expr::Func(3)),
+            )),
+        );
+        repeated.locals.push(MT::con("std::I64"));
+        p.funcs.push(repeated);
+        assert_eq!(
+            super::select(&p, false, true),
+            vec![
+                Mode::None,
+                Mode::Forward,
+                Mode::Forward,
+                Mode::Forward,
+                Mode::Forward
+            ]
+        );
+    }
+
+    #[test]
+    fn only_selected_loops_seed_single_append_callbacks() {
+        for body in [
+            Body::PackedRecordPairs {
+                callback: 1,
+                tail_slot: 0,
+            },
+            Body::PackedRecordFold { callback: 1 },
+        ] {
+            let mut p = program();
+            let Body::Expr(Expr::Let(_, first, _)) = p.funcs[1].body.clone() else {
+                unreachable!()
+            };
+            p.funcs[1].body = Body::Expr(*first);
+            p.funcs.push(function(vec![], MT::con("std::I64"), body));
+            assert_eq!(super::select(&p, false, false), vec![Mode::None; 3]);
+            assert_eq!(
+                super::select(&p, false, true),
+                vec![Mode::None, Mode::Forward, Mode::None]
+            );
+            assert_eq!(super::select(&p, true, true), vec![Mode::None; 3]);
+            p.funcs[2].body = Body::PackedRecordMap { callback: 1 };
+            assert_eq!(super::select(&p, false, true), vec![Mode::None; 3]);
+            p.funcs[2].body = Body::PackedRecordFold { callback: 100 };
+            assert_eq!(super::select(&p, false, true), vec![Mode::None; 3]);
+        }
+    }
+
+    #[test]
     fn type_and_call_depth_limits_reject_exhaustion() {
         let p = program();
         let narrow = MT::Record(
@@ -323,7 +515,7 @@ mod tests {
             Box::new(Expr::Call(2, vec![Expr::Local(0)])),
             Box::new(body),
         ));
-        assert!(!select(&p, false)[1]);
+        rejected(&p, 1);
     }
 
     #[test]
@@ -355,7 +547,7 @@ mod tests {
                 Box::new(Expr::Call(3, vec![Expr::Local(0)])),
                 Box::new(body),
             ));
-            assert!(!select(&p, false)[1], "{symbol}");
+            rejected(&p, 1);
         }
     }
 
@@ -395,7 +587,7 @@ mod tests {
                     body
                 }
             });
-            assert!(!select(&p, false)[1], "{kind}");
+            rejected(&p, 1);
         }
     }
 
@@ -409,9 +601,9 @@ mod tests {
             body = Expr::Let(2, Box::new(Expr::Const(Value::I64(0))), Box::new(body));
         }
         p.funcs[1].body = Body::Expr(body);
-        assert!(!select(&p, false)[1]);
+        rejected(&p, 1);
         let mut p = program();
         p.funcs[0].ty = MT::con("std::I64");
-        assert!(!select(&p, false)[1]);
+        rejected(&p, 1);
     }
 }

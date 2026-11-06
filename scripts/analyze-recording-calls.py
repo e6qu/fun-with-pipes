@@ -152,19 +152,20 @@ def check_plan(plan, arch):
     assert re.fullmatch('[0-9a-f]{40}', plan['contractCommit'])
     assert set(plan['architectures']) == {'aarch64', 'x86_64'}
     groups = plan['architectures'][arch]
-    assert [group['protocol'] for group in groups] in (['scalar-constant', 'recording-lookup'], ['recording-inline'], ['recording-capacity'])
+    assert [group['protocol'] for group in groups] in (['scalar-constant', 'recording-lookup'], ['recording-inline'], ['recording-capacity'], ['recording-context'])
     seen = set()
     for group in groups:
         assert set(group) == {'name', 'index', 'source', 'protocol', 'variants'}
         assert re.fullmatch('[a-z][a-z-]+', group['name'])
         assert re.fullmatch('[0-9a-f]{40}', group['source'])
-        assert group['protocol'] in ('scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity')
+        assert group['protocol'] in ('scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context')
         assert group['index'].startswith('docs/measurements/') and '..' not in Path(group['index']).parts
         expected_variants = {
             'scalar-constant': {'previous': ('', 'observe')},
             'recording-lookup': {'reference': ('-reference', 'observe'), 'candidate': ('', 'observe')},
             'recording-inline': {'reference': ('-reference', 'observe'), 'candidate': ('', 'require')},
             'recording-capacity': {'reference': ('-reference', 'observe'), 'candidate': ('', 'require')},
+            'recording-context': {'reference': ('-reference', 'require'), 'candidate': ('', 'require')},
         }[group['protocol']]
         assert len(group['variants']) == len(expected_variants)
         assert all(set(variant) == {'name', 'suffix', 'inlining'} for variant in group['variants'])
@@ -177,7 +178,7 @@ def check_plan(plan, arch):
             assert variant['suffix'] in ('', '-reference')
             assert variant['inlining'] in ('observe', 'require')
             if variant['inlining'] == 'require':
-                assert group['protocol'] in ('recording-inline', 'recording-capacity') and variant['suffix'] == ''
+                assert group['protocol'] == 'recording-context' or (group['protocol'] in ('recording-inline', 'recording-capacity') and variant['suffix'] == '')
     return groups
 
 
@@ -208,7 +209,7 @@ def main():
     try:
         for group in groups:
             symbol = {'scalar-constant': 'fwp_p_ad_push', 'recording-lookup': 'fwp_p_ad_push',
-                      'recording-inline': 'fwp_p_ad_push', 'recording-capacity': 'fwp_tape_reserve'}[group['protocol']]
+                      'recording-inline': 'fwp_p_ad_push', 'recording-capacity': 'fwp_tape_reserve', 'recording-context': 'fwp_p_ad_push'}[group['protocol']]
             report, archive = load_session(group['index'], args.arch, group['source'], group['protocol'], output / group['name'])
             with zipfile.ZipFile(archive) as saved:
                 if len(saved.namelist()) != len(set(saved.namelist())):

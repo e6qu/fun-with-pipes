@@ -1,0 +1,33 @@
+Point = { node: I64, value: F64 }
+
+input-point : I64 -> I64 -> Point
+input-point = fn index -> fn node -> Point { node = node, value = from-int index }
+
+pair-point : Point -> Point -> Point
+pair-point = fn left -> fn right -> Point {
+    node = ad.push (right | .node) 1.0 -1 0.0,
+    value = (left | .value) + (right | .value),
+}
+
+sum-point : Point -> Point -> Point
+sum-point = fn total -> fn point -> Point {
+    node = ad.push (point | .node) 1.0 -1 0.0,
+    value = (total | .value) + (point | .value),
+}
+
+export transform : List[I64] -> Point
+transform = ad.scope (fn inputs ->
+    let records = zip-with input-point (range 0 (length inputs)) inputs
+    in let pairs = zip-with pair-point (drop 1 records) records
+    in fold sum-point (Point { node = -1, value = 0.0 }) pairs)
+
+# The native harness recovers injected traps; keep a real recovery boundary
+# so code generation includes exceptional cleanup for the same program.
+checked : List[I64] -> Result[Point, String]
+checked = attempt transform
+
+main = [
+    [] | checked | result.map .value | eq (Ok 0.0),
+    [-1] | checked | result.map .node | eq (Ok -1),
+    [-1, -1, -1] | checked | result.map .value | eq (Ok 4.0),
+] | all id | echo
