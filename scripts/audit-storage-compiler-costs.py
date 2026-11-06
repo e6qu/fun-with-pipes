@@ -14,7 +14,7 @@ import zipfile
 
 sys.path.insert(0,str(Path('scripts').resolve()))
 parser=argparse.ArgumentParser(description=__doc__)
-parser.add_argument("--comparison", required=True, choices=("gradient-call", "packed-pair", "scalar-constant", "recording-lookup", 'recording-inline', 'recording-capacity'))
+parser.add_argument("--comparison", required=True, choices=("gradient-call", "packed-pair", "scalar-constant", "recording-lookup", 'recording-inline', 'recording-capacity', 'recording-context'))
 parser.add_argument("--repository", required=True)
 parser.add_argument('--source',required=True)
 parser.add_argument('--run',required=True,type=int)
@@ -134,6 +134,10 @@ with zipfile.ZipFile(path) as z:
                 measure.RECORDING_SELECTION.check_inline_declaration(z.read(base + copy + '.c').decode(), copy.startswith('candidate'))
                 if name in ('derivative-33-199', 'derivative-129-199'):
                     measure.RECORDING_SELECTION.check(z.read(base + copy + '.c').decode(), True)
+            if args.comparison == 'recording-context':
+                measure.RECORDING_SELECTION.check_capacity_gate(z.read(base + copy + '.c').decode(), True)
+                if name in ('derivative-33-199', 'derivative-129-199'):
+                    measure.CONTEXT_SELECTION.check(z.read(base + copy + '.c').decode(), copy.startswith('candidate'))
             if args.comparison == 'recording-capacity':
                 measure.RECORDING_SELECTION.check_capacity_gate(z.read(base + copy + '.c').decode(), copy.startswith('candidate'))
                 if name in ('derivative-33-199', 'derivative-129-199'):

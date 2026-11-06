@@ -31,7 +31,7 @@ int main(void) {
             if (loop_lookups != expected) return 82;
             if (loop_appends != (mode == 5 ? 0U : 2U * (unsigned)pairs)) return 83;
             V root = OBJ(result)->f[0];
-            if (fwp_f64(OBJ(result)->f[1]) != 2.0 * pairs) return 84;
+            if (fwp_f64(OBJ(result)->f[1]) != (double)pairs * pairs) return 84;
             if (!pairs || mode == 5) {
                 if (root != (V)-1) return 85;
             } else {

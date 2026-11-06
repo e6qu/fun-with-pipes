@@ -113,6 +113,15 @@ def main():
                 assert len(recording) == 3 and all(row['enabled'] and row['liveWorkers']
                     and set(row['liveWorkers'].values()) == {6} for row in recording.values())
                 report['selection/recording-lookup-selection.json'] = recording
+            context_steps = [step for step in job['steps']
+                             if step['name'] == 'Verify live numeric call and loop recording scopes']
+            if context_steps and context_steps[0]['conclusion'] == 'success':
+                context = json.loads(z.read('selection/recording-context-selection.json'))
+                assert len(context) == 3
+                assert all(row['enabled'] and len(row['loopScopes']) == 2
+                           and sorted(n for n in row['liveWorkers'].values() if n) == [1, 6]
+                           and any(row['forwardedCalls'].values()) for row in context.values())
+                report['selection/recording-context-selection.json'] = context
         if len(report['targets']) != 25 or not report['images'] or not report['probes']:
             issues.append((host, 'incomplete targets/images/probe observations'))
         if report['diagnostics']:

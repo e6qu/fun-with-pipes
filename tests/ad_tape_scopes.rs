@@ -6,6 +6,9 @@ use std::path::PathBuf;
 mod c_instrument;
 use std::process::{Command, Output};
 
+#[path = "support/exported_probe.rs"]
+mod exported_probe;
+
 #[path = "support/record_probe.rs"]
 mod record_probe;
 struct Scratch(PathBuf);
@@ -515,7 +518,7 @@ fn proved_recording_workers_reuse_only_live_tape_lookups() {
     let ordinary = runtime.replace(", recording)", ", NULL)");
     let child_call = runtime
         .lines()
-        .find(|line| line.contains("= w5(") && line.contains(", recording)"))
+        .find(|line| line.contains("w5(") && line.contains(", recording)"))
         .expect("direct nested recording call");
     let no_forward = runtime.replace(
         child_call,

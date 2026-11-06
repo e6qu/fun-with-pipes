@@ -1,10 +1,7 @@
 //! Borrow lookup state only through proven calls and complete numeric loops.
 use std::process::Command;
 
-use super::{checked, record_probe, Scratch};
-
-#[path = "exported_probe.rs"]
-mod exported_probe;
+use super::{checked, exported_probe, record_probe, Scratch};
 
 #[test]
 fn recording_loops_validate_id_changes_and_release_owners_on_nested_failure() {

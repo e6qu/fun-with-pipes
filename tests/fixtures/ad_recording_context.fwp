@@ -1,7 +1,7 @@
 Point = { node: I64, value: F64 }
 
-input-point : I64 -> Point
-input-point = fn node -> Point { node = node, value = 1.0 }
+input-point : I64 -> I64 -> Point
+input-point = fn index -> fn node -> Point { node = node, value = from-int index }
 
 pair-point : Point -> Point -> Point
 pair-point = fn left -> fn right -> Point {
@@ -17,7 +17,7 @@ sum-point = fn total -> fn point -> Point {
 
 export transform : List[I64] -> Point
 transform = ad.scope (fn inputs ->
-    let records = map input-point inputs
+    let records = zip-with input-point (range 0 (length inputs)) inputs
     in let pairs = zip-with pair-point (drop 1 records) records
     in fold sum-point (Point { node = -1, value = 0.0 }) pairs)
 

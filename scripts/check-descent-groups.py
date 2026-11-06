@@ -25,14 +25,48 @@ GROUPS = {'3-0': 42, '3-1': 42, '3-199': 21, '3-1999': 7, '33-199': 7, '129-199'
 SOLVES = {'3-0': 32768, '3-1': 512, '3-199': 32, '3-1999': 4, '33-199': 32, '129-199': 8}
 
 
+def reference_contract(protocol):
+    """The exact edits and preserved files shared by both archive readers."""
+    assert protocol in ('owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context'), protocol
+    gradient = protocol == 'gradient-call'
+    expected_paths = {'src/cgen.rs', 'lib/autodiff.fwp'} if gradient else {'src/cgen.rs'}
+    expected_transformation = 'scoped input borrowing, numeric fold fields, single-root seeding and consumed array scratch' if gradient else 'consuming scalar array maps and exclusive coordinate-list reuse'
+    if protocol == 'packed-pair':
+        expected_transformation = 'reuse of the consumed private neighboring-record buffer'
+    if protocol == 'scalar-constant':
+        expected_transformation = 'exact immediate scalar constants and acyclic cached aliases'
+    if protocol == 'recording-lookup':
+        expected_transformation = 'validated tape lookup reuse within bounded nonsuspending numeric workers'
+    if protocol == 'recording-inline':
+        expected_paths = {'runtime/fwp_rt_kernel.c'}
+        expected_transformation = 'forced inlining of the checked F64 scalar append body'
+    if protocol == 'recording-capacity':
+        expected_paths = {'runtime/fwp_rt_kernel.c'}
+        expected_transformation = 'inlined checked reserve gate with shared tape growth'
+    expected_preserved = set(('src/ownership.rs', 'src/ir.rs', 'src/rc.rs', 'src/rc/borrows.rs', 'src/cgen/owned_numeric.rs', 'src/cgen/scoped_calls.rs', 'src/cgen/fold_fields.rs', 'src/opt/scoped.rs', 'src/cgen/packed_inputs.rs', 'src/cgen/numeric_parameters.rs', 'src/cgen/packed_records.rs', 'src/cgen/range_zip.rs', 'src/fuse.rs', 'src/opt.rs', 'runtime/fwp_rt.c', 'runtime/fwp_rt_heap.c', 'runtime/fwp_rt_prims.c', 'runtime/fwp_rt_task.c', 'runtime/fwp_rt_kernel.c', 'src/numerics.rs', 'src/interp.rs', 'lib/list.fwp')) if gradient else {'src/ir.rs', 'src/rc.rs', 'src/rc/borrows.rs', 'src/cgen/owned_numeric.rs', 'runtime/fwp_rt_task.c', 'runtime/fwp_rt_heap.c', 'src/cgen/packed_inputs.rs', 'src/cgen/numeric_parameters.rs', 'src/fuse.rs', 'runtime/fwp_rt_prims.c', 'src/ownership.rs', 'src/opt/scoped.rs', 'runtime/fwp_rt.c', 'runtime/fwp_rt_kernel.c', 'src/opt.rs', 'lib/list.fwp', 'src/cgen/range_zip.rs', 'lib/autodiff.fwp', 'src/cgen/packed_records.rs'}
+    if protocol in ('packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context'):
+        expected_preserved |= {'src/escape.rs', 'src/cgen/scoped_calls.rs',
+                               'src/cgen/fold_fields.rs', 'src/numerics.rs', 'src/interp.rs'}
+    if protocol in ('scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context'):
+        expected_preserved.add('src/cgen/constant_values.rs')
+    if protocol in ('recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context'):
+        expected_preserved.add('src/cgen/recording.rs')
+    if protocol in ('recording-inline', 'recording-capacity'):
+        expected_preserved.remove('runtime/fwp_rt_kernel.c')
+        expected_preserved.add('src/cgen.rs')
+    if protocol == 'recording-context':
+        expected_transformation = 'validated recording state shared through closed numeric calls and loops'
+    return expected_transformation, expected_paths, expected_preserved
+
+
 def check_report(report, source, protocol):
-    assert protocol in {'grouped', 'repeated', 'recording', 'eager-captures', 'array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity'}
-    paired = protocol in {'recording', 'eager-captures', 'array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity'}
+    assert protocol in {'grouped', 'repeated', 'recording', 'eager-captures', 'array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context'}
+    paired = protocol in {'recording', 'eager-captures', 'array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context'}
     samples, seed = (49, 20261101) if protocol == 'array-lists' else (98, 20261029)
     labels = (['fwp-ad-history', 'fwp-ad', 'fwp-ad-history-reference', 'fwp-ad-reference',
                'c-explicit', 'rust-explicit', 'fwp-ad-identical'] if paired else LABELS)
     assert report['source'] == source
-    if protocol in ('matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity'):
+    if protocol in ('matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context'):
         assert report['settings']['FWP_VRET'] == report['settings']['FWP_FRAME_FIELDS'] == '1'
     config = report['configuration']
     assert (config['samples'], config['warmups'], config['order_seed'],
@@ -76,12 +110,12 @@ def check_report(report, source, protocol):
         for label, ratios in row['ratios'].items():
             for peer, value in ratios.items():
                 assert value == row['medianNs'][label] / row['medianNs'][peer]
-        if protocol not in {'grouped', 'array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity'}:
+        if protocol not in {'grouped', 'array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context'}:
             ratio = row['medianNs']['fwp-ad'] / row['medianNs']['fwp-ad-identical']
             assert max(ratio, 1 / ratio) <= 1.02, (name, ratio)
         CHECK.check_observations(name, row, updates * solves,
                                  "recording" if paired else "baseline")
-    if protocol in {'eager-captures', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity'}:
+    if protocol in {'eager-captures', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context'}:
         assert config['comparison'] == protocol
 
 
@@ -103,15 +137,15 @@ def check_archive(archive_path, protocol):
     source_hashes = None
     failed_sessions = 0
     for label, session in archive['sessions'].items():
-        source = session['source'] if protocol in {'eager-captures', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity'} else archive['source']
-        run = session['run'] if protocol in {'eager-captures', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity'} else archive['run']
+        source = session['source'] if protocol in {'eager-captures', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context'} else archive['source']
+        run = session['run'] if protocol in {'eager-captures', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context'} else archive['run']
         job = session['job']
         identity = (job['runner_id'], job['started_at'], job['completed_at'])
         assert identity not in identities
         identities.add(identity)
         assert job['run_id'] == run and job['head_sha'] == source
         assert job['status'] == 'completed'
-        failed = protocol == 'recording' or (protocol in {'eager-captures', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity'} and bool(session['budgetFailures']))
+        failed = protocol == 'recording' or (protocol in {'eager-captures', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context'} and bool(session['budgetFailures']))
         assert job['conclusion'] == ('failure' if failed else 'success')
         for kind in ['report', 'log']:
             raw = gzip.decompress((archive_path.parent / session[kind]).read_bytes())
@@ -122,7 +156,7 @@ def check_archive(archive_path, protocol):
         check_report(report, source, protocol)
         assert report['machine'] == ('aarch64' if label.startswith('arm') else 'x86_64')
         assert report['configuration']['session'] == int(label[-1])
-        assert len(session['files']) == (1334 if protocol in {'recording', 'eager-captures', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity'} else 1157)
+        assert len(session['files']) == (1334 if protocol in {'recording', 'eager-captures', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context'} else 1157)
         if protocol == 'recording':
             assert archive['decision'] == 'not-accepted'
             assert report['configuration']['comparison'] == 'scalar-recording'
@@ -135,7 +169,7 @@ def check_archive(archive_path, protocol):
                                 ('reference.patch', 'patchSha256')]:
                 assert session['referenceFiles'][file]['sha256'] == reference[field]
             assert hashlib.sha256(session['referencePatch'].encode()).hexdigest() == reference['patchSha256']
-        if protocol in {'eager-captures', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity'}:
+        if protocol in {'eager-captures', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context'}:
             failures = DESCENT.paired_budget_failures(report['results'], protocol)
             assert session['budgetFailures'] == failures
             failed_sessions += bool(failures)
@@ -152,36 +186,10 @@ def check_archive(archive_path, protocol):
                     expected_files['reference-' + Path(path).name] = hashes['referenceSha256']
                 for path, expected_hash in reference['unchanged'].items():
                     assert report['sourceHashes'][path] == expected_hash
-            elif protocol in ('owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity'):
-                gradient = protocol == 'gradient-call'
-                expected_transformation = {
-                    'gradient-call': 'scoped input borrowing, numeric fold fields, single-root seeding and consumed array scratch',
-                    'owned-numeric': 'consuming scalar array maps and exclusive coordinate-list reuse',
-                    'packed-pair': 'reuse of the consumed private neighboring-record buffer',
-                    'scalar-constant': 'exact immediate scalar constants and acyclic cached aliases',
-                    'recording-lookup': 'validated tape lookup reuse within bounded nonsuspending numeric workers',
-                    'recording-inline': 'forced inlining of the checked F64 scalar append body',
-                }[protocol]
+            elif protocol in ('owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context'):
+                expected_transformation, expected_paths, expected_preserved = reference_contract(protocol)
                 assert reference['disabledTransformation'] == expected_transformation
-                assert set(reference['candidate']) == set(reference['reference']) == ({'runtime/fwp_rt_kernel.c'} if protocol == 'recording-inline' else {'src/cgen.rs', 'lib/autodiff.fwp'} if gradient else {'src/cgen.rs'})
-                expected_preserved = set(('src/ownership.rs', 'src/ir.rs', 'src/rc.rs', 'src/rc/borrows.rs', 'src/cgen/owned_numeric.rs', 'src/cgen/scoped_calls.rs', 'src/cgen/fold_fields.rs', 'src/opt/scoped.rs', 'src/cgen/packed_inputs.rs', 'src/cgen/numeric_parameters.rs', 'src/cgen/packed_records.rs', 'src/cgen/range_zip.rs', 'src/fuse.rs', 'src/opt.rs', 'runtime/fwp_rt.c', 'runtime/fwp_rt_heap.c', 'runtime/fwp_rt_prims.c', 'runtime/fwp_rt_task.c', 'runtime/fwp_rt_kernel.c', 'src/numerics.rs', 'src/interp.rs', 'lib/list.fwp')) if gradient else {
-                    'src/ownership.rs', 'src/ir.rs', 'src/rc.rs', 'src/rc/borrows.rs',
-                    'src/cgen/owned_numeric.rs', 'src/opt/scoped.rs', 'src/cgen/packed_inputs.rs',
-                    'src/cgen/numeric_parameters.rs', 'src/cgen/packed_records.rs',
-                    'src/cgen/range_zip.rs', 'src/fuse.rs', 'src/opt.rs',
-                    'runtime/fwp_rt.c', 'runtime/fwp_rt_heap.c', 'runtime/fwp_rt_prims.c',
-                    'runtime/fwp_rt_task.c', 'runtime/fwp_rt_kernel.c', 'lib/autodiff.fwp', 'lib/list.fwp',
-                }
-                if protocol in ('packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity'):
-                    expected_preserved |= {'src/escape.rs', 'src/cgen/scoped_calls.rs',
-                                           'src/cgen/fold_fields.rs', 'src/numerics.rs', 'src/interp.rs'}
-                if protocol in ('scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity'):
-                    expected_preserved.add('src/cgen/constant_values.rs')
-                if protocol in ('recording-lookup', 'recording-inline', 'recording-capacity'):
-                    expected_preserved.add('src/cgen/recording.rs')
-                if protocol == 'recording-inline':
-                    expected_preserved.remove('runtime/fwp_rt_kernel.c')
-                    expected_preserved.add('src/cgen.rs')
+                assert set(reference['candidate']) == set(reference['reference']) == expected_paths
                 assert set(reference['unchanged']) == expected_preserved
                 expected_files = {'fwp': reference['compilerSha256'], 'reference.patch': reference['patchSha256']}
                 for path, checksum in reference['candidate'].items():
@@ -282,7 +290,7 @@ def check_archive(archive_path, protocol):
             ratios = [a / b for a, b in zip(row['samplesNs']['fwp-ad'], row['samplesNs']['fwp-ad-identical'])]
             paired = [max(ratio, 1 / ratio) for ratio in ratios]
             assert derived['identicalPairedP95'] == sorted(paired)[math.ceil(.95 * len(paired)) - 1]
-    if protocol in {'eager-captures', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity'}:
+    if protocol in {'eager-captures', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context'}:
         assert archive['decision'] == ('not-accepted' if failed_sessions else 'accepted')
         print(f'Four {protocol} sessions audited; {failed_sessions} failed sessions retained')
     else:
@@ -292,6 +300,6 @@ def check_archive(archive_path, protocol):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--archive', type=Path, required=True)
-    parser.add_argument('--protocol', choices=['grouped', 'repeated', 'recording', 'eager-captures', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity'], required=True)
+    parser.add_argument('--protocol', choices=['grouped', 'repeated', 'recording', 'eager-captures', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context'], required=True)
     args = parser.parse_args()
     check_archive(args.archive, args.protocol)

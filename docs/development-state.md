@@ -1,76 +1,106 @@
 # Current work
 
-**Next:** publish the combined call/loop implementation as one draft PR and
-run `gradient-call-checks` on its exact source. Audit all three hosts and every
-completed target before batching repairs. Build the new measurement/reference
-controls while these checks run; do not dispatch timings yet.
+**Next:** publish the combined repair, then dispatch recording-context-checks,
+storage-measurement-controls and recording-context-parent at the same head.
+Audit all results before measurements. No timing session has run for this group.
 
 Branch `recording-context-scopes`, worktree `.worktrees/recording-capacity-gate`.
-Base `d992a5734a12cf976c1ca20f75e9829a18bde0cc`. No active PR yet; the combined production changes and native probes are ready
-for the first focused batch. Measurement tooling remains to be completed.
+Base `d992a5734a12cf976c1ca20f75e9829a18bde0cc`.
+[PR #265](https://github.com/e6qu/fun-with-pipes/pull/265) is the only active PR,
+draft. First tested head `eab39aa9169d9245ba39eed0cb5cdd50f98f834a`;
+local `5bfdc2c23` adds the reference preparer. The following repairs are uncommitted.
 
-## Plan status
+## Roadmap status
 
 | Step | Status | Next result |
 |---|---|---|
-| 1 | Frozen | Contract and #264 delivery committed as `5dc8efd02` before production edits. |
-| 2 | Implemented, unverified | Extended bounded proof, explicit worker arguments, pair-map/fold scopes and negative probes; run focused native checks. |
-| 3 | Pending | Focused GCC/Clang checks, reference controls, one combined measurement batch and complete audits. |
-| 4 | Pending | Nine exact-head jobs/docs, complete final audit and verified squash merge. |
+| 1 | Verified | Contract and #264 delivery committed as `5dc8efd02` before production edits. |
+| 2 | Implemented | Call forwarding and loop scopes; verify tightened admission and repaired probes. |
+| 3 | In progress | Focused GCC/Clang checks, reference controls, one measurement batch and complete audits. |
+| 4 | Pending | Nine exact-head production jobs/docs, complete audit and verified squash merge. |
 
-## Verified delivery: PR #264
+## First focused run and repairs
 
-[Delivery receipt](measurements/recording-capacity-delivery-2026-11-06/README.md)
-retains complete logs, archive identities and the actual merge message/tree.
+Run `42204680001`, suite gradient-call-checks: AMD `127848244993`,
+mac `127848245176`, ARM `127848245215`. All failed; complete logs reviewed.
+All 75 native target results were audited: 24/25 pass on each host;
+ad_tape_scopes has five passes and two new probe failures on each.
 
-- Tested head `d453662e4226dbf613b5c8accc467a67fa12a359`.
-- Merge `d992a5734a12cf976c1ca20f75e9829a18bde0cc`; identical tested/merged tree
-  `7f2f64e1e45114c0e8b42a324254fe7f7f4939b3`.
-- Exact squash subject `Inline derivative tape capacity checks`: 38 characters,
-  one line, empty body and no trailers.
-- All nine production jobs `42186095529` attempt 1 pass. Docs
-  `42186063070` / `127786559808` passes. Every complete producer log reviewed.
-- Complete audit `42197602289` / `127824662178` passes. Artifact `13493958793`,
-  1,162,047 bytes, SHA-256
-  `32800cd03a63f4c7d94aa5fa0017b85ee44e7e3910787d141c7ed4d2e35a0049`.
-  All ten source receipts and every retained log hash verified (guard 0.13s).
-- Duplicate postmerge runs `42201736811` / `42201737242` confirmed cancelled
-  after tree equality. Initial receipt attempt correctly refused while the CI
-  cancellation was pending; retention passed once cancellation completed.
-- Long gains 1.86–14.02%; 17/32 meet 5%. Fifteen targets and one AMD64 copy limit
-  stay open. Allocation/validation/live storage/maximum frames unchanged;
-  all compiler comparisons pass. Every older missed limit stays in PLAN.md.
+| Failure | Repair in this batch |
+|---|---|
+| Clippy: exported_probe.rs loaded twice in ad_tape_scopes. | Declare it once in the parent; import it into both test modules. No suppression. |
+| Nested-call mutation expected `= w5(`, but scalar calls include a result cast. | Match the explicit callee and borrowed argument. Keep the broken-forwarding control. |
+| Loop fixture used map, which does not select PackedRecordPairs. | Use the required indexed range-zip producer. Point values are indices; the fold returns (length−1)². Keep selection and runtime assertions. |
+| Docs `42204664978` / `127848184855`: wrong handoff heading/status labels. | Restore Roadmap status and the supported labels. Other docs controls passed. |
 
-## Implementation map
+All three compiler unit logs: 304 passed, zero failed, four existing runner-only
+tests ignored. Formatting, builds, primitive inventory, source-reference and
+common selection checks pass. Preflight artifact hashes/source verified:
+AMD `13497750861`, mac `13496669557`, ARM `13496624934`.
+Full logs are `/tmp/fwp-context-{amd,mac,arm}-first-job.log`; preflight ZIPs use
+`/tmp/fwp-context-preflight-{amd,mac,arm}.zip`.
 
-- `src/cgen/recording.rs`: closed numeric proof, depth 64/expression 4096/type 32
-  bounds, rejects lifecycle/reentry/ticks. Current admission counts direct pushes.
-- `src/cgen.rs`: `Abi::sig`, worker/boxed entries, `FnGen::call`, `expr_fields`
-  and other direct worker calls; packed pair-map/fold generation. Forwarding must
-  cover all these callers. Reconcile uncounted proof with ownership lowering.
-- `tests/ad_tape_scopes.rs` and `fixtures/ad_recording_lookup_probe.c`: existing
-  O0/O1/O2 lookup, parent/trap order, ID-switch, reuse and unwind controls.
-- Reference selector disables only new scopes, preserving previous lookup reuse,
-  append inlining and capacity inlining. No old compiler binary dependency.
-- Read-only source notes: `/tmp/fwp-capacity-next-source-review.md`; initial
-  contract draft `/tmp/fwp-recording-context-contract-draft.md`. The committed
-  contract governs implementation; neither scratch file is acceptance evidence.
+## Implementation and safety
 
-Use the local guard for serial focused checks. Full builds/tests/benchmarks and
-large audits run on GitHub. Last free space 76 GiB. Rust formatting passed under the guard (0.25s and 0.13s); no native build/full
-suite or benchmark ran locally. Current delivery scratch: `../gradient-work/capacity-*`;
-one-shot retention helper `/tmp/fwp-retain-capacity-delivery.py` already ran.
+[The frozen contract](measurements/recording-context-scopes.md) governs this group.
+`src/cgen/recording.rs` keeps the depth 64/expression 4096/type 32 proof limits.
+Only repeated recording workers and selected pair-map/fold callbacks seed state;
+their proved numeric callees borrow it. Standalone single-append functions gain
+no state. Task ticks, lifecycle operations, reentry and unknown calls reject it.
 
-## Current implementation
+`AD_RECORDING_SCOPES` enables explicit internal worker arguments. Ordinary entries
+start fresh state; map/fold scopes remain separate. Ownership lowering can only
+release plain numeric fields here, not invoke user cleanup. Every tape-ID change
+still validates. The disabled reference preserves the earlier direct-push rule,
+local declarations and calls. No runtime wrapper or public setting was added.
 
-`AD_RECORDING_SCOPES` enables transitive numeric selection and explicit borrowed
-worker state. Ordinary entries use a fresh C compound literal; no runtime wrapper
-or optional public argument is added. Separate map/fold states end at their loop.
-The disabled reference keeps the earlier local-worker rule and generated calls.
+Existing tape probes cover nested calls, O0/O1/O2, ID changes, retired slots,
+weights, parent/trap order, reuse and unwind. The new loop module covers empty,
+singleton and growing buffers, input aliases, alternating IDs, map/fold traps,
+workspace/reuse settings, and deliberate lost-scope/ID failures. New admission
+unit tests cover useful roots, standalone exclusion and zero-argument calls.
+These latest changes have not yet passed native validation.
 
-Proof tests cover nested single-append calls, zero-argument calls and all earlier
-rejections in both modes. The existing tape-scope probe now calls a nested worker
-and deliberately breaks forwarding. A new module under the same native target
-checks empty/singleton/large loops, alternating IDs, preserved list aliases,
-map/fold traps, workspace on/off, reuse on/off and deliberate lost-scope/ID bugs.
-These tests have only been formatted; no native or Rust compile result exists yet.
+## Comparison tools
+
+New protocol `recording-context` is integrated with census, compiler/runtime
+producers, budgets, full readers, native-image plans and workflows. The reference
+changes only AD_RECORDING_SCOPES; earlier lookup/append/capacity changes stay on.
+The actual-source observer passes on nine saved optimized C files from the first
+run: two loop scopes, six direct map appends, one shared nested/fold append site,
+and forwarding. This verifies emitted selection, not runtime lookup counts or
+the later admission refinement.
+
+New recording-context-parent runner check builds the delivered source and the
+same-source disabled reference. Eight raw/optimized direct, nested, loop and
+branch examples must emit byte-identical C. No old compiled binary is required.
+This check has not run yet. Focused artifact audit now reads the context results.
+
+Incidental repair: check-descent-groups accepted recording-capacity but omitted
+its reference metadata contract. It and check-array-list-evidence now share one
+explicit contract; all four complete capacity-reference controls pass.
+
+Guarded local results: new reference 5, capacity reference 4, native plan 6,
+descent budgets 23, allocation budgets 9, census 10, measurement safety 3;
+Rust formatting, Python syntax, handoff and workflow-size checks pass. Actionlint
+syntax/expressions pass with shellcheck/pyflakes disabled. Missing sparse fixture
+files were restored unchanged before budget/census checks passed. The scratch
+saved-C check first lacked scripts on sys.path; corrected invocation passes.
+No native build, full suite, benchmark or large audit ran locally. Last free space
+75 GiB. Workflow size 508,518 bytes, below 512,000. Use the repository local guard;
+do not rerun one-shot `/tmp/fwp-context-*` edit scripts.
+
+## Previous verified delivery
+
+[PR #264 receipt](measurements/recording-capacity-delivery-2026-11-06/README.md)
+retains logs and archive identities. Tested `d453662e4226dbf613b5c8accc467a67fa12a359`,
+merged `d992a5734a12cf976c1ca20f75e9829a18bde0cc`, identical tree
+`7f2f64e1e45114c0e8b42a324254fe7f7f4939b3`. Squash subject
+`Inline derivative tape capacity checks`, one line, empty body.
+Nine jobs `42186095529` attempt 1, docs `42186063070` / `127786559808`, and full
+audit `42197602289` / `127824662178` pass. Duplicate postmerge CI/docs were
+confirmed cancelled after tree equality. Do not repeat these checks.
+
+Long gains 1.86–14.02%; 17/32 meet 5%. Fifteen speed targets and one AMD64 copy
+limit remain open. Allocations, validation, live storage and maximum frames are
+unchanged; compiler comparisons pass. Preserve every earlier miss in PLAN.md.

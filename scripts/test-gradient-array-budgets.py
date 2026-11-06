@@ -181,7 +181,7 @@ class PackedPairBudgets(unittest.TestCase):
 
 class ScalarConstantBudgets(unittest.TestCase):
     def test_fresh_work_and_every_phase_must_remain_unchanged(self):
-        for protocol in ('scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity'):
+        for protocol in ('scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context'):
             for dimensions, updates in ((3, 0), (3, 1), (3, 199), (3, 1999), (33, 199), (129, 199)):
                 report, baseline, name = GradientCallBudgets().example(dimensions, updates, (0, 0, 0), (0, 0))
                 baseline['hosts']['aarch64']['cases'][name]['observations'] = copy.deepcopy(report['cases'][name])

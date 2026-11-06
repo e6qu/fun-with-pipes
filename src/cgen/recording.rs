@@ -211,13 +211,53 @@ pub(super) fn select(program: &Program, ticks: bool, scopes: bool) -> Vec<Mode> 
         facts: vec![Fact::Unknown; program.funcs.len()],
         scopes,
     };
-    (0..program.funcs.len())
-        .map(|id| match proof.function(id, &mut 4096, 0) {
-            Some(1..) if scopes => Mode::Forward,
-            Some(2..) => Mode::Local,
-            _ => Mode::None,
-        })
-        .collect()
+    if !scopes {
+        return (0..program.funcs.len())
+            .map(|id| match proof.function(id, &mut 4096, 0) {
+                Some(2..) => Mode::Local,
+                _ => Mode::None,
+            })
+            .collect();
+    }
+    let mut pending = Vec::new();
+    for id in 0..program.funcs.len() {
+        if matches!(proof.function(id, &mut 4096, 0), Some(2..)) {
+            pending.push(id);
+        }
+        match &program.funcs[id].body {
+            Body::PackedRecordPairs { callback, .. } | Body::PackedRecordFold { callback } => {
+                pending.push(*callback);
+            }
+            _ => {}
+        }
+    }
+    // A standalone single append cannot reuse a lookup. Only repeated workers
+    // and the selected loops start scopes; their numeric callees borrow them.
+    let mut modes = vec![Mode::None; program.funcs.len()];
+    while let Some(id) = pending.pop() {
+        if !matches!(proof.facts.get(id), Some(Fact::Numeric(1..))) || modes[id] == Mode::Forward {
+            continue;
+        }
+        modes[id] = Mode::Forward;
+        let Body::Expr(body) = &program.funcs[id].body else {
+            unreachable!("only expression bodies have recording sites")
+        };
+        let mut work = vec![body];
+        while let Some(expr) = work.pop() {
+            match expr {
+                Expr::Call(callee, arguments) => {
+                    pending.push(*callee);
+                    work.extend(arguments);
+                }
+                Expr::Func(callee) => pending.push(*callee),
+                Expr::Let(_, value, body) => work.extend([&**value, &**body]),
+                Expr::Record(fields) => work.extend(fields),
+                Expr::Field(value, _) => work.push(value),
+                _ => {}
+            }
+        }
+    }
+    modes
 }
 
 #[cfg(test)]
@@ -341,6 +381,14 @@ mod tests {
             ));
         }
         assert_eq!(super::select(&p, false, false), vec![Mode::None; 5]);
+        assert_eq!(super::select(&p, false, true), vec![Mode::None; 5]);
+        let call = |id| Expr::Call(id, vec![Expr::Local(0), Expr::Local(1)]);
+        p.funcs.push(function(
+            vec![MT::con("std::I64"), MT::con("std::F64")],
+            MT::con("std::I64"),
+            Body::Expr(Expr::Let(0, Box::new(call(3)), Box::new(call(4)))),
+        ));
+        assert_eq!(super::select(&p, false, false), vec![Mode::None; 6]);
         assert_eq!(
             super::select(&p, false, true),
             vec![
@@ -349,9 +397,10 @@ mod tests {
                 Mode::Forward,
                 Mode::Forward,
                 Mode::Forward,
+                Mode::Forward
             ]
         );
-        assert_eq!(super::select(&p, true, true), vec![Mode::None; 5]);
+        assert_eq!(super::select(&p, true, true), vec![Mode::None; 6]);
     }
 
     #[test]
@@ -381,8 +430,57 @@ mod tests {
         );
         assert_eq!(
             super::select(&p, false, true),
-            vec![Mode::None, Mode::Forward, Mode::Forward, Mode::Forward]
+            vec![Mode::None, Mode::Forward, Mode::None, Mode::None]
         );
+        let mut repeated = function(
+            vec![],
+            MT::con("std::I64"),
+            Body::Expr(Expr::Let(
+                0,
+                Box::new(Expr::Func(3)),
+                Box::new(Expr::Func(3)),
+            )),
+        );
+        repeated.locals.push(MT::con("std::I64"));
+        p.funcs.push(repeated);
+        assert_eq!(
+            super::select(&p, false, true),
+            vec![
+                Mode::None,
+                Mode::Forward,
+                Mode::Forward,
+                Mode::Forward,
+                Mode::Forward
+            ]
+        );
+    }
+
+    #[test]
+    fn only_selected_loops_seed_single_append_callbacks() {
+        for body in [
+            Body::PackedRecordPairs {
+                callback: 1,
+                tail_slot: 0,
+            },
+            Body::PackedRecordFold { callback: 1 },
+        ] {
+            let mut p = program();
+            let Body::Expr(Expr::Let(_, first, _)) = p.funcs[1].body.clone() else {
+                unreachable!()
+            };
+            p.funcs[1].body = Body::Expr(*first);
+            p.funcs.push(function(vec![], MT::con("std::I64"), body));
+            assert_eq!(super::select(&p, false, false), vec![Mode::None; 3]);
+            assert_eq!(
+                super::select(&p, false, true),
+                vec![Mode::None, Mode::Forward, Mode::None]
+            );
+            assert_eq!(super::select(&p, true, true), vec![Mode::None; 3]);
+            p.funcs[2].body = Body::PackedRecordMap { callback: 1 };
+            assert_eq!(super::select(&p, false, true), vec![Mode::None; 3]);
+            p.funcs[2].body = Body::PackedRecordFold { callback: 100 };
+            assert_eq!(super::select(&p, false, true), vec![Mode::None; 3]);
+        }
     }
 
     #[test]

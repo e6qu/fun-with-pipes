@@ -24,6 +24,17 @@ class RecordingCalls(unittest.TestCase):
         for groups in capacity['architectures'].values():
             groups[0]['protocol'] = 'recording-capacity'
         self.assertEqual(CALLS.check_plan(capacity, 'x86_64'), capacity['architectures']['x86_64'])
+        context = copy.deepcopy(capacity)
+        for groups in context['architectures'].values():
+            groups[0]['protocol'] = 'recording-context'
+            for variant in groups[0]['variants']:
+                variant['inlining'] = 'require'
+        self.assertEqual(CALLS.check_plan(context, 'x86_64'), context['architectures']['x86_64'])
+        for variant in context['architectures']['x86_64'][0]['variants']:
+            if variant['name'] == 'reference':
+                variant['inlining'] = 'observe'
+        with self.assertRaises(AssertionError):
+            CALLS.check_plan(context, 'x86_64')
         for mode in ('missing-setting', 'duplicate', 'bad-source', 'wrong-suffix', 'wrong-protocol', 'outside-index', 'missing-arch', 'missing-variant'):
             altered = copy.deepcopy(plan)
             selected = altered['architectures']['aarch64'][0]
