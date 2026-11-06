@@ -58,8 +58,11 @@ because its identical-copy control failed, even though its observed ratio is bel
 
 All 16 results for 33 and 129 coordinates meet 5%. Of the 16 three-coordinate
 long results, only AMD2 3/1999 history meets 5%. The other 15 targets remain open.
-The noisy copy control has no established cause; retain these samples for
-source/driver and sample-position review, not an unchanged timing rerun.
+The [saved-copy review](copy-review.json), reproduced by [this script](copy-review.py),
+confirms byte-identical images and balanced positions. Candidate/identical medians
+are 1.02979 in the first 49 rounds and 0.99344 in the last 49: the gap reverses.
+This establishes variation, not its cause. Retain the samples for source/driver
+review; do not repeat the unchanged comparison for a pass.
 
 [C/Rust comparison, process memory and code costs](peer-costs.md) explain the
 remaining complete-program gap. Those peers use handwritten derivatives;
@@ -79,8 +82,19 @@ allows different valid diff alignments while requiring the exact reference sourc
 Original timings were audited without rerunning them. Downloaded archive digests,
 all report/log hashes and every budget decision also pass local guarded checks.
 
+The compressed evidence is stored in two parts below GitHub's recommended
+per-file limit. [Part sizes and hashes](run-42179983250/retained-parts.json) also
+record the checksum of the original archive. To reconstruct it in that directory:
+
+```sh
+cat retained-comparison.tar.xz.part-00 retained-comparison.tar.xz.part-01 > retained-comparison.tar.xz
+```
+
+Concatenation was verified byte for byte by SHA-256 before removing the large
+storage file. Nothing was recompressed, regenerated or retimed.
+
 The [frozen image input plan](../recording-capacity-call-inputs.json) selects
-session 1 on each architecture. Next: rebuild saved C with GCC inlining reports,
-require the original executable hashes, and verify the intended capacity inlining.
-No native program is executed and no new timing is taken by that check.
+session 1 on each architecture. [Native verification](../recording-capacity-images-2026-11-06/README.md)
+reproduces all 48 original executable hashes and confirms capacity inlining.
+No native program was executed and no new timing was taken by that check.
 Final platform verification follows. [Contract](../recording-capacity.md).

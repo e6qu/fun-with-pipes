@@ -1,0 +1,17 @@
+{
+  "archive": "retained-comparison.tar.xz",
+  "bytes": 56179776,
+  "sha256": "716037e9a6d53cc88f9e6018e47408cb4166b076e3bd18f27959c6fbd7199d74",
+  "parts": [
+    {
+      "name": "retained-comparison.tar.xz.part-00",
+      "bytes": 33554432,
+      "sha256": "9c2f58f8630f9dc478b076eeba5b5e5c69d31cb0b3c27304113f2cd273ad08a7"
+    },
+    {
+      "name": "retained-comparison.tar.xz.part-01",
+      "bytes": 22625344,
+      "sha256": "414a135cee02c059dbafaa152d7e93207d3cdf09c1ed98add7921f3716c77a9b"
+    }
+  ]
+}

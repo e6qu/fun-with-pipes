@@ -325,12 +325,18 @@ show 2.26–8.12% less elapsed time for long cases; 19/32 miss the 5% target.
 [Native inlining reports](measurements/recording-inline-images-2026-11-06/README.md)
 reproduce all 48 measured images. [Final platform delivery is verified](measurements/recording-inline-delivery-2026-11-06/README.md).
 
-The next [capacity-call group](measurements/recording-capacity.md) keeps the
+The [capacity-call change](measurements/recording-capacity.md) keeps the
 checked no-growth path inline and shares the unchanged buffer-growth body.
 The request bound is checked before the capacity shortcut. Typed growth retains
 its old offsets/capacity until all allocations succeed, so failure recovery stays
-valid. Initial native targets pass, but a formatting failure requires corrected-
-source verification; performance and final platform validation remain pending.
+valid. [Focused checks and full audits](measurements/recording-capacity-checks-2026-11-06/README.md)
+pass. [Memory/work counts](measurements/recording-capacity-census-2026-11-06/README.md)
+and largest reported frames are unchanged; all compiler-cost limits pass.
+[Runtime](measurements/recording-capacity-time-2026-11-06/README.md) improves
+1.86–14.02%, with 15/32 long speed targets and one copy control still open.
+[Native verification](measurements/recording-capacity-images-2026-11-06/README.md)
+reproduces all 48 measured images and confirms capacity inlining. Final platform
+validation remains pending.
 
 Channel borrowing preserves hidden native contexts as well as payload storage.
 It does not prove the queued graph acyclic: capture/cycle checks remain separate.

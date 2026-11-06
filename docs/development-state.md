@@ -1,14 +1,15 @@
 # Current work
 
-**Next:** publish the verified capacity measurement receipts and frozen
-`docs/measurements/recording-capacity-call-inputs.json`, then dispatch
-`recording-call-analysis` with that explicit plan on both architectures. Require
-all 48 original native images and intended capacity inlining before final gates.
+**Next:** publish the native receipts and archive storage repair, mark PR #264
+ready, and monitor all nine production jobs plus documentation on that exact head.
+Audit every failure and completed target before one repair push. Once all final
+jobs pass, run `production-log-audit` with exact source, run attempt and docs job;
+verify its complete receipt before the authorized one-line squash merge.
 
 Branch `recording-capacity-gate`, worktree `.worktrees/recording-capacity-gate`.
 [PR #264](https://github.com/e6qu/fun-with-pipes/pull/264) is the only active PR,
-currently draft. Current pushed head `a7665661ea6df7640a6dd9ee3aba9daa8512de3e`;
-new measurement receipts and status updates are local pending publication.
+currently draft. Current pushed head `65b253e64a8cd5008274f2c8d1aee1f9fecc74bc`;
+all measurement receipts and the explicit native plan are published.
 
 ## Roadmap status
 
@@ -16,8 +17,8 @@ new measurement receipts and status updates are local pending publication.
 |---|---|---|
 | 1 | Verified | PR #263 delivery retained; capacity contract frozen before edits. |
 | 2 | Verified | Corrected three-host checks, full audits and 116 tool controls pass. |
-| 3 | In progress | Memory/compiler/runtime results audited; verify original images and capacity inlining. Retain all timing misses. |
-| 4 | Pending | Final nine-job matrix, docs, full audits and verified squash merge. |
+| 3 | Verified | Memory/compiler/runtime results audited; all 48 original images and capacity inlining verified. Timing misses retained. |
+| 4 | In progress | Publish final receipts; run nine-job matrix/docs, full audits and verified squash merge. |
 
 ## Sources and completed checks
 
@@ -81,3 +82,22 @@ No native build, full suite or benchmark ran locally. Last free disk about 78 Gi
 Scratch: `../gradient-work/capacity-*`, `../gradient-work/recording-capacity-*`,
 `/tmp/fwp-capacity-*`, `/tmp/fwp-retain-capacity-*`. Do not rerun one-shot source
 edit helpers. Keep status-only edits local while final-head gates run.
+
+## Native verification and storage repair
+
+[Native run](measurements/recording-capacity-images-2026-11-06/README.md)
+`42184258186` at `65b253e6`: AMD64 `127780749478`, ARM64 `127780749617` pass.
+All 48 original executable hashes and every source/report/stack hash verified.
+Every positive-update candidate has capacity inlining and no final rejection.
+No new timings or native execution. Local guarded artifact check: 0.12s.
+
+GitHub warned about the 53.58 MiB retained runtime archive. It is now two <=32 MiB
+parts; the manifest records sizes/hashes and the original checksum. Concatenated
+bytes exactly match the original, with no regeneration (guarded check 0.24s).
+Publish this storage-only repair with the native receipts. Free disk about 77 GiB.
+
+Saved copy review confirms identical executable bytes and balanced positions;
+ratios reverse across the two 49-round halves (1.02979 then 0.99344). No cause
+established; the failed 2% limit remains open. Reproduction takes 0.13s guarded.
+Docs `42184176197` / `127780471090` still running at 65b253e6; final head needs
+its own docs gate. No final production support is claimed yet.
