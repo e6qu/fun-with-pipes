@@ -69,19 +69,26 @@ class RecordingInlineReference(unittest.TestCase):
             (folder / 'manifest.json').write_text(json.dumps(manifest))
             EVIDENCE.check_reference(folder, dict(referenceCompiler=manifest), revision, 'aarch64', 'recording-inline')
             inspect.assert_called_once_with(b'compiler fixture', 'aarch64')
-            for mode in ('missing-preserved-source', 'changed-body', 'changed-patch'):
+            for mode in ('missing-preserved-source', 'changed-body', 'changed-patch', 'extra-source', 'wrong-source-path'):
                 altered = json.loads(json.dumps(manifest))
                 if mode == 'missing-preserved-source':
                     del altered['unchanged']['src/cgen.rs']
                 elif mode == 'changed-body':
                     target.write_text(reference + '\n/* extra edit */\n')
                     altered['reference'][name] = sha(target.read_bytes())
-                else:
+                elif mode == 'changed-patch':
                     (folder / 'reference.patch').write_text(delta + '\nextra edit\n')
                     altered['patchSha256'] = sha((folder / 'reference.patch').read_bytes())
+                else:
+                    extra = folder / 'source/src/cgen.rs'
+                    extra.parent.mkdir(parents=True, exist_ok=True)
+                    extra.write_text(reference)
+                    if mode == 'wrong-source-path':
+                        target.unlink()
                 (folder / 'manifest.json').write_text(json.dumps(altered))
                 with self.subTest(mode=mode), self.assertRaises(AssertionError):
                     EVIDENCE.check_reference(folder, dict(referenceCompiler=altered), revision, 'aarch64', 'recording-inline')
+                (folder / 'source/src/cgen.rs').unlink(missing_ok=True)
                 target.write_text(reference)
                 (folder / 'reference.patch').write_text(delta)
 

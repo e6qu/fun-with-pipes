@@ -236,6 +236,26 @@ def check_gradient_reference(folder, manifest, source, architecture):
 
 
 def check_reference(folder, report, source, architecture, protocol):
+    reference_files = file_inventory(folder)
+    if protocol == 'callback-owners':
+        assert set(reference_files) == {'manifest.json', 'fwp', 'reference-cgen.rs', 'reference-packed_records.rs', 'reference.patch'}
+    elif protocol == 'gradient-array':
+        assert set(reference_files) == {'manifest.json', 'fwp', 'reference.patch'} | {
+            'source/' + name for name in ('lib/autodiff.fwp', 'runtime/fwp_rt_kernel.c', 'src/cgen.rs', 'src/fuse.rs', 'src/interp.rs', 'src/ir.rs', 'src/numerics.rs')}
+    elif protocol == 'gradient-call':
+        assert set(reference_files) == {'manifest.json', 'fwp', 'reference.patch', 'source/src/cgen.rs', 'source/lib/autodiff.fwp'}
+    elif protocol == 'recording-inline':
+        assert set(reference_files) == {'manifest.json', 'fwp', 'reference.patch', 'source/runtime/fwp_rt_kernel.c'}
+    elif protocol in ('matched-option', 'owned-numeric', 'packed-pair', 'scalar-constant', 'recording-lookup'):
+        assert set(reference_files) == {'manifest.json', 'fwp', 'reference.patch', 'source/src/cgen.rs'}
+    elif protocol == 'packed-input':
+        assert set(reference_files) == {'manifest.json', 'fwp', 'reference.patch', 'source/src/cgen.rs', 'source/src/mono.rs'}
+    elif protocol == 'final-iteration':
+        assert set(reference_files) == {'manifest.json', 'fwp', 'reference.patch', 'source/lib/list.fwp', 'source/src/fuse.rs'}
+    else:
+        saved = {'scalar-array-identity': 'optimizer-reference.rs', 'record-zip': 'fusion-reference.rs', 'record-fold': 'codegen-reference.rs',
+                 'packed-records': 'codegen-reference.rs', 'scalar-map-zip': 'codegen-reference.rs', 'range-zip': 'codegen-reference.rs', 'scalar-array-map': 'codegen-reference.rs'}[protocol]
+        assert set(reference_files) == {'manifest.json', 'fwp', saved, 'reference.patch'}
     manifest = json.loads((folder / 'manifest.json').read_text())
     assert manifest == report['referenceCompiler'] and manifest['source'] == source
     if protocol == 'matched-option':
@@ -548,23 +568,6 @@ def check_directory(folder, source, architecture, session, protocol, reference):
     if protocol in ('record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline'):
         assert len(files) == 1334
     reference_files = file_inventory(reference) if reference is not None else None
-    if protocol == 'callback-owners':
-        assert set(reference_files) == {'manifest.json', 'fwp', 'reference-cgen.rs', 'reference-packed_records.rs', 'reference.patch'}
-    elif protocol == 'gradient-array':
-        assert set(reference_files) == {'manifest.json', 'fwp', 'reference.patch'} | {
-            'source/' + name for name in ('lib/autodiff.fwp', 'runtime/fwp_rt_kernel.c', 'src/cgen.rs', 'src/fuse.rs', 'src/interp.rs', 'src/ir.rs', 'src/numerics.rs')}
-    elif protocol == 'gradient-call':
-        assert set(reference_files) == {'manifest.json', 'fwp', 'reference.patch', 'source/src/cgen.rs', 'source/lib/autodiff.fwp'}
-    elif protocol in ('matched-option', 'owned-numeric', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline'):
-        assert set(reference_files) == {'manifest.json', 'fwp', 'reference.patch', 'source/src/cgen.rs'}
-    elif protocol == 'packed-input':
-        assert set(reference_files) == {'manifest.json', 'fwp', 'reference.patch', 'source/src/cgen.rs', 'source/src/mono.rs'}
-    elif protocol == 'final-iteration':
-        assert set(reference_files) == {'manifest.json', 'fwp', 'reference.patch', 'source/lib/list.fwp', 'source/src/fuse.rs'}
-    elif reference_files is not None:
-        saved = {'scalar-array-identity': 'optimizer-reference.rs', 'record-zip': 'fusion-reference.rs', 'record-fold': 'codegen-reference.rs',
-                 'packed-records': 'codegen-reference.rs', 'scalar-map-zip': 'codegen-reference.rs', 'range-zip': 'codegen-reference.rs', 'scalar-array-map': 'codegen-reference.rs'}[protocol]
-        assert set(reference_files) == {'manifest.json', 'fwp', saved, 'reference.patch'}
     return dict(source=source, architecture=architecture, session=session, files=files,
                 referenceFiles=reference_files,
                 budgetFailures=failures, decision='not-accepted' if failures else 'accepted')

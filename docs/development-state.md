@@ -1,10 +1,9 @@
 # Current work
 
-**Next:** monitor runtime run `42162092035` through all four sessions, audit every
-result, then retain its reports and declare the new binary diagnostic inputs.
-Only replace hosts rejected before builds/timing. Preserve every missed limit;
-do not rerun qualified timings for a pass. Final platform checks follow the
-completed measurement/binary group.
+**Next:** publish the reference-inventory audit repair, then re-audit runtime run
+`42162092035` and audit both AMD64 runs when complete. Only the saved artifacts
+need rechecking; do not repeat qualified timings. Retain all results, declare
+binary diagnostic inputs, then run final platform gates.
 
 Branch `recording-call-costs`, worktree `.worktrees/scalar-constant-lowering`;
 draft [PR #263](https://github.com/e6qu/fun-with-pipes/pull/263).
@@ -46,13 +45,20 @@ already inlined. This motivates the candidate, not a cause for the earlier slowd
 | [Measurement controls](measurements/recording-inline-controls-2026-11-06/README.md) | `a029797e` / `42157525720`, job `127695118390` | 14 suites, 107 tests pass; all logs/digests retained. |
 | [Memory/work/stack](measurements/recording-inline-census-2026-11-06/README.md) | `ecfd740b` / `42158774007` | Both producers and audit `42159822189` pass. Retained counts and all 4,038 record hashes verified; maximum frame growth ARM64 16 bytes, AMD64 zero. |
 | [Compiler costs](measurements/recording-inline-analysis-2026-11-06/README.md) | `ecfd740b` / `42158777078` | 13/14 qualify; audit `42160109377` passes and preserves the copy failure below. All 672 commands and 2,162 retained record hashes verified. |
-| Docs | `ecfd740b` / `42158778585` | Pass. Earlier docs at `39a9f806` and `a029797e` also pass. |
+| Docs | `1c6ee1ef` / `42162532119`, job `127711334406` | Pass before the pending audit repair. |
 
 Census jobs: ARM64 `127699163254`, AMD64 `127699163371`.
 Compiler jobs: ARM64 `127699171640`, AMD64 `127699171809`.
 Runtime run `42162092035` uses source `7dba6db7010af483f9d694b78e10cf71df2653a3`,
 with both sessions on both architectures and focused prerequisite `42156552424`.
-Jobs: ARM64 `127709922516`/`127709922520`; AMD64 `127709922590`/`127709922633`.
+ARM64 `127709922516`/`127709922520` completed: each misses four 5% speed targets
+(3/199 and 3/1999, both forms); other timing limits pass. Initial AMD64 jobs
+`127709922590`/`127709922633` were rejected before building/timing (Xeon, EPYC 9V45).
+Replacement `42162639619` at `1c6ee1ef` rejected job `127711689991` on EPYC 9V45;
+qualified AMD2 `127711690001` and AMD1 `127712782292` (run `42162975545`) are timing.
+Audit `42163629822`, job `127714862013`, failed both ARM64 sessions at the same stale
+reference-file inventory assertion. [Repair and complete failure records](measurements/recording-inline-audit-repair-2026-11-06/README.md)
+are retained; source/tests stay unchanged. Corrected artifact audits remain pending.
 The final nine-job matrix has not run. Draft-only CI is skipped
 and is not platform evidence. Preserve all earlier PLAN.md timing misses.
 

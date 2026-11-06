@@ -79,10 +79,11 @@ artifact identities and compressed native evidence. Complete artifacts were audi
 on GitHub; downloaded archive digests and combined report identities were checked
 locally. Audit success verifies the evidence, not the missed performance targets.
 
-## Next diagnostic
+## Follow-up
 
-Compare the saved candidate/reference source paths for the added per-worker state,
-ID comparison and pointer selection, including ordinary NULL-state calls. Account
-for their executed work before proposing another transformation. The count audit
-alone does not establish which operation causes AMD64's slowdown. Preserve these
-samples; do not infer a repair from instruction layout or rerun for passing numbers.
+The [source comparison](../recording-call-review-2026-11-06/README.md) and
+[72-image GCC diagnostic](../recording-call-analysis-2026-11-06/README.md) are
+complete. GCC left the scalar append body out of line in all compared versions.
+That motivated the separate [inlining comparison](../recording-inline.md), whose
+results cannot settle this original comparison. The AMD64 slowdown's cause remains
+unestablished; these timing misses and original samples stay open.
