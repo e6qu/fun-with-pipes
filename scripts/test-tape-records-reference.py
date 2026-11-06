@@ -2,9 +2,12 @@
 import copy
 import hashlib
 import importlib.util
+import json
 from pathlib import Path
 import subprocess
+import tempfile
 import unittest
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 SPEC = importlib.util.spec_from_file_location('records_reference', ROOT / 'scripts/prepare-tape-records-reference.py')
@@ -119,6 +122,66 @@ class TapeReference(unittest.TestCase):
             self.assertTrue(STORAGE.record_layout_failures(changed, reference))
         reference['finalBytes'] = 1
         self.assertTrue(STORAGE.record_layout_failures(current, reference))
+
+
+    def test_complete_layout_manifest_and_corruption(self):
+        revision = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
+        name = 'runtime/fwp_rt_kernel.c'
+        current = subprocess.check_output(['git', 'show', revision + ':' + name], cwd=ROOT, text=True)
+        reference = REFERENCE.reference_sources({name: current})[name]
+        # Use the actual producer diff; validate its exact input and output.
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / 'candidate').write_text(current)
+            (root / 'reference').write_text(reference)
+            result = subprocess.run(['git', 'diff', '--no-index', '--', 'candidate', 'reference'],
+                                    cwd=root, text=True, capture_output=True)
+            self.assertEqual(result.returncode, 1, result.stderr)
+            lines = result.stdout.splitlines(keepends=True)
+            delta = (f'diff --git a/{name} b/{name}\n' + lines[1]
+                     + f'--- a/{name}\n+++ b/{name}\n' + ''.join(lines[4:]))
+        sha = lambda data: hashlib.sha256(data).hexdigest()
+        manifest = dict(source=revision,
+                        disabledTransformation='contiguous numeric operation records and typed parent pairs',
+                        candidate={name: sha(current.encode())}, reference={name: sha(reference.encode())},
+                        unchanged={path: sha(subprocess.check_output(['git', 'show', revision + ':' + path], cwd=ROOT)) for path in REFERENCE.PRESERVED},
+                        compilerSha256=sha(b'compiler fixture'), patchSha256=sha(delta.encode()))
+        manifest['layoutReference'] = dict(source=REFERENCE.BASELINE, path=REFERENCE.REFERENCE_PATH, sha256=REFERENCE.REFERENCE_SHA256)
+        manifest['ownershipSha256'] = manifest['unchanged']['src/ownership.rs']
+        with tempfile.TemporaryDirectory() as temp, patch.object(EVIDENCE, 'instruction_bytes') as inspect:
+            folder = Path(temp)
+            (folder / 'fwp').write_bytes(b'compiler fixture')
+            (folder / 'reference.patch').write_text(delta)
+            target = folder / 'source' / name
+            target.parent.mkdir(parents=True)
+            target.write_text(reference)
+            (folder / 'manifest.json').write_text(json.dumps(manifest))
+            EVIDENCE.check_reference(folder, dict(referenceCompiler=manifest), revision, 'aarch64', 'tape-records')
+            inspect.assert_called_once_with(b'compiler fixture', 'aarch64')
+            for mode in ('missing-preserved-source', 'changed-body', 'changed-patch', 'extra-source', 'wrong-source-path', 'changed-frozen-identity'):
+                altered = json.loads(json.dumps(manifest))
+                if mode == 'missing-preserved-source':
+                    del altered['unchanged']['src/cgen/recording.rs']
+                elif mode == 'changed-body':
+                    target.write_text(reference + '\n/* extra edit */\n')
+                    altered['reference'][name] = sha(target.read_bytes())
+                elif mode == 'changed-patch':
+                    (folder / 'reference.patch').write_text(delta + '\nextra edit\n')
+                    altered['patchSha256'] = sha((folder / 'reference.patch').read_bytes())
+                elif mode == 'changed-frozen-identity':
+                    altered['layoutReference']['source'] = revision
+                else:
+                    extra = folder / 'source/src/cgen.rs'
+                    extra.parent.mkdir(parents=True, exist_ok=True)
+                    extra.write_text(reference)
+                    if mode == 'wrong-source-path':
+                        target.unlink()
+                (folder / 'manifest.json').write_text(json.dumps(altered))
+                with self.subTest(mode=mode), self.assertRaises(AssertionError):
+                    EVIDENCE.check_reference(folder, dict(referenceCompiler=altered), revision, 'aarch64', 'tape-records')
+                (folder / 'source/src/cgen.rs').unlink(missing_ok=True)
+                target.write_text(reference)
+                (folder / 'reference.patch').write_text(delta)
 
 
 if __name__ == '__main__':

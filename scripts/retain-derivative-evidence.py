@@ -51,8 +51,9 @@ def rejected_host(job, host):
 
 
 def retain_session(repository, run, source, job, artifacts, output, summary, protocol):
-    assert protocol in ('record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context')
-    match = re.fullmatch(r'descent_peers \(([12]), (ubuntu-latest|ubuntu-24\.04-arm)\)', job['name'])
+    assert protocol in ('record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context', 'tape-records')
+    prefix = 'tape_measurements / ' if protocol == 'tape-records' else ''
+    match = re.fullmatch(re.escape(prefix) + r'descent_peers \(([12]), (ubuntu-latest|ubuntu-24\.04-arm)\)', job['name'])
     assert match, job['name']
     session, runner = int(match[1]), match[2]
     architecture = {'ubuntu-latest': 'x86_64', 'ubuntu-24.04-arm': 'aarch64'}[runner]
@@ -104,7 +105,7 @@ def retain_session(repository, run, source, job, artifacts, output, summary, pro
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--protocol', choices=['record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context'], required=True)
+    parser.add_argument('--protocol', choices=['record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context', 'tape-records'], required=True)
     parser.add_argument('--repository', required=True)
     parser.add_argument('--run', type=int, required=True)
     parser.add_argument('--source', required=True)

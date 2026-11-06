@@ -55,3 +55,37 @@ on rejection order. Do not combine equal parents or reassociate arithmetic.
 5. Verify original measured images and complete nine final-head production jobs,
    documentation and full evidence audits before squash merge. Implementation
    alone does not complete this experiment or close an older missed target.
+
+## Running and auditing the comparison
+
+The `numerics.yml` dispatcher provides these explicit suites:
+
+| Suite | Work |
+|---|---|
+| `tape-record-checks` | GCC on Linux ARM64/AMD64, Clang on macOS ARM64, and actual wasm32 bounds. |
+| `tape-record-analysis` | Seven compiler workloads on each Linux architecture; compiler time and peak process memory. |
+| `tape-record-time` | Two sessions per Linux architecture, each with all six inputs and current/history forms. |
+| `tape-records-compiler-report` | Audit every compiler sample, reference, command and host identity. |
+| `tape-records-report` | Audit complete runtime archives, including failures and rejected hosts. |
+
+Measurements require `evidence_run` to identify completed correctness jobs.
+The prerequisite checks all three hosts and exact equality of the compiler,
+runtime, library, native-test and build sources. Tool/documentation changes alone
+do not require another native correctness run. Audits require `evidence_run` and
+`source_revision` for the producer being audited.
+
+`scripts/fixtures/tape_column_reference.c` preserves the #266 tape section and
+its separating blank line. It is measurement data, never a production dependency.
+Preparation checks its frozen hash and changes only that section in a separate
+checkout of the current source. Both generated programs must also match outside
+the tape section. Archive readers parse saved identities as data; they never run
+saved Python or compiler binaries.
+
+Before timing each input, the driver checks both workspace settings: equal
+managed allocations, one numeric growth request versus two, equal numeric
+payload bytes, unchanged adjoint storage, and zero final raw/managed storage.
+Registry bytes and peak storage may decrease; the report retains their measured
+values. The workspace is a bounded reusable buffer, not live program output.
+Seven fresh processes per implementation per sample, two warmups, 98 balanced rounds, and the
+existing phase observations remain unchanged. Phase instrumentation is separate
+from the uninstrumented elapsed-time and process-memory measurements.

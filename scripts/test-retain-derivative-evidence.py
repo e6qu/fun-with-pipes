@@ -4,9 +4,11 @@ import copy
 import hashlib
 import importlib.util
 import io
+import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 import zipfile
 
 SPEC = importlib.util.spec_from_file_location('retain', Path(__file__).with_name('retain-derivative-evidence.py'))
@@ -15,6 +17,32 @@ SPEC.loader.exec_module(RETAIN)
 
 
 class RetainedEvidence(unittest.TestCase):
+    def test_declared_layout_jobs_retain_rejections_before_any_measurement(self):
+        source = '1' * 40
+        host = dict(source=source, actual=dict(machine='x86_64'), qualified=False,
+                    failures=['CPU differs from the frozen protocol'])
+        stream = io.BytesIO()
+        with zipfile.ZipFile(stream, 'w') as archive:
+            archive.writestr('descent-host.json', json.dumps(host))
+        blob = stream.getvalue()
+        artifacts = [dict(id=4, name='descent-host-ubuntu-latest-1', expired=False,
+                          workflow_run=dict(head_sha=source),
+                          digest='sha256:' + hashlib.sha256(blob).hexdigest())]
+        for protocol, name in [('recording-context', 'descent_peers (1, ubuntu-latest)'),
+                               ('tape-records', 'tape_measurements / descent_peers (1, ubuntu-latest)')]:
+            job = dict(id=3, name=name, status='completed', conclusion='failure', head_sha=source,
+                       run_id=1, steps=[dict(name='Qualify the native host before building', conclusion='failure')])
+            with tempfile.TemporaryDirectory() as directory, patch.object(RETAIN, 'api', side_effect=[b'host rejected\n', blob]) as api:
+                root = Path(directory)
+                summary = root / 'summary'
+                summary.mkdir()
+                label, record = RETAIN.retain_session('repos/test/repo', 1, source, job, artifacts, root, summary, protocol)
+                self.assertEqual(label, 'x86_64-1')
+                self.assertEqual(record['decision'], 'host-rejected-before-building-or-timing')
+                self.assertEqual(api.call_count, 2)
+                with self.assertRaises(AssertionError):
+                    RETAIN.retain_session('repos/test/repo', 1, source, dict(job, name='unrelated job'), artifacts, root, summary, protocol)
+
     def test_download_digest_is_checked_before_extraction(self):
         stream = io.BytesIO()
         with zipfile.ZipFile(stream, 'w') as archive:

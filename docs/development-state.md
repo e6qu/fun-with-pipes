@@ -1,9 +1,9 @@
 # Current work
 
-**Next:** finish the measurement workflow and compiler-cost/archive audit integration
-for `tape-records` while focused run `42290415866` waits for runners. Audit all
-three hosts and all targets when they complete, then batch repairs. No timing
-dispatch until correctness passes and the measurement readers are verified.
+**Next:** audit all completed targets in focused run `42290415866`, batch any
+repairs, then dispatch `tape-record-analysis` and `tape-record-time` with
+`evidence_run=42290415866` once all three correctness jobs pass. Their source-tree
+preflight rejects any intervening native change. Do not launch timings early.
 
 Branch `tape-operation-records`, worktree `.worktrees/recording-capacity-gate`.
 Reference/user merge `ef0a54a1da660fcc4c4e094e96c30c1adbe0fb5d` (#266), identical
@@ -18,9 +18,10 @@ order checks in interpreter/native code and a deliberately reversed native contr
 The old metadata driver now compares records with the fixed #266 column runtime;
 obsolete separate/interleaved choices were removed. No measurements have run.
 Draft [PR #267](https://github.com/e6qu/fun-with-pipes/pull/267), native source
-`b4b291e31`: focused jobs AMD `128142085029`, mac ARM `128142085304`, Linux ARM
-`128142085462` are queued. PR docs `42290418816` are queued; draft production
-skips do not establish acceptance.
+`b4b291e31`: focused jobs AMD `128142085029` and Linux ARM `128142085462` pass
+format/lint/inventory and are building/running unit checks; mac ARM `128142085304`
+is queued. Published preparation `a97bc703f` has docs run `42292580171` queued;
+draft production skips do not establish acceptance.
 
 Reference preparation now substitutes only the frozen #266 tape section. Its
 fixture hash is checked; the current compiler and all surrounding runtime source
@@ -31,9 +32,14 @@ two, equal payload bytes, unchanged managed counts, exact cleanup and the existi
 time/copy/stack limits. Both versions keep numeric call/loop sharing. The runtime
 producer also requires generated C to be identical outside the tape section.
 Archived reference preparation is parsed as literal data, never executed.
-Workflow dispatch and the full compiler-cost audit still need integration; no
+The measurement and complete archive-audit dispatchers are connected; no
 new measurement has been launched. Keep the frozen reference fixture under
 `scripts/fixtures`, so measurement preparation does not change native test sources.
+Use `tape-records-compiler-report` and `tape-records-report` with the actual
+producer source/run after each completes. Both retain misses and host rejections.
+Before timing each input, raw/managed checks run with and without the workspace.
+The complete reference-manifest test caught an old compiler-path expectation;
+the reader now requires the runtime path and rejects extra or changed files.
 
 ## Roadmap status
 
@@ -120,6 +126,11 @@ under `scripts/local-guard.py`; longest group took 10.02 s (5.02 s sampled CPU).
 The budget fixture was initially absent from the sparse checkout; restored the
 tracked 5 MB JSON and reran that check. New controls were rerun after edits (0.25 s).
 No native source changed after the focused runner dispatch. Last free disk 72 GiB.
+Workflow/audit follow-up checks pass: nine tape reference controls (including
+complete manifest corruption), eleven compiler-cost tests covering both old/new
+host rejection paths, four runtime retention controls and 24 budget tests.
+Actionlint passes the measurement and audit dispatchers (0.13 s; shellcheck and
+pyflakes disabled). Longest follow-up check: 3.49 s, 1.73 s sampled CPU.
 
 Use `python3 scripts/local-guard.py COMMAND...` for focused checks. No local full
 builds, suites, benchmarks or large regeneration. Last free disk 73 GiB; retain

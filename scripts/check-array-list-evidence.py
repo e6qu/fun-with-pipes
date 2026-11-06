@@ -290,9 +290,9 @@ def check_reference(folder, report, source, architecture, protocol):
             'source/' + name for name in ('lib/autodiff.fwp', 'runtime/fwp_rt_kernel.c', 'src/cgen.rs', 'src/fuse.rs', 'src/interp.rs', 'src/ir.rs', 'src/numerics.rs')}
     elif protocol == 'gradient-call':
         assert set(reference_files) == {'manifest.json', 'fwp', 'reference.patch', 'source/src/cgen.rs', 'source/lib/autodiff.fwp'}
-    elif protocol in ('recording-inline', 'recording-capacity'):
+    elif protocol in ('recording-inline', 'recording-capacity', 'tape-records'):
         assert set(reference_files) == {'manifest.json', 'fwp', 'reference.patch', 'source/runtime/fwp_rt_kernel.c'}
-    elif protocol in ('matched-option', 'owned-numeric', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-context', 'tape-records'):
+    elif protocol in ('matched-option', 'owned-numeric', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-context'):
         assert set(reference_files) == {'manifest.json', 'fwp', 'reference.patch', 'source/src/cgen.rs'}
     elif protocol == 'packed-input':
         assert set(reference_files) == {'manifest.json', 'fwp', 'reference.patch', 'source/src/cgen.rs', 'source/src/mono.rs'}
@@ -641,6 +641,16 @@ def check_directory(folder, source, architecture, session, protocol, reference):
             assert digest((case / (name + '.stdout')).read_bytes()) == control['stdoutSha256']
             assert (case / (name + '.stderr')).read_text() == control['stderr']
         check_profiles(case, row)
+        if protocol == 'tape-records':
+            preparation = subprocess.check_output(['git', 'show', source + ':scripts/prepare-tape-records-reference.py'], cwd=ROOT, text=True)
+            frozen = subprocess.check_output(['git', 'show', source + ':scripts/fixtures/tape_column_reference.c'], cwd=ROOT, text=True)
+            for label in ('fwp-ad', 'fwp-ad-history'):
+                candidate = (case / (label + '.c')).read_text()
+                expected = recorded_tape_reference({'runtime/fwp_rt_kernel.c': candidate}, preparation, frozen)
+                assert expected['runtime/fwp_rt_kernel.c'] == (case / (label + '-reference.c')).read_text()
+                current, old = (row['fwpProfiles'][name]['withoutWorkspace'] for name in (label, label + '-reference'))
+                assert current['managed'] == old['managed']
+                assert not GROUPS.DESCENT.AD.RAW.record_layout_failures(current['rawDerivativeStorage'], old['rawDerivativeStorage'])
     files = file_inventory(folder)
     if protocol in ('record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context', 'tape-records'):
         assert len(files) == 1334

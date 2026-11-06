@@ -566,6 +566,12 @@ def main():
                 candidate = (directory / (label + '.c')).read_text()
                 reference_code = (directory / (label + '-reference.c')).read_text()
                 assert TAPE_REFERENCE.replace_tape(candidate, frozen) == reference_code, label
+                current, old = profiles[label], profiles[label + '-reference']
+                assert current['managed'] == old['managed'], label
+                assert not AD.RAW.record_layout_failures(current['rawDerivativeStorage'], old['rawDerivativeStorage']), label
+                current, old = current['withoutWorkspace'], old['withoutWorkspace']
+                assert current['managed'] == old['managed'], label
+                assert not AD.RAW.record_layout_failures(current['rawDerivativeStorage'], old['rawDerivativeStorage']), label
         csource = directory / 'c-explicit.c'
         csource.write_text(BASELINE.repeat_source(f'#define DIMENSIONS {points}\n#define UPDATES {updates}\n' +
                            (ROOT / 'tests/fixtures/descent_explicit.c').read_text(), 'c', solves))

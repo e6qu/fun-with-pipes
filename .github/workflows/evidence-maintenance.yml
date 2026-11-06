@@ -246,7 +246,7 @@ jobs:
             !focused-storage-audit/*-evidence.zip
           if-no-files-found: error
   storage_compiler_report:
-    if: inputs.suite == 'storage-compiler-report' || (inputs.suite == 'scalar-constant-compiler-report' || contains(fromJSON('["recording-lookup-compiler-report","recording-inline-compiler-report","recording-capacity-compiler-report","recording-context-compiler-report"]'), inputs.suite))
+    if: inputs.suite == 'storage-compiler-report' || (inputs.suite == 'scalar-constant-compiler-report' || contains(fromJSON('["recording-lookup-compiler-report","recording-inline-compiler-report","recording-capacity-compiler-report","recording-context-compiler-report","tape-records-compiler-report"]'), inputs.suite))
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 15
     permissions:
@@ -265,7 +265,7 @@ jobs:
           python3 scripts/test-numeric-input-analysis.py
           status=0
           for machine in aarch64 x86_64; do
-            python3 scripts/audit-storage-compiler-costs.py --comparison "${{ fromJSON('{"storage-compiler-report":"packed-pair","scalar-constant-compiler-report":"scalar-constant","recording-lookup-compiler-report":"recording-lookup","recording-inline-compiler-report":"recording-inline","recording-capacity-compiler-report":"recording-capacity","recording-context-compiler-report":"recording-context"}')[inputs.suite] }}" \
+            python3 scripts/audit-storage-compiler-costs.py --comparison "${{ fromJSON('{"storage-compiler-report":"packed-pair","scalar-constant-compiler-report":"scalar-constant","recording-lookup-compiler-report":"recording-lookup","recording-inline-compiler-report":"recording-inline","recording-capacity-compiler-report":"recording-capacity","recording-context-compiler-report":"recording-context","tape-records-compiler-report":"tape-records"}')[inputs.suite] }}" \
               --repository "$GITHUB_REPOSITORY" --run "$EVIDENCE_RUN" \
               --source "$SOURCE_REVISION" --machine "$machine" \
               --output compiler-cost-audit || status=1

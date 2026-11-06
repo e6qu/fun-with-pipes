@@ -16,7 +16,7 @@ from github_records import records
 
 sys.path.insert(0,str(Path('scripts').resolve()))
 parser=argparse.ArgumentParser(description=__doc__)
-parser.add_argument("--comparison", required=True, choices=("gradient-call", "packed-pair", "scalar-constant", "recording-lookup", 'recording-inline', 'recording-capacity', 'recording-context'))
+parser.add_argument("--comparison", required=True, choices=("gradient-call", "packed-pair", "scalar-constant", "recording-lookup", 'recording-inline', 'recording-capacity', 'recording-context', 'tape-records'))
 parser.add_argument("--repository", required=True)
 parser.add_argument('--source',required=True)
 parser.add_argument('--run',required=True,type=int)
@@ -47,7 +47,8 @@ measure = module('measure-numeric-input-analysis')
 check = module('check-array-list-evidence')
 baseline = module('descent-baselines')
 jobs=records(api, f'actions/runs/{run}/jobs', 'jobs')
-job,=[job for job in jobs if job['name']==f'numeric_input_analysis ({runner})']
+job_name = ('tape_measurements / ' if args.comparison == 'tape-records' else '') + f'numeric_input_analysis ({runner})'
+job,=[job for job in jobs if job['name'] == job_name]
 assert job['head_sha']==source and job['status']=='completed' and job['run_id']==run
 artifacts=records(api, f'actions/runs/{run}/artifacts', 'artifacts')
 log=api(f"actions/jobs/{job['id']}/logs")
@@ -55,9 +56,9 @@ log=api(f"actions/jobs/{job['id']}/logs")
 clean=re.sub(rb'\x1b\[[0-?]*[ -/]*[@-~]',b'',log)
 diagnostics=[line for line in clean.decode(errors='replace').splitlines() if re.search(r'warning:|error:(?!:)|error\[|Traceback|##\[error\]',line,re.I)]
 failed_steps = [step['name'] for step in job['steps'] if step['conclusion'] == 'failure']
-if args.comparison == 'recording-context' and failed_steps == ['Qualify recording-context compiler timing host']:
+if args.comparison in ('recording-context', 'tape-records') and failed_steps == [f'Qualify {args.comparison} compiler timing host']:
     assert job['conclusion'] == 'failure'
-    host_artifact, = [item for item in artifacts if item['name'] == 'recording-context-analysis-host-' + arch and not item['expired']]
+    host_artifact, = [item for item in artifacts if item['name'] == args.comparison + '-analysis-host-' + arch and not item['expired']]
     assert host_artifact['workflow_run']['head_sha'] == source
     host_zip = api('actions/artifacts/' + str(host_artifact['id']) + '/zip')
     assert 'sha256:' + hashlib.sha256(host_zip).hexdigest() == host_artifact['digest']
@@ -93,6 +94,19 @@ if args.comparison == 'recording-context' and failed_steps == ['Qualify recordin
     sys.exit(0)
 artifact,=[a for a in artifacts if a['name']==args.comparison+'-analysis-'+arch and not a['expired']]
 assert artifact['workflow_run']['head_sha']==source
+if args.comparison == 'tape-records':
+    host_artifact, = [item for item in artifacts if item['name'] == 'tape-records-analysis-host-' + arch and not item['expired']]
+    assert host_artifact['workflow_run']['head_sha'] == source
+    host_bytes = api('actions/artifacts/' + str(host_artifact['id']) + '/zip')
+    assert host_artifact['digest'] == 'sha256:' + check.digest(host_bytes)
+    host_path = root / (machine + '-host.zip')
+    host_path.write_bytes(host_bytes)
+    with zipfile.ZipFile(host_path) as saved:
+        assert saved.namelist() == ['compiler-cost-host.json']
+        host = json.loads(saved.read('compiler-cost-host.json'))
+    assert host['source'] == source and host['qualified'] and host['failures'] == []
+    check.GROUPS.check_frozen_host(dict(machine=machine, qualification=host), 'tape-records')
+    (root / (machine + '-host-artifact.json')).write_text(json.dumps(host_artifact, indent=2) + '\n')
 path=root/(machine+'.zip')
 if not path.exists():
     with path.with_suffix('.part').open('wb') as stream:subprocess.run(['gh','api','--allow-escape-sequences',repo+f"actions/artifacts/{artifact['id']}/zip"],stdout=stream,check=True)
@@ -169,15 +183,20 @@ with zipfile.ZipFile(path) as z:
         base='numeric-analysis/'+name+'/'
         assert z.read(base+'program.fwp')==expected_inputs[name]
         assert check.digest(z.read(base+'program.fwp'))==report['inputs'][name]['sha256']
+        if args.comparison == 'tape-records':
+            preparation = subprocess.check_output(['git', 'show', source + ':scripts/prepare-tape-records-reference.py'], text=True)
+            frozen = subprocess.check_output(['git', 'show', source + ':scripts/fixtures/tape_column_reference.c'], text=True)
+            expected = check.recorded_tape_reference({'runtime/fwp_rt_kernel.c': z.read(base + 'candidate1.c').decode()}, preparation, frozen)
+            assert expected['runtime/fwp_rt_kernel.c'] == z.read(base + 'reference1.c').decode()
         for copy in measure.COPIES:
             if args.comparison == 'recording-inline':
                 measure.RECORDING_SELECTION.check_inline_declaration(z.read(base + copy + '.c').decode(), copy.startswith('candidate'))
                 if name in ('derivative-33-199', 'derivative-129-199'):
                     measure.RECORDING_SELECTION.check(z.read(base + copy + '.c').decode(), True)
-            if args.comparison == 'recording-context':
+            if args.comparison in ('recording-context', 'tape-records'):
                 measure.RECORDING_SELECTION.check_capacity_gate(z.read(base + copy + '.c').decode(), True)
                 if name in ('derivative-33-199', 'derivative-129-199'):
-                    measure.CONTEXT_SELECTION.check(z.read(base + copy + '.c').decode(), copy.startswith('candidate'))
+                    measure.CONTEXT_SELECTION.check(z.read(base + copy + '.c').decode(), args.comparison == 'tape-records' or copy.startswith('candidate'))
             if args.comparison == 'recording-capacity':
                 measure.RECORDING_SELECTION.check_capacity_gate(z.read(base + copy + '.c').decode(), copy.startswith('candidate'))
                 if name in ('derivative-33-199', 'derivative-129-199'):

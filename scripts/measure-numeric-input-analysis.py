@@ -446,6 +446,10 @@ def main():
                             and name in ('derivative-33-199', 'derivative-129-199')):
                         SCALAR_SELECTION.check(cfile.read_text(), 'literal' if kind == 'candidate' else 'cached')
             report['cases'][name]['generatedCHashes'] = generated_hashes
+            if args.comparison == 'tape-records':
+                frozen = (ROOT / TAPE_REFERENCE.REFERENCE_PATH).read_text()
+                candidate = (directory / 'candidate1.c').read_text()
+                assert TAPE_REFERENCE.replace_tape(candidate, frozen) == (directory / 'reference1.c').read_text(), name
             report['cases'][name]['summary'] = summarize(rows)
             print(name, report['cases'][name]['summary'], flush=True)
         report['complete'] = True
