@@ -17,9 +17,11 @@ qualified timing sessions are not repeated.
 [Failed index/log summary](failed-summary.zip), [full job log](job.log.gz),
 [job metadata](job.json) and [artifact identities](artifacts.json) preserve both
 failures and the two previously rejected hosts. The original complete archive
-remains identified there; the corrected audit will retain its verified contents.
+remains identified there. [Corrected audit 42164603033](https://github.com/e6qu/fun-with-pipes/actions/runs/42164603033)
+passes and retains the verified contents in the [runtime results](../recording-inline-time-2026-11-06/README.md).
 The eight ARM64 speed-target misses remain separate from this repair.
 
 Four focused reference tests pass locally (0.71s). Eighteen evidence-reader tests
 also pass; the historical archive test needs four large sparse-checkout fixtures
-and runs in the full GitHub documentation gate. No native rebuild is needed.
+and passes in [documentation run 42164607195](https://github.com/e6qu/fun-with-pipes/actions/runs/42164607195)
+at repair source `66aed9ac`. No native rebuild was needed.
