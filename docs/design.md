@@ -298,6 +298,20 @@ Focused native checks cover trap/cancellation cleanup on Linux ARM64/AMD64 and
 macOS ARM64. Allocation and compiler-cost audits pass; runtime results retain timing misses.
 [All final production gates pass](roadmap-history.md#gradient-call-storage-pr-259).
 
+The implemented [recording lookup change](measurements/recording-lookups.md) saves
+repeated tape lookup inside a proved numeric worker. A tape stores the parent
+indices and derivative weights needed for the backward pass. For example, the
+Rosenbrock pair worker records six operations directly. It can validate their
+shared tape once while still checking every parent index and every append's
+capacity. Its stack-local ID and pointer own no storage and disappear on return
+or failure. Unknown calls, tape creation/retirement, recovery, wide weights and
+programs with task/service entry checks prevent this selection. Focused safety and
+[memory/work audits](measurements/recording-lookup-census-2026-11-06/README.md) pass:
+lookups fall from eight to three per pair/update, with unchanged allocation and
+live-storage costs. [Runtime measurements](measurements/recording-lookup-time-2026-11-06/README.md)
+miss all 32 long-case speed targets; AMD64 current-result cases slow by 1.13–3.90%.
+Final platform verification remains pending. Fewer checks alone establish no speedup.
+
 Channel borrowing preserves hidden native contexts as well as payload storage.
 It does not prove the queued graph acyclic: capture/cycle checks remain separate.
 The caller keeps the borrowed owner alive and releases it on failure.
@@ -562,8 +576,8 @@ define the comparison.
 
 ### Exact scalar constants
 
-Focused native, memory and compiler-cost checks pass; final production validation
-remains. [The contract](measurements/scalar-constant-lowering.md) defines the scope. Consider:
+[PR #261 is verified and merged](measurements/scalar-constant-delivery-2026-11-05/README.md).
+[The contract](measurements/scalar-constant-lowering.md) defines the scope. Consider:
 
 ```fwp
 unit-weight : F64
@@ -716,8 +730,10 @@ Passing source selection or saving allocations alone does not prove a speedup.
 
 ### Reusing private pair storage
 
-**Focused, stack/allocation and compiler-cost checks pass. [Runtime speed targets](measurements/packed-pair-cleanup-time-2026-11-05/README.md)
-remain unmet; final platform verification is pending for [PR #260](https://github.com/e6qu/fun-with-pipes/pull/260).**
+**[PR #260 is verified and merged](measurements/packed-pair-delivery-2026-11-05/README.md).**
+Focused, stack/allocation, compiler-cost and final platform checks pass.
+The [missed runtime speed targets](measurements/packed-pair-cleanup-time-2026-11-05/README.md)
+remain open.
 For equal-width numeric records, each pair result can overwrite the earlier input
 record after both inputs have been read. For three records:
 

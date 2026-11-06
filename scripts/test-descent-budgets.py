@@ -25,6 +25,7 @@ class DescentBudgets(unittest.TestCase):
                 (3, 199, 1592, 63680, 0), (3, 1999, 15992, 639680, 0),
                 (33, 199, 1592, 827840, 0), (129, 199, 1592, 3273152, 0)),
         }
+        cases['recording-lookup'] = cases['scalar-constant']
         for protocol, predictions in cases.items():
             for dimensions, updates, requests, byte_count, retains in predictions:
                 row = self.recording_case(updates)

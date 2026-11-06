@@ -23,6 +23,7 @@ mod owned_numeric;
 mod packed_inputs;
 mod packed_records;
 mod range_zip;
+mod recording;
 mod regions;
 mod scalar_map_zip;
 mod scalar_text;
@@ -41,6 +42,9 @@ const PACKED_PAIR_REUSE: bool = true;
 
 // Same-source reference disables only general exact scalar substitutions.
 const SCALAR_CONSTANT_VALUES: bool = true;
+
+// Same-source reference disables only proved per-worker tape lookup reuse.
+const AD_RECORDING_LOOKUPS: bool = true;
 
 const RUNTIME: &[&str] = &[
     include_str!("../runtime/fwp_rt.c"),
@@ -477,6 +481,7 @@ struct Gen<'p> {
     /// Whether functions are safe points for preemption (programs with
     /// tasks): their entries spend the running task's budget.
     ticks: bool,
+    recording_workers: Vec<bool>,
     /// The runtime may return through an Error handler or task cancellation.
     unwind: bool,
     /// Step functions of `loop`s compiled to C loops with their state in
@@ -2492,6 +2497,8 @@ struct FnGen<'g, 'p, 'e> {
     root: &'e Expr,
     /// Built lazily once for this emission; never shared across cloned bodies.
     field_last_uses: Option<HashMap<Local, *const Expr>>,
+    /// This emission declared the proved worker's stack-local lookup state.
+    recording: bool,
     g: &'g mut Gen<'p>,
     out: String,
     tmp: usize,
@@ -6478,6 +6485,15 @@ impl<'g, 'p> FnGen<'g, 'p, '_> {
             self.tail_tokens(tail);
             return self.bind(format!("(V)(int64_t)({})", n));
         }
+        if self.recording && recording::scalar_push(&self.g.prog.funcs[id]) {
+            let xs: Vec<_> = args
+                .iter()
+                .enumerate()
+                .map(|(j, a)| self.arg(id, j, a))
+                .collect();
+            self.tail_tokens(tail);
+            return self.bind_call(key, format!("fwp_p_ad_push({}, &recording)", xs.join(", ")));
+        }
         if let Some(abi) = self.g.abis[id].clone() {
             let xs = self.worker_args(id, &abi, args);
             self.tail_tokens(tail);
@@ -7938,7 +7954,7 @@ impl<'p> Gen<'p> {
                     ("matrix._valid-f64", "fwp_p_matrix_valid_f64(l0, l1, l2, l3, l4, l5)"),
                     ("matrix._mul-f64", "fwp_p_matrix_mul_f64(l0, l1, l2, l3, l4)"),
                     ("ad.tape", "fwp_p_ad_tape(l0)"),
-                    ("ad.push", "fwp_p_ad_push(l0, l1, l2, l3)"),
+                    ("ad.push", "fwp_p_ad_push(l0, l1, l2, l3, NULL)"),
                     ("ad.backward", "fwp_p_ad_backward(l0, l1, l2)"),
                     ("ad._backward-one", "fwp_p_ad_backward_one(l0, l1, l2)"),
                     ("device.run", "fwp_p_device_run(l0, l1, l2, l3, l4)"),
@@ -8171,6 +8187,7 @@ impl<'p> Gen<'p> {
         let mut fg = FnGen {
             root: &body,
             field_last_uses: None,
+            recording: false,
             live_calls,
             g: self,
             out: String::new(),
@@ -8341,6 +8358,7 @@ static inline __attribute__((always_inline)) int fs{}(fwp_loop_state{step} *st, 
         let mut fg = FnGen {
             root: e,
             field_last_uses: None,
+            recording: false,
             live_calls,
             g: self,
             out: String::new(),
@@ -9501,6 +9519,7 @@ static inline __attribute__((always_inline)) int fs{}(fwp_loop_state{step} *st, 
         let mut fg = FnGen {
             root: e,
             field_last_uses: None,
+            recording: false,
             live_calls: self.live_calls(id, e),
             g: self,
             out: String::new(),
@@ -9532,6 +9551,10 @@ static inline __attribute__((always_inline)) int fs{}(fwp_loop_state{step} *st, 
                 .cloned()
                 .unwrap_or_default();
         fg.entry_tick(fg.g.prog.funcs[fg.me].arity, &borrowed);
+        fg.recording = fg.g.recording_workers[id];
+        if fg.recording {
+            fg.line("fwp_ad_recording recording = {-1, NULL};");
+        }
         let r = fg.expr(e);
         let _ = writeln!(fg.out, "    return {};", r);
         fg.out
@@ -9583,6 +9606,7 @@ static inline __attribute__((always_inline)) int fs{}(fwp_loop_state{step} *st, 
         let mut fg = FnGen {
             root: e,
             field_last_uses: None,
+            recording: false,
             live_calls: self.live_calls(id, e),
             g: self,
             out: String::new(),
@@ -9614,6 +9638,10 @@ static inline __attribute__((always_inline)) int fs{}(fwp_loop_state{step} *st, 
                 .cloned()
                 .unwrap_or_default();
         fg.entry_tick(fg.g.prog.funcs[fg.me].arity, &borrowed);
+        fg.recording = fg.g.recording_workers[id];
+        if fg.recording {
+            fg.line("fwp_ad_recording recording = {-1, NULL};");
+        }
         let ret = match (abi.ret, abi.vret) {
             (Some(n), _) => {
                 let fs = fg.expr_fields(e, n);
@@ -10765,6 +10793,12 @@ fn generate_mode(prog: &Program, mut mode: Mode) -> Result<String, String> {
         .collect();
     borrowing.borrowed_parameters = crate::rc::borrows::infer(prog, &owned_entries, &live);
     let uncounted = &borrowing;
+    let ticks = uses_async(uncounted) || uses_services(uncounted);
+    let recording_workers = if AD_RECORDING_LOOKUPS {
+        recording::select(uncounted, ticks)
+    } else {
+        vec![false; uncounted.funcs.len()]
+    };
     let counted = counted_program(uncounted);
     let prog = &counted;
     // Ownership lowering introduces temporaries. Check their concrete types
@@ -10829,7 +10863,8 @@ fn generate_mode(prog: &Program, mut mode: Mode) -> Result<String, String> {
         remotes: Vec::new(),
         cli_defs: String::new(),
         cli_flags: HashMap::new(),
-        ticks: uses_async(prog) || uses_services(prog),
+        ticks,
+        recording_workers,
         unwind: resources
             || prog
                 .funcs

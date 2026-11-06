@@ -37,11 +37,11 @@ int main(void) {
         if (t->cap || t->pa || t->pb || t->da || t->db) return 230;
         OBJ(operation_tuple)->f[0]=base; OBJ(operation_tuple)->f[1]=fwp_from_f64(2.0);
         OBJ(operation_tuple)->f[2]=base+(V)n-1; OBJ(operation_tuple)->f[3]=fwp_from_f64(3.0);
-        V node=fwp_p_ad_push(OBJ(operation_tuple)->f[0], OBJ(operation_tuple)->f[1], OBJ(operation_tuple)->f[2], OBJ(operation_tuple)->f[3]);
+        V node=fwp_p_ad_push(OBJ(operation_tuple)->f[0], OBJ(operation_tuple)->f[1], OBJ(operation_tuple)->f[2], OBJ(operation_tuple)->f[3], NULL);
         if (node!=base+(V)n) return 231;
         OBJ(operation_tuple)->f[0]=node; OBJ(operation_tuple)->f[1]=fwp_from_f64(4.0);
         OBJ(operation_tuple)->f[2]=(V)(int64_t)-1; OBJ(operation_tuple)->f[3]=fwp_from_f64(NAN);
-        node=fwp_p_ad_push(OBJ(operation_tuple)->f[0], OBJ(operation_tuple)->f[1], OBJ(operation_tuple)->f[2], OBJ(operation_tuple)->f[3]);
+        node=fwp_p_ad_push(OBJ(operation_tuple)->f[0], OBJ(operation_tuple)->f[1], OBJ(operation_tuple)->f[2], OBJ(operation_tuple)->f[3], NULL);
         if (node!=base+(V)n+1 || t->cap!=64 || t->pa[0]!=0 || t->pa[1]!=n || t->pb[0]!=n-1) return 232;
         ARR(operation_outputs)->d[0]=node;
         V result=fwp_rc_fresh(fwp_p_ad_backward(base,operation_outputs,operation_seeds));

@@ -70,4 +70,5 @@ was repaired without changing measurements. [The combined index](sessions.json)
 passes four-session source/host/sample checks. Constructing it exposed missing
 derived fields in the initial index and a checker variable that shadowed the
 archive path; both are fixed. A regression traverses all four sessions and rejects
-a corrupted final reference identity. Final production delivery remains required.
+a corrupted final reference identity. [Final production verification and delivery](../scalar-constant-delivery-2026-11-05/README.md)
+are complete; the missed speed targets remain open.

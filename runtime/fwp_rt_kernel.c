@@ -357,8 +357,18 @@ static V fwp_p_ad_tape_owned(V parameters, V inputs, const fwp_desc *elem) {
     return base;
 }
 
-/* A node with parents a and b (-1: none), with immediate F64 weights. */
-static V fwp_p_ad_push(V a, V wa, V b, V wb) {
+/* Only a compiler-proved, non-suspending numeric worker may retain this pair.
+ * Its call graph cannot create/retire tapes or reenter the runtime. Scalar
+ * append can grow the tape's buffers, but never moves the tape registry.
+ * Initialize each invocation with {-1, NULL}; active IDs are nonnegative. */
+typedef struct {
+    int64_t id;
+    fwp_tape *tape;
+} fwp_ad_recording;
+
+/* A node with parents a and b (-1: none), with immediate F64 weights.
+ * Ordinary callers explicitly pass NULL and validate every lookup. */
+static V fwp_p_ad_push(V a, V wa, V b, V wb, fwp_ad_recording *recording) {
     int64_t ra = (int64_t)a, rb = (int64_t)b;
     double da = fwp_f64(wa), db = fwp_f64(wb);
     if (ra < 0 && rb < 0) return (V)(int64_t)-1;
@@ -370,8 +380,17 @@ static V fwp_p_ad_push(V a, V wa, V b, V wb) {
         db = 0.0;
     }
     int64_t id = ra >> 32;
-    fwp_tape *t = fwp_tape_of(id);
-    if (t->owned) fwp_trap(FWP_AD_REPRESENTATION);
+    fwp_tape *t;
+    if (recording && recording->id == id) {
+        t = recording->tape;
+    } else {
+        t = fwp_tape_of(id);
+        if (t->owned) fwp_trap(FWP_AD_REPRESENTATION);
+        if (recording) {
+            recording->id = id;
+            recording->tape = t;
+        }
+    }
     int64_t idx = t->len;
     if (idx >= fwp_tape_limit()) fwp_trap("autodiff: the tape is full");
     if ((ra & 0xffffffff) >= idx || (rb >= 0 && (rb & 0xffffffff) >= idx))

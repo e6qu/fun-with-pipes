@@ -28,7 +28,7 @@ parser = argparse.ArgumentParser(
 )
 for name in ("input", "artifact", "job", "job-log", "recorded-checkout", "output"):
     parser.add_argument("--" + name, type=Path, required=True)
-parser.add_argument("--comparison", choices=("gradient-call", "packed-pair", "scalar-constant"), required=True)
+parser.add_argument("--comparison", choices=("gradient-call", "packed-pair", "scalar-constant", "recording-lookup"), required=True)
 parser.add_argument("--source", required=True)
 parser.add_argument("--run", type=int, required=True)
 parser.add_argument("--machine", choices=("aarch64", "x86_64"), required=True)
@@ -114,6 +114,7 @@ reference_module, transformation = {
     "gradient-call": (CENSUS.GRADIENT_REFERENCE, "scoped input borrowing, numeric fold fields, single-root seeding and consumed array scratch"),
     "packed-pair": (CENSUS.PAIR_REFERENCE, "reuse of the consumed private neighboring-record buffer"),
     "scalar-constant": (CENSUS.SCALAR_REFERENCE, "exact immediate scalar constants and acyclic cached aliases"),
+    "recording-lookup": (CENSUS.RECORDING_REFERENCE, "validated tape lookup reuse within bounded nonsuspending numeric workers"),
 }[args.comparison]
 with zipfile.ZipFile(args.input) as z:
     report = json.loads(z.read("numeric-analysis/report.json"))
@@ -135,7 +136,7 @@ with zipfile.ZipFile(args.input) as z:
     stack = None
     # Historical protocols predate this gate. The recorded source determines
     # whether it is mandatory; a missing report never selects the old protocol.
-    stack_required = args.comparison in ("packed-pair", "scalar-constant") and (
+    stack_required = args.comparison in ("packed-pair", "scalar-constant", "recording-lookup") and (
         args.recorded_checkout / "scripts/check-packed-pair-stack.py"
     ).is_file()
     if stack_required:
@@ -150,14 +151,14 @@ with zipfile.ZipFile(args.input) as z:
         )
     else:
         assert not any(name.startswith("pair-stack/") for name in z.namelist())
-    assert len(report["commands"]) == 99 and all(
+    assert len(report["commands"]) == (171 if args.comparison == "recording-lookup" else 99) and all(
         c["returncode"] == 0 for c in report["commands"]
     )
     assert len(report["cases"]) == 12
     compilations = [
         row["command"] for row in report["commands"] if "-std=gnu11" in row["command"]
     ]
-    assert len(compilations) == 24
+    assert len(compilations) == (48 if args.comparison == "recording-lookup" else 24)
     flags = {
         "-O2",
         "-std=gnu11",
@@ -172,6 +173,7 @@ with zipfile.ZipFile(args.input) as z:
         for command in compilations
     )
     summaries = {}
+    verified_executions = 0
     manifest = json.loads(z.read("numeric-analysis-reference/manifest.json"))
     assert manifest == report["referenceManifest"] and manifest["source"] == SOURCE
     assert (
@@ -235,8 +237,23 @@ with zipfile.ZipFile(args.input) as z:
             observations = {}
             for kind in ("candidate", "reference"):
                 source = z.read(folder + kind + ".c").decode()
+                if args.comparison == "recording-lookup" and u > 0:
+                    CENSUS.DESCENT.RECORDING_SELECTION.check(source, kind == "candidate")
                 if args.comparison == "scalar-constant" and u > 0:
                     CENSUS.DESCENT.SCALAR_SELECTION.check(source, "literal" if kind == "candidate" else "cached")
+                if args.comparison == "recording-lookup":
+                    assert z.read(folder + kind + "-lookup.c").decode() == CENSUS.DESCENT.RECORDING_SELECTION.instrument(source)
+                    image = z.read(folder + kind + "-lookup")
+                    assert image[:6] == b"\x7fELF\x02\x01" and int.from_bytes(image[18:20], "little") == elf
+                    assert not z.read(folder + kind + "-lookup-compile.stdout")
+                    assert not z.read(folder + kind + "-lookup-compile.stderr")
+                    for workspace in ("0", "1"):
+                        stem = folder + kind + "-lookup-workspace" + workspace
+                        CENSUS.DESCENT.verify(z.read(stem + ".stdout"), CENSUS.DESCENT.AD.analytic(n, u + 1), solves)
+                        verified_executions += 1
+                        counts = json.loads(z.read(stem + ".stderr"))
+                        CENSUS.DESCENT.RECORDING_SELECTION.check_counts(counts, n, u, solves, kind == "candidate")
+                        assert counts == row["lookupObservations"][kind][workspace]
                 assert z.read(
                     folder + kind + "-profile.c"
                 ).decode() == CENSUS.DESCENT.AD.RAW.instrument(
@@ -258,6 +275,7 @@ with zipfile.ZipFile(args.input) as z:
                         CENSUS.DESCENT.AD.analytic(n, u + 1),
                         solves,
                     )
+                    verified_executions += 1
                     managed, raw = [
                         json.loads(line)
                         for line in z.read(stem + ".stderr").splitlines()
@@ -283,7 +301,7 @@ with zipfile.ZipFile(args.input) as z:
             )
             if args.comparison == "packed-pair":
                 expected = dict(requests=u * solves, requestedBytes=(16 * n - 8) * u * solves, retains=0)
-            elif args.comparison == "scalar-constant":
+            elif args.comparison in ("scalar-constant", "recording-lookup"):
                 expected = dict(requests=0, requestedBytes=0, retains=0)
             for workspace in ("0", "1"):
                 old, new = (
@@ -311,6 +329,11 @@ with zipfile.ZipFile(args.input) as z:
                 rawPeakBytes=observations["candidate1"]["raw"]["peakBytes"],
                 finalRawBytes=0,
             )
+            if args.comparison == "recording-lookup":
+                summaries[name]["recordingChecks"] = {
+                    kind: row["lookupObservations"][kind]["1"]
+                    for kind in ("candidate", "reference")
+                }
     summary_spec = importlib.util.spec_from_file_location(
         "summary",
         args.recorded_checkout / "scripts/summarize-derivative-forward-costs.py",
@@ -350,7 +373,11 @@ with zipfile.ZipFile(args.input) as z:
     else:
         assert not fresh["comparisonFailures"], fresh["comparisonFailures"]
         corrected = []
-        if args.comparison == "scalar-constant":
+        if args.comparison == "recording-lookup":
+            parent = Path("docs/measurements/scalar-constant-census-2026-11-05") / machine / "audit"
+            parent_repeated = json.loads((parent / (machine + "-verified.json")).read_text())
+            parent_fresh = json.loads(gzip.decompress((parent / (machine + "-fresh-verified.json.gz")).read_bytes()))
+        elif args.comparison == "scalar-constant":
             parent = Path("docs/measurements/packed-pair-cleanup-census-2026-11-05") / machine / "audit"
             parent_repeated = json.loads(gzip.decompress((parent / (machine + "-verified.json.gz")).read_bytes()))
             parent_fresh = json.loads(gzip.decompress((parent / (machine + "-fresh-verified.json.gz")).read_bytes()))
@@ -413,16 +440,17 @@ with zipfile.ZipFile(args.input) as z:
         artifact=artifact,
         freshCases=24,
         freshNativeImages=164,
-        verifiedCommands=99,
-        nativeImages=24,
-        verifiedExecutions=48,
+        verifiedCommands=len(report["commands"]),
+        nativeImages=len(compilations),
+        verifiedExecutions=verified_executions,
         cases=summaries,
         completeProgramStack=stack,
     )
     (ROOT / f"{host}-verified.json").write_text(json.dumps(receipt, indent=2) + "\n")
     print(
         host,
-        "12 cases, 48 raw outputs/profiles, 24 native images and exact reference verified",
+        f"{len(summaries)} cases, {verified_executions} executions, "
+        f"{len(compilations)} native images and exact reference verified",
         flush=True,
     )
     print(

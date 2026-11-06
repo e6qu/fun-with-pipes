@@ -1,4 +1,6 @@
 //! Gradients own active tape buffers across callback return and nonlocal exits.
+use fwp::ir::{Body, Expr, Func, Program, MT};
+use fwp::value::Value;
 use std::path::PathBuf;
 #[path = "support/c_instrument.rs"]
 mod c_instrument;
@@ -383,3 +385,152 @@ main = read-all () | concat "runtime-owned scope input" | make {
 
 #[path = "support/gradient_call_storage.rs"]
 mod gradient_call_storage;
+
+#[test]
+fn proved_recording_workers_reuse_only_live_tape_lookups() {
+    let scratch = Scratch::new("recording-lookups");
+    let i = MT::con("std::I64");
+    let f = MT::con("std::F64");
+    let parameters = vec![i.clone(), f.clone(), i.clone(), f.clone()];
+    let ty = parameters
+        .iter()
+        .rev()
+        .fold(i.clone(), |result, parameter| {
+            MT::Fun(Box::new(parameter.clone()), Box::new(result))
+        });
+    let push = Func {
+        name: "push".into(),
+        arity: 4,
+        ty: ty.clone(),
+        locals: parameters.clone(),
+        body: Body::Prim("ad.push".into()),
+    };
+    let mut locals = parameters;
+    locals.push(i.clone());
+    let worker = Func {
+        name: "record-two".into(),
+        arity: 4,
+        ty,
+        locals,
+        body: Body::Expr(Expr::Let(
+            4,
+            Box::new(Expr::Call(0, (0..4).map(Expr::Local).collect())),
+            Box::new(Expr::Call(
+                0,
+                vec![
+                    Expr::Local(4),
+                    Expr::Local(1),
+                    Expr::Local(2),
+                    Expr::Local(3),
+                ],
+            )),
+        )),
+    };
+    // Admission must see a real scope even though the C probe replaces main.
+    let callback_ty = MT::Fun(Box::new(i.clone()), Box::new(i.clone()));
+    let scope = Func {
+        name: "scope".into(),
+        arity: 2,
+        ty: MT::Fun(Box::new(callback_ty.clone()), Box::new(callback_ty.clone())),
+        locals: vec![callback_ty.clone(), i.clone()],
+        body: Body::Prim("ad.scope".into()),
+    };
+    let callback = Func {
+        name: "scoped-recording".into(),
+        arity: 1,
+        ty: callback_ty,
+        locals: vec![i.clone()],
+        body: Body::Expr(Expr::Call(
+            1,
+            vec![
+                Expr::Local(0),
+                Expr::Const(Value::F64(0.5)),
+                Expr::Local(0),
+                Expr::Const(Value::F64(0.5)),
+            ],
+        )),
+    };
+    let main = Func {
+        name: "main".into(),
+        arity: 0,
+        ty: i,
+        locals: vec![],
+        body: Body::Expr(Expr::Call(
+            2,
+            vec![Expr::Func(3), Expr::Const(Value::I64(-1))],
+        )),
+    };
+    let program = Program {
+        funcs: vec![push, worker, scope, callback, main],
+        main: Some(4),
+        ..Program::default()
+    };
+    let mut unscoped = program.clone();
+    unscoped.funcs[4].body = Body::Expr(Expr::Call(3, vec![Expr::Const(Value::I64(-1))]));
+    assert!(fwp::cgen::generate(&unscoped)
+        .unwrap_err()
+        .contains("outside an autodiff scope"));
+    let original = fwp::cgen::generate(&program).unwrap();
+    assert_eq!(
+        original
+            .matches("fwp_ad_recording recording = {-1, NULL};")
+            .count(),
+        1
+    );
+    assert_eq!(original.matches(", &recording)").count(), 2);
+    let lookup = "static fwp_tape *fwp_tape_of(int64_t id) {";
+    let append = "    t->len = idx + 1;\n";
+    assert_eq!(original.matches(lookup).count(), 1);
+    assert_eq!(original.matches(append).count(), 1);
+    let runtime = original.replace(lookup, &format!(
+        "static unsigned recording_lookup_calls;\nstatic int recording_fail_after_append;\n{lookup}\n    recording_lookup_calls++;"))
+        .replace(append, &format!("{append}    if (recording_fail_after_append) fwp_trap(\"recording append control\");\n"))
+        .replace("int main(int argc, char **argv)", "int original_main(int argc, char **argv)");
+    let parent = "    if ((ra & 0xffffffff) >= idx || (rb >= 0 && (rb & 0xffffffff) >= idx))\n        fwp_trap(FWP_AD_INVALID_NODE);\n";
+    let full = "    if (idx >= fwp_tape_limit()) fwp_trap(\"autodiff: the tape is full\");\n";
+    let start = runtime.find("static V fwp_p_ad_push(").unwrap();
+    let end = start + runtime[start..].find("/* the adjoints").unwrap();
+    let push = &runtime[start..end];
+    assert_eq!(push.matches(parent).count(), 1);
+    assert_eq!(push.matches(&format!("{full}{parent}")).count(), 1);
+    let no_parent = format!(
+        "{}{}{}",
+        &runtime[..start],
+        push.replace(parent, ""),
+        &runtime[end..]
+    );
+    let wrong_order = format!(
+        "{}{}{}",
+        &runtime[..start],
+        push.replace(&format!("{full}{parent}"), &format!("{parent}{full}")),
+        &runtime[end..]
+    );
+    let ordinary = runtime.replace(", &recording)", ", NULL)");
+    for (label, source, lookups, expected) in [
+        ("proved", runtime, 1, 0),
+        ("ordinary", ordinary.clone(), 2, 0),
+        ("broken-lookup-observer", ordinary, 1, 61),
+        ("broken-parent-validation", no_parent, 1, 62),
+        ("broken-validation-order", wrong_order, 1, 63),
+    ] {
+        let code = format!(
+            "{source}\n#define EXPECTED_LOOKUPS {lookups}\n{}",
+            include_str!("fixtures/ad_recording_lookup_probe.c")
+        );
+        for opt in ["-O1", "-O2"] {
+            let executable = scratch.0.join(format!("{label}{opt}.exe"));
+            fwp::cgen::compile_c(&code, &executable, opt).unwrap();
+            for reuse in ["0", "1"] {
+                let output = Command::new(&executable)
+                    .env("FWP_AD_WORKSPACE", reuse)
+                    .output()
+                    .unwrap();
+                let label = format!("recording-{label}{opt}-reuse{reuse}");
+                record_probe::save("ad_tape_scopes", &label, &code, &executable, &output);
+                assert_eq!(output.status.code(), Some(expected), "{label}: {output:?}");
+                assert!(output.stdout.is_empty(), "{label}: {output:?}");
+                assert!(output.stderr.is_empty(), "{label}: {output:?}");
+            }
+        }
+    }
+}

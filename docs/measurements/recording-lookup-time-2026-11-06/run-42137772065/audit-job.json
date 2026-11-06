@@ -1,0 +1,100 @@
+{
+  "id": 127638589464,
+  "run_id": 42140277966,
+  "workflow_name": "Numerical and ownership evidence",
+  "head_branch": "recording-work-review",
+  "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/42140277966",
+  "run_attempt": 1,
+  "node_id": "CR_kwDOU33zxM8AAAAdt9pQGA",
+  "head_sha": "31c04650527d7a3c9efdd63bd5b4eae8a15d5732",
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/127638589464",
+  "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/42140277966/job/127638589464",
+  "status": "completed",
+  "conclusion": "success",
+  "created_at": "2026-11-06T00:55:21Z",
+  "started_at": "2026-11-06T00:55:37Z",
+  "completed_at": "2026-11-06T00:57:07Z",
+  "name": "retained_comparisons",
+  "steps": [
+    {
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 1,
+      "started_at": "2026-11-06T00:55:37Z",
+      "completed_at": "2026-11-06T00:55:38Z"
+    },
+    {
+      "name": "Run actions/checkout@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 2,
+      "started_at": "2026-11-06T00:55:38Z",
+      "completed_at": "2026-11-06T00:55:51Z"
+    },
+    {
+      "name": "Evidence download and host-rejection controls",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 3,
+      "started_at": "2026-11-06T00:55:51Z",
+      "completed_at": "2026-11-06T00:55:51Z"
+    },
+    {
+      "name": "Audit completed native observations without executing binaries",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 4,
+      "started_at": "2026-11-06T00:55:51Z",
+      "completed_at": "2026-11-06T00:56:00Z"
+    },
+    {
+      "name": "Preserve compact reports and complete job logs",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 5,
+      "started_at": "2026-11-06T00:56:00Z",
+      "completed_at": "2026-11-06T00:56:01Z"
+    },
+    {
+      "name": "Package all collected evidence, including failed audits",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 6,
+      "started_at": "2026-11-06T00:56:01Z",
+      "completed_at": "2026-11-06T00:57:04Z"
+    },
+    {
+      "name": "Run actions/upload-artifact@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 7,
+      "started_at": "2026-11-06T00:57:04Z",
+      "completed_at": "2026-11-06T00:57:05Z"
+    },
+    {
+      "name": "Post Run actions/checkout@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 14,
+      "started_at": "2026-11-06T00:57:05Z",
+      "completed_at": "2026-11-06T00:57:05Z"
+    },
+    {
+      "name": "Complete job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 15,
+      "started_at": "2026-11-06T00:57:05Z",
+      "completed_at": "2026-11-06T00:57:05Z"
+    }
+  ],
+  "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/127638589464",
+  "labels": [
+    "ubuntu-24.04-arm"
+  ],
+  "runner_id": 1000413558,
+  "runner_name": "GitHub Actions 1000413558",
+  "runner_group_id": 0,
+  "runner_group_name": "GitHub Actions"
+}

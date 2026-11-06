@@ -50,4 +50,5 @@ artifacts identified by each receipt.
 
 [Allocation and stack checks](../scalar-constant-census-2026-11-05/README.md)
 also pass. [Runtime measurements](../scalar-constant-time-2026-11-05/README.md)
-retain 27 missed speed targets; final production delivery remains pending.
+retain 27 missed speed targets. [Final production verification and delivery](../scalar-constant-delivery-2026-11-05/README.md)
+are complete.

@@ -5,38 +5,40 @@ and useful inference. Prefer direct values, moves and borrows; use automatic
 reference counting (ARC) only for necessary sharing. Tracing garbage collection
 has been removed. JIT compilation and backward compatibility are excluded.
 
-## Current work: exact scalar constants
+## Delivered: exact scalar constants
 
-[PR #260 is verified and merged](docs/measurements/packed-pair-delivery-2026-11-05/README.md).
-Private pair-buffer reuse reduces allocation; its 34 timing misses remain open
-below. The current group targets proved scalar constants without changing
-allocation or derivative work.
+[PR #261 is verified and merged](docs/measurements/scalar-constant-delivery-2026-11-05/README.md).
+The compiler replaces proved immediate constants and aliases with exact bits.
+For example, `one` specialized to F64 is `1.0f64`, without a lazy-cache read.
+Effects, traps, owned values and unproved calculations keep their behavior.
+All nine production jobs, docs and complete evidence audits pass. Long derivative
+solves improve by 1.7–6.3%; allocation and stack costs are unchanged. The 27 missed
+speed targets remain open below, alongside earlier results.
 
-The implemented group replaces proved immediate scalar values and aliases with exact
-bits, avoiding lazy-cache reads. For example, `one` specialized to F64 is exactly
-`1.0f64`; it does not need a mutable first-use flag. Arbitrary zero-argument
-functions still may allocate, trap or perform effects and keep their behavior.
+## Next work: objective evaluation and recording
 
-| Step | Work | Completion requirement |
+The source review selected [bounded tape lookup reuse](docs/measurements/recording-lookups.md).
+The source account, comparison contract and
+[focused safety checks](docs/measurements/recording-lookup-checks-2026-11-06/README.md)
+are verified. The [runtime report](docs/measurements/recording-lookup-time-2026-11-06/README.md)
+retains all 32 missed speed targets; memory/work audits pass, with one inconclusive
+compiler-time control. Step 4 still requires final platform validation.
+The saved 129-coordinate/199-update observations put this
+stage at 71.8–72.4% of derivative-phase time, or 45.5–47.6% of the instrumented
+process. Result-array construction is only 0.9–1.0% of phase time. These percentages
+do not isolate the cost of an individual runtime check or predict a speedup.
+
+| Step | Concrete work | Required result |
 |---|---|---|
-| 1 | Share the bounded constant proof | Reuse packed-fold seed analysis; exact scalar types/bits, acyclic aliases and a finite proof budget. |
-| 2 | Replace scalar reads and cache entries | Preserve evaluation order, tracing/resource boundaries and owned globals; no runtime tape-check changes. |
-| 3 | Verify bits, effects and cache ownership | Interpreter/native agreement, O1/O2 probes, deliberate broken controls, prior packed-fold and cleanup coverage on three hosts. |
-| 4 | Measure the complete programs | Unchanged allocation/node counts, parent reconciliation, compiler costs, two qualified runtime sessions per architecture and complete artifact audits. |
-| 5 | Deliver the group | Pass nine final-head production jobs plus docs, audit every result and squash merge. |
+| 1 | Trace the objective's generated scalar workers through `rev._op1`, `rev._op2` and `fwp_p_ad_push`; reconcile recorded nodes with the saved profiles. | A source-level account of arithmetic, parent validation, capacity checks and writes per update. Distinguish forward evaluation from reverse traversal. |
+| 2 | Determine which repeated recording checks can be proved once for a closed worker. | An explicit scope/alias proof covering mixed or expired tapes, invalid parents, capacity growth, nested differentiation, effects, traps and cancellation. Do not remove checks on unproved paths. |
+| 3 | Freeze one coherent transformation and its comparison before implementation. | Same-source enabled/disabled references, representative current/history workloads, exact arithmetic/trap order, and explicit time, memory, stack and compiler-cost limits. If the proof fails, record the reason and select from the measured work instead. |
+| 4 | Implement and verify the complete group. | Focused production-compiler checks during development; one final platform matrix and measurement batch after the group is ready. Retain misses and audit all artifacts before merge. |
 
-[The contract](docs/measurements/scalar-constant-lowering.md) was committed at
-`4bad4992` before implementation. Source review identified repeated scalar-cache
-reads in generated numeric workers; it does not establish their machine cost.
-C/Rust peers still use handwritten derivatives, so their whole-program comparison
-cannot isolate language or ARC overhead. Keep all previous missed timing goals.
-[The handoff](docs/development-state.md) records actual checks and the next action.
-
-Focused native checks, the [allocation/stack audit](docs/measurements/scalar-constant-census-2026-11-05/README.md)
-and [compiler-cost audit](docs/measurements/scalar-constant-analysis-2026-11-05/README.md)
-pass. [Four runtime sessions](docs/measurements/scalar-constant-time-2026-11-05/README.md)
-retain 27 missed speed targets; all other measured limits pass. Complete final
-production verification and delivery remain.
+Use existing samples for diagnosis; do not rerun unchanged timings for a pass.
+C/Rust peers use handwritten derivatives, so their complete-program ratios cannot
+isolate language or ARC overhead. [The handoff](docs/development-state.md) records
+the exact next action, source identities and current checks.
 
 ## Open performance goals
 
@@ -50,6 +52,8 @@ history can be optimized away). Copy controls compare identical executable bytes
 
 | Goal and evidence | What remains; next action |
 |---|---|
+| [Recording lookup runtime](docs/measurements/recording-lookup-time-2026-11-06/README.md) | All 32 long-case 5% targets remain unmet. ARM64 ranges from 0.14% slower to 2.33% faster; AMD64 current-result cases slow by 1.13–3.90%, while history ranges from 0.40% slower to 1.80% faster. Small-case and copy limits pass. Lookup counts fall 8→3 per pair/update; allocations, live storage and reported frames stay unchanged. Review saved source for per-worker state, ID comparisons and pointer selection, including ordinary NULL-state calls, before selecting another change. Preserve the original timings; the count reduction does not explain the slowdown. |
+| [Recording lookup compiler time](docs/measurements/recording-lookup-analysis-2026-11-06/README.md) | AMD64 large callback worker is inconclusive: identical candidate copies differ by 2.854%, above 2%. All observed time/RSS ratios are below 1.05. Saved samples show later timings rising for all four copies; the two-order schedule partly confounds copy identity and position. Preserve the original failure. A future diagnostic must separate those factors before changing the setup; do not rerun unchanged timings for a pass. |
 | [Exact scalar constants](docs/measurements/scalar-constant-time-2026-11-05/README.md) | 27 of 32 long-case 5% targets remain open: all 16 ARM64 results; both AMD64 sessions' 3/199 and 3/1999 forms; AMD1 history 33/199 and 129/199; AMD2 history 33/199. Gains are 1.7–6.3%; small-case, copy, storage, stack and compiler limits pass. Inspect objective arithmetic/recording source and saved phase/work counts before selecting another transformation. Keep these original samples; do not rerun unchanged timings. |
 | [Private pair reuse](docs/measurements/packed-pair-cleanup-time-2026-11-05/README.md) | The cleanup repair fixes the observed stack excess; all 32 long-case 5% targets remain unmet. AMD64 session 1 one-update current is 2.8315% slower; session 2 zero-update current is 2.2158% slower. Copy controls pass. Diagnose objective evaluation/recording work (73–75% of recorded phase time in the largest diagnostic case) before selecting another speed change. Remaining buffer sizes/lifetime constraints are [explicit](docs/measurements/packed-pair-cleanup-census-2026-11-05/README.md#remaining-storage-and-its-constraints). The first implementation's 23 timing misses remain separately recorded. |
 | [Gradient-call storage](docs/measurements/gradient-call-time-2026-11-05/README.md) | Sixteen 33/199 and 129/199 results miss 5%; AMD64 session 2 3/0 current is 2.1822% slower, beyond 2%. All copy controls pass. Three-coordinate long solves improve 14.3–25.2%. The current pair-buffer group addresses one of the [two remaining recording allocations](docs/measurements/gradient-call-census-2026-11-05/README.md#remaining-storage) identified by producer/consumer lifetimes (together 2U requests, 32NU bytes). Separately review the zero-update source/driver path before declaring a new experiment. These are next investigations, not established causes. |

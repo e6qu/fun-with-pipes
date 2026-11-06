@@ -6,6 +6,18 @@ and complete platform validation are different events. Measurements retain their
 original source and settings; old numbers are not measurements of current main.
 The linked PRs, runs and data records supply the detailed evidence.
 
+## Exact scalar constants (PR #261)
+
+[PR #261](https://github.com/e6qu/fun-with-pipes/pull/261) replaces proved immediate
+constants and aliases with exact bits instead of lazy-cache reads. Effects, traps,
+owned values and unproved bodies retain their behavior. All final platform jobs,
+docs and artifact audits pass; [delivery records](measurements/scalar-constant-delivery-2026-11-05/README.md)
+verify merge `2e6e09f5` and its identical tested tree.
+
+Long derivative solves improve by 1.7–6.3%, with unchanged measured allocation,
+work and stack costs. Compiler-cost limits pass. The [runtime report](measurements/scalar-constant-time-2026-11-05/README.md)
+retains 27 missed 5% targets; no unchanged timing was rerun for a pass.
+
 ## Private pair-buffer reuse (PR #260)
 
 [PR #260](https://github.com/e6qu/fun-with-pipes/pull/260) merged November 5 as

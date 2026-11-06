@@ -1,64 +1,87 @@
 # Current work
 
-**Next:** publish the completed PR #261 group, mark it ready, then monitor all nine
-production jobs and docs on that exact final head. Fix every failure, audit every
-completed log/artifact and squash merge only after all final gates pass. Use a
-single-line subject of at most 80 characters and an empty body; verify the merge.
+**Next:** publish the complete measurement report, mark PR #262 ready, and run
+all nine production jobs plus docs on that exact final head. Audit every complete
+log/artifact before the authorized squash merge. Do not repeat the completed timings.
+
+Branch `recording-work-review`, worktree `.worktrees/scalar-constant-lowering`;
+active draft [PR #262](https://github.com/e6qu/fun-with-pipes/pull/262).
+Base: verified [PR #261 delivery](measurements/scalar-constant-delivery-2026-11-05/README.md),
+merge `2e6e09f539bcdab965d062f0184b585b340b29d8`.
+[Lookup contract](measurements/recording-lookups.md) frozen at `bfddc31e` before code.
 
 ## Roadmap status
 
-| Step | Status | Evidence still needed |
+| Step | Status | Remaining work |
 |---|---|---|
-| 1 | Implemented | Bounded proof verified in focused tests; final production coverage remains. |
-| 2 | Implemented | Exact scalar reads verified; final production coverage remains. |
-| 3 | Verified | Three native hosts and complete artifact audit pass. |
-| 4 | Verified | Census/compiler/runtime audits pass; 27 timing targets remain explicitly open. |
-| 5 | In progress | Nine exact-head production jobs, docs, full audit and squash merge. |
+| 1 | Verified | Source accounting reconciles eight nodes per pair/update. |
+| 2 | Verified | Closed numeric proof and focused lifetime controls pass. |
+| 3 | Verified | Same-source comparison and original limits are frozen. |
+| 4 | In progress | All measurement audits are complete, with 32 missed speed targets and one inconclusive compiler-time control retained. Final platform gates remain. |
 
-[PR #261](https://github.com/e6qu/fun-with-pipes/pull/261), branch/worktree
-`scalar-constant-lowering`. Compiler/test source matches focused
-`37da72171d64dbb53dd87dbc49254f61f3ebf0bd`. Measurements use
-`76690b385514c58ad94c5591da3553fa48218535`; subsequent changes repair evidence
-checkers and docs only. No timing reruns are needed or permitted for a better result.
+## Sources and verified work
 
-## Verified evidence
+Safety/census/compiler source: `6a0ae280c4616f791df507b44cbd31935a16cd67`.
+Runtime source: `31c04650527d7a3c9efdd63bd5b4eae8a15d5732`.
+Compiler/runtime/library/test trees are identical. The later commit retains
+evidence and fixes only census summary totals. This publication adds reports and
+docs; no production code changes after these measurements.
 
-| Check | Original run | Complete audit / records |
+| Evidence | Run / complete audit | Result |
 |---|---|---|
-| 25 targets, 828 native images and 844 observations per host | `42048215807` | `42070540044`; [focused receipts](measurements/scalar-constant-checks-2026-11-05/native-passing/README.md) |
-| Unchanged allocations, cleanup, work and stack | `42072583890` | `42074145465`; [census](measurements/scalar-constant-census-2026-11-05/README.md) |
-| 336 compiler commands per host | `42074639596` | `42076024832`; [costs](measurements/scalar-constant-analysis-2026-11-05/README.md) |
-| ARM1/ARM2/AMD1 and rejected AMD2 host | `42074728167` | `42078637088`; [runtime](measurements/scalar-constant-time-2026-11-05/README.md) |
-| Qualified AMD2 replacement | `42075136884` | `42078654369`; same original measurement source |
+| [Focused safety](measurements/recording-lookup-checks-2026-11-06/README.md) | `42129223759` / `42134128147` | Three hosts pass: 25 native targets and 302 compiler units per host, four existing ignored units. Audit covers 848 images and 864 probe observations per host. |
+| [Measurement tools](measurements/recording-lookup-controls-2026-11-06/README.md) | `42123056112`, job `127580112855` | Eleven suites, 97 tests; full logs and source identity retained. |
+| [Memory/work](measurements/recording-lookup-census-2026-11-06/README.md) | `42134160356` / corrected audit `42136506956` | Eight-to-three lookups per pair/update. Validation/node counts, allocation counts, raw/managed peaks and largest reported frames unchanged; cleanup and parent reconciliation pass. |
+| [Compiler costs](measurements/recording-lookup-analysis-2026-11-06/README.md) | `42134169729` / `42135475969` | All 672 commands succeed; 13/14 timing cases qualify. All observed time/RSS ratios below 1.05. |
+| Previous docs | `42136488509`, job `127625843070`, at `31c04650` | Pass; complete log reviewed, only three intentional runner-failure controls. New publication still needs its own docs job. |
 
-All four qualified runtime sessions measured once. Their 27 failures are long-case
-5% speed targets; all other measured limits pass. Retain the verified transformation
-under the agreed policy, with misses in PLAN.md. The rejected EPYC 9V45 host ran
-no builds/timing; its EPYC 7763 replacement is separate. No claimed C/Rust parity.
+AMD64 large callback worker compiler time is **inconclusive**: identical candidate
+copies vary by 2.854%, above 2%. Saved samples rise later for all four copies;
+generated C matches, but source/order review establishes no cause. Preserve the
+failure under the standing policy to retain verified reductions with timing goals
+open. Do not claim its time bound passed or rerun it for a pass.
 
-## Repairs included
+The first census audit validated every probe but printed obsolete summary totals.
+Corrected audit `42136506956`, job `127625915163`, derives 171 commands, 48 images
+and 96 executions per architecture. Retained observation hashes pass; only saved
+artifacts were re-audited. Earlier safety repairs are verified: explicit test ID
+range for Clippy, real `ad.scope` entry with unscoped rejection control, and recovery
+hooks confined to active `setjmp` frames.
 
-- [Native observer](measurements/scalar-constant-checks-2026-11-05/native-passing/README.md):
-  keep a computed byte length for cache-ownership instrumentation; exact-bit probes pass.
-- [Census observer](measurements/scalar-constant-checks-2026-11-05/census-observer/README.md):
-  follow live borrowed callbacks. Four controls and 21 saved programs pass.
-- [Runtime audit](measurements/scalar-constant-checks-2026-11-05/runtime-audit/README.md):
-  classify instrumented references correctly. Original samples re-audited successfully.
-- Four-session checker: keep the archive path separate from source-file paths.
-  Guarded combined audit passes; regression rejects a corrupted last reference.
-- Docs inventory: four cache tests, not three; eight controls pass. Full docs
-  passed at `26a5cbe6` and `76690b38`; the final head still needs its own gate.
-- Oversized workflow split; docs enforce GitHub's 512,000-byte limit.
+## Runtime results
 
-## Sources and resources
+[All original results and complete audits](measurements/recording-lookup-time-2026-11-06/README.md)
+are retained. The four qualified sessions each ran once on Neoverse-N2/EPYC 7763.
 
-Protocol tag: `roadmap/scalar-constant-lowering-protocol-2026-11-05` (`4bad4992`).
-Pre-rebase sources: `roadmap/scalar-constant-premerge-2026-11-05` (`5e1c51d5`).
-Original measurement setup: `roadmap/scalar-constant-measurements-2026-11-05`
-(`26a5cbe6`); repaired observer: `roadmap/scalar-constant-observer-repair-2026-11-05`
-(`76690b38`). [Parent #260 delivery](measurements/packed-pair-delivery-2026-11-05/README.md)
-is verified at `a85f59d2`.
+| Session | Measurement run | Job | Complete audit |
+|---|---|---|---|
+| ARM64 1/2 | `42136888829` | `127627213167` / `127627213106` | `42139232314` |
+| AMD64 1 | `42137772065` | `127630185205` | `42140277966` |
+| AMD64 2 | `42138616667` | `127632984326` | `42141026225` |
 
-About 84 GiB remains free. User-authorized cleanup removed 1,098,786,631 bytes of
-verified duplicate downloads; receipt is in `../gradient-work/removed-verified-downloads-2026-11-05-user-cleanup.json`.
-Use the unchanged local guard. Full builds, suites and large audits stay on GitHub.
+All four audits pass; all 32 long-case 5% speed targets remain unmet. ARM64 ranges
+from 0.14% slower to 2.33% faster. AMD64 current-result cases are 1.13–3.90% slower;
+history ranges from 0.40% slower to 1.80% faster. Small-case/copy, tracked memory,
+cleanup and stack limits pass. Retain the verified lookup reduction under the
+agreed policy, with timing goals open. An audit pass does not make timing pass.
+
+Five rejected hosts failed before builds/timing. Their logs and qualifications
+remain in the runtime report, including rejected-only run `42137525746`, audited
+by `42138966228`. Four downloaded bundles passed digest checks. Combined report
+checks verify source identities, CPU/settings, orders, medians, original budgets
+and the five rejected attempts. Native binaries were audited on GitHub.
+
+## Local checks and delivery
+
+All full builds, native suites, benchmarks and large artifact audits ran on GitHub.
+Focused local checks used `scripts/local-guard.py`: retained bundle hashes
+0.25 seconds; combined saved-report validation/table generation 0.48 seconds.
+The scratch report helper initially lacked the scripts import path; explicitly
+setting `PYTHONPATH=scripts` fixed it. No benchmark or native test reran.
+Scratch helpers/logs are in `/tmp/fwp-recording-*` and `../gradient-work/`.
+About 80 GiB remains free.
+
+No final production matrix has launched yet. Preserve the final head while gates
+run. After all nine jobs, docs and complete audits pass, squash with one explicit
+subject of at most 80 characters and an empty body; verify tested/merged trees and
+commit message. Then select the next source-level diagnostic from the open plan.

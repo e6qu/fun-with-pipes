@@ -1,0 +1,20 @@
+{
+  "id": 13464463640,
+  "node_id": "MDg6QXJ0aWZhY3QxMzQ2NDQ2MzY0MA==",
+  "name": "focused-storage-audit",
+  "size_in_bytes": 7261731,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13464463640",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13464463640/zip",
+  "expired": false,
+  "digest": "sha256:cfcec3827405f421ffeb7f1a4afefe1fac572f0adc13ca7370d4ae872db153e0",
+  "created_at": "2026-11-06T00:06:18Z",
+  "updated_at": "2026-11-06T00:06:18Z",
+  "expires_at": "2027-02-04T00:04:30Z",
+  "workflow_run": {
+    "id": 42134128147,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "recording-work-review",
+    "head_sha": "6a0ae280c4616f791df507b44cbd31935a16cd67"
+  }
+}
