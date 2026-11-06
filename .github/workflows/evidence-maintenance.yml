@@ -27,6 +27,39 @@ permissions:
   actions: read
 
 jobs:
+  recording_calls:
+    if: inputs.suite == 'recording-call-analysis'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04-arm
+            arch: aarch64
+          - runner: ubuntu-latest
+            arch: x86_64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts
+            .github
+          sparse-checkout-cone-mode: true
+      - name: Verify diagnostic failure controls
+        run: python3 scripts/test-recording-calls.py
+      - name: Rebuild saved measured C and retain GCC call decisions
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/analyze-recording-calls.py --arch '${{ matrix.arch }}' --output recording-call-analysis
+      - name: Preserve every report and failure
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: recording-call-analysis-${{ matrix.arch }}
+          path: recording-call-analysis/
+          if-no-files-found: error
   source_format:
     if: inputs.suite == 'source-format'
     runs-on: ubuntu-24.04-arm

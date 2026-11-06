@@ -1,7 +1,7 @@
 # Current work
 
-**Next:** implement the frozen [recording-call diagnostic](measurements/recording-call-costs.md),
-check its failure controls, then publish one draft PR and run the native GCC builds.
+**Next:** publish the [recording-call diagnostic](measurements/recording-call-costs.md)
+and run its native GCC builds. Audit every retained report before selecting a change.
 Use saved C and original executable hashes; do not repeat runtime timings.
 
 Branch `recording-call-costs`, worktree `.worktrees/scalar-constant-lowering`.
@@ -17,7 +17,7 @@ confirming tree equality; they are not additional validation.
 | Step | Status | Remaining work |
 |---|---|---|
 | 1 | Verified | Delivery receipt and all four sessions' generated-source hashes agree. |
-| 2 | Pending | Implement/check the diagnostic, then collect native GCC reports with exact executable equality. |
+| 2 | In progress | Diagnostic and failure controls implemented; native GCC reports and exact executable equality pending. |
 | 3 | Pending | Choose and freeze a production change from the reports; no cause or optimization is established yet. |
 | 4 | Pending | Implement the related group and run its final measurement/platform batch once ready. |
 
@@ -53,3 +53,8 @@ small tracked inputs fixed the source check. No native workload reran.
 Full builds, benchmarks and large audits remain on GitHub. About 80 GiB was free
 at the last check. Scratch helpers are `/tmp/fwp-recording-*`; evidence scratch is
 `../gradient-work/`. Keep imports at the top and commit subjects one line/≤80 chars.
+
+Diagnostic contract frozen at `4e7ff3ef` before tool implementation. Four focused
+control tests pass (0.13 seconds), including altered commands, corrupt sources,
+stale outputs, compiler failure/deadline, missing reports and changed images.
+Workflow syntax check passes (0.13 seconds). No production code changed.
