@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path
 import platform
+import re
 import subprocess
 import zipfile
 
@@ -15,13 +16,6 @@ ROOT = Path(__file__).resolve().parents[1]
 ORIGINAL_ROOT = Path('/home/runner/work/fun-with-pipes/fun-with-pipes')
 CASES = ('3-0', '3-1', '3-199', '3-1999', '33-199', '129-199')
 FORMS = ('fwp-ad', 'fwp-ad-history')
-PARENT = '76690b385514c58ad94c5591da3553fa48218535'
-CURRENT = '31c04650527d7a3c9efdd63bd5b4eae8a15d5732'
-PARENT_INDEX = 'docs/measurements/scalar-constant-time-2026-11-05/42078637088/index.json'
-CURRENT_INDEX = {
-    'aarch64': 'docs/measurements/recording-lookup-time-2026-11-06/run-42136888829/summary/index.json',
-    'x86_64': 'docs/measurements/recording-lookup-time-2026-11-06/run-42137772065/summary/index.json',
-}
 
 
 def digest(data):
@@ -102,6 +96,8 @@ def compile_one(command, source, metadata, output):
             record[name + 'Bytes'] = len(data)
             if name != 'inline':
                 (output / name).write_bytes(data)
+    if inline.is_file():
+        record['inlineDecisions'] = inline_decisions(inline.read_text())
     (output / 'result.json').write_text(json.dumps(record, indent=2) + '\n')
     check_result(result, binary, inline, metadata['sha256'])
     if not stack.is_file() or not stack.stat().st_size:
@@ -109,10 +105,12 @@ def compile_one(command, source, metadata, output):
     return record
 
 
-def load_session(index_path, arch, source, output):
+def load_session(index_path, arch, source, protocol, output):
     index = json.loads(git_file(index_path))
+    if index['auditErrors']:
+        raise ValueError('input audit has unresolved artifact errors')
     session = index['sessions'][arch + '-1']
-    if index['source'] != source or session['source'] != source:
+    if index['protocol'] != protocol or index['source'] != source or session['source'] != source:
         raise ValueError('unexpected saved source identity')
     report_path = str(Path(index_path).parent / session['report'])
     raw = gzip.decompress(git_file(report_path))
@@ -141,54 +139,104 @@ def load_session(index_path, arch, source, output):
     return report, archive
 
 
+def inline_decisions(text):
+    lines = text.splitlines()
+    return dict(inlined=sum(bool(re.search(r'optimized:.*\bInlin(?:ing|ed) fwp_p_ad_push[./]', line)) for line in lines),
+                rejected=sum('not inlinable:' in line and bool(re.search(r'-> fwp_p_ad_push[./]', line)) for line in lines))
+
+
+def check_plan(plan, arch):
+    assert set(plan) == {'contractCommit', 'architectures'}
+    assert re.fullmatch('[0-9a-f]{40}', plan['contractCommit'])
+    assert set(plan['architectures']) == {'aarch64', 'x86_64'}
+    groups = plan['architectures'][arch]
+    assert [group['protocol'] for group in groups] in (['scalar-constant', 'recording-lookup'], ['recording-inline'])
+    seen = set()
+    for group in groups:
+        assert set(group) == {'name', 'index', 'source', 'protocol', 'variants'}
+        assert re.fullmatch('[a-z][a-z-]+', group['name'])
+        assert re.fullmatch('[0-9a-f]{40}', group['source'])
+        assert group['protocol'] in ('scalar-constant', 'recording-lookup', 'recording-inline')
+        assert group['index'].startswith('docs/measurements/') and '..' not in Path(group['index']).parts
+        expected_variants = {
+            'scalar-constant': {'previous': ('', 'observe')},
+            'recording-lookup': {'reference': ('-reference', 'observe'), 'candidate': ('', 'observe')},
+            'recording-inline': {'reference': ('-reference', 'observe'), 'candidate': ('', 'require')},
+        }[group['protocol']]
+        assert len(group['variants']) == len(expected_variants)
+        assert all(set(variant) == {'name', 'suffix', 'inlining'} for variant in group['variants'])
+        assert {variant['name']: (variant['suffix'], variant['inlining'])
+                for variant in group['variants']} == expected_variants
+        for variant in group['variants']:
+            assert set(variant) == {'name', 'suffix', 'inlining'}
+            assert re.fullmatch('[a-z][a-z-]+', variant['name']) and variant['name'] not in seen
+            seen.add(variant['name'])
+            assert variant['suffix'] in ('', '-reference')
+            assert variant['inlining'] in ('observe', 'require')
+            if variant['inlining'] == 'require':
+                assert group['protocol'] == 'recording-inline' and variant['suffix'] == ''
+    return groups
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--arch', choices=('aarch64', 'x86_64'), required=True)
+    parser.add_argument('--plan', required=True, help='committed JSON with explicit sources, indexes and variants')
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
+    if not args.plan:
+        parser.error('--plan must name a committed input JSON')
     if os.environ.get('GITHUB_ACTIONS') != 'true' or platform.system() != 'Linux':
         raise RuntimeError('native compiler diagnostic runs only on GitHub Linux runners')
     if platform.machine() != args.arch or ROOT != ORIGINAL_ROOT:
         raise RuntimeError('native architecture or original workspace path differs')
+    plan_bytes = git_file(args.plan)
+    plan = json.loads(plan_bytes)
+    groups = check_plan(plan, args.arch)
+    expected = len(CASES) * len(FORMS) * sum(len(group['variants']) for group in groups)
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=False)
+    (output / 'plan.json').write_bytes(plan_bytes)
     source = execute(['git', 'rev-parse', 'HEAD'])
     source.check_returncode()
     summary = {'source': source.stdout.decode().strip(), 'architecture': args.arch,
-               'protocolCommit': '4e7ff3ef', 'compilations': [], 'errors': []}
+               'protocolCommit': plan['contractCommit'], 'planSha256': digest(plan_bytes),
+               'compilations': [], 'errors': []}
     try:
-        for group, index, revision, variants in [
-            ('previous', PARENT_INDEX, PARENT, [('previous', '')]),
-            ('lookup', CURRENT_INDEX[args.arch], CURRENT, [('reference', '-reference'), ('candidate', '')]),
-        ]:
-            report, archive = load_session(index, args.arch, revision, output / group)
+        for group in groups:
+            report, archive = load_session(group['index'], args.arch, group['source'], group['protocol'], output / group['name'])
             with zipfile.ZipFile(archive) as saved:
                 if len(saved.namelist()) != len(set(saved.namelist())):
                     raise ValueError('duplicate archive members')
-                for variant, suffix in variants:
+                for variant in group['variants']:
                     for case in CASES:
                         for form in FORMS:
-                            program = form + suffix
-                            label = f'{variant}/{case}/{form}'
+                            program = form + variant['suffix']
+                            label = f"{variant['name']}/{case}/{form}"
                             try:
                                 metadata = report['results'][case]['binaries'][program]
                                 data = saved.read(f'{case}/{program}.c')
                                 require_hash(saved.read(f'{case}/{program}'), metadata['sha256'], 'original image')
                                 command = recorded_command(report, args.arch, case, program)
                                 result = compile_one(command, data, metadata, output / label)
+                                if variant['inlining'] == 'require':
+                                    assert data.count(b'static inline __attribute__((always_inline)) V fwp_p_ad_push(') == 1, 'forced append declaration missing or duplicated'
+                                    assert result['inlineDecisions']['rejected'] == 0, 'GCC rejected forced append inlining'
+                                    if case != '3-0':
+                                        assert result['inlineDecisions']['inlined'] > 0, 'no append inlining reported in a positive-update program'
                                 summary['compilations'].append({'case': label, **result})
                                 print('verified', label, flush=True)
-                            except (ValueError, OSError, KeyError, subprocess.SubprocessError) as error:
-                                summary['errors'].append({'case': label, 'error': str(error)})
+                            except (AssertionError, ValueError, OSError, KeyError, subprocess.SubprocessError) as error:
+                                summary['errors'].append({'case': label, 'error': type(error).__name__ + ': ' + str(error)})
                                 print('failed', label, str(error), flush=True)
             archive.unlink()
     except (ValueError, OSError, KeyError, subprocess.SubprocessError) as error:
         summary['errors'].append({'input': True, 'error': str(error)})
     finally:
         (output / 'summary.json').write_text(json.dumps(summary, indent=2) + '\n')
-    if summary['errors'] or len(summary['compilations']) != 36:
+    if summary['errors'] or len(summary['compilations']) != expected:
         raise SystemExit('recording call diagnostic failed; inspect every retained error')
-    print('36 original images reproduced; no native programs executed')
+    print(f'{expected} original images reproduced; no native programs executed')
 
 
 if __name__ == '__main__':

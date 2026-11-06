@@ -21,6 +21,9 @@ on:
       audit_host:
         type: string
         required: true
+      call_plan:
+        type: string
+        required: true
 
 permissions:
   contents: read
@@ -52,7 +55,8 @@ jobs:
       - name: Rebuild saved measured C and retain GCC call decisions
         env:
           GH_TOKEN: ${{ github.token }}
-        run: python3 scripts/analyze-recording-calls.py --arch '${{ matrix.arch }}' --output recording-call-analysis
+          CALL_PLAN: ${{ inputs.call_plan }}
+        run: python3 scripts/analyze-recording-calls.py --arch '${{ matrix.arch }}' --plan "$CALL_PLAN" --output recording-call-analysis
       - name: Preserve every report and failure
         if: always()
         uses: actions/upload-artifact@v7

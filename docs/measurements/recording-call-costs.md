@@ -57,3 +57,18 @@ evidence justify it. Freeze its proof, enabled/disabled reference, correctness,
 cleanup and time/memory/compiler-cost limits before editing production code.
 Preserve the [32 runtime misses](recording-lookup-time-2026-11-06/README.md) and
 [inconclusive compiler-time control](recording-lookup-analysis-2026-11-06/README.md).
+
+## Explicit input files
+
+The shared diagnostic now takes `--plan` with committed JSON naming each source,
+audited index, result suffix and whether to require inlining or merely observe it.
+The [original lookup inputs](recording-call-inputs.json) preserve this contract's
+three versions. Workflow `recording-call-analysis` requires `call_plan` explicitly;
+there is no selected comparison when that input is omitted.
+
+For the [new inlining candidate](recording-inline.md), create its input file only
+from the completed, audited runtime sessions. Rebuild candidate/reference images
+with identical flags, require each original image hash, and check GCC reports that
+the candidate append was inlined in positive-update programs. Record all reports,
+including the zero-update controls. This adds no native program execution or new
+timing samples. The original 72-image diagnostic is not rerun.

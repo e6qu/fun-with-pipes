@@ -313,6 +313,12 @@ miss all 32 long-case speed targets; AMD64 current-result cases slow by 1.13–3
 [Final platform verification and complete audits pass](measurements/recording-lookup-delivery-2026-11-06/README.md).
 Fewer checks alone establish no speedup.
 
+The current [scalar append inlining change](measurements/recording-inline.md)
+places that same checked body at its native call sites. It adds no lifetime proof
+or unchecked path. Known arguments can then be simplified by the C compiler.
+[Three-host correctness and complete artifact checks pass](measurements/recording-inline-checks-2026-11-06/README.md);
+performance acceptance and final platform verification remain in progress.
+
 Channel borrowing preserves hidden native contexts as well as payload storage.
 It does not prove the queued graph acyclic: capture/cycle checks remain separate.
 The caller keeps the borrowed owner alive and releases it on failure.

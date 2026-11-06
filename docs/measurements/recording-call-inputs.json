@@ -1,0 +1,71 @@
+{
+  "contractCommit": "4e7ff3efc5b712c6d0f06cd6a7fe07a19d6576d3",
+  "architectures": {
+    "aarch64": [
+      {
+        "name": "previous",
+        "index": "docs/measurements/scalar-constant-time-2026-11-05/42078637088/index.json",
+        "source": "76690b385514c58ad94c5591da3553fa48218535",
+        "protocol": "scalar-constant",
+        "variants": [
+          {
+            "name": "previous",
+            "suffix": "",
+            "inlining": "observe"
+          }
+        ]
+      },
+      {
+        "name": "lookup",
+        "index": "docs/measurements/recording-lookup-time-2026-11-06/run-42136888829/summary/index.json",
+        "source": "31c04650527d7a3c9efdd63bd5b4eae8a15d5732",
+        "protocol": "recording-lookup",
+        "variants": [
+          {
+            "name": "reference",
+            "suffix": "-reference",
+            "inlining": "observe"
+          },
+          {
+            "name": "candidate",
+            "suffix": "",
+            "inlining": "observe"
+          }
+        ]
+      }
+    ],
+    "x86_64": [
+      {
+        "name": "previous",
+        "index": "docs/measurements/scalar-constant-time-2026-11-05/42078637088/index.json",
+        "source": "76690b385514c58ad94c5591da3553fa48218535",
+        "protocol": "scalar-constant",
+        "variants": [
+          {
+            "name": "previous",
+            "suffix": "",
+            "inlining": "observe"
+          }
+        ]
+      },
+      {
+        "name": "lookup",
+        "index": "docs/measurements/recording-lookup-time-2026-11-06/run-42137772065/summary/index.json",
+        "source": "31c04650527d7a3c9efdd63bd5b4eae8a15d5732",
+        "protocol": "recording-lookup",
+        "variants": [
+          {
+            "name": "reference",
+            "suffix": "-reference",
+            "inlining": "observe"
+          },
+          {
+            "name": "candidate",
+            "suffix": "",
+            "inlining": "observe"
+          }
+        ]
+      }
+    ]
+  }
+}

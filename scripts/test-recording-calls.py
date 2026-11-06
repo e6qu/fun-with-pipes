@@ -1,4 +1,5 @@
 """Failure controls for saved-image compiler diagnostics; no native compiler run."""
+import copy
 import importlib.util
 from pathlib import Path
 import subprocess
@@ -12,6 +13,43 @@ SPEC.loader.exec_module(CALLS)
 
 
 class RecordingCalls(unittest.TestCase):
+    def test_explicit_plan_rejects_incomplete_or_ambiguous_inputs(self):
+        group = dict(name='lookup', source='a' * 40, protocol='recording-inline',
+                     index='docs/measurements/fixture/index.json',
+                     variants=[dict(name='candidate', suffix='', inlining='require'),
+                               dict(name='reference', suffix='-reference', inlining='observe')])
+        plan = dict(contractCommit='b' * 40, architectures={arch: [copy.deepcopy(group)] for arch in ('aarch64', 'x86_64')})
+        self.assertEqual(CALLS.check_plan(plan, 'aarch64'), [group])
+        for mode in ('missing-setting', 'duplicate', 'bad-source', 'wrong-suffix', 'wrong-protocol', 'outside-index', 'missing-arch', 'missing-variant'):
+            altered = copy.deepcopy(plan)
+            selected = altered['architectures']['aarch64'][0]
+            if mode == 'missing-setting':
+                del selected['variants'][0]['inlining']
+            elif mode == 'duplicate':
+                selected['variants'].append(selected['variants'][0])
+            elif mode == 'bad-source':
+                selected['source'] = 'HEAD'
+            elif mode == 'wrong-suffix':
+                selected['variants'][0]['suffix'] = '-unrelated'
+            elif mode == 'wrong-protocol':
+                selected['protocol'] = 'recording-lookup'
+            elif mode == 'missing-variant':
+                selected['variants'].pop()
+            elif mode == 'outside-index':
+                selected['index'] = 'docs/measurements/../outside.json'
+            else:
+                del altered['architectures']['x86_64']
+            with self.subTest(mode=mode), self.assertRaises(AssertionError):
+                CALLS.check_plan(altered, 'aarch64')
+
+    def test_reports_distinguish_final_decisions_from_early_misses(self):
+        report = (
+            'sample.c:10:5: missed: will not early inline: f123/4->fwp_p_ad_push/1022, growth limit\n'
+            'sample.c:10:5: optimized: Inlining fwp_p_ad_push/1022 into w120/1110.\n'
+            'sample.c:11:5: optimized: Inlined fwp_f64/74 into w120/1110.\n'
+            'sample.c:12:5: missed: not inlinable: w120/1110 -> fwp_p_ad_push.constprop/1619, size limit\n')
+        self.assertEqual(CALLS.inline_decisions(report), dict(inlined=1, rejected=1))
+
     def test_recorded_command_rejects_changed_flags_duplicate_and_failure(self):
         command = CALLS.expected_command('aarch64', '3-199', 'fwp-ad')
         record = dict(command=command, status=0, stdout='', stderr='')

@@ -47,6 +47,9 @@ on:
       production_attempt:
         description: Explicit evidence run attempt for production or focused audits
         type: string
+      call_plan:
+        description: Committed input JSON required for recording-call-analysis
+        type: string
       application_run:
         description: Exact focused API run supplying native diagnostic executables
         type: string
@@ -64,6 +67,7 @@ jobs:
       production_attempt: ${{ inputs.production_attempt }}
       documentation_job: ${{ inputs.documentation_job }}
       audit_host: ${{ inputs.audit_host }}
+      call_plan: ${{ inputs.call_plan }}
 
   gradient_call_census_report:
     if: contains(fromJSON('["gradient-call-census-report","packed-pair-census-report","scalar-constant-census-report","recording-lookup-census-report","recording-inline-census-report"]'), inputs.suite)

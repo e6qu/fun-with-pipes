@@ -1,118 +1,89 @@
 # Current work
 
-**Next:** dispatch the `recording-inline-census` and `recording-inline-analysis`
-suites with passing correctness run `42156552424` as `evidence_run`. Monitor the
-complete focused audit `42158479402` (explicit attempt 1) alongside them. Audit
-census/compiler results before the single qualified runtime batch. Production
-code remains at `39a9f806`; no timing has run for this change.
+**Next:** finish the census audit `42159822189` and compiler-cost audit
+`42160109377`, inspect every saved result, then run the frozen qualified runtime
+batch once. Preserve the AMD64 compiler-copy failure below; do not rerun unchanged
+timings for a pass. Publish the pending diagnostic/receipt changes together.
 
-Branch `recording-call-costs`, worktree `.worktrees/scalar-constant-lowering`.
-Draft [PR #263](https://github.com/e6qu/fun-with-pipes/pull/263). Base: [verified PR #262](measurements/recording-lookup-delivery-2026-11-06/README.md),
+Branch `recording-call-costs`, worktree `.worktrees/scalar-constant-lowering`;
+draft [PR #263](https://github.com/e6qu/fun-with-pipes/pull/263).
+Published measurement source: `ecfd740be6289b365dd2a1bb9e2f60980ab27c8f`.
+Production code/tests: `39a9f806891b524042b391b85480cbafc022afbc`; all subsequent
+changes are measurement tools, Python controls or documentation. Their `src`,
+`runtime`, `lib`, `tests`, Cargo and build-script trees match that passing source.
+
+Base: [verified PR #262](measurements/recording-lookup-delivery-2026-11-06/README.md),
 merge `9a9dc49c53212b562cd9de06f908248ceb6109af`, tree
 `66f69ee54dcc207be2a9041d2cae9e89ad3d9aa3`, identical to tested `a8e427e8`.
-The squash message is one line, 54 characters, without body or trailers.
-Duplicate post-merge CI/docs runs `42152999846`/`42152999847` were cancelled after
-confirming tree equality; they are not additional validation.
+Its verified squash subject has 54 characters and no body/trailers. Duplicate
+post-merge runs `42152999846`/`42152999847` were cancelled after tree equality.
 
 ## Roadmap status
 
 | Step | Status | Remaining work |
 |---|---|---|
-| 1 | Verified | Delivery receipt and all four sessions' generated-source hashes agree. |
-| 2 | Verified | All 72 native diagnostic images reproduce their originals; complete reports/logs audited. |
-| 3 | Verified | Freeze explicit scalar append inlining; preserve checks, same-source reference and original measurement limits. |
-| 4 | In progress | Append declaration and all affected probes updated; native correctness and measurement tools remain. |
+| 1 | Verified | PR #262 delivery and saved source comparison are retained. |
+| 2 | Verified | All 72 original images reproduced; complete GCC reports/logs audited. |
+| 3 | Verified | Scalar append inlining contract frozen at `29f99b70` before production edits. |
+| 4 | In progress | Three-host correctness and full audit pass. Census producers pass; compiler costs have one inconclusive control. Finish measurement audits, runtime/binary checks and final platform delivery. |
 
-## Evidence and limits
+## Change and evidence
 
-PR #262 production run `42141696622`, docs `42141693447` and complete audit
-`42151713370` all pass. The retained delivery receipt includes every job/log,
-target-log and nested artifact hash. Audit artifact `13472887762` has no issues.
+The [implementation](measurements/recording-inline.md) marks the existing F64
+append body always-inline. It changes no validation, arithmetic order, allocation,
+cleanup or lifetime proof. Ordinary and proved-state callers share the same body.
+The reference removes only that declaration attribute; both keep lookup reuse.
 
-The [source review](measurements/recording-call-review-2026-11-06/README.md)
-finds exactly one local state declaration and six changed calls in the saved
-129-coordinate/199-update worker. Candidate/reference arithmetic is unchanged.
-This does not establish optimized instruction costs or explain AMD64's slowdown.
+[The earlier native diagnostic](measurements/recording-call-analysis-2026-11-06/README.md)
+reproduced 72 original images at `7d68bcea`, run `42155555677`. GCC left the append
+body out of line in all three compared versions; the forwarding wrapper was
+already inlined. This motivates the candidate, not a cause for the earlier slowdown.
 
-Diagnostic inputs: previous candidate `76690b385514c58ad94c5591da3553fa48218535`;
-new reference/candidate `31c04650527d7a3c9efdd63bd5b4eae8a15d5732`.
-The previous release has a four-argument append helper; both new versions share
-the five-argument helper. Compare all three before attributing a change to reuse.
+| Gate | Source / run | Result and next action |
+|---|---|---|
+| [Focused correctness](measurements/recording-inline-checks-2026-11-06/README.md) | `39a9f806` / `42156552424`; audit `42158479402` | Three hosts pass, each with 25 targets, 856 native images and 872 observations. Full logs and retained hashes verified. |
+| [Measurement controls](measurements/recording-inline-controls-2026-11-06/README.md) | `a029797e` / `42157525720`, job `127695118390` | 14 suites, 107 tests pass; all logs/digests retained. |
+| Memory/work/stack | `ecfd740b` / `42158774007` | Both producers pass; audit `42159822189`, job `127702599856`, is queued. Complete producer logs have no unexpected diagnostics. |
+| Compiler costs | `ecfd740b` / `42158777078` | ARM64 passes; AMD64 has the single copy-control failure below. Audit `42160109377`, job `127703506512`, is queued. |
+| Docs | `ecfd740b` / `42158778585` | Pass. Earlier docs at `39a9f806` and `a029797e` also pass. |
 
-[Original timing results](measurements/recording-lookup-time-2026-11-06/README.md)
-retain all 32 missed long-case targets. ARM64 ranges from 0.14% slower to 2.33%
-faster; AMD64 current-result cases slow by 1.13–3.90%. Small-case/copy, tracked
-memory, cleanup and reported-frame limits pass. The AMD64 large callback-worker
-compiler-time control remains inconclusive (2.854% identical-copy variation).
-A passing artifact audit does not turn these results into timing passes.
+Census jobs: ARM64 `127699163254`, AMD64 `127699163371`.
+Compiler jobs: ARM64 `127699171640`, AMD64 `127699171809`.
+No new runtime timing or final nine-job matrix has run. Draft-only CI is skipped
+and is not platform evidence. Preserve all earlier PLAN.md timing misses.
 
-## Checks and workspace
+## Compiler result that remains open
 
-Guarded local checks: complete final-audit hashes 0.13 seconds; delivery retention
-0.13 seconds; saved-source verifier 0.24 seconds. Branch switching reapplied the
-sparse checkout, initially hiding required saved reports; restoring those exact
-small tracked inputs fixed the source check. No native workload reran.
-Full builds, benchmarks and large audits remain on GitHub. About 80 GiB was free
-at the last check. Scratch helpers are `/tmp/fwp-recording-*`; evidence scratch is
-`../gradient-work/`. Keep imports at the top and commit subjects one line/≤80 chars.
+AMD64 `derivative-3-0`: identical reference copies have medians 0.3917460715 and
+0.3838788290 seconds, ratio **1.0204940776**, exceeding 1.02. All commands complete;
+observed candidate/reference time is 0.99721112 and peak RSS ratio 0.99949114.
+All other observed time/RSS limits pass. This case is **inconclusive**, not a
+verified compiler-cost bound. Audit saved source/order/samples before attributing
+a cause; do not tune the setup or rerun it for a pass. The standing policy retains
+verified reductions with timing goals open; it does not turn a failed control green.
 
-Diagnostic contract frozen at `4e7ff3ef` before tool implementation. Four focused
-control tests pass (0.13 seconds), including altered commands, corrupt sources,
-stale outputs, compiler failure/deadline, missing reports and changed images.
-Workflow syntax check passes (0.13 seconds). No production code changed.
+## Pending publication and verification
 
-[Native call reports](measurements/recording-call-analysis-2026-11-06/README.md)
-pass at `7d68bcea91b27023f0408ca7543058eb6f592873`, run `42155555677`.
-ARM64 job `127688745853`, AMD64 `127688745884`; all 72 exact images, reports,
-source hashes and complete logs verified. GCC does not inline the append body in
-any compared version; its generated wrapper is already inlined. This supports
-testing explicit body inlining, not a claim about the previous slowdown's cause.
-Docs run `42155558291` passes at that source. No runtime timing was repeated.
-Full source/report audit and summary each took 0.13 seconds; 351 documentation
-links and all four plan/handoff rows pass (0.25 seconds).
+The binary-report tool now requires an explicit committed `--plan` JSON and the
+workflow requires `call_plan`. [Original inputs](measurements/recording-call-inputs.json)
+match every source/index/variant of the completed 72-image diagnostic; do not rerun
+it. After runtime audits, create the new candidate/reference input file from those
+saved sessions, rebuild each image byte-for-byte and require GCC's candidate
+inlining reports. No native programs or timings execute in this diagnostic.
 
-Scalar append contract frozen at `29f99b70`. The only runtime behavior-related
-edit marks the existing checked append body always-inline; no checks or allocation
-paths changed. Declaration-sensitive ownership/scoped probes and counter readers
-are updated. Native scoped controls now compare forced/non-forced bodies at
-O1/O2 and their O0 behavior. Three new reference controls and five existing lookup
-controls pass locally, each 0.13 seconds. Formatting found one long Rust line;
-it was corrected before publication. No local native build was run.
+Local guarded checks pass: count/phase/timing/compiler controls, reference edits,
+full reference manifest corruption tests, explicit diagnostic inputs/report parsing,
+Python syntax, workflow sizes and actionlint. New complete-reference test: 0.72s;
+six diagnostic tests: 0.13s; original-input equivalence: 0.13s; full focused audit
+hash verification: 0.25s. Full builds, measurements and large audits stay on GitHub.
 
-## Inlining validation in progress
+First focused audit `42158262680` omitted `production_attempt`, causing argument
+parsing and then empty-artifact upload to fail. Corrected `42158479402` explicitly
+used attempt 1 and passed; native tests were not rerun. Its receipt retains both
+logs. Earlier local control failures were missing sparse JSON/gzip fixtures;
+restoring those exact tracked files fixed them. One Rust formatting line was fixed
+before publication. There are no unresolved semantic or memory-safety failures.
 
-Focused source `39a9f806891b524042b391b85480cbafc022afbc`, run `42156552424`:
-Linux ARM64 job `127691972751`, Linux AMD64 `127691973009`, macOS ARM64
-`127691973129`. All three pass, and every complete job log has no unexpected diagnostics. Docs
-`42156556915` passes. Draft-only CI is skipped and is not platform evidence.
-
-Measurement tools now support the `recording-inline` reference: only the runtime
-append declaration differs; both versions keep lookup reuse. The census expects
-identical counts/storage and reconciles against PR #262's saved candidate.
-Six explicit workflow routes cover census, compiler/runtime measurements and
-complete audits. Shared prerequisite checks replace duplicated workflow Python;
-they still require all native correctness jobs and identical production trees.
-The numerical workflow is 503,986 bytes, below GitHub's 512,000-byte limit.
-
-Focused local checks pass: 10 census controls (0.25 seconds), 10 compiler-cost
-controls (2.78 seconds), 9 phase-budget controls (0.12 seconds), 23 runtime-budget
-controls (0.13 seconds), 3 declaration/reference controls (0.13 seconds), 3 safety
-prerequisite controls (0.13 seconds), changed Python syntax and workflow checks
-(0.13 seconds each). Missing sparse fixtures initially prevented two control
-suites from loading; restoring their exact tracked JSON/gzip files fixed that.
-Broader artifact-reader controls run on GitHub, not in a large local checkout.
-
-[Measurement controls](measurements/recording-inline-controls-2026-11-06/README.md)
-pass: 14 suites / 107 tests at `a029797e3a158f9cbb2aaa3ff0ba78fbf3d62d84`,
-run `42157525720`, job `127695118390`. Every suite log, source identity and artifact
-digest is retained and verified. Docs `42157531749` also passes at that head.
-A new complete-reference unit check additionally rejects a missing preserved
-source, altered append body and altered patch; all four reference tests pass
-locally (0.72 seconds). The native image decoder is mocked only in this metadata
-unit test; real binary verification remains in the complete native audits.
-
-First focused audit `42158262680`, job `127697500689`, failed because the dispatch
-omitted `production_attempt`; argument parsing stopped before any audit output,
-so upload also failed. Corrected dispatch `42158479402`, job `127698194745`,
-explicitly uses attempt 1 and is queued. Both failed steps were inspected; no
-native test or timing was rerun. Keep this correction in the final receipt.
+Scratch: `/tmp/fwp-inline-*`, `/tmp/fwp-recording-*`, `../gradient-work/`.
+About 80 GiB was free at the last disk check. Use the local guard, keep imports
+at the top, and keep commit messages one line, at most 80 characters, no trailers.
