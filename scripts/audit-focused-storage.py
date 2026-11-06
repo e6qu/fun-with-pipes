@@ -36,8 +36,8 @@ def main():
     args = parser.parse_args()
     assert args.attempt > 0 and re.fullmatch(r'[0-9a-f]{40}', args.source)
     args.output.mkdir(parents=True, exist_ok=True)
-    jobs = json.loads(PRODUCTION.api(f'actions/runs/{args.run}/attempts/{args.attempt}/jobs?per_page=100'))['jobs']
-    artifacts = json.loads(PRODUCTION.api(f'actions/runs/{args.run}/artifacts?per_page=100'))['artifacts']
+    jobs = PRODUCTION.records(f'actions/runs/{args.run}/attempts/{args.attempt}/jobs', 'jobs')
+    artifacts = PRODUCTION.records(f'actions/runs/{args.run}/artifacts', 'artifacts')
     PRODUCTION.save(args.output / 'jobs.json', jobs)
     PRODUCTION.save(args.output / 'artifacts.json', artifacts)
     issues, summary = [], {}

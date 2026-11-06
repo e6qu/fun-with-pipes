@@ -37,10 +37,10 @@ class ProductionLogs(unittest.TestCase):
                     status='completed', conclusion='success', steps=[])
 
         def api(path):
-            if path == 'actions/runs/10/attempts/1/jobs?per_page=100':
-                return json.dumps(dict(jobs=jobs)).encode()
-            if path == 'actions/runs/10/artifacts?per_page=100':
-                return b'{"artifacts": []}'
+            if path == 'actions/runs/10/attempts/1/jobs?per_page=100&page=1':
+                return json.dumps(dict(total_count=len(jobs), jobs=jobs)).encode()
+            if path == 'actions/runs/10/artifacts?per_page=100&page=1':
+                return b'{"total_count": 0, "artifacts": []}'
             if path == 'actions/jobs/200':
                 return json.dumps(docs).encode()
             if path == 'actions/jobs/200/logs':
@@ -99,6 +99,33 @@ class ProductionLogs(unittest.TestCase):
     def test_error_warning_filter_preserves_real_errors(self):
         self.assertEqual(AUDIT.diagnostics(b'python -W error::ResourceWarning -m unittest'), [])
         self.assertEqual(len(AUDIT.diagnostics(b'error: bad\nwarning: unexpected\nTraceback')), 3)
+
+    def test_paginated_listings_include_jobs_and_artifacts_beyond_first_page(self):
+        for field in ('jobs', 'artifacts'):
+            with self.subTest(field=field):
+                expected = [dict(id=i) for i in range(128)]
+                pages = [json.dumps(dict(total_count=128, **{field: batch})).encode()
+                         for batch in (expected[:100], expected[100:])]
+                with patch.object(AUDIT, 'api', side_effect=pages) as api:
+                    self.assertEqual(AUDIT.records('actions/list', field), expected)
+                self.assertEqual([call.args[0] for call in api.call_args_list], [
+                    'actions/list?per_page=100&page=1', 'actions/list?per_page=100&page=2'])
+        with patch.object(AUDIT, 'api', return_value=b'{"total_count":0,"jobs":[]}') as api:
+            self.assertEqual(AUDIT.records('actions/list', 'jobs'), [])
+            api.assert_called_once()
+
+    def test_incomplete_duplicate_or_changing_listings_fail(self):
+        first = dict(total_count=2, jobs=[dict(id=1)])
+        for last in [
+            dict(total_count=2, jobs=[]),
+            dict(total_count=2, jobs=[dict(id=1)]),
+            dict(total_count=3, jobs=[dict(id=2), dict(id=3)]),
+            dict(total_count=2, jobs=[dict(id=2), dict(id=3)]),
+        ]:
+            with self.subTest(last=last), patch.object(AUDIT, 'api', side_effect=[
+                json.dumps(first).encode(), json.dumps(last).encode()
+            ]), self.assertRaises(AssertionError):
+                AUDIT.records('actions/list', 'jobs')
 
 
 if __name__ == '__main__':

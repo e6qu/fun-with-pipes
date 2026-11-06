@@ -1,7 +1,7 @@
 # Current work
 
-**Next:** publish the recovery-boundary repair and run recording-context-checks
-plus recording-context-parent once. The compiler is unchanged; the loop fixture
+**Next:** monitor repaired focused run `42213041403`, parent comparison
+`42213046373` and docs `42213039124`, all at `49371e06f5bba4598273a1b807140775dde64c57`. The compiler is unchanged; the loop fixture
 now declares a real attempt boundary and asserts FWP_UNWIND=1 before trap probes.
 No timing session has run. Audit every result before dispatching measurements.
 
@@ -10,17 +10,29 @@ Base `d992a5734a12cf976c1ca20f75e9829a18bde0cc`.
 [PR #265](https://github.com/e6qu/fun-with-pipes/pull/265) is the only active PR,
 draft. First tested head `eab39aa9169d9245ba39eed0cb5cdd50f98f834a`;
 Reference preparer `5bfdc2c23`; combined compiler repair
-`b9de738671732289a6263a8db3c1a36e54a8cfd9`; current remote `13aa113ae` adds only
-the diagnostic and retained reference/tool checks. Docs `42211603024` is queued.
+`b9de738671732289a6263a8db3c1a36e54a8cfd9`; `13aa113ae` added only the diagnostic and retained reference/tool checks.
+Native repair source `49371e06f5bba4598273a1b807140775dde64c57` repairs the fixture.
+The pagination repair changes only audit tools and verification records.
+Docs `42211603024` passed; its replacement for the repair is queued.
+The five queued checks have no runner assignment or explanatory annotations.
 
-| Current run | Check | Last status |
+| Current repair run | Check | Last status |
+|---|---|---|
+| `42213041403` | Native checks: AMD `127876137274`, ARM `127876137456`, mac `127876137522` | Queued |
+| `42213046373` | Reference C comparison for the repaired fixture | Queued |
+| `42213039124` | Documentation | Queued |
+
+Earlier results at compiler source `b9de738671732289a6263a8db3c1a36e54a8cfd9`:
+
+| Run | Check | Result |
 |---|---|---|
 | `42209117885` | All three hosts: only the new loop release probe fails | Failed |
 | `42209127591` / `127863148988` | Sixteen suites, 121 controls; full log clean | Passed |
 | `42209137797` / `127863168674` | Eight emitted-C comparisons; full log clean | Passed |
 | `42209102269` / `127863034359` | Roadmap documentation | Passed |
 
-Draft production run `42209102490` skipped; it is not an acceptance gate.
+Draft production runs `42209102490` and `42213039217` skipped; neither is an
+acceptance gate. All final-head production jobs remain required.
 
 ## Roadmap status
 
@@ -31,7 +43,7 @@ Draft production run `42209102490` skipped; it is not an acceptance gate.
 | 3 | In progress | Focused GCC/Clang checks, reference controls, one measurement batch and complete audits. |
 | 4 | Pending | Nine exact-head production jobs/docs, complete audit and verified squash merge. |
 
-## Current native failure
+## Repair awaiting native verification
 
 All 75 target results reviewed: 24/25 targets pass on each host. ad_tape_scopes
 has six passes and one failure: the new loop probe returns 92 at O1, reuse on,
@@ -57,26 +69,8 @@ Small completed reference/tool evidence is in
 The full 172 MB failed artifact stayed on a runner; only the 379 KB diagnostic
 was downloaded. No disassembly or timing was used to diagnose this failure.
 
-## First focused run and repairs
-
-Run `42204680001`, suite gradient-call-checks: AMD `127848244993`,
-mac `127848245176`, ARM `127848245215`. All failed; complete logs reviewed.
-All 75 native target results were audited: 24/25 pass on each host;
-ad_tape_scopes has five passes and two new probe failures on each.
-
-| Failure | Repair in this batch |
-|---|---|
-| Clippy: exported_probe.rs loaded twice in ad_tape_scopes. | Declare it once in the parent; import it into both test modules. No suppression. |
-| Nested-call mutation expected `= w5(`, but scalar calls include a result cast. | Match the explicit callee and borrowed argument. Keep the broken-forwarding control. |
-| Loop fixture used map, which does not select PackedRecordPairs. | Use the required indexed range-zip producer. Point values are indices; the fold returns (length−1)². Keep selection and runtime assertions. |
-| Docs `42204664978` / `127848184855`: wrong handoff heading/status labels. | Restore Roadmap status and the supported labels. Other docs controls passed. |
-
-All three compiler unit logs: 304 passed, zero failed, four existing runner-only
-tests ignored. Formatting, builds, primitive inventory, source-reference and
-common selection checks pass. Preflight artifact hashes/source verified:
-AMD `13497750861`, mac `13496669557`, ARM `13496624934`.
-Full logs are `/tmp/fwp-context-{amd,mac,arm}-first-job.log`; preflight ZIPs use
-`/tmp/fwp-context-preflight-{amd,mac,arm}.zip`.
+Earlier failures, repairs and their job IDs are retained in
+[the verification record](measurements/recording-context-checks-2026-11-06/README.md#earlier-failures-and-repairs).
 
 ## Implementation and safety
 
@@ -97,7 +91,9 @@ weights, parent/trap order, reuse and unwind. The new loop module covers empty,
 singleton and growing buffers, input aliases, alternating IDs, map/fold traps,
 workspace/reuse settings, and deliberate lost-scope/ID failures. New admission
 unit tests cover useful roots, standalone exclusion and zero-argument calls.
-These latest changes have not yet passed native validation.
+Source review confirms that both loop states start after setup and allocation.
+The proof excludes callbacks that can invalidate registry entries, and boxed
+entries start fresh state. This review does not replace native validation.
 
 ## Comparison tools
 
@@ -126,7 +122,7 @@ syntax/expressions pass with shellcheck/pyflakes disabled. Missing sparse fixtur
 files were restored unchanged before budget/census checks passed. The scratch
 saved-C check first lacked scripts on sys.path; corrected invocation passes.
 No native build, full suite, benchmark or large audit ran locally. Last free space
-75 GiB. Workflow size 508,518 bytes, below 512,000. Use the repository local guard;
+75 GiB. Workflow size 508,579 bytes, below 512,000. Use the repository local guard;
 do not rerun one-shot `/tmp/fwp-context-*` edit scripts.
 
 ## Previous verified delivery
@@ -143,3 +139,27 @@ confirmed cancelled after tree equality. Do not repeat these checks.
 Long gains 1.86–14.02%; 17/32 meet 5%. Fifteen speed targets and one AMD64 copy
 limit remain open. Allocations, validation, live storage and maximum frames are
 unchanged; compiler comparisons pass. Preserve every earlier miss in PLAN.md.
+
+## Audit pagination repair
+
+The actual focused run has 128 jobs. Both artifact auditors previously read only
+one 100-job page; today's three native jobs happen to be on that page. They now
+read every page, rejecting truncated, duplicate or changing listings. All six
+production-audit controls pass under the local guard (0.13 s); the guarded actual
+metadata check reads all 128 jobs (2.63 s). No artifacts were downloaded for it.
+Affected callers and both audit workflows were reviewed. Docs CI also runs these
+controls; this tool-only repair needs no repeated native build.
+
+Changed document links, handoff steps and workflow sizes pass under the guard
+(0.13 s). Whitespace checks pass. The earlier 121-control CI record stays tied to
+its original source; it does not include the two new pagination controls.
+
+## Queue observations
+
+The repair runs created at 11:49 UTC remain queued without assigned runners.
+An unrelated October 16 run `38888712709` on owned-cpu-kernels is inconsistently
+listed in_progress, but all 24 job records are complete (six failed, others
+skipped). It has no reference in the current plan/handoff/history/queue and no
+associated PR. Normal and force-cancel endpoints both returned HTTP 409,
+"not in progress". No jobs/artifacts were deleted. This is not evidence that the
+old run causes the current queue delay; keep monitoring the active repair runs.

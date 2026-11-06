@@ -29,6 +29,26 @@ def api(path):
                                     'repos/e6qu/fun-with-pipes/' + path])
 
 
+def records(path, field):
+    """Read a complete, stable job/artifact listing before auditing it."""
+    items = []
+    page = 1
+    total = None
+    while True:
+        response = json.loads(api(f'{path}?per_page=100&page={page}'))
+        if total is None:
+            total = response['total_count']
+        assert response['total_count'] == total, (path, 'listing changed during audit')
+        batch = response[field]
+        assert batch or len(items) == total, (path, 'truncated listing')
+        items.extend(batch)
+        assert len({item['id'] for item in items}) == len(items), (path, 'duplicate records')
+        assert len(items) <= total, (path, 'more records than declared')
+        if len(items) == total:
+            return items
+        page += 1
+
+
 def save(path, value):
     path.write_text(json.dumps(value, indent=2) + '\n')
 
@@ -74,10 +94,10 @@ def main():
     RUN = args.run
     SOURCE = args.source
     jobs_path = f'actions/runs/{RUN}' + (f'/attempts/{args.attempt}' if args.attempt else '')
-    jobs = json.loads(api(jobs_path + '/jobs?per_page=100'))['jobs']
+    jobs = records(jobs_path + '/jobs', 'jobs')
     assert len(jobs) == 9
     jobs.append(json.loads(api(f'actions/jobs/{args.docs_job}')))
-    artifacts = json.loads(api(f'actions/runs/{RUN}/artifacts?per_page=100'))['artifacts']
+    artifacts = records(f'actions/runs/{RUN}/artifacts', 'artifacts')
     save(ROOT / 'jobs.json', jobs)
     save(ROOT / 'artifacts.json', artifacts)
     issues = []
