@@ -14,7 +14,7 @@ import zipfile
 
 sys.path.insert(0,str(Path('scripts').resolve()))
 parser=argparse.ArgumentParser(description=__doc__)
-parser.add_argument("--comparison", required=True, choices=("gradient-call", "packed-pair", "scalar-constant", "recording-lookup"))
+parser.add_argument("--comparison", required=True, choices=("gradient-call", "packed-pair", "scalar-constant", "recording-lookup", 'recording-inline'))
 parser.add_argument("--repository", required=True)
 parser.add_argument('--source',required=True)
 parser.add_argument('--run',required=True,type=int)
@@ -130,6 +130,10 @@ with zipfile.ZipFile(path) as z:
         assert z.read(base+'program.fwp')==expected_inputs[name]
         assert check.digest(z.read(base+'program.fwp'))==report['inputs'][name]['sha256']
         for copy in measure.COPIES:
+            if args.comparison == 'recording-inline':
+                measure.RECORDING_SELECTION.check_inline_declaration(z.read(base + copy + '.c').decode(), copy.startswith('candidate'))
+                if name in ('derivative-33-199', 'derivative-129-199'):
+                    measure.RECORDING_SELECTION.check(z.read(base + copy + '.c').decode(), True)
             if args.comparison == 'recording-lookup' and name in ('derivative-33-199', 'derivative-129-199'):
                 measure.RECORDING_SELECTION.check(z.read(base + copy + '.c').decode(), copy.startswith('candidate'))
             if args.comparison == 'scalar-constant' and name in ('derivative-33-199', 'derivative-129-199'):

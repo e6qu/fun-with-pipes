@@ -1,0 +1,362 @@
+[
+  {
+    "variant": "previous",
+    "case": "3-0",
+    "form": "fwp-ad",
+    "appendInlined": 0,
+    "appendMissed": 8,
+    "missReasons": [
+      "--param max-inline-insns-auto limit reached"
+    ]
+  },
+  {
+    "variant": "previous",
+    "case": "3-0",
+    "form": "fwp-ad-history",
+    "appendInlined": 0,
+    "appendMissed": 8,
+    "missReasons": [
+      "--param max-inline-insns-auto limit reached"
+    ]
+  },
+  {
+    "variant": "previous",
+    "case": "3-1",
+    "form": "fwp-ad",
+    "appendInlined": 0,
+    "appendMissed": 8,
+    "missReasons": [
+      "--param max-inline-insns-auto limit reached"
+    ]
+  },
+  {
+    "variant": "previous",
+    "case": "3-1",
+    "form": "fwp-ad-history",
+    "appendInlined": 0,
+    "appendMissed": 8,
+    "missReasons": [
+      "--param max-inline-insns-auto limit reached"
+    ]
+  },
+  {
+    "variant": "previous",
+    "case": "3-199",
+    "form": "fwp-ad",
+    "appendInlined": 0,
+    "appendMissed": 8,
+    "missReasons": [
+      "--param max-inline-insns-auto limit reached"
+    ]
+  },
+  {
+    "variant": "previous",
+    "case": "3-199",
+    "form": "fwp-ad-history",
+    "appendInlined": 0,
+    "appendMissed": 8,
+    "missReasons": [
+      "--param max-inline-insns-auto limit reached"
+    ]
+  },
+  {
+    "variant": "previous",
+    "case": "3-1999",
+    "form": "fwp-ad",
+    "appendInlined": 0,
+    "appendMissed": 8,
+    "missReasons": [
+      "--param max-inline-insns-auto limit reached"
+    ]
+  },
+  {
+    "variant": "previous",
+    "case": "3-1999",
+    "form": "fwp-ad-history",
+    "appendInlined": 0,
+    "appendMissed": 8,
+    "missReasons": [
+      "--param max-inline-insns-auto limit reached"
+    ]
+  },
+  {
+    "variant": "previous",
+    "case": "33-199",
+    "form": "fwp-ad",
+    "appendInlined": 0,
+    "appendMissed": 8,
+    "missReasons": [
+      "--param max-inline-insns-auto limit reached"
+    ]
+  },
+  {
+    "variant": "previous",
+    "case": "33-199",
+    "form": "fwp-ad-history",
+    "appendInlined": 0,
+    "appendMissed": 8,
+    "missReasons": [
+      "--param max-inline-insns-auto limit reached"
+    ]
+  },
+  {
+    "variant": "previous",
+    "case": "129-199",
+    "form": "fwp-ad",
+    "appendInlined": 0,
+    "appendMissed": 8,
+    "missReasons": [
+      "--param max-inline-insns-auto limit reached"
+    ]
+  },
+  {
+    "variant": "previous",
+    "case": "129-199",
+    "form": "fwp-ad-history",
+    "appendInlined": 0,
+    "appendMissed": 8,
+    "missReasons": [
+      "--param max-inline-insns-auto limit reached"
+    ]
+  },
+  {
+    "variant": "reference",
+    "case": "3-0",
+    "form": "fwp-ad",
+    "appendInlined": 0,
+    "appendMissed": 7,
+    "missReasons": [
+      "--param max-inline-insns-auto limit reached"
+    ]
+  },
+  {
+    "variant": "reference",
+    "case": "3-0",
+    "form": "fwp-ad-history",
+    "appendInlined": 0,
+    "appendMissed": 7,
+    "missReasons": [
+      "--param max-inline-insns-auto limit reached"
+    ]
+  },
+  {
+    "variant": "reference",
+    "case": "3-1",
+    "form": "fwp-ad",
+    "appendInlined": 0,
+    "appendMissed": 7,
+    "missReasons": [
+      "--param max-inline-insns-auto limit reached"
+    ]
+  },
+  {
+    "variant": "reference",
+    "case": "3-1",
+    "form": "fwp-ad-history",
+    "appendInlined": 0,
+    "appendMissed": 7,
+    "missReasons": [
+      "--param max-inline-insns-auto limit reached"
+    ]
+  },
+  {
+    "variant": "reference",
+    "case": "3-199",
+    "form": "fwp-ad",
+    "appendInlined": 0,
+    "appendMissed": 7,
+    "missReasons": [
+      "--param max-inline-insns-auto limit reached"
+    ]
+  },
+  {
+    "variant": "reference",
+    "case": "3-199",
+    "form": "fwp-ad-history",
+    "appendInlined": 0,
+    "appendMissed": 7,
+    "missReasons": [
+      "--param max-inline-insns-auto limit reached"
+    ]
+  },
+  {
+    "variant": "reference",
+    "case": "3-1999",
+    "form": "fwp-ad",
+    "appendInlined": 0,
+    "appendMissed": 7,
+    "missReasons": [
+      "--param max-inline-insns-auto limit reached"
+    ]
+  },
+  {
+    "variant": "reference",
+    "case": "3-1999",
+    "form": "fwp-ad-history",
+    "appendInlined": 0,
+    "appendMissed": 7,
+    "missReasons": [
+      "--param max-inline-insns-auto limit reached"
+    ]
+  },
+  {
+    "variant": "reference",
+    "case": "33-199",
+    "form": "fwp-ad",
+    "appendInlined": 0,
+    "appendMissed": 7,
+    "missReasons": [
+      "--param max-inline-insns-auto limit reached"
+    ]
+  },
+  {
+    "variant": "reference",
+    "case": "33-199",
+    "form": "fwp-ad-history",
+    "appendInlined": 0,
+    "appendMissed": 7,
+    "missReasons": [
+      "--param max-inline-insns-auto limit reached"
+    ]
+  },
+  {
+    "variant": "reference",
+    "case": "129-199",
+    "form": "fwp-ad",
+    "appendInlined": 0,
+    "appendMissed": 7,
+    "missReasons": [
+      "--param max-inline-insns-auto limit reached"
+    ]
+  },
+  {
+    "variant": "reference",
+    "case": "129-199",
+    "form": "fwp-ad-history",
+    "appendInlined": 0,
+    "appendMissed": 7,
+    "missReasons": [
+      "--param max-inline-insns-auto limit reached"
+    ]
+  },
+  {
+    "variant": "candidate",
+    "case": "3-0",
+    "form": "fwp-ad",
+    "appendInlined": 0,
+    "appendMissed": 7,
+    "missReasons": [
+      "--param max-inline-insns-auto limit reached"
+    ]
+  },
+  {
+    "variant": "candidate",
+    "case": "3-0",
+    "form": "fwp-ad-history",
+    "appendInlined": 0,
+    "appendMissed": 7,
+    "missReasons": [
+      "--param max-inline-insns-auto limit reached"
+    ]
+  },
+  {
+    "variant": "candidate",
+    "case": "3-1",
+    "form": "fwp-ad",
+    "appendInlined": 0,
+    "appendMissed": 7,
+    "missReasons": [
+      "--param max-inline-insns-auto limit reached"
+    ]
+  },
+  {
+    "variant": "candidate",
+    "case": "3-1",
+    "form": "fwp-ad-history",
+    "appendInlined": 0,
+    "appendMissed": 7,
+    "missReasons": [
+      "--param max-inline-insns-auto limit reached"
+    ]
+  },
+  {
+    "variant": "candidate",
+    "case": "3-199",
+    "form": "fwp-ad",
+    "appendInlined": 0,
+    "appendMissed": 7,
+    "missReasons": [
+      "--param max-inline-insns-auto limit reached"
+    ]
+  },
+  {
+    "variant": "candidate",
+    "case": "3-199",
+    "form": "fwp-ad-history",
+    "appendInlined": 0,
+    "appendMissed": 7,
+    "missReasons": [
+      "--param max-inline-insns-auto limit reached"
+    ]
+  },
+  {
+    "variant": "candidate",
+    "case": "3-1999",
+    "form": "fwp-ad",
+    "appendInlined": 0,
+    "appendMissed": 7,
+    "missReasons": [
+      "--param max-inline-insns-auto limit reached"
+    ]
+  },
+  {
+    "variant": "candidate",
+    "case": "3-1999",
+    "form": "fwp-ad-history",
+    "appendInlined": 0,
+    "appendMissed": 7,
+    "missReasons": [
+      "--param max-inline-insns-auto limit reached"
+    ]
+  },
+  {
+    "variant": "candidate",
+    "case": "33-199",
+    "form": "fwp-ad",
+    "appendInlined": 0,
+    "appendMissed": 7,
+    "missReasons": [
+      "--param max-inline-insns-auto limit reached"
+    ]
+  },
+  {
+    "variant": "candidate",
+    "case": "33-199",
+    "form": "fwp-ad-history",
+    "appendInlined": 0,
+    "appendMissed": 7,
+    "missReasons": [
+      "--param max-inline-insns-auto limit reached"
+    ]
+  },
+  {
+    "variant": "candidate",
+    "case": "129-199",
+    "form": "fwp-ad",
+    "appendInlined": 0,
+    "appendMissed": 7,
+    "missReasons": [
+      "--param max-inline-insns-auto limit reached"
+    ]
+  },
+  {
+    "variant": "candidate",
+    "case": "129-199",
+    "form": "fwp-ad-history",
+    "appendInlined": 0,
+    "appendMissed": 7,
+    "missReasons": [
+      "--param max-inline-insns-auto limit reached"
+    ]
+  }
+]

@@ -1,0 +1,20 @@
+{
+  "id": 13476353247,
+  "node_id": "MDg6QXJ0aWZhY3QxMzQ3NjM1MzI0Nw==",
+  "name": "recording-inline-census-report",
+  "size_in_bytes": 2636867,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13476353247",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13476353247/zip",
+  "expired": false,
+  "digest": "sha256:1c5d52523814c5a9f46acd0d8fa014903d665879c281a13a4a5d8209b47ffd78",
+  "created_at": "2026-11-06T04:13:58Z",
+  "updated_at": "2026-11-06T04:13:58Z",
+  "expires_at": "2027-02-04T03:59:54Z",
+  "workflow_run": {
+    "id": 42159822189,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "recording-call-costs",
+    "head_sha": "ecfd740be6289b365dd2a1bb9e2f60980ab27c8f"
+  }
+}

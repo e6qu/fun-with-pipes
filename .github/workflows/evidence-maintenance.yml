@@ -21,12 +21,49 @@ on:
       audit_host:
         type: string
         required: true
+      call_plan:
+        type: string
+        required: true
 
 permissions:
   contents: read
   actions: read
 
 jobs:
+  recording_calls:
+    if: inputs.suite == 'recording-call-analysis'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04-arm
+            arch: aarch64
+          - runner: ubuntu-latest
+            arch: x86_64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          filter: blob:limit=1m
+          sparse-checkout: |
+            scripts
+            .github
+          sparse-checkout-cone-mode: true
+      - name: Verify diagnostic failure controls
+        run: python3 scripts/test-recording-calls.py
+      - name: Rebuild saved measured C and retain GCC call decisions
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CALL_PLAN: ${{ inputs.call_plan }}
+        run: python3 scripts/analyze-recording-calls.py --arch '${{ matrix.arch }}' --plan "$CALL_PLAN" --output recording-call-analysis
+      - name: Preserve every report and failure
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: recording-call-analysis-${{ matrix.arch }}
+          path: recording-call-analysis/
+          if-no-files-found: error
   source_format:
     if: inputs.suite == 'source-format'
     runs-on: ubuntu-24.04-arm
@@ -69,7 +106,7 @@ jobs:
           git rev-parse HEAD > storage-measurement-controls/source.txt
           set -o pipefail
           status=0
-          for script in test-recording-lookup-reference test-scalar-constant-reference test-packed-pair-reference test-packed-pair-stack test-owned-numeric-census test-gradient-array-budgets test-numeric-input-analysis test-descent-budgets test-array-list-evidence test-retain-derivative-evidence test-production-log-audit; do
+          for script in test-measurement-safety test-recording-inline-reference test-recording-calls test-recording-lookup-reference test-scalar-constant-reference test-packed-pair-reference test-packed-pair-stack test-owned-numeric-census test-gradient-array-budgets test-numeric-input-analysis test-descent-budgets test-array-list-evidence test-retain-derivative-evidence test-production-log-audit; do
             python3 "scripts/$script.py" 2>&1 | tee "storage-measurement-controls/$script.log" || status=1
           done
           exit "$status"
@@ -145,7 +182,7 @@ jobs:
             !focused-storage-audit/*-evidence.zip
           if-no-files-found: error
   storage_compiler_report:
-    if: inputs.suite == 'storage-compiler-report' || (inputs.suite == 'scalar-constant-compiler-report' || inputs.suite == 'recording-lookup-compiler-report')
+    if: inputs.suite == 'storage-compiler-report' || (inputs.suite == 'scalar-constant-compiler-report' || contains(fromJSON('["recording-lookup-compiler-report","recording-inline-compiler-report"]'), inputs.suite))
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 15
     permissions:
@@ -164,7 +201,7 @@ jobs:
           python3 scripts/test-numeric-input-analysis.py
           status=0
           for machine in aarch64 x86_64; do
-            python3 scripts/audit-storage-compiler-costs.py --comparison "${{ fromJSON('{"storage-compiler-report":"packed-pair","scalar-constant-compiler-report":"scalar-constant","recording-lookup-compiler-report":"recording-lookup"}')[inputs.suite] }}" \
+            python3 scripts/audit-storage-compiler-costs.py --comparison "${{ fromJSON('{"storage-compiler-report":"packed-pair","scalar-constant-compiler-report":"scalar-constant","recording-lookup-compiler-report":"recording-lookup","recording-inline-compiler-report":"recording-inline"}')[inputs.suite] }}" \
               --repository "$GITHUB_REPOSITORY" --run "$EVIDENCE_RUN" \
               --source "$SOURCE_REVISION" --machine "$machine" \
               --output compiler-cost-audit || status=1

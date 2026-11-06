@@ -5,35 +5,43 @@ and useful inference. Prefer direct values, moves and borrows; use automatic
 reference counting (ARC) only for necessary sharing. Tracing garbage collection
 has been removed. JIT compilation and backward compatibility are excluded.
 
-## Delivered: exact scalar constants
+## Delivered: validated tape lookup reuse
 
-[PR #261 is verified and merged](docs/measurements/scalar-constant-delivery-2026-11-05/README.md).
-The compiler replaces proved immediate constants and aliases with exact bits.
-For example, `one` specialized to F64 is `1.0f64`, without a lazy-cache read.
-Effects, traps, owned values and unproved calculations keep their behavior.
-All nine production jobs, docs and complete evidence audits pass. Long derivative
-solves improve by 1.7–6.3%; allocation and stack costs are unchanged. The 27 missed
-speed targets remain open below, alongside earlier results.
+[PR #262 is verified and merged](docs/measurements/recording-lookup-delivery-2026-11-06/README.md).
+Selected numeric workers validate a shared derivative tape once per invocation.
+The measured pair/update path now uses three registry lookups instead of eight;
+parent checks, allocation and live-storage costs are unchanged. All nine production
+jobs, docs and complete artifact audits pass. All 32 long-case speed targets and
+one inconclusive compiler-time control remain open. Fewer lookups did not deliver
+the required speedup; AMD64 current-result cases slowed by 1.13–3.90%.
 
-## Next work: objective evaluation and recording
+## Next work: recording calls and compiler decisions
 
-The source review selected [bounded tape lookup reuse](docs/measurements/recording-lookups.md).
-The source account, comparison contract and
-[focused safety checks](docs/measurements/recording-lookup-checks-2026-11-06/README.md)
-are verified. The [runtime report](docs/measurements/recording-lookup-time-2026-11-06/README.md)
-retains all 32 missed speed targets; memory/work audits pass, with one inconclusive
-compiler-time control. Step 4 still requires final platform validation.
-The saved 129-coordinate/199-update observations put this
-stage at 71.8–72.4% of derivative-phase time, or 45.5–47.6% of the instrumented
-process. Result-array construction is only 0.9–1.0% of phase time. These percentages
-do not isolate the cost of an individual runtime check or predict a speedup.
+The [saved source review](docs/measurements/recording-call-review-2026-11-06/README.md)
+finds one local state declaration and six changed calls in the measured numeric
+worker. It does not establish the slowdown's cause. The
+[diagnostic contract](docs/measurements/recording-call-costs.md) compares the previous
+release, the new same-source reference and the candidate. This separates changes
+shared by both new versions from the selected worker's lookup reuse.
+[All 72 native diagnostic images match](docs/measurements/recording-call-analysis-2026-11-06/README.md);
+GCC leaves the append body out of line. The selected next candidate is
+[explicit scalar append inlining](docs/measurements/recording-inline.md), with all
+checks preserved and its comparison frozen before implementation.
+The implementation passes [three-host correctness](docs/measurements/recording-inline-checks-2026-11-06/README.md)
+and [memory/stack audits](docs/measurements/recording-inline-census-2026-11-06/README.md).
+[Runtime audits](docs/measurements/recording-inline-time-2026-11-06/README.md) find
+2.26–8.12% less elapsed time in long cases; 13/32 meet 5%, with 19 targets open.
+Small-case/copy limits pass. [Compiler costs](docs/measurements/recording-inline-analysis-2026-11-06/README.md)
+have one inconclusive AMD64 copy control. [All 48 new native images and GCC
+inlining reports pass](docs/measurements/recording-inline-images-2026-11-06/README.md).
+Final platform validation and its complete audits remain.
 
 | Step | Concrete work | Required result |
 |---|---|---|
-| 1 | Trace the objective's generated scalar workers through `rev._op1`, `rev._op2` and `fwp_p_ad_push`; reconcile recorded nodes with the saved profiles. | A source-level account of arithmetic, parent validation, capacity checks and writes per update. Distinguish forward evaluation from reverse traversal. |
-| 2 | Determine which repeated recording checks can be proved once for a closed worker. | An explicit scope/alias proof covering mixed or expired tapes, invalid parents, capacity growth, nested differentiation, effects, traps and cancellation. Do not remove checks on unproved paths. |
-| 3 | Freeze one coherent transformation and its comparison before implementation. | Same-source enabled/disabled references, representative current/history workloads, exact arithmetic/trap order, and explicit time, memory, stack and compiler-cost limits. If the proof fails, record the reason and select from the measured work instead. |
-| 4 | Implement and verify the complete group. | Focused production-compiler checks during development; one final platform matrix and measurement batch after the group is ready. Retain misses and audit all artifacts before merge. |
+| 1 | Verify the saved generated source and close PR #262's delivery record. | Exact source hashes across all four sessions, a complete source diff, and verified final gates/merge identity. |
+| 2 | Rebuild saved C with GCC's inlining reports on native ARM64/AMD64. | All six cases, two result forms and three versions; original flags/toolchain and byte-identical rebuilt executables. No new runtime samples. |
+| 3 | Select and freeze a coherent change from the source and compiler reports. | Explain the work removed and lifetime/trap proof; freeze reference, representative workloads and time/memory/compiler limits before production edits. Do not assume an inlining cause. |
+| 4 | Implement and verify the complete group. | Focused checks during development, then one final measurement/platform batch and complete artifact audits. Retain every miss and update examples/docs where behavior changes. |
 
 Use existing samples for diagnosis; do not rerun unchanged timings for a pass.
 C/Rust peers use handwritten derivatives, so their complete-program ratios cannot
@@ -52,11 +60,13 @@ history can be optimized away). Copy controls compare identical executable bytes
 
 | Goal and evidence | What remains; next action |
 |---|---|
-| [Recording lookup runtime](docs/measurements/recording-lookup-time-2026-11-06/README.md) | All 32 long-case 5% targets remain unmet. ARM64 ranges from 0.14% slower to 2.33% faster; AMD64 current-result cases slow by 1.13–3.90%, while history ranges from 0.40% slower to 1.80% faster. Small-case and copy limits pass. Lookup counts fall 8→3 per pair/update; allocations, live storage and reported frames stay unchanged. Review saved source for per-worker state, ID comparisons and pointer selection, including ordinary NULL-state calls, before selecting another change. Preserve the original timings; the count reduction does not explain the slowdown. |
+| [Scalar append runtime](docs/measurements/recording-inline-time-2026-11-06/README.md) | 19/32 long-case targets miss 5%: both architectures’ 3/199 and 3/1999 forms in both sessions, plus AMD64 history 33/199 in session 1 and 129/199 in both. Long gains are 2.26–8.12%; small-case/copy limits pass. Native inlining is verified; finish platform delivery, then use saved source and phase/work records before selecting another change. No unchanged timing reruns. |
+| [Scalar append compiler time](docs/measurements/recording-inline-analysis-2026-11-06/README.md) | AMD64 zero-update reference copies differ by 2.0494%, above 2%; all observed time/RSS ratios are below 1.05. Saved samples rise later in all four copies; copy identity and position are partly confounded. Preserve this inconclusive result. A future diagnostic must separate those factors; do not rerun unchanged timings for a pass. |
+| [Recording lookup runtime](docs/measurements/recording-lookup-time-2026-11-06/README.md) | All 32 long-case 5% targets remain unmet. ARM64 ranges from 0.14% slower to 2.33% faster; AMD64 current-result cases slow by 1.13–3.90%, while history ranges from 0.40% slower to 1.80% faster. Small-case and copy limits pass. Lookup counts fall 8→3 per pair/update; allocations, live storage and reported frames stay unchanged. [Source and GCC review](docs/measurements/recording-call-analysis-2026-11-06/README.md) is complete; the current group tests append-body inlining. Preserve the original timings; the slowdown has no established cause. |
 | [Recording lookup compiler time](docs/measurements/recording-lookup-analysis-2026-11-06/README.md) | AMD64 large callback worker is inconclusive: identical candidate copies differ by 2.854%, above 2%. All observed time/RSS ratios are below 1.05. Saved samples show later timings rising for all four copies; the two-order schedule partly confounds copy identity and position. Preserve the original failure. A future diagnostic must separate those factors before changing the setup; do not rerun unchanged timings for a pass. |
 | [Exact scalar constants](docs/measurements/scalar-constant-time-2026-11-05/README.md) | 27 of 32 long-case 5% targets remain open: all 16 ARM64 results; both AMD64 sessions' 3/199 and 3/1999 forms; AMD1 history 33/199 and 129/199; AMD2 history 33/199. Gains are 1.7–6.3%; small-case, copy, storage, stack and compiler limits pass. Inspect objective arithmetic/recording source and saved phase/work counts before selecting another transformation. Keep these original samples; do not rerun unchanged timings. |
 | [Private pair reuse](docs/measurements/packed-pair-cleanup-time-2026-11-05/README.md) | The cleanup repair fixes the observed stack excess; all 32 long-case 5% targets remain unmet. AMD64 session 1 one-update current is 2.8315% slower; session 2 zero-update current is 2.2158% slower. Copy controls pass. Diagnose objective evaluation/recording work (73–75% of recorded phase time in the largest diagnostic case) before selecting another speed change. Remaining buffer sizes/lifetime constraints are [explicit](docs/measurements/packed-pair-cleanup-census-2026-11-05/README.md#remaining-storage-and-its-constraints). The first implementation's 23 timing misses remain separately recorded. |
-| [Gradient-call storage](docs/measurements/gradient-call-time-2026-11-05/README.md) | Sixteen 33/199 and 129/199 results miss 5%; AMD64 session 2 3/0 current is 2.1822% slower, beyond 2%. All copy controls pass. Three-coordinate long solves improve 14.3–25.2%. The current pair-buffer group addresses one of the [two remaining recording allocations](docs/measurements/gradient-call-census-2026-11-05/README.md#remaining-storage) identified by producer/consumer lifetimes (together 2U requests, 32NU bytes). Separately review the zero-update source/driver path before declaring a new experiment. These are next investigations, not established causes. |
+| [Gradient-call storage](docs/measurements/gradient-call-time-2026-11-05/README.md) | Sixteen 33/199 and 129/199 results miss 5%; AMD64 session 2 3/0 current is 2.1822% slower, beyond 2%. All copy controls pass. Three-coordinate long solves improve 14.3–25.2%. Delivered pair-buffer reuse addresses one of the [two remaining recording allocations](docs/measurements/gradient-call-census-2026-11-05/README.md#remaining-storage) identified by producer/consumer lifetimes (together 2U requests, 32NU bytes). Separately review the zero-update source/driver path before declaring a new experiment. These are next investigations, not established causes. |
 | [Consumed numeric storage](docs/measurements/owned-numeric-time-2026-11-05/README.md) | Four AMD64 5% targets remain open: session 1 3/199 current; session 2 3/199 current/history and 3/1999 current. Observed gains are 3.36–4.76%; copy controls pass. The [gradient-call group](docs/measurements/gradient-call-storage.md) passes focused checks and allocation audits. Compiler/runtime results and final production delivery are verified; a new comparison does not settle these earlier misses. |
 | [Packed derivative inputs](docs/measurements/packed-input-time-2026-11-04/README.md) | AMD64 session 1 copy variation is 2.3628% / 2.7833% on 3/199 and 3/1999; session 2 slows 3/1 current by 2.3095%, against 2% limits. [Saved samples](docs/measurements/packed-input-time-2026-11-04/amd64-sample-review.md) establish no cause. Consumed-storage delivery is verified; retain these separate misses. |
 | [Final-iteration compiler cost](docs/measurements/final-iteration-analysis-2026-11-04/README.md) | AMD64 field-owner transfer copy variation is 2.043% against 2%; other observed limits pass. Inspect retained sample/setup progression before proposing a new measurement. |

@@ -21,7 +21,7 @@ class Census(unittest.TestCase):
         self.old['managed'].update(requests=25741 * 8 + 100, requestedBytes=819968 * 8 + 1000)
 
     def test_scalar_constants_require_unchanged_counts_in_all_workloads(self):
-        for protocol in ('scalar-constant', 'recording-lookup'):
+        for protocol in ('scalar-constant', 'recording-lookup', 'recording-inline'):
             for dimensions, updates, solves in CENSUS.CASES:
                 self.assertEqual(CENSUS.compare(self.current, self.current, dimensions,
                     updates, solves, protocol), dict(requests=0, requestedBytes=0, retains=0))

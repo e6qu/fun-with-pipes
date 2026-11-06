@@ -73,6 +73,7 @@ class Evidence(unittest.TestCase):
             ('packed-pair', ('src/cgen.rs',)),
             ('scalar-constant', ('src/cgen.rs',)),
             ('recording-lookup', ('src/cgen.rs',)),
+            ('recording-inline', ('runtime/fwp_rt_kernel.c',)),
         ):
             preparation = (ROOT / f'scripts/prepare-{protocol}-reference.py').read_text()
             candidates = {name: (ROOT / name).read_text() for name in paths}

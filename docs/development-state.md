@@ -1,87 +1,80 @@
 # Current work
 
-**Next:** publish the complete measurement report, mark PR #262 ready, and run
-all nine production jobs plus docs on that exact final head. Audit every complete
-log/artifact before the authorized squash merge. Do not repeat the completed timings.
+**Next:** publish the final native-image receipt, mark PR #263 ready and monitor
+all nine production jobs plus documentation for that exact head. Audit every
+completed job/target and fix all failures together. When all final-head gates and
+complete audits pass, squash-merge with an empty body and subject
+`Inline checked scalar derivative recording`; verify the actual message and tree.
+Do not rerun
+qualified measurements or the completed native diagnostics.
 
-Branch `recording-work-review`, worktree `.worktrees/scalar-constant-lowering`;
-active draft [PR #262](https://github.com/e6qu/fun-with-pipes/pull/262).
-Base: verified [PR #261 delivery](measurements/scalar-constant-delivery-2026-11-05/README.md),
-merge `2e6e09f539bcdab965d062f0184b585b340b29d8`.
-[Lookup contract](measurements/recording-lookups.md) frozen at `bfddc31e` before code.
+Branch `recording-call-costs`, worktree `.worktrees/scalar-constant-lowering`;
+draft [PR #263](https://github.com/e6qu/fun-with-pipes/pull/263).
+Measurement/input publication: `48c2ae70ab58813bc04ab7bda4b8d7845ccef852`.
+The next commit retains only its native-image receipt and documentation; use the
+exact resulting PR head for final production gates.
+Production code/tests: `39a9f806891b524042b391b85480cbafc022afbc`;
+subsequent production trees are identical. Base is [verified PR #262](measurements/recording-lookup-delivery-2026-11-06/README.md),
+merge `9a9dc49c53212b562cd9de06f908248ceb6109af`, tree
+`66f69ee54dcc207be2a9041d2cae9e89ad3d9aa3`, identical to its tested head.
 
 ## Roadmap status
 
 | Step | Status | Remaining work |
 |---|---|---|
-| 1 | Verified | Source accounting reconciles eight nodes per pair/update. |
-| 2 | Verified | Closed numeric proof and focused lifetime controls pass. |
-| 3 | Verified | Same-source comparison and original limits are frozen. |
-| 4 | In progress | All measurement audits are complete, with 32 missed speed targets and one inconclusive compiler-time control retained. Final platform gates remain. |
+| 1 | Verified | PR #262 delivery and saved source comparison retained. |
+| 2 | Verified | All 72 original images reproduced; complete GCC reports/logs audited. |
+| 3 | Verified | Inlining contract frozen at `29f99b70` before production edits. |
+| 4 | In progress | Correctness, memory and complete measurement audits pass. Native reports pass with all 48 images identical. Retain misses; finish final platform delivery. |
 
-## Sources and verified work
+## Change and evidence
 
-Safety/census/compiler source: `6a0ae280c4616f791df507b44cbd31935a16cd67`.
-Runtime source: `31c04650527d7a3c9efdd63bd5b4eae8a15d5732`.
-Compiler/runtime/library/test trees are identical. The later commit retains
-evidence and fixes only census summary totals. This publication adds reports and
-docs; no production code changes after these measurements.
+The [change](measurements/recording-inline.md) forces the existing checked F64
+append body inline. It changes no validation, arithmetic, allocation or cleanup.
+The same-source reference removes only that declaration attribute; both versions
+keep lookup reuse. The earlier 72-image diagnostic motivated this candidate but
+did not establish the previous AMD64 slowdown's cause.
 
-| Evidence | Run / complete audit | Result |
+| Gate | Source / run | Verified result |
 |---|---|---|
-| [Focused safety](measurements/recording-lookup-checks-2026-11-06/README.md) | `42129223759` / `42134128147` | Three hosts pass: 25 native targets and 302 compiler units per host, four existing ignored units. Audit covers 848 images and 864 probe observations per host. |
-| [Measurement tools](measurements/recording-lookup-controls-2026-11-06/README.md) | `42123056112`, job `127580112855` | Eleven suites, 97 tests; full logs and source identity retained. |
-| [Memory/work](measurements/recording-lookup-census-2026-11-06/README.md) | `42134160356` / corrected audit `42136506956` | Eight-to-three lookups per pair/update. Validation/node counts, allocation counts, raw/managed peaks and largest reported frames unchanged; cleanup and parent reconciliation pass. |
-| [Compiler costs](measurements/recording-lookup-analysis-2026-11-06/README.md) | `42134169729` / `42135475969` | All 672 commands succeed; 13/14 timing cases qualify. All observed time/RSS ratios below 1.05. |
-| Previous docs | `42136488509`, job `127625843070`, at `31c04650` | Pass; complete log reviewed, only three intentional runner-failure controls. New publication still needs its own docs job. |
+| [Focused correctness](measurements/recording-inline-checks-2026-11-06/README.md) | `39a9f806` / `42156552424`; audit `42158479402` | Three hosts, each 25 targets, 856 images and 872 observations. Complete logs/hashes pass. |
+| [Measurement controls](measurements/recording-inline-controls-2026-11-06/README.md) | `a029797e` / `42157525720` | 14 suites, 107 tests; complete logs retained. Later reference/file-list controls also pass. |
+| [Memory/work/stack](measurements/recording-inline-census-2026-11-06/README.md) | `ecfd740b` / `42158774007`; audit `42159822189` | Counts unchanged; zero final storage. Max frame growth ARM64 16 bytes, AMD64 zero. All 4,038 retained record hashes verified. |
+| [Compiler costs](measurements/recording-inline-analysis-2026-11-06/README.md) | `ecfd740b` / `42158777078`; audit `42160109377` | All 672 commands succeed; 13/14 cases qualify. AMD64 zero-update copy control remains inconclusive. |
+| [Runtime](measurements/recording-inline-time-2026-11-06/README.md) | ARM `7dba6db7` / `42162092035`; AMD `1c6ee1ef` / `42162639619`, `42162975545` | Four qualified sessions; audits `42164603033`, `42164773822`, `42164952097` pass. 13/32 long targets pass, 19 remain open. |
+| [Native inlining](measurements/recording-inline-images-2026-11-06/README.md) | `48c2ae70` / `42165452140` | Both jobs pass; all 48 measured images identical, candidate inlining verified, complete hashes/logs retained. |
+| Docs | `66aed9ac` / `42164607195`, job `127718027559` | Full controls pass, including historical archives and the inventory repair. |
 
-AMD64 large callback worker compiler time is **inconclusive**: identical candidate
-copies vary by 2.854%, above 2%. Saved samples rise later for all four copies;
-generated C matches, but source/order review establishes no cause. Preserve the
-failure under the standing policy to retain verified reductions with timing goals
-open. Do not claim its time bound passed or rerun it for a pass.
+Runtime producer heads have identical production, benchmark and recorded source
+hashes. Long cases use 2.26–8.12% less elapsed time. Small-case slowdown peaks at
+1.53%; identical-copy variation at 1.43%, both below 2%. The 19 misses are both
+architectures' 3/199 and 3/1999 forms in both sessions, plus AMD64 history 33/199
+in session 1 and 129/199 in both. Keep every older PLAN.md miss too.
 
-The first census audit validated every probe but printed obsolete summary totals.
-Corrected audit `42136506956`, job `127625915163`, derives 171 commands, 48 images
-and 96 executions per architecture. Retained observation hashes pass; only saved
-artifacts were re-audited. Earlier safety repairs are verified: explicit test ID
-range for Clippy, real `ad.scope` entry with unscoped rejection control, and recovery
-hooks confined to active `setjmp` frames.
+Compiler AMD64 `derivative-3-0`: identical reference medians 0.3917460715 and
+0.3838788290 seconds differ by 2.0494%, above 2%. Observed time/RSS ratios stay
+below 1.05. All four copies slow later; copy identity and position are partly
+confounded. This remains inconclusive; no cause or passing bound is established.
 
-## Runtime results
+## Repairs and remaining gates
 
-[All original results and complete audits](measurements/recording-lookup-time-2026-11-06/README.md)
-are retained. The four qualified sessions each ran once on Neoverse-N2/EPYC 7763.
+The [first runtime audit](measurements/recording-inline-audit-repair-2026-11-06/README.md)
+expected `source/src/cgen.rs` instead of the changed runtime file. The repair
+moves inventory validation into the complete reference validator and adds extra/
+wrong-path controls. Every failed session was re-audited from its saved artifacts;
+no timing was rerun. Three wrong-CPU hosts were rejected before builds/timing.
+All failure/rejection records remain linked in the runtime receipts.
 
-| Session | Measurement run | Job | Complete audit |
-|---|---|---|---|
-| ARM64 1/2 | `42136888829` | `127627213167` / `127627213106` | `42139232314` |
-| AMD64 1 | `42137772065` | `127630185205` | `42140277966` |
-| AMD64 2 | `42138616667` | `127632984326` | `42141026225` |
+The [new input plan](measurements/recording-inline-call-inputs.json) selects each
+architecture's audited session 1, both forms, six cases and both versions. All original image hashes and candidate append inlining pass; no program
+executed during this diagnostic. Do not rerun the original 72-image diagnostic. The final exact-head
+nine-job matrix and complete production/doc audits have not run. Draft-only skipped
+CI is not platform evidence. Squash-merge only after final gates pass, with one
+subject at most 80 characters and empty body, then verify tree/message identity.
 
-All four audits pass; all 32 long-case 5% speed targets remain unmet. ARM64 ranges
-from 0.14% slower to 2.33% faster. AMD64 current-result cases are 1.13–3.90% slower;
-history ranges from 0.40% slower to 1.80% faster. Small-case/copy, tracked memory,
-cleanup and stack limits pass. Retain the verified lookup reduction under the
-agreed policy, with timing goals open. An audit pass does not make timing pass.
-
-Five rejected hosts failed before builds/timing. Their logs and qualifications
-remain in the runtime report, including rejected-only run `42137525746`, audited
-by `42138966228`. Four downloaded bundles passed digest checks. Combined report
-checks verify source identities, CPU/settings, orders, medians, original budgets
-and the five rejected attempts. Native binaries were audited on GitHub.
-
-## Local checks and delivery
-
-All full builds, native suites, benchmarks and large artifact audits ran on GitHub.
-Focused local checks used `scripts/local-guard.py`: retained bundle hashes
-0.25 seconds; combined saved-report validation/table generation 0.48 seconds.
-The scratch report helper initially lacked the scripts import path; explicitly
-setting `PYTHONPATH=scripts` fixed it. No benchmark or native test reran.
-Scratch helpers/logs are in `/tmp/fwp-recording-*` and `../gradient-work/`.
-About 80 GiB remains free.
-
-No final production matrix has launched yet. Preserve the final head while gates
-run. After all nine jobs, docs and complete audits pass, squash with one explicit
-subject of at most 80 characters and an empty body; verify tested/merged trees and
-commit message. Then select the next source-level diagnostic from the open plan.
+Local guarded checks: measurement receipt hashes 0.50s; saved compiler review
+0.13s; corrected reference controls 0.71s; runtime digests 0.25s and four-report
+reconciliation 0.49s; complete native-image record hashes 0.13s. Sparse historical fixtures were left to the passing GitHub
+full documentation gate. Scratch report generation needed explicit `PYTHONPATH=scripts`;
+no product change. Full builds, large audits and benchmarks stay on GitHub.
+About 78 GiB free at last check. Scratch: `/tmp/fwp-inline-*`, `../gradient-work/`.

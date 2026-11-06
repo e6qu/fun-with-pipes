@@ -18,6 +18,9 @@ SCALAR_SPEC.loader.exec_module(SCALAR_REFERENCE)
 RECORDING_SPEC = importlib.util.spec_from_file_location('recording_reference', ROOT / 'scripts/prepare-recording-lookup-reference.py')
 RECORDING_REFERENCE = importlib.util.module_from_spec(RECORDING_SPEC)
 RECORDING_SPEC.loader.exec_module(RECORDING_REFERENCE)
+INLINE_SPEC = importlib.util.spec_from_file_location('inline_reference', ROOT / 'scripts/prepare-recording-inline-reference.py')
+INLINE_REFERENCE = importlib.util.module_from_spec(INLINE_SPEC)
+INLINE_SPEC.loader.exec_module(INLINE_REFERENCE)
 SPEC = importlib.util.spec_from_file_location('descent', ROOT / 'scripts/measure-descent-peers.py')
 DESCENT = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(DESCENT)
@@ -42,7 +45,7 @@ def compare(candidate, reference, dimensions, updates, solves, comparison):
         expected = dict(requests=7 * maps + int(updates > 0),
                         requestedBytes=(8 * dimensions + 128) * maps + 24 * int(updates > 0),
                         retains=2 * maps)
-    elif comparison in ('scalar-constant', 'recording-lookup'):
+    elif comparison in ('scalar-constant', 'recording-lookup', 'recording-inline'):
         expected = dict(requests=0, requestedBytes=0, retains=0)
     elif comparison == 'packed-pair':
         expected = dict(requests=maps, requestedBytes=(16 * dimensions - 8) * maps, retains=0)
@@ -62,7 +65,7 @@ def compare(candidate, reference, dimensions, updates, solves, comparison):
 
 def reconcile_parent(repeated, fresh, parent_repeated, parent_fresh):
     """The same-source reference must reproduce the delivered parent's storage."""
-    assert repeated['complete'] and repeated['comparison'] in ('packed-pair', 'scalar-constant', 'recording-lookup')
+    assert repeated['complete'] and repeated['comparison'] in ('packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline')
     assert fresh['source'] == repeated['source']
     assert fresh['machine'] == repeated['machine'] == parent_fresh['machine'] == parent_repeated['machine']
     assert parent_fresh['source'] == parent_repeated['source']
@@ -97,7 +100,7 @@ def reconcile_parent(repeated, fresh, parent_repeated, parent_fresh):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--comparison', choices=('owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup'), required=True)
+    parser.add_argument('--comparison', choices=('owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline'), required=True)
     parser.add_argument('--compiler', type=Path, required=True)
     parser.add_argument('--reference', type=Path, required=True)
     parser.add_argument('--reference-manifest', type=Path, required=True)
@@ -114,12 +117,13 @@ def main():
     assert args.timeout > 0
     assert subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip() == args.source
     reference_module = {'owned-numeric': REFERENCE, 'gradient-call': GRADIENT_REFERENCE,
-                        'packed-pair': PAIR_REFERENCE, 'scalar-constant': SCALAR_REFERENCE, 'recording-lookup': RECORDING_REFERENCE}[args.comparison]
+                        'packed-pair': PAIR_REFERENCE, 'scalar-constant': SCALAR_REFERENCE, 'recording-lookup': RECORDING_REFERENCE, 'recording-inline': INLINE_REFERENCE}[args.comparison]
     manifest = json.loads(args.reference_manifest.read_text())
     assert manifest['source'] == args.source
     expected_transformation = {
         'scalar-constant': 'exact immediate scalar constants and acyclic cached aliases',
         'recording-lookup': 'validated tape lookup reuse within bounded nonsuspending numeric workers',
+        'recording-inline': 'forced inlining of the checked F64 scalar append body',
         'packed-pair': 'reuse of the consumed private neighboring-record buffer',
         'owned-numeric': 'consuming scalar array maps and exclusive coordinate-list reuse',
         'gradient-call': 'scoped input borrowing, numeric fold fields, single-root seeding and consumed array scratch',
@@ -187,11 +191,13 @@ def main():
                     result = run([compiler.resolve(), 'build', '--memory', 'dynamic', '--emit-c', '-O2', path, '-o', emitted],
                                  environment, folder / (kind + '-emit'))
                     assert not result.stdout and not result.stderr
-                    if args.comparison == 'recording-lookup' and updates > 0:
-                        DESCENT.RECORDING_SELECTION.check(emitted.read_text(), kind == 'candidate')
+                    if args.comparison == 'recording-inline':
+                        DESCENT.RECORDING_SELECTION.check_inline_declaration(emitted.read_text(), kind == 'candidate')
+                    if args.comparison in ("recording-lookup", "recording-inline") and updates > 0:
+                        DESCENT.RECORDING_SELECTION.check(emitted.read_text(), kind == 'candidate' or args.comparison == 'recording-inline')
                     if args.comparison == 'scalar-constant' and updates > 0:
                         DESCENT.SCALAR_SELECTION.check(emitted.read_text(), 'literal' if kind == 'candidate' else 'cached')
-                    if args.comparison == 'recording-lookup':
+                    if args.comparison in ("recording-lookup", "recording-inline"):
                         lookup_source = folder / (kind + '-lookup.c')
                         lookup_source.write_text(DESCENT.RECORDING_SELECTION.instrument(emitted.read_text()))
                         lookup_binary = folder / (kind + '-lookup')
@@ -206,7 +212,7 @@ def main():
                                            folder / (kind + '-lookup-workspace' + workspace))
                             DESCENT.verify(observed.stdout, DESCENT.AD.analytic(dimensions, updates + 1), solves)
                             counts = json.loads(observed.stderr)
-                            DESCENT.RECORDING_SELECTION.check_counts(counts, dimensions, updates, solves, kind == 'candidate')
+                            DESCENT.RECORDING_SELECTION.check_counts(counts, dimensions, updates, solves, kind == 'candidate' or args.comparison == 'recording-inline')
                             row['lookupObservations'][kind][workspace] = counts
                     profiled = folder / (kind + '-profile.c')
                     profiled.write_text(DESCENT.AD.RAW.instrument(DESCENT.AD.PROFILE.instrument(emitted.read_text())))

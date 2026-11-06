@@ -1,0 +1,36 @@
+{
+  "pr": 262,
+  "source": "a8e427e8cf57a36110c2cdf4ab63569a0d503666",
+  "tree": "66f69ee54dcc207be2a9041d2cae9e89ad3d9aa3",
+  "merge": "9a9dc49c53212b562cd9de06f908248ceb6109af",
+  "message": "Reuse validated tape lookups in proved numeric workers",
+  "productionRun": 42141696622,
+  "documentationRun": 42141693447,
+  "documentationJob": 127643280241,
+  "auditRun": 42151713370,
+  "auditJob": 127676275210,
+  "auditArtifact": {
+    "id": 13472887762,
+    "node_id": "MDg6QXJ0aWZhY3QxMzQ3Mjg4Nzc2Mg==",
+    "name": "production-log-audit-all",
+    "size_in_bytes": 1161381,
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13472887762",
+    "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13472887762/zip",
+    "expired": false,
+    "digest": "sha256:9de3c6fd11d25bba33ac511a5aa0b9afb21007b6cc407ff8b1ff30242704622e",
+    "created_at": "2026-11-06T02:48:34Z",
+    "updated_at": "2026-11-06T02:48:34Z",
+    "expires_at": "2027-02-04T02:39:32Z",
+    "workflow_run": {
+      "id": 42151713370,
+      "repository_id": 1400763332,
+      "head_repository_id": 1400763332,
+      "head_branch": "recording-work-review",
+      "head_sha": "a8e427e8cf57a36110c2cdf4ab63569a0d503666"
+    }
+  },
+  "redundantPostmergeRunsCancelled": [
+    42152999846,
+    42152999847
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "contractCommit": "29f99b709579b6e3d0b07cac9e8863113f04a9bd",
+  "architectures": {
+    "aarch64": [
+      {
+        "name": "inline",
+        "index": "docs/measurements/recording-inline-time-2026-11-06/run-42162092035/summary/index.json",
+        "source": "7dba6db7010af483f9d694b78e10cf71df2653a3",
+        "protocol": "recording-inline",
+        "variants": [
+          {
+            "name": "reference",
+            "suffix": "-reference",
+            "inlining": "observe"
+          },
+          {
+            "name": "candidate",
+            "suffix": "",
+            "inlining": "require"
+          }
+        ]
+      }
+    ],
+    "x86_64": [
+      {
+        "name": "inline",
+        "index": "docs/measurements/recording-inline-time-2026-11-06/run-42162975545/summary/index.json",
+        "source": "1c6ee1efb7d45d952829d9e5e326aceb11bd32cb",
+        "protocol": "recording-inline",
+        "variants": [
+          {
+            "name": "reference",
+            "suffix": "-reference",
+            "inlining": "observe"
+          },
+          {
+            "name": "candidate",
+            "suffix": "",
+            "inlining": "require"
+          }
+        ]
+      }
+    ]
+  }
+}

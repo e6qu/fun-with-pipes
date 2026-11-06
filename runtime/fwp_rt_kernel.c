@@ -367,8 +367,10 @@ typedef struct {
 } fwp_ad_recording;
 
 /* A node with parents a and b (-1: none), with immediate F64 weights.
- * Ordinary callers explicitly pass NULL and validate every lookup. */
-static V fwp_p_ad_push(V a, V wa, V b, V wb, fwp_ad_recording *recording) {
+ * Ordinary callers explicitly pass NULL and validate every lookup. Inline the
+ * same checked body so native compilers can specialize known arguments; keep
+ * growth, traps and tape lifetime rules unchanged. */
+static inline __attribute__((always_inline)) V fwp_p_ad_push(V a, V wa, V b, V wb, fwp_ad_recording *recording) {
     int64_t ra = (int64_t)a, rb = (int64_t)b;
     double da = fwp_f64(wa), db = fwp_f64(wb);
     if (ra < 0 && rb < 0) return (V)(int64_t)-1;

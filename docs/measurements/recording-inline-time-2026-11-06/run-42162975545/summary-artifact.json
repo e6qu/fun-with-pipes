@@ -1,0 +1,20 @@
+{
+  "id": 13478866105,
+  "node_id": "MDg6QXJ0aWZhY3QxMzQ3ODg2NjEwNQ==",
+  "name": "recording-inline-report-summary",
+  "size_in_bytes": 251460,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13478866105",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13478866105/zip",
+  "expired": false,
+  "digest": "sha256:033ea4cbbb6abe6fbebc3dbdd3530cb4cc3551f3680771e95426e7a07bfb9fff",
+  "created_at": "2026-11-06T04:52:10Z",
+  "updated_at": "2026-11-06T04:52:10Z",
+  "expires_at": "2027-02-04T04:51:29Z",
+  "workflow_run": {
+    "id": 42164952097,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "recording-call-costs",
+    "head_sha": "66aed9aca44fa4d2b703525155178ba96cdbf31f"
+  }
+}

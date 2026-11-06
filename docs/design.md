@@ -310,7 +310,20 @@ programs with task/service entry checks prevent this selection. Focused safety a
 lookups fall from eight to three per pair/update, with unchanged allocation and
 live-storage costs. [Runtime measurements](measurements/recording-lookup-time-2026-11-06/README.md)
 miss all 32 long-case speed targets; AMD64 current-result cases slow by 1.13–3.90%.
-Final platform verification remains pending. Fewer checks alone establish no speedup.
+[Final platform verification and complete audits pass](measurements/recording-lookup-delivery-2026-11-06/README.md).
+Fewer checks alone establish no speedup.
+
+The current [scalar append inlining change](measurements/recording-inline.md)
+requests that native compilers place the same checked body at its call sites.
+It adds no lifetime proof or unchecked path. Known arguments can then be simplified by the C compiler.
+[Three-host correctness](measurements/recording-inline-checks-2026-11-06/README.md)
+and [memory/work audits](measurements/recording-inline-census-2026-11-06/README.md)
+pass. Allocation and validation counts are unchanged; largest-frame growth is
+at most 16 bytes. [Compiler costs](measurements/recording-inline-analysis-2026-11-06/README.md)
+have one inconclusive copy control. [Runtime results](measurements/recording-inline-time-2026-11-06/README.md)
+show 2.26–8.12% less elapsed time for long cases; 19/32 miss the 5% target.
+[Native inlining reports](measurements/recording-inline-images-2026-11-06/README.md)
+reproduce all 48 measured images. Final platform verification remains in progress.
 
 Channel borrowing preserves hidden native contexts as well as payload storage.
 It does not prove the queued graph acyclic: capture/cycle checks remain separate.
