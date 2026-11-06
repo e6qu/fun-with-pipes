@@ -28,9 +28,10 @@ GCC leaves the append body out of line. The selected next candidate is
 [explicit scalar append inlining](docs/measurements/recording-inline.md), with all
 checks preserved and its comparison frozen before implementation.
 The implementation passes [three-host correctness and its complete audit](docs/measurements/recording-inline-checks-2026-11-06/README.md).
-Both memory/stack census producers pass. Compiler costs have one inconclusive
-AMD64 copy control; complete measurement audits, runtime timing and final platform
-validation remain. No speedup is claimed yet.
+[Memory/stack counts](docs/measurements/recording-inline-census-2026-11-06/README.md)
+and both complete measurement audits pass. [Compiler costs](docs/measurements/recording-inline-analysis-2026-11-06/README.md)
+have one inconclusive AMD64 copy control. Runtime timing is running; binary
+verification and final platform validation remain. No speedup is claimed yet.
 
 | Step | Concrete work | Required result |
 |---|---|---|
@@ -56,6 +57,7 @@ history can be optimized away). Copy controls compare identical executable bytes
 
 | Goal and evidence | What remains; next action |
 |---|---|
+| [Scalar append compiler time](docs/measurements/recording-inline-analysis-2026-11-06/README.md) | AMD64 zero-update reference copies differ by 2.0494%, above 2%; all observed time/RSS ratios are below 1.05. Saved samples rise later in all four copies; copy identity and position are partly confounded. Preserve this inconclusive result. A future diagnostic must separate those factors; do not rerun unchanged timings for a pass. |
 | [Recording lookup runtime](docs/measurements/recording-lookup-time-2026-11-06/README.md) | All 32 long-case 5% targets remain unmet. ARM64 ranges from 0.14% slower to 2.33% faster; AMD64 current-result cases slow by 1.13–3.90%, while history ranges from 0.40% slower to 1.80% faster. Small-case and copy limits pass. Lookup counts fall 8→3 per pair/update; allocations, live storage and reported frames stay unchanged. [Source and GCC review](docs/measurements/recording-call-analysis-2026-11-06/README.md) is complete; the current group tests append-body inlining. Preserve the original timings; the slowdown has no established cause. |
 | [Recording lookup compiler time](docs/measurements/recording-lookup-analysis-2026-11-06/README.md) | AMD64 large callback worker is inconclusive: identical candidate copies differ by 2.854%, above 2%. All observed time/RSS ratios are below 1.05. Saved samples show later timings rising for all four copies; the two-order schedule partly confounds copy identity and position. Preserve the original failure. A future diagnostic must separate those factors before changing the setup; do not rerun unchanged timings for a pass. |
 | [Exact scalar constants](docs/measurements/scalar-constant-time-2026-11-05/README.md) | 27 of 32 long-case 5% targets remain open: all 16 ARM64 results; both AMD64 sessions' 3/199 and 3/1999 forms; AMD1 history 33/199 and 129/199; AMD2 history 33/199. Gains are 1.7–6.3%; small-case, copy, storage, stack and compiler limits pass. Inspect objective arithmetic/recording source and saved phase/work counts before selecting another transformation. Keep these original samples; do not rerun unchanged timings. |

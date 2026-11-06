@@ -1,13 +1,14 @@
 # Current work
 
-**Next:** finish the census audit `42159822189` and compiler-cost audit
-`42160109377`, inspect every saved result, then run the frozen qualified runtime
-batch once. Preserve the AMD64 compiler-copy failure below; do not rerun unchanged
-timings for a pass. Publish the pending diagnostic/receipt changes together.
+**Next:** monitor runtime run `42162092035` through all four sessions, audit every
+result, then retain its reports and declare the new binary diagnostic inputs.
+Only replace hosts rejected before builds/timing. Preserve every missed limit;
+do not rerun qualified timings for a pass. Final platform checks follow the
+completed measurement/binary group.
 
 Branch `recording-call-costs`, worktree `.worktrees/scalar-constant-lowering`;
 draft [PR #263](https://github.com/e6qu/fun-with-pipes/pull/263).
-Published measurement source: `ecfd740be6289b365dd2a1bb9e2f60980ab27c8f`.
+Census/compiler measurement source: `ecfd740be6289b365dd2a1bb9e2f60980ab27c8f`.
 Production code/tests: `39a9f806891b524042b391b85480cbafc022afbc`; all subsequent
 changes are measurement tools, Python controls or documentation. Their `src`,
 `runtime`, `lib`, `tests`, Cargo and build-script trees match that passing source.
@@ -25,7 +26,7 @@ post-merge runs `42152999846`/`42152999847` were cancelled after tree equality.
 | 1 | Verified | PR #262 delivery and saved source comparison are retained. |
 | 2 | Verified | All 72 original images reproduced; complete GCC reports/logs audited. |
 | 3 | Verified | Scalar append inlining contract frozen at `29f99b70` before production edits. |
-| 4 | In progress | Three-host correctness and full audit pass. Census producers pass; compiler costs have one inconclusive control. Finish measurement audits, runtime/binary checks and final platform delivery. |
+| 4 | In progress | Three-host correctness and full audit pass. Memory/work/stack and complete measurement audits pass; one compiler control is inconclusive. Finish runtime/binary checks and final platform delivery. |
 
 ## Change and evidence
 
@@ -43,13 +44,16 @@ already inlined. This motivates the candidate, not a cause for the earlier slowd
 |---|---|---|
 | [Focused correctness](measurements/recording-inline-checks-2026-11-06/README.md) | `39a9f806` / `42156552424`; audit `42158479402` | Three hosts pass, each with 25 targets, 856 native images and 872 observations. Full logs and retained hashes verified. |
 | [Measurement controls](measurements/recording-inline-controls-2026-11-06/README.md) | `a029797e` / `42157525720`, job `127695118390` | 14 suites, 107 tests pass; all logs/digests retained. |
-| Memory/work/stack | `ecfd740b` / `42158774007` | Both producers pass; audit `42159822189`, job `127702599856`, is queued. Complete producer logs have no unexpected diagnostics. |
-| Compiler costs | `ecfd740b` / `42158777078` | ARM64 passes; AMD64 has the single copy-control failure below. Audit `42160109377`, job `127703506512`, is queued. |
+| [Memory/work/stack](measurements/recording-inline-census-2026-11-06/README.md) | `ecfd740b` / `42158774007` | Both producers and audit `42159822189` pass. Retained counts and all 4,038 record hashes verified; maximum frame growth ARM64 16 bytes, AMD64 zero. |
+| [Compiler costs](measurements/recording-inline-analysis-2026-11-06/README.md) | `ecfd740b` / `42158777078` | 13/14 qualify; audit `42160109377` passes and preserves the copy failure below. All 672 commands and 2,162 retained record hashes verified. |
 | Docs | `ecfd740b` / `42158778585` | Pass. Earlier docs at `39a9f806` and `a029797e` also pass. |
 
 Census jobs: ARM64 `127699163254`, AMD64 `127699163371`.
 Compiler jobs: ARM64 `127699171640`, AMD64 `127699171809`.
-No new runtime timing or final nine-job matrix has run. Draft-only CI is skipped
+Runtime run `42162092035` uses source `7dba6db7010af483f9d694b78e10cf71df2653a3`,
+with both sessions on both architectures and focused prerequisite `42156552424`.
+Jobs: ARM64 `127709922516`/`127709922520`; AMD64 `127709922590`/`127709922633`.
+The final nine-job matrix has not run. Draft-only CI is skipped
 and is not platform evidence. Preserve all earlier PLAN.md timing misses.
 
 ## Compiler result that remains open
@@ -58,11 +62,11 @@ AMD64 `derivative-3-0`: identical reference copies have medians 0.3917460715 and
 0.3838788290 seconds, ratio **1.0204940776**, exceeding 1.02. All commands complete;
 observed candidate/reference time is 0.99721112 and peak RSS ratio 0.99949114.
 All other observed time/RSS limits pass. This case is **inconclusive**, not a
-verified compiler-cost bound. Audit saved source/order/samples before attributing
-a cause; do not tune the setup or rerun it for a pass. The standing policy retains
+verified compiler-cost bound. The saved-sample review finds all copies slower in the second half; copy
+identity and position are partly confounded. No cause is established; do not tune the setup or rerun it for a pass. The standing policy retains
 verified reductions with timing goals open; it does not turn a failed control green.
 
-## Pending publication and verification
+## Remaining verification
 
 The binary-report tool now requires an explicit committed `--plan` JSON and the
 workflow requires `call_plan`. [Original inputs](measurements/recording-call-inputs.json)
@@ -75,7 +79,8 @@ Local guarded checks pass: count/phase/timing/compiler controls, reference edits
 full reference manifest corruption tests, explicit diagnostic inputs/report parsing,
 Python syntax, workflow sizes and actionlint. New complete-reference test: 0.72s;
 six diagnostic tests: 0.13s; original-input equivalence: 0.13s; full focused audit
-hash verification: 0.25s. Full builds, measurements and large audits stay on GitHub.
+hash verification: 0.25s. Measurement receipts/hash check: 0.50s; saved
+compiler sample review: 0.13s. Full builds, measurements and large audits stay on GitHub.
 
 First focused audit `42158262680` omitted `production_attempt`, causing argument
 parsing and then empty-artifact upload to fail. Corrected `42158479402` explicitly

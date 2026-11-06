@@ -1,0 +1,76 @@
+{
+  "id": 127702599856,
+  "run_id": 42159822189,
+  "workflow_name": "Numerical and ownership evidence",
+  "head_branch": "recording-call-costs",
+  "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/42159822189",
+  "run_attempt": 1,
+  "node_id": "CR_kwDOU33zxM8AAAAdu6sIsA",
+  "head_sha": "ecfd740be6289b365dd2a1bb9e2f60980ab27c8f",
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/127702599856",
+  "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/42159822189/job/127702599856",
+  "status": "completed",
+  "conclusion": "success",
+  "created_at": "2026-11-06T03:59:55Z",
+  "started_at": "2026-11-06T04:12:48Z",
+  "completed_at": "2026-11-06T04:14:02Z",
+  "name": "gradient_call_census_report",
+  "steps": [
+    {
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 1,
+      "started_at": "2026-11-06T04:12:49Z",
+      "completed_at": "2026-11-06T04:12:50Z"
+    },
+    {
+      "name": "Run actions/checkout@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 2,
+      "started_at": "2026-11-06T04:12:50Z",
+      "completed_at": "2026-11-06T04:13:05Z"
+    },
+    {
+      "name": "Check literal budgets and audit saved census on both architectures",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 3,
+      "started_at": "2026-11-06T04:13:05Z",
+      "completed_at": "2026-11-06T04:13:56Z"
+    },
+    {
+      "name": "Preserve original observations and corrected audits",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 4,
+      "started_at": "2026-11-06T04:13:56Z",
+      "completed_at": "2026-11-06T04:13:59Z"
+    },
+    {
+      "name": "Post Run actions/checkout@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 8,
+      "started_at": "2026-11-06T04:13:59Z",
+      "completed_at": "2026-11-06T04:13:59Z"
+    },
+    {
+      "name": "Complete job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 9,
+      "started_at": "2026-11-06T04:13:59Z",
+      "completed_at": "2026-11-06T04:13:59Z"
+    }
+  ],
+  "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/127702599856",
+  "labels": [
+    "ubuntu-24.04-arm"
+  ],
+  "runner_id": 1000414329,
+  "runner_name": "GitHub Actions 1000414329",
+  "runner_group_id": 0,
+  "runner_group_name": "GitHub Actions"
+}
