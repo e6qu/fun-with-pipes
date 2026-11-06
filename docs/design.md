@@ -298,15 +298,19 @@ Focused native checks cover trap/cancellation cleanup on Linux ARM64/AMD64 and
 macOS ARM64. Allocation and compiler-cost audits pass; runtime results retain timing misses.
 [All final production gates pass](roadmap-history.md#gradient-call-storage-pr-259).
 
-The proposed [recording lookup change](measurements/recording-lookups.md) saves
+The implemented [recording lookup change](measurements/recording-lookups.md) saves
 repeated tape lookup inside a proved numeric worker. A tape stores the parent
 indices and derivative weights needed for the backward pass. For example, the
 Rosenbrock pair worker records six operations directly. It can validate their
 shared tape once while still checking every parent index and every append's
 capacity. Its stack-local ID and pointer own no storage and disappear on return
 or failure. Unknown calls, tape creation/retirement, recovery, wide weights and
-programs with task/service entry checks prevent this selection. Verification and
-measurements are in progress; lookup-count savings alone establish no speedup.
+programs with task/service entry checks prevent this selection. Focused safety and
+[memory/work audits](measurements/recording-lookup-census-2026-11-06/README.md) pass:
+lookups fall from eight to three per pair/update, with unchanged allocation and
+live-storage costs. [Runtime measurements](measurements/recording-lookup-time-2026-11-06/README.md)
+miss all 32 long-case speed targets; AMD64 current-result cases slow by 1.13–3.90%.
+Final platform verification remains pending. Fewer checks alone establish no speedup.
 
 Channel borrowing preserves hidden native contexts as well as payload storage.
 It does not prove the queued graph acyclic: capture/cycle checks remain separate.

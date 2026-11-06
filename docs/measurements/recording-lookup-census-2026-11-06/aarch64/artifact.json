@@ -1,0 +1,20 @@
+{
+  "id": 13466280064,
+  "node_id": "MDg6QXJ0aWZhY3QxMzQ2NjI4MDA2NA==",
+  "name": "recording-lookup-census-ARM64",
+  "size_in_bytes": 93249916,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13466280064",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13466280064/zip",
+  "expired": false,
+  "digest": "sha256:db6bc0aac79831ce29b906b1720f45b5121c4865fd8491a47ab4755ce34f020e",
+  "created_at": "2026-11-06T00:13:53Z",
+  "updated_at": "2026-11-06T00:13:53Z",
+  "expires_at": "2027-02-04T00:04:45Z",
+  "workflow_run": {
+    "id": 42134160356,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "recording-work-review",
+    "head_sha": "6a0ae280c4616f791df507b44cbd31935a16cd67"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "id": 13467278653,
+  "node_id": "MDg6QXJ0aWZhY3QxMzQ2NzI3ODY1Mw==",
+  "name": "recording-lookup-report-retained",
+  "size_in_bytes": 14740838,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13467278653",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13467278653/zip",
+  "expired": false,
+  "digest": "sha256:81c973d86c7ef528aab887235b508a0d5459297bfaa427bee569434237616588",
+  "created_at": "2026-11-06T01:03:32Z",
+  "updated_at": "2026-11-06T01:03:32Z",
+  "expires_at": "2027-02-04T01:01:59Z",
+  "workflow_run": {
+    "id": 42141026225,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "recording-work-review",
+    "head_sha": "31c04650527d7a3c9efdd63bd5b4eae8a15d5732"
+  }
+}
