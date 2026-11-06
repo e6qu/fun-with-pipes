@@ -1,0 +1,20 @@
+{
+  "id": 13487955072,
+  "node_id": "MDg6QXJ0aWZhY3QxMzQ4Nzk1NTA3Mg==",
+  "name": "recording-call-analysis-aarch64",
+  "size_in_bytes": 5470991,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13487955072",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13487955072/zip",
+  "expired": false,
+  "digest": "sha256:40a633fb5f3ef07fa322b56aaaf2faa8dac8b52777ac20b25677803a0554db3c",
+  "created_at": "2026-11-06T08:08:58Z",
+  "updated_at": "2026-11-06T08:08:58Z",
+  "expires_at": "2027-02-04T07:57:17Z",
+  "workflow_run": {
+    "id": 42184258186,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "recording-capacity-gate",
+    "head_sha": "65b253e64a8cd5008274f2c8d1aee1f9fecc74bc"
+  }
+}

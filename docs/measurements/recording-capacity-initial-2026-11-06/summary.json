@@ -1,0 +1,66 @@
+{
+  "source": "4e8fbfd9411b097d54e7ea89202416f53f75a8b7",
+  "run": 42173870504,
+  "attempt": 1,
+  "hosts": {
+    "arm": {
+      "job": 127747735095,
+      "targets": 25,
+      "images": 864,
+      "probes": 880,
+      "conclusion": "failure"
+    },
+    "amd": {
+      "job": 127747735400,
+      "targets": 25,
+      "images": 864,
+      "probes": 880,
+      "conclusion": "failure"
+    },
+    "mac": {
+      "job": 127747735804,
+      "targets": 25,
+      "images": 864,
+      "probes": 880,
+      "conclusion": "failure"
+    }
+  },
+  "issues": [
+    [
+      "arm",
+      "job failure"
+    ],
+    [
+      "arm",
+      {
+        "job": [
+          "2026-11-06T06:29:32.4367130Z ##[error]Process completed with exit code 1."
+        ]
+      }
+    ],
+    [
+      "amd",
+      "job failure"
+    ],
+    [
+      "amd",
+      {
+        "job": [
+          "2026-11-06T06:29:26.8081143Z ##[error]Process completed with exit code 1."
+        ]
+      }
+    ],
+    [
+      "mac",
+      "job failure"
+    ],
+    [
+      "mac",
+      {
+        "job": [
+          "2026-11-06T06:29:45.4720030Z ##[error]Process completed with exit code 1."
+        ]
+      }
+    ]
+  ]
+}

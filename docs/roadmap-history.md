@@ -6,6 +6,19 @@ and complete platform validation are different events. Measurements retain their
 original source and settings; old numbers are not measurements of current main.
 The linked PRs, runs and data records supply the detailed evidence.
 
+## Checked scalar append inlining (PR #263)
+
+[PR #263](https://github.com/e6qu/fun-with-pipes/pull/263) places the existing
+checked derivative append body at its call sites. Allocation, validation and
+cleanup stay unchanged. All nine production jobs, documentation and complete
+artifact/log audits pass. [Delivery records](measurements/recording-inline-delivery-2026-11-06/README.md)
+verify merge `53bd2d78` against the tested tree and one-line squash message.
+
+Long measured solves use 2.26–8.12% less elapsed time; 13/32 meet the 5% target.
+The other 19 targets and one inconclusive compiler-time copy control remain open.
+Small-case/copy limits pass. Allocation and live-storage counts are unchanged;
+maximum reported frame growth is 16 bytes on ARM64 and zero on AMD64.
+
 ## Validated tape lookup reuse (PR #262)
 
 [PR #262](https://github.com/e6qu/fun-with-pipes/pull/262) reuses a validated tape

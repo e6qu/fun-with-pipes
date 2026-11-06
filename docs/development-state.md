@@ -1,80 +1,103 @@
 # Current work
 
-**Next:** publish the final native-image receipt, mark PR #263 ready and monitor
-all nine production jobs plus documentation for that exact head. Audit every
-completed job/target and fix all failures together. When all final-head gates and
-complete audits pass, squash-merge with an empty body and subject
-`Inline checked scalar derivative recording`; verify the actual message and tree.
-Do not rerun
-qualified measurements or the completed native diagnostics.
+**Next:** publish the native receipts and archive storage repair, mark PR #264
+ready, and monitor all nine production jobs plus documentation on that exact head.
+Audit every failure and completed target before one repair push. Once all final
+jobs pass, run `production-log-audit` with exact source, run attempt and docs job;
+verify its complete receipt before the authorized one-line squash merge.
 
-Branch `recording-call-costs`, worktree `.worktrees/scalar-constant-lowering`;
-draft [PR #263](https://github.com/e6qu/fun-with-pipes/pull/263).
-Measurement/input publication: `48c2ae70ab58813bc04ab7bda4b8d7845ccef852`.
-The next commit retains only its native-image receipt and documentation; use the
-exact resulting PR head for final production gates.
-Production code/tests: `39a9f806891b524042b391b85480cbafc022afbc`;
-subsequent production trees are identical. Base is [verified PR #262](measurements/recording-lookup-delivery-2026-11-06/README.md),
-merge `9a9dc49c53212b562cd9de06f908248ceb6109af`, tree
-`66f69ee54dcc207be2a9041d2cae9e89ad3d9aa3`, identical to its tested head.
+Branch `recording-capacity-gate`, worktree `.worktrees/recording-capacity-gate`.
+[PR #264](https://github.com/e6qu/fun-with-pipes/pull/264) is the only active PR,
+currently draft. Current pushed head `65b253e64a8cd5008274f2c8d1aee1f9fecc74bc`;
+all measurement receipts and the explicit native plan are published.
 
 ## Roadmap status
 
 | Step | Status | Remaining work |
 |---|---|---|
-| 1 | Verified | PR #262 delivery and saved source comparison retained. |
-| 2 | Verified | All 72 original images reproduced; complete GCC reports/logs audited. |
-| 3 | Verified | Inlining contract frozen at `29f99b70` before production edits. |
-| 4 | In progress | Correctness, memory and complete measurement audits pass. Native reports pass with all 48 images identical. Retain misses; finish final platform delivery. |
+| 1 | Verified | PR #263 delivery retained; capacity contract frozen before edits. |
+| 2 | Verified | Corrected three-host checks, full audits and 116 tool controls pass. |
+| 3 | Verified | Memory/compiler/runtime results audited; all 48 original images and capacity inlining verified. Timing misses retained. |
+| 4 | In progress | Publish final receipts; run nine-job matrix/docs, full audits and verified squash merge. |
 
-## Change and evidence
+## Sources and completed checks
 
-The [change](measurements/recording-inline.md) forces the existing checked F64
-append body inline. It changes no validation, arithmetic, allocation or cleanup.
-The same-source reference removes only that declaration attribute; both versions
-keep lookup reuse. The earlier 72-image diagnostic motivated this candidate but
-did not establish the previous AMD64 slowdown's cause.
+- PR #263 merge `53bd2d78e7a19afc5c7f697bf22ee380c4f9b2ac` exactly matches tested
+  tree `c7bef970b64dc07dc487592a14402b8d46ccf388`; subject is one line, 42 chars.
+  [Delivery receipt](measurements/recording-inline-delivery-2026-11-06/README.md).
+- Capacity [contract](measurements/recording-capacity.md) frozen at
+  `10b275c0eec9b7cb51921bce282ea4cf758d0a84` before edits. The reference recreates
+  the old runtime byte for byte; growth/check order and failure cleanup remain.
+- Initial source `4e8fbfd9` remains tagged
+  `evidence/recording-capacity-initial-2026-11-06`. Its full audit found only
+  Rust line wrapping; all native targets passed. [Initial receipt](measurements/recording-capacity-initial-2026-11-06/README.md).
+- Corrected source `51edfc0e7884e1a75201bc9876fd13cb8ca25eee` passes focused run
+  `42177517863`: AMD `127759292851`, ARM `127759293082`, mac `127759293154`.
+  Full audit `42179352168` / `127765102666` passes. All 25 targets, 864 images
+  and 880 observations per host, plus 8,304 retained records verified.
+  [Corrected receipt](measurements/recording-capacity-checks-2026-11-06/README.md).
 
-| Gate | Source / run | Verified result |
-|---|---|---|
-| [Focused correctness](measurements/recording-inline-checks-2026-11-06/README.md) | `39a9f806` / `42156552424`; audit `42158479402` | Three hosts, each 25 targets, 856 images and 872 observations. Complete logs/hashes pass. |
-| [Measurement controls](measurements/recording-inline-controls-2026-11-06/README.md) | `a029797e` / `42157525720` | 14 suites, 107 tests; complete logs retained. Later reference/file-list controls also pass. |
-| [Memory/work/stack](measurements/recording-inline-census-2026-11-06/README.md) | `ecfd740b` / `42158774007`; audit `42159822189` | Counts unchanged; zero final storage. Max frame growth ARM64 16 bytes, AMD64 zero. All 4,038 retained record hashes verified. |
-| [Compiler costs](measurements/recording-inline-analysis-2026-11-06/README.md) | `ecfd740b` / `42158777078`; audit `42160109377` | All 672 commands succeed; 13/14 cases qualify. AMD64 zero-update copy control remains inconclusive. |
-| [Runtime](measurements/recording-inline-time-2026-11-06/README.md) | ARM `7dba6db7` / `42162092035`; AMD `1c6ee1ef` / `42162639619`, `42162975545` | Four qualified sessions; audits `42164603033`, `42164773822`, `42164952097` pass. 13/32 long targets pass, 19 remain open. |
-| [Native inlining](measurements/recording-inline-images-2026-11-06/README.md) | `48c2ae70` / `42165452140` | Both jobs pass; all 48 measured images identical, candidate inlining verified, complete hashes/logs retained. |
-| Docs | `66aed9ac` / `42164607195`, job `127718027559` | Full controls pass, including historical archives and the inventory repair. |
+## Combined measurements: original source 51edfc0e
 
-Runtime producer heads have identical production, benchmark and recorded source
-hashes. Long cases use 2.26–8.12% less elapsed time. Small-case slowdown peaks at
-1.53%; identical-copy variation at 1.43%, both below 2%. The 19 misses are both
-architectures' 3/199 and 3/1999 forms in both sessions, plus AMD64 history 33/199
-in session 1 and 129/199 in both. Keep every older PLAN.md miss too.
+- [Memory](measurements/recording-capacity-census-2026-11-06/README.md): producer
+  `42179964294` jobs AMD `127767049412`, ARM `127767049900` pass. Full audit
+  `42181326578` / `127771398833` passes. Counts, peaks and largest frames
+  unchanged; final storage zero. All 4,038 retained record hashes verified.
+- [Compiler](measurements/recording-capacity-analysis-2026-11-06/README.md):
+  producer `42179974129`, AMD `127767078406`, ARM `127767078878`, passes.
+  Repaired audit `42182313740` / `127774534662` passes: all 14 comparisons
+  qualify, 672 commands and 2,162 retained records verified.
+- [Runtime](measurements/recording-capacity-time-2026-11-06/README.md):
+  producer `42179983250`, AMD1/2 `127767111308` / `127767111269`, ARM1/2
+  `127767111350` / `127767111433`. All hosts qualified; none replaced.
+  Full audit `42183074888` / `127776942929` passes, preserving four failed
+  producer jobs. All report/log hashes, archive digests and budgets verified.
+- Long gains 1.86–14.02%; 17/32 meet 5%. Fifteen three-coordinate results miss;
+  only AMD2 3/1999 history meets 5%. All larger cases pass. AMD2 3/1999 current
+  has 2.2188% copy variation (limit 2%), so remains inconclusive. Small-case
+  maximum regression 1.153%; no qualified timing repeated. All older limits
+  in PLAN.md remain open. C/Rust peers use handwritten derivatives.
 
-Compiler AMD64 `derivative-3-0`: identical reference medians 0.3917460715 and
-0.3838788290 seconds differ by 2.0494%, above 2%. Observed time/RSS ratios stay
-below 1.05. All four copies slow later; copy identity and position are partly
-confounded. This remains inconclusive; no cause or passing bound is established.
+## Audit repair and local verification
 
-## Repairs and remaining gates
+First compiler audit `42181226529` / `127771091070` failed on both architectures:
+Git and difflib align repeated braces differently. Repair `a7665661` validates
+exact patch input/output, hunk positions/counts and newline markers. The complete
+reference test now uses real Git diff. Production and measured compilers unchanged.
+[Failed evidence and repair](measurements/recording-capacity-audit-repair-2026-11-06/README.md).
 
-The [first runtime audit](measurements/recording-inline-audit-repair-2026-11-06/README.md)
-expected `source/src/cgen.rs` instead of the changed runtime file. The repair
-moves inventory validation into the complete reference validator and adds extra/
-wrong-path controls. Every failed session was re-audited from its saved artifacts;
-no timing was rerun. Three wrong-CPU hosts were rejected before builds/timing.
-All failure/rejection records remain linked in the runtime receipts.
+[Repair controls](measurements/recording-capacity-repair-controls-2026-11-06/README.md)
+`42182321875` / `127774561016`: 15 suites / 116 tests pass, including historical
+archives omitted from this sparse local checkout. All suite/full logs and digest
+verified. Docs `42182289922` / `127774447845` pass; complete log has exactly the
+three deliberate runner-failure controls. Draft CI `42182289841` is skipped,
+not native platform evidence. Initial 114 controls also remain retained.
 
-The [new input plan](measurements/recording-inline-call-inputs.json) selects each
-architecture's audited session 1, both forms, six cases and both versions. All original image hashes and candidate append inlining pass; no program
-executed during this diagnostic. Do not rerun the original 72-image diagnostic. The final exact-head
-nine-job matrix and complete production/doc audits have not run. Draft-only skipped
-CI is not platform evidence. Squash-merge only after final gates pass, with one
-subject at most 80 characters and empty body, then verify tree/message identity.
+Guarded local checks: 4 complete reference tests (0.85s), 20 focused shared-reader
+controls (0.94s), compiler/census receipt hashes (0.23/0.25s), runtime retention
+and budget reconciliation (0.24/0.47s), docs links (0.13s). A local full Python
+control target lacked four historical archives; its full CI run now passes.
+No native build, full suite or benchmark ran locally. Last free disk about 78 GiB.
 
-Local guarded checks: measurement receipt hashes 0.50s; saved compiler review
-0.13s; corrected reference controls 0.71s; runtime digests 0.25s and four-report
-reconciliation 0.49s; complete native-image record hashes 0.13s. Sparse historical fixtures were left to the passing GitHub
-full documentation gate. Scratch report generation needed explicit `PYTHONPATH=scripts`;
-no product change. Full builds, large audits and benchmarks stay on GitHub.
-About 78 GiB free at last check. Scratch: `/tmp/fwp-inline-*`, `../gradient-work/`.
+Scratch: `../gradient-work/capacity-*`, `../gradient-work/recording-capacity-*`,
+`/tmp/fwp-capacity-*`, `/tmp/fwp-retain-capacity-*`. Do not rerun one-shot source
+edit helpers. Keep status-only edits local while final-head gates run.
+
+## Native verification and storage repair
+
+[Native run](measurements/recording-capacity-images-2026-11-06/README.md)
+`42184258186` at `65b253e6`: AMD64 `127780749478`, ARM64 `127780749617` pass.
+All 48 original executable hashes and every source/report/stack hash verified.
+Every positive-update candidate has capacity inlining and no final rejection.
+No new timings or native execution. Local guarded artifact check: 0.12s.
+
+GitHub warned about the 53.58 MiB retained runtime archive. It is now two <=32 MiB
+parts; the manifest records sizes/hashes and the original checksum. Concatenated
+bytes exactly match the original, with no regeneration (guarded check 0.24s).
+Publish this storage-only repair with the native receipts. Free disk about 77 GiB.
+
+Saved copy review confirms identical executable bytes and balanced positions;
+ratios reverse across the two 49-round halves (1.02979 then 0.99344). No cause
+established; the failed 2% limit remains open. Reproduction takes 0.13s guarded.
+Docs `42184176197` / `127780471090` still running at 65b253e6; final head needs
+its own docs gate. No final production support is claimed yet.

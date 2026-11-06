@@ -5,7 +5,7 @@ from pathlib import Path
 import subprocess
 
 GROUPS = {
-    **dict.fromkeys(('gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline'),
+    **dict.fromkeys(('gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity'),
                    'gradient_call_checks'),
     'owned-numeric': 'owned_numeric_checks', 'packed-input': 'packed_input_checks',
     'matched-option': 'matched_option_checks', 'final-iteration': 'final_iteration_checks',

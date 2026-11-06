@@ -1,0 +1,185 @@
+{
+  "source": "51edfc0e7884e1a75201bc9876fd13cb8ca25eee",
+  "run": 42179974129,
+  "job": {
+    "id": 127767078406,
+    "run_id": 42179974129,
+    "workflow_name": "Numerical and ownership evidence",
+    "head_branch": "recording-capacity-gate",
+    "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/42179974129",
+    "run_attempt": 1,
+    "node_id": "CR_kwDOU33zxM8AAAAdv4LmBg",
+    "head_sha": "51edfc0e7884e1a75201bc9876fd13cb8ca25eee",
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/127767078406",
+    "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/42179974129/job/127767078406",
+    "status": "completed",
+    "conclusion": "success",
+    "created_at": "2026-11-06T07:18:13Z",
+    "started_at": "2026-11-06T07:21:25Z",
+    "completed_at": "2026-11-06T07:28:14Z",
+    "name": "numeric_input_analysis (ubuntu-latest)",
+    "steps": [
+      {
+        "name": "Set up job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 1,
+        "started_at": "2026-11-06T07:21:26Z",
+        "completed_at": "2026-11-06T07:21:27Z"
+      },
+      {
+        "name": "Run actions/checkout@v7",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 2,
+        "started_at": "2026-11-06T07:21:27Z",
+        "completed_at": "2026-11-06T07:21:47Z"
+      },
+      {
+        "name": "Run dtolnay/rust-toolchain@stable",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 3,
+        "started_at": "2026-11-06T07:21:47Z",
+        "completed_at": "2026-11-06T07:21:55Z"
+      },
+      {
+        "name": "Verify focused correctness and matching compiler sources",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 4,
+        "started_at": "2026-11-06T07:21:55Z",
+        "completed_at": "2026-11-06T07:22:02Z"
+      },
+      {
+        "name": "Run actions/cache@v6",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 5,
+        "started_at": "2026-11-06T07:22:02Z",
+        "completed_at": "2026-11-06T07:22:04Z"
+      },
+      {
+        "name": "Build candidate at production settings",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 6,
+        "started_at": "2026-11-06T07:22:04Z",
+        "completed_at": "2026-11-06T07:23:34Z"
+      },
+      {
+        "name": "Build and verify the selected same-source reference",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 7,
+        "started_at": "2026-11-06T07:23:34Z",
+        "completed_at": "2026-11-06T07:25:14Z"
+      },
+      {
+        "name": "Check complete-program stack costs before allocation and timing gates",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 8,
+        "started_at": "2026-11-06T07:25:14Z",
+        "completed_at": "2026-11-06T07:25:14Z"
+      },
+      {
+        "name": "Verify complete solve allocations before any timing",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 9,
+        "started_at": "2026-11-06T07:25:14Z",
+        "completed_at": "2026-11-06T07:25:14Z"
+      },
+      {
+        "name": "Attribute fresh-solve reference allocations to phases and source sites",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 10,
+        "started_at": "2026-11-06T07:25:14Z",
+        "completed_at": "2026-11-06T07:25:14Z"
+      },
+      {
+        "name": "Verify fresh-solve savings and their exact phase attribution",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 11,
+        "started_at": "2026-11-06T07:25:14Z",
+        "completed_at": "2026-11-06T07:25:14Z"
+      },
+      {
+        "name": "Measure balanced compiler commands and peak memory",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 12,
+        "started_at": "2026-11-06T07:25:14Z",
+        "completed_at": "2026-11-06T07:27:55Z"
+      },
+      {
+        "name": "Preserve complete measurements and failures",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 13,
+        "started_at": "2026-11-06T07:27:55Z",
+        "completed_at": "2026-11-06T07:28:11Z"
+      },
+      {
+        "name": "Post Run actions/cache@v6",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 25,
+        "started_at": "2026-11-06T07:28:11Z",
+        "completed_at": "2026-11-06T07:28:11Z"
+      },
+      {
+        "name": "Post Run actions/checkout@v7",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 26,
+        "started_at": "2026-11-06T07:28:11Z",
+        "completed_at": "2026-11-06T07:28:12Z"
+      },
+      {
+        "name": "Complete job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 27,
+        "started_at": "2026-11-06T07:28:12Z",
+        "completed_at": "2026-11-06T07:28:12Z"
+      }
+    ],
+    "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/127767078406",
+    "labels": [
+      "ubuntu-latest"
+    ],
+    "runner_id": 1000414952,
+    "runner_name": "GitHub Actions 1000414952",
+    "runner_group_id": 0,
+    "runner_group_name": "GitHub Actions"
+  },
+  "artifact": {
+    "id": 13484569397,
+    "node_id": "MDg6QXJ0aWZhY3QxMzQ4NDU2OTM5Nw==",
+    "name": "recording-capacity-analysis-X64",
+    "size_in_bytes": 143732975,
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13484569397",
+    "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13484569397/zip",
+    "expired": false,
+    "digest": "sha256:d708de3022bbeaae5fcc91055cbe2f929ca015636c4d0ef303742c88cd53c065",
+    "created_at": "2026-11-06T07:28:11Z",
+    "updated_at": "2026-11-06T07:28:11Z",
+    "expires_at": "2027-02-04T07:18:12Z",
+    "workflow_run": {
+      "id": 42179974129,
+      "repository_id": 1400763332,
+      "head_repository_id": 1400763332,
+      "head_branch": "recording-capacity-gate",
+      "head_sha": "51edfc0e7884e1a75201bc9876fd13cb8ca25eee"
+    }
+  },
+  "commands": 336,
+  "untimedChecks": 6,
+  "failures": {},
+  "referenceVerified": true,
+  "expectedDiagnostics": []
+}

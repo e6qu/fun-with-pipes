@@ -313,7 +313,7 @@ miss all 32 long-case speed targets; AMD64 current-result cases slow by 1.13–3
 [Final platform verification and complete audits pass](measurements/recording-lookup-delivery-2026-11-06/README.md).
 Fewer checks alone establish no speedup.
 
-The current [scalar append inlining change](measurements/recording-inline.md)
+The delivered [scalar append inlining change](measurements/recording-inline.md)
 requests that native compilers place the same checked body at its call sites.
 It adds no lifetime proof or unchecked path. Known arguments can then be simplified by the C compiler.
 [Three-host correctness](measurements/recording-inline-checks-2026-11-06/README.md)
@@ -323,7 +323,20 @@ at most 16 bytes. [Compiler costs](measurements/recording-inline-analysis-2026-1
 have one inconclusive copy control. [Runtime results](measurements/recording-inline-time-2026-11-06/README.md)
 show 2.26–8.12% less elapsed time for long cases; 19/32 miss the 5% target.
 [Native inlining reports](measurements/recording-inline-images-2026-11-06/README.md)
-reproduce all 48 measured images. Final platform verification remains in progress.
+reproduce all 48 measured images. [Final platform delivery is verified](measurements/recording-inline-delivery-2026-11-06/README.md).
+
+The [capacity-call change](measurements/recording-capacity.md) keeps the
+checked no-growth path inline and shares the unchanged buffer-growth body.
+The request bound is checked before the capacity shortcut. Typed growth retains
+its old offsets/capacity until all allocations succeed, so failure recovery stays
+valid. [Focused checks and full audits](measurements/recording-capacity-checks-2026-11-06/README.md)
+pass. [Memory/work counts](measurements/recording-capacity-census-2026-11-06/README.md)
+and largest reported frames are unchanged; all compiler-cost limits pass.
+[Runtime](measurements/recording-capacity-time-2026-11-06/README.md) improves
+1.86–14.02%, with 15/32 long speed targets and one copy control still open.
+[Native verification](measurements/recording-capacity-images-2026-11-06/README.md)
+reproduces all 48 measured images and confirms capacity inlining. Final platform
+validation remains pending.
 
 Channel borrowing preserves hidden native contexts as well as payload storage.
 It does not prove the queued graph acyclic: capture/cycle checks remain separate.

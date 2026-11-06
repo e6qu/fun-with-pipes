@@ -27,6 +27,7 @@ class DescentBudgets(unittest.TestCase):
         }
         cases['recording-lookup'] = cases['scalar-constant']
         cases['recording-inline'] = cases['scalar-constant']
+        cases['recording-capacity'] = cases['scalar-constant']
         for protocol, predictions in cases.items():
             for dimensions, updates, requests, byte_count, retains in predictions:
                 row = self.recording_case(updates)

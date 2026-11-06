@@ -1,0 +1,29 @@
+{
+  "source": "51edfc0e7884e1a75201bc9876fd13cb8ca25eee",
+  "run": 42177517863,
+  "attempt": 1,
+  "hosts": {
+    "arm": {
+      "job": 127759293082,
+      "targets": 25,
+      "images": 864,
+      "probes": 880,
+      "conclusion": "success"
+    },
+    "amd": {
+      "job": 127759292851,
+      "targets": 25,
+      "images": 864,
+      "probes": 880,
+      "conclusion": "success"
+    },
+    "mac": {
+      "job": 127759293154,
+      "targets": 25,
+      "images": 864,
+      "probes": 880,
+      "conclusion": "success"
+    }
+  },
+  "issues": []
+}

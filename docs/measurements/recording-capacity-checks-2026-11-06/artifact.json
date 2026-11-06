@@ -1,0 +1,20 @@
+{
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13485166212/zip",
+  "created_at": "2026-11-06T07:16:11Z",
+  "digest": "sha256:44f2dd5ceb5ef780be7a380c18a4526070a1b839a7e253912ca4d0ad36b4afef",
+  "expired": false,
+  "expires_at": "2027-02-04T07:12:33Z",
+  "id": 13485166212,
+  "name": "focused-storage-audit",
+  "node_id": "MDg6QXJ0aWZhY3QxMzQ4NTE2NjIxMg==",
+  "size_in_bytes": 7276472,
+  "updated_at": "2026-11-06T07:16:11Z",
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13485166212",
+  "workflow_run": {
+    "head_branch": "recording-capacity-gate",
+    "head_repository_id": 1400763332,
+    "head_sha": "51edfc0e7884e1a75201bc9876fd13cb8ca25eee",
+    "id": 42179352168,
+    "repository_id": 1400763332
+  }
+}
