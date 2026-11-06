@@ -1,11 +1,11 @@
 # Current work
 
-**Next:** publish the [recording-call diagnostic](measurements/recording-call-costs.md)
-and run its native GCC builds. Audit every retained report before selecting a change.
-Use saved C and original executable hashes; do not repeat runtime timings.
+**Next:** implement the frozen [scalar append inlining](measurements/recording-inline.md)
+and update every declaration-sensitive probe. Prepare its same-source comparison
+and focused checks before running the final measurement/platform batch.
 
 Branch `recording-call-costs`, worktree `.worktrees/scalar-constant-lowering`.
-No active PR yet. Base: [verified PR #262](measurements/recording-lookup-delivery-2026-11-06/README.md),
+Draft [PR #263](https://github.com/e6qu/fun-with-pipes/pull/263). Base: [verified PR #262](measurements/recording-lookup-delivery-2026-11-06/README.md),
 merge `9a9dc49c53212b562cd9de06f908248ceb6109af`, tree
 `66f69ee54dcc207be2a9041d2cae9e89ad3d9aa3`, identical to tested `a8e427e8`.
 The squash message is one line, 54 characters, without body or trailers.
@@ -17,8 +17,8 @@ confirming tree equality; they are not additional validation.
 | Step | Status | Remaining work |
 |---|---|---|
 | 1 | Verified | Delivery receipt and all four sessions' generated-source hashes agree. |
-| 2 | In progress | Diagnostic and failure controls implemented; native GCC reports and exact executable equality pending. |
-| 3 | Pending | Choose and freeze a production change from the reports; no cause or optimization is established yet. |
+| 2 | Verified | All 72 native diagnostic images reproduce their originals; complete reports/logs audited. |
+| 3 | Verified | Freeze explicit scalar append inlining; preserve checks, same-source reference and original measurement limits. |
 | 4 | Pending | Implement the related group and run its final measurement/platform batch once ready. |
 
 ## Evidence and limits
@@ -58,3 +58,13 @@ Diagnostic contract frozen at `4e7ff3ef` before tool implementation. Four focuse
 control tests pass (0.13 seconds), including altered commands, corrupt sources,
 stale outputs, compiler failure/deadline, missing reports and changed images.
 Workflow syntax check passes (0.13 seconds). No production code changed.
+
+[Native call reports](measurements/recording-call-analysis-2026-11-06/README.md)
+pass at `7d68bcea91b27023f0408ca7543058eb6f592873`, run `42155555677`.
+ARM64 job `127688745853`, AMD64 `127688745884`; all 72 exact images, reports,
+source hashes and complete logs verified. GCC does not inline the append body in
+any compared version; its generated wrapper is already inlined. This supports
+testing explicit body inlining, not a claim about the previous slowdown's cause.
+Docs run `42155558291` passes at that source. No runtime timing was repeated.
+Full source/report audit and summary each took 0.13 seconds; 351 documentation
+links and all four plan/handoff rows pass (0.25 seconds).

@@ -23,6 +23,10 @@ worker. It does not establish the slowdown's cause. The
 [diagnostic contract](docs/measurements/recording-call-costs.md) compares the previous
 release, the new same-source reference and the candidate. This separates changes
 shared by both new versions from the selected worker's lookup reuse.
+[All 72 native diagnostic images match](docs/measurements/recording-call-analysis-2026-11-06/README.md);
+GCC leaves the append body out of line. The selected next candidate is
+[explicit scalar append inlining](docs/measurements/recording-inline.md), with all
+checks preserved and its comparison frozen before implementation.
 
 | Step | Concrete work | Required result |
 |---|---|---|
