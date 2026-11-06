@@ -53,7 +53,7 @@ Commit `49371e06f5bba4598273a1b807140775dde64c57` gives the fixture an explicit,
 typed `attempt` boundary and requires `FWP_UNWIND=1` before injecting failures.
 `attempt` handles language errors; the C hook still supplies the injected trap
 recovery. All release, alias and lookup assertions remain. The compiler/runtime
-are unchanged. All three focused native jobs now pass; the complete artifact audit is pending.
+are unchanged. All three focused native jobs now pass; the complete artifact audit also passes (record below).
 
 [The small diagnostic archive](release-diagnostic.zip) preserves both C versions,
 executables and outputs; [the complete job log](release-diagnostic-job.log.gz)
@@ -151,4 +151,46 @@ The ZIP writer is now named `retained_files`. A new small integration control
 calls the actual focused audit entry point with three native jobs on page two,
 synthetic native headers, 25 passing target logs and retained records. It also
 rejects a missing target. All seven audit controls pass locally (guard: 0.13 s).
-The full runner audit must still pass before measurements start.
+The repaired full runner audit passes; its record follows.
+
+## Complete artifact audit
+
+Run `42221400241`, job `127904076811`, tool source
+`319782736b0a983022f2a48879b35c9e57992949` audits native source
+`49371e06f5bba4598273a1b807140775dde64c57`, run `42213041403`, attempt 1.
+All three hosts pass: 25 targets, 894 native images and 910 probe observations
+per host. The full logs, native image headers, observations and artifact
+identities were checked on GitHub. The issue list is empty.
+
+[Summary](audit-summary.json), [job](audit-job.json), [complete log](audit-job.log.gz),
+[retained records](audit.zip), [artifact identity](audit-artifact.json).
+Artifact `13503834185` is 7,293,923 bytes with SHA-256
+`20e47ac1fab25227ae167f7b6dae717e1645eb01f0052efb12e3cd2c66da0c35`.
+Local guarded checks verified its hash, source, all three retained-record hashes,
+coverage and clean full log (0.12–0.13 s). Large original native archives stayed
+on the runner. These checks do not establish a speedup or final platform support.
+
+The repaired audit tools also pass documentation run `42221406301`, job
+`127904085671`, at `319782736b0a983022f2a48879b35c9e57992949`:
+[complete log](repaired-tools-docs.log.gz), [job identity](repaired-tools-docs-job.json).
+All seven audit controls pass; the complete documentation log has only the
+three expected test-runner failure controls. A guarded source-tree comparison
+confirms that compiler/runtime/library/test sources still match the verified
+native run (0.12 s including the log audit).
+
+## Source lifetime review
+
+The review at source `319782736b0a983022f2a48879b35c9e57992949` found no additional
+defect in the new scope lifetime:
+
+- The proof accepts only numeric values/records and known numeric callees. It
+  rejects recursion, branches, unknown calls, lifecycle operations and task ticks.
+- Each selected map/fold starts its own state after setup. Loop-exit boxing and
+  cleanup cannot reuse it; ordinary and exported calls pass fresh state.
+- A shared state checks the tape ID on every append. Buffer growth cannot move
+  the registry entry; operations that could move or retire it are excluded.
+- Ownership lowering preserves function identities and adds ownership operations
+  for numeric values/records, which cannot invoke resource cleanup callbacks.
+
+This source review complements the passing failure/ID/reuse probes above. It
+does not replace the remaining final platform gates or measurement audits.

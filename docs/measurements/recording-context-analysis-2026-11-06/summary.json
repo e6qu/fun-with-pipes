@@ -1,0 +1,328 @@
+{
+  "aarch64": {
+    "field-transfer": {
+      "copyMediansSeconds": {
+        "candidate1": 0.30671646550001697,
+        "reference1": 0.30657489550003447,
+        "reference2": 0.3061691805000919,
+        "candidate2": 0.30611531650004054
+      },
+      "copyRatios": {
+        "candidate": 1.0019637991553303,
+        "reference": 1.0013251333765205
+      },
+      "medianSeconds": {
+        "candidate": 0.30645383699993545,
+        "reference": 0.3062023305001276
+      },
+      "candidateReferenceSeconds": 1.0008213735649794,
+      "maxPeakCommandKiB": {
+        "candidate": 41792,
+        "reference": 41844
+      },
+      "candidateReferencePeakRSS": 0.9987572889781091,
+      "failures": []
+    },
+    "autodiff-tutorial": {
+      "copyMediansSeconds": {
+        "candidate1": 0.6268730054998741,
+        "reference1": 0.6263239085000123,
+        "reference2": 0.6279043034999177,
+        "candidate2": 0.6297123275001013
+      },
+      "copyRatios": {
+        "candidate": 1.004529341629511,
+        "reference": 1.0025232870379965
+      },
+      "medianSeconds": {
+        "candidate": 0.6286926085000459,
+        "reference": 0.6264980015000674
+      },
+      "candidateReferenceSeconds": 1.0035029752604538,
+      "maxPeakCommandKiB": {
+        "candidate": 65396,
+        "reference": 65396
+      },
+      "candidateReferencePeakRSS": 1.0,
+      "failures": []
+    },
+    "derivative-3-0": {
+      "copyMediansSeconds": {
+        "candidate1": 0.3482484060000388,
+        "reference1": 0.34723731750011666,
+        "reference2": 0.3466620360001116,
+        "candidate2": 0.34746871450010985
+      },
+      "copyRatios": {
+        "candidate": 1.0022439185670304,
+        "reference": 1.0016594880323293
+      },
+      "medianSeconds": {
+        "candidate": 0.34774415800006864,
+        "reference": 0.34682985050017123
+      },
+      "candidateReferenceSeconds": 1.0026361845688279,
+      "maxPeakCommandKiB": {
+        "candidate": 45888,
+        "reference": 45940
+      },
+      "candidateReferencePeakRSS": 0.9988680888114932,
+      "failures": []
+    },
+    "derivative-33-199": {
+      "copyMediansSeconds": {
+        "candidate1": 0.3483789074999777,
+        "reference1": 0.34809861550013466,
+        "reference2": 0.34870804850004333,
+        "candidate2": 0.34763259550004477
+      },
+      "copyRatios": {
+        "candidate": 1.0021468412617045,
+        "reference": 1.0017507481293284
+      },
+      "medianSeconds": {
+        "candidate": 0.34832703500001116,
+        "reference": 0.3482214535000594
+      },
+      "candidateReferenceSeconds": 1.00030320216888,
+      "maxPeakCommandKiB": {
+        "candidate": 46068,
+        "reference": 46056
+      },
+      "candidateReferencePeakRSS": 1.0002605523710266,
+      "failures": []
+    },
+    "derivative-129-199": {
+      "copyMediansSeconds": {
+        "candidate1": 0.347271180000007,
+        "reference1": 0.3474575459999869,
+        "reference2": 0.3482772140000634,
+        "candidate2": 0.34932603399988693
+      },
+      "copyRatios": {
+        "candidate": 1.0059171452116467,
+        "reference": 1.0023590450387758
+      },
+      "medianSeconds": {
+        "candidate": 0.34838939599990226,
+        "reference": 0.3475879449999866
+      },
+      "candidateReferenceSeconds": 1.002305750275418,
+      "maxPeakCommandKiB": {
+        "candidate": 46464,
+        "reference": 46448
+      },
+      "candidateReferencePeakRSS": 1.0003444712366518,
+      "failures": []
+    },
+    "repeated-scopes": {
+      "copyMediansSeconds": {
+        "candidate1": 0.31281287100000554,
+        "reference1": 0.3124033885001154,
+        "reference2": 0.31257670799993775,
+        "candidate2": 0.3140292639999416
+      },
+      "copyRatios": {
+        "candidate": 1.0038885644188726,
+        "reference": 1.0005547939177435
+      },
+      "medianSeconds": {
+        "candidate": 0.3137552279999909,
+        "reference": 0.31256227350002064
+      },
+      "candidateReferenceSeconds": 1.0038166938274788,
+      "maxPeakCommandKiB": {
+        "candidate": 43380,
+        "reference": 43380
+      },
+      "candidateReferencePeakRSS": 1.0,
+      "failures": []
+    },
+    "large-scoped-worker": {
+      "copyMediansSeconds": {
+        "candidate1": 0.5551035619998856,
+        "reference1": 0.557795585000008,
+        "reference2": 0.5511777894998886,
+        "candidate2": 0.5547282425000049
+      },
+      "copyRatios": {
+        "candidate": 1.0006765826419606,
+        "reference": 1.0120066440016098
+      },
+      "medianSeconds": {
+        "candidate": 0.5551035619998856,
+        "reference": 0.5557900700000573
+      },
+      "candidateReferenceSeconds": 0.9987648070067686,
+      "maxPeakCommandKiB": {
+        "candidate": 68500,
+        "reference": 68432
+      },
+      "candidateReferencePeakRSS": 1.0009936871639,
+      "failures": []
+    }
+  },
+  "x86_64": {
+    "field-transfer": {
+      "copyMediansSeconds": {
+        "candidate1": 0.27795205149999447,
+        "reference1": 0.2762168679999917,
+        "reference2": 0.27654780999999673,
+        "candidate2": 0.2812469894999907
+      },
+      "copyRatios": {
+        "candidate": 1.0118543395604198,
+        "reference": 1.0011981237873027
+      },
+      "medianSeconds": {
+        "candidate": 0.28009612850000565,
+        "reference": 0.2764861174999993
+      },
+      "candidateReferenceSeconds": 1.0130567532021073,
+      "maxPeakCommandKiB": {
+        "candidate": 43120,
+        "reference": 42996
+      },
+      "candidateReferencePeakRSS": 1.0028839892082984,
+      "failures": []
+    },
+    "autodiff-tutorial": {
+      "copyMediansSeconds": {
+        "candidate1": 0.5563254754999889,
+        "reference1": 0.5543602024999927,
+        "reference2": 0.5565256845000022,
+        "candidate2": 0.5599067335000001
+      },
+      "copyRatios": {
+        "candidate": 1.0064373431700078,
+        "reference": 1.003906272474546
+      },
+      "medianSeconds": {
+        "candidate": 0.5571295310000011,
+        "reference": 0.5543602024999927
+      },
+      "candidateReferenceSeconds": 1.0049955398809647,
+      "maxPeakCommandKiB": {
+        "candidate": 66832,
+        "reference": 66860
+      },
+      "candidateReferencePeakRSS": 0.9995812144780137,
+      "failures": []
+    },
+    "derivative-3-0": {
+      "copyMediansSeconds": {
+        "candidate1": 0.31240809350001086,
+        "reference1": 0.3104731805000256,
+        "reference2": 0.31109952850002287,
+        "candidate2": 0.31534730050003645
+      },
+      "copyRatios": {
+        "candidate": 1.0094082293678652,
+        "reference": 1.002017398085685
+      },
+      "medianSeconds": {
+        "candidate": 0.312574678499999,
+        "reference": 0.3109335725000051
+      },
+      "candidateReferenceSeconds": 1.0052779955113849,
+      "maxPeakCommandKiB": {
+        "candidate": 47328,
+        "reference": 47288
+      },
+      "candidateReferencePeakRSS": 1.0008458805616647,
+      "failures": []
+    },
+    "derivative-33-199": {
+      "copyMediansSeconds": {
+        "candidate1": 0.3121027170000161,
+        "reference1": 0.31100578150000047,
+        "reference2": 0.3132510994999791,
+        "candidate2": 0.3141183875000024
+      },
+      "copyRatios": {
+        "candidate": 1.0064583561442888,
+        "reference": 1.0072195378142146
+      },
+      "medianSeconds": {
+        "candidate": 0.3134096050000039,
+        "reference": 0.31167852850001054
+      },
+      "candidateReferenceSeconds": 1.0055540447663314,
+      "maxPeakCommandKiB": {
+        "candidate": 47268,
+        "reference": 47260
+      },
+      "candidateReferencePeakRSS": 1.000169276343631,
+      "failures": []
+    },
+    "derivative-129-199": {
+      "copyMediansSeconds": {
+        "candidate1": 0.31364460550000217,
+        "reference1": 0.3113338185000032,
+        "reference2": 0.31336710799999423,
+        "candidate2": 0.31624753599999167
+      },
+      "copyRatios": {
+        "candidate": 1.0082989806116385,
+        "reference": 1.0065308982807823
+      },
+      "medianSeconds": {
+        "candidate": 0.3149027480000086,
+        "reference": 0.3123977884999931
+      },
+      "candidateReferenceSeconds": 1.0080184930631018,
+      "maxPeakCommandKiB": {
+        "candidate": 47740,
+        "reference": 47720
+      },
+      "candidateReferencePeakRSS": 1.0004191114836547,
+      "failures": []
+    },
+    "repeated-scopes": {
+      "copyMediansSeconds": {
+        "candidate1": 0.284909325000001,
+        "reference1": 0.2810400609999988,
+        "reference2": 0.2835921395000014,
+        "candidate2": 0.28631165150000015
+      },
+      "copyRatios": {
+        "candidate": 1.0049220098359335,
+        "reference": 1.0090808352763723
+      },
+      "medianSeconds": {
+        "candidate": 0.28541887549999956,
+        "reference": 0.2821016770000142
+      },
+      "candidateReferenceSeconds": 1.0117588755063842,
+      "maxPeakCommandKiB": {
+        "candidate": 44508,
+        "reference": 44640
+      },
+      "candidateReferencePeakRSS": 0.9970430107526882,
+      "failures": []
+    },
+    "large-scoped-worker": {
+      "copyMediansSeconds": {
+        "candidate1": 0.4831504324999685,
+        "reference1": 0.4831282050000141,
+        "reference2": 0.4853835115000038,
+        "candidate2": 0.48181059449999
+      },
+      "copyRatios": {
+        "candidate": 1.0027808396396285,
+        "reference": 1.0046681325508406
+      },
+      "medianSeconds": {
+        "candidate": 0.48284686950003675,
+        "reference": 0.4849913800000252
+      },
+      "candidateReferenceSeconds": 0.9955782502773796,
+      "maxPeakCommandKiB": {
+        "candidate": 70016,
+        "reference": 70080
+      },
+      "candidateReferencePeakRSS": 0.9990867579908675,
+      "failures": []
+    }
+  }
+}

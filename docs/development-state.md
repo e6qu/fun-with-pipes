@@ -1,210 +1,145 @@
 # Current work
 
-**Next:** publish the audit entry-point repair, then dispatch only
-`focused-storage-audit` again with `evidence_run=42213041403`,
-`source_revision=49371e06f5bba4598273a1b807140775dde64c57` and
-`production_attempt=1`. All three native jobs pass; do not repeat those suites.
-All 75 target logs and 305 compiler units per host are reviewed and clean.
-After the full artifact audit passes, dispatch one context census/compiler/runtime
-batch with that native evidence run; runtime uses `comparison_session=both`.
-No timing session has run. No native source changed after `49371e06f`.
+**Next:** finish the census/runtime evidence audits and resolve the pending
+CPU-policy question before requesting more AMD64 timings. Source for every run is
+`319782736b0a983022f2a48879b35c9e57992949`. Audit every failed job and completed
+result; do not repeat qualified timings or passing native suites.
 
-Branch `recording-context-scopes`, worktree `.worktrees/recording-capacity-gate`.
-Base `d992a5734a12cf976c1ca20f75e9829a18bde0cc`.
-[PR #265](https://github.com/e6qu/fun-with-pipes/pull/265) is the only active PR,
-draft. First tested head `eab39aa9169d9245ba39eed0cb5cdd50f98f834a`;
-Reference preparer `5bfdc2c23`; combined compiler repair
-`b9de738671732289a6263a8db3c1a36e54a8cfd9`; `13aa113ae` added only the diagnostic and retained reference/tool checks.
-Native repair source `49371e06f5bba4598273a1b807140775dde64c57` repairs the fixture.
-The pagination repair changes only audit tools and verification records.
-The native-source docs replacement passes. Latest remote `3809353824e19f53117fcf7e8eaa56752dafa234` has docs run
-`42218866499` / `127895597129` passed. Superseded queued docs `42217822914`
-was confirmed cancelled. No native source changed after `49371e06f`.
-
-| Current repair run | Check | Last status |
+| Run | Suite | Last result |
 |---|---|---|
-| `42213041403` | Native checks: AMD `127876137274`, ARM `127876137456`, mac `127876137522` | Passed |
-| `42213046373` / `127876155092` | Eight raw/optimized reference C comparisons | Passed |
-| `42213039124` / `127876122034` | Native-repair documentation; full log clean | Passed |
+| `42224646191` | recording-context-census | Both passed; full producer logs clean. Complete archive audit queued below. |
+| `42224658244` | recording-context-analysis | Both reported time/RSS/copy limits pass; full audit passes. AMD CPU was 9V74, so frozen-host acceptance is pending the policy decision. |
+| `42224669329` | recording-context-time | Both ARM sessions complete with eight long-case speed misses each; small/copy limits pass. Both AMD hosts rejected before building/timing. |
+| `42228557375` | recording-context-time, AMD replacements only | Both rejected before build/timing: 9V74 and 9V45 again. No AMD samples exist. |
+| `42228884598` | recording-context-compiler-report | Passed; full log and 12.3 MB audit archive verified. Records retained in recording-context-analysis-2026-11-06. |
+| `42229061410` | recording-context-census-report | Dispatched for the completed census run. |
+| `42230424553` | recording-context-report | Dispatched for original ARM sessions and rejected AMD hosts. |
+| `42231927387` | recording-context-report | Dispatched for replacement AMD host rejections. |
 
-Earlier results at compiler source `b9de738671732289a6263a8db3c1a36e54a8cfd9`:
+Initial job IDs: census ARM `127914973561`, AMD `127914973641`; compiler analysis
+ARM `127915006870`, AMD `127915007195`; time ARM sessions 1/2
+`127915047727` / `127915047757`, AMD sessions 1/2 `127915047834` / `127915047762`.
+Replacement AMD jobs: session 1 `127928229175`, session 2 `127928229350`.
+Compiler-report job `127929341718`; census-report job `127929948850`.
 
-| Run | Check | Result |
-|---|---|---|
-| `42209117885` | All three hosts: only the new loop release probe fails | Failed |
-| `42209127591` / `127863148988` | Sixteen suites, 121 controls; full log clean | Passed |
-| `42209137797` / `127863168674` | Eight emitted-C comparisons; full log clean | Passed |
-| `42209102269` / `127863034359` | Roadmap documentation | Passed |
+AMD rejections: session 1 EPYC 9V74; session 2 EPYC 9V45; required EPYC 7763.
+Both failed only qualification; builds and timings were skipped. Full logs and
+small archive hashes verified. Artifacts `13506258100` / `13505828703`;
+`/tmp/fwp-context-time-amd{1,2}-rejected{.zip,.log,-job.json,-artifact.json}`.
+Replacement rejection logs: `/tmp/fwp-context-time-amd{1,2}-replacement-rejected{.log,-job.json}`. Both full logs reviewed; only qualification failed.
+Replacement used native_runner=ubuntu-latest, comparison_session=both; all runs
+use evidence_run=42213041403. Do not replace a host that has qualified and timed.
 
-Draft production runs `42209102490` and `42213039217` skipped; neither is an
-acceptance gate. All final-head production jobs remain required.
+ARM runtime full logs reviewed: only the expected final budget assertion fails.
+Session 1 long cases range 2.085% slower to 2.367% faster; session 2 ranges
+1.963% slower to 2.477% faster. All 16 required 5% targets remain open; small-case
+and identical-copy limits pass. Do not rerun either qualified ARM session.
+Records: `/tmp/fwp-context-time-arm{1,2}-job.log`, `-job.json`, `-limit-misses.json`.
+
+Pending question (not answered yet): explicitly allow EPYC 7763, 9V74 and 9V45
+as matched-session peers, retaining exact hardware and all other frozen settings,
+or require EPYC 7763 for all timing. The compiler-cost workflow recorded CPU but
+never enforced the runtime CPU filter, and its AMD report is 9V74. The new README
+labels those results observations pending this decision. Do not quietly treat
+that hardware requirement as met or change the protocol without an answer.
+
+Next: finish the report audits, runtime report for each completed
+original/replacement run, then original-image checks on runners. Retain all
+limits/misses before final production delivery. Large originals stay on runners.
+
+[Draft PR #265](https://github.com/e6qu/fun-with-pipes/pull/265) is the only active PR.
+Worktree `.worktrees/recording-capacity-gate`, branch `recording-context-scopes`.
+Measurement/tool source: `319782736b0a983022f2a48879b35c9e57992949`.
+Native source: `49371e06f5bba4598273a1b807140775dde64c57`; subsequent commits
+change only evidence readers and docs. Base: `d992a5734a12cf976c1ca20f75e9829a18bde0cc`.
+Documentation/evidence updates retain the passing full focused audit, compiler
+cost observations with their CPU caveat and the observed ARM timing misses.
 
 ## Roadmap status
 
 | Step | Status | Next result |
 |---|---|---|
-| 1 | Verified | Contract and #264 delivery committed as `5dc8efd02` before production edits. |
-| 2 | Implemented | Call forwarding and loop scopes pass all focused checks; final matrix pending. |
-| 3 | In progress | Focused/reference checks pass; repair audit entry point, finish artifact audit, then one measurement batch. |
-| 4 | Pending | Nine exact-head production jobs/docs, complete audit and verified squash merge. |
+| 1 | Verified | Contract and #264 delivery frozen in `5dc8efd02` before production edits. |
+| 2 | Implemented | Numeric call forwarding and loop scopes pass focused checks. Final matrix pending. |
+| 3 | In progress | Focused/reference checks and full audit pass. Single measurement batch dispatched. |
+| 4 | Pending | Nine final-head production jobs/docs, complete audit and verified squash merge. |
 
-## Verified repair
+## Passing verification
 
-Earlier run `42209117885`: 24/25 targets passed on each host. ad_tape_scopes
-had six passes and one failure: the new loop probe returns 92 at O1, reuse on,
-workspace off. Jobs: AMD `127863094516`, ARM `127863094512`, mac `127863094225`.
-Complete logs: `/tmp/fwp-context-{amd,arm,mac}-second-job.log`.
+[Complete records and repairs](measurements/recording-context-checks-2026-11-06/README.md).
 
-Diagnostic `42211595925` / `127871298573` reproduces the original 92 before
-instrumentation. At count=4, invalid-parent mode=2, alias=0: managed live=208,
-baseline=0; registry/capacity/cache/wide counts are zero. Artifact `13499112406`,
-378,998 bytes, hash `3234f7efa56548fe0090b1913bb299ad51a18dff8033710eb85e26f33fdde69d`,
-verified locally; source `/tmp/fwp-context-failed.c`.
+| Run / job | Result |
+|---|---|
+| `42213041403`: AMD `127876137274`, ARM `127876137456`, mac `127876137522` | 25/25 native targets per host; 305 compiler units pass, four existing runner-only exclusions. All complete logs clean. Recovery probe passes. |
+| `42213046373` / `127876155092` | Eight raw/optimized emitted-C comparisons match the delivered compiler with new scopes disabled. Full log clean. |
+| `42213039124` / `127876122034` | Native-source docs pass; only expected failure-control diagnostics. |
+| `42218866499` / `127895597129` | Earlier pagination-tool docs pass; full log reviewed. |
+| `42221400241` / `127904076811` | Full focused audit passes: 75 targets, 2,682 native images, 2,730 probe observations; no issues. |
+| `42221406301` / `127904085671` | Current docs pass; seven audit controls and clean complete log. |
 
-Root cause: the fixture's main had no recoverable boundary and generated
-FWP_UNWIND=0. The C harness installed longjmp recovery anyway. Cleanup generation
-in src/cgen.rs and runtime value protection correctly omit exceptional frames in
-that mode. The test now uses attempt in main and requires FWP_UNWIND=1 before
-injecting traps. Keep all storage/alias/count assertions. The release failure
-also prints its case and counters for future diagnostics. No production compiler
-or runtime change is justified by this harness error. Focused verification passes on all three hosts; final production gates remain pending.
+Full audit artifact `13503834185`, 7,293,923 bytes, hash
+`20e47ac1fab25227ae167f7b6dae717e1645eb01f0052efb12e3cd2c66da0c35`.
+Retained in `docs/measurements/recording-context-checks-2026-11-06/audit.zip`.
+Source/hash, retained-record hashes and complete audit log verified locally.
+Large native archives stayed on runners. Draft production skips are not gates.
 
-Small completed reference/tool evidence is in
-[the verification record](measurements/recording-context-checks-2026-11-06/README.md).
-The full 172 MB failed artifact stayed on a runner; only the 379 KB diagnostic
-was downloaded. No disassembly or timing was used to diagnose this failure.
+## Implementation and repaired failures
 
-Earlier failures, repairs and their job IDs are retained in
-[the verification record](measurements/recording-context-checks-2026-11-06/README.md#earlier-failures-and-repairs).
+The [frozen contract](measurements/recording-context-scopes.md) governs this group.
+Depth 64/expression 4096/type 32 proof limits are unchanged. Repeated recording
+workers and selected pair-map/fold callbacks start separate scopes; proven numeric
+callees borrow state. Standalone single-append workers gain none. Unknown calls,
+task ticks, lifecycle operations, reentry and resource cleanup remain excluded.
+Tape-ID changes still validate. No runtime wrapper or public setting was added.
 
-## Implementation and safety
+- The loop harness recovered traps in a fixture with FWP_UNWIND=0. Commit
+  `49371e06f` adds a real typed attempt boundary and requires FWP_UNWIND=1.
+  All alias, failure, lookup and exact-release assertions now pass on three hosts.
+- Evidence readers previously truncated job/artifact listings at 100 entries.
+  The native run has 128 jobs. Shared explicit pagination rejects truncation,
+  duplicate IDs and changing totals; affected census/compiler/diagnostic readers
+  are repaired too.
+- Audit `42220789909` failed because the ZIP writer local shadowed the new records
+  function; upload then had no output. `319782736` renames it and adds a real
+  entry-point control with later-page jobs, native headers and a missing-target
+  rejection. All seven controls pass; the repaired full audit passes above.
 
-[The frozen contract](measurements/recording-context-scopes.md) governs this group.
-`src/cgen/recording.rs` keeps the depth 64/expression 4096/type 32 proof limits.
-Only repeated recording workers and selected pair-map/fold callbacks seed state;
-their proved numeric callees borrow it. Standalone single-append functions gain
-no state. Task ticks, lifecycle operations, reentry and unknown calls reject it.
+## Measurement and delivery rules
 
-`AD_RECORDING_SCOPES` enables explicit internal worker arguments. Ordinary entries
-start fresh state; map/fold scopes remain separate. Ownership lowering can only
-release plain numeric fields here, not invoke user cleanup. Every tape-ID change
-still validates. The disabled reference preserves the earlier direct-push rule,
-local declarations and calls. No runtime wrapper or public setting was added.
+The contract specifies native Neoverse N2/EPYC 7763 with fixed inputs, flags,
+sessions and limits; any AMD CPU change awaits the explicit decision above.
+Target two registry lookups per positive update instead of 3*(N-1); the complete
+census archive audit is queued. ARM runtime limits are reported above.
+Allocation/retain counts, eight nodes per pair, validation and final storage
+must stay unchanged.
 
-Existing tape probes cover nested calls, O0/O1/O2, ID changes, retired slots,
-weights, parent/trap order, reuse and unwind. The new loop module covers empty,
-singleton and growing buffers, input aliases, alternating IDs, map/fold traps,
-workspace/reuse settings, and deliberate lost-scope/ID failures. New admission
-unit tests cover useful roots, standalone exclusion and zero-argument calls.
-Source review confirms that both loop states start after setup and allocation.
-The proof excludes callbacks that can invalidate registry entries, and boxed
-entries start fresh state. This review does not replace native validation.
+Retain all timing misses and inconclusive copy controls. Replace only hosts
+rejected before building/timing; never rerun qualified unchanged samples for a
+pass. Full census/compiler/runtime audits and original-image checks run on GitHub.
+Final delivery still needs all nine exact-head production jobs, docs and full
+audit, then an explicit one-line squash subject <=80 characters and empty body.
+Verify the actual merge message and tested/merged tree equality.
 
-## Comparison tools
+## Local work and queue
 
-New protocol `recording-context` is integrated with census, compiler/runtime
-producers, budgets, full readers, native-image plans and workflows. The reference
-changes only AD_RECORDING_SCOPES; earlier lookup/append/capacity changes stay on.
-The actual-source observer passes on nine saved optimized C files from the first
-run: two loop scopes, six direct map appends, one shared nested/fold append site,
-and forwarding. This verifies emitted selection, not runtime lookup counts or
-the later admission refinement.
+Use `scripts/local-guard.py`; last free space 74 GiB. No local native build,
+full suite, benchmark or large audit ran. Seven audit controls, changed Python
+and embedded workflow syntax, handoff/links and workflow size pass. Actionlint
+syntax/expressions pass with shellcheck/pyflakes disabled. Small log/archive
+reviews took 0.12–0.13 s; actual 128-job metadata review took 2.63 s.
+Changed PLAN/design link checks initially hit sparse-checkout omissions; 95
+small tracked targets were restored unchanged from HEAD, then all changed-document
+checks passed. Git restore needed normal authorized index access.
+A scratch preflight review expected the earlier 304-unit count; corrected to
+retain the actual 305 passing units. No native assertion was weakened.
 
-New recording-context-parent runner check builds the delivered source and the
-same-source disabled reference. Eight raw/optimized direct, nested, loop and
-branch examples must emit byte-identical C. No old compiled binary is required.
-All eight comparisons pass with a clean complete job log. Focused artifact audit
-now reads the context results.
+Source lifetime review found no additional defect: numeric-only proof, separate
+map/fold state after setup, fresh ordinary/exported entries, preserved ID checks
+and ownership lowering without resource callbacks. Changed docs/handoff links
+pass (guard, 0.13 s); `git diff --check` is clean. No native suite was repeated.
 
-Incidental repair: check-descent-groups accepted recording-capacity but omitted
-its reference metadata contract. It and check-array-list-evidence now share one
-explicit contract; all four complete capacity-reference controls pass.
-
-Guarded local results: new reference 5, capacity reference 4, native plan 6,
-descent budgets 23, allocation budgets 9, census 10, measurement safety 3;
-Rust formatting, Python syntax, handoff and workflow-size checks pass. Actionlint
-syntax/expressions pass with shellcheck/pyflakes disabled. Missing sparse fixture
-files were restored unchanged before budget/census checks passed. The scratch
-saved-C check first lacked scripts on sys.path; corrected invocation passes.
-No native build, full suite, benchmark or large audit ran locally. Last free space
-75 GiB. Workflow size 508,579 bytes, below 512,000. Use the repository local guard;
-do not rerun one-shot `/tmp/fwp-context-*` edit scripts.
-
-## Previous verified delivery
-
-[PR #264 receipt](measurements/recording-capacity-delivery-2026-11-06/README.md)
-retains logs and archive identities. Tested `d453662e4226dbf613b5c8accc467a67fa12a359`,
-merged `d992a5734a12cf976c1ca20f75e9829a18bde0cc`, identical tree
-`7f2f64e1e45114c0e8b42a324254fe7f7f4939b3`. Squash subject
-`Inline derivative tape capacity checks`, one line, empty body.
-Nine jobs `42186095529` attempt 1, docs `42186063070` / `127786559808`, and full
-audit `42197602289` / `127824662178` pass. Duplicate postmerge CI/docs were
-confirmed cancelled after tree equality. Do not repeat these checks.
-
-Long gains 1.86–14.02%; 17/32 meet 5%. Fifteen speed targets and one AMD64 copy
-limit remain open. Allocations, validation, live storage and maximum frames are
-unchanged; compiler comparisons pass. Preserve every earlier miss in PLAN.md.
-
-## Completed preflight review
-
-All three repaired-source preflight archives have verified hashes/source and
-clean complete logs: 305 compiler units pass per host; four existing runner-only
-exclusions remain. All three programs select the required two loop scopes and
-forwarded numeric calls on each host. All 75 native target results also pass. Complete logs and the guarded review are
-`/tmp/fwp-context-repaired-{arm,amd,mac}-job.log` and
-`/tmp/fwp-context-repaired-log-review.json` (0.12 s).
-
-Artifacts: ARM `13502810649`, AMD `13502771014`, mac `13502921267` (about 2.2 MB
-each). Local archives: `/tmp/fwp-context-repaired-preflight-{arm,amd,mac}.zip`;
-review: `/tmp/fwp-context-repaired-preflight-review.json`. Guarded reviews took
-0.12–0.13 s. The first scratch review incorrectly expected the earlier 304-unit
-count; it was corrected to validate and retain the actual passing result.
-
-## Audit pagination repair
-
-The actual focused run has 128 jobs. The focused and production artifact auditors previously read only
-one 100-job page; today's three native jobs happen to be on that page. They now
-read every page, rejecting truncated, duplicate or changing listings. All six
-production-audit controls pass under the local guard (0.13 s); the guarded actual
-metadata check reads all 128 jobs (2.63 s). No artifacts were downloaded for it.
-Affected census, compiler-cost, diagnostic and HTTP artifact readers are also
-repaired. Shared pagination logic takes an explicit request function; imports
-come from its defining module. Six controls and Python/embedded-program syntax
-pass; Actionlint syntax/expressions pass with shellcheck/pyflakes disabled. Docs CI also runs these
-controls; this tool-only repair needs no repeated native build.
-
-Changed document links, handoff steps and workflow sizes pass under the guard
-(0.13 s). Whitespace checks pass. The earlier 121-control CI record stays tied to
-its original source; it does not include the two new pagination controls.
-
-## Queue observations
-
-The repair runs queued at 11:49 UTC began receiving runners around 12:29 UTC.
-All three native hosts and the reference/docs jobs have passed. The cause
-of the queue delay is unknown. Do not restart completed or active native work.
-An unrelated October 16 run `38888712709` on owned-cpu-kernels is inconsistently
-listed in_progress, but all 24 job records are complete (six failed, others
-skipped). It has no reference in the current plan/handoff/history/queue and no
-associated PR. Normal and force-cancel endpoints both returned HTTP 409,
-"not in progress". No jobs/artifacts were deleted. This is not evidence that the
-old run causes the current queue delay; keep monitoring the active repair runs.
-
-The user confirmed a free GitHub account with a 20-job parallel limit. Allow
-for occupied hosted runners; do not infer an account restriction from queue time
-alone. Wait on existing jobs instead of restarting them.
-
-## Artifact audit entry-point repair
-
-Audit `42220789909` / `127902024671` failed before reading evidence: the existing
-ZIP writer local `records` shadowed the new imported pagination function.
-This was introduced by the audit integration, not a native failure. The upload
-step then failed because the output directory had no files. Complete log checked;
-there are no other failed steps or diagnostics to repair.
-
-Rename the ZIP writer `retained_files`. The new integration control calls the
-real focused entry point with three later-page jobs, native artifact headers,
-all 25 targets and retained records; it also rejects a missing target. All seven
-audit controls pass under the guard (0.13 s). Other helper callers were checked
-for name collisions. Retained failure log and all three passing native logs are
-in the verification record. Only the artifact audit and changed docs need new
-runs; the exact native source remains unchanged.
+The user has a free GitHub account with a 20-job parallel limit. Wait for occupied
+hosted runners; do not infer restrictions from queue time or restart queued work.
+Superseded queued docs `42217822914` was confirmed cancelled. Keep current runs.
+[PR #264 delivery](measurements/recording-capacity-delivery-2026-11-06/README.md)
+is verified; its timing misses and all earlier misses remain in PLAN.md.

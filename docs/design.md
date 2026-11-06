@@ -338,9 +338,12 @@ and largest reported frames are unchanged; all compiler-cost limits pass.
 reproduces all 48 measured images and confirms capacity inlining.
 [Final platform gates and complete audits pass](measurements/recording-capacity-delivery-2026-11-06/README.md).
 
-The next [numeric call/loop contract](measurements/recording-context-scopes.md)
-extends this local lookup proof across eligible direct calls and separate packed
-map/fold loops. It has no verified implementation yet; tape-ID changes, task
+The [numeric call/loop change](measurements/recording-context-scopes.md) extends
+this local lookup proof across eligible direct calls and separate packed map/fold
+loops. [Focused native checks and the complete artifact audit pass](measurements/recording-context-checks-2026-11-06/README.md);
+both ARM64 timing sessions miss the 5% long-case target, with small-case and
+identical-copy limits passing. AMD64 runtime hardware qualification, complete
+census/runtime audits and final platform gates remain pending. Tape-ID changes, task
 switches, reentry and retirement remain explicit lifetime boundaries.
 
 Channel borrowing preserves hidden native contexts as well as payload storage.
