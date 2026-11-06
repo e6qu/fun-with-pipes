@@ -310,7 +310,8 @@ programs with task/service entry checks prevent this selection. Focused safety a
 lookups fall from eight to three per pair/update, with unchanged allocation and
 live-storage costs. [Runtime measurements](measurements/recording-lookup-time-2026-11-06/README.md)
 miss all 32 long-case speed targets; AMD64 current-result cases slow by 1.13–3.90%.
-Final platform verification remains pending. Fewer checks alone establish no speedup.
+[Final platform verification and complete audits pass](measurements/recording-lookup-delivery-2026-11-06/README.md).
+Fewer checks alone establish no speedup.
 
 Channel borrowing preserves hidden native contexts as well as payload storage.
 It does not prove the queued graph acyclic: capture/cycle checks remain separate.

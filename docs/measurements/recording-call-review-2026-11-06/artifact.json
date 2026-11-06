@@ -1,0 +1,20 @@
+{
+  "id": 13466509922,
+  "node_id": "MDg6QXJ0aWZhY3QxMzQ2NjUwOTkyMg==",
+  "name": "descent-peers-ubuntu-24.04-arm-1",
+  "size_in_bytes": 33842765,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13466509922",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13466509922/zip",
+  "expired": false,
+  "digest": "sha256:c37f1844d5bac137cff0443fff5073bb3cba1af16f4ef9d8580c46f8bd86bc5b",
+  "created_at": "2026-11-06T00:43:58Z",
+  "updated_at": "2026-11-06T00:43:58Z",
+  "expires_at": "2027-02-04T00:26:59Z",
+  "workflow_run": {
+    "id": 42136888829,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "recording-work-review",
+    "head_sha": "31c04650527d7a3c9efdd63bd5b4eae8a15d5732"
+  }
+}

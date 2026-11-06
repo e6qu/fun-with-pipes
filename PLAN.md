@@ -5,35 +5,31 @@ and useful inference. Prefer direct values, moves and borrows; use automatic
 reference counting (ARC) only for necessary sharing. Tracing garbage collection
 has been removed. JIT compilation and backward compatibility are excluded.
 
-## Delivered: exact scalar constants
+## Delivered: validated tape lookup reuse
 
-[PR #261 is verified and merged](docs/measurements/scalar-constant-delivery-2026-11-05/README.md).
-The compiler replaces proved immediate constants and aliases with exact bits.
-For example, `one` specialized to F64 is `1.0f64`, without a lazy-cache read.
-Effects, traps, owned values and unproved calculations keep their behavior.
-All nine production jobs, docs and complete evidence audits pass. Long derivative
-solves improve by 1.7–6.3%; allocation and stack costs are unchanged. The 27 missed
-speed targets remain open below, alongside earlier results.
+[PR #262 is verified and merged](docs/measurements/recording-lookup-delivery-2026-11-06/README.md).
+Selected numeric workers validate a shared derivative tape once per invocation.
+The measured pair/update path now uses three registry lookups instead of eight;
+parent checks, allocation and live-storage costs are unchanged. All nine production
+jobs, docs and complete artifact audits pass. All 32 long-case speed targets and
+one inconclusive compiler-time control remain open. Fewer lookups did not deliver
+the required speedup; AMD64 current-result cases slowed by 1.13–3.90%.
 
-## Next work: objective evaluation and recording
+## Next work: recording calls and compiler decisions
 
-The source review selected [bounded tape lookup reuse](docs/measurements/recording-lookups.md).
-The source account, comparison contract and
-[focused safety checks](docs/measurements/recording-lookup-checks-2026-11-06/README.md)
-are verified. The [runtime report](docs/measurements/recording-lookup-time-2026-11-06/README.md)
-retains all 32 missed speed targets; memory/work audits pass, with one inconclusive
-compiler-time control. Step 4 still requires final platform validation.
-The saved 129-coordinate/199-update observations put this
-stage at 71.8–72.4% of derivative-phase time, or 45.5–47.6% of the instrumented
-process. Result-array construction is only 0.9–1.0% of phase time. These percentages
-do not isolate the cost of an individual runtime check or predict a speedup.
+The [saved source review](docs/measurements/recording-call-review-2026-11-06/README.md)
+finds one local state declaration and six changed calls in the measured numeric
+worker. It does not establish the slowdown's cause. The
+[diagnostic contract](docs/measurements/recording-call-costs.md) compares the previous
+release, the new same-source reference and the candidate. This separates changes
+shared by both new versions from the selected worker's lookup reuse.
 
 | Step | Concrete work | Required result |
 |---|---|---|
-| 1 | Trace the objective's generated scalar workers through `rev._op1`, `rev._op2` and `fwp_p_ad_push`; reconcile recorded nodes with the saved profiles. | A source-level account of arithmetic, parent validation, capacity checks and writes per update. Distinguish forward evaluation from reverse traversal. |
-| 2 | Determine which repeated recording checks can be proved once for a closed worker. | An explicit scope/alias proof covering mixed or expired tapes, invalid parents, capacity growth, nested differentiation, effects, traps and cancellation. Do not remove checks on unproved paths. |
-| 3 | Freeze one coherent transformation and its comparison before implementation. | Same-source enabled/disabled references, representative current/history workloads, exact arithmetic/trap order, and explicit time, memory, stack and compiler-cost limits. If the proof fails, record the reason and select from the measured work instead. |
-| 4 | Implement and verify the complete group. | Focused production-compiler checks during development; one final platform matrix and measurement batch after the group is ready. Retain misses and audit all artifacts before merge. |
+| 1 | Verify the saved generated source and close PR #262's delivery record. | Exact source hashes across all four sessions, a complete source diff, and verified final gates/merge identity. |
+| 2 | Rebuild saved C with GCC's inlining reports on native ARM64/AMD64. | All six cases, two result forms and three versions; original flags/toolchain and byte-identical rebuilt executables. No new runtime samples. |
+| 3 | Select and freeze a coherent change from the source and compiler reports. | Explain the work removed and lifetime/trap proof; freeze reference, representative workloads and time/memory/compiler limits before production edits. Do not assume an inlining cause. |
+| 4 | Implement and verify the complete group. | Focused checks during development, then one final measurement/platform batch and complete artifact audits. Retain every miss and update examples/docs where behavior changes. |
 
 Use existing samples for diagnosis; do not rerun unchanged timings for a pass.
 C/Rust peers use handwritten derivatives, so their complete-program ratios cannot

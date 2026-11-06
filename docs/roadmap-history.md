@@ -6,6 +6,19 @@ and complete platform validation are different events. Measurements retain their
 original source and settings; old numbers are not measurements of current main.
 The linked PRs, runs and data records supply the detailed evidence.
 
+## Validated tape lookup reuse (PR #262)
+
+[PR #262](https://github.com/e6qu/fun-with-pipes/pull/262) reuses a validated tape
+pointer inside proved numeric workers. Lookup counts fall eight to three per
+pair/update; parent/capacity checks, allocation and live storage stay unchanged.
+All nine production jobs, docs and full artifact audits pass.
+[Delivery records](measurements/recording-lookup-delivery-2026-11-06/README.md)
+verify merge `9a9dc49c` against the tested tree and one-line squash message.
+
+All 32 long-case speed targets remain unmet, and one compiler-time copy control
+is inconclusive. AMD64 current-result cases slow by 1.13–3.90%; this is a verified
+work reduction, not a general speed improvement. Original samples remain intact.
+
 ## Exact scalar constants (PR #261)
 
 [PR #261](https://github.com/e6qu/fun-with-pipes/pull/261) replaces proved immediate

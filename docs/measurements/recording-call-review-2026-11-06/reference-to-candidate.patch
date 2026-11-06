@@ -1,0 +1,64 @@
+--- reference.c
++++ candidate.c
+@@ -17742,6 +17742,7 @@
+     V l156 = 0;
+     V l157 = 0;
+     V l158 = 0;
++    fwp_ad_recording recording = {-1, NULL};
+     l117 = l0_0;
+     l20 = l117;
+     l118 = l0_0;
+@@ -17762,7 +17763,7 @@
+     l18 = l123;
+     V t5 = f115(l10);
+     V t6 = f115(l11);
+-    V t7 = f141(l17, t5, l18, t6);
++    V t7 = fwp_p_ad_push(l17, t5, l18, t6, &recording);
+     V t8 = l9;
+     V t9 = t7;
+     l22 = (V)0x3ff0000000000000ULL;
+@@ -17789,7 +17790,7 @@
+     l39 = l130;
+     V t15 = f115(l31);
+     V t16 = f115(l32);
+-    V t17 = f141(l38, t15, l39, t16);
++    V t17 = fwp_p_ad_push(l38, t15, l39, t16, &recording);
+     V t18 = l30;
+     V t19 = t17;
+     V t20 = f152((V)0x3ff0000000000000ULL);
+@@ -17820,7 +17821,7 @@
+     l59 = l137;
+     V t28 = f115(l51);
+     V t29 = f115(l52);
+-    V t30 = f141(l58, t28, l59, t29);
++    V t30 = fwp_p_ad_push(l58, t28, l59, t29, &recording);
+     V t31 = l50;
+     V t32 = t30;
+     l138 = t18;
+@@ -17843,7 +17844,7 @@
+     l73 = l144;
+     V t37 = f115(l65);
+     V t38 = f115(l66);
+-    V t39 = f141(l72, t37, l73, t38);
++    V t39 = fwp_p_ad_push(l72, t37, l73, t38, &recording);
+     V t40 = l64;
+     V t41 = t39;
+     V t42 = f152((V)0x4059000000000000ULL);
+@@ -17870,7 +17871,7 @@
+     l96 = l151;
+     V t49 = f115(l84);
+     V t50 = f115(l85);
+-    V t51 = f141(l95, t49, l96, t50);
++    V t51 = fwp_p_ad_push(l95, t49, l96, t50, &recording);
+     V t52 = l83;
+     V t53 = t51;
+     l152 = t31;
+@@ -17893,7 +17894,7 @@
+     l114 = l158;
+     V t58 = f115(l106);
+     V t59 = f115(l107);
+-    V t60 = f141(l113, t58, l114, t59);
++    V t60 = fwp_p_ad_push(l113, t58, l114, t59, &recording);
+     V t61 = l105;
+     V t62 = t60;
+     fwp_wr123 t63 = w123(fwp_f64(t61), (int64_t)(t62), fwp_f64(t52), (int64_t)(t53));
