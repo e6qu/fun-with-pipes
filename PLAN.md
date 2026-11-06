@@ -61,6 +61,13 @@ Run each qualified timing session once after the whole group and focused checks;
 replace only hosts rejected before building/timing. [The handoff](docs/development-state.md)
 records the next action and actual verification.
 
+The [next layout candidate](docs/measurements/recording-context-next-layout.md)
+comes from the saved phase counts and runtime source: store each numeric tape
+operation's two parent indices and two weights together. First finish this
+verification group and review AMD results. Freeze alignment, overflow, typed
+ownership and exact arithmetic requirements before any layout implementation;
+no speed benefit is established yet.
+
 ## Open performance goals
 
 Allocation reductions do not establish a speedup or lower process RAM. Preserve

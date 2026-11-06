@@ -1,14 +1,26 @@
 # Current work
 
-**Next:** publish the approved host-policy change and request only the two missing
-AMD64 runtime sessions. Use `recording-context-time`, `native_runner=ubuntu-latest`,
-`comparison_session=both`, `evidence_run=42213041403`. Monitor the merged source's
-production run alongside them; audit and fix every failed job before a repair push.
+**Next:** publish the compiler-audit rejection repair, then monitor the two
+missing AMD sessions and the merged-source production jobs. Audit every failed
+step and completed target; batch any needed repairs. Do not repeat qualified
+measurements or passing native suites.
 
+[Draft PR #266](https://github.com/e6qu/fun-with-pipes/pull/266) is the only active PR.
 Worktree `.worktrees/recording-capacity-gate`, branch `recording-context-verification`.
-PR #265 is merged; open the next coherent PR for hardware qualification, missing
-measurements, original-image verification, discovered repairs and final delivery.
 The user approved EPYC 7763, 9V74 and 9V45 on 6 November. No decision is pending.
+
+AMD runtime run `42251223529`, source `1720c3b8cd06d7756295186233181cd64544bf44`:
+session 1 job `128006547069` queued; session 2 job `128006547098` is comparing
+candidate/reference after successful qualification. Its actual CPU is EPYC 7763;
+the record explicitly allows all three approved models. Small host artifact
+`13520077385` source/digest verified in `/tmp/fwp-context-approved-amd2-host*`.
+Dispatch used native_runner=ubuntu-latest, comparison_session=both,
+evidence_run=42213041403. Never restart a qualified session for a passing result.
+
+Policy-head docs `42251227613` / `128006538642` pass. Full log reviewed: only
+three intentional test-runner failure controls. Native source trees still match
+`49371e06f5bba4598273a1b807140775dde64c57`; policy/evidence edits do not require
+repeating the completed native focused run or compiler-cost measurements.
 
 ## Roadmap status
 
@@ -32,7 +44,7 @@ calls and loops (#265). The user merged before final production acceptance.
   macOS regular ARM `127996983198`, AMD `127996983302`;
   macOS ownership ARM `127996983804`, AMD `127996983252`;
   Windows ARM `127996983442`, AMD `127996983555`.
-- Main docs `42248509969` queued. Review-head docs `42235592916` /
+- Main docs `42248509969` / `127996978359` pass; complete log reviewed. Review-head docs `42235592916` /
   `127952223193` passed; complete log reviewed with only its three intentional
   runner-failure controls. Logs/identities: `/tmp/fwp-context-merged-{review-docs,bench}*`.
 - Superseded docs `42233681205` was confirmed cancelled. Draft production skips
@@ -104,3 +116,21 @@ needed small tracked records, not all historical archives.
 
 The user has a free GitHub account with 20 parallel jobs. Wait for busy hosted
 runners; do not infer account restrictions or restart queued work.
+
+## Audit repair and next source investigation
+
+The new compiler-cost host gate exposed an audit assumption: it expected a
+measurement archive containing samples after any failure. Rejected hosts instead
+have only qualification and preflight artifacts. The reader now verifies both
+archives, skipped build/timing steps and the exact mismatch, retaining a rejected
+outcome without inventing samples. Eleven compiler-analysis controls pass (guard,
+4.63 s), including the actual audit entry point and seven corrupt-record cases.
+These changes do not affect the running runtime measurements.
+
+[Next layout candidate](measurements/recording-context-next-layout.md): investigate
+keeping each numeric operation's parents/weights in one record. Large-case saved
+ARM phase medians place about 57% in recording and 37% in reverse traversal;
+instrumentation adds 2–3.4%. Small-case instrumentation adds 42–49%, so it cannot
+establish a small-case bottleneck. Source review identifies four columns and two
+capacity-growth moves; no cache-miss cause or speedup is established. Finish this
+group and review AMD results before freezing a layout implementation.
