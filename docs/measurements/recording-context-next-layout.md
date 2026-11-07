@@ -1,8 +1,9 @@
 # Next candidate: keep each tape operation's fields together
 
 The shared-scope change removes most tape lookups but misses thirty of 32
-5% speed targets across ARM64 and AMD64. The next candidate is a **storage-layout experiment**, not
-another lookup shortcut. It has not been implemented or measured.
+5% speed targets across ARM64 and AMD64. This source investigation selected the
+[operation-record experiment](tape-operation-records.md). Implementation is now
+under way; native validation and measurements are pending.
 
 ## Why this candidate
 
@@ -38,7 +39,7 @@ A tape operation stores two parent node indices and two local derivatives
 (weights). For `z = x * y`, the weights are `y` for parent `x`, then `x` for
 parent `y`. The backward pass applies those contributions in that order.
 
-The [runtime](../../runtime/fwp_rt_kernel.c) currently keeps four columns:
+The reference runtime at #266 keeps four columns:
 
 ```text
 parent allocation:  [first parent for every operation][second parent for every operation]
@@ -79,8 +80,8 @@ benefit some access patterns; do not assume the record layout wins.
   passes focused ownership/numeric checks, measure runtime, allocations, peaks,
   stack and compiler cost together once. Retain all failed speed/copy limits.
 
-Complete [the current verification group](../../PLAN.md) before freezing this
-experiment. All four sessions locate substantial large-case work in recording
+The [implementation contract](tape-operation-records.md) freezes the next group.
+All four sessions locate substantial large-case work in recording
 and reverse traversal, but they do not prove that layout causes its cost.
 This note selects a concrete source
 investigation; it is not an accepted speedup or a substitute for that verification.

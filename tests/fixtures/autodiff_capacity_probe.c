@@ -27,7 +27,7 @@ static void capacity_exit(int code){capacity_exit_code=code;longjmp(capacity_oom
 static int capacity_recover(void){return 1;}
 static void capacity_dispose(void) {
     for(int64_t i=0;i<fwp_ntapes;i++){
-        fwp_tape *t=&fwp_tapes[i];fwp_tape_unlink_scope(t);capacity_free(t->pa);capacity_free(t->da);
+        fwp_tape *t=&fwp_tapes[i];fwp_tape_unlink_scope(t);capacity_free(t->ops);capacity_free(t->parents);
     }
     capacity_free(fwp_tapes);fwp_tapes=0;fwp_ntapes=fwp_tapes_cap=0;
     fwp_tape_next_slot=0;
@@ -42,23 +42,23 @@ int main(void) {
     if(fwp_tape_limit()!=INT32_MAX/8)return 180;
     if(!setjmp(capacity_trap)){fwp_p_ad_tape((V)(fwp_tape_limit()+1));return 182;}
     if(strcmp(fwp_trap_msg,"autodiff: too many inputs") || capacity_calls || capacity_live)return 182;
-    /* Both paired-buffer failures must free the last owned pointer, including successful
+    /* Numeric record growth failures must free the last owned pointer, including successful
      * earlier reallocs. No giant allocations are performed by this probe. */
-    for(capacity_fail=1;capacity_fail<=2;capacity_fail++) {
+    for(capacity_fail=1;capacity_fail<=1;capacity_fail++) {
         size_t selected=capacity_fail;capacity_fail=0;
         capacity_base=fwp_p_ad_tape(1);
         fwp_tape_reserve(fwp_tape_of((int64_t)capacity_base>>32),1);
         capacity_calls=0;capacity_fail=selected;
         if(!setjmp(capacity_oom)){fwp_tape_reserve(fwp_tape_of((int64_t)capacity_base>>32),65);return 183;}
         if(capacity_exit_code!=102 || capacity_oversized || capacity_live!=1 || fwp_tapes[0].live ||
-           fwp_tapes[0].pa || fwp_tapes[0].pb || fwp_tapes[0].da || fwp_tapes[0].db)return 184;
+           fwp_tapes[0].ops || fwp_tapes[0].parents)return 184;
         selected=capacity_fail;capacity_dispose();capacity_fail=selected;
     }
     capacity_fail=0;capacity_base=fwp_p_ad_tape(1);capacity_registry=fwp_tapes;
     fwp_tape_reserve(capacity_registry,1);
     capacity_calls=0;capacity_fail=1;
     if(!setjmp(capacity_oom)){fwp_p_ad_tape(1);return 185;}
-    if(capacity_exit_code!=102 || fwp_tapes!=capacity_registry || fwp_ntapes!=1 || fwp_tapes_cap!=1 || fwp_tape_next_slot!=1 || capacity_live!=3 ||
+    if(capacity_exit_code!=102 || fwp_tapes!=capacity_registry || fwp_ntapes!=1 || fwp_tapes_cap!=1 || fwp_tape_next_slot!=1 || capacity_live!=2 ||
        fwp_tape_of((int64_t)capacity_base>>32)!=capacity_registry)return 186;
     capacity_fail=0;capacity_calls=0;
     capacity_saved_cap=capacity_registry->cap;
@@ -68,9 +68,9 @@ int main(void) {
     /* Even an already-large capacity must not hide an invalid request. The
      * fake capacity is never used for allocation or access; restore it before
      * retiring the real buffers. Negative requests exercise the same gate. */
-    capacity_registry->cap=fwp_tape_limit()+1;
-    for(capacity_request=-1;capacity_request<=fwp_tape_limit()+1;
-        capacity_request+=fwp_tape_limit()+2) {
+    capacity_registry->cap=INT32_MAX/sizeof(fwp_tape_op)+1;
+    for(capacity_request=-1;capacity_request<=(int64_t)(INT32_MAX/sizeof(fwp_tape_op))+1;
+        capacity_request+=(int64_t)(INT32_MAX/sizeof(fwp_tape_op))+2) {
         if(!setjmp(capacity_trap)){fwp_tape_reserve(capacity_registry,capacity_request);return 191;}
         if(strcmp(fwp_trap_msg,"autodiff: the tape is full") || capacity_calls || capacity_oversized)return 191;
     }

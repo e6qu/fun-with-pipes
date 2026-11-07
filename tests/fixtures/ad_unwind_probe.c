@@ -1,5 +1,5 @@
-static void *tracked[5];
-static unsigned released[5];
+static void *tracked[2];
+static unsigned released[2];
 static int probe_mode, single_root;
 static jmp_buf recovered;
 static fwp_task cancelled_task;
@@ -7,12 +7,12 @@ static fwp_task *saved_current;
 static V selected_base, other_base, outputs, seeds, before_wrap, last_generation;
 static int recover_probe(void) { return 1; }
 static void probe_free(void *p) {
-    for (int i=0;i<5;i++) if (p && p==tracked[i]) released[i]++;
+    for (int i=0;i<2;i++) if (p && p==tracked[i]) released[i]++;
     free(p);
 }
 static void *probe_calloc(size_t n, size_t size) {
     void *p=calloc(n,size);
-    tracked[4]=p;
+    tracked[1]=p;
     return p;
 }
 static V probe_result_array(size_t n) {
@@ -60,7 +60,7 @@ int main(void) {
         ARR(seeds)->d[0]=fwp_from_f64(2);ARR(seeds)->d[1]=fwp_from_f64(3);
         if (probe_mode==1) ARR(outputs)->d[0]=other_base;
         if (probe_mode==2) ARR(outputs)->d[0]=selected_base+3;
-        tracked[0]=t->pa;tracked[1]=t->pb;tracked[2]=t->da;tracked[3]=t->db;tracked[4]=0;
+        tracked[0]=t->ops;tracked[1]=0;
         memset(released,0,sizeof(released));
         saved_current=fwp_cur;
         if (probe_mode==4) {
@@ -85,15 +85,14 @@ int main(void) {
         }
         if (fwp_cleanups!=&scope_owner) return 39;
         t=&fwp_tapes[(((int64_t)selected_base>>32)&0xffff)-1];
-        if (t->live || t->pa || t->pb || t->da || t->db || t->len || t->cap || t->leaves) return 40;
-        /* Each pair has one owning base; its interior region is never freed. */
-        for (int i=0;i<4;i++) if (!tracked[i] || released[i]!=(i%2==0?1u:0u)) return 41;
+        if (t->live || t->ops || t->parents || t->len || t->cap || t->leaves) return 40;
+        if (!tracked[0] || released[0]!=1) return 41;
         /* Output validation now precedes adjoint allocation. On these two
          * paths there must be no allocation to release; later failures still
-         * own both metadata pairs and the adjoint buffer. */
+         * own the operation records and the adjoint buffer. */
         if (probe_mode==1 || probe_mode==2) {
-            if (tracked[4] || released[4]) return 41;
-        } else if (!tracked[4] || released[4]!=1) return 41;
+            if (tracked[1] || released[1]) return 41;
+        } else if (!tracked[1] || released[1]!=1) return 41;
         if (!setjmp(recovered)) { (single_root ? fwp_p_ad_backward_one(selected_base,ARR(outputs)->d[0],ARR(seeds)->d[0]) : fwp_p_ad_backward(selected_base,outputs,seeds));return 42; }
         if (strcmp(fwp_trap_msg,FWP_AD_OUTSIDE)) return 43;
         // The other computation remains live, and gets its own normal teardown.

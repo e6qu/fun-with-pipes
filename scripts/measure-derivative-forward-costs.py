@@ -351,7 +351,7 @@ def main():
                     detailed, sites, bases = PROFILE.instrument(code)
                     save_sites(directory, sites, bases)
                     binaries = {label: compile_c(directory, label, text, opt) for label, text in (
-                        ('ordinary', code), ('totals', PROFILE.RAW.instrument(ARC.PROFILE.instrument(code))),
+                        ('ordinary', code), ('totals', PROFILE.RAW.instrument(ARC.PROFILE.instrument(code), 'records')),
                         ('detailed', detailed))}
                     if census:
                         instrumented, constructors = CONSTRUCTOR.instrument(detailed)

@@ -34,7 +34,7 @@ int main(void) {
         int64_t n=sizes[k];
         V base=fwp_p_ad_tape((V)n);
         fwp_tape *t=fwp_tape_of((int64_t)base>>32);
-        if (t->cap || t->pa || t->pb || t->da || t->db) return 230;
+        if (t->cap || t->ops || t->parents) return 230;
         OBJ(operation_tuple)->f[0]=base; OBJ(operation_tuple)->f[1]=fwp_from_f64(2.0);
         OBJ(operation_tuple)->f[2]=base+(V)n-1; OBJ(operation_tuple)->f[3]=fwp_from_f64(3.0);
         V node=fwp_p_ad_push(OBJ(operation_tuple)->f[0], OBJ(operation_tuple)->f[1], OBJ(operation_tuple)->f[2], OBJ(operation_tuple)->f[3], NULL);
@@ -42,7 +42,7 @@ int main(void) {
         OBJ(operation_tuple)->f[0]=node; OBJ(operation_tuple)->f[1]=fwp_from_f64(4.0);
         OBJ(operation_tuple)->f[2]=(V)(int64_t)-1; OBJ(operation_tuple)->f[3]=fwp_from_f64(NAN);
         node=fwp_p_ad_push(OBJ(operation_tuple)->f[0], OBJ(operation_tuple)->f[1], OBJ(operation_tuple)->f[2], OBJ(operation_tuple)->f[3], NULL);
-        if (node!=base+(V)n+1 || t->cap!=64 || t->pa[0]!=0 || t->pa[1]!=n || t->pb[0]!=n-1) return 232;
+        if (node!=base+(V)n+1 || t->cap!=64 || t->ops[0].pa!=0 || t->ops[1].pa!=n || t->ops[0].pb!=n-1) return 232;
         ARR(operation_outputs)->d[0]=node;
         V result=fwp_rc_fresh(fwp_p_ad_backward(base,operation_outputs,operation_seeds));
         if (ARR(result)->len!=(size_t)n) return 233;
@@ -54,6 +54,17 @@ int main(void) {
         if(scope.head!=-1)return 242;
         fwp_tape_finish();
     }
+    /* Duplicate parents must preserve contribution order and both roundings:
+     * (1e16 + -1e16) + 1 = 1; combining/reversing contributions gives 0. */
+    V ordered_base=fwp_p_ad_tape(1);
+    V ordered_node=fwp_p_ad_push(ordered_base,fwp_from_f64(-1e16),
+                                ordered_base,fwp_from_f64(1),NULL);
+    V ordered_outputs[2]={ordered_base,ordered_node};
+    V ordered_seeds[2]={fwp_from_f64(1e16),fwp_from_f64(1)};
+    V ordered=fwp_rc_fresh(fwp_ad_backward_values(ordered_base,
+        (const unsigned char *)ordered_outputs,(const unsigned char *)ordered_seeds,2));
+    if (ARR(ordered)->len!=1 || fwp_f64(ARR(ordered)->d[0])!=1) return 248;
+    fwp_rc_free_arr(ordered);fwp_tape_finish();
     /* Real heap weights transfer without retains. Inject failure before growth,
      * after growth and after storing fields but before publishing the new node. */
     static const fwp_desc element={.kind=K_I64,.dup=operation_dup,.drop=operation_drop};
@@ -61,7 +72,7 @@ int main(void) {
     for (int i=0;i<65;i++) operation_inputs=fwp_rc_fresh(fwp_cons(0,operation_inputs));
     V base=fwp_p_ad_tape_owned(operation_parameters,operation_inputs,&element);
     fwp_tape *t=fwp_tape_of((int64_t)base>>32);
-    if (t->cap || t->pa || t->pb || t->owned->weights || t->owned->cap) return 235;
+    if (t->cap || t->ops || t->parents || t->owned->weights || t->owned->cap) return 235;
     fwp_trap_recover=operation_recover; fwp_trap_jb=&operation_recovered;
     fwp_trap_cleanup=fwp_cleanups;
     for (operation_fail=1;operation_fail<=3;operation_fail++) {

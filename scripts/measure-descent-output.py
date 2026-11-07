@@ -306,7 +306,7 @@ def main():
                     if language == 'fwp':
                         assert actual.stdout == reference.stdout * repetitions
                 if language == 'fwp':
-                    instrumented = BATCHES.PEERS.AD.RAW.instrument(BATCHES.PEERS.AD.PROFILE.instrument(originals[language]))
+                    instrumented = BATCHES.PEERS.AD.RAW.instrument(BATCHES.PEERS.AD.PROFILE.instrument(originals[language]), 'records')
                     instrumented = BATCHES.observe_solves(repeated(instrumented, language, repetitions, sink), 'checked')
                     observed = compile_program(label + '-profile', language, instrumented, 'hash' if sink else '', 0)
                     assert observed.stdout == actual.stdout

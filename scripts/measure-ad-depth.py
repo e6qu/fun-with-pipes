@@ -68,7 +68,7 @@ def digest(data):
 
 
 def instrument(code):
-    observed = RAW.instrument(PROFILE.instrument(code))
+    observed = RAW.instrument(PROFILE.instrument(code), 'records')
     return RAW.replace_once(observed, '    iteration_active=0;',
         '    if(fwp_owned_tapes)exit(231);\n'
         '    for(int64_t i=0;i<fwp_ntapes;i++)if(fwp_tapes[i].live)exit(231);\n'
@@ -214,7 +214,7 @@ def main():
                             assert not executed.stderr
                     if variant == 'ad' and number == 1 and (scalar, depth) in [('F64', 1), ('F128', 2)]:
                         if scalar == 'F64':
-                            broken = RAW.replace_once(observed, 'ad_raw_free(b->pa);', '(void)b->pa;')
+                            broken = RAW.replace_once(observed, 'ad_raw_free(b->ops);', '(void)b->ops;')
                             expected_status = 232
                         else:
                             broken = RAW.replace_once(observed, 'fwp_mem_free(owner->weights);', '(void)owner->weights;')

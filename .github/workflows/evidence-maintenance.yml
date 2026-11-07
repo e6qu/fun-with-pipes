@@ -216,7 +216,7 @@ jobs:
             !production-log-audit/*.part
           if-no-files-found: error
   focused_storage_audit:
-    if: inputs.suite == 'focused-storage-audit'
+    if: inputs.suite == 'focused-storage-audit' || inputs.suite == 'tape-record-audit'
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 20
     permissions:
@@ -233,7 +233,8 @@ jobs:
           FOCUSED_SOURCE: ${{ inputs.source_revision }}
           FOCUSED_ATTEMPT: ${{ inputs.production_attempt }}
         run: >-
-          python3 scripts/audit-focused-storage.py --run "$FOCUSED_RUN"
+          python3 scripts/audit-focused-storage.py
+          --group "${{ inputs.suite == 'tape-record-audit' && 'tape-records' || 'shared-storage' }}" --run "$FOCUSED_RUN"
           --source "$FOCUSED_SOURCE" --attempt "$FOCUSED_ATTEMPT"
           --output focused-storage-audit
       - name: Retain all logs, observations and original artifact identities
@@ -246,7 +247,7 @@ jobs:
             !focused-storage-audit/*-evidence.zip
           if-no-files-found: error
   storage_compiler_report:
-    if: inputs.suite == 'storage-compiler-report' || (inputs.suite == 'scalar-constant-compiler-report' || contains(fromJSON('["recording-lookup-compiler-report","recording-inline-compiler-report","recording-capacity-compiler-report","recording-context-compiler-report"]'), inputs.suite))
+    if: inputs.suite == 'storage-compiler-report' || (inputs.suite == 'scalar-constant-compiler-report' || contains(fromJSON('["recording-lookup-compiler-report","recording-inline-compiler-report","recording-capacity-compiler-report","recording-context-compiler-report","tape-records-compiler-report"]'), inputs.suite))
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 15
     permissions:
@@ -265,7 +266,7 @@ jobs:
           python3 scripts/test-numeric-input-analysis.py
           status=0
           for machine in aarch64 x86_64; do
-            python3 scripts/audit-storage-compiler-costs.py --comparison "${{ fromJSON('{"storage-compiler-report":"packed-pair","scalar-constant-compiler-report":"scalar-constant","recording-lookup-compiler-report":"recording-lookup","recording-inline-compiler-report":"recording-inline","recording-capacity-compiler-report":"recording-capacity","recording-context-compiler-report":"recording-context"}')[inputs.suite] }}" \
+            python3 scripts/audit-storage-compiler-costs.py --comparison "${{ fromJSON('{"storage-compiler-report":"packed-pair","scalar-constant-compiler-report":"scalar-constant","recording-lookup-compiler-report":"recording-lookup","recording-inline-compiler-report":"recording-inline","recording-capacity-compiler-report":"recording-capacity","recording-context-compiler-report":"recording-context","tape-records-compiler-report":"tape-records"}')[inputs.suite] }}" \
               --repository "$GITHUB_REPOSITORY" --run "$EVIDENCE_RUN" \
               --source "$SOURCE_REVISION" --machine "$machine" \
               --output compiler-cost-audit || status=1

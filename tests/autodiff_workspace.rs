@@ -59,11 +59,16 @@ fn input_nodes_omit_metadata_and_managed_weights_transfer_atomically() {
             &format!("{retain_site}\n    if (elem->dup) elem->dup(da);"),
         );
         let probe = include_str!("fixtures/autodiff_operations_probe.c");
+        let left = "        if (node->pa >= 0) adj[node->pa] += a * node->da;";
+        let right = "        if (node->pb >= 0) adj[node->pb] += a * node->db;";
+        assert_eq!(code.matches(&format!("{left}\n{right}")).count(), 1);
+        let reversed = code.replace(&format!("{left}\n{right}"), &format!("{right}\n{left}"));
         let mut cases = vec![
             ("operations", code.clone(), probe.to_owned(), 0),
             ("padded", padded, probe.to_owned(), 230),
             ("unprotected", unprotected, probe.to_owned(), 237),
             ("extra-retain", extra, probe.to_owned(), 243),
+            ("reversed-contributions", reversed, probe.to_owned(), 248),
         ];
 
         for (label, release) in [

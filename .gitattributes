@@ -4,3 +4,5 @@
 *.in -text
 # Preserve the licensed upstream source bytes verbatim.
 vendor/softfloat/** -text
+# Frozen measurement source includes its exact section-separating blank line.
+scripts/fixtures/tape_column_reference.c whitespace=-blank-at-eof

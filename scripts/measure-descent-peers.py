@@ -36,6 +36,9 @@ CAPACITY_SPEC.loader.exec_module(CAPACITY_REFERENCE)
 CONTEXT_SPEC = importlib.util.spec_from_file_location('context_reference', ROOT / 'scripts/prepare-recording-context-reference.py')
 CONTEXT_REFERENCE = importlib.util.module_from_spec(CONTEXT_SPEC)
 CONTEXT_SPEC.loader.exec_module(CONTEXT_REFERENCE)
+TAPE_SPEC = importlib.util.spec_from_file_location('tape_reference', ROOT / 'scripts/prepare-tape-records-reference.py')
+TAPE_REFERENCE = importlib.util.module_from_spec(TAPE_SPEC)
+TAPE_SPEC.loader.exec_module(TAPE_REFERENCE)
 SELECTION_SPEC = importlib.util.spec_from_file_location('scalar_selection', ROOT / 'scripts/check-scalar-constant-selection.py')
 SCALAR_SELECTION = importlib.util.module_from_spec(SELECTION_SPEC)
 SELECTION_SPEC.loader.exec_module(SCALAR_SELECTION)
@@ -123,7 +126,7 @@ def ownership_budget_failures(profiles, baseline):
 
 def paired_budget_failures(results, comparison):
     """Apply the selected pre-candidate limits and report every violation."""
-    assert comparison in {'scalar-recording', 'eager-captures', 'array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context'}
+    assert comparison in {'scalar-recording', 'eager-captures', 'array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context', 'tape-records'}
     failures = []
 
     def require(case, program, metric, actual, limit):
@@ -172,7 +175,7 @@ def paired_budget_failures(results, comparison):
                 # Here the full AD solve reports traffic, raw storage, code and
                 # RSS separately; those are not substitutes for peak live bytes.
                 continue
-            if comparison in ('record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context'):
+            if comparison in ('record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context', 'tape-records'):
                 time_limit = 0.95 if row['updates'] >= 199 else 1.02
             else:
                 time_limit = 1.02 if comparison == 'array-lists' else 0.95 if row['updates'] else 1.02
@@ -182,7 +185,7 @@ def paired_budget_failures(results, comparison):
             if comparison == 'array-lists':
                 cells = row['dimensions'] * row['updates'] * row['solvesPerProcess']
                 savings = [('requests', cells), ('requestedBytes', 24 * cells)]
-            if comparison in ('record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context'):
+            if comparison in ('record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context', 'tape-records'):
                 pairs = (row['dimensions'] - 1) * row['updates'] * row['solvesPerProcess']
                 removed = (2 * pairs if comparison == 'record-zip' else
                            max(row['dimensions'] - 2, 0) * row['updates'] * row['solvesPerProcess'])
@@ -224,7 +227,7 @@ def paired_budget_failures(results, comparison):
                     updates = row['updates'] * row['solvesPerProcess']
                     savings = [('requests', updates),
                                ('requestedBytes', (16 * row['dimensions'] - 8) * updates), ('retains', 0)]
-                if comparison in ('scalar-array-map', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context'):
+                if comparison in ('scalar-array-map', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context', 'tape-records'):
                     savings = [('requests', 0), ('requestedBytes', 0), ('retains', 0)]
                 if not row['updates'] and current['managed'] != old['managed']:
                     failures.append(dict(case=case, program=label, metric='zero-update counts',
@@ -233,18 +236,21 @@ def paired_budget_failures(results, comparison):
                 savings += [('retains', 0)]
             for key, saving in savings + [('peakChargedBytes', 0), ('finalChargedBytes', 0)]:
                 limit = 0 if key == 'finalChargedBytes' else old['managed'][key] - saving
-                if comparison in ('scalar-map-zip', 'range-zip', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context') and key in ('requests', 'requestedBytes', 'retains'):
+                if comparison in ('scalar-map-zip', 'range-zip', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context', 'tape-records') and key in ('requests', 'requestedBytes', 'retains'):
                     if current['managed'][key] != limit:
                         failures.append(dict(case=case, program=label, metric=key,
                                              actual=current['managed'][key], expected=limit))
                 else:
                     require(case, label, key, current['managed'][key], limit)
-            for key in ['rawDerivativeStorage', 'expandedRawSha256']:
+            if comparison == 'tape-records':
+                for diagnostic in AD.RAW.record_layout_failures(current['rawDerivativeStorage'], old['rawDerivativeStorage']):
+                    failures.append(dict(case=case, program=label, **diagnostic))
+            for key in ([] if comparison == 'tape-records' else ['rawDerivativeStorage', 'expandedRawSha256']):
                 if current[key] != old[key]:
                     failures.append(dict(case=case, program=label, metric=key,
                                          actual=current[key], expected=old[key]))
             images = row['binaries']
-            if comparison not in ('packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context'):
+            if comparison not in ('packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context', 'tape-records'):
                 require(case, label, 'instruction bytes', images[label]['instructionBytes'],
                         images[reference]['instructionBytes'] + 1024)
             stacks = row['cCompilerStackUsage']
@@ -257,7 +263,7 @@ def paired_budget_failures(results, comparison):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--compiler', required=True, type=Path)
-    parser.add_argument('--comparison', required=True, choices=['current', 'eager-captures', 'array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context'])
+    parser.add_argument('--comparison', required=True, choices=['current', 'eager-captures', 'array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context', 'tape-records'])
     parser.add_argument('--reference-compiler', type=Path)
     parser.add_argument('--reference-manifest', type=Path)
     parser.add_argument('--cc', required=True)
@@ -296,7 +302,7 @@ def main():
                 assert digest((ROOT / path).read_bytes()) == expected_hash, path
         else:
             assert reference_manifest['ownershipSha256'] == digest((ROOT / 'src/ownership.rs').read_bytes())
-        if args.comparison in ('packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context'):
+        if args.comparison in ('packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context', 'tape-records'):
             module, transformation = {
                 'packed-pair': (PAIR_REFERENCE, 'reuse of the consumed private neighboring-record buffer'),
                 'scalar-constant': (SCALAR_REFERENCE, 'exact immediate scalar constants and acyclic cached aliases'),
@@ -304,6 +310,7 @@ def main():
                 'recording-inline': (INLINE_REFERENCE, 'forced inlining of the checked F64 scalar append body'),
                 'recording-capacity': (CAPACITY_REFERENCE, 'inlined checked reserve gate with shared tape growth'),
                 'recording-context': (CONTEXT_REFERENCE, 'validated recording state shared through closed numeric calls and loops'),
+                'tape-records': (TAPE_REFERENCE, 'contiguous numeric operation records and typed parent pairs'),
             }[args.comparison]
             assert reference_manifest['disabledTransformation'] == transformation
             assert set(reference_manifest['candidate']) == set(reference_manifest['reference']) == set(module.EDITS)
@@ -400,7 +407,7 @@ def main():
                    if not key.startswith('FWP_') and key not in ('GH_TOKEN', 'GITHUB_TOKEN')}
     environment.update(CC=args.cc, FWP_LTO='0', FWP_AD_WORKSPACE='1',
                        FWP_PACKED_ARRAYS='1', FWP_STACK='1', FWP_ARRAY_FUSION='1')
-    if args.comparison in ('matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context'):
+    if args.comparison in ('matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context', 'tape-records'):
         environment.update(FWP_VRET='1', FWP_FRAME_FIELDS='1')
     commands = []
     cflags = ['-O2', '-std=gnu11', '-fno-fast-math', '-ffp-contract=off', '-UFWP_NO_REUSE', '-fstack-usage', '-march=' + args.c_arch]
@@ -484,10 +491,10 @@ def main():
                 RECORDING_SELECTION.check_capacity_gate(text, not label.endswith('-reference'))
                 if updates > 0:
                     RECORDING_SELECTION.check(text, True)
-            if args.comparison == 'recording-context':
+            if args.comparison in ('recording-context', 'tape-records'):
                 RECORDING_SELECTION.check_capacity_gate(text, True)
                 if updates > 0:
-                    CONTEXT_SELECTION.check(text, not label.endswith('-reference'))
+                    CONTEXT_SELECTION.check(text, args.comparison == 'tape-records' or not label.endswith('-reference'))
             if args.comparison == 'recording-lookup' and updates > 0:
                 RECORDING_SELECTION.check(text, not label.endswith('-reference'))
             if args.comparison == 'scalar-constant' and updates > 0:
@@ -496,7 +503,8 @@ def main():
             build([args.cc, *cflags, '-w', code, '-o', binary, '-lm', '-lpthread', '-ldl'])
             actual = run([binary], environment)
             assert actual.stdout == reference.stdout and not actual.stderr
-            profiles_code = AD.RAW.instrument(AD.PROFILE.instrument(text))
+            profiles_code = AD.RAW.instrument(AD.PROFILE.instrument(text),
+                'columns' if args.comparison == 'tape-records' and label.endswith('-reference') else 'records')
             profiled_source = directory / (label + '-profile.c')
             profiled_source.write_text(profiles_code)
             profiled_binary = directory / (label + '-profile')
@@ -530,8 +538,8 @@ def main():
                 assert no_managed == managed, 'workspace selection changed managed ownership'
                 if label == 'fwp-ad' and updates == 1:
                     broken_sources = {
-                        'missing-parent-free': (AD.RAW.replace_once(profiles_code,
-                            'ad_raw_free(b->pa);', '/* deliberate missing physical release */'),
+                        'missing-operation-free': (AD.RAW.replace_once(profiles_code,
+                            'ad_raw_free(b->ops);', '/* deliberate missing physical release */'),
                             232, b'unreleased raw derivative storage'),
                         'missing-result-phase': (AD.RAW.replace_once(phase_code.read_text(),
                             '    descent_phase_step(DESCENT_RESULT);', ''),
@@ -552,6 +560,18 @@ def main():
                             stdoutSha256=digest(failed.stdout), stderr=failed.stderr.decode())
             binaries[label] = binary
             outputs[label] = actual.stdout
+        if args.comparison == 'tape-records':
+            frozen = (ROOT / TAPE_REFERENCE.REFERENCE_PATH).read_text()
+            for label in ('fwp-ad', 'fwp-ad-history'):
+                candidate = (directory / (label + '.c')).read_text()
+                reference_code = (directory / (label + '-reference.c')).read_text()
+                assert TAPE_REFERENCE.replace_tape(candidate, frozen) == reference_code, label
+                current, old = profiles[label], profiles[label + '-reference']
+                assert current['managed'] == old['managed'], label
+                assert not AD.RAW.record_layout_failures(current['rawDerivativeStorage'], old['rawDerivativeStorage']), label
+                current, old = current['withoutWorkspace'], old['withoutWorkspace']
+                assert current['managed'] == old['managed'], label
+                assert not AD.RAW.record_layout_failures(current['rawDerivativeStorage'], old['rawDerivativeStorage']), label
         csource = directory / 'c-explicit.c'
         csource.write_text(BASELINE.repeat_source(f'#define DIMENSIONS {points}\n#define UPDATES {updates}\n' +
                            (ROOT / 'tests/fixtures/descent_explicit.c').read_text(), 'c', solves))
@@ -683,7 +703,7 @@ def main():
              'scripts/prepare-scalar-array-map-reference.py', 'scripts/prepare-scalar-array-identity-reference.py',
              'scripts/prepare-matched-option-reference.py', 'scripts/prepare-packed-input-reference.py',
              'scripts/prepare-packed-pair-reference.py',
-             'scripts/prepare-recording-lookup-reference.py', 'scripts/prepare-recording-inline-reference.py', 'scripts/prepare-recording-capacity-reference.py', 'scripts/prepare-recording-context-reference.py', 'scripts/check-recording-context-selection.py', 'scripts/check-recording-lookup-selection.py', 'src/cgen/recording.rs',
+             'scripts/prepare-recording-lookup-reference.py', 'scripts/prepare-recording-inline-reference.py', 'scripts/prepare-recording-capacity-reference.py', 'scripts/prepare-recording-context-reference.py', 'scripts/prepare-tape-records-reference.py', 'scripts/fixtures/tape_column_reference.c', 'scripts/check-recording-context-selection.py', 'scripts/check-recording-lookup-selection.py', 'src/cgen/recording.rs',
              'scripts/prepare-scalar-constant-reference.py', 'src/cgen/constant_values.rs',
              'scripts/check-scalar-constant-selection.py', 'scripts/check-packed-pair-selection.py',
              'scripts/inspect-iteration-storage.py',
@@ -713,6 +733,7 @@ def main():
             'recording-lookup': 'Same-source compilers differ only in reusing validated tape lookups in proved numeric workers. Parent and capacity checks, allocations and derivative work stay unchanged. C/Rust use handwritten derivatives; whole-program ratios do not isolate language or ARC overhead. ',
             'recording-inline': 'Same-source compilers differ only in forced inlining of the checked F64 append body. Lookup reuse, validation, allocation and derivative work remain identical. C/Rust use handwritten derivatives; complete-program ratios do not isolate language or ARC overhead. ',
             'recording-capacity': 'Same-source compilers differ only in the inlined checked reserve gate and shared growth body. Append inlining, lookup reuse, validation, allocation and derivative work remain identical. C/Rust use handwritten derivatives; complete-program ratios do not isolate language or ARC overhead. ',
+            'tape-records': 'The current compiler and generated program are identical outside tape storage. Numeric operation records replace separate parent/weight columns. C/Rust peers use handwritten derivatives; their timing does not isolate language or ARC overhead.',
             'recording-context': 'Same-source compilers differ only in borrowing validated recording state across closed numeric calls and separate map/fold loops. Both retain local lookup reuse, append/capacity inlining, validation, allocation and derivative work. C/Rust peers use handwritten derivatives.',
             'scalar-constant': 'Same-source compilers differ only in exact immediate scalar values and acyclic aliases. All allocation, tape checks and derivative work remain unchanged. C/Rust use handwritten derivatives; their whole-program ratios do not isolate language or ARC overhead. ',
             'packed-pair': 'Same-source compilers differ only in reusing the consumed private pair buffer. Both keep consuming ownership, cleanup and eager callback order. C/Rust use manual derivatives and different storage; those ratios do not isolate language or ARC overhead. ',

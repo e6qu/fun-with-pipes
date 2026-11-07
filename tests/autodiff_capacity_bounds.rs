@@ -6,7 +6,7 @@ mod record_probe;
 use std::process::Command;
 
 #[test]
-fn paired_metadata_preserves_values_alignment_and_recoverable_growth() {
+fn operation_records_preserve_values_alignment_and_recoverable_growth() {
     let directory = fwp::cgen::TempDir::new("fwp-ad-pairs").unwrap();
     let input = directory.join("runtime.fwp");
     let cfile = directory.join("runtime.c");
@@ -36,19 +36,21 @@ fn paired_metadata_preserves_values_alignment_and_recoverable_growth() {
         "int main(int argc, char **argv)",
         "int original_main(int argc, char **argv)",
     );
-    let parent_move = "if (used) pair_move(t->pa + cap, t->pb, used * sizeof(int32_t));";
-    let derivative_move = "if (used) pair_move(t->da + cap, t->db, used * sizeof(double));";
-    assert_eq!(code.matches(parent_move).count(), 1);
-    assert_eq!(code.matches(derivative_move).count(), 1);
-    let no_parents = code.replace(parent_move, "");
-    let no_derivatives = code.replace(derivative_move, "");
-    let full_capacity = code.replace("used * sizeof(int32_t)", "(size_t)cap * sizeof(int32_t)");
+    let wrong_parents = code.replace("cap * sizeof(fwp_tape_parents)", "cap * sizeof(int32_t)");
+    let wrong_numeric = code.replace("cap * sizeof(fwp_tape_op)", "cap * sizeof(double)");
+    let extra_request = code.replace(
+        "        t->ops = next;",
+        "        t->ops = next; t->ops = pair_realloc(t->ops, (size_t)cap * sizeof(fwp_tape_op));",
+    );
+    assert_ne!(wrong_parents, code);
+    assert_ne!(wrong_numeric, code);
+    assert_ne!(extra_request, code);
     let early_capacity = code.replace(
         "fwp_owned_tape_reserve(owned, cap);",
         "t->cap = cap; fwp_owned_tape_reserve(owned, cap);",
     );
     assert_ne!(early_capacity, code);
-    // Clamp below doubling so the relocated second region overlaps its source.
+    // Exercise a final growth smaller than doubling.
     let clamped = code.replace(
         "return limit < (size_t)INT32_MAX ? (int64_t)limit : INT32_MAX;",
         "return 273;",
@@ -56,11 +58,11 @@ fn paired_metadata_preserves_values_alignment_and_recoverable_growth() {
     assert_ne!(clamped, code);
     for opt in ["-O1", "-O2"] {
         for (name, runtime, expected) in [
-            ("paired", &code, 0),
+            ("records", &code, 0),
             ("clamped", &clamped, 0),
-            ("missing-parents", &no_parents, 211),
-            ("missing-derivatives", &no_derivatives, 212),
-            ("full-capacity", &full_capacity, 213),
+            ("wrong-parent-size", &wrong_parents, 211),
+            ("wrong-numeric-size", &wrong_numeric, 212),
+            ("extra-request", &extra_request, 214),
             ("early-capacity", &early_capacity, 216),
         ] {
             let source = format!(
@@ -155,8 +157,8 @@ fn tape_capacity_checks_and_realloc_failures_preserve_owners() {
             "",
         );
         let missing_release = code.replace(
-            "capacity_free(t->pa);capacity_free(t->da);",
-            "(void)t->pa;capacity_free(t->da);",
+            "capacity_free(t->ops);capacity_free(t->parents);",
+            "(void)t->ops;capacity_free(t->parents);",
         );
         let missing_registry_owner = code.replace("if (!next) {", "if (!next) { fwp_tapes = next;");
         assert_ne!(missing_input_bound, code);

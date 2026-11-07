@@ -64,7 +64,7 @@ int main(void) {
         int64_t base = (int64_t)fwp_p_ad_tape(0), id = base >> 32;
         if ((id & 0xffff) != i + 1 || (id >> 16) != 1) return 190;
         fwp_tape *t = fwp_tape_of(id);
-        if (t->pa || t->pb || t->da || t->db || t->adj || t->cap || t->adjcap || t->owned) return 191;
+        if (t->ops || t->parents || t->adj || t->cap || t->adjcap || t->owned) return 191;
         if (fwp_ntapes != i + 1 || fwp_tapes_cap < fwp_ntapes || fwp_tapes_cap >= 2 * fwp_ntapes) return 192;
     }
     if (registry_requests != 10 || fwp_tapes_cap != 512) return 193;

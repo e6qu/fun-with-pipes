@@ -1,0 +1,66 @@
+{
+  "source": "e187b92d75bf936bc7191ea11eeca0c573005399",
+  "archiveSha256": "c576b264684ab4692eaa9ac8c1584695ce088f553dd1bf42a2317917e40403eb",
+  "hosts": [
+    {
+      "host": "bench",
+      "job": 127996982688,
+      "checkedLogs": 0,
+      "expectedDiagnostics": []
+    },
+    {
+      "host": "docs",
+      "job": 127996978359,
+      "checkedLogs": 0,
+      "expectedDiagnostics": []
+    },
+    {
+      "host": "linux-amd",
+      "job": 127996983681,
+      "checkedLogs": 257,
+      "expectedDiagnostics": []
+    },
+    {
+      "host": "linux-arm",
+      "job": 127996983403,
+      "checkedLogs": 257,
+      "expectedDiagnostics": []
+    },
+    {
+      "host": "mac-amd",
+      "job": 127996983302,
+      "checkedLogs": 131,
+      "expectedDiagnostics": []
+    },
+    {
+      "host": "mac-amd-ownership",
+      "job": 127996983252,
+      "checkedLogs": 126,
+      "expectedDiagnostics": []
+    },
+    {
+      "host": "mac-arm",
+      "job": 127996983198,
+      "checkedLogs": 131,
+      "expectedDiagnostics": []
+    },
+    {
+      "host": "mac-arm-ownership",
+      "job": 127996983804,
+      "checkedLogs": 126,
+      "expectedDiagnostics": []
+    },
+    {
+      "host": "windows-amd",
+      "job": 127996983555,
+      "checkedLogs": 214,
+      "expectedDiagnostics": []
+    },
+    {
+      "host": "windows-arm",
+      "job": 127996983442,
+      "checkedLogs": 214,
+      "expectedDiagnostics": []
+    }
+  ]
+}

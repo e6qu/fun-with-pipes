@@ -10,16 +10,26 @@ def replace_once(source, old, new):
     return source.replace(old, new)
 
 
-def instrument(source):
+def instrument(source, layout):
     """Observe physical allocation/free operations without changing timed code."""
     marker = '/* ------------------------------------------------------------------ tapes */'
     probe = (ROOT / 'tests/fixtures/ad_raw_storage_probe.c').read_text()
+    if layout == 'records':
+        allocations = [('parents', '(size_t)cap * sizeof(fwp_tape_parents)', 'AD_PARENTS'),
+                       ('ops', '(size_t)cap * sizeof(fwp_tape_op)', 'AD_OPERATIONS')]
+        fields = ['ops', 'parents', 'adj']
+    elif layout == 'columns':
+        allocations = [('pa', '(size_t)cap * (2 * sizeof(int32_t))', 'AD_PARENTS'),
+                       ('da', '(size_t)cap * (2 * sizeof(double))', 'AD_PARTIALS')]
+        fields = ['pa', 'da', 'adj']
+        probe = probe.replace('AD_OPERATIONS', 'AD_PARTIALS').replace('"operations"', '"partials"')
+    else:
+        raise ValueError(f'Unknown tape layout: {layout!r}')
     source = replace_once(source, marker, probe + '\n' + marker)
+    for field, size, kind in allocations:
+        source = replace_once(source, f'realloc(t->{field}, {size})',
+                              f'ad_raw_realloc(t->{field}, {size}, {kind})')
     for old, new in [
-        ('realloc(t->pa, (size_t)cap * (2 * sizeof(int32_t)))',
-         'ad_raw_realloc(t->pa, (size_t)cap * (2 * sizeof(int32_t)), AD_PARENTS)'),
-        ('realloc(t->da, (size_t)cap * (2 * sizeof(double)))',
-         'ad_raw_realloc(t->da, (size_t)cap * (2 * sizeof(double)), AD_PARTIALS)'),
         ('realloc(fwp_tapes, (size_t)cap * sizeof(fwp_tape))',
          'ad_raw_realloc(fwp_tapes, (size_t)cap * sizeof(fwp_tape), AD_REGISTRY)'),
         ('realloc(buffers.adj, (size_t)capacity * sizeof(double))',
@@ -28,7 +38,7 @@ def instrument(source):
          'ad_raw_calloc((size_t)capacity, sizeof(double), AD_ADJOINTS)'),
     ]:
         source = replace_once(source, old, new)
-    for pointer in ['b->pa', 'b->da', 'b->adj', 't->pa', 't->da', 't->adj', 'fwp_tapes']:
+    for pointer in [owner + '->' + field for owner in ('b', 't') for field in fields] + ['fwp_tapes']:
         source = replace_once(source, f'free({pointer});', f'ad_raw_free({pointer});')
     source = replace_once(source, '} else fwp_tape_buffers_dispose(b);\n}',
                           '} else fwp_tape_buffers_dispose(b);\n'
@@ -63,3 +73,27 @@ def check_profile(report, updates, workspace):
     assert 0 <= point['workspaceBytes'] <= 512 * 1024, point
     assert bool(point['workspaceBytes']) == workspace, point
     assert report['beforeShutdownBytes'] == point['registryBytes'] + point['workspaceBytes']
+
+
+def record_layout_failures(current, reference):
+    """Compare raw numeric storage with the declared column-layout peer."""
+    checks = []
+    kinds, old = current['kinds'], reference['kinds']
+    assert set(kinds) == {'registry', 'parents', 'operations', 'adjoints'}
+    assert set(old) == {'registry', 'parents', 'partials', 'adjoints'}
+    for key in ('requests', 'requestedBytes', 'peakBytes'):
+        checks.append(('unused typed parents/' + key, kinds['parents'][key], 0, False))
+        checks.append(('adjoints/' + key, kinds['adjoints'][key], old['adjoints'][key], False))
+    checks.append(('numeric growth requests', kinds['operations']['requests'], old['parents']['requests'], False))
+    checks.append(('reference paired growth requests', old['parents']['requests'], old['partials']['requests'], False))
+    for key in ('requestedBytes', 'peakBytes'):
+        checks.append(('numeric payload/' + key, kinds['operations'][key], old['parents'][key] + old['partials'][key], False))
+        checks.append(('registry/' + key, kinds['registry'][key], old['registry'][key], True))
+    checks.append(('registry requests', kinds['registry']['requests'], old['registry']['requests'], False))
+    for key in ('peakBytes', 'beforeShutdownBytes'):
+        checks.append((key, current[key], reference[key], True))
+    for label, report in [('candidate', current), ('reference', reference)]:
+        checks.append((label + ' final bytes', report['finalBytes'], 0, False))
+    return [dict(metric=metric, actual=actual, expected=expected, requirement='at most' if upper else 'equal')
+            for metric, actual, expected, upper in checks
+            if (actual > expected if upper else actual != expected)]

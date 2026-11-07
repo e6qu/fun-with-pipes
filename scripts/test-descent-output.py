@@ -106,7 +106,7 @@ def main():
                 sink = not mode.startswith('full')
                 observed = original
                 if profiled and language == 'fwp':
-                    observed = OUTPUT.BATCHES.PEERS.AD.RAW.instrument(OUTPUT.BATCHES.PEERS.AD.PROFILE.instrument(original))
+                    observed = OUTPUT.BATCHES.PEERS.AD.RAW.instrument(OUTPUT.BATCHES.PEERS.AD.PROFILE.instrument(original), 'records')
                 code = OUTPUT.repeated(observed, language, 2, sink)
                 if profiled:
                     code = (OUTPUT.BATCHES.observe_solves(code, 'retained' if missing else 'checked')

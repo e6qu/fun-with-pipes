@@ -40,14 +40,18 @@ static V pair_weight(int64_t i, int side) {
     return side ? UINT64_C(0x8000000000000000)+(V)i : UINT64_C(0x7ff8000000000000)+(V)i;
 }
 static int pair_check(fwp_tape *t) {
-    if (t->pb!=t->pa+t->cap || pair_bytes(t->pa)<(size_t)t->cap*8 ||
-        (uintptr_t)t->pa%_Alignof(int32_t) || (uintptr_t)t->pb%_Alignof(int32_t)) return 211;
-    if (!t->owned && (t->db!=t->da+t->cap || pair_bytes(t->da)!=(size_t)t->cap*16 ||
-        (uintptr_t)t->da%_Alignof(double) || (uintptr_t)t->db%_Alignof(double))) return 212;
+    if (sizeof(fwp_tape_op)!=24 || sizeof(fwp_tape_parents)!=8) return 210;
+    if (t->owned) {
+        if (t->ops || pair_bytes(t->parents)<(size_t)t->cap*8 ||
+            (uintptr_t)t->parents%_Alignof(fwp_tape_parents)) return 211;
+    } else if (t->parents || pair_bytes(t->ops)!=(size_t)t->cap*24 ||
+               (uintptr_t)t->ops%_Alignof(double)) return 212;
     for (int64_t i=0;i<t->len-t->leaves;i++) {
-        if (t->pa[i]!=(int32_t)i || t->pb[i]!=-(int32_t)i-1) return 211;
-        if (!t->owned && (fwp_from_f64(t->da[i])!=pair_weight(i,0) ||
-                         fwp_from_f64(t->db[i])!=pair_weight(i,1))) return 212;
+        int32_t pa=t->owned?t->parents[i].pa:t->ops[i].pa;
+        int32_t pb=t->owned?t->parents[i].pb:t->ops[i].pb;
+        if (pa!=(int32_t)i || pb!=-(int32_t)i-1) return 211;
+        if (!t->owned && (fwp_from_f64(t->ops[i].da)!=pair_weight(i,0) ||
+                         fwp_from_f64(t->ops[i].db)!=pair_weight(i,1))) return 212;
     }
     return 0;
 }
@@ -56,11 +60,12 @@ static int pair_fill(fwp_tape *t, int64_t count) {
         int64_t old=t->cap;
         size_t calls=pair_calls, moved=pair_moved;
         fwp_tape_reserve(t,i+1);
-        if (pair_calls-calls!=(old==t->cap?0:(t->owned?1:2))) return 214;
+        if (pair_calls-calls!=(old==t->cap?0:1)) return 214;
         int status=pair_check(t); if (status) return status;
-        if (pair_moved-moved!=(old==t->cap?0:(size_t)i*(t->owned?4:12))) return 213;
-        t->pa[i]=(int32_t)i; t->pb[i]=-(int32_t)i-1;
-        if (!t->owned) { t->da[i]=fwp_f64(pair_weight(i,0));t->db[i]=fwp_f64(pair_weight(i,1)); }
+        if (pair_moved-moved!=0) return 213;
+        if (t->owned) t->parents[i]=(fwp_tape_parents){(int32_t)i,-(int32_t)i-1};
+        else t->ops[i]=(fwp_tape_op){(int32_t)i,-(int32_t)i-1,
+            fwp_f64(pair_weight(i,0)),fwp_f64(pair_weight(i,1))};
         t->len++;
     }
     return pair_check(t);
@@ -78,18 +83,18 @@ int main(void) {
         } else pair_base=fwp_p_ad_tape(1);
         fwp_tape *t=fwp_tape_of((int64_t)pair_base>>32);
         int status=pair_fill(t,7);if (status) return status;
-        /* Explicit over-reservation moves only initialized metadata. */
+        /* Explicit over-reservation needs no column shifts. */
         size_t moved=pair_moved;
         fwp_tape_reserve(t,129);
         status=pair_check(t);if (status) return status;
-        if (pair_moved-moved!=7*(size_t)(managed?4:12)) return 213;
+        if (pair_moved!=moved) return 213;
         if (managed) {
             fwp_trap_recover=pair_recover;fwp_trap_jb=&pair_recovered;
             fwp_trap_cleanup=fwp_cleanups;pair_fail_weights=1;
             if (!setjmp(pair_recovered)) {fwp_tape_reserve(t,257);return 215;}
             if (strcmp(fwp_trap_msg,"paired weight growth control") || t->cap!=256 ||
-                t->pb!=t->pa+256 || t->owned->cap!=256 || !t->live) return 216;
-            for (int64_t i=0;i<7;i++) if (t->pa[i]!=i || t->pb[i]!=-i-1) return 216;
+                t->owned->cap!=256 || !t->live) return 216;
+            for (int64_t i=0;i<7;i++) if (t->parents[i].pa!=i || t->parents[i].pb!=-i-1) return 216;
             pair_fail_weights=0;
         }
         int64_t count=fwp_tape_limit()<1025?fwp_tape_limit():1025;
@@ -99,6 +104,6 @@ int main(void) {
     }
     fwp_cleanup_pop(&cleanup);
     if (fwp_cleanups || fwp_owned_tapes || scope.head!=-1) return 218;
-    puts("paired metadata preserves aligned values across moving growth and traps");
+    puts("operation records preserve aligned values across moving growth and traps");
     return 0;
 }

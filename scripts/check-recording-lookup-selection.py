@@ -52,11 +52,21 @@ def check_capacity_gate(source, split):
     expected, excluded = (inline, plain) if split else (plain, inline)
     assert source.count(expected) == 1 and excluded not in source, 'wrong reserve gate declaration'
     body = source.split(expected, 1)[1].split('\n}', 1)[0]
-    prefix = '''
-    int64_t limit = fwp_tape_limit();
+    # Historical column evidence and current record evidence have different
+    # allocation bounds. Identify the actual representation, then require its
+    # entire gate; a missing record bound must not pass as a column gate.
+    record = 'typedef struct { int32_t pa, pb; double da, db; } fwp_tape_op;'
+    prefix = '\n    int64_t limit = fwp_tape_limit();\n'
+    if 'fwp_tape_op' in source:
+        assert source.count(record) == 1, 'missing or altered numeric record layout'
+        prefix += '''    size_t stride = t->owned ? 2 * sizeof(V) : sizeof(fwp_tape_op);
+    size_t records = (size_t)PTRDIFF_MAX / stride;
+    if ((uint64_t)limit > records) limit = (int64_t)records;
+'''
+    prefix += '''
     if (n < 0 || n > limit) fwp_trap("autodiff: the tape is full");
     if (n <= t->cap) return;
-'''
+'''.lstrip('\n')
     assert body.startswith(prefix), 'reserve checks missing or reordered'
     grow = 'static void fwp_tape_grow(fwp_tape *t, int64_t n, int64_t limit) {'
     if split:

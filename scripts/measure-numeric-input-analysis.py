@@ -32,6 +32,9 @@ CAPACITY_SPEC.loader.exec_module(CAPACITY_REFERENCE)
 CONTEXT_SPEC = importlib.util.spec_from_file_location('context_reference', ROOT / 'scripts/prepare-recording-context-reference.py')
 CONTEXT_REFERENCE = importlib.util.module_from_spec(CONTEXT_SPEC)
 CONTEXT_SPEC.loader.exec_module(CONTEXT_REFERENCE)
+TAPE_SPEC = importlib.util.spec_from_file_location('tape_reference', ROOT / 'scripts/prepare-tape-records-reference.py')
+TAPE_REFERENCE = importlib.util.module_from_spec(TAPE_SPEC)
+TAPE_SPEC.loader.exec_module(TAPE_REFERENCE)
 SELECTION_SPEC = importlib.util.spec_from_file_location('scalar_selection', ROOT / 'scripts/check-scalar-constant-selection.py')
 SCALAR_SELECTION = importlib.util.module_from_spec(SELECTION_SPEC)
 SELECTION_SPEC.loader.exec_module(SCALAR_SELECTION)
@@ -220,7 +223,7 @@ def main():
     parser.add_argument('--compiler', required=True, type=Path)
     parser.add_argument('--reference', required=True, type=Path)
     parser.add_argument('--reference-manifest', required=True, type=Path)
-    parser.add_argument('--comparison', required=True, choices=('numeric-inputs', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context'))
+    parser.add_argument('--comparison', required=True, choices=('numeric-inputs', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context', 'tape-records'))
     parser.add_argument('--time', required=True, type=Path)
     parser.add_argument('--machine', required=True, choices=('aarch64', 'x86_64'))
     parser.add_argument('--source', required=True)
@@ -243,7 +246,7 @@ def main():
             assert sha(ROOT / path) == hashes['candidateSha256'], path
         for path, digest in reference_manifest['unchanged'].items():
             assert sha(ROOT / path) == digest, path
-    elif args.comparison in ('gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context'):
+    elif args.comparison in ('gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context', 'tape-records'):
         reference_module, transformation = {
             'gradient-call': (GRADIENT_REFERENCE, 'scoped input borrowing, numeric fold fields, single-root seeding and consumed array scratch'),
             'packed-pair': (PAIR_REFERENCE, 'reuse of the consumed private neighboring-record buffer'),
@@ -252,6 +255,7 @@ def main():
             'recording-inline': (INLINE_REFERENCE, 'forced inlining of the checked F64 scalar append body'),
                 'recording-capacity': (CAPACITY_REFERENCE, 'inlined checked reserve gate with shared tape growth'),
                 'recording-context': (CONTEXT_REFERENCE, 'validated recording state shared through closed numeric calls and loops'),
+                'tape-records': (TAPE_REFERENCE, 'contiguous numeric operation records and typed parent pairs'),
         }[args.comparison]
         assert reference_manifest['disabledTransformation'] == transformation
         assert set(reference_manifest['candidate']) == set(reference_manifest['reference']) == set(reference_module.EDITS)
@@ -329,9 +333,9 @@ def main():
     output.mkdir(parents=True, exist_ok=False)
     environment = {key: value for key, value in os.environ.items() if not key.startswith('FWP_')}
     environment.update(FWP_LTO='0', LC_ALL='C')
-    if args.comparison in ('matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context'):
+    if args.comparison in ('matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context', 'tape-records'):
         environment.update(FWP_VRET='1', FWP_FRAME_FIELDS='1')
-    if args.comparison in ('packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context'):
+    if args.comparison in ('packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context', 'tape-records'):
         environment.update(FWP_PACKED_ARRAYS='1', FWP_STACK='1', FWP_ARRAY_FUSION='1')
     report = dict(source=args.source, machine=args.machine, complete=False, comparison=args.comparison,
                   scope='Entire compiler command through C emission: startup, parsing, typing, '
@@ -363,10 +367,10 @@ def main():
             ('autodiff-tutorial', 'docs/tutorials/20-autodiff-and-devices/main.fwp')]}
         programs.update({f'derivative-{dimensions}-{updates}': COSTS.AD.program(dimensions, updates + 1, False)
                          for dimensions, updates in ((3, 0), (33, 199), (129, 199))})
-        if args.comparison in ('packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context'):
+        if args.comparison in ('packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context', 'tape-records'):
             programs.update(scoped_cost_inputs())
             report['preflight'] = {}
-            for kind, specialized in [('candidate', True), ('reference', args.comparison in ('owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context'))]:
+            for kind, specialized in [('candidate', True), ('reference', args.comparison in ('owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context', 'tape-records'))]:
                 try:
                     report['preflight'][kind] = check_scoped_cost_inputs(
                         output / (kind + '1'), output / ('preflight-' + kind),
@@ -374,13 +378,13 @@ def main():
                 except AssertionError as error:
                     report['preflight'][kind] = dict(failure=str(error))
             assert all(isinstance(rows, list) for rows in report['preflight'].values()), report['preflight']
-        if args.comparison in ('owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context'):
+        if args.comparison in ('owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context', 'tape-records'):
             report['consumingPreflight'] = {}
             for kind in ('candidate', 'reference'):
                 try:
                     report['consumingPreflight'][kind] = check_consuming_cost_input(
                         output / (kind + '1'), output / ('consuming-' + kind),
-                        environment, args.timeout, kind == 'candidate' or args.comparison in ('gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context'))
+                        environment, args.timeout, kind == 'candidate' or args.comparison in ('gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context', 'tape-records'))
                 except AssertionError as error:
                     report['consumingPreflight'][kind] = dict(failure=str(error))
             assert all('observed' in row for row in report['consumingPreflight'].values()), report['consumingPreflight']
@@ -427,10 +431,10 @@ def main():
                         RECORDING_SELECTION.check_inline_declaration(cfile.read_text(), kind == 'candidate')
                         if name in ('derivative-33-199', 'derivative-129-199'):
                             RECORDING_SELECTION.check(cfile.read_text(), True)
-                    if args.comparison == 'recording-context' and round_number == -2:
+                    if args.comparison in ('recording-context', 'tape-records') and round_number == -2:
                         RECORDING_SELECTION.check_capacity_gate(cfile.read_text(), True)
                         if name in ('derivative-33-199', 'derivative-129-199'):
-                            CONTEXT_SELECTION.check(cfile.read_text(), kind == 'candidate')
+                            CONTEXT_SELECTION.check(cfile.read_text(), args.comparison == 'tape-records' or kind == 'candidate')
                     if args.comparison == 'recording-capacity' and round_number == -2:
                         RECORDING_SELECTION.check_capacity_gate(cfile.read_text(), kind == 'candidate')
                         if name in ('derivative-33-199', 'derivative-129-199'):
@@ -442,6 +446,10 @@ def main():
                             and name in ('derivative-33-199', 'derivative-129-199')):
                         SCALAR_SELECTION.check(cfile.read_text(), 'literal' if kind == 'candidate' else 'cached')
             report['cases'][name]['generatedCHashes'] = generated_hashes
+            if args.comparison == 'tape-records':
+                frozen = (ROOT / TAPE_REFERENCE.REFERENCE_PATH).read_text()
+                candidate = (directory / 'candidate1.c').read_text()
+                assert TAPE_REFERENCE.replace_tape(candidate, frozen) == (directory / 'reference1.c').read_text(), name
             report['cases'][name]['summary'] = summarize(rows)
             print(name, report['cases'][name]['summary'], flush=True)
         report['complete'] = True

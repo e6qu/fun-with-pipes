@@ -49,79 +49,80 @@ def consuming_output(selected):
 
 class CompilerCosts(unittest.TestCase):
     def test_audit_retains_rejected_host_without_inventing_compiler_samples(self):
-        source = '1' * 40
-        expected = dict(system='Linux', machine='x86_64', processors=4,
-                        cpu=['AMD EPYC 7763 64-Core Processor', 'AMD EPYC 9V74 80-Core Processor',
-                             'AMD EPYC 9V45 96-Core Processor'])
-        host = dict(source=source, expected=expected, actual=expected | {'cpu': 'unapproved CPU'},
-                    qualified=False, failures=["cpu: expected " + repr(expected['cpu']) + ", observed 'unapproved CPU'"])
-        steps = [dict(name='Qualify recording-context compiler timing host', conclusion='failure')]
-        steps.extend(dict(name=name, conclusion='skipped') for name in (
-            'Build candidate at production settings', 'Build and verify the selected same-source reference',
-            'Measure balanced compiler commands and peak memory'))
-        job = dict(id=3, name='numeric_input_analysis (ubuntu-latest)', head_sha=source,
-                   run_id=1, status='completed', conclusion='failure', steps=steps)
-        for change in ('none', 'built', 'timed', 'qualified', 'wrong-failure', 'extra-diagnostic',
-                       'partial-samples', 'wrong-hash'):
-            with self.subTest(change=change), tempfile.TemporaryDirectory() as temporary:
-                changed_job, changed_host = copy.deepcopy(job), copy.deepcopy(host)
-                if change == 'built':
-                    changed_job['steps'][1]['conclusion'] = 'success'
-                elif change == 'timed':
-                    changed_job['steps'][3]['conclusion'] = 'success'
-                elif change == 'qualified':
-                    changed_host['qualified'] = True
-                elif change == 'wrong-failure':
-                    changed_host['failures'] = ['not the recorded mismatch']
-                log = b'Host rejected before building/timing\n##[error]Process completed with exit code 1.\n'
-                if change == 'extra-diagnostic':
-                    log += b'warning: unrelated issue\n'
-                host_buffer, safety_buffer = io.BytesIO(), io.BytesIO()
-                with zipfile.ZipFile(host_buffer, 'w') as archive:
-                    archive.writestr('compiler-cost-host.json', json.dumps(changed_host))
-                with zipfile.ZipFile(safety_buffer, 'w') as archive:
-                    archive.writestr('numeric-analysis-safety/run.json', json.dumps(dict(head_sha=source)))
-                    if change == 'partial-samples':
-                        archive.writestr('numeric-analysis/report.json', '{}')
-                blobs = {4: host_buffer.getvalue(), 5: safety_buffer.getvalue()}
-                artifacts = [dict(id=number, name=name, expired=False, workflow_run=dict(head_sha=source),
-                                  digest='sha256:' + hashlib.sha256(blobs[number]).hexdigest())
-                             for number, name in ((4, 'recording-context-analysis-host-X64'),
-                                                  (5, 'recording-context-analysis-X64'))]
-                if change == 'wrong-hash':
-                    artifacts[0]['digest'] = 'sha256:' + '0' * 64
-                def api(command, **kwargs):
-                    path = command[-1].split('?', 1)[0]
-                    if path.endswith('/runs/1/jobs'):
-                        return json.dumps(dict(total_count=1, jobs=[changed_job])).encode()
-                    if path.endswith('/runs/1/artifacts'):
-                        return json.dumps(dict(total_count=2, artifacts=artifacts)).encode()
-                    if path.endswith('/jobs/3/logs'):
-                        return log
-                    if path.endswith('/artifacts/4/zip'):
-                        return blobs[4]
-                    if path.endswith('/artifacts/5/zip'):
-                        return blobs[5]
-                    self.fail('unexpected API request: ' + path)
-                argv = ['audit-storage-compiler-costs.py', '--comparison', 'recording-context',
-                        '--repository', 'test/repo', '--source', source, '--run', '1',
-                        '--machine', 'x86_64', '--output', temporary]
-                with patch('sys.argv', argv), patch.dict(os.environ, {'GITHUB_ACTIONS': 'true'}), \
-                        patch.object(sys, 'path', sys.path.copy()), \
-                        patch.object(subprocess, 'check_output', side_effect=api), \
-                        contextlib.redirect_stdout(io.StringIO()):
-                    if change == 'none':
-                        with self.assertRaises(SystemExit) as exited:
-                            runpy.run_path(str(Path(__file__).with_name('audit-storage-compiler-costs.py')))
-                        self.assertEqual(exited.exception.code, 0)
-                        record = json.loads((Path(temporary) / 'x86_64-host-rejected.json').read_text())
-                        self.assertEqual(record['decision'], 'host-rejected-before-building-or-timing')
-                        self.assertFalse(record['complete'])
-                        self.assertEqual(record['qualification'], host)
-                    else:
-                        with self.assertRaises(AssertionError):
-                            runpy.run_path(str(Path(__file__).with_name('audit-storage-compiler-costs.py')))
-                        self.assertFalse((Path(temporary) / 'x86_64-host-rejected.json').exists())
+        for comparison in ('recording-context', 'tape-records'):
+            source = '1' * 40
+            expected = dict(system='Linux', machine='x86_64', processors=4,
+                            cpu=['AMD EPYC 7763 64-Core Processor', 'AMD EPYC 9V74 80-Core Processor',
+                                 'AMD EPYC 9V45 96-Core Processor'])
+            host = dict(source=source, expected=expected, actual=expected | {'cpu': 'unapproved CPU'},
+                        qualified=False, failures=["cpu: expected " + repr(expected['cpu']) + ", observed 'unapproved CPU'"])
+            steps = [dict(name=f'Qualify {comparison} compiler timing host', conclusion='failure')]
+            steps.extend(dict(name=name, conclusion='skipped') for name in (
+                'Build candidate at production settings', 'Build and verify the selected same-source reference',
+                'Measure balanced compiler commands and peak memory'))
+            job = dict(id=3, name=('tape_measurements / ' if comparison == 'tape-records' else '') + 'numeric_input_analysis (ubuntu-latest)', head_sha=source,
+                       run_id=1, status='completed', conclusion='failure', steps=steps)
+            for change in ('none', 'built', 'timed', 'qualified', 'wrong-failure', 'extra-diagnostic',
+                           'partial-samples', 'wrong-hash'):
+                with self.subTest(comparison=comparison, change=change), tempfile.TemporaryDirectory() as temporary:
+                    changed_job, changed_host = copy.deepcopy(job), copy.deepcopy(host)
+                    if change == 'built':
+                        changed_job['steps'][1]['conclusion'] = 'success'
+                    elif change == 'timed':
+                        changed_job['steps'][3]['conclusion'] = 'success'
+                    elif change == 'qualified':
+                        changed_host['qualified'] = True
+                    elif change == 'wrong-failure':
+                        changed_host['failures'] = ['not the recorded mismatch']
+                    log = b'Host rejected before building/timing\n##[error]Process completed with exit code 1.\n'
+                    if change == 'extra-diagnostic':
+                        log += b'warning: unrelated issue\n'
+                    host_buffer, safety_buffer = io.BytesIO(), io.BytesIO()
+                    with zipfile.ZipFile(host_buffer, 'w') as archive:
+                        archive.writestr('compiler-cost-host.json', json.dumps(changed_host))
+                    with zipfile.ZipFile(safety_buffer, 'w') as archive:
+                        archive.writestr('numeric-analysis-safety/run.json', json.dumps(dict(head_sha=source)))
+                        if change == 'partial-samples':
+                            archive.writestr('numeric-analysis/report.json', '{}')
+                    blobs = {4: host_buffer.getvalue(), 5: safety_buffer.getvalue()}
+                    artifacts = [dict(id=number, name=name, expired=False, workflow_run=dict(head_sha=source),
+                                      digest='sha256:' + hashlib.sha256(blobs[number]).hexdigest())
+                                 for number, name in ((4, comparison + '-analysis-host-X64'),
+                                                      (5, comparison + '-analysis-X64'))]
+                    if change == 'wrong-hash':
+                        artifacts[0]['digest'] = 'sha256:' + '0' * 64
+                    def api(command, **kwargs):
+                        path = command[-1].split('?', 1)[0]
+                        if path.endswith('/runs/1/jobs'):
+                            return json.dumps(dict(total_count=1, jobs=[changed_job])).encode()
+                        if path.endswith('/runs/1/artifacts'):
+                            return json.dumps(dict(total_count=2, artifacts=artifacts)).encode()
+                        if path.endswith('/jobs/3/logs'):
+                            return log
+                        if path.endswith('/artifacts/4/zip'):
+                            return blobs[4]
+                        if path.endswith('/artifacts/5/zip'):
+                            return blobs[5]
+                        self.fail('unexpected API request: ' + path)
+                    argv = ['audit-storage-compiler-costs.py', '--comparison', comparison,
+                            '--repository', 'test/repo', '--source', source, '--run', '1',
+                            '--machine', 'x86_64', '--output', temporary]
+                    with patch('sys.argv', argv), patch.dict(os.environ, {'GITHUB_ACTIONS': 'true'}), \
+                            patch.object(sys, 'path', sys.path.copy()), \
+                            patch.object(subprocess, 'check_output', side_effect=api), \
+                            contextlib.redirect_stdout(io.StringIO()):
+                        if change == 'none':
+                            with self.assertRaises(SystemExit) as exited:
+                                runpy.run_path(str(Path(__file__).with_name('audit-storage-compiler-costs.py')))
+                            self.assertEqual(exited.exception.code, 0)
+                            record = json.loads((Path(temporary) / 'x86_64-host-rejected.json').read_text())
+                            self.assertEqual(record['decision'], 'host-rejected-before-building-or-timing')
+                            self.assertFalse(record['complete'])
+                            self.assertEqual(record['qualification'], host)
+                        else:
+                            with self.assertRaises(AssertionError):
+                                runpy.run_path(str(Path(__file__).with_name('audit-storage-compiler-costs.py')))
+                            self.assertFalse((Path(temporary) / 'x86_64-host-rejected.json').exists())
 
     def test_consuming_selection_requires_live_calls_and_retained_exclusion(self):
         roots = ('mapped', 'mapped32', 'mapped64', 'update-left', 'update-right', 'mapped-produced', 'shared-first')

@@ -2,7 +2,7 @@
  * successful allocator requests, independently of the runtime's tape pointers.
  * It does not count allocator metadata, temporary realloc copies or managed
  * typed weights. The fixed observer storage is excluded from process-RSS runs. */
-enum { AD_REGISTRY, AD_PARENTS, AD_PARTIALS, AD_ADJOINTS, AD_RAW_KINDS };
+enum { AD_REGISTRY, AD_PARENTS, AD_OPERATIONS, AD_ADJOINTS, AD_RAW_KINDS };
 typedef struct { void *pointer; size_t bytes; unsigned kind; } ad_raw_block;
 static ad_raw_block ad_raw_blocks[4096];
 static size_t ad_raw_live[AD_RAW_KINDS], ad_raw_peak[AD_RAW_KINDS];
@@ -73,7 +73,7 @@ static void ad_raw_report(void) {
     if (ad_raw_total()) ad_raw_fail("unreleased raw derivative storage");
     fprintf(stderr, "{\"rawDerivativeStorage\":{\"peakBytes\":%zu,\"beforeShutdownBytes\":%zu,\"finalBytes\":%zu,\"kinds\":{",
             ad_raw_total_peak, ad_raw_before_shutdown, ad_raw_total());
-    const char *names[] = {"registry", "parents", "partials", "adjoints"};
+    const char *names[] = {"registry", "parents", "operations", "adjoints"};
     for (unsigned i = 0; i < AD_RAW_KINDS; i++)
         fprintf(stderr, "%s\"%s\":{\"requests\":%zu,\"requestedBytes\":%zu,\"peakBytes\":%zu}",
                 i ? "," : "", names[i], ad_raw_requests[i], ad_raw_bytes[i], ad_raw_peak[i]);

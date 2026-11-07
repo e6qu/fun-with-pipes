@@ -139,7 +139,7 @@ def main():
             profile_code = profile_code.replace(marker, '''    if(fwp_owned_tapes)exit(230);
     for(int64_t i=0;i<fwp_ntapes;i++)if(fwp_tapes[i].live)exit(231);
 ''' + marker)
-            profile_code = RAW.instrument(profile_code)
+            profile_code = RAW.instrument(profile_code, 'records')
             profiled = directory / (label + '-profile.c')
             profiled.write_text(profile_code)
             binary = directory / label
@@ -194,7 +194,7 @@ def main():
                 # An orphaned allocation is absent from the runtime's tape
                 # pointers. The physical ledger must still detect it.
                 for control_name, release in [
-                    ('missing-parent-free', 'ad_raw_free(b->pa);'),
+                    ('missing-operation-free', 'ad_raw_free(b->ops);'),
                     ('missing-registry-free', 'ad_raw_free(fwp_tapes);'),
                 ]:
                     broken = directory / (control_name + '.c')

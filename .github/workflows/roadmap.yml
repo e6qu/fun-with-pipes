@@ -41,6 +41,7 @@ jobs:
           python3 scripts/test-recording-inline-reference.py
           python3 scripts/test-recording-capacity-reference.py
           python3 scripts/test-recording-context-reference.py
+          python3 scripts/test-tape-records-reference.py
           python3 scripts/test-measurement-safety.py
       - name: Measured child deadlines and polling control
         timeout-minutes: 2

@@ -36,7 +36,7 @@ int main(void) {
     fwp_tape *t = fwp_tape_of((int64_t)first >> 32);
     if (t->len != 202 || t->cap < 200) return 65;
     for (unsigned i = 0; i < 200; i++) {
-        if (fwp_from_f64(t->da[i]) != half || fwp_from_f64(t->db[i]) != half) return 66;
+        if (fwp_from_f64(t->ops[i].da) != half || fwp_from_f64(t->ops[i].db) != half) return 66;
     }
     V result = fwp_rc_fresh(fwp_p_ad_backward_one(first, node, fwp_from_f64(1.0)));
     if (ARR(result)->len != 2 || fwp_f64(ARR(result)->d[0]) != 1.0
@@ -82,7 +82,7 @@ int main(void) {
         node = fwp_p_ad_push(second, bits[i], second, bits[i], &state);
         t = state.tape;
         size_t op = (size_t)((node & 0xffffffff) - t->leaves);
-        if (fwp_from_f64(t->da[op]) != bits[i] || fwp_from_f64(t->db[op]) != bits[i]) return 71;
+        if (fwp_from_f64(t->ops[op].da) != bits[i] || fwp_from_f64(t->ops[op].db) != bits[i]) return 71;
     }
 
     /* Trap after an append: unwind past the worker and retire every scoped tape. */

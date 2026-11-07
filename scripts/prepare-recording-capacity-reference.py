@@ -11,6 +11,9 @@ EDITS = {'runtime/fwp_rt_kernel.c': (
     ('static void fwp_tape_grow(fwp_tape *t, int64_t n, int64_t limit) {\n',
      '''static void fwp_tape_reserve(fwp_tape *t, int64_t n) {
     int64_t limit = fwp_tape_limit();
+    size_t stride = t->owned ? 2 * sizeof(V) : sizeof(fwp_tape_op);
+    size_t records = (size_t)PTRDIFF_MAX / stride;
+    if ((uint64_t)limit > records) limit = (int64_t)records;
     if (n < 0 || n > limit) fwp_trap("autodiff: the tape is full");
     if (n <= t->cap) return;
 '''),
@@ -18,6 +21,9 @@ EDITS = {'runtime/fwp_rt_kernel.c': (
  * allocation and recovery. Validate before taking the capacity shortcut. */
 static inline __attribute__((always_inline)) void fwp_tape_reserve(fwp_tape *t, int64_t n) {
     int64_t limit = fwp_tape_limit();
+    size_t stride = t->owned ? 2 * sizeof(V) : sizeof(fwp_tape_op);
+    size_t records = (size_t)PTRDIFF_MAX / stride;
+    if ((uint64_t)limit > records) limit = (int64_t)records;
     if (n < 0 || n > limit) fwp_trap("autodiff: the tape is full");
     if (n <= t->cap) return;
     fwp_tape_grow(t, n, limit);

@@ -347,8 +347,9 @@ unmet, two AMD small-case regressions and one inconclusive AMD copy control.
 confirms two lookups per positive update with unchanged allocation/peak storage.
 [Runtime audits](measurements/recording-context-time-2026-11-06/README.md) preserve
 all misses and host rejections. The approved EPYC 7763/9V74/9V45 policy permits
-matched AMD sessions; original measured-image checks and final platform gates
-remain pending. Tape-ID changes, task
+matched AMD sessions. All 48 original measured images reproduce exactly;
+[the compiler change's final platform gates and complete audit pass](measurements/recording-context-delivery-2026-11-06/README.md).
+The later measurement-only #266 merge also passes all nine production jobs and docs. Tape-ID changes, task
 switches, reentry and retirement remain explicit lifetime boundaries.
 
 Channel borrowing preserves hidden native contexts as well as payload storage.
