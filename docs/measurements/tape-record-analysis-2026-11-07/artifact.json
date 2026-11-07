@@ -1,0 +1,20 @@
+{
+  "id": 13573526746,
+  "node_id": "MDg6QXJ0aWZhY3QxMzU3MzUyNjc0Ng==",
+  "name": "tape-records-compiler-report",
+  "size_in_bytes": 12145827,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13573526746",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13573526746/zip",
+  "expired": false,
+  "digest": "sha256:7feefbf33963f2c62ca4ee46929c6b8e28862d6b74aee71de899c1c29f780acc",
+  "created_at": "2026-11-07T11:54:53Z",
+  "updated_at": "2026-11-07T11:54:53Z",
+  "expires_at": "2027-02-05T11:50:33Z",
+  "workflow_run": {
+    "id": 42369871217,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "tape-record-measurements",
+    "head_sha": "d48e6ca0b5bf1ed5ccf3524ae7aef3686b3632e3"
+  }
+}

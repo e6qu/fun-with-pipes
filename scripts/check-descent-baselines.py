@@ -15,17 +15,19 @@ PHASES = {'setup', 'forwardWithRecording', 'reverseSetup', 'reverseTraversal',
           'resultArray', 'retirement'}
 
 
-def check_observations(name, row, updates, protocol):
+def check_observations(name, row, updates, protocol, layout):
     assert protocol in {"baseline", "recording"}
+    assert layout in {"columns", "records"}
     recording = protocol == "recording"
     dimensions = row['dimensions']
-    controls = {'missing-parent-free', 'missing-result-phase'} if name == '3-1' else set()
-    assert set(row['controls']) == controls
+    release_control = {'columns': 'missing-parent-free', 'records': 'missing-operation-free'}[layout]
+    controls = {release_control, 'missing-result-phase'} if name == '3-1' else set()
+    assert set(row['controls']) == controls, (name, layout, set(row['controls']), controls)
     assert len(row['binaries']) == (15 if recording else 13) + len(controls)
     assert len(row['cCompilerStackUsage']) == (13 if recording else 11) + len(controls)
     assert row['binaries']['fwp-ad']['sha256'] == row['binaries']['fwp-ad-identical']['sha256']
     for label, control in row['controls'].items():
-        assert control['status'] == {'missing-parent-free': 232, 'missing-result-phase': 233}[label]
+        assert control['status'] == {release_control: 232, 'missing-result-phase': 233}[label]
         assert control['stderr']
     profiles = {'fwp-ad-history', 'fwp-ad'}
     profiles |= {'fwp-ad-history-reference', 'fwp-ad-reference'} if recording else {'fwp-explicit', 'fwp-packed'}
@@ -86,7 +88,7 @@ def check_report(report, source):
         for label, ratios in row['ratios'].items():
             for peer, value in ratios.items():
                 assert value == row['medianNs'][label] / row['medianNs'][peer]
-        check_observations(name, row, updates, "baseline")
+        check_observations(name, row, updates, "baseline", "columns")
 
 
 def check_archive(path):

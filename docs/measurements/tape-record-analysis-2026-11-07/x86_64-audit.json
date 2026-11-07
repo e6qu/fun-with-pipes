@@ -1,0 +1,169 @@
+{
+  "source": "621653b6394f49dc229a2956b6b61476c82c9aac",
+  "run": 42369286155,
+  "job": {
+    "id": 128393863835,
+    "run_id": 42369286155,
+    "workflow_name": "Numerical and ownership evidence",
+    "head_branch": "main",
+    "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/42369286155",
+    "run_attempt": 1,
+    "node_id": "CR_kwDOU33zxM8AAAAd5N7imw",
+    "head_sha": "621653b6394f49dc229a2956b6b61476c82c9aac",
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/128393863835",
+    "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/42369286155/job/128393863835",
+    "status": "completed",
+    "conclusion": "success",
+    "created_at": "2026-11-07T11:42:15Z",
+    "started_at": "2026-11-07T11:43:40Z",
+    "completed_at": "2026-11-07T11:49:22Z",
+    "name": "tape_measurements / numeric_input_analysis (ubuntu-latest)",
+    "steps": [
+      {
+        "name": "Set up job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 1,
+        "started_at": "2026-11-07T11:43:40Z",
+        "completed_at": "2026-11-07T11:43:41Z"
+      },
+      {
+        "name": "Run actions/checkout@v7",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 2,
+        "started_at": "2026-11-07T11:43:41Z",
+        "completed_at": "2026-11-07T11:44:00Z"
+      },
+      {
+        "name": "Run dtolnay/rust-toolchain@stable",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 3,
+        "started_at": "2026-11-07T11:44:00Z",
+        "completed_at": "2026-11-07T11:44:08Z"
+      },
+      {
+        "name": "Verify focused correctness and matching compiler sources",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 4,
+        "started_at": "2026-11-07T11:44:08Z",
+        "completed_at": "2026-11-07T11:44:14Z"
+      },
+      {
+        "name": "Qualify tape-records compiler timing host",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 5,
+        "started_at": "2026-11-07T11:44:14Z",
+        "completed_at": "2026-11-07T11:44:14Z"
+      },
+      {
+        "name": "Preserve compiler timing host qualification",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 6,
+        "started_at": "2026-11-07T11:44:14Z",
+        "completed_at": "2026-11-07T11:44:15Z"
+      },
+      {
+        "name": "Run actions/cache@v6",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 7,
+        "started_at": "2026-11-07T11:44:15Z",
+        "completed_at": "2026-11-07T11:44:16Z"
+      },
+      {
+        "name": "Build candidate at production settings",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 8,
+        "started_at": "2026-11-07T11:44:16Z",
+        "completed_at": "2026-11-07T11:45:30Z"
+      },
+      {
+        "name": "Build and verify the selected same-source reference",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 9,
+        "started_at": "2026-11-07T11:45:30Z",
+        "completed_at": "2026-11-07T11:46:56Z"
+      },
+      {
+        "name": "Measure balanced compiler commands and peak memory",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 10,
+        "started_at": "2026-11-07T11:46:56Z",
+        "completed_at": "2026-11-07T11:49:05Z"
+      },
+      {
+        "name": "Preserve complete measurements and failures",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 11,
+        "started_at": "2026-11-07T11:49:05Z",
+        "completed_at": "2026-11-07T11:49:19Z"
+      },
+      {
+        "name": "Post Run actions/cache@v6",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 21,
+        "started_at": "2026-11-07T11:49:19Z",
+        "completed_at": "2026-11-07T11:49:19Z"
+      },
+      {
+        "name": "Post Run actions/checkout@v7",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 22,
+        "started_at": "2026-11-07T11:49:19Z",
+        "completed_at": "2026-11-07T11:49:19Z"
+      },
+      {
+        "name": "Complete job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 23,
+        "started_at": "2026-11-07T11:49:19Z",
+        "completed_at": "2026-11-07T11:49:19Z"
+      }
+    ],
+    "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/128393863835",
+    "labels": [
+      "ubuntu-latest"
+    ],
+    "runner_id": 1000420290,
+    "runner_name": "GitHub Actions 1000420290",
+    "runner_group_id": 0,
+    "runner_group_name": "GitHub Actions"
+  },
+  "artifact": {
+    "id": 13572963375,
+    "node_id": "MDg6QXJ0aWZhY3QxMzU3Mjk2MzM3NQ==",
+    "name": "tape-records-analysis-X64",
+    "size_in_bytes": 143855827,
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13572963375",
+    "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13572963375/zip",
+    "expired": false,
+    "digest": "sha256:94ca31b9049bbcd9bf3e57c62f6ea008ebbb3c0447735601a05abdf59d180b6b",
+    "created_at": "2026-11-07T11:49:19Z",
+    "updated_at": "2026-11-07T11:49:19Z",
+    "expires_at": "2027-02-05T11:42:14Z",
+    "workflow_run": {
+      "id": 42369286155,
+      "repository_id": 1400763332,
+      "head_repository_id": 1400763332,
+      "head_branch": "main",
+      "head_sha": "621653b6394f49dc229a2956b6b61476c82c9aac"
+    }
+  },
+  "commands": 336,
+  "untimedChecks": 6,
+  "failures": {},
+  "referenceVerified": true,
+  "expectedDiagnostics": []
+}

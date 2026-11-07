@@ -119,7 +119,8 @@ def check_report(report, source, protocol):
             ratio = row['medianNs']['fwp-ad'] / row['medianNs']['fwp-ad-identical']
             assert max(ratio, 1 / ratio) <= 1.02, (name, ratio)
         CHECK.check_observations(name, row, updates * solves,
-                                 "recording" if paired else "baseline")
+                                 "recording" if paired else "baseline",
+                                 "records" if protocol == 'tape-records' else "columns")
     if protocol in {'eager-captures', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context', 'tape-records'}:
         assert config['comparison'] == protocol
 

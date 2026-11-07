@@ -69,8 +69,8 @@ memory must stay within 5% of the reference.
 Audit artifact `13573526746` contains the complete reports and 1,081 retained
 observation files per architecture. Its SHA-256 is
 `7feefbf33963f2c62ca4ee46929c6b8e28862d6b74aee71de899c1c29f780acc`.
-Repository retention is pending: local checks stopped below the 64 GiB disk
-limit. Do not call an unverified local copy retained evidence.
+[All compiler records are retained](tape-record-analysis-2026-11-07/README.md);
+the archive digest and 2,162 observation-file hashes pass local verification.
 
 ## Remaining acceptance
 

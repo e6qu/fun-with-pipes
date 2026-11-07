@@ -1,5 +1,6 @@
 """Keep the layout comparison isolated and reject changed reference bytes."""
 import copy
+import gzip
 import hashlib
 import importlib.util
 import json
@@ -22,6 +23,37 @@ SPEC.loader.exec_module(EVIDENCE)
 
 
 class TapeReference(unittest.TestCase):
+    def test_saved_record_layout_report_requires_physical_release_control(self):
+        raw = gzip.decompress((ROOT / 'docs/measurements/tape-record-time-2026-11-07/x86_64-1.json.gz').read_bytes())
+        self.assertEqual(hashlib.sha256(raw).hexdigest(),
+                         '48a5b73d7df2c678699d49804ac33b3913c2a1f155e722715cc6f88fb3fb2d92')
+        report = json.loads(raw)
+        EVIDENCE.GROUPS.check_report(report, '621653b6394f49dc229a2956b6b61476c82c9aac', 'tape-records')
+        original = report['results']['3-1']
+        for change in ('old-control', 'missing-control', 'extra-control', 'successful-control',
+                       'empty-diagnostic', 'missing-image', 'live-storage', 'wrong-layout'):
+            row = copy.deepcopy(original)
+            layout = 'records'
+            controls = row['controls']
+            if change == 'old-control':
+                controls['missing-parent-free'] = controls.pop('missing-operation-free')
+            elif change == 'missing-control':
+                del controls['missing-operation-free']
+            elif change == 'extra-control':
+                controls['missing-parent-free'] = controls['missing-operation-free']
+            elif change == 'successful-control':
+                controls['missing-operation-free']['status'] = 0
+            elif change == 'empty-diagnostic':
+                controls['missing-operation-free']['stderr'] = ''
+            elif change == 'missing-image':
+                del row['binaries']['missing-operation-free']
+            elif change == 'live-storage':
+                row['fwpProfiles']['fwp-ad']['rawDerivativeStorage']['finalBytes'] = 24
+            else:
+                layout = 'columns'
+            with self.subTest(change=change), self.assertRaises(AssertionError):
+                EVIDENCE.GROUPS.CHECK.check_observations('3-1', row, 512, 'recording', layout)
+
     def setUp(self):
         self.name = 'runtime/fwp_rt_kernel.c'
         self.current = (ROOT / self.name).read_text()
