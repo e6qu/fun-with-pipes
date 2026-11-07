@@ -1,9 +1,10 @@
 # Current work
 
-**Next:** publish the complete formatting/probe/audit batch, then dispatch
-`numerics.yml`, suite `local-derivatives`, on `tape-record-evidence`. Its three
-native semantic checks gate four complete-solve timing sessions. Keep this in
-PR #269; do not rerun old tape-layout timings.
+**Next:** monitor the four runtime sessions in `42413370794` at source
+`0ddde8224c3ab39e9ef4d9770483a72372b17c42`; its three native semantic/formatting
+checks pass. Runtime jobs: AMD2 `128527543727`, ARM2 `128527543735`, ARM1
+`128527543827`, AMD1 `128527543903`. All have started; three are measuring and AMD1 is building. Keep PR #269 draft until
+this batch is complete, then require final-head full validation.
 
 Contract `524524bd3` precedes prototype `3f0cea6b8`. The prototype remains in
 `tests/fixtures/descent_local_ad.fwp`; no public API or compiler/runtime behavior
@@ -17,6 +18,13 @@ is applied. No timing jobs ran. All three full logs and artifacts were reviewed
 and retained. The batch also adds a callback trap-order check, saves native
 probes, verifies zero tape calls/storage and audits every saved timing observation.
 The new complete audit still needs its first real local-derivative report.
+
+[Repaired checks](measurements/local-derivative-checks-2026-11-07/passing/README.md)
+pass all three hosts, including callback trap order. All nine native probes,
+generated C and full logs are retained and verified (0.20 s). The generic probe
+contains dynamic callback dispatch and boxed Dual inputs; the benchmark's known
+edge path still needs its own C/counter review. No allocation-free claim.
+
 
 Guarded local checks: four new measurement controls (0.12 s), 24 historical
 budget controls (0.13 s), 13 historical report controls (6.68 s), Rust formatting
@@ -127,3 +135,9 @@ PR #269 is draft while the prototype is tested. Superseded full matrices
 `42407505153` and `42411792736` were canceled to avoid spending runner time on
 intermediate heads. No failure had been reported; canceled runs establish no
 final platform support. Run the complete matrix on the finished batch.
+
+Documentation run `42413373915` failed at two links to the moved
+`PLAN.md#open-performance-goals` section. A full tracked-file search found both
+references (one was absent from the sparse checkout); both now point directly
+to `docs/measurements/unmet-comparisons.md`. No other completed step failed.
+The prior documentation run `42411792755` passes.

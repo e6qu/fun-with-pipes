@@ -1,0 +1,105 @@
+{
+  "run": 42413370794,
+  "source": "0ddde8224c3ab39e9ef4d9770483a72372b17c42",
+  "checks": [
+    {
+      "host": "amd",
+      "job": 128526061815,
+      "artifact": 13590273035,
+      "statuses": {
+        "values": "Some(0)",
+        "trap": "Some(101)",
+        "order": "Some(101)"
+      },
+      "files": {
+        "format.patch": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "probes/record-ownership/local-derivatives/order.c": "9ffd1fcda0951c5e1d6a956cb40f5a5abfccd4c03a13f544e9367803f375a8b6",
+        "cc.txt": "6e876a25bb7fdb71ab2914e8f1eeaa00cc61d20a36a6c2981ab7d4d7ceab42f8",
+        "probes/record-ownership/local-derivatives/order.exe": "21cb02ec73ddf001c62eda7df769241c1d3bbb353520da4869a2cc4355c3ce63",
+        "probes/record-ownership/local-derivatives/order.status": "32bd8fc8af253e6be1df047b3ac41a524b88563e7370a4d99464a78846dd9ace",
+        "probes/record-ownership/local-derivatives/order.stderr": "f3065fe10101b916d5a6358fb3c07bca57ccbca84d931e37b46abe905509e6d7",
+        "probes/record-ownership/local-derivatives/order.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "probes/record-ownership/local-derivatives/trap.c": "aa0f7f7fe8428620dd17305eff099216589752693e2aa081e32dbf3ce2d1b8bb",
+        "probes/record-ownership/local-derivatives/trap.exe": "e39b859a70324a9fedde4006c52360b536a5b4a3344855cd7096db4c10303a3c",
+        "probes/record-ownership/local-derivatives/trap.status": "32bd8fc8af253e6be1df047b3ac41a524b88563e7370a4d99464a78846dd9ace",
+        "probes/record-ownership/local-derivatives/trap.stderr": "ccdeeec69e0db166d38e4c92c8523ddb829196b6c9bc263bc1cc0e67f6c753ff",
+        "probes/record-ownership/local-derivatives/trap.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "probes/record-ownership/local-derivatives/values.c": "659cb3edf0f88c2410d34cd7c54715f10ed06c208e971334c780fccb19ce92e3",
+        "probes/record-ownership/local-derivatives/values.exe": "a6725c1877b2b38c7c16fe053dd6cb789d956822a3b3f52f2f5ebf1eba662d15",
+        "probes/record-ownership/local-derivatives/values.status": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+        "probes/record-ownership/local-derivatives/values.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "semantics.log": "8da8df5619bebe0e2455f794d7cb31a1a096873adcbafa064475880a79cf09ab",
+        "probes/record-ownership/local-derivatives/values.stdout": "ae2ab51c77ea469a7fc4786aadf33395c068df78d6a269daec8479be72f57684",
+        "source.txt": "ff4b2c7803d77246881548cda99bd0b3f3425cd896152a97f9c4f9e5ef6c202f"
+      },
+      "archiveSha256": "907a0bed4ffc79221c30a71f86d5913c69321c85a528bc5de43174255ce58e1f",
+      "logSha256": "1736ae22e2aaf483ea20b7c7f859f92a3fed7f14cf56fd0e4fe8d87ed1d03eed"
+    },
+    {
+      "host": "arm",
+      "job": 128526061855,
+      "artifact": 13590298314,
+      "statuses": {
+        "values": "Some(0)",
+        "trap": "Some(101)",
+        "order": "Some(101)"
+      },
+      "files": {
+        "cc.txt": "8497f84b2b8334c413d9c6166bd39d009ba55d2ff60a8f23e66dfa5819c2b048",
+        "probes/record-ownership/local-derivatives/order.c": "9ffd1fcda0951c5e1d6a956cb40f5a5abfccd4c03a13f544e9367803f375a8b6",
+        "format.patch": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "probes/record-ownership/local-derivatives/order.exe": "5f27c6a64f2d1f2bf85ff3337ce37eaa821fe97ccf3c14ef00a81fbf758c2436",
+        "probes/record-ownership/local-derivatives/order.status": "32bd8fc8af253e6be1df047b3ac41a524b88563e7370a4d99464a78846dd9ace",
+        "probes/record-ownership/local-derivatives/order.stderr": "f3065fe10101b916d5a6358fb3c07bca57ccbca84d931e37b46abe905509e6d7",
+        "probes/record-ownership/local-derivatives/order.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "probes/record-ownership/local-derivatives/trap.c": "aa0f7f7fe8428620dd17305eff099216589752693e2aa081e32dbf3ce2d1b8bb",
+        "probes/record-ownership/local-derivatives/trap.exe": "4ec7e4f888c6a4f610ab5e0e9b55081c7c12233b6782e2c40a716f37786cc56f",
+        "probes/record-ownership/local-derivatives/trap.status": "32bd8fc8af253e6be1df047b3ac41a524b88563e7370a4d99464a78846dd9ace",
+        "probes/record-ownership/local-derivatives/trap.stderr": "ccdeeec69e0db166d38e4c92c8523ddb829196b6c9bc263bc1cc0e67f6c753ff",
+        "probes/record-ownership/local-derivatives/trap.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "probes/record-ownership/local-derivatives/values.c": "659cb3edf0f88c2410d34cd7c54715f10ed06c208e971334c780fccb19ce92e3",
+        "probes/record-ownership/local-derivatives/values.exe": "ff06ca60fd4bf50e8a52341370d356589acee046866c10db1c8ad9e87399a7e3",
+        "probes/record-ownership/local-derivatives/values.status": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+        "probes/record-ownership/local-derivatives/values.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "probes/record-ownership/local-derivatives/values.stdout": "ae2ab51c77ea469a7fc4786aadf33395c068df78d6a269daec8479be72f57684",
+        "semantics.log": "647ecbab4f6cfa561b86a944d881404fcbb622c5f8298f502180102b65170e81",
+        "source.txt": "ff4b2c7803d77246881548cda99bd0b3f3425cd896152a97f9c4f9e5ef6c202f"
+      },
+      "archiveSha256": "9de6637a850c431ef0592a46e80855fa885b9383faacfd66b1cd9bfaefcde708",
+      "logSha256": "4974e9a52bd0b7008824ec536de5f1f7a0eed9aeb12dd2d33093494b42c454a7"
+    },
+    {
+      "host": "mac",
+      "job": 128526061803,
+      "artifact": 13589954659,
+      "statuses": {
+        "values": "Some(0)",
+        "trap": "Some(101)",
+        "order": "Some(101)"
+      },
+      "files": {
+        "format.patch": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "probes/record-ownership/local-derivatives/order.c": "9ffd1fcda0951c5e1d6a956cb40f5a5abfccd4c03a13f544e9367803f375a8b6",
+        "probes/record-ownership/local-derivatives/order.exe": "400351a56ce6852a7d34f45df7382fe2a771afaf529b1fe85a619f9a361594cb",
+        "cc.txt": "df12815703ce3452ab4bd51ecbea4cf8155246b94b5b15113a580ff6aec2befd",
+        "probes/record-ownership/local-derivatives/order.status": "32bd8fc8af253e6be1df047b3ac41a524b88563e7370a4d99464a78846dd9ace",
+        "probes/record-ownership/local-derivatives/order.stderr": "f3065fe10101b916d5a6358fb3c07bca57ccbca84d931e37b46abe905509e6d7",
+        "probes/record-ownership/local-derivatives/order.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "probes/record-ownership/local-derivatives/trap.c": "aa0f7f7fe8428620dd17305eff099216589752693e2aa081e32dbf3ce2d1b8bb",
+        "probes/record-ownership/local-derivatives/trap.exe": "6366f3bfe74cf6b12d41db9abca7b3093b0a4cfe754ff1ed30e35d3af9193956",
+        "probes/record-ownership/local-derivatives/trap.status": "32bd8fc8af253e6be1df047b3ac41a524b88563e7370a4d99464a78846dd9ace",
+        "probes/record-ownership/local-derivatives/trap.stderr": "ccdeeec69e0db166d38e4c92c8523ddb829196b6c9bc263bc1cc0e67f6c753ff",
+        "probes/record-ownership/local-derivatives/trap.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "probes/record-ownership/local-derivatives/values.c": "659cb3edf0f88c2410d34cd7c54715f10ed06c208e971334c780fccb19ce92e3",
+        "probes/record-ownership/local-derivatives/values.exe": "6511dcede30959ce0f57d522531a2d8d02277834b702b5dc4bfe24e4c24db4c0",
+        "probes/record-ownership/local-derivatives/values.status": "e67403f811c9e0307b56d6067ee62452c96101087926773b09f24f8f923fb7db",
+        "probes/record-ownership/local-derivatives/values.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "probes/record-ownership/local-derivatives/values.stdout": "ae2ab51c77ea469a7fc4786aadf33395c068df78d6a269daec8479be72f57684",
+        "semantics.log": "a1a54a0649a2934478f7884cc17ca9cd3d54f3d7595100c7fa2f6bab1b0fcdf2",
+        "source.txt": "ff4b2c7803d77246881548cda99bd0b3f3425cd896152a97f9c4f9e5ef6c202f"
+      },
+      "archiveSha256": "f885894f1b834ab13e7a4467ceae51dd21326662ee7b103ac015020b13678cd4",
+      "logSha256": "3cfd4830f2f33ed8c6bc474f8eb9f5e48d52f94838f6d34632349d8f20fdf83a"
+    }
+  ]
+}

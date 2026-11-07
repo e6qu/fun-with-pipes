@@ -1,4 +1,7 @@
-# First local-derivative correctness checks
+# Local-derivative correctness checks
+
+[The repaired batch passes all three hosts](passing/README.md). The initial
+formatting failure and its passing semantic results remain recorded below.
 
 [Run 42411789323](https://github.com/e6qu/fun-with-pipes/actions/runs/42411789323)
 tested source `3f0cea6b870701f2f1acc529060e2b5427705026`.
