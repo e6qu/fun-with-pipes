@@ -1,15 +1,23 @@
 # Current work
 
-**Next:** prove why the measured local-edge call keeps two heap records, then
-implement the bounded [direct numeric worker](measurements/direct-numeric-workers.md)
-extension. All four first-prototype sessions are complete and audited; retain
+**Next:** run the bounded numeric-worker checks and then measurements in PR #269.
+Contract `1c5d555c5` precedes the compiler change. The pass now preserves record
+entries for incompatible/function-value uses and shares one numeric worker among
+eligible direct calls. An actual local-edge source test records its callers and
+must prove four numeric inputs; the root cause is not yet confirmed by execution.
+Three native jobs also run existing mixed-ownership controls. Runtime audits now
+require exact request/retain parity with handwritten arrays and no extra peak
+managed storage. Five guarded Python acceptance controls pass (0.13 s); Rust
+formatting passes (0.13 s). Compiler/native execution belongs on runners.
+
+All four first-prototype sessions are complete and audited; retain
 [their five timing misses](measurements/local-derivative-time-2026-11-07/README.md).
 Do not repeat unchanged timings. PR #269 remains draft pending this substantial
 compiler improvement and final-head full validation.
 
 Contract `524524bd3` precedes prototype `3f0cea6b8`. The prototype remains in
-`tests/fixtures/descent_local_ad.fwp`; no public API or compiler/runtime behavior
-has changed. [The experiment](measurements/local-derivatives.md) requires 20%
+`tests/fixtures/descent_local_ad.fwp`; no public API has changed. The compiler extension above is experimental until
+its focused and full gates pass. [The experiment](measurements/local-derivatives.md) requires 20%
 long-case gains, <=2% small-case regression and <=2% identical-copy variation.
 
 [First checks](measurements/local-derivative-checks-2026-11-07/README.md), run

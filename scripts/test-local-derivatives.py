@@ -7,6 +7,9 @@ import unittest
 SPEC = importlib.util.spec_from_file_location('peers', Path(__file__).with_name('measure-descent-peers.py'))
 PEERS = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(PEERS)
+AUDIT_SPEC = importlib.util.spec_from_file_location('local_audit', Path(__file__).with_name('audit-local-derivatives.py'))
+AUDIT = importlib.util.module_from_spec(AUDIT_SPEC)
+AUDIT_SPEC.loader.exec_module(AUDIT)
 
 
 class Acceptance(unittest.TestCase):
@@ -43,6 +46,17 @@ class Acceptance(unittest.TestCase):
         self.assertNotIn('packed-descend', source)
         self.assertIn('both (const 199) id | loop', source)
         self.assertIn('array.from-list | solve | array.to-list | echo', source)
+
+    def test_numeric_workers_must_remove_all_extra_requests_without_extra_owners(self):
+        counts = dict(requests=1745, retains=8, finalChargedBytes=0, peakChargedBytes=8736)
+        row = dict(fwpProfiles={name: dict(managed=copy.deepcopy(counts))
+                               for name in ['fwp-local', 'fwp-packed']})
+        AUDIT.check_numeric_storage(row)
+        for field in counts:
+            changed = copy.deepcopy(row)
+            changed['fwpProfiles']['fwp-local']['managed'][field] += 1
+            with self.subTest(field=field), self.assertRaises(AssertionError):
+                AUDIT.check_numeric_storage(changed)
 
 
 if __name__ == '__main__':

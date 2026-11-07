@@ -1,6 +1,10 @@
 name: Structured automatic derivatives
 on:
   workflow_call:
+    inputs:
+      measure:
+        type: boolean
+        required: true
 permissions:
   contents: read
 jobs:
@@ -47,6 +51,11 @@ jobs:
           "$CC" --version > local-checks/cc.txt
           python3 scripts/test-local-derivatives.py
           cargo fmt --check
+      - name: Numeric parameter proofs and mixed ownership
+        run: |
+          set -o pipefail
+          cargo test --locked --lib cgen::numeric_parameters::tests -- --nocapture 2>&1 | tee local-checks/numeric-workers.log
+          cargo test --locked --test fold_ownership numeric_callback_inputs_preserve_order_shared_lists_and_mixed_owners -- --exact --nocapture 2>&1 | tee local-checks/mixed-ownership.log
       - name: Interpreter and production native semantics
         run: |
           set -o pipefail
@@ -64,6 +73,7 @@ jobs:
           path: local-checks/
           if-no-files-found: error
   measure:
+    if: inputs.measure
     needs: checks
     strategy:
       fail-fast: false
@@ -113,7 +123,7 @@ jobs:
         if: ${{ !cancelled() && hashFiles('local-evidence/solves/comparison.json') != '' }}
         run: >-
           python3 scripts/audit-local-derivatives.py --directory local-evidence/solves
-          --source "$GITHUB_SHA"
+          --source "$GITHUB_SHA" --representation numeric
           --architecture ${{ matrix.runner == 'ubuntu-latest' && 'x86_64' || 'aarch64' }}
       - uses: actions/upload-artifact@v7
         if: always()

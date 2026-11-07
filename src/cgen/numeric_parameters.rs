@@ -1,6 +1,6 @@
 //! Replace an internal nested numeric-record parameter with its numeric leaves.
-//! All uses and direct callers are checked before any signature changes. This
-//! runs on the already-owned packed lowering result, before ownership insertion.
+//! Preserve the original entry when some callers need records; eligible direct
+//! calls can share one numeric worker. This runs before ownership insertion.
 use std::collections::HashMap;
 
 use crate::ir::*;
@@ -207,7 +207,7 @@ fn path(expr: &Expr, aliases: &HashMap<Local, Vec<u32>>, depth: usize) -> Option
 }
 
 /// The analysis and rewrite use the same lexical traversal. The first pass
-/// changes no expression; the second runs only after every caller also passes.
+/// changes no expression; the second runs only for a proved numeric worker.
 fn expression(
     expr: &mut Expr,
     shape: &Shape,
@@ -265,14 +265,26 @@ fn expression(
     }
 }
 
-fn callers(expr: &mut Expr, selected: &[Option<Shape>], visits: &mut usize) {
+fn callers(
+    expr: &mut Expr,
+    selected: &[Option<Shape>],
+    targets: &[FuncId],
+    locals: &[MT],
+    shapes: &Shapes,
+    visits: &mut usize,
+) {
     *visits += 1;
     match expr {
         Expr::Call(id, xs) => {
             for x in xs.iter_mut() {
-                callers(x, selected, visits);
+                callers(x, selected, targets, locals, shapes, visits);
             }
-            if let Some(shape) = &selected[*id] {
+            if let Some(Some(shape)) = selected.get(*id) {
+                // Other direct calls and function values keep the original ABI.
+                if xs.len() != 1 || !argument(&xs[0], shape, locals, shapes) {
+                    return;
+                }
+                let target = targets[*id];
                 let Expr::Record(fields) = &xs[0] else {
                     unreachable!()
                 };
@@ -289,36 +301,40 @@ fn callers(expr: &mut Expr, selected: &[Option<Shape>], visits: &mut usize) {
                         })
                         .collect(),
                 );
+                *id = target;
             }
         }
-        Expr::Record(xs) | Expr::Construct(_, xs) => {
-            xs.iter_mut().for_each(|e| callers(e, selected, visits))
-        }
+        Expr::Record(xs) | Expr::Construct(_, xs) => xs
+            .iter_mut()
+            .for_each(|e| callers(e, selected, targets, locals, shapes, visits)),
         Expr::Apply(f, xs) => {
-            callers(f, selected, visits);
-            xs.iter_mut().for_each(|e| callers(e, selected, visits));
+            callers(f, selected, targets, locals, shapes, visits);
+            xs.iter_mut()
+                .for_each(|e| callers(e, selected, targets, locals, shapes, visits));
         }
         Expr::Let(_, a, b) => {
-            callers(a, selected, visits);
-            callers(b, selected, visits);
+            callers(a, selected, targets, locals, shapes, visits);
+            callers(b, selected, targets, locals, shapes, visits);
         }
         Expr::Match(value, arms) => {
-            callers(value, selected, visits);
+            callers(value, selected, targets, locals, shapes, visits);
             arms.iter_mut()
-                .for_each(|(_, e)| callers(e, selected, visits));
+                .for_each(|(_, e)| callers(e, selected, targets, locals, shapes, visits));
         }
         Expr::SetFields(base, fields) => {
-            callers(base, selected, visits);
+            callers(base, selected, targets, locals, shapes, visits);
             fields
                 .iter_mut()
-                .for_each(|(_, e)| callers(e, selected, visits));
+                .for_each(|(_, e)| callers(e, selected, targets, locals, shapes, visits));
         }
         Expr::Field(e, _)
         | Expr::Trace(_, e)
         | Expr::Dup(_, e)
         | Expr::Drop(_, e)
         | Expr::BorrowGlobal(_, _, e)
-        | Expr::ResourceRegion { body: e, .. } => callers(e, selected, visits),
+        | Expr::ResourceRegion { body: e, .. } => {
+            callers(e, selected, targets, locals, shapes, visits)
+        }
         Expr::Local(_) | Expr::Const(_) | Expr::Func(_) => {}
     }
 }
@@ -340,10 +356,11 @@ pub(super) fn lower(program: &mut Program, entries: &[FuncId]) -> usize {
                 match e {
                     Expr::Call(id, args) => {
                         graph[caller].push(*id);
-                        called[*id] = true;
                         if let Some(shape) = &selected[*id] {
-                            blocked[*id] |= args.len() != 1
-                                || !argument(&args[0], shape, &function.locals, &program.shapes);
+                            let eligible = args.len() == 1
+                                && argument(&args[0], shape, &function.locals, &program.shapes);
+                            called[*id] |= eligible;
+                            blocked[*id] |= !eligible;
                         }
                     }
                     Expr::Func(id) | Expr::BorrowGlobal(_, id, _) => {
@@ -416,7 +433,7 @@ pub(super) fn lower(program: &mut Program, entries: &[FuncId]) -> usize {
     }
     let recursive = recursive(&graph);
     for (id, candidate) in selected.iter_mut().enumerate() {
-        if blocked[id] || !called[id] || recursive[id] {
+        if !called[id] || recursive[id] {
             *candidate = None;
             continue;
         }
@@ -432,9 +449,22 @@ pub(super) fn lower(program: &mut Program, entries: &[FuncId]) -> usize {
             }
         }
     }
+    let mut targets: Vec<_> = (0..program.funcs.len()).collect();
     for (id, shape) in selected.iter().enumerate() {
         if let Some(shape) = shape {
-            let function = &mut program.funcs[id];
+            let target = if blocked[id] {
+                // One body per original function, shared by all eligible calls.
+                // Keep incompatible callers and externally visible entries intact.
+                let mut worker = program.funcs[id].clone();
+                worker.name.push_str("$numeric");
+                let target = program.funcs.len();
+                program.funcs.push(worker);
+                target
+            } else {
+                id
+            };
+            targets[id] = target;
+            let function = &mut program.funcs[target];
             let Body::Expr(body) = &mut function.body else {
                 unreachable!()
             };
@@ -463,7 +493,14 @@ pub(super) fn lower(program: &mut Program, entries: &[FuncId]) -> usize {
     if selected.iter().any(Option::is_some) {
         for function in &mut program.funcs {
             if let Body::Expr(body) = &mut function.body {
-                callers(body, &selected, &mut visits);
+                callers(
+                    body,
+                    &selected,
+                    &targets,
+                    &function.locals,
+                    &program.shapes,
+                    &mut visits,
+                );
             }
         }
     }
@@ -655,10 +692,150 @@ mod tests {
             }
             crate::ir::check_locals(&program).unwrap();
             let original = program.funcs[1].ty.clone();
+            let count = program.funcs.len();
             lower(&mut program, if mode == 4 { &[1] } else { &[] });
             assert_eq!(program.funcs[1].ty, original);
+            if mode == 2 {
+                assert_eq!(program.funcs.len(), count, "no eligible direct call");
+            } else {
+                assert_eq!(program.funcs.len(), count + 1, "one shared worker");
+                assert!(matches!(&program.funcs[0].body,
+                    Body::Expr(Expr::Call(id, args)) if *id == count
+                    && matches!(&args[0], Expr::Record(fields) if fields.len() == 4)));
+                assert_eq!(program.funcs[count].name, "leaf$numeric");
+            }
             crate::ir::check_locals(&program).unwrap();
         }
+    }
+
+    #[test]
+    fn mixed_direct_calls_share_one_worker_and_keep_unsupported_arguments() {
+        let mut program = example();
+        let nested = program.funcs[1].locals[0].clone();
+        program.funcs.push(Func {
+            name: "whole-argument".into(),
+            arity: 1,
+            locals: vec![nested.clone()],
+            ty: arrow(nested, MT::con("std::I64")),
+            body: Body::Expr(Expr::Call(1, vec![Expr::Local(0)])),
+        });
+        program.funcs.push(program.funcs[0].clone());
+        let original = format!("{:?}", program.funcs[1]);
+        let unsupported = format!("{:?}", program.funcs[2]);
+        lower(&mut program, &[]);
+        crate::ir::check_locals(&program).unwrap();
+        assert_eq!(program.funcs.len(), 5);
+        assert_eq!(format!("{:?}", program.funcs[1]), original);
+        assert_eq!(format!("{:?}", program.funcs[2]), unsupported);
+        for id in [0, 3] {
+            assert!(matches!(
+                &program.funcs[id].body,
+                Body::Expr(Expr::Call(4, _))
+            ));
+        }
+    }
+
+    #[test]
+    fn original_function_values_and_numeric_workers_compute_the_same_values() {
+        let mut program = example();
+        program.funcs.push(Func {
+            name: "callback".into(),
+            arity: 0,
+            locals: vec![],
+            ty: program.funcs[1].ty.clone(),
+            body: Body::Expr(Expr::Func(1)),
+        });
+        let original = program.clone();
+        lower(&mut program, &[]);
+        crate::ir::check_locals(&program).unwrap();
+        let pair = Value::Record(vec![Value::I64(-3), Value::I64(7)].into());
+        for variant in [&original, &program] {
+            let mut interpreter =
+                crate::interp::Interp::new(variant, Box::new(std::io::sink())).unwrap();
+            assert_eq!(
+                interpreter
+                    .call_root(0, vec![pair.clone(), pair.clone()])
+                    .unwrap(),
+                Value::I64(7)
+            );
+            let function = interpreter.call_root(2, vec![]).unwrap();
+            let input = Value::Record(vec![pair.clone(), pair.clone()].into());
+            assert_eq!(
+                interpreter.apply_root(function, vec![input]).unwrap(),
+                Value::I64(7)
+            );
+        }
+        assert_eq!(
+            pair,
+            Value::Record(vec![Value::I64(-3), Value::I64(7)].into())
+        );
+    }
+
+    #[test]
+    fn measured_local_edge_uses_numeric_arguments() {
+        crate::driver::with_big_stack(|| {
+            let source = format!(
+                "{}\nmain = [-1.2, 1.0, -1.2] | array.from-list | local-descend | array.to-list | echo\n",
+                include_str!("../../tests/fixtures/descent_local_ad.fwp")
+            );
+            let (_, mut program) = crate::driver::compile_source(
+                "local-numeric-worker.fwp",
+                &source,
+                crate::mono::Roots {
+                    main: true,
+                    ..Default::default()
+                },
+            )
+            .unwrap_or_else(|failure| panic!("{}", failure.rendered));
+            let edges: Vec<_> = program
+                .funcs
+                .iter()
+                .enumerate()
+                .filter(|(_, f)| f.name.contains("local-edge"))
+                .filter_map(|(id, f)| shape(&program, f).map(|shape| (id, shape)))
+                .collect();
+            assert!(
+                !edges.is_empty(),
+                "retain the measured edge before native lowering"
+            );
+            for (id, shape) in &edges {
+                for function in &program.funcs {
+                    if let Body::Expr(body) = &function.body {
+                        walk(body, &mut |e| match e {
+                            Expr::Call(target, args) if target == id => {
+                                eprintln!(
+                                    "edge {id} direct caller {} eligible={}: {args:?}",
+                                    function.name,
+                                    args.len() == 1
+                                        && argument(
+                                            &args[0],
+                                            shape,
+                                            &function.locals,
+                                            &program.shapes
+                                        )
+                                );
+                            }
+                            Expr::Func(target) if target == id => {
+                                eprintln!("edge {id} function value in {}", function.name);
+                            }
+                            _ => {}
+                        });
+                    }
+                }
+            }
+            lower(&mut program, &[]);
+            crate::ir::check_locals(&program).unwrap();
+            assert!(
+                program.funcs.iter().any(|f| f.name.contains("local-edge")
+                    && record_fields(&program.shapes, &f.locals[0]).is_some_and(|fields| fields
+                        .len()
+                        == 4
+                        && fields
+                            .iter()
+                            .all(|(_, ty)| super::super::scalar(ty).is_some()))),
+                "the measured edge needs four numeric fields"
+            );
+        });
     }
 
     #[test]
@@ -767,6 +944,33 @@ mod tests {
             let visits = lower(&mut program, &[]);
             crate::ir::check_locals(&program).unwrap();
             assert!(visits <= 40 * count + 8, "{count}: {visits}");
+            counts.push(visits);
+        }
+        assert_eq!(counts[2] - counts[1], 4 * (counts[1] - counts[0]));
+    }
+
+    #[test]
+    fn worker_cloning_and_analysis_scale_linearly() {
+        let mut counts = Vec::new();
+        for count in [32, 128, 512] {
+            let sample = example();
+            let mut program = Program::default();
+            for _ in 0..count {
+                let caller = program.funcs.len();
+                let callee = caller + 1;
+                let mut forwarding = sample.funcs[0].clone();
+                let Body::Expr(Expr::Call(id, _)) = &mut forwarding.body else {
+                    unreachable!()
+                };
+                *id = callee;
+                program.funcs.push(forwarding);
+                program.funcs.push(sample.funcs[1].clone());
+                program.exports.push((format!("edge-{callee}"), callee));
+            }
+            let visits = lower(&mut program, &[]);
+            crate::ir::check_locals(&program).unwrap();
+            assert_eq!(program.funcs.len(), 3 * count);
+            assert!(visits <= 50 * count, "{count}: {visits}");
             counts.push(visits);
         }
         assert_eq!(counts[2] - counts[1], 4 * (counts[1] - counts[0]));

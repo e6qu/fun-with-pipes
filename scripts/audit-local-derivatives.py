@@ -18,7 +18,16 @@ def digest(data):
     return hashlib.sha256(data).hexdigest()
 
 
-def audit(directory, source, architecture):
+def check_numeric_storage(row):
+    local = row['fwpProfiles']['fwp-local']['managed']
+    packed = row['fwpProfiles']['fwp-packed']['managed']
+    for field in ['requests', 'retains', 'finalChargedBytes']:
+        assert local[field] == packed[field], (field, local, packed)
+    assert local['peakChargedBytes'] <= packed['peakChargedBytes'], (local, packed)
+
+
+def audit(directory, source, architecture, representation):
+    assert representation in ("boxed", "numeric")
     assert re.fullmatch('[0-9a-f]{40}', source)
     report = json.loads((directory / 'comparison.json').read_text())
     GROUPS.check_report(report, source, 'local-derivatives')
@@ -35,6 +44,8 @@ def audit(directory, source, architecture):
     assert json.loads((directory / 'budget-failures.json').read_text()) == failures
     assert json.loads((directory / 'build-commands.json').read_text()) == report['commands']
     for name, row in report['results'].items():
+        if representation == 'numeric':
+            check_numeric_storage(row)
         case = directory / name
         for label, checksum in row['outputSha256'].items():
             output = (case / (label + '.stdout')).read_bytes()
@@ -108,7 +119,7 @@ def audit(directory, source, architecture):
             assert match and int(match[1]) * 1024 == size
     files = {str(path.relative_to(directory)): dict(bytes=path.stat().st_size, sha256=digest(path.read_bytes()))
              for path in sorted(directory.rglob('*')) if path.is_file() and path.name != 'audit.json'}
-    result = dict(source=source, architecture=architecture, files=files, budgetFailures=failures)
+    result = dict(source=source, architecture=architecture, representation=representation, files=files, budgetFailures=failures)
     (directory / 'audit.json').write_text(json.dumps(result, indent=2) + '\n')
     print(f'{architecture}: all six complete cases verified; {len(failures)} timing misses retained')
 
@@ -118,5 +129,6 @@ if __name__ == '__main__':
     parser.add_argument('--directory', type=Path, required=True)
     parser.add_argument('--source', required=True)
     parser.add_argument('--architecture', choices=['aarch64', 'x86_64'], required=True)
+    parser.add_argument('--representation', choices=['boxed', 'numeric'], required=True)
     args = parser.parse_args()
-    audit(args.directory, args.source, args.architecture)
+    audit(args.directory, args.source, args.architecture, args.representation)
