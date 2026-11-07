@@ -1,0 +1,40 @@
+name: Retain complete local derivative observations
+on:
+  workflow_call:
+    inputs:
+      evidence_run:
+        type: string
+        required: true
+      source_revision:
+        type: string
+        required: true
+      representation:
+        type: string
+        required: true
+permissions:
+  contents: read
+  actions: read
+jobs:
+  retain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      GH_TOKEN: ${{ github.token }}
+      EVIDENCE_RUN: ${{ inputs.evidence_run }}
+      MEASURED_SOURCE: ${{ inputs.source_revision }}
+      REPRESENTATION: ${{ inputs.representation }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Audit and retain every original observation and native image
+        run: >-
+          python3 scripts/retain-local-derivatives.py --repository "$GITHUB_REPOSITORY"
+          --run "$EVIDENCE_RUN" --source "$MEASURED_SOURCE"
+          --representation "$REPRESENTATION" --output local-retained
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: local-derivative-complete-observations
+          path: local-retained/
+          if-no-files-found: error

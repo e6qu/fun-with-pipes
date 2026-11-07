@@ -1,10 +1,17 @@
 # Current work
 
-**Next:** monitor `42417868388` at repaired source
-`8b24da94a4e54c023f5e4b2341896d97dff092b9`. Its three focused native jobs precede
-changed-program measurements. Then run `numeric-worker-analysis` with that
-passing safety run; seven representative compiler inputs compare against
-`f1cc94cf4`, with the original 5% time/RSS and 2% copy limits. Failed source `9cb7497f3`, run
+**Next:** monitor four runtime jobs in `42417868388` at source
+`8b24da94a4e54c023f5e4b2341896d97dff092b9`: AMD2 `128541266975`, ARM2
+`128541267002`, AMD1 `128541267009`, ARM1 `128541267023`. All three prerequisite
+native jobs pass: ARM `128539754453`, AMD `128539755075`, Mac `128539754700`.
+Each passes nine compiler proofs, the O1/O2 mixed-ownership check and native
+local-derivative values/traps. The actual edge has four numeric fields.
+
+Compiler comparison `42418398638` at `8389403c5` uses these passing checks and the
+same native source, with seven representative inputs against `f1cc94cf4`.
+Keep its 5% time/RSS and 2% copy limits. Full final-head platform gates remain.
+
+Failed source `9cb7497f3`, run
 `42417084281`, has the same sole failure on all hosts: the real edge arguments
 contain scalar `let` computations, not pure reads. Nine other unit tests pass;
 integration tests and measurements were skipped. All full logs and outcomes are
