@@ -1,14 +1,19 @@
 # Current work
 
-**Next:** run the bounded numeric-worker checks and then measurements in PR #269.
-Contract `1c5d555c5` precedes the compiler change. The pass now preserves record
-entries for incompatible/function-value uses and shares one numeric worker among
-eligible direct calls. An actual local-edge source test records its callers and
-must prove four numeric inputs; the root cause is not yet confirmed by execution.
-Three native jobs also run existing mixed-ownership controls. Runtime audits now
-require exact request/retain parity with handwritten arrays and no extra peak
-managed storage. Five guarded Python acceptance controls pass (0.13 s); Rust
-formatting passes (0.13 s). Compiler/native execution belongs on runners.
+**Next:** verify the computed numeric-input repair on all three focused native
+hosts, followed by changed-program measurements. Failed source `9cb7497f3`, run
+`42417084281`, has the same sole failure on all hosts: the real edge arguments
+contain scalar `let` computations, not pure reads. Nine other unit tests pass;
+integration tests and measurements were skipped. All full logs and outcomes are
+[retained](measurements/numeric-input-diagnosis-2026-11-07/README.md).
+
+Revised contract `250cf62a0` precedes the repair. Speculative worker cloning is
+removed. The existing all-callers rule now binds each computed numeric input
+once before reading its fields, preserving scopes and left-to-right evaluation.
+Added regressions compare original/transformed IR values, shared inputs and first
+traps; the real source must select four numeric fields. Runtime audits still
+require exact request/retain parity with handwritten arrays, no extra managed
+peak and zero tape storage. Rust formatting passes (guarded, 0.13 s).
 
 All four first-prototype sessions are complete and audited; retain
 [their five timing misses](measurements/local-derivative-time-2026-11-07/README.md).

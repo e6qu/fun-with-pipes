@@ -1,13 +1,13 @@
 //! Replace an internal nested numeric-record parameter with its numeric leaves.
-//! Preserve the original entry when some callers need records; eligible direct
-//! calls can share one numeric worker. This runs before ownership insertion.
+//! All uses and direct callers are checked before any signature changes. This
+//! runs on the already-owned packed lowering result, before ownership insertion.
 use std::collections::HashMap;
 
 use crate::ir::*;
 use crate::value::Value;
 
 struct Shape {
-    outer: usize,
+    fields: Vec<MT>,
     leaves: Vec<(Vec<u32>, MT)>,
 }
 
@@ -40,7 +40,7 @@ fn shape(program: &Program, function: &Func) -> Option<Shape> {
         }
     }
     (nested && leaves.len() >= 2).then_some(Shape {
-        outer: outer.len(),
+        fields: outer.iter().map(|(_, ty)| ty.clone()).collect(),
         leaves,
     })
 }
@@ -172,23 +172,42 @@ fn read_type<'a>(expr: &Expr, locals: &'a [MT], shapes: &'a Shapes) -> Option<&'
     }
 }
 
+/// Keep computed inputs intact. Only scalar bindings ending in numeric field
+/// reads/constructors qualify; no record lifetime crosses a new resource scope.
+fn numeric_input(expr: &Expr, expected: &MT, locals: &[MT], shapes: &Shapes) -> bool {
+    if plain_read(expr, 0) {
+        return read_type(expr, locals, shapes) == Some(expected);
+    }
+    match expr {
+        Expr::Let(local, _, body)
+            if locals
+                .get(*local as usize)
+                .and_then(super::scalar)
+                .is_some() =>
+        {
+            numeric_input(body, expected, locals, shapes)
+        }
+        Expr::Record(values) => record_fields(shapes, expected).is_some_and(|fields| {
+            fields.len() == values.len()
+                && fields.iter().zip(values).all(|((_, ty), value)| {
+                    super::scalar(ty).is_some()
+                        && plain_read(value, 0)
+                        && read_type(value, locals, shapes) == Some(ty)
+                })
+        }),
+        _ => false,
+    }
+}
+
 fn argument(expr: &Expr, shape: &Shape, locals: &[MT], shapes: &Shapes) -> bool {
     let Expr::Record(fields) = expr else {
         return false;
     };
-    fields.len() == shape.outer
-        && fields.iter().all(|e| plain_read(e, 0))
-        && shape.leaves.iter().all(|(path, expected)| {
-            let mut ty = read_type(&fields[path[0] as usize], locals, shapes);
-            for field in &path[1..] {
-                ty = ty.and_then(|ty| {
-                    record_fields(shapes, ty)?
-                        .get(*field as usize)
-                        .map(|(_, ty)| ty)
-                });
-            }
-            ty == Some(expected)
-        })
+    fields.len() == shape.fields.len()
+        && fields
+            .iter()
+            .zip(&shape.fields)
+            .all(|(value, expected)| numeric_input(value, expected, locals, shapes))
 }
 
 fn path(expr: &Expr, aliases: &HashMap<Local, Vec<u32>>, depth: usize) -> Option<Vec<u32>> {
@@ -207,7 +226,7 @@ fn path(expr: &Expr, aliases: &HashMap<Local, Vec<u32>>, depth: usize) -> Option
 }
 
 /// The analysis and rewrite use the same lexical traversal. The first pass
-/// changes no expression; the second runs only for a proved numeric worker.
+/// changes no expression; the second runs only after every caller also passes.
 fn expression(
     expr: &mut Expr,
     shape: &Shape,
@@ -265,29 +284,27 @@ fn expression(
     }
 }
 
-fn callers(
-    expr: &mut Expr,
-    selected: &[Option<Shape>],
-    targets: &[FuncId],
-    locals: &[MT],
-    shapes: &Shapes,
-    visits: &mut usize,
-) {
+fn callers(expr: &mut Expr, selected: &[Option<Shape>], locals: &mut Vec<MT>, visits: &mut usize) {
     *visits += 1;
     match expr {
         Expr::Call(id, xs) => {
             for x in xs.iter_mut() {
-                callers(x, selected, targets, locals, shapes, visits);
+                callers(x, selected, locals, visits);
             }
-            if let Some(Some(shape)) = selected.get(*id) {
-                // Other direct calls and function values keep the original ABI.
-                if xs.len() != 1 || !argument(&xs[0], shape, locals, shapes) {
-                    return;
-                }
-                let target = targets[*id];
-                let Expr::Record(fields) = &xs[0] else {
+            if let Some(shape) = &selected[*id] {
+                let Expr::Record(fields) = &mut xs[0] else {
                     unreachable!()
                 };
+                let mut bindings = Vec::new();
+                for (value, ty) in fields.iter_mut().zip(&shape.fields) {
+                    if !plain_read(value, 0) {
+                        // Keep the entire computation in its original lexical
+                        // scope. Fresh names prevent capture between arguments.
+                        let local = locals.len() as Local;
+                        locals.push(ty.clone());
+                        bindings.push((local, std::mem::replace(value, Expr::Local(local))));
+                    }
+                }
                 xs[0] = Expr::Record(
                     shape
                         .leaves
@@ -301,40 +318,44 @@ fn callers(
                         })
                         .collect(),
                 );
-                *id = target;
+                if !bindings.is_empty() {
+                    let mut body = std::mem::replace(expr, Expr::Local(0));
+                    for (local, value) in bindings.into_iter().rev() {
+                        body = Expr::Let(local, Box::new(value), Box::new(body));
+                    }
+                    *expr = body;
+                }
             }
         }
         Expr::Record(xs) | Expr::Construct(_, xs) => xs
             .iter_mut()
-            .for_each(|e| callers(e, selected, targets, locals, shapes, visits)),
+            .for_each(|e| callers(e, selected, locals, visits)),
         Expr::Apply(f, xs) => {
-            callers(f, selected, targets, locals, shapes, visits);
+            callers(f, selected, locals, visits);
             xs.iter_mut()
-                .for_each(|e| callers(e, selected, targets, locals, shapes, visits));
+                .for_each(|e| callers(e, selected, locals, visits));
         }
         Expr::Let(_, a, b) => {
-            callers(a, selected, targets, locals, shapes, visits);
-            callers(b, selected, targets, locals, shapes, visits);
+            callers(a, selected, locals, visits);
+            callers(b, selected, locals, visits);
         }
         Expr::Match(value, arms) => {
-            callers(value, selected, targets, locals, shapes, visits);
+            callers(value, selected, locals, visits);
             arms.iter_mut()
-                .for_each(|(_, e)| callers(e, selected, targets, locals, shapes, visits));
+                .for_each(|(_, e)| callers(e, selected, locals, visits));
         }
         Expr::SetFields(base, fields) => {
-            callers(base, selected, targets, locals, shapes, visits);
+            callers(base, selected, locals, visits);
             fields
                 .iter_mut()
-                .for_each(|(_, e)| callers(e, selected, targets, locals, shapes, visits));
+                .for_each(|(_, e)| callers(e, selected, locals, visits));
         }
         Expr::Field(e, _)
         | Expr::Trace(_, e)
         | Expr::Dup(_, e)
         | Expr::Drop(_, e)
         | Expr::BorrowGlobal(_, _, e)
-        | Expr::ResourceRegion { body: e, .. } => {
-            callers(e, selected, targets, locals, shapes, visits)
-        }
+        | Expr::ResourceRegion { body: e, .. } => callers(e, selected, locals, visits),
         Expr::Local(_) | Expr::Const(_) | Expr::Func(_) => {}
     }
 }
@@ -356,11 +377,10 @@ pub(super) fn lower(program: &mut Program, entries: &[FuncId]) -> usize {
                 match e {
                     Expr::Call(id, args) => {
                         graph[caller].push(*id);
+                        called[*id] = true;
                         if let Some(shape) = &selected[*id] {
-                            let eligible = args.len() == 1
-                                && argument(&args[0], shape, &function.locals, &program.shapes);
-                            called[*id] |= eligible;
-                            blocked[*id] |= !eligible;
+                            blocked[*id] |= args.len() != 1
+                                || !argument(&args[0], shape, &function.locals, &program.shapes);
                         }
                     }
                     Expr::Func(id) | Expr::BorrowGlobal(_, id, _) => {
@@ -433,7 +453,7 @@ pub(super) fn lower(program: &mut Program, entries: &[FuncId]) -> usize {
     }
     let recursive = recursive(&graph);
     for (id, candidate) in selected.iter_mut().enumerate() {
-        if !called[id] || recursive[id] {
+        if blocked[id] || !called[id] || recursive[id] {
             *candidate = None;
             continue;
         }
@@ -449,22 +469,9 @@ pub(super) fn lower(program: &mut Program, entries: &[FuncId]) -> usize {
             }
         }
     }
-    let mut targets: Vec<_> = (0..program.funcs.len()).collect();
     for (id, shape) in selected.iter().enumerate() {
         if let Some(shape) = shape {
-            let target = if blocked[id] {
-                // One body per original function, shared by all eligible calls.
-                // Keep incompatible callers and externally visible entries intact.
-                let mut worker = program.funcs[id].clone();
-                worker.name.push_str("$numeric");
-                let target = program.funcs.len();
-                program.funcs.push(worker);
-                target
-            } else {
-                id
-            };
-            targets[id] = target;
-            let function = &mut program.funcs[target];
+            let function = &mut program.funcs[id];
             let Body::Expr(body) = &mut function.body else {
                 unreachable!()
             };
@@ -493,14 +500,7 @@ pub(super) fn lower(program: &mut Program, entries: &[FuncId]) -> usize {
     if selected.iter().any(Option::is_some) {
         for function in &mut program.funcs {
             if let Body::Expr(body) = &mut function.body {
-                callers(
-                    body,
-                    &selected,
-                    &targets,
-                    &function.locals,
-                    &program.shapes,
-                    &mut visits,
-                );
+                callers(body, &selected, &mut function.locals, &mut visits);
             }
         }
     }
@@ -558,6 +558,133 @@ mod tests {
             ],
             main: Some(0),
             ..Program::default()
+        }
+    }
+
+    fn computed_example() -> Program {
+        let mut program = example();
+        let number = MT::con("std::I64");
+        let result = tuple(vec![number.clone(); 4]);
+        let pair = program.funcs[0].locals[0].clone();
+        program.funcs[0].ty = arrow(pair.clone(), arrow(pair, result.clone()));
+        program.funcs[0].locals.extend([number.clone(), number]);
+        program.funcs[0].body = Body::Expr(Expr::Call(
+            1,
+            vec![Expr::Record(
+                (0..2)
+                    .map(|index| {
+                        Expr::Let(
+                            index + 2,
+                            Box::new(Expr::Const(Value::I64(7 + index as i64))),
+                            Box::new(Expr::Record(vec![
+                                Expr::Local(index + 2),
+                                Expr::Field(Box::new(Expr::Local(index)), 1),
+                            ])),
+                        )
+                    })
+                    .collect(),
+            )],
+        ));
+        program.funcs[1].ty = arrow(program.funcs[1].locals[0].clone(), result);
+        program.funcs[1].body = Body::Expr(Expr::Record(
+            (0..2)
+                .flat_map(|outer| {
+                    (0..2).map(move |inner| {
+                        Expr::Field(
+                            Box::new(Expr::Field(Box::new(Expr::Local(0)), outer)),
+                            inner,
+                        )
+                    })
+                })
+                .collect(),
+        ));
+        program
+    }
+
+    #[test]
+    fn computed_inputs_keep_their_values_bindings_and_shared_arguments() {
+        let original = computed_example();
+        crate::ir::check_locals(&original).unwrap();
+        let mut program = original.clone();
+        lower(&mut program, &[]);
+        crate::ir::check_locals(&program).unwrap();
+        assert_eq!(
+            program.funcs.len(),
+            original.funcs.len(),
+            "no worker cloning"
+        );
+        assert_eq!(
+            program.funcs[0].locals.len(),
+            6,
+            "one fresh name per computed input"
+        );
+        assert_eq!(
+            record_fields(&program.shapes, &program.funcs[1].locals[0])
+                .unwrap()
+                .len(),
+            4
+        );
+        for value in [-11, 0, 57] {
+            let shared = Value::Record(vec![Value::I64(2), Value::I64(value)].into());
+            let expected = Value::Record(
+                vec![
+                    Value::I64(7),
+                    Value::I64(value),
+                    Value::I64(8),
+                    Value::I64(value),
+                ]
+                .into(),
+            );
+            for variant in [&original, &program] {
+                let mut interpreter =
+                    crate::interp::Interp::new(variant, Box::new(std::io::sink())).unwrap();
+                assert_eq!(
+                    interpreter
+                        .call_root(0, vec![shared.clone(), shared.clone()])
+                        .unwrap(),
+                    expected
+                );
+            }
+            assert_eq!(
+                shared,
+                Value::Record(vec![Value::I64(2), Value::I64(value)].into())
+            );
+        }
+    }
+
+    #[test]
+    fn computed_inputs_preserve_left_to_right_traps() {
+        let mut original = computed_example();
+        original.funcs.push(Func {
+            name: "fail".into(),
+            arity: 1,
+            locals: vec![MT::con("std::String")],
+            ty: arrow(MT::con("std::String"), MT::con("std::I64")),
+            body: Body::Prim("prim.trap".into()),
+        });
+        let Body::Expr(Expr::Call(_, args)) = &mut original.funcs[0].body else {
+            unreachable!()
+        };
+        let Expr::Record(fields) = &mut args[0] else {
+            unreachable!()
+        };
+        for (value, message) in fields.iter_mut().zip(["first input", "second input"]) {
+            let Expr::Let(_, prefix, _) = value else {
+                unreachable!()
+            };
+            **prefix = Expr::Call(2, vec![Expr::Const(Value::Str(message.into()))]);
+        }
+        let mut program = original.clone();
+        lower(&mut program, &[]);
+        crate::ir::check_locals(&program).unwrap();
+        for variant in [&original, &program] {
+            let mut interpreter =
+                crate::interp::Interp::new(variant, Box::new(std::io::sink())).unwrap();
+            let pair = Value::Record(vec![Value::I64(1), Value::I64(2)].into());
+            let error = interpreter
+                .call_root(0, vec![pair.clone(), pair])
+                .unwrap_err();
+            assert_eq!(format!("{error:?}"), "Trap(\"first input\")");
         }
     }
 
@@ -692,83 +819,10 @@ mod tests {
             }
             crate::ir::check_locals(&program).unwrap();
             let original = program.funcs[1].ty.clone();
-            let count = program.funcs.len();
             lower(&mut program, if mode == 4 { &[1] } else { &[] });
             assert_eq!(program.funcs[1].ty, original);
-            if mode == 2 {
-                assert_eq!(program.funcs.len(), count, "no eligible direct call");
-            } else {
-                assert_eq!(program.funcs.len(), count + 1, "one shared worker");
-                assert!(matches!(&program.funcs[0].body,
-                    Body::Expr(Expr::Call(id, args)) if *id == count
-                    && matches!(&args[0], Expr::Record(fields) if fields.len() == 4)));
-                assert_eq!(program.funcs[count].name, "leaf$numeric");
-            }
             crate::ir::check_locals(&program).unwrap();
         }
-    }
-
-    #[test]
-    fn mixed_direct_calls_share_one_worker_and_keep_unsupported_arguments() {
-        let mut program = example();
-        let nested = program.funcs[1].locals[0].clone();
-        program.funcs.push(Func {
-            name: "whole-argument".into(),
-            arity: 1,
-            locals: vec![nested.clone()],
-            ty: arrow(nested, MT::con("std::I64")),
-            body: Body::Expr(Expr::Call(1, vec![Expr::Local(0)])),
-        });
-        program.funcs.push(program.funcs[0].clone());
-        let original = format!("{:?}", program.funcs[1]);
-        let unsupported = format!("{:?}", program.funcs[2]);
-        lower(&mut program, &[]);
-        crate::ir::check_locals(&program).unwrap();
-        assert_eq!(program.funcs.len(), 5);
-        assert_eq!(format!("{:?}", program.funcs[1]), original);
-        assert_eq!(format!("{:?}", program.funcs[2]), unsupported);
-        for id in [0, 3] {
-            assert!(matches!(
-                &program.funcs[id].body,
-                Body::Expr(Expr::Call(4, _))
-            ));
-        }
-    }
-
-    #[test]
-    fn original_function_values_and_numeric_workers_compute_the_same_values() {
-        let mut program = example();
-        program.funcs.push(Func {
-            name: "callback".into(),
-            arity: 0,
-            locals: vec![],
-            ty: program.funcs[1].ty.clone(),
-            body: Body::Expr(Expr::Func(1)),
-        });
-        let original = program.clone();
-        lower(&mut program, &[]);
-        crate::ir::check_locals(&program).unwrap();
-        let pair = Value::Record(vec![Value::I64(-3), Value::I64(7)].into());
-        for variant in [&original, &program] {
-            let mut interpreter =
-                crate::interp::Interp::new(variant, Box::new(std::io::sink())).unwrap();
-            assert_eq!(
-                interpreter
-                    .call_root(0, vec![pair.clone(), pair.clone()])
-                    .unwrap(),
-                Value::I64(7)
-            );
-            let function = interpreter.call_root(2, vec![]).unwrap();
-            let input = Value::Record(vec![pair.clone(), pair.clone()].into());
-            assert_eq!(
-                interpreter.apply_root(function, vec![input]).unwrap(),
-                Value::I64(7)
-            );
-        }
-        assert_eq!(
-            pair,
-            Value::Record(vec![Value::I64(-3), Value::I64(7)].into())
-        );
     }
 
     #[test]
@@ -944,33 +998,6 @@ mod tests {
             let visits = lower(&mut program, &[]);
             crate::ir::check_locals(&program).unwrap();
             assert!(visits <= 40 * count + 8, "{count}: {visits}");
-            counts.push(visits);
-        }
-        assert_eq!(counts[2] - counts[1], 4 * (counts[1] - counts[0]));
-    }
-
-    #[test]
-    fn worker_cloning_and_analysis_scale_linearly() {
-        let mut counts = Vec::new();
-        for count in [32, 128, 512] {
-            let sample = example();
-            let mut program = Program::default();
-            for _ in 0..count {
-                let caller = program.funcs.len();
-                let callee = caller + 1;
-                let mut forwarding = sample.funcs[0].clone();
-                let Body::Expr(Expr::Call(id, _)) = &mut forwarding.body else {
-                    unreachable!()
-                };
-                *id = callee;
-                program.funcs.push(forwarding);
-                program.funcs.push(sample.funcs[1].clone());
-                program.exports.push((format!("edge-{callee}"), callee));
-            }
-            let visits = lower(&mut program, &[]);
-            crate::ir::check_locals(&program).unwrap();
-            assert_eq!(program.funcs.len(), 3 * count);
-            assert!(visits <= 50 * count, "{count}: {visits}");
             counts.push(visits);
         }
         assert_eq!(counts[2] - counts[1], 4 * (counts[1] - counts[0]));

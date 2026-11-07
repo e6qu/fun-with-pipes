@@ -713,18 +713,19 @@ Lists own two records → read four numbers → call the numeric worker
                      → keep the lists alive until mapping ends
 ```
 
-`src/cgen/numeric_parameters.rs` proves the function's field uses and each changed
-call. It allows two record levels and two-to-eight machine-sized numeric leaves.
-Repeated, reordered and unused leaf reads are safe; whole-record uses, recursion,
-resources and deeper records exclude selection. The caller must supply pure
-local/field reads, so extracting the numbers cannot repeat an effect or move a trap.
+`src/cgen/numeric_parameters.rs` proves all uses and callers before changing the
+internal parameter. It allows two record levels and two-to-eight machine-sized
+numeric leaves. Repeated, reordered and unused leaf reads are safe; whole-record
+uses, function-value references, entry points, recursion, resources and deeper
+records exclude selection.
 
-The current PR extends this rule: if function values, entry points or other
-callers require records, keep that function and give proved direct calls one
-shared numeric worker. When every use qualifies, change the existing internal
-function in place. This extension is under verification; its
-[contract](measurements/direct-numeric-workers.md) requires actual allocation,
-runtime and compiler-cost evidence before claiming support.
+The current PR extends the input rule to computed numeric constructors: bind each
+input once, in original left-to-right order, then pass its numeric fields. Each
+input keeps its original expression and local scopes. Existing field-only native
+locals can avoid constructing the intermediate record boxes. No functions are
+cloned. This extension is under verification; its
+[contract](measurements/direct-numeric-workers.md) requires allocation, runtime
+and compiler-cost evidence before claiming support.
 
 Call-graph analysis visits functions and edges a bounded number of times. The
 pass reuses the packed-lowering program rather than cloning the whole program
