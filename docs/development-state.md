@@ -1,9 +1,11 @@
 # Current work
 
-**Next:** inspect complete focused artifact audit `42319311816` (suite
-`tape-record-audit`, producer `42290415866`, source
-`b4b291e3184cae5046d7a1eba27e777c67b1884a`, attempt 1). It is dispatched.
-Batch any failures before measurements; monitor the documentation repair too.
+**Next:** redispatch the complete focused artifact audit after the workflow
+permission repair: suite `tape-record-audit`, `evidence_run=42290415866`,
+`source_revision=b4b291e3184cae5046d7a1eba27e777c67b1884a`, `production_attempt=1`.
+Audit attempt `42319311816` failed before jobs: the new measurement caller did
+not grant `actions: read` requested by its reusable workflow. Explicit read-only
+permissions now match the callee. Monitor the replacement audit and docs gate.
 
 ## PR and implementation
 
@@ -45,6 +47,10 @@ reuse, duplicate-parent arithmetic order and actual wasm32 bounds are covered.
   direct `check_handoff()` and workflow-size validation pass under the local
   guard (0.19 s). This was the only failed step; subsequent docs checks skipped.
   The replacement docs run must finish before claiming the gate passes.
+- Repair `7f76f6e07` passes direct handoff, changed-doc link, workflow-size and
+  commit-message checks (0.13 s). Sparse checkout initially lacked linked docs;
+  restored 101 small tracked targets and completed the check without changing them.
+  Its docs `42319433261` and production `42319433268` were queued at last check.
 - The PR is now ready for review. Production run `42319169980` at `a55ea682f`
   has Linux AMD64 running and eight jobs queued; no failed steps reported.
 - #266 merge CI `42288270547` passes all nine jobs; docs `42288270157` pass.

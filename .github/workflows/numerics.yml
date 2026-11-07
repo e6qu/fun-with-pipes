@@ -57,6 +57,9 @@ jobs:
   tape_measurements:
     if: inputs.suite == 'tape-record-time' || inputs.suite == 'tape-record-analysis'
     uses: ./.github/workflows/tape-measurements.yml
+    permissions:
+      contents: read
+      actions: read
     with:
       phase: ${{ inputs.suite == 'tape-record-time' && 'time' || 'analysis' }}
       evidence_run: ${{ inputs.evidence_run }}

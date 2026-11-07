@@ -16,6 +16,8 @@ They are not claimed as executed here. No unexpected diagnostics occur in any
 complete job log. [Log hashes and source identities](logs.json) are retained
 alongside the compressed logs and GitHub job records.
 
-The complete native-artifact audit is dispatched as
-[42319311816](https://github.com/e6qu/fun-with-pipes/actions/runs/42319311816).
-Its result remains pending; passing job summaries alone do not complete acceptance.
+Complete audit attempt [42319311816](https://github.com/e6qu/fun-with-pipes/actions/runs/42319311816)
+was rejected before jobs: a reusable workflow requested `actions: read` without
+the caller granting it. The caller now declares matching read-only permissions.
+Replacement artifact acceptance remains pending; passing job summaries alone
+do not complete acceptance.
