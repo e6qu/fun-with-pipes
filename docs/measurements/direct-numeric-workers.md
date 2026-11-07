@@ -7,34 +7,40 @@ allocates two temporary `Dual` records per neighboring edge. Each record contain
 only a value and a derivative. Passing four numbers to the edge function could
 remove 407,552 allocations from its largest measured process.
 
-The compiler already flattens nested numeric parameters when **every** use permits
-that representation. A function-value reference or an unsuitable caller excludes
-the entire function. Investigate the actual optimized local-edge input before
-claiming that this restriction explains the measured boxes.
+The source regression at `9cb7497f3` establishes the cause: every direct
+local-edge argument contains scalar `let` bindings around constructed `Dual`
+records. The second input also contains the checked next-coordinate read.
+These are not pure local/field reads. All three native hosts fail only that
+selection assertion; nine other unit checks pass. Native integration tests and
+measurements were not reached. [Complete logs](numeric-input-diagnosis-2026-11-07/README.md)
+retain this failed hypothesis.
 
-## Proposed compiler change
+## Revised compiler change
 
-Extend `src/cgen/numeric_parameters.rs`, keeping its existing field-use proof:
+Remove the unneeded worker-cloning experiment. Extend the existing all-callers
+numeric-parameter rule only for computed numeric record constructors:
 
-- If every use qualifies, retain the existing in-place transformation.
-- Otherwise create at most one private numeric worker for that function and
-  redirect only proved direct calls. Keep the original for function values,
-  exports and other callers. The worker contains the calculation, not a wrapper.
-- Preserve the two-level, two-to-eight machine-sized numeric-field boundary.
-  Reject recursive functions and bodies that let the original records escape.
-- Read only typed locals/fields at a changed call. Do not duplicate computation,
-  reorder arithmetic, move traps or remove checked indexing. Ownership insertion
-  still follows typed-IR validation.
-- Bound analysis and additional bodies linearly in the input program. No new
-  syntax, public API, implicit conversion or runtime ownership decision.
+- Accept scalar `let` bindings ending in a record of pure numeric local/field
+  reads, as well as the already accepted pure record inputs.
+- At the call, bind each computed input once to a fresh typed local, in original
+  left-to-right order. Read its numeric fields for the existing flattened call.
+  Keep each input expression intact inside its binding: no scope lifting,
+  repeated computation, moved traps or changed floating-point operations.
+- Existing native field-only local handling can keep these records as numbers.
+  Verify this in allocation counters and the actual emitted program.
+- Preserve the two-level, two-to-eight machine-sized field limit. Function values,
+  entries, unsuitable callers, recursive functions and escaping records still
+  exclude the transformation. Do not clone functions or broaden lifetime rules.
+- Bound analysis and added bindings linearly in the program size. No new syntax,
+  public API, implicit conversion or runtime ownership decision.
 
-If the actual call fails a different proof, record that cause before extending
-this boundary. Do not add speculative lifetime rules to force selection.
+This revision is frozen before replacing the failed implementation. The original
+runtime limits and cost expectations below remain unchanged.
 
 ## Acceptance declared before implementation
 
-1. Prove the measured edge reaches the changed rule. Test mixed direct/function
-   uses, exported and unsuitable callers, aliases, repeated reads, recursive
+1. Prove the measured edge reaches the changed rule. Test computed inputs and original lexical scopes, direct/function-value
+   exclusion, exported and unsuitable callers, aliases, repeated reads, recursive
    exclusion, effect/trap order and linear analysis growth. Compare original
    typed IR or unoptimized interpretation with generated execution.
 2. Check GCC ARM64/AMD64 and Clang ARM64 at production settings. Run existing

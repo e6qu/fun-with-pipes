@@ -1,0 +1,21 @@
+{
+  "source": "9cb7497f320ac80cdb00f95da5aabb4a7daf475e",
+  "run": 42417084281,
+  "jobs": [
+    {
+      "host": "arm",
+      "job": 128537416575,
+      "sha256": "dd12e640ae656c2fb25e875e06a1f03c735ed457982718d863c79d7b0be7b0d6"
+    },
+    {
+      "host": "amd",
+      "job": 128537416466,
+      "sha256": "01cbf13004ff3828cb9358e4de27eea9dac973d3585f630ec2033ffe1f60d368"
+    },
+    {
+      "host": "mac",
+      "job": 128537416307,
+      "sha256": "d9146f468c01555ad43816db1d5957046969f8f44843c0e3b0fbd42a56358a8d"
+    }
+  ]
+}
