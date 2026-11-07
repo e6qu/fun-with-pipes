@@ -223,7 +223,7 @@ def main():
     parser.add_argument('--compiler', required=True, type=Path)
     parser.add_argument('--reference', required=True, type=Path)
     parser.add_argument('--reference-manifest', required=True, type=Path)
-    parser.add_argument('--comparison', required=True, choices=('numeric-inputs', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context', 'tape-records'))
+    parser.add_argument('--comparison', required=True, choices=('numeric-workers', 'numeric-inputs', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context', 'tape-records'))
     parser.add_argument('--time', required=True, type=Path)
     parser.add_argument('--machine', required=True, choices=('aarch64', 'x86_64'))
     parser.add_argument('--source', required=True)
@@ -237,7 +237,18 @@ def main():
     reference_manifest = json.loads(args.reference_manifest.read_text())
     assert reference_manifest['source'] == args.source
     assert reference_manifest['compilerSha256'] == sha(args.reference)
-    if args.comparison == 'numeric-inputs':
+    if args.comparison == 'numeric-workers':
+        baseline = 'f1cc94cf4e013369cccb8a836bd745f41e5d757c'
+        path = 'src/cgen/numeric_parameters.rs'
+        assert reference_manifest['referenceSource'] == baseline
+        assert reference_manifest['changedNativeFiles'] == [path]
+        assert reference_manifest['candidateSha256'] == sha(ROOT / path)
+        previous = subprocess.check_output(['git', 'show', baseline + ':' + path], cwd=ROOT)
+        assert reference_manifest['referenceSha256'] == hashlib.sha256(previous).hexdigest()
+        changed = subprocess.check_output(['git', 'diff', '--name-only', baseline, args.source,
+                                          '--', 'src', 'runtime', 'lib', 'vendor', 'build.rs', 'Cargo.toml', 'Cargo.lock'], cwd=ROOT, text=True)
+        assert changed.splitlines() == [path]
+    elif args.comparison == 'numeric-inputs':
         assert set(reference_manifest['files']) == {'src/cgen.rs', 'src/cgen/packed_records.rs'}
         assert set(reference_manifest['unchanged']) == {'src/ownership.rs', 'src/cgen/field_transfers.rs', 'src/cgen/numeric_parameters.rs'}
         assert reference_manifest['scope'] == 'numeric-inputs'
@@ -333,9 +344,9 @@ def main():
     output.mkdir(parents=True, exist_ok=False)
     environment = {key: value for key, value in os.environ.items() if not key.startswith('FWP_')}
     environment.update(FWP_LTO='0', LC_ALL='C')
-    if args.comparison in ('matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context', 'tape-records'):
+    if args.comparison in ('matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context', 'tape-records', 'numeric-workers'):
         environment.update(FWP_VRET='1', FWP_FRAME_FIELDS='1')
-    if args.comparison in ('packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context', 'tape-records'):
+    if args.comparison in ('packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context', 'tape-records', 'numeric-workers'):
         environment.update(FWP_PACKED_ARRAYS='1', FWP_STACK='1', FWP_ARRAY_FUSION='1')
     report = dict(source=args.source, machine=args.machine, complete=False, comparison=args.comparison,
                   scope='Entire compiler command through C emission: startup, parsing, typing, '
@@ -367,10 +378,10 @@ def main():
             ('autodiff-tutorial', 'docs/tutorials/20-autodiff-and-devices/main.fwp')]}
         programs.update({f'derivative-{dimensions}-{updates}': COSTS.AD.program(dimensions, updates + 1, False)
                          for dimensions, updates in ((3, 0), (33, 199), (129, 199))})
-        if args.comparison in ('packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context', 'tape-records'):
+        if args.comparison in ('packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context', 'tape-records', 'numeric-workers'):
             programs.update(scoped_cost_inputs())
             report['preflight'] = {}
-            for kind, specialized in [('candidate', True), ('reference', args.comparison in ('owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context', 'tape-records'))]:
+            for kind, specialized in [('candidate', True), ('reference', args.comparison in ('owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context', 'tape-records', 'numeric-workers'))]:
                 try:
                     report['preflight'][kind] = check_scoped_cost_inputs(
                         output / (kind + '1'), output / ('preflight-' + kind),
@@ -378,13 +389,13 @@ def main():
                 except AssertionError as error:
                     report['preflight'][kind] = dict(failure=str(error))
             assert all(isinstance(rows, list) for rows in report['preflight'].values()), report['preflight']
-        if args.comparison in ('owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context', 'tape-records'):
+        if args.comparison in ('owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context', 'tape-records', 'numeric-workers'):
             report['consumingPreflight'] = {}
             for kind in ('candidate', 'reference'):
                 try:
                     report['consumingPreflight'][kind] = check_consuming_cost_input(
                         output / (kind + '1'), output / ('consuming-' + kind),
-                        environment, args.timeout, kind == 'candidate' or args.comparison in ('gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context', 'tape-records'))
+                        environment, args.timeout, kind == 'candidate' or args.comparison in ('gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context', 'tape-records', 'numeric-workers'))
                 except AssertionError as error:
                     report['consumingPreflight'][kind] = dict(failure=str(error))
             assert all('observed' in row for row in report['consumingPreflight'].values()), report['consumingPreflight']

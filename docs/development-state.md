@@ -1,7 +1,10 @@
 # Current work
 
-**Next:** verify the computed numeric-input repair on all three focused native
-hosts, followed by changed-program measurements. Failed source `9cb7497f3`, run
+**Next:** monitor `42417868388` at repaired source
+`8b24da94a4e54c023f5e4b2341896d97dff092b9`. Its three focused native jobs precede
+changed-program measurements. Then run `numeric-worker-analysis` with that
+passing safety run; seven representative compiler inputs compare against
+`f1cc94cf4`, with the original 5% time/RSS and 2% copy limits. Failed source `9cb7497f3`, run
 `42417084281`, has the same sole failure on all hosts: the real edge arguments
 contain scalar `let` computations, not pure reads. Nine other unit tests pass;
 integration tests and measurements were skipped. All full logs and outcomes are
@@ -158,3 +161,7 @@ The prior documentation run `42411792755` passes.
 
 All four runtime archives/report hashes and 144 peer rows are retained and
 verified (guarded check, 0.25 s). Documentation repair run `42415160614` passes.
+
+Compiler measurement controls: 11 pass (guarded, 3.44 s); changed workflow
+validation passes (guarded actionlint, 0.13 s). No native source changed while
+adding this compiler-cost workflow.

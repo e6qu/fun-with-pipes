@@ -1,0 +1,124 @@
+name: Computed numeric input compiler costs
+on:
+  workflow_call:
+    inputs:
+      evidence_run:
+        type: string
+        required: true
+permissions:
+  contents: read
+  actions: read
+jobs:
+  numeric_input_analysis:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-24.04-arm, ubuntu-latest]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    env:
+      CC: gcc
+      CARGO_BUILD_JOBS: 2
+      CARGO_PROFILE_DEV_OPT_LEVEL: '1'
+      CARGO_PROFILE_DEV_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_DEV_OVERFLOW_CHECKS: 'true'
+      FWP_LTO: '0'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.99.1
+      - name: Require passing checks for the measured compiler sources
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SAFETY_RUN: ${{ inputs.evidence_run }}
+        run: |
+          [[ "$SAFETY_RUN" =~ ^[0-9]+$ ]]
+          mkdir numeric-analysis-safety
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SAFETY_RUN" > numeric-analysis-safety/run.json
+          gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/actions/runs/$SAFETY_RUN/jobs?per_page=100" > numeric-analysis-safety/jobs.json
+          python3 - <<'PY'
+          import json
+          import subprocess
+          from pathlib import Path
+          run = json.loads(Path('numeric-analysis-safety/run.json').read_text())
+          jobs = [job for page in json.loads(Path('numeric-analysis-safety/jobs.json').read_text()) for job in page['jobs']]
+          expected = {'local_derivatives / checks (' + host + ')' for host in ('ubuntu-latest, gcc', 'ubuntu-24.04-arm, gcc', 'macos-15, clang')}
+          selected = [job for job in jobs if job['name'] in expected]
+          assert len(selected) == 3 and {job['name'] for job in selected} == expected
+          assert all(job['status'] == 'completed' and job['conclusion'] == 'success' and job['head_sha'] == run['head_sha'] for job in selected)
+          subprocess.run(['git', 'diff', '--exit-code', run['head_sha'], 'HEAD', '--', 'src', 'runtime', 'lib', 'vendor', 'tests', 'build.rs', 'Cargo.toml', 'Cargo.lock'], check=True)
+          PY
+          python3 scripts/test-numeric-input-analysis.py
+      - name: Qualify numeric-workers compiler timing host
+        env:
+          MACHINE: ${{ matrix.runner == 'ubuntu-latest' && 'x86_64' || 'aarch64' }}
+          GCC_VERSION: ${{ matrix.runner == 'ubuntu-latest' && 'gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0' || 'gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0' }}
+        run: |
+          cpus=(--cpu Neoverse-N2)
+          if [[ "$MACHINE" == x86_64 ]]; then
+            cpus=(--cpu 'AMD EPYC 7763 64-Core Processor' --cpu 'AMD EPYC 9V74 80-Core Processor' --cpu 'AMD EPYC 9V45 96-Core Processor')
+          fi
+          python3 scripts/descent-baselines.py "${cpus[@]}" --machine "$MACHINE" \
+            --cc gcc --rustc rustc --c-version "$GCC_VERSION" \
+            --rust-version 'rustc 1.99.1 (58cf8f9c3 2026-10-13)' \
+            --source "$GITHUB_SHA" --processors 4 --output compiler-cost-host.json
+      - uses: actions/upload-artifact@v7
+        if: ${{ always() && hashFiles('compiler-cost-host.json') != '' }}
+        with:
+          name: numeric-workers-analysis-host-${{ runner.arch }}
+          path: compiler-cost-host.json
+          if-no-files-found: error
+      - name: Build candidate at production settings
+        run: cargo build --locked --bin fwp
+      - name: Build the frozen pre-change compiler
+        run: |
+          reference_checkout="$RUNNER_TEMP/numeric-worker-reference"
+          reference_target="$RUNNER_TEMP/numeric-worker-reference-target"
+          git worktree add --detach "$reference_checkout" f1cc94cf4e013369cccb8a836bd745f41e5d757c
+          cargo build --locked --bin fwp --manifest-path "$reference_checkout/Cargo.toml" --target-dir "$reference_target"
+          python3 scripts/numeric-worker-reference.py --checkout "$reference_checkout" \
+            --compiler "$reference_target/debug/fwp" --output numeric-analysis-reference
+      - name: Measure balanced compiler commands and peak memory
+        run: >-
+          python3 scripts/measure-numeric-input-analysis.py --comparison numeric-workers
+          --compiler target/debug/fwp --reference numeric-analysis-reference/fwp
+          --reference-manifest numeric-analysis-reference/manifest.json
+          --time /usr/bin/time --machine ${{ matrix.runner == 'ubuntu-latest' && 'x86_64' || 'aarch64' }}
+          --source "$GITHUB_SHA" --timeout 180 --output numeric-analysis
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: numeric-workers-analysis-${{ runner.arch }}
+          path: |
+            numeric-analysis/
+            numeric-analysis-reference/
+            numeric-analysis-safety/
+          if-no-files-found: error
+  audit:
+    needs: numeric_input_analysis
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Audit all saved observations without repeating measurements
+        run: |
+          python3 scripts/audit-storage-compiler-costs.py --comparison numeric-workers \
+            --repository "$GITHUB_REPOSITORY" --source "$GITHUB_SHA" --run "$GITHUB_RUN_ID" \
+            --machine aarch64 --output numeric-worker-audit
+          python3 scripts/audit-storage-compiler-costs.py --comparison numeric-workers \
+            --repository "$GITHUB_REPOSITORY" --source "$GITHUB_SHA" --run "$GITHUB_RUN_ID" \
+            --machine x86_64 --output numeric-worker-audit
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: numeric-worker-compiler-audit
+          path: numeric-worker-audit/
+          if-no-files-found: error
