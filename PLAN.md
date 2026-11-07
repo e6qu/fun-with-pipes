@@ -19,6 +19,13 @@ maximum reported frames are unchanged. These results do not close earlier misses
 
 ## Current group: contiguous tape operation records
 
+PR #267 is merged at `621653b6394f49dc229a2956b6b61476c82c9aac` with the same tree
+as its tested head. All nine production jobs, documentation and the
+[focused artifact audit](docs/measurements/tape-record-checks-2026-11-06/README.md)
+pass. Implementation and focused correctness are complete. Runtime/compiler
+measurements continue in the follow-up PR. The [complete production-log audit](docs/measurements/tape-record-delivery-2026-11-07/README.md)
+also passes; no layout speedup is established yet.
+
 The shared-access group (#265–#266) is merged. All four runtime sessions and
 archive audits are complete; 30 of 32 long-case targets remain open, alongside
 two AMD small-case regressions and one inconclusive copy comparison. All 48
@@ -34,8 +41,8 @@ they do not prove a cache problem or a layout speedup.
 
 | Step | Concrete work | Required result |
 |---|---|---|
-| 1 | Implement numeric records and typed parent pairs with explicit owners. | 24-byte numeric and 8-byte parent records, checked operation capacities, unchanged arithmetic and failure order. |
-| 2 | Update allocation, moving-growth, cleanup and wasm32 probes; run the affected group once. | Interpreter/native parity, exact ownership on return/trap/cancellation, negative controls and complete target audits. |
+| 1 | Delivered in #267: numeric records and typed parent pairs with explicit owners. | 24-byte numeric and 8-byte parent records, checked operation capacities, unchanged arithmetic and failure order. |
+| 2 | Verified: allocation, moving-growth, cleanup and wasm32 probes. Keep as regression coverage. | Interpreter/native parity, exact ownership on return/trap/cancellation, negative controls and complete target audits. |
 | 3 | Measure candidate/reference storage, runtime and compiler costs after correctness passes. | Frozen sources; unchanged representative inputs/flags/limits; report absolute C/Rust costs and preserve all misses. |
 | 4 | Verify measured binaries, final platforms and documentation, including carried repairs. | Nine final-head production jobs, docs and complete audits pass; verify squash tree and one-line message. |
 
