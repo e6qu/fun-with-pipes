@@ -7,9 +7,11 @@ local-edge = fn (x, y) ->
     in distance * distance * 100.0 + offset * offset
 
 local-coordinate : I64 -> Array[F64] -> F64
-local-coordinate = array.get | flip compose (match
-    Some -> id
-    None -> prim.trap "local derivative coordinate is outside the input")
+local-coordinate =
+    array.get
+    | flip compose (match
+        Some -> id
+        None -> prim.trap "local derivative coordinate is outside the input")
 
 # Each coordinate receives its preceding edge's second partial, then its
 # following edge's first partial. Endpoints have just one contribution.
@@ -19,12 +21,18 @@ local-gradient-at = fn edge -> fn values -> fn index ->
     in let before = index == 0 | match
         True -> 0.0
         False ->
-            edge (dual.const (local-coordinate (index - 1) values), dual.var current)
+            edge (
+                dual.const (local-coordinate (index - 1) values),
+                dual.var current,
+            )
             | .eps
     in let after = index + 1 == array.length values | match
         True -> 0.0
         False ->
-            edge (dual.var current, dual.const (local-coordinate (index + 1) values))
+            edge (
+                dual.var current,
+                dual.const (local-coordinate (index + 1) values),
+            )
             | .eps
     in before + after
 
@@ -34,7 +42,8 @@ local-gradient = fn edge -> fn values ->
 
 local-update-at : Array[F64] -> I64 -> F64
 local-update-at = fn values -> fn index ->
-    local-coordinate index values - 0.001 * local-gradient-at local-edge values index
+    (local-coordinate index values - 0.001 * local-gradient-at local-edge values index)
 
 local-descend : Array[F64] -> Array[F64]
-local-descend = fn values -> array.generate (array.length values) (local-update-at values)
+local-descend =
+    fn values -> array.generate (array.length values) (local-update-at values)

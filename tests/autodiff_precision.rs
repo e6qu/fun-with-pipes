@@ -16,11 +16,19 @@ fn local_derivatives_preserve_endpoints_aliases_and_traps() {
     let binary = directory.join("local.exe");
     let compiler = env!("CARGO_BIN_EXE_fwp");
     let prototype = include_str!("fixtures/descent_local_ad.fwp");
-    for (body, succeeds) in [
-        (include_str!("fixtures/local_derivatives.fwp"), true),
+    for (label, body, succeeds, message) in [
+        ("values", include_str!("fixtures/local_derivatives.fwp"), true, ""),
         (
+            "trap",
             "main = [2.0, 3.0] | array.from-list | local-gradient (fn pair -> prim.trap \"local edge failed\") | array.to-list | echo\n",
             false,
+            "local edge failed",
+        ),
+        (
+            "order",
+            "edge-order : (Dual[F64], Dual[F64]) -> Dual[F64]\nedge-order = fn (x, y) -> x | .re | eq 1.0 | match\n    True -> prim.trap \"preceding edge\"\n    False -> prim.trap \"following edge\"\nmain = local-gradient-at edge-order (array.from-list [1.0, 2.0, 3.0]) 1 | echo\n",
+            false,
+            "preceding edge",
         ),
     ] {
         std::fs::write(&input, format!("{prototype}\n{body}")).unwrap();
@@ -35,7 +43,7 @@ fn local_derivatives_preserve_endpoints_aliases_and_traps() {
             assert_eq!(reference.stdout, "True\n".repeat(6).as_bytes());
             assert!(reference.stderr.is_empty());
         } else {
-            assert!(String::from_utf8_lossy(&reference.stderr).contains("local edge failed"));
+            assert!(String::from_utf8_lossy(&reference.stderr).contains(message));
         }
         checked(
             Command::new(compiler)
@@ -48,12 +56,19 @@ fn local_derivatives_preserve_endpoints_aliases_and_traps() {
         let code = std::fs::read_to_string(&cfile).unwrap();
         fwp::cgen::compile_c(&code, &binary, "-O2").unwrap();
         let native = Command::new(&binary).output().unwrap();
+        record_probe::save(
+            "local-derivatives",
+            label,
+            &code,
+            &binary,
+            &native,
+        );
         assert_eq!(native.status.success(), succeeds, "{native:?}");
         assert_eq!(native.stdout, reference.stdout);
         if succeeds {
             assert!(native.stderr.is_empty());
         } else {
-            assert!(String::from_utf8_lossy(&native.stderr).contains("local edge failed"));
+            assert!(String::from_utf8_lossy(&native.stderr).contains(message));
         }
     }
 }

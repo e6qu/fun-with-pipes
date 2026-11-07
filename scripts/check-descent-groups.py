@@ -65,13 +65,16 @@ def reference_contract(protocol):
 
 
 def check_report(report, source, protocol):
-    assert protocol in {'grouped', 'repeated', 'recording', 'eager-captures', 'array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context', 'tape-records'}
+    assert protocol in {'local-derivatives', 'grouped', 'repeated', 'recording', 'eager-captures', 'array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context', 'tape-records'}
     paired = protocol in {'recording', 'eager-captures', 'array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context', 'tape-records'}
     samples, seed = (49, 20261101) if protocol == 'array-lists' else (98, 20261029)
     labels = (['fwp-ad-history', 'fwp-ad', 'fwp-ad-history-reference', 'fwp-ad-reference',
                'c-explicit', 'rust-explicit', 'fwp-ad-identical'] if paired else LABELS)
+    if protocol == 'local-derivatives':
+        labels = ['fwp-local', 'fwp-ad', 'fwp-explicit', 'fwp-packed', 'c-explicit', 'rust-explicit', 'fwp-ad-identical']
+        assert report['referenceCompiler'] is None
     assert report['source'] == source
-    if protocol in ('matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context', 'tape-records'):
+    if protocol in ('local-derivatives', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context', 'tape-records'):
         assert report['settings']['FWP_VRET'] == report['settings']['FWP_FRAME_FIELDS'] == '1'
     config = report['configuration']
     assert (config['samples'], config['warmups'], config['order_seed'],
@@ -115,13 +118,13 @@ def check_report(report, source, protocol):
         for label, ratios in row['ratios'].items():
             for peer, value in ratios.items():
                 assert value == row['medianNs'][label] / row['medianNs'][peer]
-        if protocol not in {'grouped', 'array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context', 'tape-records'}:
+        if protocol not in {'local-derivatives', 'grouped', 'array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context', 'tape-records'}:
             ratio = row['medianNs']['fwp-ad'] / row['medianNs']['fwp-ad-identical']
             assert max(ratio, 1 / ratio) <= 1.02, (name, ratio)
         CHECK.check_observations(name, row, updates * solves,
-                                 "recording" if paired else "baseline",
-                                 "records" if protocol == 'tape-records' else "columns")
-    if protocol in {'eager-captures', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context', 'tape-records'}:
+                                 "recording" if paired else "local" if protocol == 'local-derivatives' else "baseline",
+                                 "records" if protocol in ('tape-records', 'local-derivatives') else "columns")
+    if protocol in {'local-derivatives', 'eager-captures', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context', 'tape-records'}:
         assert config['comparison'] == protocol
 
 
@@ -133,7 +136,7 @@ def check_frozen_host(report, protocol):
     else:
         assert report['machine'] == 'x86_64'
         expected_host.update(cpu='AMD EPYC 7763 64-Core Processor', cVersion='gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0')
-        if protocol in ('recording-context', 'tape-records'):
+        if protocol in ('recording-context', 'tape-records', 'local-derivatives'):
             expected_host['cpu'] = ['AMD EPYC 7763 64-Core Processor',
                                     'AMD EPYC 9V74 80-Core Processor',
                                     'AMD EPYC 9V45 96-Core Processor']

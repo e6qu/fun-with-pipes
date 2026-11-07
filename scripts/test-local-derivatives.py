@@ -32,6 +32,10 @@ class Acceptance(unittest.TestCase):
         self.assertEqual({row['case'] for row in failures}, {'3-0', '129-199'})
         self.assertEqual({row['limit'] for row in failures}, {1.02, .80})
 
+    def test_exact_declared_noise_limit_is_not_rounded_into_failure(self):
+        self.rows['129-199']['medianNs']['fwp-ad-identical'] = 102
+        self.assertEqual(PEERS.local_budget_failures(self.rows), [])
+
     def test_local_program_uses_automatic_edge_and_common_packed_driver(self):
         source = PEERS.local_program(33, 199)
         self.assertIn('local-gradient-at local-edge values index', source)

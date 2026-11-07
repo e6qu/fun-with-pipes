@@ -102,9 +102,9 @@ def local_budget_failures(results):
     for name, row in results.items():
         medians = row['medianNs']
         copies = [medians['fwp-ad'], medians['fwp-ad-identical']]
-        variation = max(copies) / min(copies) - 1
-        if variation > .02:
-            failures.append(dict(case=name, metric='identical copy variation', actual=variation, limit=.02))
+        copy_ratio = max(copies) / min(copies)
+        if copy_ratio > 1.02:
+            failures.append(dict(case=name, metric='identical copy variation', actual=copy_ratio - 1, limit=.02))
         ratio = medians['fwp-local'] / medians['fwp-ad']
         limit = 1.02 if row['updates'] <= 1 else .80
         if ratio > limit:
@@ -514,6 +514,11 @@ def main():
             text = code.read_text()
             assert 'FWP_ARC_ONLY' not in text
             assert not re.search(r'^\s*#\s*define\s+FWP_NO_REUSE\b', text, re.M)
+            if label == 'fwp-local':
+                # Runtime definitions precede this marker. Inspect every emitted
+                # program body, not a guessed subset of the call graph.
+                program_text = text.split('/* ---- program ---- */', 1)[1]
+                assert not re.search(r'\bfwp_(?:p_ad_|tape_)\w*\s*\(', program_text), 'local objective still uses a tape'
             if args.comparison == 'recording-inline':
                 RECORDING_SELECTION.check_inline_declaration(text, not label.endswith('-reference'))
                 if updates > 0:
@@ -548,6 +553,9 @@ def main():
             assert set(managed) == {'requests', 'requestedBytes', 'retains', 'peakChargedBytes', 'finalChargedBytes'}
             raw = raw['rawDerivativeStorage']
             AD.RAW.check_profile(raw, updates * solves if label.startswith('fwp-ad') else 0, True)
+            if label == 'fwp-local':
+                assert all(kind['requests'] == kind['requestedBytes'] == kind['peakBytes'] == 0
+                           for kind in raw['kinds'].values()), 'local objective allocated tape storage'
             raw_hash = digest(json.dumps(raw, sort_keys=True).encode())
             checkpoints = raw.pop('afterBackward')
             assert not checkpoints or all(value == checkpoints[0] for value in checkpoints)

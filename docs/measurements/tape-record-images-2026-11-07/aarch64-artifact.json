@@ -1,0 +1,20 @@
+{
+  "id": 13580959538,
+  "node_id": "MDg6QXJ0aWZhY3QxMzU4MDk1OTUzOA==",
+  "name": "recording-call-analysis-aarch64",
+  "size_in_bytes": 5483403,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13580959538",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13580959538/zip",
+  "expired": false,
+  "digest": "sha256:5f11fd7295933594289d32bb0eef91feb504130125c7d96845b294658ab3db9f",
+  "created_at": "2026-11-07T16:19:40Z",
+  "updated_at": "2026-11-07T16:19:40Z",
+  "expires_at": "2027-02-05T16:09:24Z",
+  "workflow_run": {
+    "id": 42389849116,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "tape-record-evidence",
+    "head_sha": "de895a714a99b397710b902105b47815b93f1616"
+  }
+}

@@ -33,6 +33,7 @@ jobs:
       FWP_PACKED_ARRAYS: '1'
       FWP_STACK: '1'
       FWP_ARRAY_FUSION: '1'
+      FWP_ARC_ARTIFACTS: local-checks/probes
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
@@ -108,6 +109,12 @@ jobs:
           --phase-samples 12 --phase-warmups 2 --session ${{ matrix.session }}
           --host ${{ matrix.runner }} --qualification local-evidence/host.json
           --output local-evidence/solves
+      - name: Audit every saved observation, including missed speed targets
+        if: ${{ !cancelled() && hashFiles('local-evidence/solves/comparison.json') != '' }}
+        run: >-
+          python3 scripts/audit-local-derivatives.py --directory local-evidence/solves
+          --source "$GITHUB_SHA"
+          --architecture ${{ matrix.runner == 'ubuntu-latest' && 'x86_64' || 'aarch64' }}
       - uses: actions/upload-artifact@v7
         if: always()
         with:

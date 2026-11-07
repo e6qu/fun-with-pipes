@@ -12,10 +12,30 @@ check-alias = fn values ->
 
 main = [
     [] | array.from-list | local-gradient no-edge | array.to-list | eq [] | echo,
-    [2.0] | array.from-list | local-gradient no-edge | array.to-list | eq [0.0] | echo,
-    [2.0, 3.0] | array.from-list | local-gradient quadratic-edge | array.to-list | eq [4.0, 3.0] | echo,
+    [2.0]
+    | array.from-list
+    | local-gradient no-edge
+    | array.to-list
+    | eq [0.0]
+    | echo,
+    [2.0, 3.0]
+    | array.from-list
+    | local-gradient quadratic-edge
+    | array.to-list
+    | eq [4.0, 3.0]
+    | echo,
     [2.0, 3.0, 4.0] | array.from-list | check-alias | echo,
-    [2.0, 3.0, 4.0] | array.from-list | local-gradient (const 7.0) | array.to-list | eq [0.0, 0.0, 0.0] | echo,
-    [-1.2, 1.0] | array.from-list | local-gradient local-edge | array.to-list
-        | zip-with sub [-215.6, -88.0] | all (abs | lt 0.000000001) | echo,
+    [2.0, 3.0, 4.0]
+    | array.from-list
+    | local-gradient (const 7.0)
+    | array.to-list
+    | eq [0.0, 0.0, 0.0]
+    | echo,
+    [-1.2, 1.0]
+    | array.from-list
+    | local-gradient local-edge
+    | array.to-list
+    | zip-with sub [-215.6, -88.0]
+    | all (abs | lt 0.000000001)
+    | echo,
 ] | ignore

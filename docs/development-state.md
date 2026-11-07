@@ -1,17 +1,29 @@
 # Current work
 
-**Next:** publish and monitor the structured local-derivative prototype's three
-native semantic checks, then its four complete-solve measurement sessions in
-PR #269. Contract `524524bd3` precedes the prototype. See
-[local derivatives](measurements/local-derivatives.md). This adds meaningful
-performance work to the same PR; do not rerun the old tape-layout timings.
+**Next:** publish the complete formatting/probe/audit batch, then dispatch
+`numerics.yml`, suite `local-derivatives`, on `tape-record-evidence`. Its three
+native semantic checks gate four complete-solve timing sessions. Keep this in
+PR #269; do not rerun old tape-layout timings.
 
-The prototype is in `tests/fixtures/descent_local_ad.fwp`; no public API or
-compiler/runtime behavior has changed. `autodiff_precision` adds empty/singleton,
-endpoint, alias, nonlinear, constant and trap checks. The common measurement
-driver adds an explicit `local-derivatives` mode and the frozen 20%/2% limits.
-Guarded local measurement controls (3 tests, 0.13 s) and Rust formatting (0.13 s)
-pass. Full native checks/builds/timings run on GitHub.
+Contract `524524bd3` precedes prototype `3f0cea6b8`. The prototype remains in
+`tests/fixtures/descent_local_ad.fwp`; no public API or compiler/runtime behavior
+has changed. [The experiment](measurements/local-derivatives.md) requires 20%
+long-case gains, <=2% small-case regression and <=2% identical-copy variation.
+
+[First checks](measurements/local-derivative-checks-2026-11-07/README.md), run
+`42411789323`: native/interpreter semantics pass on GCC AMD64/ARM64 and Clang
+ARM64. All three jobs fail only canonical fwp formatting; their identical patch
+is applied. No timing jobs ran. All three full logs and artifacts were reviewed
+and retained. The batch also adds a callback trap-order check, saves native
+probes, verifies zero tape calls/storage and audits every saved timing observation.
+The new complete audit still needs its first real local-derivative report.
+
+Guarded local checks: four new measurement controls (0.12 s), 24 historical
+budget controls (0.13 s), 13 historical report controls (6.68 s), Rust formatting
+(0.13 s), retained semantic artifacts/Python syntax/changed links (0.13 s).
+The exact 2% copy limit now compares ratios directly, avoiding subtraction
+rounding that could reject the boundary. The first historical check lacked a
+sparse-checkout JSON fixture; restoring the tracked fixture fixed the setup.
 
 ## Branch and sources
 
@@ -36,7 +48,7 @@ frozen #266 tape section differs. AMD EPYC 7763/9V74/9V45 authorization persists
 | 1 | Verified | Runtime record layout merged with nine passing production jobs. |
 | 2 | Verified | Three focused native jobs and complete artifact audit pass. |
 | 3 | Verified | Runtime/compiler audits pass; reports, all 48 peer/memory rows and all 32 speed misses retained. |
-| 4 | In progress | Verify measured executables, carried production audit and final-head gates. |
+| 4 | In progress | Original images and carried audit verified; expanded PR still needs final-head gates. |
 
 ## Audit failure and repair
 
@@ -87,7 +99,8 @@ Image run `42389849116` passes: jobs `128454948857` (AMD64) and
 `128454949013` (ARM64). Its `tape-record-image-inputs.json` selects session 1 for each
 architecture and both versions, protocol `tape-records`.
 Rebuild saved C with the same GCC/flags, require byte-identical executables and
-scalar append inlining in both versions. Both full logs and artifacts have been downloaded; verify and retain them.
+scalar append inlining in both versions. [All 48 images and complete compiler/log evidence](measurements/tape-record-images-2026-11-07/README.md)
+are verified and retained (guarded hash check, 0.25 s).
 No new timings were taken. The verifier's
 seven controls already pass from #268.
 
@@ -109,3 +122,8 @@ commit line <=80 characters, no body/trailers/attribution; verify tree/message.
 The user expanded this PR to include a meaningful performance experiment.
 The [local-derivative contract](measurements/local-derivatives.md) now defines
 that work; saved phase shares establish no ARC/cache cause on their own.
+
+PR #269 is draft while the prototype is tested. Superseded full matrices
+`42407505153` and `42411792736` were canceled to avoid spending runner time on
+intermediate heads. No failure had been reported; canceled runs establish no
+final platform support. Run the complete matrix on the finished batch.

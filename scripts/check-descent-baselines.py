@@ -16,21 +16,24 @@ PHASES = {'setup', 'forwardWithRecording', 'reverseSetup', 'reverseTraversal',
 
 
 def check_observations(name, row, updates, protocol, layout):
-    assert protocol in {"baseline", "recording"}
+    assert protocol in {"baseline", "recording", "local"}
     assert layout in {"columns", "records"}
     recording = protocol == "recording"
     dimensions = row['dimensions']
     release_control = {'columns': 'missing-parent-free', 'records': 'missing-operation-free'}[layout]
     controls = {release_control, 'missing-result-phase'} if name == '3-1' else set()
     assert set(row['controls']) == controls, (name, layout, set(row['controls']), controls)
-    assert len(row['binaries']) == (15 if recording else 13) + len(controls)
-    assert len(row['cCompilerStackUsage']) == (13 if recording else 11) + len(controls)
+    images, stacks = {"baseline": (13, 11), "recording": (15, 13), "local": (12, 10)}[protocol]
+    assert len(row['binaries']) == images + len(controls)
+    assert len(row['cCompilerStackUsage']) == stacks + len(controls)
     assert row['binaries']['fwp-ad']['sha256'] == row['binaries']['fwp-ad-identical']['sha256']
     for label, control in row['controls'].items():
         assert control['status'] == {release_control: 232, 'missing-result-phase': 233}[label]
         assert control['stderr']
     profiles = {'fwp-ad-history', 'fwp-ad'}
     profiles |= {'fwp-ad-history-reference', 'fwp-ad-reference'} if recording else {'fwp-explicit', 'fwp-packed'}
+    if protocol == 'local':
+        profiles = {'fwp-local', 'fwp-ad', 'fwp-explicit', 'fwp-packed'}
     assert set(row['fwpProfiles']) == profiles
     for label, profile in row['fwpProfiles'].items():
         assert profile['managed']['finalChargedBytes'] == 0
@@ -38,11 +41,18 @@ def check_observations(name, row, updates, protocol, layout):
         assert raw['finalBytes'] == 0
         checkpoints = raw['afterBackwardRepeated']
         assert checkpoints['count'] == (updates if label.startswith('fwp-ad') else 0)
+        if label == 'fwp-local':
+            assert raw['peakBytes'] == raw['beforeShutdownBytes'] == 0
+            assert all(kind['requests'] == kind['requestedBytes'] == kind['peakBytes'] == 0
+                       for kind in raw['kinds'].values())
         if label.startswith('fwp-ad'):
             without = profile['withoutWorkspace']
             assert without['managed'] == profile['managed']
             assert without['rawDerivativeStorage']['finalBytes'] == 0
-    assert set(row['phaseObservations']) == (profiles if recording else {'fwp-ad-history', 'fwp-ad'})
+    phases = profiles if recording else {'fwp-ad-history', 'fwp-ad'}
+    if protocol == 'local':
+        phases = {'fwp-ad'}
+    assert set(row['phaseObservations']) == phases
     for label, phase in row['phaseObservations'].items():
         observations = phase['observations']
         assert len(observations) == 28

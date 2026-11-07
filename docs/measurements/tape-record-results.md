@@ -75,6 +75,7 @@ the archive digest and 2,162 observation-file hashes pass local verification.
 
 ## Remaining acceptance
 
-- Verify original measured executables and final follow-up PR gates.
+- [All 48 original measured executables are verified](tape-record-images-2026-11-07/README.md).
+  Final follow-up PR gates remain required.
 - Use the saved phase/work records and source paths before proposing another
   optimization. This layout does not close its speed target or earlier misses.
