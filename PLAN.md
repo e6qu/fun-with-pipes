@@ -24,7 +24,7 @@ archive audits are complete; 30 of 32 long-case targets remain open, alongside
 two AMD small-case regressions and one inconclusive copy comparison. All 48
 original images reproduce exactly. The compiler-change production run passed
 all nine jobs; [its complete artifact audit is verified and retained](docs/measurements/recording-context-delivery-2026-11-06/README.md).
-#266's merged-source CI is still running. A merge alone does not establish final platform acceptance.
+#266's merged-source CI also passes all nine jobs and docs.
 
 The [new experiment](docs/measurements/tape-operation-records.md) stores each
 numeric tape operation's parents and weights together. The [source investigation](docs/measurements/recording-context-next-layout.md)

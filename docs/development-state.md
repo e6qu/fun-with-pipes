@@ -1,13 +1,13 @@
 # Current work
 
-**Next:** when macOS completes, dispatch `numerics.yml`, suite `tape-record-audit`,
-with `evidence_run=42290415866`,
-`source_revision=b4b291e3184cae5046d7a1eba27e777c67b1884a`, `production_attempt=1`.
-Audit every host/target and batch repairs before measurements.
+**Next:** inspect complete focused artifact audit `42319311816` (suite
+`tape-record-audit`, producer `42290415866`, source
+`b4b291e3184cae5046d7a1eba27e777c67b1884a`, attempt 1). It is dispatched.
+Batch any failures before measurements; monitor the documentation repair too.
 
 ## PR and implementation
 
-Draft [PR #267](https://github.com/e6qu/fun-with-pipes/pull/267), branch
+[PR #267](https://github.com/e6qu/fun-with-pipes/pull/267), branch
 `tape-operation-records`, worktree `.worktrees/recording-capacity-gate`.
 Reference/user merge: `ef0a54a1da660fcc4c4e094e96c30c1adbe0fb5d` (#266), same tree
 as reviewed `3595f4b0cec1e37bc7874fca5e09bb176c87a1af`.
@@ -20,12 +20,14 @@ operation records, 8-byte typed parent records, checked capacities and exact
 cleanup. Moving growth, partial typed growth, cancellation, registry/workspace
 reuse, duplicate-parent arithmetic order and actual wasm32 bounds are covered.
 
-| Plan step | Status |
-|---|---|
-| 1. Runtime layout | Implemented; no native change after `b4b291e31`. |
-| 2. Focused correctness | Both Linux jobs pass; macOS and full artifact audit pending. |
-| 3. Measurements | Reference, producers, readers and dispatchers ready; none launched. |
-| 4. Final delivery | Nine exact-final-head jobs, docs, full audits and verified squash still required. |
+## Roadmap status
+
+| Step | Status | Evidence and remaining work |
+|---|---|---|
+| 1 | Implemented | Runtime layout; no native change after `b4b291e31`. |
+| 2 | In progress | All three focused jobs pass; full artifact audit pending. |
+| 3 | Pending | Reference, producers, readers and dispatchers ready; no measurements launched. |
+| 4 | In progress | Production CI running; docs repair and complete audits required before squash. |
 
 ## Active CI
 
@@ -35,12 +37,18 @@ reuse, duplicate-parent arithmetic order and actual wasm32 bounds are covered.
   all ten native targets, observers, formatting, lint and primitive inventory.
   ARM also passes the real wasm32 allocation bound. Complete job logs have no
   unexpected diagnostics; their hashes and metadata are retained.
-- macOS ARM64 `128142085304` is queued. Four existing measurement-only unit
+- macOS ARM64 `128142085304` passes. Four existing measurement-only unit
   exclusions are named in the logs; the auditor verifies their exact set.
-- Preparation docs `42292580171` pass. Dispatcher docs `42293845430` are queued.
-  Draft production skips do not establish acceptance.
-- #266 merge CI `42288270547`: benchmarks pass; Linux/Windows running and macOS
-  queued at last check. Docs `42288270157` pass. Carry any failures into this PR.
+- Preparation docs `42292580171` and dispatcher docs `42293845430` pass.
+  Head `a55ea682f` docs `42294930890` failed: the handoff cleanup removed the
+  required status heading and numbered/status columns. Restored that structure;
+  direct `check_handoff()` and workflow-size validation pass under the local
+  guard (0.19 s). This was the only failed step; subsequent docs checks skipped.
+  The replacement docs run must finish before claiming the gate passes.
+- The PR is now ready for review. Production run `42319169980` at `a55ea682f`
+  has Linux AMD64 running and eight jobs queued; no failed steps reported.
+- #266 merge CI `42288270547` passes all nine jobs; docs `42288270157` pass.
+  All three focused native job logs are retained and have no unexpected diagnostics.
 
 ## After focused acceptance
 

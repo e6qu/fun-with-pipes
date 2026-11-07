@@ -2,7 +2,8 @@
 
 The compiler change merged in #265 passes all nine production jobs and docs.
 The complete log/artifact audit also passes. Later measurement-only PR #266 was
-merged by the user; its separate production run is still pending.
+merged by the user; its separate [production run](https://github.com/e6qu/fun-with-pipes/actions/runs/42288270547)
+also passes all nine jobs, and documentation run `42288270157` passes.
 
 | Record | Identity |
 |---|---|

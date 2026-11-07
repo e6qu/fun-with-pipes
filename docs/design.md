@@ -349,7 +349,7 @@ confirms two lookups per positive update with unchanged allocation/peak storage.
 all misses and host rejections. The approved EPYC 7763/9V74/9V45 policy permits
 matched AMD sessions. All 48 original measured images reproduce exactly;
 [the compiler change's final platform gates and complete audit pass](measurements/recording-context-delivery-2026-11-06/README.md).
-The later measurement-only #266 merge has its own CI still pending. Tape-ID changes, task
+The later measurement-only #266 merge also passes all nine production jobs and docs. Tape-ID changes, task
 switches, reentry and retirement remain explicit lifetime boundaries.
 
 Channel borrowing preserves hidden native contexts as well as payload storage.
