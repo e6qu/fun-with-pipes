@@ -727,6 +727,12 @@ cloned. This extension is under verification; its
 [contract](measurements/direct-numeric-workers.md) requires allocation, runtime
 and compiler-cost evidence before claiming support.
 
+For example, a `Dual` stores a value and its derivative. In
+`edge (dual.var (x + 1.0), dual.const (y * y))`, the two records carry derivative
+seeds 1 and 0. The compiler evaluates the left input, then the right input, and
+passes their four numeric fields directly. It does not repeat either calculation
+or move an input's failure past the call.
+
 Call-graph analysis visits functions and edges a bounded number of times. The
 pass reuses the packed-lowering program rather than cloning the whole program
 again. Ownership insertion follows the typed-IR check. Numeric bits own no child

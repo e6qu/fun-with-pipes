@@ -1,174 +1,99 @@
 # Current work
 
-**Next:** monitor four runtime jobs in `42417868388` at source
-`8b24da94a4e54c023f5e4b2341896d97dff092b9`: AMD2 `128541266975`, ARM2
-`128541267002`, AMD1 `128541267009`, ARM1 `128541267023`. All three prerequisite
-native jobs pass: ARM `128539754453`, AMD `128539755075`, Mac `128539754700`.
-Each passes nine compiler proofs, the O1/O2 mixed-ownership check and native
-local-derivative values/traps. The actual edge has four numeric fields.
+**Next:** monitor the four runtime sessions in `42417868388` and compiler costs in
+`42418398638`; audit every completed result before deciding the next change.
+Keep PR #269 draft until this substantial batch is ready for final platform gates.
 
-Compiler comparison `42418398638` at `8389403c5` uses these passing checks and the
-same native source, with seven representative inputs against `f1cc94cf4`.
-Keep its 5% time/RSS and 2% copy limits. Full final-head platform gates remain.
-
-Failed source `9cb7497f3`, run
-`42417084281`, has the same sole failure on all hosts: the real edge arguments
-contain scalar `let` computations, not pure reads. Nine other unit tests pass;
-integration tests and measurements were skipped. All full logs and outcomes are
-[retained](measurements/numeric-input-diagnosis-2026-11-07/README.md).
-
-Revised contract `250cf62a0` precedes the repair. Speculative worker cloning is
-removed. The existing all-callers rule now binds each computed numeric input
-once before reading its fields, preserving scopes and left-to-right evaluation.
-Added regressions compare original/transformed IR values, shared inputs and first
-traps; the real source must select four numeric fields. Runtime audits still
-require exact request/retain parity with handwritten arrays, no extra managed
-peak and zero tape storage. Rust formatting passes (guarded, 0.13 s).
-
-All four first-prototype sessions are complete and audited; retain
-[their five timing misses](measurements/local-derivative-time-2026-11-07/README.md).
-Do not repeat unchanged timings. PR #269 remains draft pending this substantial
-compiler improvement and final-head full validation.
-
-Contract `524524bd3` precedes prototype `3f0cea6b8`. The prototype remains in
-`tests/fixtures/descent_local_ad.fwp`; no public API has changed. The compiler extension above is experimental until
-its focused and full gates pass. [The experiment](measurements/local-derivatives.md) requires 20%
-long-case gains, <=2% small-case regression and <=2% identical-copy variation.
-
-[First checks](measurements/local-derivative-checks-2026-11-07/README.md), run
-`42411789323`: native/interpreter semantics pass on GCC AMD64/ARM64 and Clang
-ARM64. All three jobs fail only canonical fwp formatting; their identical patch
-is applied. No timing jobs ran. All three full logs and artifacts were reviewed
-and retained. The batch also adds a callback trap-order check, saves native
-probes, verifies zero tape calls/storage and audits every saved timing observation.
-All four complete local-derivative report audits now pass.
-
-[Repaired checks](measurements/local-derivative-checks-2026-11-07/passing/README.md)
-pass all three hosts, including callback trap order. All nine native probes,
-generated C and full logs are retained and verified (0.20 s). The generic probe contains dynamic dispatch. The complete solve instead calls
-the known edge directly, with two boxed Dual inputs per following edge. Its
-407,552 excess requests equal two per edge/update/solve. No allocation-free claim.
-
-
-Guarded local checks: four new measurement controls (0.12 s), 24 historical
-budget controls (0.13 s), 13 historical report controls (6.68 s), Rust formatting
-(0.13 s), retained semantic artifacts/Python syntax/changed links (0.13 s).
-The exact 2% copy limit now compares ratios directly, avoiding subtraction
-rounding that could reject the boundary. The first historical check lacked a
-sparse-checkout JSON fixture; restoring the tracked fixture fixed the setup.
-
-## Branch and sources
+## Branch and current sources
 
 [PR #269](https://github.com/e6qu/fun-with-pipes/pull/269), branch
 `tape-record-evidence`, worktree `.worktrees/recording-capacity-gate`.
-User merged #268 at `96efba2a9d743a3109ae417f05301ab50a63019c`.
-Its tree `1b3b8ea77217834de2cad5904847b3967d4e963a` equals reviewed head
-`74d49922a0246fede5f579a455bdb971def5d5ab`; the squash subject is one line
-without trailers. All nine production jobs `42372334679` and docs `42370758241`
-pass. Full production-log audit `42388428687` passes with attempt 1,
-documentation job `128398200623`, source `74d49922a0246fede5f579a455bdb971def5d5ab`.
+The root worktree has unrelated changes; do not modify/reset it.
 
-Contract `036662872` precedes runtime implementation `b4b291e31` (#267).
-Measured source `621653b6394f49dc229a2956b6b61476c82c9aac` uses the same native
-sources as focused correctness. Both peers use the current compiler; only the
-frozen #266 tape section differs. AMD EPYC 7763/9V74/9V45 authorization persists.
+- Runtime source: `8b24da94a4e54c023f5e4b2341896d97dff092b9`.
+- Compiler-cost source: `8389403c5`; same native sources and tests.
+- Frozen baseline for compiler costs: `f1cc94cf4e013369cccb8a836bd745f41e5d757c`.
+- Original local-derivative contract: `524524bd3`; revised computed-input proof:
+  `250cf62a0`. [Exact boundaries](measurements/direct-numeric-workers.md).
+
+The repair binds each computed numeric input once before reading its fields.
+It preserves original scopes and left-to-right evaluation, with no function
+cloning. The prototype remains in `tests/fixtures/descent_local_ad.fwp`; no
+public derivative API has been added and no timing acceptance is claimed.
 
 ## Roadmap status
 
 | Step | Status | Evidence and remaining work |
 |---|---|---|
-| 1 | Verified | Runtime record layout merged with nine passing production jobs. |
-| 2 | Verified | Three focused native jobs and complete artifact audit pass. |
-| 3 | Verified | Runtime/compiler audits pass; reports, all 48 peer/memory rows and all 32 speed misses retained. |
-| 4 | In progress | Original images and carried audit verified; expanded PR still needs final-head gates. |
+| 1 | Verified | Three focused native jobs pass nine compiler proofs, mixed ownership at O1/O2 and local derivative values/traps. The actual edge selects four numeric fields. Full platform coverage remains step 4. |
+| 2 | In progress | Four changed-program runtime sessions are measuring; exact request/retain parity with handwritten arrays and the frozen timing limits remain required. |
+| 3 | In progress | Seven-case compiler comparison and complete audit are running. Public interface depends on verified runtime acceptance. |
+| 4 | Pending | Final-head nine production jobs, documentation and complete audits; then authorized squash merge. |
 
-## Audit failure and repair
+## Running jobs
 
-Runtime audit `42370476364`, job `128397393227`, failed in all four sessions at
-`check-descent-baselines.py::check_observations`. It expected the old
-`missing-parent-free` control instead of the producer's `missing-operation-free`.
-The reader now takes an explicit `columns` or `records` layout and requires its
-exact control set, failure code, diagnostics and image counts. All callers were
-updated; older retained measurements still use `columns`.
+Runtime producer `42417868388`:
 
-Checks under `scripts/local-guard.py`:
+| Host/session | Job |
+|---|---|
+| AMD1 | `128541267009` |
+| AMD2 | `128541266975` |
+| ARM1 | `128541267023` |
+| ARM2 | `128541267002` |
 
-- `python3 scripts/test-descent-groups.py`: 13 historical evidence tests pass
-  (6.79 s), preserving their original timing failures.
-- `python3 scripts/test-tape-records-reference.py`: 10 tests pass (1.26 s).
-  The real AMD64 session 1 report passes; eight mutations reject renamed/missing/
-  extra controls, a successful control, empty diagnostics, missing image,
-  unreleased storage and the wrong declared layout.
-- Original AMD64 artifact digest and saved report hash pass (0.24 s).
-  Scratch extraction initially assumed an unpacked archive; the retained bundle
-  is tar.xz, so the report was read directly from the original ZIP instead.
-  The scratch reader needed `PYTHONPATH=scripts`; production imports are unchanged.
-- Compiler audit digest and all 2,162 retained file hashes pass (0.13 s).
+The [21 native probe images and complete logs](measurements/computed-numeric-inputs-2026-11-07/README.md)
+are verified and retained. Its passing native prerequisites are ARM `128539754453`, AMD `128539755075` and
+Mac `128539754700`. Compiler producer `42418398638` has ARM job `128541365464`
+and AMD job `128541365535`; the workflow audits both afterward. ARM passes all
+limits. AMD stays within every 5% time/RSS budget, but copy variation is 2.41%
+for field-transfer and 3.35% for the tutorial; retain both inconclusive timings.
+Complete compiler audit job `128542895551` is queued.
 
-No production code or measured source changed. Repair `0c3b03e99` passes docs
-`42389023493`. Runtime re-audit `42388963241`, job `128452299039`, passes every
-original archive; no measurements were repeated. Summary artifact `13580578087`
-is retained with four verified report hashes and four full job-log hashes.
-The [memory/peer tables](measurements/tape-record-time-2026-11-07/README.md) and
-`costs.csv` cover all 48 rows; guarded derivation passes (0.24 s).
-#268's [production audit](measurements/tape-record-delivery-2026-11-07/followup-268/README.md)
-is retained: ten job logs and 1,456 target/probe logs verified (0.13 s).
+Original-observation retention run `42418518671`, job `128541726131`, repacks and
+re-audits all four initial prototype sessions. It does not repeat timings.
+After the new runtime run completes, dispatch `local-derivative-audit` with its
+run ID, exact source and `numeric_representation=numeric` to retain all files.
 
-## Measurements and next verification
+## Results and repaired failures
 
-[Results](measurements/tape-record-results.md): ARM64 improves 0.71–3.58%; AMD64
-ranges from 2.90% faster to 1.35% slower. All reported small/copy limits pass;
-all 32 long-case speed targets remain open. Runtime producer `42369288345` has
-four complete sessions. Failed-audit summary artifact: `13573108879`;
-retained bundle: `13574171048`. Preserve the failure provenance.
+[First prototype results](measurements/local-derivative-time-2026-11-07/README.md),
+run `42413370794`, source `0ddde8224c3ab39e9ef4d9770483a72372b17c42`:
+all four complete observation audits pass. Five timing misses remain. Largest
+solves are 24–31% faster than ordinary reverse AD but make 407,552 extra managed
+requests versus handwritten fwp arrays. These equal two Dual inputs per edge.
 
-[Compiler evidence](measurements/tape-record-analysis-2026-11-07/README.md):
-producer `42369286155`, complete audit `42369871217`, artifact `13573526746`.
-All fourteen comparisons pass. Full reports, logs, host/reference identities
-and observation archives are retained in the repository.
+[Failed hypothesis](measurements/numeric-input-diagnosis-2026-11-07/README.md),
+source `9cb7497f3`, run `42417084281`: all hosts pass nine unit tests and fail
+only actual-edge selection. Computed arguments, not function-value references,
+block the call. Integration tests and timings were skipped. Full logs are
+retained. Speculative worker cloning was removed before the passing repair.
 
-Image run `42389849116` passes: jobs `128454948857` (AMD64) and
-`128454949013` (ARM64). Its `tape-record-image-inputs.json` selects session 1 for each
-architecture and both versions, protocol `tape-records`.
-Rebuild saved C with the same GCC/flags, require byte-identical executables and
-scalar append inlining in both versions. [All 48 images and complete compiler/log evidence](measurements/tape-record-images-2026-11-07/README.md)
-are verified and retained (guarded hash check, 0.25 s).
-No new timings were taken. The verifier's
-seven controls already pass from #268.
+The first prototype's formatting failure and repaired native probes are retained
+[here](measurements/local-derivative-checks-2026-11-07/README.md).
+Two links to a moved plan heading were repaired; docs `42415160614` and
+`42417087519` pass. Final-head docs remain required.
 
-## Carried evidence and limits
+## Completed carried evidence
 
-[#267 production](measurements/tape-record-delivery-2026-11-07/README.md) and
-[focused cleanup checks](measurements/tape-record-checks-2026-11-06/README.md)
-are verified and retained. Earlier timing misses in [PLAN.md](../PLAN.md) remain
-open; a new comparison never erases an old result.
+[PLAN.md](../PLAN.md#completed-work-carried-in-this-pr) links the corrected four
+layout audits, 48 original image reproductions, fourteen compiler comparisons
+and #268's complete production audit. Earlier misses remain in
+[unmet comparisons](measurements/unmet-comparisons.md). These are evidence,
+not a reason to repeat unchanged measurements.
 
-Free disk recovered to 90 GiB; minimum 64 GiB. Local checks stay guarded, serial
-and bounded; full builds, suites, large audits and benchmarks stay on GitHub.
-Stop on guard refusal. Remove disposable downloads only after retaining verified
-evidence. Hosted slots can be busy: do not restart queued work or infer billing.
+## Local checks and delivery
 
-Keep one PR for repairs, retained comparisons, image checks and docs. Only squash
-after nine final-head production jobs, docs and complete audits pass. Use one
-commit line <=80 characters, no body/trailers/attribution; verify tree/message.
-The user expanded this PR to include a meaningful performance experiment.
-The [local-derivative contract](measurements/local-derivatives.md) now defines
-that work; saved phase shares establish no ARC/cache cause on their own.
+Guarded checks: five local-derivative measurement controls (0.13 s), eleven
+compiler-cost controls (3.44 s), Rust formatting (0.13 s), workflow validation
+(0.13 s), retention-script syntax (0.13 s), and all four original archive/report
+hashes plus 144 peer rows (0.25 s). Earlier historical reader controls pass.
+The plan link check initially lacked two sparse-checkout docs; restoring their
+tracked files fixes the setup and all current plan/handoff links pass (0.13 s).
+Full builds, suites, benchmarks and large retention stay on GitHub. Last free
+disk check: 89 GiB; minimum 64 GiB. Stop on guard refusal, never raise limits.
 
-PR #269 is draft while the prototype is tested. Superseded full matrices
-`42407505153` and `42411792736` were canceled to avoid spending runner time on
-intermediate heads. No failure had been reported; canceled runs establish no
-final platform support. Run the complete matrix on the finished batch.
-
-Documentation run `42413373915` failed at two links to the moved
-`PLAN.md#open-performance-goals` section. A full tracked-file search found both
-references (one was absent from the sparse checkout); both now point directly
-to `docs/measurements/unmet-comparisons.md`. No other completed step failed.
-The prior documentation run `42411792755` passes.
-
-All four runtime archives/report hashes and 144 peer rows are retained and
-verified (guarded check, 0.25 s). Documentation repair run `42415160614` passes.
-
-Compiler measurement controls: 11 pass (guarded, 3.44 s); changed workflow
-validation passes (guarded actionlint, 0.13 s). No native source changed while
-adding this compiler-cost workflow.
+Hosted slots can be busy: do not restart queued work or infer billing. Keep one
+active PR. Final-head nine production jobs, docs and audits gate merging.
+Supply an explicit squash subject <=80 characters with an empty body, no
+trailers/attribution; verify the resulting tree/message. Continue the plan after
+verified delivery. Do not treat smaller allocation counts as a timing pass.
