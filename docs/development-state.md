@@ -1,8 +1,9 @@
 # Current work
 
-**Next:** audit every completed job in the tape-layout measurement runs below.
-Retain all qualified timing results, including misses; repair failed setup or
-correctness checks before proceeding. Do not rerun unchanged qualified timings.
+**Next:** finish runtime archive audit `42370476364`, then retain its complete
+summary and compiler audit artifact `13573526746` when resource limits permit.
+All four sessions are complete; their only reported failures are the 32 long-case
+speed targets. Preserve those misses; do not rerun unchanged qualified timings.
 
 ## Branch and measured source
 
@@ -17,7 +18,8 @@ executable verification, documentation and any needed repairs.
 The [contract](measurements/tape-operation-records.md) was committed at
 `036662872` before implementation `b4b291e31`. Reference data is the #266 tape
 section, not a dependency on a previous compiler. Both measured versions use
-the merged compiler and differ only in that section. No new speedup is claimed.
+the merged compiler and differ only in that section. The required 5% speed
+improvement is not established.
 AMD EPYC 7763/9V74/9V45 approval persists; no decision is pending.
 
 ## Roadmap status
@@ -26,19 +28,21 @@ AMD EPYC 7763/9V74/9V45 approval persists; no decision is pending.
 |---|---|---|
 | 1 | Verified | Runtime layout merged; all nine production jobs and docs pass. |
 | 2 | Verified | Three focused native jobs and complete artifact audit pass. |
-| 3 | In progress | Four runtime sessions running; both compiler-cost jobs pass, archive audit queued. |
+| 3 | In progress | All measurements complete; 32 speed targets unmet. Compiler audit passes; runtime audit queued. |
 | 4 | In progress | Full production-log audit passes; measured images and follow-up final gates remain. |
 
 ## Active runs
 
 Measurement and merge runs use source `621653b6394f49dc229a2956b6b61476c82c9aac`.
-The compiler auditor runs from preparation `d48e6ca0b`:
+The compiler auditor runs from preparation `d48e6ca0b`; the runtime auditor
+runs from `b2d2200a7`:
 
 | Run | Work | Last observed status |
 |---|---|---|
-| [42369288345](https://github.com/e6qu/fun-with-pipes/actions/runs/42369288345) | `tape-record-time`: two sessions per Linux architecture | Running |
-| [42369286155](https://github.com/e6qu/fun-with-pipes/actions/runs/42369286155) | `tape-record-analysis`: seven compiler workloads per architecture | Pass; full archive audit pending |
-| [42369871217](https://github.com/e6qu/fun-with-pipes/actions/runs/42369871217) | Complete compiler-cost archive audit | Queued |
+| [42369288345](https://github.com/e6qu/fun-with-pipes/actions/runs/42369288345) | `tape-record-time`: two sessions per Linux architecture | Complete; all 32 long-case speed targets missed |
+| [42369286155](https://github.com/e6qu/fun-with-pipes/actions/runs/42369286155) | `tape-record-analysis`: seven compiler workloads per architecture | Pass, including full archive audit |
+| [42369871217](https://github.com/e6qu/fun-with-pipes/actions/runs/42369871217) | Complete compiler-cost archive audit | Pass |
+| [42370476364](https://github.com/e6qu/fun-with-pipes/actions/runs/42370476364) | Complete runtime archive audit | Queued |
 | [42369305486](https://github.com/e6qu/fun-with-pipes/actions/runs/42369305486) | Full #267 production-log audit | Pass |
 | [42369180224](https://github.com/e6qu/fun-with-pipes/actions/runs/42369180224) | Merge-source production CI | Running |
 | [42369180108](https://github.com/e6qu/fun-with-pipes/actions/runs/42369180108) | Merge-source documentation | Pass |
@@ -48,11 +52,11 @@ Measurement prerequisite: focused run `42290415866`, source
 The production auditor reads run `42319670701`, source `6ca44feb58ce155c42eae792beb480d59894ad7f`,
 attempt 1, documentation job `128240880945`, host `all`.
 
-After each measurement producer finishes, dispatch `numerics.yml` with suite
-`tape-records-compiler-report` or `tape-records-report`, its `evidence_run`, and
-`source_revision=621653b6394f49dc229a2956b6b61476c82c9aac`. Audit complete
-archives, all failures and rejected hosts. Keep original samples and compiler,
-CPU, allocation, live-memory, elapsed-time, stack and executable-size records.
+Both archive audits have been dispatched; do not duplicate them.
+[The results](measurements/tape-record-results.md) record all reported speed
+misses, actual CPUs and passing compiler costs. Keep original samples and
+compiler, CPU, allocation, live-memory, elapsed-time, stack and executable-size
+records. Absolute C/Rust and memory tables still need the full runtime report.
 
 After retaining runtime reports, commit the explicit image-verification input
 plan and dispatch `recording-call-analysis` with `call_plan` pointing to it.
