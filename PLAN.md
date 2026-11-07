@@ -53,14 +53,29 @@ Keep the completed shared-access measurements unchanged. Its numeric-call and
 loop scopes remain enabled in both versions. [The handoff](docs/development-state.md)
 records exact source/run identities and the current next action.
 
-## Next investigation after this delivery
+## Current performance experiment: eliminate tape work for local objectives
 
-[Separate autodiff cost from shared runtime cost](docs/measurements/tape-record-next-work.md)
-by comparing automatic and handwritten derivatives within the current fwp
-compiler. Use the same inputs and common driver, review emitted source, freeze
-the diagnostic, then choose one optimization with a concrete proof boundary.
-The saved phase evidence and exact next tasks are in that plan; do not guess a
-cache or ARC cause from the C/Rust ratio alone.
+The user requested meaningful performance gains and permits language/API changes.
+Keep this work in PR #269 with the pending evidence repairs. The
+[structured derivative experiment](docs/measurements/local-derivatives.md)
+is frozen at `524524bd3`: expose each two-coordinate objective term and use
+existing `Dual` arithmetic locally, without a global reverse tape or handwritten
+derivative. The initial implementation is a fixture, not a public API.
+
+1. Check endpoints, empty/singleton inputs, aliases, nonlinear derivatives and
+   traps against the unoptimized interpreter on GCC ARM64/AMD64 and Clang ARM64.
+2. Compare full solves with ordinary reverse AD, handwritten fwp lists/arrays,
+   C and Rust using the same driver. Require 20% long-case gains, <=2% small-case
+   regression and <=2% identical-copy variation; retain all misses and costs.
+3. If qualified, promote the structured operation with clear examples and
+   regression coverage. Otherwise inspect the actual costs before choosing a
+   compiler or representation change. Do not publish an unproven performance API.
+4. Complete final-head platform/doc gates and retained audits before merging.
+
+This is a structured algorithm for neighboring interactions, not a promise of
+zero-storage derivatives for arbitrary programs. Existing `grad` semantics remain
+unchanged. [The source investigation](docs/measurements/tape-record-next-work.md)
+explains why direct comparison within fwp is necessary.
 
 ## Open performance goals
 

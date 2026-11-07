@@ -1,9 +1,17 @@
 # Current work
 
-**Next:** monitor original-image verification `42389849116` at source
-`de895a714`, then retain both native jobs' image/source/stack hashes and compiler
-reports. Final-head production/doc gates follow the completed batch. Do not
-repeat the runtime timings.
+**Next:** publish and monitor the structured local-derivative prototype's three
+native semantic checks, then its four complete-solve measurement sessions in
+PR #269. Contract `524524bd3` precedes the prototype. See
+[local derivatives](measurements/local-derivatives.md). This adds meaningful
+performance work to the same PR; do not rerun the old tape-layout timings.
+
+The prototype is in `tests/fixtures/descent_local_ad.fwp`; no public API or
+compiler/runtime behavior has changed. `autodiff_precision` adds empty/singleton,
+endpoint, alias, nonlinear, constant and trap checks. The common measurement
+driver adds an explicit `local-derivatives` mode and the frozen 20%/2% limits.
+Guarded local measurement controls (3 tests, 0.13 s) and Rust formatting (0.13 s)
+pass. Full native checks/builds/timings run on GitHub.
 
 ## Branch and sources
 
@@ -75,11 +83,12 @@ producer `42369286155`, complete audit `42369871217`, artifact `13573526746`.
 All fourteen comparisons pass. Full reports, logs, host/reference identities
 and observation archives are retained in the repository.
 
-Image run `42389849116` is queued: jobs `128454948857` (AMD64) and
+Image run `42389849116` passes: jobs `128454948857` (AMD64) and
 `128454949013` (ARM64). Its `tape-record-image-inputs.json` selects session 1 for each
 architecture and both versions, protocol `tape-records`.
 Rebuild saved C with the same GCC/flags, require byte-identical executables and
-scalar append inlining in both versions. Take no new timings. The verifier's
+scalar append inlining in both versions. Both full logs and artifacts have been downloaded; verify and retain them.
+No new timings were taken. The verifier's
 seven controls already pass from #268.
 
 ## Carried evidence and limits
@@ -89,7 +98,7 @@ seven controls already pass from #268.
 are verified and retained. Earlier timing misses in [PLAN.md](../PLAN.md) remain
 open; a new comparison never erases an old result.
 
-Free disk recovered to 68 GiB; minimum 64 GiB. Local checks stay guarded, serial
+Free disk recovered to 90 GiB; minimum 64 GiB. Local checks stay guarded, serial
 and bounded; full builds, suites, large audits and benchmarks stay on GitHub.
 Stop on guard refusal. Remove disposable downloads only after retaining verified
 evidence. Hosted slots can be busy: do not restart queued work or infer billing.
@@ -97,6 +106,6 @@ evidence. Hosted slots can be busy: do not restart queued work or infer billing.
 Keep one PR for repairs, retained comparisons, image checks and docs. Only squash
 after nine final-head production jobs, docs and complete audits pass. Use one
 commit line <=80 characters, no body/trailers/attribution; verify tree/message.
-After delivery, follow [the next bounded investigation](measurements/tape-record-next-work.md):
-compare automatic and handwritten derivatives within current fwp before selecting
-another optimization. Saved phase shares locate work but establish no ARC/cache cause.
+The user expanded this PR to include a meaningful performance experiment.
+The [local-derivative contract](measurements/local-derivatives.md) now defines
+that work; saved phase shares establish no ARC/cache cause on their own.

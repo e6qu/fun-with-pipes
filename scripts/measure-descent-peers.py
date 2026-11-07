@@ -88,6 +88,30 @@ main = [{point}] | array.from-list | solve | array.to-list | echo
 """
 
 
+def local_program(points, updates):
+    source = packed_program(points, updates)
+    manual = (ROOT / 'tests/fixtures/descent_packed.fwp').read_text()
+    automatic = (ROOT / 'tests/fixtures/descent_local_ad.fwp').read_text()
+    assert source.startswith(manual) and source.count('(.1 | packed-descend)') == 1
+    return automatic + source[len(manual):].replace('(.1 | packed-descend)', '(.1 | local-descend)')
+
+
+def local_budget_failures(results):
+    """Apply the local-derivative contract without hiding inconclusive samples."""
+    failures = []
+    for name, row in results.items():
+        medians = row['medianNs']
+        copies = [medians['fwp-ad'], medians['fwp-ad-identical']]
+        variation = max(copies) / min(copies) - 1
+        if variation > .02:
+            failures.append(dict(case=name, metric='identical copy variation', actual=variation, limit=.02))
+        ratio = medians['fwp-local'] / medians['fwp-ad']
+        limit = 1.02 if row['updates'] <= 1 else .80
+        if ratio > limit:
+            failures.append(dict(case=name, metric='local / reverse elapsed time', actual=ratio, limit=limit))
+    return failures
+
+
 def measurement_orders(labels, samples, seed):
     """Balance positions and every immediate predecessor within each round."""
     assert len(labels) == len(set(labels)) == 7 and samples > 0 and samples % 14 == 0
@@ -263,7 +287,7 @@ def paired_budget_failures(results, comparison):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--compiler', required=True, type=Path)
-    parser.add_argument('--comparison', required=True, choices=['current', 'eager-captures', 'array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context', 'tape-records'])
+    parser.add_argument('--comparison', required=True, choices=['current', 'local-derivatives', 'eager-captures', 'array-lists', 'record-zip', 'record-fold', 'packed-records', 'callback-owners', 'scalar-map-zip', 'range-zip', 'gradient-array', 'scalar-array-map', 'scalar-array-identity', 'final-iteration', 'matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context', 'tape-records'])
     parser.add_argument('--reference-compiler', type=Path)
     parser.add_argument('--reference-manifest', type=Path)
     parser.add_argument('--cc', required=True)
@@ -284,7 +308,8 @@ def main():
     parser.add_argument('--qualification', required=True, type=Path)
     parser.add_argument('--output', required=True, type=Path)
     args = parser.parse_args()
-    paired = args.comparison != 'current'
+    local = args.comparison == 'local-derivatives'
+    paired = args.comparison not in ('current', 'local-derivatives')
     separate_compiler = paired and args.comparison != 'array-lists'
     assert bool(args.reference_compiler) == bool(args.reference_manifest) == separate_compiler
     reference_manifest = json.loads(args.reference_manifest.read_text()) if separate_compiler else None
@@ -389,6 +414,8 @@ def main():
             assert reference_manifest['disabledTransformation'] == 'flat numeric record zip/map fusion'
     fwp_labels = ['fwp-ad-history', 'fwp-ad', 'fwp-ad-history-reference', 'fwp-ad-reference'] if paired else [
         'fwp-ad-history', 'fwp-ad', 'fwp-explicit', 'fwp-packed']
+    if local:
+        fwp_labels = ['fwp-local', 'fwp-ad', 'fwp-explicit', 'fwp-packed']
     assert os.environ.get('GITHUB_ACTIONS') == 'true' and platform.system() == 'Linux'
     assert args.samples > 0 and args.samples % 49 == 0 and args.warmups > 0 and args.timeout > 0
     assert args.phase_samples > 0 and args.phase_samples % 2 == 0 and args.phase_warmups > 0
@@ -407,6 +434,8 @@ def main():
                    if not key.startswith('FWP_') and key not in ('GH_TOKEN', 'GITHUB_TOKEN')}
     environment.update(CC=args.cc, FWP_LTO='0', FWP_AD_WORKSPACE='1',
                        FWP_PACKED_ARRAYS='1', FWP_STACK='1', FWP_ARRAY_FUSION='1')
+    if local:
+        environment.update(FWP_VRET='1', FWP_FRAME_FIELDS='1')
     if args.comparison in ('matched-option', 'packed-input', 'owned-numeric', 'gradient-call', 'packed-pair', 'scalar-constant', 'recording-lookup', 'recording-inline', 'recording-capacity', 'recording-context', 'tape-records'):
         environment.update(FWP_VRET='1', FWP_FRAME_FIELDS='1')
     commands = []
@@ -461,6 +490,8 @@ def main():
         controls = {}
         for label in fwp_labels:
             source = packed_program(points, updates) if label.startswith('fwp-packed') else AD.program(points, updates + 1, 'history' in label)
+            if label == 'fwp-local':
+                source = local_program(points, updates)
             if label == 'fwp-explicit':
                 assert source.count('(.1 | descend)') == 1
                 source = source.replace('(.1 | descend)', '(.1 | explicit-descend)')
@@ -623,7 +654,7 @@ def main():
             source_path = binary.with_suffix('.rs' if binary.name == 'rust-explicit' else '.c')
             metadata[binary.name] = dict(instructionBytes=text_bytes, bytes=len(raw), sha256=digest(raw), sourceSha256=digest(source_path.read_bytes()),
                                         disassemblySha256=digest(assembly))
-        assert len(metadata) == (15 if paired else 13) + len(controls)
+        assert len(metadata) == 11 + len(phase_binaries) + len(controls)
         assert metadata['fwp-ad-identical']['sha256'] == metadata['fwp-ad']['sha256']
         labels = list(binaries)
         assert labels == fwp_labels + ['c-explicit', 'rust-explicit', 'fwp-ad-identical']
@@ -684,8 +715,8 @@ def main():
                 entries.append(dict(location=location, bytes=int(size), qualifier=qualifier))
             assert entries
             stack[stack_file.name] = dict(sha256=digest(stack_file.read_bytes()), entries=entries)
-        # Four fwp forms/profiles, two or four phase images, and C.
-        assert len(stack) == (13 if paired else 11) + len(controls), stack.keys()
+        # Four fwp forms/profiles, a phase image for each reverse form, and C.
+        assert len(stack) == 9 + len(phase_binaries) + len(controls), stack.keys()
         results[name] = dict(dimensions=points, updates=updates, oracle=expected, processesPerLabel=processes, solvesPerProcess=solves,
             outputSha256={label: digest(value) for label, value in outputs.items()},
             samplesNs=samples, medianNs=medians, orders=orders,
@@ -721,6 +752,8 @@ def main():
              'tests/fixtures/stack_array_projection.c', 'tests/array_element_ownership.rs',
              'tests/fixtures/array_capture_reads.fwp', 'tests/fixtures/array_capture_effects.fwp',
              'docs/tutorials/20-autodiff-and-devices/main.fwp']
+    if local:
+        paths += ['tests/fixtures/descent_local_ad.fwp', 'docs/measurements/local-derivatives.md']
     report = dict(source=os.environ['GITHUB_SHA'], host=args.host, machine=platform.machine(),
         qualification=qualification,
         settings={key: value for key, value in environment.items() if key.startswith('FWP_') or key == 'CC'},
@@ -730,6 +763,7 @@ def main():
         referenceCompiler=reference_manifest,
         sourceHashes={name: digest((ROOT / name).read_bytes()) for name in paths}, results=results,
         scope={
+            'local-derivatives': 'Ordinary global reverse AD versus local two-input forward AD, manual fwp lists/arrays and manual C/Rust. Local AD uses existing Dual rules, no handwritten derivative. Each interior coordinate evaluates two edges. This is an explicit structured algorithm, not a transparent transformation of grad. ',
             'recording-lookup': 'Same-source compilers differ only in reusing validated tape lookups in proved numeric workers. Parent and capacity checks, allocations and derivative work stay unchanged. C/Rust use handwritten derivatives; whole-program ratios do not isolate language or ARC overhead. ',
             'recording-inline': 'Same-source compilers differ only in forced inlining of the checked F64 append body. Lookup reuse, validation, allocation and derivative work remain identical. C/Rust use handwritten derivatives; complete-program ratios do not isolate language or ARC overhead. ',
             'recording-capacity': 'Same-source compilers differ only in the inlined checked reserve gate and shared growth body. Append inlining, lookup reuse, validation, allocation and derivative work remain identical. C/Rust use handwritten derivatives; complete-program ratios do not isolate language or ARC overhead. ',
@@ -757,7 +791,8 @@ def main():
         }[args.comparison] +
         ('Candidate and reference record and reverse the same derivatives; an identical candidate copy checks timing noise. '
          if paired else '') +
-        'The history source form requests the last of its iterated vectors; selected compilers can keep only the current vector. The current source form uses an explicit loop. Both record and reverse derivatives. ' +
+        ('The local candidate generates packed updates directly; reverse AD uses its existing list update path. '
+         if local else 'The history source form requests the last of its iterated vectors; selected compilers can keep only the current vector. The current source form uses an explicit loop. Both record and reverse derivatives. ') +
         ('C/Rust reuse two contiguous buffers. ' if paired else
          'fwp explicit list and packed array forms use handwritten derivatives. C/Rust reuse two contiguous buffers. '
          'Packed fwp can recompute edge residuals that C/Rust compute once. ') +
@@ -780,6 +815,10 @@ def main():
     print(json.dumps({name: row['ratios'] for name, row in results.items()}, indent=2))
     if paired:
         failures = paired_budget_failures(results, args.comparison)
+        (out / 'budget-failures.json').write_text(json.dumps(failures, indent=2) + '\n')
+        assert not failures, json.dumps(failures, indent=2)
+    if local:
+        failures = local_budget_failures(results)
         (out / 'budget-failures.json').write_text(json.dumps(failures, indent=2) + '\n')
         assert not failures, json.dumps(failures, indent=2)
 
