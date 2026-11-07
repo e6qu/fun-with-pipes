@@ -13,6 +13,20 @@ SPEC.loader.exec_module(CALLS)
 
 
 class RecordingCalls(unittest.TestCase):
+    def test_tape_records_preserve_inlining_in_both_measured_versions(self):
+        group = dict(name='tape-records', source='a' * 40, protocol='tape-records',
+                     index='docs/measurements/fixture/index.json',
+                     variants=[dict(name='candidate', suffix='', inlining='require'),
+                               dict(name='reference', suffix='-reference', inlining='require')])
+        plan = dict(contractCommit='b' * 40, architectures={arch: [copy.deepcopy(group)] for arch in ('aarch64', 'x86_64')})
+        for arch in plan['architectures']:
+            self.assertEqual(CALLS.check_plan(plan, arch), [group])
+            for variant in range(2):
+                altered = copy.deepcopy(plan)
+                altered['architectures'][arch][0]['variants'][variant]['inlining'] = 'observe'
+                with self.subTest(arch=arch, variant=variant), self.assertRaises(AssertionError):
+                    CALLS.check_plan(altered, arch)
+
     def test_explicit_plan_rejects_incomplete_or_ambiguous_inputs(self):
         group = dict(name='lookup', source='a' * 40, protocol='recording-inline',
                      index='docs/measurements/fixture/index.json',

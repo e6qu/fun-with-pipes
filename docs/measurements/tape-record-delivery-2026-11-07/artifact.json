@@ -1,0 +1,20 @@
+{
+  "id": 13573122126,
+  "node_id": "MDg6QXJ0aWZhY3QxMzU3MzEyMjEyNg==",
+  "name": "production-log-audit-all",
+  "size_in_bytes": 1164641,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13573122126",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13573122126/zip",
+  "expired": false,
+  "digest": "sha256:9dc097fc7abda0bf07cd53e598300edad0a20f790c756704d4da31461398460c",
+  "created_at": "2026-11-07T11:44:52Z",
+  "updated_at": "2026-11-07T11:44:52Z",
+  "expires_at": "2027-02-05T11:42:30Z",
+  "workflow_run": {
+    "id": 42369305486,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "main",
+    "head_sha": "621653b6394f49dc229a2956b6b61476c82c9aac"
+  }
+}
