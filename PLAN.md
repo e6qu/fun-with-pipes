@@ -53,6 +53,15 @@ Keep the completed shared-access measurements unchanged. Its numeric-call and
 loop scopes remain enabled in both versions. [The handoff](docs/development-state.md)
 records exact source/run identities and the current next action.
 
+## Next investigation after this delivery
+
+[Separate autodiff cost from shared runtime cost](docs/measurements/tape-record-next-work.md)
+by comparing automatic and handwritten derivatives within the current fwp
+compiler. Use the same inputs and common driver, review emitted source, freeze
+the diagnostic, then choose one optimization with a concrete proof boundary.
+The saved phase evidence and exact next tasks are in that plan; do not guess a
+cache or ARC cause from the C/Rust ratio alone.
+
 ## Open performance goals
 
 Allocation reductions do not establish a speedup or lower process RAM. Preserve

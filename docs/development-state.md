@@ -1,9 +1,9 @@
 # Current work
 
-**Next:** publish the retained runtime reports and image input plan, then dispatch
-`recording-call-analysis` on branch `tape-record-evidence` with
-`call_plan=docs/measurements/tape-record-image-inputs.json`. Verify both native
-jobs and original-image hashes. Do not repeat the runtime timings.
+**Next:** monitor original-image verification `42389849116` at source
+`de895a714`, then retain both native jobs' image/source/stack hashes and compiler
+reports. Final-head production/doc gates follow the completed batch. Do not
+repeat the runtime timings.
 
 ## Branch and sources
 
@@ -75,7 +75,8 @@ producer `42369286155`, complete audit `42369871217`, artifact `13573526746`.
 All fourteen comparisons pass. Full reports, logs, host/reference identities
 and observation archives are retained in the repository.
 
-The prepared `tape-record-image-inputs.json` selects session 1 for each
+Image run `42389849116` is queued: jobs `128454948857` (AMD64) and
+`128454949013` (ARM64). Its `tape-record-image-inputs.json` selects session 1 for each
 architecture and both versions, protocol `tape-records`.
 Rebuild saved C with the same GCC/flags, require byte-identical executables and
 scalar append inlining in both versions. Take no new timings. The verifier's
@@ -96,4 +97,6 @@ evidence. Hosted slots can be busy: do not restart queued work or infer billing.
 Keep one PR for repairs, retained comparisons, image checks and docs. Only squash
 after nine final-head production jobs, docs and complete audits pass. Use one
 commit line <=80 characters, no body/trailers/attribution; verify tree/message.
-Continue the plan after delivery.
+After delivery, follow [the next bounded investigation](measurements/tape-record-next-work.md):
+compare automatic and handwritten derivatives within current fwp before selecting
+another optimization. Saved phase shares locate work but establish no ARC/cache cause.
