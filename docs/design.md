@@ -935,8 +935,12 @@ production jobs and documentation; those timing goals remain separate.
 
 A numeric derivative tape records two parents and local derivative weights per
 operation. Its backward workspace need only reach the last requested output;
-later forward work and failures still run. Parent buffers share one allocation
-and derivative buffers another; only their base pointers own storage.
+later forward work and failures still run. Numeric operations use one 24-byte
+record containing two I32 parent indices and two F64 derivative weights.
+For `z = x * y`, that record holds `(x-index, y-index, y-value, x-value)`.
+One allocation stores these records; growth preserves each record without
+shifting columns. Typed operations use 8-byte parent pairs and separately owned
+language-value weights. Only allocation base pointers own raw storage.
 Recording receives four curried arguments: parent A, weight A, parent B, weight B.
 Native typed recording consumes both weight owners. It protects them during
 validation and growth, then stores them before publishing the node. Inactive

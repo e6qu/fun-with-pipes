@@ -1,114 +1,110 @@
 # Current work
 
-**Next:** redispatch the complete focused artifact audit after the workflow
-permission repair: suite `tape-record-audit`, `evidence_run=42290415866`,
-`source_revision=b4b291e3184cae5046d7a1eba27e777c67b1884a`, `production_attempt=1`.
-Audit attempt `42319311816` failed before jobs: the new measurement caller did
-not grant `actions: read` requested by its reusable workflow. Explicit read-only
-permissions now match the callee. Monitor the replacement audit and docs gate.
+**Next:** finish runtime archive audit `42370476364`, then retain its complete
+summary and compiler audit artifact `13573526746` when resource limits permit.
+All four sessions are complete; their only reported failures are the 32 long-case
+speed targets. Preserve those misses; do not rerun unchanged qualified timings.
 
-## PR and implementation
+## Branch and measured source
 
-[PR #267](https://github.com/e6qu/fun-with-pipes/pull/267), branch
-`tape-operation-records`, worktree `.worktrees/recording-capacity-gate`.
-Reference/user merge: `ef0a54a1da660fcc4c4e094e96c30c1adbe0fb5d` (#266), same tree
-as reviewed `3595f4b0cec1e37bc7874fca5e09bb176c87a1af`.
-Contract `036662872` preceded implementation `b4b291e31`.
-Preparation `a97bc703f`; measurement/audit dispatchers `fd131ae00`.
-AMD 7763/9V74/9V45 approval persists. No decision is pending.
+[PR #268](https://github.com/e6qu/fun-with-pipes/pull/268), branch
+`tape-record-measurements`, worktree `.worktrees/recording-capacity-gate`.
+PR #267 is merged at `621653b6394f49dc229a2956b6b61476c82c9aac`.
+Its tree `87157da8628c9bd8755133830b9e93a8fd4f2a6b` equals tested head
+`6ca44feb58ce155c42eae792beb480d59894ad7f`; the squash message is one line,
+65 characters, without trailers. The follow-up groups measurements, original
+executable verification, documentation and any needed repairs.
 
-[The contract](measurements/tape-operation-records.md) defines 24-byte numeric
-operation records, 8-byte typed parent records, checked capacities and exact
-cleanup. Moving growth, partial typed growth, cancellation, registry/workspace
-reuse, duplicate-parent arithmetic order and actual wasm32 bounds are covered.
+The [contract](measurements/tape-operation-records.md) was committed at
+`036662872` before implementation `b4b291e31`. Reference data is the #266 tape
+section, not a dependency on a previous compiler. Both measured versions use
+the merged compiler and differ only in that section. The required 5% speed
+improvement is not established.
+AMD EPYC 7763/9V74/9V45 approval persists; no decision is pending.
 
 ## Roadmap status
 
 | Step | Status | Evidence and remaining work |
 |---|---|---|
-| 1 | Implemented | Runtime layout; no native change after `b4b291e31`. |
-| 2 | In progress | All three focused jobs pass; full artifact audit pending. |
-| 3 | Pending | Reference, producers, readers and dispatchers ready; no measurements launched. |
-| 4 | In progress | Production CI running; docs repair and complete audits required before squash. |
+| 1 | Verified | Runtime layout merged; all nine production jobs and docs pass. |
+| 2 | Verified | Three focused native jobs and complete artifact audit pass. |
+| 3 | In progress | All measurements complete; 32 speed targets unmet. Compiler audit passes; runtime audit queued. |
+| 4 | In progress | Full production-log audit passes; measured images and follow-up final gates remain. |
 
-## Active CI
+## Active runs
 
-[Focused run 42290415866](measurements/tape-record-checks-2026-11-06/README.md):
+Measurement and merge runs use source `621653b6394f49dc229a2956b6b61476c82c9aac`.
+The compiler auditor runs from preparation `d48e6ca0b`; the runtime auditor
+runs from `b2d2200a7`:
 
-- Linux AMD64 `128142085029` and ARM64 `128142085462` pass 305 compiler tests,
-  all ten native targets, observers, formatting, lint and primitive inventory.
-  ARM also passes the real wasm32 allocation bound. Complete job logs have no
-  unexpected diagnostics; their hashes and metadata are retained.
-- macOS ARM64 `128142085304` passes. Four existing measurement-only unit
-  exclusions are named in the logs; the auditor verifies their exact set.
-- Preparation docs `42292580171` and dispatcher docs `42293845430` pass.
-  Head `a55ea682f` docs `42294930890` failed: the handoff cleanup removed the
-  required status heading and numbered/status columns. Restored that structure;
-  direct `check_handoff()` and workflow-size validation pass under the local
-  guard (0.19 s). This was the only failed step; subsequent docs checks skipped.
-  The replacement docs run must finish before claiming the gate passes.
-- Repair `7f76f6e07` passes direct handoff, changed-doc link, workflow-size and
-  commit-message checks (0.13 s). Sparse checkout initially lacked linked docs;
-  restored 101 small tracked targets and completed the check without changing them.
-  Its docs `42319433261` and production `42319433268` were queued at last check.
-- The PR is now ready for review. Production run `42319169980` at `a55ea682f`
-  has Linux AMD64 running and eight jobs queued; no failed steps reported.
-- #266 merge CI `42288270547` passes all nine jobs; docs `42288270157` pass.
-  All three focused native job logs are retained and have no unexpected diagnostics.
+| Run | Work | Last observed status |
+|---|---|---|
+| [42369288345](https://github.com/e6qu/fun-with-pipes/actions/runs/42369288345) | `tape-record-time`: two sessions per Linux architecture | Complete; all 32 long-case speed targets missed |
+| [42369286155](https://github.com/e6qu/fun-with-pipes/actions/runs/42369286155) | `tape-record-analysis`: seven compiler workloads per architecture | Pass, including full archive audit |
+| [42369871217](https://github.com/e6qu/fun-with-pipes/actions/runs/42369871217) | Complete compiler-cost archive audit | Pass |
+| [42370476364](https://github.com/e6qu/fun-with-pipes/actions/runs/42370476364) | Complete runtime archive audit | Queued |
+| [42369305486](https://github.com/e6qu/fun-with-pipes/actions/runs/42369305486) | Full #267 production-log audit | Pass |
+| [42369180224](https://github.com/e6qu/fun-with-pipes/actions/runs/42369180224) | Merge-source production CI | Running |
+| [42369180108](https://github.com/e6qu/fun-with-pipes/actions/runs/42369180108) | Merge-source documentation | Pass |
 
-## After focused acceptance
+Measurement prerequisite: focused run `42290415866`, source
+`b4b291e3184cae5046d7a1eba27e777c67b1884a`. Native sources remain identical.
+The production auditor reads run `42319670701`, source `6ca44feb58ce155c42eae792beb480d59894ad7f`,
+attempt 1, documentation job `128240880945`, host `all`.
 
-Dispatch `tape-record-analysis` and `tape-record-time` with
-`evidence_run=42290415866`. The preflight requires all three successful jobs and
-identical compiler/runtime/library/native-test/build source trees. If native
-sources change, obtain new correctness evidence first. Tool/doc edits alone do
-not require another native run.
+Both archive audits have been dispatched; do not duplicate them.
+[The results](measurements/tape-record-results.md) record all reported speed
+misses, actual CPUs and passing compiler costs. Keep original samples and
+compiler, CPU, allocation, live-memory, elapsed-time, stack and executable-size
+records. Absolute C/Rust and memory tables still need the full runtime report.
 
-Both versions use the current compiler; only the frozen #266 tape section differs.
-Its hash-checked fixture lives under `scripts/fixtures`, outside native test
-sources. Generated C must match outside that section. Readers parse saved
-preparation identities as data, never execute saved code.
+After retaining runtime reports, commit the explicit image-verification input
+plan and dispatch `recording-call-analysis` with `call_plan` pointing to it.
+The verifier now accepts `tape-records`; both candidate and reference must retain
+scalar append inlining. Rebuild saved C with the original GCC and flags, require
+identical image hashes, and take no new timings.
 
-Before timing each input, check both workspace settings: unchanged managed
-counts, one numeric growth request versus two, equal payload bytes, unchanged
-adjoints and exact cleanup. Keep all earlier time/copy/stack limits. Audit each
-completed producer with `tape-records-compiler-report` or `tape-records-report`,
-passing its actual `evidence_run` and `source_revision`. Preserve every miss and
-host rejection; never repeat qualified unchanged timings for a pass.
+## Completed verification
 
-## Verified tools and repairs
+- PR #268 preparation `d48e6ca0b` documentation `42369752632` passes.
+  Its draft production job is skipped, not a passing final gate.
+- #267 final-head production `42319670701`: all nine jobs pass. Documentation
+  `42319670586` passes. Merge tree and one-line message checked locally.
+- [Focused correctness](measurements/tape-record-checks-2026-11-06/README.md):
+  Linux ARM64/AMD64 and macOS ARM64 each pass 305 compiler tests and all ten
+  native targets. ARM64 also passes actual wasm32 capacity bounds. Four named
+  unit measurements are excluded explicitly; no unexpected diagnostics.
+- Complete focused audit `42319675956`, job `128240909367`, passes: 900 native
+  image headers and 1,215 probe statuses. Artifact `13551664083` and each full
+  report/job-log hash are verified locally; compact reports and receipts retained.
+- [Complete production audit](measurements/tape-record-delivery-2026-11-07/README.md)
+  `42369305486`, job `128393918868`, passes. Retained artifact `13573122126`;
+  ten full job logs and 1,456 target/probe-log hashes verified locally (0.13 s).
+- Prior documentation schema and reusable-workflow permission failures are
+  repaired and their replacement gates pass. Superseded runs were cancelled.
+- Image-verifier controls: `python3 scripts/local-guard.py python3
+  scripts/test-recording-calls.py` passes all seven tests (0.13 s), including
+  rejection of weakened inlining requirements in either tape-layout version.
+  Archive/hash verification passes under the guard (0.13 s). Changed-document
+  links, plan/status alignment, workflow sizes and merge subject pass (0.13 s).
 
-Guarded focused checks pass: tape references/observers (9), context references
-(5), runtime budgets (24), historical groups (13), compiler costs (11), depth (5),
-correctness prerequisites (3), runtime retention (4), production/focused audits
-(7). Commands use `python3 scripts/local-guard.py python3 scripts/test-*.py` with
-the relevant explicit filename. Rust formatting and changed Python syntax pass.
-Actionlint passes all changed workflows with shellcheck/pyflakes disabled.
+## Constraints and carried evidence
 
-- Complete-manifest controls caught the reader expecting a compiler file instead
-  of the runtime file. The corrected reader rejects changed/extra source files,
-  tampered patches and wrong frozen identities.
-- The focused audit checks exact native target names, unit results, wasm32 result,
-  native image architectures and every saved file. Missing/wrong targets, missing
-  wasm and extra unit exclusions fail its controls.
-- Sparse checkout omitted historical fixtures. Restored only required tracked
-  reports/logs, including one 5 MB JSON, then reran affected checks unchanged.
-- Longest local group: 19.06 s, 9.55 s sampled CPU. Latest audit controls and Linux
-  log checks: 0.13 s each. No local native builds, full suites or benchmarks.
+The earlier [production audit](measurements/recording-context-delivery-2026-11-06/README.md)
+and [48 original images](measurements/recording-context-images-2026-11-06/README.md)
+are verified. Earlier [runtime misses](measurements/recording-context-time-2026-11-06/README.md)
+remain open; this comparison cannot erase them. Do not repeat completed work.
 
-## Carried evidence and operating rules
+Use the local guard serially; free disk fell from 69 to 60 GiB, below the
+64 GiB minimum. The guard refused a small compiler-log summary; local checks
+are stopped. Removed this task's two disposable downloaded archives (~82 MiB)
+after retaining their verified records; that does not restore the limit.
+No local native builds, full suites or benchmarks. The first sandboxed guard invocation
+could not read `ps`; it ran normally with approved process access and all limits
+intact. Large archives and audits stay on runners. Hosted slots can be busy;
+wait without inferring billing restrictions or restarting queued work.
 
-The previous compiler change's [nine production jobs and full audit pass](measurements/recording-context-delivery-2026-11-06/README.md);
-ten job logs and 1,456 target/probe logs have verified hashes.
-[All 48 original measured images reproduce](measurements/recording-context-images-2026-11-06/README.md).
-[Its runtime misses remain open](measurements/recording-context-time-2026-11-06/README.md);
-[compiler costs](measurements/recording-context-analysis-2026-11-06/README.md) and
-[allocation/work counts](measurements/recording-context-census-2026-11-06/README.md)
-are complete. Their source/run IDs remain in those records, not a new backlog.
-
-Use the local guard serially. Last free disk 72 GiB; preserve 64 GiB. Large
-archives and audits stay on runners. The user's 20 hosted-job slots can be busy:
-wait for runners, do not infer billing restrictions or restart queued work.
-Bundle repairs before final CI. Squash only after all final gates/audits pass,
-with one line <=80 characters, no body/trailers/attribution; verify tree/message.
-Continue [PLAN.md](../PLAN.md) after delivery; one PR does not complete the roadmap.
+Keep one active PR. Final-head nine production jobs, docs, complete audits and
+original measured images must pass before squash merge. Use one commit line
+at most 80 characters, no body, trailers or attribution; verify tree/message.
+Continue [PLAN.md](../PLAN.md) after delivery.

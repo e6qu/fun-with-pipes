@@ -16,8 +16,19 @@ They are not claimed as executed here. No unexpected diagnostics occur in any
 complete job log. [Log hashes and source identities](logs.json) are retained
 alongside the compressed logs and GitHub job records.
 
-Complete audit attempt [42319311816](https://github.com/e6qu/fun-with-pipes/actions/runs/42319311816)
-was rejected before jobs: a reusable workflow requested `actions: read` without
-the caller granting it. The caller now declares matching read-only permissions.
-Replacement artifact acceptance remains pending; passing job summaries alone
-do not complete acceptance.
+The [complete artifact audit](https://github.com/e6qu/fun-with-pipes/actions/runs/42319675956)
+passes with [no issues](summary.json). It checks all source/file hashes, exact
+target inventories, all 900 native executable headers, and 1,215 probe status
+records. The four excluded unit measurements must match the declared set;
+the actual wasm32 result must be present on ARM64.
+
+The compressed `arm-audit.json.gz`, `amd-audit.json.gz` and `mac-audit.json.gz`
+retain every file hash, image identity, target result and probe status.
+[Artifact metadata](audit-artifact.json), [audit job](audit-job.json) and its
+[complete log](audit-job.log.gz) identify the original 74,782,077-byte archive.
+Its SHA-256 and all three report/job-log hashes pass local verification.
+Large probe archives remain in the identified GitHub artifact.
+
+The first audit attempt failed before jobs because a reusable workflow lacked
+caller-granted `actions: read`. Explicit read-only permissions repaired that
+failure; the passing replacement above ran the complete audit.
