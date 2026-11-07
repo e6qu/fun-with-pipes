@@ -1,19 +1,19 @@
 # Current work
 
-**Next:** publish the observation-reader repair and rerun `tape-records-report`
-on original runtime run `42369288345`, source
-`621653b6394f49dc229a2956b6b61476c82c9aac`. Retain all four audited reports,
-finish absolute peer/memory tables and verify measured executables. Do not
-repeat original timings: all 32 long-case 5% targets remain unmet.
+**Next:** publish the retained runtime reports and image input plan, then dispatch
+`recording-call-analysis` on branch `tape-record-evidence` with
+`call_plan=docs/measurements/tape-record-image-inputs.json`. Verify both native
+jobs and original-image hashes. Do not repeat the runtime timings.
 
 ## Branch and sources
 
-Branch `tape-record-evidence`, worktree `.worktrees/recording-capacity-gate`.
+[PR #269](https://github.com/e6qu/fun-with-pipes/pull/269), branch
+`tape-record-evidence`, worktree `.worktrees/recording-capacity-gate`.
 User merged #268 at `96efba2a9d743a3109ae417f05301ab50a63019c`.
 Its tree `1b3b8ea77217834de2cad5904847b3967d4e963a` equals reviewed head
 `74d49922a0246fede5f579a455bdb971def5d5ab`; the squash subject is one line
 without trailers. All nine production jobs `42372334679` and docs `42370758241`
-pass. Full production-log audit `42388428687` is dispatched with attempt 1,
+pass. Full production-log audit `42388428687` passes with attempt 1,
 documentation job `128398200623`, source `74d49922a0246fede5f579a455bdb971def5d5ab`.
 
 Contract `036662872` precedes runtime implementation `b4b291e31` (#267).
@@ -27,7 +27,7 @@ frozen #266 tape section differs. AMD EPYC 7763/9V74/9V45 authorization persists
 |---|---|---|
 | 1 | Verified | Runtime record layout merged with nine passing production jobs. |
 | 2 | Verified | Three focused native jobs and complete artifact audit pass. |
-| 3 | In progress | Measurements complete; compiler audit retained. Repair runtime reader, audit/retain reports and finish peer/memory tables. |
+| 3 | Verified | Runtime/compiler audits pass; reports, all 48 peer/memory rows and all 32 speed misses retained. |
 | 4 | In progress | Verify measured executables, carried production audit and final-head gates. |
 
 ## Audit failure and repair
@@ -53,8 +53,14 @@ Checks under `scripts/local-guard.py`:
   The scratch reader needed `PYTHONPATH=scripts`; production imports are unchanged.
 - Compiler audit digest and all 2,162 retained file hashes pass (0.13 s).
 
-No production code or measured source changed. Re-audit original archives after
-publication; do not run new measurements to repair the reader.
+No production code or measured source changed. Repair `0c3b03e99` passes docs
+`42389023493`. Runtime re-audit `42388963241`, job `128452299039`, passes every
+original archive; no measurements were repeated. Summary artifact `13580578087`
+is retained with four verified report hashes and four full job-log hashes.
+The [memory/peer tables](measurements/tape-record-time-2026-11-07/README.md) and
+`costs.csv` cover all 48 rows; guarded derivation passes (0.24 s).
+#268's [production audit](measurements/tape-record-delivery-2026-11-07/followup-268/README.md)
+is retained: ten job logs and 1,456 target/probe logs verified (0.13 s).
 
 ## Measurements and next verification
 
@@ -69,8 +75,8 @@ producer `42369286155`, complete audit `42369871217`, artifact `13573526746`.
 All fourteen comparisons pass. Full reports, logs, host/reference identities
 and observation archives are retained in the repository.
 
-After runtime retention, commit a `recording-call-analysis` input plan selecting
-session 1 for each architecture and both versions, protocol `tape-records`.
+The prepared `tape-record-image-inputs.json` selects session 1 for each
+architecture and both versions, protocol `tape-records`.
 Rebuild saved C with the same GCC/flags, require byte-identical executables and
 scalar append inlining in both versions. Take no new timings. The verifier's
 seven controls already pass from #268.

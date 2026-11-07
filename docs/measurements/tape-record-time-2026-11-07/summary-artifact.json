@@ -1,0 +1,20 @@
+{
+  "id": 13580578087,
+  "node_id": "MDg6QXJ0aWZhY3QxMzU4MDU3ODA4Nw==",
+  "name": "tape-records-report-summary",
+  "size_in_bytes": 1020688,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13580578087",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13580578087/zip",
+  "expired": false,
+  "digest": "sha256:0124d0561972542a751a09155aaa05687caea8993389a2989fd883a33e58dec8",
+  "created_at": "2026-11-07T16:02:10Z",
+  "updated_at": "2026-11-07T16:02:10Z",
+  "expires_at": "2027-02-05T15:58:51Z",
+  "workflow_run": {
+    "id": 42388963241,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "tape-record-evidence",
+    "head_sha": "0c3b03e99e241c12ee9d28d67fa30d601c19ece6"
+  }
+}

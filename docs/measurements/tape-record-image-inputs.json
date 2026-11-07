@@ -1,0 +1,45 @@
+{
+  "contractCommit": "036662872b66f2bf0159ea25ba9db335b7f8681d",
+  "architectures": {
+    "aarch64": [
+      {
+        "name": "tape-records",
+        "index": "docs/measurements/tape-record-time-2026-11-07/index.json",
+        "source": "621653b6394f49dc229a2956b6b61476c82c9aac",
+        "protocol": "tape-records",
+        "variants": [
+          {
+            "name": "reference",
+            "suffix": "-reference",
+            "inlining": "require"
+          },
+          {
+            "name": "candidate",
+            "suffix": "",
+            "inlining": "require"
+          }
+        ]
+      }
+    ],
+    "x86_64": [
+      {
+        "name": "tape-records",
+        "index": "docs/measurements/tape-record-time-2026-11-07/index.json",
+        "source": "621653b6394f49dc229a2956b6b61476c82c9aac",
+        "protocol": "tape-records",
+        "variants": [
+          {
+            "name": "reference",
+            "suffix": "-reference",
+            "inlining": "require"
+          },
+          {
+            "name": "candidate",
+            "suffix": "",
+            "inlining": "require"
+          }
+        ]
+      }
+    ]
+  }
+}
