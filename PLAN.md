@@ -67,7 +67,10 @@ derivative. The initial implementation is a fixture, not a public API.
 2. Compare full solves with ordinary reverse AD, handwritten fwp lists/arrays,
    C and Rust using the same driver. Require 20% long-case gains, <=2% small-case
    regression and <=2% identical-copy variation; retain all misses and costs.
-3. If qualified, promote the structured operation with clear examples and
+3. First comparison: three native semantic jobs and all four observation audits
+   pass, but five timing limits miss. Remove the measured temporary Dual records
+   through the [bounded numeric-worker experiment](docs/measurements/direct-numeric-workers.md).
+   If qualified, promote the structured operation with clear examples and
    regression coverage. Otherwise inspect the actual costs before choosing a
    compiler or representation change. Do not publish an unproven performance API.
 4. Complete final-head platform/doc gates and retained audits before merging.

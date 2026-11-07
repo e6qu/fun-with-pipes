@@ -1,10 +1,11 @@
 # Current work
 
-**Next:** monitor the four runtime sessions in `42413370794` at source
-`0ddde8224c3ab39e9ef4d9770483a72372b17c42`; its three native semantic/formatting
-checks pass. Runtime jobs: AMD2 `128527543727`, ARM2 `128527543735`, ARM1
-`128527543827`, AMD1 `128527543903`. All have started; three are measuring and AMD1 is building. Keep PR #269 draft until
-this batch is complete, then require final-head full validation.
+**Next:** prove why the measured local-edge call keeps two heap records, then
+implement the bounded [direct numeric worker](measurements/direct-numeric-workers.md)
+extension. All four first-prototype sessions are complete and audited; retain
+[their five timing misses](measurements/local-derivative-time-2026-11-07/README.md).
+Do not repeat unchanged timings. PR #269 remains draft pending this substantial
+compiler improvement and final-head full validation.
 
 Contract `524524bd3` precedes prototype `3f0cea6b8`. The prototype remains in
 `tests/fixtures/descent_local_ad.fwp`; no public API or compiler/runtime behavior
@@ -17,13 +18,13 @@ ARM64. All three jobs fail only canonical fwp formatting; their identical patch
 is applied. No timing jobs ran. All three full logs and artifacts were reviewed
 and retained. The batch also adds a callback trap-order check, saves native
 probes, verifies zero tape calls/storage and audits every saved timing observation.
-The new complete audit still needs its first real local-derivative report.
+All four complete local-derivative report audits now pass.
 
 [Repaired checks](measurements/local-derivative-checks-2026-11-07/passing/README.md)
 pass all three hosts, including callback trap order. All nine native probes,
-generated C and full logs are retained and verified (0.20 s). The generic probe
-contains dynamic callback dispatch and boxed Dual inputs; the benchmark's known
-edge path still needs its own C/counter review. No allocation-free claim.
+generated C and full logs are retained and verified (0.20 s). The generic probe contains dynamic dispatch. The complete solve instead calls
+the known edge directly, with two boxed Dual inputs per following edge. Its
+407,552 excess requests equal two per edge/update/solve. No allocation-free claim.
 
 
 Guarded local checks: four new measurement controls (0.12 s), 24 historical
@@ -141,3 +142,6 @@ Documentation run `42413373915` failed at two links to the moved
 references (one was absent from the sparse checkout); both now point directly
 to `docs/measurements/unmet-comparisons.md`. No other completed step failed.
 The prior documentation run `42411792755` passes.
+
+All four runtime archives/report hashes and 144 peer rows are retained and
+verified (guarded check, 0.25 s). Documentation repair run `42415160614` passes.
