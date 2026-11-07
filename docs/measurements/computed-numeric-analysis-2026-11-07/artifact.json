@@ -1,0 +1,20 @@
+{
+  "id": 13592297940,
+  "node_id": "MDg6QXJ0aWZhY3QxMzU5MjI5Nzk0MA==",
+  "name": "numeric-worker-compiler-audit",
+  "size_in_bytes": 281686412,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13592297940",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13592297940/zip",
+  "expired": false,
+  "digest": "sha256:d4333a2619fef2bb05e83f889b27313229d0463fb12b2bdd0be1fb4fea4f5051",
+  "created_at": "2026-11-07T22:08:40Z",
+  "updated_at": "2026-11-07T22:08:40Z",
+  "expires_at": "2027-02-05T21:58:52Z",
+  "workflow_run": {
+    "id": 42418398638,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "tape-record-evidence",
+    "head_sha": "8389403c566230680b61949e6e5e6837293215bf"
+  }
+}

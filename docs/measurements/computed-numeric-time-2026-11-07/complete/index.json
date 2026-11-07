@@ -1,0 +1,555 @@
+{
+  "source": "8b24da94a4e54c023f5e4b2341896d97dff092b9",
+  "run": 42417868388,
+  "representation": "numeric",
+  "auditSource": "45e22bdd405a942e6ef6716ac8c491aee7fe7dcf",
+  "sessions": [
+    {
+      "label": "arm1",
+      "job": {
+        "id": 128541267023,
+        "run_id": 42417868388,
+        "workflow_name": "Numerical and ownership evidence",
+        "head_branch": "tape-record-evidence",
+        "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/42417868388",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOU33zxM8AAAAd7agUTw",
+        "head_sha": "8b24da94a4e54c023f5e4b2341896d97dff092b9",
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/128541267023",
+        "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/42417868388/job/128541267023",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-07T21:58:27Z",
+        "started_at": "2026-11-07T21:58:32Z",
+        "completed_at": "2026-11-07T22:10:00Z",
+        "name": "local_derivatives / measure (ubuntu-24.04-arm, 1)",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-07T21:58:32Z",
+            "completed_at": "2026-11-07T21:58:33Z"
+          },
+          {
+            "name": "Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-07T21:58:33Z",
+            "completed_at": "2026-11-07T21:59:09Z"
+          },
+          {
+            "name": "Run dtolnay/rust-toolchain@stable",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-07T21:59:09Z",
+            "completed_at": "2026-11-07T21:59:15Z"
+          },
+          {
+            "name": "Qualify the native host",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-11-07T21:59:15Z",
+            "completed_at": "2026-11-07T21:59:15Z"
+          },
+          {
+            "name": "Build current compiler",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-07T21:59:15Z",
+            "completed_at": "2026-11-07T22:00:30Z"
+          },
+          {
+            "name": "Compare complete solves and retain all costs",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-11-07T22:00:30Z",
+            "completed_at": "2026-11-07T22:09:52Z"
+          },
+          {
+            "name": "Audit every saved observation, including missed speed targets",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-11-07T22:09:52Z",
+            "completed_at": "2026-11-07T22:09:54Z"
+          },
+          {
+            "name": "Run actions/upload-artifact@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-11-07T22:09:54Z",
+            "completed_at": "2026-11-07T22:09:58Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 16,
+            "started_at": "2026-11-07T22:09:58Z",
+            "completed_at": "2026-11-07T22:09:58Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 17,
+            "started_at": "2026-11-07T22:09:58Z",
+            "completed_at": "2026-11-07T22:09:58Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/128541267023",
+        "labels": [
+          "ubuntu-24.04-arm"
+        ],
+        "runner_id": 1000422365,
+        "runner_name": "GitHub Actions 1000422365",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      },
+      "artifact": {
+        "id": 13592892212,
+        "node_id": "MDg6QXJ0aWZhY3QxMzU5Mjg5MjIxMg==",
+        "name": "local-derivative-costs-ubuntu-24.04-arm-1",
+        "size_in_bytes": 27114417,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13592892212",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13592892212/zip",
+        "expired": false,
+        "digest": "sha256:142838864d462e47e7e29427cc53b766ffcaaaa149161b8ef6125e8388a627cf",
+        "created_at": "2026-11-07T22:09:58Z",
+        "updated_at": "2026-11-07T22:09:58Z",
+        "expires_at": "2027-02-05T21:51:53Z",
+        "workflow_run": {
+          "id": 42417868388,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "tape-record-evidence",
+          "head_sha": "8b24da94a4e54c023f5e4b2341896d97dff092b9"
+        }
+      },
+      "budgetFailures": [],
+      "archiveSha256": "676f86e4dc4d69541553d42bbae9bcfc782911078fb2e58ed7a1e7cd9e31d0df",
+      "logSha256": "b51cd2c8c95cca3f7c9128a675a1cb555fc4d33bc1349422d5a696cdf1cdd720",
+      "originalAuditSha256": "3b32daec28d6dff267f09319f94e9f217a71fbfc0ba86d5e014d7ddf94eacc49"
+    },
+    {
+      "label": "arm2",
+      "job": {
+        "id": 128541267002,
+        "run_id": 42417868388,
+        "workflow_name": "Numerical and ownership evidence",
+        "head_branch": "tape-record-evidence",
+        "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/42417868388",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOU33zxM8AAAAd7agUOg",
+        "head_sha": "8b24da94a4e54c023f5e4b2341896d97dff092b9",
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/128541267002",
+        "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/42417868388/job/128541267002",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-07T21:58:27Z",
+        "started_at": "2026-11-07T21:58:31Z",
+        "completed_at": "2026-11-07T22:10:12Z",
+        "name": "local_derivatives / measure (ubuntu-24.04-arm, 2)",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-07T21:58:32Z",
+            "completed_at": "2026-11-07T21:58:32Z"
+          },
+          {
+            "name": "Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-07T21:58:32Z",
+            "completed_at": "2026-11-07T21:59:08Z"
+          },
+          {
+            "name": "Run dtolnay/rust-toolchain@stable",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-07T21:59:08Z",
+            "completed_at": "2026-11-07T21:59:14Z"
+          },
+          {
+            "name": "Qualify the native host",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-11-07T21:59:14Z",
+            "completed_at": "2026-11-07T21:59:14Z"
+          },
+          {
+            "name": "Build current compiler",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-07T21:59:14Z",
+            "completed_at": "2026-11-07T22:00:40Z"
+          },
+          {
+            "name": "Compare complete solves and retain all costs",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-11-07T22:00:40Z",
+            "completed_at": "2026-11-07T22:10:05Z"
+          },
+          {
+            "name": "Audit every saved observation, including missed speed targets",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-11-07T22:10:05Z",
+            "completed_at": "2026-11-07T22:10:07Z"
+          },
+          {
+            "name": "Run actions/upload-artifact@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-11-07T22:10:07Z",
+            "completed_at": "2026-11-07T22:10:11Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 16,
+            "started_at": "2026-11-07T22:10:11Z",
+            "completed_at": "2026-11-07T22:10:11Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 17,
+            "started_at": "2026-11-07T22:10:11Z",
+            "completed_at": "2026-11-07T22:10:11Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/128541267002",
+        "labels": [
+          "ubuntu-24.04-arm"
+        ],
+        "runner_id": 1000422364,
+        "runner_name": "GitHub Actions 1000422364",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      },
+      "artifact": {
+        "id": 13593026453,
+        "node_id": "MDg6QXJ0aWZhY3QxMzU5MzAyNjQ1Mw==",
+        "name": "local-derivative-costs-ubuntu-24.04-arm-2",
+        "size_in_bytes": 27115522,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13593026453",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13593026453/zip",
+        "expired": false,
+        "digest": "sha256:5c7f2068d5d25e5418e627586b61c9f4bd6b60facb5676cc4306c737670c5306",
+        "created_at": "2026-11-07T22:10:10Z",
+        "updated_at": "2026-11-07T22:10:10Z",
+        "expires_at": "2027-02-05T21:51:53Z",
+        "workflow_run": {
+          "id": 42417868388,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "tape-record-evidence",
+          "head_sha": "8b24da94a4e54c023f5e4b2341896d97dff092b9"
+        }
+      },
+      "budgetFailures": [],
+      "archiveSha256": "b8e8df465ab5c1ab47709bebddaf20782eabc7ae84c2e8eb1e5e83f1cfaa3887",
+      "logSha256": "d25ab07fc5ffb8004db3bcdb0bc1a2e19dc677228f96dabab5393b3400764779",
+      "originalAuditSha256": "5fd69565e58b28fc40ee93d37693f84de5530c433184837ba861a9413325050b"
+    },
+    {
+      "label": "amd1",
+      "job": {
+        "id": 128541267009,
+        "run_id": 42417868388,
+        "workflow_name": "Numerical and ownership evidence",
+        "head_branch": "tape-record-evidence",
+        "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/42417868388",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOU33zxM8AAAAd7agUQQ",
+        "head_sha": "8b24da94a4e54c023f5e4b2341896d97dff092b9",
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/128541267009",
+        "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/42417868388/job/128541267009",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-07T21:58:27Z",
+        "started_at": "2026-11-07T21:58:29Z",
+        "completed_at": "2026-11-07T22:11:01Z",
+        "name": "local_derivatives / measure (ubuntu-latest, 1)",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-07T21:58:30Z",
+            "completed_at": "2026-11-07T21:58:30Z"
+          },
+          {
+            "name": "Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-07T21:58:30Z",
+            "completed_at": "2026-11-07T21:59:05Z"
+          },
+          {
+            "name": "Run dtolnay/rust-toolchain@stable",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-07T21:59:05Z",
+            "completed_at": "2026-11-07T21:59:14Z"
+          },
+          {
+            "name": "Qualify the native host",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-11-07T21:59:14Z",
+            "completed_at": "2026-11-07T21:59:14Z"
+          },
+          {
+            "name": "Build current compiler",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-07T21:59:14Z",
+            "completed_at": "2026-11-07T22:00:31Z"
+          },
+          {
+            "name": "Compare complete solves and retain all costs",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-11-07T22:00:31Z",
+            "completed_at": "2026-11-07T22:10:54Z"
+          },
+          {
+            "name": "Audit every saved observation, including missed speed targets",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-11-07T22:10:54Z",
+            "completed_at": "2026-11-07T22:10:55Z"
+          },
+          {
+            "name": "Run actions/upload-artifact@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-11-07T22:10:55Z",
+            "completed_at": "2026-11-07T22:11:00Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 16,
+            "started_at": "2026-11-07T22:11:00Z",
+            "completed_at": "2026-11-07T22:11:01Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 17,
+            "started_at": "2026-11-07T22:11:01Z",
+            "completed_at": "2026-11-07T22:11:01Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/128541267009",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "runner_id": 1000422363,
+        "runner_name": "GitHub Actions 1000422363",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      },
+      "artifact": {
+        "id": 13593305351,
+        "node_id": "MDg6QXJ0aWZhY3QxMzU5MzMwNTM1MQ==",
+        "name": "local-derivative-costs-ubuntu-latest-1",
+        "size_in_bytes": 29653994,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13593305351",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13593305351/zip",
+        "expired": false,
+        "digest": "sha256:0e508359fc2a78b7d7d5a22606217706c1ad5849956f939643566e186addcb6c",
+        "created_at": "2026-11-07T22:11:00Z",
+        "updated_at": "2026-11-07T22:11:00Z",
+        "expires_at": "2027-02-05T21:51:53Z",
+        "workflow_run": {
+          "id": 42417868388,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "tape-record-evidence",
+          "head_sha": "8b24da94a4e54c023f5e4b2341896d97dff092b9"
+        }
+      },
+      "budgetFailures": [],
+      "archiveSha256": "ff11795b8fdcde4e056e90fb4c60b57a1d47f3a73e445da2a43407f21e15de86",
+      "logSha256": "4cb5412d5cf488447397efb23c1b69086f54fa40d33407fe42d196abd19250c9",
+      "originalAuditSha256": "0896a7208f151430b584665130b25c16cd5aa056399c298aeda823236a616901"
+    },
+    {
+      "label": "amd2",
+      "job": {
+        "id": 128541266975,
+        "run_id": 42417868388,
+        "workflow_name": "Numerical and ownership evidence",
+        "head_branch": "tape-record-evidence",
+        "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/42417868388",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOU33zxM8AAAAd7agUHw",
+        "head_sha": "8b24da94a4e54c023f5e4b2341896d97dff092b9",
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/128541266975",
+        "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/42417868388/job/128541266975",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-11-07T21:58:27Z",
+        "started_at": "2026-11-07T21:58:29Z",
+        "completed_at": "2026-11-07T22:11:16Z",
+        "name": "local_derivatives / measure (ubuntu-latest, 2)",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-07T21:58:30Z",
+            "completed_at": "2026-11-07T21:58:31Z"
+          },
+          {
+            "name": "Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-07T21:58:31Z",
+            "completed_at": "2026-11-07T21:59:12Z"
+          },
+          {
+            "name": "Run dtolnay/rust-toolchain@stable",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-07T21:59:12Z",
+            "completed_at": "2026-11-07T21:59:21Z"
+          },
+          {
+            "name": "Qualify the native host",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-11-07T21:59:21Z",
+            "completed_at": "2026-11-07T21:59:21Z"
+          },
+          {
+            "name": "Build current compiler",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-07T21:59:21Z",
+            "completed_at": "2026-11-07T22:00:41Z"
+          },
+          {
+            "name": "Compare complete solves and retain all costs",
+            "status": "completed",
+            "conclusion": "failure",
+            "number": 6,
+            "started_at": "2026-11-07T22:00:41Z",
+            "completed_at": "2026-11-07T22:11:06Z"
+          },
+          {
+            "name": "Audit every saved observation, including missed speed targets",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-11-07T22:11:06Z",
+            "completed_at": "2026-11-07T22:11:08Z"
+          },
+          {
+            "name": "Run actions/upload-artifact@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-11-07T22:11:08Z",
+            "completed_at": "2026-11-07T22:11:14Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 16,
+            "started_at": "2026-11-07T22:11:14Z",
+            "completed_at": "2026-11-07T22:11:14Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 17,
+            "started_at": "2026-11-07T22:11:14Z",
+            "completed_at": "2026-11-07T22:11:14Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/128541266975",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "runner_id": 1000422362,
+        "runner_name": "GitHub Actions 1000422362",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      },
+      "artifact": {
+        "id": 13593115533,
+        "node_id": "MDg6QXJ0aWZhY3QxMzU5MzExNTUzMw==",
+        "name": "local-derivative-costs-ubuntu-latest-2",
+        "size_in_bytes": 29653867,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13593115533",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13593115533/zip",
+        "expired": false,
+        "digest": "sha256:c2b1a13bf9cbf6d3ebdfb704873b65af35a047dfa508144874ae051f34f9cf56",
+        "created_at": "2026-11-07T22:11:13Z",
+        "updated_at": "2026-11-07T22:11:13Z",
+        "expires_at": "2027-02-05T21:51:53Z",
+        "workflow_run": {
+          "id": 42417868388,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "tape-record-evidence",
+          "head_sha": "8b24da94a4e54c023f5e4b2341896d97dff092b9"
+        }
+      },
+      "budgetFailures": [
+        {
+          "case": "3-199",
+          "metric": "identical copy variation",
+          "actual": 0.020845376960684447,
+          "limit": 0.02
+        }
+      ],
+      "archiveSha256": "29acebb5354aa6ab1c2aefc8bf01c8fcbd9868dc9aa174d8d15272e4b5f97bc1",
+      "logSha256": "5f2f3b2f2ba5711808067399e0daf284045a32435546198e837399ab40f27aef",
+      "originalAuditSha256": "b68e394b5c31e85df825114c87093b2741d6a8b5c122b5eadd1b73f2d8c27565"
+    }
+  ]
+}

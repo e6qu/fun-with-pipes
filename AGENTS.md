@@ -50,8 +50,8 @@ implementation of currently supported external protocols.
   at a time. Fix every encountered issue immediately, including unrelated or
   pre-existing issues, regardless of who caused them. Do not hide or defer fixes;
   record the repair and verification. Queued CI gates merging, not independent work.
-- Group related roadmap work and docs in one PR. Use necessary focused checks while
-  implementing; run the complete final-head matrix after the batch is ready.
+- Group related work and docs; use focused checks, then the complete final-head matrix.
+- Open normal PRs; use draft status only when the user explicitly requests it.
 - Audit failed steps while jobs run, then every completed target and compiler
   diagnostic, including warnings in passing logs. Fix causes and affected callers.
   Batch known fixes in one push; preserve passing heads as remaining gates run.

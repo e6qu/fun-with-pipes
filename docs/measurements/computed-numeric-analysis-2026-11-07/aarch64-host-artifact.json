@@ -1,0 +1,20 @@
+{
+  "id": 13592746204,
+  "node_id": "MDg6QXJ0aWZhY3QxMzU5Mjc0NjIwNA==",
+  "name": "numeric-workers-analysis-host-ARM64",
+  "size_in_bytes": 1088,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13592746204",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13592746204/zip",
+  "expired": false,
+  "digest": "sha256:f0991015baed0164e78159e9ab0ad2ab02da558b9fe4e99b855e8b9389a276a5",
+  "created_at": "2026-11-07T21:59:30Z",
+  "updated_at": "2026-11-07T21:59:30Z",
+  "expires_at": "2027-02-05T21:58:52Z",
+  "workflow_run": {
+    "id": 42418398638,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "tape-record-evidence",
+    "head_sha": "8389403c566230680b61949e6e5e6837293215bf"
+  }
+}

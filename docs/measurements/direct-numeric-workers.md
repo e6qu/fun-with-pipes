@@ -61,4 +61,18 @@ runtime limits and cost expectations below remain unchanged.
    performance is the priority. Retain every observation and source identity.
 6. Complete the final nine native production jobs, documentation and audits.
 
-This is a hypothesis and an acceptance contract, not delivered support.
+## Implementation and results
+
+The repair is implemented at `8b24da94a4e54c023f5e4b2341896d97dff092b9`.
+[Three focused native jobs](computed-numeric-inputs-2026-11-07/README.md) pass.
+[All six workloads](computed-numeric-time-2026-11-07/README.md) meet the exact
+allocation/retain and live-storage requirements. The largest process removes
+407,552 requests and takes 56–59% less time than ordinary reverse AD.
+
+One runtime and two [compiler copy controls](computed-numeric-analysis-2026-11-07/README.md)
+exceed the frozen noise limit. Their timing conclusions remain open; all fourteen
+compiler comparisons stay within the 5% time/RSS limits. Complete observation
+audits pass and retain every miss. No unchanged measurement was repeated.
+Keep the compiler reduction; the local derivative helper remains a fixture,
+not a public API. Final nine-job production coverage and documentation still
+gate delivery.

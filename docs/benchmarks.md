@@ -20,33 +20,42 @@ which host/toolchain, and what difference in behavior or algorithm?** Detailed
 
 ## Latest audited derivative comparison
 
-The [November 4 matched-result report](measurements/matched-option-time-2026-11-04/README.md)
-compares two fwp compilers on the same gradient-descent programs. It saves one
-allocation and one retain per history-form solve, with unchanged peak storage.
-Some larger cases are up to 1.95% slower, within the frozen 2% limit. All four
-sessions and their complete raw audits pass; this is not a general speedup.
+The [November 7 local-derivative comparison](measurements/computed-numeric-time-2026-11-07/README.md)
+uses objectives built from neighboring pairs. The local form computes derivatives
+with `Dual` numbers (a value plus its derivative); ordinary reverse AD records
+operations and walks that tape backward. Both use the same fwp compiler.
 
-The same sessions run handwritten C/Rust programs. For 129 coordinates and 199
-updates, using the current-result source:
+Long local solves with passing controls take **48–65% less time** than reverse AD.
+For 129 coordinates and 199 updates, all four sessions show **56–59% less time**:
 
-| Native architecture, two sessions | fwp time / C time | fwp time / Rust time |
+| Architecture, two sessions | Local AD / C time | Reverse AD / C time |
 |---|---:|---:|
-| ARM64 | 18.09–18.71× | 17.96–18.49× |
-| AMD64 | 24.37–25.32× | 22.86–23.75× |
+| ARM64, Neoverse-N2 | 4.23–4.27× | 9.74–9.77× |
+| AMD64, EPYC 7763 | 5.41–5.71× | 12.95–13.76× |
 
-For example, 18.09× means 1,709% extra time for these implementations. C/Rust
-calculate handwritten derivative formulas; fwp records operations and propagates
-derivatives automatically. Storage and formatting also differ. These ratios
-measure that whole implementation gap, not isolated ARC overhead. No Swift
-derivative counterpart was measured in this batch; the [Swift comparisons](#swift-comparison)
-below cover other workloads and cannot establish derivative parity.
+Local AD is also 2.6–8.1% slower than handwritten fwp arrays on this largest case.
+C/Rust use handwritten derivatives and reuse buffers; allocation, arithmetic and
+formatting differ. These are complete-solve implementation gaps, not isolated ARC
+or language overhead. Timings include launch, repeated solves, output and exit.
+GCC uses O2 without fast math, floating-point contraction or LTO.
 
-The preceding [iteration-history change](measurements/final-iteration-time-2026-11-04/README.md)
-reduced the largest history-form peak from 838,688 to 19,360 managed bytes and
-took 5.1–5.9% less time. Its five other speed misses and one small regression
-remain recorded against their own reference. Both reports distinguish allocation
-traffic, live storage and process RAM. Neither refreshes every older baseline below.
-Final platform delivery is tracked separately in [the handoff](development-state.md).
+The compiler removes two temporary numeric records per neighboring edge: the
+largest eight-solve process drops from 409,297 to 1,745 managed requests. It now
+matches the handwritten fwp array request/retain counts, with zero tape storage
+and zero live managed storage at exit. This does not make the whole program
+allocation-free. The linked report gives byte traffic, live peaks, RSS and stack.
+
+Three runtime sessions pass every limit. One AMD64 small long-case copy control
+varies by 2.08%, above the frozen 2% limit, so that timing remains inconclusive.
+Two [compiler-cost copy controls](measurements/computed-numeric-analysis-2026-11-07/README.md)
+also miss; all 5% compiler time/RSS budgets pass. The public helper remains
+experimental, and final platform validation is tracked in [the handoff](development-state.md).
+
+Earlier [matched-result](measurements/matched-option-time-2026-11-04/README.md)
+and [iteration-history](measurements/final-iteration-time-2026-11-04/README.md)
+comparisons remain tied to their measured sources; they are not current-code
+ratios. No Swift derivative counterpart was measured. The [Swift comparisons](#swift-comparison)
+below cover other workloads.
 
 ## PR 233 whole-program baseline
 
@@ -187,7 +196,7 @@ but three AMD64 construction regressions fail the combined acceptance rule.
 | How long does a complete program take versus C/Rust? | [Seven checked-arithmetic peers](#fwp-compared-with-c-and-rust) | Includes startup, algorithms, storage and output; not isolated compiler overhead |
 | Where do the CPU benchmark gaps occur? | [Calculation, startup and output protocol](measurements/cpu-phases.md) | Diagnostic clocks change code; retain ordinary timings and do not infer a speedup from phase observations |
 | What do numeric kernels cost? | [Current array and matrix comparison](measurements/current-kernel-costs.md) | Separates calculation from construction/cleanup; excludes process startup |
-| What does differentiation add? | [Current descent comparison](measurements/descent-costs.md) | Compare automatic and explicit fwp derivatives first; C/Rust use explicit formulas |
+| What does differentiation add? | [Local derivative comparison](measurements/computed-numeric-time-2026-11-07/README.md) | Compare automatic and explicit fwp derivatives first; C/Rust use explicit formulas |
 | Did an ownership change reduce work? | [Ownership measurements](measurements/README.md#ownership-and-storage) | Paired counts/bytes; a retain saved is not a measured speedup |
 | Does a service release completed work? | [API memory](measurements/http-application-memory.md) | Samples between request groups; final process cleanup alone is insufficient |
 | Which experiments failed? | [Rejected or inconclusive experiments](measurements/README.md#rejected-or-inconclusive-experiments) | Slower results and noise controls remain part of the evidence |
@@ -407,7 +416,7 @@ Its roughly 3.3-times-C AMD64 array result is **not current overhead**. Its fail
 must retain their own controls and missed limits; representation alone establishes
 no speedup.
 
-The [current derivative comparison](measurements/descent-costs.md) uses Rosenbrock
+The [historical derivative baseline](measurements/descent-costs.md) uses Rosenbrock
 descent with 3, 33 and 129 coordinates. Automatic differentiation records arithmetic
 and walks the record backwards; an explicit derivative calculates a formula
 written by the programmer. Compare those two fwp forms before comparing them

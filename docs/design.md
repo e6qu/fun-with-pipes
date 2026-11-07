@@ -723,9 +723,11 @@ The current PR extends the input rule to computed numeric constructors: bind eac
 input once, in original left-to-right order, then pass its numeric fields. Each
 input keeps its original expression and local scopes. Existing field-only native
 locals can avoid constructing the intermediate record boxes. No functions are
-cloned. This extension is under verification; its
-[contract](measurements/direct-numeric-workers.md) requires allocation, runtime
-and compiler-cost evidence before claiming support.
+cloned. [Focused native checks](measurements/computed-numeric-inputs-2026-11-07/README.md)
+and [allocation measurements](measurements/computed-numeric-time-2026-11-07/README.md)
+verify this reduction. Full production coverage is pending; the
+[contract](measurements/direct-numeric-workers.md) retains the inconclusive
+timing controls rather than claiming complete acceptance.
 
 For example, a `Dual` stores a value and its derivative. In
 `edge (dual.var (x + 1.0), dual.const (y * y))`, the two records carry derivative

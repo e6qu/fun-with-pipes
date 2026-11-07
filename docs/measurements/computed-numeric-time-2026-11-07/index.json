@@ -1,0 +1,65 @@
+{
+  "source": "8b24da94a4e54c023f5e4b2341896d97dff092b9",
+  "run": 42417868388,
+  "sessions": [
+    {
+      "label": "arm1",
+      "job": 128541267023,
+      "artifact": 13592892212,
+      "archiveSha256": "142838864d462e47e7e29427cc53b766ffcaaaa149161b8ef6125e8388a627cf",
+      "logSha256": "b51cd2c8c95cca3f7c9128a675a1cb555fc4d33bc1349422d5a696cdf1cdd720",
+      "files": {
+        "comparison.json": "48de02037a5330e8eeafeb2bc441def7cf4acee903d2700b019b786634de22d9",
+        "audit.json": "3b32daec28d6dff267f09319f94e9f217a71fbfc0ba86d5e014d7ddf94eacc49",
+        "budget-failures.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+      },
+      "misses": []
+    },
+    {
+      "label": "arm2",
+      "job": 128541267002,
+      "artifact": 13593026453,
+      "archiveSha256": "5c7f2068d5d25e5418e627586b61c9f4bd6b60facb5676cc4306c737670c5306",
+      "logSha256": "d25ab07fc5ffb8004db3bcdb0bc1a2e19dc677228f96dabab5393b3400764779",
+      "files": {
+        "comparison.json": "ed6218ebeb30b0a04301195c5dc14b5acd8bb00f16ab55a54d5554e639ad381f",
+        "audit.json": "5fd69565e58b28fc40ee93d37693f84de5530c433184837ba861a9413325050b",
+        "budget-failures.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+      },
+      "misses": []
+    },
+    {
+      "label": "amd1",
+      "job": 128541267009,
+      "artifact": 13593305351,
+      "archiveSha256": "0e508359fc2a78b7d7d5a22606217706c1ad5849956f939643566e186addcb6c",
+      "logSha256": "4cb5412d5cf488447397efb23c1b69086f54fa40d33407fe42d196abd19250c9",
+      "files": {
+        "comparison.json": "e97464383c9d3db21238bace20d9c1020f1e1c1f09a9f0991ab7728de6f5209c",
+        "audit.json": "0896a7208f151430b584665130b25c16cd5aa056399c298aeda823236a616901",
+        "budget-failures.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+      },
+      "misses": []
+    },
+    {
+      "label": "amd2",
+      "job": 128541266975,
+      "artifact": 13593115533,
+      "archiveSha256": "c2b1a13bf9cbf6d3ebdfb704873b65af35a047dfa508144874ae051f34f9cf56",
+      "logSha256": "5f2f3b2f2ba5711808067399e0daf284045a32435546198e837399ab40f27aef",
+      "files": {
+        "comparison.json": "574846ab464543f0dce39821d310f664a291a60b6eb79939d3492f035c0432fd",
+        "audit.json": "b68e394b5c31e85df825114c87093b2741d6a8b5c122b5eadd1b73f2d8c27565",
+        "budget-failures.json": "7ebd4372c8b13d0403585f77ec71e6a93d06539d841905590fda24fcd9165f23"
+      },
+      "misses": [
+        {
+          "case": "3-199",
+          "metric": "identical copy variation",
+          "actual": 0.020845376960684447,
+          "limit": 0.02
+        }
+      ]
+    }
+  ]
+}

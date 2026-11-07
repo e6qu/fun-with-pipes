@@ -59,7 +59,8 @@ does not explain this complete-solve path.
 [index.json](index.json) identifies every job, artifact, archive digest, report
 and full job log. Compressed reports preserve all observations in their summaries;
 compressed audits preserve the complete source/image/observation file inventory.
-The original four GitHub artifacts contain the complete individual files.
+[Complete retained archives](complete/README.md) now preserve every individual
+file, including native images and all process observations.
 All archive digests and retained report hashes were verified locally under the
 resource guard (0.25 s). Every failed job failed only its final timing gate;
 all four complete observation audits pass. No source or measurements were changed

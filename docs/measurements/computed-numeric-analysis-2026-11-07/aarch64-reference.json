@@ -1,0 +1,10 @@
+{
+  "source": "8389403c566230680b61949e6e5e6837293215bf",
+  "referenceSource": "f1cc94cf4e013369cccb8a836bd745f41e5d757c",
+  "changedNativeFiles": [
+    "src/cgen/numeric_parameters.rs"
+  ],
+  "candidateSha256": "6c8053081dac67593f72b33dfd16419e0ee2a26762943e3bd03b28d4d08ef991",
+  "referenceSha256": "da392c52c05c25b3eabc81c9d47e97e294333772fcf8a799af08640f62e74c09",
+  "compilerSha256": "d3bb2c1f6af66cac3a123696c410aad2dd0ebabc244960843200339a307cbd5f"
+}

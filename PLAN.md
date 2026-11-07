@@ -24,6 +24,16 @@ identify computed arguments as the allocation blocker. Evaluate those arguments
 once, in their original order, then pass the numeric fields directly. No new
 syntax, function cloning or relaxed arithmetic rules are needed.
 
+The [implemented repair](docs/measurements/computed-numeric-time-2026-11-07/README.md)
+removes all 407,552 extra requests. Qualified long solves take 48–65% less time
+than reverse AD; the largest takes 56–59% less. Exact request/retain parity with
+handwritten fwp arrays passes on all six cases. One runtime copy control and two
+[compiler copy controls](docs/measurements/computed-numeric-analysis-2026-11-07/README.md)
+remain inconclusive; do not claim their timing acceptance. Keep the verified
+compiler reduction, leave the helper experimental, and complete production CI.
+The largest case still takes 4.2–5.7 times handwritten C's time; the common fwp
+array cost needs diagnosis before selecting another optimization.
+
 | Step | Concrete work | Required result |
 |---|---|---|
 | 1 | Remove temporary numeric input records through the existing all-callers compiler proof. | Preserve types, shared inputs, scopes, evaluation/trap order and numeric operations. Focused GCC ARM64/AMD64 and Clang ARM64 checks pass. |

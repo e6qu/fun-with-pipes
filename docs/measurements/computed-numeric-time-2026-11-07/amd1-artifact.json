@@ -1,0 +1,20 @@
+{
+  "id": 13593305351,
+  "node_id": "MDg6QXJ0aWZhY3QxMzU5MzMwNTM1MQ==",
+  "name": "local-derivative-costs-ubuntu-latest-1",
+  "size_in_bytes": 29653994,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13593305351",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13593305351/zip",
+  "expired": false,
+  "digest": "sha256:0e508359fc2a78b7d7d5a22606217706c1ad5849956f939643566e186addcb6c",
+  "created_at": "2026-11-07T22:11:00Z",
+  "updated_at": "2026-11-07T22:11:00Z",
+  "expires_at": "2027-02-05T21:51:53Z",
+  "workflow_run": {
+    "id": 42417868388,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "tape-record-evidence",
+    "head_sha": "8b24da94a4e54c023f5e4b2341896d97dff092b9"
+  }
+}

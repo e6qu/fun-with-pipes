@@ -1,0 +1,164 @@
+{
+  "source": "8389403c566230680b61949e6e5e6837293215bf",
+  "run": 42418398638,
+  "job": {
+    "id": 128541365535,
+    "run_id": 42418398638,
+    "workflow_name": "Numerical and ownership evidence",
+    "head_branch": "tape-record-evidence",
+    "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/42418398638",
+    "run_attempt": 1,
+    "node_id": "CR_kwDOU33zxM8AAAAd7amVHw",
+    "head_sha": "8389403c566230680b61949e6e5e6837293215bf",
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/128541365535",
+    "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/42418398638/job/128541365535",
+    "status": "completed",
+    "conclusion": "failure",
+    "created_at": "2026-11-07T21:58:53Z",
+    "started_at": "2026-11-07T21:58:54Z",
+    "completed_at": "2026-11-07T22:03:52Z",
+    "name": "numeric_worker_costs / numeric_input_analysis (ubuntu-latest)",
+    "steps": [
+      {
+        "name": "Set up job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 1,
+        "started_at": "2026-11-07T21:58:55Z",
+        "completed_at": "2026-11-07T21:58:56Z"
+      },
+      {
+        "name": "Run actions/checkout@v7",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 2,
+        "started_at": "2026-11-07T21:58:56Z",
+        "completed_at": "2026-11-07T21:59:14Z"
+      },
+      {
+        "name": "Run dtolnay/rust-toolchain@stable",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 3,
+        "started_at": "2026-11-07T21:59:14Z",
+        "completed_at": "2026-11-07T21:59:23Z"
+      },
+      {
+        "name": "Require passing checks for the measured compiler sources",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 4,
+        "started_at": "2026-11-07T21:59:23Z",
+        "completed_at": "2026-11-07T21:59:27Z"
+      },
+      {
+        "name": "Qualify numeric-workers compiler timing host",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 5,
+        "started_at": "2026-11-07T21:59:27Z",
+        "completed_at": "2026-11-07T21:59:27Z"
+      },
+      {
+        "name": "Run actions/upload-artifact@v7",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 6,
+        "started_at": "2026-11-07T21:59:27Z",
+        "completed_at": "2026-11-07T21:59:28Z"
+      },
+      {
+        "name": "Build candidate at production settings",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 7,
+        "started_at": "2026-11-07T21:59:28Z",
+        "completed_at": "2026-11-07T22:00:42Z"
+      },
+      {
+        "name": "Build the frozen pre-change compiler",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 8,
+        "started_at": "2026-11-07T22:00:42Z",
+        "completed_at": "2026-11-07T22:01:52Z"
+      },
+      {
+        "name": "Measure balanced compiler commands and peak memory",
+        "status": "completed",
+        "conclusion": "failure",
+        "number": 9,
+        "started_at": "2026-11-07T22:01:52Z",
+        "completed_at": "2026-11-07T22:03:39Z"
+      },
+      {
+        "name": "Run actions/upload-artifact@v7",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 10,
+        "started_at": "2026-11-07T22:03:39Z",
+        "completed_at": "2026-11-07T22:03:50Z"
+      },
+      {
+        "name": "Post Run actions/checkout@v7",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 20,
+        "started_at": "2026-11-07T22:03:50Z",
+        "completed_at": "2026-11-07T22:03:50Z"
+      },
+      {
+        "name": "Complete job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 21,
+        "started_at": "2026-11-07T22:03:50Z",
+        "completed_at": "2026-11-07T22:03:50Z"
+      }
+    ],
+    "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/128541365535",
+    "labels": [
+      "ubuntu-latest"
+    ],
+    "runner_id": 1000422367,
+    "runner_name": "GitHub Actions 1000422367",
+    "runner_group_id": 0,
+    "runner_group_name": "GitHub Actions"
+  },
+  "artifact": {
+    "id": 13592388225,
+    "node_id": "MDg6QXJ0aWZhY3QxMzU5MjM4ODIyNQ==",
+    "name": "numeric-workers-analysis-X64",
+    "size_in_bytes": 143860507,
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13592388225",
+    "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13592388225/zip",
+    "expired": false,
+    "digest": "sha256:ebf12ff390bd26167c6c3d2e258ae57dc07621a76a03e3720b88ceb5da2a6503",
+    "created_at": "2026-11-07T22:03:50Z",
+    "updated_at": "2026-11-07T22:03:50Z",
+    "expires_at": "2027-02-05T21:58:52Z",
+    "workflow_run": {
+      "id": 42418398638,
+      "repository_id": 1400763332,
+      "head_repository_id": 1400763332,
+      "head_branch": "tape-record-evidence",
+      "head_sha": "8389403c566230680b61949e6e5e6837293215bf"
+    }
+  },
+  "commands": 336,
+  "untimedChecks": 6,
+  "failures": {
+    "field-transfer": [
+      "candidate: identical-copy median difference exceeds 2%"
+    ],
+    "autodiff-tutorial": [
+      "reference: identical-copy median difference exceeds 2%"
+    ]
+  },
+  "referenceVerified": true,
+  "expectedDiagnostics": [
+    "2026-11-07T22:03:39.4053306Z Traceback (most recent call last):",
+    "2026-11-07T22:03:39.4056481Z AssertionError: {'field-transfer': ['candidate: identical-copy median difference exceeds 2%'], 'autodiff-tutorial': ['reference: identical-copy median difference exceeds 2%']}",
+    "2026-11-07T22:03:39.4274262Z ##[error]Process completed with exit code 1."
+  ]
+}
