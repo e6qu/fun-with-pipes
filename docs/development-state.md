@@ -78,8 +78,11 @@ only fully replaced uses remove it. Parameters, pattern bindings and multiply
 bound locals cannot supply an ambiguous origin. New unit cases cover eager
 capture placement, another escaping closure use and one binding shared by
 1/8/128 maps. The reference disables both captured selection and its added index.
-The source edit is ready for focused runner verification; local guard refused
-further checks after free space fell to about 60 GiB.
+Repair source `0c704421f9ebb8ab88aed2980170aead302e7a87` is published. Focused run
+`42470453910`: macOS Clang `128699747181`, AMD GCC `128699747222`, ARM GCC
+`128699747316`. Docs run `42470456322`, job `128699751102`. All were queued at the
+last poll. The local guard refused further checks after free space fell to about
+60 GiB; no formatting or unit success is claimed for this repair yet.
 
 Docs run `42468686384`, job `128694094171`, passes at `b41752cac`; subsequent
 cross-link/repair notes still need the next docs gate. Superseded run
