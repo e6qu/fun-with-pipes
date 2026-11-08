@@ -42,6 +42,17 @@ def summarize(rows):
                 computationQualified={role: ratio <= 1.02 for role, ratio in copies['computationNs'].items()})
 
 
+def host_failures(models, processors, allowed, processor_index):
+    failures = []
+    if len(models) != 1 or not models <= set(allowed):
+        failures.append(f'CPU models {sorted(models)} are outside {allowed}')
+    if len(processors) != 4:
+        failures.append(f'Expected four assigned CPUs, received {processors}')
+    if not 0 <= processor_index < len(processors):
+        failures.append(f'Processor index {processor_index} is outside {processors}')
+    return failures
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--run', type=int, required=True)
@@ -56,9 +67,19 @@ def main():
     assert platform.system() == 'Linux' and platform.machine() == 'x86_64'
     cpu_text = Path('/proc/cpuinfo').read_text()
     models = {line.split(':', 1)[1].strip() for line in cpu_text.splitlines() if line.startswith('model name')}
-    assert len(models) == 1 and models <= set(args.cpu) and os.cpu_count() == 4
     processors = sorted(os.sched_getaffinity(0))
-    assert len(processors) == 4 and 0 <= args.processor_index < len(processors)
+    output = args.output.resolve()
+    output.mkdir(parents=True, exist_ok=False)
+    failures = host_failures(models, processors, args.cpu, args.processor_index)
+    host = dict(source=os.environ['GITHUB_SHA'], cpu=cpu_text, models=sorted(models),
+                visibleProcessors=os.cpu_count(), assignedProcessors=processors,
+                processorIndex=args.processor_index, allowedModels=args.cpu,
+                failures=failures, qualified=not failures)
+    AUDIT.save(output / 'host.json', host)
+    print('Assigned CPUs:', processors, 'visible CPUs:', host['visibleProcessors'],
+          'models:', host['models'], flush=True)
+    if failures:
+        raise SystemExit('Host rejected before executing saved images:\n' + '\n'.join(failures))
     placements = dict(all=','.join(map(str, processors)), one=str(processors[args.processor_index]))
     repository = 'repos/' + os.environ['GITHUB_REPOSITORY']
     run = json.loads(AUDIT.api(f'{repository}/actions/runs/{args.run}'))
@@ -66,8 +87,6 @@ def main():
     artifacts = json.loads(AUDIT.api(f'{repository}/actions/runs/{args.run}/artifacts'))['artifacts']
     metadata, = [item for item in artifacts if item['name'] == 'borrowed-array-costs-X64-2']
     assert not metadata['expired'] and metadata['workflow_run']['head_sha'] == args.source
-    output = args.output.resolve()
-    output.mkdir(parents=True, exist_ok=False)
     AUDIT.unpack(AUDIT.api(f"{repository}/actions/artifacts/{metadata['id']}/zip"), metadata, output / 'original')
     verified = AUDIT.audit(output / 'original', 'x86_64', 2, args.source)
     AUDIT.save(output / 'input-audit.json', verified)

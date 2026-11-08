@@ -13,7 +13,10 @@ Current investigation: [shared loop/array costs](shared-loop-array-costs.md).
 The [metadata candidate](borrowed-array-metadata-2026-11-08/README.md) misses
 its target; these are diagnostic results, not another delivered optimization.
 The [fresh F64 output diagnostic](fresh-array-diagnosis-2026-11-08/README.md)
-selects the replacement candidate; final implementation acceptance remains open.
+selects the replacement candidate. [Production comparison](fresh-array-costs-2026-11-08/README.md)
+confirms ARM64 gains and unchanged managed costs; AMD64 timing acceptance remains
+open. [C/Rust computation and process memory](loop-array-peers-2026-11-08/README.md)
+separate useful work from input construction and release.
 
 - [Computed numeric inputs and local derivatives](computed-numeric-time-2026-11-07/README.md):
   #269 removes 407,552 temporary requests from its largest measured process;

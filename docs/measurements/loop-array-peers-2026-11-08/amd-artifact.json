@@ -1,0 +1,20 @@
+{
+  "id": 13601364080,
+  "node_id": "MDg6QXJ0aWZhY3QxMzYwMTM2NDA4MA==",
+  "name": "array-peers-X64",
+  "size_in_bytes": 81442739,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13601364080",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13601364080/zip",
+  "expired": false,
+  "digest": "sha256:6236fc82d7d95542d7f3df2c02d42bd41e2272f0baea98c0a14a067a6a3c0c0d",
+  "created_at": "2026-11-08T03:21:14Z",
+  "updated_at": "2026-11-08T03:21:14Z",
+  "expires_at": "2027-02-06T03:15:55Z",
+  "workflow_run": {
+    "id": 42441977298,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "performance-roadmap-review",
+    "head_sha": "a84e8b3ebc5e16c1036a500470e47062d88c3f78"
+  }
+}

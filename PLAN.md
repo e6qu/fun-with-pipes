@@ -18,9 +18,15 @@ excluded. The [design limits](docs/design-limits.md) define what we do not promi
   56–59% faster than reverse AD, but still takes 4.2–5.7 times handwritten C's time.
   The helper remains experimental; three timing controls remain inconclusive.
   [Results](docs/measurements/computed-numeric-time-2026-11-07/README.md).
-- The latest checked-loop snapshot has zero managed requests/retains yet takes
-  24% more time than C and 49% more than Rust. This is a diagnostic lead, not a
-  controlled speed claim. Lower ARC counts alone cannot explain every gap.
+- Current milestone measurements show 26–31% less large-array computation on
+  ARM64, but AMD64 timing acceptance remains open. [All original limits and
+  memory/compiler costs](docs/measurements/fresh-array-costs-2026-11-08/README.md)
+  are retained; the candidate is not a completed milestone.
+- [The new phase comparison](docs/measurements/loop-array-peers-2026-11-08/README.md)
+  finds no comparable checked-loop computation gap: qualified large-loop cases
+  take 18–20% less time than C on ARM64 and roughly the same on AMD64. The largest
+  ARM64 local-derivative case still takes 2.47× C and 4.98× Rust. These are
+  single-session peer results; most AMD64 array/derivative controls fail.
 
 [The handoff](docs/development-state.md) records exact sources, checks and the
 single next action. [Ownership](docs/ownership.md) records contracts;

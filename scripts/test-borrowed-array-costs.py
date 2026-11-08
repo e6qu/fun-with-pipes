@@ -28,6 +28,13 @@ AFFINITY_SPEC.loader.exec_module(AFFINITY)
 
 
 class Costs(unittest.TestCase):
+    def test_placement_uses_assigned_cpus_and_retains_rejections(self):
+        self.assertEqual(AFFINITY.host_failures({'approved'}, [8, 9, 10, 11], ['approved'], 0), [])
+        for models, processors, index in ((set(), [8, 9, 10, 11], 0),
+            ({'other'}, [8, 9, 10, 11], 0), ({'approved'}, [8, 9], 0),
+            ({'approved'}, [8, 9, 10, 11], -1), ({'approved'}, [8, 9, 10, 11], 4)):
+            self.assertTrue(AFFINITY.host_failures(models, processors, ['approved'], index))
+
     def test_affinity_diagnostic_keeps_both_copy_controls(self):
         rows = []
         for number in range(-2, 24):

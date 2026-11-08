@@ -194,6 +194,23 @@ memory rather than treating the percentage alone as the delivery decision.
 The [phase measurements](measurements/callable-phases.md) show faster invocation,
 but three AMD64 construction regressions fail the combined acceptance rule.
 
+## Latest loop and array investigation
+
+[The phase comparison](measurements/loop-array-peers-2026-11-08/README.md) measures
+computation, input construction and result release separately. In its qualified
+single-session observations, the large checked loop takes 18–20% less computation
+than C on ARM64 and approximately the same on AMD64. This does not contradict an
+older whole-process ratio: the timed work and sources differ.
+
+ARM64 large map/folds also take less time than these C/Rust peers, while the
+largest local-derivative case takes 2.47 times C and 4.98 times Rust. The peers use
+handwritten derivatives and two mutable buffers; fwp produces immutable arrays.
+Most AMD64 array/derivative controls fail. The report keeps each ratio's noise
+status, exact flags, process RAM and unmeasured peer allocation counts explicit.
+[Candidate/reference results](measurements/fresh-array-costs-2026-11-08/README.md)
+are separate: ARM64 confirms faster fresh-output stores; cross-platform milestone
+acceptance remains open. Neither fewer retains nor a successful audit closes it.
+
 ## Choose the question first
 
 | Question | Evidence | Interpretation |

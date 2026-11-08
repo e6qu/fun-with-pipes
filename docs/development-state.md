@@ -1,15 +1,20 @@
 # Current work
 
-**Next:** run the declared CPU-placement diagnostic on saved AMD64 images,
-retain its result, then decide the measurement protocol before another compiler
-change. Production comparison `42440117133` and its complete audit `42441970817`
+**Next:** dispatch the repaired `array-affinity` diagnostic on saved AMD64
+images, retain its result, then decide the measurement protocol before another
+compiler change. Initial run `42442853547` passed 13 controls but stopped before
+any image execution: its host guard used visible rather than assigned CPU count
+and omitted a preflight receipt. Both defects are repaired; original hardware
+values were not logged, so do not claim its exact rejected property is known. Production comparison `42440117133` and its complete audit `42441970817`
 (job `128612920574`) pass execution/data checks; timing acceptance does not.
 Both ARM64 sessions save 26–31% on large arrays. AMD64 has 13/12 failed computation
 copy controls; its qualified zero-update manual case regresses 3.38%. The two AMD
 sessions used different approved models (9V45 and 7763); keep them separate.
 
 C/Rust comparison `42441977298` passes both native jobs and their complete audits:
-ARM64 `128612937644`, AMD64 `128612937839`. Retain and summarize these results next.
+ARM64 `128612937644`, AMD64 `128612937839`. [Peer results](measurements/loop-array-peers-2026-11-08/README.md)
+and [all four candidate/reference sessions](measurements/fresh-array-costs-2026-11-08/README.md)
+now retain compact observations, receipts and full logs.
 No PR is open yet. The compiler candidate is **not performance-accepted**.
 
 The preceding run `42439586418` at `a0c6fb084` stopped before timings: the new
@@ -107,7 +112,7 @@ historical evidence. The sweep removes stale delivery instructions, old mileston
 jargon and duplicate merge bookkeeping while preserving raw results/contracts.
 The prose/navigation sweep covers the tracked Markdown inventory, including
 historical reports, tool guides and fixture READMEs. Local link checks cover all
-381 files; the full runner audit and tutorial execution still need final-head
+383 files; the full runner audit and tutorial execution still need final-head
 verification. Original observations and acceptance limits remain intact.
 
 Full documentation audit `42437087245`, job `128598137245`, **passes** at
@@ -117,9 +122,9 @@ not edited manually. Preserve vendor licenses and source attribution.
 
 ## Checks and resource limits
 
-- Guarded checks pass: twelve measurement controls, five diagnostic controls,
+- Guarded checks pass: fourteen measurement controls, five diagnostic controls,
   Rust formatting, tutorial source/output copies and sparse/index documentation
-  audit (381 Markdown files, five roadmap rows). The extended audit-tool controls, workflow syntax and all changed cross-links
+  audit (383 Markdown files, five roadmap rows). The extended audit-tool controls, workflow syntax and all changed cross-links
   pass locally. No local compiler build or native suite was run.
 - Disk previously fell to 58 GiB and the guard refused work; nothing ran below
   the limit. The latest reading is 86 GiB. Preserve 64 GiB free and use the guard;
