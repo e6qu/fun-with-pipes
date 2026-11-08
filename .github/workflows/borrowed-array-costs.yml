@@ -129,12 +129,19 @@ jobs:
           --transformation "$TRANSFORMATION"
           --cc gcc --c-arch ${{ runner.arch == 'ARM64' && 'armv8-a' || 'x86-64' }}
           --session ${{ matrix.session }} --output array-costs
+      - name: Observe memory and compiler costs separately from timings
+        if: inputs.mode == 'fresh-array' && matrix.session == 1
+        run: >-
+          python3 scripts/observe-array-costs.py --directory array-costs
+          --compiler target/debug/fwp --reference array-reference/fwp
+          --cc gcc --time /usr/bin/time --output array-observations
       - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: borrowed-array-costs-${{ runner.arch }}-${{ matrix.session }}
           path: |
             array-costs/
+            array-observations/
             array-reference/manifest.json
             array-reference/reference.patch
             array-reference/built.patch

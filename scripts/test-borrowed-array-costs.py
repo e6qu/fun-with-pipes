@@ -16,9 +16,30 @@ SPEC.loader.exec_module(COSTS)
 BUILDER_SPEC = importlib.util.spec_from_file_location('builder', Path(__file__).with_name('diagnose-array-builder.py'))
 BUILDER = importlib.util.module_from_spec(BUILDER_SPEC)
 BUILDER_SPEC.loader.exec_module(BUILDER)
+OBSERVATION_SPEC = importlib.util.spec_from_file_location('observations', Path(__file__).with_name('observe-array-costs.py'))
+OBSERVATIONS = importlib.util.module_from_spec(OBSERVATION_SPEC)
+OBSERVATION_SPEC.loader.exec_module(OBSERVATIONS)
 
 
 class Costs(unittest.TestCase):
+    def test_resource_report_requires_every_metric_once(self):
+        source = '''    User time (seconds): 0.02
+    System time (seconds): 0.01
+    Maximum resident set size (kbytes): 1234
+'''
+        self.assertEqual(OBSERVATIONS.resources(source),
+                         dict(userSeconds=0.02, systemSeconds=0.01, maxRssKiB=1234))
+        for invalid in ('', source * 2, source.replace('1234', 'unknown')):
+            with self.assertRaises(ValueError):
+                OBSERVATIONS.resources(invalid)
+
+    def test_memory_observer_refuses_missing_or_repeated_boundaries(self):
+        with self.assertRaises(AssertionError):
+            OBSERVATIONS.memory_source('not the generated runtime')
+        for source in ('absent', 'marker marker'):
+            with self.assertRaises(AssertionError):
+                OBSERVATIONS.replace_once(source, 'marker', 'changed')
+
     def test_fresh_output_change_has_a_narrow_precondition(self):
         source = '''static const fwp_desc d0 = {K_F64, "F64", .width = 0, .dup = NULL, .drop = NULL};
 static V fwp_hof0(V count) {

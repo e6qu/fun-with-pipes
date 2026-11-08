@@ -220,3 +220,25 @@ Tests must cover empty/partial/completed construction, packed and unpacked layou
 F64 bits, slices/aliases, errors and cancellation, plus unchanged reference/F128
 element cleanup. Compare a separate compiler with only this selection disabled.
 Use the frozen workloads, schedules and acceptance limits above; retain misses.
+
+For the production candidate, run separate cost observations after timing in
+session 1 on each architecture. `observe-array-costs.py`:
+
+- Counts managed allocation requests/requested bytes and actual retains in a
+  separately compiled instrumented driver. Counts include all driver repetitions,
+  input construction, computation and output release; divide by the recorded
+  repetition count for per-invocation totals. They exclude allocator metadata,
+  native libraries and process startup. Check final live storage after every call.
+- Records peak live managed storage including the initial constant owners.
+  Candidate/reference memory counts must agree: this change removes bookkeeping,
+  not allocations or owners. The integer loop must still allocate/retain nothing.
+- Runs each ordinary image separately under GNU `time -v` for process peak RSS.
+  This includes runtime/library/allocator memory and is not a managed-heap metric.
+- Records C emission and C compilation separately with wall time and peak RSS.
+  Re-emitted C must match the timed source. These are single cost observations,
+  not a controlled compiler-speed comparison or a relaxed analysis budget.
+- Retains ordinary image sizes and compiler stack-usage files. A function's stack
+  report is not a bound on the whole call chain or task stack reservation.
+
+Instrumented timings never enter the speed comparison. Retain source, flags,
+commands, raw resource reports and outputs alongside the unchanged timing samples.
