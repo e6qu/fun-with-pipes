@@ -74,3 +74,42 @@ Before accepting a compiler change, freeze its selection/exclusions and measure
 the affected computation separately from construction, printing and teardown.
 Use unchanged loop cases as guards. Retain allocation/live-memory, compiler,
 code and stack costs as required by the roadmap; preserve misses and noise.
+
+## Decision after the first diagnostic
+
+Run `42433452458`, source `7a8d24c2e`, passes all value checks on native ARM64
+and AMD64. Forced inlining does not qualify as an optimization: the largest
+manual/local cases take 1.11–2.04% more process time on ARM64 and 1.17–1.59%
+more on AMD64. Their copy controls pass. Many smaller cases fail copy controls;
+unchanged loop sources also vary. Keep these observations; do not rerun this
+unchanged candidate for a pass. The compiler remains unchanged by this experiment.
+
+## Selected implementation: borrowed array metadata
+
+Freeze this scope before changing the compiler:
+
+1. Select an already-proved borrowed `array.generate` callback with a directly
+   read captured `Array` of immediate scalar elements. The surrounding call owns
+   the capture throughout generation. Unknown callbacks, recursive/resource
+   callbacks and unsupported element representations retain their existing path.
+2. Resolve each selected capture's data address and length once in the generator,
+   after evaluating the original arguments. Pass those two values to the existing
+   borrowed callback entry. No new closure, array, ownership count or source API.
+3. Read from that address using the existing packed stride and byte-copy rules.
+   Preserve sign extension and floating-point bits. Keep every negative/index
+   bounds check and every source arithmetic operation in its original position.
+4. Treat metadata as a borrow, never an owner. The ordinary captured owner keeps
+   owned arrays and slices alive. Returning, sharing or replacing other values
+   cannot invalidate it. Do not propagate an address into escaping values.
+5. Traverse each callback body once to find direct reads. Do not follow unknown
+   calls, clone whole programs or introduce a fixed-point search. Charge compiler
+   time/RSS and compare two distinct program patterns: indexed array mapping and
+   neighboring-coordinate updates, including handwritten and local AD formulas.
+
+Correctness controls cover empty/shared/sliced arrays, signed and unsigned packed
+lanes, F32/F64 bits, negative/large indices, multiple captures, retained aliases,
+callback effects and failures, allocation failure, cancellation and reentry.
+F128 and reference-bearing element access keep their existing rules. Comparison
+builds disable only this selection; all other compiler/runtime code is identical.
+Final timing acceptance remains the roadmap's two-session, two-architecture
+compute-time contract. This source-cost reduction is not itself an accepted gain.

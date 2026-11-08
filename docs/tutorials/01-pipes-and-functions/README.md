@@ -68,7 +68,7 @@ energy = fn x -> let square = x * x in square + square
 ```
 
 `I64` means a signed 64-bit integer. `I64 -> I64` says the function takes one
-integer and returns one. Read the body using the next rule.
+integer and returns one. The following section traces its body.
 
 ## Name a calculation: `let … in …`
 
@@ -231,7 +231,7 @@ main = [
 
 Run `fwp run docs/tutorials/01-pipes-and-functions/main.fwp` from the repository
 root. It compiles and caches native code. Add `--interp` to interpret instead.
-The added binding examples print `7` (chained names), `16` (a nested sum),
+The binding examples print `7` (chained names), `16` (a nested sum),
 and `4` (shadowing). Expected [`main.out`](main.out):
 
 ```
@@ -248,5 +248,7 @@ and `4` (shadowing). Expected [`main.out`](main.out):
 5
 PIPES!
 ```
+
+For exact grouping and scope rules, see [expressions](../../reference.md#expressions).
 
 Next: [Data](../02-data/README.md) · [All tutorials](../README.md)

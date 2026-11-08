@@ -32,6 +32,10 @@ used. WebAssembly lessons have separate target/host requirements. Shell sessions
 use POSIX shell conventions; Windows native support does not mean those shell
 commands are PowerShell syntax.
 
+To keep an executable, replace `run` with `build` and name the output:
+`fwp build docs/tutorials/01-pipes-and-functions/main.fwp -o pipes`.
+Run `./pipes` on Linux/macOS or `pipes.exe` on Windows (build with `-o pipes.exe`).
+
 In a shell, `|` connects process output to input, `>` writes a file, and `<` reads
 one. These are shell operations, separate from fwp's `|` for applying/composing
 functions. Quoting keeps spaces or symbols inside one shell argument. Background

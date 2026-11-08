@@ -48,9 +48,9 @@ WASI file access is limited to directories the host explicitly opens for the
 module (preopened directories). See the [target limits](../../reference.md#targets)
 before moving a native program to either target.
 
-Building for WebAssembly needs clang with a WASI sysroot. On Debian or
-Ubuntu, install `clang`, `lld`, `wasi-libc` and
-`libclang-rt-18-dev-wasm32`.
+Building for WebAssembly needs a matching Clang, linker and WASI sysroot.
+Follow the [target toolchain setup](../../../CONTRIBUTING.md#setting-up), which
+names the tested package versions and environment settings.
 
 ## Reading the example
 
@@ -110,9 +110,8 @@ main = [
 ] | ignore
 ```
 
-Run it with `fwp run docs/tutorials/10-webassembly/main.fwp` (compiled to native code and cached), or
-build an executable with `fwp build docs/tutorials/10-webassembly/main.fwp -o webassembly`. The output is
-[`main.out`](main.out):
+For a native comparison, run `fwp run docs/tutorials/10-webassembly/main.fwp`.
+Both targets produce [`main.out`](main.out):
 
 ```
 112

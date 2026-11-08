@@ -58,8 +58,9 @@ even when inlining replaces a function call with a record literal. Unset `FWP_NO
 its presence disables the passes, even with a value of `0`. Debug builds also validate local types after
 passes and check inserted reference operations.
 
-The native scalar-constant pass in `src/cgen/constant_values.rs` is currently
-under verification. After numeric representation selection and before ownership
+The native scalar-constant pass in `src/cgen/constant_values.rs` passed
+[PR #261's delivery gates](measurements/scalar-constant-delivery-2026-11-05/README.md).
+After numeric representation selection and before ownership
 insertion, it proves exact immediate constants and replaces their reads. It shares
 the packed-fold seed evaluator; it neither runs arbitrary user code nor changes
 ordinary interpreter optimization. [The rules](design.md#exact-scalar-constants)
@@ -95,13 +96,13 @@ For example, a callback reading two `(value, operation-id)` records can receive
 four numbers directly. This changes the compiler's internal parameter type and
 all known callers together; the source function still takes one argument.
 
-- Prove leaf-only reads and pure argument field reads before rewriting.
+- Prove leaf-only uses and supported argument construction before rewriting.
+- Bind computed arguments once, left to right, before passing their fields.
 - Exclude function values, entry points, recursion and unproved ownership uses.
 - Keep input lists alive while the packed mapper reads their numeric fields.
 - Check the rewritten typed IR before inserting ownership operations.
 
-The next derivative-storage group adds two bounded transformations, with
-[grouped verification still in progress](measurements/packed-derivative-inputs.md):
+Two further transformations passed [PR #257's delivery gates](roadmap-history.md#packed-derivative-inputs-pr-257):
 
 1. `src/opt/scoped.rs` exposes a closed, known objective inside an existing
    derivative-scope worker. It keeps scope entry and argument evaluation in
@@ -119,8 +120,8 @@ or public list representation changes.
 During C emission, `src/cgen/field_transfers.rs` can also move a complete group of
 already-separated field owners. It checks the emitted ownership expression;
 it does not remove ownership operations by searching C text.
-[Current verification and limits](measurements/derivative-owner-transfers.md)
-separate these implemented rules from pending performance/platform acceptance.
+[Verification and measured limits](measurements/derivative-owner-transfers.md)
+separate delivered behavior from unsettled timing comparisons.
 
 ## What kind of parser is this?
 

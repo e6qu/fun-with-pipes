@@ -183,9 +183,10 @@ $ head -12 shipping.json
 
 ## Calling it from fwp
 
-`fwp openapi --import` reads an OpenAPI document, this one or any other
-service's, and writes an fwp module with its types and one function per
-operation. Each function takes the server's base URL first:
+`fwp openapi --import` reads a supported OpenAPI document and writes an fwp
+module with its types and one function per operation. See the
+[import limits](../../rest.md) before using an external service's document.
+Each function takes the server's base URL first:
 
 ```console
 $ fwp openapi --import shipping.json -o api.fwp
@@ -232,6 +233,9 @@ Some ["FR", "DE", "IT"]
 ```
 
 ## The same functions elsewhere
+
+After the client example, stop the background shipping server with `kill $!`
+in the same terminal.
 
 Nothing in the functions is about HTTP. Add `cli` to the `# expose:` line
 and `fwp build shipping.fwp --cli` makes the same functions a

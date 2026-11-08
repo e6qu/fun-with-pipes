@@ -1,7 +1,8 @@
 # Private numeric inputs for derivative objectives
 
-**Native correctness and measurements audited; three AMD64 timing limits remain
-open. Final gates are pending.**
+**Delivered in [PR #257](../roadmap-history.md#packed-derivative-inputs-pr-257):
+native correctness, final gates and measurements audited. Three AMD64 timing
+limits remain open.** This is the original implementation contract, not a new backlog.
 The contract was frozen at `cc425aba` before code changes, tag
 `roadmap/packed-derivative-inputs-protocol-2026-11-04`.
 The [source review](numeric-record-inputs-2026-11-04/README.md)
@@ -77,8 +78,8 @@ remain retained. Compiler-cost input inspection required the pre-timing repairs
 below. The [completed compiler comparison](packed-input-analysis-2026-11-04/README.md)
 passes all fourteen input/architecture cases; compiler time increases by at most
 4.32% and peak RSS by at most 0.82%. [Runtime audits](packed-input-time-2026-11-04/README.md)
-verify storage/count savings and preserve three AMD64 timing misses. Final
-platform support still needs the complete production matrix.
+verify storage/count savings and preserve three AMD64 timing misses. The complete
+production matrix subsequently passed; the delivery history above records it.
 
 ## Ownership and failure proof
 

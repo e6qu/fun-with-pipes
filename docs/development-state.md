@@ -1,8 +1,8 @@
 # Current work
 
-**Next:** run the [callback-boundary diagnostic](measurements/shared-loop-array-costs.md)
-on both native Linux architectures while reviewing all docs/tutorials. Use its
-results to select and verify the compiler change. The user approved the revised project roadmap and one
+**Next:** implement the [frozen borrowed-array metadata change](measurements/shared-loop-array-costs.md#selected-implementation-borrowed-array-metadata)
+and focused lifetime/value controls, then measure its runtime/compiler costs.
+Continue the docs/tutorial refresh in the same PR. The user approved the revised project roadmap and one
 substantial normal PR for milestone 1. No next PR has been opened yet.
 
 ## Workspace and delivery
@@ -57,12 +57,16 @@ without a controlled comparison. Numeric loop state currently types F32/F64
 fields, with other fields as value words; this is a source observation, not an
 established cause or selected optimization.
 
-The first diagnostic changes only borrowed-array callback declarations in emitted
-C to force inlining. It keeps the production compiler unchanged. The source
-transformation, fixed inputs and 16-round schedule are recorded before execution;
-this short whole-process comparison cannot satisfy the final compute-time gate.
-`numerics.yml`, suite `loop-array-diagnosis`, runs the experiment on both Linux
-architectures. Five local source/schedule controls pass under the guard (0.13 s).
+The first diagnostic changed only borrowed-array callback declarations in emitted
+C to force inlining. It passed all 18 cases on each architecture in run
+`42433452458` at `7a8d24c2efe475dacf6018fda03340253a4d7559`.
+[Complete retained results](measurements/loop-array-diagnosis-2026-11-08/README.md)
+show no useful gain; largest manual/local cases are 1.11–2.04% slower. Both
+archive hashes match metadata; all builds have empty stderr. Many smaller copy
+controls fail. Do not ship forced inlining or repeat this unchanged experiment.
+Five local source/schedule controls pass under the guard (0.13 s). A saved-input
+path overwrite in the diagnostic is repaired: single/repeated sources now have
+different paths. Original archived evidence and this limitation are preserved.
 The initial dispatch `42433311089` failed before starting runners: adding the suite
 made `numerics.yml` 512,104 bytes, above GitHub's 512,000-byte limit. Shorter input
 descriptions reduce it to 511,678 bytes without changing execution. The focused
@@ -71,8 +75,13 @@ workflow additions must check this limit before publication.
 
 ## Documentation work
 
-All 372 tracked Markdown files are materialized for review; 24 tutorial READMEs
-have runnable source/output copies. Review is not complete. Small factual fixes
+All 372 Markdown files from the base are materialized; 24 tutorial READMEs
+have runnable source/output copies. Lessons 1–20 have been reviewed and edited;
+21–24 and the wider reference/evidence sweep remain. Review is not complete.
+Lesson 7 now returns a `fahrenheit` field instead of mislabeling Fahrenheit as
+`celsius`; its source/transcript copies change together. Native session execution
+and formatter validation still need the runner. The standalone all-tutorial
+copy-check harness compiled under the guard (0.38 s). Small factual fixes
 already correct stale private-pair delivery status in ownership, the README's
 old direction, and #269's passed production coverage in design. The measurement
 index now records delivered gradient-call storage and dates older CPU experiments;

@@ -163,8 +163,8 @@ $ curl -s -w ' %{http_code}\n' http://127.0.0.1:8720/mirror
 expected a WebSocket upgrade request 400
 ```
 
-A request to `/mirror` that is not an upgrade gets 400. fwp's HTTP
-client speaks HTTP/2 too, when asked (`http.client | with { version =
+After these requests, stop the background server with `kill $!` in the same
+terminal. fwp's HTTP client speaks HTTP/2 too, when asked (`http.client | with { version =
 HttpVersion.Http2 }`) or when a TLS server offers it.
 
 ## The program

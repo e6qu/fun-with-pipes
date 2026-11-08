@@ -131,7 +131,7 @@ def main():
     for name, source, expected, repetitions, interpret in programs():
         directory = out / name
         directory.mkdir()
-        source_path = directory / 'input.fwp'
+        source_path = directory / 'interpreter-input.fwp'
         source_path.write_text(source)
         reference = None
         if interpret:
@@ -141,6 +141,7 @@ def main():
             if expected is not None:
                 assert json.loads(raw.stdout) == expected
             reference = raw.stdout * repetitions
+        source_path = directory / 'input.fwp'
         source_path.write_text(repeat(source, repetitions))
         code_path = directory / 'original.c'
         run([compiler, 'build', '--emit-c', '-O2', source_path, '-o', code_path],

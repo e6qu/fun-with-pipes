@@ -24,7 +24,9 @@ jobs:
       - name: Retain review heads for preparation references
         run: git fetch --filter=blob:limit=1m origin "+refs/pull/*/head:refs/remotes/origin/review/*"
       - name: Documentation audit controls
-        run: python3 scripts/test-roadmap.py
+        run: |
+          python3 scripts/test-roadmap.py
+          python3 scripts/test-loop-array-diagnosis.py
       - name: Exact-source production log audit controls
         run: python3 scripts/test-production-log-audit.py
       - name: Documentation, immutable tags and commit messages

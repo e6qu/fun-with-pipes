@@ -41,8 +41,8 @@ ignored. These patterns must always match the input type; use `match` for
 alternatives such as `Some` and `None`.
 
 `dist = fn { x, y } -> sqrt (x * x + y * y)` reads both coordinates and computes
-the distance from the origin. `sqrt` is square root; `(3.0, 4.0)` coordinates
-produce `sqrt 25.0`, or `5.0`. The typed input is a `Point`, not a pair.
+the distance from the origin. `sqrt` is square root. For
+`Point { x = 3.0, y = 4.0 }`, it calculates `sqrt (9.0 + 16.0)`, giving `5.0`.
 
 `Point { x, y }` in an expression means `Point { x = x, y = y }`. This **field
 shorthand** uses existing values; it does not select fields from an implicit input.
@@ -54,6 +54,9 @@ Use `update { x = add 1.0 }` to transform one field, or `with { y = 9.0 }` to
 replace it. These return new logical values; they do not mutate the original.
 
 ## Match alternatives
+
+`Option[T]` describes a value that may be absent: `Some value` carries a `T`,
+and `None` carries nothing. For example, a lookup can produce `Some 3` or `None`.
 
 `match` is a function that chooses the first matching arm. In
 `Circle centre radius -> radius * radius * 3.14159`, names bind the stored centre
@@ -119,9 +122,7 @@ main = [
 ] | ignore
 ```
 
-Run it with `fwp run docs/tutorials/02-data/main.fwp` (compiled to native code and cached), or
-build an executable with `fwp build docs/tutorials/02-data/main.fwp -o data`. The output is
-[`main.out`](main.out):
+Run `fwp run docs/tutorials/02-data/main.fwp`. Expected [`main.out`](main.out):
 
 ```
 5.0

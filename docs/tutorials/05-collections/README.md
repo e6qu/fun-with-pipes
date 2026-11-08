@@ -84,9 +84,7 @@ main = [
 ] | ignore
 ```
 
-Run it with `fwp run docs/tutorials/05-collections/main.fwp` (compiled to native code and cached), or
-build an executable with `fwp build docs/tutorials/05-collections/main.fwp -o collections`. The output is
-[`main.out`](main.out):
+Run `fwp run docs/tutorials/05-collections/main.fwp`. Expected [`main.out`](main.out):
 
 ```
 41
@@ -100,8 +98,9 @@ Some 16
 apples: 12
 ```
 
-See `lib/list.fwp`, `lib/string.fwp`, `lib/collections.fwp` and
-`lib/iter.fwp` for the complete set; each file ends with its tests, which
+See [lists](../../../lib/list.fwp), [strings](../../../lib/string.fwp),
+[maps and sets](../../../lib/collections.fwp) and [iterators](../../../lib/iter.fwp)
+for the complete set; each file ends with its tests, which
 double as examples.
 
 ---

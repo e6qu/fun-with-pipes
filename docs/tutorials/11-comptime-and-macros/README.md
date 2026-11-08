@@ -66,7 +66,8 @@ that spelling; it does not obtain a fresh binding automatically.
 and local bindings. `PName "x"` binds a name, `PIgnore` discards an input and
 `PRecord` stores field patterns. `PHole` keeps the forwarding meaning used by
 `match`; it is rejected in generated fn/let patterns. Generated patterns receive
-the same duplicate-name and irrefutability checks as parsed source.
+the same checks as parsed source: names cannot repeat, and fn/let patterns must
+match every value of their input type.
 
 The macro receives parsed syntax, so it cannot add new operators or change
 precedence. Its generated expression is type-checked after expansion.
@@ -131,9 +132,7 @@ main = [
 ] | ignore
 ```
 
-Run it with `fwp run docs/tutorials/11-comptime-and-macros/main.fwp` (compiled to native code and cached), or
-build an executable with `fwp build docs/tutorials/11-comptime-and-macros/main.fwp -o comptime-and-macros`. The output is
-[`main.out`](main.out):
+Run `fwp run docs/tutorials/11-comptime-and-macros/main.fwp`. Expected [`main.out`](main.out):
 
 ```
 [0, 1, 4, 9, 16, 25, 36, 49, 64, 81]
@@ -147,7 +146,7 @@ unknown command
 
 Programs that inspect or build syntax directly can match on the `Syntax`
 constructors (`SInt`, `SName`, `SApply`, `SPipe`, ...), which are defined in
-`lib/prelude.fwp`.
+[the prelude](../../../lib/prelude.fwp).
 The [compiler pipeline](../../compiler-pipeline.md) explains the implementation,
 expansion-round limit, compile-time effects and parser classification.
 

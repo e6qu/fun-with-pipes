@@ -1,0 +1,20 @@
+{
+  "id": 13599100069,
+  "node_id": "MDg6QXJ0aWZhY3QxMzU5OTEwMDA2OQ==",
+  "name": "loop-array-diagnosis-ubuntu-24.04-arm",
+  "size_in_bytes": 7976531,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13599100069",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13599100069/zip",
+  "expired": false,
+  "digest": "sha256:06eb5004653e455de67dad1d6bebc3a08a0b3c734d974a6582024c056a0fa8dd",
+  "created_at": "2026-11-08T01:20:17Z",
+  "updated_at": "2026-11-08T01:20:17Z",
+  "expires_at": "2027-02-06T01:15:22Z",
+  "workflow_run": {
+    "id": 42433452458,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "performance-roadmap-review",
+    "head_sha": "7a8d24c2efe475dacf6018fda03340253a4d7559"
+  }
+}

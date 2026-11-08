@@ -116,9 +116,7 @@ main = [
 ] | ignore
 ```
 
-Run it with `fwp run docs/tutorials/03-types-and-traits/main.fwp` (compiled to native code and cached), or
-build an executable with `fwp build docs/tutorials/03-types-and-traits/main.fwp -o types-and-traits`. The output is
-[`main.out`](main.out):
+Run `fwp run docs/tutorials/03-types-and-traits/main.fwp`. Expected [`main.out`](main.out):
 
 ```
 (7, 7)
@@ -127,8 +125,8 @@ YES
 1.5
 ```
 
-`shout` works for any type with a `Describe` implementation, including
-`Bool`, as the output shows.
+Use the [type](../../reference.md#types) and [trait](../../reference.md#traits)
+reference for the full rules, including resource restrictions.
 
 ---
 

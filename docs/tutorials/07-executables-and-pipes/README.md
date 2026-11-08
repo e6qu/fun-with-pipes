@@ -36,9 +36,14 @@ export total : List[I64] -> I64
 total = sum
 
 Reading = { sensor: String, celsius: F64 }
+FahrenheitReading = { sensor: String, fahrenheit: F64 }
 
-export fahrenheit : Reading -> Reading
-fahrenheit = update { celsius = mul 1.8 | add 32.0 }
+export fahrenheit : Reading -> FahrenheitReading
+fahrenheit =
+    make FahrenheitReading {
+        sensor = .sensor,
+        fahrenheit = .celsius | mul 1.8 | add 32.0,
+    }
 ```
 
 `fwp exec` compiles a function (once; it is cached) and runs it with the
@@ -62,10 +67,13 @@ no installed fwp compiler to run, though it still uses system libraries. A recor
 ```console
 $ fwp build tools.fwp --fn fahrenheit -o fahrenheit
 $ echo '{celsius = 21.5, sensor = "roof"}' | ./fahrenheit
-Reading {celsius = 70.7, sensor = "roof"}
+FahrenheitReading {fahrenheit = 70.7, sensor = "roof"}
 $ ./fahrenheit '{celsius = -40.0, sensor = "pole"}'
-Reading {celsius = -40.0, sensor = "pole"}
+FahrenheitReading {fahrenheit = -40.0, sensor = "pole"}
 ```
+
+`make` builds the output record from the input's fields: it keeps `sensor` and
+calculates `21.5 × 1.8 + 32 = 70.7`. The result names its unit `fahrenheit`.
 
 ### Follow a line through two tools
 
@@ -80,8 +88,8 @@ input lines become `[1, 2, 3]` before summation.
 ## Typed pipes
 
 Executables connect like Unix tools. When one fwp program feeds another,
-the data travels in a binary protocol that starts with a fingerprint of the
-type, so a type mismatch is caught as soon as the pipe starts. `fwp pipe`
+the data travels in a binary protocol. Its initial **type fingerprint** identifies
+the expected data shape, so a type mismatch is caught when the pipe starts. `fwp pipe`
 connects functions this way:
 
 ```console
