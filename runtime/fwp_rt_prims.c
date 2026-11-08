@@ -2160,8 +2160,9 @@ static void fwp_array_store_owned(V a, size_t i, V value, const fwp_desc *elem) 
     fwp_array_store(a, i, value, elem);
     if (elem->kind == K_F128 && elem->drop) elem->drop(value);
 }
-/* A partially initialized array has one owner and exactly `filled` initialized
- * elements. Register it across callbacks and allocation/retain failures. */
+/* A partially initialized array owns its allocation. `filled` tracks the prefix
+ * needing element destruction; a builder of destructor-free elements may leave
+ * it zero. Register the owner across callbacks and allocation/retain failures. */
 typedef struct { V value; size_t filled; const fwp_desc *element; } fwp_array_builder;
 static void fwp_array_builder_release(void *arg) {
     fwp_array_builder *owner = arg;

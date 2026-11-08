@@ -18,8 +18,9 @@ checkout-only repair.
 Implementation head: `f21bf1390` (fresh F64 stores). Focused jobs are AMD64 GCC
 `128603076444`, ARM64 GCC `128603076704`, and Clang ARM64 `128603076570`.
 All three jobs pass, including every native target. Documentation run
-`42438695310`, job `128603080353`, passes. Subsequent edits change docs and
-measurement/audit tools only; preserve the compiler head while its checks finish.
+`42438695310`, job `128603080353`, passes. Subsequent edits change docs, measurement/audit tools and the builder comment
+clarifying destructor-free prefixes; executable compiler/runtime behavior is
+unchanged. Preserve the implementation while its checks finish.
 
 ## Workspace
 
