@@ -73,8 +73,16 @@ Two test assumptions still fail identically on all hosts:
   The alias-count check correctly rejects it first with status 248. Require 248;
   keep the independent physical-allocation ledger and missing-suffix control.
 
-These test/auditor repairs are ready to publish. Compiler implementation is
-unchanged. Docs `42470456322`, job `128699751102`, passes at `0c704421f`.
+Test/auditor repair `46ac4cf383c614aceb715675aba71e2b85416a4f` is published.
+Focused run `42471671589`: ARM GCC `128703672142`, macOS Clang `128703672177`, AMD
+GCC `128703672234`. All three have passed formatting/Clippy and are building or
+testing. Docs run `42471674968`, job `128703678444`, is running. Compiler code is
+unchanged from `0c704421f`; its docs run `42470456322` passed.
+
+The measurement driver also now requires the ordinary ABI entry to have the same
+function ID as the named `measure` worker. Its control rejects a neighboring
+four-argument function, instead of accepting the first matching signature. All
+four local measurement-control tests pass after that repair.
 No measurements have run. Once the repaired focused run passes, dispatch
 `numerics.yml` with suite `captured-maps` and its run ID as `evidence_run`;
 the workflow audits all three hosts before measuring. Final delivery still needs

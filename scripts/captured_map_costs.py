@@ -46,7 +46,10 @@ def raw_program(case):
 def driver(generated, case):
     marker = '/* measure :'
     assert generated.count(marker) == 1
-    entry = re.search(r'static V (f\d+)\(([^)]*)\)', generated.split(marker)[1])
+    body = generated.split(marker)[1]
+    declaration = re.match(r'[^\n]*\nstatic V [fw](\d+)\(', body)
+    assert declaration, 'require the named measure definition'
+    entry = re.search(r'static V (f' + declaration[1] + r')\(([^)]*)\)', body)
     assert entry and entry[2] == 'V l0, V l1, V l2, V l3', 'require the declared four-argument native entry'
     main = 'int main(int argc, char **argv)'
     assert generated.count(main) == 1

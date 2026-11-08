@@ -67,6 +67,13 @@ class CapturedMapCosts(unittest.TestCase):
             self.assertIn('fwp_heap.live != initial', text)
         with self.assertRaises(AssertionError):
             driver(generated.replace('V l2, V l3', 'V l2'), next(cases()))
+        worker = generated.replace('static V f0(V l0, V l1, V l2, V l3) {}',
+            'static V w0(double l0, double l1, V l2, V l3) {}\n'
+            'static V f0(V l0, V l1, V l2, V l3) {}')
+        self.assertIn('f0(scale, offset, updates, input)', driver(worker, next(cases())))
+        # A neighboring four-argument function is not the measured export.
+        with self.assertRaises(AssertionError):
+            driver(worker.replace('static V f0(', 'static V f1('), next(cases()))
         self.assertIn('value * scale + offset', program('sensor'))
         self.assertIn('Array[U8]', program('pixels'))
 
