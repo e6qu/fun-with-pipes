@@ -1,14 +1,13 @@
 # Current work
 
-**Next:** finish auditing production run `42508955007`, then publish the prepared
-measurement report/docs together and require the complete final-head matrix.
-Validate the report on `structured-autodiff-report-review` with the documentation
-workflow while the current PR's native jobs continue; this is a verification
-branch, not another PR.
-[PR #272](https://github.com/e6qu/fun-with-pipes/pull/272) is open, non-draft,
-at `4a32c102f74f738433c1d55969936b023a5510f0`. Do not merge before all nine
-production jobs, docs and the complete-log audit pass for the final commit.
-No known failing job remains. Preserve running checks while preparing docs.
+**Next:** audit the final production/docs runs started by this report publication
+on [PR #272](https://github.com/e6qu/fun-with-pipes/pull/272), then dispatch the
+complete-log audit. Find their IDs from the PR's current head; the measured
+compiler source is `4a32c102f74f738433c1d55969936b023a5510f0`.
+Do not merge before all nine production jobs, docs and the complete-log audit
+pass for the final commit. Preserve that final head while checks run.
+The report was verified on `structured-autodiff-report-review` before publication;
+that temporary verification branch has no separate PR.
 
 ## Roadmap status
 
@@ -52,7 +51,7 @@ primary target (about 91% and 85% less computation). AMD copy noise fails the
 original rule; combined timing acceptance stays open. Counts, cleanup and peak
 storage meet their bounds. At 129 inputs, requests fall 1,284→260 for neighbors
 and 518→260 for independent loss. Compiler, stack and RSS tradeoffs are explicit.
-Report files are prepared locally for the next batched publication.
+Report files join the implementation in this publication.
 `scripts/check-structured-callback-report.py` reconstructs retained timings and
 checks storage, primary image hashes and stack reports in documentation CI.
 
@@ -85,8 +84,11 @@ Reports preserve every noisy observation. Original archives remain in GitHub;
 small report/sample/source/image entries were read with HTTP ranges and ZIP CRC
 checks while disk was low. No local whole-archive digest check is claimed.
 
-Production `42508955007`: benchmark `128817627716` and Windows AMD64
-`128817627957` pass; other seven jobs run or queue. Docs `42508954924`, job
+Superseded production `42508955007`: benchmark `128817627716` and Windows AMD64
+`128817627957` pass. Cancellation was requested for the seven unfinished jobs
+when the complete report was ready, freeing runners for the final commit.
+Review their completed targets for unexpected diagnostics once logs are available.
+Docs `42508954924`, job
 `128817627196`, pass. Reviewed docs diagnostics are deliberate negative controls;
 Windows panic messages are named lifetime-test controls. Local logs:
 `/tmp/fwp-pr272-{bench,docs,windows-amd}.log`. Full final-head audit is pending.
@@ -95,7 +97,12 @@ Report-review docs `42515588460` / `128837762893` reproduce all saved timings,
 storage, primary binary hashes and stack reports. Documentation/control tests
 pass, but the shortened handoff omitted the required status column; the restored
 column keeps the existing audit unchanged. Later docs targets were skipped.
-Complete log: `/tmp/fwp-pr272-report-docs.log`. Rerun docs after this correction.
+Complete log: `/tmp/fwp-pr272-report-docs.log`.
+Corrected report/docs run `42516046373`, job `128839176998`, passes at `4bf18f4f2`.
+It checks all retained measurements, tutorials, immutable references and evidence
+controls. Run `42515982996` was cancelled while queued after a renamed benchmark
+heading needed its incoming link updated. Final publication adds only the
+remaining-container explanation, service-load plan details and this receipt.
 
 ## Local limits and resume
 

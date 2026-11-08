@@ -38,6 +38,27 @@ construction, complete-gradient work, release, process RSS and compiler/stack
 costs. These are fwp-before/after results, not a new C/Rust/Swift comparison or
 a complete iterative solve. Full platform delivery is pending.
 
+## Remaining service load measurements
+
+The native HTTP correctness test runs 64 clients with 200 requests each and
+checks shutdown with a request in flight. Its 12,800 successful requests do not
+establish throughput, latency or sustained capacity.
+
+Milestone 5 must define and run a separate measurement contract:
+
+- Freeze endpoint work, request/response sizes, keep-alive policy, concurrency
+  levels, warmup, measured duration, host limits and baseline source before runs.
+- Report completed requests per second and median/p95/p99 request latency at
+  each concurrency level, alongside errors and timeouts. Do not omit failures
+  from the denominator or mix load-generator time with server computation.
+- Measure steady allocation traffic and long-running live storage/RSS; distinguish
+  bounded pools and warmed caches from continuing growth.
+- Exercise slow readers/writers, backpressure, client disconnects, cancellation
+  and shutdown under load. Check partial-response and resource cleanup behavior.
+- Set acceptance limits from the stated application and measured starting point;
+  retain saturation and inconclusive results. A fixed correctness request count
+  is not a substitute for this contract.
+
 ## November 7 complete-solve derivative comparison
 
 The [November 7 local-derivative comparison](measurements/computed-numeric-time-2026-11-07/README.md)

@@ -83,6 +83,14 @@ independent loss. Actual reference-count increments remain one per call for the
 shared input; attempted retain calls fall from 258/260 respectively to two.
 Attempted operations and actual count changes are separate metrics.
 
+The remaining 260 requests are 129 input-list cells, 129 result-list cells and
+two arrays. This comparison deliberately keeps list inputs/results equivalent
+across methods. Removing those containers would require a different representation
+or eliminating conversions across a larger caller; it is a separate experiment.
+At ARM session 1's 129-input size, release takes about 2.15–2.19 microseconds,
+already longer than the candidate computation. Fewer derivative objects do not
+make data construction and release free.
+
 Local methods use no raw derivative-recording storage. All measured managed
 owners return to baseline and raw buffers reach zero after real shutdown.
 Dense forward mode's cached constant retains its ordinary process lifetime;
