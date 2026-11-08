@@ -1,6 +1,6 @@
 # Current work
 
-**Next:** finish the focused evidence audit and frozen sensor/pixel comparison,
+**Next:** finish the frozen sensor/pixel comparison,
 then bundle implementation, evidence and docs in
 one normal PR. [The contract](measurements/captured-array-maps.md) defines safety,
 inputs, schedule and acceptance. No performance claim is made yet.
@@ -87,10 +87,17 @@ four-argument function, instead of accepting the first matching signature. All
 four local measurement-control tests pass after that repair.
 Measurement run `42472528452` uses source
 `025016fbedfcac2127619e4a053415aa83b9d6b0` and focused evidence `42471671589`.
-It first audits complete logs, artifacts and deliberate-failure statuses, then
-runs two sessions on each native Linux architecture. No timing result is available
-yet. Final delivery still needs nine production jobs and docs on the exact final
-PR head. No PR is open yet.
+Its complete focused audit passes, job `128706453822`. The
+[retained audit](measurements/captured-map-checks-2026-11-08/README.md) verifies
+eight targets, 382 probe outcomes and native images on each host with no issues.
+Artifact `13614402438` has locally verified SHA-256
+`29391978968f75b6661d09b049290f8152e51afb7692127366c598fcb9822de6`.
+
+ARM sessions 1/2 (`128711666600` / `128711666641`) and AMD session 1
+(`128711666753`) are running; AMD session 2 (`128711666605`) is queued.
+No timing result is available yet.
+Final delivery still needs nine production jobs and docs on the exact final PR
+head. No PR is open yet.
 
 Superseded run `42466992494` was cancelled before native tests. Duplicate
 post-merge CI `42465665987` was cancelled only after checking its tree equals

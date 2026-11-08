@@ -80,6 +80,9 @@ observations per host. This includes O1/O2 cleanup, cancellation and the repaire
 deliberate-failure controls. Complete logs contain no compiler warnings or errors;
 the documentation audit also passes. The compiler is unchanged from `0c704421f`.
 
+The [complete focused audit](captured-map-checks-2026-11-08/README.md) also passes,
+including native image identities and every retained target/probe result.
+
 ## Measurement contract before collecting results
 
 Compare a same-source reference disabling only captured callback selection;
