@@ -197,7 +197,8 @@ def main():
                 row = run([out / f'parser_{language}_{variant}.exe', path, '1',
                            str(expected if expected is not None else 0), str(nodes)])
                 if expected is None:
-                    assert row['status'] != 0 and not row['stdout'], row
+                    status = 101 if language == 'rs' or name.endswith('-overflow') else 92
+                    assert row['status'] == status and not row['stdout'], row
                 elif variant == 'profile':
                     check_observation(row, nodes, expected, 1, False)
                 else:
