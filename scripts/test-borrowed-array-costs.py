@@ -19,9 +19,35 @@ BUILDER_SPEC.loader.exec_module(BUILDER)
 OBSERVATION_SPEC = importlib.util.spec_from_file_location('observations', Path(__file__).with_name('observe-array-costs.py'))
 OBSERVATIONS = importlib.util.module_from_spec(OBSERVATION_SPEC)
 OBSERVATION_SPEC.loader.exec_module(OBSERVATIONS)
+PEER_SPEC = importlib.util.spec_from_file_location('peers', Path(__file__).with_name('measure-loop-array-peers.py'))
+PEERS = importlib.util.module_from_spec(PEER_SPEC)
+PEER_SPEC.loader.exec_module(PEERS)
 
 
 class Costs(unittest.TestCase):
+    def test_peer_formula_and_schedule(self):
+        self.assertEqual(PEERS.coordinate_values(3, 0), [-1.2, 1.0, -1.2])
+        # One update: derivatives are -215.6, 792, -440 at the initial point.
+        for actual, expected in zip(PEERS.coordinate_values(3, 1), [-0.9844, 0.208, -0.76]):
+            self.assertAlmostEqual(actual, expected)
+        for position in range(6):
+            self.assertEqual(Counter(PEERS.order(number)[position] for number in range(24)),
+                             Counter({role: 4 for role in PEERS.ROLES}))
+        rows = []
+        for number in range(-2, 24):
+            for role in PEERS.order(number):
+                duration = 80 if role in ('fwp', 'fwp-copy') else 100
+                if role == 'rust-copy':
+                    duration = 103
+                rows.append(dict(round=number, role=role, constructionNs=10, computationNs=duration,
+                                 releaseNs=10, loopNs=duration+20, processNs=200))
+        report = PEERS.summarize(rows)
+        self.assertEqual(report['fwpRatios']['computationNs']['c'], 0.8)
+        self.assertTrue(report['qualified']['computationNs']['c'])
+        self.assertFalse(report['qualified']['computationNs']['rust'])
+        with self.assertRaises(AssertionError):
+            PEERS.summarize(rows[:-1])
+
     def test_resource_report_requires_every_metric_once(self):
         source = '''    User time (seconds): 0.02
     System time (seconds): 0.01

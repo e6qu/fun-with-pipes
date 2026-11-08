@@ -242,3 +242,39 @@ session 1 on each architecture. `observe-array-costs.py`:
 
 Instrumented timings never enter the speed comparison. Retain source, flags,
 commands, raw resource reports and outputs alongside the unchanged timing samples.
+
+### C and Rust computation comparison
+
+After the production comparison finishes, `measure-loop-array-peers.py` rebuilds
+its saved candidate C and the explicit C/Rust implementations on each qualified
+native ARM64/AMD64 host. It first audits the original input archive and records
+the exact measured fwp revision. This is a new peer comparison, not a rerun of
+an unsuccessful candidate/reference timing.
+
+| Case | Equivalent work | Differences to report |
+|---|---|---|
+| Checked loop | Same descending count, checked subtraction/multiplication/addition and remainder | Compiler lowering and runtime checks |
+| F64 map/fold | Materialize `x * 3 + 1`, then sum in order from `-0.0`; input is 2.0 in every position | fwp array headers/owners versus C allocations and Rust vectors; empty containers may allocate differently |
+| Coordinate updates | Same initial alternating -1.2/1.0 values, neighboring-pair objective, step 0.001 and update count | C/Rust use the handwritten coordinate derivative and reuse two mutable buffers; fwp produces immutable arrays and the local-AD form computes derivatives with Dual values |
+
+Use the same 18 inputs and per-process repetition counts. Timers surround input
+construction, the consuming computation and returned-result release separately;
+validation is outside those phases. C uses the same O2/strict floating-point,
+architecture and no-LTO flags as generated fwp C. Rust uses 1.99.1, edition 2021,
+`-O`, generic target CPU and no LTO, with explicitly checked integer operations.
+Optimization barriers keep inputs/results observable. Rust's `Instant` and C's
+monotonic clock have their own overhead, visible in the small controls.
+
+Each process checks exact output words for its own implementation. Python's
+ordered coordinate formula supplies C/Rust's independent expected words. Compare
+each fwp derivative result with that formula at absolute/relative tolerance
+`1e-10`, retaining both sets of words; different derivative evaluation orders
+must not be described as identical operations. Loop/map results match exactly.
+
+Run two warmups and 24 rounds of fwp/C/Rust plus a byte-identical copy of each.
+Six roles rotate through all positions four times. A comparison qualifies only
+if both languages' copy variation is at most 2% for that metric. Report
+`fwp_time / peer_time` and extra time `(ratio - 1) × 100`, computation and process
+time separately. No universal parity threshold is asserted. Allocation strategy,
+clock and arithmetic differences mean derivative ratios are application costs,
+not an isolated ARC or language-overhead measurement. Swift remains milestone 4.

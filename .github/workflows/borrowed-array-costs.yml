@@ -15,6 +15,52 @@ permissions:
   contents: read
   actions: read
 jobs:
+  peers:
+    if: inputs.mode == 'array-peers'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-24.04-arm, ubuntu-latest]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      EVIDENCE_RUN: ${{ inputs.evidence_run }}
+      EVIDENCE_SOURCE: ${{ inputs.source_revision }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.99.1
+      - name: Qualify the native comparison host
+        env:
+          MACHINE: ${{ runner.arch == 'ARM64' && 'aarch64' || 'x86_64' }}
+          GCC_VERSION: ${{ runner.arch == 'ARM64' && 'gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0' || 'gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0' }}
+        run: |
+          cpus=(--cpu Neoverse-N2)
+          if [[ "$MACHINE" == x86_64 ]]; then
+            cpus=(--cpu 'AMD EPYC 7763 64-Core Processor' --cpu 'AMD EPYC 9V74 80-Core Processor' --cpu 'AMD EPYC 9V45 96-Core Processor')
+          fi
+          python3 scripts/descent-baselines.py "${cpus[@]}" --machine "$MACHINE" \
+            --cc gcc --rustc rustc --c-version "$GCC_VERSION" \
+            --rust-version 'rustc 1.99.1 (58cf8f9c3 2026-10-13)' \
+            --source "$GITHUB_SHA" --processors 4 --output peer-host.json
+      - name: Check the comparison schedule and exact result controls
+        run: python3 scripts/test-borrowed-array-costs.py
+      - name: Compare the saved fwp computation with C and Rust
+        run: >-
+          python3 scripts/measure-loop-array-peers.py --run "$EVIDENCE_RUN"
+          --source "$EVIDENCE_SOURCE" --cc gcc --rustc rustc --output array-peers
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: array-peers-${{ runner.arch }}
+          path: |
+            array-peers/
+            peer-host.json
+          if-no-files-found: error
   audit:
     if: inputs.mode == 'array-metadata' || inputs.mode == 'fresh-array'
     runs-on: ubuntu-latest
@@ -25,6 +71,8 @@ jobs:
       TRANSFORMATION: ${{ inputs.mode }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
       - name: Audit complete focused logs, target results and native images
         run: |
           [[ "$SAFETY_RUN" =~ ^[0-9]+$ ]]

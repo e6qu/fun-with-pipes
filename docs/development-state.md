@@ -1,11 +1,18 @@
 # Current work
 
-**Next:** dispatch `numerics.yml` suite `fresh-array` with safety run `42438693432`.
-Its first job audits every focused target and the selection diagnostic, then measures the
+**Next:** repair the audit checkout and redispatch `numerics.yml` suite `fresh-array`
+with safety run `42438693432`. Its first job audits every focused target and the selection diagnostic, then measures the
 production implementation against its isolated reference. Continue the docs in
 the same normal PR. The metadata
 candidate has been removed; the replacement is **not performance-accepted**.
 No PR is open yet.
+
+Run `42439586418` at `a0c6fb084` stopped before timings: the new diagnostic audit
+needs historical Git source, but its job used a shallow checkout. Fix is explicit
+`fetch-depth: 0`; no source validation is removed. The preceding complete safety
+audit passes all eight targets per host: 348/348/342 native images and 372 probe
+statuses each on ARM64 GCC/AMD64 GCC/Clang. Preserve these results; do not rerun
+the native tests for a checkout-only repair.
 
 Implementation head: `f21bf1390` (fresh F64 stores). Focused jobs are AMD64 GCC
 `128603076444`, ARM64 GCC `128603076704`, and Clang ARM64 `128603076570`.
