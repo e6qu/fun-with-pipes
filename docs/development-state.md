@@ -1,68 +1,77 @@
 # Current work
 
-**Next:** verify the captured-scalar array-map extension on production runners,
-measure sensor/pixel workloads against an isolated same-source reference, and
-bundle the implementation, cleanup controls and docs in one normal PR.
-[The contract](measurements/captured-array-maps.md) fixes selection and acceptance.
-No performance claim is made for this extension yet.
+**Next:** finish native verification of captured-scalar array maps, then run the
+frozen sensor/pixel comparison and bundle implementation, evidence and docs in
+one normal PR. [The contract](measurements/captured-array-maps.md) defines safety,
+inputs, schedule and acceptance. No performance claim is made yet.
 
 ## Workspace
 
 Branch `captured-array-map-reuse`, worktree `.worktrees/recording-capacity-gate`.
-Base `f87796b52081889b96859dbd72bf4af9a6726207` is merged PR #270. The root
-worktree has unrelated changes; preserve it. No new PR is open yet.
+Base `f87796b52081889b96859dbd72bf4af9a6726207` is merged PR #270. Preserve unrelated
+root-worktree changes. No new PR is open yet.
 
 ## Roadmap status
 
-| Step | Status | Evidence and remaining work |
+| Step | Status | Remaining work |
 |---|---|---|
-| 1 | In progress | #270 delivered docs/tutorial refresh and fresh F64 stores. Both ARM64 sessions improve 26–31%; original AMD64 timing acceptance stays open. |
-| 2 | In progress | Extend consuming maps to plain scalar captures; sensor calibration and pixel adjustment. Implementation, native cleanup proof and measurements are pending. |
-| 3 | Pending | Structured differentiation across three objective families, preserving general reverse AD, nesting and precision. |
-| 4 | Pending | Current Swift/C/Rust ownership comparisons, with phase timing and explicit memory boundaries. |
-| 5 | Pending | Three end-to-end application/tooling paths and compiler phase/scaling costs; demonstrated usability repairs. |
+| 1 | In progress | #270 delivered fresh F64 stores and refreshed docs/tutorials. ARM64 improves 26–31%; original AMD64 timing acceptance stays open. |
+| 2 | In progress | Captured-scalar map selection/cleanup and controls implemented; native verification, measurements and delivery pending. |
+| 3 | Pending | Structured differentiation across three objective families; preserve general AD, nesting and precision. |
+| 4 | Pending | Current Swift/C/Rust ownership comparisons, phase timings and explicit memory boundaries. |
+| 5 | Pending | Three application/tooling paths; compiler phase/scaling costs and demonstrated usability repairs. |
 
-## PR #270 delivery and audit repair
+## Verified previous delivery
 
-Tested source `e8226a4229f0726c4aafac65a0e52d751be3e3b5` and merged source
-`f87796b52081889b96859dbd72bf4af9a6726207` share tree
-`dc4282cdc34cbe7d9c13cecec0d55f3a037088c8`. The merge message is one line,
-under 80 characters, with no trailers. The user merged the candidate; retain its
-ARM64 improvement and keep the unmet AMD64 targets explicit.
+[PR #270's delivery record](measurements/fresh-array-delivery-2026-11-08/README.md)
+retains tested/merged tree identity, all nine production jobs, docs and the passing
+complete audit. Production `42445576778`; docs `42445576736`; complete audit
+`42466806957`, job `128688101490`, at auditor source
+`416ba52854ce8926460fe2c08762f8401152a398`.
 
-All nine jobs pass in production `42445576778`. Docs `42445576736`, job
-`128623674414`, passes all 384 Markdown link sets, 106 preparation identities,
-five roadmap rows, tutorial copies and retained historical reports.
-The preceding formatting/generator failures were repaired; cancelled earlier
-logs contain no additional failed native targets.
+The first audit flagged a recovered Intel macOS checkout timeout. The repair
+requires a successful identical-command, exact-source retry and retains both
+diagnostics. Ten negative/positive controls and actual-log replay pass. The
+passing artifact `13612140976` has verified SHA-256
+`c822dbbbc30e1f5c721dbe90c1e6610f5087530405d73db314fc1b871fb76a75`.
 
-Complete audit `42466048122`, job `128685699134`, verifies every target but flags
-two checkout transport diagnostics in the otherwise passing Intel macOS job.
-The first fetch timed out; checkout's existing retry fetched the exact same
-commit and checkout/tests succeeded. Artifact `13611562384`, SHA-256
-`46958156ee43342f160dfb7caf6d2b964039205689036f7c92a8a118adc5261e`, retains all
-logs and both findings. Local copy: `/tmp/fwp-270-complete-audit.zip`.
-
-The audit repair recognizes only this proved same-command, exact-source retry
-inside a successful checkout step; it retains both diagnostics separately.
-Wrong-source retries, failed jobs/steps, extra diagnostics and out-of-step errors
-are rejected. All ten guarded audit controls pass. Replay the full retained run
-on a runner using the corrected auditor before claiming the complete audit passes.
+Keep [original timing misses](measurements/fresh-array-costs-2026-11-08/README.md)
+and the [C/Rust comparison limits](measurements/loop-array-peers-2026-11-08/README.md).
+CPU pinning did not resolve AMD64 variation; do not repeat unchanged timings to
+obtain a pass or treat the user's merge as completing milestone 1.
 
 ## Current implementation and checks
 
-Extend `cgen/owned_numeric.rs` selection and argument rewriting, preserve capture
-evaluation order, and pass scalar captures into the existing consuming worker.
-Only the final array parameter is consumed. Keep the input/output cleanup and
-runtime uniqueness/view checks. No public API or tracing collector changes.
+The map proof now accepts known partial callbacks whose saved arguments are plain
+scalars. A private entry receives captures, then the consumed array. Existing
+liveness, uniqueness/view checks and protected cleanup remain. No API change.
 
-Next verification must cover IR liveness/arity, raw interpreter/native parity,
-physical frees, aliases/slices, capture effects, callback failure/cancellation,
-packing and narrow numeric limits. Use existing native targets and one final
-production matrix after the whole batch is ready. Full builds and measurements
-stay on GitHub; focused local checks use `scripts/local-guard.py`.
+Controls cover capture arity/order, excluded representations, bounded analysis,
+raw/optimized/native values and effects, shared inputs/views, failures,
+cancellation, reuse disabled and deliberately broken cleanup. Added checks cover
+F32/F64 payload preservation and computed captures. The benchmark compares an
+isolated same-source reference disabling only captured-map selection; closed maps
+remain optimized in both. All 48 cases retain exact-result/alias checks, paired
+copy timings and separate memory/compiler observations.
 
-The original #270 [timing/memory report](measurements/fresh-array-costs-2026-11-08/README.md)
-and [C/Rust comparison](measurements/loop-array-peers-2026-11-08/README.md) retain
-all misses. CPU pinning did not resolve the AMD64 copy variation. Do not repeat
-unchanged timings or silently mark milestone 1 complete.
+Initial focused run `42466992494`, source
+`199d91993bd88211ab96dc1369ae07cc507c4a4a`, has three queued jobs: AMD GCC
+`128688683821`, ARM GCC `128688684055`, macOS ARM Clang `128688684124`.
+It predates the added float/scaling controls; replace this unstarted run with the
+complete batch. Do not measure until the three current-source jobs and complete
+focused audit pass. Final delivery still needs all nine production jobs and docs.
+
+Guarded local checks so far:
+
+- `python3 scripts/test-captured-map-costs.py`: 4 controls pass.
+- `python3 scripts/test-borrowed-array-costs.py`: 14 controls pass.
+- `python3 scripts/check-measurement-clocks.py --cc clang`: 64 O1/O2 executions
+  pass for 8 helpers; GCC verification remains in CI.
+- Isolated unchanged production parser/formatter: both native fixtures and both
+  measurement programs parse, preserve their AST and format idempotently.
+- `cargo fmt --all -- --check`: passes after wrapping the new diagnostic.
+- Prior audit controls: 10 pass; recovered real checkout log replay passes.
+
+All commands run through `python3 scripts/local-guard.py`. Free disk recovered
+from below 64 GiB to about 83 GiB; small guarded checks resumed. Full builds,
+native suites, benchmarks and large evidence generation remain on runners.

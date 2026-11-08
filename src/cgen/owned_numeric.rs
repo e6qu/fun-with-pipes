@@ -725,26 +725,54 @@ mod tests {
 
     #[test]
     fn many_calls_share_one_entry_with_linear_visits() {
-        for count in [1, 8, 128] {
-            let mut program = example(None);
-            let array = program.funcs[0].locals[0].clone();
-            program.funcs[0].locals = vec![array; count + 1];
-            let mut body = Expr::Local(count as Local);
-            for input in (0..count).rev() {
-                body = Expr::Let(
-                    input as Local + 1,
-                    Box::new(Expr::Call(
-                        2,
-                        vec![Expr::Func(1), Expr::Local(input as Local)],
-                    )),
-                    Box::new(body),
+        for captures in [0, 2, 8] {
+            for count in [1, 8, 128] {
+                let mut program = example(None);
+                let number = MT::con("std::F64");
+                let array = program.funcs[0].locals[0].clone();
+                program.funcs[1] = function(
+                    "step",
+                    vec![number.clone(); captures + 1],
+                    number.clone(),
+                    Body::Expr(Expr::Local(captures as Local)),
                 );
+                let mut parameters = vec![number; captures];
+                parameters.push(array.clone());
+                program.funcs[0] = function(
+                    "entry",
+                    parameters,
+                    array.clone(),
+                    Body::Expr(Expr::Local(0)),
+                );
+                program.funcs[0].locals.extend(vec![array; count]);
+                let mapped = if captures == 0 {
+                    Expr::Func(1)
+                } else {
+                    Expr::Call(1, (0..captures).map(|i| Expr::Local(i as Local)).collect())
+                };
+                let mut body = Expr::Local((captures + count) as Local);
+                for input in (captures..captures + count).rev() {
+                    body = Expr::Let(
+                        input as Local + 1,
+                        Box::new(Expr::Call(
+                            2,
+                            vec![mapped.clone(), Expr::Local(input as Local)],
+                        )),
+                        Box::new(body),
+                    );
+                }
+                program.funcs[0].body = Body::Expr(body);
+                let visits = lower(&mut program);
+                println!(
+                    "captured-map analysis: {count} maps, {captures} captures, {visits} visits"
+                );
+                assert_eq!(program.funcs.len(), 4);
+                assert!(
+                    visits <= (8 + 2 * captures) * count + 3,
+                    "{visits} visits for {count} maps with {captures} captures"
+                );
+                verify_ownership(&program);
             }
-            program.funcs[0].body = Body::Expr(body);
-            let visits = lower(&mut program);
-            assert_eq!(program.funcs.len(), 4);
-            assert!(visits <= 8 * count + 3, "{visits} visits for {count} maps");
-            verify_ownership(&program);
         }
     }
 }

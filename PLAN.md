@@ -54,8 +54,7 @@ performance milestone. Working-memory gains and runtime tradeoffs must be explic
 ## Active implementation: captured scalar array maps
 
 PR #270 delivered the documentation refresh and fresh F64 output stores. All nine
-production jobs and docs passed; its complete audit is being reconciled with a
-recovered checkout timeout. The original AMD64 timing acceptance stays open.
+production jobs, docs and the [complete audit](docs/measurements/fresh-array-delivery-2026-11-08/README.md) passed. The original AMD64 timing acceptance stays open.
 The user's merge retains the improvement without declaring that target met.
 
 The next substantial PR extends the existing consuming-map proof to callbacks

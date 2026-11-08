@@ -97,7 +97,7 @@ jobs:
             peer-host.json
           if-no-files-found: error
   audit:
-    if: inputs.mode == 'array-metadata' || inputs.mode == 'fresh-array'
+    if: inputs.mode == 'array-metadata' || inputs.mode == 'fresh-array' || inputs.mode == 'captured-maps'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
@@ -113,6 +113,7 @@ jobs:
           [[ "$SAFETY_RUN" =~ ^[0-9]+$ ]]
           python3 scripts/test-production-log-audit.py
           python3 scripts/test-borrowed-array-costs.py
+          python3 scripts/test-captured-map-costs.py
           safety_source=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SAFETY_RUN" --jq .head_sha)
           python3 scripts/audit-focused-storage.py --group "$TRANSFORMATION" \
             --run "$SAFETY_RUN" --source "$safety_source" --attempt 1 --output array-audit
@@ -135,7 +136,7 @@ jobs:
             builder-audit/summary.json
           if-no-files-found: error
   measure:
-    if: inputs.mode == 'array-metadata' || inputs.mode == 'fresh-array'
+    if: inputs.mode == 'array-metadata' || inputs.mode == 'fresh-array' || inputs.mode == 'captured-maps'
     needs: audit
     strategy:
       fail-fast: false
@@ -178,9 +179,10 @@ jobs:
           selected = [job for job in jobs if job['name'] in expected]
           assert len(selected) == 3 and {job['name'] for job in selected} == expected
           assert all(job['conclusion'] == 'success' and job['head_sha'] == run['head_sha'] for job in selected)
-          subprocess.run(['git', 'diff', '--exit-code', run['head_sha'], 'HEAD', '--', 'src', 'runtime', 'lib', 'vendor', 'tests/array_element_ownership.rs', 'tests/support', 'build.rs', 'Cargo.toml', 'Cargo.lock'], check=True)
+          subprocess.run(['git', 'diff', '--exit-code', run['head_sha'], 'HEAD', '--', 'src', 'runtime', 'lib', 'vendor', 'tests', ':!tests/fixtures/captured_map_timing.c', 'build.rs', 'Cargo.toml', 'Cargo.lock'], check=True)
           PY
           python3 scripts/test-borrowed-array-costs.py
+          python3 scripts/test-captured-map-costs.py
       - name: Qualify the native measurement host
         env:
           MACHINE: ${{ runner.arch == 'ARM64' && 'aarch64' || 'x86_64' }}
@@ -205,6 +207,7 @@ jobs:
           git -C "$reference_checkout" diff HEAD > array-reference/built.patch
           cmp array-reference/reference.patch array-reference/built.patch
       - name: Measure computation separately from input and result lifetime
+        if: inputs.mode != 'captured-maps'
         run: >-
           python3 scripts/measure-borrowed-arrays.py
           --compiler target/debug/fwp --reference array-reference/fwp
@@ -212,6 +215,22 @@ jobs:
           --transformation "$TRANSFORMATION"
           --cc gcc --c-arch ${{ runner.arch == 'ARM64' && 'armv8-a' || 'x86-64' }}
           --session ${{ matrix.session }} --output array-costs
+      - name: Measure captured callback applications and separate memory costs
+        if: inputs.mode == 'captured-maps'
+        run: >-
+          python3 scripts/measure-captured-maps.py
+          --compiler target/debug/fwp --reference array-reference/fwp
+          --reference-manifest array-reference/manifest.json --host array-safety/host.json
+          --cc gcc --time /usr/bin/time
+          --c-arch ${{ runner.arch == 'ARM64' && 'armv8-a' || 'x86-64' }}
+          --session ${{ matrix.session }} --output array-costs
+      - name: Reconstruct every captured-map observation
+        if: inputs.mode == 'captured-maps'
+        run: >-
+          python3 scripts/audit-captured-maps.py --directory array-costs
+          --reference array-reference --source "$GITHUB_SHA"
+          --machine ${{ runner.arch == 'ARM64' && 'aarch64' || 'x86_64' }}
+          --session ${{ matrix.session }} --output array-costs/audit.json
       - name: Observe memory and compiler costs separately from timings
         if: inputs.mode == 'fresh-array' && matrix.session == 1
         run: >-
@@ -246,6 +265,7 @@ jobs:
       - name: Audit original computation observations and reference isolation
         run: |
           python3 scripts/test-borrowed-array-costs.py
+          python3 scripts/test-captured-map-costs.py
           python3 scripts/audit-borrowed-arrays.py --run "$EVIDENCE_RUN" --source "$EVIDENCE_SOURCE" --output metadata-review
       - uses: actions/upload-artifact@v7
         if: always()

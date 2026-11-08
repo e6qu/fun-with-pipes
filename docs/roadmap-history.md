@@ -11,6 +11,15 @@ records. This index explains what changed and which claims remain unproved.
 Historical milestone codes refer to their original contracts, not current tasks.
 [The current five milestones](../PLAN.md#milestones) supersede those old queues.
 
+## Fresh F64 stores and roadmap refresh (PR #270)
+
+[PR #270](https://github.com/e6qu/fun-with-pipes/pull/270) removes redundant checks
+from newly allocated F64 output stores and refreshes the roadmap, documentation
+and 24 tutorials. [All delivery gates pass](measurements/fresh-array-delivery-2026-11-08/README.md).
+Large-array computation takes 26–31% less time on ARM64; allocations and peak
+managed storage are unchanged. [AMD64 timing acceptance remains open](measurements/fresh-array-costs-2026-11-08/README.md).
+The merge does not complete milestone 1.
+
 ## Computed numeric inputs (PR #269)
 
 [PR #269](https://github.com/e6qu/fun-with-pipes/pull/269) passes computed numeric

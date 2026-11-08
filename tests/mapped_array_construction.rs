@@ -27,6 +27,17 @@ main = adjust (coefficient 2) (coefficient 3) (input ()) | array.to-list | echo
             0,
         ),
         (
+            "computed-capture",
+            r#"
+coefficient : I64 -> I64 ! {IO}
+coefficient = tap echo
+export adjust : I64 -> Array[I64] -> Array[I64] ! {IO}
+adjust = fn offset -> fn values -> array.map (add (coefficient offset)) values
+main = array.from-list [1, 2] | adjust 3 | array.to-list | echo
+"#,
+            0,
+        ),
+        (
             "trap",
             r#"
 step : I8 -> I8 ! {IO}
@@ -53,6 +64,8 @@ main = array.from-list [1i8, 127i8, 2i8] | mapped | array.to-list | echo
         );
         if label == "trap" {
             assert_eq!(reference.stdout, b"1\n127\n");
+        } else if label == "computed-capture" {
+            assert_eq!(reference.stdout, b"3\n[4, 5]\n");
         } else if label == "capture-order" {
             assert_eq!(reference.stdout, b"2\n3\n30\n1\n2\n[5, 7]\n");
         } else {

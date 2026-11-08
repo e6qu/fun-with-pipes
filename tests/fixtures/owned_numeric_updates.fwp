@@ -32,6 +32,17 @@ mapped32 = array.map keep32
 export mapped64 : Array[F64] -> Array[F64] ! {Async}
 mapped64 = array.map keep64
 
+export captured32 : F32 -> Array[F32] -> Array[F32] ! {Async}
+captured32 = fn replacement -> array.map (fn value ->
+    let ready = task.yield () in replacement == 0.0f32 | match
+        True -> value
+        False -> replacement)
+export captured64 : F64 -> Array[F64] -> Array[F64] ! {Async}
+captured64 = fn replacement -> array.map (fn value ->
+    let ready = task.yield () in replacement == 0.0 | match
+        True -> value
+        False -> replacement)
+
 export update-left : Array[I64] -> List[I64] -> List[I64] ! {Async}
 update-left = fn values -> fn coordinates ->
     zip-with subtract-left (array.to-list values) coordinates

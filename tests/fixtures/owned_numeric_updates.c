@@ -88,6 +88,7 @@ int main(void) {
         UINT32_C(0xffc00042), UINT32_C(0x7f800042), UINT32_C(0x3f800000)};
     const V bits64[] = {0, UINT64_C(0x8000000000000000), 1, UINT64_C(0x7ff0000000000000),
         UINT64_C(0xfff8000000000042), UINT64_C(0x7ff0000000000042), UINT64_C(0x3ff0000000000000)};
+    for (int captured = 0; captured < 3; captured++)
     for (int wide = 0; wide < 2; wide++) for (int sharing = 0; sharing < 2; sharing++) {
         size_t live = owner_ledger_live, baseline = fwp_heap.live;
         const fwp_desc scalar = {.kind = wide ? K_F64 : K_F32};
@@ -97,11 +98,14 @@ int main(void) {
         if (sharing) fwp_rc_dup(input);
         numeric_mode = numeric_calls = numeric_fail_after = 0;
         size_t allocations = owner_ledger_allocations;
-        V output = wide ? MAP64_ENTRY(input) : MAP32_ENTRY(input);
+        V replacement = captured == 2 ? bits[4] : 0;
+        V output = captured
+            ? (wide ? CAP64_ENTRY(replacement, input) : CAP32_ENTRY(replacement, input))
+            : (wide ? MAP64_ENTRY(input) : MAP32_ENTRY(input));
         if (numeric_calls != 7 || fwp_array_len(output) != 7) return 244;
         if (owner_ledger_allocations - allocations != (size_t)(sharing || !reuse_enabled)) return 243;
         for (int i = 0; i < 7; i++) {
-            if (fwp_array_load(output, i, &scalar) != bits[i]) return 241;
+            if (fwp_array_load(output, i, &scalar) != (captured == 2 ? replacement : bits[i])) return 241;
             if (sharing && fwp_array_load(input, i, &scalar) != bits[i]) return 247;
         }
         if (wide) { DROP_F64_ARRAY(output); if (sharing) DROP_F64_ARRAY(input); }

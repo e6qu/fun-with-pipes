@@ -138,6 +138,14 @@ fn consumed_numeric_owners_survive_sharing_traps_and_allocation_failure() {
             &format!("f{}", function_id(&emitted, "mapped64")),
         )
         .replace(
+            "CAP32_ENTRY",
+            &format!("f{}", function_id(&emitted, "captured32")),
+        )
+        .replace(
+            "CAP64_ENTRY",
+            &format!("f{}", function_id(&emitted, "captured64")),
+        )
+        .replace(
             "LEFT_ENTRY",
             &format!("f{}", function_id(&emitted, "update-left")),
         )

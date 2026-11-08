@@ -415,12 +415,12 @@ whole-solve memory requirements.
 
 ### Consuming numeric storage
 
-The current fresh-output candidate specializes known F64 `array.generate` results.
+Fresh-output generation specializes known F64 `array.generate` results.
 The array is newly allocated, so stores need no view check; F64 elements need no
 destructor, so partial cleanup needs no initialized-element counter. The existing
 cleanup scope still frees the allocation on failure or cancellation. Other element
 types keep their existing stores. The [selection and measurements](measurements/shared-loop-array-costs.md#selected-production-scope)
-are not yet final performance acceptance.
+retain the unresolved timing targets; [platform delivery passes](measurements/fresh-array-delivery-2026-11-08/README.md).
 
 **[Focused native verification](measurements/owned-numeric-checks-2026-11-05/README.md)
 and the [exact allocation census](measurements/owned-numeric-census-2026-11-05/README.md)
@@ -429,6 +429,13 @@ pass. [Compiler costs pass](measurements/owned-numeric-analysis-2026-11-05/READM
 with four AMD64 speed targets open. [Final platform delivery is verified](roadmap-history.md#consumed-numeric-storage-pr-258).**
 For a dead array input, a private same-type scalar map can take its owner and
 overwrite exclusive storage. A shared array or view receives independent output.
+The current extension also admits known callbacks with plain scalar captures,
+for example `array.map (add offset)` when `offset` is supplied at runtime. It
+passes the saved numbers directly and consumes only the final array argument.
+Capture expressions still run once, in order, before mapping starts. Reference
+captures, unknown callbacks and wide scalars remain excluded. [The contract](measurements/captured-array-maps.md)
+records the pending native verification and runtime/memory measurements.
+
 For an array/list zip, a private entry can consume the list and reuse only its
 exclusive prefix. Encountering one shared node excludes its entire suffix from
 reuse, including descendants whose own reference counts are one.
