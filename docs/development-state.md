@@ -54,12 +54,19 @@ isolated same-source reference disabling only captured-map selection; closed map
 remain optimized in both. All 48 cases retain exact-result/alias checks, paired
 copy timings and separate memory/compiler observations.
 
-Initial focused run `42466992494`, source
-`199d91993bd88211ab96dc1369ae07cc507c4a4a`, has three queued jobs: AMD GCC
-`128688683821`, ARM GCC `128688684055`, macOS ARM Clang `128688684124`.
-It predates the added float/scaling controls; replace this unstarted run with the
-complete batch. Do not measure until the three current-source jobs and complete
-focused audit pass. Final delivery still needs all nine production jobs and docs.
+Focused run `42468684378` and docs `42468686384` test source
+`b41752cac9ff12148bbd4bbf0b3cfa2efe913f5e`. Native jobs: AMD GCC `128694090277`,
+ARM GCC `128694090574`, macOS ARM Clang `128694090623`; docs job `128694094171`.
+All were queued at the last poll. The superseded run `42466992494` was cancelled:
+its Mac runner had only reached dependency fetching, and neither Linux job
+started. No native target results were discarded.
+
+Do not measure until these three native jobs and their complete focused audit
+pass. Dispatch `numerics.yml`, suite `captured-maps`, evidence run `42468684378`;
+the workflow audits it before scheduling the two sessions on each architecture.
+It rejects changes to compiler/runtime/library/native tests since the checked
+source. Final delivery still needs all nine production jobs and docs on the
+exact final PR head. No PR is open yet.
 
 Guarded local checks so far:
 
@@ -70,6 +77,8 @@ Guarded local checks so far:
 - Isolated unchanged production parser/formatter: both native fixtures and both
   measurement programs parse, preserve their AST and format idempotently.
 - `cargo fmt --all -- --check`: passes after wrapping the new diagnostic.
+- Workflow YAML parsing and 386 Markdown link sets/five roadmap rows pass;
+  the link check used the Git index for intentionally sparse historical files.
 - Prior audit controls: 10 pass; recovered real checkout log replay passes.
 
 All commands run through `python3 scripts/local-guard.py`. Free disk recovered
