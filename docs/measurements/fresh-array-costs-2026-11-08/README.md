@@ -18,7 +18,7 @@ Percent change is `(candidate / reference - 1) × 100`: negative means less time
 `*` means a failed identical-copy control; that number is **inconclusive**.
 Construction and final-result release are outside this timer; consumed inputs
 and intermediates are released inside it. Whole-process results remain in the
-[complete report](summary.json), separately qualified.
+[complete report](summary.json.gz), separately qualified.
 
 | Input | ARM1 N2 | ARM2 N2 | AMD1 9V45 | AMD2 7763 |
 |---|---:|---:|---:|---:|

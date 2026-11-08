@@ -1,0 +1,281 @@
+{
+  "source": "c35f211a93715c099ec4c9a4e181f47b77a43220",
+  "measuredSource": "066175c3ad47cf8d226a1dc2b16fba55eba71b7d",
+  "originalArtifact": {
+    "id": 13601818184,
+    "node_id": "MDg6QXJ0aWZhY3QxMzYwMTgxODE4NA==",
+    "name": "borrowed-array-costs-X64-2",
+    "size_in_bytes": 16782982,
+    "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13601818184",
+    "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13601818184/zip",
+    "expired": false,
+    "digest": "sha256:effa248ed56831502473aa84327960e871a14a7a01eccb563968e90c84547ad1",
+    "created_at": "2026-11-08T03:14:34Z",
+    "updated_at": "2026-11-08T03:14:34Z",
+    "expires_at": "2027-02-06T02:49:09Z",
+    "workflow_run": {
+      "id": 42440117133,
+      "repository_id": 1400763332,
+      "head_repository_id": 1400763332,
+      "head_branch": "performance-roadmap-review",
+      "head_sha": "066175c3ad47cf8d226a1dc2b16fba55eba71b7d"
+    }
+  },
+  "cpu": "processor\t: 0\nvendor_id\t: AuthenticAMD\ncpu family\t: 26\nmodel\t\t: 2\nmodel name\t: AMD EPYC 9V45 96-Core Processor\nstepping\t: 1\nmicrocode\t: 0xffffffff\ncpu MHz\t\t: 4242.181\ncache size\t: 1024 KB\nphysical id\t: 0\nsiblings\t: 4\ncore id\t\t: 0\ncpu cores\t: 2\napicid\t\t: 0\ninitial apicid\t: 0\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 28\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves user_shstk avx_vnni avx512_bf16 clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm avx512_vp2intersect\nbugs\t\t: sysret_ss_attrs null_seg spectre_v1 spectre_v2 spec_store_bypass srso spectre_v2_user\nbogomips\t: 5192.20\nTLB size\t: 192 4K pages\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 48 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 1\nvendor_id\t: AuthenticAMD\ncpu family\t: 26\nmodel\t\t: 2\nmodel name\t: AMD EPYC 9V45 96-Core Processor\nstepping\t: 1\nmicrocode\t: 0xffffffff\ncpu MHz\t\t: 4296.679\ncache size\t: 1024 KB\nphysical id\t: 0\nsiblings\t: 4\ncore id\t\t: 0\ncpu cores\t: 2\napicid\t\t: 1\ninitial apicid\t: 1\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 28\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves user_shstk avx_vnni avx512_bf16 clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm avx512_vp2intersect\nbugs\t\t: sysret_ss_attrs null_seg spectre_v1 spectre_v2 spec_store_bypass srso spectre_v2_user\nbogomips\t: 5192.20\nTLB size\t: 192 4K pages\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 48 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 2\nvendor_id\t: AuthenticAMD\ncpu family\t: 26\nmodel\t\t: 2\nmodel name\t: AMD EPYC 9V45 96-Core Processor\nstepping\t: 1\nmicrocode\t: 0xffffffff\ncpu MHz\t\t: 4265.592\ncache size\t: 1024 KB\nphysical id\t: 0\nsiblings\t: 4\ncore id\t\t: 1\ncpu cores\t: 2\napicid\t\t: 2\ninitial apicid\t: 2\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 28\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves user_shstk avx_vnni avx512_bf16 clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm avx512_vp2intersect\nbugs\t\t: sysret_ss_attrs null_seg spectre_v1 spectre_v2 spec_store_bypass srso spectre_v2_user\nbogomips\t: 5192.20\nTLB size\t: 192 4K pages\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 48 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 3\nvendor_id\t: AuthenticAMD\ncpu family\t: 26\nmodel\t\t: 2\nmodel name\t: AMD EPYC 9V45 96-Core Processor\nstepping\t: 1\nmicrocode\t: 0xffffffff\ncpu MHz\t\t: 4269.630\ncache size\t: 1024 KB\nphysical id\t: 0\nsiblings\t: 4\ncore id\t\t: 1\ncpu cores\t: 2\napicid\t\t: 3\ninitial apicid\t: 3\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 28\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves user_shstk avx_vnni avx512_bf16 clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm avx512_vp2intersect\nbugs\t\t: sysret_ss_attrs null_seg spectre_v1 spectre_v2 spec_store_bypass srso spectre_v2_user\nbogomips\t: 5192.20\nTLB size\t: 192 4K pages\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 48 bits physical, 48 bits virtual\npower management:\n\n",
+  "processors": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "placements": {
+    "all": "0,1,2,3",
+    "one": "0"
+  },
+  "cases": {
+    "loop-100000000": {
+      "medians": {
+        "constructionNs": {
+          "all": 20.0,
+          "one": 20.0,
+          "all-copy": 20.0,
+          "one-copy": 20.0
+        },
+        "computationNs": {
+          "all": 77478075.0,
+          "one": 77670093.0,
+          "all-copy": 77659802.0,
+          "one-copy": 77465900.5
+        },
+        "releaseNs": {
+          "all": 20.0,
+          "one": 20.0,
+          "all-copy": 20.0,
+          "one-copy": 20.0
+        },
+        "loopNs": {
+          "all": 77478626.0,
+          "one": 77670583.5,
+          "all-copy": 77660242.0,
+          "one-copy": 77466236.0
+        },
+        "processNs": {
+          "all": 79631745.0,
+          "one": 79863708.0,
+          "all-copy": 79886538.5,
+          "one-copy": 79791958.0
+        }
+      },
+      "copyRatios": {
+        "constructionNs": {
+          "all": 1.0,
+          "one": 1.0
+        },
+        "computationNs": {
+          "all": 1.0023455280735873,
+          "one": 1.0026359017152326
+        },
+        "releaseNs": {
+          "all": 1.0,
+          "one": 1.0
+        },
+        "loopNs": {
+          "all": 1.0023440787398579,
+          "one": 1.0026378911710645
+        },
+        "processNs": {
+          "all": 1.003199647326578,
+          "one": 1.0008992134269972
+        }
+      },
+      "computationQualified": {
+        "all": true,
+        "one": true
+      },
+      "binarySha256": "74f4215550e78afd75219500a524f9ccb4afa41c34288a6865a13a3dc6d6edd0"
+    },
+    "manual-3-0": {
+      "medians": {
+        "constructionNs": {
+          "all": 120661.0,
+          "one": 122076.5,
+          "all-copy": 139081.5,
+          "one-copy": 123686.5
+        },
+        "computationNs": {
+          "all": 85130.5,
+          "one": 87228.0,
+          "all-copy": 88415.0,
+          "one-copy": 88445.5
+        },
+        "releaseNs": {
+          "all": 94085.0,
+          "one": 95195.0,
+          "all-copy": 97554.0,
+          "one-copy": 98537.0
+        },
+        "loopNs": {
+          "all": 573250.5,
+          "one": 578948.5,
+          "all-copy": 611973.0,
+          "one-copy": 578789.0
+        },
+        "processNs": {
+          "all": 2286255.5,
+          "one": 2346643.5,
+          "all-copy": 2397611.0,
+          "one-copy": 2370915.0
+        }
+      },
+      "copyRatios": {
+        "constructionNs": {
+          "all": 1.1526632466165538,
+          "one": 1.0131884515037701
+        },
+        "computationNs": {
+          "all": 1.0385819418422304,
+          "one": 1.0139576741413308
+        },
+        "releaseNs": {
+          "all": 1.0368709145985013,
+          "one": 1.0351068858658543
+        },
+        "loopNs": {
+          "all": 1.0675490034461375,
+          "one": 1.0002755753823933
+        },
+        "processNs": {
+          "all": 1.0487064984644106,
+          "one": 1.010343070858441
+        }
+      },
+      "computationQualified": {
+        "all": false,
+        "one": true
+      },
+      "binarySha256": "f801fbc20fc86ac08b11382a65e62106f12823afc3751ce905069d65dec9f33a"
+    },
+    "array-65537": {
+      "medians": {
+        "constructionNs": {
+          "all": 561723.5,
+          "one": 514005.5,
+          "all-copy": 550800.5,
+          "one-copy": 514400.0
+        },
+        "computationNs": {
+          "all": 1487466.5,
+          "one": 1301358.5,
+          "all-copy": 1432078.0,
+          "one-copy": 1268127.5
+        },
+        "releaseNs": {
+          "all": 360.0,
+          "one": 350.0,
+          "all-copy": 360.0,
+          "one-copy": 340.5
+        },
+        "loopNs": {
+          "all": 2076921.5,
+          "one": 1825169.0,
+          "all-copy": 2038198.5,
+          "one-copy": 1780537.0
+        },
+        "processNs": {
+          "all": 3994303.5,
+          "one": 4001549.0,
+          "all-copy": 4039609.5,
+          "one-copy": 4031914.5
+        }
+      },
+      "copyRatios": {
+        "constructionNs": {
+          "all": 1.0198311366819748,
+          "one": 1.0007675015150617
+        },
+        "computationNs": {
+          "all": 1.0386770134029013,
+          "one": 1.0262047783050205
+        },
+        "releaseNs": {
+          "all": 1.0,
+          "one": 1.0279001468428781
+        },
+        "loopNs": {
+          "all": 1.0189986402207636,
+          "one": 1.025066595077777
+        },
+        "processNs": {
+          "all": 1.0113426533562109,
+          "one": 1.0075884363780125
+        }
+      },
+      "computationQualified": {
+        "all": false,
+        "one": false
+      },
+      "binarySha256": "64f9ed563c3afe584712757497f95cca326b6914a97675af5da2f2259d4069db"
+    },
+    "array-262145": {
+      "medians": {
+        "constructionNs": {
+          "all": 1053341.5,
+          "one": 1026811.0,
+          "all-copy": 1102294.0,
+          "one-copy": 977411.0
+        },
+        "computationNs": {
+          "all": 1968093.0,
+          "one": 1899235.0,
+          "all-copy": 2098093.0,
+          "one-copy": 1794718.5
+        },
+        "releaseNs": {
+          "all": 90.0,
+          "one": 90.0,
+          "all-copy": 90.0,
+          "one-copy": 90.0
+        },
+        "loopNs": {
+          "all": 3022074.5,
+          "one": 2928990.5,
+          "all-copy": 3212520.5,
+          "one-copy": 2749966.0
+        },
+        "processNs": {
+          "all": 5341089.0,
+          "one": 5257196.0,
+          "all-copy": 5515203.0,
+          "one-copy": 5130262.5
+        }
+      },
+      "copyRatios": {
+        "constructionNs": {
+          "all": 1.0464735320881215,
+          "one": 1.0505416861484063
+        },
+        "computationNs": {
+          "all": 1.0660537891248025,
+          "one": 1.058235595164367
+        },
+        "releaseNs": {
+          "all": 1.0,
+          "one": 1.0
+        },
+        "loopNs": {
+          "all": 1.0630183008393737,
+          "one": 1.0651006230622488
+        },
+        "processNs": {
+          "all": 1.0325989699853344,
+          "one": 1.0247421062762383
+        }
+      },
+      "computationQualified": {
+        "all": false,
+        "one": false
+      },
+      "binarySha256": "caa8d9a3813a5418de9dde57d0338ee30104638b133e4aef7e5309e61649ccb3"
+    }
+  }
+}

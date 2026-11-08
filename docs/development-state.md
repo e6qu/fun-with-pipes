@@ -1,141 +1,113 @@
 # Current work
 
-**Next:** dispatch the repaired `array-affinity` diagnostic on saved AMD64
-images, retain its result, then decide the measurement protocol before another
-compiler change. Initial run `42442853547` passed 13 controls but stopped before
-any image execution: its host guard used visible rather than assigned CPU count
-and omitted a preflight receipt. Both defects are repaired; original hardware
-values were not logged, so do not claim its exact rejected property is known. Production comparison `42440117133` and its complete audit `42441970817`
-(job `128612920574`) pass execution/data checks; timing acceptance does not.
-Both ARM64 sessions save 26–31% on large arrays. AMD64 has 13/12 failed computation
-copy controls; its qualified zero-update manual case regresses 3.38%. The two AMD
-sessions used different approved models (9V45 and 7763); keep them separate.
+**Next:** publish the combined normal PR, then inspect all nine production jobs,
+its documentation check and complete artifact/log audits. Fix failures together.
+Do not mark milestone 1 complete: AMD64 timing acceptance remains open. The user
+has been asked whether to retain the verified ARM64 improvement with that goal
+open or withhold the compiler change pending reliable AMD64 measurements.
+Publication and correctness checks can proceed while that decision is pending.
 
-C/Rust comparison `42441977298` passes both native jobs and their complete audits:
-ARM64 `128612937644`, AMD64 `128612937839`. [Peer results](measurements/loop-array-peers-2026-11-08/README.md)
-and [all four candidate/reference sessions](measurements/fresh-array-costs-2026-11-08/README.md)
-now retain compact observations, receipts and full logs.
-No PR is open yet. The compiler candidate is **not performance-accepted**.
-
-The preceding run `42439586418` at `a0c6fb084` stopped before timings: the new
-diagnostic audit needed historical Git source, but its checkout was shallow.
-Commit `066175c3a` adds `fetch-depth: 0`; source validation is unchanged.
-The preceding complete safety audit passes all eight targets per host:
-348/348/342 native images and 372 probe statuses each on ARM64 GCC/AMD64
-GCC/Clang. Preserve these results; no native test rerun is needed for this
-checkout-only repair.
-
-Implementation head: `f21bf1390` (fresh F64 stores). Focused jobs are AMD64 GCC
-`128603076444`, ARM64 GCC `128603076704`, and Clang ARM64 `128603076570`.
-All three jobs pass, including every native target. Documentation run
-`42438695310`, job `128603080353`, passes. Subsequent edits change docs, measurement/audit tools and the builder comment
-clarifying destructor-free prefixes; executable compiler/runtime behavior is
-unchanged. Preserve the implementation while its checks finish.
-
-## Workspace
+## Workspace and scope
 
 Branch `performance-roadmap-review`, worktree `.worktrees/recording-capacity-gate`,
 base `bbcaafea00d6bf9e26feea60f90d8d440aa16d00` (merged #269). The root worktree
 has unrelated changes; do not modify/reset it. #269's tested/merged trees match;
-[all production, documentation and complete audits pass](measurements/computed-numeric-delivery-2026-11-08/README.md).
-Duplicate post-merge run `42431179791` was cancelled after confirming no failed
-jobs and equal trees (`3a6d513c61e331f86f10824b5a1926b4306db543`); it was still
-occupying four runners. Acceptance relies on the earlier complete verified run.
+[production, documentation and complete audits pass](measurements/computed-numeric-delivery-2026-11-08/README.md).
+Its redundant post-merge run `42431179791` was cancelled after verifying equal
+trees and no failed jobs.
+
+This PR combines the five-step roadmap, the complete documentation/tutorial
+review, a measured compiler improvement and reproducible measurement tools.
+Use a normal PR; draft status must not suppress CI. Preserve passing results
+while remaining gates run. [PLAN.md](../PLAN.md) owns acceptance.
 
 ## Roadmap status
 
 | Step | Status | Evidence and remaining work |
 |---|---|---|
-| 1 | In progress | Reusable loop/array improvement plus complete docs/tutorial refresh. Fresh F64 output selected after three diagnostics; no accepted speed improvement yet. Finish verification/measurements and final gates together. |
+| 1 | In progress | Fresh F64 output stores improve large-array computation 26–31% in both ARM64 sessions. Docs/tutorial sweep and complete measurement audits are ready; AMD64 acceptance and final platform/docs gates remain open. |
 | 2 | Pending | Broader lifetime/representation proofs selected from measured costs, covering at least two application patterns. |
 | 3 | Pending | Structured differentiation across three objective families, preserving general reverse AD, nesting and precision. |
 | 4 | Pending | Current Swift/C/Rust ownership comparisons, with phase timing and explicit memory boundaries. |
 | 5 | Pending | Three end-to-end application/tooling paths and compiler phase/scaling costs; demonstrated usability repairs. |
 
-[PLAN.md](../PLAN.md) owns acceptance. The user requests one substantial normal
-PR combining milestone 1 and the complete documentation refresh, with focused
-checks during development and one final nine-job production matrix plus docs
-and complete audits. Do not use a draft to suppress CI.
+## Implementation and safety
 
-## Current experiment
+Executable compiler change: `f21bf13902239805ef74048e8a8b3fc4d4237cbb`.
+Known `array.generate` callbacks returning exactly F64 store directly into their
+fresh output. Such output cannot be a view and its elements need no destructor.
+The protected builder still frees partial/completed output. Input reads, bounds
+checks, callbacks, effects and other element types retain their behavior.
+No new runtime helper, capture parameter or source API was added.
 
-The [frozen investigation](measurements/shared-loop-array-costs.md) gives inputs,
-selection boundaries, timing scope and the 10% computation target. Retain missed
-limits; do not rerun unchanged timings for a pass.
+Focused run `42438693432` passes all eight targets on AMD64 GCC
+(`128603076444`), ARM64 GCC (`128603076704`) and ARM64 Clang (`128603076570`).
+Complete safety audit `128607338068` in `42440117133` verifies 348/348/342 native
+images and 372 probe statuses per host. Tests cover packing, numeric types,
+aliases, slices, dynamic counts, callback failure/cancellation and physical frees.
+Other test assertions on stores/prefix counts were reviewed: they cover unchanged
+map lowering or runtime AD builders, not the changed generated F64 worker.
 
-| Experiment | Source / run | Result |
+Later production-code edits only clarify the builder's destructor-free prefix
+comment. Other changes are docs, tests and measurement/audit tooling. Final-head
+production checks are still required; focused coverage is not a full delivery gate.
+
+## Measurements and decisions
+
+The [frozen protocol](measurements/shared-loop-array-costs.md) defines inputs,
+phase boundaries and original limits. Do not rerun unchanged timings to obtain
+a pass, relax limits after seeing results or substitute counts for runtime gains.
+
+| Investigation | Evidence | Decision |
 |---|---|---|
-| Force callback inlining in generated C | `7a8d24c2e`, `42433452458` | Rejected. Largest manual/local cases take 1.11–2.04% more process time. [Retained results](measurements/loop-array-diagnosis-2026-11-08/README.md). No production forced inlining. |
-| Cache captured array address/length | Implementation `fed65b39e`; measurements `f227830b08ff115f7b0711274545d6685b4be0be`, `42435795842` | Rejected and removed. ARM large maps save roughly 1%, manual derivatives 3–5%, local derivatives 0–1%; the 10% target is missed. [Complete audit and retained results](measurements/borrowed-array-metadata-2026-11-08/README.md). |
-| Remove redundant fresh-output checks/count updates | Tool source `432d19715c87a5aae9681c4b7b3507847eb87a53`, `42437082841` | Both jobs pass. ARM large maps take 28–32% less computation; larger manual updates about 11% less. Most AMD copy controls fail. [Results](measurements/fresh-array-diagnosis-2026-11-08/README.md). Selected for production verification, not accepted yet. |
+| Forced callback inlining | [Run 42433452458](measurements/loop-array-diagnosis-2026-11-08/README.md) | Rejected; largest derivative cases take 1.11–2.04% more process time. |
+| Cached captured-array metadata | [Run 42435795842 and complete audit](measurements/borrowed-array-metadata-2026-11-08/README.md) | Rejected and removed; misses the 10% computation target. |
+| Direct fresh-output stores | [Diagnostic 42437082841 and complete audit](measurements/fresh-array-diagnosis-2026-11-08/README.md) | Selected for compiler implementation; diagnostic gains alone do not verify it. |
+| Production candidate/reference | [Run 42440117133; audit 42441970817](measurements/fresh-array-costs-2026-11-08/README.md) | All 72 cases pass correctness/data checks. ARM64 large arrays improve 26–31%; AMD64 acceptance remains open. |
+| Equivalent C/Rust computation | [Run 42441977298, both complete audits](measurements/loop-array-peers-2026-11-08/README.md) | Qualified long loops are competitive. Largest ARM64 local-AD case takes 2.47× C and 4.98× Rust. One session per architecture; most AMD64 array/derivative controls fail. |
+| Explicit CPU placement | [Run 42443629870 and complete audit](measurements/array-affinity-2026-11-08/README.md) | Pinning alone does not resolve large-array copy variation. Not a replacement accepted timing protocol. |
 
-The replacement emits direct word stores only for known `array.generate` results
-of exactly F64. Fresh output cannot be a view; F64 has no element destructor.
-The existing protected builder still frees partial/completed output. No new
-runtime helper, metadata capture parameters or source API. All input reads,
-bounds checks, callbacks and other element types retain their existing behavior.
+Production sessions used source `066175c3ad47cf8d226a1dc2b16fba55eba71b7d`.
+AMD64 sessions have 13/12 failed computation-copy controls and one qualified
+3.38% zero-update regression; they ran on different CPU models (9V45 and 7763).
+Both ARM64 sessions pass all computation-copy controls and qualified guard limits.
+Allocations and peak managed storage are unchanged. Separate ordinary RSS,
+compiler time/RSS, code and stack observations are retained in the reports.
 
-The **rejected metadata candidate's** focused run `42434812986` at `fed65b39e86fd6c422e9f46e4ab6adf39f7078a1`
-passes AMD64 GCC `128591289751`, ARM64 GCC `128591289810` and macOS ARM64
-Clang `128591289622`. Complete artifact/log audit `128594236952` in
-`42435795842` passes. Original artifacts remain on GitHub.
+Complete production-measurement audit `42441970817`, job `128612920574`, verifies
+all 7,976 timing/build commands plus 216 resource commands per first-session host.
+Peer jobs `128612937644`/`128612937839` each audit all 2,916 commands.
+Placement job `128617878874` at `c35f211a9` and the local standalone auditor
+verify four cases, 16 native/copy images and all 416 commands/samples.
 
-Review job `128598127188` in `42437082841` passes all four original metadata
-timing sessions, commands, sources, output bits, copied/native images and raw
-samples. Compact artifact `13600670203` is verified and retained. Fresh-output
-diagnostics `128599976437`/`128599976447` and their complete independent audit
-`128607338068` pass; its archive, receipt and full log are retained with the
-diagnostic report. Those diagnostics do not verify the new compiler code.
+Two tooling failures are repaired and recorded: `42439586418` lacked historical
+Git source for its audit (fixed with a full-history checkout); `42442853547`
+failed hardware preflight before measuring (assigned-CPU qualification and a
+hardware receipt are now explicit). Both repaired paths pass. Original logs and
+failed observations remain evidence, not unfinished implementation tasks.
 
-Still needed for an accepted implementation:
+## Documentation and remaining checks
 
-- Two-session native timing acceptance; the active run includes separate memory,
-  compiler/RSS and image/stack observations in each architecture's first session.
-- Complete artifact audits, including those separate observations. Suite
-  `array-review` audits a completed measurement run without repeating timings.
-- C/Rust computation comparisons: suite `array-peers` takes the completed run and
-  exact source as inputs. Its explicit templates, six-role schedule, separate process-RSS observations
-  and complete raw-record audit are ready; native execution remains unverified.
-- Full platform gates, documentation and their complete final-head audits.
-
-## Documentation
-
-All 24 tutorial READMEs have been reviewed and edited. Lesson 7 now returns
-`fahrenheit` instead of mislabeling Fahrenheit as `celsius`; source and transcripts
-change together. Its native session and formatter still need runner verification.
-The standalone source/output-copy test passed locally before the last four
-prose-only lesson edits.
-
+All 24 tutorial READMEs and the tracked Markdown inventory have been reviewed.
 [The documentation map](README.md) separates learning, reference, compiler work
-and evidence. The benchmark overview uses #269's verified reports; #233 is dated
-historical evidence. The sweep removes stale delivery instructions, old milestone
-jargon and duplicate merge bookkeeping while preserving raw results/contracts.
-The prose/navigation sweep covers the tracked Markdown inventory, including
-historical reports, tool guides and fixture READMEs. Local link checks cover all
-383 files; the full runner audit and tutorial execution still need final-head
-verification. Original observations and acceptance limits remain intact.
+and evidence. Stale delivery instructions, duplicate status prose and obsolete
+roadmap items are removed; original observations/contracts remain intact.
+Lesson 7 now labels Fahrenheit as `fahrenheit`; source and transcripts agree.
+Its native session and formatter need final runner verification.
 
-Full documentation audit `42437087245`, job `128598137245`, **passes** at
-`432d19715`. Later documentation edits need the final-head audit.
-The generated library reference must be updated through its source/generator,
-not edited manually. Preserve vendor licenses and source attribution.
+The latest prior full docs check is `42438695310`, job `128603080353`, at
+`f21bf1390`; subsequent edits need the final-head check. Generated library guides
+must still be maintained through their source comments/generator.
 
-## Checks and resource limits
-
-- Guarded checks pass: fourteen measurement controls, five diagnostic controls,
-  Rust formatting, tutorial source/output copies and sparse/index documentation
-  audit (383 Markdown files, five roadmap rows). The extended audit-tool controls, workflow syntax and all changed cross-links
-  pass locally. No local compiler build or native suite was run.
-- Disk previously fell to 58 GiB and the guard refused work; nothing ran below
-  the limit. The latest reading is 86 GiB. Preserve 64 GiB free and use the guard;
-  full builds, tests, benchmarks and large regeneration remain on runners.
-- An earlier local full documentation audit stopped on a tracked but absent
-  example in this sparse checkout. Use the complete runner checkout; do not
-  materialize large evidence just to satisfy a local audit.
-- `numerics.yml` is close to GitHub's 512,000-byte limit. Use
-  reusable workflows for additions. Its first oversized dispatch failed before
-  running and was repaired; no test coverage was removed.
-- The saved loop C is
-  `/tmp/fwp-269-loop-bench-evidence-e7965762490c89d2a39f5937fe8322291ea906fc-3757-loop-generated.c`;
-  `/tmp/fwp-computed-129.c` is the earlier local-AD program. Their source
-  observations select experiments, not accepted performance claims.
+- Guarded local checks pass: fourteen measurement controls, five diagnostic
+  controls, Rust formatting, tutorial source/output copies, workflow syntax and
+  sparse/index links across 384 Markdown files and five roadmap rows.
+- Retained artifacts pass digest/archive checks; the standalone placement audit
+  checks all samples without executing any binaries locally.
+- No local compiler build, native suite or benchmark was run. Full checks stay
+  on GitHub. The last disk reading was about 86 GiB; preserve the 64 GiB limit
+  and use `scripts/local-guard.py` for focused checks.
+- This sparse checkout omits tracked examples. The full documentation audit
+  belongs on a complete runner checkout; the local index-aware audit checks links.
+- `numerics.yml` is only 25 bytes below GitHub's 512,000-byte limit. Extend reusable
+  workflows instead of growing that file. The earlier size failure is repaired.

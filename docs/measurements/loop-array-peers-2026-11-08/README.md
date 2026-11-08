@@ -90,7 +90,7 @@ Comparison/auditor: `a84e8b3ebc5e16c1036a500470e47062d88c3f78`,
 [run 42441977298](https://github.com/e6qu/fun-with-pipes/actions/runs/42441977298).
 ARM64 uses Neoverse-N2/GCC 13.3; AMD64 uses EPYC 9V74/GCC 15.2. Rust is 1.99.1,
 `-O`, generic CPU, no LTO. C/fwp use O2, no fast math or FP contraction, generic
-architecture and no LTO. The [full report](summary.json) records exact versions,
+architecture and no LTO. The [full report](summary.json.gz) records exact versions,
 flags, host/affinity, source/image hashes and resource observations.
 
 Each host passes all 18 cases and the independent 2,916-command audit, including
@@ -100,8 +100,8 @@ audit preserves failed timing controls; it does not establish speed acceptance.
 
 | Host | Raw observations and audit | Original artifact receipt | File hashes | Complete job log |
 |---|---|---|---|---|
-| ARM64 | [Archive](arm-observations.zip) | [Receipt](arm-artifact.json) | [Manifest](arm-files.json) | [Log](arm.log.gz) |
-| AMD64 | [Archive](amd-observations.zip) | [Receipt](amd-artifact.json) | [Manifest](amd-files.json) | [Log](amd.log.gz) |
+| ARM64 | [Archive](arm-observations.zip) | [Receipt](arm-artifact.json) | [Manifest](arm-files.json.gz) | [Log](arm.log.gz) |
+| AMD64 | [Archive](amd-observations.zip) | [Receipt](amd-artifact.json) | [Manifest](amd-files.json.gz) | [Log](amd.log.gz) |
 
 Original C/Rust sources, native images and the audited input archives remain in
 the digest-identified GitHub artifacts. Compact archives retain every new sample,

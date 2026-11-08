@@ -320,3 +320,7 @@ A pass in this diagnostic can support a new explicit-affinity protocol; it canno
 make the original failed comparisons pass or identify the cause of all earlier
 AMD64 variation. If both conditions remain unstable, report that result and
 investigate the measurement boundary before spending another full native gate.
+
+[The completed placement diagnostic](array-affinity-2026-11-08/README.md) keeps
+both large-array copy failures even on one CPU. Pinning alone does not qualify
+a replacement timing protocol. Original candidate/reference limits remain open.

@@ -198,7 +198,7 @@ but three AMD64 construction regressions fail the combined acceptance rule.
 
 [The phase comparison](measurements/loop-array-peers-2026-11-08/README.md) measures
 computation, input construction and result release separately. In its qualified
-single-session observations, the large checked loop takes 18–20% less computation
+single-session observations, the large checked loop takes 18–20% less computation time
 than C on ARM64 and approximately the same on AMD64. This does not contradict an
 older whole-process ratio: the timed work and sources differ.
 
