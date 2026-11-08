@@ -4,8 +4,8 @@
 [PR #272](https://github.com/e6qu/fun-with-pipes/pull/272), then dispatch the
 complete-log audit. Final head: `8e7cdb94337c6fdac5656dfcbdab768d4a36e985`;
 measured compiler source: `4a32c102f74f738433c1d55969936b023a5510f0`.
-At 20:25 UTC, docs and C/Rust benchmarks pass. Seven production jobs are running;
-the macOS ARM64 ownership job remains queued. No failing step is reported. This receipt belongs
+At 20:54 UTC, docs, C/Rust benchmarks and macOS ARM64 regular pass. The six other
+production jobs are running. No failing step is reported. This receipt belongs
 to the next branch; do not push it onto the final PR head and restart verification.
 Do not merge before all nine production jobs, docs and the complete-log audit
 pass for the final commit. Preserve that final head while checks run.
@@ -117,6 +117,8 @@ negative-control failures occur. Final docs job: `128841273815`.
 Final docs and benchmark `128841273778` logs are reviewed: only expected runner
 rejection controls, no unexpected diagnostic. Logs:
 `/tmp/fwp-pr272-final-{docs,bench}.log`. Full artifact-log audit remains pending.
+macOS ARM64 regular `128841273786` also passes; its complete main log has no
+unexpected compiler/test diagnostic: `/tmp/fwp-pr272-final-mac-arm.log`.
 
 ## Next-branch preparation
 
@@ -127,13 +129,16 @@ checks with explicit language selection, and `ownership-peer-checks` in
 without rebuilding fwp. Initial source `9f0dae655` was published; focused run
 `42519237679` was cancelled before either job started (both have empty step lists).
 Combined parser/Swift run `42520124080` tests source `5c40c2a9f`; jobs
-`128851586715` (ARM64) and `128851586733` (AMD64) are queued.
+`128851586715` (ARM64) and `128851586733` (AMD64) report success, but raw records
+expose a masked observer failure described below. Do not accept the whole run.
 The existing C/Rust workflow caller now selects its
 languages explicitly. No peer timing has been collected or acceptance declared.
-The parser batch adds C/Rust allocation-transition observers, four existing tree
+The buffer checks pass 630 result/error cases on each host. The parser batch adds
+C/Rust allocation-transition observers, four existing tree
 shapes, real omitted-release controls, eight semantic controls, 32 damaged-record
 controls and Rust compiler frames with unchanged ordinary instruction bytes.
-These are prepared checks, not passes. They observe successful API requests and
+Normal parser profiles and omitted-release controls pass on both hosts. They
+observe successful API requests and
 release; allocator-internal overlap, input loading and RSS remain outside scope.
 The parser job executes even if the earlier buffer step fails so both failures
 can be repaired together. Diagnostic clock values are not performance evidence.
@@ -141,6 +146,17 @@ Further local edits tighten all parser peer rejection checks to the expected
 C/Rust exit statuses: a crash or timeout cannot stand in for a language error.
 The shared evidence tests now reject 50 altered exits and unexpected output;
 these additions are unverified and belong in the next batch, not #272.
+Raw records show every instrumented Rust invalid-input case aborting (`-6`)
+instead of its intended error (`101`). The aggregate observer charged frees for
+outer allocations it never measured. The repair tracks allocation identities and
+ends observation on unwinding. New controls free an outside owner inside the
+scope, exercise caught unwinding and deliberately restore the broken accounting
+to prove the control rejects it. Verify this repair before accepting parser evidence.
+Both job logs are reviewed: `/tmp/fwp-peer-checks-{arm,amd}.log`; small records
+are under `/tmp/fwp-peer-reports/`. Artifact IDs are `13633456991` (ARM64) and
+`13633602594` (AMD64). Only selected entries were fetched, with ZIP CRC checking;
+the complete 12/14 MB archives remain remote. A package-setup warning concerned
+an absent optional g++ manpage; focused checks now omit that unused dependency.
 Swift uses external input/result barriers; matched timing peers must all use
 the same barriers before ratios are meaningful. Remaining work includes returned
 buffers, scalar-closure allocation attribution, weak registrations and parser peaks.
