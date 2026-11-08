@@ -142,7 +142,10 @@ int main(void) {
             if (mode) return 240;
             if (fwp_array_len(output) != (size_t)n) return 241;
             for (int i = 0; i < n; i++) if (ARR(output)->d[i] != (V)(i + 2)) return 241;
-            int reused = reuse_enabled && !sharing;
+            /* An empty ordinary array transfers its existing owner without
+             * writing or allocating, including aliases and no-reuse builds.
+             * Empty views still release their backing owner. */
+            int reused = (!n && sharing != 2) || (reuse_enabled && !sharing);
             if ((output == input) != reused) return 242;
             if (owner_ledger_allocations - allocations != (size_t)!reused) return 243;
             if (numeric_calls != n) return 244;

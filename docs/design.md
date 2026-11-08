@@ -430,6 +430,10 @@ pass. [Compiler costs pass](measurements/owned-numeric-analysis-2026-11-05/READM
 with four AMD64 speed targets open. [Final platform delivery is verified](roadmap-history.md#consumed-numeric-storage-pr-258).**
 For a dead array input, a private same-type scalar map can take its owner and
 overwrite exclusive storage. A shared array or view receives independent output.
+The empty-input repair forwards an ordinary empty array's owner unchanged,
+including shared arrays; there is no element to write. Empty views still produce
+independent output so the result cannot retain a large backing allocation.
+This additional path is awaiting native verification.
 The current extension also admits known callbacks with plain scalar captures,
 for example `array.map (add offset)` when `offset` is supplied at runtime. It
 passes the saved numbers directly and consumes only the final array argument.

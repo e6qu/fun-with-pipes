@@ -1,7 +1,8 @@
 # Reuse array storage with scalar callback captures
 
-Status: focused native verification passes after PR #270; measurement and final
-platform delivery remain pending. The first native run found that the selector
+Status: the initial implementation passes focused native verification. Its first
+measurements expose a shared-empty-input regression; an empty-owner transfer
+repair is being verified. Final platform delivery remains pending. The first native run found that the selector
 missed let-bound callbacks. The repair indexes actual partial applications and their bindings. This extends
 the existing same-type numeric `array.map` proof; it does not close #270's
 unresolved AMD64 timing limits or change its original results.
@@ -27,8 +28,10 @@ Before this extension, the consuming-map proof required a callback with no saved
 These callbacks save `scale`/`offset`, so they miss the proof even though those
 numbers own no heap data. The extension passes them directly to the existing
 private worker and consumes the array only at its last use. An exclusive ordinary
-array supplies its output storage; shared arrays and views need independent
-output. This does not permit a neighboring-coordinate update to overwrite inputs
+array supplies its output storage; nonempty shared arrays and all views need
+independent output. An empty ordinary array can return its existing owner without
+writing, even when shared. Empty views still release their backing storage rather
+than keeping a potentially large array alive. This does not permit a neighboring-coordinate update to overwrite inputs
 that later coordinates still need.
 
 ## Selection and safety
@@ -41,6 +44,9 @@ that later coordinates still need.
   effects, first traps and resource boundaries; add no syntax or conversion.
 - Liveness proves the array has no later use. ARC still protects earlier owners
   and shared ancestors. Keep necessary runtime uniqueness and view checks.
+- The empty ordinary-array path performs no writes, callbacks, allocation or
+  ownership-count changes. It transfers the input owner to the result even with
+  reuse disabled. Views retain the existing independent-output and cleanup path.
 - Preserve element order, checked overflow, float bits and callback effects.
   Existing protected owners cover allocation failure, traps and cancellation.
   Every physical allocation must be released exactly once.

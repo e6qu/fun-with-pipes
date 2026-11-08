@@ -179,6 +179,8 @@ The [scalar-capture extension](measurements/captured-array-maps.md) passes saved
 numbers directly to that worker. Focused GCC/Clang checks pass; measurements and
 full platform delivery remain pending. Neither proof makes an input mutable in
 the source language.
+The empty-input repair, awaiting native verification, forwards an ordinary empty
+array unchanged even when shared. Empty views still release their backing owner.
 
 ## Tasks and channels
 

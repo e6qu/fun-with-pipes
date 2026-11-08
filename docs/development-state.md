@@ -1,7 +1,7 @@
 # Current work
 
-**Next:** finish the frozen sensor/pixel comparison,
-then bundle implementation, evidence and docs in
+**Next:** finish reviewing all original measurements, verify the shared-empty-input
+repair, then measure the changed implementation and bundle code, evidence and docs in
 one normal PR. [The contract](measurements/captured-array-maps.md) defines safety,
 inputs, schedule and acceptance. No performance claim is made yet.
 
@@ -93,9 +93,19 @@ eight targets, 382 probe outcomes and native images on each host with no issues.
 Artifact `13614402438` has locally verified SHA-256
 `29391978968f75b6661d09b049290f8152e51afb7692127366c598fcb9822de6`.
 
-ARM sessions 1/2 (`128711666600` / `128711666641`) and AMD session 1
-(`128711666753`) are running; AMD session 2 (`128711666605`) is queued.
-No timing result is available yet.
+Session 2 passes on ARM (`128711666641`) and AMD (`128711666605`), including all
+48-case reconstruction audits. Both session 1 jobs are still collecting separate
+memory/compiler observations (`128711666600` / `128711666753`). AMD2's largest
+exclusive 199-update cases qualify at 93% less sensor and 91% less pixel work;
+many other AMD2 controls are inconclusive. ARM2 has qualified shared empty
+one-update regressions of 3.77% (sensor) and 4.45% (pixels). Preserve these results.
+
+The prepared repair returns an ordinary empty array's existing owner without
+allocation, cleanup scopes or writes, including shared inputs and no-reuse builds.
+Empty views keep independent output so they release potentially large backing
+storage. The existing physical-free/alias checks now require this exact behavior.
+This source change is not yet natively verified. No acceptance limit changes;
+new timings must compare this changed implementation, not rerun unchanged cases.
 Final delivery still needs nine production jobs and docs on the exact final PR
 head. No PR is open yet.
 
