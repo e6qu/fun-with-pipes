@@ -74,7 +74,8 @@ Review job `128598127188` in `42437082841` passes all four original metadata
 timing sessions, commands, sources, output bits, copied/native images and raw
 samples. Compact artifact `13600670203` is verified and retained. Fresh-output
 diagnostics `128599976437`/`128599976447` and their complete independent audit
-`128607338068` pass. Those diagnostics do not verify the new compiler code.
+`128607338068` pass; its archive, receipt and full log are retained with the
+diagnostic report. Those diagnostics do not verify the new compiler code.
 
 Still needed for an accepted implementation:
 

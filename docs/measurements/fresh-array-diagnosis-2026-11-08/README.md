@@ -54,3 +54,16 @@ Original source and images remain in artifacts `13600770461` (ARM64) and
 `13600631455` (AMD64), identified by digest in the summary. The earlier
 [metadata experiment](../borrowed-array-metadata-2026-11-08/README.md) is rejected,
 not silently combined with this change.
+
+## Complete audit
+
+[Job 128607338068](https://github.com/e6qu/fun-with-pipes/actions/runs/42440117133/job/128607338068)
+at auditor `066175c3ad47cf8d226a1dc2b16fba55eba71b7d` passes the complete diagnostic:
+18 cases and 1,908 commands per architecture, including all source edits, native
+images, copied images and raw samples. It also audits the production candidate's
+three focused safety jobs at `f21bf13902239805ef74048e8a8b3fc4d4237cbb`.
+
+[Audit archive](complete-audit.zip), [artifact receipt](complete-audit-artifact.json)
+and [full log](complete-audit.log.gz) retain the results. The downloaded archive
+matches its GitHub SHA-256 digest. This verifies the evidence; production timing
+acceptance remains a separate comparison.

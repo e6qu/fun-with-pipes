@@ -1,0 +1,20 @@
+{
+  "id": 13601078963,
+  "node_id": "MDg6QXJ0aWZhY3QxMzYwMTA3ODk2Mw==",
+  "name": "borrowed-array-safety-audit",
+  "size_in_bytes": 3488159,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13601078963",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13601078963/zip",
+  "expired": false,
+  "digest": "sha256:edd8adfded51e5fde2d36d79ffe93a1ad0f1e820388464dac90b149ac70e67cb",
+  "created_at": "2026-11-08T02:58:40Z",
+  "updated_at": "2026-11-08T02:58:40Z",
+  "expires_at": "2027-02-06T02:49:09Z",
+  "workflow_run": {
+    "id": 42440117133,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "performance-roadmap-review",
+    "head_sha": "066175c3ad47cf8d226a1dc2b16fba55eba71b7d"
+  }
+}
