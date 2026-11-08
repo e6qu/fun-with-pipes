@@ -2725,7 +2725,10 @@ jobs:
       CARGO_PROFILE_DEV_OVERFLOW_CHECKS: 'true'
     steps:
       - name: Native build and measurement dependencies
-        run: apt-get update && apt-get install -y git gcc g++ libssl-dev pkg-config python3 time llvm curl
+        run: apt-get update && apt-get install -y git gcc python3 binutils curl
+      - name: Compiler and timing dependencies
+        if: inputs.suite != 'ownership-peer-checks'
+        run: apt-get install -y g++ libssl-dev pkg-config time llvm
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
@@ -2755,8 +2758,11 @@ jobs:
           mkdir swift-setup
           cargo fetch --locked 2>&1 | tee swift-setup/fetch.log
           cargo build --locked --offline --bin fwp 2>&1 | tee swift-setup/build.log
-      - name: Buffer peer results and argument controls
+      - name: Parser evidence rejection controls
         if: inputs.suite == 'ownership-peer-checks'
+        run: python3 scripts/test-parser-workspace-evidence.py
+      - name: Buffer peer results and argument controls
+        if: ${{ !cancelled() && inputs.suite == 'ownership-peer-checks' }}
         run: >-
           python3 scripts/check-unique-buffer-peers.py --cc gcc --rustc rustc
           --languages c rs swift --swiftc swiftc

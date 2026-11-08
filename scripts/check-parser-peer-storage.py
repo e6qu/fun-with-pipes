@@ -8,6 +8,7 @@ import json
 import os
 from pathlib import Path
 import platform
+import resource
 import shutil
 import subprocess
 
@@ -41,7 +42,7 @@ def instrument(language, source, observer):
                             '        uint64_t released = now();\n        parser_storage_finish();')
     source = replace_once(source, '#[derive(Clone, Copy)]', observer + '\n#[derive(Clone, Copy)]')
     source = replace_once(source, '        let begin = Instant::now();',
-                          '        parser_storage_begin();\n        let begin = Instant::now();')
+                          '        let _parser_storage_scope = parser_storage_begin();\n        let begin = Instant::now();')
     return replace_once(source, '        let released = Instant::now();',
                         '        let released = Instant::now();\n        parser_storage_finish();')
 
@@ -99,6 +100,7 @@ def main():
     assert args.source == os.environ['GITHUB_SHA']
     assert args.c_arch == {'x86_64': 'x86-64', 'aarch64': 'armv8-a'}[args.arch]
     assert args.rust_cpu == {'x86_64': 'x86-64', 'aarch64': 'generic'}[args.arch]
+    resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
     out = args.output.resolve()
     out.mkdir(parents=True, exist_ok=False)
     environment = {key: value for key, value in os.environ.items()
@@ -207,6 +209,62 @@ def main():
                     assert (output['result'], output['nodes']) == (expected, nodes)
                 controls[f'{language}-{variant}'] = len(commands) - 1
         report['controls'][name] = controls
+    # Reproduce the first observer's scope error: an outer owner can be freed
+    # while measurement is active, especially during an error unwind.
+    observer = (ROOT / 'tests/fixtures/parser_arena_storage.rs').read_text()
+    broken = replace_once(observer,
+        '            STORAGE_SIZES[slot].store(0, Ordering::SeqCst);\n        }\n        System.dealloc(pointer, layout);',
+        '            STORAGE_SIZES[slot].store(0, Ordering::SeqCst);\n'
+        '        } else if STORAGE_ACTIVE.load(Ordering::SeqCst) {\n'
+        '            parser_storage_event(layout.size(), 0);\n'
+        '        }\n        System.dealloc(pointer, layout);')
+    control_main = r'''
+fn main() {
+    let mode = std::env::args().nth(1).expect("expected outside or unwind");
+    assert!(mode == "outside" || mode == "unwind");
+    let outside = std::hint::black_box(vec![7u8; 1024]);
+    {
+        let _scope = parser_storage_begin();
+        drop(outside);
+        parser_storage_finish();
+    }
+    if mode == "unwind" {
+        let failed = std::panic::catch_unwind(|| {
+            let _scope = parser_storage_begin();
+            let inside = std::hint::black_box(vec![3u8; 64]);
+            assert_eq!(inside[0], 3);
+            panic!("expected observer unwind control");
+        });
+        assert!(failed.is_err());
+        drop(failed);
+        assert!(!STORAGE_ACTIVE.load(Ordering::SeqCst));
+    }
+    println!("{} scope checked", mode);
+}
+'''
+    report['observerControls'] = {}
+    for variant, template in (('ordinary', observer), ('untracked-free', broken)):
+        path = out / f'observer_{variant.replace("-", "_")}.rs'
+        path.write_text(template + control_main)
+        binary = path.with_suffix('.exe')
+        built = run([args.rustc, '--edition=2021', '-C', 'opt-level=2', '-C', 'overflow-checks=yes',
+                     '-C', 'lto=off', '-C', 'panic=unwind', '-C', 'target-cpu=' + args.rust_cpu,
+                     path, '-o', binary])
+        assert built['status'] == 0 and not built['stdout'] and not built['stderr'], built
+        for mode in (('outside', 'unwind') if variant == 'ordinary' else ('outside',)):
+            row = run([binary, mode])
+            if variant == 'untracked-free':
+                assert row['status'] == -6 and not row['stdout'], row
+            else:
+                assert row['status'] == 0 and row['stdout'] == f'{mode} scope checked\n', row
+                first, rest = row['stderr'].split('\n', 1)
+                assert json.loads(first) == dict(requests=0, requestedBytes=0, peakLiveBytes=0,
+                                                finalLiveBytes=0, events=[])
+                if mode == 'outside':
+                    assert not rest, rest
+                else:
+                    assert 'expected observer unwind control' in rest, rest
+            report['observerControls'][variant + '-' + mode] = len(commands) - 1
     rejected = 0
     for name, depth, left in CASES:
         text, nodes, expected = MEASURE.input_case(depth, left)
