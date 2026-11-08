@@ -1,7 +1,8 @@
 # Current work
 
-**Next:** implement the [frozen borrowed-array metadata change](measurements/shared-loop-array-costs.md#selected-implementation-borrowed-array-metadata)
-and focused lifetime/value controls, then measure its runtime/compiler costs.
+**Next:** run production GCC/Clang focused checks for the
+[borrowed-array metadata candidate](measurements/shared-loop-array-costs.md#selected-implementation-borrowed-array-metadata),
+repair all failures, then measure its runtime/compiler costs.
 Continue the docs/tutorial refresh in the same PR. The user approved the revised project roadmap and one
 substantial normal PR for milestone 1. No next PR has been opened yet.
 
@@ -73,6 +74,15 @@ descriptions reduce it to 511,678 bytes without changing execution. The focused
 workflow-size and five-row roadmap/handoff checks pass (guard: 0.13 s). Future
 workflow additions must check this limit before publication.
 
+The candidate caches data addresses and lengths for direct scalar-array capture
+reads in an already-proved borrowed `array.generate` callback. It preserves the
+original element representation and every bounds check. A single callback-body
+traversal selects captures; it does not follow unknown calls. Focused controls
+cover ten scalar types, packed/unpacked storage, shared slices, empty arrays and
+negative/large indices. Existing capture tests retain their extra-retain, leaked
+owner, partial-failure and cancellation controls with the new callback signature.
+Implementation is not yet verified and no speed benefit is claimed.
+
 ## Documentation work
 
 All 372 Markdown files from the base are materialized; 24 tutorial READMEs
@@ -81,7 +91,8 @@ have runnable source/output copies. Lessons 1–20 have been reviewed and edited
 Lesson 7 now returns a `fahrenheit` field instead of mislabeling Fahrenheit as
 `celsius`; its source/transcript copies change together. Native session execution
 and formatter validation still need the runner. The standalone all-tutorial
-copy-check harness compiled under the guard (0.38 s). Small factual fixes
+copy-check harness compiled under the guard (0.38 s) and its exact copy test passed
+(0.25 s). Small factual fixes
 already correct stale private-pair delivery status in ownership, the README's
 old direction, and #269's passed production coverage in design. The measurement
 index now records delivered gradient-call storage and dates older CPU experiments;

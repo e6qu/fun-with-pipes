@@ -349,9 +349,11 @@ static inline int fwp_array_should_view(V a, size_t count, const fwp_desc *elem)
     return count > sizeof(fwp_array_view) / stride
         && count >= backing / 4 + (backing % 4 != 0);
 }
-static inline V fwp_array_load(V a, size_t i, const fwp_desc *elem) {
+/* The caller keeps the backing array alive. Resolving a view's data address
+ * separately lets proved borrowed loops reuse it without rereading headers. */
+static inline V fwp_array_load_data(const unsigned char *data, size_t i, const fwp_desc *elem) {
     size_t stride = fwp_array_stride(elem);
-    const unsigned char *p = fwp_array_data(a) + i * stride;
+    const unsigned char *p = data + i * stride;
     /* This is a borrowed view, valid only while the array owner stays alive.
      * Escaping values must copy the bits into their own scalar box. */
     if (stride == 16) return PTR(p);
@@ -366,6 +368,9 @@ static inline V fwp_array_load(V a, size_t i, const fwp_desc *elem) {
     }
     uint32_t word; memcpy(&word, p, sizeof word);
     return elem->kind == K_I32 ? (V)(int64_t)(int32_t)word : (V)word;
+}
+static inline V fwp_array_load(V a, size_t i, const fwp_desc *elem) {
+    return fwp_array_load_data(fwp_array_data(a), i, elem);
 }
 static inline void fwp_array_store(V a, size_t i, V value, const fwp_desc *elem) {
     if (fwp_array_is_view(a)) fwp_trap("internal: mutating an array view");

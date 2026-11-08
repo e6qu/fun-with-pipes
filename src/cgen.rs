@@ -2532,6 +2532,8 @@ struct FnGen<'g, 'p, 'e> {
     indent: usize,
     /// Generating the step of a specialized loop (`Gen::loop_def`).
     in_loop: Option<LoopGen>,
+    /// Scalar array captures whose owner outlives this borrowed callback.
+    borrowed_arrays: HashSet<Local>,
     /// Locals kept as their fields (C expressions), read only through them.
     fields: HashMap<Local, Vec<String>>,
     /// The type of each local of the function.
@@ -3059,6 +3061,7 @@ fn hof_def(
     result_ops: Option<&str>,
     fold_drop: Option<&str>,
     borrowed_step: bool,
+    borrowed_arrays: &[Local],
 ) -> String {
     if sym == "array.fold" {
         // The selected callback has exactly two plain numeric parameters and
@@ -3073,15 +3076,26 @@ fn hof_def(
             .chain(std::iter::once("(V)index".to_string()))
             .collect::<Vec<_>>()
             .join(", ");
+        let metadata = borrowed_arrays
+            .iter()
+            .map(|local| format!("    const unsigned char *array_data_{local} = fwp_array_data(c{local});\n    size_t array_length_{local} = fwp_array_len(c{local});\n"))
+            .collect::<String>();
+        let data_arguments = borrowed_arrays
+            .iter()
+            .map(|local| format!(", array_data_{local}, array_length_{local}"))
+            .collect::<String>();
         let (prepare, entry) = if borrowed_step {
-            (String::new(), format!("fwp_borrowed_array{i}(args)"))
+            (
+                String::new(),
+                format!("fwp_borrowed_array{i}(args{data_arguments})"),
+            )
         } else {
             (
                 format!("        fwp_args{g}(args, 0, {k});\n"),
                 format!("fwp_owned_entry{g}(args)"),
             )
         };
-        return format!("{} {{\n    size_t n = fwp_count_arg(count);\n    fwp_array_builder result = {{fwp_array_typed_new(n, {element}), 0, {element}}};\n    fwp_cleanup cleanup; fwp_array_builder_protect(&result, &cleanup);\n    for (size_t index = 0; index < n; index++) {{\n        V args[] = {{{args}}};\n{prepare}        V value = {entry};\n        fwp_array_store_owned(result.value, index, value, {element});\n        result.filled++;\n    }}\n    return fwp_array_builder_finish(&result, &cleanup);\n}}\n", hof_sig(i, sym, *k));
+        return format!("{} {{\n    size_t n = fwp_count_arg(count);\n    fwp_array_builder result = {{fwp_array_typed_new(n, {element}), 0, {element}}};\n    fwp_cleanup cleanup; fwp_array_builder_protect(&result, &cleanup);\n{metadata}    for (size_t index = 0; index < n; index++) {{\n        V args[] = {{{args}}};\n{prepare}        V value = {entry};\n        fwp_array_store_owned(result.value, index, value, {element});\n        result.filled++;\n    }}\n    return fwp_array_builder_finish(&result, &cleanup);\n}}\n", hof_sig(i, sym, *k));
     }
     if sym == "loop" {
         let drop = fold_drop.expect("typed loop state");
@@ -3398,6 +3412,59 @@ fn unpack_loop_state(prog: &Program, f: &Func) -> Option<Func> {
         ty,
         body: Body::Expr(body),
     })
+}
+
+/// Find direct reads of immediate scalar array captures in one traversal.
+/// The borrowed callback proof supplies their enclosing owner lifetime.
+fn borrowed_array_reads(prog: &Program, body: &Expr, locals: &[MT], captures: usize) -> Vec<Local> {
+    let mut selected = HashSet::new();
+    let mut pending = vec![body];
+    while let Some(expression) = pending.pop() {
+        match expression {
+            Expr::Call(id, args) => {
+                let array = match &prog.funcs[*id].body {
+                    Body::Prim(symbol) if symbol == "array.get" && args.len() == 2 => {
+                        Some(&args[1])
+                    }
+                    _ => None,
+                };
+                if let Some(Expr::Local(local)) = array {
+                    if (*local as usize) < captures
+                        && matches!(&locals[*local as usize], MT::Con(name, fields)
+                            if name == "std::Array" && fields.len() == 1
+                                && scalar(&fields[0]).is_some())
+                    {
+                        selected.insert(*local);
+                    }
+                }
+                pending.extend(args);
+            }
+            Expr::Apply(function, args) => {
+                pending.push(function);
+                pending.extend(args);
+            }
+            Expr::Record(fields) | Expr::Construct(_, fields) => pending.extend(fields),
+            Expr::Field(value, _)
+            | Expr::Trace(_, value)
+            | Expr::Dup(_, value)
+            | Expr::Drop(_, value)
+            | Expr::BorrowGlobal(_, _, value)
+            | Expr::ResourceRegion { body: value, .. } => pending.push(value),
+            Expr::SetFields(value, fields) => {
+                pending.push(value);
+                pending.extend(fields.iter().map(|(_, value)| value));
+            }
+            Expr::Let(_, value, body) => pending.extend([value.as_ref(), body.as_ref()]),
+            Expr::Match(value, arms) => {
+                pending.push(value);
+                pending.extend(arms.iter().map(|(_, body)| body));
+            }
+            Expr::Const(_) | Expr::Local(_) | Expr::Func(_) => {}
+        }
+    }
+    let mut selected: Vec<_> = selected.into_iter().collect();
+    selected.sort_unstable();
+    selected
 }
 
 /// An unchanged array owner keeps its data address valid throughout the loop.
@@ -4032,6 +4099,15 @@ impl<'g, 'p> FnGen<'g, 'p, '_> {
         (produces(self, e, m, &HashMap::new())? && !matches!(e, Expr::Construct(..))).then_some(m)
     }
 
+    fn array_length(&self, array: &Expr, value: &str) -> String {
+        match array {
+            Expr::Local(local) if self.borrowed_arrays.contains(local) => {
+                format!("array_length_{local}")
+            }
+            _ => format!("fwp_array_len({value})"),
+        }
+    }
+
     /// Load a checked element, borrowing a proved loop-invariant data pointer
     /// when available. The original array remains the counted owner.
     fn load_array(
@@ -4041,6 +4117,14 @@ impl<'g, 'p> FnGen<'g, 'p, '_> {
         found: &str,
         descriptor: &str,
     ) -> String {
+        if let Expr::Local(local) = array {
+            if self.borrowed_arrays.contains(local) {
+                return self.bind(format!(
+                    "{found} ? fwp_array_load_data(array_data_{local}, (size_t){}, {descriptor}) : 0",
+                    values[0]
+                ));
+            }
+        }
         let cached = match array {
             Expr::Local(local) => self
                 .in_loop
@@ -4126,10 +4210,10 @@ impl<'g, 'p> FnGen<'g, 'p, '_> {
                     (found, value)
                 } else {
                     let descriptor = self.g.desc(&element);
+                    let length = self.array_length(&args[1], &values[1]);
                     let tag = self.bind(format!(
-                        "(V)((int64_t){index} >= 0 && (uint64_t){index} < fwp_array_len({array}))",
-                        index = values[0],
-                        array = values[1]
+                        "(V)((int64_t){index} >= 0 && (uint64_t){index} < {length})",
+                        index = values[0]
                     ));
                     let value = self.load_array(&args[1], &values, &tag, &descriptor);
                     (tag, value)
@@ -6515,6 +6599,14 @@ impl<'g, 'p> FnGen<'g, 'p, '_> {
         if self.self_jump(id, args, tail) {
             return "0".into();
         }
+        if matches!(&self.g.prog.funcs[id].body, Body::Prim(symbol) if symbol == "array.length") {
+            if let [Expr::Local(local)] = args {
+                if self.borrowed_arrays.contains(local) {
+                    self.tail_tokens(tail);
+                    return self.bind(format!("(V)array_length_{local}"));
+                }
+            }
+        }
         if let Some(result) = self.owned_hof(id, args, tail, key) {
             return result;
         }
@@ -6917,7 +7009,11 @@ impl<'g, 'p> FnGen<'g, 'p, '_> {
         let xs = self.args(args);
         let (found, at) = (self.fresh(), self.fresh());
         let v = if array_element.is_some() {
-            self.line(&format!("int {found} = (int64_t){index} >= 0 && (uint64_t){index} < fwp_array_len({array});", index=xs[0], array=xs[1]));
+            let length = self.array_length(&args[1], &xs[1]);
+            self.line(&format!(
+                "int {found} = (int64_t){index} >= 0 && (uint64_t){index} < {length};",
+                index = xs[0]
+            ));
             self.load_array(&args[1], &xs, &found, &kd)
         } else {
             self.line(&format!(
@@ -8158,7 +8254,11 @@ impl<'p> Gen<'p> {
     /// the source element while consuming their accumulator; array generation
     /// supplies a scalar index. Lower the actual body with these lifetimes so
     /// escaping values acquire owners at their uses, not at every entry.
-    fn borrowed_hof_step(&mut self, i: usize, hof: &(String, FuncId, usize)) -> Option<String> {
+    fn borrowed_hof_step(
+        &mut self,
+        i: usize,
+        hof: &(String, FuncId, usize),
+    ) -> Option<(String, Vec<Local>)> {
         let (sym, id, captures) = hof;
         if !matches!(sym.as_str(), "fold" | "fold-right" | "array.generate") {
             return None;
@@ -8213,6 +8313,11 @@ impl<'p> Gen<'p> {
             return None;
         }
         let (body, locals) = crate::rc::insert_function(self.uncounted, &f, &borrowed)?;
+        let borrowed_arrays = if array {
+            borrowed_array_reads(self.prog, &body, &locals, *captures)
+        } else {
+            Vec::new()
+        };
         // This also validates the ownership proof when unwind code is disabled.
         let live_calls = crate::rc::ownership_liveness(self.prog, &f, &body, &locals, &borrowed)
             .expect("invalid borrowed callback ownership");
@@ -8221,7 +8326,13 @@ impl<'p> Gen<'p> {
         } else {
             ("fold", "borrowed captures/elements, owned accumulator")
         };
-        let mut out = format!("/* borrowed {kind} callback for f{id}: {contract} */\nstatic V fwp_borrowed_{kind}{i}(V *args) {{\n");
+        let data_parameters = borrowed_arrays
+            .iter()
+            .map(|local| {
+                format!(", const unsigned char *array_data_{local}, size_t array_length_{local}")
+            })
+            .collect::<String>();
+        let mut out = format!("/* borrowed {kind} callback for f{id}: {contract} */\nstatic V fwp_borrowed_{kind}{i}(V *args{data_parameters}) {{\n");
         for l in 0..f.arity {
             let _ = writeln!(out, "    V l{l} = args[{l}];");
         }
@@ -8239,6 +8350,7 @@ impl<'p> Gen<'p> {
             label: 0,
             indent: 1,
             in_loop: None,
+            borrowed_arrays: borrowed_arrays.iter().copied().collect(),
             fields: HashMap::new(),
             locals,
             known_tag: HashMap::new(),
@@ -8257,7 +8369,7 @@ impl<'p> Gen<'p> {
         let value = fg.expr(&body);
         out.push_str(&fg.out);
         let _ = writeln!(out, "    return {value};\n}}\n");
-        Some(out)
+        Some((out, borrowed_arrays))
     }
 
     /// A `loop` whose step is `step`, as a C loop (see `loop_shape`): the
@@ -8410,6 +8522,7 @@ static inline __attribute__((always_inline)) int fs{}(fwp_loop_state{step} *st, 
             label: 0,
             indent: 1,
             in_loop: Some(lg),
+            borrowed_arrays: HashSet::new(),
             fields: HashMap::new(),
             locals: body_function.locals.clone(),
             known_tag: HashMap::new(),
@@ -9574,6 +9687,7 @@ static inline __attribute__((always_inline)) int fs{}(fwp_loop_state{step} *st, 
             label: 0,
             indent: 1,
             in_loop: None,
+            borrowed_arrays: HashSet::new(),
             fields: HashMap::new(),
             locals,
             known_tag: HashMap::new(),
@@ -9661,6 +9775,7 @@ static inline __attribute__((always_inline)) int fs{}(fwp_loop_state{step} *st, 
             label: 0,
             indent: 1,
             in_loop: None,
+            borrowed_arrays: HashSet::new(),
             fields,
             locals: f.locals.clone(),
             known_tag: HashMap::new(),
@@ -10969,7 +11084,7 @@ fn generate_mode(prog: &Program, mut mode: Mode) -> Result<String, String> {
             // its specialized body directly and needs no generic adapter.
             g.used_closures[hof.1] = true;
         }
-        if let Some(body) = &borrowed_step {
+        if let Some((body, _)) = &borrowed_step {
             bodies.push_str(body);
         }
         let loop_ops = if hof.0 == "loop" {
@@ -11027,6 +11142,9 @@ fn generate_mode(prog: &Program, mut mode: Mode) -> Result<String, String> {
             result_ops.as_deref(),
             fold_drop.as_deref(),
             borrowed_step.is_some(),
+            borrowed_step
+                .as_ref()
+                .map_or(&[], |(_, arrays)| arrays.as_slice()),
         ));
         bodies.push('\n');
         i += 1;
