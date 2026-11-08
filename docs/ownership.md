@@ -46,21 +46,12 @@ remove a JavaScript host's collector.
 
 ### What remains
 
-- [Private pair-buffer reuse is delivered](roadmap-history.md#private-pair-buffer-reuse-pr-260),
-  including native production checks and complete audits. Its timing misses
-  remain historical evidence, not unfinished implementation. The newer
-  [computed numeric-input change](measurements/computed-numeric-time-2026-11-07/README.md)
-  removes temporary derivative records; its local helper remains experimental.
-- Diagnose the remaining costs shared by local derivatives and handwritten fwp
-  arrays before choosing another optimization. Allocation reductions do not
-  establish the cause of their remaining C/Rust performance gap.
-- Preserve delivered ownership guarantees: aliasing, trap/cancellation cleanup,
-  primitive contracts, bounded compiler analysis and checks for absent collector
-  code. [Delivery history](roadmap-history.md) records verified platform coverage.
-- Choose broader count reductions from measured costs and explicit lifetime
-  proofs. Zero retains does not mean zero allocations or zero count checks on
-  release. [PLAN.md](../PLAN.md) keeps missed timing goals separate from verified
-  storage reductions, including the delivered final-iteration work in #255.
+[PLAN.md](../PLAN.md) selects measured loop/array improvements, broader lifetime
+proofs and application comparisons. This page defines the contracts those changes
+must preserve. Zero retains does not mean zero allocations, zero release checks
+or C/Rust performance. [Delivery history](roadmap-history.md) distinguishes verified
+storage reductions from missed timing targets; the local-derivative helper remains
+[experimental](measurements/computed-numeric-time-2026-11-07/README.md).
 
 ## Stable language behavior
 

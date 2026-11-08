@@ -340,8 +340,9 @@ remote call.
 Retaining an earlier position also retains its saved values and
 continuations, so sharing an iterator can increase memory use. Native stream
 storage has typed owners: a shared position keeps its saved values until its
-last reader releases it. The [ownership guide](services.md#reading-the-same-stream-in-two-tasks)
-describes its cleanup and measured costs.
+last reader releases it. [Ownership](ownership.md#native-executables-and-services)
+describes the contracts; [remote-call measurements](measurements/remote-client-storage.md)
+record cleanup costs at their named revisions.
 
 ### Errors and status codes
 

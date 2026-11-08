@@ -118,5 +118,5 @@ PR #217 applied the lifetime rules to all execution entries and deleted collecto
 code in [#217](roadmap-history.md#tracing-gc-removal-pr-217), preserving output, alias,
 failure, cancellation and memory checks.
 [The diagnostic deletion table](ownership-diagnostics.md#collector-specific-tests-and-retained-assertions)
-identifies what retires with tracing and what must remain. The runtime must not
+identifies the retired collector tests and their maintained replacements. The runtime must not
 silently switch an unproved program to tracing or permanent retention.

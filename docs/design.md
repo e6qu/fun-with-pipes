@@ -59,8 +59,7 @@ accept the required arguments need no additional specialization. A single-use
 local generated array can rejoin its immediate map/fold chain before fusion,
 provided every argument crossed has no effects or traps.
 
-The normal fusion proof
-still decides whether interleaving element work is valid. The eight
+The fusion proof decides whether interleaving element work is valid. The eight
 [named/tacit cost pairs](functional-costs.md#local-names-candidate-coverage) pass
 on Linux ARM64/AMD64 and macOS ARM64; #236 subsequently passed the full
 [delivery matrix](roadmap-history.md#local-names-and-allocation-optimizations-pr-236).
@@ -70,14 +69,12 @@ executes. A function constructor executes a stage and returns another function.
 The compiler may group consecutive `fn` inputs only while no computation or
 observable owner release lies between them.
 
-A `let` calculation
-ends that group. A top-level `let` is a cached value entry, even when it returns
+A `let` calculation ends that group. A top-level `let` is a cached value entry, even when it returns
 a function; a `match` entry takes one input before evaluating its selected arm.
 Applications subtract supplied inputs from the constructor's current stage,
 following checked aliases and the selected trait implementation.
 
-Runtime primitives
-use their declared stage: substituting a function for a generic result does not
+Runtime primitives use their declared stage: substituting a function for a generic result does not
 add inputs to that stage. For example:
 
 ```fwp
@@ -95,16 +92,15 @@ merely captures values: no executed calls, possible traps, observable owners or
 resource frames. It preserves typed local bindings and changes known callers
 together; the source type alone supplies no such proof.
 
-This bounded check runs
-before constructors are inlined into their consumers.
-This includes a cached function value whose captures are already constants.
+This bounded check runs before constructors are inlined, including cached
+function values whose captures are constants.
 `simd.splat` repeats one number across a vector's lanes. Small literal F64 splats
 can become constant vectors within the existing inlining-size budget; their
 signed-zero and NaN bits are copied unchanged.
 
-Other computed captures retain their original evaluation point.
-Unknown applications remain successive calls; combining them
-could run a later argument before a first-stage failure. REPL results use cached
+Other computed captures retain their original evaluation point. Unknown
+applications remain successive calls; combining them could run a later argument
+before a first-stage failure. REPL results use cached
 value entries even when their type is a function, so their construction runs once
 and later redefinitions cannot replace their saved code or captures.
 

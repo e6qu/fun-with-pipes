@@ -1,10 +1,17 @@
 # Current work
 
-**Next:** run the focused fresh-F64-output checks on native GCC ARM64/AMD64 and
-Clang ARM64, then measure the production implementation against its isolated
-reference. Continue the documentation sweep in the same normal PR. The metadata
+**Next:** finish focused run `42438693432`, audit every target, then dispatch
+`numerics.yml` suite `fresh-array` with that safety run. This measures the
+production implementation against its isolated reference. Continue the docs in
+the same normal PR. The metadata
 candidate has been removed; the replacement is **not performance-accepted**.
 No PR is open yet.
+
+Implementation head: `f21bf1390` (fresh F64 stores). Focused jobs are AMD64 GCC
+`128603076444`, ARM64 GCC `128603076704`, and Clang ARM64 `128603076570`.
+Clang passes; both GCC jobs are running native targets. Documentation run
+`42438695310`, job `128603080353`, passes. Subsequent edits change docs and
+measurement/audit tools only; preserve the compiler head while its checks finish.
 
 ## Workspace
 
@@ -87,6 +94,9 @@ not edited manually. Preserve vendor licenses and source attribution.
 
 - Earlier guarded checks pass: five diagnostic controls, six metadata controls,
   Rust formatting for the new native fixture and the tutorial copy harness.
+- Latest guarded checks: nine measurement controls, Rust formatting and the
+  sparse/index documentation audit (381 pages, five roadmap rows) pass. No local
+  compiler build or native suite was run.
 - At 75 GiB free, the sparse/index documentation audit passed 379 Markdown files
   and five roadmap rows (0.36 s). This is not the full runner audit.
 - Disk fell to **58 GiB** and the guard refused a helper; nothing ran below the

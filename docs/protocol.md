@@ -170,8 +170,7 @@ Between two fwp executables on Linux, the stream can leave the pipe after
 its header, for a Unix domain socket (`UDS_V1`) or a ring buffer in shared
 memory (`SHM_V1`). The bytes are the same (the frames after the header and
 the end frame); only the way they travel changes, so results are
-identical, and each side falls back to the pipe whenever the other cannot
-follow.
+identical. The pipe carries frames until both sides agree to switch.
 
 1. A producer whose stdout is a pipe listens on the abstract Unix socket
    `fwp.pipe.<dev>.<inode>`, named after that pipe, and writes its header
@@ -212,26 +211,18 @@ still has a cost; this is not a measured zero-overhead guarantee.
 With `FWP_TRANSPORT_WAIT=ms` the producer waits that long after its
 header for the consumer to ask, so that the whole stream moves; `fwp pipe`
 sets it, since all its stages are fwp programs. Other readers of the pipe
-(`xxd`, a file, an older fwp) get the stream unchanged on the pipe:
+(`xxd` or a file) get the stream unchanged on the pipe:
 nobody connects.
 
 A producer also enlarges its stdout pipe to 1 MiB where
 the system allows. Elsewhere than on Linux, and on WebAssembly, streams
 stay on the pipe.
 
-Measured between two native executables (`-O2`, 4 cores), the throughput
-of a stream of 200,000 strings of 4 KiB (820 MB, written as one list and
-read one record at a time) and of 1,000,000 strings of 100 bytes written
-one at a time (each flushed, as streaming results are):
-
-| transport | 820 MB in large records | 1M small records, each flushed |
-|---|---|---|
-| pipe (`FWP_TRANSPORT=stdio`) | 1.6 s | 2.2–4.3 s |
-| `UDS_V1` | 0.80 s | 3.5–4.0 s |
-| `SHM_V1` | 0.66 s | 1.3–1.4 s |
-
-(Best of five runs on a shared machine; with three other processes
-spinning on the four cores, `SHM_V1` took 0.85 s and 1.2 s.)
+Transport choice changes buffering and system-call costs. This guide makes no
+current throughput claim: the old best-of-five figures lacked a recorded source,
+complete host/toolchain identity and raw samples. A new comparison needs the same
+encoded values, flush policy and end-to-end work on each transport, following the
+[measurement rules](benchmarks.md).
 
 The interpreter (`fwp exec --interp`) implements the same transports, so
 interpreted and native stages switch with each other.
@@ -253,6 +244,6 @@ $ printf '1\n2\n3\n' | FWP_OUT=bin ./scale 10 | ./total
 60
 ```
 
-Between them, the stream may move to a faster [transport](#transports).
+Between them, the stream may switch to another [transport](#transports).
 
 Native and interpreted stages can be mixed; they write identical bytes.

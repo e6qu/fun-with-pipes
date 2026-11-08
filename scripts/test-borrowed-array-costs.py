@@ -71,6 +71,19 @@ static V fwp_hof0(V count) {
             self.assertEqual({(case['count'], case['updates']) for case in cases if case['kind'] == kind},
                              {(3, 0), (3, 1), (3, 199), (33, 199), (129, 199)})
 
+    def test_each_transformation_requires_its_own_emitted_selection(self):
+        case = dict(kind='array', updates=0)
+        for mode, selected in (
+            ('array-metadata', 'static V fwp_borrowed_array0(V *args, const unsigned char *data)'),
+            ('fresh-array', 'memcpy(result_data + index * sizeof value, &value, sizeof value);'),
+        ):
+            COSTS.check_selection(dict(candidate=selected, reference='ordinary'), case, mode)
+            for candidate, reference in (('ordinary', 'ordinary'), (selected, selected)):
+                with self.assertRaises(AssertionError):
+                    COSTS.check_selection(dict(candidate=candidate, reference=reference), case, mode)
+        with self.assertRaises(AssertionError):
+            COSTS.check_selection(dict(candidate='different', reference='loop'), dict(kind='loop'), 'fresh-array')
+
     def test_negative_zero_oracle_keeps_its_bits(self):
         self.assertEqual(COSTS.words([-0.0, 0.0], False), [1 << 63, 0])
 

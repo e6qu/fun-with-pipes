@@ -91,21 +91,15 @@ turn their aspirations into fwp acceptance claims.
 
 ## Why this combination was selected
 
-The original effort comparison below explains the design decision, not a backlog.
-Relative estimates are engineering judgments, not schedules. Keeping APIs
-is not a constraint. Keeping an explicit, testable lifetime contract is.
+Each mechanism has a specific job: moves/borrows avoid unnecessary owners,
+ARC supports independent sharing, weak links break selected owning cycles, and
+regions group data with one proved lifetime. A general region-only redesign is
+not required. Exact inference of every safe lifetime is not a feasible goal.
 
-| Route | Main implementation work | Cost and uncertainty |
-|---|---|---|
-| Weak references plus existing ARC | Decide eligible target identities; implement weak metadata, acquire/expire/release, synchronization and interpreter behavior; integrate captures, queues and foreign ownership | A bounded feature, but final-release races, reuse and observable lifetime are substantial work. It does not itself reduce ARC or prove absence of leaks |
-| Stronger static ownership with restricted cycles | Define accepted ownership graphs; infer borrowed/consumed/returned ownership, capture and escape relationships; handle recursive summaries and diagnostics | More compiler work. Predictable only with deliberately limited facts and conservative rejection; arbitrary exact cycle/lifetime inference is not a finite engineering objective |
-| Replace general ownership with regions/data stacks | Redesign containers, return storage, recursive construction, escaping functions, tasks, resources and external interfaces; implement region checks and layouts | Broadest language/runtime change. Potentially removes per-object bookkeeping, but creates new lifetime and retention tradeoffs |
-| Selected combination | Inferred moves/borrows and unique storage; ARC for genuine independent sharing; explicit weak edges; regions for suitable bounded workloads | Separate correctness from optimization. Do not make every value weak-capable or require general region inference before deleting tracing |
-
-Weak support changes optimization rules too: an apparently unused strong owner
-may still have observable expiration or resource cleanup. Count-free unique
-storage must not silently become shared through a weak acquisition. Define these
-interactions before choosing layouts; existing layouts are replaceable.
+Weak expiration and resource cleanup can make an owner's release observable.
+An optimization must preserve that timing; unique storage cannot silently become
+shared through weak acquisition. APIs and layouts may change, but these contracts
+and their tests remain.
 
 ## A concrete cycle example
 
@@ -140,7 +134,7 @@ These boundary contracts and regression cases were verified in #215. The compile
 [count-free parser storage](parser-workspace.md) inside the compiler without a
 new public API; its full platform acceptance is verified in #221.
 
-| Case | Accepted shape to implement or preserve | Required rejection or cleanup check |
+| Case | Maintained shape | Required rejection or cleanup check |
 |---|---|---|
 | Callback queued on its own channel | Callback holds an explicit weak link; a live acquisition permits the operation | Reject storing an acquired owner where it recreates the cycle; expired access reports absence; reused addresses cannot revive it |
 | Persistent subscription | Independent owner controls callback registration and active calls | Stop/unregister prevents new calls and waits for active calls to finish or unwind; test reentry, failure and cancellation |
@@ -166,34 +160,12 @@ Its expected output is checked independently. Tombstone
 metadata remains in the slot, but deleted payloads and edges do not. An older
 immutable graph snapshot intentionally still owns its older node.
 
-The subscription contract remains [lesson 24](tutorials/24-subscriptions/README.md):
-finish drains; stop cancels and awaits; both wait for active work. The existing
-failure, reentry and cancellation tests remain required. Returned partial
-applications likewise keep their captures; weak observation must not shorten
-that lifetime. The parser/AD row preserves scoped guarantees; the
-[parser workspace](parser-workspace.md) verifies the bounded count-free region
-added after GC removal. General region inference remains outside that proof.
-
-**Retained C callbacks use an explicit registration protocol.**
-[Selected C exports](retained-callbacks.md) can register copied leading arguments
-and invoke the final argument later. One host owner controls registration;
-active calls borrow its captures. Close prevents entry; release consumes that
-owner; destruction waits for active calls to return or unwind. Neither blocks
-inside reentry. Host delivery must stop before release, and all calls/results/
-registrations must finish before unload. Calls use the OS thread of first entry.
-The compiler cannot infer arbitrary C retention or raw-pointee lifetimes.
-
-Managed results retain their existing independent release functions. The native
-fixture covers repeated calls, nested release, language failure, cancellation,
-partial construction and results surviving registration release; #215 passed
-the full production matrix. Arbitrary
-runtime-created functions still cannot cross C as values; function fields in
-`repr(C)` records remain rejected. Ordinary scoped callbacks retain their scope.
-
-The [admission matrix](ownership-admission.md) maps these contracts to execution
-and rejection tests. Preserve those verified contracts as representations change.
-Scoped parser storage changes nodes within one proved invocation lifetime; it does not
-introduce general region inference or alter the completed collector removal.
+Follow the complete contracts in [subscriptions](tutorials/24-subscriptions/README.md),
+[retained C callbacks](retained-callbacks.md) and [parser storage](parser-workspace.md).
+The [admission matrix](ownership-admission.md) maps them to execution and rejection
+tests. Returned functions keep their captures; foreign callers must follow the
+declared thread, release and unload rules. Neither weak observation nor a region
+optimization permits shortening a live value's lifetime.
 
 ## Keep compiler cost bounded and visible
 

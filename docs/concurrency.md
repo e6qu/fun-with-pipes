@@ -142,10 +142,9 @@ records the six-host focused results.
 records full production acceptance after repairing the Windows output assertion
 and dependency fetching that failed in #188.
 
-Windows fibers preserve the state needed to resume execution. Tracing builds
-also save a register copy for root scanning. ARC excludes that
-collector-only copy and its stack marker; cancellation's return buffer remains.
-Both modes still use Windows fibers and preserve their floating-point state.
+Windows fibers preserve execution and floating-point state. Cancellation keeps
+its return buffer. The former collector-only register copy and root-scanning
+stack marker were removed with tracing GC; there is no second memory mode.
 
 Tasks started in a row get their turns in the order they were started,
 on both backends (the interpreter's threads take their places in the

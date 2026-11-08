@@ -33,6 +33,11 @@ jobs:
           safety_source=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SAFETY_RUN" --jq .head_sha)
           python3 scripts/audit-focused-storage.py --group "$TRANSFORMATION" \
             --run "$SAFETY_RUN" --source "$safety_source" --attempt 1 --output array-audit
+      - name: Audit the complete fresh-output selection diagnostic
+        if: inputs.mode == 'fresh-array'
+        run: >-
+          python3 scripts/audit-array-builder.py --run 42437082841
+          --source 432d19715c87a5aae9681c4b7b3507847eb87a53 --output builder-audit
       - uses: actions/upload-artifact@v7
         if: always()
         with:
@@ -44,6 +49,7 @@ jobs:
             array-audit/summary.json
             array-audit/jobs.json
             array-audit/artifacts.json
+            builder-audit/summary.json
           if-no-files-found: error
   measure:
     if: inputs.mode == 'array-metadata' || inputs.mode == 'fresh-array'

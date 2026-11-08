@@ -91,6 +91,18 @@ def driver(generated, case, expected):
     return source + '\n' + harness
 
 
+def check_selection(generated, case, transformation):
+    if case['kind'] == 'loop':
+        assert generated['candidate'] == generated['reference'], 'unchanged loop differs'
+    elif case['updates'] > 0 or case['kind'] == 'array':
+        selected = {
+            'array-metadata': r'static V fwp_borrowed_array\d+\(V \*args, const unsigned char',
+            'fresh-array': re.escape('memcpy(result_data + index * sizeof value, &value, sizeof value);'),
+        }[transformation]
+        assert re.search(selected, generated['candidate']), 'candidate selection missing'
+        assert not re.search(selected, generated['reference']), 'reference selection still enabled'
+
+
 def summarize(observations):
     measured = [row for row in observations if row['round'] >= 0]
     assert [(row['round'], row['role']) for row in measured] == [
@@ -208,11 +220,7 @@ def main():
             copied = directory / (role + '-copy')
             shutil.copy2(binary, copied)
             binaries[role], binaries[role + '-copy'] = binary, copied
-        if case['kind'] == 'loop':
-            assert generated['candidate'] == generated['reference'], 'unchanged loop differs'
-        elif case['updates'] > 0 or case['kind'] == 'array':
-            assert re.search(r'static V fwp_borrowed_array\d+\(V \*args, const unsigned char', generated['candidate'])
-            assert not re.search(r'static V fwp_borrowed_array\d+\(V \*args, const unsigned char', generated['reference'])
+        check_selection(generated, case, args.transformation)
         rows = []
         for number in range(-2, 24):
             for role in order(number):

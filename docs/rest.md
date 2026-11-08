@@ -12,7 +12,7 @@ or bodies; use the linked example files for runnable programs. A path parameter
 is part of the address (`/books/3`); query parameters follow `?` (`?limit=5`).
 Headers carry named metadata, and cookies are named values sent in a Cookie header.
 
-An exported function is a REST endpoint. Its parameters are the request:
+An exported function exposed as `rest` becomes an endpoint. Its parameters are the request:
 path parameters, query parameters and a JSON body (or a form, with
 files); its result is the JSON response (or text, or CSV), and its errors
 are error responses. The functions of a file exposed as `rest` (a line
