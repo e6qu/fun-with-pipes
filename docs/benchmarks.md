@@ -211,15 +211,17 @@ status, exact flags, process RAM and unmeasured peer allocation counts explicit.
 are separate: ARM64 confirms faster fresh-output stores; cross-platform milestone
 acceptance remains open. Neither fewer retains nor a successful audit closes it.
 
-The next [captured-map comparison](measurements/captured-array-maps.md) asks whether
-runtime scalar coefficients can use the same storage-reuse proof as closed
-callbacks. It compares sensor calibration and pixel adjustment against a
+The [captured-map comparison](measurements/captured-array-maps.md) extends
+storage reuse to runtime scalar coefficients. It compares sensor calibration and pixel adjustment against a
 same-source build disabling only that selection. It checks exclusive, shared and
 slice inputs, with construction/work/release timings and separate memory counts.
-[Initial results](measurements/captured-map-initial-2026-11-08/README.md) show large
-qualified gains and fewer array allocations, but shared-empty-input regressions
-and noisy controls leave acceptance open. The empty-owner repair needs new
-verification and measurements; earlier unmet targets remain unchanged.
+[Repaired results](measurements/captured-map-repaired-2026-11-08/README.md) show
+84–94% less computation on both largest applications in four sessions, 199 fewer
+array allocations and roughly half the managed peak storage. No qualified case
+regresses; noisy controls leave combined acceptance open. Native safety and
+measurement audits pass; final production delivery remains pending.
+[Initial results](measurements/captured-map-initial-2026-11-08/README.md) and
+earlier unmet targets remain unchanged.
 
 ## Choose the question first
 

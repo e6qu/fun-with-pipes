@@ -173,16 +173,16 @@ controls, count savings, and additional code/stack costs. Its six-host
 checks and final production gates passed in #212.
 
 A selected same-type numeric `array.map` can consume a last-use array and reuse
-its exclusive ordinary storage. Shared arrays and views receive independent
+its exclusive ordinary storage. Nonempty shared arrays and all views receive independent
 output. [The original proof is verified](roadmap-history.md#consumed-numeric-storage-pr-258).
 The [scalar-capture extension](measurements/captured-array-maps.md) passes saved
-numbers directly to that worker. Initial GCC/Clang checks pass;
-[measurements](measurements/captured-map-initial-2026-11-08/README.md) show fewer
+numbers directly to that worker. Expanded GCC/Clang checks pass;
+[measurements](measurements/captured-map-repaired-2026-11-08/README.md) show fewer
 allocations but leave combined timing acceptance open. Full platform delivery
 remains pending. Neither proof makes an input mutable in the source language.
 The natively checked empty-input repair forwards an ordinary empty array unchanged
-even when shared. Empty views still release their backing owner; revised timings
-and final platform delivery remain pending.
+even when shared. Empty views still release their backing owner. Four revised
+measurement sessions pass their audits; final platform delivery remains pending.
 
 ## Tasks and channels
 

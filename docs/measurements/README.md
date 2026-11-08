@@ -11,8 +11,10 @@ identities. Do not edit observations to make an old experiment describe new code
 
 Current investigation: [captured scalar array-map reuse](captured-array-maps.md).
 [Initial safety checks](captured-map-checks-2026-11-08/README.md) pass.
-[Measurements](captured-map-initial-2026-11-08/README.md) show large gains but miss
-combined acceptance; the empty-owner repair and final delivery remain pending.
+[Repaired measurements](captured-map-repaired-2026-11-08/README.md) show 84–94%
+less computation on both largest applications and no qualified regression.
+Noisy controls leave combined acceptance open; final delivery remains pending.
+[Initial results](captured-map-initial-2026-11-08/README.md) remain unchanged.
 
 Merged #270 passes [all delivery gates](fresh-array-delivery-2026-11-08/README.md).
 Its [shared loop/array investigation](shared-loop-array-costs.md) retains unmet

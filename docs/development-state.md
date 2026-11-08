@@ -1,148 +1,104 @@
 # Current work
 
-**Next:** publish the benchmark cleanup repair and measure the repaired compiler
-using safety run `42477156079`; review all four sessions before final delivery.
-Keep the original measurements unchanged. Bundle the implementation, repair,
-evidence and docs in one normal PR after the changed implementation is measured.
-
-## Workspace
-
-Branch `captured-array-map-reuse`, worktree `.worktrees/recording-capacity-gate`.
-Base `f87796b52081889b96859dbd72bf4af9a6726207` is merged PR #270. Preserve unrelated
-root-worktree changes. No PR is open yet; final production gates have not run.
+**Next:** publish the captured-map batch as one normal PR, run all nine final-head
+production jobs plus docs, audit every completed log/artifact, then squash-merge
+with a one-line subject (at most 80 characters) and empty body. Fix any failure
+before merging. Do not repeat completed timings to obtain better results.
 
 ## Roadmap status
 
 | Step | Status | Remaining work |
 |---|---|---|
-| 1 | In progress | #270 delivered fresh F64 stores and refreshed docs/tutorials. ARM64 improves 26–31%; original AMD64 timing acceptance stays open. |
-| 2 | In progress | Empty-input repair passes expanded native checks. Measure it under the unchanged limits and complete final delivery; retain original timing misses. |
-| 3 | Pending | Structured differentiation across three objective families; preserve general AD, nesting and precision. |
-| 4 | Pending | Current Swift/C/Rust ownership comparisons, phase timings and explicit memory boundaries. |
-| 5 | Pending | Three application/tooling paths; compiler phase/scaling costs and demonstrated usability repairs. |
+| 1 | In progress | #270 delivered the docs refresh and fresh F64 stores; original AMD timing acceptance stays open. |
+| 2 | In progress | Captured maps pass native safety and measurement audits; final production delivery and noisy timing acceptance remain open. |
+| 3 | Pending | Compare structured autodiff on neighboring pairs, independent losses and a dense coupled objective. |
+| 4 | Pending | Update Swift/C/Rust ownership comparisons with separate time and memory boundaries. |
+| 5 | Pending | Three application/tooling paths, compiler phase/scaling costs and demonstrated usability repairs. |
 
-## Implementation and current checks
+## Workspace and scope
 
-The compiler snapshots known scalar captures at their original binding, passes
-those numbers directly to a consuming map and retains closures needed by other
-uses. Only the last array argument is consumed. Nonempty shared arrays and views
-receive independent output. No language API or syntax change.
+Branch `captured-array-map-reuse`, worktree `.worktrees/recording-capacity-gate`.
+Base `f87796b52081889b96859dbd72bf4af9a6726207` is merged PR #270. Preserve unrelated
+root-worktree changes. Final production gates have not run yet.
 
-Repair source `ca837567a41c660c5a0150faca688b6b5917cd81` forwards an ordinary empty
-array's existing owner without writes, allocation, cleanup scopes or count changes,
-including shared inputs and no-reuse builds. Empty views still release their
-potentially large backing owner. The physical-free/alias tests require this exact
-behavior. Formatting passes locally; the first native run found stale assertions
-in record/temporary-map tests. The compiler source is unchanged by their repair.
+Known scalar captures now pass directly to a consuming array map. Capture values
+are saved once at the original binding; other closure uses remain valid. Only the
+last array argument is consumed. Exclusive arrays can supply output storage;
+nonempty aliases and views preserve their original data. Empty ordinary arrays
+transfer unchanged, including shared inputs. Empty views release their backing
+owner. There is no language API or syntax change.
 
-Expectation repair `4da9011873ce7cc6f67af71448cd3591c1d5562c` is published.
-Expanded focused run `42477156079`:
+## Verified results
 
-| Host | Job | Last observed state |
+| Evidence | Source / run | Outcome |
 |---|---|---|
-| AMD64 GCC | 128720938835 | Passed |
-| ARM64 GCC | 128720938985 | Passed |
-| macOS ARM64 Clang | 128720938966 | Passed |
+| Expanded ownership and identity checks | `4da9011873ce7cc6f67af71448cd3591c1d5562c`; `42477156079` | ARM GCC `128720938985`, AMD GCC `128720938835`, macOS ARM Clang `128720938966` pass: 57 native tests in ten targets and 14 units per host, nine bounded analysis rows. |
+| Complete focused audit | `42478473189`, job `128724990571`; repeated in `42479872910`, job `128729288911` | All identity logs, 444 probe outcomes per host and actual native image checks pass. [Retained evidence](measurements/captured-map-empty-checks-2026-11-08/README.md). |
+| Repaired measurements | `c8611f5e67c773a1d380255eb0c49088424325b8`; `42479872910` | ARM1 `128729874165`, ARM2 `128729874189`, AMD1 `128729874176`, AMD2 `128729874145`: all 48 cases and complete observation audits pass. |
+| Documentation | Same measured source; `42479874918`, job `128729292696` | Passes. Full log reviewed, including expected failure-propagation controls. |
 
-All 57 native tests in ten targets and 14 ownership/identity units pass per host.
-Full logs contain no compiler warnings or errors. Docs `42477158452`, job
-`128720942662`, passes. Prior docs `42475717410`,
-job `128716518586`, passes at compiler source `ca837567a`.
-In failed run `42475715012`, all completed targets and full job logs were reviewed:
-13 ownership units and the other seven targets pass on every host. The batch updates exact
-empty-result identity/allocation counts for returned records and temporary inputs,
-adds contextual diagnostics, and repairs the same assumption in the float
-identity control. Alias, empty-view and physical-free assertions remain required.
-The expanded focused suite includes the affected float/identity targets.
-The evidence auditor now also requires their three saved unit/target logs;
-ten local auditor tests pass, including complete/missing/failed/ignored controls.
+All completed native and measurement logs were reviewed; no unresolved compiler
+warnings/errors remain. The workflow verifies compiler/native-fixture identity
+against the passing safety run before measurements. The [complete report](measurements/captured-map-repaired-2026-11-08/README.md)
+retains both sessions per architecture and exact source/toolchain identities.
 
-New measurement source `7ab93331027f65d02f1b029b51c8c909656d3fe4` uses the unchanged
-48-case protocol and safety run `42477156079`. Its
-[expanded evidence audit](measurements/captured-map-empty-checks-2026-11-08/README.md)
-passes, job `128724990571`, with 444 probe outcomes and all identity logs per host.
-Artifact `13616691909` is retained with its verified digest and record hashes.
-Measurement run `42478473189` failed: ARM2 `128725646968` and AMD2 `128725647003`
-exposed a benchmark cleanup bug (status 214); AMD1 `128725646945` correctly
-rejected an Intel host before timing. ARM1 `128725646991` was cancelled during
-building after the failure was known. All completed logs were reviewed.
-[Failure evidence and repair](measurements/captured-map-driver-repair-2026-11-08/README.md)
-explain the missing reference drops. The driver now consumes each owner before
-freeing its storage; compiler code is unchanged. Both saved failures and the
-rejected host are retained. Docs `42478475287`, job `128724993198`, passes.
-No repaired timing result is available yet; keep host and acceptance limits fixed.
+- Both largest 199-update applications qualify in every session: 84–94% less
+  computation than the same-source reference without captured-map selection.
+- Allocations fall from 600 to 401; sensor requested bytes fall from 419,441,600
+  to 2,105,168. Managed peak roughly halves. Final live storage is zero.
+- Remaining loop-state/step boxes account for 400 requests; the input array adds
+  one. Payload extraction still retains 200 times. No heap/ARC-free claim.
+- No qualified timing regression remains. Of 48 cases per session, copy controls
+  are inconclusive in 7 and 7 on ARM, and 32 and 37 on AMD, so combined acceptance stays
+  open. This does not establish parity with Swift/C/Rust.
 
-## Original measurements: preserved, not accepted as complete
+## Repairs and preserved evidence
 
-[The four-session report](measurements/captured-map-initial-2026-11-08/README.md)
-retains all raw observations, sources, flags, hashes and job logs. Run
-`42472528452`, source `025016fbedfcac2127619e4a053415aa83b9d6b0`, is anchored by
-`evidence/captured-maps-initial-20261108`. Every job and reconstruction audit passes.
+[Initial measurements](measurements/captured-map-initial-2026-11-08/README.md)
+retain shared-empty regressions and all original limits. The empty-owner repair
+`ca837567a` passes after stale pointer/allocation expectations were fixed in
+`4da901187`; affected float identity checks were included before measuring.
 
-| Session | Job | Outcome |
-|---|---|---|
-| ARM1, N2 | 128711666600 | 9 inconclusive computation controls; no qualified regression |
-| ARM2, N2 | 128711666641 | 6 inconclusive controls; shared empty sensor/pixel regressions 3.77%/4.45% |
-| AMD1, EPYC 9V74 | 128711666753 | 33 inconclusive controls; shared empty pixel regression 2.44% |
-| AMD2, EPYC 9V45 | 128711666605 | 38 inconclusive controls; no qualified regression |
+[Driver failure and repair](measurements/captured-map-driver-repair-2026-11-08/README.md):
+run `42478473189` found missing shared-reference drops in the C benchmark driver
+on both architectures (status 214). The repair uses the runtime's normal
+release-before-free order and includes status/timeout in diagnostics. An Intel
+host was rejected before timing; the remaining build was cancelled. All logs and
+failure records are retained. No compiler change was needed for this repair.
 
-Qualified large cases show roughly 83–94% less computation, but missing copy
-qualification and the three regressions prevent combined acceptance. Do not pool
-CPU models, weaken the 2% noise/regression limits or rerun unchanged timings for a
-pass. The empty-input repair changes the implementation and must be measured anew.
+[#270's complete delivery audit](measurements/fresh-array-delivery-2026-11-08/README.md)
+is retained. This batch also repairs recovered exact-source checkout handling
+in the production auditor while preserving original diagnostics.
 
-Memory counts match across both architectures for all 48 cases. Largest exclusive
-199-update cases remove 199 array allocations: 600 requests become 401. Sensor
-requested bytes fall from 419,441,600 to 2,105,168; peak managed storage roughly
-halves. Retains remain 200; final live storage is zero. Remaining heap/ARC work is
-not removed. The report includes RSS, compiler time/RSS, code and stack costs.
+## Local verification and resources
 
-## Safety evidence and earlier delivery
+All checks use `python3 scripts/local-guard.py`, serially. Full suites/builds,
+benchmarks and large generation run on GitHub runners.
 
-[Initial safety evidence](measurements/captured-map-checks-2026-11-08/README.md):
-run `42471671589`, source `46ac4cf383c614aceb715675aba71e2b85416a4f`; 13 ownership
-units, 47 native tests in eight targets and nine bounded traversal observations
-pass per host. Audit job `128706453822` checks 382 probe outcomes per host and
-native images, with no issues. The verified archive and full artifact metadata
-are retained. These checks precede the empty-input repair.
+- Formatting, four captured-map controls, 14 borrowed-array controls and ten
+  production-auditor controls pass. Eight clock helpers pass 64 Clang executions.
+- `/tmp/fwp-replay-empty-owner.py`: ten exact O1/O2 success/failure cases pass
+  (reuse, no-reuse, corrupt output, missing suffix and missing captured owner).
+- `/tmp/fwp-replay-captured-driver.py`: old C reproduces 214 at O1/O2; 24 corrected
+  exclusive/shared/view cases pass, with unchanged final managed storage.
+- All four full artifact digests and retained raw-file hashes pass verification;
+  cross-architecture managed counts agree for all 48 cases. One verification was
+  attempted before a download completed and rejected it; the completed download
+  passed before retention. No partial artifact was accepted.
+- The docs check caught and fixed a missing status table in the shortened
+  handoff. All five roadmap rows, 391 Markdown files and workflow limits pass.
 
-[The contract](measurements/captured-array-maps.md) retains the two earlier failed
-runs and their repairs: actual bound callbacks needed indexing; exported roots
-were needed for selection checks; missing-owner cleanup rejects at exact status
-248 before the physical-leak check. All completed targets/logs were reviewed.
+Disk fluctuates across the 64 GiB reserve. Stop on guard limits; never bypass or
+raise them. Space was 77 GiB before final artifact downloads. Guarded replays took
+5.43 and 24.31 seconds; they supplement, not replace, GCC and final platform gates.
 
-[#270's delivery record](measurements/fresh-array-delivery-2026-11-08/README.md)
-retains all nine native production jobs, docs, tested/merged tree identity and the
-passing complete audit. Its recovered-checkout audit repair is included in this
-branch; ten controls and actual-log replay pass. Earlier timing misses remain open.
+## Roadmap after this batch
 
-## Local checks and delivery requirements
-
-All local checks use `python3 scripts/local-guard.py`, serially. Full builds,
-native suites, benchmarks and large evidence generation run on GitHub runners.
-
-- Rust formatting passes after the empty-owner repair.
-- Four captured-map and 14 borrowed-array measurement controls pass.
-- Eight clock helpers pass 64 Clang O1/O2 executions; docs CI also checks GCC.
-- Measurement/fixture programs pass isolated production parser/formatter checks.
-- Markdown links, five roadmap rows and workflow size/YAML checks pass.
-- Original artifact digests, compact record hashes and reported fields are checked
-  locally; the complete observation audits passed on their measurement runners.
-- Guarded `/tmp/fwp-replay-empty-owner.py` replays the exact failing CI-generated
-  C with the repaired fixture at Apple Clang 17 O1/O2: reuse and no-reuse pass;
-  corrupted output, missing suffix cleanup and missing captured-input cleanup
-  reject at exact statuses 241/90/248. All ten cases pass in 5.43 seconds, 2.32
-  sampled CPU seconds. This does not replace GCC or the added identity checks.
-- Guarded `/tmp/fwp-replay-captured-driver.py` reproduces the benchmark leak at
-  O1/O2 and passes all 24 corrected exclusive/shared/view checks: 24.31 seconds,
-  12.05 sampled CPU seconds. Four driver-contract tests pass. Compact failure
-  artifacts and their exact status-214 records pass digest checks.
-
-Disk has fluctuated across the 64 GiB reserve. Local checks stopped at 54 GiB and
-resumed only after recovery to 78 GiB. The guard then refused the final docs check
-after free space fell again; that check is queued on CI. No limits were raised
-or bypassed. Space recovered to 76 GiB before the guarded driver replay; stop
-again if the reserve falls below the limit.
-Final delivery still needs nine production jobs, docs and a complete audit for the
-exact final PR head, followed by authorized squash merge with a one-line subject
-of at most 80 characters and an empty body.
+[PLAN.md](../PLAN.md) owns the ordered milestones. #270 delivered the broad docs
+refresh; its original AMD timing target stays open. This batch extends ownership
+coverage to sensor and pixel applications; final delivery and noisy timing
+acceptance remain separate. Next comes structured autodiff across neighboring
+pairs, independent losses and a dense coupled objective, then Swift/C/Rust
+ownership comparisons and three application/tooling/compiler-scaling exercises.
+Freeze each next comparison before implementation; preserve general AD, nested
+differentiation and F128 precision. Tracing GC remains removed; JIT is excluded.

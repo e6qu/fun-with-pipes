@@ -2,7 +2,8 @@
 
 Status: the initial implementation passes focused native verification. Its first
 measurements expose a shared-empty-input regression; an empty-owner transfer
-repair passes expanded native checks and awaits measurement. Final platform
+repair passes expanded native checks and all four measurement audits. No qualified
+regression remains; noisy controls leave combined timing acceptance open. Final platform
 delivery remains pending. The first native run found that the selector
 missed let-bound callbacks. The repair indexes actual partial applications and their bindings. This extends
 the existing same-type numeric `array.map` proof; it does not close #270's
@@ -10,8 +11,8 @@ unresolved AMD64 timing limits or change its original results.
 
 The [initial four-session report](captured-map-initial-2026-11-08/README.md)
 retains all gains, regressions, inconclusive controls and memory/compiler costs.
-The empty-owner repair changes the implementation; its measurements must use
-the same protocol below, without replacing the initial observations.
+The [repaired measurements](captured-map-repaired-2026-11-08/README.md) use
+the same protocol below without replacing the initial observations.
 
 ## Programs and the cost to remove
 
@@ -26,8 +27,8 @@ brighten : U8 -> Array[U8] -> Array[U8]
 brighten = fn offset -> fn pixels -> pixels | array.map (add offset)
 ```
 
-`calibrate 2.0 1.0` turns `[1.0, 3.0]` into `[3.0, 7.0]`.
-`brighten 3u8` turns `[10u8, 20u8]` into `[13u8, 23u8]`.
+`calibrate 2.0 1.0` turns `array[1.0, 3.0]` into `array[3.0, 7.0]`.
+`brighten 3u8` turns `array[10u8, 20u8]` into `array[13u8, 23u8]`.
 Both return immutable values. An alias must still see the original input.
 
 Before this extension, the consuming-map proof required a callback with no saved arguments.
@@ -105,8 +106,8 @@ control; preserve all alias/free checks. The compiler is unchanged from `ca83756
 [Expanded run 42477156079](https://github.com/e6qu/fun-with-pipes/actions/runs/42477156079),
 `4da901187`, passes on all three hosts: 57 native tests in ten targets and 14
 ownership/identity units per host, plus docs. Full logs have no compiler warnings
-or errors. The empty-owner path is natively checked; its timing benefit still
-needs measurement under the unchanged protocol below.
+or errors. The empty-owner path is natively checked and measured under the
+unchanged protocol below; full platform delivery remains pending.
 The [complete expanded audit](captured-map-empty-checks-2026-11-08/README.md)
 passes, including the separate identity/float logs and 444 probe outcomes per host.
 
