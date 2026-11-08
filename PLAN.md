@@ -18,7 +18,7 @@ excluded. The [design limits](docs/design-limits.md) define what we do not promi
   56–59% faster than reverse AD, but still takes 4.2–5.7 times handwritten C's time.
   The helper remains experimental; three timing controls remain inconclusive.
   [Results](docs/measurements/computed-numeric-time-2026-11-07/README.md).
-- Current milestone measurements show 26–31% less large-array computation on
+- Merged PR #270 shows 26–31% less large-array computation on
   ARM64, but AMD64 timing acceptance remains open. [All original limits and
   memory/compiler costs](docs/measurements/fresh-array-costs-2026-11-08/README.md)
   are retained; the candidate is not a completed milestone.
@@ -51,7 +51,21 @@ Each milestone preserves earlier behavior and coverage. A smaller executable or
 fewer requested operations is evidence, but does not by itself finish a runtime
 performance milestone. Working-memory gains and runtime tradeoffs must be explicit.
 
-## Current milestone: shared loop and array costs
+## Active implementation: captured scalar array maps
+
+PR #270 delivered the documentation refresh and fresh F64 output stores. All nine
+production jobs and docs passed; its complete audit is being reconciled with a
+recovered checkout timeout. The original AMD64 timing acceptance stays open.
+The user's merge retains the improvement without declaring that target met.
+
+The next substantial PR extends the existing consuming-map proof to callbacks
+with scalar captures: runtime sensor calibration and pixel adjustment. Bundle
+selection/ownership changes, failure and alias controls, measured runtime/memory
+costs and documentation. [The selection and measurement contract](docs/measurements/captured-array-maps.md)
+defines exclusions and acceptance before collecting results. This begins step 2's
+broader proof coverage while step 1's unresolved timing result remains visible.
+
+## Retained contract: shared loop and array costs
 
 Bundle implementation, incidental repairs, evidence and the entire documentation
 refresh into one normal PR. Publish when the batch is ready; do not use draft

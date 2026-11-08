@@ -61,6 +61,41 @@ def windows_diagnostics(log):
     found = [line for line in found if line not in expected_diagnostics]
     return found, expected_diagnostics
 
+def recovered_checkout_diagnostics(log, job, source):
+    """Recognize only a proved same-command checkout retry; retain its errors."""
+    timeout = b'##[error]error: RPC failed; curl 56 Recv failure: Operation timed out'
+    header = b'##[error]fatal: protocol error: bad pack header'
+    lines = log.splitlines()
+    messages = [line.partition(b' ')[2] for line in lines]
+    if timeout not in messages:
+        return []
+    checkout, = [step for step in job['steps'] if step['name'] == 'Run actions/checkout@v7']
+    assert checkout['conclusion'] == job['conclusion'] == 'success'
+    begin = datetime.fromisoformat(checkout['started_at'])
+    end = datetime.fromisoformat(checkout['completed_at'])
+    start, = [i for i, message in enumerate(messages) if message == b'##[group]Fetching the repository']
+    stop = next(i for i in range(start + 1, len(messages)) if messages[i] == b'##[endgroup]')
+    block = messages[start + 1:stop]
+    commands = [message for message in block if message.startswith(b'[command]') and b' fetch ' in message]
+    assert len(commands) == 2 and commands[0] == commands[1]
+    assert re.fullmatch(rb'\[command\]/[^ ]+/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin ' + source.encode(), commands[0])
+    first = block.index(commands[0])
+    second = block.index(commands[1], first + 1)
+    assert block[first + 1:second - 2] == [timeout, header]
+    assert re.fullmatch(rb"The process '/[^ ]+/git' failed with exit code 128", block[second - 2])
+    assert re.fullmatch(rb'Waiting [0-9]+ seconds before trying again', block[second - 1])
+    assert b' * branch            ' + source.encode() + b' -> FETCH_HEAD' in block[second + 1:]
+    verified = b'[command]' + commands[0].split(b'[command]', 1)[1].split(b' -c ', 1)[0] + b' rev-parse --verify --quiet ' + source.encode() + b'^{object}'
+    proof = block.index(verified, second + 1)
+    assert block[proof + 1] == source.encode()
+    recovered = diagnostics(b'\n'.join(lines[start + 1:stop]))
+    assert [line.partition(b' ')[2] for line in recovered] == [timeout, header]
+    for line in lines[start:stop + 1]:
+        when = datetime.fromisoformat(line.partition(b' ')[0].decode())
+        assert begin <= when and when.timestamp() < end.timestamp() + 1
+    return recovered
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--run', type=int, required=True)
@@ -130,7 +165,8 @@ def main():
         elif label.startswith('mac-'):
             found = [line for line in found if not re.search(
                 rb'Warning: openssl@3 [0-9.]+ is already installed and up-to-date\.$', line)]
-        expected_diagnostics = []
+        expected_diagnostics = recovered_checkout_diagnostics(log, job, SOURCE)
+        found = [line for line in found if line not in expected_diagnostics]
         if label.startswith('mac-'):
             first_name = ('Publish individual ownership test logs' if label.endswith('ownership')
                           else 'Publish individual regular test logs')
@@ -155,7 +191,9 @@ def main():
             else:
                 assert first['conclusion'] == 'success' and retry['conclusion'] == 'skipped'
         if label.startswith('windows-'):
-            found, expected_diagnostics = windows_diagnostics(log)
+            found, windows_expected = windows_diagnostics(log)
+            found = [line for line in found if line not in expected_diagnostics]
+            expected_diagnostics.extend(windows_expected)
         report = dict(source=SOURCE, job=job, logSha256=hashlib.sha256(log).hexdigest(),
                       expectedDiagnostics=[line.decode() for line in expected_diagnostics], targetLogs={})
         if artifact_name:

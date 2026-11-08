@@ -207,5 +207,58 @@ class ProductionLogs(unittest.TestCase):
                         self.assertNotIn('owners/probe.exe', retained.namelist())
 
 
+
+class CheckoutRecovery(unittest.TestCase):
+    def sample(self):
+        command = b'[command]/usr/local/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin ' + SOURCE.encode()
+        messages = [
+            b'##[group]Fetching the repository', command,
+            b'##[error]error: RPC failed; curl 56 Recv failure: Operation timed out',
+            b'##[error]fatal: protocol error: bad pack header',
+            b"The process '/usr/local/bin/git' failed with exit code 128",
+            b'Waiting 17 seconds before trying again', command,
+            b'From https://github.com/e6qu/fun-with-pipes',
+            b' * branch            ' + SOURCE.encode() + b' -> FETCH_HEAD',
+            b'[command]/usr/local/bin/git rev-parse --verify --quiet ' + SOURCE.encode() + b'^{object}',
+            SOURCE.encode(), b'##[endgroup]',
+        ]
+        log = b'\n'.join(b'2026-11-08T00:00:01Z ' + message for message in messages)
+        job = dict(conclusion='success', steps=[dict(name='Run actions/checkout@v7',
+            conclusion='success', started_at='2026-11-08T00:00:00Z', completed_at='2026-11-08T00:00:02Z')])
+        return log, job
+
+    def test_same_command_and_exact_source_retry_retains_both_diagnostics(self):
+        log, job = self.sample()
+        recovered = AUDIT.recovered_checkout_diagnostics(log, job, SOURCE)
+        self.assertEqual(recovered, AUDIT.diagnostics(log))
+        self.assertEqual(len(recovered), 2)
+
+    def test_missing_source_proof_changed_retry_and_extra_errors_are_rejected(self):
+        log, job = self.sample()
+        for broken in (
+            log.replace(SOURCE.encode() + b'^{object}', b'wrong^{object}'),
+            log.replace(SOURCE.encode() + b' -> FETCH_HEAD', b'wrong -> FETCH_HEAD'),
+            log.replace(b'origin ' + SOURCE.encode(), b'origin other', 1),
+            log.replace(b'Waiting 17', b'warning: compiler failure\n2026-11-08T00:00:01Z Waiting 17'),
+            log.replace(b'bad pack header', b'another failure'),
+            log.replace(b'##[endgroup]', b'warning: unrelated\n2026-11-08T00:00:01Z ##[endgroup]'),
+        ):
+            with self.subTest(log=broken), self.assertRaises((AssertionError, ValueError, StopIteration)):
+                AUDIT.recovered_checkout_diagnostics(broken, job, SOURCE)
+
+    def test_failed_checkout_or_job_and_errors_outside_step_are_rejected(self):
+        log, job = self.sample()
+        for field in ('job', 'step', 'time'):
+            _, broken = self.sample()
+            if field == 'job':
+                broken['conclusion'] = 'failure'
+            elif field == 'step':
+                broken['steps'][0]['conclusion'] = 'failure'
+            else:
+                broken['steps'][0]['started_at'] = '2026-11-08T00:00:02Z'
+            with self.subTest(field=field), self.assertRaises(AssertionError):
+                AUDIT.recovered_checkout_diagnostics(log, broken, SOURCE)
+
+
 if __name__ == '__main__':
     unittest.main()
