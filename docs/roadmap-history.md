@@ -6,6 +6,16 @@ and complete platform validation are different events. Measurements retain their
 original source and settings; old numbers are not measurements of current main.
 The linked PRs, runs and data records supply the detailed evidence.
 
+## Computed numeric inputs (PR #269)
+
+[PR #269](https://github.com/e6qu/fun-with-pipes/pull/269) passes computed numeric
+record fields directly to proved internal calls, preserving evaluation and trap
+order. [All delivery gates pass](measurements/computed-numeric-delivery-2026-11-08/README.md).
+The largest local-derivative process removes 407,552 temporary allocations.
+Qualified long solves take 48–65% less time than ordinary reverse AD, but the
+largest remains 4.2–5.7 times handwritten C. One runtime and two compiler timing
+controls remain inconclusive. [Measurements](measurements/computed-numeric-time-2026-11-07/README.md).
+
 ## Checked capacity calls (PR #264)
 
 [PR #264](https://github.com/e6qu/fun-with-pipes/pull/264) keeps tape capacity

@@ -719,13 +719,14 @@ numeric leaves. Repeated, reordered and unused leaf reads are safe; whole-record
 uses, function-value references, entry points, recursion, resources and deeper
 records exclude selection.
 
-The current PR extends the input rule to computed numeric constructors: bind each
+Computed numeric constructors follow the same input rule: bind each
 input once, in original left-to-right order, then pass its numeric fields. Each
 input keeps its original expression and local scopes. Existing field-only native
 locals can avoid constructing the intermediate record boxes. No functions are
 cloned. [Focused native checks](measurements/computed-numeric-inputs-2026-11-07/README.md)
 and [allocation measurements](measurements/computed-numeric-time-2026-11-07/README.md)
-verify this reduction. Full production coverage is pending; the
+verify this reduction. All nine production jobs and documentation passed for
+[PR #269](https://github.com/e6qu/fun-with-pipes/pull/269); the
 [contract](measurements/direct-numeric-workers.md) retains the inconclusive
 timing controls rather than claiming complete acceptance.
 

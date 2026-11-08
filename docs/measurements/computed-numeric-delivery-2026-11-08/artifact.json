@@ -1,0 +1,20 @@
+{
+  "id": 13597757379,
+  "node_id": "MDg6QXJ0aWZhY3QxMzU5Nzc1NzM3OQ==",
+  "name": "production-log-audit-all",
+  "size_in_bytes": 1167388,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13597757379",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13597757379/zip",
+  "expired": false,
+  "digest": "sha256:8256fdcd42d85094faf19da772ec7d25e21fe1837daf724284c4d9075a836f0f",
+  "created_at": "2026-11-08T01:00:55Z",
+  "updated_at": "2026-11-08T01:00:55Z",
+  "expires_at": "2027-02-06T00:38:41Z",
+  "workflow_run": {
+    "id": 42430683595,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "tape-record-evidence",
+    "head_sha": "e7965762490c89d2a39f5937fe8322291ea906fc"
+  }
+}

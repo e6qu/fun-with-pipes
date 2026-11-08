@@ -51,10 +51,11 @@ comparisons with Swift, C and Rust and the limits of the evidence.
 
 ## Project direction
 
-Tracing GC removal and the local `let`/`fn` syntax are delivered. The current
-[plan](PLAN.md) measures current array and matrix costs against C and Rust,
-including the contribution of native floating-point loop state. Timing, memory
-and identical-program noise controls determine the next optimization priorities.
+Tracing GC removal and the local `let`/`fn` syntax are delivered. Recent work
+reduces derivative recording and temporary numeric records. The current
+[plan](PLAN.md) keeps verified reductions separate from unmet timing goals.
+Remaining array, loop and ownership costs need measured comparisons with C,
+Rust and Swift before selecting further optimizations.
 
 - Prefer moves, borrows, direct values and storage reuse; count necessary sharing.
 - Preserve simple pipes, immutable values, checked arithmetic and effect order.

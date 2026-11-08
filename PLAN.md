@@ -1,82 +1,92 @@
-# Implementation plan
+# Project roadmap
 
-Build an ahead-of-time language with simple pipes, immutable values, strong types
-and useful inference. Prefer direct values, moves and borrows; use automatic
-reference counting (ARC) only for necessary sharing. Tracing garbage collection
-has been removed. JIT compilation and backward compatibility are excluded.
+Build a language with simple pipes, immutable values, strong types and useful
+inference. Compile ahead of time through C. Prefer direct values, moves, borrows
+and storage reuse; count necessary sharing. JIT and backward compatibility are
+excluded. The [design limits](docs/design-limits.md) define what we do not promise.
 
-## Current performance experiment: eliminate tape work for local objectives
+## Where we are
 
-Keep this work in PR #269. The user wants meaningful runtime improvements and
-permits language/API changes. Small tape-layout changes did not establish their
-required speedups; their [results remain evidence](docs/measurements/tape-record-results.md).
+- Tracing GC removal is verified on Linux, macOS and Windows, each on ARM64/AMD64.
+- Known calls, selected records/arrays and scoped workspaces avoid many temporary
+  allocations and ownership operations. These are bounded proofs, not a promise
+  that every abstraction or every uniquely used value has no runtime cost.
+- Types/effects, `let`/`fn`, infix arithmetic, macros, recursion lowering, REPL,
+  notebook, debugger and Python inspection tools are implemented. Keep the syntax
+  steady unless a concrete program establishes a meaningful limitation.
+- PR #269 removed temporary numeric inputs. Its largest local-derivative case is
+  56–59% faster than reverse AD, but still takes 4.2–5.7 times handwritten C's time.
+  The helper remains experimental; three timing controls remain inconclusive.
+  [Results](docs/measurements/computed-numeric-time-2026-11-07/README.md).
+- The latest checked-loop snapshot has zero managed requests/retains yet takes
+  24% more time than C and 49% more than Rust. This is a diagnostic lead, not a
+  controlled speed claim. Lower ARC counts alone cannot explain every gap.
 
-For an objective such as `edge(x0, x1) + edge(x1, x2)`, calculate each pair's
-partial derivatives with existing `Dual` arithmetic, without a global tape or
-handwritten derivatives. Write coordinate updates into an immutable packed array.
-This is a structured algorithm, not a replacement for arbitrary `grad`.
+[The handoff](docs/development-state.md) records exact sources, checks and the
+single next action. [Ownership](docs/ownership.md) records contracts;
+[history](docs/roadmap-history.md) and [measurements](docs/measurements/README.md)
+record delivered work and original observations.
 
-The [first prototype](docs/measurements/local-derivative-time-2026-11-07/README.md)
-is 24–31% faster than ordinary reverse AD on the largest input, but misses five
-frozen timing limits. It also creates two temporary `Dual` records per edge.
-The [source diagnosis and repair contract](docs/measurements/direct-numeric-workers.md)
-identify computed arguments as the allocation blocker. Evaluate those arguments
-once, in their original order, then pass the numeric fields directly. No new
-syntax, function cloning or relaxed arithmetic rules are needed.
+## Milestones
 
-The [implemented repair](docs/measurements/computed-numeric-time-2026-11-07/README.md)
-removes all 407,552 extra requests. Qualified long solves take 48–65% less time
-than reverse AD; the largest takes 56–59% less. Exact request/retain parity with
-handwritten fwp arrays passes on all six cases. One runtime copy control and two
-[compiler copy controls](docs/measurements/computed-numeric-analysis-2026-11-07/README.md)
-remain inconclusive; do not claim their timing acceptance. Keep the verified
-compiler reduction, leave the helper experimental, and complete production CI.
-The largest case still takes 4.2–5.7 times handwritten C's time; the common fwp
-array cost needs diagnosis before selecting another optimization.
+Work through these in order, one substantial PR at a time. Later proofs and
+numerical targets must be frozen against their measured starting points before
+implementation; do not invent a universal language-overhead target.
 
-| Step | Concrete work | Required result |
+| Step | Milestone | Concrete completion evidence |
 |---|---|---|
-| 1 | Remove temporary numeric input records through the existing all-callers compiler proof. | Preserve types, shared inputs, scopes, evaluation/trap order and numeric operations. Focused GCC ARM64/AMD64 and Clang ARM64 checks pass. |
-| 2 | Measure complete solves with ordinary reverse AD, local forward AD, handwritten fwp arrays/lists, C and Rust. | Exact allocation-request/retain parity with handwritten fwp arrays, no extra managed peak, zero tape activity and zero final live storage. At least 20% faster long cases; at most 2% small-case regression and identical-copy variation. Two sessions per architecture. |
-| 3 | Measure compiler costs and decide the public interface from verified results. | Seven representative inputs stay within 5% time/RSS and 2% copy variation. Promote the structured operation with examples only if its frozen runtime contract qualifies; otherwise diagnose the remaining cost without claiming acceptance. |
-| 4 | Finish documentation, retain complete evidence and deliver the substantial batch. | Nine final-head native production jobs, docs and audits pass. Squash-merge with a verified one-line subject of at most 80 characters and an empty body. |
+| 1 | Shared loop/array costs and complete documentation refresh | Attribute the checked-loop and array/derivative gaps; deliver a reusable improvement selected from those costs, with the measurement contract below. Review all tracked docs and 24 tutorials, remove stale directions/repetition, repair navigation, and pass the final production/docs/audit gates in the same PR. |
+| 2 | Broader ownership and representation coverage | Extend a common lifetime or representation proof to at least two distinct application patterns exposed by milestone 1. Cover local/escaping closures, records and shared inputs as appropriate. Preserve trap/cancellation cleanup and count necessary sharing; report time, allocations, live memory and compiler scaling. |
+| 3 | Structured autodiff usable beyond one objective | Compare ordinary reverse AD, local forward AD and existing tensor operations on a neighboring-pair objective, independent per-element loss, and a dense coupled objective. Specify supported operations and effects. Add a public structured operation only with correctness, lifetime and measured-benefit evidence; preserve general `grad`, nested differentiation and F128 precision. |
+| 4 | Complete ownership and peer comparisons | Update relevant Swift/C/Rust comparisons for buffers, returned functions, weak subscriptions and parser workspaces. Separate construction/work/release, ordinary runtime from instrumented counts, managed/native storage from RSS, and actual algorithm differences. Measure ARC operations only with a verified observer; otherwise mark them unmeasured. |
+| 5 | Language/tooling usability and compiler cost | Exercise a numerical application, a CLI/data-processing program and a callback-based service through the documented tools. Fix demonstrated inference/diagnostic/workflow gaps. Measure parsing, typing/specialization, ownership, C emission and C compilation separately on growing inputs; keep errors useful and analysis bounded. Add syntax only for a demonstrated need. |
 
-The [experiment](docs/measurements/local-derivatives.md) fixes workloads, flags,
-hardware, timing scope and decision rules. Keep every missed limit and memory,
-code-size and stack cost. Do not repeat unchanged qualified sessions to obtain
-passing numbers. [The handoff](docs/development-state.md) has the current action
-and exact source/run identities.
+Each milestone preserves earlier behavior and coverage. A smaller executable or
+fewer requested operations is evidence, but does not by itself finish a runtime
+performance milestone. Working-memory gains and runtime tradeoffs must be explicit.
 
-## Completed work carried in this PR
+## Current milestone: shared loop and array costs
 
-- The tape layout and checked capacity-call implementations are merged with
-  native production validation. Their timing misses are retained, not relabeled.
-- [All four tape-layout runtime archives](docs/measurements/tape-record-time-2026-11-07/README.md)
-  pass the corrected release-control audit; all 48 peer/memory rows remain visible.
-- [All 48 original images](docs/measurements/tape-record-images-2026-11-07/README.md)
-  reproduce byte for byte. [All fourteen compiler-cost comparisons](docs/measurements/tape-record-analysis-2026-11-07/README.md)
-  pass, with complete observations retained.
-- [The carried production-log audit](docs/measurements/tape-record-delivery-2026-11-07/followup-268/README.md)
-  passes. These older gates do not verify the new compiler change.
+Bundle implementation, incidental repairs, evidence and the entire documentation
+refresh into one normal PR. Publish when the batch is ready; do not use draft
+status to suppress CI. Use focused checks while implementing and one complete
+final-head matrix after the batch is ready.
 
-## Earlier measurements
+[The first diagnostic](docs/measurements/shared-loop-array-costs.md) tests whether
+array callback boundaries hide useful loop information from the C optimizer.
+It selects further work; it is not a completed compiler improvement.
 
-[Unmet comparisons](docs/measurements/unmet-comparisons.md) preserve earlier speed
-misses, small-case regressions and inconclusive copy controls. They are evidence,
-not a queue of unchanged reruns. Broader ARC reduction needs a concrete
-alias/lifetime proof and measured costs. Count-free arbitrary sharing, universal
-stack storage and reclamation of every owning cycle are not goals.
-[Swift comparisons](docs/measurements/swift-allocations.md) distinguish allocator
-traffic from managed storage; Swift ARC counts remain unmeasured.
+| Work | Scope and decision |
+|---|---|
+| A. Establish costs | Start from merged #269. Inspect the saved checked-loop C and the saved local/manual-array programs. Measure equivalent C/Rust/fwp computation separately from input construction, output and teardown. Use the checked loop at 0/16/1,000,000/100,000,000 iterations; F64 map/fold at 0/16/65,537/262,145 elements; and derivative descent at 3/33/129 coordinates with 199 updates, plus 0/1-update controls. Retain the existing exact arithmetic and output oracles. |
+| B. Choose the compiler change | Identify actual extra work in source/generated C and corroborate it with phase/work measurements. Consider calls, representation, repeated checks, copies and construction; do not assume ARC, register pressure or cache misses are the cause. Freeze the chosen transformation, affected workloads and correctness exclusions before implementing it. |
+| C. Verify benefit | Aim for at least 10% less uninstrumented computation time on two affected nontrivial inputs, in two sessions on each native ARM64/AMD64 host. Qualified guard cases must not regress more than 2%. Preserve identical-copy controls; noise makes a comparison inconclusive. Record whole-program time separately, allocations, live storage, RSS, code/stack costs and compiler time/RSS. An inconclusive or missed target remains open rather than becoming a pass. |
+| D. Refresh all documentation | Review every tracked Markdown document and all tutorial source/output copies. Explain concepts before examples, state inputs/results and prerequisites, replace repetitive prose with useful tables/diagrams, remove obsolete next actions and link to one authoritative explanation. Update generated library guides through source comments/generators. Preserve raw observations, original acceptance contracts and source identities; historical evidence is not an active backlog. |
+| E. Deliver together | Compare raw interpretation and native results, effects and first failures. Use production GCC/Clang settings for focused checks. Run nine final-head native production jobs, documentation and complete log/artifact audits; fix every encountered issue before delivery. Squash with one line <=80 characters and an empty body. |
+
+If an investigated change misses its target, retain the result and choose the
+next change from evidence within this milestone. Do not repeat unchanged timings
+to obtain a pass, relax old limits after seeing results, or substitute count savings
+for a speed claim. Keep prior successful gates stable while remaining jobs run.
 
 ## Maintained guarantees and evidence
 
-GC removal, scoped A1–A6 ARC reductions, F1–F3 call/recursion coverage, decimal-count
-improvements, D3 derivative accuracy and #236's selected transformations are
-verified deliveries. [Ownership](docs/ownership.md), [functional costs](docs/functional-costs.md)
-and [history](docs/roadmap-history.md) record their scope. Keep their failure,
-cancellation, reuse, application and binary checks as regression coverage.
+Keep GC absence, weak expiration/reuse, alias preservation, resource cleanup,
+failure/cancellation, arithmetic/rounding order, inference/effects and native
+packaging coverage. Restricted self/mutual tail calls do not imply constant stack
+for arbitrary recursion. Unique storage can be on the heap; no-count is not no-heap.
 
-The [intermittent Intel compiler abort](docs/measurements/compiler-abort.md) has no
-established cause. Preserve evidence and diagnose a recurrence from its input
-and source path. Passing reruns are not a repair.
+[Earlier missed comparisons](docs/measurements/unmet-comparisons.md) preserve their
+original outcomes. They do not require repeating old experiments or completing
+abandoned hypotheses. The [Intel compiler abort](docs/measurements/compiler-abort.md)
+has no established cause; preserve and diagnose any recurrence rather than treating
+successful reruns as a repair.
+
+## Completed work carried in this PR
+
+PR #269 is merged as `bbcaafea00d6bf9e26feea60f90d8d440aa16d00`, with the identical
+tested tree. All nine production jobs, documentation and the complete log audit
+pass; [delivery records](docs/measurements/computed-numeric-delivery-2026-11-08/README.md)
+retain their identities. Original runtime and
+compiler-cost observations, including timing misses, remain under
+[the measurement index](docs/measurements/README.md).

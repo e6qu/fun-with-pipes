@@ -46,11 +46,14 @@ remove a JavaScript host's collector.
 
 ### What remains
 
-- Finish [private pair-buffer reuse](measurements/packed-pair-storage.md): focused
-  correctness and exact allocation counts pass. Complete runtime comparisons,
-  retained-data audits and final platform checks. The earlier
-  [gradient-call group is delivered](roadmap-history.md#gradient-call-storage-pr-259),
-  with its missed timing limits still open.
+- [Private pair-buffer reuse is delivered](roadmap-history.md#private-pair-buffer-reuse-pr-260),
+  including native production checks and complete audits. Its timing misses
+  remain historical evidence, not unfinished implementation. The newer
+  [computed numeric-input change](measurements/computed-numeric-time-2026-11-07/README.md)
+  removes temporary derivative records; its local helper remains experimental.
+- Diagnose the remaining costs shared by local derivatives and handwritten fwp
+  arrays before choosing another optimization. Allocation reductions do not
+  establish the cause of their remaining C/Rust performance gap.
 - Preserve delivered ownership guarantees: aliasing, trap/cancellation cleanup,
   primitive contracts, bounded compiler analysis and checks for absent collector
   code. [Delivery history](roadmap-history.md) records verified platform coverage.
