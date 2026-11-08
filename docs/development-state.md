@@ -1,11 +1,13 @@
 # Current work
 
-**Next:** publish the exact formatting repair reported by `42507519027`, then
-audit all three replacement native jobs before the frozen candidate comparison.
+**Next:** audit run `42508330680` at
+`e085e2306d3a938e7253d2f9f3586252e54057eb` before the frozen candidate comparison.
+Jobs: AMD GCC `128815743055`, ARM GCC `128815743093`, macOS Clang
+`128815743162`. All three are queued.
 `3203b635a813538350cefb90f13f09f9a641ee8b` passes correctness/cleanup on both
 Linux architectures, but still misses the neighboring allocation limit.
-Keep implementation, measurements and tutorials in one substantial normal PR;
-no PR is open yet.
+Keep implementation, measurements and tutorials in this substantial normal PR.
+Publication is authorized; native verification and candidate timing remain pending.
 
 ## Roadmap status
 
