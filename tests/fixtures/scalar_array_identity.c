@@ -46,10 +46,11 @@ int main(int argc, char **argv) {
                     offset=0;
                 }
                 if(alias) fwp_rc_dup(input);
-                /* Native ownership lowering can reuse an exclusive ordinary
-                 * array even when the earlier identity rewrite is disabled.
-                 * Views, aliases and disabled reuse still require a copy. */
-                int reusable=IDENTITY_REUSE && !alias && !fwp_array_is_view(input);
+                /* Native ownership lowering can forward an empty ordinary
+                 * array without writes, even with aliases or reuse disabled.
+                 * Nonempty arrays need exclusivity and enabled reuse; views
+                 * still need a copy when the identity rewrite is disabled. */
+                int reusable=!fwp_array_is_view(input) && (!length || (IDENTITY_REUSE && !alias));
                 size_t allocations=owner_ledger_allocations, retains=identity_retains;
                 V result=f2(input);
                 if(IDENTITY_SELECTED || reusable) {

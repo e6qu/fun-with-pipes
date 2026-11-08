@@ -57,8 +57,8 @@ that later coordinates still need.
   Every physical allocation must be released exactly once.
 - Index known callback bindings once, then use the existing reverse liveness
   walk and rewrite. Save captures at their original binding, including computed
-  values; remove the closure only when no other use needs it. Both walks
-  visit existing expressions once. Selection checks and rewriting do work per
+  values; remove the closure only when no other use needs it. Each traversal
+  visits existing expressions once. Selection checks and rewriting do work per
   capture per selected map; a shared callback therefore adds `maps × captures`
   scalar arguments. There is no whole-program search.
 
@@ -93,6 +93,14 @@ the documentation audit also passes. The compiler is unchanged from `0c704421f`.
 
 The [complete focused audit](captured-map-checks-2026-11-08/README.md) also passes,
 including native image identities and every retained target/probe result.
+
+The empty-owner repair's first run,
+[42475715012](https://github.com/e6qu/fun-with-pipes/actions/runs/42475715012),
+passes 13 units and seven native targets per host. The remaining target still
+requires distinct empty arrays inside returned records. Update its exact identity
+and allocation counts, including temporary inputs and the related float identity
+control; preserve all alias/free checks. Native verification remains pending for
+that test repair. The compiler is unchanged from `ca837567a`.
 
 ## Measurement contract before collecting results
 

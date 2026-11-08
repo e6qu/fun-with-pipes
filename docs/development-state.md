@@ -1,7 +1,8 @@
 # Current work
 
-**Next:** finish the empty-array repair's focused native checks, then dispatch
-`numerics.yml` with `suite=captured-maps` and `evidence_run=42475715012`.
+**Next:** publish the batched empty-array test-expectation repair and run
+`numerics.yml` with `suite=scalar-identity-checks`. After all three hosts pass,
+dispatch `suite=captured-maps` with that passing run as `evidence_run`.
 Keep the original measurements unchanged. Bundle the implementation, repair,
 evidence and docs in one normal PR after the changed implementation is measured.
 
@@ -32,19 +33,24 @@ Repair source `ca837567a41c660c5a0150faca688b6b5917cd81` forwards an ordinary em
 array's existing owner without writes, allocation, cleanup scopes or count changes,
 including shared inputs and no-reuse builds. Empty views still release their
 potentially large backing owner. The physical-free/alias tests require this exact
-behavior. Formatting passes locally; native verification is still running.
+behavior. Formatting passes locally; the first native run found stale assertions
+in record/temporary-map tests. The compiler source is unchanged by their repair.
 
 Focused run `42475715012`:
 
 | Host | Job | Last observed state |
 |---|---|---|
-| AMD64 GCC | 128716513453 | Formatting/Clippy running |
-| ARM64 GCC | 128716513460 | Native tests running |
-| macOS ARM64 Clang | 128716513528 | Native tests running |
+| AMD64 GCC | 128716513453 | One stale record-map assertion fails |
+| ARM64 GCC | 128716513460 | Same assertion fails |
+| macOS ARM64 Clang | 128716513528 | Same assertion fails |
 
 Docs `42475717410`, job `128716518586`, passes at the same repair source.
-No new native failure has been reported. Audit every completed target and full
-job log before publishing any further repair.
+All completed targets and full job logs were reviewed: 13 ownership units and
+the other seven targets pass on every host. The prepared batch updates exact
+empty-result identity/allocation counts for returned records and temporary inputs,
+adds contextual diagnostics, and repairs the same assumption in the float
+identity control. Alias, empty-view and physical-free assertions remain required.
+The expanded focused suite includes the affected float/identity targets.
 
 ## Original measurements: preserved, not accepted as complete
 
@@ -103,8 +109,9 @@ native suites, benchmarks and large evidence generation run on GitHub runners.
 - Original artifact digests, compact record hashes and reported fields are checked
   locally; the complete observation audits passed on their measurement runners.
 
-Disk has fluctuated across the 64 GiB reserve: stopped when refused, resumed only
-above the limit. Last observation was about 80 GiB free. No limits were raised.
+Disk has fluctuated across the 64 GiB reserve. Free space dropped from about 80
+to 54 GiB while the original measurements ran. Local checks are stopped; verify
+the expectation repair on CI. No limits were raised or bypassed.
 Final delivery still needs nine production jobs, docs and a complete audit for the
 exact final PR head, followed by authorized squash merge with a one-line subject
 of at most 80 characters and an empty body.

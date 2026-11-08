@@ -56,8 +56,19 @@ int main(void) {
                 if (ARR(changed)->d[i] != (V)(i + 2)) return 241;
                 if (!produced && ARR(OBJ(output)->f[0])->d[i] != (V)(i + 1)) return 247;
             }
-            if (!produced && (OBJ(output)->f[0] != input || changed == input)) return 242;
-            if (owner_ledger_allocations - allocations != (size_t)(produced ? 1 + !reuse_enabled : 2)) return 243;
+            if (!produced && (OBJ(output)->f[0] != input || (changed == input) != !n)) {
+                fprintf(stderr, "record map identity: length=%d observed=%u\n", n, observed);
+                return 242;
+            }
+            /* A produced input needs one array allocation; a returned pair
+             * needs one record allocation. Only nonempty mapping can need a
+             * separate result array, regardless of the no-reuse setting. */
+            size_t expected_allocations = 1 + (n != 0 && (!produced || !reuse_enabled));
+            if (owner_ledger_allocations - allocations != expected_allocations) {
+                fprintf(stderr, "temporary map allocations: produced=%u length=%d observed=%u expected=%zu actual=%zu\n",
+                    produced, n, observed, expected_allocations, owner_ledger_allocations - allocations);
+                return 243;
+            }
             if (produced) DROP_ARRAY(output);
             else {
                 if (*fwp_rc_slot(output) != 1) return 248;
@@ -146,8 +157,16 @@ int main(void) {
              * writing or allocating, including aliases and no-reuse builds.
              * Empty views still release their backing owner. */
             int reused = (!n && sharing != 2) || (reuse_enabled && !sharing);
-            if ((output == input) != reused) return 242;
-            if (owner_ledger_allocations - allocations != (size_t)!reused) return 243;
+            if ((output == input) != reused) {
+                fprintf(stderr, "map identity: captures=%u length=%d sharing=%u reuse=%d\n",
+                    captured, n, sharing, reuse_enabled);
+                return 242;
+            }
+            if (owner_ledger_allocations - allocations != (size_t)!reused) {
+                fprintf(stderr, "map allocations: captures=%u length=%d sharing=%u expected=%d actual=%zu\n",
+                    captured, n, sharing, !reused, owner_ledger_allocations - allocations);
+                return 243;
+            }
             if (numeric_calls != n) return 244;
             DROP_ARRAY(output);
         } else {
