@@ -11,6 +11,17 @@ records. This index explains what changed and which claims remain unproved.
 Historical milestone codes refer to their original contracts, not current tasks.
 [The current five milestones](../PLAN.md#milestones) supersede those old queues.
 
+## Runtime scalar captures and empty array owners (PR #271)
+
+[PR #271](https://github.com/e6qu/fun-with-pipes/pull/271) reuses dead input arrays
+through known map callbacks with runtime scalar captures. Captures evaluate once;
+shared nonempty inputs and views preserve their values. Empty ordinary arrays
+transfer unchanged, including shared empty arrays.
+[All delivery gates pass](measurements/captured-map-delivery-2026-11-08/README.md).
+The two largest applications take 84–94% less computation and request 199 fewer
+arrays per 199 updates. Noise leaves combined timing acceptance open; remaining
+loop boxes and retains are explicit in [the results](measurements/captured-map-repaired-2026-11-08/README.md).
+
 ## Fresh F64 stores and roadmap refresh (PR #270)
 
 [PR #270](https://github.com/e6qu/fun-with-pipes/pull/270) removes redundant checks

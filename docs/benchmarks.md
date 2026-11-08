@@ -220,7 +220,7 @@ slice inputs, with construction/work/release timings and separate memory counts.
 84–94% less computation on both largest applications in four sessions, 199 fewer
 array allocations and roughly half the managed peak storage. No qualified case
 regresses; noisy controls leave combined acceptance open. Native safety and
-measurement audits pass; final production delivery remains pending.
+measurement audits pass; [All delivery gates pass](measurements/captured-map-delivery-2026-11-08/README.md).
 [Initial results](measurements/captured-map-initial-2026-11-08/README.md) and
 earlier unmet targets remain unchanged.
 

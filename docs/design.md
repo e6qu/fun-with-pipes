@@ -442,7 +442,7 @@ captures, unknown callbacks and wide scalars remain excluded. [The contract](mea
 records the passing native checks and
 [repaired runtime/memory results](measurements/captured-map-repaired-2026-11-08/README.md).
 Four measurement sessions pass their audits; noise leaves combined timing
-acceptance open. Full platform delivery remains pending.
+acceptance open. [All delivery gates pass](measurements/captured-map-delivery-2026-11-08/README.md).
 
 For an array/list zip, a private entry can consume the list and reuse only its
 exclusive prefix. Encountering one shared node excludes its entire suffix from

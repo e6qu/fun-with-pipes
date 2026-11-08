@@ -9,11 +9,12 @@ identities. Do not edit observations to make an old experiment describe new code
 
 ## Latest delivery
 
-Current investigation: [captured scalar array-map reuse](captured-array-maps.md).
+Merged #271 delivers [captured scalar array-map reuse](captured-array-maps.md);
+[all final gates pass](captured-map-delivery-2026-11-08/README.md).
 [Initial safety checks](captured-map-checks-2026-11-08/README.md) pass.
 [Repaired measurements](captured-map-repaired-2026-11-08/README.md) show 84–94%
 less computation on both largest applications and no qualified regression.
-Noisy controls leave combined acceptance open; final delivery remains pending.
+Noisy controls leave combined timing acceptance open.
 [Initial results](captured-map-initial-2026-11-08/README.md) remain unchanged.
 
 Merged #270 passes [all delivery gates](fresh-array-delivery-2026-11-08/README.md).
@@ -36,7 +37,8 @@ separate useful work from input construction and release.
 - [Native proof cases](computed-numeric-inputs-2026-11-07/README.md): values,
   shared inputs, evaluation/trap order and the actual four-number call.
 
-These results motivate the shared loop/array milestone in [PLAN.md](../../PLAN.md).
+These results lead to the [structured autodiff comparison](structured-autodiff.md)
+in [PLAN.md](../../PLAN.md).
 Older reports below retain their own sources and decisions; “current” in a dated
 experiment names its measured variant, not the latest compiler.
 

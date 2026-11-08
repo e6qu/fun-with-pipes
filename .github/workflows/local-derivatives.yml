@@ -60,11 +60,12 @@ jobs:
         run: |
           set -o pipefail
           cargo test --locked --test autodiff_precision local_derivatives_preserve_endpoints_aliases_and_traps -- --exact --nocapture 2>&1 | tee local-checks/semantics.log
+          cargo test --locked --test autodiff_precision structured_gradients_agree_on_three_objectives_and_empty_inputs -- --exact --nocapture 2>&1 | tee local-checks/structured-gradients.log
       - name: Format prototype sources and retain any needed patch
         if: ${{ !cancelled() && hashFiles('target/debug/fwp') != '' }}
         run: |
-          target/debug/fwp fmt tests/fixtures/descent_local_ad.fwp tests/fixtures/local_derivatives.fwp
-          git diff -- tests/fixtures/descent_local_ad.fwp tests/fixtures/local_derivatives.fwp > local-checks/format.patch
+          target/debug/fwp fmt tests/fixtures/descent_local_ad.fwp tests/fixtures/local_derivatives.fwp tests/fixtures/structured_ad_objectives.fwp tests/fixtures/structured_ad_examples.fwp
+          git diff -- tests/fixtures/descent_local_ad.fwp tests/fixtures/local_derivatives.fwp tests/fixtures/structured_ad_objectives.fwp tests/fixtures/structured_ad_examples.fwp > local-checks/format.patch
           test ! -s local-checks/format.patch
       - uses: actions/upload-artifact@v7
         if: always()

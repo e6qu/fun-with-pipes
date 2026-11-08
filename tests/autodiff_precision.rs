@@ -74,6 +74,56 @@ fn local_derivatives_preserve_endpoints_aliases_and_traps() {
 }
 
 #[test]
+fn structured_gradients_agree_on_three_objectives_and_empty_inputs() {
+    let directory = fwp::cgen::TempDir::new("structured-gradients").unwrap();
+    let input = directory.join("examples.fwp");
+    let cfile = directory.join("examples.c");
+    let binary = directory.join("examples.exe");
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    std::fs::write(
+        &input,
+        format!(
+            "{}\n{}\n{}",
+            include_str!("fixtures/descent_local_ad.fwp"),
+            include_str!("fixtures/structured_ad_objectives.fwp"),
+            include_str!("fixtures/structured_ad_examples.fwp"),
+        ),
+    )
+    .unwrap();
+    let reference = checked(
+        Command::new(compiler)
+            .env("FWP_NO_OPT", "1")
+            .args(["run", "--interp"])
+            .arg(&input),
+    );
+    assert_eq!(reference.stdout, "True\n".repeat(30).as_bytes());
+    assert!(reference.stderr.is_empty());
+    checked(
+        Command::new(compiler)
+            .env_remove("FWP_NO_OPT")
+            .args(["build", "--emit-c", "-O2"])
+            .arg(&input)
+            .arg("-o")
+            .arg(&cfile),
+    );
+    let code = std::fs::read_to_string(&cfile).unwrap();
+    for optimization in ["-O1", "-O2"] {
+        fwp::cgen::compile_c(&code, &binary, optimization).unwrap();
+        let native = Command::new(&binary).output().unwrap();
+        record_probe::save(
+            "structured-gradients",
+            optimization,
+            &code,
+            &binary,
+            &native,
+        );
+        assert!(native.status.success(), "{native:?}");
+        assert_eq!(native.stdout, reference.stdout);
+        assert!(native.stderr.is_empty());
+    }
+}
+
+#[test]
 fn quad_reverse_preserves_low_bits_exponent_range_and_reclaims_owned_values() {
     let directory = fwp::cgen::TempDir::new("quad-gradient-precision").unwrap();
     let input = directory.join("precision.fwp");
