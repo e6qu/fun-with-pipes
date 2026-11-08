@@ -1,7 +1,6 @@
 # Current work
 
-**Next:** finish expanded focused run `42477156079` (`scalar-identity-checks`).
-After all three hosts pass, dispatch `numerics.yml` with `suite=captured-maps`
+**Next:** publish the strengthened identity-log audit, then dispatch `numerics.yml` with `suite=captured-maps`
 and `evidence_run=42477156079`.
 Keep the original measurements unchanged. Bundle the implementation, repair,
 evidence and docs in one normal PR after the changed implementation is measured.
@@ -17,7 +16,7 @@ root-worktree changes. No PR is open yet; final production gates have not run.
 | Step | Status | Remaining work |
 |---|---|---|
 | 1 | In progress | #270 delivered fresh F64 stores and refreshed docs/tutorials. ARM64 improves 26–31%; original AMD64 timing acceptance stays open. |
-| 2 | In progress | Captured-map safety and initial measurements pass audit, but timing acceptance does not. Verify the empty-input repair, measure it and complete final delivery. |
+| 2 | In progress | Empty-input repair passes expanded native checks. Measure it under the unchanged limits and complete final delivery; retain original timing misses. |
 | 3 | Pending | Structured differentiation across three objective families; preserve general AD, nesting and precision. |
 | 4 | Pending | Current Swift/C/Rust ownership comparisons, phase timings and explicit memory boundaries. |
 | 5 | Pending | Three application/tooling paths; compiler phase/scaling costs and demonstrated usability repairs. |
@@ -41,11 +40,13 @@ Expanded focused run `42477156079`:
 
 | Host | Job | Last observed state |
 |---|---|---|
-| AMD64 GCC | 128720938835 | Queued |
-| ARM64 GCC | 128720938985 | Formatting/Clippy running |
-| macOS ARM64 Clang | 128720938966 | Queued |
+| AMD64 GCC | 128720938835 | Passed |
+| ARM64 GCC | 128720938985 | Passed |
+| macOS ARM64 Clang | 128720938966 | Passed |
 
-Docs `42477158452`, job `128720942662`, is running. Prior docs `42475717410`,
+All 57 native tests in ten targets and 14 ownership/identity units pass per host.
+Full logs contain no compiler warnings or errors. Docs `42477158452`, job
+`128720942662`, passes. Prior docs `42475717410`,
 job `128716518586`, passes at compiler source `ca837567a`.
 In failed run `42475715012`, all completed targets and full job logs were reviewed:
 13 ownership units and the other seven targets pass on every host. The batch updates exact
@@ -53,6 +54,8 @@ empty-result identity/allocation counts for returned records and temporary input
 adds contextual diagnostics, and repairs the same assumption in the float
 identity control. Alias, empty-view and physical-free assertions remain required.
 The expanded focused suite includes the affected float/identity targets.
+The evidence auditor now also requires their three saved unit/target logs;
+ten local auditor tests pass, including complete/missing/failed/ignored controls.
 
 ## Original measurements: preserved, not accepted as complete
 

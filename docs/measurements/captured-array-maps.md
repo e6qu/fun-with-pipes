@@ -2,7 +2,8 @@
 
 Status: the initial implementation passes focused native verification. Its first
 measurements expose a shared-empty-input regression; an empty-owner transfer
-repair is being verified. Final platform delivery remains pending. The first native run found that the selector
+repair passes expanded native checks and awaits measurement. Final platform
+delivery remains pending. The first native run found that the selector
 missed let-bound callbacks. The repair indexes actual partial applications and their bindings. This extends
 the existing same-type numeric `array.map` proof; it does not close #270's
 unresolved AMD64 timing limits or change its original results.
@@ -99,8 +100,13 @@ The empty-owner repair's first run,
 passes 13 units and seven native targets per host. The remaining target still
 requires distinct empty arrays inside returned records. Update its exact identity
 and allocation counts, including temporary inputs and the related float identity
-control; preserve all alias/free checks. Native verification remains pending for
-that test repair. The compiler is unchanged from `ca837567a`.
+control; preserve all alias/free checks. The compiler is unchanged from `ca837567a`.
+
+[Expanded run 42477156079](https://github.com/e6qu/fun-with-pipes/actions/runs/42477156079),
+`4da901187`, passes on all three hosts: 57 native tests in ten targets and 14
+ownership/identity units per host, plus docs. Full logs have no compiler warnings
+or errors. The empty-owner path is natively checked; its timing benefit still
+needs measurement under the unchanged protocol below.
 
 ## Measurement contract before collecting results
 

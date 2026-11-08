@@ -134,14 +134,19 @@ class ProductionLogs(unittest.TestCase):
     def test_focused_entry_audits_later_page_jobs_and_rejects_missing_targets(self):
         for group, target_count, defect in (('shared-storage', 25, ''), ('shared-storage', 24, ''),
                 ('tape-records', 10, ''), ('tape-records', 9, ''), ('tape-records', 10, 'missing-wasm'),
-                ('tape-records', 10, 'ignored-unit'), ('tape-records', 10, 'wrong-target')):
+                ('tape-records', 10, 'ignored-unit'), ('tape-records', 10, 'wrong-target'),
+                ('shared-storage', 25, 'float-pass'), ('shared-storage', 25, 'float-missing'),
+                ('shared-storage', 25, 'float-failed'), ('shared-storage', 25, 'float-ignored'),
+                ('shared-storage', 25, 'float-unit-missing')):
             with self.subTest(group=group, target_count=target_count, defect=defect), tempfile.TemporaryDirectory() as temporary:
                 jobs = [dict(id=i, name='skipped control') for i in range(100)]
                 artifacts, downloads, logs = [], {}, {}
                 for index, (host, (name, runner)) in enumerate((FOCUSED.RECORD_HOSTS if group == 'tape-records' else FOCUSED.HOSTS).items()):
                     job_id, artifact_id = 200 + index, 300 + index
+                    steps = [dict(name='Same-type float bits, conversion maps and owner transfer',
+                                  conclusion='success')] if defect.startswith('float-') else []
                     jobs.append(dict(id=job_id, name=name, head_sha=SOURCE,
-                                     status='completed', conclusion='success', steps=[]))
+                                     status='completed', conclusion='success', steps=steps))
                     image = bytearray(64)
                     if host == 'mac':
                         image[:4] = b'\xcf\xfa\xed\xfe'
@@ -155,6 +160,15 @@ class ProductionLogs(unittest.TestCase):
                         for target in range(target_count):
                             archive.writestr('targets/test-' + ('wrong' if defect == 'wrong-target' and target == 0 else FOCUSED.RECORD_TARGETS[target] if group == 'tape-records' else str(target)) + '.log',
                                             'test result: ok. 1 passed; 0 failed; 0 ignored;\n')
+                        if defect.startswith('float-'):
+                            if defect != 'float-unit-missing':
+                                archive.writestr('identity-selection.log', 'test result: ok. 1 passed; 0 failed; 0 ignored;\n')
+                            archive.writestr('float-targets/test-float_formats.log',
+                                'test result: FAILED. 0 passed; 1 failed; 0 ignored;\n' if defect == 'float-failed'
+                                else 'test result: ok. 1 passed; 0 failed; 1 ignored;\n' if defect == 'float-ignored'
+                                else 'test result: ok. 1 passed; 0 failed; 0 ignored;\n')
+                            if defect != 'float-missing':
+                                archive.writestr('float-targets/test-softfloat_core.log', 'test result: ok. 1 passed; 0 failed; 0 ignored;\n')
                         ignored = ''.join('test ' + name + ' ... ignored, separate measurement\n' for name in sorted(FOCUSED.UNIT_MEASUREMENTS))
                         archive.writestr('unit.log', ignored + 'test result: ok. 305 passed; 0 failed; ' + ('5' if defect == 'ignored-unit' else '4') + ' ignored; 0 measured; 0 filtered out; finished in 1s\n')
                         if host == 'arm' and defect != 'missing-wasm':
@@ -192,14 +206,15 @@ class ProductionLogs(unittest.TestCase):
                 with patch.object(FOCUSED.PRODUCTION, 'api', side_effect=api), \
                         patch.object(FOCUSED.subprocess, 'run', side_effect=download), \
                         patch('sys.argv', command), patch('sys.stdout', io.StringIO()):
-                    if target_count == (10 if group == 'tape-records' else 25) and not defect:
+                    if target_count == (10 if group == 'tape-records' else 25) and defect in ('', 'float-pass'):
                         FOCUSED.main()
                     else:
                         with self.assertRaises(AssertionError):
                             FOCUSED.main()
                 report = json.loads((output / 'summary.json').read_text())
                 self.assertEqual(len(report['hosts']), 3)
-                self.assertEqual(bool(report['issues']), target_count != (10 if group == 'tape-records' else 25) or bool(defect))
+                self.assertEqual(bool(report['issues']), target_count != (10 if group == 'tape-records' else 25)
+                                 or defect not in ('', 'float-pass'))
                 self.assertEqual(len(json.loads((output / 'jobs.json').read_text())), 103)
                 for host in FOCUSED.HOSTS:
                     with zipfile.ZipFile(output / (host + '-records.zip')) as retained:

@@ -433,7 +433,7 @@ overwrite exclusive storage. A shared array or view receives independent output.
 The empty-input repair forwards an ordinary empty array's owner unchanged,
 including shared arrays; there is no element to write. Empty views still produce
 independent output so the result cannot retain a large backing allocation.
-This additional path is awaiting native verification.
+Expanded GCC/Clang ownership and identity checks pass for this path.
 The current extension also admits known callbacks with plain scalar captures,
 for example `array.map (add offset)` when `offset` is supplied at runtime. It
 passes the saved numbers directly and consumes only the final array argument.
@@ -441,7 +441,7 @@ Capture expressions still run once, in order, before mapping starts. Reference
 captures, unknown callbacks and wide scalars remain excluded. [The contract](measurements/captured-array-maps.md)
 records the passing initial native checks and
 [runtime/memory results](measurements/captured-map-initial-2026-11-08/README.md).
-The empty-input repair and full platform delivery remain pending.
+Measurements of the empty-input repair and full platform delivery remain pending.
 
 For an array/list zip, a private entry can consume the list and reuse only its
 exclusive prefix. Encountering one shared node excludes its entire suffix from

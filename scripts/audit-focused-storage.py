@@ -163,6 +163,21 @@ def main():
                                 issues.append((host, 'missing ' + stem + suffix))
                         if report['probes'].get(stem + '.status') != 'Some(0)':
                             issues.append((host, 'metadata value/alias control failed: ' + stem))
+            identity_steps = [step for step in job['steps']
+                              if step['name'] == 'Same-type float bits, conversion maps and owner transfer']
+            if identity_steps and identity_steps[0]['conclusion'] == 'success':
+                report['identityChecks'] = {}
+                for name in ('identity-selection.log', 'float-targets/test-float_formats.log',
+                             'float-targets/test-softfloat_core.log'):
+                    if name not in z.namelist():
+                        issues.append((host, 'missing ' + name))
+                        continue
+                    results = re.findall(rb'test result: ([^\r\n]+)', z.read(name))
+                    report['identityChecks'][name] = [value.decode() for value in results]
+                    count = rb'1' if name == 'identity-selection.log' else rb'[1-9][0-9]*'
+                    if len(results) != 1 or not re.fullmatch(
+                        rb'ok\. ' + count + rb' passed; 0 failed; 0 ignored;.*', results[0]):
+                        issues.append((host, name + ': incomplete or failing identity result'))
             constant_steps = [step for step in job['steps']
                               if step['name'] == 'Verify exact scalar constants in complete programs']
             if constant_steps and constant_steps[0]['conclusion'] == 'success':
