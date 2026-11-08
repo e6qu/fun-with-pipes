@@ -55,6 +55,8 @@ experiment names its measured variant, not the latest compiler.
 
 ## Ownership costs
 
+- [First ownership peer checks](ownership-peer-checks-2026-11-08/README.md): Swift/C/Rust buffer correctness, C/Rust parser allocation lifetimes and native stack frames on ARM64/AMD64. Includes the repaired observer failure; no new peer timing claim.
+
 - [Swift allocation attribution](swift-allocations.md): pipeline/map allocator stacks and separate fwp managed counters; audited ARM64/AMD64 profiles and allocation/release controls; individual ARC counts remain unmeasured.
 
 - [Swift, C, Rust and fwp](swift-peers.md): seven programs on four native sessions, elapsed time and resident RAM; repeated ARM64 results, failed noise controls and different AMD64 CPUs remain explicit.

@@ -1,8 +1,9 @@
 # Ownership comparisons: next measurement work
 
 This is milestone 4 of the [roadmap](../../PLAN.md). It prepares comparisons,
-not another compiler optimization. No new measurements or speed claims have been
-made. Freeze the complete protocol and source before collecting peer timings.
+not another compiler optimization. [The first native checks](ownership-peer-checks-2026-11-08/README.md)
+cover Swift buffer results and C/Rust parser storage/frames. Peer timings remain
+unmeasured. Freeze the complete protocol and source before collecting them.
 
 ## Questions and programs
 
@@ -113,6 +114,11 @@ language parser. Keep malformed, trailing-token and overflow controls.
 - Separate payload, capacity, native allocation, virtual reservation and RSS.
   fwp owns token strings; C/Rust borrow input slices. Their tree representations
   also differ. Neither time nor memory ratios isolate reference-count overhead.
+
+The [first checks](ownership-peer-checks-2026-11-08/README.md#parser-storage)
+now verify successful allocation transitions and ordinary Rust frames on both
+native architectures. Actual allocator-internal peaks, reservations and RSS remain
+separate work; this observer does not measure them.
 
 ## Before collecting timings
 

@@ -11,6 +11,10 @@ all parse that format. It is input data, not fwp arithmetic syntax. Removing
 tree-node reference counts does not remove tokenization or every heap allocation
 from this program.
 
+[Follow-up native checks](ownership-peer-checks-2026-11-08/README.md) add C/Rust
+allocation-transition peaks and Rust frames at their own recorded source. They
+do not replace the timings below or measure allocator-internal transient storage.
+
 ## Verified storage so far
 
 Both Linux architectures pass the focused native/WASI lifetime checks at

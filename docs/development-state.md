@@ -1,16 +1,14 @@
 # Current work
 
-**Next:** audit final production `42516732838` and docs `42516732902` on
-[PR #272](https://github.com/e6qu/fun-with-pipes/pull/272), then dispatch the
-complete-log audit. Final head: `8e7cdb94337c6fdac5656dfcbdab768d4a36e985`;
-measured compiler source: `4a32c102f74f738433c1d55969936b023a5510f0`.
-At 20:54 UTC, docs, C/Rust benchmarks and macOS ARM64 regular pass. The six other
-production jobs are running. No failing step is reported. This receipt belongs
-to the next branch; do not push it onto the final PR head and restart verification.
-Do not merge before all nine production jobs, docs and the complete-log audit
-pass for the final commit. Preserve that final head while checks run.
-The report was verified on `structured-autodiff-report-review` before publication;
-that temporary verification branch has no separate PR.
+**Next:** review complete-log audit `42525276460` for
+[PR #272](https://github.com/e6qu/fun-with-pipes/pull/272), then squash-merge
+only if it passes. All nine production jobs in `42516732838` and docs
+`42516732902` pass on final head `8e7cdb94337c6fdac5656dfcbdab768d4a36e985`.
+The audit is queued; green production jobs alone do not finish this gate.
+Measured compiler source: `4a32c102f74f738433c1d55969936b023a5510f0`.
+This receipt belongs to the next branch; preserve #272's tested head.
+After the verified merge, rebase `ownership-peer-comparisons` onto the actual
+merge and continue milestone 4 in one substantial PR.
 
 ## Roadmap status
 
@@ -18,8 +16,8 @@ that temporary verification branch has no separate PR.
 |---|---|---|---|
 | 1 | In progress | #270 docs and fresh F64 stores | Original AMD timing acceptance remains open. |
 | 2 | In progress | #271 captured maps and empty-owner transfer | Noisy timing acceptance remains open. |
-| 3 | In progress | #272 implementation/reports; focused safety, four measurement audits and final docs/bench jobs pass | Remaining final platform/audit gates; retain AMD timing misses. |
-| 4 | Pending | [Concrete comparison scope](measurements/ownership-peers.md); unverified Swift buffer fixture | Complete and verify Swift/C/Rust buffers, returned functions, weak subscriptions and parser workspaces. |
+| 3 | In progress | #272 implementation/reports; focused safety, four measurement audits and all final production/docs jobs pass | Complete-log audit and merge; retain AMD timing misses. |
+| 4 | In progress | [Native buffer/parser checks](measurements/ownership-peer-checks-2026-11-08/README.md) pass on ARM64/AMD64 | Complete and verify Swift/C/Rust buffers, returned functions, weak subscriptions and parser workspaces. |
 | 5 | Pending | Existing tools and correctness tests | Three application paths, compiler phase/scaling costs and sustained-load measurements. |
 
 The local-pair gradient remains experimental. Independent loss uses existing
@@ -119,58 +117,58 @@ rejection controls, no unexpected diagnostic. Logs:
 `/tmp/fwp-pr272-final-{docs,bench}.log`. Full artifact-log audit remains pending.
 macOS ARM64 regular `128841273786` also passes; its complete main log has no
 unexpected compiler/test diagnostic: `/tmp/fwp-pr272-final-mac-arm.log`.
+Linux AMD64 `128841273718` and Windows AMD64 `128841273836` pass. Their complete
+main logs are reviewed: Linux has no unexpected diagnostic; Windows panic messages
+are named scheduler lifetime controls, followed by passing test results.
+Logs: `/tmp/fwp-pr272-final-{linux-amd,windows-amd}.log`.
 
 ## Next-branch preparation
 
-Milestone 4 has a [concrete scope](measurements/ownership-peers.md). Prepared,
-not yet tested: native Swift Array peer, common peer result/error
-checks with explicit language selection, and `ownership-peer-checks` in
-`numerics.yml`. It runs C/Rust O1/O2 and Swift Onone/O on native Linux ARM64/AMD64
-without rebuilding fwp. Initial source `9f0dae655` was published; focused run
-`42519237679` was cancelled before either job started (both have empty step lists).
-Combined parser/Swift run `42520124080` tests source `5c40c2a9f`; jobs
-`128851586715` (ARM64) and `128851586733` (AMD64) report success, but raw records
-expose a masked observer failure described below. Do not accept the whole run.
-The existing C/Rust workflow caller now selects its
-languages explicitly. No peer timing has been collected or acceptance declared.
-The buffer checks pass 630 result/error cases on each host. The parser batch adds
-C/Rust allocation-transition observers, four existing tree
-shapes, real omitted-release controls, eight semantic controls, 32 damaged-record
-controls and Rust compiler frames with unchanged ordinary instruction bytes.
-Normal parser profiles and omitted-release controls pass on both hosts. They
-observe successful API requests and
-release; allocator-internal overlap, input loading and RSS remain outside scope.
-The parser job executes even if the earlier buffer step fails so both failures
-can be repaired together. Diagnostic clock values are not performance evidence.
-Further local edits tighten all parser peer rejection checks to the expected
-C/Rust exit statuses: a crash or timeout cannot stand in for a language error.
-The shared evidence tests now reject 50 altered exits and unexpected output;
-these additions are unverified and belong in the next batch, not #272.
-Raw records show every instrumented Rust invalid-input case aborting (`-6`)
-instead of its intended error (`101`). The aggregate observer charged frees for
-outer allocations it never measured. The repair tracks allocation identities and
-ends observation on unwinding. New controls free an outside owner inside the
-scope, exercise caught unwinding and deliberately restore the broken accounting
-to prove the control rejects it. Verify this repair before accepting parser evidence.
-Both job logs are reviewed: `/tmp/fwp-peer-checks-{arm,amd}.log`; small records
-are under `/tmp/fwp-peer-reports/`. Artifact IDs are `13633456991` (ARM64) and
-`13633602594` (AMD64). Only selected entries were fetched, with ZIP CRC checking;
-the complete 12/14 MB archives remain remote. A package-setup warning concerned
-an absent optional g++ manpage; focused checks now omit that unused dependency.
-Swift uses external input/result barriers; matched timing peers must all use
-the same barriers before ratios are meaningful. Remaining work includes returned
-buffers, scalar-closure allocation attribution, weak registrations and parser peaks.
-After #272's verified merge, carry this branch onto the actual merge and bundle
-the remaining comparison work into one substantial PR.
+[Scope](measurements/ownership-peers.md) and
+[first native report](measurements/ownership-peer-checks-2026-11-08/README.md)
+record the protocol, observations and limits. Repair source
+`4c6cda41fc2739569cdeda241da85b2a7310b89c` is preserved by immutable tag
+`roadmap/ownership-peer-checks-2026-11-08`. Native Linux run `42522747197`
+passes on ARM64 (`128859624064`) and AMD64 (`128859624152`): 630 buffer cases
+per host, twelve evidence-reader tests, C/Rust parser allocation lifetimes,
+Rust frames, cleanup and deliberately broken observer controls. Both full main
+logs and raw command records are reviewed. No peer timing is claimed.
+
+The first run `42520124080` reported success but its Rust observer aborted on
+invalid input. It incorrectly charged releases of allocations made outside the
+measurement scope. The repair tracks allocation identities and ends observation
+on unwind; strict exit-status checks now reject crashes instead of accepting
+any nonzero exit as a language error. The report retains both runs and controls.
+Run `42519237679` was cancelled before either job started to combine the checks.
+
+Remaining work: matched buffer barriers and returned-buffer phases, scalar Swift
+closure allocation attribution, weak registrations and allocator-internal parser
+peaks/reservations/RSS. Swift allocation counts are not ARC operation counts.
+Do not rerun unchanged failed timing controls to manufacture qualification.
 
 ## Local limits and resume
 
-Free disk is about 14 GiB, below the required 64 GiB. Local validation, builds
-and large downloads remain paused. Do not raise or bypass the guard. Continue
-source/docs edits, small report inspection and remote verification. Use
-`python3 scripts/local-guard.py COMMAND...` when the reserve is restored.
-The guard refused the new report check: `local-guard: stopped: less than 64 GiB
-free disk`; no local report-check pass is claimed.
+Disk cleanup on 2026-11-08 restored free space from 8.6 GiB to about 106 GiB
+(the net change also includes concurrent disk activity). Removed duplicate tracked
+files from seven inactive fwp worktrees using sparse checkout; each uncommitted
+handoff was preserved byte-for-byte. Source/history/evidence remain in Git.
+Removed 23 old completed Homebrew downloads (0.85 GiB), inactive Theseus Rust
+build caches (about 11 GiB), and 110 Git-ignored Terraform provider binaries
+(36.25 GiB logical). Preserved installed tools, infrastructure state/configuration,
+lockfiles, databases, models and active emulator scratch data. Affected Terraform
+projects need `terraform init` before use. Cleanup manifest:
+`/tmp/fwp-provider-cleanup.json`. The active branch was left intact; its sparse checkout was later expanded to
+restore documentation, examples, SDK and vendor inputs for link validation.
+
+Local focused checks can resume through `python3 scripts/local-guard.py COMMAND...`
+while the 64 GiB reserve holds. Full builds/suites/benchmarks still run remotely.
+The earlier report-check refusal remains a non-pass; no limits were bypassed.
+The first resumed attempt could not sample processes inside the sandbox; the
+authorized guarded retry exposed absent sparse-checkout inputs, not broken
+repository links. After restoring those inputs,
+`python3 scripts/local-guard.py python3 scripts/check-roadmap.py` passes:
+398 tracked Markdown link sets including the staged report, 106 preparation
+pairs/tags and five roadmap steps (0.42 CPU seconds, 3.16 seconds elapsed).
 
 Earlier guarded tutorial checks passed in raw interpretation and Clang O2
 (3.29 seconds, 1.46 CPU); receipt `/tmp/fwp-structured-tutorial/checks.json`.
