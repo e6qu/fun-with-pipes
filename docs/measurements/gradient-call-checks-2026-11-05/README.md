@@ -1,6 +1,7 @@
 # Gradient-call verification
 
-**Focused checks and measurement audits pass; timing goals stay open and final production gates remain.** [PR #259](https://github.com/e6qu/fun-with-pipes/pull/259)
+**Focused checks, measurement audits and all final production gates pass.**
+Timing goals stay open. [PR #259](https://github.com/e6qu/fun-with-pipes/pull/259)
 groups scoped input borrowing, numeric fold fields, direct backward seeds and
 consumed coordinate scratch. The [contract](../gradient-call-storage.md) fixes
 selection rules, failure controls and measurement requirements.
@@ -93,7 +94,8 @@ uses it with this passing correctness run as its explicit prerequisite.
 The [allocation audit](../gradient-call-census-2026-11-05/README.md) passes locally and in CI
 after correcting phase-byte attribution. [Compiler costs](../gradient-call-analysis-2026-11-05/README.md)
 pass; the [runtime audit](../gradient-call-time-2026-11-05/README.md) preserves
-17 missed timing limits. Final production gates remain.
+17 missed timing limits. [Final production gates](../gradient-call-delivery-2026-11-05.json)
+subsequently passed.
 
 
 ## First production run: lint and formatting repairs
@@ -130,7 +132,7 @@ identifies the package and binary. Repository formatting, three reference-patch
 controls, Rust formatting and workflow syntax pass locally. Runtime measurements
 remain tied to their original sources; no native measurement was repeated.
 
-The repaired commit must pass all nine production jobs plus docs before merge.
+The final delivery below passes all nine production jobs and documentation.
 
 ## Second production run: reference-patch context repair
 

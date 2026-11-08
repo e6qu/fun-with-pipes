@@ -2,8 +2,8 @@
 
 These checks answer two different questions: what runtime work a convenient
 source construct introduces, and whether a recursive computation can use a
-bounded call stack. They supply the baseline for [known-call work](../PLAN.md).
-F1–F3 are verified in PR #222. [Delivery history](roadmap-history.md#functional-calls-and-recursion-pr-222)
+bounded call stack. These finite call/recursion checks were verified in PR #222.
+[Delivery history](roadmap-history.md#functional-calls-and-recursion-pr-222)
 records all nine platform jobs, documentation and analysis budgets. The accepted
 scope is these fixtures and lifetime rules, not zero overhead for every function.
 
@@ -97,8 +97,8 @@ is free. Inputs, phase boundaries and cost limits remain unchanged.
 
 Seven new cases extend the same probe, with empty-input controls at 0 as well
 as 32 and 128. They return integers, so every temporary owner must be released
-before the call finishes. These are predeclared requirements for roadmap steps
-4–5. All seven meet these limits on Linux ARM64/AMD64 and macOS ARM64
+before the call finishes. All seven meet their originally declared limits on
+Linux ARM64/AMD64 and macOS ARM64
 at `a61addc6` (run `41251272638`). Later staged-call changes require the updated
 native probe described above. At `f7f5309c`, run `41257967346` passes all
 eight named/tacit pairs and all eight added cases on those three hosts; final

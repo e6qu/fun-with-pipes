@@ -1,0 +1,380 @@
+{
+  "loop-0": {
+    "medianProcessNs": {
+      "original": 875159.5,
+      "inline": 886016.5,
+      "original-copy": 873847.0,
+      "inline-copy": 857811.0
+    },
+    "copyRatios": {
+      "original": 1.0015019791794215,
+      "inline": 1.0328807860939064
+    },
+    "qualified": false,
+    "inlineOverOriginal": 1.012405738611076,
+    "changedDeclarations": 0,
+    "executables": {
+      "original": "19c8436d94e58e04c594027089d3ebc5098d6efbc67afcda174f4ff859355701",
+      "original-copy": "19c8436d94e58e04c594027089d3ebc5098d6efbc67afcda174f4ff859355701",
+      "inline": "e2b399975a69f0a9eba328aa2951a2c0f1c9c103fe39bc3eab51b201cc44a493",
+      "inline-copy": "e2b399975a69f0a9eba328aa2951a2c0f1c9c103fe39bc3eab51b201cc44a493"
+    }
+  },
+  "loop-16": {
+    "medianProcessNs": {
+      "original": 862703.0,
+      "inline": 953968.5,
+      "original-copy": 923763.0,
+      "inline-copy": 874636.0
+    },
+    "copyRatios": {
+      "original": 1.070777544531548,
+      "inline": 1.0907034469196328
+    },
+    "qualified": false,
+    "inlineOverOriginal": 1.105790173443236,
+    "changedDeclarations": 0,
+    "executables": {
+      "original": "26000be8e914813f407029331b8784f14af1c97994d3659726a25b51c3268a75",
+      "original-copy": "26000be8e914813f407029331b8784f14af1c97994d3659726a25b51c3268a75",
+      "inline": "3693d49c77349db33ba29141c8e5d8883af0f6984104092a8dda817c6b01ae3b",
+      "inline-copy": "3693d49c77349db33ba29141c8e5d8883af0f6984104092a8dda817c6b01ae3b"
+    }
+  },
+  "loop-1000000": {
+    "medianProcessNs": {
+      "original": 2374832.5,
+      "inline": 2139868.0,
+      "original-copy": 2334839.5,
+      "inline-copy": 2146506.0
+    },
+    "copyRatios": {
+      "original": 1.017128800502133,
+      "inline": 1.0031020605009282
+    },
+    "qualified": true,
+    "inlineOverOriginal": 0.9010606011160787,
+    "changedDeclarations": 0,
+    "executables": {
+      "original": "47a60141494e17c48b2924e2ea2006f560257338cf0d5b3408b99ccc4f19ebaa",
+      "original-copy": "47a60141494e17c48b2924e2ea2006f560257338cf0d5b3408b99ccc4f19ebaa",
+      "inline": "a70c94855bc18c487dd8ef5fc7564f354b8c2b5d94505e38846b23e0725c1548",
+      "inline-copy": "a70c94855bc18c487dd8ef5fc7564f354b8c2b5d94505e38846b23e0725c1548"
+    }
+  },
+  "loop-100000000": {
+    "medianProcessNs": {
+      "original": 116634994.0,
+      "inline": 115882345.5,
+      "original-copy": 116637458.5,
+      "inline-copy": 115972792.0
+    },
+    "copyRatios": {
+      "original": 1.0000211300220927,
+      "inline": 1.0007805028419967
+    },
+    "qualified": true,
+    "inlineOverOriginal": 0.993546975275705,
+    "changedDeclarations": 0,
+    "executables": {
+      "original": "a5eec7428097d4a8f07f05466fc069398b6260466b4f4b7c0624f1ed0409cc27",
+      "original-copy": "a5eec7428097d4a8f07f05466fc069398b6260466b4f4b7c0624f1ed0409cc27",
+      "inline": "86637aa3e9dcd0f9360d99a2b287a1dd618372349e7b4c188f0d92a6e5face54",
+      "inline-copy": "86637aa3e9dcd0f9360d99a2b287a1dd618372349e7b4c188f0d92a6e5face54"
+    }
+  },
+  "array-0": {
+    "medianProcessNs": {
+      "original": 936877.0,
+      "inline": 1083468.0,
+      "original-copy": 954035.5,
+      "inline-copy": 949533.5
+    },
+    "copyRatios": {
+      "original": 1.0183145706426777,
+      "inline": 1.1410529486321441
+    },
+    "qualified": false,
+    "inlineOverOriginal": 1.1564677113431112,
+    "changedDeclarations": 1,
+    "executables": {
+      "original": "de3aaf34c422733dd6c72a991a83411231cf8bcff9c07cd2aae9539d7900287c",
+      "original-copy": "de3aaf34c422733dd6c72a991a83411231cf8bcff9c07cd2aae9539d7900287c",
+      "inline": "2e65ebcf2c211c0398d0f8040e320c82ab265f6c020fe5b14a63f506069fdf57",
+      "inline-copy": "2e65ebcf2c211c0398d0f8040e320c82ab265f6c020fe5b14a63f506069fdf57"
+    }
+  },
+  "array-16": {
+    "medianProcessNs": {
+      "original": 1036745.0,
+      "inline": 987430.0,
+      "original-copy": 1040413.0,
+      "inline-copy": 1000051.5
+    },
+    "copyRatios": {
+      "original": 1.0035379963250366,
+      "inline": 1.012782171900793
+    },
+    "qualified": true,
+    "inlineOverOriginal": 0.9524328547521329,
+    "changedDeclarations": 1,
+    "executables": {
+      "original": "fe4235826f7d0b5bc3bcb11dfd0968c19cbccba5e84274c4f3b45f1c3d37cd59",
+      "original-copy": "fe4235826f7d0b5bc3bcb11dfd0968c19cbccba5e84274c4f3b45f1c3d37cd59",
+      "inline": "a19ec43f37b0c9216fc6dfd06b2a9a09eefa686ee6aa0ed1bbd1f130d9a3b5b7",
+      "inline-copy": "a19ec43f37b0c9216fc6dfd06b2a9a09eefa686ee6aa0ed1bbd1f130d9a3b5b7"
+    }
+  },
+  "array-65537": {
+    "medianProcessNs": {
+      "original": 1549780.5,
+      "inline": 1859962.5,
+      "original-copy": 1611719.0,
+      "inline-copy": 1752606.0
+    },
+    "copyRatios": {
+      "original": 1.039965982279426,
+      "inline": 1.06125535345651
+    },
+    "qualified": false,
+    "inlineOverOriginal": 1.2001457625773457,
+    "changedDeclarations": 1,
+    "executables": {
+      "original": "e230180c8939f32c13d2cd7d2cfa537c6df174b3a681068bd292c54b46231322",
+      "original-copy": "e230180c8939f32c13d2cd7d2cfa537c6df174b3a681068bd292c54b46231322",
+      "inline": "66857562e83488036e368d183a0d374f46543c81be63bec82be6a79e2a83950b",
+      "inline-copy": "66857562e83488036e368d183a0d374f46543c81be63bec82be6a79e2a83950b"
+    }
+  },
+  "array-262145": {
+    "medianProcessNs": {
+      "original": 3827746.0,
+      "inline": 3782837.5,
+      "original-copy": 3896436.0,
+      "inline-copy": 3880722.0
+    },
+    "copyRatios": {
+      "original": 1.0179452868607268,
+      "inline": 1.0258759462969267
+    },
+    "qualified": false,
+    "inlineOverOriginal": 0.9882676384483192,
+    "changedDeclarations": 1,
+    "executables": {
+      "original": "435de673a2aa69aec18f72538691c5a80958137f746fa863dc0f57de1e6b594e",
+      "original-copy": "435de673a2aa69aec18f72538691c5a80958137f746fa863dc0f57de1e6b594e",
+      "inline": "583e89b2a9263b5c4706ea2d06a0496044066a16412ea7a346107ce61ea083fa",
+      "inline-copy": "583e89b2a9263b5c4706ea2d06a0496044066a16412ea7a346107ce61ea083fa"
+    }
+  },
+  "manual-3-0": {
+    "medianProcessNs": {
+      "original": 988181.5,
+      "inline": 1039524.0,
+      "original-copy": 1104434.5,
+      "inline-copy": 1037738.5
+    },
+    "copyRatios": {
+      "original": 1.1176433681464386,
+      "inline": 1.0017205683320027
+    },
+    "qualified": false,
+    "inlineOverOriginal": 1.05195654846807,
+    "changedDeclarations": 1,
+    "executables": {
+      "original": "fb4bcd6fec2be0d78e9630e821dc34911475217770422e87ca53dfd9caf23207",
+      "original-copy": "fb4bcd6fec2be0d78e9630e821dc34911475217770422e87ca53dfd9caf23207",
+      "inline": "f663cacbb42236d81f4b0cbcf73a2d824ee226617a882b3fc1e24dd35ce8e83f",
+      "inline-copy": "f663cacbb42236d81f4b0cbcf73a2d824ee226617a882b3fc1e24dd35ce8e83f"
+    }
+  },
+  "manual-3-1": {
+    "medianProcessNs": {
+      "original": 1359649.0,
+      "inline": 1509754.0,
+      "original-copy": 1336279.0,
+      "inline-copy": 1372708.5
+    },
+    "copyRatios": {
+      "original": 1.0174888627300138,
+      "inline": 1.0998358355033133
+    },
+    "qualified": false,
+    "inlineOverOriginal": 1.1103998164232092,
+    "changedDeclarations": 1,
+    "executables": {
+      "original": "a85ad7c758e70d9dfd25d6abee95f1c2915da14179bd08104b7426800d11fdeb",
+      "original-copy": "a85ad7c758e70d9dfd25d6abee95f1c2915da14179bd08104b7426800d11fdeb",
+      "inline": "844c8de4e10342dca96a82efbb7549f704523c2492bb58a38a213fc59ca4f8e5",
+      "inline-copy": "844c8de4e10342dca96a82efbb7549f704523c2492bb58a38a213fc59ca4f8e5"
+    }
+  },
+  "manual-3-199": {
+    "medianProcessNs": {
+      "original": 1531165.0,
+      "inline": 1445027.5,
+      "original-copy": 1704741.5,
+      "inline-copy": 1517281.5
+    },
+    "copyRatios": {
+      "original": 1.1133623744011913,
+      "inline": 1.0500018165744252
+    },
+    "qualified": false,
+    "inlineOverOriginal": 0.9437438159832546,
+    "changedDeclarations": 1,
+    "executables": {
+      "original": "5821066c21eaf024a94a4229f9fb0788e48c4b9f914c82024dd91c4d6d33be00",
+      "original-copy": "5821066c21eaf024a94a4229f9fb0788e48c4b9f914c82024dd91c4d6d33be00",
+      "inline": "22bad7085647f75d26f1ca1e2cac973b274252fbcfe9bd7af50accd943302b6c",
+      "inline-copy": "22bad7085647f75d26f1ca1e2cac973b274252fbcfe9bd7af50accd943302b6c"
+    }
+  },
+  "manual-33-199": {
+    "medianProcessNs": {
+      "original": 5993278.5,
+      "inline": 5789173.5,
+      "original-copy": 5856900.0,
+      "inline-copy": 5723189.0
+    },
+    "copyRatios": {
+      "original": 1.023285099626082,
+      "inline": 1.0115293239485887
+    },
+    "qualified": false,
+    "inlineOverOriginal": 0.9659443491571433,
+    "changedDeclarations": 1,
+    "executables": {
+      "original": "6b01292206b19b07ee556634bd0aa5c673bdaf1dab84cd6eac0831b1981abd1f",
+      "original-copy": "6b01292206b19b07ee556634bd0aa5c673bdaf1dab84cd6eac0831b1981abd1f",
+      "inline": "fd820c3b835c8c4ef8f0c6ad1acd867dde837676f39980f6c360ab6bda8a6756",
+      "inline-copy": "fd820c3b835c8c4ef8f0c6ad1acd867dde837676f39980f6c360ab6bda8a6756"
+    }
+  },
+  "manual-129-199": {
+    "medianProcessNs": {
+      "original": 17368937.5,
+      "inline": 17644833.5,
+      "original-copy": 17484947.0,
+      "inline-copy": 17738832.5
+    },
+    "copyRatios": {
+      "original": 1.0066791362453806,
+      "inline": 1.0053272817791112
+    },
+    "qualified": true,
+    "inlineOverOriginal": 1.0158844488904402,
+    "changedDeclarations": 1,
+    "executables": {
+      "original": "0e043e4d8ef23ed846943778c303c6ac418669b0539f073fcc3375c98d77cdb2",
+      "original-copy": "0e043e4d8ef23ed846943778c303c6ac418669b0539f073fcc3375c98d77cdb2",
+      "inline": "99048f52f772163ee4742da27d91dd9a4a3de705c1d084d8862a9aeea29d4374",
+      "inline-copy": "99048f52f772163ee4742da27d91dd9a4a3de705c1d084d8862a9aeea29d4374"
+    }
+  },
+  "local-3-0": {
+    "medianProcessNs": {
+      "original": 1010302.0,
+      "inline": 991531.0,
+      "original-copy": 1014279.0,
+      "inline-copy": 1081352.0
+    },
+    "copyRatios": {
+      "original": 1.0039364467258305,
+      "inline": 1.0905881913929065
+    },
+    "qualified": false,
+    "inlineOverOriginal": 0.9814204069674216,
+    "changedDeclarations": 1,
+    "executables": {
+      "original": "b55e605b5f619f81a720629c4bc9b24d9bf5968ce6600aa92c422d8d6034504f",
+      "original-copy": "b55e605b5f619f81a720629c4bc9b24d9bf5968ce6600aa92c422d8d6034504f",
+      "inline": "30dadcdc08dd59517ccf302b58dec2c1149d34be1e487b36df7d316b23cd513e",
+      "inline-copy": "30dadcdc08dd59517ccf302b58dec2c1149d34be1e487b36df7d316b23cd513e"
+    }
+  },
+  "local-3-1": {
+    "medianProcessNs": {
+      "original": 1669498.0,
+      "inline": 1461372.5,
+      "original-copy": 1398537.0,
+      "inline-copy": 1408950.5
+    },
+    "copyRatios": {
+      "original": 1.1937460360362293,
+      "inline": 1.037206417116854
+    },
+    "qualified": false,
+    "inlineOverOriginal": 0.8753364783905102,
+    "changedDeclarations": 1,
+    "executables": {
+      "original": "a928920bd63be0d1a32a8918084706949ceb43cb5474c218894fa6937b742e60",
+      "original-copy": "a928920bd63be0d1a32a8918084706949ceb43cb5474c218894fa6937b742e60",
+      "inline": "9461081a6e949055ca617ed66c520f79de3b013d656c8da1cdb29ad6aa7ccc98",
+      "inline-copy": "9461081a6e949055ca617ed66c520f79de3b013d656c8da1cdb29ad6aa7ccc98"
+    }
+  },
+  "local-3-199": {
+    "medianProcessNs": {
+      "original": 1490756.5,
+      "inline": 1662252.5,
+      "original-copy": 1468445.5,
+      "inline-copy": 1521483.0
+    },
+    "copyRatios": {
+      "original": 1.015193618013062,
+      "inline": 1.0925212440756815
+    },
+    "qualified": false,
+    "inlineOverOriginal": 1.1150395788983647,
+    "changedDeclarations": 1,
+    "executables": {
+      "original": "c5e28a035dc6793a9b7070cfdefce549f7577b3aaef3525dc5c20a313a82b898",
+      "original-copy": "c5e28a035dc6793a9b7070cfdefce549f7577b3aaef3525dc5c20a313a82b898",
+      "inline": "88c6fc83cde9aa9daa675f2e0bc218ec73b43c1160de4e3b1452f2ec65a0b9f8",
+      "inline-copy": "88c6fc83cde9aa9daa675f2e0bc218ec73b43c1160de4e3b1452f2ec65a0b9f8"
+    }
+  },
+  "local-33-199": {
+    "medianProcessNs": {
+      "original": 6495396.0,
+      "inline": 6069906.5,
+      "original-copy": 6381221.5,
+      "inline-copy": 6326704.0
+    },
+    "copyRatios": {
+      "original": 1.0178922640438042,
+      "inline": 1.042306664855546
+    },
+    "qualified": false,
+    "inlineOverOriginal": 0.934493678291516,
+    "changedDeclarations": 1,
+    "executables": {
+      "original": "130b0d35ce119875906bec3bba3f96ca5621ca9994bc24c02049196cc399c2f3",
+      "original-copy": "130b0d35ce119875906bec3bba3f96ca5621ca9994bc24c02049196cc399c2f3",
+      "inline": "0663e94fa27a1204e78b1dc8deffa30d1b70ab0c3f41f9f183aa199608168bd3",
+      "inline-copy": "0663e94fa27a1204e78b1dc8deffa30d1b70ab0c3f41f9f183aa199608168bd3"
+    }
+  },
+  "local-129-199": {
+    "medianProcessNs": {
+      "original": 18192502.0,
+      "inline": 18404586.5,
+      "original-copy": 18525088.5,
+      "inline-copy": 18620624.5
+    },
+    "copyRatios": {
+      "original": 1.0182815150989126,
+      "inline": 1.0117382696970671
+    },
+    "qualified": true,
+    "inlineOverOriginal": 1.011657797261751,
+    "changedDeclarations": 1,
+    "executables": {
+      "original": "57ae5efb01db6cc6ae7a5df4fcfd2bdc93c26d2434765862372adf02dabdc425",
+      "original-copy": "57ae5efb01db6cc6ae7a5df4fcfd2bdc93c26d2434765862372adf02dabdc425",
+      "inline": "560c4b7b0f839aef87201d1070e8f626e3d3d46a8f15a1beb578c2acd7e08127",
+      "inline-copy": "560c4b7b0f839aef87201d1070e8f626e3d3d46a8f15a1beb578c2acd7e08127"
+    }
+  }
+}

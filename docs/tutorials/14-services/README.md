@@ -32,7 +32,7 @@ The sessions below run exactly as shown: the test suite runs them.
 
 The library's `book` function constructs a predicate from its ISBN input (the
 book identifier), applies it to each catalog entry's `.isbn`, and uses `find`.
-`apply catalog` supplies the fixed list to that assembled search function.
+`apply shelf` supplies the fixed list to that assembled search function.
 `Option` represents “not found”; borrowing a found book returns a loan or a typed
 error. It does not mutate a persistent inventory. The client uses `attempt` to
 show successful and failed calls as values, making local/remote behavior comparable.
@@ -115,7 +115,8 @@ Err (library.NotAvailable {isbn = "978-1", reason = "all copies are out"})
 Err (library.NotAvailable {isbn = "978-9", reason = "no such book"})
 ```
 
-The output is the same as the single executable's. The interpreter does
+After the client finishes, stop this background server with `kill $!` in the
+same terminal. The output is the same as the single executable's. The interpreter does
 the same with explicit `--interp`: `fwp serve --interp main.fwp library`
 serves the module, and `fwp run --interp --service library main.fwp` runs `main`
 against it. Native and

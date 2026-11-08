@@ -99,7 +99,8 @@ including their different allocation and checking work.
 The ARM64 one-update case is 0.8% slower. AMD64's one-update identical-code control
 differs by 10%, and its 33-coordinate control by 5.3%; these differences cannot
 come from the compiler change. Small-case speed claims remain inconclusive.
-Independent repeats and a declared timing budget are still needed.
+This original comparison therefore does not establish two-session acceptance.
+Later experiments have their own inputs and limits; current work is in [PLAN.md](../../PLAN.md).
 
 ## Hosts, machine code and remaining costs
 

@@ -110,8 +110,9 @@ errors without rerunning a completed test shard. Test failures are never retried
 or ignored by these upload steps. Audit any recovered upload error alongside the
 successful archive identity and its complete target logs.
 
-A skip, cancelled job, emulated execution or draft-PR skip is not a passing gate.
-Draft PRs use dispatched focused checks; marking ready starts the full matrix.
+A skip, cancelled job or emulated execution is not a passing gate.
+Dispatch focused checks while preparing the batch. Open a normal PR when the
+batch is ready, so its complete matrix starts; use a draft only if requested.
 Before a repair push, audit every failed job and completed target, then batch all
 known fixes. Preserve a passing final head while its remaining gates run.
 
@@ -126,7 +127,7 @@ before execution. Recheck actual durations before claiming a cycle-time saving.
 
 [The `ownership-analysis` suite](.github/workflows/numerics.yml) runs
 only the paired compiler-analysis experiment on Linux and Intel macOS. Use it
-when updating [G2 evidence](docs/measurements/ownership-analysis.md); it does not
+when updating [ownership-analysis evidence](docs/measurements/ownership-analysis.md); it does not
 replace the production correctness gates.
 
 `Numerical and ownership evidence` in `.github/workflows/numerics.yml` exposes

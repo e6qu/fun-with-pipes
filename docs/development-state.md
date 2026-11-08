@@ -1,93 +1,138 @@
 # Current work
 
-**Next:** finish the exact-head nine-job production CI and documentation for
-PR #269, audit every completed job, fix all failures together, then squash-merge.
-The PR is now ready for review. Draft status had skipped CI; use normal PRs
-unless the user explicitly requests a draft.
+**Next:** monitor the repair commit on [PR #270](https://github.com/e6qu/fun-with-pipes/pull/270)
+and audit every completed production/docs result before merging. Use the PR's
+current exact head, then dispatch the complete artifact/log audit after its gates
+finish. The original production `42444906666` and docs `42444906569` tested
+`56ffa96bc28f573f01f28a3e23827414d90d6e31`. Bench job `128621688027` failed the
+lesson 7 formatter check; docs job `128621687708` found a historical report title
+changed without its generator. Both causes are fixed together in this commit.
+Other jobs had reported no failure when their available steps were reviewed;
+the new head still requires the full nine-job production matrix and docs audit.
+Do not mark milestone 1 complete: AMD64 timing acceptance remains open. The user
+has been asked whether to retain the verified ARM64 improvement with that goal
+open or withhold the compiler change pending reliable AMD64 measurements.
+Publication and correctness checks can proceed while that decision is pending.
 
-## Branch and current sources
+## Workspace and scope
 
-[PR #269](https://github.com/e6qu/fun-with-pipes/pull/269), branch
-`tape-record-evidence`, worktree `.worktrees/recording-capacity-gate`.
-The root worktree has unrelated changes; do not modify/reset it.
+Branch `performance-roadmap-review`, worktree `.worktrees/recording-capacity-gate`,
+base `bbcaafea00d6bf9e26feea60f90d8d440aa16d00` (merged #269). The root worktree
+has unrelated changes; do not modify/reset it. #269's tested/merged trees match;
+[production, documentation and complete audits pass](measurements/computed-numeric-delivery-2026-11-08/README.md).
+Its redundant post-merge run `42431179791` was cancelled after verifying equal
+trees and no failed jobs.
 
-- Measured runtime/compiler repair: `8b24da94a4e54c023f5e4b2341896d97dff092b9`.
-- Compiler-cost source: `8389403c566230680b61949e6e5e6837293215bf`; same native sources/tests.
-- Frozen compiler reference: `f1cc94cf4e013369cccb8a836bd745f41e5d757c`.
-- Original runtime contract: `524524bd3`; revised computed-input proof: `250cf62a0`.
-  [Exact boundaries](measurements/direct-numeric-workers.md).
-
-The compiler binds each computed numeric input once, in original scopes and
-left-to-right order, then passes its numeric fields. No function cloning, new
-syntax or public API. The local derivative helper stays in
-`tests/fixtures/descent_local_ad.fwp`; frozen timing acceptance remains open.
+This PR combines the five-step roadmap, the complete documentation/tutorial
+review, a measured compiler improvement and reproducible measurement tools.
+Use a normal PR; draft status must not suppress CI. Preserve passing results
+while remaining gates run. [PLAN.md](../PLAN.md) owns acceptance.
 
 ## Roadmap status
 
 | Step | Status | Evidence and remaining work |
 |---|---|---|
-| 1 | Verified | GCC ARM64/AMD64 and Clang ARM64 pass nine compiler proofs, mixed ownership at O1/O2 and local derivative values/traps. All 21 native images retained. Full platforms remain step 4. |
-| 2 | Implemented | All six cases match handwritten-array allocation/retain counts, with no extra managed peak and zero tape/final storage. Qualified long solves are 48–65% faster than reverse AD. One AMD copy control remains inconclusive. |
-| 3 | Implemented | All fourteen compiler comparisons meet 5% time/RSS limits; two AMD copy controls remain inconclusive. Complete audits pass. Retain the compiler reduction; no public helper promotion or timing waiver. |
-| 4 | In progress | Complete final-head nine production jobs, documentation and log audit; then authorized squash merge. |
+| 1 | In progress | Fresh F64 output stores improve large-array computation 26–31% in both ARM64 sessions. Docs/tutorial sweep and complete measurement audits are ready; AMD64 acceptance and final platform/docs gates remain open. |
+| 2 | Pending | Broader lifetime/representation proofs selected from measured costs, covering at least two application patterns. |
+| 3 | Pending | Structured differentiation across three objective families, preserving general reverse AD, nesting and precision. |
+| 4 | Pending | Current Swift/C/Rust ownership comparisons, with phase timing and explicit memory boundaries. |
+| 5 | Pending | Three end-to-end application/tooling paths and compiler phase/scaling costs; demonstrated usability repairs. |
 
-## Completed measurements and audits
+## Implementation and safety
 
-[Runtime results](measurements/computed-numeric-time-2026-11-07/README.md),
-producer `42417868388`: ARM jobs `128541267023`, `128541267002` and AMD1
-`128541267009` pass. AMD2 `128541266975` fails only the 3/199 identical-copy
-control (2.0845% versus 2%). All four complete observation audits pass.
-Retention run `42419504241`, job `128544674265`, passes and preserves all process
-observations, native images, logs and the miss. No timing was repeated.
+Executable compiler change: `f21bf13902239805ef74048e8a8b3fc4d4237cbb`.
+Known `array.generate` callbacks returning exactly F64 store directly into their
+fresh output. Such output cannot be a view and its elements need no destructor.
+The protected builder still frees partial/completed output. Input reads, bounds
+checks, callbacks, effects and other element types retain their behavior.
+No new runtime helper, capture parameter or source API was added.
 
-The largest process drops from 409,297 to 1,745 managed requests: 407,552 temporary
-input records removed. Its elapsed time is 56–59% lower than reverse AD, but
-still 4.2–5.7 times handwritten C's time. Both fwp array versions share much of
-that gap; its cause is not yet established. Do not attribute it to ARC or caches
-without measurement. Requested traffic and live memory remain separate metrics.
+Focused run `42438693432` passes all eight targets on AMD64 GCC
+(`128603076444`), ARM64 GCC (`128603076704`) and ARM64 Clang (`128603076570`).
+Complete safety audit `128607338068` in `42440117133` verifies 348/348/342 native
+images and 372 probe statuses per host. Tests cover packing, numeric types,
+aliases, slices, dynamic counts, callback failure/cancellation and physical frees.
+Other test assertions on stores/prefix counts were reviewed: they cover unchanged
+map lowering or runtime AD builders, not the changed generated F64 worker.
 
-[Compiler results](measurements/computed-numeric-analysis-2026-11-07/README.md),
-producer `42418398638`: ARM job `128541365464` passes; AMD `128541365535` fails
-only field-transfer candidate-copy (2.41%) and tutorial reference-copy (3.35%)
-controls. Every time/RSS comparison stays within 5%. Complete audit job
-`128542895551` passes; all 336 commands plus six preflights per host are retained.
+Later production-code edits only clarify the builder's destructor-free prefix
+comment. Other changes are docs, tests and measurement/audit tooling. Final-head
+production checks are still required; focused coverage is not a full delivery gate.
 
-[Focused native evidence](measurements/computed-numeric-inputs-2026-11-07/README.md)
-passes: ARM `128539754453`, AMD `128539755075`, Mac `128539754700`.
-Actual emitted local-edge takes four doubles. No new production source changes
-follow these focused tests and measurements.
+## Measurements and decisions
 
-## Earlier evidence and repairs
+The [frozen protocol](measurements/shared-loop-array-costs.md) defines inputs,
+phase boundaries and original limits. Do not rerun unchanged timings to obtain
+a pass, relax limits after seeing results or substitute counts for runtime gains.
 
-The [first prototype](measurements/local-derivative-time-2026-11-07/README.md)
-retains five timing misses and its original allocation cost. Complete retention
-run `42418518671`, job `128541726131`, passes without repeating timings.
+| Investigation | Evidence | Decision |
+|---|---|---|
+| Forced callback inlining | [Run 42433452458](measurements/loop-array-diagnosis-2026-11-08/README.md) | Rejected; largest derivative cases take 1.11–2.04% more process time. |
+| Cached captured-array metadata | [Run 42435795842 and complete audit](measurements/borrowed-array-metadata-2026-11-08/README.md) | Rejected and removed; misses the 10% computation target. |
+| Direct fresh-output stores | [Diagnostic 42437082841 and complete audit](measurements/fresh-array-diagnosis-2026-11-08/README.md) | Selected for compiler implementation; diagnostic gains alone do not verify it. |
+| Production candidate/reference | [Run 42440117133; audit 42441970817](measurements/fresh-array-costs-2026-11-08/README.md) | All 72 cases pass correctness/data checks. ARM64 large arrays improve 26–31%; AMD64 acceptance remains open. |
+| Equivalent C/Rust computation | [Run 42441977298, both complete audits](measurements/loop-array-peers-2026-11-08/README.md) | Qualified long loops are competitive. Largest ARM64 local-AD case takes 2.47× C and 4.98× Rust. One session per architecture; most AMD64 array/derivative controls fail. |
+| Explicit CPU placement | [Run 42443629870 and complete audit](measurements/array-affinity-2026-11-08/README.md) | Pinning alone does not resolve large-array copy variation. Not a replacement accepted timing protocol. |
 
-The [failed cloning hypothesis](measurements/numeric-input-diagnosis-2026-11-07/README.md)
-at `9cb7497f3`, run `42417084281`, failed actual-edge selection on all hosts.
-Computed arguments were the blocker. Cloning was removed before the passing repair.
-Earlier formatting and native probe results remain
-[here](measurements/local-derivative-checks-2026-11-07/README.md).
+Production sessions used source `066175c3ad47cf8d226a1dc2b16fba55eba71b7d`.
+AMD64 sessions have 13/12 failed computation-copy controls and one qualified
+3.38% zero-update regression; they ran on different CPU models (9V45 and 7763).
+Both ARM64 sessions pass all computation-copy controls and qualified guard limits.
+Allocations and peak managed storage are unchanged. Separate ordinary RSS,
+compiler time/RSS, code and stack observations are retained in the reports.
 
-[PLAN.md](../PLAN.md#completed-work-carried-in-this-pr) links the corrected layout
-audits, original image reproductions, compiler comparisons and #268 production
-audit. These older gates do not verify this compiler change.
-[Earlier timing misses](measurements/unmet-comparisons.md) remain evidence,
-not a queue of unchanged reruns.
+Complete production-measurement audit `42441970817`, job `128612920574`, verifies
+all 7,976 timing/build commands plus 216 resource commands per first-session host.
+Peer jobs `128612937644`/`128612937839` each audit all 2,916 commands.
+Placement job `128617878874` at `c35f211a9` and the local standalone auditor
+verify four cases, 16 native/copy images and all 416 commands/samples.
 
-## Local checks and delivery
+Two tooling failures are repaired and recorded: `42439586418` lacked historical
+Git source for its audit (fixed with a full-history checkout); `42442853547`
+failed hardware preflight before measuring (assigned-CPU qualification and a
+hardware receipt are now explicit). Both repaired paths pass. Original logs and
+failed observations remain evidence, not unfinished implementation tasks.
 
-Guarded checks pass: five measurement controls (0.13 s), eleven compiler-cost
-controls (3.44 s), Rust formatting, workflow validation, retention-script syntax,
-21 native image/header/hash checks, four runtime report archives and 144 peer
-rows, all complete observation archive digests and compiler audit summaries.
-Each remaining check took 0.13–0.36 s. Sparse-checkout link prerequisites were
-restored from tracked files. Full builds, suites, benchmarks and large audits
-stay on GitHub. Last free disk: 89 GiB; minimum 64 GiB. Never bypass guard limits.
+## Documentation and remaining checks
 
-Documentation at `45e22bdd4` passed run `42419425639`; final-head docs are still
-required. Do not count draft-skipped production jobs as passes. Hosted slots
-can be busy: wait for queued jobs rather than restarting or inferring billing.
-Audit completed targets and diagnostics before a repair push. Supply an explicit
-one-line squash subject <=80 characters and an empty body, without trailers or
-attribution; verify the resulting tree/message. Continue the plan after delivery.
+All 24 tutorial READMEs and the tracked Markdown inventory have been reviewed.
+[The documentation map](README.md) separates learning, reference, compiler work
+and evidence. Stale delivery instructions, duplicate status prose and obsolete
+roadmap items are removed; original observations/contracts remain intact.
+Lesson 7 now labels Fahrenheit as `fahrenheit`; source and transcripts agree.
+Its native session needs final runner verification. The isolated production
+formatter now verifies canonical form, identical parsed meaning and idempotence.
+
+The latest prior full docs check is `42438695310`, job `128603080353`, at
+`f21bf1390`; subsequent edits need the final-head check. Generated library guides
+must still be maintained through their source comments/generator.
+
+- Guarded local checks pass: fourteen measurement controls, five diagnostic
+  controls, Rust formatting, tutorial source/output copies, workflow syntax and
+  sparse/index links across 384 Markdown files and five roadmap rows.
+- Retained artifacts pass digest/archive checks; the standalone placement audit
+  checks all samples without executing any binaries locally.
+- No full local compiler build, native suite or benchmark was run. A temporary
+  formatter probe compiles the production parser/formatter modules and the exact
+  string-escaping helper under the guard (2.54 CPU seconds/5.02 seconds elapsed). Full checks stay
+  on GitHub. The last disk reading was about 86 GiB; preserve the 64 GiB limit
+  and use `scripts/local-guard.py` for focused checks.
+- This sparse checkout omits tracked examples. The full documentation audit
+  belongs on a complete runner checkout; the local index-aware audit checks links.
+- `numerics.yml` is only 25 bytes below GitHub's 512,000-byte limit. Extend reusable
+  workflows instead of growing that file. The earlier size failure is repaired.
+
+## Batched CI repairs
+
+- Formatter failure: update lesson 7 source and its README together, using the
+  formatter's `.sensor` shorthand and canonical layout; explain the shorthand.
+  The isolated formatter verifies unchanged parsed meaning and idempotence.
+  `/tmp/fwp-roadmap-tutorial-copies --exact tutorial_readmes_match_their_programs`
+  passes through the local guard after the edit. Full failed log:
+  `/tmp/fwp-270-bench.log`. Its missing-artifact error follows the early fmt exit.
+- Generated report failure: update `scripts/report-current-kernels.py` to emit
+  the historical PR #243 heading. The report body and observations are unchanged.
+  Guarded `python3 scripts/test-current-kernel-report.py` passes both controls.
+  A source sweep found no other removed prose still emitted by a generator.
+  Full failed log: `/tmp/fwp-270-docs.log`. Expected negative-control failures
+  earlier in that log pass their enclosing tests; they are not job failures.

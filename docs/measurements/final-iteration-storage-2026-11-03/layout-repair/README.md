@@ -38,5 +38,6 @@ this smaller archive. Artifact metadata preserves the full download identity and
 digest; full job logs are retained separately. Complete originals remain in the
 local `final-iteration-second` scratch folder and the linked GitHub run.
 
-See [the contract](../../final-iteration-storage.md) and
-[handoff](../../../development-state.md) for remaining acceptance work.
+[The contract](../../final-iteration-storage.md) retains the original requirements.
+[The later completed delivery](../../../roadmap-history.md#final-iteration-values-without-histories-pr-255)
+records final gates separately from the original timing misses.

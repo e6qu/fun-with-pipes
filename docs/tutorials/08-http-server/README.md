@@ -131,7 +131,10 @@ not found 404
 ```
 
 `fwp build server.fwp -o server` builds the same program as an
-executable.
+executable. After the requests, run `kill $!` in the same terminal to stop the
+background server. Do this before starting another background job, which would
+replace `$!` with that job's process ID. The test harness performs this cleanup
+automatically after replaying the session.
 
 ## The program
 

@@ -1,7 +1,8 @@
 # Baselines for the remaining CPU gaps
 
-This is the current B1/P1 work in [the plan](../../PLAN.md). Before changing the
-compiler, measure two programs against their checked C/Rust implementations:
+This records the completed B1/P1 baseline experiment. Its frozen limits and
+observations remain tied to the recorded sources; [the plan](../../PLAN.md)
+owns current work. The experiment compared two checked C/Rust/fwp programs:
 
 | Program | Work in every implementation | Question |
 |---|---|---|

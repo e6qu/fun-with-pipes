@@ -3,8 +3,8 @@
 An owner keeps an allocation alive. A retain adds an owner; a release gives one
 up. Without tracing GC, checks must catch lost owners, premature release
 and unsafe storage reuse without a collector keeping the affected objects alive.
-G4 passed all nine production jobs and documentation in [#215](roadmap-history.md#weak-channels-and-retained-callbacks-pr-215).
-G5 replaced collector-specific controls while retaining these ownership checks.
+The weak-reference and cleanup controls passed in [#215](roadmap-history.md#weak-channels-and-retained-callbacks-pr-215).
+Collector-specific tests were later replaced with direct ownership checks.
 All nine production jobs, documentation and both analysis-budget hosts passed in
 [PR #217](roadmap-history.md#tracing-gc-removal-pr-217).
 
@@ -14,7 +14,7 @@ A closure is a function together with the values it captures. Releasing its last
 owner also releases those captured values. A temporary queue avoids recursively
 using the C stack for a long chain of captured functions.
 
-The G5 closure probe checks that normal destruction releases all captures,
+The closure probe checks that normal destruction releases all captures,
 restores live bytes and clears the temporary thread context. A deliberately
 missing context reset must fail with status 94 before reading the stale pointer.
 Failure to grow the queue terminates with status 102, matching allocator
@@ -262,7 +262,7 @@ is included in dynamic/static native and WASI JSPI/Asyncify execution.
 The [WASI physical ledger](../tests/fixtures/wasm_arc_allocations.c) now detects
 duplicate addresses even when an earlier slot is empty. Its regression test
 checks normal reuse, duplicate registration and duplicate removal on native and
-WASI hosts. The migrated G5 controls pass integrated native and WASI validation
+WASI hosts. The replacement controls pass integrated native and WASI validation
 in #217; the original #215 results remain historical evidence.
 
 ## Retired collector checks
@@ -307,7 +307,7 @@ removed after their counted-ownership replacements passed. The deletion inventor
 retains their original source locations, including dynamically selected settings,
 so the change can be reviewed without guessing from test names.
 
-G5 moved record/tree/array/map allocation comparisons and ordinary
+GC removal moved record/tree/array/map allocation comparisons and ordinary
 loop/HTTP/REST RSS checks to ARC. Both reuse variants keep reference counts;
 `FWP_NO_REUSE` disables only in-place updates in the copy control. The numeric
 budgets remain unchanged. This measures allocation cost, not elapsed time or

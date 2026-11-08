@@ -199,9 +199,8 @@ no process-memory or wider benchmark speedup is claimed.
 
 Keep the startup error-handling repair for correctness. Do not remove its required
 stack setup or infer an optimization from these clock-instrumented images.
-Investigate the repeated divisions in decimal digit counting next. A bit-length
-estimate followed by an exact power-of-ten comparison is a testable alternative:
-it needs integer-boundary proofs, a visible constant-table cost and an ordinary
-same-job comparison against the current helper on both architectures. Preserve
-all checked arithmetic, evaluation order and existing fixed timing limits. No
-candidate has yet passed that acceptance test; P2/P3 remain open.
+This experiment led to a bit-length estimate followed by an exact power-of-ten
+comparison. The later [decimal-count implementation](decimal-count.md) records
+its accepted comparison, boundary proofs and table cost. That delivery does not
+alter these phase measurements or their failed controls. Current work belongs
+to [PLAN.md](../../PLAN.md).

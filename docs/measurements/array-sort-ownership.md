@@ -5,7 +5,7 @@ building and sorting an array. Focused checks pass on Linux, macOS and Windows,
 each on ARM64 and AMD64. Integrated delivery passed in [PR #212](../roadmap-history.md#array-moves-and-the-gc-removal-checklist-pr-212). These are
 storage/count savings, not a measured timing speedup or proof of C/Rust parity.
 
-The current G5 checks use one counted configuration: eighteen executable
+The collector-free checks use one counted configuration: eighteen executable
 variants each for construction and sorting, including two output runs, four balanced/copy
 observations and twelve deliberate faults per host. The readers require those
 exact sets and check every image for collector symbols. This protocol passed integrated

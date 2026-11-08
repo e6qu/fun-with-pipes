@@ -86,8 +86,9 @@ same bits. Subsequent immutable updates still preserve any input aliases.
 Removing this copy can keep a slice's backing array alive longer; fewer
 allocations do not always mean less live storage. The
 [implementation and verification contract](measurements/scalar-array-identities.md)
-records the narrow selection and required checks; [the handoff](development-state.md)
-distinguishes completed checks from pending verification.
+records the narrow selection and required checks;
+[PR #254's delivery](roadmap-history.md#float-bits-and-identity-array-maps-pr-254)
+records completed platform verification and the original timing misses.
 
 Keep `float.convert` explicit. Preserve operation order and the existing policy
 against implicit reassociation or contraction. Do not silently substitute the

@@ -59,8 +59,7 @@ accept the required arguments need no additional specialization. A single-use
 local generated array can rejoin its immediate map/fold chain before fusion,
 provided every argument crossed has no effects or traps.
 
-The normal fusion proof
-still decides whether interleaving element work is valid. The eight
+The fusion proof decides whether interleaving element work is valid. The eight
 [named/tacit cost pairs](functional-costs.md#local-names-candidate-coverage) pass
 on Linux ARM64/AMD64 and macOS ARM64; #236 subsequently passed the full
 [delivery matrix](roadmap-history.md#local-names-and-allocation-optimizations-pr-236).
@@ -70,14 +69,12 @@ executes. A function constructor executes a stage and returns another function.
 The compiler may group consecutive `fn` inputs only while no computation or
 observable owner release lies between them.
 
-A `let` calculation
-ends that group. A top-level `let` is a cached value entry, even when it returns
+A `let` calculation ends that group. A top-level `let` is a cached value entry, even when it returns
 a function; a `match` entry takes one input before evaluating its selected arm.
 Applications subtract supplied inputs from the constructor's current stage,
 following checked aliases and the selected trait implementation.
 
-Runtime primitives
-use their declared stage: substituting a function for a generic result does not
+Runtime primitives use their declared stage: substituting a function for a generic result does not
 add inputs to that stage. For example:
 
 ```fwp
@@ -95,16 +92,15 @@ merely captures values: no executed calls, possible traps, observable owners or
 resource frames. It preserves typed local bindings and changes known callers
 together; the source type alone supplies no such proof.
 
-This bounded check runs
-before constructors are inlined into their consumers.
-This includes a cached function value whose captures are already constants.
+This bounded check runs before constructors are inlined, including cached
+function values whose captures are constants.
 `simd.splat` repeats one number across a vector's lanes. Small literal F64 splats
 can become constant vectors within the existing inlining-size budget; their
 signed-zero and NaN bits are copied unchanged.
 
-Other computed captures retain their original evaluation point.
-Unknown applications remain successive calls; combining them
-could run a later argument before a first-stage failure. REPL results use cached
+Other computed captures retain their original evaluation point. Unknown
+applications remain successive calls; combining them could run a later argument
+before a first-stage failure. REPL results use cached
 value entries even when their type is a function, so their construction runs once
 and later redefinitions cannot replace their saved code or captures.
 
@@ -419,6 +415,13 @@ whole-solve memory requirements.
 
 ### Consuming numeric storage
 
+The current fresh-output candidate specializes known F64 `array.generate` results.
+The array is newly allocated, so stores need no view check; F64 elements need no
+destructor, so partial cleanup needs no initialized-element counter. The existing
+cleanup scope still frees the allocation on failure or cancellation. Other element
+types keep their existing stores. The [selection and measurements](measurements/shared-loop-array-costs.md#selected-production-scope)
+are not yet final performance acceptance.
+
 **[Focused native verification](measurements/owned-numeric-checks-2026-11-05/README.md)
 and the [exact allocation census](measurements/owned-numeric-census-2026-11-05/README.md)
 pass. [Compiler costs pass](measurements/owned-numeric-analysis-2026-11-05/README.md);
@@ -486,7 +489,7 @@ sort primitive's original order. Runtime-selected callbacks keep ordinary calls.
 The [measurement protocol](measurements/sort-key-ownership.md) separates these
 verified changes from their exact count targets and measurement limits.
 
-The verified A4 path stores known `(I64, String)` keys in an aligned field buffer
+The verified sort-key path stores known `(I64, String)` keys in an aligned field buffer
 and calls the existing worker directly on `(String, I64)` inputs. Its initialized
 prefix owns the saved Strings; merge scratch borrows them. Other callback shapes
 retain ordinary calls and key records. [The protocol](measurements/inline-sort-keys.md)
@@ -719,13 +722,14 @@ numeric leaves. Repeated, reordered and unused leaf reads are safe; whole-record
 uses, function-value references, entry points, recursion, resources and deeper
 records exclude selection.
 
-The current PR extends the input rule to computed numeric constructors: bind each
+Computed numeric constructors follow the same input rule: bind each
 input once, in original left-to-right order, then pass its numeric fields. Each
 input keeps its original expression and local scopes. Existing field-only native
 locals can avoid constructing the intermediate record boxes. No functions are
 cloned. [Focused native checks](measurements/computed-numeric-inputs-2026-11-07/README.md)
 and [allocation measurements](measurements/computed-numeric-time-2026-11-07/README.md)
-verify this reduction. Full production coverage is pending; the
+verify this reduction. All nine production jobs and documentation passed for
+[PR #269](https://github.com/e6qu/fun-with-pipes/pull/269); the
 [contract](measurements/direct-numeric-workers.md) retains the inconclusive
 timing controls rather than claiming complete acceptance.
 
@@ -1180,7 +1184,7 @@ and function-call recursion are separate stack concerns.
 ### Remaining work
 
 Broader resource-frame reuse would need a new lifetime proof and measured benefit
-beyond the verified F2–F3 cases. Next arguments
+beyond the [verified recursion cases](functional-costs.md). Next arguments
 must be prepared before releasing anything they borrow. Pending destructors,
 handlers, state/derivative scopes and callback registrations cannot be discarded
 or run early. Unknown/foreign calls have separate ABI and lifetime constraints;
@@ -1225,23 +1229,18 @@ x86-64 instruction levels at startup; it is not a macOS universal binary.
 Compiler-build and generated-program toolchains can differ; configure them
 explicitly as described in [Contributing](../CONTRIBUTING.md#setting-up).
 
-## Remaining memory work
+## Memory coverage and limits
 
-The [restricted unique-array path](measurements/unique-array-storage.md) was
-verified in PR #219. [The scoped parser path](parser-workspace.md) is implemented
-in `src/cgen/regions.rs` and `runtime/fwp_rt_region.c` and verified in PR #221. A selected call owns aligned blocks and passes an explicit
-context to allocation helpers. Internal node links have no counts; escaped trees
-keep ordinary ownership.
+| Implemented mechanism | Scope and limit |
+|---|---|
+| [Count-free arrays](measurements/unique-array-storage.md) | Selected local arrays have one proved owner; arbitrary shared arrays still need ownership operations. |
+| [Parser regions](parser-workspace.md) | One call owns aligned blocks; internal links have no counts, escaped trees keep ordinary ownership. Implemented in `src/cgen/regions.rs` and `runtime/fwp_rt_region.c`. |
+| [Weak channels](weak-channels.md), [retained C callbacks](retained-callbacks.md) | Explicit acquisition/registration lifetimes; no silent weakening of captures. |
+| [Tracing removal](roadmap-history.md#tracing-gc-removal-pr-217) | Verified collector-free native delivery; this does not remove every allocation or count. |
 
-[Measurements](measurements/parser-workspace.md) separate
-this storage change from input/token costs and from general region inference. Tracing removal passed integrated verification in
-[#217](roadmap-history.md#tracing-gc-removal-pr-217). Explicit weak channels and retained
-C callbacks are implemented; see [weak channels](weak-channels.md) and
-[retained callbacks](retained-callbacks.md) for their lifetime rules.
+The model rejects unproved owning cycles and preserves escaping functions.
 General strong-cycle reclamation by ordinary ARC is not a goal.
-
-The selected
-model rejects unproved owning cycles and preserves escaping functions.
+[PLAN.md](../PLAN.md) selects further proofs from measured costs.
 JIT compilation is excluded, not deferred. The interpreter prepares foreign-call
 bridges before language execution; CPU kernel interpretation generates no machine
 code. GPU execution, a replacement backend and distributed execution are outside

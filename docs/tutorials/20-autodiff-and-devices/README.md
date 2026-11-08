@@ -45,11 +45,14 @@ creates that pair: `const 199` ignores its input and supplies the count, while
 Each `Again` supplies the next pair; `Stop` returns the final weights. The loop
 therefore makes exactly 199 updates without keeping a list of earlier vectors.
 
-Keeping a history is useful when plotting the path, but this example only needs
-the final result. `iterate 200 descend | last` would retain 200 vectors including
-the starting one and perform the same 199 updates. The
-[measured comparison](../../measurements/ad-application.md) explains the storage
-saved by the loop and the remaining cost of derivative recording.
+Keeping a history is useful when plotting the path. `iterate 200 descend`
+describes 200 vectors, including the starting one, from the same 199 updates.
+If only `last` consumes that list, the compiler can remove an eligible unused
+history; retaining or inspecting it still needs storage. This example uses
+`loop` to express directly that only the final weights are needed.
+[The history-removal contract](../../design.md#other-selected-transformations)
+states the proof's limits; [measurements](../../measurements/final-iteration-time-2026-11-04/README.md)
+record its time and memory costs.
 
 ## What the tape records: a smaller example
 
@@ -156,9 +159,8 @@ main = [
 ] | ignore
 ```
 
-Run it with `fwp run docs/tutorials/20-autodiff-and-devices/main.fwp` (compiled to native code and cached), or
-build an executable with `fwp build docs/tutorials/20-autodiff-and-devices/main.fwp
--o autodiff`. The output is [`main.out`](main.out):
+Run `fwp run docs/tutorials/20-autodiff-and-devices/main.fwp`.
+Expected [`main.out`](main.out):
 
 ```
 [-215.59999999999997, 112.00000000000001, -100.0]

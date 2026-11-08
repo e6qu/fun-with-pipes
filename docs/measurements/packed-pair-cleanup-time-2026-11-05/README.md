@@ -96,7 +96,7 @@ are per sample, not per process or per solve.
 | AMD1 | 200.019 | 11.177 | 11.824 | 17.90× | 16.92× |
 | AMD2 | 199.647 | 10.499 | 11.321 | 19.02× | 17.64× |
 
-## Where to investigate next
+## What the diagnostic attributed
 
 Each eight-solve process records 1,630,208 derivative nodes across 1,592 updates.
 Separate diagnostic executions time the solver stages: two warmups and 12
@@ -112,8 +112,8 @@ stages and are **not** shares of the ordinary end-to-end timing above.
 | AMD2 | 74.8% | 21.1% |
 
 Recording time includes objective arithmetic and recording operations, not just
-allocation. Investigate that source path and its work counts before assuming
-another small allocation reduction can close the C/Rust gap. The
+allocation. These observations motivated the later recording changes; they do
+not establish that another allocation reduction will close the C/Rust gap. The
 [remaining allocation sizes and lifetime constraints](../packed-pair-cleanup-census-2026-11-05/README.md#remaining-storage-and-its-constraints)
 provide a separate memory-work list. Neither table establishes a new optimization.
 

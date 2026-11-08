@@ -1,10 +1,13 @@
-# Current materialized array construction
+# Materialized array construction before PR #245
 
 The source-built fwp array is much slower to construct than the same array built
 by the C driver. Two qualified ARM64 sessions reproduce the difference. Separate
 instrumented runs place almost all source-construction time in filling, which
 includes callback dispatch and checked arithmetic. They do not isolate dispatch
 from those other operations.
+
+The later [direct-capture change](../scalar-array-captures-2026-11-02/README.md)
+addresses this baseline. These timings are not current compiler costs.
 
 ## What runs
 
@@ -20,7 +23,7 @@ this for rounds 0 through 7; exact result bits must agree.
 - The fully composed fwp program already eliminates its array. It remains a
   separate correctness/storage control, not a timing peer here.
 
-[The frozen protocol](../array-construction-costs.md#next-measurement-materialized-construction-phases)
+[The frozen protocol](../array-construction-costs.md#materialized-construction-protocol)
 specifies hosts, flags, sampling and controls. Source: `f05e25f8`; GCC 13.3 on
 Neoverse N2 and GCC 15.2 on EPYC 7763, four CPUs, C O2, contraction off and no LTO.
 The compiler itself is Rust O1 with assertions; the Rust peer uses O2.

@@ -22,8 +22,9 @@ failure/control binaries, two compact-set probes, four range-set probes and 18
 timed program variants.
 
 It rejects collector symbols in every inspected binary.
-This standalone comparison still needs a new measurement run. The results below retain
-their original revisions and memory modes; do not treat them as new measurements.
+The revised tools are not measurement results. The observations below retain
+their original revisions and memory modes; they are not current-compiler numbers
+or a separate pending task.
 
 ### Compact set storage: measured allocation size
 

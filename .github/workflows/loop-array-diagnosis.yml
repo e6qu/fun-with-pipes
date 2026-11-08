@@ -1,0 +1,43 @@
+name: Shared loop and array diagnosis
+on:
+  workflow_call:
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            arch: x86-64
+          - runner: ubuntu-24.04-arm
+            arch: armv8-a
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    env:
+      CC: gcc
+      CARGO_BUILD_JOBS: 2
+      CARGO_PROFILE_DEV_OPT_LEVEL: '1'
+      CARGO_PROFILE_DEV_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_DEV_OVERFLOW_CHECKS: 'true'
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.99.1
+      - name: Check diagnostic controls
+        run: python3 scripts/test-loop-array-diagnosis.py
+      - name: Build the production compiler
+        run: cargo build --locked --bin fwp
+      - name: Compare generated callback boundaries
+        run: >-
+          python3 scripts/diagnose-loop-arrays.py
+          --compiler target/debug/fwp --cc gcc --c-arch ${{ matrix.arch }}
+          --timeout 180 --warmups 2 --samples 16 --output loop-array-diagnosis
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: loop-array-diagnosis-${{ matrix.runner }}
+          path: loop-array-diagnosis/
+          if-no-files-found: error

@@ -8,9 +8,9 @@ every fwp profile must restore its final live-byte baseline.
 
 Correctness artifacts
 cover eight numeric binaries per host: typed dispatch off/on, packed arrays off/on,
-and O0/O2. All must omit collector symbols. A new run of this standalone comparison
-is still needed; historical results below retain their original sources and
-six-implementation, twelve-sample protocol.
+and O0/O2. All must omit collector symbols. The revised tools do not update the
+historical results below, which retain their original sources and
+six-implementation, twelve-sample protocol. New comparisons follow [PLAN.md](../../PLAN.md).
 
 Historical results; reproduce with the recorded revisions, not current main.
 [Measurement terms](../benchmarks.md) explain the costs;

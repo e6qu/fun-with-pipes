@@ -1,9 +1,9 @@
 # Exact scalar constants without lazy caches
 
-Preparation for the group after PR #260. Parent source:
-`ba3f0d8793dc3bbd3c21f94d06a1bca2896b6d45`. Require its verified merge before
-publishing this PR or collecting native measurements. Freeze this contract in
-Git before changing compiler code; retain all earlier timing misses.
+Historical protocol for the change delivered in
+[PR #261](scalar-constant-delivery-2026-11-05/README.md). Parent source:
+`ba3f0d8793dc3bbd3c21f94d06a1bca2896b6d45`. The original selection and limits
+below explain its measurements; they are not another implementation task.
 
 ## Why investigate this
 
@@ -89,5 +89,5 @@ derivatives differ from fwp recording/reverse traversal.
 
 Verified structural reductions may be retained under the accepted policy with
 missed timing targets explicit. That does not waive semantic, memory or compiler
-cost failures. Delivery still needs all nine exact-head production jobs, docs,
-complete log/artifact audits and a one-line squash message of at most 80 characters.
+cost failures. All nine final production jobs, documentation and complete audits
+[passed for delivery](scalar-constant-delivery-2026-11-05/README.md); timing misses remain.

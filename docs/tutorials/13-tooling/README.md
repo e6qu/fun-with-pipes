@@ -10,9 +10,11 @@ The sample counts each word with `frequencies`, turns the resulting map into
 counts first. `take 3` keeps three entries. `format "{}: {}"` inserts the two
 pair fields into the placeholders.
 
-Three commands help with fwp code beyond running it: `fwp fmt` formats
-it, `fwp lint` points out likely mistakes, and `fwp lsp` brings
-diagnostics, types and navigation into an editor.
+| Command | Purpose |
+|---|---|
+| `fwp fmt` | Format source files |
+| `fwp lint` | Report likely mistakes and simplifications |
+| `fwp lsp` | Supply editor diagnostics, types and navigation |
 
 ## Formatting
 
@@ -130,9 +132,7 @@ main = [
 ] | ignore
 ```
 
-Run it with `fwp run docs/tutorials/13-tooling/main.fwp` (compiled to native code and cached), or
-build an executable with `fwp build docs/tutorials/13-tooling/main.fwp -o tooling`. The output is
-[`main.out`](main.out):
+Run `fwp run docs/tutorials/13-tooling/main.fwp`. Expected [`main.out`](main.out):
 
 ```
 ["the: 4", "and: 2", "cat: 2"]
@@ -142,7 +142,6 @@ build an executable with `fwp build docs/tutorials/13-tooling/main.fwp -o toolin
 
 `fwp fmt --check docs/tutorials/13-tooling` and
 `fwp lint docs/tutorials/13-tooling` both succeed on it.
-
 
 ## Explore a running program
 

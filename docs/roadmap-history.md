@@ -5,6 +5,44 @@ A compact index of merged changes. [PLAN.md](../PLAN.md) lists unfinished tasks;
 and complete platform validation are different events. Measurements retain their
 original source and settings; old numbers are not measurements of current main.
 The linked PRs, runs and data records supply the detailed evidence.
+Commit/tree checks, archive hashes and individual gate IDs belong in those
+records. This index explains what changed and which claims remain unproved.
+
+Historical milestone codes refer to their original contracts, not current tasks.
+[The current five milestones](../PLAN.md#milestones) supersede those old queues.
+
+## Computed numeric inputs (PR #269)
+
+[PR #269](https://github.com/e6qu/fun-with-pipes/pull/269) passes computed numeric
+record fields directly to proved internal calls, preserving evaluation and trap
+order. [All delivery gates pass](measurements/computed-numeric-delivery-2026-11-08/README.md).
+The largest local-derivative process removes 407,552 temporary allocations.
+Qualified long solves take 48–65% less time than ordinary reverse AD, but the
+largest remains 4.2–5.7 times handwritten C. One runtime and two compiler timing
+controls remain inconclusive. [Measurements](measurements/computed-numeric-time-2026-11-07/README.md).
+
+## Tape operation records and measurements (PRs #267–268)
+
+[PR #267](https://github.com/e6qu/fun-with-pipes/pull/267) stores each numeric
+derivative operation in one 24-byte record, replacing separate parent/weight
+buffers. It reduces growth requests without changing the derivative calculation.
+[PR #268](https://github.com/e6qu/fun-with-pipes/pull/268) completes the comparisons:
+all 32 long-case targets miss the required 5% gain. ARM64 improves 0.7–3.6%;
+AMD64 ranges from 2.9% faster to 1.4% slower. Compiler-cost limits pass.
+[Results](measurements/tape-record-results.md) retain every original outcome.
+Both [#267](measurements/tape-record-delivery-2026-11-07/README.md) and
+[#268](measurements/tape-record-delivery-2026-11-07/followup-268/README.md) pass
+all nine production jobs, documentation and complete audits.
+
+## Shared tape access and approved hosts (PRs #265–266)
+
+[PR #265](https://github.com/e6qu/fun-with-pipes/pull/265) shares validated tape
+access across selected numeric calls, maps and folds. Allocation and live storage
+are unchanged. [PR #266](https://github.com/e6qu/fun-with-pipes/pull/266) records
+the approved AMD EPYC models and completes the previously unstarted sessions.
+Thirty of 32 long-case speed targets remain unmet; two small cases regress and
+one copy comparison is inconclusive. [Measurements](measurements/recording-context-time-2026-11-06/README.md)
+keep different CPUs separate. [Both deliveries pass their production gates](measurements/recording-context-delivery-2026-11-06/README.md).
 
 ## Checked capacity calls (PR #264)
 
@@ -59,11 +97,9 @@ retains 27 missed 5% targets; no unchanged timing was rerun for a pass.
 
 ## Private pair-buffer reuse (PR #260)
 
-[PR #260](https://github.com/e6qu/fun-with-pipes/pull/260) merged November 5 as
-`a85f59d23918c1854f43fb3a3ce2af65383ac5f9`, with the identical tested tree.
-All nine production jobs, documentation and the complete log/artifact audit pass.
-[Delivery records](measurements/packed-pair-delivery-2026-11-05/README.md) retain
-those gates and verify the one-line squash message without body or trailers.
+[PR #260](https://github.com/e6qu/fun-with-pipes/pull/260) passes all nine production jobs, documentation
+and complete log audits. [Delivery records](measurements/packed-pair-delivery-2026-11-05/README.md)
+retain the exact tested and merged sources.
 
 A private neighboring-pair buffer now reuses its consumed input allocation and
 keeps one cleanup owner. Shared/public inputs remain immutable. For a fresh solve
@@ -76,14 +112,9 @@ lower process RAM or parity with the manual-gradient C/Rust programs.
 
 ## Gradient-call storage (PR #259)
 
-[PR #259](https://github.com/e6qu/fun-with-pipes/pull/259) merged November 5 as
-`cbb779446162efa71301f64350662f2c7c0d8073`. Its tree equals tested
-`e3a2e1d34eaa9364ff22273ed10fef7afb98204e`; the squash message is one line,
-with no body or trailers. All nine [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/41986867960),
-[docs](https://github.com/e6qu/fun-with-pipes/actions/runs/41986867893) and the
-[complete log audit](https://github.com/e6qu/fun-with-pipes/actions/runs/42000937569)
-pass. [Delivery identities](measurements/gradient-call-delivery-2026-11-05.json)
-record the source, tree and archived audit.
+[PR #259](https://github.com/e6qu/fun-with-pipes/pull/259) passes all nine production jobs, documentation
+and complete log audits. [Delivery records](measurements/gradient-call-delivery-2026-11-05.json)
+retain the exact tested and merged sources.
 
 Scoped gradient calls borrow read-only inputs; numeric folds pass fields directly;
 backward propagation accepts one explicit root seed; exclusive derivative arrays
@@ -96,13 +127,9 @@ These results do not settle earlier timing goals or establish C/Rust parity.
 
 ## Consumed numeric storage (PR #258)
 
-[PR #258](https://github.com/e6qu/fun-with-pipes/pull/258) merged as
-`68115090b161f198e11fb625946259f65f781580`. Its tree equals tested `35745c0b`.
-All nine production jobs and documentation pass; every full and target log is
-audited, including 155 completed targets on each Windows architecture.
-[Final gates and retained logs](measurements/owned-numeric-checks-2026-11-05/platforms/final-gates.json)
-record the verified tree and one-line squash message with no body or trailers.
-Redundant same-tree push runs `41952053890` and `41952053874` were cancelled.
+[PR #258](https://github.com/e6qu/fun-with-pipes/pull/258) passes all nine production jobs, documentation
+and complete log audits. [Delivery records](measurements/owned-numeric-checks-2026-11-05/platforms/final-gates.json)
+retain the exact tested and merged sources.
 
 Private numeric maps now reuse exclusive arrays. Coordinate updates reuse the
 exclusive list prefix after callbacks finish; shared suffixes and views preserve
@@ -121,13 +148,9 @@ isolate language overhead. No unchanged timing was repeated.
 
 ## Packed derivative inputs (PR #257)
 
-[PR #257](https://github.com/e6qu/fun-with-pipes/pull/257) merged November 4 as
-`30c2bad9b89d8086a8822f992eaa0e9331bd9bd1`. Its tree equals tested `519fc966`.
-All nine production jobs and documentation pass; every full and target log is
-audited. [Final gate identities and logs](measurements/packed-input-checks-2026-11-04/platforms/final-gates.json)
-retain original executions, carried-forward results and three initial macOS
-capacity cancellations. Only the unexecuted jobs were retried. The verified
-squash message is one line under 80 characters, without body or trailers.
+[PR #257](https://github.com/e6qu/fun-with-pipes/pull/257) passes all nine production jobs, documentation
+and complete log audits. [Delivery records](measurements/packed-input-checks-2026-11-04/platforms/final-gates.json)
+retain the exact tested and merged sources.
 
 Known objectives can now use one private buffer for input records and their
 numeric tape IDs. Overlapping neighboring reads borrow that buffer; public lists
@@ -143,19 +166,14 @@ solves take 14.5–23.1% less time. Three AMD64 timing limits remain open; proce
 RAM does not consistently fall. Faster than the same-source reference does not
 establish parity with manual-gradient C/Rust.
 
-Final log collection takes 9.03s; squash verification 0.14s; retention 0.13s.
-Duplicate same-tree main runs `41918420647` and `41918420613` were cancelled.
 The measurement source keeps immutable tag `roadmap/packed-input-measurement-2026-11-04`.
 No completed timing was repeated.
 
 ## Matched optional results (PR #256)
 
-[PR #256](https://github.com/e6qu/fun-with-pipes/pull/256) merged November 4 as
-`cfb6dcc4223e281188cf6159e0623368501e2294`. Its tree equals tested `81bce309`.
-All nine production jobs and documentation pass; every full/target log is audited,
-including all 155 Windows targets per architecture. [Final gates and logs](measurements/matched-option-fields-2026-11-04/platforms/final-gates.json)
-retain the evidence. The verified squash message is one line under 80 characters,
-without a body or trailers.
+[PR #256](https://github.com/e6qu/fun-with-pipes/pull/256) passes all nine production jobs, documentation
+and complete log audits. [Delivery records](measurements/matched-option-fields-2026-11-04/platforms/final-gates.json)
+retain the exact tested and merged sources.
 
 For this expression, the selected native match receives the tag and `20` directly:
 
@@ -179,20 +197,15 @@ and one retain; peak storage is unchanged. Some larger timings are up to 1.95%
 slower, within the 2% limit; maximum frame growth is 16 bytes. No general speedup
 is claimed. Rejected hosts and the first fixture failure remain recorded.
 
-Final collection takes 5.15s and verified retention 0.13s. Duplicate same-tree
-main runs `41836731497` and `41836731217` were cancelled after checking for
-failed jobs. Original preparation history remains at immutable
+Original preparation history remains at immutable
 `roadmap/matched-option-pre-delivery-2026-11-04`; measurement source `82963531`
 keeps its original tag. No completed timing was repeated.
 
 ## Final iteration values without histories (PR #255)
 
-[PR #255](https://github.com/e6qu/fun-with-pipes/pull/255) merged November 4 as
-`24e099135f08403a95f36752e39f4e609a5d06cb`. Its tree equals tested `19b91c05`.
-All nine production jobs and documentation pass, with every full and target log
-audited. [Gate identities and logs](measurements/final-iteration-storage-2026-11-03/platforms/final-gates.json)
-include all 155 Windows targets per architecture. The squash message is one line,
-under 80 characters, without body or trailers.
+[PR #255](https://github.com/e6qu/fun-with-pipes/pull/255) passes all nine production jobs, documentation
+and complete log audits. [Delivery records](measurements/final-iteration-storage-2026-11-03/platforms/final-gates.json)
+retain the exact tested and merged sources.
 
 Ordinary `last` walks directly to the final list node. Eligible numeric
 `iterate … | last` keeps only the current value. Shared histories and resource
@@ -211,11 +224,9 @@ attempts remain recorded. Duplicate same-tree main runs `41821619651` and
 
 ## Float bits and identity array maps (PR #254)
 
-[PR #254](https://github.com/e6qu/fun-with-pipes/pull/254) merged November 4 as
-`379bc9d553b15dfbadaa9cca1edc58c17897774e`. Its tree equals tested `8bf9c65b`.
-All nine production jobs and documentation pass; every full and target log is
-audited. [Gate identities and logs](measurements/scalar-array-identities-2026-11-03/platforms/final-gates.json).
-The squash message is one line, under 80 characters, without body or trailers.
+[PR #254](https://github.com/e6qu/fun-with-pipes/pull/254) passes all nine production jobs, documentation
+and complete log audits. [Delivery records](measurements/scalar-array-identities-2026-11-03/platforms/final-gates.json)
+retain the exact tested and merged sources.
 
 Same-type conversion preserves all bits in five float formats. Exact F64 identity
 maps transfer their array owner, avoiding one allocation per selected update.
@@ -231,11 +242,9 @@ Duplicate same-tree main jobs were cancelled while queued, with no failed steps.
 
 ## Direct scalar array calls (PR #253)
 
-[PR #253](https://github.com/e6qu/fun-with-pipes/pull/253) merged November 3 as
-`ed5b8830a3cb90a4b6a248464d279ac8d1d0ccc7`. Its tree equals tested head `89394229`.
-The squash message is exactly one line, under 80 characters, with no body or
-trailers. All nine production jobs and documentation pass; every full and target
-log is audited. [Gate identities and retained logs](measurements/direct-array-callbacks-2026-11-03/platforms/final-gates.json).
+[PR #253](https://github.com/e6qu/fun-with-pipes/pull/253) passes all nine production jobs, documentation
+and complete log audits. [Delivery records](measurements/direct-array-callbacks-2026-11-03/platforms/final-gates.json)
+retain the exact tested and merged sources.
 
 Selected numeric `array.map` calls invoke their known scalar callback directly,
 removing generic dispatch while keeping an independent result array. Native
@@ -250,13 +259,9 @@ retain those limits. No completed timing was repeated.
 
 ## Private gradient arrays (PR #252)
 
-[PR #252](https://github.com/e6qu/fun-with-pipes/pull/252) merged November 3 as
-`3034a9d047c2bef44744c6ffc1807146570ced57`. Its tree equals tested head `e2d55aa8`;
-the squash message is one line, under 80 characters, with no body or trailers.
-All nine production jobs and documentation pass. Every full and target log is
-audited; [gate identities and logs](measurements/gradient-array-storage-2026-11-03/platforms/final-gates.json)
-are retained here. Duplicate same-tree main CI was cancelled after confirming
-it had no failed steps.
+[PR #252](https://github.com/e6qu/fun-with-pipes/pull/252) passes all nine production jobs, documentation
+and complete log audits. [Delivery records](measurements/gradient-array-storage-2026-11-03/platforms/final-gates.json)
+retain the exact tested and merged sources.
 
 Private derivatives remain arrays through map/zip; public gradient APIs still
 return lists. The largest solve saves 25,472 allocation requests and 409,144
@@ -269,11 +274,9 @@ keep reductions separate from unresolved speed goals.
 
 ## Direct private range indices (PR #251)
 
-[PR #251](https://github.com/e6qu/fun-with-pipes/pull/251) merged November 3 as
-`296ec5b4c3540c6d57671d076d2a39247b2389f4`. Its tree equals tested head `cea8debc`;
-the squash message is one line with no body or trailers. All nine production
-jobs and documentation pass, with every full and target log audited.
-[Gate identities and logs](measurements/range-zip-storage-2026-11-03/platforms/final-gates.json).
+[PR #251](https://github.com/e6qu/fun-with-pipes/pull/251) passes all nine production jobs, documentation
+and complete log audits. [Delivery records](measurements/range-zip-storage-2026-11-03/platforms/final-gates.json)
+retain the exact tested and merged sources.
 
 A private integer range supplies indices directly to zip instead of allocating
 a list. The largest solve saves 25,870 requests and 823,064 requested bytes;
@@ -309,14 +312,9 @@ ARM64 zero-update regression limits remain open. All raw audits are complete.
 
 ## Numeric callback owner transfers (PR #249)
 
-[PR #249](https://github.com/e6qu/fun-with-pipes/pull/249) merged November 3 as
-`46af240b8c540746b942b687b416cd52f6a91f9e`. All nine
-[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/41557647177)
-and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/41557647102)
-pass on `6ca3c41106d78f8251d3d59e3750470a3c270f68`; every full job and target log
-was audited. The squash has the identical tested tree and a verified 56-character
-single-line message with no body or trailers.
-[Gate identities and logs](measurements/callback-owners-2026-11-03/final-gates.json).
+[PR #249](https://github.com/e6qu/fun-with-pipes/pull/249) passes all nine production jobs, documentation
+and complete log audits. [Delivery records](measurements/callback-owners-2026-11-03/final-gates.json)
+retain the exact tested and merged sources.
 
 Complete-field moves and numeric callback inputs remove unnecessary owners.
 The largest saved solve drops from 77,411 to 995 retains, with unchanged allocation
@@ -332,14 +330,9 @@ Both attempts' complete logs are retained. Duplicate same-tree main runs
 
 ## Packed temporary numeric records (PR #248)
 
-[PR #248](https://github.com/e6qu/fun-with-pipes/pull/248) merged November 2 as
-`31e4e25b9a0494a2ce3d75a189fe1b1b7c177247`. All nine
-[production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/41524286630)
-and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/41524286169)
-pass on `32aae4f79b66f5e88e9aded39d6df794439b7430`; every full job/target log was
-audited. The squash preserves tested tree `8213af3a5722c84c8730bad5071f24e5f6579ed3`
-and a verified 51-character single-line message, without body or trailers.
-[Gate identities](measurements/derivative-temporary-storage-2026-11-02/final-gates.json).
+[PR #248](https://github.com/e6qu/fun-with-pipes/pull/248) passes all nine production jobs, documentation
+and complete log audits. [Delivery records](measurements/derivative-temporary-storage-2026-11-02/final-gates.json)
+retain the exact tested and merged sources.
 
 A sole-use mapped numeric-record list now uses one temporary word buffer, keeping
 map/seed/fold order and callback owners. The largest measured solve uses 51,143
@@ -504,7 +497,7 @@ GCC ARM64/AMD64 and Clang ARM64 runs pass allocation/release controls, but the
 semantic fixture did not exercise the selected worker shape. The follow-up
 repairs that coverage and completes unwind, performance and production checks.
 This is an implementation record, not a verified performance result; see the
-[requirements](measurements/derivative-record-folds.md) and [current handoff](development-state.md).
+[requirements](measurements/derivative-record-folds.md) and [#242 repair](#numeric-callbacks-and-inline-cleanup-pr-242).
 
 ## Numeric record zip/map fusion (PR #239)
 
@@ -847,7 +840,7 @@ The user merged as `17978b97373f3e9236468ac19c1b8e0d290816d7`, tree
 squash message is one line, at most 80 characters, with no body or trailers.
 Postmerge production `40749834807` and docs `40749834937` also report success;
 acceptance above relies on the audited final-head runs. F1–F3 are complete for
-the stated cases; B/P/D/N and application work remain in the plan.
+the stated cases. Later comparisons retain their own limits and results.
 
 ## Scoped parser storage and analysis work (PR #221)
 
@@ -981,7 +974,7 @@ All nine [production jobs](https://github.com/e6qu/fun-with-pipes/actions/runs/4
 passed on `1dd5fcaed7792b5505283b1037a9c22d788a3be5`.
 [PR #216](https://github.com/e6qu/fun-with-pipes/pull/216) was squash-merged as
 `f5621cb46828273f7ce8edf92be4062ccec0f17c`; the tree and one-line message were
-verified. G2 is complete. Collector deletion and further ARC reduction remain.
+verified. Shared lifetime checks were complete; #217 then removed the collector.
 
 ## Weak channels and retained callbacks (PR #215)
 
@@ -997,7 +990,7 @@ and [documentation](https://github.com/e6qu/fun-with-pipes/actions/runs/40221722
 passed at `bd77d65f58d8c5117ea678cb86cf15fbcf9231f7`. The user merged
 [PR #215](https://github.com/e6qu/fun-with-pipes/pull/215) as
 `4e7b74be8e11634fac9309e67cb4efccfb34d360`, with an identical tree.
-G3/G4 are complete; tracing still exists.
+Weak-channel and retained-callback support was complete; #217 then removed tracing.
 
 ## Ownership checks without retaining freed objects (PR #214)
 
@@ -1849,7 +1842,7 @@ itself is not passing platform evidence.
 [Four-platform derivative tests](https://github.com/e6qu/fun-with-pipes/actions/runs/38726490082)
 and [both WebAssembly checks](https://github.com/e6qu/fun-with-pipes/actions/runs/38726508454)
 passed at runtime revision `24620eadbcc8c03fa1aefc2190bf1af483720840`.
-The final production/docs gates are in the table above.
+The linked PR and historical snapshot below retain its final gate records.
 
 [PR #141](https://github.com/e6qu/fun-with-pipes/pull/141) · [Recorded measurements](measurements/ad-metadata-2026-10-15.json)
 
@@ -1857,6 +1850,7 @@ The final production/docs gates are in the table above.
 
 [Preparation records](preparation-records.md) retain the immutable commit/tag
 mapping used by the documentation audit. Detailed job tables and merge bookkeeping remain in the
+[November 8 snapshot](https://github.com/e6qu/fun-with-pipes/blob/f227830b0/docs/roadmap-history.md) and the
 [pre-overhaul snapshot](https://github.com/e6qu/fun-with-pipes/blob/a33c8ba944635283899407349e3e3a761ed30db5/docs/roadmap-history.md).
 It is historical evidence, not instructions for current work. Numerical samples
 and acceptance records remain in the repository with their original identities.

@@ -46,18 +46,12 @@ remove a JavaScript host's collector.
 
 ### What remains
 
-- Finish [private pair-buffer reuse](measurements/packed-pair-storage.md): focused
-  correctness and exact allocation counts pass. Complete runtime comparisons,
-  retained-data audits and final platform checks. The earlier
-  [gradient-call group is delivered](roadmap-history.md#gradient-call-storage-pr-259),
-  with its missed timing limits still open.
-- Preserve delivered ownership guarantees: aliasing, trap/cancellation cleanup,
-  primitive contracts, bounded compiler analysis and checks for absent collector
-  code. [Delivery history](roadmap-history.md) records verified platform coverage.
-- Choose broader count reductions from measured costs and explicit lifetime
-  proofs. Zero retains does not mean zero allocations or zero count checks on
-  release. [PLAN.md](../PLAN.md) keeps missed timing goals separate from verified
-  storage reductions, including the delivered final-iteration work in #255.
+[PLAN.md](../PLAN.md) selects measured loop/array improvements, broader lifetime
+proofs and application comparisons. This page defines the contracts those changes
+must preserve. Zero retains does not mean zero allocations, zero release checks
+or C/Rust performance. [Delivery history](roadmap-history.md) distinguishes verified
+storage reductions from missed timing targets; the local-derivative helper remains
+[experimental](measurements/computed-numeric-time-2026-11-07/README.md).
 
 ## Stable language behavior
 
@@ -147,7 +141,7 @@ can move into their last consuming call. Every case needs the alias, effect and
 cleanup proof, not just syntactic last use. See the
 [compiler design](design.md) and [primitive contracts](primitive-ownership.md).
 
-### Private neighboring-record buffers: verification in progress
+### Private neighboring-record buffers
 
 The compiler can prove that one fresh numeric buffer feeds only a neighboring-pair
 operation. That operation now consumes the buffer. Equal-width results reuse it;
@@ -161,10 +155,11 @@ the actual allocation throughout. Returning that allocation also counts as an
 escape from the helper, so callers must not treat its input as merely borrowed.
 
 The [contract and controls](measurements/packed-pair-storage.md) cover both storage
-paths, aliases, numeric bits and physical frees. [Focused GCC/Clang native checks and evidence audits](measurements/packed-pair-checks-2026-11-05.md)
-pass on Linux AMD64/ARM64 and macOS ARM64. The [allocation census](measurements/packed-pair-census-2026-11-05.md)
-confirms one fewer allocation per update without increasing overall peak managed
-storage. Runtime comparisons and final platform verification remain pending.
+paths, aliases, numeric bits and physical frees. [PR #260's final gates pass](roadmap-history.md#private-pair-buffer-reuse-pr-260).
+The [allocation census](measurements/packed-pair-census-2026-11-05.md) confirms one
+fewer allocation per update without higher overall peak managed storage.
+[Runtime measurements](measurements/packed-pair-cleanup-time-2026-11-05/README.md)
+retain the missed timing targets; storage savings alone do not prove a speedup.
 
 ### Array construction and sorting
 
@@ -453,7 +448,7 @@ between completed operations as well as at process teardown; a final zero can
 hide growing retention during a service's lifetime. Deliberately missing releases,
 invalid reuse and stale borrows must fail their observers.
 
-G5 passed the replacement ownership controls and every maintained native target
+GC removal passed the replacement ownership controls and every maintained native target
 on one source in [#217](roadmap-history.md#tracing-gc-removal-pr-217). Preserve those
 checks when changing storage; a focused test alone does not verify all platforms.
 Report managed bytes, native buffers, OS handles and process memory

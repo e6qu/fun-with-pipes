@@ -1,4 +1,4 @@
-# Choose the next autodiff optimization
+# Why the local-derivative experiment was selected
 
 The [completed layout comparison](tape-record-time-2026-11-07/README.md) reduces
 raw growth requests but misses every 5% speed target. It leaves managed traffic
@@ -25,11 +25,14 @@ process-time ratios range from 0.982 to 1.024. These observations locate work;
 they do not prove that a particular branch, cache miss or ARC operation causes
 the remaining cost.
 
-## Current investigation, bundled into PR #269
+## Investigation delivered in PR #269
 
-The [local-derivative experiment](local-derivatives.md) implements this investigation
-with a tape-free prototype and a 20% speed target. Its frozen contract and current
-handoff supersede the delivery ordering below, not the retained measurements.
+The [local-derivative experiment](local-derivatives.md) tested a tape-free prototype
+against a 20% speed target. [The results](computed-numeric-time-2026-11-07/README.md)
+show qualified long-case gains of 48–65%, while one runtime copy control remains
+inconclusive. [Delivery is verified](computed-numeric-delivery-2026-11-08/README.md).
+The three investigation steps below record the original method; current work is
+in [PLAN.md](../../PLAN.md).
 
 1. **Compare automatic and handwritten derivatives within current fwp.** Use
    `tests/fixtures/descent_explicit.fwp` and `descent_packed.fwp` alongside the

@@ -79,15 +79,11 @@ owner must still close the channel; `task.await` alone does not close it or cons
 its remaining messages. [The regression program](../../../tests/fixtures/subscription_lifetimes.fwp)
 shows this policy, active cancellation with a child task, reentry and scope failure.
 
-[The native check](../../../tests/arc_tasks.rs),
-`subscriptions_join_active_callbacks_and_release_each_round`, compares raw
-interpretation with native O1/O2 execution. Eight and 64 rounds must return to the
-same managed-byte balance after each outer scope, then release all runtime charge.
-Broken message, task-owner and callback releases must fail; reporting completion
-before joining children must also fail. The original checks passed on all six native targets in
-[#213](../../roadmap-history.md#scoped-subscriber-lifetimes-pr-213).
-Tracing GC has since been removed. Current ownership checks require physical
-release and safe reuse; this rewritten example must pass those maintained gates.
+[The native checks](../../../tests/arc_tasks.rs) compare interpreted and compiled
+results, verify release after repeated subscriptions, and detect deliberately
+broken cleanup or premature completion. The [ownership guide](../../ownership.md)
+defines the maintained guarantees; the [delivery record](../../roadmap-history.md#scoped-subscriber-lifetimes-pr-213)
+preserves the original validation.
 
 ## Run it
 

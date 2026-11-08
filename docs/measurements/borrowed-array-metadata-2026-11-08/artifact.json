@@ -1,0 +1,20 @@
+{
+  "id": 13600670203,
+  "node_id": "MDg6QXJ0aWZhY3QxMzYwMDY3MDIwMw==",
+  "name": "borrowed-array-computation-audit",
+  "size_in_bytes": 1446979,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13600670203",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13600670203/zip",
+  "expired": false,
+  "digest": "sha256:6df40a804073a96bc3d5b9ef16bb21ebf6aa228a43746634413880f7787cd779",
+  "created_at": "2026-11-08T02:14:36Z",
+  "updated_at": "2026-11-08T02:14:36Z",
+  "expires_at": "2027-02-06T02:06:21Z",
+  "workflow_run": {
+    "id": 42437082841,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "performance-roadmap-review",
+    "head_sha": "432d19715c87a5aae9681c4b7b3507847eb87a53"
+  }
+}

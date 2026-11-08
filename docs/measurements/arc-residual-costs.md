@@ -1,9 +1,10 @@
 # Remaining ownership costs after GC removal
 
-This is the original A2 measurement protocol and baseline. Tracing
+This is the October 27 ownership-cost baseline (original roadmap step A2). Tracing
 removal passed [#217](../roadmap-history.md#tracing-gc-removal-pr-217); it did not
-remove all reference counts or heap storage. This experiment measures the
-remaining work before selecting the next compiler change. Both native Linux
+remove all reference counts or heap storage. It measured the remaining work before the subsequent compiler changes.
+[PLAN.md](../../PLAN.md) owns current priorities; these counts belong to the
+source below. Both native Linux
 hosts pass [baseline run 40474903463](https://github.com/e6qu/fun-with-pipes/actions/runs/40474903463)
 at source `405bcfde48afdc07267c76251ac3c70a0d346e97`. The
 [audited report](arc-residual-baseline-2026-10-27.json) retains all 13 cases,
@@ -27,7 +28,7 @@ reports preserve these baselines and describe their own measured changes.
 | `bench/map/main.fwp` | Build 500,000 scrambled numeric entries, then perform 2,000,000 lookups and print size/sum | Check the remaining owner of a cached map, separately from construction |
 | `examples/wordfreq.fwp` | 4,096 words/256 distinct spellings and 65,536/4,096; print the five most common normalized words | Attribute list, text and map ownership in an application |
 | Packed derivative descent | 3 coordinates/7 updates and 129/199; print the complete final vector | Separate array storage/destruction from per-coordinate ownership work |
-| Local numeric buffer | Runtime lengths 0, 16 and 4,096; read the array then its length, returning twice the length | Establish A5's first unique-storage candidate |
+| Local numeric buffer | Runtime lengths 0, 16 and 4,096; read the array then its length, returning twice the length | Establish the first unique-storage candidate |
 | Shared buffer | Same lengths; return the array in both fields of a pair | Preserve two live aliases through printing and cleanup |
 | Callback reader | Same lengths; pass the array to an exported callback-taking reader, returning the length | Record the cost of a call boundary; this is not proof of an unknown or escaping callback |
 

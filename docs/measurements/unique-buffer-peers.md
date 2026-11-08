@@ -288,7 +288,7 @@ failure cleanup. Both hosts expose one faulty test assumption: a callback called
 fixture selects its callback through input and checks the generic dispatch body.
 The repaired tests pass on both native GCC hosts. Additional view, mixed-element
 and cancellation controls pass at `4b5c49ce`; raw/optimized interpretation and
-native O1/O2 agree. Final production-platform gates remain required.
+native O1/O2 agree. [PR #231 subsequently passed all final production gates](../roadmap-history.md#direct-scalar-folds-and-process-timing-pr-231).
 
 For three 4,096-element calls, diagnostics remove 12,288 ineffective duplicate
 and release entries each. Payload remains three requests, 98,328 requested bytes,

@@ -68,7 +68,7 @@ review; do not repeat the unchanged comparison for a pass.
 remaining complete-program gap. Those peers use handwritten derivatives;
 their ratios do not isolate language or ARC overhead.
 
-## Evidence and next check
+## Evidence and delivery
 
 [Original run](https://github.com/e6qu/fun-with-pipes/actions/runs/42179983250),
 [complete audit](https://github.com/e6qu/fun-with-pipes/actions/runs/42183074888),
@@ -97,4 +97,5 @@ The [frozen image input plan](../recording-capacity-call-inputs.json) selects
 session 1 on each architecture. [Native verification](../recording-capacity-images-2026-11-06/README.md)
 reproduces all 48 original executable hashes and confirms capacity inlining.
 No native program was executed and no new timing was taken by that check.
-Final platform verification follows. [Contract](../recording-capacity.md).
+[Final platform verification](../recording-capacity-delivery-2026-11-06/README.md)
+passes. [Original contract](../recording-capacity.md).

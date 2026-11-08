@@ -1,0 +1,300 @@
+name: Borrowed array metadata costs
+on:
+  workflow_call:
+    inputs:
+      mode:
+        type: string
+        required: true
+      evidence_run:
+        type: string
+        required: true
+      source_revision:
+        type: string
+        required: true
+permissions:
+  contents: read
+  actions: read
+jobs:
+  affinity:
+    if: inputs.mode == 'array-affinity'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+      EVIDENCE_RUN: ${{ inputs.evidence_run }}
+      EVIDENCE_SOURCE: ${{ inputs.source_revision }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Check timing controls
+        run: python3 scripts/test-borrowed-array-costs.py
+      - name: Compare explicit CPU placement with identical saved binaries
+        run: >-
+          python3 scripts/diagnose-array-affinity.py --run "$EVIDENCE_RUN"
+          --source "$EVIDENCE_SOURCE" --processor-index 0
+          --cpu 'AMD EPYC 7763 64-Core Processor'
+          --cpu 'AMD EPYC 9V74 80-Core Processor'
+          --cpu 'AMD EPYC 9V45 96-Core Processor'
+          --taskset /usr/bin/taskset --time /usr/bin/time --output array-affinity
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: array-affinity
+          path: array-affinity/
+          if-no-files-found: error
+  peers:
+    if: inputs.mode == 'array-peers'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-24.04-arm, ubuntu-latest]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      EVIDENCE_RUN: ${{ inputs.evidence_run }}
+      EVIDENCE_SOURCE: ${{ inputs.source_revision }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.99.1
+      - name: Qualify the native comparison host
+        env:
+          MACHINE: ${{ runner.arch == 'ARM64' && 'aarch64' || 'x86_64' }}
+          GCC_VERSION: ${{ runner.arch == 'ARM64' && 'gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0' || 'gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0' }}
+        run: |
+          cpus=(--cpu Neoverse-N2)
+          if [[ "$MACHINE" == x86_64 ]]; then
+            cpus=(--cpu 'AMD EPYC 7763 64-Core Processor' --cpu 'AMD EPYC 9V74 80-Core Processor' --cpu 'AMD EPYC 9V45 96-Core Processor')
+          fi
+          python3 scripts/descent-baselines.py "${cpus[@]}" --machine "$MACHINE" \
+            --cc gcc --rustc rustc --c-version "$GCC_VERSION" \
+            --rust-version 'rustc 1.99.1 (58cf8f9c3 2026-10-13)' \
+            --source "$GITHUB_SHA" --processors 4 --output peer-host.json
+      - name: Check the comparison schedule and exact result controls
+        run: python3 scripts/test-borrowed-array-costs.py
+      - name: Compare the saved fwp computation with C and Rust
+        run: >-
+          python3 scripts/measure-loop-array-peers.py --run "$EVIDENCE_RUN"
+          --source "$EVIDENCE_SOURCE" --cc gcc --rustc rustc
+          --time /usr/bin/time --output array-peers
+      - name: Reconstruct all peer results from complete raw observations
+        run: >-
+          python3 scripts/audit-loop-array-peers.py --directory array-peers
+          --host peer-host.json --source "$GITHUB_SHA"
+          --machine ${{ runner.arch == 'ARM64' && 'aarch64' || 'x86_64' }}
+          --output array-peers/audit.json
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: array-peers-${{ runner.arch }}
+          path: |
+            array-peers/
+            peer-host.json
+          if-no-files-found: error
+  audit:
+    if: inputs.mode == 'array-metadata' || inputs.mode == 'fresh-array'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+      SAFETY_RUN: ${{ inputs.evidence_run }}
+      TRANSFORMATION: ${{ inputs.mode }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Audit complete focused logs, target results and native images
+        run: |
+          [[ "$SAFETY_RUN" =~ ^[0-9]+$ ]]
+          python3 scripts/test-production-log-audit.py
+          python3 scripts/test-borrowed-array-costs.py
+          safety_source=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SAFETY_RUN" --jq .head_sha)
+          python3 scripts/audit-focused-storage.py --group "$TRANSFORMATION" \
+            --run "$SAFETY_RUN" --source "$safety_source" --attempt 1 --output array-audit
+      - name: Audit the complete fresh-output selection diagnostic
+        if: inputs.mode == 'fresh-array'
+        run: >-
+          python3 scripts/audit-array-builder.py --run 42437082841
+          --source 432d19715c87a5aae9681c4b7b3507847eb87a53 --output builder-audit
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: borrowed-array-safety-audit
+          path: |
+            array-audit/*-audit.json
+            array-audit/*-records.zip
+            array-audit/*-job.log.gz
+            array-audit/summary.json
+            array-audit/jobs.json
+            array-audit/artifacts.json
+            builder-audit/summary.json
+          if-no-files-found: error
+  measure:
+    if: inputs.mode == 'array-metadata' || inputs.mode == 'fresh-array'
+    needs: audit
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-24.04-arm, ubuntu-latest]
+        session: [1, 2]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 40
+    env:
+      CC: gcc
+      CARGO_BUILD_JOBS: 2
+      CARGO_PROFILE_DEV_OPT_LEVEL: '1'
+      CARGO_PROFILE_DEV_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_DEV_OVERFLOW_CHECKS: 'true'
+      FWP_LTO: '0'
+      TRANSFORMATION: ${{ inputs.mode }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.99.1
+      - name: Require passing focused checks for this implementation
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SAFETY_RUN: ${{ inputs.evidence_run }}
+        run: |
+          [[ "$SAFETY_RUN" =~ ^[0-9]+$ ]]
+          mkdir array-safety
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SAFETY_RUN" > array-safety/run.json
+          gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/actions/runs/$SAFETY_RUN/jobs?per_page=100" > array-safety/jobs.json
+          python3 - <<'PY'
+          import json
+          import subprocess
+          from pathlib import Path
+          run = json.loads(Path('array-safety/run.json').read_text())
+          jobs = [job for page in json.loads(Path('array-safety/jobs.json').read_text()) for job in page['jobs']]
+          expected = {'scalar_array_checks (' + host + ')' for host in ('ubuntu-latest, gcc', 'ubuntu-24.04-arm, gcc', 'macos-15, clang')}
+          selected = [job for job in jobs if job['name'] in expected]
+          assert len(selected) == 3 and {job['name'] for job in selected} == expected
+          assert all(job['conclusion'] == 'success' and job['head_sha'] == run['head_sha'] for job in selected)
+          subprocess.run(['git', 'diff', '--exit-code', run['head_sha'], 'HEAD', '--', 'src', 'runtime', 'lib', 'vendor', 'tests/array_element_ownership.rs', 'tests/support', 'build.rs', 'Cargo.toml', 'Cargo.lock'], check=True)
+          PY
+          python3 scripts/test-borrowed-array-costs.py
+      - name: Qualify the native measurement host
+        env:
+          MACHINE: ${{ runner.arch == 'ARM64' && 'aarch64' || 'x86_64' }}
+          GCC_VERSION: ${{ runner.arch == 'ARM64' && 'gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0' || 'gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0' }}
+        run: |
+          cpus=(--cpu Neoverse-N2)
+          if [[ "$MACHINE" == x86_64 ]]; then
+            cpus=(--cpu 'AMD EPYC 7763 64-Core Processor' --cpu 'AMD EPYC 9V74 80-Core Processor' --cpu 'AMD EPYC 9V45 96-Core Processor')
+          fi
+          python3 scripts/descent-baselines.py "${cpus[@]}" --machine "$MACHINE" \
+            --cc gcc --rustc rustc --c-version "$GCC_VERSION" \
+            --rust-version 'rustc 1.99.1 (58cf8f9c3 2026-10-13)' \
+            --source "$GITHUB_SHA" --processors 4 --output array-safety/host.json
+      - name: Build candidate and isolated reference
+        run: |
+          cargo build --locked --bin fwp
+          reference_checkout="$RUNNER_TEMP/borrowed-array-reference"
+          git worktree add --detach "$reference_checkout" "$GITHUB_SHA"
+          python3 scripts/borrowed_array_reference.py --transformation "$TRANSFORMATION" --checkout "$reference_checkout" --output array-reference
+          cargo build --locked --bin fwp --manifest-path "$reference_checkout/Cargo.toml" --target-dir "$RUNNER_TEMP/array-reference-target"
+          cp "$RUNNER_TEMP/array-reference-target/debug/fwp" array-reference/fwp
+          git -C "$reference_checkout" diff HEAD > array-reference/built.patch
+          cmp array-reference/reference.patch array-reference/built.patch
+      - name: Measure computation separately from input and result lifetime
+        run: >-
+          python3 scripts/measure-borrowed-arrays.py
+          --compiler target/debug/fwp --reference array-reference/fwp
+          --reference-manifest array-reference/manifest.json
+          --transformation "$TRANSFORMATION"
+          --cc gcc --c-arch ${{ runner.arch == 'ARM64' && 'armv8-a' || 'x86-64' }}
+          --session ${{ matrix.session }} --output array-costs
+      - name: Observe memory and compiler costs separately from timings
+        if: inputs.mode == 'fresh-array' && matrix.session == 1
+        run: >-
+          python3 scripts/observe-array-costs.py --directory array-costs
+          --compiler target/debug/fwp --reference array-reference/fwp
+          --cc gcc --time /usr/bin/time --output array-observations
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: borrowed-array-costs-${{ runner.arch }}-${{ matrix.session }}
+          path: |
+            array-costs/
+            array-observations/
+            array-reference/manifest.json
+            array-reference/reference.patch
+            array-reference/built.patch
+            array-reference/cgen-reference.rs
+            array-safety/
+          if-no-files-found: error
+  review:
+    if: inputs.mode == 'array-builder-diagnosis' || inputs.mode == 'array-review'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+      EVIDENCE_RUN: ${{ inputs.evidence_run }}
+      EVIDENCE_SOURCE: ${{ inputs.source_revision }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Audit original computation observations and reference isolation
+        run: |
+          python3 scripts/test-borrowed-array-costs.py
+          python3 scripts/audit-borrowed-arrays.py --run "$EVIDENCE_RUN" --source "$EVIDENCE_SOURCE" --output metadata-review
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: borrowed-array-computation-audit
+          path: metadata-review/retained/
+          if-no-files-found: error
+  diagnose:
+    if: inputs.mode == 'array-builder-diagnosis'
+    needs: review
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-24.04-arm, ubuntu-latest]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    env:
+      GH_TOKEN: ${{ github.token }}
+      EVIDENCE_RUN: ${{ inputs.evidence_run }}
+      EVIDENCE_SOURCE: ${{ inputs.source_revision }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.99.1
+      - name: Qualify the native diagnostic host
+        env:
+          MACHINE: ${{ runner.arch == 'ARM64' && 'aarch64' || 'x86_64' }}
+          GCC_VERSION: ${{ runner.arch == 'ARM64' && 'gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0' || 'gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0' }}
+        run: |
+          cpus=(--cpu Neoverse-N2)
+          if [[ "$MACHINE" == x86_64 ]]; then
+            cpus=(--cpu 'AMD EPYC 7763 64-Core Processor' --cpu 'AMD EPYC 9V74 80-Core Processor' --cpu 'AMD EPYC 9V45 96-Core Processor')
+          fi
+          python3 scripts/descent-baselines.py "${cpus[@]}" --machine "$MACHINE" \
+            --cc gcc --rustc rustc --c-version "$GCC_VERSION" \
+            --rust-version 'rustc 1.99.1 (58cf8f9c3 2026-10-13)' \
+            --source "$GITHUB_SHA" --processors 4 --output builder-host.json
+      - name: Compare fresh output writes without changing callback inputs
+        run: >-
+          python3 scripts/diagnose-array-builder.py --run "$EVIDENCE_RUN"
+          --source "$EVIDENCE_SOURCE" --output builder-diagnosis --cc gcc
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: array-builder-diagnosis-${{ runner.arch }}
+          path: |
+            builder-diagnosis/
+            builder-host.json
+          if-no-files-found: error

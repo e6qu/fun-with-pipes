@@ -12,11 +12,8 @@ The examples show exactly where defaults come from: function types, metadata
 comments or library calls. A metadata comment such as `# expose: cli` is read by
 the compiler; it is not a runtime statement.
 
-This tutorial builds a real command-line program from ordinary
-functions: flags, help, subcommands, exit statuses, shell completion and
-a man page, with no argument parser to write. You build it with `fwp build
---cli` and run it from your shell. [docs/cli.md](../../cli.md) has every
-rule.
+`fwp build --cli` generates argument parsing and help from ordinary functions,
+their types and comments. The [CLI reference](../../cli.md) gives the full rules.
 
 To follow along, go to this directory (`cd docs/tutorials/16-clis`).
 Every session below runs exactly as shown: the test suite runs them.
@@ -219,8 +216,7 @@ one
 two
 ```
 
-`--fn` builds one exported function on its own, as a program of its
-own (it needs no `# expose:` line: naming the function exposes it):
+`--fn` builds one exported function. Naming it explicitly needs no `# expose:` line:
 
 ```console
 $ fwp build words.fwp --fn divide -o divide
@@ -306,7 +302,7 @@ In an interactive shell, `source words.bash` (or `source <(./words
 TAB after `./words shout hey` offers `quiet normal loud`. `--completions
 zsh` and `fish` work the same way; `man ./words.1` shows the man page.
 
-## Without building
+## Run without a separate build command
 
 `fwp exec --cli` runs the file as the `--cli` program would, compiled and
 cached, and `fwp exec` runs one exported function:

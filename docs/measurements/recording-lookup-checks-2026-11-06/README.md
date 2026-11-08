@@ -29,6 +29,7 @@ the original CI artifacts; their hashes and checked architectures are recorded.
 [downloaded artifact identity/digest](artifact.json) establish the audit source.
 The local retention check verified archive, log and record-bundle digests.
 
-These are focused correctness checks. Allocation, stack, compiler-cost and timing
-acceptance still require the [frozen comparison](../recording-lookups.md), followed
-by the full final platform matrix. See the [handoff](../../development-state.md).
+These are focused correctness checks. The subsequent [delivery](../recording-lookup-delivery-2026-11-06/README.md)
+passes the full platform matrix. The [frozen comparison](../recording-lookups.md)
+and [runtime results](../recording-lookup-time-2026-11-06/README.md) keep timing
+acceptance separate: all 32 original long-case speed targets remain unmet.

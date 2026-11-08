@@ -2,7 +2,7 @@
 
 These measurements precede the typed floating-point loop state shipped in #227.
 The AMD64 array ratios below are **historical, not current language overhead**.
-The [current comparison](current-kernel-costs.md) measures today's compiler and
+The [later comparison](current-kernel-costs.md) records its own source and
 isolates that representation change with a same-source reference.
 
 This records the original N1 protocol and its still-incomplete timing acceptance.
@@ -119,7 +119,7 @@ where used, and process peak RSS. C/Rust payload bytes, fwp allocator charge and
 process RSS have different meanings; report them separately. Every case must
 restore its pre-operation live-storage baseline and release owners at shutdown.
 
-## Evidence and next decision
+## Original reporting and selection rules
 
 Retain every generated source, build diagnostic, binary/section hash, instruction
 size, static stack entry, output, process sample and profile. Inspect executable

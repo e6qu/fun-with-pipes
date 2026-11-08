@@ -13,11 +13,8 @@ The same function can support several interfaces, but their transport and failur
 costs differ. The table below compares mappings, not performance. Its snippets
 are declaration fragments from the linked bookstore example.
 
-An explicitly exposed fwp function can be a command-line program, a REST endpoint
-and an MCP tool, without a line of interface code. Its type is
-the contract; its comments are the documentation; a few comment lines
-adjust what the types cannot say. You choose which interfaces a function
-has, and build the program for one of them:
+Expose a function to select its interfaces. Types determine argument/result
+encoding; comments supply help and interface settings. Build the desired form:
 
 ```
 $ fwp build examples/rest/books.fwp --cli -o books        # a command-line program
@@ -182,7 +179,7 @@ gRPC with exact types and a fingerprint check ([services.md](services.md)).
 * Authentication is per interface: REST endpoints verify credentials
   with `authenticate`; command lines and MCP tools have none (an MCP
   client runs the server it calls).
-* There are no streams: REST has no streaming responses, the command
-  line reads standard input as a list, and an MCP tool returns one
-  result. (`Iterator` and `Channel` stream between the parts of a split
-  program.)
+* REST and MCP return one response per call; they do not expose `Iterator` or
+  `Channel` streams. CLI input can stream one value per invocation, or collect
+  all lines for a `List` parameter; see [standard input](cli.md#positional-arguments-and-standard-input).
+  Split-service calls have their own [streaming contracts](services.md).

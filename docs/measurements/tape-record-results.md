@@ -73,9 +73,10 @@ observation files per architecture. Its SHA-256 is
 [All compiler records are retained](tape-record-analysis-2026-11-07/README.md);
 the archive digest and 2,162 observation-file hashes pass local verification.
 
-## Remaining acceptance
+## Delivery and interpretation
 
 - [All 48 original measured executables are verified](tape-record-images-2026-11-07/README.md).
-  Final follow-up PR gates remain required.
-- Use the saved phase/work records and source paths before proposing another
-  optimization. This layout does not close its speed target or earlier misses.
+  [Follow-up PR #268 also passes all final gates](tape-record-delivery-2026-11-07/followup-268/README.md).
+- This layout does not close its speed target or earlier misses. Current
+  investigations belong in [the roadmap](../../PLAN.md), using these saved
+  observations as evidence.

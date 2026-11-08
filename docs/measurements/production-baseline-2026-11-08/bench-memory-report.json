@@ -1,0 +1,825 @@
+{
+  "source": "e7965762490c89d2a39f5937fe8322291ea906fc",
+  "ownership": "counted",
+  "architecture": "x86_64",
+  "inspectionSha256": "483660687f738edc6d3e264e1b5f9c2b8fe5be8bf5c698e9705746196f9d1b59",
+  "samples": 3,
+  "cCompiler": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0\nCopyright (C) 2025 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+  "timeTool": "time (GNU Time) UNKNOWN\nCopyright (C) 2018 Free Software Foundation, Inc.\nLicense GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>.\nThis is free software: you are free to change and redistribute it.\nThere is NO WARRANTY, to the extent permitted by law.\n\nWritten by David Keppel, David MacKenzie, and Assaf Gordon.\n",
+  "kernel": "Linux runnervmwuk1x 7.0.0-1019-azure #20-Ubuntu SMP PREEMPT Mon Oct 19 22:41:16 UTC 2026 x86_64 GNU/Linux",
+  "scope": "Fresh-process peak RSS from the actual timed binaries; no timing samples from GNU time or instrumented binaries. Separate fwp profiles count managed requests/bytes, retains and charged live storage after constant initialization through language cleanup. Counts exclude runtime raw buffers, allocator metadata, stacks and C/Rust allocations. Stack reports describe instrumented binaries, not the original timed executables.",
+  "programs": [
+    {
+      "name": "fib",
+      "processMemory": {
+        "c": {
+          "binarySha256": "ab287ff67102c1121b80e37a72032353eb66d6dbab256970e7cc83b7849ee235",
+          "peakRssKiB": [
+            1544,
+            1544,
+            1544
+          ]
+        },
+        "rs": {
+          "binarySha256": "689d4fbd1cc85db791b051314087fab84e5ebc7b8cd88baf4730e9be721e202f",
+          "peakRssKiB": [
+            2168,
+            2280,
+            2176
+          ]
+        },
+        "fwp": {
+          "binarySha256": "b5e08f4c66690809ca793387f3c47b35453bbd854e0b608664ca91a03eb97f58",
+          "peakRssKiB": [
+            2064,
+            2192,
+            2064
+          ]
+        }
+      },
+      "managedMemory": {
+        "ordinary": {
+          "profiles": [
+            {
+              "requests": 0,
+              "requestedBytes": 0,
+              "retains": 0,
+              "peakChargedBytes": 0,
+              "finalChargedBytes": 0
+            },
+            {
+              "requests": 0,
+              "requestedBytes": 0,
+              "retains": 0,
+              "peakChargedBytes": 0,
+              "finalChargedBytes": 0
+            },
+            {
+              "requests": 0,
+              "requestedBytes": 0,
+              "retains": 0,
+              "peakChargedBytes": 0,
+              "finalChargedBytes": 0
+            }
+          ],
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-fstack-usage",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/fib-ordinary.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/fib-ordinary",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "generatedSha256": "8d983138d89aa63c126639447a9aae8e4207cb5f6b69c00d9578afcc276f8674",
+          "binarySha256": "d9f78c05544a9ca6887831c1b0727f0d1239112361fd4856fed7d17caa14576c",
+          "fileBytes": 27856
+        },
+        "injected-leak": {
+          "profiles": [
+            {
+              "requests": 1,
+              "requestedBytes": 16,
+              "retains": 0,
+              "peakChargedBytes": 16,
+              "finalChargedBytes": 16
+            },
+            {
+              "requests": 1,
+              "requestedBytes": 16,
+              "retains": 0,
+              "peakChargedBytes": 16,
+              "finalChargedBytes": 16
+            },
+            {
+              "requests": 1,
+              "requestedBytes": 16,
+              "retains": 0,
+              "peakChargedBytes": 16,
+              "finalChargedBytes": 16
+            }
+          ],
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-fstack-usage",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/fib-injected-leak.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/fib-injected-leak",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "generatedSha256": "963c2345903f4919a5ccfc159021640f44d82bfba131815066f54907607097d6",
+          "binarySha256": "e51225716f3c8b522f4a4b27caae031171053b289a0b5604ef8791882041abe6",
+          "fileBytes": 28304
+        }
+      },
+      "leakDetected": true
+    },
+    {
+      "name": "loop",
+      "processMemory": {
+        "c": {
+          "binarySha256": "c28e152d8636665173c971842c352af756af9f3078e1ece6fb4aa14ed7c4b850",
+          "peakRssKiB": [
+            1544,
+            1544,
+            1544
+          ]
+        },
+        "rs": {
+          "binarySha256": "46d422d3f6c54c43fe93c1a73371780a49d20db4314972d89c13573676bf282d",
+          "peakRssKiB": [
+            2040,
+            2112,
+            2120
+          ]
+        },
+        "fwp": {
+          "binarySha256": "cc87da6ee64d20de28b56f34509d0a0bbe1db25822d7981144f0d98d8b23e708",
+          "peakRssKiB": [
+            2064,
+            2064,
+            2192
+          ]
+        }
+      },
+      "managedMemory": {
+        "ordinary": {
+          "profiles": [
+            {
+              "requests": 0,
+              "requestedBytes": 0,
+              "retains": 0,
+              "peakChargedBytes": 0,
+              "finalChargedBytes": 0
+            },
+            {
+              "requests": 0,
+              "requestedBytes": 0,
+              "retains": 0,
+              "peakChargedBytes": 0,
+              "finalChargedBytes": 0
+            },
+            {
+              "requests": 0,
+              "requestedBytes": 0,
+              "retains": 0,
+              "peakChargedBytes": 0,
+              "finalChargedBytes": 0
+            }
+          ],
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-fstack-usage",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/loop-ordinary.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/loop-ordinary",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "generatedSha256": "a5cc41b2f760bc681046cd8b12f703259af6fb43b8eefde45d6651a07e4e6490",
+          "binarySha256": "ffd6714b13e59a0dc72e2b255f942d2f0ef982ed731a760ef4a84184d0ca430c",
+          "fileBytes": 27800
+        },
+        "injected-leak": {
+          "profiles": [
+            {
+              "requests": 1,
+              "requestedBytes": 16,
+              "retains": 0,
+              "peakChargedBytes": 16,
+              "finalChargedBytes": 16
+            },
+            {
+              "requests": 1,
+              "requestedBytes": 16,
+              "retains": 0,
+              "peakChargedBytes": 16,
+              "finalChargedBytes": 16
+            },
+            {
+              "requests": 1,
+              "requestedBytes": 16,
+              "retains": 0,
+              "peakChargedBytes": 16,
+              "finalChargedBytes": 16
+            }
+          ],
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-fstack-usage",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/loop-injected-leak.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/loop-injected-leak",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "generatedSha256": "1dbd1e77fe47781da1eeef9c3175b3cc1b8576d184bdb3c32dfcdb82d76602e0",
+          "binarySha256": "e11e76429cd97253d33d3866a17ce3514f3ed4a7332002127f3f941f1e1b8d20",
+          "fileBytes": 28248
+        }
+      },
+      "leakDetected": true
+    },
+    {
+      "name": "map",
+      "processMemory": {
+        "c": {
+          "binarySha256": "dc3d688677c9bc339586a8c57f27e468ff82faf797ed4e67a46e349d8c27a495",
+          "peakRssKiB": [
+            16880,
+            16880,
+            16876
+          ]
+        },
+        "rs": {
+          "binarySha256": "17f019b35dfb59a338d0600b74dab55c85e4f782151b925138f89d14cd191660",
+          "peakRssKiB": [
+            9852,
+            9872,
+            9868
+          ]
+        },
+        "fwp": {
+          "binarySha256": "acd6c12a2574d109276ec80fba70ef118d44c69c6307b08611af7e79e4fdfaee",
+          "peakRssKiB": [
+            17816,
+            17684,
+            17816
+          ]
+        }
+      },
+      "managedMemory": {
+        "ordinary": {
+          "profiles": [
+            {
+              "requests": 4,
+              "requestedBytes": 24000032,
+              "retains": 1,
+              "peakChargedBytes": 16000008,
+              "finalChargedBytes": 0
+            },
+            {
+              "requests": 4,
+              "requestedBytes": 24000032,
+              "retains": 1,
+              "peakChargedBytes": 16000008,
+              "finalChargedBytes": 0
+            },
+            {
+              "requests": 4,
+              "requestedBytes": 24000032,
+              "retains": 1,
+              "peakChargedBytes": 16000008,
+              "finalChargedBytes": 0
+            }
+          ],
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-fstack-usage",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-ordinary",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "generatedSha256": "5b9f09aaec159aa39fb34ab7d5ef0c0884a1afb56d383bd4a573f2d035b3103f",
+          "binarySha256": "ced9676c672ef6c836958d57c3b625e559996237770f828d24118340b7f80980",
+          "fileBytes": 41384
+        },
+        "injected-leak": {
+          "profiles": [
+            {
+              "requests": 5,
+              "requestedBytes": 24000048,
+              "retains": 1,
+              "peakChargedBytes": 16000024,
+              "finalChargedBytes": 16
+            },
+            {
+              "requests": 5,
+              "requestedBytes": 24000048,
+              "retains": 1,
+              "peakChargedBytes": 16000024,
+              "finalChargedBytes": 16
+            },
+            {
+              "requests": 5,
+              "requestedBytes": 24000048,
+              "retains": 1,
+              "peakChargedBytes": 16000024,
+              "finalChargedBytes": 16
+            }
+          ],
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-fstack-usage",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-injected-leak.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/map-injected-leak",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "generatedSha256": "e7e779d0a12555726075dfb64d6755f04dc4db836078808357c752ec41cfa844",
+          "binarySha256": "ba6d72ca528cb0ab70bb300971098bb094df4fffc6744c1a4841a8e79b55c5ab",
+          "fileBytes": 41392
+        }
+      },
+      "leakDetected": true
+    },
+    {
+      "name": "pipeline",
+      "processMemory": {
+        "c": {
+          "binarySha256": "31fc55579d67f9f021f10482d928694d1a1ddad7d57c3aae2581972a492cfae1",
+          "peakRssKiB": [
+            13320,
+            13320,
+            13320
+          ]
+        },
+        "rs": {
+          "binarySha256": "2bc9eaaee7fa36720694122d5fece0b59e19277850ac94b646e314553c696aa7",
+          "peakRssKiB": [
+            10100,
+            10084,
+            10064
+          ]
+        },
+        "fwp": {
+          "binarySha256": "47a4fb207e02662a4a066d0722f9c950819c96a27c9a871b32e5add5c43f7618",
+          "peakRssKiB": [
+            2064,
+            2064,
+            2064
+          ]
+        }
+      },
+      "managedMemory": {
+        "ordinary": {
+          "profiles": [
+            {
+              "requests": 0,
+              "requestedBytes": 0,
+              "retains": 0,
+              "peakChargedBytes": 0,
+              "finalChargedBytes": 0
+            },
+            {
+              "requests": 0,
+              "requestedBytes": 0,
+              "retains": 0,
+              "peakChargedBytes": 0,
+              "finalChargedBytes": 0
+            },
+            {
+              "requests": 0,
+              "requestedBytes": 0,
+              "retains": 0,
+              "peakChargedBytes": 0,
+              "finalChargedBytes": 0
+            }
+          ],
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-fstack-usage",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/pipeline-ordinary.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/pipeline-ordinary",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "generatedSha256": "97485f8e78f744b098b894446b869a4b6b8924307856f3c807fbcb9f0fb0c8aa",
+          "binarySha256": "cfbfaf8d29837f9f413ac305b00fc78016d5df40791ff44854b4934679514101",
+          "fileBytes": 27808
+        },
+        "injected-leak": {
+          "profiles": [
+            {
+              "requests": 1,
+              "requestedBytes": 16,
+              "retains": 0,
+              "peakChargedBytes": 16,
+              "finalChargedBytes": 16
+            },
+            {
+              "requests": 1,
+              "requestedBytes": 16,
+              "retains": 0,
+              "peakChargedBytes": 16,
+              "finalChargedBytes": 16
+            },
+            {
+              "requests": 1,
+              "requestedBytes": 16,
+              "retains": 0,
+              "peakChargedBytes": 16,
+              "finalChargedBytes": 16
+            }
+          ],
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-fstack-usage",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/pipeline-injected-leak.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/pipeline-injected-leak",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "generatedSha256": "1b5a0a02acc99fcc37b688419a46de8c13f2bca2e4b03980a98bb70e57e18ec5",
+          "binarySha256": "6fe6e97aa7d5233621d041d2805150baef4c18754712f3c6f843a6bc67ad3e41",
+          "fileBytes": 28248
+        }
+      },
+      "leakDetected": true
+    },
+    {
+      "name": "range-set",
+      "processMemory": {
+        "c": {
+          "binarySha256": "8f3b4154678b42dd123f68e56921c4c44374d57d4d9f2504e444261055727f78",
+          "peakRssKiB": [
+            9352,
+            9352,
+            9348
+          ]
+        },
+        "rs": {
+          "binarySha256": "41a01cc3e98456da08d6f6b32dbd3709c83fafd80a85a4ea0cd425348884e328",
+          "peakRssKiB": [
+            9968,
+            9900,
+            9976
+          ]
+        },
+        "fwp": {
+          "binarySha256": "8e7aa657fefad88c425c9de3289f946df6b67b3e314a7e8e9a80375f08c235be",
+          "peakRssKiB": [
+            9872,
+            9868,
+            9744
+          ]
+        }
+      },
+      "managedMemory": {
+        "ordinary": {
+          "profiles": [
+            {
+              "requests": 1,
+              "requestedBytes": 8000008,
+              "retains": 0,
+              "peakChargedBytes": 8000008,
+              "finalChargedBytes": 0
+            },
+            {
+              "requests": 1,
+              "requestedBytes": 8000008,
+              "retains": 0,
+              "peakChargedBytes": 8000008,
+              "finalChargedBytes": 0
+            },
+            {
+              "requests": 1,
+              "requestedBytes": 8000008,
+              "retains": 0,
+              "peakChargedBytes": 8000008,
+              "finalChargedBytes": 0
+            }
+          ],
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-fstack-usage",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/range-set-ordinary.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/range-set-ordinary",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "generatedSha256": "c28bb8e3c74b5ff4cc6e231a93205301b8282f8cd40de588263f203c622c8510",
+          "binarySha256": "3102039860a22733b0d05c24837020e113b4c30bf59a3c0ecc9d086dc3c09cf6",
+          "fileBytes": 28272
+        },
+        "injected-leak": {
+          "profiles": [
+            {
+              "requests": 2,
+              "requestedBytes": 8000024,
+              "retains": 0,
+              "peakChargedBytes": 8000024,
+              "finalChargedBytes": 16
+            },
+            {
+              "requests": 2,
+              "requestedBytes": 8000024,
+              "retains": 0,
+              "peakChargedBytes": 8000024,
+              "finalChargedBytes": 16
+            },
+            {
+              "requests": 2,
+              "requestedBytes": 8000024,
+              "retains": 0,
+              "peakChargedBytes": 8000024,
+              "finalChargedBytes": 16
+            }
+          ],
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-fstack-usage",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/range-set-injected-leak.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/range-set-injected-leak",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "generatedSha256": "3ca1fa97e450a3cec25db5b60422eee21222fefb621289418d330dfc16061400",
+          "binarySha256": "90a35b97615ce1b5b2b88527bbe08b5d2bbdee86a3a4ef8eef54370552e1aac2",
+          "fileBytes": 28248
+        }
+      },
+      "leakDetected": true
+    },
+    {
+      "name": "strings",
+      "processMemory": {
+        "c": {
+          "binarySha256": "363209826bcebff475ee997de65c606f516ee8120f5451b69d647b4358cb4f78",
+          "peakRssKiB": [
+            1544,
+            1544,
+            1544
+          ]
+        },
+        "rs": {
+          "binarySha256": "57303cfbad4a08f06912169047c8025f5b256bd13a9b4434180aaef8718fa42c",
+          "peakRssKiB": [
+            2148,
+            2116,
+            2180
+          ]
+        },
+        "fwp": {
+          "binarySha256": "68ea80e8f7b6bdf38992d52946deab7c0a0af3eba49347f390f481192d170f8c",
+          "peakRssKiB": [
+            2060,
+            2064,
+            2064
+          ]
+        }
+      },
+      "managedMemory": {
+        "ordinary": {
+          "profiles": [
+            {
+              "requests": 0,
+              "requestedBytes": 0,
+              "retains": 0,
+              "peakChargedBytes": 0,
+              "finalChargedBytes": 0
+            },
+            {
+              "requests": 0,
+              "requestedBytes": 0,
+              "retains": 0,
+              "peakChargedBytes": 0,
+              "finalChargedBytes": 0
+            },
+            {
+              "requests": 0,
+              "requestedBytes": 0,
+              "retains": 0,
+              "peakChargedBytes": 0,
+              "finalChargedBytes": 0
+            }
+          ],
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-fstack-usage",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/strings-ordinary.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/strings-ordinary",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "generatedSha256": "d6e26670b1157ec51ff4d099bc5da7099e1b0fb059aec5761077c43afa4efef7",
+          "binarySha256": "cd685591fd27176f08284c79ec0479507b5e82f1bb3032ea23f8b0f56ad42821",
+          "fileBytes": 27808
+        },
+        "injected-leak": {
+          "profiles": [
+            {
+              "requests": 1,
+              "requestedBytes": 16,
+              "retains": 0,
+              "peakChargedBytes": 16,
+              "finalChargedBytes": 16
+            },
+            {
+              "requests": 1,
+              "requestedBytes": 16,
+              "retains": 0,
+              "peakChargedBytes": 16,
+              "finalChargedBytes": 16
+            },
+            {
+              "requests": 1,
+              "requestedBytes": 16,
+              "retains": 0,
+              "peakChargedBytes": 16,
+              "finalChargedBytes": 16
+            }
+          ],
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-fstack-usage",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/strings-injected-leak.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/strings-injected-leak",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "generatedSha256": "3522dcc25da23a40243843d0874705f8c074aee89662cb4ea41f55a8388445cd",
+          "binarySha256": "71400a953d0a3ae43ebdf83cff3bcd968cc399c3a487967de0bab402977dad89",
+          "fileBytes": 28248
+        }
+      },
+      "leakDetected": true
+    },
+    {
+      "name": "text-length",
+      "processMemory": {
+        "c": {
+          "binarySha256": "cd824f089d7e5440519f512a6efc00a771657661ca50d23190d6c09942d9eb9c",
+          "peakRssKiB": [
+            1544,
+            1544,
+            1544
+          ]
+        },
+        "rs": {
+          "binarySha256": "6b626f0df295a98b9517b7f37bdb4ba921c66b50d1db415e0ab92d8203e910c8",
+          "peakRssKiB": [
+            2104,
+            2120,
+            2164
+          ]
+        },
+        "fwp": {
+          "binarySha256": "d49fa9563bd4dd1b0f975d0b457cd827ab18d4ff480391190a5ff9d0056bc6e0",
+          "peakRssKiB": [
+            2064,
+            2064,
+            2064
+          ]
+        }
+      },
+      "managedMemory": {
+        "ordinary": {
+          "profiles": [
+            {
+              "requests": 0,
+              "requestedBytes": 0,
+              "retains": 0,
+              "peakChargedBytes": 0,
+              "finalChargedBytes": 0
+            },
+            {
+              "requests": 0,
+              "requestedBytes": 0,
+              "retains": 0,
+              "peakChargedBytes": 0,
+              "finalChargedBytes": 0
+            },
+            {
+              "requests": 0,
+              "requestedBytes": 0,
+              "retains": 0,
+              "peakChargedBytes": 0,
+              "finalChargedBytes": 0
+            }
+          ],
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-fstack-usage",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/text-length-ordinary.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/text-length-ordinary",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "generatedSha256": "d6e26670b1157ec51ff4d099bc5da7099e1b0fb059aec5761077c43afa4efef7",
+          "binarySha256": "85d58632e862b89a9da31b68090e6c88b42810038e3158be5fb2caea0799b2fe",
+          "fileBytes": 27808
+        },
+        "injected-leak": {
+          "profiles": [
+            {
+              "requests": 1,
+              "requestedBytes": 16,
+              "retains": 0,
+              "peakChargedBytes": 16,
+              "finalChargedBytes": 16
+            },
+            {
+              "requests": 1,
+              "requestedBytes": 16,
+              "retains": 0,
+              "peakChargedBytes": 16,
+              "finalChargedBytes": 16
+            },
+            {
+              "requests": 1,
+              "requestedBytes": 16,
+              "retains": 0,
+              "peakChargedBytes": 16,
+              "finalChargedBytes": 16
+            }
+          ],
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-fstack-usage",
+            "-w",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/text-length-injected-leak.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/target/bench-memory/text-length-injected-leak",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "generatedSha256": "3522dcc25da23a40243843d0874705f8c074aee89662cb4ea41f55a8388445cd",
+          "binarySha256": "88f5b3514fcd7386d3c987310e213fc5696de855ed9269e3818aa389b55fb606",
+          "fileBytes": 28256
+        }
+      },
+      "leakDetected": true
+    }
+  ]
+}

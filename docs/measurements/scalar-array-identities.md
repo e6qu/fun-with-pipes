@@ -2,7 +2,8 @@
 
 **Preparation:** frozen before implementation, based on PR #253's final head
 `89394229`. That PR is now [delivered](../roadmap-history.md#direct-scalar-array-calls-pr-253).
-[The handoff](../development-state.md) records this group's exact sources and checks.
+[The delivered results](scalar-array-identities-2026-11-03/README.md) record
+this group's exact sources and checks. The requirements below are its original contract.
 
 The rule for this implementation is that converting a float to its own type
 preserves every bit. Cross-type conversion rules remain unchanged.

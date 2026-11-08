@@ -399,7 +399,7 @@ correctness tests pass 247 Rust tests and 17 measurement controls on each Linux
 architecture. Full grouped platform checks subsequently pass in
 [PR #226](../roadmap-history.md#derivative-allocation-and-accuracy-pr-226).
 
-## Current derivative work
+## Subsequent derivative work
 
 The delivered [array traversal](array-list-traversal.md) removes the temporary
 list between the adjoint array and its element conversion. Its protocol fixes
@@ -416,7 +416,7 @@ these count results do not settle D2 timing acceptance.
 Keep the [output diagnostic](descent-output-current.md): full vector formatting
 versus a checksum consumer, with exact result bits checked separately. Its four
 sessions retain inconclusive short controls. Zero-update time includes startup
-and vector construction, not just output. D3 preserves F64/F128 derivative accuracy,
+and vector construction, not just output. The derivative accuracy contract preserves F64/F128 results,
 nesting and checkpoint controls; it promises neither derivatives at discontinuities
 nor constant storage for arbitrary AD.
 

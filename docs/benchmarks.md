@@ -18,6 +18,11 @@ Each report should answer: **which implementations, which input, what timed work
 which host/toolchain, and what difference in behavior or algorithm?** Detailed
 [measurement terms](terminology.md#tests-and-measurements) explain ratios and memory.
 
+Extra time is `(fwp time / baseline time - 1) × 100%`. Name the baseline and
+statistic: a ratio of medians differs from a median of paired ratios. Elapsed time
+includes scheduling delays; CPU time measures processing time. Neither identifies
+a cause on its own. Do not average unrelated ratios into a language-wide score.
+
 ## Latest audited derivative comparison
 
 The [November 7 local-derivative comparison](measurements/computed-numeric-time-2026-11-07/README.md)
@@ -49,7 +54,7 @@ Three runtime sessions pass every limit. One AMD64 small long-case copy control
 varies by 2.08%, above the frozen 2% limit, so that timing remains inconclusive.
 Two [compiler-cost copy controls](measurements/computed-numeric-analysis-2026-11-07/README.md)
 also miss; all 5% compiler time/RSS budgets pass. The public helper remains
-experimental, and final platform validation is tracked in [the handoff](development-state.md).
+experimental. [All final platform gates and the complete audit passed](measurements/computed-numeric-delivery-2026-11-08/README.md).
 
 Earlier [matched-result](measurements/matched-option-time-2026-11-04/README.md)
 and [iteration-history](measurements/final-iteration-time-2026-11-04/README.md)
@@ -57,10 +62,10 @@ comparisons remain tied to their measured sources; they are not current-code
 ratios. No Swift derivative counterpart was measured. The [Swift comparisons](#swift-comparison)
 below cover other workloads.
 
-## PR 233 whole-program baseline
+## Latest whole-program snapshot: PR #269
 
-Source: `fd19b9e4`, same tree as merged `73a6b20d`;
-[production job](https://github.com/e6qu/fun-with-pipes/actions/runs/41174213818/job/124458289963).
+Source: `e79657624`, same tree as merged `bbcaafea`;
+[retained reports and artifact identity](measurements/production-baseline-2026-11-08/README.md).
 
 | Setting | Recorded value |
 |---|---|
@@ -76,13 +81,13 @@ Inputs and implementation differences are [below](#what-each-program-actually-do
 
 | Program | C ms | Rust ms | fwp ms | fwp extra time vs C / Rust |
 |---|---:|---:|---:|---:|
-| Fibonacci, 35 | 48.979 | 44.537 | 15.658 | −68.0% / −64.8% |
-| Checked loop, 100 million steps | 126.882 | 107.275 | 158.734 | +25.1% / +48.0% |
-| Sorted map, 500,000 pairs / 2 million lookups | 411.124 | 338.409 | 363.642 | −11.5% / +7.5% |
-| Map/filter/sum, 20 × 1 million elements | 35.613 | 22.612 | 14.226 | −60.1% / −37.1% |
-| Ordered million-key set and hash | 15.183 | 15.400 | 17.563 | +15.7% / +14.0% |
-| Format strings then count characters | 146.610 | 156.296 | 6.487 | −95.6% / −95.8% |
-| Count characters directly | 3.806 | 7.110 | 5.171 | +35.8% / −27.3% |
+| Fibonacci, 35 | 48.670 | 44.245 | 15.278 | -68.6% / -65.5% |
+| Checked loop, 100 million steps | 128.769 | 106.924 | 159.768 | +24.1% / +49.4% |
+| Sorted map, 500,000 pairs / 2 million lookups | 395.800 | 320.880 | 355.184 | -10.3% / +10.7% |
+| Map/filter/sum, 20 × 1 million elements | 33.987 | 21.335 | 18.988 | -44.1% / -11.0% |
+| Ordered million-key set and hash | 14.458 | 14.659 | 16.634 | +15.0% / +13.5% |
+| Format strings then count characters | 145.941 | 155.598 | 4.804 | -96.7% / -96.9% |
+| Count characters directly | 3.595 | 6.787 | 4.851 | +34.9% / -28.5% |
 
 The pipeline peers materialize collections that fwp eliminates. In `strings`,
 fwp avoids formatting that C/Rust still perform; `text-length` supplies the more
@@ -94,13 +99,13 @@ memory**, the RAM occupied by the process, including runtime and mapped librarie
 
 | Program | C peak KiB | Rust peak KiB | fwp peak KiB |
 |---|---:|---:|---:|
-| Fibonacci | 1,544 | 2,040–2,212 | 2,060–2,064 |
-| Checked loop | 1,544 | 2,116–2,228 | 2,060–2,192 |
-| Sorted map | 16,880 | 9,908–9,980 | 17,688–17,816 |
-| Map/filter/sum | 13,316–13,320 | 9,956–9,968 | 2,064 |
-| Ordered set/hash | 9,348–9,352 | 9,820–9,976 | 9,868–10,000 |
-| Strings | 1,544 | 2,044–2,284 | 2,064–2,192 |
-| Direct character count | 1,544 | 2,120–2,244 | 1,680–2,064 |
+| Fibonacci | 1,544 | 2,168–2,280 | 2,064–2,192 |
+| Checked loop | 1,544 | 2,040–2,120 | 2,064–2,192 |
+| Sorted map | 16,876–16,880 | 9,852–9,872 | 17,684–17,816 |
+| Map/filter/sum | 13,320 | 10,064–10,100 | 2,064 |
+| Ordered set/hash | 9,348–9,352 | 9,900–9,976 | 9,744–9,872 |
+| Strings | 1,544 | 2,116–2,180 | 2,060–2,064 |
+| Direct character count | 1,544 | 2,104–2,164 | 2,064 |
 
 Separate fwp profiles report zero managed requests/retains for Fibonacci, loop,
 pipeline and both character-count programs. The map makes four requests totaling
@@ -118,7 +123,7 @@ small diagnostic; the reservation is not that much occupied RAM.
 The older [parser comparison](measurements/parser-workspace.md) still records
 about 5–9× C/Rust time. The derivative figures above supersede the older
 44–58× C snapshot for their recorded sources and hosts; they do not refresh the
-parser or PR #233 measurements. Allocation reductions alone establish neither
+parser measurements. Allocation reductions alone establish neither
 elapsed time nor peak memory. The [Swift protocol](#swift-comparison) adds the
 closest ownership-model peer alongside C and Rust.
 
@@ -189,6 +194,23 @@ memory rather than treating the percentage alone as the delivery decision.
 The [phase measurements](measurements/callable-phases.md) show faster invocation,
 but three AMD64 construction regressions fail the combined acceptance rule.
 
+## Latest loop and array investigation
+
+[The phase comparison](measurements/loop-array-peers-2026-11-08/README.md) measures
+computation, input construction and result release separately. In its qualified
+single-session observations, the large checked loop takes 18–20% less computation time
+than C on ARM64 and approximately the same on AMD64. This does not contradict an
+older whole-process ratio: the timed work and sources differ.
+
+ARM64 large map/folds also take less time than these C/Rust peers, while the
+largest local-derivative case takes 2.47 times C and 4.98 times Rust. The peers use
+handwritten derivatives and two mutable buffers; fwp produces immutable arrays.
+Most AMD64 array/derivative controls fail. The report keeps each ratio's noise
+status, exact flags, process RAM and unmeasured peer allocation counts explicit.
+[Candidate/reference results](measurements/fresh-array-costs-2026-11-08/README.md)
+are separate: ARM64 confirms faster fresh-output stores; cross-platform milestone
+acceptance remains open. Neither fewer retains nor a successful audit closes it.
+
 ## Choose the question first
 
 | Question | Evidence | Interpretation |
@@ -233,7 +255,7 @@ work. The [ownership direction](gc-removal-design.md) explains the lifetime rule
 | Unique numeric buffer | [C/Rust peer comparison](measurements/unique-buffer-peers.md) covers lengths 0, 16, 4,096 and 262,144, output/cleanup, payload versus metadata, process memory, code and stack; [newer sessions](measurements/buffer-current.md) retain failed controls | Qualify the remaining timing comparisons without retrying unchanged failures. Separate construction/work/release timing from the existing whole-process totals. Preserve [array removal](measurements/generated-array-folds.md) and [State range](measurements/state-range-folds.md) cost checks without treating them as timing acceptance. |
 | Returned partial application | [Three-host C/Rust/fwp comparison](measurements/returned-callables.md) separates construction, repeated calls and destruction at O1/O2; fwp uses a 16-byte heap payload, while C/Rust captures are inline | The [phase experiment](measurements/callable-phases.md) adds Swift and measures invocation/whole-call costs; retain the original ARM O1 size rejection. Original ARM acceptance and three AMD construction regressions remain open; [the phase report](measurements/callable-phases.md) retains all later qualified and inconclusive results. |
 | Subscription with weak back-link | [Weak-link semantics](gc-removal-design.md) and lifetime tests cover registration, expiration and cleanup | Add explicit C/Rust registrations with the same active-call and cancellation rules. Measure weak metadata allocation, live/expired acquisition, callback work and teardown separately. |
-| Recursive parser workspace | [A6](measurements/parser-workspace.md) already compares all three languages at 31/511/8,191 balanced nodes and 127 left-nested nodes, with phase timings and storage observations | Preserve those results. Complete the broader memory accounting (reserved/committed storage and peer transient peaks) and Rust stack observations before claiming complete memory accounting; current reported capacities are not process memory. |
+| Recursive parser workspace | [Recorded parser comparison](measurements/parser-workspace.md) covers all three languages at 31/511/8,191 balanced nodes and 127 left-nested nodes, with phase timings and storage observations | Preserve those results. Complete reserved/committed storage, peer transient peaks and Rust stack observations; reported capacities are not process memory. |
 
 Measure construction, useful work and cleanup separately and together at small,
 cache-sized and larger inputs. Match checked arithmetic and lifetime behavior;
@@ -273,20 +295,6 @@ Separate [bounded-memory tests](../tests/native_memory.rs) retain the long-loop 
 RSS limit and HTTP/REST growth limits of 16 MiB across 20,000 requests. RSS is
 whole-process resident memory, including allocator and runtime costs. These are
 regression limits, not claims of optimal space or performance.
-
-## Reading a result
-
-Divide fwp time by the named baseline time. `1.25×` means 25% more elapsed time;
-`0.80×` means 20% less. Extra time is `(fwp / baseline - 1) × 100%`. Always name
-which baseline: fwp can be faster than C and slower than Rust in one workload.
-Do not average unrelated ratios into a language-wide score.
-
-A ratio of medians differs from a median of paired ratios. Use the statistic and
-execution order stated by the report. Elapsed time includes scheduling delays;
-CPU time measures processing time. Neither identifies a bottleneck on its own.
-Identical-code controls reveal when measurement variation is too large for the
-claimed effect. Compilation, profiling and initialization are included only when
-the report's timer explicitly includes them.
 
 ## fwp compared with C and Rust
 
@@ -423,7 +431,7 @@ written by the programmer. Compare those two fwp forms before comparing them
 with handwritten C/Rust. Inputs, complete outputs, update counts and memory
 observations are retained. [Capture binding](measurements/eager-captures.md)
 improves updated solves in its initial sessions, but a repaired-source zero-update
-recheck exceeds its 2% regression limit. D2 remains open.
+recheck exceeds its 2% regression limit. That original comparison remains unmet.
 
 Older reports change list/array storage, borrow captures, repeat solves or replace
 printing with a checksum. They are distinct experiments, not successive universal

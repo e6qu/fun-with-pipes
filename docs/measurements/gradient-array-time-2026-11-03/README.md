@@ -93,7 +93,7 @@ storage and print in different formats. It is not isolated language overhead,
 and this change does not establish parity with C/Rust. The reference/candidate
 comparison above holds the fwp algorithm and output format fixed.
 
-## Audits and next investigation
+## Audits and subsequent investigation
 
 - ARM64 sessions 1/2 and AMD64 session 2: measurement run `41629714632`, jobs
   `125895890316`, `125895890374`, `125895890329`. Raw audit
@@ -112,9 +112,9 @@ test failure was found. The retained archives identify original generated C,
 native images, samples and patches without executing downloaded binaries.
 
 Source review finds generic callback dispatch in scalar `array.map`; the previous
-buffer map called its known function directly. This is a concrete next experiment,
-not a proven cause of these differences. [The retained requirements](../unmet-comparisons.md)
-requires preserving ownership/eager order and measuring that change independently.
+buffer map called its known function directly. That observation motivated the subsequent [scalar-map experiment](../direct-array-callbacks-2026-11-03/README.md);
+it did not prove the cause of these differences. [The retained requirements](../unmet-comparisons.md)
+preserve original failed limits independently of later changes.
 
 ## Rejected hosts
 

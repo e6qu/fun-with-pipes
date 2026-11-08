@@ -15,6 +15,9 @@ playground does, and it needs no server and no C compiler.
 
 ## A program, compiled for the browser
 
+Run the `main.fwp` build commands from `docs/tutorials/15-browser`. Run the
+playground commands in the next section from the repository root.
+
 `--target wasm32-browser` writes the module and a loader next to it,
 `palindromes.js`:
 
@@ -157,9 +160,8 @@ main = [
 ] | ignore
 ```
 
-Run it with `fwp run docs/tutorials/15-browser/main.fwp` (compiled to native code and cached), or
-build an executable with `fwp build docs/tutorials/15-browser/main.fwp -o browser`. The output is
-[`main.out`](main.out):
+Run `fwp run docs/tutorials/15-browser/main.fwp` from the repository root.
+Expected [`main.out`](main.out):
 
 ```
 ["level", "noon", "kayak", "refer", "radar", "stats"]

@@ -71,9 +71,7 @@ $ fwp run --native --link visit.c visit.fwp
 
 Both print `5`, the number of characters in `"hello"`; [visit.out](visit.out)
 records that result. The [callback checks](../../measurements/callback-inputs.md)
-cover copied inputs and failure cleanup;
-[PR #196](../../roadmap-history.md#array-owner-moves-and-copied-callback-strings-pr-196)
-records passing native delivery checks.
+cover copied inputs and failure cleanup.
 C's text is copied into an owned fwp string. Keeping that string in checked
 state is safe after C returns; the copy survives changes to C's original buffer.
 
@@ -83,8 +81,8 @@ separate rule. Passing text into a callback and returning text from one are
 different ownership boundaries.
 
 For a C host that calls later, the [retained export API](../../retained-callbacks.md)
-uses a separate context and explicit registration/result releases. Its integrated
-validation passed in #215. It does not extend these scoped callback lifetimes.
+uses a separate context and explicit registration/result releases. It does not
+extend these scoped callback lifetimes.
 
 ## fwp as a C library
 
@@ -256,9 +254,7 @@ main = [
 ] | ignore
 ```
 
-Run it with `fwp run docs/tutorials/09-c-interop/main.fwp` (compiled to native code and cached), or
-build an executable with `fwp build docs/tutorials/09-c-interop/main.fwp -o c-interop`. The output is
-[`main.out`](main.out):
+Run `fwp run docs/tutorials/09-c-interop/main.fwp`. Expected [`main.out`](main.out):
 
 ```
 5

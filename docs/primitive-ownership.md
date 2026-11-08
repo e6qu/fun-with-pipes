@@ -317,8 +317,8 @@ released explicitly. Scalar bits never select a reference destructor.
 | index-of | Borrow key/list | Fresh Option of scalar; comparison key is read-only |
 
 The [final-iteration group](measurements/final-iteration-storage.md) adds `last`
-and the internal history-free operation. Three-host focused native checks pass;
-the full final-head platform matrix remains required.
+and the internal history-free operation. Their
+[complete platform delivery passed](roadmap-history.md#matched-optional-results-pr-256).
 The optional wrapper is protected while its borrowed child is retained: a failed
 retain frees the wrapper without releasing a child it never acquired.
 
@@ -339,8 +339,8 @@ aliasing and immutable values; they do not establish complete exception or
 retained-callback ownership.
 
 The [matched-result implementation](measurements/matched-option-fields.md)
-adds direct fields for `last`, `nth` and internal final iteration. Focused checks
-pass on GCC ARM64/AMD64 and Clang ARM64; final delivery is pending.
+adds direct fields for `last`, `nth` and internal final iteration, delivered in
+[#256](roadmap-history.md#matched-optional-results-pr-256).
 Borrowed list reads retain the selected element by its concrete
 type. Iteration moves its already-owned result. Original resource-frame
 references remain separate; boxing an escaping result protects its payload

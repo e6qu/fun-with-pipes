@@ -196,8 +196,11 @@ Some (quotes.Quote {id = 2, text = "Make it work, make it right, make it fast."}
 3
 ```
 
-A program that uses TLS is linked with OpenSSL (`libssl.so.3`), and the
-interpreter loads the same library when a program first uses TLS.
+Native programs link with the platform's OpenSSL 3 libraries; the interpreter
+loads the corresponding libraries when TLS is first used. See
+[OpenSSL setup](../../tls.md#openssl) for platform-specific paths.
+Stop each background server after its client examples, before starting the next
+server, with `kill $!` in the same terminal.
 
 ## The program
 

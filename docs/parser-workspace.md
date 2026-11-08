@@ -1,6 +1,6 @@
 # One lifetime for a parser's tree
 
-A6 optimizes a parser written in fwp. It is verified in
+Scoped storage optimizes a parser written in fwp. It is verified in
 [#221](roadmap-history.md#scoped-parser-storage-and-analysis-work-pr-221), including
 all native platforms and the declared WASI checks. It does not change fwp's source parser.
 fwp arithmetic uses infix notation: `2 + 3 * 4` evaluates to `14`.
@@ -13,7 +13,7 @@ an integer or links to other nodes. Input Strings and the token list keep their
 ordinary owners. See [fwp operator precedence](compiler-pipeline.md#tokens-layout-and-precedence)
 for the language grammar.
 
-Before A6, each heap node had an individual lifetime. The implementation
+Previously, each heap node had an individual lifetime. The implementation
 lets one function call own a collection of storage blocks, called a region.
 Each recursive call is a separate invocation. Links
 within those blocks need neither ownership counts nor individual destruction.
@@ -23,28 +23,26 @@ measured, not assumed to improve.
 
 ## Admission proof
 
-The admitted node type is a recursive variant whose fields are I64 (signed
-64-bit integers) or links to that same variant.
-Do not admit Strings, files, channels, closures or unrelated managed fields in
-nodes. Their destruction could have obligations beyond freeing region storage.
+The compiler proves one invocation owns every selected node:
 
-A selected invocation must have no node-containing parameter or result.
-Do not lift ownership to a surrounding repetition loop: each parse needs its own
-cleanup boundary. Reject self-tail roots until region cleanup across their back
-edges is implemented and measured. Within
-it, nodes may appear in local records and pass through known recursive helpers.
+| Selected | Excluded from this optimization |
+|---|---|
+| Recursive variant with I64 fields and links to itself | Strings, files, channels, closures or unrelated owned fields inside nodes |
+| Nodes created and consumed within one call | Node-containing arguments/results, globals, cached graph values and escaping captures |
+| Known recursive helpers with specialized internal versions | Unknown calls, collection/runtime/foreign boundaries and resource scopes involving nodes |
+| A separate region for each parse | Lifting cleanup outside a repetition loop or across a self-tail root |
 
-Every helper that receives or returns those nodes needs a specialized internal
-version. The ordinary helper remains available to the `escaping` example, which
-returns a tree to its caller. Returning a tree is legal; it prevents this storage
-optimization for that invocation.
+Local records may hold nodes. Pure scalar/String operations keep their ordinary
+contracts; a failure primitive can terminate a node-producing expression but
+cannot return a node. Returning a tree remains legal: that invocation uses
+ordinary ownership, as the fixture's `escaping` example demonstrates.
 
-Reject unknown calls involving nodes, function values whose signatures contain
-nodes, captures, global storage, collection/runtime/foreign boundaries involving
-nodes, and resource scopes. Cached zero-argument graph definitions also stay outside:
-their storage belongs to the cache, not the selected invocation. Pure scalar and String operations keep their existing
-contracts. A failure primitive may terminate a node-producing expression; it
-cannot return a node. Validate its precise existing contract before admitting it.
+```text
+parse invocation owns blocks
+  ├─ node → child node       links do not own individual nodes
+  ├─ helper reads nodes     same invocation, same region
+  └─ return scalar/error → release all blocks
+```
 
 Use a finite worklist over types and direct helper calls. Cache containment of
 the candidate node type, visit each selected helper once, and count analysis
@@ -55,7 +53,8 @@ Completed cloned functions and locals may add at most
 twice the original expression/local weight; check their actual rewritten weight
 before publishing a candidate. A candidate that exceeds a budget
 keeps ordinary ownership. Measure these limits on larger programs and preserve
-the existing G2 compiler-analysis checks; bounded work is not a measured compile-time result.
+the [compiler-analysis checks](measurements/ownership-analysis.md); bounded work
+is not a measured compile-time result.
 
 ## Representation and cleanup
 
@@ -85,7 +84,7 @@ the previous block chain intact. Construction initializes a node before exposing
 its address. Cleanup follows only the block chain, never the node graph. No link
 may survive cleanup, and no ordinary reference-count operation may see one.
 
-## Evidence required in the same delivery
+## Maintained verification
 
 | Check | Required observation |
 |---|---|

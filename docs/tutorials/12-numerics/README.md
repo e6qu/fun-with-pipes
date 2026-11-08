@@ -72,7 +72,7 @@ the input's derivative with respect to itself is `1`:
 | `x * x - 2` | `7` | `6 - 0 = 6` |
 
 `derivative f 3.0` returns the derivative `6.0`, not the ordinary value `7.0`.
-The next lesson on [reverse mode](../20-autodiff-and-devices/README.md) shows
+Lesson 20 on [reverse mode](../20-autodiff-and-devices/README.md) shows
 how a tape records the same dependencies for a backward calculation.
 
 ## The program
@@ -105,9 +105,7 @@ main = [
 ] | ignore
 ```
 
-Run it with `fwp run docs/tutorials/12-numerics/main.fwp` (compiled to native code and cached), or
-build an executable with `fwp build docs/tutorials/12-numerics/main.fwp -o numerics`. The output is
-[`main.out`](main.out):
+Run `fwp run docs/tutorials/12-numerics/main.fwp`. Expected [`main.out`](main.out):
 
 ```
 Matrix {cols = 2, data = array[17.0, 7.0, 7.0, 10.0], rows = 2}

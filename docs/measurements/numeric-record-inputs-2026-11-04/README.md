@@ -12,11 +12,11 @@ the full job log pass audit. [The archive](evidence.zip) contains the inputs,
 typed intermediate code, generated C and exact commands;
 [the manifest](manifest.json) and [audit](audit.json) identify them.
 
-## What still allocates
+## Allocations at the reviewed source
 
 A derivative input pairs a number with its node number in the derivative tape.
 The tape records operations needed to calculate derivatives backward. For three
-inputs, the current preparation builds three boxed records and three list cells:
+inputs, the reviewed preparation builds three boxed records and three list cells:
 
 ```text
 coordinates:       [a, b, c]
@@ -41,7 +41,7 @@ The base-node capture uses a stack closure. Removing a supposed heap closure her
 would target a cost that does not exist. The remaining input boxes and list cells
 are visible in generated C, independently of machine-code interpretation.
 
-## Proposed next group
+## Original implementation proposal
 
 1. **Expose a known objective inside its scope.** Specialize a known scoped
    worker for its known objective, using bounded, cached specialization. Keep
@@ -62,7 +62,7 @@ Streaming these three stages together could change the first trap, tape
 operations or floating-point accumulation order. That is outside this proposal.
 No public list-to-array API change is needed for this exact private use.
 
-The current packed-record pass accepts a closed map callback and one fold
+The reviewed packed-record pass accepts a closed map callback and one fold
 consumer. It runs before private range consumption. Supporting this producer's
 numeric capture and the overlapping reads therefore needs an explicit extension;
 adding a type to an eligibility list is insufficient.

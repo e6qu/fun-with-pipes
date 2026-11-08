@@ -3059,6 +3059,7 @@ fn hof_def(
     result_ops: Option<&str>,
     fold_drop: Option<&str>,
     borrowed_step: bool,
+    fresh_f64: bool,
 ) -> String {
     if sym == "array.fold" {
         // The selected callback has exactly two plain numeric parameters and
@@ -3081,7 +3082,20 @@ fn hof_def(
                 format!("fwp_owned_entry{g}(args)"),
             )
         };
-        return format!("{} {{\n    size_t n = fwp_count_arg(count);\n    fwp_array_builder result = {{fwp_array_typed_new(n, {element}), 0, {element}}};\n    fwp_cleanup cleanup; fwp_array_builder_protect(&result, &cleanup);\n    for (size_t index = 0; index < n; index++) {{\n        V args[] = {{{args}}};\n{prepare}        V value = {entry};\n        fwp_array_store_owned(result.value, index, value, {element});\n        result.filled++;\n    }}\n    return fwp_array_builder_finish(&result, &cleanup);\n}}\n", hof_sig(i, sym, *k));
+        // The fresh result cannot be a view. F64 stores one word in both array
+        // layouts and has no element destructor, so unwind needs only its owner.
+        let (data, store) = if fresh_f64 {
+            (
+                "    unsigned char *result_data = (unsigned char *)(uintptr_t)result.value + sizeof(fwp_arr);\n",
+                "        memcpy(result_data + index * sizeof value, &value, sizeof value);\n".to_string(),
+            )
+        } else {
+            (
+                "",
+                format!("        fwp_array_store_owned(result.value, index, value, {element});\n        result.filled++;\n"),
+            )
+        };
+        return format!("{} {{\n    size_t n = fwp_count_arg(count);\n    fwp_array_builder result = {{fwp_array_typed_new(n, {element}), 0, {element}}};\n    fwp_cleanup cleanup; fwp_array_builder_protect(&result, &cleanup);\n{data}    for (size_t index = 0; index < n; index++) {{\n        V args[] = {{{args}}};\n{prepare}        V value = {entry};\n{store}    }}\n    return fwp_array_builder_finish(&result, &cleanup);\n}}\n", hof_sig(i, sym, *k));
     }
     if sym == "loop" {
         let drop = fold_drop.expect("typed loop state");
@@ -11020,6 +11034,8 @@ fn generate_mode(prog: &Program, mut mode: Mode) -> Result<String, String> {
         } else {
             None
         };
+        let fresh_f64 = hof.0 == "array.generate"
+            && *prog.funcs[hof.1].ty.params(hof.2 + 1).1 == MT::con("std::F64");
         bodies.push_str(&hof_def(
             i,
             &hof,
@@ -11027,6 +11043,7 @@ fn generate_mode(prog: &Program, mut mode: Mode) -> Result<String, String> {
             result_ops.as_deref(),
             fold_drop.as_deref(),
             borrowed_step.is_some(),
+            fresh_f64,
         ));
         bodies.push('\n');
         i += 1;

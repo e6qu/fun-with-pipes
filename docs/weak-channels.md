@@ -71,7 +71,7 @@ used directly, but cannot be captured in a queued owner unless the existing rule
 prove the relationship safe. This is deliberate conservative rejection, not an
 empty capture set or a claim of exact target inference. Function-bearing channel
 captures remain rejected even when obtained through upgrade. More precision must
-pass G2's compiler-scaling measurements before adoption.
+pass the compiler-scaling measurements before adoption.
 
 An internal graph edge that is weak does not make an independently strong edge
 safe. Wrapped, returned and nested acquired owners must retain the same checks.
@@ -103,7 +103,7 @@ an identity and expiration state without owning the target; no scan can turn
 that address into a strong edge. Allocator/static-pool and WASI checks passed
 with #215 and again on the collector-free implementation in #217.
 
-## Required evidence and remaining work
+## Verification and boundaries
 
 The tests in [queued_functions.rs](../tests/queued_functions.rs) cover
 raw/optimized interpretation versus native O1/O2, close versus expiration,
@@ -120,5 +120,5 @@ metadata release must fail independently. The runtime probe checks expiration
 before dereferencing a deliberately invalid target.
 
 All production gates passed for #215. Further proof precision must respect
-[G2's measured analysis budgets](measurements/ownership-analysis.md). Count savings alone are not a timing
+[measured analysis budgets](measurements/ownership-analysis.md). Count savings alone are not a timing
 improvement; [the benchmark guide](benchmarks.md) explains the distinction.

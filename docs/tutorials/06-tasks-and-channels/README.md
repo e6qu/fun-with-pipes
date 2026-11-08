@@ -109,9 +109,7 @@ main = [
 ] | ignore
 ```
 
-Run it with `fwp run docs/tutorials/06-tasks-and-channels/main.fwp` (compiled to native code and cached), or
-build an executable with `fwp build docs/tutorials/06-tasks-and-channels/main.fwp -o tasks-and-channels`. The output is
-[`main.out`](main.out):
+Run `fwp run docs/tutorials/06-tasks-and-channels/main.fwp`. Expected [`main.out`](main.out):
 
 ```
 [Some 1, Some 4, Some 9, Some 16]
@@ -122,7 +120,7 @@ None
 In compiled programs, the runtime switches between task stacks on one event
 loop; these lightweight tasks are often called green threads. In the
 interpreter, tasks use host threads but only one executes language code at a time. See
-[docs/concurrency.md](../../concurrency.md) for the details.
+[task scheduling](../../concurrency.md#tasks) for the details.
 
 ---
 

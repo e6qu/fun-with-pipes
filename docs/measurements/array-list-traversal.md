@@ -3,8 +3,8 @@
 This change was delivered in [PR #236](../roadmap-history.md#local-names-and-allocation-optimizations-pr-236). Allocation and
 cleanup checks pass on three native hosts. The latest four whole-solve sessions
 retain one failed identical-copy timing control, so combined timing acceptance
-remains open. The [handoff](../development-state.md) records current
-verification; the rejected observations remain below.
+remains open. The linked delivery records final platform verification;
+the rejected observations remain below.
 
 An array stores elements contiguously. A list stores a head and a link to the next
 cell. Converting an array to a list before immediately mapping or folding it can
@@ -147,8 +147,8 @@ exceeding the 2% limit.
 
 The combined timing acceptance therefore remains open.
 This is a recorded rejected timing result, not a reason to repeat unchanged runs
-or relax the budget. The next source change repairs pure-constructor specialization;
-its own cost and timing evidence must be identified separately.
+or relax the budget. The following pure-constructor repair has separate source,
+cost and timing evidence.
 
 ## Constructor repair: cost reduction retained, timing acceptance open
 

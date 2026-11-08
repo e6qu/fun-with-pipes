@@ -12,16 +12,9 @@ behavior. A client stub is generated code that performs those steps. The
 `shop.fwp` commands below illustrate deployment; the complete checked-in shop
 uses `main.fwp` in `examples/services`, with commands in [the example guide](../examples/README.md).
 
-An fwp program can be compiled as **one executable** holding every module, in which its modules call each other's
-functions directly, or as **separate executables** that call each other
-over gRPC. The source is the same in both builds; only the
-build command differs.
-
-You can write, test and debug a system as one
-program, then deploy parts of it as services when the need arises (to
-scale a part on its own, to isolate it, to call it from another language)
-and go back just as easily. The first build gives one executable, the
-second three:
+The same source can produce **one executable** with direct module calls or
+**separate executables** communicating over gRPC. The first command produces
+one executable; the second produces three:
 
 ```
 $ fwp build shop.fwp -o shop
@@ -347,8 +340,9 @@ remote call.
 Retaining an earlier position also retains its saved values and
 continuations, so sharing an iterator can increase memory use. Native stream
 storage has typed owners: a shared position keeps its saved values until its
-last reader releases it. The [ownership guide](services.md#reading-the-same-stream-in-two-tasks)
-describes its cleanup and measured costs.
+last reader releases it. [Ownership](ownership.md#native-executables-and-services)
+describes the contracts; [remote-call measurements](measurements/remote-client-storage.md)
+record cleanup costs at their named revisions.
 
 ### Errors and status codes
 

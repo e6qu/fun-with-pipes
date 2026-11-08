@@ -1,9 +1,9 @@
 # Remaining temporary list storage
 
-**Status:** census verified; scalar map-to-zip storage change selected below.
+**Status:** historical census and selection contract for the scalar map-to-zip change.
 Protocol anchor: `roadmap/temporary-list-protocol-2026-11-03`.
-[PLAN.md](../../PLAN.md) groups the census, selected storage change, controls and
-final measurements in one PR.
+[Delivery history](../roadmap-history.md) records the subsequent implementation
+and verification. [PLAN.md](../../PLAN.md) owns current work.
 
 ## What we need to explain
 

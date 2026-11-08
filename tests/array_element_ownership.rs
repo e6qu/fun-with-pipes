@@ -15,6 +15,9 @@ mod array_sort;
 #[path = "support/record_probe.rs"]
 mod record_probe;
 
+#[path = "support/fresh_array_output.rs"]
+mod fresh_array_output;
+
 fn checked(command: &mut Command) -> Output {
     let out = command.output().unwrap();
     assert!(
@@ -667,8 +670,13 @@ fn generated_numeric_arrays_borrow_captures_and_preserve_effect_cleanup() {
                     &format!("{retain}\n        if (array_probe_active) array_probe_retains++;"),
                 );
                 for helper in &helpers {
-                    let call = format!("V value = fwp_borrowed_array{helper}(args);");
-                    assert_eq!(code.matches(&call).count(), 1);
+                    let prefix = format!("V value = fwp_borrowed_array{helper}(args");
+                    let call = emitted
+                        .lines()
+                        .map(str::trim)
+                        .find(|line| line.starts_with(&prefix))
+                        .expect("borrowed callback invocation");
+                    assert_eq!(code.matches(call).count(), 1);
                     let extra = if *control == "extra-retain" {
                         "fwp_rc_dup(args[0]); fwp_rc_drop(args[0]);"
                     } else {
@@ -684,7 +692,7 @@ fn generated_numeric_arrays_borrow_captures_and_preserve_effect_cleanup() {
                     } else {
                         ""
                     };
-                    code = code.replace(&call, &format!("array_probe_retains=0; array_probe_active=1; {extra} {call} array_probe_active=0; {count_check} array_probe_calls++; {leaked}"));
+                    code = code.replace(call, &format!("array_probe_retains=0; array_probe_active=1; {extra} {call} array_probe_active=0; {count_check} array_probe_calls++; {leaked}"));
                 }
                 code = code.replace(
                     start,
@@ -697,7 +705,11 @@ fn generated_numeric_arrays_borrow_captures_and_preserve_effect_cleanup() {
                 } else {
                     ""
                 };
-                code = code.replace(release, &format!("{release}\n    if (owner->value && owner->filled == 2 && owner->element->kind == K_F64) {{ array_probe_partials++; {skip} }}"));
+                // F64 cleanup owns the allocation, not an initialized prefix.
+                // The fixture fails/cancels after two successful callbacks.
+                assert!(emitted
+                    .contains("memcpy(result_data + index * sizeof value, &value, sizeof value);"));
+                code = code.replace(release, &format!("{release}\n    if (owner->value && owner->element->kind == K_F64) {{ if (owner->filled != 0) _Exit(225); array_probe_partials++; {skip} }}"));
                 let calls = if name == "reads" {
                     "if (array_probe_calls != 3) _Exit(223);"
                 } else {

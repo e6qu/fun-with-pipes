@@ -7,6 +7,30 @@ The files here are evidence at recorded revisions, not live project status.
 records merges and platform validation. Raw JSON retains samples and source/tool
 identities. Do not edit observations to make an old experiment describe new code.
 
+## Latest delivery
+
+Current investigation: [shared loop/array costs](shared-loop-array-costs.md).
+The [metadata candidate](borrowed-array-metadata-2026-11-08/README.md) misses
+its target; these are diagnostic results, not another delivered optimization.
+The [fresh F64 output diagnostic](fresh-array-diagnosis-2026-11-08/README.md)
+selects the replacement candidate. [Production comparison](fresh-array-costs-2026-11-08/README.md)
+confirms ARM64 gains and unchanged managed costs; AMD64 timing acceptance remains
+open. [C/Rust computation and process memory](loop-array-peers-2026-11-08/README.md)
+separate useful work from input construction and release.
+
+- [Computed numeric inputs and local derivatives](computed-numeric-time-2026-11-07/README.md):
+  #269 removes 407,552 temporary requests from its largest measured process;
+  qualified long cases take 48–65% less time than ordinary reverse AD. The helper
+  remains experimental and one runtime copy control is inconclusive.
+- [Compiler costs](computed-numeric-analysis-2026-11-07/README.md): all fourteen
+  time/RSS comparisons meet 5% limits; two copy controls remain inconclusive.
+- [Native proof cases](computed-numeric-inputs-2026-11-07/README.md): values,
+  shared inputs, evaluation/trap order and the actual four-number call.
+
+These results motivate the shared loop/array milestone in [PLAN.md](../../PLAN.md).
+Older reports below retain their own sources and decisions; “current” in a dated
+experiment names its measured variant, not the latest compiler.
+
 ## Ownership costs
 
 - [Swift allocation attribution](swift-allocations.md): pipeline/map allocator stacks and separate fwp managed counters; audited ARM64/AMD64 profiles and allocation/release controls; individual ARC counts remain unmeasured.
@@ -37,8 +61,8 @@ identities. Do not edit observations to make an old experiment describe new code
 
 ## Numerical applications
 
-- [Gradient call storage](gradient-call-storage.md): next grouped proof for scoped input borrowing, fold fields, direct backward seeds and coordinate scratch. Implementation pending.
-- [Current gradient allocation sites](gradient-storage-2026-11-05/README.md): audited phase counts, exact remaining constructors and two retain sites after numeric-storage reuse.
+- [Gradient call storage](gradient-call-storage.md): scoped input borrowing, fold fields, direct backward seeds and coordinate scratch; delivered in #259, with timing misses retained.
+- [Gradient allocation sites after numeric-storage reuse](gradient-storage-2026-11-05/README.md): audited phase counts, constructors and two retain sites at the recorded source.
 
 - [Private derivative inputs](packed-derivative-inputs.md): one buffer replaces
   private record boxes and list cells while keeping evaluation order. Native
@@ -62,8 +86,8 @@ identities. Do not edit observations to make an old experiment describe new code
   safety and lower call costs, 84.5–84.9% less ARM64 construction time, unchanged
   managed storage, remaining C/Rust gaps and eight failed AMD64 timing limits.
 
-- [Typed derivative owners](typed-derivative-owners.md): current F128/nested-tape
-  work; stack-record, initialization and result-transfer counts, plus alias,
+- [Typed derivative owners](typed-derivative-owners.md): F128/nested-tape work
+  delivered in #237; stack-record, initialization and result-transfer counts, plus alias,
   failure and cancellation controls. Counts are not timing evidence.
 
 - [Array traversal without temporary lists](array-list-traversal.md): verified allocation reductions in numerical and gradient results; rejected allocation and timing observations retained.
@@ -71,7 +95,7 @@ identities. Do not edit observations to make an old experiment describe new code
 - [Nested derivative costs](ad-depth.md): audited F64/F128 depth/size comparisons with explicit fwp formulas, including allocation, code and stack costs; verified in #226.
 
 - [Eager capture bindings](eager-captures.md): 13–72% less updated-solve time in initial sessions; a repaired-source zero-update recheck still exceeds its limit. All outcomes and C/Rust gaps remain visible.
-- [Current derivative costs](descent-costs.md): initial and matched-host sessions, phase/memory observations and unresolved short-case timing noise.
+- [Earlier derivative costs](descent-costs.md): initial and matched-host sessions, phase/memory observations and unresolved short-case timing noise.
 - [Current output versus checksum costs](descent-output-current.md): four audited sessions; short noisy controls and host differences remain visible.
 
 These reports follow different versions of derivative descent. Read the variant table and timing boundary before comparing ratios across reports. A protocol describes an experiment, not an outstanding task.
@@ -98,9 +122,9 @@ These reports follow different versions of derivative descent. Read the variant 
 - [Numerical output after removing temporary lists](array-output-results.md)
 - [Array and matrix kernels: recorded comparison](numerical-kernels.md)
 
-## Current CPU kernels
+## CPU kernel comparisons
 
-- [Current array and matrix costs](current-kernel-costs.md): current fwp, a same-source word-state reference, C and Rust; separate calculation/allocation timings and two identical-copy controls.
+- [November 2 array and matrix costs](current-kernel-costs.md): fwp at the recorded revision, a same-source word-state reference, C and Rust; separate calculation/allocation timings and two identical-copy controls.
 - [Earlier array and matrix baselines](kernel-baselines.md): predates typed loop state; exact output checks and four sizes, with one expanded array noise control still inconclusive.
 - [Timing variation and GCC reports](timing-variation.md): retained failed controls, the matrix sampling repair, typed loop-state checks and the unsuccessful executable-name diagnostic. Representation checks alone do not prove a speedup.
 

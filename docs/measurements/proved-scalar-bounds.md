@@ -158,5 +158,5 @@ checks retained records; it does not rebuild or re-execute the archived binaries
 The closed runner is preserved at its
 [original source](https://github.com/e6qu/fun-with-pipes/blob/08039d8698743116c31cc0b8929e705c3562f833/scripts/scalar-bounds.py);
 its workflow option is removed rather than left as a command that targets reverted
-compiler code. The next P2 experiment must separate runtime setup, calculation,
-output and cleanup before choosing another source change.
+compiler code. The later [phase experiment](cpu-phases.md) separated runtime
+setup, calculation, output and cleanup; it does not change this rejection.

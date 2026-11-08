@@ -2,16 +2,16 @@
 
 Read [effects](../04-effects/README.md), [collections](../05-collections/README.md)
 and [tasks/channels](../06-tasks-and-channels/README.md) first. This lesson uses
-existing APIs to give every asynchronous operation an independent owner. It
-uses ordinary tasks, scopes and maps. [Weak channels](../../weak-channels.md)
+tasks, scopes and maps to give asynchronous work an independent owner.
+[Weak channels](../../weak-channels.md)
 provide another explicit option for a callback that needs a link back to its queue.
 
 An **owner** keeps storage alive. A channel owns its queued messages, while a
 callback owns its captured values. Queuing a callback that captures the receiving
 channel can create an owning cycle. Queuing an integer does not: the integer has
-no reference back to the channel. Checked ARC accepts the latter shape and rejects
-unproved retained relationships. Rejection is not proof that a particular run
-would create a cycle.
+no reference back to the channel. The compiler accepts the latter shape and rejects
+relationships it cannot prove safe. Rejection does not mean every execution would
+create a cycle. See [ownership diagnostics](../../ownership-admission.md) for examples.
 
 ## A scoped event callback
 
@@ -146,10 +146,8 @@ Some 8
 (None, Some [1])
 ```
 
-The integration checks compare raw interpretation with counted native execution
-and verify reclamation after teardown. The [ownership guide](../../ownership.md#functions-stored-in-channels) links the
-separate channel, task and callback checks. This example alone does not prove
-arbitrary callbacks or graphs safe.
+The [ownership guide](../../ownership.md#functions-stored-in-channels) links the
+channel, task and callback checks behind these rules.
 
 [`main.fwp`](main.fwp):
 

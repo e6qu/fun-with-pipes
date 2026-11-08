@@ -1,6 +1,7 @@
 # Inline scalar derivative recording
 
-Freeze this candidate before production edits. The [native GCC diagnostic](recording-call-analysis-2026-11-06/README.md)
+Historical protocol for [PR #263](recording-inline-delivery-2026-11-06/README.md),
+whose final production and documentation gates pass. The [native GCC diagnostic](recording-call-analysis-2026-11-06/README.md)
 reproduces all 72 original images and shows that the scalar append body stays out
 of line in every saved version/workload. The generated forwarding wrapper is
 already inlined. This motivates testing the body itself; it does not establish
@@ -39,8 +40,9 @@ Retain negative controls for omitted validation, changed trap order, stale tape
 state and broken observers. Compare the inline and ordinary declarations at
 production O1/O2, plus an O0 direct-recording control. Preserve nested/typed/wide
 derivatives, ownership, tasks/cancellation, cleanup and the golden corpus.
-Focused native checks run on Linux ARM64/AMD64 and macOS ARM64; the completed group
-still needs all nine final-head production jobs, documentation and full audits.
+Focused native checks ran on Linux ARM64/AMD64 and macOS ARM64, followed by all
+nine production jobs, documentation and complete audits. The linked delivery
+retains their source identities and the original missed timing limits.
 
 ## Frozen measurement limits
 

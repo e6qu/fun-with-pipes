@@ -1,8 +1,8 @@
-# Where the current gradient update still allocates
+# Gradient allocations after PR #258
 
 **An untimed allocation breakdown, not a new optimization or speed result.**
-Both architectures pass the independent raw-data audit. This report identifies
-specific work for the next ownership proof after [PR #258](https://github.com/e6qu/fun-with-pipes/pull/258).
+Both architectures pass the independent raw-data audit. This report identified
+work subsequently addressed by [gradient-call storage changes](../gradient-call-storage.md) after [PR #258](https://github.com/e6qu/fun-with-pipes/pull/258).
 
 ## Program and method
 

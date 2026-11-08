@@ -5,8 +5,8 @@ broken queue, callback-transfer, clock-owner, await-result and raw-buffer cases 
 O0/O2. Collector symbols must be absent from all of them. Callback transfers and
 direct await results retain their exact count comparisons. The collector-free
 tests passed [PR #217's platform gates](../roadmap-history.md#tracing-gc-removal-pr-217).
-The standalone artifact comparison still needs a refreshed report; the reports
-below describe their recorded source and larger two-mode matrix.
+The reports below describe their recorded source and larger two-mode matrix;
+those old counts are not new collector-free measurements.
 
 This extension passed full production acceptance in [PR #190](../roadmap-history.md#queued-task-owners-and-callback-transfers-pr-190).
 The measurements below keep their exact source revisions.
@@ -47,8 +47,9 @@ rec main = task.spawn work
 `rec` permits recursive references. Here `main` caches the spawned task. The task
 returns a record whose `read` function captures that same task: task → result →
 function → task. Nothing needs to invoke `read` for the ownership cycle to exist.
-The new ARC check rejects it; ordinary recursion without an owning back-reference
-remains allowed. The regression also checks interpretation and tracing execution.
+The ownership check rejects it; ordinary recursion without an owning back-reference
+remains allowed. The original regression also checked interpretation and tracing
+execution before the collector was removed.
 
 ## Example
 

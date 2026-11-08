@@ -131,5 +131,5 @@ On Linux, a separate
 control omits release of idle descriptor-wait metadata belonging to the library;
 the host can keep the descriptor itself open. Identity is checked before reading a
 possibly freed capture. These tests passed on the six native targets in #215.
-[Ownership diagnostics](ownership-diagnostics.md) records the other checks that
-must survive collector deletion.
+[Ownership diagnostics](ownership-diagnostics.md) records the checks maintained
+after collector removal.

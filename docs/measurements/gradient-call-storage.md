@@ -1,10 +1,11 @@
 # Remove temporary storage around gradient calls
 
-**Focused native checks, allocation and compiler-cost audits pass. Runtime results retain 17 missed timing limits; final production gates remain.**
+**Delivered in PR #259.** [All final production gates pass](gradient-call-delivery-2026-11-05.json).
+Runtime results retain 17 missed timing limits.
 This contract precedes code;
 its immutable tag is `roadmap/gradient-call-storage-protocol-2026-11-05`.
 Starting source: verified squash `68115090b161f198e11fb625946259f65f781580`.
-The [current allocation-site report](gradient-storage-2026-11-05/README.md)
+The [starting allocation-site report](gradient-storage-2026-11-05/README.md)
 identifies each cost. [PR #258's delivery](../roadmap-history.md#consumed-numeric-storage-pr-258)
 keeps its four missed speed targets separate from this experiment.
 

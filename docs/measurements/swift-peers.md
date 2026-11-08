@@ -86,7 +86,7 @@ fwp's small scalar programs occupy roughly 1.3–1.7 MiB here, versus about 8 Mi
 for Swift. The sorted map still uses about 16.9 MiB in fwp versus 9.3 MiB in Rust.
 Lower resident memory alone does not prove fewer ARC operations: runtime and
 representation differences are included. Swift allocation/count instrumentation
-remains open; the [PR #233 fwp profiles](../benchmarks.md#pr-233-whole-program-baseline)
+remains open; the [PR #233 fwp profiles](production-baseline-pr233.md)
 are separate observations from #233, not profiles of these new executables.
 
 ## AMD64 observations are not a matched pair

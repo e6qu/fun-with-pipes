@@ -18,9 +18,7 @@ Each request stands alone: there is no session or `initialize` handshake. The to
 input and output schemas come from the functions' types, and their
 descriptions from the comments. [docs/mcp.md](../../mcp.md) has every rule.
 
-To follow along, go to this directory (`cd docs/tutorials/21-mcp`). The
-sessions below run exactly as shown: the test suite runs them. They use
-`jq` to show the JSON.
+Run these sessions from `docs/tutorials/21-mcp`; they require `jq`.
 
 ## Reading the example
 
@@ -49,8 +47,7 @@ in this example; the input validation and supported range still apply.
 
 ## Functions are tools
 
-[`converter.fwp`](converter.fwp) converts temperatures and splits bills:
-arithmetic that a model should not do in its head. An exported function
+[`converter.fwp`](converter.fwp) converts temperatures and splits bills. An exported function
 is a tool only when it is exposed as `mcp`; the file's leading comment
 exposes all of them, and is the server's instructions:
 
@@ -243,6 +240,8 @@ $ curl -s -w ' %{http_code}\n' localhost:8722/mcp \
 
 A request from a web page on another host (an `Origin` header that is not
 `localhost`) is refused with a 403, against DNS rebinding.
+
+Stop the background server with `kill $!` in the shell that started it.
 
 ## The same functions elsewhere
 
