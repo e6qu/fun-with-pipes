@@ -70,7 +70,7 @@ before compiler edits. No new public gradient operation is planned.
   2 `128791969912`. All four pass, including evidence-rejection controls; complete
   logs are clean and original archive digests match. Managed storage returns to
   baseline and raw buffers reach zero with workspace reuse on/off.
-- Six analytic/statistical controls pass. Python syntax and all five changed
+- Seven analytic/statistical controls pass. Python syntax and all five changed
   workflow files parse; workflow sizes remain below 512,000 bytes. PyYAML is
   absent locally; the installed Ruby YAML parser passes instead.
 - `numerics.yml` moves two unchanged regression jobs to `numerical-regressions.yml`
@@ -84,19 +84,32 @@ only elementwise objectives; all repeated-leaf contributions must be combined.
 Independent losses already use `array.map (derivative loss)`. The local pair
 helper remains experimental until correctness, lifetime and benefit are verified.
 
-## Candidate implementation
+## Candidate implementation and current failure
 
-Acceptance was frozen in commit `412b50b52` before compiler edits. The existing
-`opt::specialize_hofs` now includes `array.map` and `array.generate` (callback
-position 1 for generation, after the count). Existing capture-order, resource,
-body-size and expansion guards are unchanged. No public API is added.
+Acceptance was frozen in `412b50b52`. First candidate
+`b0a2becabf7acc474a410002df6a8f88d2c1ddb4` adds array primitives to small-callback
+specialization. All three jobs in `42501889779` fail the same allocation limit:
+neighbor-local `n=3` makes 768 requests over 32 calls; limit 256. Final storage
+is zero. Outputs, order, unknown callbacks, unwinding, F128 and nested AD pass.
+All completed tests and diagnostics were reviewed. [Logs/source evidence](measurements/structured-array-callback-first-2026-11-08/README.md).
 
-The focused workflow now includes existing map/generate ordering, unknown
-callback, array unwinding, F128 and nested-gradient tests. The driver adds both
-local methods and requires at most `2*n+2` requests per call. Two new exact
-scalar-capture derivative examples pass raw interpretation (32 results total).
-Formatting and changed-script syntax pass locally. Candidate Rust/native checks
-have not run yet; do not claim the allocation or speed target passed.
+Uncommitted repair extends `opt::scoped`'s existing known-function worker copy to
+arrays. The 40-node inlining limit prevented the first candidate from exposing
+the known edge inside the larger coordinate worker. The repair substitutes that
+closed function and omits only its effect-free, owner-free argument for arrays;
+other arguments/resource identities remain in place. The first candidate's
+forwarding-only array wrappers are removed; native array lowering already calls
+these workers directly. Existing body/expansion budgets stay unchanged. New proof tests cover ordering, reuse and exclusions.
+Do not claim repaired native behavior until the next focused run passes.
+
+The paired measurement runner/auditor now implements the frozen 14-case,
+256-gradient experiment and builds baseline/current compilers from source.
+Seven analytic/statistical controls and Python/YAML syntax pass locally.
+The XOR result checksum could cancel across even repeats; it is replaced with
+a rolling bit checksum and a native one-bit-change rejection control (2.44 s,
+1.12 CPU). Full per-coordinate checks in the original study remain valid.
+No candidate timing session has run. The driver now collects all allocation
+misses before failing, so one missed budget does not hide later controls.
 
 ## Tutorial changes awaiting the same PR
 

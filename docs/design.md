@@ -87,6 +87,16 @@ must fail before a later input is evaluated. The returned function's type
 cannot justify delaying that division. A composed
 pipe likewise takes its input before evaluating any returned function's next input.
 
+Known array callbacks use the same bounded function-specialization machinery as
+scoped derivatives. A private worker can be copied with its first closed function
+argument known; the array call retains its other arguments in their original
+order. Removing that closed function parameter cannot release captured owners:
+it has none. Resource-local indices are remapped after removing its anchor.
+Unknown or captured function arguments and oversized workers remain unchanged.
+Only original workers are visited; copies do not recursively expand the pass.
+The [active proof and measurement contract](measurements/structured-autodiff.md#selected-change-known-array-callbacks)
+records candidate verification; implementation is not yet delivery acceptance.
+
 The optimizer may combine constructor stages only after proving that construction
 merely captures values: no executed calls, possible traps, observable owners or
 resource frames. It preserves typed local bindings and changes known callers

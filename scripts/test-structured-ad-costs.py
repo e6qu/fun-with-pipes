@@ -5,7 +5,7 @@ import copy
 from fractions import Fraction
 import unittest
 
-from structured_ad_costs import cases, entry_and_drops, expected, inputs, matrix
+from structured_ad_costs import callback_cases, cases, entry_and_drops, expected, inputs, matrix
 from structured_ad_statistics import interval, order, summarize
 
 
@@ -32,6 +32,23 @@ class StructuredComparison(unittest.TestCase):
         self.assertEqual(expected('dense',1),[-0.244140625])
         self.assertEqual(expected('neighbors',1),[0.0])
 
+    def test_frozen_callback_cases_and_baseline_pairing(self):
+        workload=list(callback_cases())
+        self.assertEqual(len(workload),14)
+        self.assertEqual(len({case['name'] for case in workload}),14)
+        self.assertTrue(all(case['repeats']==256 and case['methods']==('baseline','candidate')
+                            for case in workload))
+        self.assertEqual([case['name'] for case in workload if case['method']=='local'],
+            ['neighbors-0-local','neighbors-1-local','neighbors-3-local','neighbors-33-local',
+             'neighbors-129-local','independent-0-local','independent-1-local',
+             'independent-16-local','independent-129-local'])
+        rows=samples(('reverse','local'))
+        for row in rows:
+            row['role']=row['role'].replace('reverse','baseline').replace('local','candidate')
+        report=summarize(rows,('baseline','candidate'),256,'baseline')
+        self.assertEqual(report['vsBaseline']['candidate']['ratio'],0.5)
+        self.assertEqual(report['vsBaseline']['candidate']['reference'],'baseline')
+
     def test_dense_gradient_against_exact_quadratic_difference(self):
         for count in (1,3):
             point=list(map(Fraction,inputs('dense',count)))
@@ -57,7 +74,7 @@ class StructuredComparison(unittest.TestCase):
     def test_paired_results_and_noisy_copy_rejection(self):
         methods=('reverse','forward','local')
         rows=samples(methods)
-        report=summarize(rows,methods,1)
+        report=summarize(rows,methods,1,'reverse')
         self.assertEqual(report['vsReverse']['local']['direction'],'faster')
         self.assertEqual(report['vsReverse']['local']['interval95'],[0.5,0.5])
         self.assertEqual(report['vsReverse']['forward']['direction'],'slower')
@@ -65,7 +82,7 @@ class StructuredComparison(unittest.TestCase):
         for row in noisy:
             if row['role']=='reverse-copy':
                 row['computationNs']=120
-        report=summarize(noisy,methods,1)
+        report=summarize(noisy,methods,1,'reverse')
         self.assertTrue(all(row['direction']=='inconclusive' and not row['copyQualified']
                             for row in report['vsReverse'].values()))
         self.assertEqual(interval([1.0]*24),[1.0,1.0])
@@ -78,7 +95,7 @@ class StructuredComparison(unittest.TestCase):
         zero_clock=copy.deepcopy(rows);zero_clock[-1]['computationNs']=0
         for bad in (rows[:-1],rows+[rows[0]],bad_checksum,bad_storage,zero_clock):
             with self.assertRaises(AssertionError):
-                summarize(bad,methods,1)
+                summarize(bad,methods,1,'reverse')
 
     def test_exact_owned_entry_and_typed_destructors_are_required(self):
         source='''/* measure : List[List[F64]] -> List[F64] -> List[F64] */

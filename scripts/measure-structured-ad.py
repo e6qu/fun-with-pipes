@@ -14,7 +14,7 @@ import subprocess
 import time
 
 from process_wait import run_capture
-from structured_ad_costs import ROOT, cases, driver, entry_and_drops, expected, program, raw_program
+from structured_ad_costs import ROOT, REFERENCE_SOURCE, callback_cases, cases, driver, entry_and_drops, expected, program, raw_program
 from structured_ad_observations import check_reports, instrument, stack_report
 from structured_ad_statistics import order, summarize
 
@@ -25,6 +25,8 @@ SPEC.loader.exec_module(RESOURCES)
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--comparison', choices=('methods', 'callbacks'), required=True)
+    parser.add_argument('--reference-root', type=Path)
     parser.add_argument('--compiler', type=Path, required=True)
     parser.add_argument('--cc', required=True)
     parser.add_argument('--c-arch', choices=('armv8-a', 'x86-64'), required=True)
@@ -44,6 +46,18 @@ def main():
     cpu = cpus[0]
     source = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
     compiler = args.compiler.resolve()
+    reference_compiler = None
+    if args.comparison == 'callbacks':
+        assert args.reference_root is not None
+        reference_root = args.reference_root.resolve()
+        assert subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=reference_root, text=True).strip() == REFERENCE_SOURCE
+        subprocess.run(['git', 'diff', '--exit-code', 'HEAD'], cwd=reference_root, check=True)
+        reference_compiler = reference_root / 'target/debug/fwp'
+    else:
+        assert args.reference_root is None
+    workload = list(callback_cases() if args.comparison == 'callbacks' else cases())
+    reference = 'baseline' if args.comparison == 'callbacks' else 'reverse'
+    summary_key = 'vsBaseline' if args.comparison == 'callbacks' else 'vsReverse'
     output = args.output.resolve(); output.mkdir(parents=True, exist_ok=False)
     environment = {key: value for key, value in os.environ.items()
                    if not key.startswith('FWP_') and key not in ('GH_TOKEN', 'GITHUB_TOKEN')}
@@ -54,7 +68,7 @@ def main():
     host = json.loads(subprocess.check_output(['lscpu', '--json'], text=True))
     models = [row['data'] for row in host['lscpu'] if row['field'] == 'Model name:']
     assert len(models) == 1 and models[0]
-    identity = dict(source=source, session=args.session, machine=machine, host=host,
+    identity = dict(source=source, comparison=args.comparison, session=args.session, machine=machine, host=host,
         model=models[0], availableCpus=cpus, timingCpu=cpu, flags=flags,
         stackLimitBytes=resource.getrlimit(resource.RLIMIT_STACK)[0],
         compilerSha256=hashlib.sha256(compiler.read_bytes()).hexdigest(),
@@ -63,6 +77,9 @@ def main():
         ccVersion=subprocess.check_output([args.cc, '--version'], text=True),
         rustVersion=subprocess.check_output(['rustc', '-Vv'], text=True),
         settings={key: value for key, value in environment.items() if key.startswith('FWP_')})
+    if reference_compiler is not None:
+        identity['referenceSource'] = REFERENCE_SOURCE
+        identity['referenceCompilerSha256'] = hashlib.sha256(reference_compiler.read_bytes()).hexdigest()
     (output / 'identity.json').write_text(json.dumps(identity, indent=2)+'\n')
 
     def run(command, destination, observe, pinned, env):
@@ -93,16 +110,19 @@ def main():
         return result, cost
 
     summary = {}
-    for case in cases():
+    for case in workload:
         directory = output / case['name']; directory.mkdir()
         (directory / 'case.json').write_text(json.dumps(case, indent=2)+'\n')
         (directory / 'expected.json').write_text(json.dumps(expected(case['family'], case['count']))+'\n')
         binaries = {}
+        result_checksums = {}
         for method in case['methods']:
-            fwp = directory / (method + '.fwp'); fwp.write_text(program(case['family'], method))
+            selected_compiler = reference_compiler if method == 'baseline' else compiler
+            actual_method = case['method'] if args.comparison == 'callbacks' else method
+            fwp = directory / (method + '.fwp'); fwp.write_text(program(case['family'], actual_method))
             if case['count'] <= 3:
-                raw = directory / (method + '-raw.fwp'); raw.write_text(raw_program(case, method))
-                result, _ = run([compiler, 'run', '--interp', raw], directory / (method + '-interpreter'),
+                raw = directory / (method + '-raw.fwp'); raw.write_text(raw_program(case, actual_method))
+                result, _ = run([selected_compiler, 'run', '--interp', raw], directory / (method + '-interpreter'),
                     False, False, dict(environment, FWP_NO_OPT='1'))
                 assert not result.stderr, result.stderr
                 values = json.loads(result.stdout)
@@ -110,7 +130,7 @@ def main():
                 assert len(values) == len(oracle)
                 assert all(math.isfinite(a) and abs(a-b) <= 1e-10 + 1e-10*abs(b) for a,b in zip(values,oracle))
             emitted = directory / (method + '-generated.c')
-            result, _ = run([compiler, 'build', '--fn', 'measure', '--emit-c', '-O2', fwp, '-o', emitted],
+            result, _ = run([selected_compiler, 'build', '--fn', 'measure', '--emit-c', '-O2', fwp, '-o', emitted],
                 directory / (method + '-emit'), False, False, environment)
             assert not result.stderr, result.stderr
             cfile = directory / (method + '.c'); cfile.write_text(driver(emitted.read_text(), case))
@@ -122,8 +142,11 @@ def main():
             assert not result.stderr, result.stderr
             observation = json.loads(result.stdout)
             assert observation['initialLiveBytes'] == observation['finalLiveBytes']
+            result_checksums[method] = observation['checksum']
             copied = directory / (method + '-copy'); shutil.copy2(binary, copied)
             binaries[method], binaries[method + '-copy'] = binary, copied
+        if args.comparison == 'callbacks':
+            assert result_checksums['baseline'] == result_checksums['candidate'], case['name']
         rows = []
         for round_number in range(-2, 24):
             for role in order(case['methods'], round_number):
@@ -134,23 +157,25 @@ def main():
                 rows.append(row)
                 with (directory / 'samples.jsonl').open('a') as log:
                     log.write(json.dumps(row)+'\n')
-        summary[case['name']] = summarize(rows, case['methods'], case['repeats']) | dict(
+        summary[case['name']] = summarize(rows, case['methods'], case['repeats'], reference) | dict(
             binaryHashes={role: hashlib.sha256(path.read_bytes()).hexdigest() for role,path in binaries.items()})
         (output / 'summary.json').write_text(json.dumps(summary, indent=2)+'\n')
-        print(case['name'], summary[case['name']]['vsReverse'], flush=True)
+        print(case['name'], summary[case['name']][summary_key], flush=True)
 
     # Finish all ordinary timings before instrumentation or resource rebuilding.
     if args.session == 1:
         observations = {}
-        for case in cases():
+        for case in workload:
             directory = output / case['name']; reports = {}
             for method in case['methods']:
+                selected_compiler = reference_compiler if method == 'baseline' else compiler
+                actual_method = case['method'] if args.comparison == 'callbacks' else method
                 ordinary = directory / method
                 result, rss = run([ordinary, case['count']], directory / (method + '-rss'), True, True, environment)
                 assert not result.stderr, result.stderr
                 timing = json.loads(result.stdout)
                 emitted = directory / (method + '-observed-generated.c')
-                result, emitter = run([compiler, 'build', '--fn', 'measure', '--emit-c', '-O2',
+                result, emitter = run([selected_compiler, 'build', '--fn', 'measure', '--emit-c', '-O2',
                     directory / (method + '.fwp'), '-o', emitted], directory / (method + '-compiler-cost'),
                     True, False, environment)
                 assert not result.stderr and emitted.read_bytes() == (directory / (method + '-generated.c')).read_bytes()
@@ -174,7 +199,7 @@ def main():
                     assert measured['checksum'] == timing['checksum']
                     assert measured['retainedManagedBytesAfterCall'] == timing['retainedManagedBytesAfterCall']
                     managed, raw = [json.loads(line) for line in result.stderr.splitlines()]
-                    check_reports(managed, raw['rawDerivativeStorage'], case['count'], case['repeats'], method, workspace)
+                    check_reports(managed, raw['rawDerivativeStorage'], case['count'], case['repeats'], actual_method, workspace)
                     memory[str(int(workspace))] = dict(managed=managed, rawDerivativeStorage=raw['rawDerivativeStorage'])
                 reports[method] = dict(memory=memory, process=rss, compiler=emitter,
                     cCompiler=c_compiler, imageBytes=ordinary.stat().st_size,

@@ -19,7 +19,8 @@ def interval(ratios):
     return [estimates[49], estimates[1949]]
 
 
-def summarize(rows, methods, repeats):
+def summarize(rows, methods, repeats, reference):
+    assert reference in methods
     expected = {(round_number, role) for round_number in range(-2, 24)
                 for role in order(methods, round_number)}
     selected = {(row['round'], row['role']): row for row in rows}
@@ -41,17 +42,18 @@ def summarize(rows, methods, repeats):
         copies[method] = dict(ratio=median, qualified=1 / 1.02 <= median <= 1.02)
     comparisons = {}
     for method in methods:
-        if method == 'reverse':
+        if method == reference:
             continue
-        ratios = [selected[r, method]['computationNs'] / selected[r, 'reverse']['computationNs']
+        ratios = [selected[r, method]['computationNs'] / selected[r, reference]['computationNs']
                   for r in range(24)]
         bounds = interval(ratios)
-        qualified = copies[method]['qualified'] and copies['reverse']['qualified']
+        qualified = copies[method]['qualified'] and copies[reference]['qualified']
         direction = 'inconclusive'
         if qualified and bounds[1] < 1:
             direction = 'faster'
         elif qualified and bounds[0] > 1:
             direction = 'slower'
-        comparisons[method] = dict(reference='reverse', ratio=statistics.median(ratios),
+        comparisons[method] = dict(reference=reference, ratio=statistics.median(ratios),
             interval95=bounds, copyQualified=qualified, direction=direction)
-    return dict(medianNsPerGradient=medians, identicalCopies=copies, vsReverse=comparisons)
+    return dict(medianNsPerGradient=medians, identicalCopies=copies) | {
+        'vsReverse' if reference == 'reverse' else 'vsBaseline': comparisons}

@@ -8,7 +8,7 @@ import math
 from pathlib import Path
 import subprocess
 
-from structured_ad_costs import ROOT, cases, driver, entry_and_drops, expected, program, raw_program
+from structured_ad_costs import ROOT, REFERENCE_SOURCE, callback_cases, cases, driver, entry_and_drops, expected, program, raw_program
 from structured_ad_observations import check_reports, instrument, stack_report
 from structured_ad_statistics import order, summarize
 
@@ -24,8 +24,21 @@ def native_hash(path, machine):
     return hashlib.sha256(data).hexdigest()
 
 
-def audit(directory, compiler, cc, source, machine, session):
+def audit(directory, compiler, cc, source, machine, session, comparison, reference_root):
     identity = json.loads((directory / 'identity.json').read_text())
+    assert identity['comparison'] == comparison
+    reference_compiler = None
+    if comparison == 'callbacks':
+        assert reference_root is not None
+        reference_compiler = reference_root / 'target/debug/fwp'
+        assert identity['referenceSource'] == REFERENCE_SOURCE
+        assert subprocess.check_output(['git','rev-parse','HEAD'],cwd=reference_root,text=True).strip() == REFERENCE_SOURCE
+        assert identity['referenceCompilerSha256'] == native_hash(reference_compiler,machine)
+    else:
+        assert reference_root is None
+    workload = list(callback_cases() if comparison == 'callbacks' else cases())
+    reference = 'baseline' if comparison == 'callbacks' else 'reverse'
+    summary_key = 'vsBaseline' if comparison == 'callbacks' else 'vsReverse'
     assert identity['source'] == source and identity['machine'] == machine and identity['session'] == session
     assert subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip() == source
     assert identity['compilerSha256'] == native_hash(compiler,machine)
@@ -76,26 +89,28 @@ def audit(directory, compiler, cc, source, machine, session):
         return value
 
     summary={}; observations={}
-    for case in cases():
+    for case in workload:
         name=case['name']; path=directory/name
         assert json.loads((path/'case.json').read_text())==dict(case,methods=list(case['methods']))
         assert json.loads((path/'expected.json').read_text())==expected(case['family'],case['count'])
         hashes={role:native_hash(path/role,machine) for role in order(case['methods'],0)}
         checks={}
         for method in case['methods']:
+            selected_compiler = reference_compiler if method == 'baseline' else compiler
+            actual_method = case['method'] if comparison == 'callbacks' else method
             prefix=name+'/'+method
             assert hashes[method]==hashes[method+'-copy']
-            assert (path/(method+'.fwp')).read_text()==program(case['family'],method)
+            assert (path/(method+'.fwp')).read_text()==program(case['family'],actual_method)
             if case['count']<=3:
                 raw_file=path/(method+'-raw.fwp')
-                assert raw_file.read_text()==raw_program(case,method)
-                raw,_,_=command(prefix+'-interpreter',[compiler,'run','--interp',raw_file],False,False,
+                assert raw_file.read_text()==raw_program(case,actual_method)
+                raw,_,_=command(prefix+'-interpreter',[selected_compiler,'run','--interp',raw_file],False,False,
                                 dict(settings,FWP_NO_OPT='1'),False)
                 values=json.loads(raw); oracle=expected(case['family'],case['count'])
                 assert len(values)==len(oracle)
                 assert all(math.isfinite(a) and abs(a-b)<=1e-10+1e-10*abs(b) for a,b in zip(values,oracle))
             emitted=path/(method+'-generated.c')
-            raw,_,_=command(prefix+'-emit',[compiler,'build','--fn','measure','--emit-c','-O2',
+            raw,_,_=command(prefix+'-emit',[selected_compiler,'build','--fn','measure','--emit-c','-O2',
                 path/(method+'.fwp'),'-o',emitted],False,False,settings,False)
             assert not raw
             assert (path/(method+'.c')).read_text()==driver(emitted.read_text(),case)
@@ -105,6 +120,8 @@ def audit(directory, compiler, cc, source, machine, session):
             raw,_,_=command(prefix+'-check',[path/method,case['count']],False,True,settings,False)
             checks[method]=observation(raw)
             stack_report((path/(method+'.su')).read_text(),entry_and_drops(emitted.read_text())[0])
+        if comparison == 'callbacks':
+            assert checks['baseline']['checksum'] == checks['candidate']['checksum'], name
         samples=[json.loads(line) for line in (path/'samples.jsonl').read_text().splitlines()]
         assert [(row['round'],row['role']) for row in samples]==[
             (number,role) for number in range(-2,24) for role in order(case['methods'],number)]
@@ -116,16 +133,18 @@ def audit(directory, compiler, cc, source, machine, session):
             for field in ('checksum','retainedManagedBytesAfterCall','initialLiveBytes','finalLiveBytes'):
                 assert value[field]==checks[method][field]
             assert row==value|dict(round=row['round'],role=row['role'],processNs=cost['elapsedNs'])
-        summary[name]=summarize(samples,case['methods'],case['repeats'])|dict(binaryHashes=hashes)
+        summary[name]=summarize(samples,case['methods'],case['repeats'],reference)|dict(binaryHashes=hashes)
         if session==1:
             reports={}
             for method in case['methods']:
+                selected_compiler = reference_compiler if method == 'baseline' else compiler
+                actual_method = case['method'] if comparison == 'callbacks' else method
                 prefix=name+'/'+method
                 raw,_,rss=command(prefix+'-rss',[path/method,case['count']],True,True,settings,False)
                 timing=observation(raw)
                 assert timing['checksum']==checks[method]['checksum']
                 emitted=path/(method+'-observed-generated.c')
-                raw,_,emitter=command(prefix+'-compiler-cost',[compiler,'build','--fn','measure','--emit-c',
+                raw,_,emitter=command(prefix+'-compiler-cost',[selected_compiler,'build','--fn','measure','--emit-c',
                     '-O2',path/(method+'.fwp'),'-o',emitted],True,False,settings,False)
                 assert not raw and emitted.read_bytes()==(path/(method+'-generated.c')).read_bytes()
                 raw,_,c_compiler=command(prefix+'-c-cost',[cc,*flags,path/(method+'.c'),'-o',path/(method+'-rebuilt'),
@@ -148,7 +167,7 @@ def audit(directory, compiler, cc, source, machine, session):
                     assert value['checksum']==timing['checksum']
                     assert value['retainedManagedBytesAfterCall']==timing['retainedManagedBytesAfterCall']
                     managed,raw_storage=[json.loads(line) for line in stderr.splitlines()]
-                    check_reports(managed,raw_storage['rawDerivativeStorage'],case['count'],case['repeats'],method,workspace)
+                    check_reports(managed,raw_storage['rawDerivativeStorage'],case['count'],case['repeats'],actual_method,workspace)
                     memory[str(int(workspace))]=dict(managed=managed,rawDerivativeStorage=raw_storage['rawDerivativeStorage'])
                 reports[method]=dict(memory=memory,process=rss,compiler=emitter,cCompiler=c_compiler,
                     imageBytes=(path/method).stat().st_size,
@@ -162,12 +181,15 @@ def audit(directory, compiler, cc, source, machine, session):
         assert observations==json.loads((directory/'observations.json').read_text())
     else:
         assert not (directory/'observations.json').exists()
-    return dict(source=source,machine=machine,session=session,inputCases=len(summary),methodCases=41,
-                commands=len(commands),vsReverse={name:row['vsReverse'] for name,row in summary.items()})
+    return dict(source=source,machine=machine,session=session,comparison=comparison,inputCases=len(summary),
+                methodCases=sum(len(case['methods']) for case in workload),commands=len(commands)) | {
+                    summary_key:{name:row[summary_key] for name,row in summary.items()}}
 
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--comparison',choices=('methods','callbacks'),required=True)
+    parser.add_argument('--reference-root',type=Path)
     parser.add_argument('--directory',type=Path,required=True)
     parser.add_argument('--compiler',type=Path,required=True)
     parser.add_argument('--cc',required=True)
@@ -176,7 +198,8 @@ def main():
     parser.add_argument('--session',type=int,choices=(1,2),required=True)
     parser.add_argument('--output',type=Path,required=True)
     args=parser.parse_args()
-    result=audit(args.directory.resolve(),args.compiler.resolve(),args.cc,args.source,args.machine,args.session)
+    result=audit(args.directory.resolve(),args.compiler.resolve(),args.cc,args.source,args.machine,args.session,args.comparison,
+        args.reference_root.resolve() if args.reference_root is not None else None)
     args.output.write_text(json.dumps(result,indent=2)+'\n')
     print('Complete commands, sources, samples, native images and storage observations pass audit.')
 

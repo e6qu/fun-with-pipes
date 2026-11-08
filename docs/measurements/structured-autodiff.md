@@ -129,7 +129,12 @@ selects a compiler change, not a new public gradient operation. At 129 inputs,
 local neighboring derivatives make 1,284 managed requests; independent derivatives
 make 518. Saved C shows indirect calls to known derivative/edge functions and
 heap `Dual` arguments/results. `opt::specialize_hofs` currently omits `array.map`
-and `array.generate`; use its existing bounded specialization for those callbacks.
+and `array.generate`; use bounded known-function specialization for those callbacks.
+[The first candidate](structured-array-callback-first-2026-11-08/README.md)
+confirmed that the larger neighboring worker exceeds small-function inlining.
+Reuse the existing known-function worker-copy pass without raising that limit;
+for arrays omit only the now-known closed function argument (no construction
+effects or captured owners), preserving every other argument/resource identity.
 
 ### Proof and exclusions
 
@@ -170,6 +175,11 @@ checking and releasing each input/output in the original driver. This reduces
 process-start and short-interval noise exposed by the first study; it is not a
 rerun intended to replace those results. Constant initialization retains its
 normal per-process lifetime. Report per-gradient times and total memory counts.
+Use a rolling result-bit checksum as well as per-coordinate analytic checks;
+require baseline/candidate bit agreement. The original XOR checksum could cancel
+across even repetitions, so it was replaced before this candidate experiment.
+Original method comparisons still have full per-coordinate correctness checks;
+their timing/noise observations are unchanged.
 
 Use two native sessions per architecture, two warmups and 24 rounds. Rotate
 four byte-identified roles (baseline, baseline copy, candidate, candidate copy)

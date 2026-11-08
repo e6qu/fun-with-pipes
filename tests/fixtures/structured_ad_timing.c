@@ -40,7 +40,8 @@ int main(int argc, char **argv) {
     size_t initial = fwp_heap.live;
     size_t retained_after_call = initial;
     /* Structured gradient observer starts here. */
-    uint64_t construction = 0, work = 0, release = 0, checksum = 0;
+    uint64_t construction = 0, work = 0, release = 0;
+    uint64_t checksum = UINT64_C(14695981039346656037);
     uint64_t total_start = gradient_clock();
     for (size_t round = 0; round < repeats; round++) {
         uint64_t start = gradient_clock();
@@ -68,7 +69,7 @@ int main(int argc, char **argv) {
             if (!cursor || OBJ(cursor)->tag != 1 || OBJ(cursor)->n != 2) return 211;
             double value = fwp_f64(OBJ(cursor)->f[0]);
             if (!isfinite(value) || fabs(value - expected[i]) > 1e-10 + 1e-10 * fabs(expected[i])) return 212;
-            checksum ^= OBJ(cursor)->f[0] + round;
+            checksum = (checksum ^ OBJ(cursor)->f[0]) * UINT64_C(1099511628211);
             cursor = OBJ(cursor)->f[1];
         }
         if (cursor) return 211;

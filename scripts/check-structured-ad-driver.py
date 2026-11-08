@@ -54,6 +54,7 @@ def main():
         return binary
 
     saved = {}
+    budget_failures = []
     for family, count, method in (('neighbors', 0, 'reverse'), ('neighbors', 3, 'reverse'),
                                   ('independent', 16, 'tensor'), ('dense', 3, 'forward'),
                                   ('neighbors', 3, 'local'), ('independent', 16, 'local')):
@@ -80,10 +81,11 @@ def main():
             managed, raw = [json.loads(line) for line in result.stderr.splitlines()]
             check_reports(managed, raw['rawDerivativeStorage'], count, case['repeats'], method, workspace)
             if method == 'local':
-                assert managed['requests'] <= case['repeats'] * (2 * count + 2), managed
+                if managed['requests'] > case['repeats'] * (2 * count + 2):
+                    budget_failures.append(dict(case=label,workspace=workspace,counts=managed))
                 assert raw['rawDerivativeStorage']['peakBytes'] == 0
         environment['FWP_AD_WORKSPACE'] = '1'
-        saved[label] = dict(generated=generated, ordinary=source, observed=measured)
+        saved[label] = dict(generated=generated, ordinary=source, observed=measured, checksum=ordinary['checksum'])
         print(label, 'correct output, aliases, managed owners and raw tape release', flush=True)
 
     dense = saved['dense-3-forward']
@@ -101,6 +103,17 @@ def main():
         binary = compile_source(replace_once(source, before, after), label)
         run([binary, 3], label + '-run', status)
         print(label, 'rejected:', status, flush=True)
+
+    # A one-bit result difference is below the numeric tolerance. The rolling
+    # checksum must still distinguish it, even with an even number of repeats.
+    changed = replace_once(dense['ordinary'],
+        '            checksum = (checksum ^ OBJ(cursor)->f[0]) * UINT64_C(1099511628211);',
+        '            OBJ(cursor)->f[0] ^= 1;\n'
+        '            checksum = (checksum ^ OBJ(cursor)->f[0]) * UINT64_C(1099511628211);')
+    binary = compile_source(changed, 'changed-output-bit')
+    result = run([binary, 3], 'changed-output-bit-run', 0)
+    assert json.loads(result.stdout)['checksum'] != dense['checksum']
+    print('changed output bit detected across repeated calls', flush=True)
 
     # One allocated list cell, one added owner, one shared drop and one last-owner
     # destruction. The generated list destructor also visits the Nil tail.
@@ -132,6 +145,7 @@ int main(void) {
         assert (managed == expected) == agrees, (label, managed, expected)
         assert raw['rawDerivativeStorage']['finalBytes'] == 0
         print(label, 'observer agreement:', agrees, flush=True)
+    assert not budget_failures, budget_failures
     print('Six native cases, five rejected runtime faults and three known-work observer controls pass.')
 
 

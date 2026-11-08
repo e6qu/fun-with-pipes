@@ -55,6 +55,7 @@ jobs:
       - name: Numeric parameter proofs and mixed ownership
         run: |
           set -o pipefail
+          cargo test --locked --lib opt::scoped::tests -- --nocapture 2>&1 | tee local-checks/known-functions.log
           cargo test --locked --lib cgen::numeric_parameters::tests -- --nocapture 2>&1 | tee local-checks/numeric-workers.log
           cargo test --locked --test fold_ownership numeric_callback_inputs_preserve_order_shared_lists_and_mixed_owners -- --exact --nocapture 2>&1 | tee local-checks/mixed-ownership.log
       - name: Interpreter and production native semantics

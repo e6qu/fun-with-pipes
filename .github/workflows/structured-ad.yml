@@ -2,6 +2,9 @@ name: Structured gradient method comparison
 on:
   workflow_call:
     inputs:
+      comparison:
+        type: string
+        required: true
       evidence_run:
         type: string
         required: true
@@ -66,6 +69,13 @@ jobs:
               'scripts/test-structured-ad-costs.py', '.github/workflows/local-derivatives.yml'], check=True)
           PY
           python3 scripts/test-structured-ad-costs.py
+      - name: Build the frozen comparison compiler from source
+        if: inputs.comparison == 'callbacks'
+        run: |
+          set -o pipefail
+          git worktree add --detach baseline 04ddc0ac5d296ec895364236c4120341d7328e41
+          cargo build --locked --manifest-path baseline/Cargo.toml --bin fwp 2>&1 | tee structured-safety/baseline-build.log
+          git -C baseline rev-parse HEAD > structured-safety/baseline-source.txt
       - name: Build the current source compiler
         run: |
           set -o pipefail
@@ -74,28 +84,36 @@ jobs:
       - name: Measure complete gradients and separate storage costs
         run: |
           ulimit -s 65536
-          python3 scripts/measure-structured-ad.py \
+          options=()
+          if [[ '${{ inputs.comparison }}' == callbacks ]]; then options=(--reference-root "$PWD/baseline"); fi
+          python3 scripts/measure-structured-ad.py --comparison '${{ inputs.comparison }}' "${options[@]}" \
             --compiler target/debug/fwp --cc gcc --time /usr/bin/time \
             --c-arch ${{ runner.arch == 'ARM64' && 'armv8-a' || 'x86-64' }} \
             --session ${{ matrix.session }} --output structured-costs
       - name: Audit every source, command, observation and native image
-        run: >-
-          python3 scripts/audit-structured-ad.py
-          --directory structured-costs --compiler target/debug/fwp --cc gcc
-          --source "$GITHUB_SHA"
-          --machine ${{ runner.arch == 'ARM64' && 'aarch64' || 'x86_64' }}
-          --session ${{ matrix.session }} --output structured-costs/audit.json
+        run: |
+          options=()
+          if [[ '${{ inputs.comparison }}' == callbacks ]]; then options=(--reference-root "$PWD/baseline"); fi
+          python3 scripts/audit-structured-ad.py \
+            --comparison '${{ inputs.comparison }}' "${options[@]}" \
+            --directory structured-costs --compiler target/debug/fwp --cc gcc \
+            --source "$GITHUB_SHA" \
+            --machine ${{ runner.arch == 'ARM64' && 'aarch64' || 'x86_64' }} \
+            --session ${{ matrix.session }} --output structured-costs/audit.json
       - name: Verify rejection of incomplete or changed evidence
-        run: >-
-          python3 scripts/test-structured-ad-audit.py
-          --directory structured-costs --compiler target/debug/fwp --cc gcc
-          --source "$GITHUB_SHA"
-          --machine ${{ runner.arch == 'ARM64' && 'aarch64' || 'x86_64' }}
-          --session ${{ matrix.session }} --output structured-costs/audit-controls.json
+        run: |
+          options=()
+          if [[ '${{ inputs.comparison }}' == callbacks ]]; then options=(--reference-root "$PWD/baseline"); fi
+          python3 scripts/test-structured-ad-audit.py \
+            --comparison '${{ inputs.comparison }}' "${options[@]}" \
+            --directory structured-costs --compiler target/debug/fwp --cc gcc \
+            --source "$GITHUB_SHA" \
+            --machine ${{ runner.arch == 'ARM64' && 'aarch64' || 'x86_64' }} \
+            --session ${{ matrix.session }} --output structured-costs/audit-controls.json
       - uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: structured-ad-${{ matrix.runner }}-${{ matrix.session }}
+          name: structured-ad-${{ inputs.comparison }}-${{ matrix.runner }}-${{ matrix.session }}
           path: |
             structured-safety/
             structured-costs/

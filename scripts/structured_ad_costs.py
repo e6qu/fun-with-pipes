@@ -19,6 +19,23 @@ def cases():
                        repeats=32 if count <= 3 else 1, methods=METHODS[family])
 
 
+REFERENCE_SOURCE = '04ddc0ac5d296ec895364236c4120341d7328e41'
+
+
+def callback_cases():
+    for family, method, counts in (
+        ('neighbors', 'local', (0, 1, 3, 33, 129)),
+        ('independent', 'local', (0, 1, 16, 129)),
+        ('neighbors', 'reverse', (129,)),
+        ('independent', 'reverse', (129,)),
+        ('dense', 'reverse', (9, 33)),
+        ('dense', 'forward', (33,)),
+    ):
+        for count in counts:
+            yield dict(name=f'{family}-{count}-{method}', family=family, count=count,
+                repeats=256, method=method, methods=('baseline', 'candidate'))
+
+
 def inputs(family, count):
     if family == 'neighbors':
         return [-1.2 if i % 2 == 0 else 1.0 for i in range(count)]
