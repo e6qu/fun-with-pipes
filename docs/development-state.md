@@ -1,9 +1,12 @@
 # Current work
 
-**Next:** audit the final production/docs runs started by this report publication
-on [PR #272](https://github.com/e6qu/fun-with-pipes/pull/272), then dispatch the
-complete-log audit. Find their IDs from the PR's current head; the measured
-compiler source is `4a32c102f74f738433c1d55969936b023a5510f0`.
+**Next:** audit final production `42516732838` and docs `42516732902` on
+[PR #272](https://github.com/e6qu/fun-with-pipes/pull/272), then dispatch the
+complete-log audit. Final head: `8e7cdb94337c6fdac5656dfcbdab768d4a36e985`;
+measured compiler source: `4a32c102f74f738433c1d55969936b023a5510f0`.
+At 20:13 UTC, docs and C/Rust benchmarks pass. Five production jobs are running;
+three macOS jobs remain queued. No failing step is reported. This receipt belongs
+to the next branch; do not push it onto the final PR head and restart verification.
 Do not merge before all nine production jobs, docs and the complete-log audit
 pass for the final commit. Preserve that final head while checks run.
 The report was verified on `structured-autodiff-report-review` before publication;
@@ -15,8 +18,8 @@ that temporary verification branch has no separate PR.
 |---|---|---|---|
 | 1 | In progress | #270 docs and fresh F64 stores | Original AMD timing acceptance remains open. |
 | 2 | In progress | #271 captured maps and empty-owner transfer | Noisy timing acceptance remains open. |
-| 3 | In progress | #272 known array callbacks; focused safety and four measurement audits pass | Publish reports; final platform/docs/audit gates; retain AMD timing misses. |
-| 4 | Pending | Comparison scope in PLAN.md | Swift/C/Rust buffers, returned functions, weak subscriptions and parser workspaces. |
+| 3 | In progress | #272 implementation/reports; focused safety, four measurement audits and final docs/bench jobs pass | Remaining final platform/audit gates; retain AMD timing misses. |
+| 4 | Pending | [Concrete comparison scope](measurements/ownership-peers.md); unverified Swift buffer fixture | Complete and verify Swift/C/Rust buffers, returned functions, weak subscriptions and parser workspaces. |
 | 5 | Pending | Existing tools and correctness tests | Three application paths, compiler phase/scaling costs and sustained-load measurements. |
 
 The local-pair gradient remains experimental. Independent loss uses existing
@@ -25,7 +28,9 @@ rerun unchanged timing sessions to obtain qualification.
 
 ## Source and worktree
 
-Branch `structured-autodiff-comparison`, worktree `.worktrees/recording-capacity-gate`.
+PR branch `structured-autodiff-comparison` remains at final head `8e7cdb943`.
+The same worktree `.worktrees/recording-capacity-gate` now has local branch
+`ownership-peer-comparisons`, based on that head. No second PR is open.
 Preserve unrelated root-worktree changes. Verified base #271 merge:
 `b76306b20a1d7727917ef6184c9a8716967ceb89`, same tree as its tested head.
 [Delivery receipt](measurements/captured-map-delivery-2026-11-08/README.md)
@@ -71,7 +76,8 @@ was also fixed so even repeat counts cannot cancel an altered result.
 ## Checks and active jobs
 
 Focused run `42508330680`, source
-`e085e2306d3a938e7253d2f9f3586252e54057eb`, differs from PR head only in handoff.
+`e085e2306d3a938e7253d2f9f3586252e54057eb`, has the same compiler implementation;
+later changes add documentation, retained reports and their documentation audit.
 All three jobs pass: AMD GCC `128815743055`, ARM GCC `128815743093`, macOS Clang
 `128815743162`. Eight specialization and eleven numeric-proof tests, mixed owners,
 32 exact gradient outputs, callback order, unwinding, nested AD, F128, allocation
@@ -87,7 +93,10 @@ checks while disk was low. No local whole-archive digest check is claimed.
 Superseded production `42508955007`: benchmark `128817627716` and Windows AMD64
 `128817627957` pass. Cancellation was requested for the seven unfinished jobs
 when the complete report was ready, freeing runners for the final commit.
-Review their completed targets for unexpected diagnostics once logs are available.
+All five interrupted running-job logs are now reviewed: cancellation and missing
+artifacts from unexecuted steps are the only error/warning diagnostics; no test
+failure or compiler warning was found. The two ARM macOS jobs never started.
+Logs: `/tmp/fwp-pr272-old-{linux-arm,linux-amd,mac-amd,mac-amd-ownership,windows-arm}.log`.
 Docs `42508954924`, job
 `128817627196`, pass. Reviewed docs diagnostics are deliberate negative controls;
 Windows panic messages are named lifetime-test controls. Local logs:
@@ -103,10 +112,29 @@ It checks all retained measurements, tutorials, immutable references and evidenc
 controls. Run `42515982996` was cancelled while queued after a renamed benchmark
 heading needed its incoming link updated. Final publication adds only the
 remaining-container explanation, service-load plan details and this receipt.
+Complete passing log reviewed: `/tmp/fwp-pr272-report-docs-pass.log`; only named
+negative-control failures occur. Final docs job: `128841273815`.
+Final docs and benchmark `128841273778` logs are reviewed: only expected runner
+rejection controls, no unexpected diagnostic. Logs:
+`/tmp/fwp-pr272-final-{docs,bench}.log`. Full artifact-log audit remains pending.
+
+## Next-branch preparation
+
+Milestone 4 has a [concrete scope](measurements/ownership-peers.md). Prepared,
+not yet tested or published: native Swift Array peer, common peer result/error
+checks with explicit language selection, and `ownership-peer-checks` in
+`numerics.yml`. It runs C/Rust O1/O2 and Swift Onone/O on native Linux ARM64/AMD64
+without rebuilding fwp. The existing C/Rust workflow caller now selects its
+languages explicitly. No peer timing has been collected or acceptance declared.
+Swift uses external input/result barriers; matched timing peers must all use
+the same barriers before ratios are meaningful. Remaining work includes returned
+buffers, scalar-closure allocation attribution, weak registrations and parser peaks.
+After #272's verified merge, carry this branch onto the actual merge and bundle
+the remaining comparison work into one substantial PR.
 
 ## Local limits and resume
 
-Free disk is about 15 GiB, below the required 64 GiB. Local validation, builds
+Free disk is about 14 GiB, below the required 64 GiB. Local validation, builds
 and large downloads remain paused. Do not raise or bypass the guard. Continue
 source/docs edits, small report inspection and remote verification. Use
 `python3 scripts/local-guard.py COMMAND...` when the reserve is restored.
