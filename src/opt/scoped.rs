@@ -459,12 +459,54 @@ mod tests {
 
     #[test]
     fn array_specialization_preserves_remaining_resource_parameter_identity() {
-        let mut program = array_program("array.generate");
-        program.funcs[1].body = Body::Expr(Expr::ResourceRegion {
-            parameters: vec![0, 1],
-            bindings: vec![],
-            body: Box::new(Expr::Apply(Box::new(Expr::Local(0)), vec![Expr::Local(1)])),
-        });
+        let integer = MT::con("std::I64");
+        let file = MT::con("std::File");
+        let input = MT::Con("std::Array".into(), vec![file.clone()]);
+        let output = MT::Con("std::Array".into(), vec![integer.clone()]);
+        let objective = function(
+            "objective",
+            vec![file.clone()],
+            integer.clone(),
+            Body::Prim("test.file".into()),
+        );
+        let worker = function(
+            "worker",
+            vec![objective.ty.clone(), file],
+            integer,
+            Body::Expr(Expr::ResourceRegion {
+                parameters: vec![0, 1],
+                bindings: vec![],
+                body: Box::new(Expr::Apply(Box::new(Expr::Local(0)), vec![Expr::Local(1)])),
+            }),
+        );
+        let map = function(
+            "map",
+            vec![objective.ty.clone(), input.clone()],
+            output.clone(),
+            Body::Prim("array.map".into()),
+        );
+        let mut program = Program {
+            funcs: vec![
+                objective,
+                worker,
+                map,
+                function(
+                    "caller",
+                    vec![],
+                    output,
+                    Body::Expr(Expr::Call(
+                        2,
+                        vec![
+                            Expr::Apply(Box::new(Expr::Func(1)), vec![Expr::Func(0)]),
+                            Expr::Call(4, vec![]),
+                        ],
+                    )),
+                ),
+                function("input", vec![], input, Body::Prim("test.input".into())),
+            ],
+            ..Program::default()
+        };
+        crate::ir::check_locals(&program).unwrap();
         specialize(&mut program);
         assert_eq!(program.funcs.len(), 6);
         let Body::Expr(Expr::ResourceRegion {

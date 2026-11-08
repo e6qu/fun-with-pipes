@@ -160,7 +160,10 @@ and wrong-specialization controls. Verify generated C and real native images;
 counts alone do not prove dispatch removal or speed.
 
 Use baseline `04ddc0ac5d296ec895364236c4120341d7328e41` and candidate compilers built
-from source on each measuring runner, with the original strict settings. Freeze
+from source on each measuring runner, with the original strict settings. The
+`roadmap/structured-gradient-baseline-2026-11-08` tag preserves that source;
+`roadmap/structured-gradient-acceptance-2026-11-08` preserves the acceptance
+contract committed before implementation. Freeze
 this **new paired experiment** separately from the original method comparison:
 
 | Role | Complete gradient cases |

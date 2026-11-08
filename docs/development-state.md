@@ -1,9 +1,10 @@
 # Current work
 
-**Next:** run and audit the expanded three-host focused checks for known array
-callback specialization. Repair every failure together, then run the frozen
-candidate/baseline comparison. Keep implementation, measurements and tutorials
-in one substantial normal PR; no PR is open yet.
+**Next:** publish the corrected resource-owner fixture and complete all focused
+native checks before the frozen candidate/baseline comparison. The compiler
+repair is `f243db4bba63fdeb41f38d4a42d73664e6e69c59`; its test fixture failed on
+all three hosts. Keep implementation, measurements and tutorials in one
+substantial normal PR; no PR is open yet.
 
 ## Roadmap status
 
@@ -46,7 +47,10 @@ All four sessions and their audits pass. Original timing qualifications remain
 mixed; [retained reports and archives](measurements/structured-gradient-methods-2026-11-08/README.md)
 record every outcome. Selected change and new paired acceptance are frozen in
 [the contract](measurements/structured-autodiff.md#selected-change-known-array-callbacks),
-before compiler edits. No new public gradient operation is planned.
+before compiler edits. Published tags
+`roadmap/structured-gradient-baseline-2026-11-08` and
+`roadmap/structured-gradient-acceptance-2026-11-08` preserve both sources after
+squash merge. No new public gradient operation is planned.
 
 - Thirty-two exact results now cover empty/singleton values, repeated tensor leaves,
   dense matrices, two neighboring formulas and unchanged caller values.
@@ -84,7 +88,7 @@ only elementwise objectives; all repeated-leaf contributions must be combined.
 Independent losses already use `array.map (derivative loss)`. The local pair
 helper remains experimental until correctness, lifetime and benefit are verified.
 
-## Candidate implementation and current failure
+## Candidate implementation and validation
 
 Acceptance was frozen in `412b50b52`. First candidate
 `b0a2becabf7acc474a410002df6a8f88d2c1ddb4` adds array primitives to small-callback
@@ -93,18 +97,28 @@ neighbor-local `n=3` makes 768 requests over 32 calls; limit 256. Final storage
 is zero. Outputs, order, unknown callbacks, unwinding, F128 and nested AD pass.
 All completed tests and diagnostics were reviewed. [Logs/source evidence](measurements/structured-array-callback-first-2026-11-08/README.md).
 
-Uncommitted repair extends `opt::scoped`'s existing known-function worker copy to
+Published repair `f243db4bb` extends `opt::scoped`'s existing known-function worker copy to
 arrays. The 40-node inlining limit prevented the first candidate from exposing
 the known edge inside the larger coordinate worker. The repair substitutes that
 closed function and omits only its effect-free, owner-free argument for arrays;
 other arguments/resource identities remain in place. The first candidate's
 forwarding-only array wrappers are removed; native array lowering already calls
 these workers directly. Existing body/expansion budgets stay unchanged. New proof tests cover ordering, reuse and exclusions.
-Do not claim repaired native behavior until the next focused run passes.
+Focused run `42503655664`: ARM GCC `128801543946`, AMD GCC `128801544219`,
+macOS Clang `128801544211` all fail one new proof fixture: it incorrectly marks
+an I64 parameter as a resource owner. All seven other proof tests pass; later
+native targets were skipped. Complete logs were reviewed. The corrected fixture
+uses a real File parameter and checks valid IR before and after specialization.
+The focused workflow now completes independent targets after an earlier failure,
+retaining a failing overall result. No safety or allocation limit is relaxed.
+Docs `42503658149` / `128801548679` pass; reviewed diagnostics are deliberate
+negative controls. Local Rust formatting, workflow YAML and 395 Markdown links
+pass. Native repair remains unverified until the next focused run passes.
 
 The paired measurement runner/auditor now implements the frozen 14-case,
 256-gradient experiment and builds baseline/current compilers from source.
 Seven analytic/statistical controls and Python/YAML syntax pass locally.
+Repaired-source logs: `/tmp/fwp-array-callback-repair-{arm,amd,mac,docs}.log`.
 The XOR result checksum could cancel across even repeats; it is replaced with
 a rolling bit checksum and a native one-bit-change rejection control (2.44 s,
 1.12 CPU). Full per-coordinate checks in the original study remain valid.
