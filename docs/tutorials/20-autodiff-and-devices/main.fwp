@@ -13,6 +13,12 @@ descend = fn values ->
     let adjustment = grad rosenbrock values | map (mul 0.001)
     in values | zip-with sub adjustment
 
+loss : t -> t where Ring[t], FromFloat[t], Dup[t]
+loss = fn value -> let residual = value * value - 1.0 in residual * residual
+
+independent : List[t] -> t where Ring[t], FromFloat[t], Dup[t]
+independent = map loss | sum
+
 soft : t -> t where Field[t], Floating[t], FromFloat[t]
 soft = exp | add 1.0 | ln
 
@@ -20,6 +26,21 @@ xs : Vector[F64, _]
 xs = 1000 | range 0 | map (int.to-float | mul 0.01 | sub 5.0) | vector.from-list
 
 main = [
+    [-2.0, 0.0, 2.0] | grad independent | echo,
+    [-2.0, 0.0, 2.0] | gradient independent | echo,
+    [-2.0, 0.0, 2.0]
+    | array.from-list
+    | array.map (derivative loss)
+    | array.to-list
+    | echo,
+    [-2.0, 0.0, 2.0]
+    | vector.from-list
+    | tensor.lazy
+    | loss
+    | tensor.grad-on Cpu
+    | map vector.to-list
+    | fold (zip-with add) [0.0, 0.0, 0.0]
+    | echo,
     [-1.2, 1.0, 0.5] | grad rosenbrock | show | print,
     [-1.2, 1.0, 0.5] | gradient rosenbrock | show | print,
     [-1.2, 1.0, 0.5]

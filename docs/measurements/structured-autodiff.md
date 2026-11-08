@@ -122,6 +122,78 @@ architectures, no qualified guard regression above 2%, and explicit memory and
 compiler-cost tradeoffs. Misses remain misses. A smaller executable or fewer
 requests alone cannot satisfy the timing rule.
 
+## Selected change: known array callbacks
+
+The [four-session diagnosis](structured-gradient-methods-2026-11-08/README.md)
+selects a compiler change, not a new public gradient operation. At 129 inputs,
+local neighboring derivatives make 1,284 managed requests; independent derivatives
+make 518. Saved C shows indirect calls to known derivative/edge functions and
+heap `Dual` arguments/results. `opt::specialize_hofs` currently omits `array.map`
+and `array.generate`; use its existing bounded specialization for those callbacks.
+
+### Proof and exclusions
+
+- Specialize only an already-known partial callback or known returned function;
+  dynamic functions remain ordinary calls. Do not guess a callback's identity.
+- `array.map` takes the callback first. `array.generate` takes its count first:
+  preserve that count's effects/trap before any eager capture computation.
+- Bind captured computations once, in original order. Retain resource-frame,
+  observable-owner and earlier-argument checks. Do not turn construction effects
+  into per-element work or remove empty-input construction effects.
+- Keep current body, expansion and recursion budgets. No new global analysis,
+  broad inlining-budget increase, numeric reassociation or unchecked arithmetic.
+- Use existing ownership/lowering after specialization; preserve aliases, partial
+  output cleanup, traps/cancellation, ordinary generic/nested/F128 behavior.
+- No syntax, public API, tracing, permanent retention or compatibility adapter.
+
+### Candidate checks and acceptance
+
+Before measuring, pass focused interpreter/GCC/Clang checks for the two diagnosed
+objectives, a second neighboring formula, scalar captures and unknown callbacks.
+Add eager-capture/count order, empty inputs, shared inputs, trap/resource cleanup
+and wrong-specialization controls. Verify generated C and real native images;
+counts alone do not prove dispatch removal or speed.
+
+Use baseline `04ddc0ac5d296ec895364236c4120341d7328e41` and candidate compilers built
+from source on each measuring runner, with the original strict settings. Freeze
+this **new paired experiment** separately from the original method comparison:
+
+| Role | Complete gradient cases |
+|---|---|
+| Primary affected | Neighbor local 129; independent local 129 |
+| Additional affected | Neighbor local 33; independent local 16 |
+| Boundaries | Neighbor local 0, 1, 3; independent local 0, 1 |
+| Unchanged-method guards | Neighbor reverse 129; independent reverse 129; dense reverse 9, 33; dense forward 33 |
+
+There are 14 cases. Each process computes 256 complete gradients, constructing,
+checking and releasing each input/output in the original driver. This reduces
+process-start and short-interval noise exposed by the first study; it is not a
+rerun intended to replace those results. Constant initialization retains its
+normal per-process lifetime. Report per-gradient times and total memory counts.
+
+Use two native sessions per architecture, two warmups and 24 rounds. Rotate
+four byte-identified roles (baseline, baseline copy, candidate, candidate copy)
+by round; pin one CPU and retain the CPU model. Pair candidate/baseline within
+each round, using the original bootstrap and 2% identical-copy rules. Report
+construction, computation, release and process time separately. No pooling
+across CPU models and no unchanged reruns to obtain qualification.
+
+Acceptance requires:
+
+- At least 10% less computation for **both primary cases**, with the paired 95%
+  interval's upper bound at most 0.90, in both sessions on both architectures.
+- No qualified guard regression above 2%. Retain every inconclusive observation.
+- At most `2*n + 2` managed requests per local-gradient call for positive sizes,
+  including the driver's input/output lists and array containers; zero temporary
+  `Dual` heap allocations on the two specialized callback paths. No managed peak
+  increase or unreleased owners/raw buffers; verify workspace on/off.
+- Report candidate/baseline compiler time/RSS, generated C/image size, main and
+  surviving entry stack frames. Explain any increase; do not equate file size
+  with runtime speed. Check specialization stays within existing budgets.
+
+Keep any failed criterion explicitly open. Complete the semantic and safety fix
+before deciding how measured timing limits affect milestone acceptance.
+
 Finish the same PR with implementation, examples/tutorials, retained observations,
 all nine final-head production jobs, documentation and a complete evidence audit.
 Peer-language ownership comparisons follow in [milestone 4](../../PLAN.md#milestones).

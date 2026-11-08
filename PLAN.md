@@ -75,9 +75,11 @@ Milestone 3 now compares complete gradients for three functions:
 
 [The comparison contract](docs/measurements/structured-autodiff.md) defines the
 formulas, method limits, input/output boundaries, correctness and measurement
-requirements. Validate the examples and freeze exact observations before timing.
-Select a reusable compiler/library improvement from the results; freeze its
-acceptance before implementing it. A public operation needs more than one useful
+requirements. The [four-session diagnosis](docs/measurements/structured-gradient-methods-2026-11-08/README.md)
+now identifies indirect array callbacks and temporary derivative records as a
+shared cost in independent and neighboring objectives. Extend existing bounded
+callback specialization to `array.map` and `array.generate`, under the
+[frozen candidate acceptance](docs/measurements/structured-autodiff.md#selected-change-known-array-callbacks). A public operation needs more than one useful
 formula and a demonstrated advantage. Preserve general `grad`, nested AD and F128.
 Bundle the improvement, measurements, tutorials and incidental fixes in one PR.
 Use focused checks while working, then one complete final-head matrix and audit.

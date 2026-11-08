@@ -1,0 +1,1150 @@
+{
+  "neighbors-0": {
+    "medianNsPerGradient": {
+      "reverse": {
+        "constructionNs": 26.296875,
+        "computationNs": 563.296875,
+        "releaseNs": 25.96875,
+        "processNs": 38495.0625
+      },
+      "reverse-copy": {
+        "constructionNs": 26.109375,
+        "computationNs": 540.0,
+        "releaseNs": 25.96875,
+        "processNs": 37866.515625
+      },
+      "forward": {
+        "constructionNs": 25.96875,
+        "computationNs": 162.15625,
+        "releaseNs": 25.828125,
+        "processNs": 39235.15625
+      },
+      "forward-copy": {
+        "constructionNs": 26.0,
+        "computationNs": 173.34375,
+        "releaseNs": 25.859375,
+        "processNs": 38864.375
+      },
+      "local": {
+        "constructionNs": 25.65625,
+        "computationNs": 189.640625,
+        "releaseNs": 25.953125,
+        "processNs": 39020.765625
+      },
+      "local-copy": {
+        "constructionNs": 25.984375,
+        "computationNs": 207.03125,
+        "releaseNs": 25.984375,
+        "processNs": 38571.890625
+      }
+    },
+    "identicalCopies": {
+      "reverse": {
+        "ratio": 1.0130615414001727,
+        "qualified": true
+      },
+      "forward": {
+        "ratio": 0.9999227187772737,
+        "qualified": true
+      },
+      "local": {
+        "ratio": 1.0081654254357693,
+        "qualified": true
+      }
+    },
+    "vsReverse": {
+      "forward": {
+        "reference": "reverse",
+        "ratio": 0.3220274294943902,
+        "interval95": [
+          0.3001768693412865,
+          0.3477655677655678
+        ],
+        "copyQualified": true,
+        "direction": "faster"
+      },
+      "local": {
+        "reference": "reverse",
+        "ratio": 0.3660203980235275,
+        "interval95": [
+          0.33587042961740254,
+          0.3933378297988996
+        ],
+        "copyQualified": true,
+        "direction": "faster"
+      }
+    },
+    "binaryHashes": {
+      "reverse": "0a7d7489d1ad69c2384b5e536b4e82aed3f0bd2273c9b74570bb67d4368b9e02",
+      "reverse-copy": "0a7d7489d1ad69c2384b5e536b4e82aed3f0bd2273c9b74570bb67d4368b9e02",
+      "forward": "ebbc37a520791d34ebb3641918600bbb6d22cf7250c65a3f1c04bb7087b4325a",
+      "forward-copy": "ebbc37a520791d34ebb3641918600bbb6d22cf7250c65a3f1c04bb7087b4325a",
+      "local": "fba9ed049ef95710a95c7b8831100778b05bdc16551333a895eadf17afb60e6a",
+      "local-copy": "fba9ed049ef95710a95c7b8831100778b05bdc16551333a895eadf17afb60e6a"
+    }
+  },
+  "neighbors-1": {
+    "medianNsPerGradient": {
+      "reverse": {
+        "constructionNs": 110.9375,
+        "computationNs": 837.265625,
+        "releaseNs": 45.234375,
+        "processNs": 38993.546875
+      },
+      "reverse-copy": {
+        "constructionNs": 110.78125,
+        "computationNs": 729.078125,
+        "releaseNs": 41.171875,
+        "processNs": 38852.9375
+      },
+      "forward": {
+        "constructionNs": 103.328125,
+        "computationNs": 277.921875,
+        "releaseNs": 33.96875,
+        "processNs": 37403.25
+      },
+      "forward-copy": {
+        "constructionNs": 104.390625,
+        "computationNs": 307.484375,
+        "releaseNs": 37.96875,
+        "processNs": 37032.09375
+      },
+      "local": {
+        "constructionNs": 112.015625,
+        "computationNs": 202.03125,
+        "releaseNs": 37.90625,
+        "processNs": 36831.484375
+      },
+      "local-copy": {
+        "constructionNs": 102.859375,
+        "computationNs": 179.765625,
+        "releaseNs": 35.5,
+        "processNs": 37148.28125
+      }
+    },
+    "identicalCopies": {
+      "reverse": {
+        "ratio": 0.893187622445149,
+        "qualified": false
+      },
+      "forward": {
+        "ratio": 1.0648686029562338,
+        "qualified": false
+      },
+      "local": {
+        "ratio": 0.9691938906791073,
+        "qualified": false
+      }
+    },
+    "vsReverse": {
+      "forward": {
+        "reference": "reverse",
+        "ratio": 0.37494781368143015,
+        "interval95": [
+          0.33295337968767813,
+          0.4330784422950322
+        ],
+        "copyQualified": false,
+        "direction": "inconclusive"
+      },
+      "local": {
+        "reference": "reverse",
+        "ratio": 0.2738432422972741,
+        "interval95": [
+          0.21370824624364082,
+          0.3135498975709687
+        ],
+        "copyQualified": false,
+        "direction": "inconclusive"
+      }
+    },
+    "binaryHashes": {
+      "reverse": "10d411ec10a82aef5d162f5c70dc3f3fcd6111f9c79e3b5e408d53c066d18f1e",
+      "reverse-copy": "10d411ec10a82aef5d162f5c70dc3f3fcd6111f9c79e3b5e408d53c066d18f1e",
+      "forward": "be7462c3ec432e233cce58ce0a9c4cdd1ef96737a7e7c4f829fb80b0225be244",
+      "forward-copy": "be7462c3ec432e233cce58ce0a9c4cdd1ef96737a7e7c4f829fb80b0225be244",
+      "local": "7bd170fc62487eb316d491919ea30982b3c5bd2920bcfc59d2c4c318a1d01908",
+      "local-copy": "7bd170fc62487eb316d491919ea30982b3c5bd2920bcfc59d2c4c318a1d01908"
+    }
+  },
+  "neighbors-3": {
+    "medianNsPerGradient": {
+      "reverse": {
+        "constructionNs": 129.1875,
+        "computationNs": 1372.0625,
+        "releaseNs": 74.765625,
+        "processNs": 39917.6875
+      },
+      "reverse-copy": {
+        "constructionNs": 130.96875,
+        "computationNs": 1339.0625,
+        "releaseNs": 74.09375,
+        "processNs": 40816.265625
+      },
+      "forward": {
+        "constructionNs": 117.21875,
+        "computationNs": 405.25,
+        "releaseNs": 58.078125,
+        "processNs": 37409.1875
+      },
+      "forward-copy": {
+        "constructionNs": 125.625,
+        "computationNs": 378.640625,
+        "releaseNs": 73.6875,
+        "processNs": 38390.9375
+      },
+      "local": {
+        "constructionNs": 119.421875,
+        "computationNs": 565.328125,
+        "releaseNs": 64.84375,
+        "processNs": 38125.921875
+      },
+      "local-copy": {
+        "constructionNs": 119.890625,
+        "computationNs": 528.75,
+        "releaseNs": 62.90625,
+        "processNs": 37962.40625
+      }
+    },
+    "identicalCopies": {
+      "reverse": {
+        "ratio": 0.9878171857797577,
+        "qualified": true
+      },
+      "forward": {
+        "ratio": 1.034470004780698,
+        "qualified": false
+      },
+      "local": {
+        "ratio": 0.9938210358050981,
+        "qualified": true
+      }
+    },
+    "vsReverse": {
+      "forward": {
+        "reference": "reverse",
+        "ratio": 0.28616341988433885,
+        "interval95": [
+          0.24698802351854698,
+          0.30173644218516
+        ],
+        "copyQualified": false,
+        "direction": "inconclusive"
+      },
+      "local": {
+        "reference": "reverse",
+        "ratio": 0.39887396868138303,
+        "interval95": [
+          0.33903397851616296,
+          0.41875834753373553
+        ],
+        "copyQualified": true,
+        "direction": "faster"
+      }
+    },
+    "binaryHashes": {
+      "reverse": "0a5954acb12c1cb12bdfa0ef9ed38f34dbabf7129831d6e405ed9546569c64aa",
+      "reverse-copy": "0a5954acb12c1cb12bdfa0ef9ed38f34dbabf7129831d6e405ed9546569c64aa",
+      "forward": "2553ceb4f67e152657871ab3681b4a3349a24e041f9b7e9a4e11a9078b1e9366",
+      "forward-copy": "2553ceb4f67e152657871ab3681b4a3349a24e041f9b7e9a4e11a9078b1e9366",
+      "local": "e9a5eb0389741f3577b6f18bd35ee04628cd7a214387825b8198832febcae63e",
+      "local-copy": "e9a5eb0389741f3577b6f18bd35ee04628cd7a214387825b8198832febcae63e"
+    }
+  },
+  "neighbors-33": {
+    "medianNsPerGradient": {
+      "reverse": {
+        "constructionNs": 2478.5,
+        "computationNs": 21126.0,
+        "releaseNs": 646.0,
+        "processNs": 1216150.5
+      },
+      "reverse-copy": {
+        "constructionNs": 2483.0,
+        "computationNs": 19238.0,
+        "releaseNs": 501.0,
+        "processNs": 1215737.5
+      },
+      "forward": {
+        "constructionNs": 2544.0,
+        "computationNs": 7571.0,
+        "releaseNs": 451.0,
+        "processNs": 1210610.5
+      },
+      "forward-copy": {
+        "constructionNs": 2634.0,
+        "computationNs": 7475.5,
+        "releaseNs": 460.0,
+        "processNs": 1209991.5
+      },
+      "local": {
+        "constructionNs": 2663.5,
+        "computationNs": 6344.0,
+        "releaseNs": 491.0,
+        "processNs": 1225692.0
+      },
+      "local-copy": {
+        "constructionNs": 2523.0,
+        "computationNs": 6589.5,
+        "releaseNs": 491.0,
+        "processNs": 1219015.0
+      }
+    },
+    "identicalCopies": {
+      "reverse": {
+        "ratio": 0.8849341162906811,
+        "qualified": false
+      },
+      "forward": {
+        "ratio": 0.9812872431817781,
+        "qualified": true
+      },
+      "local": {
+        "ratio": 1.011564568122541,
+        "qualified": true
+      }
+    },
+    "vsReverse": {
+      "forward": {
+        "reference": "reverse",
+        "ratio": 0.39389111385454567,
+        "interval95": [
+          0.35344623120345336,
+          0.41616599910992436
+        ],
+        "copyQualified": false,
+        "direction": "inconclusive"
+      },
+      "local": {
+        "reference": "reverse",
+        "ratio": 0.30598070106051434,
+        "interval95": [
+          0.27939613012970443,
+          0.3334825926340535
+        ],
+        "copyQualified": false,
+        "direction": "inconclusive"
+      }
+    },
+    "binaryHashes": {
+      "reverse": "86b0c697cc0e4ff95fb1c95f9e758470b4b292c953e29fbad4f824a9cd2e97b8",
+      "reverse-copy": "86b0c697cc0e4ff95fb1c95f9e758470b4b292c953e29fbad4f824a9cd2e97b8",
+      "forward": "2f5ab0d910472c0e5d2db0d62aab02afc541223d32426e856ed67f4d4d8a4073",
+      "forward-copy": "2f5ab0d910472c0e5d2db0d62aab02afc541223d32426e856ed67f4d4d8a4073",
+      "local": "58b2a07ceaf0742bb8a1bb44a6fdd080f243c4c9d1aa9cce70f32d07b19aa84d",
+      "local-copy": "58b2a07ceaf0742bb8a1bb44a6fdd080f243c4c9d1aa9cce70f32d07b19aa84d"
+    }
+  },
+  "neighbors-129": {
+    "medianNsPerGradient": {
+      "reverse": {
+        "constructionNs": 4497.0,
+        "computationNs": 63948.5,
+        "releaseNs": 1588.0,
+        "processNs": 1293197.0
+      },
+      "reverse-copy": {
+        "constructionNs": 4421.5,
+        "computationNs": 63152.0,
+        "releaseNs": 1562.0,
+        "processNs": 1338603.0
+      },
+      "forward": {
+        "constructionNs": 4617.0,
+        "computationNs": 99950.5,
+        "releaseNs": 1542.5,
+        "processNs": 1435384.5
+      },
+      "forward-copy": {
+        "constructionNs": 4407.0,
+        "computationNs": 99120.0,
+        "releaseNs": 1522.0,
+        "processNs": 1384445.5
+      },
+      "local": {
+        "constructionNs": 4466.5,
+        "computationNs": 28897.0,
+        "releaseNs": 2319.0,
+        "processNs": 1308562.5
+      },
+      "local-copy": {
+        "constructionNs": 4361.0,
+        "computationNs": 28286.5,
+        "releaseNs": 2288.5,
+        "processNs": 1285716.0
+      }
+    },
+    "identicalCopies": {
+      "reverse": {
+        "ratio": 0.9956825833833376,
+        "qualified": true
+      },
+      "forward": {
+        "ratio": 1.0099515572150175,
+        "qualified": true
+      },
+      "local": {
+        "ratio": 0.9898560500364124,
+        "qualified": true
+      }
+    },
+    "vsReverse": {
+      "forward": {
+        "reference": "reverse",
+        "ratio": 1.5859988620530001,
+        "interval95": [
+          1.5118716946785304,
+          1.6494877273478639
+        ],
+        "copyQualified": true,
+        "direction": "slower"
+      },
+      "local": {
+        "reference": "reverse",
+        "ratio": 0.4325219168227948,
+        "interval95": [
+          0.38295789720967865,
+          0.4786968598465232
+        ],
+        "copyQualified": true,
+        "direction": "faster"
+      }
+    },
+    "binaryHashes": {
+      "reverse": "e5ea54263c0e8c4c8b2a80ac379692b8c66a7d92e8337ce29af49270b5df57af",
+      "reverse-copy": "e5ea54263c0e8c4c8b2a80ac379692b8c66a7d92e8337ce29af49270b5df57af",
+      "forward": "c167cc74ead66a14757d0975333e954836bc4219e24e7f66635f7ad895c57646",
+      "forward-copy": "c167cc74ead66a14757d0975333e954836bc4219e24e7f66635f7ad895c57646",
+      "local": "11883e29e7faceb1f4debccf83419e4069b9ccfebd00d728ab936c8d0d016738",
+      "local-copy": "11883e29e7faceb1f4debccf83419e4069b9ccfebd00d728ab936c8d0d016738"
+    }
+  },
+  "independent-0": {
+    "medianNsPerGradient": {
+      "reverse": {
+        "constructionNs": 26.265625,
+        "computationNs": 670.015625,
+        "releaseNs": 25.515625,
+        "processNs": 41368.765625
+      },
+      "reverse-copy": {
+        "constructionNs": 28.328125,
+        "computationNs": 611.171875,
+        "releaseNs": 26.78125,
+        "processNs": 39800.375
+      },
+      "forward": {
+        "constructionNs": 26.125,
+        "computationNs": 225.453125,
+        "releaseNs": 26.453125,
+        "processNs": 37456.875
+      },
+      "forward-copy": {
+        "constructionNs": 26.453125,
+        "computationNs": 174.3125,
+        "releaseNs": 26.28125,
+        "processNs": 37821.71875
+      },
+      "local": {
+        "constructionNs": 28.5,
+        "computationNs": 195.265625,
+        "releaseNs": 25.953125,
+        "processNs": 37849.25
+      },
+      "local-copy": {
+        "constructionNs": 26.75,
+        "computationNs": 196.515625,
+        "releaseNs": 25.953125,
+        "processNs": 37141.578125
+      },
+      "tensor": {
+        "constructionNs": 26.609375,
+        "computationNs": 11139.796875,
+        "releaseNs": 25.71875,
+        "processNs": 54097.171875
+      },
+      "tensor-copy": {
+        "constructionNs": 27.703125,
+        "computationNs": 11393.671875,
+        "releaseNs": 25.65625,
+        "processNs": 56774.109375
+      }
+    },
+    "identicalCopies": {
+      "reverse": {
+        "ratio": 0.9908795934837799,
+        "qualified": true
+      },
+      "forward": {
+        "ratio": 0.9298775385978706,
+        "qualified": false
+      },
+      "local": {
+        "ratio": 1.0045772935048232,
+        "qualified": true
+      },
+      "tensor": {
+        "ratio": 1.0003133067303969,
+        "qualified": true
+      }
+    },
+    "vsReverse": {
+      "forward": {
+        "reference": "reverse",
+        "ratio": 0.32744221801338325,
+        "interval95": [
+          0.3014093678775757,
+          0.3528681914057653
+        ],
+        "copyQualified": false,
+        "direction": "inconclusive"
+      },
+      "local": {
+        "reference": "reverse",
+        "ratio": 0.3555152389394064,
+        "interval95": [
+          0.2887195400200785,
+          0.3885081841730147
+        ],
+        "copyQualified": true,
+        "direction": "faster"
+      },
+      "tensor": {
+        "reference": "reverse",
+        "ratio": 19.637549884404592,
+        "interval95": [
+          16.506033111963333,
+          22.319657627116417
+        ],
+        "copyQualified": true,
+        "direction": "slower"
+      }
+    },
+    "binaryHashes": {
+      "reverse": "b5eb7a21ed1abde2d3416f29fb0a2306603e3866c68a7e592e5cf27a053452a2",
+      "reverse-copy": "b5eb7a21ed1abde2d3416f29fb0a2306603e3866c68a7e592e5cf27a053452a2",
+      "forward": "d3f95f92ab63ae979d663c884349892a3298b6205e291b3411f5d33e74020ad1",
+      "forward-copy": "d3f95f92ab63ae979d663c884349892a3298b6205e291b3411f5d33e74020ad1",
+      "local": "fedae2b011c740b1faf203e759525c9ff2308f102e589ded5e005505b7207b2d",
+      "local-copy": "fedae2b011c740b1faf203e759525c9ff2308f102e589ded5e005505b7207b2d",
+      "tensor": "99b448311837379c921e2d0159a89f8f78fee25ef3a76f71aa0120a3ac44b85f",
+      "tensor-copy": "99b448311837379c921e2d0159a89f8f78fee25ef3a76f71aa0120a3ac44b85f"
+    }
+  },
+  "independent-1": {
+    "medianNsPerGradient": {
+      "reverse": {
+        "constructionNs": 120.5,
+        "computationNs": 910.078125,
+        "releaseNs": 43.359375,
+        "processNs": 45785.765625
+      },
+      "reverse-copy": {
+        "constructionNs": 121.578125,
+        "computationNs": 923.890625,
+        "releaseNs": 43.6875,
+        "processNs": 40300.71875
+      },
+      "forward": {
+        "constructionNs": 115.625,
+        "computationNs": 418.90625,
+        "releaseNs": 41.78125,
+        "processNs": 38328.0
+      },
+      "forward-copy": {
+        "constructionNs": 129.75,
+        "computationNs": 460.65625,
+        "releaseNs": 42.546875,
+        "processNs": 38108.6875
+      },
+      "local": {
+        "constructionNs": 111.46875,
+        "computationNs": 343.484375,
+        "releaseNs": 42.390625,
+        "processNs": 37130.109375
+      },
+      "local-copy": {
+        "constructionNs": 108.125,
+        "computationNs": 321.28125,
+        "releaseNs": 40.53125,
+        "processNs": 37305.578125
+      },
+      "tensor": {
+        "constructionNs": 125.46875,
+        "computationNs": 12242.3125,
+        "releaseNs": 34.71875,
+        "processNs": 53435.59375
+      },
+      "tensor-copy": {
+        "constructionNs": 118.609375,
+        "computationNs": 11926.9375,
+        "releaseNs": 34.734375,
+        "processNs": 60072.90625
+      }
+    },
+    "identicalCopies": {
+      "reverse": {
+        "ratio": 1.017338884202572,
+        "qualified": true
+      },
+      "forward": {
+        "ratio": 1.062640531916094,
+        "qualified": false
+      },
+      "local": {
+        "ratio": 0.9339011844290313,
+        "qualified": false
+      },
+      "tensor": {
+        "ratio": 1.0023996364006251,
+        "qualified": true
+      }
+    },
+    "vsReverse": {
+      "forward": {
+        "reference": "reverse",
+        "ratio": 0.45801939529608776,
+        "interval95": [
+          0.3853908312665013,
+          0.4829831451322407
+        ],
+        "copyQualified": false,
+        "direction": "inconclusive"
+      },
+      "local": {
+        "reference": "reverse",
+        "ratio": 0.39099303197801943,
+        "interval95": [
+          0.3127797833935018,
+          0.4570932961463896
+        ],
+        "copyQualified": false,
+        "direction": "inconclusive"
+      },
+      "tensor": {
+        "reference": "reverse",
+        "ratio": 14.223775128353118,
+        "interval95": [
+          13.511810126870602,
+          16.09128431176117
+        ],
+        "copyQualified": true,
+        "direction": "slower"
+      }
+    },
+    "binaryHashes": {
+      "reverse": "730d097165fb63c50cf8484f289042616d7c87e46ca0f7ea38839d7d3dcca4e3",
+      "reverse-copy": "730d097165fb63c50cf8484f289042616d7c87e46ca0f7ea38839d7d3dcca4e3",
+      "forward": "c83b7e5182aa2424007344d35297cafd91cc7fee15b5652b2a8b12360bbd8845",
+      "forward-copy": "c83b7e5182aa2424007344d35297cafd91cc7fee15b5652b2a8b12360bbd8845",
+      "local": "f4668507b6f32f947a2d40b2855538e23a963cd8e88d87b76264935f3e82e9f1",
+      "local-copy": "f4668507b6f32f947a2d40b2855538e23a963cd8e88d87b76264935f3e82e9f1",
+      "tensor": "923c0c5549db6c8e9a2c27d2571588d042d077e0f45061622d35e7b41ab1bd88",
+      "tensor-copy": "923c0c5549db6c8e9a2c27d2571588d042d077e0f45061622d35e7b41ab1bd88"
+    }
+  },
+  "independent-16": {
+    "medianNsPerGradient": {
+      "reverse": {
+        "constructionNs": 3009.0,
+        "computationNs": 11647.0,
+        "releaseNs": 355.5,
+        "processNs": 1443676.5
+      },
+      "reverse-copy": {
+        "constructionNs": 2799.0,
+        "computationNs": 12699.0,
+        "releaseNs": 355.5,
+        "processNs": 1246886.5
+      },
+      "forward": {
+        "constructionNs": 2739.0,
+        "computationNs": 13440.0,
+        "releaseNs": 350.5,
+        "processNs": 1214975.5
+      },
+      "forward-copy": {
+        "constructionNs": 2624.0,
+        "computationNs": 13605.0,
+        "releaseNs": 360.5,
+        "processNs": 1187109.5
+      },
+      "local": {
+        "constructionNs": 2629.0,
+        "computationNs": 4761.5,
+        "releaseNs": 350.0,
+        "processNs": 1225167.5
+      },
+      "local-copy": {
+        "constructionNs": 2819.0,
+        "computationNs": 4341.0,
+        "releaseNs": 360.0,
+        "processNs": 1231419.0
+      },
+      "tensor": {
+        "constructionNs": 2874.0,
+        "computationNs": 70182.5,
+        "releaseNs": 265.5,
+        "processNs": 1361779.5
+      },
+      "tensor-copy": {
+        "constructionNs": 2704.0,
+        "computationNs": 67563.5,
+        "releaseNs": 265.5,
+        "processNs": 1377933.5
+      }
+    },
+    "identicalCopies": {
+      "reverse": {
+        "ratio": 1.0470071458428891,
+        "qualified": false
+      },
+      "forward": {
+        "ratio": 0.9594233271146313,
+        "qualified": false
+      },
+      "local": {
+        "ratio": 0.9605401378496021,
+        "qualified": false
+      },
+      "tensor": {
+        "ratio": 0.9679574098027501,
+        "qualified": false
+      }
+    },
+    "vsReverse": {
+      "forward": {
+        "reference": "reverse",
+        "ratio": 1.029981056633039,
+        "interval95": [
+          0.9389915127309036,
+          1.1911182219473972
+        ],
+        "copyQualified": false,
+        "direction": "inconclusive"
+      },
+      "local": {
+        "reference": "reverse",
+        "ratio": 0.38591268469595463,
+        "interval95": [
+          0.34502511677095266,
+          0.47071526875812175
+        ],
+        "copyQualified": false,
+        "direction": "inconclusive"
+      },
+      "tensor": {
+        "reference": "reverse",
+        "ratio": 6.0676236683246625,
+        "interval95": [
+          5.404547858276044,
+          6.733165512901196
+        ],
+        "copyQualified": false,
+        "direction": "inconclusive"
+      }
+    },
+    "binaryHashes": {
+      "reverse": "db38855236d983644faa48b5e632d8a739e95214294a9f8ac17a1a405317ad5a",
+      "reverse-copy": "db38855236d983644faa48b5e632d8a739e95214294a9f8ac17a1a405317ad5a",
+      "forward": "d1b275c8bebf7845d40d08f5b60aa9c569f3ca1aba1edc544303f638d4aa9b6a",
+      "forward-copy": "d1b275c8bebf7845d40d08f5b60aa9c569f3ca1aba1edc544303f638d4aa9b6a",
+      "local": "e1354b3662565fc21d13922c18f668ac2dd7b678a710a5cfeee878b8e000214f",
+      "local-copy": "e1354b3662565fc21d13922c18f668ac2dd7b678a710a5cfeee878b8e000214f",
+      "tensor": "a1f81c03538bdb001a014f1dbb98d2012c0ad589df167c3fe7d820e0b7127101",
+      "tensor-copy": "a1f81c03538bdb001a014f1dbb98d2012c0ad589df167c3fe7d820e0b7127101"
+    }
+  },
+  "independent-129": {
+    "medianNsPerGradient": {
+      "reverse": {
+        "constructionNs": 5512.5,
+        "computationNs": 36699.0,
+        "releaseNs": 2268.5,
+        "processNs": 1516249.0
+      },
+      "reverse-copy": {
+        "constructionNs": 6043.5,
+        "computationNs": 36473.0,
+        "releaseNs": 2508.5,
+        "processNs": 1346118.0
+      },
+      "forward": {
+        "constructionNs": 5809.0,
+        "computationNs": 719691.0,
+        "releaseNs": 2098.0,
+        "processNs": 1915102.0
+      },
+      "forward-copy": {
+        "constructionNs": 5768.5,
+        "computationNs": 718189.0,
+        "releaseNs": 2233.5,
+        "processNs": 1923188.0
+      },
+      "local": {
+        "constructionNs": 5758.5,
+        "computationNs": 18131.5,
+        "releaseNs": 2479.0,
+        "processNs": 1460773.0
+      },
+      "local-copy": {
+        "constructionNs": 5863.5,
+        "computationNs": 17796.0,
+        "releaseNs": 2363.5,
+        "processNs": 1297903.0
+      },
+      "tensor": {
+        "constructionNs": 6014.0,
+        "computationNs": 112579.0,
+        "releaseNs": 2338.5,
+        "processNs": 1459626.0
+      },
+      "tensor-copy": {
+        "constructionNs": 6018.5,
+        "computationNs": 112990.0,
+        "releaseNs": 2273.0,
+        "processNs": 1505829.0
+      }
+    },
+    "identicalCopies": {
+      "reverse": {
+        "ratio": 1.0729797457650776,
+        "qualified": false
+      },
+      "forward": {
+        "ratio": 1.0063928356039114,
+        "qualified": true
+      },
+      "local": {
+        "ratio": 0.9847015039638225,
+        "qualified": true
+      },
+      "tensor": {
+        "ratio": 0.995413890846232,
+        "qualified": true
+      }
+    },
+    "vsReverse": {
+      "forward": {
+        "reference": "reverse",
+        "ratio": 19.022678168900303,
+        "interval95": [
+          14.339862597859083,
+          19.811798963962453
+        ],
+        "copyQualified": false,
+        "direction": "inconclusive"
+      },
+      "local": {
+        "reference": "reverse",
+        "ratio": 0.49802937047835005,
+        "interval95": [
+          0.4367161685351362,
+          0.5275658397220857
+        ],
+        "copyQualified": false,
+        "direction": "inconclusive"
+      },
+      "tensor": {
+        "reference": "reverse",
+        "ratio": 3.155561490687523,
+        "interval95": [
+          3.0002903523822093,
+          3.3098872561439068
+        ],
+        "copyQualified": false,
+        "direction": "inconclusive"
+      }
+    },
+    "binaryHashes": {
+      "reverse": "0a1a8ec094ec0e552e2884c2c5037bec3bf07bcdd22808aaa044d8a51384945d",
+      "reverse-copy": "0a1a8ec094ec0e552e2884c2c5037bec3bf07bcdd22808aaa044d8a51384945d",
+      "forward": "80786a41b94d50af55d915ba339b5ff16d1ac590784cf57602a2277af164d753",
+      "forward-copy": "80786a41b94d50af55d915ba339b5ff16d1ac590784cf57602a2277af164d753",
+      "local": "1f609b17f72c3c26efe0b91c3dde02589a0f0b96133425f8d9eedd0a5e8d1eae",
+      "local-copy": "1f609b17f72c3c26efe0b91c3dde02589a0f0b96133425f8d9eedd0a5e8d1eae",
+      "tensor": "cc90ceb09cb64670c63a6ec513ca9fb9e3cb9bacfc49e1eefbb879cae9f9e0d8",
+      "tensor-copy": "cc90ceb09cb64670c63a6ec513ca9fb9e3cb9bacfc49e1eefbb879cae9f9e0d8"
+    }
+  },
+  "dense-0": {
+    "medianNsPerGradient": {
+      "reverse": {
+        "constructionNs": 25.1875,
+        "computationNs": 782.359375,
+        "releaseNs": 27.078125,
+        "processNs": 38278.953125
+      },
+      "reverse-copy": {
+        "constructionNs": 24.734375,
+        "computationNs": 663.4375,
+        "releaseNs": 27.0625,
+        "processNs": 38562.96875
+      },
+      "forward": {
+        "constructionNs": 25.5,
+        "computationNs": 162.28125,
+        "releaseNs": 54.78125,
+        "processNs": 39006.4375
+      },
+      "forward-copy": {
+        "constructionNs": 25.96875,
+        "computationNs": 161.171875,
+        "releaseNs": 53.875,
+        "processNs": 38739.171875
+      }
+    },
+    "identicalCopies": {
+      "reverse": {
+        "ratio": 0.8673701386866317,
+        "qualified": false
+      },
+      "forward": {
+        "ratio": 0.9895364321723925,
+        "qualified": true
+      }
+    },
+    "vsReverse": {
+      "forward": {
+        "reference": "reverse",
+        "ratio": 0.21173555253193552,
+        "interval95": [
+          0.19171085464753587,
+          0.26730287712004536
+        ],
+        "copyQualified": false,
+        "direction": "inconclusive"
+      }
+    },
+    "binaryHashes": {
+      "reverse": "6b5cbbe8aaea345679d400daa97664fac40e96cabef46d10826c57a57282c6ca",
+      "reverse-copy": "6b5cbbe8aaea345679d400daa97664fac40e96cabef46d10826c57a57282c6ca",
+      "forward": "352700e35b64641768b964d418658084f36f0a0f510c98e73e353c3b1f6963cf",
+      "forward-copy": "352700e35b64641768b964d418658084f36f0a0f510c98e73e353c3b1f6963cf"
+    }
+  },
+  "dense-1": {
+    "medianNsPerGradient": {
+      "reverse": {
+        "constructionNs": 133.609375,
+        "computationNs": 1201.875,
+        "releaseNs": 63.984375,
+        "processNs": 40582.0
+      },
+      "reverse-copy": {
+        "constructionNs": 125.578125,
+        "computationNs": 1189.265625,
+        "releaseNs": 63.984375,
+        "processNs": 41195.546875
+      },
+      "forward": {
+        "constructionNs": 120.9375,
+        "computationNs": 669.765625,
+        "releaseNs": 60.390625,
+        "processNs": 39463.328125
+      },
+      "forward-copy": {
+        "constructionNs": 125.015625,
+        "computationNs": 698.671875,
+        "releaseNs": 61.796875,
+        "processNs": 40000.28125
+      }
+    },
+    "identicalCopies": {
+      "reverse": {
+        "ratio": 0.9579010017203553,
+        "qualified": false
+      },
+      "forward": {
+        "ratio": 1.0533930325677052,
+        "qualified": false
+      }
+    },
+    "vsReverse": {
+      "forward": {
+        "reference": "reverse",
+        "ratio": 0.5669529137042826,
+        "interval95": [
+          0.5190294957183634,
+          0.6458591363223516
+        ],
+        "copyQualified": false,
+        "direction": "inconclusive"
+      }
+    },
+    "binaryHashes": {
+      "reverse": "e23d7ced9859cc1ca24e391b293997c58c3776b86cecb920dd63f6e074164f78",
+      "reverse-copy": "e23d7ced9859cc1ca24e391b293997c58c3776b86cecb920dd63f6e074164f78",
+      "forward": "0a36b6d0e02ed66bbcb183a8bfc3288a95ed4b1c3a0d1fa0071a6526280f9fed",
+      "forward-copy": "0a36b6d0e02ed66bbcb183a8bfc3288a95ed4b1c3a0d1fa0071a6526280f9fed"
+    }
+  },
+  "dense-3": {
+    "medianNsPerGradient": {
+      "reverse": {
+        "constructionNs": 216.390625,
+        "computationNs": 1711.640625,
+        "releaseNs": 158.5,
+        "processNs": 41732.234375
+      },
+      "reverse-copy": {
+        "constructionNs": 212.046875,
+        "computationNs": 1668.625,
+        "releaseNs": 160.53125,
+        "processNs": 43994.78125
+      },
+      "forward": {
+        "constructionNs": 208.78125,
+        "computationNs": 2224.03125,
+        "releaseNs": 149.4375,
+        "processNs": 42380.53125
+      },
+      "forward-copy": {
+        "constructionNs": 204.984375,
+        "computationNs": 2130.203125,
+        "releaseNs": 151.21875,
+        "processNs": 44764.1875
+      }
+    },
+    "identicalCopies": {
+      "reverse": {
+        "ratio": 0.9783317774337874,
+        "qualified": false
+      },
+      "forward": {
+        "ratio": 0.976559545453176,
+        "qualified": false
+      }
+    },
+    "vsReverse": {
+      "forward": {
+        "reference": "reverse",
+        "ratio": 1.288099574722888,
+        "interval95": [
+          1.2564327806449251,
+          1.3621110611593337
+        ],
+        "copyQualified": false,
+        "direction": "inconclusive"
+      }
+    },
+    "binaryHashes": {
+      "reverse": "1361b06500c9ea5734e893b6ea7996ac6f235a05231ca014aa0dbcf3535bb8ce",
+      "reverse-copy": "1361b06500c9ea5734e893b6ea7996ac6f235a05231ca014aa0dbcf3535bb8ce",
+      "forward": "8dbe8cc4c359cc5ef735ee188c53937ccf20962938470415ee3e6621c21320dd",
+      "forward-copy": "8dbe8cc4c359cc5ef735ee188c53937ccf20962938470415ee3e6621c21320dd"
+    }
+  },
+  "dense-9": {
+    "medianNsPerGradient": {
+      "reverse": {
+        "constructionNs": 2904.0,
+        "computationNs": 21792.0,
+        "releaseNs": 871.0,
+        "processNs": 1219168.5
+      },
+      "reverse-copy": {
+        "constructionNs": 3020.0,
+        "computationNs": 23695.0,
+        "releaseNs": 1081.5,
+        "processNs": 1257942.5
+      },
+      "forward": {
+        "constructionNs": 2914.5,
+        "computationNs": 45276.5,
+        "releaseNs": 966.0,
+        "processNs": 1279651.5
+      },
+      "forward-copy": {
+        "constructionNs": 2904.5,
+        "computationNs": 44595.5,
+        "releaseNs": 851.0,
+        "processNs": 1271177.0
+      }
+    },
+    "identicalCopies": {
+      "reverse": {
+        "ratio": 1.0440672855243571,
+        "qualified": false
+      },
+      "forward": {
+        "ratio": 0.9683429454424064,
+        "qualified": false
+      }
+    },
+    "vsReverse": {
+      "forward": {
+        "reference": "reverse",
+        "ratio": 2.020570189508026,
+        "interval95": [
+          1.9157497917853856,
+          2.2550830912813677
+        ],
+        "copyQualified": false,
+        "direction": "inconclusive"
+      }
+    },
+    "binaryHashes": {
+      "reverse": "66b038e7cfd85e82cb5ed79d0b82264633c30048810608d18f5f5fc98c1a246f",
+      "reverse-copy": "66b038e7cfd85e82cb5ed79d0b82264633c30048810608d18f5f5fc98c1a246f",
+      "forward": "c2d7612a797e0c7d305bfb8ad9ee0b2d747f7e64f31a442382674a0d3eb24f9b",
+      "forward-copy": "c2d7612a797e0c7d305bfb8ad9ee0b2d747f7e64f31a442382674a0d3eb24f9b"
+    }
+  },
+  "dense-33": {
+    "medianNsPerGradient": {
+      "reverse": {
+        "constructionNs": 30064.0,
+        "computationNs": 123906.5,
+        "releaseNs": 11576.5,
+        "processNs": 1463385.5
+      },
+      "reverse-copy": {
+        "constructionNs": 29623.0,
+        "computationNs": 124422.0,
+        "releaseNs": 11492.0,
+        "processNs": 1505412.5
+      },
+      "forward": {
+        "constructionNs": 30139.5,
+        "computationNs": 1324948.5,
+        "releaseNs": 12092.5,
+        "processNs": 2630718.5
+      },
+      "forward-copy": {
+        "constructionNs": 29438.0,
+        "computationNs": 1633394.0,
+        "releaseNs": 11176.5,
+        "processNs": 2952334.0
+      }
+    },
+    "identicalCopies": {
+      "reverse": {
+        "ratio": 0.9803945242801432,
+        "qualified": true
+      },
+      "forward": {
+        "ratio": 1.0163370897768516,
+        "qualified": true
+      }
+    },
+    "vsReverse": {
+      "forward": {
+        "reference": "reverse",
+        "ratio": 12.2782984732875,
+        "interval95": [
+          11.540697645601089,
+          12.661262379967884
+        ],
+        "copyQualified": true,
+        "direction": "slower"
+      }
+    },
+    "binaryHashes": {
+      "reverse": "2dca8c42d70118d94f95e1e478974bcebf0ebd7299edfbff0c1ebd1f90f94337",
+      "reverse-copy": "2dca8c42d70118d94f95e1e478974bcebf0ebd7299edfbff0c1ebd1f90f94337",
+      "forward": "e4758bba9b0c35fd6feaf465e1c7a77b2c18e37813f109926ce12a972839e98d",
+      "forward-copy": "e4758bba9b0c35fd6feaf465e1c7a77b2c18e37813f109926ce12a972839e98d"
+    }
+  }
+}

@@ -281,6 +281,8 @@ Output: `[6.0]`.
 | Scalar / vector / matrix / tensor | One number / ordered numbers / rectangular grid / general multidimensional array. |
 | Shape / kernel / reduction | Dimensions / calculation on data / combine many values, such as summing a list. |
 | Derivative / partial derivative | Local output-change rate / vary one input while holding the others fixed. |
+| Objective | Scalar function being differentiated or minimized; for example the sum of squared errors. |
+| Independent / neighboring / dense objective | A term uses one input / a few nearby inputs / potentially every input. This determines which calculations a local derivative can avoid; see the [worked examples](tutorials/20-autodiff-and-devices/README.md#use-the-structure-of-the-calculation). |
 | Gradient | Input derivatives of one scalar output. For `x*y+x` at `(3,4)`, it is `[5,3]`. |
 | Jacobian / Hessian | One derivative row per output / second derivatives of a scalar output. |
 | AD / chain rule | Automatic differentiation / multiply contributions along a dependency path and add contributions from multiple paths. |

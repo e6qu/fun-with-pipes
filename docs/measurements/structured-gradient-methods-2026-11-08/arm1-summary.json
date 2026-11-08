@@ -1,0 +1,1150 @@
+{
+  "neighbors-0": {
+    "medianNsPerGradient": {
+      "reverse": {
+        "constructionNs": 35.625,
+        "computationNs": 371.71875,
+        "releaseNs": 36.25,
+        "processNs": 41686.046875
+      },
+      "reverse-copy": {
+        "constructionNs": 34.25,
+        "computationNs": 358.609375,
+        "releaseNs": 36.5,
+        "processNs": 41249.203125
+      },
+      "forward": {
+        "constructionNs": 34.5,
+        "computationNs": 125.625,
+        "releaseNs": 36.5,
+        "processNs": 42873.328125
+      },
+      "forward-copy": {
+        "constructionNs": 34.875,
+        "computationNs": 125.0,
+        "releaseNs": 36.625,
+        "processNs": 40854.734375
+      },
+      "local": {
+        "constructionNs": 34.5,
+        "computationNs": 167.125,
+        "releaseNs": 36.625,
+        "processNs": 41462.8125
+      },
+      "local-copy": {
+        "constructionNs": 34.5,
+        "computationNs": 157.375,
+        "releaseNs": 36.25,
+        "processNs": 41048.21875
+      }
+    },
+    "identicalCopies": {
+      "reverse": {
+        "ratio": 0.9642639672346447,
+        "qualified": false
+      },
+      "forward": {
+        "ratio": 0.9977746268068849,
+        "qualified": true
+      },
+      "local": {
+        "ratio": 0.9737877413848288,
+        "qualified": false
+      }
+    },
+    "vsReverse": {
+      "forward": {
+        "reference": "reverse",
+        "ratio": 0.33902335571438885,
+        "interval95": [
+          0.32757901759653074,
+          0.34977840956601725
+        ],
+        "copyQualified": false,
+        "direction": "inconclusive"
+      },
+      "local": {
+        "reference": "reverse",
+        "ratio": 0.4560374187015379,
+        "interval95": [
+          0.44075591604649217,
+          0.4695531686643771
+        ],
+        "copyQualified": false,
+        "direction": "inconclusive"
+      }
+    },
+    "binaryHashes": {
+      "reverse": "028c6f5dec52179e8c1a4599b5f37939492503cf7a16d07403aec993d69c1d21",
+      "reverse-copy": "028c6f5dec52179e8c1a4599b5f37939492503cf7a16d07403aec993d69c1d21",
+      "forward": "82507dd7fbbf23aec73b388f08a36853ba514693b148112f8256dde515888013",
+      "forward-copy": "82507dd7fbbf23aec73b388f08a36853ba514693b148112f8256dde515888013",
+      "local": "a53c360702e9074033d64345b7f70fe49ae875d2a98ff711fe275f70d889b226",
+      "local-copy": "a53c360702e9074033d64345b7f70fe49ae875d2a98ff711fe275f70d889b226"
+    }
+  },
+  "neighbors-1": {
+    "medianNsPerGradient": {
+      "reverse": {
+        "constructionNs": 80.75,
+        "computationNs": 438.21875,
+        "releaseNs": 52.625,
+        "processNs": 41167.984375
+      },
+      "reverse-copy": {
+        "constructionNs": 76.875,
+        "computationNs": 427.453125,
+        "releaseNs": 53.359375,
+        "processNs": 42967.21875
+      },
+      "forward": {
+        "constructionNs": 78.75,
+        "computationNs": 245.609375,
+        "releaseNs": 51.875,
+        "processNs": 42292.03125
+      },
+      "forward-copy": {
+        "constructionNs": 77.0,
+        "computationNs": 242.234375,
+        "releaseNs": 51.625,
+        "processNs": 39899.6875
+      },
+      "local": {
+        "constructionNs": 78.09375,
+        "computationNs": 178.609375,
+        "releaseNs": 52.125,
+        "processNs": 41411.96875
+      },
+      "local-copy": {
+        "constructionNs": 78.75,
+        "computationNs": 175.375,
+        "releaseNs": 51.75,
+        "processNs": 42229.171875
+      }
+    },
+    "identicalCopies": {
+      "reverse": {
+        "ratio": 0.983380844426534,
+        "qualified": true
+      },
+      "forward": {
+        "ratio": 0.9673531615420785,
+        "qualified": false
+      },
+      "local": {
+        "ratio": 0.9992548435171387,
+        "qualified": true
+      }
+    },
+    "vsReverse": {
+      "forward": {
+        "reference": "reverse",
+        "ratio": 0.56652554719292,
+        "interval95": [
+          0.5564896006957026,
+          0.5777843689752336
+        ],
+        "copyQualified": false,
+        "direction": "inconclusive"
+      },
+      "local": {
+        "reference": "reverse",
+        "ratio": 0.40454874958922593,
+        "interval95": [
+          0.39213034953688053,
+          0.41134289439374183
+        ],
+        "copyQualified": true,
+        "direction": "faster"
+      }
+    },
+    "binaryHashes": {
+      "reverse": "5e2e2f36da4e620f6d06699936b992b571c183ddec114868de855aa39bf6bb80",
+      "reverse-copy": "5e2e2f36da4e620f6d06699936b992b571c183ddec114868de855aa39bf6bb80",
+      "forward": "abd504403f676480fcfdaab4cedbeb9f7ab2abea28cc0578ea7e97cbac72ec3b",
+      "forward-copy": "abd504403f676480fcfdaab4cedbeb9f7ab2abea28cc0578ea7e97cbac72ec3b",
+      "local": "3d577737c564dccf751e3a5451d07bd66072150b33a8e7c4b27e1075bac03efb",
+      "local-copy": "3d577737c564dccf751e3a5451d07bd66072150b33a8e7c4b27e1075bac03efb"
+    }
+  },
+  "neighbors-3": {
+    "medianNsPerGradient": {
+      "reverse": {
+        "constructionNs": 99.0,
+        "computationNs": 997.15625,
+        "releaseNs": 89.625,
+        "processNs": 41421.46875
+      },
+      "reverse-copy": {
+        "constructionNs": 99.25,
+        "computationNs": 978.03125,
+        "releaseNs": 88.609375,
+        "processNs": 42721.75
+      },
+      "forward": {
+        "constructionNs": 100.5,
+        "computationNs": 344.734375,
+        "releaseNs": 86.0,
+        "processNs": 41483.59375
+      },
+      "forward-copy": {
+        "constructionNs": 98.625,
+        "computationNs": 344.859375,
+        "releaseNs": 84.75,
+        "processNs": 42292.65625
+      },
+      "local": {
+        "constructionNs": 101.875,
+        "computationNs": 547.0,
+        "releaseNs": 86.25,
+        "processNs": 41072.359375
+      },
+      "local-copy": {
+        "constructionNs": 96.25,
+        "computationNs": 538.453125,
+        "releaseNs": 85.0,
+        "processNs": 41868.0625
+      }
+    },
+    "identicalCopies": {
+      "reverse": {
+        "ratio": 0.9784355505570885,
+        "qualified": false
+      },
+      "forward": {
+        "ratio": 0.9975347369634836,
+        "qualified": true
+      },
+      "local": {
+        "ratio": 0.9823519874251919,
+        "qualified": true
+      }
+    },
+    "vsReverse": {
+      "forward": {
+        "reference": "reverse",
+        "ratio": 0.3442117315224036,
+        "interval95": [
+          0.33930882120877387,
+          0.34857243995608617
+        ],
+        "copyQualified": false,
+        "direction": "inconclusive"
+      },
+      "local": {
+        "reference": "reverse",
+        "ratio": 0.5457762838630938,
+        "interval95": [
+          0.5343214218426175,
+          0.5539529745936563
+        ],
+        "copyQualified": false,
+        "direction": "inconclusive"
+      }
+    },
+    "binaryHashes": {
+      "reverse": "79a4b5818f0253c2f9ec667d0874dc41dda8ad81bb78fb06ee0d2347f7678b23",
+      "reverse-copy": "79a4b5818f0253c2f9ec667d0874dc41dda8ad81bb78fb06ee0d2347f7678b23",
+      "forward": "eb360d2ec9ac4deec5ffc8932c5e1f6554775f082bf85c486f9328a3d70a9f1c",
+      "forward-copy": "eb360d2ec9ac4deec5ffc8932c5e1f6554775f082bf85c486f9328a3d70a9f1c",
+      "local": "d0a7d7e56a615891f13938cbd42e5246197d9fe873156ba8d6322a5c951c6acf",
+      "local-copy": "d0a7d7e56a615891f13938cbd42e5246197d9fe873156ba8d6322a5c951c6acf"
+    }
+  },
+  "neighbors-33": {
+    "medianNsPerGradient": {
+      "reverse": {
+        "constructionNs": 1356.0,
+        "computationNs": 15851.0,
+        "releaseNs": 660.0,
+        "processNs": 1357492.5
+      },
+      "reverse-copy": {
+        "constructionNs": 1351.5,
+        "computationNs": 15687.0,
+        "releaseNs": 656.0,
+        "processNs": 1358195.5
+      },
+      "forward": {
+        "constructionNs": 1544.0,
+        "computationNs": 10435.0,
+        "releaseNs": 644.0,
+        "processNs": 1344185.5
+      },
+      "forward-copy": {
+        "constructionNs": 1491.5,
+        "computationNs": 10371.5,
+        "releaseNs": 628.0,
+        "processNs": 1345821.0
+      },
+      "local": {
+        "constructionNs": 1416.0,
+        "computationNs": 8032.0,
+        "releaseNs": 648.0,
+        "processNs": 1342149.5
+      },
+      "local-copy": {
+        "constructionNs": 1407.5,
+        "computationNs": 7459.0,
+        "releaseNs": 640.0,
+        "processNs": 1298537.0
+      }
+    },
+    "identicalCopies": {
+      "reverse": {
+        "ratio": 0.9886223365296269,
+        "qualified": true
+      },
+      "forward": {
+        "ratio": 0.9940217528167152,
+        "qualified": true
+      },
+      "local": {
+        "ratio": 0.9338763632573199,
+        "qualified": false
+      }
+    },
+    "vsReverse": {
+      "forward": {
+        "reference": "reverse",
+        "ratio": 0.665665214029636,
+        "interval95": [
+          0.6518264127380581,
+          0.6802713735969621
+        ],
+        "copyQualified": true,
+        "direction": "faster"
+      },
+      "local": {
+        "reference": "reverse",
+        "ratio": 0.5221984015265553,
+        "interval95": [
+          0.49772369876992634,
+          0.5319348651747805
+        ],
+        "copyQualified": false,
+        "direction": "inconclusive"
+      }
+    },
+    "binaryHashes": {
+      "reverse": "6607202495cd5eb84adfef37569b3fb84f8e3e5d20500fdeb4d7a7df20319f7e",
+      "reverse-copy": "6607202495cd5eb84adfef37569b3fb84f8e3e5d20500fdeb4d7a7df20319f7e",
+      "forward": "e73371ec7c659118b8c6539fb982e9aa5482c3a8fbfa5c8dc82d4925169b2c72",
+      "forward-copy": "e73371ec7c659118b8c6539fb982e9aa5482c3a8fbfa5c8dc82d4925169b2c72",
+      "local": "a3288ffa0b8ac9143700c39ce1266c3814435a76ca81b4c4aac3b06945a3a74d",
+      "local-copy": "a3288ffa0b8ac9143700c39ce1266c3814435a76ca81b4c4aac3b06945a3a74d"
+    }
+  },
+  "neighbors-129": {
+    "medianNsPerGradient": {
+      "reverse": {
+        "constructionNs": 2847.5,
+        "computationNs": 50549.0,
+        "releaseNs": 2288.0,
+        "processNs": 1348653.0
+      },
+      "reverse-copy": {
+        "constructionNs": 2651.5,
+        "computationNs": 50460.0,
+        "releaseNs": 2272.0,
+        "processNs": 1346184.5
+      },
+      "forward": {
+        "constructionNs": 2855.0,
+        "computationNs": 134146.0,
+        "releaseNs": 2219.5,
+        "processNs": 1446310.0
+      },
+      "forward-copy": {
+        "constructionNs": 2764.0,
+        "computationNs": 134090.0,
+        "releaseNs": 2200.0,
+        "processNs": 1495314.5
+      },
+      "local": {
+        "constructionNs": 2632.0,
+        "computationNs": 24070.5,
+        "releaseNs": 2224.0,
+        "processNs": 1460601.0
+      },
+      "local-copy": {
+        "constructionNs": 2679.5,
+        "computationNs": 23734.5,
+        "releaseNs": 2228.0,
+        "processNs": 1380735.0
+      }
+    },
+    "identicalCopies": {
+      "reverse": {
+        "ratio": 0.9892693623561674,
+        "qualified": true
+      },
+      "forward": {
+        "ratio": 1.0001797941357147,
+        "qualified": true
+      },
+      "local": {
+        "ratio": 0.9898735511935417,
+        "qualified": true
+      }
+    },
+    "vsReverse": {
+      "forward": {
+        "reference": "reverse",
+        "ratio": 2.663428085093069,
+        "interval95": [
+          2.5861319747513534,
+          2.7630621669626554
+        ],
+        "copyQualified": true,
+        "direction": "slower"
+      },
+      "local": {
+        "reference": "reverse",
+        "ratio": 0.4759307869214635,
+        "interval95": [
+          0.4561971080819837,
+          0.4957711857345221
+        ],
+        "copyQualified": true,
+        "direction": "faster"
+      }
+    },
+    "binaryHashes": {
+      "reverse": "c6894cb632ed92d6d0cd14cbdf67c7eebe25721cce07b0ffe9978079c214a80b",
+      "reverse-copy": "c6894cb632ed92d6d0cd14cbdf67c7eebe25721cce07b0ffe9978079c214a80b",
+      "forward": "909a046f56fe53af409496bcf0b47fdcd350a67efaf05cacb46f277f0ca31b74",
+      "forward-copy": "909a046f56fe53af409496bcf0b47fdcd350a67efaf05cacb46f277f0ca31b74",
+      "local": "e441cbeeebd2725eb40ce0b0628272688c141a213cb445f7899c1a720bcdd472",
+      "local-copy": "e441cbeeebd2725eb40ce0b0628272688c141a213cb445f7899c1a720bcdd472"
+    }
+  },
+  "independent-0": {
+    "medianNsPerGradient": {
+      "reverse": {
+        "constructionNs": 36.5,
+        "computationNs": 398.46875,
+        "releaseNs": 36.625,
+        "processNs": 43834.640625
+      },
+      "reverse-copy": {
+        "constructionNs": 34.25,
+        "computationNs": 420.609375,
+        "releaseNs": 36.25,
+        "processNs": 42680.234375
+      },
+      "forward": {
+        "constructionNs": 37.0,
+        "computationNs": 147.96875,
+        "releaseNs": 36.5,
+        "processNs": 42682.625
+      },
+      "forward-copy": {
+        "constructionNs": 34.859375,
+        "computationNs": 141.859375,
+        "releaseNs": 37.125,
+        "processNs": 41968.65625
+      },
+      "local": {
+        "constructionNs": 35.75,
+        "computationNs": 176.359375,
+        "releaseNs": 36.609375,
+        "processNs": 42332.640625
+      },
+      "local-copy": {
+        "constructionNs": 34.984375,
+        "computationNs": 171.75,
+        "releaseNs": 36.5,
+        "processNs": 42255.015625
+      },
+      "tensor": {
+        "constructionNs": 36.75,
+        "computationNs": 14015.75,
+        "releaseNs": 37.0,
+        "processNs": 58043.03125
+      },
+      "tensor-copy": {
+        "constructionNs": 36.25,
+        "computationNs": 13659.90625,
+        "releaseNs": 37.0,
+        "processNs": 58758.984375
+      }
+    },
+    "identicalCopies": {
+      "reverse": {
+        "ratio": 1.0327260216356122,
+        "qualified": false
+      },
+      "forward": {
+        "ratio": 0.9385240082914501,
+        "qualified": false
+      },
+      "local": {
+        "ratio": 0.9710098342666973,
+        "qualified": false
+      },
+      "tensor": {
+        "ratio": 0.9869077104167314,
+        "qualified": true
+      }
+    },
+    "vsReverse": {
+      "forward": {
+        "reference": "reverse",
+        "ratio": 0.372318736663307,
+        "interval95": [
+          0.36731974921630095,
+          0.38229108505669396
+        ],
+        "copyQualified": false,
+        "direction": "inconclusive"
+      },
+      "local": {
+        "reference": "reverse",
+        "ratio": 0.43768184816471967,
+        "interval95": [
+          0.42382445141065833,
+          0.4578676179151803
+        ],
+        "copyQualified": false,
+        "direction": "inconclusive"
+      },
+      "tensor": {
+        "reference": "reverse",
+        "ratio": 35.005035467359995,
+        "interval95": [
+          33.81621663204862,
+          35.82944640753828
+        ],
+        "copyQualified": false,
+        "direction": "inconclusive"
+      }
+    },
+    "binaryHashes": {
+      "reverse": "ae7b6836668b0ce4d6f78df4f68715c61389c7c34e1fb80f0477d910e4c8bc4d",
+      "reverse-copy": "ae7b6836668b0ce4d6f78df4f68715c61389c7c34e1fb80f0477d910e4c8bc4d",
+      "forward": "42d2c58a2aeb71961431ec99eb439835a2e6873eeb93c329b5de2241ee56991a",
+      "forward-copy": "42d2c58a2aeb71961431ec99eb439835a2e6873eeb93c329b5de2241ee56991a",
+      "local": "fd7bd4d700ee2e868b356f74e3a6fb68b47c0913b23495de86faf7c4d094f27d",
+      "local-copy": "fd7bd4d700ee2e868b356f74e3a6fb68b47c0913b23495de86faf7c4d094f27d",
+      "tensor": "5d80a80f4ebd47afecfadf7a637ac1304eb5c02ffedd0d7044167d2d3c3608bc",
+      "tensor-copy": "5d80a80f4ebd47afecfadf7a637ac1304eb5c02ffedd0d7044167d2d3c3608bc"
+    }
+  },
+  "independent-1": {
+    "medianNsPerGradient": {
+      "reverse": {
+        "constructionNs": 83.234375,
+        "computationNs": 578.359375,
+        "releaseNs": 53.609375,
+        "processNs": 45590.78125
+      },
+      "reverse-copy": {
+        "constructionNs": 84.25,
+        "computationNs": 568.578125,
+        "releaseNs": 52.75,
+        "processNs": 43238.3125
+      },
+      "forward": {
+        "constructionNs": 81.25,
+        "computationNs": 331.59375,
+        "releaseNs": 51.875,
+        "processNs": 43825.890625
+      },
+      "forward-copy": {
+        "constructionNs": 81.125,
+        "computationNs": 324.859375,
+        "releaseNs": 51.5,
+        "processNs": 43555.296875
+      },
+      "local": {
+        "constructionNs": 83.75,
+        "computationNs": 319.953125,
+        "releaseNs": 53.25,
+        "processNs": 42767.859375
+      },
+      "local-copy": {
+        "constructionNs": 84.5,
+        "computationNs": 321.125,
+        "releaseNs": 53.109375,
+        "processNs": 42955.0625
+      },
+      "tensor": {
+        "constructionNs": 88.75,
+        "computationNs": 14666.203125,
+        "releaseNs": 52.125,
+        "processNs": 60093.5
+      },
+      "tensor-copy": {
+        "constructionNs": 88.75,
+        "computationNs": 13970.015625,
+        "releaseNs": 52.25,
+        "processNs": 58545.984375
+      }
+    },
+    "identicalCopies": {
+      "reverse": {
+        "ratio": 0.9943651019084042,
+        "qualified": true
+      },
+      "forward": {
+        "ratio": 0.9846517438972734,
+        "qualified": true
+      },
+      "local": {
+        "ratio": 1.0042827179238825,
+        "qualified": true
+      },
+      "tensor": {
+        "ratio": 0.9596721079532509,
+        "qualified": false
+      }
+    },
+    "vsReverse": {
+      "forward": {
+        "reference": "reverse",
+        "ratio": 0.584304197322735,
+        "interval95": [
+          0.5615372229080564,
+          0.5961289664512877
+        ],
+        "copyQualified": true,
+        "direction": "faster"
+      },
+      "local": {
+        "reference": "reverse",
+        "ratio": 0.5533942614684599,
+        "interval95": [
+          0.5344224646380291,
+          0.5670765481333776
+        ],
+        "copyQualified": true,
+        "direction": "faster"
+      },
+      "tensor": {
+        "reference": "reverse",
+        "ratio": 25.953557624466193,
+        "interval95": [
+          24.693916033497864,
+          27.066445004558375
+        ],
+        "copyQualified": false,
+        "direction": "inconclusive"
+      }
+    },
+    "binaryHashes": {
+      "reverse": "162b29ca5138e818baa19c79c5356c0819641fc3c05c5d452e7704abf0b20b99",
+      "reverse-copy": "162b29ca5138e818baa19c79c5356c0819641fc3c05c5d452e7704abf0b20b99",
+      "forward": "1c1674f1ac956feb22af8a648b1b612e9b7ee0cc294ad3f30427729fdf460d8f",
+      "forward-copy": "1c1674f1ac956feb22af8a648b1b612e9b7ee0cc294ad3f30427729fdf460d8f",
+      "local": "1d3c2e094ce36e003f478dd338b7833d5fd44c91be9b8ce1fecd09e7421c9840",
+      "local-copy": "1d3c2e094ce36e003f478dd338b7833d5fd44c91be9b8ce1fecd09e7421c9840",
+      "tensor": "79a26217ba5fb5ed72121392c1826b261dc83cdff744e1fa98998072812e7b45",
+      "tensor-copy": "79a26217ba5fb5ed72121392c1826b261dc83cdff744e1fa98998072812e7b45"
+    }
+  },
+  "independent-16": {
+    "medianNsPerGradient": {
+      "reverse": {
+        "constructionNs": 1492.0,
+        "computationNs": 6212.0,
+        "releaseNs": 380.0,
+        "processNs": 1343853.0
+      },
+      "reverse-copy": {
+        "constructionNs": 1396.0,
+        "computationNs": 6323.5,
+        "releaseNs": 364.0,
+        "processNs": 1359732.0
+      },
+      "forward": {
+        "constructionNs": 1512.0,
+        "computationNs": 11676.0,
+        "releaseNs": 352.0,
+        "processNs": 1363315.5
+      },
+      "forward-copy": {
+        "constructionNs": 1400.0,
+        "computationNs": 11327.5,
+        "releaseNs": 352.0,
+        "processNs": 1379398.5
+      },
+      "local": {
+        "constructionNs": 1495.5,
+        "computationNs": 4436.0,
+        "releaseNs": 392.0,
+        "processNs": 1347769.0
+      },
+      "local-copy": {
+        "constructionNs": 1524.0,
+        "computationNs": 4724.0,
+        "releaseNs": 384.0,
+        "processNs": 1330714.0
+      },
+      "tensor": {
+        "constructionNs": 1592.0,
+        "computationNs": 53664.0,
+        "releaseNs": 352.0,
+        "processNs": 1452269.5
+      },
+      "tensor-copy": {
+        "constructionNs": 1676.0,
+        "computationNs": 50612.5,
+        "releaseNs": 352.0,
+        "processNs": 1457993.0
+      }
+    },
+    "identicalCopies": {
+      "reverse": {
+        "ratio": 1.0026282651714429,
+        "qualified": true
+      },
+      "forward": {
+        "ratio": 0.9657237847008996,
+        "qualified": false
+      },
+      "local": {
+        "ratio": 1.0428415584415585,
+        "qualified": false
+      },
+      "tensor": {
+        "ratio": 0.9561376875947727,
+        "qualified": false
+      }
+    },
+    "vsReverse": {
+      "forward": {
+        "reference": "reverse",
+        "ratio": 1.8832703038136183,
+        "interval95": [
+          1.8349753694581281,
+          1.9583263033575165
+        ],
+        "copyQualified": false,
+        "direction": "inconclusive"
+      },
+      "local": {
+        "reference": "reverse",
+        "ratio": 0.7240868255504189,
+        "interval95": [
+          0.689211935730681,
+          0.7444876783398184
+        ],
+        "copyQualified": false,
+        "direction": "inconclusive"
+      },
+      "tensor": {
+        "reference": "reverse",
+        "ratio": 8.449298648578395,
+        "interval95": [
+          8.000810635538262,
+          8.70497311827957
+        ],
+        "copyQualified": false,
+        "direction": "inconclusive"
+      }
+    },
+    "binaryHashes": {
+      "reverse": "ad7d95097271e8aa6f4951740d69141303a69475edfc96d1310b66df515b7e5d",
+      "reverse-copy": "ad7d95097271e8aa6f4951740d69141303a69475edfc96d1310b66df515b7e5d",
+      "forward": "596377ea3dc7786e2ff7537d5cbf0b1f4c36b5d4be4055505b3d659e7ec2d9a5",
+      "forward-copy": "596377ea3dc7786e2ff7537d5cbf0b1f4c36b5d4be4055505b3d659e7ec2d9a5",
+      "local": "b2184c5869764fb29abc138242a514b6a416fad3adcbe055282abc3dee27d7c0",
+      "local-copy": "b2184c5869764fb29abc138242a514b6a416fad3adcbe055282abc3dee27d7c0",
+      "tensor": "47592badfe289552af50b7e44966353acf578f095f769f862055c6fcae51d9a6",
+      "tensor-copy": "47592badfe289552af50b7e44966353acf578f095f769f862055c6fcae51d9a6"
+    }
+  },
+  "independent-129": {
+    "medianNsPerGradient": {
+      "reverse": {
+        "constructionNs": 2788.0,
+        "computationNs": 21826.5,
+        "releaseNs": 2248.0,
+        "processNs": 1439349.5
+      },
+      "reverse-copy": {
+        "constructionNs": 3016.0,
+        "computationNs": 23554.5,
+        "releaseNs": 2228.0,
+        "processNs": 1435577.5
+      },
+      "forward": {
+        "constructionNs": 2844.0,
+        "computationNs": 580590.5,
+        "releaseNs": 2216.0,
+        "processNs": 1923738.5
+      },
+      "forward-copy": {
+        "constructionNs": 2880.0,
+        "computationNs": 557972.0,
+        "releaseNs": 2223.5,
+        "processNs": 1916675.0
+      },
+      "local": {
+        "constructionNs": 2835.5,
+        "computationNs": 13699.0,
+        "releaseNs": 2268.0,
+        "processNs": 1408963.5
+      },
+      "local-copy": {
+        "constructionNs": 2824.0,
+        "computationNs": 13731.0,
+        "releaseNs": 2288.0,
+        "processNs": 1336497.0
+      },
+      "tensor": {
+        "constructionNs": 3479.5,
+        "computationNs": 83338.0,
+        "releaseNs": 2192.0,
+        "processNs": 1487942.0
+      },
+      "tensor-copy": {
+        "constructionNs": 3467.5,
+        "computationNs": 82218.0,
+        "releaseNs": 2196.0,
+        "processNs": 1516500.0
+      }
+    },
+    "identicalCopies": {
+      "reverse": {
+        "ratio": 0.9930383420376037,
+        "qualified": true
+      },
+      "forward": {
+        "ratio": 1.0011744355025818,
+        "qualified": true
+      },
+      "local": {
+        "ratio": 1.003179162646086,
+        "qualified": true
+      },
+      "tensor": {
+        "ratio": 0.9771553004019446,
+        "qualified": false
+      }
+    },
+    "vsReverse": {
+      "forward": {
+        "reference": "reverse",
+        "ratio": 25.455201717124897,
+        "interval95": [
+          24.471882864333104,
+          25.996417158903846
+        ],
+        "copyQualified": true,
+        "direction": "slower"
+      },
+      "local": {
+        "reference": "reverse",
+        "ratio": 0.6290477938821105,
+        "interval95": [
+          0.5732055043596843,
+          0.6587629965427848
+        ],
+        "copyQualified": true,
+        "direction": "faster"
+      },
+      "tensor": {
+        "reference": "reverse",
+        "ratio": 3.883861478875504,
+        "interval95": [
+          3.5331212033555106,
+          3.9614733470601693
+        ],
+        "copyQualified": false,
+        "direction": "inconclusive"
+      }
+    },
+    "binaryHashes": {
+      "reverse": "48e9a76ca2da5c376bb192e47564d2d0b53a7123da8b0fce884f92d2e681e868",
+      "reverse-copy": "48e9a76ca2da5c376bb192e47564d2d0b53a7123da8b0fce884f92d2e681e868",
+      "forward": "46f2b05f9b55799758c107f4c7f166c838bf52a9b80def9d657f57369c9f4651",
+      "forward-copy": "46f2b05f9b55799758c107f4c7f166c838bf52a9b80def9d657f57369c9f4651",
+      "local": "d3499f23aea6b76b1de1637305052424c818448a32d8e564b7186daa261542d6",
+      "local-copy": "d3499f23aea6b76b1de1637305052424c818448a32d8e564b7186daa261542d6",
+      "tensor": "c40fc413bce06b6b765dcdf41cbe0e8bd96fb1d42c21e550e80f7b91f97eb0d9",
+      "tensor-copy": "c40fc413bce06b6b765dcdf41cbe0e8bd96fb1d42c21e550e80f7b91f97eb0d9"
+    }
+  },
+  "dense-0": {
+    "medianNsPerGradient": {
+      "reverse": {
+        "constructionNs": 35.25,
+        "computationNs": 500.21875,
+        "releaseNs": 36.5,
+        "processNs": 43155.84375
+      },
+      "reverse-copy": {
+        "constructionNs": 34.5,
+        "computationNs": 501.96875,
+        "releaseNs": 36.5,
+        "processNs": 41844.4375
+      },
+      "forward": {
+        "constructionNs": 35.125,
+        "computationNs": 135.125,
+        "releaseNs": 36.609375,
+        "processNs": 43360.21875
+      },
+      "forward-copy": {
+        "constructionNs": 34.0,
+        "computationNs": 127.96875,
+        "releaseNs": 36.25,
+        "processNs": 40032.671875
+      }
+    },
+    "identicalCopies": {
+      "reverse": {
+        "ratio": 0.9904424412764123,
+        "qualified": true
+      },
+      "forward": {
+        "ratio": 0.9468771177053197,
+        "qualified": false
+      }
+    },
+    "vsReverse": {
+      "forward": {
+        "reference": "reverse",
+        "ratio": 0.26876737160120845,
+        "interval95": [
+          0.25610809476801577,
+          0.275706497900871
+        ],
+        "copyQualified": false,
+        "direction": "inconclusive"
+      }
+    },
+    "binaryHashes": {
+      "reverse": "a6498052ef877ac83f3f12a81095d955840a1e3e08b62ed21d433d8bda942fcc",
+      "reverse-copy": "a6498052ef877ac83f3f12a81095d955840a1e3e08b62ed21d433d8bda942fcc",
+      "forward": "5d009e013e87ff6f04db0ee94166a8d78455deb75c32c6ea4047651dc141b5f3",
+      "forward-copy": "5d009e013e87ff6f04db0ee94166a8d78455deb75c32c6ea4047651dc141b5f3"
+    }
+  },
+  "dense-1": {
+    "medianNsPerGradient": {
+      "reverse": {
+        "constructionNs": 100.25,
+        "computationNs": 840.0625,
+        "releaseNs": 72.5,
+        "processNs": 43552.4375
+      },
+      "reverse-copy": {
+        "constructionNs": 100.484375,
+        "computationNs": 822.921875,
+        "releaseNs": 72.25,
+        "processNs": 41977.171875
+      },
+      "forward": {
+        "constructionNs": 99.359375,
+        "computationNs": 493.9375,
+        "releaseNs": 70.0,
+        "processNs": 42890.75
+      },
+      "forward-copy": {
+        "constructionNs": 96.734375,
+        "computationNs": 493.359375,
+        "releaseNs": 70.0,
+        "processNs": 43366.59375
+      }
+    },
+    "identicalCopies": {
+      "reverse": {
+        "ratio": 0.9628152029528416,
+        "qualified": false
+      },
+      "forward": {
+        "ratio": 1.0030610073686301,
+        "qualified": true
+      }
+    },
+    "vsReverse": {
+      "forward": {
+        "reference": "reverse",
+        "ratio": 0.5875624864915527,
+        "interval95": [
+          0.5476897748827887,
+          0.6097248221191209
+        ],
+        "copyQualified": false,
+        "direction": "inconclusive"
+      }
+    },
+    "binaryHashes": {
+      "reverse": "d3fbc59ac821306943ef05c778c1947e108944ee8f2a247eefdb52afbb30b911",
+      "reverse-copy": "d3fbc59ac821306943ef05c778c1947e108944ee8f2a247eefdb52afbb30b911",
+      "forward": "07e2a35ea4be77997f340f7959b632a2dcff41c33bff2b403150b301c8fbdfa5",
+      "forward-copy": "07e2a35ea4be77997f340f7959b632a2dcff41c33bff2b403150b301c8fbdfa5"
+    }
+  },
+  "dense-3": {
+    "medianNsPerGradient": {
+      "reverse": {
+        "constructionNs": 191.984375,
+        "computationNs": 1470.9375,
+        "releaseNs": 190.625,
+        "processNs": 43011.21875
+      },
+      "reverse-copy": {
+        "constructionNs": 187.75,
+        "computationNs": 1454.375,
+        "releaseNs": 190.734375,
+        "processNs": 42556.78125
+      },
+      "forward": {
+        "constructionNs": 188.984375,
+        "computationNs": 2333.734375,
+        "releaseNs": 188.359375,
+        "processNs": 43544.953125
+      },
+      "forward-copy": {
+        "constructionNs": 189.859375,
+        "computationNs": 2329.078125,
+        "releaseNs": 188.21875,
+        "processNs": 43042.609375
+      }
+    },
+    "identicalCopies": {
+      "reverse": {
+        "ratio": 0.989365647581554,
+        "qualified": true
+      },
+      "forward": {
+        "ratio": 0.9974632638741593,
+        "qualified": true
+      }
+    },
+    "vsReverse": {
+      "forward": {
+        "reference": "reverse",
+        "ratio": 1.5839309006154276,
+        "interval95": [
+          1.5686666807067793,
+          1.592638324143657
+        ],
+        "copyQualified": true,
+        "direction": "slower"
+      }
+    },
+    "binaryHashes": {
+      "reverse": "e6b8b6971003fbb3bb2c0fe535dcac8887b8b5d357a246c5ab6debe17752cc8e",
+      "reverse-copy": "e6b8b6971003fbb3bb2c0fe535dcac8887b8b5d357a246c5ab6debe17752cc8e",
+      "forward": "277289a587dca0500b4869a1c016c3c7eb75222702fea67d14cf8ecd12733f99",
+      "forward-copy": "277289a587dca0500b4869a1c016c3c7eb75222702fea67d14cf8ecd12733f99"
+    }
+  },
+  "dense-9": {
+    "medianNsPerGradient": {
+      "reverse": {
+        "constructionNs": 2052.0,
+        "computationNs": 14635.0,
+        "releaseNs": 1064.0,
+        "processNs": 1298557.0
+      },
+      "reverse-copy": {
+        "constructionNs": 1940.0,
+        "computationNs": 13747.0,
+        "releaseNs": 1048.0,
+        "processNs": 1294557.0
+      },
+      "forward": {
+        "constructionNs": 1976.0,
+        "computationNs": 36737.5,
+        "releaseNs": 1028.0,
+        "processNs": 1296913.0
+      },
+      "forward-copy": {
+        "constructionNs": 1960.0,
+        "computationNs": 36601.0,
+        "releaseNs": 1024.0,
+        "processNs": 1332366.0
+      }
+    },
+    "identicalCopies": {
+      "reverse": {
+        "ratio": 0.9492544914408634,
+        "qualified": false
+      },
+      "forward": {
+        "ratio": 0.9954160227967238,
+        "qualified": true
+      }
+    },
+    "vsReverse": {
+      "forward": {
+        "reference": "reverse",
+        "ratio": 2.5131967234788704,
+        "interval95": [
+          2.4000263175208896,
+          2.640436447720211
+        ],
+        "copyQualified": false,
+        "direction": "inconclusive"
+      }
+    },
+    "binaryHashes": {
+      "reverse": "aedf8bfbff0dd9299505e4e4abfc9eb851b106671577a029dcc40a8460f53d25",
+      "reverse-copy": "aedf8bfbff0dd9299505e4e4abfc9eb851b106671577a029dcc40a8460f53d25",
+      "forward": "14f772539c4ca513881bd68cde77b38e25bdd7e739abda092cb37cfba4902e23",
+      "forward-copy": "14f772539c4ca513881bd68cde77b38e25bdd7e739abda092cb37cfba4902e23"
+    }
+  },
+  "dense-33": {
+    "medianNsPerGradient": {
+      "reverse": {
+        "constructionNs": 16051.0,
+        "computationNs": 82474.5,
+        "releaseNs": 10288.0,
+        "processNs": 1429471.5
+      },
+      "reverse-copy": {
+        "constructionNs": 16311.0,
+        "computationNs": 83118.0,
+        "releaseNs": 10303.5,
+        "processNs": 1423508.0
+      },
+      "forward": {
+        "constructionNs": 15623.0,
+        "computationNs": 1251324.0,
+        "releaseNs": 10352.0,
+        "processNs": 2595681.5
+      },
+      "forward-copy": {
+        "constructionNs": 15939.0,
+        "computationNs": 1254436.0,
+        "releaseNs": 10163.5,
+        "processNs": 2596837.5
+      }
+    },
+    "identicalCopies": {
+      "reverse": {
+        "ratio": 1.000871932207452,
+        "qualified": true
+      },
+      "forward": {
+        "ratio": 0.9970164451851935,
+        "qualified": true
+      }
+    },
+    "vsReverse": {
+      "forward": {
+        "reference": "reverse",
+        "ratio": 15.283953078185366,
+        "interval95": [
+          14.971976538238444,
+          15.653525713852913
+        ],
+        "copyQualified": true,
+        "direction": "slower"
+      }
+    },
+    "binaryHashes": {
+      "reverse": "8f2018aa969ebdf30c9d3fc964ef7c9a07fd3c6e8e3062448ba61ff2bf1b2b3c",
+      "reverse-copy": "8f2018aa969ebdf30c9d3fc964ef7c9a07fd3c6e8e3062448ba61ff2bf1b2b3c",
+      "forward": "55245fa5233f3754f22b2db98cffb2f888b45aa057219b98fcf8f7a2bcbf90ae",
+      "forward-copy": "55245fa5233f3754f22b2db98cffb2f888b45aa057219b98fcf8f7a2bcbf90ae"
+    }
+  }
+}

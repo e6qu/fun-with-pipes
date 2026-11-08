@@ -1,9 +1,9 @@
 # Current work
 
-**Next:** publish the structured-gradient measurement batch, run its focused
-three-host safety checks, then dispatch the frozen comparison. Choose an
-improvement from those results before changing the compiler or public library.
-Keep the whole milestone in one substantial normal PR; no PR is open yet.
+**Next:** implement the frozen known-array-callback specialization, add focused
+ordering/lifetime controls, and compare it with `04ddc0ac5` using the new paired
+contract. Keep implementation, measurements and tutorials in one substantial
+normal PR; no PR is open yet.
 
 ## Roadmap status
 
@@ -41,7 +41,12 @@ missing-evidence errors occurred. Required original gates remain successful.
 [The frozen contract](measurements/structured-autodiff.md) specifies 41 complete
 gradient comparisons, two sessions per native architecture, settings and noise
 limits. Preparation source: `fe374a246332e44d312c4c90bb6aaf7a7c714f71`.
-No benchmark session has run; no public operation or compiler change is selected.
+Measurement source: `04ddc0ac5d296ec895364236c4120341d7328e41`.
+All four sessions and their audits pass. Original timing qualifications remain
+mixed; [retained reports and archives](measurements/structured-gradient-methods-2026-11-08/README.md)
+record every outcome. Selected change and new paired acceptance are frozen in
+[the contract](measurements/structured-autodiff.md#selected-change-known-array-callbacks),
+before compiler edits. No new public gradient operation is planned.
 
 - Thirty exact results cover empty/singleton values, repeated tensor leaves,
   dense matrices, two neighboring formulas and unchanged caller values.
@@ -50,13 +55,21 @@ No benchmark session has run; no public operation or compiler change is selected
   numeric proofs, mixed ownership and original/new O1/O2 semantics, **not the
   newer measurement driver**. Docs `42491928737` / `128765970978` also pass;
   reviewed diagnostics are deliberate negative controls.
-- The new driver checks every gradient coordinate and caller alias. Managed and
+- The driver checks every gradient coordinate and caller alias. Managed and
   raw-tape observers cover workspace reuse on/off. Four native controls, five
   rejected faults and known-work observer controls pass locally with Clang.
 - The first dense driver control mistook a cached zero `Dual` constant (`caf68`)
   for a 32-byte leak. The corrected boundary preserves normal constant lifetime,
   reports retained bytes, rejects growth and requires exact reclamation after
   actual constant shutdown. Missing constant cleanup is a rejected control.
+- New driver checks pass on all three hosts in `42495076166`: AMD `128775588266`,
+  ARM `128775588591`, macOS `128775588512`; all complete logs reviewed clean.
+  Docs `42495078259` / `128775593155` pass with expected negative controls only.
+- Measurement `42500492246` uses those passing safety gates. Job IDs: ARM session
+  1 `128791969735`, session 2 `128791969927`; AMD session 1 `128791970017`, session
+  2 `128791969912`. All four pass, including evidence-rejection controls; complete
+  logs are clean and original archive digests match. Managed storage returns to
+  baseline and raw buffers reach zero with workspace reuse on/off.
 - Six analytic/statistical controls pass. Python syntax and all five changed
   workflow files parse; workflow sizes remain below 512,000 bytes. PyYAML is
   absent locally; the installed Ruby YAML parser passes instead.
@@ -70,6 +83,16 @@ General `grad`, nested AD and F128 stay required. Tensor AD currently supports
 only elementwise objectives; all repeated-leaf contributions must be combined.
 Independent losses already use `array.map (derivative loss)`. The local pair
 helper remains experimental until correctness, lifetime and benefit are verified.
+
+## Tutorial changes awaiting the same PR
+
+Lesson 20 now computes one independent-loss gradient by reverse, whole-objective
+forward, per-element forward and tensor AD. It explains all four tensor leaf
+contributions, neighboring/dense limits and the local derivative's `-0.0` versus
+other methods' `0.0`. Full output agrees in raw interpretation and Clang O2
+(3.29 seconds, 1.46 CPU); initial expected-output mismatch was corrected to
+preserve signed zero. Numerics and terminology cross-link the worked examples.
+These new tutorial changes still need final native CI coverage.
 
 ## Reproduce and resume
 
@@ -90,6 +113,8 @@ Driver failure/repair evidence is in
 `/tmp/fwp-structured-ad-preparation/driver-controls/` (`dense-diagnostic.c` and
 `.log` retain the original error). Focused CI logs:
 `/tmp/fwp-structured-checks-{amd,arm,mac}.log`, `/tmp/fwp-structured-docs.log`.
+New driver/docs logs: `/tmp/fwp-structured-driver-{amd,arm,mac,docs}.log`.
+Tutorial commands/results: `/tmp/fwp-structured-tutorial/checks.json`.
 
 Disk fluctuated from 75 to 49 GiB; the guard refused below the 64 GiB reserve.
 Checks resumed only after recovery to 74 GiB. Keep all guard limits unchanged;

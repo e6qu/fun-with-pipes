@@ -7,6 +7,14 @@ The files here are evidence at recorded revisions, not live project status.
 records merges and platform validation. Raw JSON retains samples and source/tool
 identities. Do not edit observations to make an old experiment describe new code.
 
+## Current diagnosis
+
+[Structured-gradient methods](structured-gradient-methods-2026-11-08/README.md)
+compares reverse, forward, local and tensor AD across three objective shapes.
+All four sessions pass correctness/storage audits; noisy timing controls remain
+inconclusive. The next change specializes known array callbacks to remove
+measured derivative-object allocation and dispatch. [Frozen candidate contract](structured-autodiff.md#selected-change-known-array-callbacks).
+
 ## Latest delivery
 
 Merged #271 delivers [captured scalar array-map reuse](captured-array-maps.md);
