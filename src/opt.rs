@@ -1016,9 +1016,8 @@ pub(crate) fn simplify(
 /// argument to, for those that `specialize_hofs` handles.
 pub fn hof_arity(sym: &str) -> Option<usize> {
     match sym {
-        "map" | "filter" | "find" | "take-while" | "drop-while" | "loop" | "modify" | "sort-by" => {
-            Some(1)
-        }
+        "map" | "array.map" | "filter" | "find" | "take-while" | "drop-while" | "loop"
+        | "modify" | "sort-by" => Some(1),
         "fold" | "fold-right" | "zip-with" => Some(2),
         _ => None,
     }
@@ -1226,7 +1225,10 @@ fn rewrite_hofs(
     // Synchronous handlers call their callback once. Specializing its known
     // body avoids rebuilding nested partial applications on every invocation.
     let (callback, n) = match sym.as_str() {
-        "run-state" | "grpc.with-tls" | "grpc.with-metadata" | "grpc.with-deadline" => (1, 1),
+        // Generation evaluates its count before constructing the callback.
+        // The earlier-argument check below also applies to eager captures here.
+        "array.generate" | "run-state" | "grpc.with-tls" | "grpc.with-metadata"
+        | "grpc.with-deadline" => (1, 1),
         "attempt" | "grpc.with-gzip" | "grpc.with-response-metadata" => (0, 1),
         _ => {
             let Some(n) = hof_arity(sym) else { return };

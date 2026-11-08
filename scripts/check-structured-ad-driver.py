@@ -55,7 +55,8 @@ def main():
 
     saved = {}
     for family, count, method in (('neighbors', 0, 'reverse'), ('neighbors', 3, 'reverse'),
-                                  ('independent', 16, 'tensor'), ('dense', 3, 'forward')):
+                                  ('independent', 16, 'tensor'), ('dense', 3, 'forward'),
+                                  ('neighbors', 3, 'local'), ('independent', 16, 'local')):
         case = next(value for value in cases() if value['family'] == family and value['count'] == count)
         label = case['name'] + '-' + method
         fwp = output / (label + '.fwp'); fwp.write_text(program(family, method))
@@ -78,6 +79,9 @@ def main():
             assert observed['retainedManagedBytesAfterCall'] == ordinary['retainedManagedBytesAfterCall']
             managed, raw = [json.loads(line) for line in result.stderr.splitlines()]
             check_reports(managed, raw['rawDerivativeStorage'], count, case['repeats'], method, workspace)
+            if method == 'local':
+                assert managed['requests'] <= case['repeats'] * (2 * count + 2), managed
+                assert raw['rawDerivativeStorage']['peakBytes'] == 0
         environment['FWP_AD_WORKSPACE'] = '1'
         saved[label] = dict(generated=generated, ordinary=source, observed=measured)
         print(label, 'correct output, aliases, managed owners and raw tape release', flush=True)
@@ -128,7 +132,7 @@ int main(void) {
         assert (managed == expected) == agrees, (label, managed, expected)
         assert raw['rawDerivativeStorage']['finalBytes'] == 0
         print(label, 'observer agreement:', agrees, flush=True)
-    print('Four native cases, five rejected runtime faults and three known-work observer controls pass.')
+    print('Six native cases, five rejected runtime faults and three known-work observer controls pass.')
 
 
 if __name__ == '__main__':

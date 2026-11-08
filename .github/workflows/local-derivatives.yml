@@ -62,6 +62,14 @@ jobs:
           set -o pipefail
           cargo test --locked --test autodiff_precision local_derivatives_preserve_endpoints_aliases_and_traps -- --exact --nocapture 2>&1 | tee local-checks/semantics.log
           cargo test --locked --test autodiff_precision structured_gradients_agree_on_three_objectives_and_empty_inputs -- --exact --nocapture 2>&1 | tee local-checks/structured-gradients.log
+      - name: Array callback ordering, unknown functions and cleanup
+        run: |
+          set -o pipefail
+          cargo test --locked --test mapped_array_construction direct_scalar_array_maps_preserve_values_order_aliases_and_exclusions -- --exact --nocapture 2>&1 | tee local-checks/array-map-order.log
+          cargo test --locked --test array_element_ownership generated_array_captures_preserve_argument_and_callback_order -- --exact --nocapture 2>&1 | tee local-checks/array-generate-order.log
+          cargo test --locked --test array_unwind_ownership -- --nocapture 2>&1 | tee local-checks/array-unwind.log
+          cargo test --locked --test autodiff_precision quad_reverse_preserves_low_bits_exponent_range_and_reclaims_owned_values -- --exact --nocapture 2>&1 | tee local-checks/quad-precision.log
+          cargo test --locked --test autodiff_nested nested_reverse_derivatives_match_analytic_values_and_both_engines -- --exact --nocapture 2>&1 | tee local-checks/nested-gradients.log
       - name: Structured gradient driver and storage observer controls
         run: >-
           python3 scripts/check-structured-ad-driver.py

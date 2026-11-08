@@ -1,9 +1,9 @@
 # Current work
 
-**Next:** implement the frozen known-array-callback specialization, add focused
-ordering/lifetime controls, and compare it with `04ddc0ac5` using the new paired
-contract. Keep implementation, measurements and tutorials in one substantial
-normal PR; no PR is open yet.
+**Next:** run and audit the expanded three-host focused checks for known array
+callback specialization. Repair every failure together, then run the frozen
+candidate/baseline comparison. Keep implementation, measurements and tutorials
+in one substantial normal PR; no PR is open yet.
 
 ## Roadmap status
 
@@ -48,7 +48,7 @@ record every outcome. Selected change and new paired acceptance are frozen in
 [the contract](measurements/structured-autodiff.md#selected-change-known-array-callbacks),
 before compiler edits. No new public gradient operation is planned.
 
-- Thirty exact results cover empty/singleton values, repeated tensor leaves,
+- Thirty-two exact results now cover empty/singleton values, repeated tensor leaves,
   dense matrices, two neighboring formulas and unchanged caller values.
 - All three focused jobs in `42491926962` pass: AMD GCC `128765967628`, ARM GCC
   `128765967846`, macOS Clang `128765967795`. Full logs are clean. These verify
@@ -83,6 +83,20 @@ General `grad`, nested AD and F128 stay required. Tensor AD currently supports
 only elementwise objectives; all repeated-leaf contributions must be combined.
 Independent losses already use `array.map (derivative loss)`. The local pair
 helper remains experimental until correctness, lifetime and benefit are verified.
+
+## Candidate implementation
+
+Acceptance was frozen in commit `412b50b52` before compiler edits. The existing
+`opt::specialize_hofs` now includes `array.map` and `array.generate` (callback
+position 1 for generation, after the count). Existing capture-order, resource,
+body-size and expansion guards are unchanged. No public API is added.
+
+The focused workflow now includes existing map/generate ordering, unknown
+callback, array unwinding, F128 and nested-gradient tests. The driver adds both
+local methods and requires at most `2*n+2` requests per call. Two new exact
+scalar-capture derivative examples pass raw interpretation (32 results total).
+Formatting and changed-script syntax pass locally. Candidate Rust/native checks
+have not run yet; do not claim the allocation or speed target passed.
 
 ## Tutorial changes awaiting the same PR
 

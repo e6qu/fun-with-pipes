@@ -96,7 +96,7 @@ fn structured_gradients_agree_on_three_objectives_and_empty_inputs() {
             .args(["run", "--interp"])
             .arg(&input),
     );
-    assert_eq!(reference.stdout, "True\n".repeat(30).as_bytes());
+    assert_eq!(reference.stdout, "True\n".repeat(32).as_bytes());
     assert!(reference.stderr.is_empty());
     checked(
         Command::new(compiler)
