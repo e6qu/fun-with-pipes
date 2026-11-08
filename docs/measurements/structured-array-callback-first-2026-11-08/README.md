@@ -1,5 +1,8 @@
 # First array-callback candidate: allocation target missed
 
+This is retained failure evidence. The [repaired candidate](../structured-array-callbacks-2026-11-08/README.md)
+passes allocation/cleanup checks; its AMD64 timing acceptance remains open.
+
 Source `b0a2becabf7acc474a410002df6a8f88d2c1ddb4`,
 [run 42501889779](https://github.com/e6qu/fun-with-pipes/actions/runs/42501889779).
 All three hosts pass gradient outputs, numeric proofs, map/generate order,

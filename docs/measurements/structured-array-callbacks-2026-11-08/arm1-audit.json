@@ -1,0 +1,179 @@
+{
+  "source": "4a32c102f74f738433c1d55969936b023a5510f0",
+  "machine": "aarch64",
+  "session": 1,
+  "comparison": "callbacks",
+  "inputCases": 14,
+  "methodCases": 28,
+  "commands": 1746,
+  "vsBaseline": {
+    "neighbors-0-local": {
+      "candidate": {
+        "reference": "baseline",
+        "ratio": 0.9767932750818608,
+        "interval95": [
+          0.9541978060399459,
+          0.9993353420772776
+        ],
+        "copyQualified": true,
+        "direction": "faster"
+      }
+    },
+    "neighbors-1-local": {
+      "candidate": {
+        "reference": "baseline",
+        "ratio": 0.9646669703263373,
+        "interval95": [
+          0.9568997547744669,
+          0.9708614864864865
+        ],
+        "copyQualified": true,
+        "direction": "faster"
+      }
+    },
+    "neighbors-3-local": {
+      "candidate": {
+        "reference": "baseline",
+        "ratio": 0.2689830464054882,
+        "interval95": [
+          0.26331984925491825,
+          0.27100711212573536
+        ],
+        "copyQualified": true,
+        "direction": "faster"
+      }
+    },
+    "neighbors-33-local": {
+      "candidate": {
+        "reference": "baseline",
+        "ratio": 0.09855005120609299,
+        "interval95": [
+          0.09808247545248026,
+          0.09990653545820646
+        ],
+        "copyQualified": true,
+        "direction": "faster"
+      }
+    },
+    "neighbors-129-local": {
+      "candidate": {
+        "reference": "baseline",
+        "ratio": 0.08978579110061108,
+        "interval95": [
+          0.08903910811274011,
+          0.09083108309430621
+        ],
+        "copyQualified": true,
+        "direction": "faster"
+      }
+    },
+    "independent-0-local": {
+      "candidate": {
+        "reference": "baseline",
+        "ratio": 0.9766095811151514,
+        "interval95": [
+          0.9648101485793726,
+          0.9932450331125828
+        ],
+        "copyQualified": true,
+        "direction": "faster"
+      }
+    },
+    "independent-1-local": {
+      "candidate": {
+        "reference": "baseline",
+        "ratio": 0.5391319086738984,
+        "interval95": [
+          0.5358885897004375,
+          0.54392797319933
+        ],
+        "copyQualified": true,
+        "direction": "faster"
+      }
+    },
+    "independent-16-local": {
+      "candidate": {
+        "reference": "baseline",
+        "ratio": 0.186511443847862,
+        "interval95": [
+          0.18184214903787305,
+          0.18731005437219544
+        ],
+        "copyQualified": true,
+        "direction": "faster"
+      }
+    },
+    "independent-129-local": {
+      "candidate": {
+        "reference": "baseline",
+        "ratio": 0.14885011986834085,
+        "interval95": [
+          0.14745985129981087,
+          0.15101903704509734
+        ],
+        "copyQualified": true,
+        "direction": "faster"
+      }
+    },
+    "neighbors-129-reverse": {
+      "candidate": {
+        "reference": "baseline",
+        "ratio": 1.0004602075245312,
+        "interval95": [
+          0.997351162178515,
+          1.0030563048825867
+        ],
+        "copyQualified": true,
+        "direction": "inconclusive"
+      }
+    },
+    "independent-129-reverse": {
+      "candidate": {
+        "reference": "baseline",
+        "ratio": 0.9984423276539016,
+        "interval95": [
+          0.9949799063555529,
+          1.0088930229469797
+        ],
+        "copyQualified": true,
+        "direction": "inconclusive"
+      }
+    },
+    "dense-9-reverse": {
+      "candidate": {
+        "reference": "baseline",
+        "ratio": 1.00274289663636,
+        "interval95": [
+          0.9853662320266288,
+          1.0081097756670685
+        ],
+        "copyQualified": true,
+        "direction": "inconclusive"
+      }
+    },
+    "dense-33-reverse": {
+      "candidate": {
+        "reference": "baseline",
+        "ratio": 1.0011210714250907,
+        "interval95": [
+          0.9970248931180954,
+          1.0020023025993123
+        ],
+        "copyQualified": true,
+        "direction": "inconclusive"
+      }
+    },
+    "dense-33-forward": {
+      "candidate": {
+        "reference": "baseline",
+        "ratio": 0.9996376634866169,
+        "interval95": [
+          0.9982627010079616,
+          1.0004541503703646
+        ],
+        "copyQualified": true,
+        "direction": "inconclusive"
+      }
+    }
+  }
+}

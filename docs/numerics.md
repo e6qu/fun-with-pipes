@@ -184,8 +184,11 @@ uses `Dual` on each local edge instead of recording a global tape. Its
 The [structured-gradient comparison](measurements/structured-autodiff.md) now
 covers neighboring terms, independent losses and dense coupling. The
 [four-session results](measurements/structured-gradient-methods-2026-11-08/README.md)
-retain noisy comparisons and expose temporary callback allocations. General
-`grad`, nested differentiation and F128 remain supported.
+retain noisy comparisons and expose temporary callback allocations.
+[Known-callback measurements](measurements/structured-array-callbacks-2026-11-08/README.md)
+verify fewer allocations and large ARM64 computation reductions; AMD64 timing
+acceptance remains open. General `grad`, nested differentiation and F128 remain
+supported.
 For independent terms, use existing `array.map (derivative loss)`; the
 [tutorial's four equivalent methods](tutorials/20-autodiff-and-devices/README.md#use-the-structure-of-the-calculation)
 show complete outputs and explain when that decomposition is valid.

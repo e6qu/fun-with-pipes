@@ -12,8 +12,11 @@ identities. Do not edit observations to make an old experiment describe new code
 [Structured-gradient methods](structured-gradient-methods-2026-11-08/README.md)
 compares reverse, forward, local and tensor AD across three objective shapes.
 All four sessions pass correctness/storage audits; noisy timing controls remain
-inconclusive. The next change specializes known array callbacks to remove
-measured derivative-object allocation and dispatch. [Frozen candidate contract](structured-autodiff.md#selected-change-known-array-callbacks).
+inconclusive. [Known array callback results](structured-array-callbacks-2026-11-08/README.md)
+now verify fewer derivative-object allocations and 85–91% less large-case
+computation in both ARM64 sessions. AMD64 timing acceptance remains open because
+copy controls fail. Full platform delivery is pending.
+[Frozen candidate contract](structured-autodiff.md#selected-change-known-array-callbacks).
 
 ## Latest delivery
 

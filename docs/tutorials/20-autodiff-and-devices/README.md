@@ -86,6 +86,9 @@ The [method comparison](../../measurements/structured-autodiff.md) defines the
 complete-gradient measurements and these limits; the
 [results](../../measurements/structured-gradient-methods-2026-11-08/README.md)
 separate supported speed comparisons from inconclusive timings.
+The [compiler comparison](../../measurements/structured-array-callbacks-2026-11-08/README.md)
+shows what removing temporary derivative objects changes, with allocation counts,
+computation time and remaining measurement limits reported separately.
 
 ## What the tape records: a smaller example
 
