@@ -1,8 +1,8 @@
 # Current work
 
-**Next:** publish the batched empty-array test-expectation repair and run
-`numerics.yml` with `suite=scalar-identity-checks`. After all three hosts pass,
-dispatch `suite=captured-maps` with that passing run as `evidence_run`.
+**Next:** finish expanded focused run `42477156079` (`scalar-identity-checks`).
+After all three hosts pass, dispatch `numerics.yml` with `suite=captured-maps`
+and `evidence_run=42477156079`.
 Keep the original measurements unchanged. Bundle the implementation, repair,
 evidence and docs in one normal PR after the changed implementation is measured.
 
@@ -36,17 +36,19 @@ potentially large backing owner. The physical-free/alias tests require this exac
 behavior. Formatting passes locally; the first native run found stale assertions
 in record/temporary-map tests. The compiler source is unchanged by their repair.
 
-Focused run `42475715012`:
+Expectation repair `4da9011873ce7cc6f67af71448cd3591c1d5562c` is published.
+Expanded focused run `42477156079`:
 
 | Host | Job | Last observed state |
 |---|---|---|
-| AMD64 GCC | 128716513453 | One stale record-map assertion fails |
-| ARM64 GCC | 128716513460 | Same assertion fails |
-| macOS ARM64 Clang | 128716513528 | Same assertion fails |
+| AMD64 GCC | 128720938835 | Queued |
+| ARM64 GCC | 128720938985 | Formatting/Clippy running |
+| macOS ARM64 Clang | 128720938966 | Queued |
 
-Docs `42475717410`, job `128716518586`, passes at the same repair source.
-All completed targets and full job logs were reviewed: 13 ownership units and
-the other seven targets pass on every host. The prepared batch updates exact
+Docs `42477158452`, job `128720942662`, is running. Prior docs `42475717410`,
+job `128716518586`, passes at compiler source `ca837567a`.
+In failed run `42475715012`, all completed targets and full job logs were reviewed:
+13 ownership units and the other seven targets pass on every host. The batch updates exact
 empty-result identity/allocation counts for returned records and temporary inputs,
 adds contextual diagnostics, and repairs the same assumption in the float
 identity control. Alias, empty-view and physical-free assertions remain required.
@@ -108,10 +110,14 @@ native suites, benchmarks and large evidence generation run on GitHub runners.
 - Markdown links, five roadmap rows and workflow size/YAML checks pass.
 - Original artifact digests, compact record hashes and reported fields are checked
   locally; the complete observation audits passed on their measurement runners.
+- Guarded `/tmp/fwp-replay-empty-owner.py` replays the exact failing CI-generated
+  C with the repaired fixture at Apple Clang 17 O1/O2: reuse and no-reuse pass;
+  corrupted output, missing suffix cleanup and missing captured-input cleanup
+  reject at exact statuses 241/90/248. All ten cases pass in 5.43 seconds, 2.32
+  sampled CPU seconds. This does not replace GCC or the added identity checks.
 
-Disk has fluctuated across the 64 GiB reserve. Free space dropped from about 80
-to 54 GiB while the original measurements ran. Local checks are stopped; verify
-the expectation repair on CI. No limits were raised or bypassed.
+Disk has fluctuated across the 64 GiB reserve. Local checks stopped at 54 GiB and
+resumed only after recovery to 78 GiB. No limits were raised or bypassed.
 Final delivery still needs nine production jobs, docs and a complete audit for the
 exact final PR head, followed by authorized squash merge with a one-line subject
 of at most 80 characters and an empty body.
