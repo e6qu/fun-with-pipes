@@ -1,0 +1,522 @@
+[
+  {
+    "command": [
+      "clang",
+      "-O1",
+      "-std=gnu11",
+      "-ffp-contract=off",
+      "-fno-fast-math",
+      "-fno-lto",
+      "/tmp/fwp-captured-driver-replay/original-shared-empty-O1.c",
+      "-o",
+      "/tmp/fwp-captured-driver-replay/original-shared-empty-O1.exe",
+      "-lm",
+      "-lpthread"
+    ],
+    "sourceSha256": "947f6d3c5c560790b29c4c11a0995e50a42cd09ca553c735a4ff256160a368d3",
+    "status": 214,
+    "expected": 214,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "clang",
+      "-O1",
+      "-std=gnu11",
+      "-ffp-contract=off",
+      "-fno-fast-math",
+      "-fno-lto",
+      "/tmp/fwp-captured-driver-replay/fixed-0-1-0-O1.c",
+      "-o",
+      "/tmp/fwp-captured-driver-replay/fixed-0-1-0-O1.exe",
+      "-lm",
+      "-lpthread"
+    ],
+    "sourceSha256": "daebc4154121ad49930dbc669b6d68cef51fc0a3621be807bb8e2de455635228",
+    "status": 0,
+    "expected": 0,
+    "stdout": "{\"constructionNs\":23000,\"computationNs\":3000,\"releaseNs\":0,\"loopNs\":26000,\"checksum\":0,\"initialLiveBytes\":0,\"finalLiveBytes\":0}\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "clang",
+      "-O1",
+      "-std=gnu11",
+      "-ffp-contract=off",
+      "-fno-fast-math",
+      "-fno-lto",
+      "/tmp/fwp-captured-driver-replay/fixed-0-1-1-O1.c",
+      "-o",
+      "/tmp/fwp-captured-driver-replay/fixed-0-1-1-O1.exe",
+      "-lm",
+      "-lpthread"
+    ],
+    "sourceSha256": "4bbf377d9b8f67b92a9f37498013f86fb47289f8a4c86d606a5046cea556331d",
+    "status": 0,
+    "expected": 0,
+    "stdout": "{\"constructionNs\":25000,\"computationNs\":3000,\"releaseNs\":0,\"loopNs\":28000,\"checksum\":0,\"initialLiveBytes\":0,\"finalLiveBytes\":0}\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "clang",
+      "-O1",
+      "-std=gnu11",
+      "-ffp-contract=off",
+      "-fno-fast-math",
+      "-fno-lto",
+      "/tmp/fwp-captured-driver-replay/fixed-0-1-2-O1.c",
+      "-o",
+      "/tmp/fwp-captured-driver-replay/fixed-0-1-2-O1.exe",
+      "-lm",
+      "-lpthread"
+    ],
+    "sourceSha256": "967cba18122f8f769fb53f8e64dce87e1913e2533062580d672e805e9a4b3f87",
+    "status": 0,
+    "expected": 0,
+    "stdout": "{\"constructionNs\":157000,\"computationNs\":2000,\"releaseNs\":0,\"loopNs\":160000,\"checksum\":0,\"initialLiveBytes\":0,\"finalLiveBytes\":0}\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "clang",
+      "-O1",
+      "-std=gnu11",
+      "-ffp-contract=off",
+      "-fno-fast-math",
+      "-fno-lto",
+      "/tmp/fwp-captured-driver-replay/fixed-0-199-0-O1.c",
+      "-o",
+      "/tmp/fwp-captured-driver-replay/fixed-0-199-0-O1.exe",
+      "-lm",
+      "-lpthread"
+    ],
+    "sourceSha256": "28a6163a2ff803c7e36e1ff44cc37c775cffcb7037e1174628d4f0d768d80012",
+    "status": 0,
+    "expected": 0,
+    "stdout": "{\"constructionNs\":21000,\"computationNs\":12000,\"releaseNs\":0,\"loopNs\":33000,\"checksum\":0,\"initialLiveBytes\":0,\"finalLiveBytes\":0}\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "clang",
+      "-O1",
+      "-std=gnu11",
+      "-ffp-contract=off",
+      "-fno-fast-math",
+      "-fno-lto",
+      "/tmp/fwp-captured-driver-replay/fixed-0-199-1-O1.c",
+      "-o",
+      "/tmp/fwp-captured-driver-replay/fixed-0-199-1-O1.exe",
+      "-lm",
+      "-lpthread"
+    ],
+    "sourceSha256": "549b98f7272e2c7f139cde12072a0a64d42c206f7457c3cdfc8fe24ec7e33f23",
+    "status": 0,
+    "expected": 0,
+    "stdout": "{\"constructionNs\":25000,\"computationNs\":12000,\"releaseNs\":0,\"loopNs\":37000,\"checksum\":0,\"initialLiveBytes\":0,\"finalLiveBytes\":0}\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "clang",
+      "-O1",
+      "-std=gnu11",
+      "-ffp-contract=off",
+      "-fno-fast-math",
+      "-fno-lto",
+      "/tmp/fwp-captured-driver-replay/fixed-0-199-2-O1.c",
+      "-o",
+      "/tmp/fwp-captured-driver-replay/fixed-0-199-2-O1.exe",
+      "-lm",
+      "-lpthread"
+    ],
+    "sourceSha256": "abaae9fedd5ade8aad5a59482e5e2a1bda32b1dee3bfebdb4cefd823c601b6e4",
+    "status": 0,
+    "expected": 0,
+    "stdout": "{\"constructionNs\":33000,\"computationNs\":11000,\"releaseNs\":1000,\"loopNs\":45000,\"checksum\":0,\"initialLiveBytes\":0,\"finalLiveBytes\":0}\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "clang",
+      "-O1",
+      "-std=gnu11",
+      "-ffp-contract=off",
+      "-fno-fast-math",
+      "-fno-lto",
+      "/tmp/fwp-captured-driver-replay/fixed-16-1-0-O1.c",
+      "-o",
+      "/tmp/fwp-captured-driver-replay/fixed-16-1-0-O1.exe",
+      "-lm",
+      "-lpthread"
+    ],
+    "sourceSha256": "b9012853f5bbbe7b2157cdc7b81885bd60ba334422a93708717db604a9d384a2",
+    "status": 0,
+    "expected": 0,
+    "stdout": "{\"constructionNs\":21000,\"computationNs\":2000,\"releaseNs\":0,\"loopNs\":23000,\"checksum\":0,\"initialLiveBytes\":0,\"finalLiveBytes\":0}\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "clang",
+      "-O1",
+      "-std=gnu11",
+      "-ffp-contract=off",
+      "-fno-fast-math",
+      "-fno-lto",
+      "/tmp/fwp-captured-driver-replay/fixed-16-1-1-O1.c",
+      "-o",
+      "/tmp/fwp-captured-driver-replay/fixed-16-1-1-O1.exe",
+      "-lm",
+      "-lpthread"
+    ],
+    "sourceSha256": "43f01e9418dda29ea0f827df4e1940c79b52a481c9b16be40aa63007262ba238",
+    "status": 0,
+    "expected": 0,
+    "stdout": "{\"constructionNs\":22000,\"computationNs\":2000,\"releaseNs\":0,\"loopNs\":25000,\"checksum\":0,\"initialLiveBytes\":0,\"finalLiveBytes\":0}\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "clang",
+      "-O1",
+      "-std=gnu11",
+      "-ffp-contract=off",
+      "-fno-fast-math",
+      "-fno-lto",
+      "/tmp/fwp-captured-driver-replay/fixed-16-1-2-O1.c",
+      "-o",
+      "/tmp/fwp-captured-driver-replay/fixed-16-1-2-O1.exe",
+      "-lm",
+      "-lpthread"
+    ],
+    "sourceSha256": "a980e1ffa1aed7e77ee44d41019778ab5b51914c818ad8fcd355be41a57ed8d9",
+    "status": 0,
+    "expected": 0,
+    "stdout": "{\"constructionNs\":24000,\"computationNs\":2000,\"releaseNs\":0,\"loopNs\":26000,\"checksum\":0,\"initialLiveBytes\":0,\"finalLiveBytes\":0}\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "clang",
+      "-O1",
+      "-std=gnu11",
+      "-ffp-contract=off",
+      "-fno-fast-math",
+      "-fno-lto",
+      "/tmp/fwp-captured-driver-replay/fixed-16-199-0-O1.c",
+      "-o",
+      "/tmp/fwp-captured-driver-replay/fixed-16-199-0-O1.exe",
+      "-lm",
+      "-lpthread"
+    ],
+    "sourceSha256": "43887282b64719a674f2c0778dabce23d825a93092d8e8efa554611ac59ddd0c",
+    "status": 0,
+    "expected": 0,
+    "stdout": "{\"constructionNs\":21000,\"computationNs\":16000,\"releaseNs\":0,\"loopNs\":40000,\"checksum\":0,\"initialLiveBytes\":0,\"finalLiveBytes\":0}\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "clang",
+      "-O1",
+      "-std=gnu11",
+      "-ffp-contract=off",
+      "-fno-fast-math",
+      "-fno-lto",
+      "/tmp/fwp-captured-driver-replay/fixed-16-199-1-O1.c",
+      "-o",
+      "/tmp/fwp-captured-driver-replay/fixed-16-199-1-O1.exe",
+      "-lm",
+      "-lpthread"
+    ],
+    "sourceSha256": "025d5358b9bf18f67cd98c6a6813af44729fdbfac7b92bbffe056cc51a400368",
+    "status": 0,
+    "expected": 0,
+    "stdout": "{\"constructionNs\":58000,\"computationNs\":49000,\"releaseNs\":0,\"loopNs\":113000,\"checksum\":0,\"initialLiveBytes\":0,\"finalLiveBytes\":0}\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "clang",
+      "-O1",
+      "-std=gnu11",
+      "-ffp-contract=off",
+      "-fno-fast-math",
+      "-fno-lto",
+      "/tmp/fwp-captured-driver-replay/fixed-16-199-2-O1.c",
+      "-o",
+      "/tmp/fwp-captured-driver-replay/fixed-16-199-2-O1.exe",
+      "-lm",
+      "-lpthread"
+    ],
+    "sourceSha256": "149f07fc3702dbce3a31b27d0243b4faeecde6c7ba058a836ef8872097ca9047",
+    "status": 0,
+    "expected": 0,
+    "stdout": "{\"constructionNs\":23000,\"computationNs\":16000,\"releaseNs\":0,\"loopNs\":43000,\"checksum\":0,\"initialLiveBytes\":0,\"finalLiveBytes\":0}\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "clang",
+      "-O2",
+      "-std=gnu11",
+      "-ffp-contract=off",
+      "-fno-fast-math",
+      "-fno-lto",
+      "/tmp/fwp-captured-driver-replay/original-shared-empty-O2.c",
+      "-o",
+      "/tmp/fwp-captured-driver-replay/original-shared-empty-O2.exe",
+      "-lm",
+      "-lpthread"
+    ],
+    "sourceSha256": "947f6d3c5c560790b29c4c11a0995e50a42cd09ca553c735a4ff256160a368d3",
+    "status": 214,
+    "expected": 214,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "clang",
+      "-O2",
+      "-std=gnu11",
+      "-ffp-contract=off",
+      "-fno-fast-math",
+      "-fno-lto",
+      "/tmp/fwp-captured-driver-replay/fixed-0-1-0-O2.c",
+      "-o",
+      "/tmp/fwp-captured-driver-replay/fixed-0-1-0-O2.exe",
+      "-lm",
+      "-lpthread"
+    ],
+    "sourceSha256": "daebc4154121ad49930dbc669b6d68cef51fc0a3621be807bb8e2de455635228",
+    "status": 0,
+    "expected": 0,
+    "stdout": "{\"constructionNs\":12000,\"computationNs\":3000,\"releaseNs\":0,\"loopNs\":15000,\"checksum\":0,\"initialLiveBytes\":0,\"finalLiveBytes\":0}\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "clang",
+      "-O2",
+      "-std=gnu11",
+      "-ffp-contract=off",
+      "-fno-fast-math",
+      "-fno-lto",
+      "/tmp/fwp-captured-driver-replay/fixed-0-1-1-O2.c",
+      "-o",
+      "/tmp/fwp-captured-driver-replay/fixed-0-1-1-O2.exe",
+      "-lm",
+      "-lpthread"
+    ],
+    "sourceSha256": "4bbf377d9b8f67b92a9f37498013f86fb47289f8a4c86d606a5046cea556331d",
+    "status": 0,
+    "expected": 0,
+    "stdout": "{\"constructionNs\":45000,\"computationNs\":6000,\"releaseNs\":0,\"loopNs\":51000,\"checksum\":0,\"initialLiveBytes\":0,\"finalLiveBytes\":0}\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "clang",
+      "-O2",
+      "-std=gnu11",
+      "-ffp-contract=off",
+      "-fno-fast-math",
+      "-fno-lto",
+      "/tmp/fwp-captured-driver-replay/fixed-0-1-2-O2.c",
+      "-o",
+      "/tmp/fwp-captured-driver-replay/fixed-0-1-2-O2.exe",
+      "-lm",
+      "-lpthread"
+    ],
+    "sourceSha256": "967cba18122f8f769fb53f8e64dce87e1913e2533062580d672e805e9a4b3f87",
+    "status": 0,
+    "expected": 0,
+    "stdout": "{\"constructionNs\":26000,\"computationNs\":3000,\"releaseNs\":0,\"loopNs\":29000,\"checksum\":0,\"initialLiveBytes\":0,\"finalLiveBytes\":0}\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "clang",
+      "-O2",
+      "-std=gnu11",
+      "-ffp-contract=off",
+      "-fno-fast-math",
+      "-fno-lto",
+      "/tmp/fwp-captured-driver-replay/fixed-0-199-0-O2.c",
+      "-o",
+      "/tmp/fwp-captured-driver-replay/fixed-0-199-0-O2.exe",
+      "-lm",
+      "-lpthread"
+    ],
+    "sourceSha256": "28a6163a2ff803c7e36e1ff44cc37c775cffcb7037e1174628d4f0d768d80012",
+    "status": 0,
+    "expected": 0,
+    "stdout": "{\"constructionNs\":15000,\"computationNs\":12000,\"releaseNs\":0,\"loopNs\":27000,\"checksum\":0,\"initialLiveBytes\":0,\"finalLiveBytes\":0}\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "clang",
+      "-O2",
+      "-std=gnu11",
+      "-ffp-contract=off",
+      "-fno-fast-math",
+      "-fno-lto",
+      "/tmp/fwp-captured-driver-replay/fixed-0-199-1-O2.c",
+      "-o",
+      "/tmp/fwp-captured-driver-replay/fixed-0-199-1-O2.exe",
+      "-lm",
+      "-lpthread"
+    ],
+    "sourceSha256": "549b98f7272e2c7f139cde12072a0a64d42c206f7457c3cdfc8fe24ec7e33f23",
+    "status": 0,
+    "expected": 0,
+    "stdout": "{\"constructionNs\":12000,\"computationNs\":12000,\"releaseNs\":0,\"loopNs\":24000,\"checksum\":0,\"initialLiveBytes\":0,\"finalLiveBytes\":0}\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "clang",
+      "-O2",
+      "-std=gnu11",
+      "-ffp-contract=off",
+      "-fno-fast-math",
+      "-fno-lto",
+      "/tmp/fwp-captured-driver-replay/fixed-0-199-2-O2.c",
+      "-o",
+      "/tmp/fwp-captured-driver-replay/fixed-0-199-2-O2.exe",
+      "-lm",
+      "-lpthread"
+    ],
+    "sourceSha256": "abaae9fedd5ade8aad5a59482e5e2a1bda32b1dee3bfebdb4cefd823c601b6e4",
+    "status": 0,
+    "expected": 0,
+    "stdout": "{\"constructionNs\":23000,\"computationNs\":10000,\"releaseNs\":0,\"loopNs\":34000,\"checksum\":0,\"initialLiveBytes\":0,\"finalLiveBytes\":0}\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "clang",
+      "-O2",
+      "-std=gnu11",
+      "-ffp-contract=off",
+      "-fno-fast-math",
+      "-fno-lto",
+      "/tmp/fwp-captured-driver-replay/fixed-16-1-0-O2.c",
+      "-o",
+      "/tmp/fwp-captured-driver-replay/fixed-16-1-0-O2.exe",
+      "-lm",
+      "-lpthread"
+    ],
+    "sourceSha256": "b9012853f5bbbe7b2157cdc7b81885bd60ba334422a93708717db604a9d384a2",
+    "status": 0,
+    "expected": 0,
+    "stdout": "{\"constructionNs\":22000,\"computationNs\":3000,\"releaseNs\":0,\"loopNs\":25000,\"checksum\":0,\"initialLiveBytes\":0,\"finalLiveBytes\":0}\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "clang",
+      "-O2",
+      "-std=gnu11",
+      "-ffp-contract=off",
+      "-fno-fast-math",
+      "-fno-lto",
+      "/tmp/fwp-captured-driver-replay/fixed-16-1-1-O2.c",
+      "-o",
+      "/tmp/fwp-captured-driver-replay/fixed-16-1-1-O2.exe",
+      "-lm",
+      "-lpthread"
+    ],
+    "sourceSha256": "43f01e9418dda29ea0f827df4e1940c79b52a481c9b16be40aa63007262ba238",
+    "status": 0,
+    "expected": 0,
+    "stdout": "{\"constructionNs\":21000,\"computationNs\":3000,\"releaseNs\":0,\"loopNs\":24000,\"checksum\":0,\"initialLiveBytes\":0,\"finalLiveBytes\":0}\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "clang",
+      "-O2",
+      "-std=gnu11",
+      "-ffp-contract=off",
+      "-fno-fast-math",
+      "-fno-lto",
+      "/tmp/fwp-captured-driver-replay/fixed-16-1-2-O2.c",
+      "-o",
+      "/tmp/fwp-captured-driver-replay/fixed-16-1-2-O2.exe",
+      "-lm",
+      "-lpthread"
+    ],
+    "sourceSha256": "a980e1ffa1aed7e77ee44d41019778ab5b51914c818ad8fcd355be41a57ed8d9",
+    "status": 0,
+    "expected": 0,
+    "stdout": "{\"constructionNs\":23000,\"computationNs\":2000,\"releaseNs\":0,\"loopNs\":26000,\"checksum\":0,\"initialLiveBytes\":0,\"finalLiveBytes\":0}\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "clang",
+      "-O2",
+      "-std=gnu11",
+      "-ffp-contract=off",
+      "-fno-fast-math",
+      "-fno-lto",
+      "/tmp/fwp-captured-driver-replay/fixed-16-199-0-O2.c",
+      "-o",
+      "/tmp/fwp-captured-driver-replay/fixed-16-199-0-O2.exe",
+      "-lm",
+      "-lpthread"
+    ],
+    "sourceSha256": "43887282b64719a674f2c0778dabce23d825a93092d8e8efa554611ac59ddd0c",
+    "status": 0,
+    "expected": 0,
+    "stdout": "{\"constructionNs\":22000,\"computationNs\":17000,\"releaseNs\":0,\"loopNs\":42000,\"checksum\":0,\"initialLiveBytes\":0,\"finalLiveBytes\":0}\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "clang",
+      "-O2",
+      "-std=gnu11",
+      "-ffp-contract=off",
+      "-fno-fast-math",
+      "-fno-lto",
+      "/tmp/fwp-captured-driver-replay/fixed-16-199-1-O2.c",
+      "-o",
+      "/tmp/fwp-captured-driver-replay/fixed-16-199-1-O2.exe",
+      "-lm",
+      "-lpthread"
+    ],
+    "sourceSha256": "025d5358b9bf18f67cd98c6a6813af44729fdbfac7b92bbffe056cc51a400368",
+    "status": 0,
+    "expected": 0,
+    "stdout": "{\"constructionNs\":23000,\"computationNs\":16000,\"releaseNs\":0,\"loopNs\":42000,\"checksum\":0,\"initialLiveBytes\":0,\"finalLiveBytes\":0}\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "clang",
+      "-O2",
+      "-std=gnu11",
+      "-ffp-contract=off",
+      "-fno-fast-math",
+      "-fno-lto",
+      "/tmp/fwp-captured-driver-replay/fixed-16-199-2-O2.c",
+      "-o",
+      "/tmp/fwp-captured-driver-replay/fixed-16-199-2-O2.exe",
+      "-lm",
+      "-lpthread"
+    ],
+    "sourceSha256": "149f07fc3702dbce3a31b27d0243b4faeecde6c7ba058a836ef8872097ca9047",
+    "status": 0,
+    "expected": 0,
+    "stdout": "{\"constructionNs\":23000,\"computationNs\":16000,\"releaseNs\":0,\"loopNs\":43000,\"checksum\":0,\"initialLiveBytes\":0,\"finalLiveBytes\":0}\n",
+    "stderr": ""
+  }
+]

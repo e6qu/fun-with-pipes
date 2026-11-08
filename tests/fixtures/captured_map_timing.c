@@ -60,8 +60,8 @@ int main(void) {
         if (alias) for (size_t i = 0; i < backing_count; i++)
             if (fwp_array_load(alias, i, &scalar) != initial_word(SHARING == 2 ? (i ? i - 1 : 16) : i)) return 213;
         start = capture_clock();
-        fwp_rc_free_arr(result);
-        if (alias) fwp_rc_free_arr(alias);
+        if (fwp_rc_release_last(result)) fwp_rc_free_arr(result);
+        if (alias && fwp_rc_release_last(alias)) fwp_rc_free_arr(alias);
         release += capture_clock() - start;
         if (fwp_heap.live != initial) return 214;
     }

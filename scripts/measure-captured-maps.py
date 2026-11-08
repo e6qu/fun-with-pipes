@@ -77,7 +77,8 @@ def main():
         with (output / 'commands.jsonl').open('a') as log:
             log.write(json.dumps(dict(command=command, status=result.returncode, timedOut=timed_out,
                 elapsedNs=elapsed, output=str(destination.relative_to(output)))) + '\n')
-        assert result.returncode == 0 and not timed_out and not result.stderr, (command, result.stderr)
+        assert result.returncode == 0 and not timed_out and not result.stderr, dict(
+            command=command, status=result.returncode, timedOut=timed_out, stderr=result.stderr)
         cost = dict(elapsedNs=elapsed)
         if observe:
             cost.update(OBS.resources(destination.with_suffix('.resources').read_text()))

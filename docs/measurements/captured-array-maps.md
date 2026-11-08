@@ -147,6 +147,8 @@ keep no-capture optimization in both. No previous fwp build dependency.
 
 Construction includes input filling and alias/view creation. Computation includes
 all updates and intermediate releases. Final release is timed separately.
+The [driver cleanup repair](captured-map-driver-repair-2026-11-08/README.md)
+documents correct release of a shared empty result and the failed run it fixes.
 Result/alias checks sit outside those three timers; they remain inside loop and
 whole-process elapsed time. Whole-process time therefore includes the checker
 and is **not** an end-to-end application speed claim.

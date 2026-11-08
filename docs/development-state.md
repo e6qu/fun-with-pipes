@@ -1,7 +1,7 @@
 # Current work
 
-**Next:** finish repaired-implementation measurement run `42478473189`, then
-review all four sessions and prepare the normal PR with final evidence.
+**Next:** publish the benchmark cleanup repair and measure the repaired compiler
+using safety run `42477156079`; review all four sessions before final delivery.
 Keep the original measurements unchanged. Bundle the implementation, repair,
 evidence and docs in one normal PR after the changed implementation is measured.
 
@@ -62,10 +62,15 @@ New measurement source `7ab93331027f65d02f1b029b51c8c909656d3fe4` uses the uncha
 [expanded evidence audit](measurements/captured-map-empty-checks-2026-11-08/README.md)
 passes, job `128724990571`, with 444 probe outcomes and all identity logs per host.
 Artifact `13616691909` is retained with its verified digest and record hashes.
-Measurement jobs: ARM1 `128725646991`, ARM2 `128725646968`, AMD1 `128725646945`,
-AMD2 `128725647003`. AMD2 has started; the other three are queued. Docs
-`42478475287`, job `128724993198`, is running at the same source. No repaired
-timing result is available yet.
+Measurement run `42478473189` failed: ARM2 `128725646968` and AMD2 `128725647003`
+exposed a benchmark cleanup bug (status 214); AMD1 `128725646945` correctly
+rejected an Intel host before timing. ARM1 `128725646991` was cancelled during
+building after the failure was known. All completed logs were reviewed.
+[Failure evidence and repair](measurements/captured-map-driver-repair-2026-11-08/README.md)
+explain the missing reference drops. The driver now consumes each owner before
+freeing its storage; compiler code is unchanged. Both saved failures and the
+rejected host are retained. Docs `42478475287`, job `128724993198`, passes.
+No repaired timing result is available yet; keep host and acceptance limits fixed.
 
 ## Original measurements: preserved, not accepted as complete
 
@@ -128,11 +133,16 @@ native suites, benchmarks and large evidence generation run on GitHub runners.
   corrupted output, missing suffix cleanup and missing captured-input cleanup
   reject at exact statuses 241/90/248. All ten cases pass in 5.43 seconds, 2.32
   sampled CPU seconds. This does not replace GCC or the added identity checks.
+- Guarded `/tmp/fwp-replay-captured-driver.py` reproduces the benchmark leak at
+  O1/O2 and passes all 24 corrected exclusive/shared/view checks: 24.31 seconds,
+  12.05 sampled CPU seconds. Four driver-contract tests pass. Compact failure
+  artifacts and their exact status-214 records pass digest checks.
 
 Disk has fluctuated across the 64 GiB reserve. Local checks stopped at 54 GiB and
 resumed only after recovery to 78 GiB. The guard then refused the final docs check
 after free space fell again; that check is queued on CI. No limits were raised
-or bypassed. Local checks remain stopped until the reserve recovers.
+or bypassed. Space recovered to 76 GiB before the guarded driver replay; stop
+again if the reserve falls below the limit.
 Final delivery still needs nine production jobs, docs and a complete audit for the
 exact final PR head, followed by authorized squash merge with a one-line subject
 of at most 80 characters and an empty body.

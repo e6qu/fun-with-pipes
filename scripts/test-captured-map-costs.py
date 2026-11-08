@@ -63,7 +63,8 @@ class CapturedMapCosts(unittest.TestCase):
             text = driver(generated, case)
             self.assertIn('f0(scale, offset, updates, input)', text)
             self.assertIn('"+r"(scale)', text)
-            self.assertIn('fwp_rc_free_arr(alias)', text)
+            self.assertIn('if (fwp_rc_release_last(result)) fwp_rc_free_arr(result);', text)
+            self.assertIn('if (alias && fwp_rc_release_last(alias)) fwp_rc_free_arr(alias);', text)
             self.assertIn('fwp_heap.live != initial', text)
         with self.assertRaises(AssertionError):
             driver(generated.replace('V l2, V l3', 'V l2'), next(cases()))
