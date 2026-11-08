@@ -102,7 +102,7 @@ derivative implementations. These RSS samples do not establish an allocation
 reduction: tracked storage/counts remain unchanged. AMD instruction bytes grow
 44,498→45,106 and executable bytes 88,648→88,672 in both sessions.
 
-## Audits and remaining delivery
+## Audits and delivery
 
 - [Original run audit](https://github.com/e6qu/fun-with-pipes/actions/runs/42230424553)
   verifies both complete ARM sessions and two rejected AMD hosts.
@@ -126,6 +126,7 @@ reduction: tracked storage/counts remain unchanged. AMD instruction bytes grow
   were not downloaded or re-audited locally.
 
 The successful audits preserve producer failures; they do not accept missed
-timing limits. Check original measured images
-and finish all nine final-head production gates plus docs before merge.
+timing limits. [Original measured images](../recording-context-images-2026-11-06/README.md)
+and [all final production gates](../recording-context-delivery-2026-11-06/README.md)
+are verified.
 [Contract](../recording-context-scopes.md) · [Current plan](../../../PLAN.md).

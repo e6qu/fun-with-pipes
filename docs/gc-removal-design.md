@@ -136,7 +136,7 @@ this is not a promise to prove arbitrary external code safe.
 
 ## Six implementation examples
 
-These boundary contracts and regression cases were verified in #215. A6 adds
+These boundary contracts and regression cases were verified in #215. The compiler adds
 [count-free parser storage](parser-workspace.md) inside the compiler without a
 new public API; its full platform acceptance is verified in #221.
 
@@ -192,7 +192,7 @@ runtime-created functions still cannot cross C as values; function fields in
 
 The [admission matrix](ownership-admission.md) maps these contracts to execution
 and rejection tests. Preserve those verified contracts as representations change.
-A6 changes parser node storage within one proved invocation lifetime; it does not
+Scoped parser storage changes nodes within one proved invocation lifetime; it does not
 introduce general region inference or alter the completed collector removal.
 
 ## Keep compiler cost bounded and visible
@@ -215,8 +215,8 @@ specialization.
 
 ## Completed removal and maintained checks
 
-G3/G4 delivered the six contracts, weak channels, C registrations and ownership
-diagnostics. G5 removed tracing in [#217](roadmap-history.md#tracing-gc-removal-pr-217):
+The six contracts, weak channels, C registrations and ownership diagnostics are
+delivered. [PR #217](roadmap-history.md#tracing-gc-removal-pr-217) removed tracing:
 one admission policy now applies before interpreter effects and native generation,
 including REPL, notebooks and compile-time execution. Collector selection,
 root discovery, marking and sweeping are gone. There is no compatibility collector.

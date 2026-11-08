@@ -38,7 +38,7 @@ is research precedent for functional reuse, not evidence for fwp's contracts.
 
 Use finite summaries and revisit changed dependencies. Measure analysis time,
 memory and specialization growth as inputs grow; preserve the
-[G2 budgets](measurements/ownership-analysis.md).
+[ownership-analysis budgets](measurements/ownership-analysis.md).
 
 More precise types cannot decide every runtime lifetime. Conservative rejection
 is permitted; unbounded search for an exact proof is not. A terminating analysis

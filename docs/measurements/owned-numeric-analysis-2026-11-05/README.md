@@ -75,4 +75,5 @@ expected negative-runner diagnostics.
 [Runtime sessions](../owned-numeric-time-2026-11-05/README.md) and
 [final platform gates](../../roadmap-history.md#consumed-numeric-storage-pr-258)
 are verified; four AMD64 speed targets remain open.
-[The handoff](../../development-state.md) tracks the current pair-storage work.
+[Later pair-storage results](../packed-pair-cleanup-time-2026-11-05/README.md)
+use their own reference; they do not change these original outcomes.

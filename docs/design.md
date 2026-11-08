@@ -486,7 +486,7 @@ sort primitive's original order. Runtime-selected callbacks keep ordinary calls.
 The [measurement protocol](measurements/sort-key-ownership.md) separates these
 verified changes from their exact count targets and measurement limits.
 
-The verified A4 path stores known `(I64, String)` keys in an aligned field buffer
+The verified sort-key path stores known `(I64, String)` keys in an aligned field buffer
 and calls the existing worker directly on `(String, I64)` inputs. Its initialized
 prefix owns the saved Strings; merge scratch borrows them. Other callback shapes
 retain ordinary calls and key records. [The protocol](measurements/inline-sort-keys.md)
@@ -1181,7 +1181,7 @@ and function-call recursion are separate stack concerns.
 ### Remaining work
 
 Broader resource-frame reuse would need a new lifetime proof and measured benefit
-beyond the verified F2–F3 cases. Next arguments
+beyond the [verified recursion cases](functional-costs.md). Next arguments
 must be prepared before releasing anything they borrow. Pending destructors,
 handlers, state/derivative scopes and callback registrations cannot be discarded
 or run early. Unknown/foreign calls have separate ABI and lifetime constraints;

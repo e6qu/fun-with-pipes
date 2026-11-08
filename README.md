@@ -123,23 +123,11 @@ generated C and machine instructions across architectures and optimization level
 
 | If you want to… | Read |
 |---|---|
-| Learn the language with explained, runnable examples | [Tutorials](docs/tutorials/README.md) |
-| Find an example application and its prerequisites | [Example applications](examples/README.md) |
-| Try expressions interactively | [REPL guide](docs/repl.md) |
-| Look up syntax or a compiler command | [Language reference](docs/reference.md) |
-| Look up a library function or read a type signature | [Standard library](docs/stdlib.md) |
-| Understand a performance comparison | [Benchmarks and overhead](docs/benchmarks.md) |
-| Build a command-line program | [Command-line guide](docs/cli.md) |
-| Build a web API or client | [REST and OpenAPI guide](docs/rest.md) |
-| Learn about tasks and networking | [Concurrency guide](docs/concurrency.md) |
-| Connect functions to commands, web routes or MCP tools | [Interface guide](docs/interfaces.md) |
-| Use encrypted connections | [TLS guide](docs/tls.md) |
-| Split a program into communicating processes | [Services guide](docs/services.md) |
-| Compute derivatives or run array calculations | [Numerical guide](docs/numerics.md) |
-| Understand memory management | [Memory and ownership](docs/ownership.md) |
-| Understand parsing, desugaring and macro expansion | [Compiler pipeline](docs/compiler-pipeline.md) |
-| Work on the compiler | [Design](docs/design.md) and [Contributing](CONTRIBUTING.md) |
-| Find completed work and the current task | [Plan](PLAN.md) and [session handoff](docs/development-state.md) |
+| Learn through runnable examples | [Tutorials](docs/tutorials/README.md), [applications](examples/README.md) |
+| Find a language, library or tooling guide | [Documentation map](docs/README.md) |
+| Understand measured time and memory | [Benchmarks and overhead](docs/benchmarks.md) |
+| Work on the compiler | [Contributing](CONTRIBUTING.md), [compiler pipeline](docs/compiler-pipeline.md) |
+| Find remaining goals or resume work | [Plan](PLAN.md), [development state](docs/development-state.md) |
 
 ## Repository layout
 

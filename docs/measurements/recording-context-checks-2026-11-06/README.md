@@ -92,7 +92,7 @@ duplicate IDs or a changing total. This prevents job ordering from hiding a gate
 Six local audit controls pass, including complete 128-record job/artifact lists,
 empty lists and rejected malformed pages. A guarded metadata-only check reads
 all 128 actual jobs. These checks took 0.13 s and 2.63 s respectively; they do not
-replace the pending native runs or the complete artifact audit.
+replace native execution or the complete artifact audit recorded below.
 
 ## Repaired fixture: reference and documentation
 

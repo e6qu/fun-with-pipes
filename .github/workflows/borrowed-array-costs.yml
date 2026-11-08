@@ -2,7 +2,13 @@ name: Borrowed array metadata costs
 on:
   workflow_call:
     inputs:
+      mode:
+        type: string
+        required: true
       evidence_run:
+        type: string
+        required: true
+      source_revision:
         type: string
         required: true
 permissions:
@@ -10,6 +16,7 @@ permissions:
   actions: read
 jobs:
   audit:
+    if: inputs.mode == 'array-metadata'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
@@ -38,6 +45,7 @@ jobs:
             array-audit/artifacts.json
           if-no-files-found: error
   measure:
+    if: inputs.mode == 'array-metadata'
     needs: audit
     strategy:
       fail-fast: false
@@ -123,4 +131,71 @@ jobs:
             array-reference/built.patch
             array-reference/cgen-reference.rs
             array-safety/
+          if-no-files-found: error
+  review:
+    if: inputs.mode == 'array-builder-diagnosis'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+      EVIDENCE_RUN: ${{ inputs.evidence_run }}
+      EVIDENCE_SOURCE: ${{ inputs.source_revision }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Audit original computation observations and reference isolation
+        run: |
+          python3 scripts/test-borrowed-array-costs.py
+          python3 scripts/audit-borrowed-arrays.py --run "$EVIDENCE_RUN" --source "$EVIDENCE_SOURCE" --output metadata-review
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: borrowed-array-computation-audit
+          path: metadata-review/retained/
+          if-no-files-found: error
+  diagnose:
+    if: inputs.mode == 'array-builder-diagnosis'
+    needs: review
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-24.04-arm, ubuntu-latest]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    env:
+      GH_TOKEN: ${{ github.token }}
+      EVIDENCE_RUN: ${{ inputs.evidence_run }}
+      EVIDENCE_SOURCE: ${{ inputs.source_revision }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.99.1
+      - name: Qualify the native diagnostic host
+        env:
+          MACHINE: ${{ runner.arch == 'ARM64' && 'aarch64' || 'x86_64' }}
+          GCC_VERSION: ${{ runner.arch == 'ARM64' && 'gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0' || 'gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0' }}
+        run: |
+          cpus=(--cpu Neoverse-N2)
+          if [[ "$MACHINE" == x86_64 ]]; then
+            cpus=(--cpu 'AMD EPYC 7763 64-Core Processor' --cpu 'AMD EPYC 9V74 80-Core Processor' --cpu 'AMD EPYC 9V45 96-Core Processor')
+          fi
+          python3 scripts/descent-baselines.py "${cpus[@]}" --machine "$MACHINE" \
+            --cc gcc --rustc rustc --c-version "$GCC_VERSION" \
+            --rust-version 'rustc 1.99.1 (58cf8f9c3 2026-10-13)' \
+            --source "$GITHUB_SHA" --processors 4 --output builder-host.json
+      - name: Compare fresh output writes without changing callback inputs
+        run: >-
+          python3 scripts/diagnose-array-builder.py --run "$EVIDENCE_RUN"
+          --source "$EVIDENCE_SOURCE" --output builder-diagnosis --cc gcc
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: array-builder-diagnosis-${{ runner.arch }}
+          path: |
+            builder-diagnosis/
+            builder-host.json
           if-no-files-found: error

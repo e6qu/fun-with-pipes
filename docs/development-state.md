@@ -1,7 +1,7 @@
 # Current work
 
-**Next:** finish auditing focused run `42434812986` at `fed65b39e`, then dispatch
-the frozen `array-metadata` computation comparison with that passing safety run.
+**Next:** audit the completed computation run `42435795842` at `f227830b0`, then
+run the frozen fresh-output diagnostic against its saved reference C.
 Continue the docs/tutorial refresh in the same PR. The user approved the revised project roadmap and one
 substantial normal PR for milestone 1. No next PR has been opened yet.
 
@@ -80,12 +80,19 @@ traversal selects captures; it does not follow unknown calls. Focused controls
 cover ten scalar types, packed/unpacked storage, shared slices, empty arrays and
 negative/large indices. Existing capture tests retain their extra-retain, leaked
 owner, partial-failure and cancellation controls with the new callback signature.
-Implementation is not yet verified and no speed benefit is claimed.
+Focused implementation checks pass; full platform verification and speed acceptance remain open.
 Focused `scalar-array-checks` run `42434812986` tests `fed65b39e86fd6c422e9f46e4ab6adf39f7078a1`.
 AMD64 GCC job `128591289751`, ARM64 GCC `128591289810` and macOS ARM64
 Clang `128591289622` all pass. Their 70–76 MB artifacts remain on GitHub;
 the `array-metadata` suite audits every complete log, target and native image
-before allowing measurements to start.
+before allowing measurements to start. That complete audit passes in run
+`42435795842`; two ARM64 timing sessions are running and two AMD64 sessions are
+queued at the first status check. Both ARM64 sessions have since completed:
+large maps save roughly 1%, manual derivatives 3–5%, and local derivatives 0–1%.
+Those results miss the 10% target. The complete four-session raw audit is next;
+the candidate is not accepted. The next diagnostic removes fresh-output view
+checks and scalar partial-element updates in saved C, with input metadata
+caching disabled on both sides. Its scope is frozen in the investigation report.
 The new computation driver has six passing local source/oracle/schedule controls
 (guard: 0.13 s). Its runtime, allocation, RSS and compiler comparisons remain
 unmeasured. The dispatcher is 511,923 bytes; avoid adding more inline jobs.
@@ -130,3 +137,8 @@ audit; no checks or large downloads continue locally below 64 GiB. Earlier
 worktree, not a broken repository link. Use the complete runner checkout for the
 full doc audit. This task's listed scratch archives recover less than the deficit;
 do not delete unrelated work or raise the guard limits.
+
+Disk briefly recovered to 75 GiB: the guarded sparse/index link audit passed
+all 379 Markdown files and five roadmap rows (0.36 s). It then fell to 58 GiB;
+the guard refused the history-edit helper. That helper did not run. Simple text
+edits continue through the editor; checks and downloads remain on runners.

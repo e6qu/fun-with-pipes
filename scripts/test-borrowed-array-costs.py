@@ -10,9 +10,38 @@ from borrowed_array_reference import DISABLED, SELECTION, reference_source
 SPEC = importlib.util.spec_from_file_location('costs', Path(__file__).with_name('measure-borrowed-arrays.py'))
 COSTS = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(COSTS)
+BUILDER_SPEC = importlib.util.spec_from_file_location('builder', Path(__file__).with_name('diagnose-array-builder.py'))
+BUILDER = importlib.util.module_from_spec(BUILDER_SPEC)
+BUILDER_SPEC.loader.exec_module(BUILDER)
 
 
 class Costs(unittest.TestCase):
+    def test_fresh_output_change_has_a_narrow_precondition(self):
+        source = '''static const fwp_desc d0 = {K_F64, "F64", .width = 0, .dup = NULL, .drop = NULL};
+static V fwp_hof0(V count) {
+    fwp_array_builder result = {fwp_array_typed_new(n, &d0), 0, &d0};
+    fwp_cleanup cleanup; fwp_array_builder_protect(&result, &cleanup);
+    for (size_t index = 0; index < n; index++) {
+        V value = callback(index);
+        fwp_array_store_owned(result.value, index, value, &d0);
+        result.filled++;
+    }
+    return fwp_array_builder_finish(&result, &cleanup);
+}
+'''
+        changed, count = BUILDER.direct_stores(source)
+        self.assertEqual(count, 1)
+        self.assertIn('V value = callback(index);', changed)
+        self.assertIn('fwp_array_builder_finish(&result, &cleanup)', changed)
+        self.assertIn('memcpy(result_data + index * sizeof value, &value, sizeof value);', changed)
+        self.assertNotIn('result.filled++', changed)
+        for invalid in (source.replace('K_F64', 'K_F128'),
+                        source.replace('.drop = NULL', '.drop = drop_value'),
+                        source.replace('result.filled++;', 'result.filled += 2;')):
+            with self.assertRaises(AssertionError):
+                BUILDER.direct_stores(invalid)
+        self.assertEqual(BUILDER.direct_stores('unchanged loop'), ('unchanged loop', 0))
+
     def test_only_selection_changes(self):
         source = 'prefix\n' + SELECTION + '\nsuffix\n'
         result = reference_source(source)
@@ -54,6 +83,14 @@ class Costs(unittest.TestCase):
         self.assertTrue(result['processQualified'])
         with self.assertRaises(AssertionError):
             COSTS.summarize(rows[:-1])
+        damaged = [dict(row) for row in rows]
+        damaged[0]['round'] = 1
+        with self.assertRaises(AssertionError):
+            COSTS.summarize(damaged)
+        damaged = [dict(row) for row in rows]
+        damaged[0]['computationNs'] = float('nan')
+        with self.assertRaises(AssertionError):
+            COSTS.summarize(damaged)
 
     def test_driver_does_not_change_measured_entry_body(self):
         generated = '/* measure : Array[F64] -> F64 */\nstatic V f7(V a) { return a; }\nint main(int argc, char **argv) { return 0; }'

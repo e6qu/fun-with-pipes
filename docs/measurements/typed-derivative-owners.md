@@ -75,11 +75,8 @@ N1/N2 kernel timings, or noisy identical-copy controls. If timing is added,
 declare its workload, reference-only calibration, hosts, samples, boundaries
 and limits before running the candidate; retain every failed observation.
 
-Run focused checks together after all three changes are implemented. Then require
-the exact final head's nine production jobs and documentation. Full builds,
-suites and benchmarks run on GitHub; local work stays under the resource guard.
-Focused results follow below. [The handoff](../development-state.md) tracks
-full final-head production validation.
+Focused results follow below. [PR #237](../roadmap-history.md#typed-derivative-owners-and-documentation-pr-237)
+subsequently passed all nine production jobs, documentation and complete log audits.
 
 ## Read the recording fixture
 

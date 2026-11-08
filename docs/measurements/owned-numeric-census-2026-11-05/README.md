@@ -95,5 +95,7 @@ GitHub assigned EPYC 9V74 rather than the required EPYC 7763. Its
 metadata are retained here. No timing sample was discarded. Replacement run
 `41927345094` requests only that missing session with unchanged requirements.
 
-Next: compiler-cost and runtime measurements, then all final production gates.
-See [the current handoff](../../development-state.md).
+[Compiler costs](../owned-numeric-analysis-2026-11-05/README.md),
+[runtime measurements](../owned-numeric-time-2026-11-05/README.md) and
+[final production gates](../owned-numeric-checks-2026-11-05/platforms/final-gates.json)
+are complete. Four original AMD64 speed targets remain unmet.

@@ -1,19 +1,24 @@
-# Remaining storage in gradient descent
+# Gradient storage after PR #258
 
 Private derivative-input packing is implemented and
 [its measurements are audited](packed-input-time-2026-11-04/README.md), with three
 AMD64 timing limits open. [PR #257 is verified delivery](../roadmap-history.md#packed-derivative-inputs-pr-257).
-The current group implements
+PR #258 delivered
 [consuming array maps and coordinate-list reuse](owned-numeric-updates.md), with
 [native checks](owned-numeric-checks-2026-11-05/README.md) and
 [exact allocation counts](owned-numeric-census-2026-11-05/README.md) verified.
 [Compiler-cost limits pass](owned-numeric-analysis-2026-11-05/README.md);
 [runtime results are audited](owned-numeric-time-2026-11-05/README.md), with four
-AMD64 speed targets open. Final production checks remain. [The plan](../../PLAN.md) owns acceptance.
+AMD64 speed targets open. [All final production checks passed](owned-numeric-checks-2026-11-05/platforms/final-gates.json).
+This report explains that measured starting point. Later work removed
+[gradient-call containers](gradient-call-time-2026-11-05/README.md), reused
+[private pair buffers](packed-pair-cleanup-time-2026-11-05/README.md), and passed
+[computed numeric inputs directly](computed-numeric-time-2026-11-07/README.md).
+[The plan](../../PLAN.md) owns current priorities.
 
-## Current allocation breakdown
+## Allocation breakdown at that revision
 
-The [current source-site report](gradient-storage-2026-11-05/README.md) audits one
+The [source-site report](gradient-storage-2026-11-05/README.md) audits one
 fresh 129-coordinate/199-update solve: 2,121 managed requests, 1,265,230 requested
 bytes and 398 retains. Eight requests per update occur during forward recording;
 the derivative result and coordinate scratch add one each. Peak managed storage
@@ -23,10 +28,10 @@ Neither counter is whole-process RAM.
 Its fresh input is exclusive. The repeated timing driver shares its initial input
 between solves, so their absolute counts differ. Use each report's own driver and
 reference. The report names the remaining fold record, singleton seed containers,
-coordinate scratch and two retain sites, with safety requirements for the next proof.
-These are measured costs and proposed work, not implemented reductions.
+coordinate scratch and two retain sites. Those observations selected the later
+gradient-call changes linked above; they are not another backlog.
 
-## Current group: consumed numeric storage
+## How consumed storage preserves aliases
 
 For example, subtracting adjustments `[1, 2]` from coordinates `[10, 20, 30]`
 produces `[9, 18]`: zip stops at the shorter input. Suppose another value keeps
@@ -65,7 +70,7 @@ the [frozen contract](owned-numeric-updates.md) specifies:
 
 Both consuming operations pass native correctness and exact allocation checks.
 Runtime measurements show 3.36–10.50% less time for long solves, with four AMD64
-5% targets missed. Final production gates still separate this from verified delivery. At 129 coordinates
+5% targets missed. All final production gates passed. At 129 coordinates
 and 199 updates, the census confirms 25,741 fewer requests and 819,968 fewer
 requested bytes per solve. Retain counts and raw derivative storage are unchanged.
 The current packed-input proof covers private flat numeric records. F128, nested

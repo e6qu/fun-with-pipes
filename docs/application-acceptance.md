@@ -13,8 +13,8 @@ Numerical timing goals remain separate open requirements.
 | [Word frequencies](../examples/wordfreq.fwp) | Read text, normalize words, count, rank and print five results; 4,096 words/64 distinct words and 65,536/1,024 | [Four current C/Rust sessions and fixed budgets](measurements/wordfreq-current.md), plus historical [text comparison](measurements/unchanged-text.md) | Preserve exact ranking, repeated cleanup and the #229 string-allocation improvement across all native hosts |
 | [Directory report](../examples/cli/dirstat.fwp) | Walk directories, group by extension and sort; 64/1,024-file trees and small ownership controls | [Six-host observations](measurements/file-applications.md): exact output, repeated success/error cleanup and process memory | Preserve [allocation-boundary failure checks](measurements/directory-failures.md), aliases, descriptor cleanup and scaled output |
 | [Text-file tools](../examples/cli) | Count words, filter lines, select CSV columns and update a task file | `tests/text_file_tools.rs`: maintained programs, repeated results and ownership checks | Rerun scaled counting/filtering/CSV/task-file cleanup on the integrated source; distinguish input/output from calculation |
-| Numerical pipeline | Map/reduce 65,537/262,145 elements; multiply 65×67 by 67×63 and 257×259 by 259×255 matrices, eight rounds | [Current four-case protocol and partial results](measurements/kernel-baselines.md); typed loop fields are implemented and verified in #227 | Complete qualified N1 baselines and resolve the failed timing control before accepting N2 timing |
-| Derivative application | Rosenbrock descent at 3, 33 and 129 dimensions; 199 updates plus zero/one/1,999-update controls | [Repeated current baselines and fixed limits](measurements/descent-costs.md), [nested accuracy/storage](measurements/ad-depth.md) and [capture costs](measurements/eager-captures.md) | Verify [gradient-list removal](measurements/array-list-traversal.md), nested accuracy and cleanup; D2 timing remains open independently |
+| Numerical pipeline | Map/reduce 65,537/262,145 elements; multiply 65×67 by 67×63 and 257×259 by 259×255 matrices, eight rounds | [Array/matrix comparisons](measurements/current-kernel-costs.md) and [delivered paired-column improvement](measurements/matrix-calculation-costs.md) | Preserve exact arithmetic and cleanup; new changes need their own qualified time/memory comparison. Earlier noise controls remain historical limits. |
+| Derivative application | Rosenbrock descent at 3, 33 and 129 dimensions; 199 updates plus zero/one/1,999-update controls | [Latest local/manual/reverse comparison](measurements/computed-numeric-time-2026-11-07/README.md), [nested accuracy/storage](measurements/ad-depth.md) | Preserve general reverse AD and nested precision. Verify structured local derivatives on additional objective families before making the experimental helper public. |
 | Long-running service | Existing HTTP/gRPC clients, handlers, streams and task cancellation | [Service ownership](ownership.md#http-ownership) and [service measurements](measurements/remote-server-storage.md#server-memory-after-completed-remote-calls) | Preserve the [API memory scenario](measurements/http-application-memory.md), failure/cancellation and completed-operation memory checks |
 
 Before declaring this suite accepted, name the exact revisions, inputs and native
@@ -123,12 +123,13 @@ retain documented storage between updates, but shutdown must release it.
 Neither these finite runs nor a clean exit prove bounded memory for arbitrary
 nesting or indefinitely repeated work.
 
-D1's repeated baseline and D3's accuracy/depth checks are verified. D2 remains
-open: the repaired-source zero-update recheck exceeds its unchanged 2% limit.
+The repeated baseline and accuracy/depth checks are verified. The original speed
+comparison remains unmet: its repaired-source zero-update recheck exceeds 2%.
 [Capture costs](measurements/eager-captures.md) and
 [timing variation](measurements/timing-variation.md) retain all observations.
 Do not replace that failed control with an earlier passing run. See
-[the derivative plan](../PLAN.md) for remaining acceptance work.
+[the roadmap](../PLAN.md) for new work and [earlier outcomes](measurements/unmet-comparisons.md)
+for source-specific missed limits.
 
 ## Testing unchanged string ownership
 

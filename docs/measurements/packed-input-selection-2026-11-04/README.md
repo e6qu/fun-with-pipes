@@ -1,5 +1,9 @@
 # Packed inputs: selection failure and repair
 
+Historical failures and repairs leading to
+[verified #257 delivery](../packed-input-checks-2026-11-04/platforms/final-gates.json).
+The chronological checks below are complete records, not instructions to repeat them.
+
 The first storage preflight failed at `0b274ca8f404800e5c2dd9f1a90f7fcabaffd746`:
 [run 41827593617](https://github.com/e6qu/fun-with-pipes/actions/runs/41827593617),
 job `126566218264`. Compilation succeeded, as did five scoped-specialization and
@@ -30,8 +34,8 @@ The repair runs numeric-parameter lowering before packed-input selection. It
 does not relax the field-use or ownership proof. A production-generation unit
 test now includes the forwarding shape. Native controls add both window orders,
 aliases, eager stage order, failure/cancellation, allocation failure and
-deliberately omitted frees. The repaired selections pass; the grouped gate is
-still pending, including the fixture repairs below.
+deliberately omitted frees. The repaired selections passed before the grouped
+gate exposed the fixture repairs below.
 
 ## Repair preflight
 
@@ -125,4 +129,4 @@ test infrastructure repair, not evidence of a runtime speed change.
 
 Collection completed before resumption; guarded retention/full diagnostic audit
 took 0.13 seconds. The only job error is the three failed selections above;
-there are no compiler warnings. Keep this failure when the repair passes.
+there are no compiler warnings. The original failure remains alongside the repair.

@@ -154,3 +154,39 @@ Apply the frozen 2% copy limit independently to computation and process times;
 a qualified process result does not qualify an unreliable computation timer.
 These are paired fwp comparisons, not new C/Rust/Swift comparisons. Separate
 allocation, RSS and compiler-cost observations are still required for delivery.
+
+## Fresh-output diagnostic
+
+The first two metadata sessions on ARM64 miss the 10% computation target:
+large maps save about 1%, manual derivatives 3–5%, and local derivatives roughly
+0–1%. The complete four-session audit will retain every outcome. Do not treat a
+successful measurement job as accepted performance.
+
+The next experiment changes only writes into a newly allocated F64 result array:
+
+```text
+allocate output → protect its owner → for each index:
+                                      call the unchanged callback
+                                      write eight result bytes
+                 → finish the existing cleanup scope
+```
+
+The original store checks whether the output is a view on every iteration.
+The builder also increments its initialized-element count, although F64 elements
+have no destructor. The diagnostic resolves the fresh output address once and
+writes with `memcpy`; it omits only that view check and counter update. Allocation,
+count validation, callback order, arithmetic and whole-array failure cleanup stay
+unchanged. Neither input reads nor bounds checks change.
+
+`scripts/diagnose-array-builder.py` starts from the retained **reference** C in
+run `42435795842`, so metadata caching is disabled on both sides. It accepts only
+the exact generated fresh-builder shape with an immediate F64 descriptor and no
+element destructor. Unknown shapes fail the experiment. This is not a change to
+general array mutation or to production code.
+
+Use the same 18 inputs, driver, repeat counts, GCC O2/strict floating-point flags,
+two warmups and 24 rotated four-role rounds. Run once on native ARM64 and AMD64,
+with the existing 2% computation/process copy controls. Retain every source diff,
+binary, command, result and timing. The unchanged integer loop is a control.
+This diagnostic selects a possible implementation; milestone acceptance still
+requires two sessions per architecture and the complete correctness/memory gates.

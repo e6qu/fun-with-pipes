@@ -72,7 +72,7 @@ Public interpreter entries now check queue/State/autodiff lifetimes before
 language effects, using the same proof as native ARC. Successful checks are
 cached per entry in the immutable program; unreachable definitions are not roots.
 
-This entry check passed [G5 verification](roadmap-history.md#tracing-gc-removal-pr-217).
+This entry check passed [GC-removal verification](roadmap-history.md#tracing-gc-removal-pr-217).
 Direct-call borrowing changes who keeps an argument alive during a call, without
 changing its source type. Its proof runs before reference operations are inserted;
 [the ownership design](design.md#ownership-implementation) explains the limits.

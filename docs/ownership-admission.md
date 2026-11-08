@@ -36,13 +36,13 @@ WebAssembly tests require their declared runtime and toolchain.
 | Asynchronous WASI | Scheduler/task stacks own suspended work; queue and task results have typed owners | [wasm_arc](../tests/wasm_arc.rs), `wasi_tasks_release_captures_channels_stacks_and_scheduler`, runs JSPI and Asyncify variants, with repeated tasks, queued functions/data and handles. Missing required tools fail production coverage. |
 | Browser-target loader | Each loader invocation owns a separate module instance; host output receives copied strings | [wasm_arc](../tests/wasm_arc.rs), `browser_entries_isolate_outputs_reentrant_calls_and_host_errors`, runs sequential/concurrent/reentrant calls and throwing sinks under Node. This is loader execution evidence, not coverage of every browser engine. `wasm_entries_keep_cycle_checks_for_browser_and_wasi` checks both targets' queue-capture rejection. |
 
-The interpreter uses Rust-owned values rather than generated C counts. This G5
-batch adds the same queue, State and autodiff lifetime admission to its public
+The interpreter uses Rust-owned values rather than generated C counts. It applies
+the same queue, State and autodiff lifetime checks to its public
 entry calls, including REPL/notebook and compile-time execution. It checks only
 functions reachable from the selected entry; unused definitions cannot reject
 an unrelated calculation. Interpreter gRPC handlers are checked before listening.
-Native representation and foreign ABI checks remain native-specific. See
-[the handoff](development-state.md) for verification of this change.
+Native representation and foreign ABI checks remain native-specific.
+[GC-removal delivery](roadmap-history.md#tracing-gc-removal-pr-217) records verification.
 
 ## Named rejection fixtures
 
@@ -75,7 +75,7 @@ shows a graph whose edges are integer IDs: a logical cycle without owning cycles
 
 ## Scoped parser storage
 
-[A6](parser-workspace.md) selects recursive integer/link trees whose nodes stay
+[Scoped parser storage](parser-workspace.md) selects recursive integer/link trees whose nodes stay
 inside one function call. Escaping trees remain legal with ordinary ownership;
 unknown calls, captured links and managed fields prevent region selection.
 This is a compiler optimization, not a new entry form or public API.
@@ -109,12 +109,12 @@ an address through C does not prove that C can retain fwp-owned storage. See
 
 ## Delivered contracts and collector removal
 
-G1's entry matrix passed in #212; G3/G4's weak links, retained callbacks and
+The entry matrix passed in #212; weak links, retained callbacks and
 cleanup controls passed in #215. [Delivery history](roadmap-history.md) records
 exact tested sources and runs. A passing entry does not prove arbitrary user
 programs safe; each rejection above still applies.
 
-G5 applied the lifetime rules to all execution entries and deleted collector
+PR #217 applied the lifetime rules to all execution entries and deleted collector
 code in [#217](roadmap-history.md#tracing-gc-removal-pr-217), preserving output, alias,
 failure, cancellation and memory checks.
 [The diagnostic deletion table](ownership-diagnostics.md#collector-specific-tests-and-retained-assertions)

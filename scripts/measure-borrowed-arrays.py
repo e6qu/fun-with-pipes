@@ -92,6 +92,14 @@ def driver(generated, case, expected):
 
 
 def summarize(observations):
+    measured = [row for row in observations if row['round'] >= 0]
+    assert [(row['round'], row['role']) for row in measured] == [
+        (number, role) for number in range(24) for role in order(number)]
+    for row in observations:
+        assert type(row['round']) is int and row['role'] in ROLES
+        assert all(type(row[key]) is int and row[key] > 0 for key in
+                   ('constructionNs', 'computationNs', 'releaseNs', 'loopNs', 'processNs'))
+        assert row['constructionNs'] + row['computationNs'] + row['releaseNs'] <= row['loopNs']
     samples = {role: [row for row in observations if row['round'] >= 0 and row['role'] == role]
                for role in ROLES}
     assert all(len(rows) == 24 for rows in samples.values())

@@ -219,7 +219,7 @@ actually taken. This does not define a smooth derivative at every branch boundar
 
 ### Accuracy checks
 
-The D3 test batch compares `f(x) = x^4` with its analytic derivative
+The accuracy tests compare `f(x) = x^4` with its analytic derivative
 `4*x^3` at -2, -0.5, 0.5 and 2. It checks both forward and reverse mode in F64
 and F128. A separate central difference computes `(f(x+h) - f(x-h)) / (2*h)`
 without AD. It is an approximation: for this polynomial its exact truncation

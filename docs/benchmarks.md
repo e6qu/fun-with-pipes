@@ -423,7 +423,7 @@ written by the programmer. Compare those two fwp forms before comparing them
 with handwritten C/Rust. Inputs, complete outputs, update counts and memory
 observations are retained. [Capture binding](measurements/eager-captures.md)
 improves updated solves in its initial sessions, but a repaired-source zero-update
-recheck exceeds its 2% regression limit. D2 remains open.
+recheck exceeds its 2% regression limit. That original comparison remains unmet.
 
 Older reports change list/array storage, borrow captures, repeat solves or replace
 printing with a checksum. They are distinct experiments, not successive universal

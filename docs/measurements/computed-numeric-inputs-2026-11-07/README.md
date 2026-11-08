@@ -21,6 +21,7 @@ their generated C and execution records. GitHub archive digests, source identity
 empty format patches, native architecture headers, zero-live ownership exits
 and failure diagnostics were verified under the resource guard (0.13 s).
 
-These checks establish focused correctness, not timing acceptance or final
-Windows/macOS Intel support. The [plan](../../../PLAN.md) requires the allocation
-and speed comparison, compiler costs and final native platform gates separately.
+These checks establish focused correctness. Subsequent [allocation and timing results](../computed-numeric-time-2026-11-07/README.md),
+[compiler comparisons](../computed-numeric-analysis-2026-11-07/README.md) and
+[final six-platform verification](../computed-numeric-delivery-2026-11-08/README.md)
+provide their separate evidence; the focused checks alone do not establish those claims.

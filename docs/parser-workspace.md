@@ -55,7 +55,8 @@ Completed cloned functions and locals may add at most
 twice the original expression/local weight; check their actual rewritten weight
 before publishing a candidate. A candidate that exceeds a budget
 keeps ordinary ownership. Measure these limits on larger programs and preserve
-the existing G2 compiler-analysis checks; bounded work is not a measured compile-time result.
+the [compiler-analysis checks](measurements/ownership-analysis.md); bounded work
+is not a measured compile-time result.
 
 ## Representation and cleanup
 
