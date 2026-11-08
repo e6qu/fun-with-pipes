@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check peer results and argument errors; this does not measure performance."""
+"""Check selected native buffer peers; this does not measure performance."""
 import argparse
 import base64
 import hashlib
@@ -15,10 +15,20 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--cc', required=True)
     parser.add_argument('--rustc', required=True)
+    parser.add_argument('--languages', nargs='+', choices=['c', 'rs', 'swift'], required=True)
+    parser.add_argument('--swiftc')
+    parser.add_argument('--swift-target')
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
     if not args.cc or not args.rustc:
         parser.error('compiler paths must not be empty')
+    if len(set(args.languages)) != len(args.languages):
+        parser.error('languages must not be repeated')
+    if 'swift' in args.languages:
+        if not args.swiftc or not args.swift_target:
+            parser.error('Swift checks require --swiftc and --swift-target')
+    elif args.swiftc is not None or args.swift_target is not None:
+        parser.error('Swift settings require Swift in --languages')
     executions = 0
     folder = args.output.resolve()
     folder.mkdir(parents=True, exist_ok=False)
@@ -43,13 +53,26 @@ def main():
         return result
 
     sources = {}
-    for language in ['c', 'rs']:
+    for language in args.languages:
         raw = (ROOT / f'tests/fixtures/unique_buffer_peer.{language}').read_bytes()
         (folder / f'peer.{language}').write_bytes(raw)
         sources[language] = hashlib.sha256(raw).hexdigest()
 
+    if 'swift' in args.languages:
+        for name in ('buffer_peer_opaque.c', 'buffer_peer_opaque.h'):
+            raw = (ROOT / 'tests/fixtures' / name).read_bytes()
+            (folder / name).write_bytes(raw)
+            sources[name] = hashlib.sha256(raw).hexdigest()
+
     for level in [1, 2]:
-        for language in ['c', 'rs']:
+        if 'swift' in args.languages:
+            barrier = folder / f'opaque-{level}.o'
+            command = [args.cc, '-std=c11', f'-O{level}', '-fno-lto',
+                       '-Wall', '-Wextra', '-Werror', '-c',
+                       str(folder / 'buffer_peer_opaque.c'), '-o', str(barrier)]
+            built = run(command, 45)
+            assert built.returncode == 0 and not built.stdout and not built.stderr, (command, built)
+        for language in args.languages:
             for entry_index, entry in enumerate(ENTRIES):
                 source = folder / f'peer.{language}'
                 executable = folder / f'peer-{language}-{entry}-{level}'
@@ -57,11 +80,18 @@ def main():
                     command = [args.cc, '-std=c11', f'-O{level}', '-ffp-contract=off',
                                '-fno-lto', '-Wall', '-Wextra', '-Werror',
                                f'-DBUFFER_ENTRY={entry_index}', str(source), '-o', str(executable)]
-                else:
+                elif language == 'rs':
                     command = [args.rustc, '--edition=2021', '-C', f'opt-level={level}',
                                '-C', 'overflow-checks=yes', '-C', 'lto=off', '-C', 'codegen-units=16', '-C', 'debuginfo=0', '-C', 'panic=unwind', '-D', 'warnings',
                                '--cfg', f'buffer_entry="{entry}"', str(source), '-o', str(executable)]
-                built = run(command, 45)
+                else:
+                    optimization = ['-Onone'] if level == 1 else ['-O', '-whole-module-optimization']
+                    command = [args.swiftc, '-swift-version', '6', *optimization,
+                               '-warnings-as-errors', '-target', args.swift_target,
+                               '-D', 'BUFFER_' + entry.upper(), '-import-objc-header',
+                               str(folder / 'buffer_peer_opaque.h'), str(source), str(barrier),
+                               '-o', str(executable)]
+                built = run(command, 90)
                 assert built.returncode == 0 and not built.stdout and not built.stderr, (command, built)
                 cases = []
                 for length in [-9223372036854775808, -1, 0, 1, 16, 4096, 262144]:
@@ -88,7 +118,8 @@ def main():
                         language, level, entry, arguments, out)
                     executions += 1
     (folder / 'report.json').write_text(json.dumps(dict(sourceHashes=sources, commands=commands, executions=executions), indent=2) + '\n')
-    print(f'C/Rust peers: {executions} O1/O2 result and invalid-input controls pass; no timings collected')
+    print(f'{args.languages}: {executions} result and invalid-input controls pass; '
+          'C/Rust O1/O2, Swift Onone/O where selected; no timings collected')
 
 
 if __name__ == '__main__':
