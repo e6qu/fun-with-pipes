@@ -176,8 +176,9 @@ A selected same-type numeric `array.map` can consume a last-use array and reuse
 its exclusive ordinary storage. Shared arrays and views receive independent
 output. [The original proof is verified](roadmap-history.md#consumed-numeric-storage-pr-258).
 The [scalar-capture extension](measurements/captured-array-maps.md) passes saved
-numbers directly to that worker; its native verification and measurements are
-pending. Neither proof makes an input mutable in the source language.
+numbers directly to that worker. Focused GCC/Clang checks pass; measurements and
+full platform delivery remain pending. Neither proof makes an input mutable in
+the source language.
 
 ## Tasks and channels
 

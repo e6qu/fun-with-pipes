@@ -10,7 +10,7 @@ identities. Do not edit observations to make an old experiment describe new code
 ## Latest delivery
 
 Current investigation: [captured scalar array-map reuse](captured-array-maps.md).
-Its native verification and runtime/memory measurements are pending.
+Focused native checks pass; runtime/memory measurements and final delivery are pending.
 
 Merged #270 passes [all delivery gates](fresh-array-delivery-2026-11-08/README.md).
 Its [shared loop/array investigation](shared-loop-array-costs.md) retains unmet

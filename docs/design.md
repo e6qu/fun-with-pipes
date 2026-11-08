@@ -435,7 +435,8 @@ for example `array.map (add offset)` when `offset` is supplied at runtime. It
 passes the saved numbers directly and consumes only the final array argument.
 Capture expressions still run once, in order, before mapping starts. Reference
 captures, unknown callbacks and wide scalars remain excluded. [The contract](measurements/captured-array-maps.md)
-records the pending native verification and runtime/memory measurements.
+records passing focused native checks; runtime/memory measurements and full
+platform delivery remain pending.
 
 For an array/list zip, a private entry can consume the list and reuse only its
 exclusive prefix. Encountering one shared node excludes its entire suffix from
