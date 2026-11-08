@@ -178,6 +178,11 @@ to obtain second derivatives. This is useful when there are few inputs, or many
 outputs relative to inputs. The implementation is library code, but its extra
 arithmetic and values still have runtime costs.
 
+An [experimental neighboring-pair gradient](measurements/local-derivatives.md)
+uses `Dual` on each local edge instead of recording a global tape. Its
+`local-gradient` helper lives in test fixtures; it is not a standard-library API.
+Support beyond that F64, pure-callback experiment remains roadmap work.
+
 ## Reverse mode
 
 `Rev[T] = { value: T, vertex: I64 }` pairs a value with a reference to its recorded

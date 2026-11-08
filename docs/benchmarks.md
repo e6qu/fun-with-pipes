@@ -53,8 +53,9 @@ allocation-free. The linked report gives byte traffic, live peaks, RSS and stack
 Three runtime sessions pass every limit. One AMD64 small long-case copy control
 varies by 2.08%, above the frozen 2% limit, so that timing remains inconclusive.
 Two [compiler-cost copy controls](measurements/computed-numeric-analysis-2026-11-07/README.md)
-also miss; all 5% compiler time/RSS budgets pass. The public helper remains
-experimental. [All final platform gates and the complete audit passed](measurements/computed-numeric-delivery-2026-11-08/README.md).
+also miss; all 5% compiler time/RSS budgets pass. The local-gradient helper exists
+only in an experimental test fixture, not the standard library.
+[All final platform gates and the complete audit passed](measurements/computed-numeric-delivery-2026-11-08/README.md).
 
 Earlier [matched-result](measurements/matched-option-time-2026-11-04/README.md)
 and [iteration-history](measurements/final-iteration-time-2026-11-04/README.md)

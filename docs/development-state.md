@@ -1,7 +1,7 @@
 # Current work
 
-**Next:** publish the captured-map batch as one normal PR, run all nine final-head
-production jobs plus docs, audit every completed log/artifact, then squash-merge
+**Next:** monitor [PR #271](https://github.com/e6qu/fun-with-pipes/pull/271), run all
+nine final-head production jobs plus docs, audit every completed log/artifact, then squash-merge
 with a one-line subject (at most 80 characters) and empty body. Fix any failure
 before merging. Do not repeat completed timings to obtain better results.
 
@@ -19,7 +19,11 @@ before merging. Do not repeat completed timings to obtain better results.
 
 Branch `captured-array-map-reuse`, worktree `.worktrees/recording-capacity-gate`.
 Base `f87796b52081889b96859dbd72bf4af9a6726207` is merged PR #270. Preserve unrelated
-root-worktree changes. Final production gates have not run yet.
+root-worktree changes. Initial head `6605c3608d56c249136fea335efb605b56fe3c8d`
+started production run `42482278753` and docs `42482278727`. A final docs review
+found the benchmark guide incorrectly calling a fixture-only gradient helper
+public. Correct that statement and the numerical guide, then cancel superseded
+jobs once the corrected head's matrix is queued. Keep that head stable afterward.
 
 Known scalar captures now pass directly to a consuming array map. Capture values
 are saved once at the original binding; other closure uses remain valid. Only the
