@@ -52,3 +52,23 @@ parameter and validates the input before specialization. The workflow now runs
 independent checks after an earlier failure, preserving a failing overall result.
 [`worker-repair-checks.json`](worker-repair-checks.json) identifies the complete
 reviewed logs and hashes. No unexpected compiler warnings occurred.
+
+## Known worker: remaining numeric-input boxes
+
+At `3203b635a813538350cefb90f13f09f9a641ee8b`, both Linux architectures pass
+all proof, semantic, ordering, cleanup, F128, nested-AD and negative controls in
+[run 42504579188](https://github.com/e6qu/fun-with-pipes/actions/runs/42504579188).
+Independent-local `n=16` meets its 34-request limit. Neighbor-local `n=3` falls
+from 24 to **16 requests per call**, still above its limit of 8. Both workspace
+settings reclaim all managed and raw storage. macOS remained queued and was
+cancelled when this source was superseded; it establishes no native result.
+
+The known edge is now called directly, but its two `Dual` inputs remain heap
+objects. Checked array access introduces an `Option[F64]` binding; the numeric
+input proof accepts only scalar bindings. The next repair permits nonresource
+data bindings while preserving the complete argument expression and its scope.
+Possible resources, channels and captured-function owners remain excluded.
+No timing run occurred and the original allocation limit is unchanged.
+
+[`partial-worker-checks.json`](partial-worker-checks.json) records both complete
+logs and the unchanged ARM archive, including generated C and native images.

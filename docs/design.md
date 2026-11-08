@@ -748,7 +748,10 @@ uses, function-value references, entry points, recursion, resources and deeper
 records exclude selection.
 
 Computed numeric constructors follow the same input rule: bind each
-input once, in original left-to-right order, then pass its numeric fields. Each
+input once, in original left-to-right order, then pass its numeric fields.
+An input may bind ordinary data, such as the `Option[F64]` from checked array
+access, before returning its numeric fields. The complete expression keeps its
+original scope; possible resource owners, channels and functions remain excluded. Each
 input keeps its original expression and local scopes. Existing field-only native
 locals can avoid constructing the intermediate record boxes. No functions are
 cloned. [Focused native checks](measurements/computed-numeric-inputs-2026-11-07/README.md)

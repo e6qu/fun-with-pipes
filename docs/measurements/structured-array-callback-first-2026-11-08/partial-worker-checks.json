@@ -1,0 +1,26 @@
+{
+  "source": "3203b635a813538350cefb90f13f09f9a641ee8b",
+  "run": 42504579188,
+  "logs": [
+    {
+      "host": "arm",
+      "job": 128804340262,
+      "file": "partial-worker-arm.log.gz",
+      "sha256": "e79b7b717c7a03aeed1d2550ab3b95c8d770c30946925be3e43a01b007319c79",
+      "uncompressedSha256": "e94e722ec19751ced0b6c037b22b78c8ff8bade3c468aeba17b6e716fe08b20d"
+    },
+    {
+      "host": "amd",
+      "job": 128804340312,
+      "file": "partial-worker-amd.log.gz",
+      "sha256": "7d8a5c8b37eef22061649e53b9a3eb83f839460073593cb4550d6720fa0f77ba",
+      "uncompressedSha256": "be97a211e5adf6bd60cc362e12d9cba5988c0fe474973e2bf54c6b38090fc8d0"
+    }
+  ],
+  "artifact": {
+    "id": 13627776526,
+    "file": "partial-worker-arm.zip",
+    "size": 13522136,
+    "sha256": "b805f8305bd0f0b0695bbbdd34f20a1ac8913d6821dd485545194716b38e4d4a"
+  }
+}

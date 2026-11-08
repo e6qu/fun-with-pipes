@@ -1,9 +1,9 @@
 # Current work
 
-**Next:** audit all focused native jobs in `42504579188` at
-`3203b635a813538350cefb90f13f09f9a641ee8b`, then run the frozen
-candidate/baseline comparison only if they pass. Jobs: macOS `128804340246`,
-ARM GCC `128804340262`, AMD GCC `128804340312`. They are queued for runners.
+**Next:** publish and verify the numeric-input repair, then run the frozen
+candidate/baseline comparison only after all three focused native jobs pass.
+`3203b635a813538350cefb90f13f09f9a641ee8b` passes correctness/cleanup on both
+Linux architectures, but still misses the neighboring allocation limit.
 Keep implementation, measurements and tutorials in one substantial normal PR;
 no PR is open yet.
 
@@ -118,6 +118,22 @@ limit is relaxed.
 Docs `42503658149` / `128801548679` pass; reviewed diagnostics are deliberate
 negative controls. Local Rust formatting, workflow YAML and 395 Markdown links
 pass. Native repair remains unverified until the next focused run passes.
+
+The corrected fixture passes. Run `42504579188` at `3203b635a` completes all
+Linux checks (ARM `128804340262`, AMD `128804340312`); only neighbor-local
+allocation fails: 512 requests / 32 calls, versus limit 256. Independent-local
+meets its limit (34 requests at n=16). All outputs, aliases, cleanup, precision,
+nested differentiation and observer controls pass; full logs reviewed clean.
+macOS `128804340246` remained queued and was cancelled for the replacement.
+[Retained logs, generated sources and native images](measurements/structured-array-callback-first-2026-11-08/README.md#known-worker-remaining-numeric-input-boxes).
+
+The remaining two Dual inputs per edge are excluded by `numeric_input` because
+checked reads introduce an Option binding. The repair admits nonresource data
+bindings while preserving each complete input's lexical scope, evaluation order
+and existing resource/unknown-function exclusions. New tests check owned data
+bindings, valid resource exclusions and the actual neighboring worker's four
+numeric fields. No proof or inlining budgets increase. Local free disk fell from
+68 to 19 GiB; local validation is paused, with all native checks on GitHub.
 
 The paired measurement runner/auditor now implements the frozen 14-case,
 256-gradient experiment and builds baseline/current compilers from source.

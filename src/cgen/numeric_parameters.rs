@@ -172,18 +172,19 @@ fn read_type<'a>(expr: &Expr, locals: &'a [MT], shapes: &'a Shapes) -> Option<&'
     }
 }
 
-/// Keep computed inputs intact. Only scalar bindings ending in numeric field
-/// reads/constructors qualify; no record lifetime crosses a new resource scope.
+/// Keep computed inputs intact. Bindings may hold ordinary data, including
+/// the Option returned by checked array reads. Reject possible resource owners;
+/// each complete input keeps its original scope before numeric fields are read.
 fn numeric_input(expr: &Expr, expected: &MT, locals: &[MT], shapes: &Shapes) -> bool {
     if plain_read(expr, 0) {
         return read_type(expr, locals, shapes) == Some(expected);
     }
     match expr {
         Expr::Let(local, _, body)
-            if locals
-                .get(*local as usize)
-                .and_then(super::scalar)
-                .is_some() =>
+            if locals.get(*local as usize).is_some_and(|ty| {
+                !crate::resource::may_hold_resource(shapes, ty)
+                    && !crate::resource::contains_channel(shapes, ty)
+            }) =>
         {
             numeric_input(body, expected, locals, shapes)
         }
@@ -650,6 +651,158 @@ mod tests {
                 Value::Record(vec![Value::I64(2), Value::I64(value)].into())
             );
         }
+    }
+
+    #[test]
+    fn computed_data_bindings_keep_the_original_input_scope() {
+        let mut original = computed_example();
+        let pair = original.funcs[0].locals[0].clone();
+        original.funcs[0].locals.push(pair);
+        let Body::Expr(Expr::Call(_, arguments)) = &mut original.funcs[0].body else {
+            unreachable!()
+        };
+        let Expr::Record(fields) = &mut arguments[0] else {
+            unreachable!()
+        };
+        let Expr::Let(_, value, _) = &mut fields[0] else {
+            unreachable!()
+        };
+        **value = Expr::Field(Box::new(Expr::Local(4)), 0);
+        fields[0] = Expr::Let(
+            4,
+            Box::new(Expr::Record(vec![
+                Expr::Const(Value::I64(7)),
+                Expr::Const(Value::I64(9)),
+            ])),
+            Box::new(fields[0].clone()),
+        );
+        crate::ir::check_locals(&original).unwrap();
+        let mut program = original.clone();
+        lower(&mut program, &[]);
+        crate::ir::check_locals(&program).unwrap();
+        assert_eq!(
+            record_fields(&program.shapes, &program.funcs[1].locals[0])
+                .unwrap()
+                .len(),
+            4
+        );
+        let Body::Expr(Expr::Let(_, value, _)) = &program.funcs[0].body else {
+            panic!("computed input must retain its own binding")
+        };
+        assert!(matches!(&**value, Expr::Let(4, _, _)));
+        let input = Value::Record(vec![Value::I64(2), Value::I64(11)].into());
+        for variant in [&original, &program] {
+            let mut interpreter =
+                crate::interp::Interp::new(variant, Box::new(std::io::sink())).unwrap();
+            assert_eq!(
+                interpreter
+                    .call_root(0, vec![input.clone(), input.clone()])
+                    .unwrap(),
+                Value::Record(
+                    vec![
+                        Value::I64(7),
+                        Value::I64(11),
+                        Value::I64(8),
+                        Value::I64(11),
+                    ]
+                    .into(),
+                )
+            );
+        }
+        for ty in [
+            MT::con("std::File"),
+            MT::Con("std::Channel".into(), vec![MT::con("std::I64")]),
+            arrow(MT::con("std::I64"), MT::con("std::I64")),
+        ] {
+            let mut rejected = computed_example();
+            rejected.funcs[0].locals.push(ty.clone());
+            rejected.funcs.push(Func {
+                name: "owner".into(),
+                arity: 0,
+                locals: vec![],
+                ty,
+                body: Body::Prim("test.owner".into()),
+            });
+            let Body::Expr(Expr::Call(_, arguments)) = &mut rejected.funcs[0].body else {
+                unreachable!()
+            };
+            let Expr::Record(fields) = &mut arguments[0] else {
+                unreachable!()
+            };
+            fields[0] = Expr::Let(
+                4,
+                Box::new(Expr::Call(2, vec![])),
+                Box::new(fields[0].clone()),
+            );
+            crate::ir::check_locals(&rejected).unwrap();
+            let before = rejected.funcs[1].ty.clone();
+            lower(&mut rejected, &[]);
+            assert_eq!(rejected.funcs[1].ty, before);
+        }
+    }
+
+    #[test]
+    fn known_array_workers_expose_checked_numeric_edge_inputs() {
+        crate::driver::with_big_stack(|| {
+            let source = format!(
+                "{}\n{}\nmain = [-1.2, 1.0, -1.2] | array.from-list | local-gradient edge | array.to-list | echo\n",
+                include_str!("../../tests/fixtures/descent_local_ad.fwp"),
+                include_str!("../../tests/fixtures/structured_ad_objectives.fwp"),
+            );
+            let (_, mut program) = crate::driver::compile_source(
+                "array-numeric-worker.fwp",
+                &source,
+                crate::mono::Roots {
+                    main: true,
+                    ..Default::default()
+                },
+            )
+            .unwrap_or_else(|failure| panic!("{}", failure.rendered));
+            let edges: Vec<_> = program
+                .funcs
+                .iter()
+                .enumerate()
+                .filter(|(_, function)| function.name == "edge")
+                .map(|(id, _)| id)
+                .collect();
+            assert!(!edges.is_empty());
+            for &edge in &edges {
+                let expected = shape(&program, &program.funcs[edge]).unwrap();
+                let mut direct_calls = 0;
+                for function in &program.funcs {
+                    if let Body::Expr(body) = &function.body {
+                        walk(body, &mut |expression| match expression {
+                            Expr::Call(id, args) if *id == edge => {
+                                direct_calls += 1;
+                                assert!(
+                                    args.len() == 1
+                                        && argument(
+                                            &args[0],
+                                            &expected,
+                                            &function.locals,
+                                            &program.shapes
+                                        ),
+                                    "numeric argument rejected in {}: {args:?}",
+                                    function.name
+                                );
+                            }
+                            Expr::Func(id) if *id == edge => {
+                                panic!("edge still escapes in {}", function.name)
+                            }
+                            _ => {}
+                        });
+                    }
+                }
+                assert!(direct_calls > 0);
+            }
+            lower(&mut program, &[]);
+            crate::ir::check_locals(&program).unwrap();
+            for edge in edges {
+                let fields = record_fields(&program.shapes, &program.funcs[edge].locals[0]).unwrap();
+                assert_eq!(fields.len(), 4);
+                assert!(fields.iter().all(|(_, ty)| super::super::scalar(ty).is_some()));
+            }
+        });
     }
 
     #[test]
