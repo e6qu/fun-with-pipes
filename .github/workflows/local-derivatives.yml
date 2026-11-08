@@ -50,6 +50,7 @@ jobs:
           git rev-parse HEAD > local-checks/source.txt
           "$CC" --version > local-checks/cc.txt
           python3 scripts/test-local-derivatives.py
+          python3 scripts/test-structured-ad-costs.py
           cargo fmt --check
       - name: Numeric parameter proofs and mixed ownership
         run: |
@@ -61,6 +62,13 @@ jobs:
           set -o pipefail
           cargo test --locked --test autodiff_precision local_derivatives_preserve_endpoints_aliases_and_traps -- --exact --nocapture 2>&1 | tee local-checks/semantics.log
           cargo test --locked --test autodiff_precision structured_gradients_agree_on_three_objectives_and_empty_inputs -- --exact --nocapture 2>&1 | tee local-checks/structured-gradients.log
+      - name: Structured gradient driver and storage observer controls
+        run: >-
+          python3 scripts/check-structured-ad-driver.py
+          --compiler target/debug/fwp --cc "${{ matrix.cc }}"
+          --c-arch ${{ runner.arch == 'ARM64' && 'armv8-a' || 'x86-64' }}
+          --platform ${{ runner.os == 'macOS' && 'darwin' || 'linux' }}
+          --output local-checks/driver-controls
       - name: Format prototype sources and retain any needed patch
         if: ${{ !cancelled() && hashFiles('target/debug/fwp') != '' }}
         run: |

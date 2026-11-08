@@ -74,7 +74,15 @@ are outside those intervals; whole-process elapsed time includes them and is a
 separate metric. A caller alias stays alive through the call. Compare it with its
 original data afterwards. Empty calls still obey the same lifetime boundaries.
 
-Use ordinary binaries for timing. In separate executions record managed requests,
+The native driver uses an explicit 64 MiB process stack limit and matching runtime
+stack guard. Common runtime initialization is outside the three phase timers;
+whole-process time includes it and shutdown. Pure global constants may initialize
+on the first call (dense forward AD creates a cached zero `Dual`). Keep their
+normal lifetime: report retained managed bytes after the call, require repeated
+identical calls not to grow that amount, and include final constant destruction
+in release time. After that destruction, managed storage must equal its initial
+baseline exactly. This distinguishes a live constant from a leak without hiding
+either cost. Use ordinary binaries for timing. In separate executions record managed requests,
 requested bytes, actual retain/release outcomes, managed peak/final storage and
 raw tape/workspace capacity. Distinguish charged storage from RSS. Report process
 RSS, compiler time/RSS, code size and stack estimates too. Verify observers with
