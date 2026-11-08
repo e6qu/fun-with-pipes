@@ -1,4 +1,4 @@
-"""Disable only borrowed-array metadata selection in a separate measured build."""
+"""Disable one declared array transformation in a same-source measured build."""
 import argparse
 import hashlib
 import json
@@ -10,6 +10,8 @@ SELECTION = 'let borrowed_arrays = if array {\n            borrowed_array_reads(
 DISABLED = SELECTION.replace('if array {', 'if false {')
 FRESH_SELECTION = 'let fresh_f64 = hof.0 == "array.generate"\n'
 FRESH_DISABLED = 'let fresh_f64 = false\n'
+CAPTURED_SELECTION = 'const CAPTURED_MAPS: bool = true;'
+CAPTURED_DISABLED = 'const CAPTURED_MAPS: bool = false;'
 
 
 def reference_source(source):
@@ -22,23 +24,30 @@ def fresh_reference_source(source):
     return source.replace(FRESH_SELECTION, FRESH_DISABLED)
 
 
+def captured_reference_source(source):
+    assert source.count(CAPTURED_SELECTION) == 1 and CAPTURED_DISABLED not in source
+    return source.replace(CAPTURED_SELECTION, CAPTURED_DISABLED)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--checkout', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
-    parser.add_argument('--transformation', choices=('array-metadata', 'fresh-array'), required=True)
+    parser.add_argument('--transformation', choices=('array-metadata', 'fresh-array', 'captured-maps'), required=True)
     args = parser.parse_args()
     checkout, output = args.checkout.resolve(), args.output.resolve()
     assert checkout != ROOT
     source = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
     assert subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=checkout, text=True).strip() == source
     subprocess.run(['git', 'diff', '--exit-code', 'HEAD'], cwd=checkout, check=True)
-    candidate = (ROOT / 'src/cgen.rs').read_text()
-    assert (checkout / 'src/cgen.rs').read_text() == candidate
-    transform = {'array-metadata': reference_source, 'fresh-array': fresh_reference_source}[args.transformation]
+    path = 'src/cgen/owned_numeric.rs' if args.transformation == 'captured-maps' else 'src/cgen.rs'
+    candidate = (ROOT / path).read_text()
+    assert (checkout / path).read_text() == candidate
+    transform = {'array-metadata': reference_source, 'fresh-array': fresh_reference_source,
+                 'captured-maps': captured_reference_source}[args.transformation]
     reference = transform(candidate)
-    (checkout / 'src/cgen.rs').write_text(reference)
-    assert subprocess.check_output(['git', 'diff', '--name-only', 'HEAD'], cwd=checkout, text=True).splitlines() == ['src/cgen.rs']
+    (checkout / path).write_text(reference)
+    assert subprocess.check_output(['git', 'diff', '--name-only', 'HEAD'], cwd=checkout, text=True).splitlines() == [path]
     output.mkdir(parents=True, exist_ok=False)
     patch = subprocess.check_output(['git', 'diff', 'HEAD'], cwd=checkout)
     (output / 'reference.patch').write_bytes(patch)

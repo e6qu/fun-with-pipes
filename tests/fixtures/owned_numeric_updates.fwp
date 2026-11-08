@@ -12,6 +12,11 @@ subtract-right = fn coordinate -> fn adjustment ->
 export mapped : Array[I64] -> Array[I64] ! {Async}
 mapped = array.map increment
 
+export mapped-capture : I64 -> I64 -> Array[I64] -> Array[I64] ! {Async}
+mapped-capture = fn factor -> fn offset -> fn values ->
+    values | array.map (fn value ->
+        let ready = task.yield () in value * factor + offset)
+
 export mapped-produced : List[I64] -> Array[I64] ! {Async}
 mapped-produced = array.from-list | array.map increment
 
@@ -26,6 +31,17 @@ export mapped32 : Array[F32] -> Array[F32] ! {Async}
 mapped32 = array.map keep32
 export mapped64 : Array[F64] -> Array[F64] ! {Async}
 mapped64 = array.map keep64
+
+export captured32 : F32 -> Array[F32] -> Array[F32] ! {Async}
+captured32 = fn replacement -> array.map (fn value ->
+    let ready = task.yield () in replacement == 0.0f32 | match
+        True -> value
+        False -> replacement)
+export captured64 : F64 -> Array[F64] -> Array[F64] ! {Async}
+captured64 = fn replacement -> array.map (fn value ->
+    let ready = task.yield () in replacement == 0.0 | match
+        True -> value
+        False -> replacement)
 
 export update-left : Array[I64] -> List[I64] -> List[I64] ! {Async}
 update-left = fn values -> fn coordinates ->
@@ -42,6 +58,7 @@ main = [
     | both (.0 | array.to-list) (.1 | array.to-list)
     | eq ([1, 2], [2, 3]),
     array.from-list [] | mapped | array.to-list | eq [],
+    array.from-list [1, 2, 3] | mapped-capture 2 3 | array.to-list | eq [5, 7, 9],
     array.from-list [1, 2, 3] | mapped | array.to-list | eq [2, 3, 4],
     update-left (array.from-list []) [10, 20] | eq [],
     update-left (array.from-list [1, 2]) [] | eq [],

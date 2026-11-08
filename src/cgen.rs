@@ -2647,13 +2647,22 @@ fn hof_sig(i: usize, sym: &str, k: usize) -> String {
 
 impl Gen<'_> {
     fn owned_scalar_array_map(&mut self, id: FuncId, callback: FuncId) -> String {
-        let array = self.prog.funcs[id].locals[0].clone();
+        let captures = self.prog.funcs[id].arity as usize - 1;
+        let input = format!("l{captures}");
+        let array = self.prog.funcs[id].locals[captures].clone();
         let MT::Con(_, elements) = &array else {
             unreachable!()
         };
         let descriptor = self.desc(&elements[0]);
         let drop = self.value_drop(&array);
-        format!("    /* Consume one scalar array owner; views and aliases keep their values. */\n    fwp_value_owner input = {{l0, {drop}}};\n    fwp_cleanup input_cleanup; fwp_value_protect(&input, &input_cleanup);\n    size_t count = fwp_array_len(l0);\n    int reuse = !fwp_array_is_view(l0) && fwp_rc_unique_mut(l0);\n    V output = reuse ? l0 : fwp_array_typed_new(count, {descriptor});\n    fwp_array_builder result = {{output, 0, {descriptor}}};\n    fwp_cleanup cleanup; fwp_array_builder_protect(&result, &cleanup);\n    if (reuse) input.value = 0;\n    for (size_t i = 0; i < count; i++) {{\n        fwp_array_store(output, i, f{callback}(fwp_array_load(l0, i, {descriptor})), {descriptor});\n        result.filled++;\n    }}\n    output = fwp_array_builder_finish(&result, &cleanup);\n    {drop}(fwp_value_finish(&input, &input_cleanup));\n    return output;\n")
+        let args = (0..captures)
+            .map(|index| format!("l{index}"))
+            .chain(std::iter::once(format!(
+                "fwp_array_load({input}, i, {descriptor})"
+            )))
+            .collect::<Vec<_>>()
+            .join(", ");
+        format!("    /* Consume one scalar array owner; views and aliases keep their values. */\n    size_t count = fwp_array_len({input});\n    /* Empty ordinary arrays transfer unchanged, even when shared: no writes.\n     * Views must still release their potentially large backing storage. */\n    if (!count && !fwp_array_is_view({input})) return {input};\n    fwp_value_owner input = {{{input}, {drop}}};\n    fwp_cleanup input_cleanup; fwp_value_protect(&input, &input_cleanup);\n    int reuse = !fwp_array_is_view({input}) && fwp_rc_unique_mut({input});\n    V output = reuse ? {input} : fwp_array_typed_new(count, {descriptor});\n    fwp_array_builder result = {{output, 0, {descriptor}}};\n    fwp_cleanup cleanup; fwp_array_builder_protect(&result, &cleanup);\n    if (reuse) input.value = 0;\n    for (size_t i = 0; i < count; i++) {{\n        fwp_array_store(output, i, f{callback}({args}), {descriptor});\n        result.filled++;\n    }}\n    output = fwp_array_builder_finish(&result, &cleanup);\n    {drop}(fwp_value_finish(&input, &input_cleanup));\n    return output;\n")
     }
 
     fn owned_scalar_buffer_zip(

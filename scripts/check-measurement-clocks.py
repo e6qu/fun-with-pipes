@@ -8,6 +8,7 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parent.parent
 HELPERS = [
+    ('tests/fixtures/captured_map_timing.c', 'capture_clock'),
     ('tests/fixtures/callable_phase_clock.c', 'callable_now'),
     ('tests/fixtures/numerical_bench_native.c', 'bench_clock'),
     ('tests/fixtures/numerical_bench.c', 'now_ns'),

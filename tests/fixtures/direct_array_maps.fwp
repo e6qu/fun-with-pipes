@@ -29,11 +29,13 @@ converted = array.map to-double
 export observed : Array[I64] -> Array[I64] ! {IO}
 observed = array.map observe
 
-# These callbacks or representations are outside the selected direct-call case.
-export dynamic : (F64 -> F64) -> Array[F64] -> Array[F64]
-dynamic = fn callback -> array.map callback
+# Known scalar captures can use the same consuming map entry.
 export captured : F64 -> Array[F64] -> Array[F64]
 captured = fn offset -> array.map (fn value -> value + offset)
+
+# These callbacks or representations remain outside the selected direct-call case.
+export dynamic : (F64 -> F64) -> Array[F64] -> Array[F64]
+dynamic = fn callback -> array.map callback
 quad-step : F128 -> F128
 quad-step = fn value -> value + 1.0f128
 export wide : Array[F128] -> Array[F128]

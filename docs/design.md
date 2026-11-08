@@ -405,8 +405,9 @@ Native `array.map` can also call an explicitly known, closed scalar function
 directly. For example, mapping `fn x -> x * 0.25` over `array[2.0, 4.0]` produces
 an independent `array[0.5, 1.0]`. The input stays borrowed; the existing typed-array
 builder cleans partial output on failure. This selection accepts ordinary
-integer/F32/F64 arguments and results, with no saved arguments. Dynamic functions,
-captures, wide values and reference-bearing elements keep their ordinary calls.
+integer/F32/F64 arguments and results, with no saved arguments. On this borrowed
+input path, dynamic functions, captures, wide values and reference-bearing elements
+keep their ordinary calls. The consuming path below admits scalar captures.
 The [native checks](measurements/direct-array-callbacks-2026-11-03/README.md) cover
 selection, effects, traps and partial-output cleanup. [Compiler-cost measurements](measurements/direct-array-analysis-2026-11-03/README.md)
 bound compilation overhead; they do not measure generated-program speed. The
@@ -415,12 +416,12 @@ whole-solve memory requirements.
 
 ### Consuming numeric storage
 
-The current fresh-output candidate specializes known F64 `array.generate` results.
+Fresh-output generation specializes known F64 `array.generate` results.
 The array is newly allocated, so stores need no view check; F64 elements need no
 destructor, so partial cleanup needs no initialized-element counter. The existing
 cleanup scope still frees the allocation on failure or cancellation. Other element
 types keep their existing stores. The [selection and measurements](measurements/shared-loop-array-costs.md#selected-production-scope)
-are not yet final performance acceptance.
+retain the unresolved timing targets; [platform delivery passes](measurements/fresh-array-delivery-2026-11-08/README.md).
 
 **[Focused native verification](measurements/owned-numeric-checks-2026-11-05/README.md)
 and the [exact allocation census](measurements/owned-numeric-census-2026-11-05/README.md)
@@ -428,7 +429,21 @@ pass. [Compiler costs pass](measurements/owned-numeric-analysis-2026-11-05/READM
 [runtime results are audited](measurements/owned-numeric-time-2026-11-05/README.md)
 with four AMD64 speed targets open. [Final platform delivery is verified](roadmap-history.md#consumed-numeric-storage-pr-258).**
 For a dead array input, a private same-type scalar map can take its owner and
-overwrite exclusive storage. A shared array or view receives independent output.
+overwrite exclusive storage. A nonempty shared array or view receives independent output.
+The empty-input repair forwards an ordinary empty array's owner unchanged,
+including shared arrays; there is no element to write. Empty views still produce
+independent output so the result cannot retain a large backing allocation.
+Expanded GCC/Clang ownership and identity checks pass for this path.
+The current extension also admits known callbacks with plain scalar captures,
+for example `array.map (add offset)` when `offset` is supplied at runtime. It
+passes the saved numbers directly and consumes only the final array argument.
+Capture expressions still run once, in order, before mapping starts. Reference
+captures, unknown callbacks and wide scalars remain excluded. [The contract](measurements/captured-array-maps.md)
+records the passing native checks and
+[repaired runtime/memory results](measurements/captured-map-repaired-2026-11-08/README.md).
+Four measurement sessions pass their audits; noise leaves combined timing
+acceptance open. Full platform delivery remains pending.
+
 For an array/list zip, a private entry can consume the list and reuse only its
 exclusive prefix. Encountering one shared node excludes its entire suffix from
 reuse, including descendants whose own reference counts are one.

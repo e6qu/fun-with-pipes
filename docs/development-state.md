@@ -1,138 +1,108 @@
 # Current work
 
-**Next:** monitor the repair commit on [PR #270](https://github.com/e6qu/fun-with-pipes/pull/270)
-and audit every completed production/docs result before merging. Use the PR's
-current exact head, then dispatch the complete artifact/log audit after its gates
-finish. The original production `42444906666` and docs `42444906569` tested
-`56ffa96bc28f573f01f28a3e23827414d90d6e31`. Bench job `128621688027` failed the
-lesson 7 formatter check; docs job `128621687708` found a historical report title
-changed without its generator. Both causes are fixed together in this commit.
-Other jobs had reported no failure when their available steps were reviewed;
-the new head still requires the full nine-job production matrix and docs audit.
-Do not mark milestone 1 complete: AMD64 timing acceptance remains open. The user
-has been asked whether to retain the verified ARM64 improvement with that goal
-open or withhold the compiler change pending reliable AMD64 measurements.
-Publication and correctness checks can proceed while that decision is pending.
-
-## Workspace and scope
-
-Branch `performance-roadmap-review`, worktree `.worktrees/recording-capacity-gate`,
-base `bbcaafea00d6bf9e26feea60f90d8d440aa16d00` (merged #269). The root worktree
-has unrelated changes; do not modify/reset it. #269's tested/merged trees match;
-[production, documentation and complete audits pass](measurements/computed-numeric-delivery-2026-11-08/README.md).
-Its redundant post-merge run `42431179791` was cancelled after verifying equal
-trees and no failed jobs.
-
-This PR combines the five-step roadmap, the complete documentation/tutorial
-review, a measured compiler improvement and reproducible measurement tools.
-Use a normal PR; draft status must not suppress CI. Preserve passing results
-while remaining gates run. [PLAN.md](../PLAN.md) owns acceptance.
+**Next:** monitor [PR #271](https://github.com/e6qu/fun-with-pipes/pull/271), run all
+nine final-head production jobs plus docs, audit every completed log/artifact, then squash-merge
+with a one-line subject (at most 80 characters) and empty body. Fix any failure
+before merging. Do not repeat completed timings to obtain better results.
 
 ## Roadmap status
 
-| Step | Status | Evidence and remaining work |
+| Step | Status | Remaining work |
 |---|---|---|
-| 1 | In progress | Fresh F64 output stores improve large-array computation 26–31% in both ARM64 sessions. Docs/tutorial sweep and complete measurement audits are ready; AMD64 acceptance and final platform/docs gates remain open. |
-| 2 | Pending | Broader lifetime/representation proofs selected from measured costs, covering at least two application patterns. |
-| 3 | Pending | Structured differentiation across three objective families, preserving general reverse AD, nesting and precision. |
-| 4 | Pending | Current Swift/C/Rust ownership comparisons, with phase timing and explicit memory boundaries. |
-| 5 | Pending | Three end-to-end application/tooling paths and compiler phase/scaling costs; demonstrated usability repairs. |
+| 1 | In progress | #270 delivered the docs refresh and fresh F64 stores; original AMD timing acceptance stays open. |
+| 2 | In progress | Captured maps pass native safety and measurement audits; final production delivery and noisy timing acceptance remain open. |
+| 3 | Pending | Compare structured autodiff on neighboring pairs, independent losses and a dense coupled objective. |
+| 4 | Pending | Update Swift/C/Rust ownership comparisons with separate time and memory boundaries. |
+| 5 | Pending | Three application/tooling paths, compiler phase/scaling costs and demonstrated usability repairs. |
 
-## Implementation and safety
+## Workspace and scope
 
-Executable compiler change: `f21bf13902239805ef74048e8a8b3fc4d4237cbb`.
-Known `array.generate` callbacks returning exactly F64 store directly into their
-fresh output. Such output cannot be a view and its elements need no destructor.
-The protected builder still frees partial/completed output. Input reads, bounds
-checks, callbacks, effects and other element types retain their behavior.
-No new runtime helper, capture parameter or source API was added.
+Branch `captured-array-map-reuse`, worktree `.worktrees/recording-capacity-gate`.
+Base `f87796b52081889b96859dbd72bf4af9a6726207` is merged PR #270. Preserve unrelated
+root-worktree changes. Initial head `6605c3608d56c249136fea335efb605b56fe3c8d`
+started production run `42482278753` and docs `42482278727`. A final docs review
+found the benchmark guide incorrectly calling a fixture-only gradient helper
+public. Correct that statement and the numerical guide, then cancel superseded
+jobs once the corrected head's matrix is queued. Keep that head stable afterward.
 
-Focused run `42438693432` passes all eight targets on AMD64 GCC
-(`128603076444`), ARM64 GCC (`128603076704`) and ARM64 Clang (`128603076570`).
-Complete safety audit `128607338068` in `42440117133` verifies 348/348/342 native
-images and 372 probe statuses per host. Tests cover packing, numeric types,
-aliases, slices, dynamic counts, callback failure/cancellation and physical frees.
-Other test assertions on stores/prefix counts were reviewed: they cover unchanged
-map lowering or runtime AD builders, not the changed generated F64 worker.
+Known scalar captures now pass directly to a consuming array map. Capture values
+are saved once at the original binding; other closure uses remain valid. Only the
+last array argument is consumed. Exclusive arrays can supply output storage;
+nonempty aliases and views preserve their original data. Empty ordinary arrays
+transfer unchanged, including shared inputs. Empty views release their backing
+owner. There is no language API or syntax change.
 
-Later production-code edits only clarify the builder's destructor-free prefix
-comment. Other changes are docs, tests and measurement/audit tooling. Final-head
-production checks are still required; focused coverage is not a full delivery gate.
+## Verified results
 
-## Measurements and decisions
-
-The [frozen protocol](measurements/shared-loop-array-costs.md) defines inputs,
-phase boundaries and original limits. Do not rerun unchanged timings to obtain
-a pass, relax limits after seeing results or substitute counts for runtime gains.
-
-| Investigation | Evidence | Decision |
+| Evidence | Source / run | Outcome |
 |---|---|---|
-| Forced callback inlining | [Run 42433452458](measurements/loop-array-diagnosis-2026-11-08/README.md) | Rejected; largest derivative cases take 1.11–2.04% more process time. |
-| Cached captured-array metadata | [Run 42435795842 and complete audit](measurements/borrowed-array-metadata-2026-11-08/README.md) | Rejected and removed; misses the 10% computation target. |
-| Direct fresh-output stores | [Diagnostic 42437082841 and complete audit](measurements/fresh-array-diagnosis-2026-11-08/README.md) | Selected for compiler implementation; diagnostic gains alone do not verify it. |
-| Production candidate/reference | [Run 42440117133; audit 42441970817](measurements/fresh-array-costs-2026-11-08/README.md) | All 72 cases pass correctness/data checks. ARM64 large arrays improve 26–31%; AMD64 acceptance remains open. |
-| Equivalent C/Rust computation | [Run 42441977298, both complete audits](measurements/loop-array-peers-2026-11-08/README.md) | Qualified long loops are competitive. Largest ARM64 local-AD case takes 2.47× C and 4.98× Rust. One session per architecture; most AMD64 array/derivative controls fail. |
-| Explicit CPU placement | [Run 42443629870 and complete audit](measurements/array-affinity-2026-11-08/README.md) | Pinning alone does not resolve large-array copy variation. Not a replacement accepted timing protocol. |
+| Expanded ownership and identity checks | `4da9011873ce7cc6f67af71448cd3591c1d5562c`; `42477156079` | ARM GCC `128720938985`, AMD GCC `128720938835`, macOS ARM Clang `128720938966` pass: 57 native tests in ten targets and 14 units per host, nine bounded analysis rows. |
+| Complete focused audit | `42478473189`, job `128724990571`; repeated in `42479872910`, job `128729288911` | All identity logs, 444 probe outcomes per host and actual native image checks pass. [Retained evidence](measurements/captured-map-empty-checks-2026-11-08/README.md). |
+| Repaired measurements | `c8611f5e67c773a1d380255eb0c49088424325b8`; `42479872910` | ARM1 `128729874165`, ARM2 `128729874189`, AMD1 `128729874176`, AMD2 `128729874145`: all 48 cases and complete observation audits pass. |
+| Documentation | Same measured source; `42479874918`, job `128729292696` | Passes. Full log reviewed, including expected failure-propagation controls. |
 
-Production sessions used source `066175c3ad47cf8d226a1dc2b16fba55eba71b7d`.
-AMD64 sessions have 13/12 failed computation-copy controls and one qualified
-3.38% zero-update regression; they ran on different CPU models (9V45 and 7763).
-Both ARM64 sessions pass all computation-copy controls and qualified guard limits.
-Allocations and peak managed storage are unchanged. Separate ordinary RSS,
-compiler time/RSS, code and stack observations are retained in the reports.
+All completed native and measurement logs were reviewed; no unresolved compiler
+warnings/errors remain. The workflow verifies compiler/native-fixture identity
+against the passing safety run before measurements. The [complete report](measurements/captured-map-repaired-2026-11-08/README.md)
+retains both sessions per architecture and exact source/toolchain identities.
 
-Complete production-measurement audit `42441970817`, job `128612920574`, verifies
-all 7,976 timing/build commands plus 216 resource commands per first-session host.
-Peer jobs `128612937644`/`128612937839` each audit all 2,916 commands.
-Placement job `128617878874` at `c35f211a9` and the local standalone auditor
-verify four cases, 16 native/copy images and all 416 commands/samples.
+- Both largest 199-update applications qualify in every session: 84–94% less
+  computation than the same-source reference without captured-map selection.
+- Allocations fall from 600 to 401; sensor requested bytes fall from 419,441,600
+  to 2,105,168. Managed peak roughly halves. Final live storage is zero.
+- Remaining loop-state/step boxes account for 400 requests; the input array adds
+  one. Payload extraction still retains 200 times. No heap/ARC-free claim.
+- No qualified timing regression remains. Of 48 cases per session, copy controls
+  are inconclusive in 7 and 7 on ARM, and 32 and 37 on AMD, so combined acceptance stays
+  open. This does not establish parity with Swift/C/Rust.
 
-Two tooling failures are repaired and recorded: `42439586418` lacked historical
-Git source for its audit (fixed with a full-history checkout); `42442853547`
-failed hardware preflight before measuring (assigned-CPU qualification and a
-hardware receipt are now explicit). Both repaired paths pass. Original logs and
-failed observations remain evidence, not unfinished implementation tasks.
+## Repairs and preserved evidence
 
-## Documentation and remaining checks
+[Initial measurements](measurements/captured-map-initial-2026-11-08/README.md)
+retain shared-empty regressions and all original limits. The empty-owner repair
+`ca837567a` passes after stale pointer/allocation expectations were fixed in
+`4da901187`; affected float identity checks were included before measuring.
 
-All 24 tutorial READMEs and the tracked Markdown inventory have been reviewed.
-[The documentation map](README.md) separates learning, reference, compiler work
-and evidence. Stale delivery instructions, duplicate status prose and obsolete
-roadmap items are removed; original observations/contracts remain intact.
-Lesson 7 now labels Fahrenheit as `fahrenheit`; source and transcripts agree.
-Its native session needs final runner verification. The isolated production
-formatter now verifies canonical form, identical parsed meaning and idempotence.
+[Driver failure and repair](measurements/captured-map-driver-repair-2026-11-08/README.md):
+run `42478473189` found missing shared-reference drops in the C benchmark driver
+on both architectures (status 214). The repair uses the runtime's normal
+release-before-free order and includes status/timeout in diagnostics. An Intel
+host was rejected before timing; the remaining build was cancelled. All logs and
+failure records are retained. No compiler change was needed for this repair.
 
-The latest prior full docs check is `42438695310`, job `128603080353`, at
-`f21bf1390`; subsequent edits need the final-head check. Generated library guides
-must still be maintained through their source comments/generator.
+[#270's complete delivery audit](measurements/fresh-array-delivery-2026-11-08/README.md)
+is retained. This batch also repairs recovered exact-source checkout handling
+in the production auditor while preserving original diagnostics.
 
-- Guarded local checks pass: fourteen measurement controls, five diagnostic
-  controls, Rust formatting, tutorial source/output copies, workflow syntax and
-  sparse/index links across 384 Markdown files and five roadmap rows.
-- Retained artifacts pass digest/archive checks; the standalone placement audit
-  checks all samples without executing any binaries locally.
-- No full local compiler build, native suite or benchmark was run. A temporary
-  formatter probe compiles the production parser/formatter modules and the exact
-  string-escaping helper under the guard (2.54 CPU seconds/5.02 seconds elapsed). Full checks stay
-  on GitHub. The last disk reading was about 86 GiB; preserve the 64 GiB limit
-  and use `scripts/local-guard.py` for focused checks.
-- This sparse checkout omits tracked examples. The full documentation audit
-  belongs on a complete runner checkout; the local index-aware audit checks links.
-- `numerics.yml` is only 25 bytes below GitHub's 512,000-byte limit. Extend reusable
-  workflows instead of growing that file. The earlier size failure is repaired.
+## Local verification and resources
 
-## Batched CI repairs
+All checks use `python3 scripts/local-guard.py`, serially. Full suites/builds,
+benchmarks and large generation run on GitHub runners.
 
-- Formatter failure: update lesson 7 source and its README together, using the
-  formatter's `.sensor` shorthand and canonical layout; explain the shorthand.
-  The isolated formatter verifies unchanged parsed meaning and idempotence.
-  `/tmp/fwp-roadmap-tutorial-copies --exact tutorial_readmes_match_their_programs`
-  passes through the local guard after the edit. Full failed log:
-  `/tmp/fwp-270-bench.log`. Its missing-artifact error follows the early fmt exit.
-- Generated report failure: update `scripts/report-current-kernels.py` to emit
-  the historical PR #243 heading. The report body and observations are unchanged.
-  Guarded `python3 scripts/test-current-kernel-report.py` passes both controls.
-  A source sweep found no other removed prose still emitted by a generator.
-  Full failed log: `/tmp/fwp-270-docs.log`. Expected negative-control failures
-  earlier in that log pass their enclosing tests; they are not job failures.
+- Formatting, four captured-map controls, 14 borrowed-array controls and ten
+  production-auditor controls pass. Eight clock helpers pass 64 Clang executions.
+- `/tmp/fwp-replay-empty-owner.py`: ten exact O1/O2 success/failure cases pass
+  (reuse, no-reuse, corrupt output, missing suffix and missing captured owner).
+- `/tmp/fwp-replay-captured-driver.py`: old C reproduces 214 at O1/O2; 24 corrected
+  exclusive/shared/view cases pass, with unchanged final managed storage.
+- All four full artifact digests and retained raw-file hashes pass verification;
+  cross-architecture managed counts agree for all 48 cases. One verification was
+  attempted before a download completed and rejected it; the completed download
+  passed before retention. No partial artifact was accepted.
+- The docs check caught and fixed a missing status table in the shortened
+  handoff. All five roadmap rows, 391 Markdown files and workflow limits pass.
+
+Disk fluctuates across the 64 GiB reserve. Stop on guard limits; never bypass or
+raise them. Space was 77 GiB before final artifact downloads. Guarded replays took
+5.43 and 24.31 seconds; they supplement, not replace, GCC and final platform gates.
+
+## Roadmap after this batch
+
+[PLAN.md](../PLAN.md) owns the ordered milestones. #270 delivered the broad docs
+refresh; its original AMD timing target stays open. This batch extends ownership
+coverage to sensor and pixel applications; final delivery and noisy timing
+acceptance remain separate. Next comes structured autodiff across neighboring
+pairs, independent losses and a dense coupled objective, then Swift/C/Rust
+ownership comparisons and three application/tooling/compiler-scaling exercises.
+Freeze each next comparison before implementation; preserve general AD, nested
+differentiation and F128 precision. Tracing GC remains removed; JIT is excluded.

@@ -53,8 +53,9 @@ allocation-free. The linked report gives byte traffic, live peaks, RSS and stack
 Three runtime sessions pass every limit. One AMD64 small long-case copy control
 varies by 2.08%, above the frozen 2% limit, so that timing remains inconclusive.
 Two [compiler-cost copy controls](measurements/computed-numeric-analysis-2026-11-07/README.md)
-also miss; all 5% compiler time/RSS budgets pass. The public helper remains
-experimental. [All final platform gates and the complete audit passed](measurements/computed-numeric-delivery-2026-11-08/README.md).
+also miss; all 5% compiler time/RSS budgets pass. The local-gradient helper exists
+only in an experimental test fixture, not the standard library.
+[All final platform gates and the complete audit passed](measurements/computed-numeric-delivery-2026-11-08/README.md).
 
 Earlier [matched-result](measurements/matched-option-time-2026-11-04/README.md)
 and [iteration-history](measurements/final-iteration-time-2026-11-04/README.md)
@@ -194,7 +195,7 @@ memory rather than treating the percentage alone as the delivery decision.
 The [phase measurements](measurements/callable-phases.md) show faster invocation,
 but three AMD64 construction regressions fail the combined acceptance rule.
 
-## Latest loop and array investigation
+## Loop and array measurements
 
 [The phase comparison](measurements/loop-array-peers-2026-11-08/README.md) measures
 computation, input construction and result release separately. In its qualified
@@ -210,6 +211,18 @@ status, exact flags, process RAM and unmeasured peer allocation counts explicit.
 [Candidate/reference results](measurements/fresh-array-costs-2026-11-08/README.md)
 are separate: ARM64 confirms faster fresh-output stores; cross-platform milestone
 acceptance remains open. Neither fewer retains nor a successful audit closes it.
+
+The [captured-map comparison](measurements/captured-array-maps.md) extends
+storage reuse to runtime scalar coefficients. It compares sensor calibration and pixel adjustment against a
+same-source build disabling only that selection. It checks exclusive, shared and
+slice inputs, with construction/work/release timings and separate memory counts.
+[Repaired results](measurements/captured-map-repaired-2026-11-08/README.md) show
+84–94% less computation on both largest applications in four sessions, 199 fewer
+array allocations and roughly half the managed peak storage. No qualified case
+regresses; noisy controls leave combined acceptance open. Native safety and
+measurement audits pass; final production delivery remains pending.
+[Initial results](measurements/captured-map-initial-2026-11-08/README.md) and
+earlier unmet targets remain unchanged.
 
 ## Choose the question first
 

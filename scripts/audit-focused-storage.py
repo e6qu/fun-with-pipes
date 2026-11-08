@@ -57,7 +57,7 @@ def native_header(host, raw):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--group', choices=('shared-storage', 'tape-records', 'array-metadata', 'fresh-array'), required=True)
+    parser.add_argument('--group', choices=('shared-storage', 'tape-records', 'array-metadata', 'fresh-array', 'captured-maps'), required=True)
     parser.add_argument('--run', type=int, required=True)
     parser.add_argument('--source', required=True)
     parser.add_argument('--attempt', type=int, required=True)
@@ -71,7 +71,7 @@ def main():
     PRODUCTION.save(args.output / 'artifacts.json', artifacts)
     issues, summary = [], {}
     hosts = {'shared-storage': HOSTS, 'tape-records': RECORD_HOSTS,
-             'array-metadata': ARRAY_HOSTS, 'fresh-array': ARRAY_HOSTS}[args.group]
+             'array-metadata': ARRAY_HOSTS, 'fresh-array': ARRAY_HOSTS, 'captured-maps': ARRAY_HOSTS}[args.group]
     for host, (name, runner) in hosts.items():
         job, = [j for j in jobs if j['name'] == name]
         assert job['head_sha'] == args.source
@@ -88,7 +88,7 @@ def main():
         if job['conclusion'] != 'success':
             issues.append((host, 'job ' + str(job['conclusion'])))
         artifact_name = {'shared-storage': 'gradient-call-checks-', 'tape-records': 'tape-record-checks-',
-                         'array-metadata': 'scalar-array-checks-', 'fresh-array': 'scalar-array-checks-'}[args.group] + runner
+                         'array-metadata': 'scalar-array-checks-', 'fresh-array': 'scalar-array-checks-', 'captured-maps': 'scalar-array-checks-'}[args.group] + runner
         ids = {int(i) for i in re.findall(rb'Artifact ' + artifact_name.encode() + rb' successfully finalized\. Artifact ID ([0-9]+)', log)}
         matches = [a for a in artifacts if a['id'] in ids and a['name'] == artifact_name and not a['expired']]
         if len(matches) != 1:
@@ -150,25 +150,60 @@ def main():
                             issues.append((host, 'unexpected unit exclusion'))
                     if len(results) != 1 or not re.fullmatch(expected, results[0]):
                         issues.append((host, name + ': incomplete or failing test result'))
-            if args.group in ('array-metadata', 'fresh-array'):
+            if args.group in ('array-metadata', 'fresh-array', 'captured-maps'):
                 expected_targets = {'targets/test-' + name + '.log' for name in ARRAY_TARGETS}
                 if set(report['targets']) != expected_targets:
                     issues.append((host, 'wrong array target inventory'))
                 for packing in (0, 1):
                     for level in ('O0', 'O2'):
-                        probe = {'array-metadata': 'borrowed-array-metadata', 'fresh-array': 'fresh-array-output'}[args.group]
+                        probe = {'array-metadata': 'borrowed-array-metadata', 'fresh-array': 'fresh-array-output', 'captured-maps': 'fresh-array-output'}[args.group]
                         stem = f'owners/record-ownership/{probe}/packed-{packing}-{level}'
                         for suffix in ('.c', '.exe', '.stdout', '.stderr', '.status'):
                             if stem + suffix not in report['files']:
                                 issues.append((host, 'missing ' + stem + suffix))
                         if report['probes'].get(stem + '.status') != 'Some(0)':
                             issues.append((host, 'metadata value/alias control failed: ' + stem))
+            identity_steps = [step for step in job['steps']
+                              if step['name'] == 'Same-type float bits, conversion maps and owner transfer']
+            if identity_steps and identity_steps[0]['conclusion'] == 'success':
+                report['identityChecks'] = {}
+                for name in ('identity-selection.log', 'float-targets/test-float_formats.log',
+                             'float-targets/test-softfloat_core.log'):
+                    if name not in z.namelist():
+                        issues.append((host, 'missing ' + name))
+                        continue
+                    results = re.findall(rb'test result: ([^\r\n]+)', z.read(name))
+                    report['identityChecks'][name] = [value.decode() for value in results]
+                    count = rb'1' if name == 'identity-selection.log' else rb'[1-9][0-9]*'
+                    if len(results) != 1 or not re.fullmatch(
+                        rb'ok\. ' + count + rb' passed; 0 failed; 0 ignored;.*', results[0]):
+                        issues.append((host, name + ': incomplete or failing identity result'))
             constant_steps = [step for step in job['steps']
                               if step['name'] == 'Verify exact scalar constants in complete programs']
             if constant_steps and constant_steps[0]['conclusion'] == 'success':
                 constants = json.loads(z.read('selection/scalar-constant-selection.json'))
                 assert len(constants) == 3 and all(row['representation'] == 'literal' for row in constants.values())
                 report['selection/scalar-constant-selection.json'] = constants
+            if args.group == 'captured-maps':
+                for test in ('scalar_captures_keep_argument_order_and_consume_only_the_array',
+                             'captured_maps_reject_reference_captures_and_executing_call_stages',
+                             'many_calls_share_one_entry_with_linear_visits',
+                             'bound_captures_keep_their_evaluation_point_and_other_closure_uses',
+                             'many_bound_map_uses_share_one_snapshot_and_worker'):
+                    expected = ('test cgen::owned_numeric::tests::' + test + ' ... ok').encode()
+                    if expected not in log:
+                        issues.append((host, 'missing ownership unit result: ' + test))
+                scaling = re.findall(rb'captured-map analysis: (\d+) maps, (\d+) captures, (\d+) visits', log)
+                report['captureAnalysisVisits'] = [list(map(int, row)) for row in scaling]
+                if {(count, captures) for count, captures, _ in report['captureAnalysisVisits']} != {
+                    (count, captures) for count in (1, 8, 128) for captures in (0, 2, 8)
+                } or len(scaling) != 9 or any(visits > (15 + 3 * captures) * count + 5
+                    for count, captures, visits in report['captureAnalysisVisits']):
+                    issues.append((host, 'missing or unbounded captured-map analysis counts'))
+                for level in ('O1', 'O2'):
+                    name = f'owners/record-ownership/owned_numeric_updates/missing-captured-input-{level}.status'
+                    if report['probes'].get(name) != 'Some(248)':
+                        issues.append((host, 'missing captured-input cleanup rejection: ' + name))
             recording_steps = [step for step in job['steps']
                                if step['name'] == 'Verify live bounded recording lookup selection']
             if recording_steps and recording_steps[0]['conclusion'] == 'success':
@@ -185,7 +220,7 @@ def main():
                            and sorted(n for n in row['liveWorkers'].values() if n) == [1, 6]
                            and any(row['forwardedCalls'].values()) for row in context.values())
                 report['selection/recording-context-selection.json'] = context
-        expected_count = {'shared-storage': 25, 'tape-records': 10, 'array-metadata': 8, 'fresh-array': 8}[args.group]
+        expected_count = {'shared-storage': 25, 'tape-records': 10, 'array-metadata': 8, 'fresh-array': 8, 'captured-maps': 8}[args.group]
         if len(report['targets']) != expected_count or not report['images'] or not report['probes']:
             issues.append((host, 'incomplete targets/images/probe observations'))
         if report['diagnostics']:

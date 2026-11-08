@@ -97,7 +97,8 @@ pub fn consumes_arg(prog: &Program, id: FuncId, j: usize) -> bool {
             .is_some_and(|ps| ps.contains(&(j as Local))),
         Body::Ctor(_) | Body::RegionEntry { .. } => true,
         Body::PackedRecordFold { .. } => j == 0,
-        Body::OwnedScalarArrayMap { .. } | Body::PackedRecordPairs { .. } => j == 0,
+        Body::OwnedScalarArrayMap { .. } => j + 1 == prog.funcs[id].arity as usize,
+        Body::PackedRecordPairs { .. } => j == 0,
         Body::OwnedScalarBufferZip {
             slot,
             consume_array,
