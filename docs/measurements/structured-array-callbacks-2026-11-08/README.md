@@ -14,6 +14,8 @@ predates implementation. No limit was relaxed and no unchanged session rerun.
 
 - Baseline: `04ddc0ac5d296ec895364236c4120341d7328e41`.
 - Candidate: `4a32c102f74f738433c1d55969936b023a5510f0`.
+- Retention tags: `roadmap/structured-gradient-baseline-2026-11-08` and
+  `roadmap/structured-gradient-candidate-2026-11-08`; both survive squash merge.
 - [Measurement run](https://github.com/e6qu/fun-with-pipes/actions/runs/42510222540):
   all four jobs, source/binary audits and evidence-rejection controls pass.
 - [Focused safety run](https://github.com/e6qu/fun-with-pipes/actions/runs/42508330680):

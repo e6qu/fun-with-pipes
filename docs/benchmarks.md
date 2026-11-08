@@ -23,7 +23,22 @@ statistic: a ratio of medians differs from a median of paired ratios. Elapsed ti
 includes scheduling delays; CPU time measures processing time. Neither identifies
 a cause on its own. Do not average unrelated ratios into a language-wide score.
 
-## Latest audited derivative comparison
+## Latest complete-gradient comparison
+
+[Known array callbacks](measurements/structured-array-callbacks-2026-11-08/README.md)
+compares fwp before and after removing temporary derivative objects, across
+neighboring, independent and dense calculations. Both ARM64 sessions show about
+91% less computation for the 129-input neighboring gradient and 85% less for
+independent loss. AMD64 copy noise leaves its timing acceptance open.
+
+Allocation requests fall from 1,284 to 260 and from 518 to 260 respectively,
+including input/output containers. Peak managed storage remains 9,536 bytes;
+all owners and raw derivative buffers are released. The report separates
+construction, complete-gradient work, release, process RSS and compiler/stack
+costs. These are fwp-before/after results, not a new C/Rust/Swift comparison or
+a complete iterative solve. Full platform delivery is pending.
+
+## November 7 complete-solve derivative comparison
 
 The [November 7 local-derivative comparison](measurements/computed-numeric-time-2026-11-07/README.md)
 uses objectives built from neighboring pairs. The local form computes derivatives
@@ -63,7 +78,7 @@ comparisons remain tied to their measured sources; they are not current-code
 ratios. No Swift derivative counterpart was measured. The [Swift comparisons](#swift-comparison)
 below cover other workloads.
 
-## Latest whole-program snapshot: PR #269
+## Recorded whole-program snapshot: PR #269
 
 Source: `e79657624`, same tree as merged `bbcaafea`;
 [retained reports and artifact identity](measurements/production-baseline-2026-11-08/README.md).

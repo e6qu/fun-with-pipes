@@ -12,13 +12,13 @@ No known failing job remains. Preserve running checks while preparing docs.
 
 ## Roadmap status
 
-| Step | Delivered or verified | Remaining |
-|---|---|---|
-| 1 | #270 docs and fresh F64 stores | Original AMD timing acceptance remains open. |
-| 2 | #271 captured maps and empty-owner transfer | Noisy timing acceptance remains open. |
-| 3 | #272 known array callbacks; focused safety and four measurement audits pass | Publish reports; final platform/docs/audit gates; retain AMD timing misses. |
-| 4 | Comparison scope in PLAN.md | Swift/C/Rust buffers, returned functions, weak subscriptions and parser workspaces. |
-| 5 | Existing tools and correctness tests | Three application paths, compiler phase/scaling costs and sustained-load measurements. |
+| Step | Status | Delivered or verified | Remaining |
+|---|---|---|---|
+| 1 | In progress | #270 docs and fresh F64 stores | Original AMD timing acceptance remains open. |
+| 2 | In progress | #271 captured maps and empty-owner transfer | Noisy timing acceptance remains open. |
+| 3 | In progress | #272 known array callbacks; focused safety and four measurement audits pass | Publish reports; final platform/docs/audit gates; retain AMD timing misses. |
+| 4 | Pending | Comparison scope in PLAN.md | Swift/C/Rust buffers, returned functions, weak subscriptions and parser workspaces. |
+| 5 | Pending | Existing tools and correctness tests | Three application paths, compiler phase/scaling costs and sustained-load measurements. |
 
 The local-pair gradient remains experimental. Independent loss uses existing
 `array.map (derivative loss)`; no new public gradient API is selected. Do not
@@ -36,7 +36,8 @@ Frozen comparison baseline: `04ddc0ac5d296ec895364236c4120341d7328e41`.
 Acceptance commit: `412b50b52d5f694ffb0b7d871b807715cdde3dda`.
 Published tags `roadmap/structured-gradient-baseline-2026-11-08` and
 `roadmap/structured-gradient-acceptance-2026-11-08` preserve them after squash.
-Do not move these tags.
+`roadmap/structured-gradient-candidate-2026-11-08` preserves measured candidate
+`4a32c102f74f738433c1d55969936b023a5510f0`. Do not move these tags.
 
 ## What this batch proves
 
@@ -89,6 +90,12 @@ Production `42508955007`: benchmark `128817627716` and Windows AMD64
 `128817627196`, pass. Reviewed docs diagnostics are deliberate negative controls;
 Windows panic messages are named lifetime-test controls. Local logs:
 `/tmp/fwp-pr272-{bench,docs,windows-amd}.log`. Full final-head audit is pending.
+
+Report-review docs `42515588460` / `128837762893` reproduce all saved timings,
+storage, primary binary hashes and stack reports. Documentation/control tests
+pass, but the shortened handoff omitted the required status column; the restored
+column keeps the existing audit unchanged. Later docs targets were skipped.
+Complete log: `/tmp/fwp-pr272-report-docs.log`. Rerun docs after this correction.
 
 ## Local limits and resume
 
