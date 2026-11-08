@@ -1,7 +1,14 @@
 # Current work
 
-**Next:** publish the combined normal PR, then inspect all nine production jobs,
-its documentation check and complete artifact/log audits. Fix failures together.
+**Next:** monitor the repair commit on [PR #270](https://github.com/e6qu/fun-with-pipes/pull/270)
+and audit every completed production/docs result before merging. Use the PR's
+current exact head, then dispatch the complete artifact/log audit after its gates
+finish. The original production `42444906666` and docs `42444906569` tested
+`56ffa96bc28f573f01f28a3e23827414d90d6e31`. Bench job `128621688027` failed the
+lesson 7 formatter check; docs job `128621687708` found a historical report title
+changed without its generator. Both causes are fixed together in this commit.
+Other jobs had reported no failure when their available steps were reviewed;
+the new head still requires the full nine-job production matrix and docs audit.
 Do not mark milestone 1 complete: AMD64 timing acceptance remains open. The user
 has been asked whether to retain the verified ARM64 improvement with that goal
 open or withhold the compiler change pending reliable AMD64 measurements.
@@ -93,7 +100,8 @@ All 24 tutorial READMEs and the tracked Markdown inventory have been reviewed.
 and evidence. Stale delivery instructions, duplicate status prose and obsolete
 roadmap items are removed; original observations/contracts remain intact.
 Lesson 7 now labels Fahrenheit as `fahrenheit`; source and transcripts agree.
-Its native session and formatter need final runner verification.
+Its native session needs final runner verification. The isolated production
+formatter now verifies canonical form, identical parsed meaning and idempotence.
 
 The latest prior full docs check is `42438695310`, job `128603080353`, at
 `f21bf1390`; subsequent edits need the final-head check. Generated library guides
@@ -104,10 +112,27 @@ must still be maintained through their source comments/generator.
   sparse/index links across 384 Markdown files and five roadmap rows.
 - Retained artifacts pass digest/archive checks; the standalone placement audit
   checks all samples without executing any binaries locally.
-- No local compiler build, native suite or benchmark was run. Full checks stay
+- No full local compiler build, native suite or benchmark was run. A temporary
+  formatter probe compiles the production parser/formatter modules and the exact
+  string-escaping helper under the guard (2.54 CPU seconds/5.02 seconds elapsed). Full checks stay
   on GitHub. The last disk reading was about 86 GiB; preserve the 64 GiB limit
   and use `scripts/local-guard.py` for focused checks.
 - This sparse checkout omits tracked examples. The full documentation audit
   belongs on a complete runner checkout; the local index-aware audit checks links.
 - `numerics.yml` is only 25 bytes below GitHub's 512,000-byte limit. Extend reusable
   workflows instead of growing that file. The earlier size failure is repaired.
+
+## Batched CI repairs
+
+- Formatter failure: update lesson 7 source and its README together, using the
+  formatter's `.sensor` shorthand and canonical layout; explain the shorthand.
+  The isolated formatter verifies unchanged parsed meaning and idempotence.
+  `/tmp/fwp-roadmap-tutorial-copies --exact tutorial_readmes_match_their_programs`
+  passes through the local guard after the edit. Full failed log:
+  `/tmp/fwp-270-bench.log`. Its missing-artifact error follows the early fmt exit.
+- Generated report failure: update `scripts/report-current-kernels.py` to emit
+  the historical PR #243 heading. The report body and observations are unchanged.
+  Guarded `python3 scripts/test-current-kernel-report.py` passes both controls.
+  A source sweep found no other removed prose still emitted by a generator.
+  Full failed log: `/tmp/fwp-270-docs.log`. Expected negative-control failures
+  earlier in that log pass their enclosing tests; they are not job failures.

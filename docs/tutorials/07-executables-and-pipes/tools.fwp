@@ -13,8 +13,7 @@ Reading = { sensor: String, celsius: F64 }
 FahrenheitReading = { sensor: String, fahrenheit: F64 }
 
 export fahrenheit : Reading -> FahrenheitReading
-fahrenheit =
-    make FahrenheitReading {
-        sensor = .sensor,
-        fahrenheit = .celsius | mul 1.8 | add 32.0,
-    }
+fahrenheit = make FahrenheitReading {
+    .sensor,
+    fahrenheit = .celsius | mul 1.8 | add 32.0,
+}

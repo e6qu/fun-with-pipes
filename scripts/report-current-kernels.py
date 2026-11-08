@@ -86,7 +86,7 @@ def span(values, divisor):
 
 
 def render(index, reports, comparison):
-    introduction = {'loop-state': ['# Current numerical costs', '',
+    introduction = {'loop-state': ['# Numerical costs at PR #243', '',
         'Generated from all four retained sessions; [protocol and timing boundaries](../current-kernel-costs.md).',
         'No production compiler change is introduced by this measurement batch.'],
         'matrix-columns': ['# Paired matrix columns: time and memory', '',

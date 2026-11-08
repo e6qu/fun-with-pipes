@@ -39,11 +39,10 @@ Reading = { sensor: String, celsius: F64 }
 FahrenheitReading = { sensor: String, fahrenheit: F64 }
 
 export fahrenheit : Reading -> FahrenheitReading
-fahrenheit =
-    make FahrenheitReading {
-        sensor = .sensor,
-        fahrenheit = .celsius | mul 1.8 | add 32.0,
-    }
+fahrenheit = make FahrenheitReading {
+    .sensor,
+    fahrenheit = .celsius | mul 1.8 | add 32.0,
+}
 ```
 
 `fwp exec` compiles a function (once; it is cached) and runs it with the
@@ -72,8 +71,9 @@ $ ./fahrenheit '{celsius = -40.0, sensor = "pole"}'
 FahrenheitReading {fahrenheit = -40.0, sensor = "pole"}
 ```
 
-`make` builds the output record from the input's fields: it keeps `sensor` and
-calculates `21.5 × 1.8 + 32 = 70.7`. The result names its unit `fahrenheit`.
+`make` builds the output record. Here `.sensor` means `sensor = .sensor`: copy
+the input's sensor field unchanged. The other field calculates
+`21.5 × 1.8 + 32 = 70.7`. The result names its unit `fahrenheit`.
 
 ### Follow a line through two tools
 
