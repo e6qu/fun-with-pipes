@@ -52,7 +52,10 @@ def audit(folder, machine, session, source):
     assert hashlib.sha256(patch).hexdigest() == manifest['patchSha256']
     original = subprocess.check_output(['git', 'show', source + ':src/cgen.rs'], cwd=COSTS.ROOT)
     assert hashlib.sha256(original).hexdigest() == manifest['candidateSha256']
-    assert COSTS.reference_source(original.decode()).encode() == reference
+    transform = {'borrowed array metadata selection': COSTS.reference_source,
+                 'array-metadata': COSTS.reference_source,
+                 'fresh-array': COSTS.fresh_reference_source}[manifest['disabled']]
+    assert transform(original.decode()).encode() == reference
     summary = json.loads((directory / 'summary.json').read_text())
     cases = list(COSTS.programs())
     assert set(summary) == {case['name'] for case in cases}

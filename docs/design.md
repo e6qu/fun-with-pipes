@@ -419,6 +419,13 @@ whole-solve memory requirements.
 
 ### Consuming numeric storage
 
+The current fresh-output candidate specializes known F64 `array.generate` results.
+The array is newly allocated, so stores need no view check; F64 elements need no
+destructor, so partial cleanup needs no initialized-element counter. The existing
+cleanup scope still frees the allocation on failure or cancellation. Other element
+types keep their existing stores. The [selection and measurements](measurements/shared-loop-array-costs.md#selected-production-scope)
+are not yet final performance acceptance.
+
 **[Focused native verification](measurements/owned-numeric-checks-2026-11-05/README.md)
 and the [exact allocation census](measurements/owned-numeric-census-2026-11-05/README.md)
 pass. [Compiler costs pass](measurements/owned-numeric-analysis-2026-11-05/README.md);
@@ -1226,23 +1233,18 @@ x86-64 instruction levels at startup; it is not a macOS universal binary.
 Compiler-build and generated-program toolchains can differ; configure them
 explicitly as described in [Contributing](../CONTRIBUTING.md#setting-up).
 
-## Remaining memory work
+## Memory coverage and limits
 
-The [restricted unique-array path](measurements/unique-array-storage.md) was
-verified in PR #219. [The scoped parser path](parser-workspace.md) is implemented
-in `src/cgen/regions.rs` and `runtime/fwp_rt_region.c` and verified in PR #221. A selected call owns aligned blocks and passes an explicit
-context to allocation helpers. Internal node links have no counts; escaped trees
-keep ordinary ownership.
+| Implemented mechanism | Scope and limit |
+|---|---|
+| [Count-free arrays](measurements/unique-array-storage.md) | Selected local arrays have one proved owner; arbitrary shared arrays still need ownership operations. |
+| [Parser regions](parser-workspace.md) | One call owns aligned blocks; internal links have no counts, escaped trees keep ordinary ownership. Implemented in `src/cgen/regions.rs` and `runtime/fwp_rt_region.c`. |
+| [Weak channels](weak-channels.md), [retained C callbacks](retained-callbacks.md) | Explicit acquisition/registration lifetimes; no silent weakening of captures. |
+| [Tracing removal](roadmap-history.md#tracing-gc-removal-pr-217) | Verified collector-free native delivery; this does not remove every allocation or count. |
 
-[Measurements](measurements/parser-workspace.md) separate
-this storage change from input/token costs and from general region inference. Tracing removal passed integrated verification in
-[#217](roadmap-history.md#tracing-gc-removal-pr-217). Explicit weak channels and retained
-C callbacks are implemented; see [weak channels](weak-channels.md) and
-[retained callbacks](retained-callbacks.md) for their lifetime rules.
+The model rejects unproved owning cycles and preserves escaping functions.
 General strong-cycle reclamation by ordinary ARC is not a goal.
-
-The selected
-model rejects unproved owning cycles and preserves escaping functions.
+[PLAN.md](../PLAN.md) selects further proofs from measured costs.
 JIT compilation is excluded, not deferred. The interpreter prepares foreign-call
 bridges before language execution; CPU kernel interpretation generates no machine
 code. GPU execution, a replacement backend and distributed execution are outside

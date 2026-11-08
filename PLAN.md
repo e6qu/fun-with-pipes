@@ -81,12 +81,3 @@ original outcomes. They do not require repeating old experiments or completing
 abandoned hypotheses. The [Intel compiler abort](docs/measurements/compiler-abort.md)
 has no established cause; preserve and diagnose any recurrence rather than treating
 successful reruns as a repair.
-
-## Completed work carried in this PR
-
-PR #269 is merged as `bbcaafea00d6bf9e26feea60f90d8d440aa16d00`, with the identical
-tested tree. All nine production jobs, documentation and the complete log audit
-pass; [delivery records](docs/measurements/computed-numeric-delivery-2026-11-08/README.md)
-retain their identities. Original runtime and
-compiler-cost observations, including timing misses, remain under
-[the measurement index](docs/measurements/README.md).

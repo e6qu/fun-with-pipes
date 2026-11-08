@@ -57,7 +57,7 @@ def native_header(host, raw):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--group', choices=('shared-storage', 'tape-records', 'array-metadata'), required=True)
+    parser.add_argument('--group', choices=('shared-storage', 'tape-records', 'array-metadata', 'fresh-array'), required=True)
     parser.add_argument('--run', type=int, required=True)
     parser.add_argument('--source', required=True)
     parser.add_argument('--attempt', type=int, required=True)
@@ -70,7 +70,8 @@ def main():
     PRODUCTION.save(args.output / 'jobs.json', jobs)
     PRODUCTION.save(args.output / 'artifacts.json', artifacts)
     issues, summary = [], {}
-    hosts = {'shared-storage': HOSTS, 'tape-records': RECORD_HOSTS, 'array-metadata': ARRAY_HOSTS}[args.group]
+    hosts = {'shared-storage': HOSTS, 'tape-records': RECORD_HOSTS,
+             'array-metadata': ARRAY_HOSTS, 'fresh-array': ARRAY_HOSTS}[args.group]
     for host, (name, runner) in hosts.items():
         job, = [j for j in jobs if j['name'] == name]
         assert job['head_sha'] == args.source
@@ -87,7 +88,7 @@ def main():
         if job['conclusion'] != 'success':
             issues.append((host, 'job ' + str(job['conclusion'])))
         artifact_name = {'shared-storage': 'gradient-call-checks-', 'tape-records': 'tape-record-checks-',
-                         'array-metadata': 'scalar-array-checks-'}[args.group] + runner
+                         'array-metadata': 'scalar-array-checks-', 'fresh-array': 'scalar-array-checks-'}[args.group] + runner
         ids = {int(i) for i in re.findall(rb'Artifact ' + artifact_name.encode() + rb' successfully finalized\. Artifact ID ([0-9]+)', log)}
         matches = [a for a in artifacts if a['id'] in ids and a['name'] == artifact_name and not a['expired']]
         if len(matches) != 1:
@@ -149,13 +150,14 @@ def main():
                             issues.append((host, 'unexpected unit exclusion'))
                     if len(results) != 1 or not re.fullmatch(expected, results[0]):
                         issues.append((host, name + ': incomplete or failing test result'))
-            if args.group == 'array-metadata':
+            if args.group in ('array-metadata', 'fresh-array'):
                 expected_targets = {'targets/test-' + name + '.log' for name in ARRAY_TARGETS}
                 if set(report['targets']) != expected_targets:
                     issues.append((host, 'wrong array target inventory'))
                 for packing in (0, 1):
                     for level in ('O0', 'O2'):
-                        stem = f'owners/record-ownership/borrowed-array-metadata/packed-{packing}-{level}'
+                        probe = {'array-metadata': 'borrowed-array-metadata', 'fresh-array': 'fresh-array-output'}[args.group]
+                        stem = f'owners/record-ownership/{probe}/packed-{packing}-{level}'
                         for suffix in ('.c', '.exe', '.stdout', '.stderr', '.status'):
                             if stem + suffix not in report['files']:
                                 issues.append((host, 'missing ' + stem + suffix))
@@ -183,7 +185,7 @@ def main():
                            and sorted(n for n in row['liveWorkers'].values() if n) == [1, 6]
                            and any(row['forwardedCalls'].values()) for row in context.values())
                 report['selection/recording-context-selection.json'] = context
-        expected_count = {'shared-storage': 25, 'tape-records': 10, 'array-metadata': 8}[args.group]
+        expected_count = {'shared-storage': 25, 'tape-records': 10, 'array-metadata': 8, 'fresh-array': 8}[args.group]
         if len(report['targets']) != expected_count or not report['images'] or not report['probes']:
             issues.append((host, 'incomplete targets/images/probe observations'))
         if report['diagnostics']:

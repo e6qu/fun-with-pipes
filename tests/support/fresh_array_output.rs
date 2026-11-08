@@ -1,10 +1,10 @@
-//! Borrowed metadata must preserve bounds, packed values, views and aliases.
+//! Fresh F64 output stores preserve bits, bounds, input views and other layouts.
 use super::{checked, record_probe, Scratch};
 use std::process::{Command, Stdio};
 
 #[test]
-fn captured_array_metadata_preserves_views_bounds_and_packed_values() {
-    let dir = Scratch::new("borrowed-metadata");
+fn fresh_array_output_preserves_views_bounds_and_packed_values() {
+    let dir = Scratch::new("fresh-output");
     let compiler = env!("CARGO_BIN_EXE_fwp");
     let mut source = String::new();
     let mut calls = Vec::new();
@@ -80,20 +80,13 @@ probe-{name} = fn count ->
                 .arg(&cfile),
         );
         let code = std::fs::read_to_string(&cfile).unwrap();
-        let callbacks = code.lines().filter(|line| {
-            line.starts_with("static V fwp_borrowed_array")
-                && line.contains(", const unsigned char *array_data_")
-        });
-        assert!(
-            callbacks.count() >= 10,
-            "numeric capture proofs did not apply"
-        );
+        assert!(code.contains("memcpy(result_data + index * sizeof value, &value, sizeof value);"));
         for opt in ["-O0", "-O2"] {
             let executable = dir.0.join("arrays.exe");
             fwp::cgen::compile_c(&code, &executable, opt).unwrap();
             let output = checked(Command::new(&executable).stdin(Stdio::null()));
             record_probe::save(
-                "borrowed-array-metadata",
+                "fresh-array-output",
                 &format!("packed-{packed}{opt}"),
                 &code,
                 &executable,

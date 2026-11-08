@@ -5,7 +5,10 @@ import importlib.util
 from pathlib import Path
 import unittest
 
-from borrowed_array_reference import DISABLED, SELECTION, reference_source
+from borrowed_array_reference import (
+    DISABLED, FRESH_DISABLED, FRESH_SELECTION, SELECTION,
+    fresh_reference_source, reference_source,
+)
 
 SPEC = importlib.util.spec_from_file_location('costs', Path(__file__).with_name('measure-borrowed-arrays.py'))
 COSTS = importlib.util.module_from_spec(SPEC)
@@ -49,6 +52,14 @@ static V fwp_hof0(V count) {
         for invalid in ('no selection', source * 2, result):
             with self.assertRaises(AssertionError):
                 reference_source(invalid)
+
+    def test_fresh_output_reference_changes_only_selection(self):
+        source = 'prefix\n' + FRESH_SELECTION + '    && exact_type;\nsuffix\n'
+        self.assertEqual(fresh_reference_source(source),
+                         source.replace(FRESH_SELECTION, FRESH_DISABLED))
+        for invalid in ('missing selection', source * 2, fresh_reference_source(source)):
+            with self.assertRaises(AssertionError):
+                fresh_reference_source(invalid)
 
     def test_all_inputs_and_controls_are_present(self):
         cases = list(COSTS.programs())

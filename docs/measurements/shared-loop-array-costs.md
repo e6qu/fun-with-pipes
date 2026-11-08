@@ -157,9 +157,10 @@ allocation, RSS and compiler-cost observations are still required for delivery.
 
 ## Fresh-output diagnostic
 
-The first two metadata sessions on ARM64 miss the 10% computation target:
+The [four-session metadata result](borrowed-array-metadata-2026-11-08/README.md)
+misses the 10% computation target. On ARM64,
 large maps save about 1%, manual derivatives 3–5%, and local derivatives roughly
-0–1%. The complete four-session audit will retain every outcome. Do not treat a
+0–1%. Most AMD64 cases fail copy controls; the complete audit retains every outcome. Do not treat a
 successful measurement job as accepted performance.
 
 The next experiment changes only writes into a newly allocated F64 result array:
@@ -190,3 +191,32 @@ with the existing 2% computation/process copy controls. Retain every source diff
 binary, command, result and timing. The unchanged integer loop is a control.
 This diagnostic selects a possible implementation; milestone acceptance still
 requires two sessions per architecture and the complete correctness/memory gates.
+
+### Selected production scope
+
+Run `42437082841` completed both diagnostics. ARM64 large maps take 28–32%
+less computation time; the 33/129-coordinate manual updates take about 11% less.
+All ARM64 computation copy controls pass. Most AMD64 cases fail those controls,
+so their apparent gains are inconclusive. This selects an implementation,
+not an accepted speed claim.
+
+Replace the unsuccessful captured-metadata candidate with this narrower change:
+
+- Select known `array.generate` entries whose result element type is exactly F64.
+  Both borrowed and ordinary callback entries retain their existing contracts.
+- Allocate and protect the result exactly as before. Its storage is fresh,
+  never a view, and both packed/unpacked F64 elements occupy one eight-byte word.
+- Resolve its data address once. Copy each callback result word with `memcpy`,
+  preserving all bits, without inspecting a view flag or advancing `filled`.
+- Keep the existing builder cleanup registration. F64 has no element destructor;
+  cleanup frees the allocation regardless of the initialized prefix length.
+  No callback can access the unfinished output, and allocation failure occurs
+  before that output's cleanup registration as before.
+- Keep every other element type on its existing path, especially reference
+  elements and boxed F128. Do not change input reads, iteration order, effects,
+  cancellation points, result ownership, count/overflow checks or public APIs.
+
+Tests must cover empty/partial/completed construction, packed and unpacked layouts,
+F64 bits, slices/aliases, errors and cancellation, plus unchanged reference/F128
+element cleanup. Compare a separate compiler with only this selection disabled.
+Use the frozen workloads, schedules and acceptance limits above; retain misses.

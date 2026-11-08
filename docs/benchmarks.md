@@ -18,6 +18,11 @@ Each report should answer: **which implementations, which input, what timed work
 which host/toolchain, and what difference in behavior or algorithm?** Detailed
 [measurement terms](terminology.md#tests-and-measurements) explain ratios and memory.
 
+Extra time is `(fwp time / baseline time - 1) × 100%`. Name the baseline and
+statistic: a ratio of medians differs from a median of paired ratios. Elapsed time
+includes scheduling delays; CPU time measures processing time. Neither identifies
+a cause on its own. Do not average unrelated ratios into a language-wide score.
+
 ## Latest audited derivative comparison
 
 The [November 7 local-derivative comparison](measurements/computed-numeric-time-2026-11-07/README.md)
@@ -233,7 +238,7 @@ work. The [ownership direction](gc-removal-design.md) explains the lifetime rule
 | Unique numeric buffer | [C/Rust peer comparison](measurements/unique-buffer-peers.md) covers lengths 0, 16, 4,096 and 262,144, output/cleanup, payload versus metadata, process memory, code and stack; [newer sessions](measurements/buffer-current.md) retain failed controls | Qualify the remaining timing comparisons without retrying unchanged failures. Separate construction/work/release timing from the existing whole-process totals. Preserve [array removal](measurements/generated-array-folds.md) and [State range](measurements/state-range-folds.md) cost checks without treating them as timing acceptance. |
 | Returned partial application | [Three-host C/Rust/fwp comparison](measurements/returned-callables.md) separates construction, repeated calls and destruction at O1/O2; fwp uses a 16-byte heap payload, while C/Rust captures are inline | The [phase experiment](measurements/callable-phases.md) adds Swift and measures invocation/whole-call costs; retain the original ARM O1 size rejection. Original ARM acceptance and three AMD construction regressions remain open; [the phase report](measurements/callable-phases.md) retains all later qualified and inconclusive results. |
 | Subscription with weak back-link | [Weak-link semantics](gc-removal-design.md) and lifetime tests cover registration, expiration and cleanup | Add explicit C/Rust registrations with the same active-call and cancellation rules. Measure weak metadata allocation, live/expired acquisition, callback work and teardown separately. |
-| Recursive parser workspace | [A6](measurements/parser-workspace.md) already compares all three languages at 31/511/8,191 balanced nodes and 127 left-nested nodes, with phase timings and storage observations | Preserve those results. Complete the broader memory accounting (reserved/committed storage and peer transient peaks) and Rust stack observations before claiming complete memory accounting; current reported capacities are not process memory. |
+| Recursive parser workspace | [Recorded parser comparison](measurements/parser-workspace.md) covers all three languages at 31/511/8,191 balanced nodes and 127 left-nested nodes, with phase timings and storage observations | Preserve those results. Complete reserved/committed storage, peer transient peaks and Rust stack observations; reported capacities are not process memory. |
 
 Measure construction, useful work and cleanup separately and together at small,
 cache-sized and larger inputs. Match checked arithmetic and lifetime behavior;
@@ -273,20 +278,6 @@ Separate [bounded-memory tests](../tests/native_memory.rs) retain the long-loop 
 RSS limit and HTTP/REST growth limits of 16 MiB across 20,000 requests. RSS is
 whole-process resident memory, including allocator and runtime costs. These are
 regression limits, not claims of optimal space or performance.
-
-## Reading a result
-
-Divide fwp time by the named baseline time. `1.25×` means 25% more elapsed time;
-`0.80×` means 20% less. Extra time is `(fwp / baseline - 1) × 100%`. Always name
-which baseline: fwp can be faster than C and slower than Rust in one workload.
-Do not average unrelated ratios into a language-wide score.
-
-A ratio of medians differs from a median of paired ratios. Use the statistic and
-execution order stated by the report. Elapsed time includes scheduling delays;
-CPU time measures processing time. Neither identifies a bottleneck on its own.
-Identical-code controls reveal when measurement variation is too large for the
-claimed effect. Compilation, profiling and initialization are included only when
-the report's timer explicitly includes them.
 
 ## fwp compared with C and Rust
 

@@ -1,5 +1,8 @@
 # Count characters without building integer text
 
+Historical measurements from before tracing GC removal. The current compiler
+has one ownership policy; the collector settings below identify the old experiment.
+
 `show | string.length` asks for the length of an integer's decimal display.
 For `-17`, the result is `3`: a sign and two digits. Native lowering now counts
 those characters without creating a temporary String. Concatenations of integer

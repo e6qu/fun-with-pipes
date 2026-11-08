@@ -1,0 +1,2738 @@
+{
+  "arm": {
+    "artifact": 13600770461,
+    "archiveSha256": "60774a5e413ef3d3061c2a6aa6c6234fee183807e6ef843669e252b7c55ab744",
+    "identity": {
+      "source": "432d19715c87a5aae9681c4b7b3507847eb87a53",
+      "originalSource": "f227830b08ff115f7b0711274545d6685b4be0be",
+      "originalArtifact": {
+        "id": 13599921511,
+        "node_id": "MDg6QXJ0aWZhY3QxMzU5OTkyMTUxMQ==",
+        "name": "borrowed-array-costs-ARM64-1",
+        "size_in_bytes": 16807607,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13599921511",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13599921511/zip",
+        "expired": false,
+        "digest": "sha256:d38b1da548571e4ee6aaf726f4cf58b5d2ee366f43fa087c9c209f7385c0f3b3",
+        "created_at": "2026-11-08T01:55:55Z",
+        "updated_at": "2026-11-08T01:55:55Z",
+        "expires_at": "2027-02-06T01:47:59Z",
+        "workflow_run": {
+          "id": 42435795842,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "performance-roadmap-review",
+          "head_sha": "f227830b08ff115f7b0711274545d6685b4be0be"
+        }
+      },
+      "machine": "aarch64",
+      "cpu": "processor\t: 0\nBogoMIPS\t: 2000.00\nFeatures\t: fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nCPU implementer\t: 0x41\nCPU architecture: 8\nCPU variant\t: 0x0\nCPU part\t: 0xd49\nCPU revision\t: 0\n\nprocessor\t: 1\nBogoMIPS\t: 2000.00\nFeatures\t: fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nCPU implementer\t: 0x41\nCPU architecture: 8\nCPU variant\t: 0x0\nCPU part\t: 0xd49\nCPU revision\t: 0\n\nprocessor\t: 2\nBogoMIPS\t: 2000.00\nFeatures\t: fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nCPU implementer\t: 0x41\nCPU architecture: 8\nCPU variant\t: 0x0\nCPU part\t: 0xd49\nCPU revision\t: 0\n\nprocessor\t: 3\nBogoMIPS\t: 2000.00\nFeatures\t: fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nCPU implementer\t: 0x41\nCPU architecture: 8\nCPU variant\t: 0x0\nCPU part\t: 0xd49\nCPU revision\t: 0\n\n",
+      "affinity": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "flags": [
+        "-O2",
+        "-std=gnu11",
+        "-ffp-contract=off",
+        "-fno-fast-math",
+        "-fno-lto",
+        "-march=armv8-a",
+        "-fstack-usage"
+      ],
+      "ccVersion": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n"
+    },
+    "host": {
+      "source": "432d19715c87a5aae9681c4b7b3507847eb87a53",
+      "actual": {
+        "system": "Linux",
+        "machine": "aarch64",
+        "cpu": "Neoverse-N2",
+        "processors": 4,
+        "cVersion": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+        "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+      },
+      "expected": {
+        "system": "Linux",
+        "machine": "aarch64",
+        "cpu": "Neoverse-N2",
+        "processors": 4,
+        "cVersion": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+        "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+      },
+      "lscpu": "Architecture:                            aarch64\nCPU op-mode(s):                          32-bit, 64-bit\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               ARM\nModel name:                              Neoverse-N2\nModel:                                   0\nThread(s) per core:                      1\nCore(s) per socket:                      4\nSocket(s):                               1\nStepping:                                r0p0\nBogoMIPS:                                2000.00\nFlags:                                   fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nL1d cache:                               256 KiB (4 instances)\nL1i cache:                               256 KiB (4 instances)\nL2 cache:                                4 MiB (4 instances)\nL3 cache:                                128 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; CSV2, BHB\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+      "failures": [],
+      "qualified": true
+    },
+    "cases": {
+      "loop-0": {
+        "medians": {
+          "constructionNs": {
+            "candidate": 126282.5,
+            "reference": 126207.0,
+            "candidate-copy": 126303.0,
+            "reference-copy": 126309.0
+          },
+          "computationNs": {
+            "candidate": 126424.0,
+            "reference": 126500.0,
+            "candidate-copy": 126517.0,
+            "reference-copy": 126493.0
+          },
+          "releaseNs": {
+            "candidate": 126443.0,
+            "reference": 126291.0,
+            "candidate-copy": 126379.5,
+            "reference-copy": 126363.0
+          },
+          "loopNs": {
+            "candidate": 773160.0,
+            "reference": 772636.0,
+            "candidate-copy": 774219.5,
+            "reference-copy": 771635.5
+          },
+          "processNs": {
+            "candidate": 1524913.0,
+            "reference": 1522361.0,
+            "candidate-copy": 1534996.5,
+            "reference-copy": 1526433.0
+          }
+        },
+        "copyRatios": {
+          "constructionNs": {
+            "candidate": 1.0001623344485577,
+            "reference": 1.0008081960588557
+          },
+          "computationNs": {
+            "candidate": 1.0007356198190218,
+            "reference": 1.0000553390306184
+          },
+          "releaseNs": {
+            "candidate": 1.0005024549076393,
+            "reference": 1.0005701118844572
+          },
+          "loopNs": {
+            "candidate": 1.0013703502509184,
+            "reference": 1.0012965966444
+          },
+          "processNs": {
+            "candidate": 1.0066125083857242,
+            "reference": 1.0026747926411672
+          }
+        },
+        "ratios": {
+          "constructionNs": 1.0005982235533686,
+          "computationNs": 0.999399209486166,
+          "releaseNs": 1.0012035695338544,
+          "loopNs": 1.0006781977541819,
+          "processNs": 1.0016763435216745
+        },
+        "computationQualified": true,
+        "processQualified": true,
+        "changedBuilders": 0,
+        "binaryHashes": {
+          "candidate": "1fa08d7e42507b01e69c5350951cb4ef1be773a5572a25573041b2bbc29bd9e9",
+          "candidate-copy": "1fa08d7e42507b01e69c5350951cb4ef1be773a5572a25573041b2bbc29bd9e9",
+          "reference": "229ad020c8c9e0629609b9765cf62217a5c12f9ac8b535f4d6da3c7999067b08",
+          "reference-copy": "229ad020c8c9e0629609b9765cf62217a5c12f9ac8b535f4d6da3c7999067b08"
+        }
+      },
+      "loop-16": {
+        "medians": {
+          "constructionNs": {
+            "candidate": 126339.0,
+            "reference": 125374.0,
+            "candidate-copy": 126202.0,
+            "reference-copy": 126196.5
+          },
+          "computationNs": {
+            "candidate": 186186.5,
+            "reference": 187355.0,
+            "candidate-copy": 187313.0,
+            "reference-copy": 187655.0
+          },
+          "releaseNs": {
+            "candidate": 126352.5,
+            "reference": 126428.0,
+            "candidate-copy": 126313.5,
+            "reference-copy": 126465.0
+          },
+          "loopNs": {
+            "candidate": 831801.0,
+            "reference": 833012.5,
+            "candidate-copy": 829813.0,
+            "reference-copy": 832036.5
+          },
+          "processNs": {
+            "candidate": 1578150.0,
+            "reference": 1577361.5,
+            "candidate-copy": 1570526.0,
+            "reference-copy": 1577370.0
+          }
+        },
+        "copyRatios": {
+          "constructionNs": {
+            "candidate": 1.0010855612430865,
+            "reference": 1.0065603713688644
+          },
+          "computationNs": {
+            "candidate": 1.006050384963464,
+            "reference": 1.001601238290945
+          },
+          "releaseNs": {
+            "candidate": 1.0003087555961951,
+            "reference": 1.0002926566899737
+          },
+          "loopNs": {
+            "candidate": 1.0023957204816025,
+            "reference": 1.0011730254622244
+          },
+          "processNs": {
+            "candidate": 1.004854424568584,
+            "reference": 1.0000053887456997
+          }
+        },
+        "ratios": {
+          "constructionNs": 1.007696970663774,
+          "computationNs": 0.9937631768567692,
+          "releaseNs": 0.9994028221596482,
+          "loopNs": 0.9985456400714275,
+          "processNs": 1.0004998854099076
+        },
+        "computationQualified": true,
+        "processQualified": true,
+        "changedBuilders": 0,
+        "binaryHashes": {
+          "candidate": "c449e75dd7850a25da07232b5239592eb4b56d04bffe85aa0b842bf0ae50801a",
+          "candidate-copy": "c449e75dd7850a25da07232b5239592eb4b56d04bffe85aa0b842bf0ae50801a",
+          "reference": "3dcd7d0dd409ce07c2a6f50c93022e85ba1eda358a7381d60d8f5c9f16d7f568",
+          "reference-copy": "3dcd7d0dd409ce07c2a6f50c93022e85ba1eda358a7381d60d8f5c9f16d7f568"
+        }
+      },
+      "loop-1000000": {
+        "medians": {
+          "constructionNs": {
+            "candidate": 496.0,
+            "reference": 496.0,
+            "candidate-copy": 488.0,
+            "reference-copy": 496.0
+          },
+          "computationNs": {
+            "candidate": 21093160.0,
+            "reference": 21103974.0,
+            "candidate-copy": 21102248.0,
+            "reference-copy": 21089915.0
+          },
+          "releaseNs": {
+            "candidate": 496.0,
+            "reference": 496.0,
+            "candidate-copy": 496.0,
+            "reference-copy": 496.0
+          },
+          "loopNs": {
+            "candidate": 21095759.0,
+            "reference": 21106542.0,
+            "candidate-copy": 21104839.5,
+            "reference-copy": 21092443.0
+          },
+          "processNs": {
+            "candidate": 21953116.0,
+            "reference": 21964904.0,
+            "candidate-copy": 21961154.0,
+            "reference-copy": 21971229.0
+          }
+        },
+        "copyRatios": {
+          "constructionNs": {
+            "candidate": 1.0163934426229508,
+            "reference": 1.0
+          },
+          "computationNs": {
+            "candidate": 1.0004308505695685,
+            "reference": 1.0006666219375469
+          },
+          "releaseNs": {
+            "candidate": 1.0,
+            "reference": 1.0
+          },
+          "loopNs": {
+            "candidate": 1.0004304419670322,
+            "reference": 1.000668438454474
+          },
+          "processNs": {
+            "candidate": 1.000366143922348,
+            "reference": 1.0002879593737355
+          }
+        },
+        "ratios": {
+          "constructionNs": 1.0,
+          "computationNs": 0.9994875846605952,
+          "releaseNs": 1.0,
+          "loopNs": 0.9994891157443033,
+          "processNs": 0.9994633256762697
+        },
+        "computationQualified": true,
+        "processQualified": true,
+        "changedBuilders": 0,
+        "binaryHashes": {
+          "candidate": "41f6643d83febced53046445da4d191833f4a2558b3ba8ff85c980c16b9289dd",
+          "candidate-copy": "41f6643d83febced53046445da4d191833f4a2558b3ba8ff85c980c16b9289dd",
+          "reference": "0ca0e29c4b3928c49e1699066b1dde6b11a8df0ca211f47914a68b1abc344732",
+          "reference-copy": "0ca0e29c4b3928c49e1699066b1dde6b11a8df0ca211f47914a68b1abc344732"
+        }
+      },
+      "loop-100000000": {
+        "medians": {
+          "constructionNs": {
+            "candidate": 32.0,
+            "reference": 32.0,
+            "candidate-copy": 32.0,
+            "reference-copy": 32.0
+          },
+          "computationNs": {
+            "candidate": 131492879.5,
+            "reference": 131570410.5,
+            "candidate-copy": 131554255.0,
+            "reference-copy": 131364413.5
+          },
+          "releaseNs": {
+            "candidate": 32.0,
+            "reference": 32.0,
+            "candidate-copy": 32.0,
+            "reference-copy": 32.0
+          },
+          "loopNs": {
+            "candidate": 131493115.5,
+            "reference": 131570706.5,
+            "candidate-copy": 131554715.0,
+            "reference-copy": 131364797.5
+          },
+          "processNs": {
+            "candidate": 132638480.5,
+            "reference": 132688017.5,
+            "candidate-copy": 132699371.5,
+            "reference-copy": 132508504.0
+          }
+        },
+        "copyRatios": {
+          "constructionNs": {
+            "candidate": 1.0,
+            "reference": 1.0
+          },
+          "computationNs": {
+            "candidate": 1.0004667591145116,
+            "reference": 1.0015681339756448
+          },
+          "releaseNs": {
+            "candidate": 1.0,
+            "reference": 1.0
+          },
+          "loopNs": {
+            "candidate": 1.0004684617880242,
+            "reference": 1.0015674595014696
+          },
+          "processNs": {
+            "candidate": 1.0004590749213234,
+            "reference": 1.0013547319196963
+          }
+        },
+        "ratios": {
+          "constructionNs": 1.0,
+          "computationNs": 0.9994107261677959,
+          "releaseNs": 1.0,
+          "loopNs": 0.999410271464948,
+          "processNs": 0.9996266656105552
+        },
+        "computationQualified": true,
+        "processQualified": true,
+        "changedBuilders": 0,
+        "binaryHashes": {
+          "candidate": "f4ed41784677e058ec8709be7e79bd45ad7ea6dba77a30101dd7a185f289d2d1",
+          "candidate-copy": "f4ed41784677e058ec8709be7e79bd45ad7ea6dba77a30101dd7a185f289d2d1",
+          "reference": "443e58f1975b5bb04fda03d9a3b9b7f89e30c7f9e901869fb4a88dc6dfc8cd85",
+          "reference-copy": "443e58f1975b5bb04fda03d9a3b9b7f89e30c7f9e901869fb4a88dc6dfc8cd85"
+        }
+      },
+      "array-0": {
+        "medians": {
+          "constructionNs": {
+            "candidate": 179973.0,
+            "reference": 181774.0,
+            "candidate-copy": 184702.0,
+            "reference-copy": 182540.5
+          },
+          "computationNs": {
+            "candidate": 239633.5,
+            "reference": 240056.0,
+            "candidate-copy": 239891.0,
+            "reference-copy": 243074.0
+          },
+          "releaseNs": {
+            "candidate": 125850.5,
+            "reference": 125277.0,
+            "candidate-copy": 125897.0,
+            "reference-copy": 125367.5
+          },
+          "loopNs": {
+            "candidate": 942010.5,
+            "reference": 940063.0,
+            "candidate-copy": 942754.5,
+            "reference-copy": 943547.0
+          },
+          "processNs": {
+            "candidate": 1691068.0,
+            "reference": 1676289.0,
+            "candidate-copy": 1697635.5,
+            "reference-copy": 1680408.0
+          }
+        },
+        "copyRatios": {
+          "constructionNs": {
+            "candidate": 1.0262761636467692,
+            "reference": 1.0042167746762463
+          },
+          "computationNs": {
+            "candidate": 1.001074557605677,
+            "reference": 1.0125720665178126
+          },
+          "releaseNs": {
+            "candidate": 1.0003694860171395,
+            "reference": 1.0007223991634537
+          },
+          "loopNs": {
+            "candidate": 1.000789800113693,
+            "reference": 1.003706134588852
+          },
+          "processNs": {
+            "candidate": 1.0038836403976659,
+            "reference": 1.0024572135234437
+          }
+        },
+        "ratios": {
+          "constructionNs": 0.990092092378448,
+          "computationNs": 0.9982399940013996,
+          "releaseNs": 1.0045778554722735,
+          "loopNs": 1.0020716696646927,
+          "processNs": 1.0088164988256798
+        },
+        "computationQualified": true,
+        "processQualified": true,
+        "changedBuilders": 1,
+        "binaryHashes": {
+          "candidate": "7c169bcbb0378a851e80566d06e9f30fd0d22289c981765a934ac41fbe666036",
+          "candidate-copy": "7c169bcbb0378a851e80566d06e9f30fd0d22289c981765a934ac41fbe666036",
+          "reference": "914aa45660b23d06470c9226b496ab712e6a6d84082f713bcc8585bbbc8d2eae",
+          "reference-copy": "914aa45660b23d06470c9226b496ab712e6a6d84082f713bcc8585bbbc8d2eae"
+        }
+      },
+      "array-16": {
+        "medians": {
+          "constructionNs": {
+            "candidate": 248819.0,
+            "reference": 250890.0,
+            "candidate-copy": 251617.0,
+            "reference-copy": 249476.5
+          },
+          "computationNs": {
+            "candidate": 344241.0,
+            "reference": 377741.0,
+            "candidate-copy": 341558.5,
+            "reference-copy": 372632.5
+          },
+          "releaseNs": {
+            "candidate": 126200.5,
+            "reference": 126362.0,
+            "candidate-copy": 126181.0,
+            "reference-copy": 126373.5
+          },
+          "loopNs": {
+            "candidate": 1116422.0,
+            "reference": 1156472.0,
+            "candidate-copy": 1124282.0,
+            "reference-copy": 1145129.0
+          },
+          "processNs": {
+            "candidate": 1845968.0,
+            "reference": 1892794.0,
+            "candidate-copy": 1838585.0,
+            "reference-copy": 1878447.0
+          }
+        },
+        "copyRatios": {
+          "constructionNs": {
+            "candidate": 1.0112451219561207,
+            "reference": 1.005665864319886
+          },
+          "computationNs": {
+            "candidate": 1.0078537058805446,
+            "reference": 1.0137092175266516
+          },
+          "releaseNs": {
+            "candidate": 1.0001545399069591,
+            "reference": 1.0000910083727703
+          },
+          "loopNs": {
+            "candidate": 1.0070403485420387,
+            "reference": 1.0099054342349203
+          },
+          "processNs": {
+            "candidate": 1.0040155880745247,
+            "reference": 1.0076376921999928
+          }
+        },
+        "ratios": {
+          "constructionNs": 0.9917453864243294,
+          "computationNs": 0.9113148956560183,
+          "releaseNs": 0.9987219258954433,
+          "loopNs": 0.9653688113503829,
+          "processNs": 0.9752609105903759
+        },
+        "computationQualified": true,
+        "processQualified": true,
+        "changedBuilders": 1,
+        "binaryHashes": {
+          "candidate": "91c994f1816fa5f8a055b871ef66ad9c9cb02eb765d84cccfd9f70d26854d6b8",
+          "candidate-copy": "91c994f1816fa5f8a055b871ef66ad9c9cb02eb765d84cccfd9f70d26854d6b8",
+          "reference": "dde16943fb49c1fea9298a24660af1ab7ea7cdbe9226fc39f3fda8b5ef8c14c0",
+          "reference-copy": "dde16943fb49c1fea9298a24660af1ab7ea7cdbe9226fc39f3fda8b5ef8c14c0"
+        }
+      },
+      "array-65537": {
+        "medians": {
+          "constructionNs": {
+            "candidate": 1489983.0,
+            "reference": 1483804.0,
+            "candidate-copy": 1489572.5,
+            "reference-copy": 1487669.5
+          },
+          "computationNs": {
+            "candidate": 2529591.0,
+            "reference": 3693392.0,
+            "candidate-copy": 2521557.5,
+            "reference-copy": 3698899.5
+          },
+          "releaseNs": {
+            "candidate": 496.0,
+            "reference": 496.0,
+            "candidate-copy": 496.0,
+            "reference-copy": 492.0
+          },
+          "loopNs": {
+            "candidate": 4018028.0,
+            "reference": 5190651.0,
+            "candidate-copy": 4007960.0,
+            "reference-copy": 5193199.0
+          },
+          "processNs": {
+            "candidate": 4961455.0,
+            "reference": 6110891.5,
+            "candidate-copy": 4920069.0,
+            "reference-copy": 6123895.0
+          }
+        },
+        "copyRatios": {
+          "constructionNs": {
+            "candidate": 1.0002755824238163,
+            "reference": 1.0026051284401445
+          },
+          "computationNs": {
+            "candidate": 1.0031859277450543,
+            "reference": 1.0014911766744499
+          },
+          "releaseNs": {
+            "candidate": 1.0,
+            "reference": 1.008130081300813
+          },
+          "loopNs": {
+            "candidate": 1.0025120011177757,
+            "reference": 1.000490882550185
+          },
+          "processNs": {
+            "candidate": 1.0084116706493345,
+            "reference": 1.0021279219243215
+          }
+        },
+        "ratios": {
+          "constructionNs": 1.0041642966321698,
+          "computationNs": 0.6848964312480235,
+          "releaseNs": 1.0,
+          "loopNs": 0.7740894157592179,
+          "processNs": 0.8119036314095905
+        },
+        "computationQualified": true,
+        "processQualified": true,
+        "changedBuilders": 1,
+        "binaryHashes": {
+          "candidate": "efb172df8465e1e14c30a7680bcc25df8c534962d68f85d337d53f3379ae6918",
+          "candidate-copy": "efb172df8465e1e14c30a7680bcc25df8c534962d68f85d337d53f3379ae6918",
+          "reference": "1a69116fbaf4697165b2fe4a69e15279ce9dd4146db6bb1ed6afacc32e39e6a6",
+          "reference-copy": "1a69116fbaf4697165b2fe4a69e15279ce9dd4146db6bb1ed6afacc32e39e6a6"
+        }
+      },
+      "array-262145": {
+        "medians": {
+          "constructionNs": {
+            "candidate": 1899293.5,
+            "reference": 1898398.5,
+            "candidate-copy": 1905035.0,
+            "reference-copy": 1897998.5
+          },
+          "computationNs": {
+            "candidate": 2980617.5,
+            "reference": 4149031.0,
+            "candidate-copy": 2966186.0,
+            "reference-copy": 4180774.5
+          },
+          "releaseNs": {
+            "candidate": 156.0,
+            "reference": 128.0,
+            "candidate-copy": 164.0,
+            "reference-copy": 128.0
+          },
+          "loopNs": {
+            "candidate": 4855970.0,
+            "reference": 6051342.0,
+            "candidate-copy": 4871357.0,
+            "reference-copy": 6066617.5
+          },
+          "processNs": {
+            "candidate": 5989597.0,
+            "reference": 7176086.0,
+            "candidate-copy": 6008780.5,
+            "reference-copy": 7197989.0
+          }
+        },
+        "copyRatios": {
+          "constructionNs": {
+            "candidate": 1.0030229661713685,
+            "reference": 1.0002107483225091
+          },
+          "computationNs": {
+            "candidate": 1.0048653388560258,
+            "reference": 1.007650822565558
+          },
+          "releaseNs": {
+            "candidate": 1.0512820512820513,
+            "reference": 1.0
+          },
+          "loopNs": {
+            "candidate": 1.0031686769069825,
+            "reference": 1.0025243160938515
+          },
+          "processNs": {
+            "candidate": 1.0032028031268214,
+            "reference": 1.00305222094607
+          }
+        },
+        "ratios": {
+          "constructionNs": 1.0004714500143146,
+          "computationNs": 0.7183888238000632,
+          "releaseNs": 1.21875,
+          "loopNs": 0.8024616688331283,
+          "processNs": 0.8346607050138474
+        },
+        "computationQualified": true,
+        "processQualified": true,
+        "changedBuilders": 1,
+        "binaryHashes": {
+          "candidate": "e18b011b0c6f3d6ec989dfc61a47755913eeb02fa07cf309874b58175ace42e3",
+          "candidate-copy": "e18b011b0c6f3d6ec989dfc61a47755913eeb02fa07cf309874b58175ace42e3",
+          "reference": "05aa89d5a168609089590f9a30991f33ce8541f47a734992c2cb8688c6a29b5a",
+          "reference-copy": "05aa89d5a168609089590f9a30991f33ce8541f47a734992c2cb8688c6a29b5a"
+        }
+      },
+      "manual-3-0": {
+        "medians": {
+          "constructionNs": {
+            "candidate": 187245.0,
+            "reference": 184542.0,
+            "candidate-copy": 188232.0,
+            "reference-copy": 185357.0
+          },
+          "computationNs": {
+            "candidate": 126561.0,
+            "reference": 126462.0,
+            "candidate-copy": 126693.5,
+            "reference-copy": 126493.5
+          },
+          "releaseNs": {
+            "candidate": 142305.5,
+            "reference": 141902.5,
+            "candidate-copy": 142126.0,
+            "reference-copy": 142122.0
+          },
+          "loopNs": {
+            "candidate": 863438.0,
+            "reference": 859634.5,
+            "candidate-copy": 862534.0,
+            "reference-copy": 855063.0
+          },
+          "processNs": {
+            "candidate": 1623549.5,
+            "reference": 1606486.5,
+            "candidate-copy": 1620641.5,
+            "reference-copy": 1614490.0
+          }
+        },
+        "copyRatios": {
+          "constructionNs": {
+            "candidate": 1.0052711687895537,
+            "reference": 1.0044163388280174
+          },
+          "computationNs": {
+            "candidate": 1.0010469259882586,
+            "reference": 1.0002490866821654
+          },
+          "releaseNs": {
+            "candidate": 1.0012629638489792,
+            "reference": 1.0015468367364917
+          },
+          "loopNs": {
+            "candidate": 1.0010480746266235,
+            "reference": 1.0053463896812282
+          },
+          "processNs": {
+            "candidate": 1.0017943511874774,
+            "reference": 1.0049819902003534
+          }
+        },
+        "ratios": {
+          "constructionNs": 1.014647072211204,
+          "computationNs": 1.000782843858234,
+          "releaseNs": 1.0028399781540143,
+          "loopNs": 1.0044245548544177,
+          "processNs": 1.0106213155230375
+        },
+        "computationQualified": true,
+        "processQualified": true,
+        "changedBuilders": 1,
+        "binaryHashes": {
+          "candidate": "5748dafa29932453ae9a75478766f77c82c390a4b1e57d8a68f580d185d3c9ea",
+          "candidate-copy": "5748dafa29932453ae9a75478766f77c82c390a4b1e57d8a68f580d185d3c9ea",
+          "reference": "f712d67454d7a3bb36e3c56abfe27613db02cd04bcb757d443f2d6dada072b2f",
+          "reference-copy": "f712d67454d7a3bb36e3c56abfe27613db02cd04bcb757d443f2d6dada072b2f"
+        }
+      },
+      "manual-3-1": {
+        "medians": {
+          "constructionNs": {
+            "candidate": 62137.0,
+            "reference": 64089.0,
+            "candidate-copy": 63801.5,
+            "reference-copy": 63009.0
+          },
+          "computationNs": {
+            "candidate": 59849.5,
+            "reference": 60553.0,
+            "candidate-copy": 59690.5,
+            "reference-copy": 60495.0
+          },
+          "releaseNs": {
+            "candidate": 35398.5,
+            "reference": 35425.5,
+            "candidate-copy": 35614.5,
+            "reference-copy": 35494.5
+          },
+          "loopNs": {
+            "candidate": 256754.5,
+            "reference": 257922.0,
+            "candidate-copy": 257494.5,
+            "reference-copy": 258390.5
+          },
+          "processNs": {
+            "candidate": 991252.5,
+            "reference": 987805.0,
+            "candidate-copy": 982045.0,
+            "reference-copy": 994640.5
+          }
+        },
+        "copyRatios": {
+          "constructionNs": {
+            "candidate": 1.0267875822778698,
+            "reference": 1.0171404085130695
+          },
+          "computationNs": {
+            "candidate": 1.0026637404612124,
+            "reference": 1.0009587569220597
+          },
+          "releaseNs": {
+            "candidate": 1.0061019534726048,
+            "reference": 1.0019477495024771
+          },
+          "loopNs": {
+            "candidate": 1.0028821305955689,
+            "reference": 1.0018164406293375
+          },
+          "processNs": {
+            "candidate": 1.0093758432658382,
+            "reference": 1.0069198880345818
+          }
+        },
+        "ratios": {
+          "constructionNs": 0.9695423551623523,
+          "computationNs": 0.9883820785097353,
+          "releaseNs": 0.9992378371512046,
+          "loopNs": 0.9954734377059731,
+          "processNs": 1.0034900612975233
+        },
+        "computationQualified": true,
+        "processQualified": true,
+        "changedBuilders": 1,
+        "binaryHashes": {
+          "candidate": "9d1325419ac184462d0f2570da1ee9628c3f9ae010c2cf3f3e3841d124faee9a",
+          "candidate-copy": "9d1325419ac184462d0f2570da1ee9628c3f9ae010c2cf3f3e3841d124faee9a",
+          "reference": "7dea60a388c2b056319b8c0dc030c6a2c3a5cf7a9c99c230cfcb592ea01971e2",
+          "reference-copy": "7dea60a388c2b056319b8c0dc030c6a2c3a5cf7a9c99c230cfcb592ea01971e2"
+        }
+      },
+      "manual-3-199": {
+        "medians": {
+          "constructionNs": {
+            "candidate": 24150.5,
+            "reference": 23747.0,
+            "candidate-copy": 23898.5,
+            "reference-copy": 24254.5
+          },
+          "computationNs": {
+            "candidate": 163071.0,
+            "reference": 170491.0,
+            "candidate-copy": 162319.5,
+            "reference-copy": 170555.0
+          },
+          "releaseNs": {
+            "candidate": 1127.5,
+            "reference": 1124.0,
+            "candidate-copy": 1128.0,
+            "reference-copy": 1132.0
+          },
+          "loopNs": {
+            "candidate": 194542.0,
+            "reference": 200286.0,
+            "candidate-copy": 191386.0,
+            "reference-copy": 199074.0
+          },
+          "processNs": {
+            "candidate": 921564.0,
+            "reference": 930731.5,
+            "candidate-copy": 921864.0,
+            "reference-copy": 925103.5
+          }
+        },
+        "copyRatios": {
+          "constructionNs": {
+            "candidate": 1.010544594849049,
+            "reference": 1.0213711205625975
+          },
+          "computationNs": {
+            "candidate": 1.0046297579773225,
+            "reference": 1.000375386384032
+          },
+          "releaseNs": {
+            "candidate": 1.0004434589800444,
+            "reference": 1.00711743772242
+          },
+          "loopNs": {
+            "candidate": 1.0164902343954103,
+            "reference": 1.006088188311884
+          },
+          "processNs": {
+            "candidate": 1.0003255335494876,
+            "reference": 1.0060836436139307
+          }
+        },
+        "ratios": {
+          "constructionNs": 1.0169916199941045,
+          "computationNs": 0.9564786411012898,
+          "releaseNs": 1.0031138790035588,
+          "loopNs": 0.9713210109543353,
+          "processNs": 0.990150220552329
+        },
+        "computationQualified": true,
+        "processQualified": true,
+        "changedBuilders": 1,
+        "binaryHashes": {
+          "candidate": "34a21c3127b01ca8fb819667c723b6d8f59a39c4672d1859467d04373aa2c2f5",
+          "candidate-copy": "34a21c3127b01ca8fb819667c723b6d8f59a39c4672d1859467d04373aa2c2f5",
+          "reference": "780a730b16c458cb394ecacc9e567b842f66b4bbc4af68bf864ef06bebcc8d94",
+          "reference-copy": "780a730b16c458cb394ecacc9e567b842f66b4bbc4af68bf864ef06bebcc8d94"
+        }
+      },
+      "manual-33-199": {
+        "medians": {
+          "constructionNs": {
+            "candidate": 26306.5,
+            "reference": 25935.0,
+            "candidate-copy": 25835.0,
+            "reference-copy": 25886.5
+          },
+          "computationNs": {
+            "candidate": 652845.5,
+            "reference": 739882.0,
+            "candidate-copy": 655557.5,
+            "reference-copy": 739585.5
+          },
+          "releaseNs": {
+            "candidate": 1168.0,
+            "reference": 1156.0,
+            "candidate-copy": 1176.0,
+            "reference-copy": 1151.5
+          },
+          "loopNs": {
+            "candidate": 685292.5,
+            "reference": 774320.0,
+            "candidate-copy": 688392.5,
+            "reference-copy": 771748.0
+          },
+          "processNs": {
+            "candidate": 1432857.5,
+            "reference": 1505662.0,
+            "candidate-copy": 1425946.0,
+            "reference-copy": 1503581.5
+          }
+        },
+        "copyRatios": {
+          "constructionNs": {
+            "candidate": 1.018250435455777,
+            "reference": 1.0018735634404032
+          },
+          "computationNs": {
+            "candidate": 1.0041541222234052,
+            "reference": 1.0004009002339824
+          },
+          "releaseNs": {
+            "candidate": 1.0068493150684932,
+            "reference": 1.0039079461571863
+          },
+          "loopNs": {
+            "candidate": 1.0045236158282778,
+            "reference": 1.0033326940918539
+          },
+          "processNs": {
+            "candidate": 1.0048469577389325,
+            "reference": 1.0013836961947191
+          }
+        },
+        "ratios": {
+          "constructionNs": 1.0143242722190091,
+          "computationNs": 0.8823643499909445,
+          "releaseNs": 1.0103806228373702,
+          "loopNs": 0.8850249250955677,
+          "processNs": 0.9516461861958394
+        },
+        "computationQualified": true,
+        "processQualified": true,
+        "changedBuilders": 1,
+        "binaryHashes": {
+          "candidate": "92568a82edb65804a100d526488333623c8b3b774c6fb9b3cce2d2f28c687930",
+          "candidate-copy": "92568a82edb65804a100d526488333623c8b3b774c6fb9b3cce2d2f28c687930",
+          "reference": "ad7d04333e8c0ac34ead04ccec4750a7a881ca56e2403d0bfdc99c10fee6c699",
+          "reference-copy": "ad7d04333e8c0ac34ead04ccec4750a7a881ca56e2403d0bfdc99c10fee6c699"
+        }
+      },
+      "manual-129-199": {
+        "medians": {
+          "constructionNs": {
+            "candidate": 26818.5,
+            "reference": 25510.5,
+            "candidate-copy": 27559.0,
+            "reference-copy": 26543.0
+          },
+          "computationNs": {
+            "candidate": 558839.0,
+            "reference": 628107.0,
+            "candidate-copy": 559047.0,
+            "reference-copy": 629703.5
+          },
+          "releaseNs": {
+            "candidate": 288.0,
+            "reference": 296.0,
+            "candidate-copy": 296.0,
+            "reference-copy": 296.0
+          },
+          "loopNs": {
+            "candidate": 586801.5,
+            "reference": 658925.0,
+            "candidate-copy": 588545.0,
+            "reference-copy": 658797.0
+          },
+          "processNs": {
+            "candidate": 1361440.0,
+            "reference": 1444356.5,
+            "candidate-copy": 1363112.5,
+            "reference-copy": 1422501.5
+          }
+        },
+        "copyRatios": {
+          "constructionNs": {
+            "candidate": 1.0276115368122751,
+            "reference": 1.040473530507046
+          },
+          "computationNs": {
+            "candidate": 1.0003722002222464,
+            "reference": 1.0025417643809096
+          },
+          "releaseNs": {
+            "candidate": 1.0277777777777777,
+            "reference": 1.0
+          },
+          "loopNs": {
+            "candidate": 1.0029711921322628,
+            "reference": 1.00019429353807
+          },
+          "processNs": {
+            "candidate": 1.001228478669644,
+            "reference": 1.0153637799327453
+          }
+        },
+        "ratios": {
+          "constructionNs": 1.0512730052331394,
+          "computationNs": 0.8897194267855636,
+          "releaseNs": 0.972972972972973,
+          "loopNs": 0.8905436885836779,
+          "processNs": 0.9425927740138947
+        },
+        "computationQualified": true,
+        "processQualified": true,
+        "changedBuilders": 1,
+        "binaryHashes": {
+          "candidate": "4afe3e16991b11edfb454f0fe43e6432c5303fc2e89477fd2afbeef5d2072df1",
+          "candidate-copy": "4afe3e16991b11edfb454f0fe43e6432c5303fc2e89477fd2afbeef5d2072df1",
+          "reference": "914d674734199a8f8c5c89d354a8e949f66b4b577f80fa54949ae97ee6610361",
+          "reference-copy": "914d674734199a8f8c5c89d354a8e949f66b4b577f80fa54949ae97ee6610361"
+        }
+      },
+      "local-3-0": {
+        "medians": {
+          "constructionNs": {
+            "candidate": 183842.0,
+            "reference": 183585.0,
+            "candidate-copy": 184362.5,
+            "reference-copy": 182720.5
+          },
+          "computationNs": {
+            "candidate": 126852.5,
+            "reference": 126433.0,
+            "candidate-copy": 126575.5,
+            "reference-copy": 126503.0
+          },
+          "releaseNs": {
+            "candidate": 142684.0,
+            "reference": 141720.0,
+            "candidate-copy": 141577.5,
+            "reference-copy": 142479.0
+          },
+          "loopNs": {
+            "candidate": 859087.0,
+            "reference": 854355.0,
+            "candidate-copy": 856951.5,
+            "reference-copy": 856511.5
+          },
+          "processNs": {
+            "candidate": 1599952.0,
+            "reference": 1578417.5,
+            "candidate-copy": 1584777.0,
+            "reference-copy": 1591832.5
+          }
+        },
+        "copyRatios": {
+          "constructionNs": {
+            "candidate": 1.0028312355174551,
+            "reference": 1.0047312698903517
+          },
+          "computationNs": {
+            "candidate": 1.0021884171897406,
+            "reference": 1.000553652922892
+          },
+          "releaseNs": {
+            "candidate": 1.0078155074076036,
+            "reference": 1.0053556308213378
+          },
+          "loopNs": {
+            "candidate": 1.0024919729996389,
+            "reference": 1.002524126387743
+          },
+          "processNs": {
+            "candidate": 1.0095754797047156,
+            "reference": 1.0084990187957241
+          }
+        },
+        "ratios": {
+          "constructionNs": 1.0013998965057058,
+          "computationNs": 1.0033179628736169,
+          "releaseNs": 1.0068021450747953,
+          "loopNs": 1.0055386812273586,
+          "processNs": 1.0136430950619846
+        },
+        "computationQualified": true,
+        "processQualified": true,
+        "changedBuilders": 1,
+        "binaryHashes": {
+          "candidate": "afbbc7ade03cbd295120a8189f84c0f7960d13910b8a3a5e084e252a2a218a2c",
+          "candidate-copy": "afbbc7ade03cbd295120a8189f84c0f7960d13910b8a3a5e084e252a2a218a2c",
+          "reference": "5ec1d01aaa3525c0a241590cdf75c4e3c883089759b4b422660319415773112d",
+          "reference-copy": "5ec1d01aaa3525c0a241590cdf75c4e3c883089759b4b422660319415773112d"
+        }
+      },
+      "local-3-1": {
+        "medians": {
+          "constructionNs": {
+            "candidate": 63147.5,
+            "reference": 63324.0,
+            "candidate-copy": 63955.0,
+            "reference-copy": 62477.5
+          },
+          "computationNs": {
+            "candidate": 62181.0,
+            "reference": 63027.5,
+            "candidate-copy": 62133.5,
+            "reference-copy": 62869.0
+          },
+          "releaseNs": {
+            "candidate": 35550.5,
+            "reference": 35503.0,
+            "candidate-copy": 35562.5,
+            "reference-copy": 35621.5
+          },
+          "loopNs": {
+            "candidate": 260155.0,
+            "reference": 259842.5,
+            "candidate-copy": 264882.0,
+            "reference-copy": 263394.0
+          },
+          "processNs": {
+            "candidate": 993288.5,
+            "reference": 1012495.0,
+            "candidate-copy": 995144.0,
+            "reference-copy": 983628.5
+          }
+        },
+        "copyRatios": {
+          "constructionNs": {
+            "candidate": 1.0127875212795439,
+            "reference": 1.0135488775959345
+          },
+          "computationNs": {
+            "candidate": 1.0007644829278892,
+            "reference": 1.0025211153350617
+          },
+          "releaseNs": {
+            "candidate": 1.0003375479951055,
+            "reference": 1.003337746105963
+          },
+          "loopNs": {
+            "candidate": 1.0181699371528512,
+            "reference": 1.0136678949748406
+          },
+          "processNs": {
+            "candidate": 1.0018680373325575,
+            "reference": 1.029346953651709
+          }
+        },
+        "ratios": {
+          "constructionNs": 0.9972127471416841,
+          "computationNs": 0.9865693546467812,
+          "releaseNs": 1.0013379151057658,
+          "loopNs": 1.0012026516062615,
+          "processNs": 0.981030523607524
+        },
+        "computationQualified": true,
+        "processQualified": false,
+        "changedBuilders": 1,
+        "binaryHashes": {
+          "candidate": "40f286ad90f2e03429ea4000d23cd450278d7cf497d63ee4d291f306b46f2355",
+          "candidate-copy": "40f286ad90f2e03429ea4000d23cd450278d7cf497d63ee4d291f306b46f2355",
+          "reference": "c801196101579764bd7fbe19858da0eb47829f37b278793ba748b07e1c77a678",
+          "reference-copy": "c801196101579764bd7fbe19858da0eb47829f37b278793ba748b07e1c77a678"
+        }
+      },
+      "local-3-199": {
+        "medians": {
+          "constructionNs": {
+            "candidate": 23958.5,
+            "reference": 24418.5,
+            "candidate-copy": 24806.0,
+            "reference-copy": 26251.0
+          },
+          "computationNs": {
+            "candidate": 189449.5,
+            "reference": 188346.5,
+            "candidate-copy": 189178.0,
+            "reference-copy": 188587.0
+          },
+          "releaseNs": {
+            "candidate": 1128.0,
+            "reference": 1132.0,
+            "candidate-copy": 1140.0,
+            "reference-copy": 1140.0
+          },
+          "loopNs": {
+            "candidate": 221196.5,
+            "reference": 217648.5,
+            "candidate-copy": 218213.0,
+            "reference-copy": 223196.0
+          },
+          "processNs": {
+            "candidate": 1004119.5,
+            "reference": 986812.5,
+            "candidate-copy": 996576.0,
+            "reference-copy": 987416.0
+          }
+        },
+        "copyRatios": {
+          "constructionNs": {
+            "candidate": 1.035373666965795,
+            "reference": 1.0750455597190656
+          },
+          "computationNs": {
+            "candidate": 1.0014351563078159,
+            "reference": 1.001276901880311
+          },
+          "releaseNs": {
+            "candidate": 1.0106382978723405,
+            "reference": 1.0070671378091873
+          },
+          "loopNs": {
+            "candidate": 1.0136724209831678,
+            "reference": 1.0254883447393388
+          },
+          "processNs": {
+            "candidate": 1.0075694176861574,
+            "reference": 1.0006115650136171
+          }
+        },
+        "ratios": {
+          "constructionNs": 0.9811618240268649,
+          "computationNs": 1.0058562277504492,
+          "releaseNs": 0.9964664310954063,
+          "loopNs": 1.0163015136791662,
+          "processNs": 1.0175382861485844
+        },
+        "computationQualified": true,
+        "processQualified": true,
+        "changedBuilders": 1,
+        "binaryHashes": {
+          "candidate": "7cc5c7e2b3995b1c4b115aa2a05765ee978984bf243a418c875e0f2fa0605155",
+          "candidate-copy": "7cc5c7e2b3995b1c4b115aa2a05765ee978984bf243a418c875e0f2fa0605155",
+          "reference": "794dbf597717c4e787c3d52a55b1d20956a61de5be59bf071165bf2a90a0320d",
+          "reference-copy": "794dbf597717c4e787c3d52a55b1d20956a61de5be59bf071165bf2a90a0320d"
+        }
+      },
+      "local-33-199": {
+        "medians": {
+          "constructionNs": {
+            "candidate": 26322.5,
+            "reference": 28195.0,
+            "candidate-copy": 27178.5,
+            "reference-copy": 24962.5
+          },
+          "computationNs": {
+            "candidate": 1317578.5,
+            "reference": 1336386.5,
+            "candidate-copy": 1323894.5,
+            "reference-copy": 1327403.0
+          },
+          "releaseNs": {
+            "candidate": 1183.5,
+            "reference": 1184.0,
+            "candidate-copy": 1176.0,
+            "reference-copy": 1175.0
+          },
+          "loopNs": {
+            "candidate": 1350345.5,
+            "reference": 1376356.0,
+            "candidate-copy": 1356053.0,
+            "reference-copy": 1358897.0
+          },
+          "processNs": {
+            "candidate": 2133168.5,
+            "reference": 2159103.0,
+            "candidate-copy": 2136768.0,
+            "reference-copy": 2116137.0
+          }
+        },
+        "copyRatios": {
+          "constructionNs": {
+            "candidate": 1.032519707474594,
+            "reference": 1.129494241362043
+          },
+          "computationNs": {
+            "candidate": 1.0047936422763426,
+            "reference": 1.0067677261540016
+          },
+          "releaseNs": {
+            "candidate": 1.0063775510204083,
+            "reference": 1.0076595744680852
+          },
+          "loopNs": {
+            "candidate": 1.004226696056676,
+            "reference": 1.0128479200410332
+          },
+          "processNs": {
+            "candidate": 1.0016873960027068,
+            "reference": 1.0203039784286179
+          }
+        },
+        "ratios": {
+          "constructionNs": 0.9335875155169356,
+          "computationNs": 0.985926227180535,
+          "releaseNs": 0.9995777027027027,
+          "loopNs": 0.9811019096803443,
+          "processNs": 0.9879882988444738
+        },
+        "computationQualified": true,
+        "processQualified": false,
+        "changedBuilders": 1,
+        "binaryHashes": {
+          "candidate": "4d0f14416663a309ebf9859f35aaa61b7392741d4ec67078cc83d75390b0c6a1",
+          "candidate-copy": "4d0f14416663a309ebf9859f35aaa61b7392741d4ec67078cc83d75390b0c6a1",
+          "reference": "2e87cd7196551475a2fcc14cf9db7607dee846b1d692a648d739ed7e210def2c",
+          "reference-copy": "2e87cd7196551475a2fcc14cf9db7607dee846b1d692a648d739ed7e210def2c"
+        }
+      },
+      "local-129-199": {
+        "medians": {
+          "constructionNs": {
+            "candidate": 24487.0,
+            "reference": 25943.0,
+            "candidate-copy": 24750.5,
+            "reference-copy": 25238.0
+          },
+          "computationNs": {
+            "candidate": 1240759.0,
+            "reference": 1240619.0,
+            "candidate-copy": 1239171.0,
+            "reference-copy": 1248535.5
+          },
+          "releaseNs": {
+            "candidate": 296.0,
+            "reference": 296.0,
+            "candidate-copy": 296.0,
+            "reference-copy": 288.0
+          },
+          "loopNs": {
+            "candidate": 1268761.5,
+            "reference": 1269825.5,
+            "candidate-copy": 1266214.0,
+            "reference-copy": 1278073.0
+          },
+          "processNs": {
+            "candidate": 2047033.0,
+            "reference": 2065600.0,
+            "candidate-copy": 2033053.5,
+            "reference-copy": 2044009.0
+          }
+        },
+        "copyRatios": {
+          "constructionNs": {
+            "candidate": 1.0107608118593538,
+            "reference": 1.0279340676757271
+          },
+          "computationNs": {
+            "candidate": 1.0012815019073236,
+            "reference": 1.00638108879519
+          },
+          "releaseNs": {
+            "candidate": 1.0,
+            "reference": 1.0277777777777777
+          },
+          "loopNs": {
+            "candidate": 1.0020119032011967,
+            "reference": 1.0064949869096187
+          },
+          "processNs": {
+            "candidate": 1.0068761102450083,
+            "reference": 1.010563065035428
+          }
+        },
+        "ratios": {
+          "constructionNs": 0.9438769610299502,
+          "computationNs": 1.0001128468933653,
+          "releaseNs": 1.0,
+          "loopNs": 0.9991620895942002,
+          "processNs": 0.9910113284275756
+        },
+        "computationQualified": true,
+        "processQualified": true,
+        "changedBuilders": 1,
+        "binaryHashes": {
+          "candidate": "7d6d30b1e5769ee15034427b8c83d568f88d6951b68ad9a1761ed43d15e76df3",
+          "candidate-copy": "7d6d30b1e5769ee15034427b8c83d568f88d6951b68ad9a1761ed43d15e76df3",
+          "reference": "243f99b8bc7a96b0ad8a30d5f91a2a2e54d78ff810a35a44c85a13434ccab1cb",
+          "reference-copy": "243f99b8bc7a96b0ad8a30d5f91a2a2e54d78ff810a35a44c85a13434ccab1cb"
+        }
+      }
+    }
+  },
+  "amd": {
+    "artifact": 13600631455,
+    "archiveSha256": "060adec053ee871e8be37233262a9cae0f1c42d646654ccefa56b1fb497253c3",
+    "identity": {
+      "source": "432d19715c87a5aae9681c4b7b3507847eb87a53",
+      "originalSource": "f227830b08ff115f7b0711274545d6685b4be0be",
+      "originalArtifact": {
+        "id": 13599178368,
+        "node_id": "MDg6QXJ0aWZhY3QxMzU5OTE3ODM2OA==",
+        "name": "borrowed-array-costs-X64-1",
+        "size_in_bytes": 16763470,
+        "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13599178368",
+        "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13599178368/zip",
+        "expired": false,
+        "digest": "sha256:36890eb2d458a9ab904ec9f77b1ed3c773da04591added810a7d49bc2bfc0326",
+        "created_at": "2026-11-08T02:00:03Z",
+        "updated_at": "2026-11-08T02:00:03Z",
+        "expires_at": "2027-02-06T01:47:59Z",
+        "workflow_run": {
+          "id": 42435795842,
+          "repository_id": 1400763332,
+          "head_repository_id": 1400763332,
+          "head_branch": "performance-roadmap-review",
+          "head_sha": "f227830b08ff115f7b0711274545d6685b4be0be"
+        }
+      },
+      "machine": "x86_64",
+      "cpu": "processor\t: 0\nvendor_id\t: AuthenticAMD\ncpu family\t: 25\nmodel\t\t: 1\nmodel name\t: AMD EPYC 7763 64-Core Processor\nstepping\t: 1\nmicrocode\t: 0xffffffff\ncpu MHz\t\t: 2874.815\ncache size\t: 512 KB\nphysical id\t: 0\nsiblings\t: 4\ncore id\t\t: 0\ncpu cores\t: 2\napicid\t\t: 0\ninitial apicid\t: 0\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 13\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves user_shstk clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload umip vaes vpclmulqdq rdpid fsrm\nbugs\t\t: sysret_ss_attrs null_seg spectre_v1 spectre_v2 spec_store_bypass srso spectre_v2_user tsa\nbogomips\t: 4890.85\nTLB size\t: 2560 4K pages\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 48 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 1\nvendor_id\t: AuthenticAMD\ncpu family\t: 25\nmodel\t\t: 1\nmodel name\t: AMD EPYC 7763 64-Core Processor\nstepping\t: 1\nmicrocode\t: 0xffffffff\ncpu MHz\t\t: 2869.166\ncache size\t: 512 KB\nphysical id\t: 0\nsiblings\t: 4\ncore id\t\t: 0\ncpu cores\t: 2\napicid\t\t: 1\ninitial apicid\t: 1\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 13\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves user_shstk clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload umip vaes vpclmulqdq rdpid fsrm\nbugs\t\t: sysret_ss_attrs null_seg spectre_v1 spectre_v2 spec_store_bypass srso spectre_v2_user tsa\nbogomips\t: 4890.85\nTLB size\t: 2560 4K pages\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 48 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 2\nvendor_id\t: AuthenticAMD\ncpu family\t: 25\nmodel\t\t: 1\nmodel name\t: AMD EPYC 7763 64-Core Processor\nstepping\t: 1\nmicrocode\t: 0xffffffff\ncpu MHz\t\t: 3246.467\ncache size\t: 512 KB\nphysical id\t: 0\nsiblings\t: 4\ncore id\t\t: 1\ncpu cores\t: 2\napicid\t\t: 2\ninitial apicid\t: 2\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 13\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves user_shstk clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload umip vaes vpclmulqdq rdpid fsrm\nbugs\t\t: sysret_ss_attrs null_seg spectre_v1 spectre_v2 spec_store_bypass srso spectre_v2_user tsa\nbogomips\t: 4890.85\nTLB size\t: 2560 4K pages\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 48 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 3\nvendor_id\t: AuthenticAMD\ncpu family\t: 25\nmodel\t\t: 1\nmodel name\t: AMD EPYC 7763 64-Core Processor\nstepping\t: 1\nmicrocode\t: 0xffffffff\ncpu MHz\t\t: 3241.380\ncache size\t: 512 KB\nphysical id\t: 0\nsiblings\t: 4\ncore id\t\t: 1\ncpu cores\t: 2\napicid\t\t: 3\ninitial apicid\t: 3\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 13\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves user_shstk clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload umip vaes vpclmulqdq rdpid fsrm\nbugs\t\t: sysret_ss_attrs null_seg spectre_v1 spectre_v2 spec_store_bypass srso spectre_v2_user tsa\nbogomips\t: 4890.85\nTLB size\t: 2560 4K pages\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 48 bits physical, 48 bits virtual\npower management:\n\n",
+      "affinity": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "flags": [
+        "-O2",
+        "-std=gnu11",
+        "-ffp-contract=off",
+        "-fno-fast-math",
+        "-fno-lto",
+        "-march=x86-64",
+        "-fstack-usage"
+      ],
+      "ccVersion": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0\nCopyright (C) 2025 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n"
+    },
+    "host": {
+      "source": "432d19715c87a5aae9681c4b7b3507847eb87a53",
+      "actual": {
+        "system": "Linux",
+        "machine": "x86_64",
+        "cpu": "AMD EPYC 7763 64-Core Processor",
+        "processors": 4,
+        "cVersion": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+        "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+      },
+      "expected": {
+        "system": "Linux",
+        "machine": "x86_64",
+        "cpu": [
+          "AMD EPYC 7763 64-Core Processor",
+          "AMD EPYC 9V74 80-Core Processor",
+          "AMD EPYC 9V45 96-Core Processor"
+        ],
+        "processors": 4,
+        "cVersion": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+        "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+      },
+      "lscpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 7763 64-Core Processor\nCPU family:                              25\nModel:                                   1\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                4890.85\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves user_shstk clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload umip vaes vpclmulqdq rdpid fsrm\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               64 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                1 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Vulnerable: No microcode\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+      "failures": [],
+      "qualified": true
+    },
+    "cases": {
+      "loop-0": {
+        "medians": {
+          "constructionNs": {
+            "candidate": 114701.0,
+            "reference": 110510.5,
+            "candidate-copy": 110687.5,
+            "reference-copy": 111665.0
+          },
+          "computationNs": {
+            "candidate": 113155.5,
+            "reference": 111712.0,
+            "candidate-copy": 114441.0,
+            "reference-copy": 111871.0
+          },
+          "releaseNs": {
+            "candidate": 115491.5,
+            "reference": 110706.0,
+            "candidate-copy": 111918.5,
+            "reference-copy": 110719.0
+          },
+          "loopNs": {
+            "candidate": 700463.0,
+            "reference": 695414.0,
+            "candidate-copy": 696487.0,
+            "reference-copy": 697879.0
+          },
+          "processNs": {
+            "candidate": 1578834.5,
+            "reference": 1573589.5,
+            "candidate-copy": 1590305.5,
+            "reference-copy": 1575904.0
+          }
+        },
+        "copyRatios": {
+          "constructionNs": {
+            "candidate": 1.0362597402597402,
+            "reference": 1.0104469711022934
+          },
+          "computationNs": {
+            "candidate": 1.0113604729774515,
+            "reference": 1.0014233027785735
+          },
+          "releaseNs": {
+            "candidate": 1.0319250168649508,
+            "reference": 1.0001174281430094
+          },
+          "loopNs": {
+            "candidate": 1.0057086492640925,
+            "reference": 1.0035446510999204
+          },
+          "processNs": {
+            "candidate": 1.0072654860278263,
+            "reference": 1.001470841029379
+          }
+        },
+        "ratios": {
+          "constructionNs": 1.0379194737151674,
+          "computationNs": 1.0129216198796906,
+          "releaseNs": 1.0432271060285803,
+          "loopNs": 1.007260423287423,
+          "processNs": 1.0033331437455575
+        },
+        "computationQualified": true,
+        "processQualified": true,
+        "changedBuilders": 0,
+        "binaryHashes": {
+          "candidate": "098e94c7ab126ef59688cf94b76e0d49a64f5b1acd02272080cdd9408fc5ea3e",
+          "candidate-copy": "098e94c7ab126ef59688cf94b76e0d49a64f5b1acd02272080cdd9408fc5ea3e",
+          "reference": "7b01ac2f11de3885cb6a056c0cf62e79a4c460d151749024cef0c8edfe6158fe",
+          "reference-copy": "7b01ac2f11de3885cb6a056c0cf62e79a4c460d151749024cef0c8edfe6158fe"
+        }
+      },
+      "loop-16": {
+        "medians": {
+          "constructionNs": {
+            "candidate": 112862.0,
+            "reference": 113672.0,
+            "candidate-copy": 113638.5,
+            "reference-copy": 119598.0
+          },
+          "computationNs": {
+            "candidate": 188427.5,
+            "reference": 187412.0,
+            "candidate-copy": 198910.5,
+            "reference-copy": 197189.0
+          },
+          "releaseNs": {
+            "candidate": 112523.5,
+            "reference": 115443.5,
+            "candidate-copy": 115794.5,
+            "reference-copy": 113034.5
+          },
+          "loopNs": {
+            "candidate": 777958.5,
+            "reference": 782607.5,
+            "candidate-copy": 782391.5,
+            "reference-copy": 783683.5
+          },
+          "processNs": {
+            "candidate": 1676343.0,
+            "reference": 1740052.0,
+            "candidate-copy": 1732245.0,
+            "reference-copy": 1716855.5
+          }
+        },
+        "copyRatios": {
+          "constructionNs": {
+            "candidate": 1.0068800836419698,
+            "reference": 1.052132451263284
+          },
+          "computationNs": {
+            "candidate": 1.055634129837736,
+            "reference": 1.0521684844086825
+          },
+          "releaseNs": {
+            "candidate": 1.0290694832634961,
+            "reference": 1.0213120772861384
+          },
+          "loopNs": {
+            "candidate": 1.0056982474000862,
+            "reference": 1.001374890989417
+          },
+          "processNs": {
+            "candidate": 1.0333475905587342,
+            "reference": 1.0135110380576584
+          }
+        },
+        "ratios": {
+          "constructionNs": 0.9928742346400169,
+          "computationNs": 1.0054185431028964,
+          "releaseNs": 0.9747062415813796,
+          "loopNs": 0.9940596020355031,
+          "processNs": 0.9633867263736946
+        },
+        "computationQualified": false,
+        "processQualified": false,
+        "changedBuilders": 0,
+        "binaryHashes": {
+          "candidate": "663d05f416bd7600460fb5647fc4508f4e986d1d14810bb8fd43ba5b48e37663",
+          "candidate-copy": "663d05f416bd7600460fb5647fc4508f4e986d1d14810bb8fd43ba5b48e37663",
+          "reference": "4ed81db44557904bd2d06be53758845fd6f424d9dcafd8db08b816e830b64a4f",
+          "reference-copy": "4ed81db44557904bd2d06be53758845fd6f424d9dcafd8db08b816e830b64a4f"
+        }
+      },
+      "loop-1000000": {
+        "medians": {
+          "constructionNs": {
+            "candidate": 445.5,
+            "reference": 451.0,
+            "candidate-copy": 440.0,
+            "reference-copy": 450.5
+          },
+          "computationNs": {
+            "candidate": 21766436.0,
+            "reference": 22385108.0,
+            "candidate-copy": 22030330.5,
+            "reference-copy": 22378447.0
+          },
+          "releaseNs": {
+            "candidate": 444.0,
+            "reference": 451.0,
+            "candidate-copy": 440.5,
+            "reference-copy": 431.5
+          },
+          "loopNs": {
+            "candidate": 21770577.5,
+            "reference": 22387718.0,
+            "candidate-copy": 22032886.5,
+            "reference-copy": 22380916.0
+          },
+          "processNs": {
+            "candidate": 22611581.0,
+            "reference": 23261473.0,
+            "candidate-copy": 22886744.5,
+            "reference-copy": 23261082.5
+          }
+        },
+        "copyRatios": {
+          "constructionNs": {
+            "candidate": 1.0125,
+            "reference": 1.0011098779134295
+          },
+          "computationNs": {
+            "candidate": 1.0121239186791995,
+            "reference": 1.0002976524689136
+          },
+          "releaseNs": {
+            "candidate": 1.0079455164585698,
+            "reference": 1.045191193511008
+          },
+          "loopNs": {
+            "candidate": 1.012048784649833,
+            "reference": 1.0003039196429673
+          },
+          "processNs": {
+            "candidate": 1.0121691402295134,
+            "reference": 1.0000167876967894
+          }
+        },
+        "ratios": {
+          "constructionNs": 0.9878048780487805,
+          "computationNs": 0.9723623401772286,
+          "releaseNs": 0.9844789356984479,
+          "loopNs": 0.9724339702688769,
+          "processNs": 0.9720614425406336
+        },
+        "computationQualified": true,
+        "processQualified": true,
+        "changedBuilders": 0,
+        "binaryHashes": {
+          "candidate": "ebf4f78fe4e11bd188160ac30fb7de51e9425f55277ecf5c1840a296970af12e",
+          "candidate-copy": "ebf4f78fe4e11bd188160ac30fb7de51e9425f55277ecf5c1840a296970af12e",
+          "reference": "a5722ca98f6421f0a84e72020b14eb6928b1355e649e1efb32b232698400c32f",
+          "reference-copy": "a5722ca98f6421f0a84e72020b14eb6928b1355e649e1efb32b232698400c32f"
+        }
+      },
+      "loop-100000000": {
+        "medians": {
+          "constructionNs": {
+            "candidate": 30.0,
+            "reference": 30.0,
+            "candidate-copy": 30.0,
+            "reference-copy": 30.0
+          },
+          "computationNs": {
+            "candidate": 126902692.5,
+            "reference": 126619248.0,
+            "candidate-copy": 126115424.5,
+            "reference-copy": 126933109.5
+          },
+          "releaseNs": {
+            "candidate": 30.0,
+            "reference": 30.0,
+            "candidate-copy": 30.0,
+            "reference-copy": 30.0
+          },
+          "loopNs": {
+            "candidate": 126903063.0,
+            "reference": 126619584.5,
+            "candidate-copy": 126115775.5,
+            "reference-copy": 126933399.5
+          },
+          "processNs": {
+            "candidate": 127844700.0,
+            "reference": 127583327.5,
+            "candidate-copy": 127071900.5,
+            "reference-copy": 127899226.0
+          }
+        },
+        "copyRatios": {
+          "constructionNs": {
+            "candidate": 1.0,
+            "reference": 1.0
+          },
+          "computationNs": {
+            "candidate": 1.0062424402337875,
+            "reference": 1.0024787818989416
+          },
+          "releaseNs": {
+            "candidate": 1.0,
+            "reference": 1.0
+          },
+          "loopNs": {
+            "candidate": 1.0062425774799284,
+            "reference": 1.0024784080696458
+          },
+          "processNs": {
+            "candidate": 1.0060815923658906,
+            "reference": 1.0024760170955722
+          }
+        },
+        "ratios": {
+          "constructionNs": 1.0,
+          "computationNs": 1.002238557758612,
+          "releaseNs": 1.0,
+          "loopNs": 1.0022388203303574,
+          "processNs": 1.00204864150451
+        },
+        "computationQualified": true,
+        "processQualified": true,
+        "changedBuilders": 0,
+        "binaryHashes": {
+          "candidate": "9b8af7bd604c0499aee28331ae7e2d32dc58a483362618259a167a104aacf58e",
+          "candidate-copy": "9b8af7bd604c0499aee28331ae7e2d32dc58a483362618259a167a104aacf58e",
+          "reference": "b598e7ac4b111ef98633408ec8449b823303d6a3b5d49385714e93ee898e7072",
+          "reference-copy": "b598e7ac4b111ef98633408ec8449b823303d6a3b5d49385714e93ee898e7072"
+        }
+      },
+      "array-0": {
+        "medians": {
+          "constructionNs": {
+            "candidate": 157539.0,
+            "reference": 157255.5,
+            "candidate-copy": 157544.5,
+            "reference-copy": 155541.0
+          },
+          "computationNs": {
+            "candidate": 208308.5,
+            "reference": 226616.0,
+            "candidate-copy": 212548.5,
+            "reference-copy": 219413.5
+          },
+          "releaseNs": {
+            "candidate": 111769.0,
+            "reference": 111238.5,
+            "candidate-copy": 110727.0,
+            "reference-copy": 110599.0
+          },
+          "loopNs": {
+            "candidate": 833376.0,
+            "reference": 846856.0,
+            "candidate-copy": 834798.0,
+            "reference-copy": 835690.0
+          },
+          "processNs": {
+            "candidate": 1715070.5,
+            "reference": 1765229.5,
+            "candidate-copy": 1727348.0,
+            "reference-copy": 1747270.5
+          }
+        },
+        "copyRatios": {
+          "constructionNs": {
+            "candidate": 1.000034911990047,
+            "reference": 1.011022817135032
+          },
+          "computationNs": {
+            "candidate": 1.0203544262476087,
+            "reference": 1.0328261478897152
+          },
+          "releaseNs": {
+            "candidate": 1.0094105322098494,
+            "reference": 1.005782149929023
+          },
+          "loopNs": {
+            "candidate": 1.001706312636793,
+            "reference": 1.0133614139214302
+          },
+          "processNs": {
+            "candidate": 1.0071585978535575,
+            "reference": 1.010278316952069
+          }
+        },
+        "ratios": {
+          "constructionNs": 1.0018027986302547,
+          "computationNs": 0.9192135595015356,
+          "releaseNs": 1.004769032304463,
+          "loopNs": 0.9840822997062074,
+          "processNs": 0.9715849978713816
+        },
+        "computationQualified": false,
+        "processQualified": true,
+        "changedBuilders": 1,
+        "binaryHashes": {
+          "candidate": "93722a57eeccea63db0e248d6921f4ad1eec6de08aab72b24e00fcd26498d5a5",
+          "candidate-copy": "93722a57eeccea63db0e248d6921f4ad1eec6de08aab72b24e00fcd26498d5a5",
+          "reference": "ed02b12498564f4c9fb86babeb0eb82805dcd1638d011a89ecd2cb1c3e5403cd",
+          "reference-copy": "ed02b12498564f4c9fb86babeb0eb82805dcd1638d011a89ecd2cb1c3e5403cd"
+        }
+      },
+      "array-16": {
+        "medians": {
+          "constructionNs": {
+            "candidate": 184025.0,
+            "reference": 173292.5,
+            "candidate-copy": 184701.0,
+            "reference-copy": 176742.0
+          },
+          "computationNs": {
+            "candidate": 303241.0,
+            "reference": 308080.0,
+            "candidate-copy": 306439.5,
+            "reference-copy": 313786.5
+          },
+          "releaseNs": {
+            "candidate": 113992.5,
+            "reference": 110394.0,
+            "candidate-copy": 110304.0,
+            "reference-copy": 110357.5
+          },
+          "loopNs": {
+            "candidate": 950553.0,
+            "reference": 946896.5,
+            "candidate-copy": 941737.0,
+            "reference-copy": 947598.5
+          },
+          "processNs": {
+            "candidate": 1857486.5,
+            "reference": 1835315.0,
+            "candidate-copy": 1862908.5,
+            "reference-copy": 1851459.5
+          }
+        },
+        "copyRatios": {
+          "constructionNs": {
+            "candidate": 1.0036734139383237,
+            "reference": 1.0199056508504407
+          },
+          "computationNs": {
+            "candidate": 1.010547716172945,
+            "reference": 1.0185227862892756
+          },
+          "releaseNs": {
+            "candidate": 1.0334394038294168,
+            "reference": 1.000330743266203
+          },
+          "loopNs": {
+            "candidate": 1.0093614246865101,
+            "reference": 1.000741369304882
+          },
+          "processNs": {
+            "candidate": 1.0029189983345774,
+            "reference": 1.0087965826029863
+          }
+        },
+        "ratios": {
+          "constructionNs": 1.061932859183173,
+          "computationNs": 0.9842930407686316,
+          "releaseNs": 1.0325968802652319,
+          "loopNs": 1.0038615624833338,
+          "processNs": 1.0120804875457348
+        },
+        "computationQualified": true,
+        "processQualified": true,
+        "changedBuilders": 1,
+        "binaryHashes": {
+          "candidate": "5c430c2aa6c5e1413488efb9a867125323563eb94578db6ee34160304dfeb31e",
+          "candidate-copy": "5c430c2aa6c5e1413488efb9a867125323563eb94578db6ee34160304dfeb31e",
+          "reference": "575bdaff6cf2f87b5bc3d894421bed5cc3bd2cd7faa8f46f911c3d9e6b080886",
+          "reference-copy": "575bdaff6cf2f87b5bc3d894421bed5cc3bd2cd7faa8f46f911c3d9e6b080886"
+        }
+      },
+      "array-65537": {
+        "medians": {
+          "constructionNs": {
+            "candidate": 832874.5,
+            "reference": 792195.0,
+            "candidate-copy": 811038.5,
+            "reference-copy": 780566.0
+          },
+          "computationNs": {
+            "candidate": 2290830.0,
+            "reference": 2668975.0,
+            "candidate-copy": 2254039.5,
+            "reference-copy": 2598724.0
+          },
+          "releaseNs": {
+            "candidate": 442.5,
+            "reference": 449.0,
+            "candidate-copy": 445.0,
+            "reference-copy": 441.5
+          },
+          "loopNs": {
+            "candidate": 3125729.0,
+            "reference": 3473651.5,
+            "candidate-copy": 3076970.5,
+            "reference-copy": 3368751.0
+          },
+          "processNs": {
+            "candidate": 4154701.0,
+            "reference": 4517671.0,
+            "candidate-copy": 4222076.0,
+            "reference-copy": 4453625.0
+          }
+        },
+        "copyRatios": {
+          "constructionNs": {
+            "candidate": 1.0269235060974293,
+            "reference": 1.0148981636402303
+          },
+          "computationNs": {
+            "candidate": 1.0163220298490776,
+            "reference": 1.027032882291463
+          },
+          "releaseNs": {
+            "candidate": 1.0056497175141244,
+            "reference": 1.0169875424688561
+          },
+          "loopNs": {
+            "candidate": 1.0158462682693903,
+            "reference": 1.0311392857471509
+          },
+          "processNs": {
+            "candidate": 1.0162165700973427,
+            "reference": 1.0143806449802129
+          }
+        },
+        "ratios": {
+          "constructionNs": 1.0513503619689597,
+          "computationNs": 0.8583182682490469,
+          "releaseNs": 0.9855233853006682,
+          "loopNs": 0.8998395492466645,
+          "processNs": 0.9196555039089832
+        },
+        "computationQualified": false,
+        "processQualified": true,
+        "changedBuilders": 1,
+        "binaryHashes": {
+          "candidate": "e6d5a00ab2e28bd4c754eba94d498c994ddb139d48836933974b99200b797ff2",
+          "candidate-copy": "e6d5a00ab2e28bd4c754eba94d498c994ddb139d48836933974b99200b797ff2",
+          "reference": "3c711fa840e72662471fa9f428f6ee2c085d1227a8253eacbb9849108e1153cd",
+          "reference-copy": "3c711fa840e72662471fa9f428f6ee2c085d1227a8253eacbb9849108e1153cd"
+        }
+      },
+      "array-262145": {
+        "medians": {
+          "constructionNs": {
+            "candidate": 1374701.5,
+            "reference": 1377055.5,
+            "candidate-copy": 1441892.0,
+            "reference-copy": 1408800.5
+          },
+          "computationNs": {
+            "candidate": 2851974.5,
+            "reference": 3479798.0,
+            "candidate-copy": 3152032.5,
+            "reference-copy": 3433160.5
+          },
+          "releaseNs": {
+            "candidate": 111.0,
+            "reference": 111.0,
+            "candidate-copy": 119.5,
+            "reference-copy": 120.0
+          },
+          "loopNs": {
+            "candidate": 4245492.0,
+            "reference": 4834532.5,
+            "candidate-copy": 4578256.0,
+            "reference-copy": 4877482.5
+          },
+          "processNs": {
+            "candidate": 5607348.5,
+            "reference": 6125039.5,
+            "candidate-copy": 5640624.5,
+            "reference-copy": 6124806.0
+          }
+        },
+        "copyRatios": {
+          "constructionNs": {
+            "candidate": 1.0488764288101817,
+            "reference": 1.023052810870731
+          },
+          "computationNs": {
+            "candidate": 1.105210618117378,
+            "reference": 1.0135844217012284
+          },
+          "releaseNs": {
+            "candidate": 1.0765765765765767,
+            "reference": 1.0810810810810811
+          },
+          "loopNs": {
+            "candidate": 1.0783805504756574,
+            "reference": 1.0088840027448363
+          },
+          "processNs": {
+            "candidate": 1.005934355604971,
+            "reference": 1.0000381236564881
+          }
+        },
+        "ratios": {
+          "constructionNs": 0.998290555464177,
+          "computationNs": 0.8195804756482992,
+          "releaseNs": 1.0,
+          "loopNs": 0.8781597807026843,
+          "processNs": 0.9154795654787206
+        },
+        "computationQualified": false,
+        "processQualified": true,
+        "changedBuilders": 1,
+        "binaryHashes": {
+          "candidate": "147b1e3ec67ac450969ac5fd0120abad1801675ad91dc6d291c2e939a09b77ab",
+          "candidate-copy": "147b1e3ec67ac450969ac5fd0120abad1801675ad91dc6d291c2e939a09b77ab",
+          "reference": "3b6f511281ee345d217759d14e4a36d1f42736fda8ab8ca0eb74375ec9822129",
+          "reference-copy": "3b6f511281ee345d217759d14e4a36d1f42736fda8ab8ca0eb74375ec9822129"
+        }
+      },
+      "manual-3-0": {
+        "medians": {
+          "constructionNs": {
+            "candidate": 190282.5,
+            "reference": 175105.0,
+            "candidate-copy": 166749.5,
+            "reference-copy": 173270.0
+          },
+          "computationNs": {
+            "candidate": 115287.0,
+            "reference": 114159.0,
+            "candidate-copy": 118341.5,
+            "reference-copy": 115117.5
+          },
+          "releaseNs": {
+            "candidate": 133924.5,
+            "reference": 137151.0,
+            "candidate-copy": 130058.0,
+            "reference-copy": 127672.0
+          },
+          "loopNs": {
+            "candidate": 791062.0,
+            "reference": 788126.5,
+            "candidate-copy": 778633.5,
+            "reference-copy": 775387.5
+          },
+          "processNs": {
+            "candidate": 1728044.5,
+            "reference": 1736561.5,
+            "candidate-copy": 1731025.5,
+            "reference-copy": 1726275.5
+          }
+        },
+        "copyRatios": {
+          "constructionNs": {
+            "candidate": 1.1411278594538514,
+            "reference": 1.0105904080337047
+          },
+          "computationNs": {
+            "candidate": 1.0264947478900484,
+            "reference": 1.0083961842693085
+          },
+          "releaseNs": {
+            "candidate": 1.0297290439650002,
+            "reference": 1.0742449401591578
+          },
+          "loopNs": {
+            "candidate": 1.0159619384472927,
+            "reference": 1.0164292047524626
+          },
+          "processNs": {
+            "candidate": 1.0017250713161612,
+            "reference": 1.0059584927203102
+          }
+        },
+        "ratios": {
+          "constructionNs": 1.0866765654892778,
+          "computationNs": 1.009880955509421,
+          "releaseNs": 0.976474834306713,
+          "loopNs": 1.0037246558769437,
+          "processNs": 0.9950954803501056
+        },
+        "computationQualified": false,
+        "processQualified": true,
+        "changedBuilders": 1,
+        "binaryHashes": {
+          "candidate": "cdc3aebd0a305cc3088d1886548aa8fc2034ade08b8808221962b6157079ec64",
+          "candidate-copy": "cdc3aebd0a305cc3088d1886548aa8fc2034ade08b8808221962b6157079ec64",
+          "reference": "41ce953a7434afa80457d526feb5114516d5ab57a11d4374285e73fd8565a94f",
+          "reference-copy": "41ce953a7434afa80457d526feb5114516d5ab57a11d4374285e73fd8565a94f"
+        }
+      },
+      "manual-3-1": {
+        "medians": {
+          "constructionNs": {
+            "candidate": 61003.5,
+            "reference": 64792.0,
+            "candidate-copy": 70649.0,
+            "reference-copy": 64683.0
+          },
+          "computationNs": {
+            "candidate": 54998.5,
+            "reference": 58433.0,
+            "candidate-copy": 71581.0,
+            "reference-copy": 62220.0
+          },
+          "releaseNs": {
+            "candidate": 33524.0,
+            "reference": 34119.5,
+            "candidate-copy": 35514.5,
+            "reference-copy": 32787.5
+          },
+          "loopNs": {
+            "candidate": 248648.0,
+            "reference": 250105.5,
+            "candidate-copy": 276159.0,
+            "reference-copy": 254920.0
+          },
+          "processNs": {
+            "candidate": 1201882.5,
+            "reference": 1245387.0,
+            "candidate-copy": 1214613.5,
+            "reference-copy": 1190520.0
+          }
+        },
+        "copyRatios": {
+          "constructionNs": {
+            "candidate": 1.1581138787118772,
+            "reference": 1.001685141381816
+          },
+          "computationNs": {
+            "candidate": 1.3015082229515351,
+            "reference": 1.0648092687351325
+          },
+          "releaseNs": {
+            "candidate": 1.0593753728671995,
+            "reference": 1.0406252382767822
+          },
+          "loopNs": {
+            "candidate": 1.1106423538496188,
+            "reference": 1.019249876552095
+          },
+          "processNs": {
+            "candidate": 1.0105925496044748,
+            "reference": 1.0460865840137084
+          }
+        },
+        "ratios": {
+          "constructionNs": 0.9415282750956908,
+          "computationNs": 0.9412232813649821,
+          "releaseNs": 0.9825466375533053,
+          "loopNs": 0.9941724592222082,
+          "processNs": 0.9650674850468167
+        },
+        "computationQualified": false,
+        "processQualified": false,
+        "changedBuilders": 1,
+        "binaryHashes": {
+          "candidate": "dc8afc14cef46e7fae1b8e7e9d6c42d7033c0978a6dce52a3018d948ed1d66db",
+          "candidate-copy": "dc8afc14cef46e7fae1b8e7e9d6c42d7033c0978a6dce52a3018d948ed1d66db",
+          "reference": "1691fe8c24cbebb0a10ac800c19c648f2b96e811e0e8fdd0475b9d9a5866a5a4",
+          "reference-copy": "1691fe8c24cbebb0a10ac800c19c648f2b96e811e0e8fdd0475b9d9a5866a5a4"
+        }
+      },
+      "manual-3-199": {
+        "medians": {
+          "constructionNs": {
+            "candidate": 27862.0,
+            "reference": 27355.5,
+            "candidate-copy": 30468.0,
+            "reference-copy": 25595.0
+          },
+          "computationNs": {
+            "candidate": 239549.0,
+            "reference": 201446.5,
+            "candidate-copy": 290420.0,
+            "reference-copy": 178971.5
+          },
+          "releaseNs": {
+            "candidate": 1022.0,
+            "reference": 1002.5,
+            "candidate-copy": 1093.5,
+            "reference-copy": 988.0
+          },
+          "loopNs": {
+            "candidate": 272542.5,
+            "reference": 231260.5,
+            "candidate-copy": 323752.5,
+            "reference-copy": 223135.5
+          },
+          "processNs": {
+            "candidate": 1155677.0,
+            "reference": 1363448.0,
+            "candidate-copy": 1173954.0,
+            "reference-copy": 1314565.0
+          }
+        },
+        "copyRatios": {
+          "constructionNs": {
+            "candidate": 1.0935324097336874,
+            "reference": 1.0687829654229342
+          },
+          "computationNs": {
+            "candidate": 1.2123615627700386,
+            "reference": 1.1255786535845094
+          },
+          "releaseNs": {
+            "candidate": 1.0699608610567515,
+            "reference": 1.014676113360324
+          },
+          "loopNs": {
+            "candidate": 1.1878973004210351,
+            "reference": 1.0364128522803409
+          },
+          "processNs": {
+            "candidate": 1.0158149725225993,
+            "reference": 1.0371856849984595
+          }
+        },
+        "ratios": {
+          "constructionNs": 1.018515472208514,
+          "computationNs": 1.189144512314684,
+          "releaseNs": 1.0194513715710722,
+          "loopNs": 1.178508651499067,
+          "processNs": 0.8476135503517552
+        },
+        "computationQualified": false,
+        "processQualified": false,
+        "changedBuilders": 1,
+        "binaryHashes": {
+          "candidate": "5ba647cd1de7bd2ed91a62b1ecdc6aedbb97f8df4a32903cb1c442e2872bb0fa",
+          "candidate-copy": "5ba647cd1de7bd2ed91a62b1ecdc6aedbb97f8df4a32903cb1c442e2872bb0fa",
+          "reference": "37010b07ce843bd15aa007e3d88c73dc4f25008f25476776cd75340ba61dcee2",
+          "reference-copy": "37010b07ce843bd15aa007e3d88c73dc4f25008f25476776cd75340ba61dcee2"
+        }
+      },
+      "manual-33-199": {
+        "medians": {
+          "constructionNs": {
+            "candidate": 23992.0,
+            "reference": 25982.5,
+            "candidate-copy": 23716.5,
+            "reference-copy": 23249.0
+          },
+          "computationNs": {
+            "candidate": 688341.0,
+            "reference": 753709.0,
+            "candidate-copy": 680534.5,
+            "reference-copy": 742738.0
+          },
+          "releaseNs": {
+            "candidate": 1031.0,
+            "reference": 1036.0,
+            "candidate-copy": 1010.0,
+            "reference-copy": 1032.5
+          },
+          "loopNs": {
+            "candidate": 715436.5,
+            "reference": 781103.5,
+            "candidate-copy": 710046.5,
+            "reference-copy": 770709.0
+          },
+          "processNs": {
+            "candidate": 1668116.5,
+            "reference": 1724889.5,
+            "candidate-copy": 1698505.5,
+            "reference-copy": 1696096.5
+          }
+        },
+        "copyRatios": {
+          "constructionNs": {
+            "candidate": 1.011616385217043,
+            "reference": 1.1175749494601919
+          },
+          "computationNs": {
+            "candidate": 1.0114711304129327,
+            "reference": 1.014771022890979
+          },
+          "releaseNs": {
+            "candidate": 1.0207920792079208,
+            "reference": 1.0033898305084745
+          },
+          "loopNs": {
+            "candidate": 1.007591052135318,
+            "reference": 1.0134869321624633
+          },
+          "processNs": {
+            "candidate": 1.018217552551036,
+            "reference": 1.0169760388043958
+          }
+        },
+        "ratios": {
+          "constructionNs": 0.9233907437698451,
+          "computationNs": 0.9132715676739962,
+          "releaseNs": 0.9951737451737451,
+          "loopNs": 0.915930475282725,
+          "processNs": 0.9670860075384539
+        },
+        "computationQualified": true,
+        "processQualified": true,
+        "changedBuilders": 1,
+        "binaryHashes": {
+          "candidate": "cb4c5aff0e13bcedebac20c7d7dc2b6b1e69361500fc74f10b84a64775e974bb",
+          "candidate-copy": "cb4c5aff0e13bcedebac20c7d7dc2b6b1e69361500fc74f10b84a64775e974bb",
+          "reference": "71ce7b4c7a7d1c292b89cccbd399a0d319793e1937223918f57c55a46db548aa",
+          "reference-copy": "71ce7b4c7a7d1c292b89cccbd399a0d319793e1937223918f57c55a46db548aa"
+        }
+      },
+      "manual-129-199": {
+        "medians": {
+          "constructionNs": {
+            "candidate": 23820.5,
+            "reference": 25111.5,
+            "candidate-copy": 23828.5,
+            "reference-copy": 22111.5
+          },
+          "computationNs": {
+            "candidate": 605812.0,
+            "reference": 676619.5,
+            "candidate-copy": 630850.0,
+            "reference-copy": 659221.5
+          },
+          "releaseNs": {
+            "candidate": 265.5,
+            "reference": 259.5,
+            "candidate-copy": 265.5,
+            "reference-copy": 262.5
+          },
+          "loopNs": {
+            "candidate": 632847.5,
+            "reference": 701024.5,
+            "candidate-copy": 654577.0,
+            "reference-copy": 682144.0
+          },
+          "processNs": {
+            "candidate": 1577068.5,
+            "reference": 1657288.0,
+            "candidate-copy": 1600424.0,
+            "reference-copy": 1634239.0
+          }
+        },
+        "copyRatios": {
+          "constructionNs": {
+            "candidate": 1.000335845175374,
+            "reference": 1.1356760056983923
+          },
+          "computationNs": {
+            "candidate": 1.0413296534238345,
+            "reference": 1.0263917363132118
+          },
+          "releaseNs": {
+            "candidate": 1.0,
+            "reference": 1.0115606936416186
+          },
+          "loopNs": {
+            "candidate": 1.0343360762268952,
+            "reference": 1.027678173523479
+          },
+          "processNs": {
+            "candidate": 1.0148094391587936,
+            "reference": 1.0141038122330943
+          }
+        },
+        "ratios": {
+          "constructionNs": 0.948589291758756,
+          "computationNs": 0.8953510798905441,
+          "releaseNs": 1.023121387283237,
+          "loopNs": 0.9027466229782268,
+          "processNs": 0.9515959205641988
+        },
+        "computationQualified": false,
+        "processQualified": true,
+        "changedBuilders": 1,
+        "binaryHashes": {
+          "candidate": "f5e44d7df94a4d801b3bef528e4622bbbcb3c8d8ceea069d050049feab12ae8c",
+          "candidate-copy": "f5e44d7df94a4d801b3bef528e4622bbbcb3c8d8ceea069d050049feab12ae8c",
+          "reference": "f6dd6408c51f1c9f3ff4c8cbbe8bc106ca708b77bf76f2817f84a82d6db14a8b",
+          "reference-copy": "f6dd6408c51f1c9f3ff4c8cbbe8bc106ca708b77bf76f2817f84a82d6db14a8b"
+        }
+      },
+      "local-3-0": {
+        "medians": {
+          "constructionNs": {
+            "candidate": 182046.5,
+            "reference": 163989.0,
+            "candidate-copy": 170288.0,
+            "reference-copy": 172468.0
+          },
+          "computationNs": {
+            "candidate": 114248.5,
+            "reference": 112061.0,
+            "candidate-copy": 112515.0,
+            "reference-copy": 114860.0
+          },
+          "releaseNs": {
+            "candidate": 127210.0,
+            "reference": 124989.5,
+            "candidate-copy": 130251.5,
+            "reference-copy": 134839.0
+          },
+          "loopNs": {
+            "candidate": 786693.5,
+            "reference": 773203.0,
+            "candidate-copy": 784680.0,
+            "reference-copy": 774946.5
+          },
+          "processNs": {
+            "candidate": 1748842.0,
+            "reference": 1702637.0,
+            "candidate-copy": 1755691.0,
+            "reference-copy": 1756207.5
+          }
+        },
+        "copyRatios": {
+          "constructionNs": {
+            "candidate": 1.0690506671051396,
+            "reference": 1.0517046875095282
+          },
+          "computationNs": {
+            "candidate": 1.0154068346442697,
+            "reference": 1.0249774676292376
+          },
+          "releaseNs": {
+            "candidate": 1.0239092838613317,
+            "reference": 1.0788026194200313
+          },
+          "loopNs": {
+            "candidate": 1.002566014171382,
+            "reference": 1.0022549058914672
+          },
+          "processNs": {
+            "candidate": 1.0039163057611837,
+            "reference": 1.0314632537646016
+          }
+        },
+        "ratios": {
+          "constructionNs": 1.1101140930184341,
+          "computationNs": 1.0195206182347114,
+          "releaseNs": 1.0177654923013533,
+          "loopNs": 1.0174475525832156,
+          "processNs": 1.027137316997105
+        },
+        "computationQualified": false,
+        "processQualified": false,
+        "changedBuilders": 1,
+        "binaryHashes": {
+          "candidate": "a4dc53cdba25a71aa391612cbbc412bb67fcbfbbe176cd5dfbc2ef67ea1b8dab",
+          "candidate-copy": "a4dc53cdba25a71aa391612cbbc412bb67fcbfbbe176cd5dfbc2ef67ea1b8dab",
+          "reference": "5fe106850b80049a8fc5e2a1d1f58dcd32c8d461074795d3ffd607c215cec0fb",
+          "reference-copy": "5fe106850b80049a8fc5e2a1d1f58dcd32c8d461074795d3ffd607c215cec0fb"
+        }
+      },
+      "local-3-1": {
+        "medians": {
+          "constructionNs": {
+            "candidate": 57326.0,
+            "reference": 60466.0,
+            "candidate-copy": 58998.5,
+            "reference-copy": 61452.5
+          },
+          "computationNs": {
+            "candidate": 57074.5,
+            "reference": 59746.5,
+            "candidate-copy": 57338.0,
+            "reference-copy": 58744.5
+          },
+          "releaseNs": {
+            "candidate": 31653.0,
+            "reference": 32165.0,
+            "candidate-copy": 31521.0,
+            "reference-copy": 32118.5
+          },
+          "loopNs": {
+            "candidate": 239170.0,
+            "reference": 262503.0,
+            "candidate-copy": 236745.5,
+            "reference-copy": 250060.0
+          },
+          "processNs": {
+            "candidate": 1342648.5,
+            "reference": 1373657.5,
+            "candidate-copy": 1221716.5,
+            "reference-copy": 1344156.0
+          }
+        },
+        "copyRatios": {
+          "constructionNs": {
+            "candidate": 1.029175243345079,
+            "reference": 1.0163149538583667
+          },
+          "computationNs": {
+            "candidate": 1.0046167728144793,
+            "reference": 1.0170569159666012
+          },
+          "releaseNs": {
+            "candidate": 1.0041876844008757,
+            "reference": 1.0014477637498638
+          },
+          "loopNs": {
+            "candidate": 1.0102409549495133,
+            "reference": 1.0497600575861794
+          },
+          "processNs": {
+            "candidate": 1.0989853210626197,
+            "reference": 1.0219479733007182
+          }
+        },
+        "ratios": {
+          "constructionNs": 0.9480699897463037,
+          "computationNs": 0.9552777150125948,
+          "releaseNs": 0.9840820767915436,
+          "loopNs": 0.9111133967992747,
+          "processNs": 0.9774259595277571
+        },
+        "computationQualified": true,
+        "processQualified": false,
+        "changedBuilders": 1,
+        "binaryHashes": {
+          "candidate": "04b6670c6c4dedee2ea3d43a1439d1635ea52dff30c3cab49e07a4fa2150b4c8",
+          "candidate-copy": "04b6670c6c4dedee2ea3d43a1439d1635ea52dff30c3cab49e07a4fa2150b4c8",
+          "reference": "5910382e891c2c0ae096af126d39980aac4bf931c2561602955d8a1fb96f278a",
+          "reference-copy": "5910382e891c2c0ae096af126d39980aac4bf931c2561602955d8a1fb96f278a"
+        }
+      },
+      "local-3-199": {
+        "medians": {
+          "constructionNs": {
+            "candidate": 24207.0,
+            "reference": 25722.0,
+            "candidate-copy": 27360.5,
+            "reference-copy": 23007.5
+          },
+          "computationNs": {
+            "candidate": 213613.0,
+            "reference": 212861.0,
+            "candidate-copy": 243523.0,
+            "reference-copy": 214118.5
+          },
+          "releaseNs": {
+            "candidate": 997.0,
+            "reference": 1009.5,
+            "candidate-copy": 1079.0,
+            "reference-copy": 1026.5
+          },
+          "loopNs": {
+            "candidate": 239630.5,
+            "reference": 241579.5,
+            "candidate-copy": 273579.5,
+            "reference-copy": 247876.0
+          },
+          "processNs": {
+            "candidate": 1266144.5,
+            "reference": 1229868.0,
+            "candidate-copy": 1223421.0,
+            "reference-copy": 1241932.0
+          }
+        },
+        "copyRatios": {
+          "constructionNs": {
+            "candidate": 1.1302722353038377,
+            "reference": 1.117983266326198
+          },
+          "computationNs": {
+            "candidate": 1.1400195680974472,
+            "reference": 1.005907611070135
+          },
+          "releaseNs": {
+            "candidate": 1.082246740220662,
+            "reference": 1.016840019811788
+          },
+          "loopNs": {
+            "candidate": 1.1416722829522954,
+            "reference": 1.0260638837318563
+          },
+          "processNs": {
+            "candidate": 1.0349213394244499,
+            "reference": 1.0098091827740863
+          }
+        },
+        "ratios": {
+          "constructionNs": 0.9411010030324236,
+          "computationNs": 1.0035328218884625,
+          "releaseNs": 0.9876176324913324,
+          "loopNs": 0.9919322624643233,
+          "processNs": 1.0294962548826379
+        },
+        "computationQualified": false,
+        "processQualified": false,
+        "changedBuilders": 1,
+        "binaryHashes": {
+          "candidate": "b80c522b13e30093ff072416ded21d3fd61c1378e8432f47dd3e6c634da257e3",
+          "candidate-copy": "b80c522b13e30093ff072416ded21d3fd61c1378e8432f47dd3e6c634da257e3",
+          "reference": "34d362e226092ebc1c9ae75350aa8b22884889c668443878dcb81422b857cb48",
+          "reference-copy": "34d362e226092ebc1c9ae75350aa8b22884889c668443878dcb81422b857cb48"
+        }
+      },
+      "local-33-199": {
+        "medians": {
+          "constructionNs": {
+            "candidate": 27121.5,
+            "reference": 24677.0,
+            "candidate-copy": 24339.5,
+            "reference-copy": 27443.5
+          },
+          "computationNs": {
+            "candidate": 958736.0,
+            "reference": 1028343.0,
+            "candidate-copy": 1020728.5,
+            "reference-copy": 1048244.0
+          },
+          "releaseNs": {
+            "candidate": 1032.0,
+            "reference": 1051.0,
+            "candidate-copy": 1054.5,
+            "reference-copy": 1052.0
+          },
+          "loopNs": {
+            "candidate": 991108.5,
+            "reference": 1054556.5,
+            "candidate-copy": 1053349.5,
+            "reference-copy": 1093383.5
+          },
+          "processNs": {
+            "candidate": 1928534.0,
+            "reference": 2063584.5,
+            "candidate-copy": 2046777.5,
+            "reference-copy": 2177853.0
+          }
+        },
+        "copyRatios": {
+          "constructionNs": {
+            "candidate": 1.1142998007354301,
+            "reference": 1.1121084410584754
+          },
+          "computationNs": {
+            "candidate": 1.0646606573655313,
+            "reference": 1.0193524923104451
+          },
+          "releaseNs": {
+            "candidate": 1.0218023255813953,
+            "reference": 1.0009514747859183
+          },
+          "loopNs": {
+            "candidate": 1.0627993806934357,
+            "reference": 1.0368183212563764
+          },
+          "processNs": {
+            "candidate": 1.0613126343637187,
+            "reference": 1.0553737925439932
+          }
+        },
+        "ratios": {
+          "constructionNs": 1.0990598533046967,
+          "computationNs": 0.9323114952890232,
+          "releaseNs": 0.9819219790675547,
+          "loopNs": 0.9398344232859975,
+          "processNs": 0.9345553816671912
+        },
+        "computationQualified": false,
+        "processQualified": false,
+        "changedBuilders": 1,
+        "binaryHashes": {
+          "candidate": "8a5e5b724caadbde8deb4c8d1d2bfa81e5ec7548e2009986d4e6a049eb05289b",
+          "candidate-copy": "8a5e5b724caadbde8deb4c8d1d2bfa81e5ec7548e2009986d4e6a049eb05289b",
+          "reference": "2faa0f5db0cedfd04651e1d6fc2c60cc638614e92708c073323141123940eb33",
+          "reference-copy": "2faa0f5db0cedfd04651e1d6fc2c60cc638614e92708c073323141123940eb33"
+        }
+      },
+      "local-129-199": {
+        "medians": {
+          "constructionNs": {
+            "candidate": 22616.5,
+            "reference": 24131.0,
+            "candidate-copy": 22866.5,
+            "reference-copy": 22252.5
+          },
+          "computationNs": {
+            "candidate": 847386.5,
+            "reference": 920608.5,
+            "candidate-copy": 837448.5,
+            "reference-copy": 868413.5
+          },
+          "releaseNs": {
+            "candidate": 261.0,
+            "reference": 265.5,
+            "candidate-copy": 259.5,
+            "reference-copy": 260.5
+          },
+          "loopNs": {
+            "candidate": 871040.5,
+            "reference": 944136.0,
+            "candidate-copy": 872167.0,
+            "reference-copy": 891543.5
+          },
+          "processNs": {
+            "candidate": 1805148.5,
+            "reference": 1871562.0,
+            "candidate-copy": 1845588.0,
+            "reference-copy": 1828042.5
+          }
+        },
+        "copyRatios": {
+          "constructionNs": {
+            "candidate": 1.0110538765945216,
+            "reference": 1.0844174811818896
+          },
+          "computationNs": {
+            "candidate": 1.0118669983885575,
+            "reference": 1.0601038560547482
+          },
+          "releaseNs": {
+            "candidate": 1.0057803468208093,
+            "reference": 1.0191938579654511
+          },
+          "loopNs": {
+            "candidate": 1.0012932808520385,
+            "reference": 1.058990391383034
+          },
+          "processNs": {
+            "candidate": 1.0224023120535513,
+            "reference": 1.0238066128112449
+          }
+        },
+        "ratios": {
+          "constructionNs": 0.9372384070283039,
+          "computationNs": 0.9204634760595845,
+          "releaseNs": 0.9830508474576272,
+          "loopNs": 0.9225794800749044,
+          "processNs": 0.9645144002710035
+        },
+        "computationQualified": false,
+        "processQualified": false,
+        "changedBuilders": 1,
+        "binaryHashes": {
+          "candidate": "e922cdd6e737c7d641dbf84ffb9623566af279f9c540344e412b7b171f974de2",
+          "candidate-copy": "e922cdd6e737c7d641dbf84ffb9623566af279f9c540344e412b7b171f974de2",
+          "reference": "63b3824e2f6b2fb3c8ceb93f0c7eb22b29e524df361a595a1b866cf0e975a7dc",
+          "reference-copy": "63b3824e2f6b2fb3c8ceb93f0c7eb22b29e524df361a595a1b866cf0e975a7dc"
+        }
+      }
+    }
+  }
+}

@@ -122,8 +122,9 @@ fixed. This changes hardware qualification, not the speed acceptance rule.
   contain no samples and do not become successful sessions retroactively.
 - The completed compiler-cost AMD session used 9V74. Its seven passing numeric
   comparisons are accepted under this amendment, alongside the seven ARM results.
-- Request only the two missing AMD runtime sessions. Finish their complete
-  archive audits and reconstruct session 1's original images on each architecture.
+- The two AMD runtime sessions and complete archive audits subsequently finished;
+  [the final results](recording-context-time-2026-11-06/README.md) retain their
+  misses and copy-control failure alongside the ARM sessions.
 - Future compiler-cost runs must qualify hardware before building. The earlier
   workflow recorded the CPU but did not enforce that requirement; the new guard
   fixes this without repeating the completed comparison.
@@ -131,4 +132,5 @@ fixed. This changes hardware qualification, not the speed acceptance rule.
 PR #265 was user-merged as `e187b92d75bf936bc7191ea11eeca0c573005399` before
 the final production matrix completed. Its tree equals review head
 `db94106b3ad2e8c65a384379c653bd395069b5fb`; the squash message is one line.
-The next PR finishes outstanding verification and any discovered repairs.
+[PR #266 completed verification](recording-context-delivery-2026-11-06/README.md).
+This protocol records the original experiment; it is not an outstanding task.

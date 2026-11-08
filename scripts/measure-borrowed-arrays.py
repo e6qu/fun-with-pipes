@@ -13,7 +13,7 @@ import struct
 import subprocess
 import time
 
-from borrowed_array_reference import reference_source
+from borrowed_array_reference import fresh_reference_source, reference_source
 from process_wait import run_capture
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -122,6 +122,7 @@ def main():
     for name in ('cc', 'c-arch'):
         parser.add_argument('--' + name, required=True)
     parser.add_argument('--session', type=int, choices=(1, 2), required=True)
+    parser.add_argument('--transformation', choices=('array-metadata', 'fresh-array'), required=True)
     args = parser.parse_args()
     assert os.environ.get('GITHUB_ACTIONS') == 'true' and platform.system() == 'Linux'
     assert args.c_arch == {'aarch64': 'armv8-a', 'x86_64': 'x86-64'}[platform.machine()]
@@ -131,7 +132,9 @@ def main():
     candidate = (ROOT / 'src/cgen.rs').read_text()
     assert manifest['source'] == source_id
     assert manifest['candidateSha256'] == hashlib.sha256(candidate.encode()).hexdigest()
-    assert manifest['referenceSha256'] == hashlib.sha256(reference_source(candidate).encode()).hexdigest()
+    assert manifest['disabled'] == args.transformation
+    transform = {'array-metadata': reference_source, 'fresh-array': fresh_reference_source}[args.transformation]
+    assert manifest['referenceSha256'] == hashlib.sha256(transform(candidate).encode()).hexdigest()
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=False)
     environment = {key: value for key, value in os.environ.items()

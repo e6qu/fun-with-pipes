@@ -21,9 +21,10 @@ It does not divide independently aggregated medians. Instrumentation adds work;
 these percentages neither isolate a runtime check nor predict its removal's gain.
 
 Every observed process records 1,592 updates, 205,368 inputs and 1,630,208 nodes:
-1,024 nodes per update. The next source review must account for those operations
-and distinguish arithmetic, validation, capacity checks and writes. Preserve the
-existing checks until a scope/lifetime proof also preserves failure order.
+1,024 nodes per update. This observation led to the
+[recording-call review](../recording-call-review-2026-11-06/README.md), separating
+arithmetic, validation, capacity checks and writes. The resulting optimizations
+retain those checks unless a lifetime proof also preserves failure order.
 
 Reproduce from the repository root, with these retained reports present:
 
@@ -36,6 +37,6 @@ python3 scripts/local-guard.py python3 docs/measurements/recording-work-review-2
   --report docs/measurements/scalar-constant-time-2026-11-05/42078654369/x86_64-2.json.gz
 ```
 
-The guarded calculation passed in 0.56 seconds, using 0.17 CPU seconds.
-This selects an investigation in [the plan](../../../PLAN.md), not an implemented
-optimization or a changed timing acceptance rule.
+The guarded calculation passed. This is the original diagnostic, not a speed
+claim. Later [computed-input measurements](../computed-numeric-time-2026-11-07/README.md)
+have different source and cost boundaries; do not apply these percentages to them.

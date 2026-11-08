@@ -27,5 +27,5 @@ coverage. The repaired source must run the complete three-host focused batch.
 Each host's ZIP retains its logs, source identity, generated docs and tutorial
 outputs. The adjacent artifact metadata records its SHA-256; compressed full
 job logs and job metadata preserve the failed steps. These results verify no
-native ownership probe yet. See [the contract](../../final-iteration-storage.md)
-and [handoff](../../../development-state.md) for remaining checks.
+native ownership probe yet. [The subsequent repaired delivery](../../../roadmap-history.md#final-iteration-values-without-histories-pr-255)
+passed its final gates; these failed first-attempt records remain unchanged.

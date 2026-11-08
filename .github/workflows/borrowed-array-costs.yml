@@ -16,12 +16,13 @@ permissions:
   actions: read
 jobs:
   audit:
-    if: inputs.mode == 'array-metadata'
+    if: inputs.mode == 'array-metadata' || inputs.mode == 'fresh-array'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
       GH_TOKEN: ${{ github.token }}
       SAFETY_RUN: ${{ inputs.evidence_run }}
+      TRANSFORMATION: ${{ inputs.mode }}
     steps:
       - uses: actions/checkout@v7
       - name: Audit complete focused logs, target results and native images
@@ -30,7 +31,7 @@ jobs:
           python3 scripts/test-production-log-audit.py
           python3 scripts/test-borrowed-array-costs.py
           safety_source=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SAFETY_RUN" --jq .head_sha)
-          python3 scripts/audit-focused-storage.py --group array-metadata \
+          python3 scripts/audit-focused-storage.py --group "$TRANSFORMATION" \
             --run "$SAFETY_RUN" --source "$safety_source" --attempt 1 --output array-audit
       - uses: actions/upload-artifact@v7
         if: always()
@@ -45,7 +46,7 @@ jobs:
             array-audit/artifacts.json
           if-no-files-found: error
   measure:
-    if: inputs.mode == 'array-metadata'
+    if: inputs.mode == 'array-metadata' || inputs.mode == 'fresh-array'
     needs: audit
     strategy:
       fail-fast: false
@@ -61,6 +62,7 @@ jobs:
       CARGO_PROFILE_DEV_DEBUG_ASSERTIONS: 'true'
       CARGO_PROFILE_DEV_OVERFLOW_CHECKS: 'true'
       FWP_LTO: '0'
+      TRANSFORMATION: ${{ inputs.mode }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -87,7 +89,7 @@ jobs:
           selected = [job for job in jobs if job['name'] in expected]
           assert len(selected) == 3 and {job['name'] for job in selected} == expected
           assert all(job['conclusion'] == 'success' and job['head_sha'] == run['head_sha'] for job in selected)
-          subprocess.run(['git', 'diff', '--exit-code', run['head_sha'], 'HEAD', '--', 'src', 'runtime', 'lib', 'vendor', 'tests/array_element_ownership.rs', 'tests/support/borrowed_array_metadata.rs', 'build.rs', 'Cargo.toml', 'Cargo.lock'], check=True)
+          subprocess.run(['git', 'diff', '--exit-code', run['head_sha'], 'HEAD', '--', 'src', 'runtime', 'lib', 'vendor', 'tests/array_element_ownership.rs', 'tests/support', 'build.rs', 'Cargo.toml', 'Cargo.lock'], check=True)
           PY
           python3 scripts/test-borrowed-array-costs.py
       - name: Qualify the native measurement host
@@ -108,7 +110,7 @@ jobs:
           cargo build --locked --bin fwp
           reference_checkout="$RUNNER_TEMP/borrowed-array-reference"
           git worktree add --detach "$reference_checkout" "$GITHUB_SHA"
-          python3 scripts/borrowed_array_reference.py --checkout "$reference_checkout" --output array-reference
+          python3 scripts/borrowed_array_reference.py --transformation "$TRANSFORMATION" --checkout "$reference_checkout" --output array-reference
           cargo build --locked --bin fwp --manifest-path "$reference_checkout/Cargo.toml" --target-dir "$RUNNER_TEMP/array-reference-target"
           cp "$RUNNER_TEMP/array-reference-target/debug/fwp" array-reference/fwp
           git -C "$reference_checkout" diff HEAD > array-reference/built.patch
@@ -118,6 +120,7 @@ jobs:
           python3 scripts/measure-borrowed-arrays.py
           --compiler target/debug/fwp --reference array-reference/fwp
           --reference-manifest array-reference/manifest.json
+          --transformation "$TRANSFORMATION"
           --cc gcc --c-arch ${{ runner.arch == 'ARM64' && 'armv8-a' || 'x86-64' }}
           --session ${{ matrix.session }} --output array-costs
       - uses: actions/upload-artifact@v7

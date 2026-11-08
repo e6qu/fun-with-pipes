@@ -33,7 +33,7 @@ The arrows show stage order; the table identifies the responsible source files.
 | Preserve resources | Record original resource scopes before transformations | `src/resource.rs` |
 | Optimize | Matrix specialization → pure-constructor proof → simplification/inlining → known scoped/callback specialization → fusion → self-tail proof | `src/fuse.rs`, `src/opt.rs`, `src/opt/scoped.rs`, `src/opt/stages.rs`, `src/tailrec.rs` |
 | Interpret | Check entry lifetimes, then execute typed IR directly | `src/arc.rs`, `src/arc_scope.rs`, `src/interp.rs` |
-| Or generate native code | Select representations, prove direct-call borrows, insert and verify reference operations, check ownership for default ARC execution, emit C/runtime | `src/cgen.rs`, `src/rc/borrows.rs`, `src/rc.rs`, `src/ownership.rs` |
+| Or generate native code | Select representations, prove borrows, insert and verify necessary reference operations, check entry lifetimes, emit C/runtime | `src/cgen.rs`, `src/rc/borrows.rs`, `src/rc.rs`, `src/ownership.rs` |
 | Compile and link | Generated C and required libraries → native executable/library or supported WebAssembly module | C toolchain, selected by `src/cgen.rs` |
 
 Macro expansion has its own nested check/lower/interpret cycle: macro functions

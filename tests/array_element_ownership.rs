@@ -15,8 +15,8 @@ mod array_sort;
 #[path = "support/record_probe.rs"]
 mod record_probe;
 
-#[path = "support/borrowed_array_metadata.rs"]
-mod borrowed_array_metadata;
+#[path = "support/fresh_array_output.rs"]
+mod fresh_array_output;
 
 fn checked(command: &mut Command) -> Output {
     let out = command.output().unwrap();
@@ -705,7 +705,11 @@ fn generated_numeric_arrays_borrow_captures_and_preserve_effect_cleanup() {
                 } else {
                     ""
                 };
-                code = code.replace(release, &format!("{release}\n    if (owner->value && owner->filled == 2 && owner->element->kind == K_F64) {{ array_probe_partials++; {skip} }}"));
+                // F64 cleanup owns the allocation, not an initialized prefix.
+                // The fixture fails/cancels after two successful callbacks.
+                assert!(emitted
+                    .contains("memcpy(result_data + index * sizeof value, &value, sizeof value);"));
+                code = code.replace(release, &format!("{release}\n    if (owner->value && owner->element->kind == K_F64) {{ if (owner->filled != 0) _Exit(225); array_probe_partials++; {skip} }}"));
                 let calls = if name == "reads" {
                     "if (array_probe_calls != 3) _Exit(223);"
                 } else {

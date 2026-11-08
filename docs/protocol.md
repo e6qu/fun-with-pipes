@@ -6,13 +6,8 @@ A typed stream carries the expected type as well as values so mismatched program
 can reject each other before interpreting data. This page includes the actual
 binary layout for implementers, not just command-line examples.
 
-Run the opening commands from `examples/shell`. `printf` supplies newline-separated
-input; the shell pipe connects it to the executable. The function `scale` takes
-the multiplier first, so `./scale 10` multiplies each input line by ten.
-
-Every exported function can be compiled into a standalone executable.
-The examples on this page use `examples/shell/tools.fwp`. From the repository
-root, run `cd examples/shell` before the commands below. That file contains:
+Every exported function can become a standalone executable. From the repository
+root, run `cd examples/shell`; its `tools.fwp` contains:
 
 ```
 export scale : I64 -> I64 -> I64
@@ -31,6 +26,9 @@ $ printf '1\n2\n3\n' | ./scale 10
 20
 30
 ```
+
+`printf` supplies three input lines; the shell pipe connects them to `scale`.
+The function takes its multiplier first, so `./scale 10` multiplies each line by ten.
 
 `fwp exec tools.fwp scale 3 14` compiles and runs the same function (with
 `--interp`, the interpreter) and behaves identically. This page describes the arguments, input and

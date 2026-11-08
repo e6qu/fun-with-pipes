@@ -9,6 +9,12 @@ identities. Do not edit observations to make an old experiment describe new code
 
 ## Latest delivery
 
+Current investigation: [shared loop/array costs](shared-loop-array-costs.md).
+The [metadata candidate](borrowed-array-metadata-2026-11-08/README.md) misses
+its target; these are diagnostic results, not another delivered optimization.
+The [fresh F64 output diagnostic](fresh-array-diagnosis-2026-11-08/README.md)
+selects the replacement candidate; final implementation acceptance remains open.
+
 - [Computed numeric inputs and local derivatives](computed-numeric-time-2026-11-07/README.md):
   #269 removes 407,552 temporary requests from its largest measured process;
   qualified long cases take 48–65% less time than ordinary reverse AD. The helper
@@ -77,8 +83,8 @@ experiment names its measured variant, not the latest compiler.
   safety and lower call costs, 84.5–84.9% less ARM64 construction time, unchanged
   managed storage, remaining C/Rust gaps and eight failed AMD64 timing limits.
 
-- [Typed derivative owners](typed-derivative-owners.md): current F128/nested-tape
-  work; stack-record, initialization and result-transfer counts, plus alias,
+- [Typed derivative owners](typed-derivative-owners.md): F128/nested-tape work
+  delivered in #237; stack-record, initialization and result-transfer counts, plus alias,
   failure and cancellation controls. Counts are not timing evidence.
 
 - [Array traversal without temporary lists](array-list-traversal.md): verified allocation reductions in numerical and gradient results; rejected allocation and timing observations retained.

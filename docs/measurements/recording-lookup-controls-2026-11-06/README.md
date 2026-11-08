@@ -10,6 +10,6 @@ and full-log digest. [Job metadata](job.json) and the [complete log](job.log.gz)
 are retained. Every diagnostic was reviewed; none remain. These are checks of the
 measurement tools, not runtime speed or platform-support results.
 
-Follow the [lookup protocol](../recording-lookups.md) and
-[current handoff](../../development-state.md) for the remaining native checks
-and measurements.
+The [lookup protocol](../recording-lookups.md) defines this experiment's original
+requirements. [Its completed delivery](../recording-lookup-delivery-2026-11-06/README.md)
+links the native checks and measurements.

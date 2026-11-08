@@ -23,28 +23,26 @@ measured, not assumed to improve.
 
 ## Admission proof
 
-The admitted node type is a recursive variant whose fields are I64 (signed
-64-bit integers) or links to that same variant.
-Do not admit Strings, files, channels, closures or unrelated managed fields in
-nodes. Their destruction could have obligations beyond freeing region storage.
+The compiler proves one invocation owns every selected node:
 
-A selected invocation must have no node-containing parameter or result.
-Do not lift ownership to a surrounding repetition loop: each parse needs its own
-cleanup boundary. Reject self-tail roots until region cleanup across their back
-edges is implemented and measured. Within
-it, nodes may appear in local records and pass through known recursive helpers.
+| Selected | Excluded from this optimization |
+|---|---|
+| Recursive variant with I64 fields and links to itself | Strings, files, channels, closures or unrelated owned fields inside nodes |
+| Nodes created and consumed within one call | Node-containing arguments/results, globals, cached graph values and escaping captures |
+| Known recursive helpers with specialized internal versions | Unknown calls, collection/runtime/foreign boundaries and resource scopes involving nodes |
+| A separate region for each parse | Lifting cleanup outside a repetition loop or across a self-tail root |
 
-Every helper that receives or returns those nodes needs a specialized internal
-version. The ordinary helper remains available to the `escaping` example, which
-returns a tree to its caller. Returning a tree is legal; it prevents this storage
-optimization for that invocation.
+Local records may hold nodes. Pure scalar/String operations keep their ordinary
+contracts; a failure primitive can terminate a node-producing expression but
+cannot return a node. Returning a tree remains legal: that invocation uses
+ordinary ownership, as the fixture's `escaping` example demonstrates.
 
-Reject unknown calls involving nodes, function values whose signatures contain
-nodes, captures, global storage, collection/runtime/foreign boundaries involving
-nodes, and resource scopes. Cached zero-argument graph definitions also stay outside:
-their storage belongs to the cache, not the selected invocation. Pure scalar and String operations keep their existing
-contracts. A failure primitive may terminate a node-producing expression; it
-cannot return a node. Validate its precise existing contract before admitting it.
+```text
+parse invocation owns blocks
+  ├─ node → child node       links do not own individual nodes
+  ├─ helper reads nodes     same invocation, same region
+  └─ return scalar/error → release all blocks
+```
 
 Use a finite worklist over types and direct helper calls. Cache containment of
 the candidate node type, visit each selected helper once, and count analysis

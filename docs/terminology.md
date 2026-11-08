@@ -324,7 +324,7 @@ and the [manual recording test](measurements/typed-derivative-owners.md).
 | h2 / h2c / WebSocket / gRPC | HTTP/2 over TLS / unencrypted HTTP/2 / bidirectional messages / remote calls over HTTP/2. |
 | MCP | Model Context Protocol: discover and call exposed tools. |
 | CLI / stdin / stdout / stderr | Command-line interface / standard input / normal output / diagnostic output. |
-| REPL / notebook cell | Read, evaluate and print repeatedly / one editable code or text unit. Neither requires JIT. |
+| REPL / notebook cell | Read, evaluate and print repeatedly / one editable code or text unit. Both execute through the interpreter; JIT is excluded. |
 | Reactive dependency | A cell uses another cell's definitions. fwp marks dependent results stale; rerunning them requires an explicit action. |
 | Debugger / breakpoint / stepping | Inspect paused execution / pause location / advance execution by a chosen unit. |
 | SDK / LSP | Programming interface for a tool / protocol connecting language tools to editors. |

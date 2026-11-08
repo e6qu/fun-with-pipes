@@ -103,7 +103,7 @@ an identity and expiration state without owning the target; no scan can turn
 that address into a strong edge. Allocator/static-pool and WASI checks passed
 with #215 and again on the collector-free implementation in #217.
 
-## Required evidence and remaining work
+## Verification and boundaries
 
 The tests in [queued_functions.rs](../tests/queued_functions.rs) cover
 raw/optimized interpretation versus native O1/O2, close versus expiration,
