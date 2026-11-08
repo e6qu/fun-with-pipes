@@ -238,8 +238,8 @@ pub enum Body {
         callback: FuncId,
         slot: usize,
     },
-    /// Private same-type scalar map: consumes its array, reusing only ordinary
-    /// exclusive storage. Shared arrays and views produce independent output.
+    /// Private same-type scalar map: plain scalar captures precede the consumed
+    /// array. Reuse only exclusive ordinary storage; aliases/views keep theirs.
     OwnedScalarArrayMap {
         callback: FuncId,
     },

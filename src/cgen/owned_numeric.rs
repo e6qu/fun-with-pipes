@@ -30,11 +30,19 @@ fn selection(
 ) -> Option<(Option<Local>, Operation)> {
     let function = &program.funcs[id];
     match (&function.body, args) {
-        (Body::Prim(symbol), [Expr::Func(step), input])
-            if symbol == "array.map" && callback(program, *step, 1) =>
-        {
-            let worker = &program.funcs[*step];
-            let (parameters, result) = worker.ty.params(1);
+        (Body::Prim(symbol), [mapped, input]) if symbol == "array.map" => {
+            // A partial call evaluates its captures here but cannot enter the
+            // callback body. Only plain scalar captures may cross the loop.
+            let (step, captures) = match mapped {
+                Expr::Func(step) => (*step, 0),
+                Expr::Call(step, args) => (*step, args.len()),
+                _ => return None,
+            };
+            if !callback(program, step, captures + 1) {
+                return None;
+            }
+            let worker = &program.funcs[step];
+            let (parameters, result) = worker.ty.params(captures + 1);
             let array = MT::Con("std::Array".into(), vec![result.clone()]);
             let (actual, output) = function.ty.params(2);
             // A saturated call returns an owner at this exact evaluation
@@ -49,11 +57,11 @@ fn selection(
                 }
                 _ => return None,
             };
-            (parameters[0] == result
+            (parameters[captures] == result
                 && function.arity == 2
-                && actual == vec![&worker.ty, &array]
+                && actual == vec![worker.ty.after_args(captures), &array]
                 && output == &array)
-                .then_some((local, Operation::Map(id, *step)))
+                .then_some((local, Operation::Map(id, step)))
         }
         (
             Body::ScalarBufferZip {
@@ -182,11 +190,17 @@ fn entry(program: &Program, operation: Operation) -> Func {
         Operation::Map(id, callback) => {
             let original = &program.funcs[id];
             let (parameters, result) = original.ty.params(2);
+            let worker = &program.funcs[callback];
+            let captures = worker.arity as usize - 1;
+            let mut inputs: Vec<_> = worker.ty.params(captures).0.into_iter().cloned().collect();
+            inputs.push(parameters[1].clone());
             Func {
                 name: "consumed-scalar-array-map".into(),
-                arity: 1,
-                locals: vec![parameters[1].clone()],
-                ty: MT::Fun(Box::new(parameters[1].clone()), Box::new(result.clone())),
+                arity: inputs.len() as u32,
+                ty: inputs.iter().rev().fold(result.clone(), |result, input| {
+                    MT::Fun(Box::new(input.clone()), Box::new(result))
+                }),
+                locals: inputs,
                 body: Body::OwnedScalarArrayMap { callback },
             }
         }
@@ -255,7 +269,14 @@ fn rewrite(expr: &mut Expr, replacements: &HashMap<usize, (FuncId, bool)>, visit
         };
         *id = replacement;
         if remove_callback {
-            args.remove(0);
+            match args.remove(0) {
+                Expr::Func(_) => {}
+                Expr::Call(_, mut captures) => {
+                    captures.append(args);
+                    *args = captures;
+                }
+                _ => unreachable!("selected scalar callback changed"),
+            }
         }
     }
 }
@@ -382,6 +403,88 @@ mod tests {
             if let Some((body, locals)) = prepared {
                 crate::rc::check(program, function, &body, &locals).unwrap();
             }
+        }
+    }
+
+    #[test]
+    fn scalar_captures_keep_argument_order_and_consume_only_the_array() {
+        for captures in [1, 2, 8] {
+            let mut program = example(None);
+            let number = MT::con("std::F64");
+            let array = program.funcs[0].locals[0].clone();
+            program.funcs[1] = function(
+                "captured-step",
+                vec![number.clone(); captures + 1],
+                number.clone(),
+                Body::Expr(Expr::Local(captures as Local)),
+            );
+            let mut parameters = vec![number; captures];
+            parameters.push(array.clone());
+            let saved = (0..captures)
+                .map(|index| Expr::Local(index as Local))
+                .collect::<Vec<_>>();
+            program.funcs[0] = function(
+                "entry",
+                parameters.clone(),
+                array,
+                Body::Expr(Expr::Call(
+                    2,
+                    vec![Expr::Call(1, saved.clone()), Expr::Local(captures as Local)],
+                )),
+            );
+            lower(&mut program);
+            assert_eq!(program.funcs.len(), 4);
+            assert_eq!(program.funcs[3].locals, parameters);
+            let Body::Expr(Expr::Call(id, args)) = &program.funcs[0].body else {
+                panic!("lost call")
+            };
+            assert_eq!(*id, 3);
+            assert_eq!(args.len(), captures + 1);
+            assert!(args
+                .iter()
+                .enumerate()
+                .all(|(index, arg)| matches!(arg, Expr::Local(local) if *local == index as Local)));
+            for index in 0..=captures {
+                assert_eq!(
+                    crate::rc::consumes_arg(&program, 3, index),
+                    index == captures
+                );
+            }
+            verify_ownership(&program);
+        }
+    }
+
+    #[test]
+    fn captured_maps_reject_reference_captures_and_executing_call_stages() {
+        for (capture, supplied) in [
+            (MT::con("std::String"), 1),
+            (MT::con("std::I128"), 1),
+            (MT::con("std::F64"), 0),
+            (MT::con("std::F64"), 2),
+        ] {
+            let mut program = example(None);
+            let number = MT::con("std::F64");
+            let array = program.funcs[0].locals[0].clone();
+            program.funcs[1] = function(
+                "step",
+                vec![capture.clone(), number.clone()],
+                number,
+                Body::Expr(Expr::Local(1)),
+            );
+            program.funcs[0] = function(
+                "entry",
+                vec![capture, array.clone()],
+                array,
+                Body::Expr(Expr::Call(
+                    2,
+                    vec![
+                        Expr::Call(1, vec![Expr::Local(0); supplied]),
+                        Expr::Local(1),
+                    ],
+                )),
+            );
+            lower(&mut program);
+            assert_eq!(program.funcs.len(), 3);
         }
     }
 

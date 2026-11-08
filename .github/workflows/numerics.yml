@@ -1734,6 +1734,7 @@ jobs:
       - name: Check scalar captures, arithmetic, reuse, failure and cancellation
         if: ${{ !cancelled() && steps.compiler_build.outcome == 'success' }}
         run: |
+          cargo test --locked --lib cgen::owned_numeric::tests
           CARGO_NET_OFFLINE=true python3 scripts/run-native-tests.py --targets array_element_ownership array_unwind_ownership array_size_limits numeric_array_fusion argument_preparation_ownership mapped_array_construction zip_map_fusion zip_unwind_ownership --idle-timeout 600 --logs scalar-array-checks/targets
       - name: Same-type float bits, conversion maps and owner transfer
         if: ${{ !cancelled() && steps.compiler_build.outcome == 'success' && inputs.suite == 'scalar-identity-checks' }}
@@ -3975,7 +3976,6 @@ jobs:
       FWP_TAIL_ARTIFACTS: functional-evidence/tail
       FWP_ARC_ARTIFACTS: functional-evidence/owners
       FWP_CONTEXT_ARTIFACTS: functional-evidence/calls
-      # Probe-only reruns follow test/measurement repairs; compiler changes need the full selection.
       FWP_FUNCTIONAL_TESTS: ${{ inputs.suite == 'functional-probes' && '--test tail_recursion --test compiler_call_liveness' || '--test tail_recursion --test compiler_call_liveness --test borrowed_callbacks --test closure_ownership --test state_sequence_ownership --test resource_frames --test resource_frame_fields --test resource_frame_variants --test resource_match_context --test queued_functions' }}
     steps:
       - uses: actions/checkout@v7

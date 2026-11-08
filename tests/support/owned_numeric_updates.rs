@@ -118,6 +118,10 @@ fn consumed_numeric_owners_survive_sharing_traps_and_allocation_failure() {
             &format!("f{}", function_id(&emitted, "mapped")),
         )
         .replace(
+            "CAPTURE_ENTRY",
+            &format!("f{}", function_id(&emitted, "mapped-capture")),
+        )
+        .replace(
             "TEMP_ENTRY",
             &format!("f{}", function_id(&emitted, "mapped-produced")),
         )
@@ -155,12 +159,18 @@ fn consumed_numeric_owners_survive_sharing_traps_and_allocation_failure() {
         "/* deliberately leak partial copied suffix */",
     );
     assert_ne!(leak, code);
+    let missing_map_owner = code.replace(
+        "fwp_value_owner input = {l2, ",
+        "fwp_value_owner input = {0, ",
+    );
+    assert_ne!(missing_map_owner, code);
     for opt in ["-O1", "-O2"] {
         for (label, text, expected) in [
             ("reuse", code.clone(), 0),
             ("no-reuse", format!("#define FWP_NO_REUSE 1\n{code}"), 0),
             ("corrupt-prefix", corrupt.clone(), 241),
             ("missing-suffix-release", leak.clone(), 90),
+            ("missing-captured-input", missing_map_owner.clone(), 90),
         ] {
             let executable = directory.0.join(format!("{label}{opt}.exe"));
             fwp::cgen::compile_c(&text, &executable, opt).unwrap();

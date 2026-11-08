@@ -108,6 +108,7 @@ int main(void) {
         else { DROP_F32_ARRAY(output); if (sharing) DROP_F32_ARRAY(input); }
         if (owner_ledger_live != live || fwp_heap.live != baseline) return 90;
     }
+    for (unsigned captured = 0; captured < 2; captured++)
     for (unsigned length = 0; length < 3; length++)
     for (unsigned sharing = 0; sharing < 3; sharing++)
     for (volatile int mode = 0; mode < 4; mode++)
@@ -133,7 +134,7 @@ int main(void) {
         jmp_buf jump;
         numeric_begin(&jump, mode, failure);
         if (!setjmp(jump)) {
-            V output = MAP_ENTRY(input);
+            V output = captured ? CAPTURE_ENTRY(1, 1, input) : MAP_ENTRY(input);
             if (mode) return 240;
             if (fwp_array_len(output) != (size_t)n) return 241;
             for (int i = 0; i < n; i++) if (ARR(output)->d[i] != (V)(i + 2)) return 241;

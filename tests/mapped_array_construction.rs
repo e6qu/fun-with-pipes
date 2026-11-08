@@ -13,6 +13,20 @@ fn direct_scalar_array_maps_preserve_values_order_aliases_and_exclusions() {
     for (label, program, status) in [
         ("values", include_str!("fixtures/direct_array_maps.fwp"), 0),
         (
+            "capture-order",
+            r#"
+coefficient : I64 -> I64 ! {IO}
+coefficient = tap echo
+input : () -> Array[I64] ! {IO}
+input = fn () -> let shown = echo 30 in array.from-list [1, 2]
+export adjust : I64 -> I64 -> Array[I64] -> Array[I64] ! {IO}
+adjust = fn scale -> fn offset -> fn values ->
+    values | array.map (fn value -> let shown = echo value in value * scale + offset)
+main = adjust (coefficient 2) (coefficient 3) (input ()) | array.to-list | echo
+"#,
+            0,
+        ),
+        (
             "trap",
             r#"
 step : I8 -> I8 ! {IO}
@@ -39,6 +53,8 @@ main = array.from-list [1i8, 127i8, 2i8] | mapped | array.to-list | echo
         );
         if label == "trap" {
             assert_eq!(reference.stdout, b"1\n127\n");
+        } else if label == "capture-order" {
+            assert_eq!(reference.stdout, b"2\n3\n30\n1\n2\n[5, 7]\n");
         } else {
             assert!(reference.stdout.starts_with(b"[2, -1]\n[0.5, 1.0]"));
         }
@@ -99,7 +115,7 @@ main = array.from-list [1i8, 127i8, 2i8] | mapped | array.to-list | echo
                     ("converted", true),
                     ("observed", true),
                     ("dynamic", false),
-                    ("captured", false),
+                    ("captured", true),
                     ("wide", false),
                     ("text-lengths", false),
                     ("record-sums", false),
