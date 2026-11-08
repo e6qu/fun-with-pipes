@@ -1,0 +1,4942 @@
+{
+  "source": "e7965762490c89d2a39f5937fe8322291ea906fc",
+  "architecture": "x86_64",
+  "cCompiler": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0\nCopyright (C) 2025 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+  "rustCompiler": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+  "arithmetic": [
+    {
+      "file": "step-c-none",
+      "command": [
+        "gcc",
+        "-std=c11",
+        "-O2",
+        "-ffp-contract=off",
+        "target/bench-peer-controls/step-c-none.c",
+        "-o",
+        "target/bench-peer-controls/step-c-none"
+      ],
+      "sourceSha256": "1bf272e7123060db0112ba3a8ad96d1efed28e1c0577ad4793e86ee7c3665e40",
+      "binarySha256": "0bfa6adb905af137f383f30d189e70275e0c0b0ad5c92699baf30e2cfd2e4b3d",
+      "language": "c",
+      "removedCheck": "none",
+      "benchmarkSourceSha256": "92668a9bbff2b609c08be4f0504f7a587d7545f3504fa4d1d8250332221aa2e9",
+      "observations": [
+        {
+          "index": -9223372036854775808,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "subtraction",
+          "status": 1,
+          "stdout": "",
+          "stderr": "subtraction overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": -9223372036854775808,
+          "accumulator": 0,
+          "expected": null,
+          "expectedFailure": "subtraction",
+          "status": 1,
+          "stdout": "",
+          "stderr": "subtraction overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": -9223372036854775808,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "subtraction",
+          "status": 1,
+          "stdout": "",
+          "stderr": "subtraction overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": -9223372036854775807,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 1,
+          "stdout": "",
+          "stderr": "multiplication overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": -9223372036854775807,
+          "accumulator": 0,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 1,
+          "stdout": "",
+          "stderr": "multiplication overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": -9223372036854775807,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 1,
+          "stdout": "",
+          "stderr": "multiplication overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": -3074457345618258603,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 1,
+          "stdout": "",
+          "stderr": "multiplication overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": -3074457345618258603,
+          "accumulator": 0,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 1,
+          "stdout": "",
+          "stderr": "multiplication overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": -3074457345618258603,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 1,
+          "stdout": "",
+          "stderr": "multiplication overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": -3074457345618258602,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 1,
+          "stdout": "",
+          "stderr": "addition overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": -3074457345618258602,
+          "accumulator": 0,
+          "expected": [
+            -3074457345618258603,
+            -6
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-3074457345618258603 -6\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -3074457345618258602,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            -3074457345618258603,
+            9223372036854775801
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-3074457345618258603 9223372036854775801\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -8,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 1,
+          "stdout": "",
+          "stderr": "addition overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": -8,
+          "accumulator": 0,
+          "expected": [
+            -9,
+            -3
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-9 -3\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -8,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            -9,
+            9223372036854775804
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-9 9223372036854775804\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -7,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            -8,
+            -9223372036854775808
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-8 -9223372036854775808\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -7,
+          "accumulator": 0,
+          "expected": [
+            -8,
+            0
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-8 0\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -7,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            -8,
+            9223372036854775807
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-8 9223372036854775807\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -2,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 1,
+          "stdout": "",
+          "stderr": "addition overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": -2,
+          "accumulator": 0,
+          "expected": [
+            -3,
+            -6
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-3 -6\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -2,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            -3,
+            9223372036854775801
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-3 9223372036854775801\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -1,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 1,
+          "stdout": "",
+          "stderr": "addition overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": -1,
+          "accumulator": 0,
+          "expected": [
+            -2,
+            -3
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-2 -3\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -1,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            -2,
+            9223372036854775804
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-2 9223372036854775804\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 0,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            0,
+            -9223372036854775808
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "0 -9223372036854775808\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 0,
+          "accumulator": 0,
+          "expected": [
+            0,
+            0
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "0 0\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 0,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            0,
+            9223372036854775807
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "0 9223372036854775807\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 1,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            0,
+            -9223372036854775805
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "0 -9223372036854775805\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 1,
+          "accumulator": 0,
+          "expected": [
+            0,
+            3
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "0 3\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 1,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 1,
+          "stdout": "",
+          "stderr": "addition overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": 2,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            1,
+            -9223372036854775802
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "1 -9223372036854775802\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 2,
+          "accumulator": 0,
+          "expected": [
+            1,
+            6
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "1 6\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 2,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 1,
+          "stdout": "",
+          "stderr": "addition overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": 7,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            6,
+            -9223372036854775808
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "6 -9223372036854775808\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 7,
+          "accumulator": 0,
+          "expected": [
+            6,
+            0
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "6 0\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 7,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            6,
+            9223372036854775807
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "6 9223372036854775807\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 8,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            7,
+            -9223372036854775805
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "7 -9223372036854775805\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 8,
+          "accumulator": 0,
+          "expected": [
+            7,
+            3
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "7 3\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 8,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 1,
+          "stdout": "",
+          "stderr": "addition overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": 3074457345618258602,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            3074457345618258601,
+            -9223372036854775802
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "3074457345618258601 -9223372036854775802\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 3074457345618258602,
+          "accumulator": 0,
+          "expected": [
+            3074457345618258601,
+            6
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "3074457345618258601 6\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 3074457345618258602,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 1,
+          "stdout": "",
+          "stderr": "addition overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": 3074457345618258603,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 1,
+          "stdout": "",
+          "stderr": "multiplication overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": 3074457345618258603,
+          "accumulator": 0,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 1,
+          "stdout": "",
+          "stderr": "multiplication overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": 3074457345618258603,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 1,
+          "stdout": "",
+          "stderr": "multiplication overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": 9223372036854775806,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 1,
+          "stdout": "",
+          "stderr": "multiplication overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": 9223372036854775806,
+          "accumulator": 0,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 1,
+          "stdout": "",
+          "stderr": "multiplication overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": 9223372036854775806,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 1,
+          "stdout": "",
+          "stderr": "multiplication overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": 9223372036854775807,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 1,
+          "stdout": "",
+          "stderr": "multiplication overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": 9223372036854775807,
+          "accumulator": 0,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 1,
+          "stdout": "",
+          "stderr": "multiplication overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": 9223372036854775807,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 1,
+          "stdout": "",
+          "stderr": "multiplication overflow\n",
+          "matchesContract": true
+        }
+      ],
+      "detectedMissingChecks": 0
+    },
+    {
+      "file": "step-c-subtraction",
+      "command": [
+        "gcc",
+        "-std=c11",
+        "-O2",
+        "-ffp-contract=off",
+        "target/bench-peer-controls/step-c-subtraction.c",
+        "-o",
+        "target/bench-peer-controls/step-c-subtraction"
+      ],
+      "sourceSha256": "3e4cb9cec8b2839a51d32f5a963e3c4df5b0e85b15942b38670b8c3d9bfe4d02",
+      "binarySha256": "03f57a827dd4d1ea161f154b3c21c48741be7425dee11a529f2cbd7bdcc7bee3",
+      "language": "c",
+      "removedCheck": "subtraction",
+      "benchmarkSourceSha256": "92668a9bbff2b609c08be4f0504f7a587d7545f3504fa4d1d8250332221aa2e9",
+      "observations": [
+        {
+          "index": -9223372036854775808,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "subtraction",
+          "status": 1,
+          "stdout": "",
+          "stderr": "multiplication overflow\n",
+          "matchesContract": false
+        },
+        {
+          "index": -9223372036854775808,
+          "accumulator": 0,
+          "expected": null,
+          "expectedFailure": "subtraction",
+          "status": 1,
+          "stdout": "",
+          "stderr": "multiplication overflow\n",
+          "matchesContract": false
+        },
+        {
+          "index": -9223372036854775808,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "subtraction",
+          "status": 1,
+          "stdout": "",
+          "stderr": "multiplication overflow\n",
+          "matchesContract": false
+        },
+        {
+          "index": -9223372036854775807,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 1,
+          "stdout": "",
+          "stderr": "multiplication overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": -9223372036854775807,
+          "accumulator": 0,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 1,
+          "stdout": "",
+          "stderr": "multiplication overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": -9223372036854775807,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 1,
+          "stdout": "",
+          "stderr": "multiplication overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": -3074457345618258603,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 1,
+          "stdout": "",
+          "stderr": "multiplication overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": -3074457345618258603,
+          "accumulator": 0,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 1,
+          "stdout": "",
+          "stderr": "multiplication overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": -3074457345618258603,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 1,
+          "stdout": "",
+          "stderr": "multiplication overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": -3074457345618258602,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 1,
+          "stdout": "",
+          "stderr": "addition overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": -3074457345618258602,
+          "accumulator": 0,
+          "expected": [
+            -3074457345618258603,
+            -6
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-3074457345618258603 -6\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -3074457345618258602,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            -3074457345618258603,
+            9223372036854775801
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-3074457345618258603 9223372036854775801\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -8,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 1,
+          "stdout": "",
+          "stderr": "addition overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": -8,
+          "accumulator": 0,
+          "expected": [
+            -9,
+            -3
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-9 -3\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -8,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            -9,
+            9223372036854775804
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-9 9223372036854775804\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -7,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            -8,
+            -9223372036854775808
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-8 -9223372036854775808\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -7,
+          "accumulator": 0,
+          "expected": [
+            -8,
+            0
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-8 0\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -7,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            -8,
+            9223372036854775807
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-8 9223372036854775807\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -2,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 1,
+          "stdout": "",
+          "stderr": "addition overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": -2,
+          "accumulator": 0,
+          "expected": [
+            -3,
+            -6
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-3 -6\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -2,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            -3,
+            9223372036854775801
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-3 9223372036854775801\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -1,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 1,
+          "stdout": "",
+          "stderr": "addition overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": -1,
+          "accumulator": 0,
+          "expected": [
+            -2,
+            -3
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-2 -3\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -1,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            -2,
+            9223372036854775804
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-2 9223372036854775804\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 0,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            0,
+            -9223372036854775808
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "0 -9223372036854775808\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 0,
+          "accumulator": 0,
+          "expected": [
+            0,
+            0
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "0 0\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 0,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            0,
+            9223372036854775807
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "0 9223372036854775807\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 1,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            0,
+            -9223372036854775805
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "0 -9223372036854775805\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 1,
+          "accumulator": 0,
+          "expected": [
+            0,
+            3
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "0 3\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 1,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 1,
+          "stdout": "",
+          "stderr": "addition overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": 2,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            1,
+            -9223372036854775802
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "1 -9223372036854775802\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 2,
+          "accumulator": 0,
+          "expected": [
+            1,
+            6
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "1 6\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 2,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 1,
+          "stdout": "",
+          "stderr": "addition overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": 7,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            6,
+            -9223372036854775808
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "6 -9223372036854775808\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 7,
+          "accumulator": 0,
+          "expected": [
+            6,
+            0
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "6 0\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 7,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            6,
+            9223372036854775807
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "6 9223372036854775807\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 8,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            7,
+            -9223372036854775805
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "7 -9223372036854775805\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 8,
+          "accumulator": 0,
+          "expected": [
+            7,
+            3
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "7 3\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 8,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 1,
+          "stdout": "",
+          "stderr": "addition overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": 3074457345618258602,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            3074457345618258601,
+            -9223372036854775802
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "3074457345618258601 -9223372036854775802\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 3074457345618258602,
+          "accumulator": 0,
+          "expected": [
+            3074457345618258601,
+            6
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "3074457345618258601 6\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 3074457345618258602,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 1,
+          "stdout": "",
+          "stderr": "addition overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": 3074457345618258603,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 1,
+          "stdout": "",
+          "stderr": "multiplication overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": 3074457345618258603,
+          "accumulator": 0,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 1,
+          "stdout": "",
+          "stderr": "multiplication overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": 3074457345618258603,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 1,
+          "stdout": "",
+          "stderr": "multiplication overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": 9223372036854775806,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 1,
+          "stdout": "",
+          "stderr": "multiplication overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": 9223372036854775806,
+          "accumulator": 0,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 1,
+          "stdout": "",
+          "stderr": "multiplication overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": 9223372036854775806,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 1,
+          "stdout": "",
+          "stderr": "multiplication overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": 9223372036854775807,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 1,
+          "stdout": "",
+          "stderr": "multiplication overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": 9223372036854775807,
+          "accumulator": 0,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 1,
+          "stdout": "",
+          "stderr": "multiplication overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": 9223372036854775807,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 1,
+          "stdout": "",
+          "stderr": "multiplication overflow\n",
+          "matchesContract": true
+        }
+      ],
+      "detectedMissingChecks": 3
+    },
+    {
+      "file": "step-c-multiplication",
+      "command": [
+        "gcc",
+        "-std=c11",
+        "-O2",
+        "-ffp-contract=off",
+        "target/bench-peer-controls/step-c-multiplication.c",
+        "-o",
+        "target/bench-peer-controls/step-c-multiplication"
+      ],
+      "sourceSha256": "3be9c069b5f502282db83647496eb6da2e29f18d9d24c97f1d660ad9ee2fcacd",
+      "binarySha256": "077be73007069ef0fd48c9349e36158639130cbeb8048dbb670744cddc7132d9",
+      "language": "c",
+      "removedCheck": "multiplication",
+      "benchmarkSourceSha256": "92668a9bbff2b609c08be4f0504f7a587d7545f3504fa4d1d8250332221aa2e9",
+      "observations": [
+        {
+          "index": -9223372036854775808,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "subtraction",
+          "status": 1,
+          "stdout": "",
+          "stderr": "subtraction overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": -9223372036854775808,
+          "accumulator": 0,
+          "expected": null,
+          "expectedFailure": "subtraction",
+          "status": 1,
+          "stdout": "",
+          "stderr": "subtraction overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": -9223372036854775808,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "subtraction",
+          "status": 1,
+          "stdout": "",
+          "stderr": "subtraction overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": -9223372036854775807,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 1,
+          "stdout": "",
+          "stderr": "addition overflow\n",
+          "matchesContract": false
+        },
+        {
+          "index": -9223372036854775807,
+          "accumulator": 0,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 0,
+          "stdout": "-9223372036854775808 -5\n",
+          "stderr": "",
+          "matchesContract": false
+        },
+        {
+          "index": -9223372036854775807,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 0,
+          "stdout": "-9223372036854775808 9223372036854775802\n",
+          "stderr": "",
+          "matchesContract": false
+        },
+        {
+          "index": -3074457345618258603,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 0,
+          "stdout": "-3074457345618258604 -9223372036854775808\n",
+          "stderr": "",
+          "matchesContract": false
+        },
+        {
+          "index": -3074457345618258603,
+          "accumulator": 0,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 0,
+          "stdout": "-3074457345618258604 0\n",
+          "stderr": "",
+          "matchesContract": false
+        },
+        {
+          "index": -3074457345618258603,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 0,
+          "stdout": "-3074457345618258604 9223372036854775807\n",
+          "stderr": "",
+          "matchesContract": false
+        },
+        {
+          "index": -3074457345618258602,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 1,
+          "stdout": "",
+          "stderr": "addition overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": -3074457345618258602,
+          "accumulator": 0,
+          "expected": [
+            -3074457345618258603,
+            -6
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-3074457345618258603 -6\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -3074457345618258602,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            -3074457345618258603,
+            9223372036854775801
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-3074457345618258603 9223372036854775801\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -8,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 1,
+          "stdout": "",
+          "stderr": "addition overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": -8,
+          "accumulator": 0,
+          "expected": [
+            -9,
+            -3
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-9 -3\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -8,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            -9,
+            9223372036854775804
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-9 9223372036854775804\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -7,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            -8,
+            -9223372036854775808
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-8 -9223372036854775808\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -7,
+          "accumulator": 0,
+          "expected": [
+            -8,
+            0
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-8 0\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -7,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            -8,
+            9223372036854775807
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-8 9223372036854775807\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -2,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 1,
+          "stdout": "",
+          "stderr": "addition overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": -2,
+          "accumulator": 0,
+          "expected": [
+            -3,
+            -6
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-3 -6\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -2,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            -3,
+            9223372036854775801
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-3 9223372036854775801\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -1,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 1,
+          "stdout": "",
+          "stderr": "addition overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": -1,
+          "accumulator": 0,
+          "expected": [
+            -2,
+            -3
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-2 -3\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -1,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            -2,
+            9223372036854775804
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-2 9223372036854775804\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 0,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            0,
+            -9223372036854775808
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "0 -9223372036854775808\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 0,
+          "accumulator": 0,
+          "expected": [
+            0,
+            0
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "0 0\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 0,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            0,
+            9223372036854775807
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "0 9223372036854775807\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 1,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            0,
+            -9223372036854775805
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "0 -9223372036854775805\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 1,
+          "accumulator": 0,
+          "expected": [
+            0,
+            3
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "0 3\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 1,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 1,
+          "stdout": "",
+          "stderr": "addition overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": 2,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            1,
+            -9223372036854775802
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "1 -9223372036854775802\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 2,
+          "accumulator": 0,
+          "expected": [
+            1,
+            6
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "1 6\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 2,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 1,
+          "stdout": "",
+          "stderr": "addition overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": 7,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            6,
+            -9223372036854775808
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "6 -9223372036854775808\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 7,
+          "accumulator": 0,
+          "expected": [
+            6,
+            0
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "6 0\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 7,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            6,
+            9223372036854775807
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "6 9223372036854775807\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 8,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            7,
+            -9223372036854775805
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "7 -9223372036854775805\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 8,
+          "accumulator": 0,
+          "expected": [
+            7,
+            3
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "7 3\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 8,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 1,
+          "stdout": "",
+          "stderr": "addition overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": 3074457345618258602,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            3074457345618258601,
+            -9223372036854775802
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "3074457345618258601 -9223372036854775802\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 3074457345618258602,
+          "accumulator": 0,
+          "expected": [
+            3074457345618258601,
+            6
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "3074457345618258601 6\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 3074457345618258602,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 1,
+          "stdout": "",
+          "stderr": "addition overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": 3074457345618258603,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 0,
+          "stdout": "3074457345618258602 -9223372036854775808\n",
+          "stderr": "",
+          "matchesContract": false
+        },
+        {
+          "index": 3074457345618258603,
+          "accumulator": 0,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 0,
+          "stdout": "3074457345618258602 0\n",
+          "stderr": "",
+          "matchesContract": false
+        },
+        {
+          "index": 3074457345618258603,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 0,
+          "stdout": "3074457345618258602 9223372036854775807\n",
+          "stderr": "",
+          "matchesContract": false
+        },
+        {
+          "index": 9223372036854775806,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 0,
+          "stdout": "9223372036854775805 -9223372036854775806\n",
+          "stderr": "",
+          "matchesContract": false
+        },
+        {
+          "index": 9223372036854775806,
+          "accumulator": 0,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 0,
+          "stdout": "9223372036854775805 2\n",
+          "stderr": "",
+          "matchesContract": false
+        },
+        {
+          "index": 9223372036854775806,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 1,
+          "stdout": "",
+          "stderr": "addition overflow\n",
+          "matchesContract": false
+        },
+        {
+          "index": 9223372036854775807,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 0,
+          "stdout": "9223372036854775806 -9223372036854775803\n",
+          "stderr": "",
+          "matchesContract": false
+        },
+        {
+          "index": 9223372036854775807,
+          "accumulator": 0,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 0,
+          "stdout": "9223372036854775806 5\n",
+          "stderr": "",
+          "matchesContract": false
+        },
+        {
+          "index": 9223372036854775807,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 1,
+          "stdout": "",
+          "stderr": "addition overflow\n",
+          "matchesContract": false
+        }
+      ],
+      "detectedMissingChecks": 15
+    },
+    {
+      "file": "step-c-addition",
+      "command": [
+        "gcc",
+        "-std=c11",
+        "-O2",
+        "-ffp-contract=off",
+        "target/bench-peer-controls/step-c-addition.c",
+        "-o",
+        "target/bench-peer-controls/step-c-addition"
+      ],
+      "sourceSha256": "cb570098306c6611d9caa6bf40641f8561b57dbfee6052a611f08a4f99c965e1",
+      "binarySha256": "1770f0af94ef6df19c632d3daf499db0eb6d2e1ce03be8d25ea0782ee305c007",
+      "language": "c",
+      "removedCheck": "addition",
+      "benchmarkSourceSha256": "92668a9bbff2b609c08be4f0504f7a587d7545f3504fa4d1d8250332221aa2e9",
+      "observations": [
+        {
+          "index": -9223372036854775808,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "subtraction",
+          "status": 1,
+          "stdout": "",
+          "stderr": "subtraction overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": -9223372036854775808,
+          "accumulator": 0,
+          "expected": null,
+          "expectedFailure": "subtraction",
+          "status": 1,
+          "stdout": "",
+          "stderr": "subtraction overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": -9223372036854775808,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "subtraction",
+          "status": 1,
+          "stdout": "",
+          "stderr": "subtraction overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": -9223372036854775807,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 1,
+          "stdout": "",
+          "stderr": "multiplication overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": -9223372036854775807,
+          "accumulator": 0,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 1,
+          "stdout": "",
+          "stderr": "multiplication overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": -9223372036854775807,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 1,
+          "stdout": "",
+          "stderr": "multiplication overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": -3074457345618258603,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 1,
+          "stdout": "",
+          "stderr": "multiplication overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": -3074457345618258603,
+          "accumulator": 0,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 1,
+          "stdout": "",
+          "stderr": "multiplication overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": -3074457345618258603,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 1,
+          "stdout": "",
+          "stderr": "multiplication overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": -3074457345618258602,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 0,
+          "stdout": "-3074457345618258603 9223372036854775802\n",
+          "stderr": "",
+          "matchesContract": false
+        },
+        {
+          "index": -3074457345618258602,
+          "accumulator": 0,
+          "expected": [
+            -3074457345618258603,
+            -6
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-3074457345618258603 -6\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -3074457345618258602,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            -3074457345618258603,
+            9223372036854775801
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-3074457345618258603 9223372036854775801\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -8,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 0,
+          "stdout": "-9 9223372036854775805\n",
+          "stderr": "",
+          "matchesContract": false
+        },
+        {
+          "index": -8,
+          "accumulator": 0,
+          "expected": [
+            -9,
+            -3
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-9 -3\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -8,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            -9,
+            9223372036854775804
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-9 9223372036854775804\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -7,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            -8,
+            -9223372036854775808
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-8 -9223372036854775808\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -7,
+          "accumulator": 0,
+          "expected": [
+            -8,
+            0
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-8 0\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -7,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            -8,
+            9223372036854775807
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-8 9223372036854775807\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -2,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 0,
+          "stdout": "-3 9223372036854775802\n",
+          "stderr": "",
+          "matchesContract": false
+        },
+        {
+          "index": -2,
+          "accumulator": 0,
+          "expected": [
+            -3,
+            -6
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-3 -6\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -2,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            -3,
+            9223372036854775801
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-3 9223372036854775801\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -1,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 0,
+          "stdout": "-2 9223372036854775805\n",
+          "stderr": "",
+          "matchesContract": false
+        },
+        {
+          "index": -1,
+          "accumulator": 0,
+          "expected": [
+            -2,
+            -3
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-2 -3\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -1,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            -2,
+            9223372036854775804
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-2 9223372036854775804\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 0,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            0,
+            -9223372036854775808
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "0 -9223372036854775808\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 0,
+          "accumulator": 0,
+          "expected": [
+            0,
+            0
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "0 0\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 0,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            0,
+            9223372036854775807
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "0 9223372036854775807\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 1,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            0,
+            -9223372036854775805
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "0 -9223372036854775805\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 1,
+          "accumulator": 0,
+          "expected": [
+            0,
+            3
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "0 3\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 1,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 0,
+          "stdout": "0 -9223372036854775806\n",
+          "stderr": "",
+          "matchesContract": false
+        },
+        {
+          "index": 2,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            1,
+            -9223372036854775802
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "1 -9223372036854775802\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 2,
+          "accumulator": 0,
+          "expected": [
+            1,
+            6
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "1 6\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 2,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 0,
+          "stdout": "1 -9223372036854775803\n",
+          "stderr": "",
+          "matchesContract": false
+        },
+        {
+          "index": 7,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            6,
+            -9223372036854775808
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "6 -9223372036854775808\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 7,
+          "accumulator": 0,
+          "expected": [
+            6,
+            0
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "6 0\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 7,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            6,
+            9223372036854775807
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "6 9223372036854775807\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 8,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            7,
+            -9223372036854775805
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "7 -9223372036854775805\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 8,
+          "accumulator": 0,
+          "expected": [
+            7,
+            3
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "7 3\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 8,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 0,
+          "stdout": "7 -9223372036854775806\n",
+          "stderr": "",
+          "matchesContract": false
+        },
+        {
+          "index": 3074457345618258602,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            3074457345618258601,
+            -9223372036854775802
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "3074457345618258601 -9223372036854775802\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 3074457345618258602,
+          "accumulator": 0,
+          "expected": [
+            3074457345618258601,
+            6
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "3074457345618258601 6\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 3074457345618258602,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 0,
+          "stdout": "3074457345618258601 -9223372036854775803\n",
+          "stderr": "",
+          "matchesContract": false
+        },
+        {
+          "index": 3074457345618258603,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 1,
+          "stdout": "",
+          "stderr": "multiplication overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": 3074457345618258603,
+          "accumulator": 0,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 1,
+          "stdout": "",
+          "stderr": "multiplication overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": 3074457345618258603,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 1,
+          "stdout": "",
+          "stderr": "multiplication overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": 9223372036854775806,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 1,
+          "stdout": "",
+          "stderr": "multiplication overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": 9223372036854775806,
+          "accumulator": 0,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 1,
+          "stdout": "",
+          "stderr": "multiplication overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": 9223372036854775806,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 1,
+          "stdout": "",
+          "stderr": "multiplication overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": 9223372036854775807,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 1,
+          "stdout": "",
+          "stderr": "multiplication overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": 9223372036854775807,
+          "accumulator": 0,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 1,
+          "stdout": "",
+          "stderr": "multiplication overflow\n",
+          "matchesContract": true
+        },
+        {
+          "index": 9223372036854775807,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 1,
+          "stdout": "",
+          "stderr": "multiplication overflow\n",
+          "matchesContract": true
+        }
+      ],
+      "detectedMissingChecks": 8
+    },
+    {
+      "file": "step-rs-none",
+      "command": [
+        "rustc",
+        "--edition=2021",
+        "-O",
+        "--crate-name",
+        "peer_probe",
+        "target/bench-peer-controls/step-rs-none.rs",
+        "-o",
+        "target/bench-peer-controls/step-rs-none"
+      ],
+      "sourceSha256": "9a8053a3117ded300f6fcc6c7e8dc74593ffa700495bfcdb63239776e1f1707c",
+      "binarySha256": "201ba49597f6a53d3be28a5620bbf9245fe4ee9711556724dcb72854354387b1",
+      "language": "rs",
+      "removedCheck": "none",
+      "benchmarkSourceSha256": "05de58a23d02391e00a0cc3949d994042d623cf96c0421d7f54001cb66c5e50c",
+      "observations": [
+        {
+          "index": -9223372036854775808,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "subtraction",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3296) panicked at target/bench-peer-controls/step-rs-none.rs:7:37:\nsubtraction overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": -9223372036854775808,
+          "accumulator": 0,
+          "expected": null,
+          "expectedFailure": "subtraction",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3297) panicked at target/bench-peer-controls/step-rs-none.rs:7:37:\nsubtraction overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": -9223372036854775808,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "subtraction",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3298) panicked at target/bench-peer-controls/step-rs-none.rs:7:37:\nsubtraction overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": -9223372036854775807,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3299) panicked at target/bench-peer-controls/step-rs-none.rs:8:40:\nmultiplication overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": -9223372036854775807,
+          "accumulator": 0,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3300) panicked at target/bench-peer-controls/step-rs-none.rs:8:40:\nmultiplication overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": -9223372036854775807,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3301) panicked at target/bench-peer-controls/step-rs-none.rs:8:40:\nmultiplication overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": -3074457345618258603,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3302) panicked at target/bench-peer-controls/step-rs-none.rs:8:40:\nmultiplication overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": -3074457345618258603,
+          "accumulator": 0,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3303) panicked at target/bench-peer-controls/step-rs-none.rs:8:40:\nmultiplication overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": -3074457345618258603,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3304) panicked at target/bench-peer-controls/step-rs-none.rs:8:40:\nmultiplication overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": -3074457345618258602,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3305) panicked at target/bench-peer-controls/step-rs-none.rs:9:44:\naddition overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": -3074457345618258602,
+          "accumulator": 0,
+          "expected": [
+            -3074457345618258603,
+            -6
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-3074457345618258603 -6\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -3074457345618258602,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            -3074457345618258603,
+            9223372036854775801
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-3074457345618258603 9223372036854775801\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -8,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3308) panicked at target/bench-peer-controls/step-rs-none.rs:9:44:\naddition overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": -8,
+          "accumulator": 0,
+          "expected": [
+            -9,
+            -3
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-9 -3\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -8,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            -9,
+            9223372036854775804
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-9 9223372036854775804\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -7,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            -8,
+            -9223372036854775808
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-8 -9223372036854775808\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -7,
+          "accumulator": 0,
+          "expected": [
+            -8,
+            0
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-8 0\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -7,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            -8,
+            9223372036854775807
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-8 9223372036854775807\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -2,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3314) panicked at target/bench-peer-controls/step-rs-none.rs:9:44:\naddition overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": -2,
+          "accumulator": 0,
+          "expected": [
+            -3,
+            -6
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-3 -6\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -2,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            -3,
+            9223372036854775801
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-3 9223372036854775801\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -1,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3317) panicked at target/bench-peer-controls/step-rs-none.rs:9:44:\naddition overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": -1,
+          "accumulator": 0,
+          "expected": [
+            -2,
+            -3
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-2 -3\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -1,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            -2,
+            9223372036854775804
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-2 9223372036854775804\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 0,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            0,
+            -9223372036854775808
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "0 -9223372036854775808\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 0,
+          "accumulator": 0,
+          "expected": [
+            0,
+            0
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "0 0\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 0,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            0,
+            9223372036854775807
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "0 9223372036854775807\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 1,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            0,
+            -9223372036854775805
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "0 -9223372036854775805\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 1,
+          "accumulator": 0,
+          "expected": [
+            0,
+            3
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "0 3\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 1,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3325) panicked at target/bench-peer-controls/step-rs-none.rs:9:44:\naddition overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": 2,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            1,
+            -9223372036854775802
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "1 -9223372036854775802\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 2,
+          "accumulator": 0,
+          "expected": [
+            1,
+            6
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "1 6\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 2,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3328) panicked at target/bench-peer-controls/step-rs-none.rs:9:44:\naddition overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": 7,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            6,
+            -9223372036854775808
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "6 -9223372036854775808\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 7,
+          "accumulator": 0,
+          "expected": [
+            6,
+            0
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "6 0\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 7,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            6,
+            9223372036854775807
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "6 9223372036854775807\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 8,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            7,
+            -9223372036854775805
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "7 -9223372036854775805\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 8,
+          "accumulator": 0,
+          "expected": [
+            7,
+            3
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "7 3\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 8,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3334) panicked at target/bench-peer-controls/step-rs-none.rs:9:44:\naddition overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": 3074457345618258602,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            3074457345618258601,
+            -9223372036854775802
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "3074457345618258601 -9223372036854775802\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 3074457345618258602,
+          "accumulator": 0,
+          "expected": [
+            3074457345618258601,
+            6
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "3074457345618258601 6\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 3074457345618258602,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3337) panicked at target/bench-peer-controls/step-rs-none.rs:9:44:\naddition overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": 3074457345618258603,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3338) panicked at target/bench-peer-controls/step-rs-none.rs:8:40:\nmultiplication overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": 3074457345618258603,
+          "accumulator": 0,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3339) panicked at target/bench-peer-controls/step-rs-none.rs:8:40:\nmultiplication overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": 3074457345618258603,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3340) panicked at target/bench-peer-controls/step-rs-none.rs:8:40:\nmultiplication overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": 9223372036854775806,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3341) panicked at target/bench-peer-controls/step-rs-none.rs:8:40:\nmultiplication overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": 9223372036854775806,
+          "accumulator": 0,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3342) panicked at target/bench-peer-controls/step-rs-none.rs:8:40:\nmultiplication overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": 9223372036854775806,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3343) panicked at target/bench-peer-controls/step-rs-none.rs:8:40:\nmultiplication overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": 9223372036854775807,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3344) panicked at target/bench-peer-controls/step-rs-none.rs:8:40:\nmultiplication overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": 9223372036854775807,
+          "accumulator": 0,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3345) panicked at target/bench-peer-controls/step-rs-none.rs:8:40:\nmultiplication overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": 9223372036854775807,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3346) panicked at target/bench-peer-controls/step-rs-none.rs:8:40:\nmultiplication overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        }
+      ],
+      "detectedMissingChecks": 0
+    },
+    {
+      "file": "step-rs-subtraction",
+      "command": [
+        "rustc",
+        "--edition=2021",
+        "-O",
+        "--crate-name",
+        "peer_probe",
+        "target/bench-peer-controls/step-rs-subtraction.rs",
+        "-o",
+        "target/bench-peer-controls/step-rs-subtraction"
+      ],
+      "sourceSha256": "396868bde07e51ed87efff9191e0d8db7960e318524f538bfb0205885ba765e2",
+      "binarySha256": "f0b0fdd5a03f465891dd028507c843eb1175e928a26fe814a998591746b0bcef",
+      "language": "rs",
+      "removedCheck": "subtraction",
+      "benchmarkSourceSha256": "05de58a23d02391e00a0cc3949d994042d623cf96c0421d7f54001cb66c5e50c",
+      "observations": [
+        {
+          "index": -9223372036854775808,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "subtraction",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3366) panicked at target/bench-peer-controls/step-rs-subtraction.rs:8:40:\nmultiplication overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": false
+        },
+        {
+          "index": -9223372036854775808,
+          "accumulator": 0,
+          "expected": null,
+          "expectedFailure": "subtraction",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3367) panicked at target/bench-peer-controls/step-rs-subtraction.rs:8:40:\nmultiplication overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": false
+        },
+        {
+          "index": -9223372036854775808,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "subtraction",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3368) panicked at target/bench-peer-controls/step-rs-subtraction.rs:8:40:\nmultiplication overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": false
+        },
+        {
+          "index": -9223372036854775807,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3369) panicked at target/bench-peer-controls/step-rs-subtraction.rs:8:40:\nmultiplication overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": -9223372036854775807,
+          "accumulator": 0,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3370) panicked at target/bench-peer-controls/step-rs-subtraction.rs:8:40:\nmultiplication overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": -9223372036854775807,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3371) panicked at target/bench-peer-controls/step-rs-subtraction.rs:8:40:\nmultiplication overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": -3074457345618258603,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3372) panicked at target/bench-peer-controls/step-rs-subtraction.rs:8:40:\nmultiplication overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": -3074457345618258603,
+          "accumulator": 0,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3373) panicked at target/bench-peer-controls/step-rs-subtraction.rs:8:40:\nmultiplication overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": -3074457345618258603,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3374) panicked at target/bench-peer-controls/step-rs-subtraction.rs:8:40:\nmultiplication overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": -3074457345618258602,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3375) panicked at target/bench-peer-controls/step-rs-subtraction.rs:9:44:\naddition overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": -3074457345618258602,
+          "accumulator": 0,
+          "expected": [
+            -3074457345618258603,
+            -6
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-3074457345618258603 -6\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -3074457345618258602,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            -3074457345618258603,
+            9223372036854775801
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-3074457345618258603 9223372036854775801\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -8,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3378) panicked at target/bench-peer-controls/step-rs-subtraction.rs:9:44:\naddition overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": -8,
+          "accumulator": 0,
+          "expected": [
+            -9,
+            -3
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-9 -3\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -8,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            -9,
+            9223372036854775804
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-9 9223372036854775804\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -7,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            -8,
+            -9223372036854775808
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-8 -9223372036854775808\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -7,
+          "accumulator": 0,
+          "expected": [
+            -8,
+            0
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-8 0\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -7,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            -8,
+            9223372036854775807
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-8 9223372036854775807\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -2,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3384) panicked at target/bench-peer-controls/step-rs-subtraction.rs:9:44:\naddition overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": -2,
+          "accumulator": 0,
+          "expected": [
+            -3,
+            -6
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-3 -6\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -2,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            -3,
+            9223372036854775801
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-3 9223372036854775801\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -1,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3387) panicked at target/bench-peer-controls/step-rs-subtraction.rs:9:44:\naddition overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": -1,
+          "accumulator": 0,
+          "expected": [
+            -2,
+            -3
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-2 -3\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -1,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            -2,
+            9223372036854775804
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-2 9223372036854775804\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 0,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            0,
+            -9223372036854775808
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "0 -9223372036854775808\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 0,
+          "accumulator": 0,
+          "expected": [
+            0,
+            0
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "0 0\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 0,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            0,
+            9223372036854775807
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "0 9223372036854775807\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 1,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            0,
+            -9223372036854775805
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "0 -9223372036854775805\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 1,
+          "accumulator": 0,
+          "expected": [
+            0,
+            3
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "0 3\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 1,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3395) panicked at target/bench-peer-controls/step-rs-subtraction.rs:9:44:\naddition overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": 2,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            1,
+            -9223372036854775802
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "1 -9223372036854775802\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 2,
+          "accumulator": 0,
+          "expected": [
+            1,
+            6
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "1 6\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 2,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3398) panicked at target/bench-peer-controls/step-rs-subtraction.rs:9:44:\naddition overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": 7,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            6,
+            -9223372036854775808
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "6 -9223372036854775808\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 7,
+          "accumulator": 0,
+          "expected": [
+            6,
+            0
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "6 0\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 7,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            6,
+            9223372036854775807
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "6 9223372036854775807\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 8,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            7,
+            -9223372036854775805
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "7 -9223372036854775805\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 8,
+          "accumulator": 0,
+          "expected": [
+            7,
+            3
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "7 3\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 8,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3404) panicked at target/bench-peer-controls/step-rs-subtraction.rs:9:44:\naddition overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": 3074457345618258602,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            3074457345618258601,
+            -9223372036854775802
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "3074457345618258601 -9223372036854775802\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 3074457345618258602,
+          "accumulator": 0,
+          "expected": [
+            3074457345618258601,
+            6
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "3074457345618258601 6\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 3074457345618258602,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3407) panicked at target/bench-peer-controls/step-rs-subtraction.rs:9:44:\naddition overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": 3074457345618258603,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3408) panicked at target/bench-peer-controls/step-rs-subtraction.rs:8:40:\nmultiplication overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": 3074457345618258603,
+          "accumulator": 0,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3409) panicked at target/bench-peer-controls/step-rs-subtraction.rs:8:40:\nmultiplication overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": 3074457345618258603,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3410) panicked at target/bench-peer-controls/step-rs-subtraction.rs:8:40:\nmultiplication overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": 9223372036854775806,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3411) panicked at target/bench-peer-controls/step-rs-subtraction.rs:8:40:\nmultiplication overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": 9223372036854775806,
+          "accumulator": 0,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3412) panicked at target/bench-peer-controls/step-rs-subtraction.rs:8:40:\nmultiplication overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": 9223372036854775806,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3413) panicked at target/bench-peer-controls/step-rs-subtraction.rs:8:40:\nmultiplication overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": 9223372036854775807,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3414) panicked at target/bench-peer-controls/step-rs-subtraction.rs:8:40:\nmultiplication overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": 9223372036854775807,
+          "accumulator": 0,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3415) panicked at target/bench-peer-controls/step-rs-subtraction.rs:8:40:\nmultiplication overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": 9223372036854775807,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3416) panicked at target/bench-peer-controls/step-rs-subtraction.rs:8:40:\nmultiplication overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        }
+      ],
+      "detectedMissingChecks": 3
+    },
+    {
+      "file": "step-rs-multiplication",
+      "command": [
+        "rustc",
+        "--edition=2021",
+        "-O",
+        "--crate-name",
+        "peer_probe",
+        "target/bench-peer-controls/step-rs-multiplication.rs",
+        "-o",
+        "target/bench-peer-controls/step-rs-multiplication"
+      ],
+      "sourceSha256": "9f3a42dd5ed4fa659734459138a01fa29ca51304a1faff440de4aa6735d9334f",
+      "binarySha256": "eedc5db521a42a35b68f81fd12c514480bf89b7973c1a97fea3699dffb9e54e5",
+      "language": "rs",
+      "removedCheck": "multiplication",
+      "benchmarkSourceSha256": "05de58a23d02391e00a0cc3949d994042d623cf96c0421d7f54001cb66c5e50c",
+      "observations": [
+        {
+          "index": -9223372036854775808,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "subtraction",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3436) panicked at target/bench-peer-controls/step-rs-multiplication.rs:7:37:\nsubtraction overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": -9223372036854775808,
+          "accumulator": 0,
+          "expected": null,
+          "expectedFailure": "subtraction",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3437) panicked at target/bench-peer-controls/step-rs-multiplication.rs:7:37:\nsubtraction overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": -9223372036854775808,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "subtraction",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3438) panicked at target/bench-peer-controls/step-rs-multiplication.rs:7:37:\nsubtraction overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": -9223372036854775807,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3439) panicked at target/bench-peer-controls/step-rs-multiplication.rs:9:44:\naddition overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": false
+        },
+        {
+          "index": -9223372036854775807,
+          "accumulator": 0,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 0,
+          "stdout": "-9223372036854775808 -5\n",
+          "stderr": "",
+          "matchesContract": false
+        },
+        {
+          "index": -9223372036854775807,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 0,
+          "stdout": "-9223372036854775808 9223372036854775802\n",
+          "stderr": "",
+          "matchesContract": false
+        },
+        {
+          "index": -3074457345618258603,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 0,
+          "stdout": "-3074457345618258604 -9223372036854775808\n",
+          "stderr": "",
+          "matchesContract": false
+        },
+        {
+          "index": -3074457345618258603,
+          "accumulator": 0,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 0,
+          "stdout": "-3074457345618258604 0\n",
+          "stderr": "",
+          "matchesContract": false
+        },
+        {
+          "index": -3074457345618258603,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 0,
+          "stdout": "-3074457345618258604 9223372036854775807\n",
+          "stderr": "",
+          "matchesContract": false
+        },
+        {
+          "index": -3074457345618258602,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3445) panicked at target/bench-peer-controls/step-rs-multiplication.rs:9:44:\naddition overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": -3074457345618258602,
+          "accumulator": 0,
+          "expected": [
+            -3074457345618258603,
+            -6
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-3074457345618258603 -6\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -3074457345618258602,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            -3074457345618258603,
+            9223372036854775801
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-3074457345618258603 9223372036854775801\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -8,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3448) panicked at target/bench-peer-controls/step-rs-multiplication.rs:9:44:\naddition overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": -8,
+          "accumulator": 0,
+          "expected": [
+            -9,
+            -3
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-9 -3\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -8,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            -9,
+            9223372036854775804
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-9 9223372036854775804\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -7,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            -8,
+            -9223372036854775808
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-8 -9223372036854775808\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -7,
+          "accumulator": 0,
+          "expected": [
+            -8,
+            0
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-8 0\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -7,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            -8,
+            9223372036854775807
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-8 9223372036854775807\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -2,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3454) panicked at target/bench-peer-controls/step-rs-multiplication.rs:9:44:\naddition overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": -2,
+          "accumulator": 0,
+          "expected": [
+            -3,
+            -6
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-3 -6\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -2,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            -3,
+            9223372036854775801
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-3 9223372036854775801\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -1,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3457) panicked at target/bench-peer-controls/step-rs-multiplication.rs:9:44:\naddition overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": -1,
+          "accumulator": 0,
+          "expected": [
+            -2,
+            -3
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-2 -3\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -1,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            -2,
+            9223372036854775804
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-2 9223372036854775804\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 0,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            0,
+            -9223372036854775808
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "0 -9223372036854775808\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 0,
+          "accumulator": 0,
+          "expected": [
+            0,
+            0
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "0 0\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 0,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            0,
+            9223372036854775807
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "0 9223372036854775807\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 1,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            0,
+            -9223372036854775805
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "0 -9223372036854775805\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 1,
+          "accumulator": 0,
+          "expected": [
+            0,
+            3
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "0 3\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 1,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3465) panicked at target/bench-peer-controls/step-rs-multiplication.rs:9:44:\naddition overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": 2,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            1,
+            -9223372036854775802
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "1 -9223372036854775802\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 2,
+          "accumulator": 0,
+          "expected": [
+            1,
+            6
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "1 6\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 2,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3468) panicked at target/bench-peer-controls/step-rs-multiplication.rs:9:44:\naddition overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": 7,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            6,
+            -9223372036854775808
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "6 -9223372036854775808\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 7,
+          "accumulator": 0,
+          "expected": [
+            6,
+            0
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "6 0\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 7,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            6,
+            9223372036854775807
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "6 9223372036854775807\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 8,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            7,
+            -9223372036854775805
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "7 -9223372036854775805\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 8,
+          "accumulator": 0,
+          "expected": [
+            7,
+            3
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "7 3\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 8,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3474) panicked at target/bench-peer-controls/step-rs-multiplication.rs:9:44:\naddition overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": 3074457345618258602,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            3074457345618258601,
+            -9223372036854775802
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "3074457345618258601 -9223372036854775802\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 3074457345618258602,
+          "accumulator": 0,
+          "expected": [
+            3074457345618258601,
+            6
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "3074457345618258601 6\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 3074457345618258602,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3477) panicked at target/bench-peer-controls/step-rs-multiplication.rs:9:44:\naddition overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": 3074457345618258603,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 0,
+          "stdout": "3074457345618258602 -9223372036854775808\n",
+          "stderr": "",
+          "matchesContract": false
+        },
+        {
+          "index": 3074457345618258603,
+          "accumulator": 0,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 0,
+          "stdout": "3074457345618258602 0\n",
+          "stderr": "",
+          "matchesContract": false
+        },
+        {
+          "index": 3074457345618258603,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 0,
+          "stdout": "3074457345618258602 9223372036854775807\n",
+          "stderr": "",
+          "matchesContract": false
+        },
+        {
+          "index": 9223372036854775806,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 0,
+          "stdout": "9223372036854775805 -9223372036854775806\n",
+          "stderr": "",
+          "matchesContract": false
+        },
+        {
+          "index": 9223372036854775806,
+          "accumulator": 0,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 0,
+          "stdout": "9223372036854775805 2\n",
+          "stderr": "",
+          "matchesContract": false
+        },
+        {
+          "index": 9223372036854775806,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3483) panicked at target/bench-peer-controls/step-rs-multiplication.rs:9:44:\naddition overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": false
+        },
+        {
+          "index": 9223372036854775807,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 0,
+          "stdout": "9223372036854775806 -9223372036854775803\n",
+          "stderr": "",
+          "matchesContract": false
+        },
+        {
+          "index": 9223372036854775807,
+          "accumulator": 0,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 0,
+          "stdout": "9223372036854775806 5\n",
+          "stderr": "",
+          "matchesContract": false
+        },
+        {
+          "index": 9223372036854775807,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3486) panicked at target/bench-peer-controls/step-rs-multiplication.rs:9:44:\naddition overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": false
+        }
+      ],
+      "detectedMissingChecks": 15
+    },
+    {
+      "file": "step-rs-addition",
+      "command": [
+        "rustc",
+        "--edition=2021",
+        "-O",
+        "--crate-name",
+        "peer_probe",
+        "target/bench-peer-controls/step-rs-addition.rs",
+        "-o",
+        "target/bench-peer-controls/step-rs-addition"
+      ],
+      "sourceSha256": "389943261de13cc3543e03ab62cf52f292c35d0665ad99d4a89dd053b9d75c1c",
+      "binarySha256": "99560506636abcf47a881c78f88c177e4fa306645042d0bd7b5fc6ffa5f5aaca",
+      "language": "rs",
+      "removedCheck": "addition",
+      "benchmarkSourceSha256": "05de58a23d02391e00a0cc3949d994042d623cf96c0421d7f54001cb66c5e50c",
+      "observations": [
+        {
+          "index": -9223372036854775808,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "subtraction",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3506) panicked at target/bench-peer-controls/step-rs-addition.rs:7:37:\nsubtraction overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": -9223372036854775808,
+          "accumulator": 0,
+          "expected": null,
+          "expectedFailure": "subtraction",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3507) panicked at target/bench-peer-controls/step-rs-addition.rs:7:37:\nsubtraction overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": -9223372036854775808,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "subtraction",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3508) panicked at target/bench-peer-controls/step-rs-addition.rs:7:37:\nsubtraction overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": -9223372036854775807,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3509) panicked at target/bench-peer-controls/step-rs-addition.rs:8:40:\nmultiplication overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": -9223372036854775807,
+          "accumulator": 0,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3510) panicked at target/bench-peer-controls/step-rs-addition.rs:8:40:\nmultiplication overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": -9223372036854775807,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3511) panicked at target/bench-peer-controls/step-rs-addition.rs:8:40:\nmultiplication overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": -3074457345618258603,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3512) panicked at target/bench-peer-controls/step-rs-addition.rs:8:40:\nmultiplication overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": -3074457345618258603,
+          "accumulator": 0,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3513) panicked at target/bench-peer-controls/step-rs-addition.rs:8:40:\nmultiplication overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": -3074457345618258603,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3514) panicked at target/bench-peer-controls/step-rs-addition.rs:8:40:\nmultiplication overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": -3074457345618258602,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 0,
+          "stdout": "-3074457345618258603 9223372036854775802\n",
+          "stderr": "",
+          "matchesContract": false
+        },
+        {
+          "index": -3074457345618258602,
+          "accumulator": 0,
+          "expected": [
+            -3074457345618258603,
+            -6
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-3074457345618258603 -6\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -3074457345618258602,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            -3074457345618258603,
+            9223372036854775801
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-3074457345618258603 9223372036854775801\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -8,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 0,
+          "stdout": "-9 9223372036854775805\n",
+          "stderr": "",
+          "matchesContract": false
+        },
+        {
+          "index": -8,
+          "accumulator": 0,
+          "expected": [
+            -9,
+            -3
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-9 -3\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -8,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            -9,
+            9223372036854775804
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-9 9223372036854775804\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -7,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            -8,
+            -9223372036854775808
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-8 -9223372036854775808\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -7,
+          "accumulator": 0,
+          "expected": [
+            -8,
+            0
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-8 0\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -7,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            -8,
+            9223372036854775807
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-8 9223372036854775807\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -2,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 0,
+          "stdout": "-3 9223372036854775802\n",
+          "stderr": "",
+          "matchesContract": false
+        },
+        {
+          "index": -2,
+          "accumulator": 0,
+          "expected": [
+            -3,
+            -6
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-3 -6\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -2,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            -3,
+            9223372036854775801
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-3 9223372036854775801\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -1,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 0,
+          "stdout": "-2 9223372036854775805\n",
+          "stderr": "",
+          "matchesContract": false
+        },
+        {
+          "index": -1,
+          "accumulator": 0,
+          "expected": [
+            -2,
+            -3
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-2 -3\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": -1,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            -2,
+            9223372036854775804
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "-2 9223372036854775804\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 0,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            0,
+            -9223372036854775808
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "0 -9223372036854775808\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 0,
+          "accumulator": 0,
+          "expected": [
+            0,
+            0
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "0 0\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 0,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            0,
+            9223372036854775807
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "0 9223372036854775807\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 1,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            0,
+            -9223372036854775805
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "0 -9223372036854775805\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 1,
+          "accumulator": 0,
+          "expected": [
+            0,
+            3
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "0 3\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 1,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 0,
+          "stdout": "0 -9223372036854775806\n",
+          "stderr": "",
+          "matchesContract": false
+        },
+        {
+          "index": 2,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            1,
+            -9223372036854775802
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "1 -9223372036854775802\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 2,
+          "accumulator": 0,
+          "expected": [
+            1,
+            6
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "1 6\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 2,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 0,
+          "stdout": "1 -9223372036854775803\n",
+          "stderr": "",
+          "matchesContract": false
+        },
+        {
+          "index": 7,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            6,
+            -9223372036854775808
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "6 -9223372036854775808\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 7,
+          "accumulator": 0,
+          "expected": [
+            6,
+            0
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "6 0\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 7,
+          "accumulator": 9223372036854775807,
+          "expected": [
+            6,
+            9223372036854775807
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "6 9223372036854775807\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 8,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            7,
+            -9223372036854775805
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "7 -9223372036854775805\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 8,
+          "accumulator": 0,
+          "expected": [
+            7,
+            3
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "7 3\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 8,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 0,
+          "stdout": "7 -9223372036854775806\n",
+          "stderr": "",
+          "matchesContract": false
+        },
+        {
+          "index": 3074457345618258602,
+          "accumulator": -9223372036854775808,
+          "expected": [
+            3074457345618258601,
+            -9223372036854775802
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "3074457345618258601 -9223372036854775802\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 3074457345618258602,
+          "accumulator": 0,
+          "expected": [
+            3074457345618258601,
+            6
+          ],
+          "expectedFailure": null,
+          "status": 0,
+          "stdout": "3074457345618258601 6\n",
+          "stderr": "",
+          "matchesContract": true
+        },
+        {
+          "index": 3074457345618258602,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "addition",
+          "status": 0,
+          "stdout": "3074457345618258601 -9223372036854775803\n",
+          "stderr": "",
+          "matchesContract": false
+        },
+        {
+          "index": 3074457345618258603,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3548) panicked at target/bench-peer-controls/step-rs-addition.rs:8:40:\nmultiplication overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": 3074457345618258603,
+          "accumulator": 0,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3549) panicked at target/bench-peer-controls/step-rs-addition.rs:8:40:\nmultiplication overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": 3074457345618258603,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3550) panicked at target/bench-peer-controls/step-rs-addition.rs:8:40:\nmultiplication overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": 9223372036854775806,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3551) panicked at target/bench-peer-controls/step-rs-addition.rs:8:40:\nmultiplication overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": 9223372036854775806,
+          "accumulator": 0,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3552) panicked at target/bench-peer-controls/step-rs-addition.rs:8:40:\nmultiplication overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": 9223372036854775806,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3553) panicked at target/bench-peer-controls/step-rs-addition.rs:8:40:\nmultiplication overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": 9223372036854775807,
+          "accumulator": -9223372036854775808,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3554) panicked at target/bench-peer-controls/step-rs-addition.rs:8:40:\nmultiplication overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": 9223372036854775807,
+          "accumulator": 0,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3555) panicked at target/bench-peer-controls/step-rs-addition.rs:8:40:\nmultiplication overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        },
+        {
+          "index": 9223372036854775807,
+          "accumulator": 9223372036854775807,
+          "expected": null,
+          "expectedFailure": "multiplication",
+          "status": 101,
+          "stdout": "",
+          "stderr": "\nthread 'main' (3556) panicked at target/bench-peer-controls/step-rs-addition.rs:8:40:\nmultiplication overflow\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n",
+          "matchesContract": true
+        }
+      ],
+      "detectedMissingChecks": 8
+    }
+  ],
+  "allocation": [
+    {
+      "file": "allocation-map-none",
+      "command": [
+        "gcc",
+        "-std=c11",
+        "-O2",
+        "-ffp-contract=off",
+        "target/bench-peer-controls/allocation-map-none.c",
+        "-o",
+        "target/bench-peer-controls/allocation-map-none"
+      ],
+      "sourceSha256": "87e6f0365f696a1215ac004294644b5e8ddb0d3801306001020c7464ce34893c",
+      "binarySha256": "4e3bf0a805ee387da8ba029eb10406d802066eba9ba0f0158fa09e724c9cc2d7",
+      "program": "map",
+      "removedCleanup": "none",
+      "benchmarkSourceSha256": "1c6159222b626be5c8559eadf6e53020939182700f856d022d24665de574ff38",
+      "observations": [
+        {
+          "failedRequest": 1,
+          "status": 0,
+          "stdout": "status=1 calls=1 live=0\n",
+          "stderr": ""
+        }
+      ]
+    },
+    {
+      "file": "allocation-pipeline-none",
+      "command": [
+        "gcc",
+        "-std=c11",
+        "-O2",
+        "-ffp-contract=off",
+        "target/bench-peer-controls/allocation-pipeline-none.c",
+        "-o",
+        "target/bench-peer-controls/allocation-pipeline-none"
+      ],
+      "sourceSha256": "1315855896201cbd8ebf03c2116ea78a794325427b89df339609297c71d4e95e",
+      "binarySha256": "263a423e02224ecb1febe90676a88fc147c06f74f68609c0a325056f3e0d3c63",
+      "program": "pipeline",
+      "removedCleanup": "none",
+      "benchmarkSourceSha256": "823db3642a24c16a88bb0b5cd80ce5f50bd4cada05cac97f011f87bf71d02d60",
+      "observations": [
+        {
+          "failedRequest": 1,
+          "status": 0,
+          "stdout": "status=1 calls=1 live=0\n",
+          "stderr": ""
+        },
+        {
+          "failedRequest": 2,
+          "status": 0,
+          "stdout": "status=1 calls=2 live=0\n",
+          "stderr": ""
+        }
+      ]
+    },
+    {
+      "file": "allocation-pipeline-partial-free",
+      "command": [
+        "gcc",
+        "-std=c11",
+        "-O2",
+        "-ffp-contract=off",
+        "target/bench-peer-controls/allocation-pipeline-partial-free.c",
+        "-o",
+        "target/bench-peer-controls/allocation-pipeline-partial-free"
+      ],
+      "sourceSha256": "1e865982cf0e8545d847af3e6b8ecc2851e90fd3e1119661eeed4d4af534e94a",
+      "binarySha256": "ff1159dcf7936db0fdcd4882b114b73b052f2304bad0e2052c0567f52d52414c",
+      "program": "pipeline",
+      "removedCleanup": "partial-free",
+      "benchmarkSourceSha256": "823db3642a24c16a88bb0b5cd80ce5f50bd4cada05cac97f011f87bf71d02d60",
+      "observations": [
+        {
+          "failedRequest": 1,
+          "status": 0,
+          "stdout": "status=1 calls=1 live=0\n",
+          "stderr": ""
+        },
+        {
+          "failedRequest": 2,
+          "status": 75,
+          "stdout": "status=1 calls=2 live=1\n",
+          "stderr": ""
+        }
+      ]
+    }
+  ],
+  "scope": "One actual loop body with dynamic I64 inputs, including its stop condition. Checks subtraction, multiplication, addition and their failure order against an independent arbitrary-precision oracle. Three deliberately removed checks per language must be detected. C map/pipeline allocation failures and a deliberately omitted partial cleanup are checked separately. These derived control images are never timed and do not measure whole-process allocations."
+}

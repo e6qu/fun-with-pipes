@@ -1,9 +1,11 @@
-# Next candidate: keep each tape operation's fields together
+# Tape record layout: original source investigation
 
 The shared-scope change removes most tape lookups but misses thirty of 32
 5% speed targets across ARM64 and AMD64. This source investigation selected the
-[operation-record experiment](tape-operation-records.md). Implementation is now
-under way; native validation and measurements are pending.
+[operation-record experiment](tape-operation-records.md), delivered in #267.
+[Validation passed](tape-record-delivery-2026-11-07/README.md), but
+[all 32 speed targets were missed](tape-record-results.md). The investigation
+below preserves the original rationale and requirements, not outstanding work.
 
 ## Why this candidate
 
@@ -80,7 +82,7 @@ benefit some access patterns; do not assume the record layout wins.
   passes focused ownership/numeric checks, measure runtime, allocations, peaks,
   stack and compiler cost together once. Retain all failed speed/copy limits.
 
-The [implementation contract](tape-operation-records.md) freezes the next group.
+The [implementation contract](tape-operation-records.md) froze that experiment.
 All four sessions locate substantial large-case work in recording
 and reverse traversal, but they do not prove that layout causes its cost.
 This note selects a concrete source

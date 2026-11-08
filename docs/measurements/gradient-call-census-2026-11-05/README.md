@@ -56,7 +56,7 @@ accounts for the other 5,934 bytes. These are allocation traffic, not elapsed ti
 
 These are parent #259 counts. [PR #260's repaired-source census](../packed-pair-cleanup-census-2026-11-05/README.md#remaining-storage-and-its-constraints)
 removes the separate pair-result buffer and identifies the remaining recording
-and gradient-result allocations. Its final delivery is still pending. The
+and gradient-result allocations. [Its final delivery passed](../packed-pair-delivery-2026-11-05/README.md). The
 zero-update source/driver investigation remains separate: positive-update
 allocation savings cannot explain its timing regression.
 

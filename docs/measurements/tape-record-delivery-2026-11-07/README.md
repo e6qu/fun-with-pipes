@@ -3,7 +3,9 @@
 PR #267 passes all nine production jobs, documentation and the complete
 log/artifact audit. The user merged it at `621653b6394f49dc229a2956b6b61476c82c9aac`.
 Its tree equals the tested head; its squash subject is one line, 65 characters,
-with no body or trailers. Runtime measurements remain separate and incomplete.
+with no body or trailers. The later [runtime report](../tape-record-results.md)
+preserves all 32 missed speed targets; [#268](followup-268/README.md) delivered
+the completed measurements and audits.
 
 | Record | Identity |
 |---|---|
@@ -25,5 +27,5 @@ success, all ten complete job-log hashes and 1,456 target/probe-log hashes.
 
 [Focused allocation and cleanup checks](../tape-record-checks-2026-11-06/README.md)
 also pass. These establish correctness and artifact identity, not a speedup.
-The [frozen measurement contract](../tape-operation-records.md) still requires
-runtime/compiler comparisons and verification of their original executables.
+The [frozen measurement contract](../tape-operation-records.md) specifies the
+separate runtime/compiler comparisons and original-executable checks.

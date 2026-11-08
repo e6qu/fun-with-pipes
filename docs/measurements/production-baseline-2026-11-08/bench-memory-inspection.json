@@ -1,0 +1,162 @@
+{
+  "source": "e7965762490c89d2a39f5937fe8322291ea906fc",
+  "architecture": "x86_64",
+  "reportSha256": "d8fc79c7e5fe2f747ca2af07c2e66faa8d98f135a9f6e2b50a5c79a448442fa1",
+  "images": [
+    {
+      "program": "fib",
+      "variant": "ordinary",
+      "binarySha256": "d9f78c05544a9ca6887831c1b0727f0d1239112361fd4856fed7d17caa14576c",
+      "generatedSha256": "8d983138d89aa63c126639447a9aae8e4207cb5f6b69c00d9578afcc276f8674",
+      "fileBytes": 27856,
+      "textSectionBytes": 7682,
+      "disassemblySha256": "f8116356bf81422d58a453c34fcb15e631fcedc76d8455d9c421a944d486e7e1",
+      "symbolsSha256": "ebcb98167a650e099f7d802fcdbb7f7b69b00fa6db333bdeb07be693651973d8",
+      "instrumentedStackSha256": "dc24b14b79efa0ade47b97a836d28db5cffa20e70feaa17d0bd3bfd55db25bee"
+    },
+    {
+      "program": "fib",
+      "variant": "injected-leak",
+      "binarySha256": "e51225716f3c8b522f4a4b27caae031171053b289a0b5604ef8791882041abe6",
+      "generatedSha256": "963c2345903f4919a5ccfc159021640f44d82bfba131815066f54907607097d6",
+      "fileBytes": 28304,
+      "textSectionBytes": 9170,
+      "disassemblySha256": "6d2fa84fdb1709e4f2235c434ff785b0de5f722f652f0b63203651786dd92cbb",
+      "symbolsSha256": "e40f01e23a392daaa21ad0490ed221f29e7e63249ace8ad951f3cd2f62350585",
+      "instrumentedStackSha256": "67e976adc37d015e8614626166a61a6009a5ffe192a4fb254df5204f6fa9f521"
+    },
+    {
+      "program": "loop",
+      "variant": "ordinary",
+      "binarySha256": "ffd6714b13e59a0dc72e2b255f942d2f0ef982ed731a760ef4a84184d0ca430c",
+      "generatedSha256": "a5cc41b2f760bc681046cd8b12f703259af6fb43b8eefde45d6651a07e4e6490",
+      "fileBytes": 27800,
+      "textSectionBytes": 7458,
+      "disassemblySha256": "f84979466157e18119fa34955c6e7b19f1d31084c4974fbb2fa66f99bde60a14",
+      "symbolsSha256": "3cb5d5159f38d48a7e8b367be0ed8fd705bdbf90df93709e1c0bb8bbd2942fc2",
+      "instrumentedStackSha256": "eb6934b605329f488ec01094c295c5125b54848a3f5e1c5039ae8f7e5e75a5b7"
+    },
+    {
+      "program": "loop",
+      "variant": "injected-leak",
+      "binarySha256": "e11e76429cd97253d33d3866a17ce3514f3ed4a7332002127f3f941f1e1b8d20",
+      "generatedSha256": "1dbd1e77fe47781da1eeef9c3175b3cc1b8576d184bdb3c32dfcdb82d76602e0",
+      "fileBytes": 28248,
+      "textSectionBytes": 8978,
+      "disassemblySha256": "f47eacba83d5a31e5030ec8444311408982eab74648dbd19fb6af7908ec793fd",
+      "symbolsSha256": "3ddfe4d879b3e74716d283fe5b7a838a5509a5164c41b5caa124be2cc45b3733",
+      "instrumentedStackSha256": "74515a9fa0f2464375eff16566c6def3585da1e152d9edf3fa5cee02e5402d51"
+    },
+    {
+      "program": "map",
+      "variant": "ordinary",
+      "binarySha256": "ced9676c672ef6c836958d57c3b625e559996237770f828d24118340b7f80980",
+      "generatedSha256": "5b9f09aaec159aa39fb34ab7d5ef0c0884a1afb56d383bd4a573f2d035b3103f",
+      "fileBytes": 41384,
+      "textSectionBytes": 14130,
+      "disassemblySha256": "9a3c241e912ab16ef57d61a0859db4c88de1fa1168925cdf064600787aefaeb0",
+      "symbolsSha256": "ef72cd9ea65965c9c46e5218b7d26cec1c410045d402518a7ff06ea7fe56ac26",
+      "instrumentedStackSha256": "56ee9630cf55003611ed00d22d27464f40bc2ba79989b3973200344d8c6aaebf"
+    },
+    {
+      "program": "map",
+      "variant": "injected-leak",
+      "binarySha256": "ba6d72ca528cb0ab70bb300971098bb094df4fffc6744c1a4841a8e79b55c5ab",
+      "generatedSha256": "e7e779d0a12555726075dfb64d6755f04dc4db836078808357c752ec41cfa844",
+      "fileBytes": 41392,
+      "textSectionBytes": 14194,
+      "disassemblySha256": "d1ad80d29e1bc2edad59eda61c4c55e1a54eaafec020e5b5ec1f5805cc98fcc0",
+      "symbolsSha256": "59ac8cab680e8e38c630f64725a27258e5dd6b951d7b41ad898fa2f3a3b83fee",
+      "instrumentedStackSha256": "f7b8ca6b6e9a02c6c71da036521ac142e669ecf5920bd33c7d42624d76ee656e"
+    },
+    {
+      "program": "pipeline",
+      "variant": "ordinary",
+      "binarySha256": "cfbfaf8d29837f9f413ac305b00fc78016d5df40791ff44854b4934679514101",
+      "generatedSha256": "97485f8e78f744b098b894446b869a4b6b8924307856f3c807fbcb9f0fb0c8aa",
+      "fileBytes": 27808,
+      "textSectionBytes": 7378,
+      "disassemblySha256": "5060e1ce68d4e72f994336672ac9e28e3c2eec59025bfdbd7ffac2dfbfd1635b",
+      "symbolsSha256": "846243de5b5ea8540a77cdbb3783fbb23a52dd5b944f6a5ea15afd67b26239f6",
+      "instrumentedStackSha256": "843e66321569f4b22e3119575ae8ac90eefd3cbc739b8f1aa45294c4575ae7e6"
+    },
+    {
+      "program": "pipeline",
+      "variant": "injected-leak",
+      "binarySha256": "6fe6e97aa7d5233621d041d2805150baef4c18754712f3c6f843a6bc67ad3e41",
+      "generatedSha256": "1b5a0a02acc99fcc37b688419a46de8c13f2bca2e4b03980a98bb70e57e18ec5",
+      "fileBytes": 28248,
+      "textSectionBytes": 8882,
+      "disassemblySha256": "5372936b202e8c8e6b530d47b33b4f9c4994e9f7d1177ef54136f585b4804070",
+      "symbolsSha256": "140fb314de36307f2aca58da8f8d8157420a8381047a336276819c096c3d9d48",
+      "instrumentedStackSha256": "ff071641f8793803c94d0ddec0744200e079796a6c2f6a67d69518f3dcf86a19"
+    },
+    {
+      "program": "range-set",
+      "variant": "ordinary",
+      "binarySha256": "3102039860a22733b0d05c24837020e113b4c30bf59a3c0ecc9d086dc3c09cf6",
+      "generatedSha256": "c28bb8e3c74b5ff4cc6e231a93205301b8282f8cd40de588263f203c622c8510",
+      "fileBytes": 28272,
+      "textSectionBytes": 9666,
+      "disassemblySha256": "228cfc5e3fb53209dc4f4237a2d10c7825ae4d40b54780073f96756774abd46e",
+      "symbolsSha256": "a160bb84cbc8995b27ec458555e3aac14e237bdfa12c5248b54d2046b167a3b8",
+      "instrumentedStackSha256": "b84b7d106bb36d640656fe26da0000c291dff7c489b6495ec7b5aae00ee9cfaa"
+    },
+    {
+      "program": "range-set",
+      "variant": "injected-leak",
+      "binarySha256": "90a35b97615ce1b5b2b88527bbe08b5d2bbdee86a3a4ef8eef54370552e1aac2",
+      "generatedSha256": "3ca1fa97e450a3cec25db5b60422eee21222fefb621289418d330dfc16061400",
+      "fileBytes": 28248,
+      "textSectionBytes": 10082,
+      "disassemblySha256": "897f22ba16e21ee6e3acf4845904b79924e3904a285b5a6fe379fabafd099d49",
+      "symbolsSha256": "0a3904bb350c6d7d61de14f263dcbb2245b9bd93adb97b6c0e85df5c46023d5f",
+      "instrumentedStackSha256": "085340a5c96275fcf7a86eafaa984ce7034f4831ca43ac042c7a19957b7a1602"
+    },
+    {
+      "program": "strings",
+      "variant": "ordinary",
+      "binarySha256": "cd685591fd27176f08284c79ec0479507b5e82f1bb3032ea23f8b0f56ad42821",
+      "generatedSha256": "d6e26670b1157ec51ff4d099bc5da7099e1b0fb059aec5761077c43afa4efef7",
+      "fileBytes": 27808,
+      "textSectionBytes": 7538,
+      "disassemblySha256": "466ec5b832a584a55f2d4069dedbcfa2329da3985750b06bbb61d63bca07cca1",
+      "symbolsSha256": "0c1fb5c2b997a22f354a74c5edb4fb509878aa4c60813ce57adecaaaf5ae663b",
+      "instrumentedStackSha256": "81504ea94829dce257a407e3dc8fed6794a18a70f4006a16a0aca59e4948e553"
+    },
+    {
+      "program": "strings",
+      "variant": "injected-leak",
+      "binarySha256": "71400a953d0a3ae43ebdf83cff3bcd968cc399c3a487967de0bab402977dad89",
+      "generatedSha256": "3522dcc25da23a40243843d0874705f8c074aee89662cb4ea41f55a8388445cd",
+      "fileBytes": 28248,
+      "textSectionBytes": 9042,
+      "disassemblySha256": "49f6c9373f67c147dc8a12e44c9d15b44d9ee915842b2913c8a4907b12d691a5",
+      "symbolsSha256": "f9b668343e591e45076aa475b99856d79f5fd23a989410810a1f3304f83d1e7b",
+      "instrumentedStackSha256": "1a6d22abb82fd3c74996b3a496ce6757684961168d75403e98a057a5839c6e46"
+    },
+    {
+      "program": "text-length",
+      "variant": "ordinary",
+      "binarySha256": "85d58632e862b89a9da31b68090e6c88b42810038e3158be5fb2caea0799b2fe",
+      "generatedSha256": "d6e26670b1157ec51ff4d099bc5da7099e1b0fb059aec5761077c43afa4efef7",
+      "fileBytes": 27808,
+      "textSectionBytes": 7538,
+      "disassemblySha256": "790927f253123604f609765d14c1ee2eecc7b9774b1e046dbbcaee0e71d18412",
+      "symbolsSha256": "472d60e4e755db2168f66d9b6e5fb3b6a5f7443cd866a38d67a87112e044c13e",
+      "instrumentedStackSha256": "bcc4a1b5e4a0ec2ec08c39c83004f9c9a74929cf7999a1ed32c40c21a48b219a"
+    },
+    {
+      "program": "text-length",
+      "variant": "injected-leak",
+      "binarySha256": "88f5b3514fcd7386d3c987310e213fc5696de855ed9269e3818aa389b55fb606",
+      "generatedSha256": "3522dcc25da23a40243843d0874705f8c074aee89662cb4ea41f55a8388445cd",
+      "fileBytes": 28256,
+      "textSectionBytes": 9042,
+      "disassemblySha256": "0de4be68fc89bb706fa5715b904135cdfa38c4bf57fa248ab3e2ac4fcc7a1467",
+      "symbolsSha256": "7957c1509c91f32524eddc46309cac71eb847a65b0e29a8f293d77e8c42028e3",
+      "instrumentedStackSha256": "f434a7446cd26cd3e1c2bb5f4188dd51cd650e106a3a43c5e9cc9c37e2594421"
+    }
+  ],
+  "scope": "Static inspection of separate instrumented ARC binaries and saved memory observations; no downloaded executable run. Stack reports belong to these instrumented images."
+}

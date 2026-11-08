@@ -113,9 +113,9 @@ These reports follow different versions of derivative descent. Read the variant 
 - [Numerical output after removing temporary lists](array-output-results.md)
 - [Array and matrix kernels: recorded comparison](numerical-kernels.md)
 
-## Current CPU kernels
+## CPU kernel comparisons
 
-- [Current array and matrix costs](current-kernel-costs.md): current fwp, a same-source word-state reference, C and Rust; separate calculation/allocation timings and two identical-copy controls.
+- [November 2 array and matrix costs](current-kernel-costs.md): fwp at the recorded revision, a same-source word-state reference, C and Rust; separate calculation/allocation timings and two identical-copy controls.
 - [Earlier array and matrix baselines](kernel-baselines.md): predates typed loop state; exact output checks and four sizes, with one expanded array noise control still inconclusive.
 - [Timing variation and GCC reports](timing-variation.md): retained failed controls, the matrix sampling repair, typed loop-state checks and the unsuccessful executable-name diagnostic. Representation checks alone do not prove a speedup.
 

@@ -87,8 +87,10 @@ would need checked lookup and a rule for deletion/stale numbers; this tiny examp
 does neither. Keeping the whole graph alive also keeps its nodes alive.
 
 Automatic reference counting (ARC) frees an object when its last owner releases
-it. A cycle of owning references needs another release strategy; ordinary ARC
-alone cannot reclaim an unreachable cycle. fwp rejects unproved owning cycles before execution. Graph IDs are one useful representation, not automatic cycle repair.
+it. Ordinary ARC cannot reclaim a cycle whose objects keep each other alive.
+fwp rejects unproved owning cycles before execution. Choose integer graph IDs
+as here, or an explicit [weak channel link](../../weak-channels.md), which does
+not keep its target alive. `channel.upgrade` reports `None` after expiration.
 
 ## Run the program
 
@@ -146,15 +148,6 @@ main = [
 ([1, 2, 3], [2, 3, 4])
 [[1], [0]]
 ```
-
-Cycles are a different ownership problem: two objects can keep each other alive
-without an outside owner. fwp's [accepted memory direction](../../gc-removal-design.md)
-rejects unproved owning cycles and provides [weak channel links](../../weak-channels.md). A weak link does
-not keep its target alive; `channel.upgrade` returns `None` after expiration.
-This lesson uses integer graph IDs instead, so lookup rather than weak acquisition
-determines whether a target still exists.
-The [tail-call design](../../design.md#tail-calls-and-recursion) describes the
-implemented frame reuse, remaining limits and cleanup rules.
 
 ---
 

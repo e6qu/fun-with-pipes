@@ -27,6 +27,7 @@ jobs:
         run: |
           python3 scripts/test-roadmap.py
           python3 scripts/test-loop-array-diagnosis.py
+          python3 scripts/test-borrowed-array-costs.py
       - name: Exact-source production log audit controls
         run: python3 scripts/test-production-log-audit.py
       - name: Documentation, immutable tags and commit messages

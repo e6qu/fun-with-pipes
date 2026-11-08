@@ -8,7 +8,7 @@ about 65% more time than the matched C peer on AMD64, and 6% more on ARM64.
 Both sessions pass their identical-copy controls for this case. The runtime uses
 zero effective retains during this workload. The paired-column candidate below
 passes focused safety checks and the qualified timing comparisons below. Six
-small-AMD64 noise limits remain open; the full production delivery is pending.
+small-AMD64 noise limits remain open; [production delivery passed in #244](../roadmap-history.md#paired-matrix-columns-pr-244).
 
 ## Results: November 2, 2026
 
@@ -46,7 +46,7 @@ All correctness, memory and independent raw-data checks pass. Following the
 standing preference to retain verified improvements with unmet timing goals
 explicit, keep the qualified gains and retain these six failures as open goals.
 This is a delivery decision, not a change to the frozen measurement rules or a
-claim that the entire experiment passed. Full production CI is still required.
+claim that every timing limit passed. Production correctness passed separately.
 
 The computation multiplies each left row by each right column. For example,
 `[1, 2]` dotted with `[3, 4]` gives `1*3 + 2*4 = 11`. Each output cell must keep

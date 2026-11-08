@@ -24,5 +24,6 @@ The complete-solve candidate instead supplies one known edge function; its
 compiler output and measured allocation counters must be reviewed separately.
 Do not assume either path is allocation-free, or infer a speedup from no tape.
 
-The four runtime sessions are pending. These checks do not establish a timing
-improvement or replace the final nine-platform-job gate.
+The later [runtime sessions](../../computed-numeric-time-2026-11-07/README.md)
+and [final delivery](../../computed-numeric-delivery-2026-11-08/README.md) are
+recorded separately. These focused checks alone establish no timing improvement.

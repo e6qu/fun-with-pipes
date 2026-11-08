@@ -30,6 +30,14 @@ RECORD_HOSTS = {
 RECORD_TARGETS = ('autodiff_capacity_bounds', 'autodiff_workspace', 'ad_tape_ownership',
                   'ad_tape_scopes', 'autodiff_nested', 'autodiff_precision',
                   'autodiff_checkpoint', 'autodiff_library', 'grpc_receive_cleanup', 'float_formats')
+ARRAY_HOSTS = {
+    'arm': ('scalar_array_checks (ubuntu-24.04-arm, gcc)', 'ubuntu-24.04-arm'),
+    'amd': ('scalar_array_checks (ubuntu-latest, gcc)', 'ubuntu-latest'),
+    'mac': ('scalar_array_checks (macos-15, clang)', 'macos-15'),
+}
+ARRAY_TARGETS = ('array_element_ownership', 'array_unwind_ownership', 'array_size_limits',
+                 'numeric_array_fusion', 'argument_preparation_ownership',
+                 'mapped_array_construction', 'zip_map_fusion', 'zip_unwind_ownership')
 
 
 UNIT_MEASUREMENTS = {
@@ -49,7 +57,7 @@ def native_header(host, raw):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--group', choices=('shared-storage', 'tape-records'), required=True)
+    parser.add_argument('--group', choices=('shared-storage', 'tape-records', 'array-metadata'), required=True)
     parser.add_argument('--run', type=int, required=True)
     parser.add_argument('--source', required=True)
     parser.add_argument('--attempt', type=int, required=True)
@@ -62,7 +70,7 @@ def main():
     PRODUCTION.save(args.output / 'jobs.json', jobs)
     PRODUCTION.save(args.output / 'artifacts.json', artifacts)
     issues, summary = [], {}
-    hosts = RECORD_HOSTS if args.group == 'tape-records' else HOSTS
+    hosts = {'shared-storage': HOSTS, 'tape-records': RECORD_HOSTS, 'array-metadata': ARRAY_HOSTS}[args.group]
     for host, (name, runner) in hosts.items():
         job, = [j for j in jobs if j['name'] == name]
         assert job['head_sha'] == args.source
@@ -78,7 +86,8 @@ def main():
             report['diagnostics']['job'] = [line.decode(errors='replace') for line in diagnostics]
         if job['conclusion'] != 'success':
             issues.append((host, 'job ' + str(job['conclusion'])))
-        artifact_name = ('tape-record-checks-' if args.group == 'tape-records' else 'gradient-call-checks-') + runner
+        artifact_name = {'shared-storage': 'gradient-call-checks-', 'tape-records': 'tape-record-checks-',
+                         'array-metadata': 'scalar-array-checks-'}[args.group] + runner
         ids = {int(i) for i in re.findall(rb'Artifact ' + artifact_name.encode() + rb' successfully finalized\. Artifact ID ([0-9]+)', log)}
         matches = [a for a in artifacts if a['id'] in ids and a['name'] == artifact_name and not a['expired']]
         if len(matches) != 1:
@@ -140,6 +149,18 @@ def main():
                             issues.append((host, 'unexpected unit exclusion'))
                     if len(results) != 1 or not re.fullmatch(expected, results[0]):
                         issues.append((host, name + ': incomplete or failing test result'))
+            if args.group == 'array-metadata':
+                expected_targets = {'targets/test-' + name + '.log' for name in ARRAY_TARGETS}
+                if set(report['targets']) != expected_targets:
+                    issues.append((host, 'wrong array target inventory'))
+                for packing in (0, 1):
+                    for level in ('O0', 'O2'):
+                        stem = f'owners/record-ownership/borrowed-array-metadata/packed-{packing}-{level}'
+                        for suffix in ('.c', '.exe', '.stdout', '.stderr', '.status'):
+                            if stem + suffix not in report['files']:
+                                issues.append((host, 'missing ' + stem + suffix))
+                        if report['probes'].get(stem + '.status') != 'Some(0)':
+                            issues.append((host, 'metadata value/alias control failed: ' + stem))
             constant_steps = [step for step in job['steps']
                               if step['name'] == 'Verify exact scalar constants in complete programs']
             if constant_steps and constant_steps[0]['conclusion'] == 'success':
@@ -162,7 +183,7 @@ def main():
                            and sorted(n for n in row['liveWorkers'].values() if n) == [1, 6]
                            and any(row['forwardedCalls'].values()) for row in context.values())
                 report['selection/recording-context-selection.json'] = context
-        expected_count = 10 if args.group == 'tape-records' else 25
+        expected_count = {'shared-storage': 25, 'tape-records': 10, 'array-metadata': 8}[args.group]
         if len(report['targets']) != expected_count or not report['images'] or not report['probes']:
             issues.append((host, 'incomplete targets/images/probe observations'))
         if report['diagnostics']:

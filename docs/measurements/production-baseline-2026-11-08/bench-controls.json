@@ -1,0 +1,47 @@
+{
+  "source": "e7965762490c89d2a39f5937fe8322291ea906fc",
+  "ownership": "counted",
+  "architecture": "x86_64",
+  "controls": [
+    {
+      "case": "wrong-ownership",
+      "expected": "declared benchmark ownership differs",
+      "exitStatus": 1,
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"/home/runner/work/fun-with-pipes/fun-with-pipes/scripts/inspect-benchmark-binaries.py\", line 25, in <module>\n    assert 'Native fwp ownership: counted.' in report, 'declared benchmark ownership differs'\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: declared benchmark ownership differs\n",
+      "changedSha256": "fa88d31a9ca9f5245468fab18ed61341d0f2e65cec831d15a447864103ad4b1b"
+    },
+    {
+      "case": "wrong-arithmetic",
+      "expected": "declared arithmetic contract differs",
+      "exitStatus": 1,
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"/home/runner/work/fun-with-pipes/fun-with-pipes/scripts/inspect-benchmark-binaries.py\", line 26, in <module>\n    assert 'Arithmetic contract: checked signed I64 calculations in all three peers.' in report, 'declared arithmetic contract differs'\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: declared arithmetic contract differs\n",
+      "changedSha256": "aee0c13b004ef45f873616893207c75ba00f4876457cd6c130675c4752155cbc"
+    },
+    {
+      "case": "wrong-machine",
+      "expected": "benchmark binary has wrong architecture",
+      "exitStatus": 1,
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"/home/runner/work/fun-with-pipes/fun-with-pipes/scripts/inspect-benchmark-binaries.py\", line 71, in <module>\n    assert struct.unpack_from('<H', data, 18)[0] == machine, 'benchmark binary has wrong architecture'\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: benchmark binary has wrong architecture\n",
+      "changedSha256": "cebcebc997c0915fe863ef93328d3d75f46721857ab43eb62a3dd454c401ae72"
+    },
+    {
+      "case": "object-file",
+      "expected": "benchmark image is not executable",
+      "exitStatus": 1,
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"/home/runner/work/fun-with-pipes/fun-with-pipes/scripts/inspect-benchmark-binaries.py\", line 72, in <module>\n    assert struct.unpack_from('<H', data, 16)[0] in {2, 3}, 'benchmark image is not executable'\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: benchmark image is not executable\n",
+      "changedSha256": "35e31ec0b89e1dc2bbfee0031f648ab0482983b131cf6d06502edf4c7144d70e"
+    },
+    {
+      "case": "missing-sample",
+      "expected": "need six positive timing samples",
+      "exitStatus": 1,
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"/home/runner/work/fun-with-pipes/fun-with-pipes/scripts/inspect-benchmark-binaries.py\", line 57, in <module>\n    assert len(values) == 6 and all(value > 0 for value in values), 'need six positive timing samples'\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: need six positive timing samples\n",
+      "changedSha256": "374f35c6badf9d86cf7d96e69b460da5476354b6296e70e3f97b03ab74b851ea"
+    }
+  ]
+}

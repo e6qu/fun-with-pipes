@@ -1,8 +1,7 @@
 # Current work
 
-**Next:** run production GCC/Clang focused checks for the
-[borrowed-array metadata candidate](measurements/shared-loop-array-costs.md#selected-implementation-borrowed-array-metadata),
-repair all failures, then measure its runtime/compiler costs.
+**Next:** finish auditing focused run `42434812986` at `fed65b39e`, then dispatch
+the frozen `array-metadata` computation comparison with that passing safety run.
 Continue the docs/tutorial refresh in the same PR. The user approved the revised project roadmap and one
 substantial normal PR for milestone 1. No next PR has been opened yet.
 
@@ -82,12 +81,20 @@ cover ten scalar types, packed/unpacked storage, shared slices, empty arrays and
 negative/large indices. Existing capture tests retain their extra-retain, leaked
 owner, partial-failure and cancellation controls with the new callback signature.
 Implementation is not yet verified and no speed benefit is claimed.
+Focused `scalar-array-checks` run `42434812986` tests `fed65b39e86fd6c422e9f46e4ab6adf39f7078a1`.
+AMD64 GCC job `128591289751`, ARM64 GCC `128591289810` and macOS ARM64
+Clang `128591289622` all pass. Their 70–76 MB artifacts remain on GitHub;
+the `array-metadata` suite audits every complete log, target and native image
+before allowing measurements to start.
+The new computation driver has six passing local source/oracle/schedule controls
+(guard: 0.13 s). Its runtime, allocation, RSS and compiler comparisons remain
+unmeasured. The dispatcher is 511,923 bytes; avoid adding more inline jobs.
 
 ## Documentation work
 
 All 372 Markdown files from the base are materialized; 24 tutorial READMEs
-have runnable source/output copies. Lessons 1–20 have been reviewed and edited;
-21–24 and the wider reference/evidence sweep remain. Review is not complete.
+have runnable source/output copies. All 24 lessons have been reviewed and edited;
+the wider reference/evidence sweep remains in progress. Review is not complete.
 Lesson 7 now returns a `fahrenheit` field instead of mislabeling Fahrenheit as
 `celsius`; its source/transcript copies change together. Native session execution
 and formatter validation still need the runner. The standalone all-tutorial
@@ -99,6 +106,10 @@ index now records delivered gradient-call storage and dates older CPU experiment
 continue checking obsolete directions during the sweep. Preserve historical measurements/contracts.
 Keep live work in PLAN/handoff, semantics in reference/design, and evidence in
 measurement records. Cross-link rather than duplicating status histories.
+The benchmark overview now uses #269's verified artifact reports; #233's numbers
+remain in a dated historical report. Stale pending claims in numerics, primitive
+ownership, matrix and tape-layout reports are corrected. Historical missed
+comparisons retain their numbers but lose obsolete next-action instructions.
 
 ## Checks and resource limits
 
@@ -112,3 +123,10 @@ Next milestone validation has not run. Keep one active normal PR, group related
 fixes, audit every completed target/diagnostic, and run the full final matrix once
 the batch is ready. No draft PR unless explicitly requested. Existing failures
 are repaired, not hidden; frozen timing misses are retained, not rerun for a pass.
+
+Latest resource check: **59 GiB free**. The guard refused the sparse documentation
+audit; no checks or large downloads continue locally below 64 GiB. Earlier
+`check-roadmap.py` also stopped on an unmaterialized tracked example in this sparse
+worktree, not a broken repository link. Use the complete runner checkout for the
+full doc audit. This task's listed scratch archives recover less than the deficit;
+do not delete unrelated work or raise the guard limits.

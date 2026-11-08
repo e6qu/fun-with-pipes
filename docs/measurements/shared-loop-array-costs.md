@@ -113,3 +113,44 @@ F128 and reference-bearing element access keep their existing rules. Comparison
 builds disable only this selection; all other compiler/runtime code is identical.
 Final timing acceptance remains the roadmap's two-session, two-architecture
 compute-time contract. This source-cost reduction is not itself an accepted gain.
+
+### Computation-time comparison
+
+The `array-metadata` runner suite builds the candidate and an isolated compiler
+whose metadata selection is disabled. The selection patch and source hashes are
+retained; runtime, ownership and other optimizations are identical. It requires
+passing focused GCC/Clang checks for the implementation before measuring.
+
+`scripts/measure-borrowed-arrays.py` uses the 18 inputs above. A C driver calls the
+ordinary compiled `measure` entry with a fresh input each time. Clocks surround
+calls; there are no clocks or allocation counters inside their bodies.
+
+| Timer | Includes | Excludes |
+|---|---|---|
+| Construction | Allocate and fill the input array (or supply the loop count) | Work on that input |
+| Computation | The generated function, its internal allocations and cleanup of consumed inputs/intermediates | Input construction, result validation, release of the returned array, printing |
+| Result release | Release the returned derivative array | Internal cleanup already performed by the function |
+| Whole driver loop | All three phases plus result validation and timer calls | Runtime startup and printing |
+| Whole process | Launch through exit, including output | Compilation |
+
+The map/fold returns a scalar, so it releases its intermediate array inside the
+computation. A derivative solve returns an array, released after validation.
+The C driver keeps no extra input alias; this is the ordinary consuming-call
+contract. It checks exact result bits and unchanged live managed storage after
+every repetition. Raw interpretation supplies derivative oracles; exact formulas
+check large loops and maps. The empty fold's `-0.0` bit is preserved.
+
+| Cases | Repetitions per process |
+|---|---:|
+| Loop 0 / 16 / 1,000,000 / 100,000,000 | 4,096 / 4,096 / 16 / 1 |
+| Map/fold 0 / 16 / 65,537 / 262,145 | 4,096 / 4,096 / 16 / 4 |
+| Each derivative form: 3/0, 3/1, 3/199, 33/199, 129/199 | 4,096 / 1,024 / 32 / 32 / 8 |
+
+Two warmups precede 24 measured rounds per session. Candidate, reference and a
+byte-identical copy of each rotate through all positions six times. Use two
+independent sessions per native ARM64/AMD64 architecture. Record the qualified
+CPU/compiler identity, sources, binaries, stack reports, every command and sample.
+Apply the frozen 2% copy limit independently to computation and process times;
+a qualified process result does not qualify an unreliable computation timer.
+These are paired fwp comparisons, not new C/Rust/Swift comparisons. Separate
+allocation, RSS and compiler-cost observations are still required for delivery.

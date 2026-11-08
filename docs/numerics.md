@@ -293,13 +293,14 @@ tracks the current implementation; the earlier
 [owner-transfer results](measurements/typed-derivative-owners.md) describe its
 list-based predecessor. Neither count reduction alone establishes speed.
 
-The pending [gradient-storage group](measurements/gradient-call-storage.md)
-seeds scalar-output derivatives directly. For `x * x` at `x = 3`, the backward
+Scalar-output derivatives use a direct seed, verified in
+[the gradient-storage delivery](measurements/gradient-call-storage.md).
+For `x * x` at `x = 3`, the backward
 call takes the output vertex and seed `1`, producing `[6]`; it need not allocate
 one-element root/seed containers. Scalar weights and owned weights (F128 or nested
 `Rev`) have separate explicit entries. Multiple-output operations keep their
-ordered roots/seeds. Both engines implement this change; native verification and
-measurements are still pending.
+ordered roots/seeds. Both engines implement this change. The linked report
+separates verified storage savings from missed timing targets.
 
 The vertex token encodes `(tape id << 32) | index`, with −1 for constants.
 The tape ID encodes `(generation << 16) | (slot + 1)`. Generation numbers prevent
@@ -315,12 +316,13 @@ Forward evaluation still runs in full, including possible failures. Nested tapes
 skip only recursively inactive constant zeros; a numeric zero with an active
 derivative must still propagate.
 
-The current [layout experiment](measurements/tape-operation-records.md) stores
+The [native tape layout](measurements/tape-operation-records.md) stores
 each numeric operation's two parents and two weights together in 24 bytes.
 One buffer grows without shifting columns. Typed F128/nested tapes store 8-byte
 parent pairs and separately owned weights. Growth preserves alignment and scalar
-bits; only allocation bases own storage. Native validation and performance
-acceptance are still pending. The interpreter keeps its independent vectors.
+bits; only allocation bases own storage. [Native validation passed](measurements/tape-record-delivery-2026-11-07/README.md);
+[all 32 speed targets were missed](measurements/tape-record-results.md).
+The interpreter keeps its independent vectors.
 Both implementations check the operation limit before allocation: 24 bytes per
 numeric record or 16 bytes per typed weight pair must fit the address-size bound.
 
