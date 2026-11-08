@@ -1,8 +1,8 @@
 # Reuse array storage with scalar callback captures
 
-Status: implementation and verification in progress after PR #270. The first
-native run found that the selector missed let-bound callbacks; no timings were
-collected. The repair indexes actual partial applications and their bindings. This extends
+Status: focused native verification passes after PR #270; measurement and final
+platform delivery remain pending. The first native run found that the selector
+missed let-bound callbacks. The repair indexes actual partial applications and their bindings. This extends
 the existing same-type numeric `array.map` proof; it does not close #270's
 unresolved AMD64 timing limits or change its original results.
 
@@ -71,8 +71,14 @@ The first two focused runs found implementation and test gaps before timing:
 | [42470453910](https://github.com/e6qu/fun-with-pipes/actions/runs/42470453910), `0c704421f` | All 13 ownership units and six native targets pass per host; captured export selection now works. Two test assumptions fail: main may optimize away its map, and the missing-input owner is caught at alias-count status 248 before the leak check. Select exported runtime-argument functions explicitly; keep separate ordinary-main checks and require the exact observed negative-control status. |
 
 Every native target result and all three complete logs were reviewed for each
-run. No timing was collected from either failed run. Remaining O2 and full
-failure/cancellation checks must complete after repairing those test expectations.
+run. No timing was collected from either failed run.
+
+[Run 42471671589](https://github.com/e6qu/fun-with-pipes/actions/runs/42471671589),
+test repair `46ac4cf38`, passes on ARM64 GCC, AMD64 GCC and macOS ARM64 Clang:
+13 ownership units, eight native targets (47 tests) and nine bounded analysis
+observations per host. This includes O1/O2 cleanup, cancellation and the repaired
+deliberate-failure controls. Complete logs contain no compiler warnings or errors;
+the documentation audit also passes. The compiler is unchanged from `0c704421f`.
 
 ## Measurement contract before collecting results
 

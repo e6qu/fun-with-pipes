@@ -1,7 +1,7 @@
 # Current work
 
-**Next:** finish native verification after correcting both test expectations, then run the
-frozen sensor/pixel comparison and bundle implementation, evidence and docs in
+**Next:** finish the focused evidence audit and frozen sensor/pixel comparison,
+then bundle implementation, evidence and docs in
 one normal PR. [The contract](measurements/captured-array-maps.md) defines safety,
 inputs, schedule and acceptance. No performance claim is made yet.
 
@@ -16,7 +16,7 @@ root-worktree changes. No new PR is open yet.
 | Step | Status | Remaining work |
 |---|---|---|
 | 1 | In progress | #270 delivered fresh F64 stores and refreshed docs/tutorials. ARM64 improves 26–31%; original AMD64 timing acceptance stays open. |
-| 2 | In progress | Captured-scalar map selection/cleanup and controls implemented; native verification, measurements and delivery pending. |
+| 2 | In progress | Captured-scalar map selection/cleanup passes focused native checks; measurements and final platform delivery pending. |
 | 3 | Pending | Structured differentiation across three objective families; preserve general AD, nesting and precision. |
 | 4 | Pending | Current Swift/C/Rust ownership comparisons, phase timings and explicit memory boundaries. |
 | 5 | Pending | Three application/tooling paths; compiler phase/scaling costs and demonstrated usability repairs. |
@@ -75,18 +75,22 @@ Two test assumptions still fail identically on all hosts:
 
 Test/auditor repair `46ac4cf383c614aceb715675aba71e2b85416a4f` is published.
 Focused run `42471671589`: ARM GCC `128703672142`, macOS Clang `128703672177`, AMD
-GCC `128703672234`. All three have passed formatting/Clippy and are building or
-testing. Docs run `42471674968`, job `128703678444`, is running. Compiler code is
-unchanged from `0c704421f`; its docs run `42470456322` passed.
+GCC `128703672234`. All three pass formatting/Clippy, 13 ownership unit tests and
+all eight native targets (47 tests per host). All nine analysis-size observations
+per host meet the frozen visit bound. Complete logs contain no compiler warnings
+or errors. Docs run `42471674968`, job `128703678444`, also passes. Compiler code
+is unchanged from `0c704421f`.
 
 The measurement driver also now requires the ordinary ABI entry to have the same
 function ID as the named `measure` worker. Its control rejects a neighboring
 four-argument function, instead of accepting the first matching signature. All
 four local measurement-control tests pass after that repair.
-No measurements have run. Once the repaired focused run passes, dispatch
-`numerics.yml` with suite `captured-maps` and its run ID as `evidence_run`;
-the workflow audits all three hosts before measuring. Final delivery still needs
-nine production jobs and docs on the exact final PR head. No PR is open yet.
+Measurement run `42472528452` uses source
+`025016fbedfcac2127619e4a053415aa83b9d6b0` and focused evidence `42471671589`.
+It first audits complete logs, artifacts and deliberate-failure statuses, then
+runs two sessions on each native Linux architecture. No timing result is available
+yet. Final delivery still needs nine production jobs and docs on the exact final
+PR head. No PR is open yet.
 
 Superseded run `42466992494` was cancelled before native tests. Duplicate
 post-merge CI `42465665987` was cancelled only after checking its tree equals
