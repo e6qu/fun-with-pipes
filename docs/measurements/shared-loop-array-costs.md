@@ -292,3 +292,31 @@ memory/compiler observations from raw records. Each peer job also runs
 copy hashes, every command/result, exact checksums, the full six-role schedule,
 resource reports and all recomputed ratios. An audit pass verifies the record;
 it does not turn a failed timing control into acceptance.
+
+## CPU-placement diagnostic after the production comparison
+
+Run `42440117133` preserves two qualifying ARM64 sessions, but AMD64 has 13/12
+failed computation-copy controls and one qualified 3.38% zero-update regression.
+Its sessions use EPYC 9V45 and 7763 respectively. No cross-platform acceptance
+is claimed. The complete audit passes; these are recorded timing failures.
+
+Before another compiler change or a replacement timing protocol, compare CPU
+placement with **one unchanged saved candidate executable**, not candidate versus
+reference. Use AMD64 session 2's 100-million-step loop, zero-update manual case,
+and both large map/folds. For each, all four roles have identical bytes:
+
+- `all` and `all-copy`: allow all four CPUs assigned to the runner.
+- `one` and `one-copy`: allow only the lowest-numbered assigned CPU, selected
+  explicitly with `--processor-index 0`.
+
+Use `/usr/bin/taskset` for both conditions and the original per-process work.
+Keep two warmups, 24 rotated rounds and the 2% copy limit. Record ordinary inner
+phase clocks, whole-command time, exact outputs, source/image identities and
+separate GNU-time resource reports. The command timer includes these launcher
+processes; it is not comparable with the earlier unwrapped process timer.
+No compiler build, source rewrite, hidden warmup or increased repetition count.
+
+A pass in this diagnostic can support a new explicit-affinity protocol; it cannot
+make the original failed comparisons pass or identify the cause of all earlier
+AMD64 variation. If both conditions remain unstable, report that result and
+investigate the measurement boundary before spending another full native gate.

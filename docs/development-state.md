@@ -1,11 +1,16 @@
 # Current work
 
-**Next:** finish run `42440117133` at `066175c3a` (suite `fresh-array`),
-then audit all four sessions and run the prepared C/Rust comparison against its
-retained candidate images. The complete audit `128607338068` passes. Measurement jobs `128609245028`,
-`128609245031`, `128609245033` and `128609245092` are queued. Keep the
-compiler unchanged while these checks run; finish the docs in the same normal
-PR. No PR is open yet. The candidate is **not performance-accepted**.
+**Next:** run the declared CPU-placement diagnostic on saved AMD64 images,
+retain its result, then decide the measurement protocol before another compiler
+change. Production comparison `42440117133` and its complete audit `42441970817`
+(job `128612920574`) pass execution/data checks; timing acceptance does not.
+Both ARM64 sessions save 26–31% on large arrays. AMD64 has 13/12 failed computation
+copy controls; its qualified zero-update manual case regresses 3.38%. The two AMD
+sessions used different approved models (9V45 and 7763); keep them separate.
+
+C/Rust comparison `42441977298` passes both native jobs and their complete audits:
+ARM64 `128612937644`, AMD64 `128612937839`. Retain and summarize these results next.
+No PR is open yet. The compiler candidate is **not performance-accepted**.
 
 The preceding run `42439586418` at `a0c6fb084` stopped before timings: the new
 diagnostic audit needed historical Git source, but its checkout was shallow.

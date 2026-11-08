@@ -22,9 +22,25 @@ OBSERVATION_SPEC.loader.exec_module(OBSERVATIONS)
 PEER_SPEC = importlib.util.spec_from_file_location('peers', Path(__file__).with_name('measure-loop-array-peers.py'))
 PEERS = importlib.util.module_from_spec(PEER_SPEC)
 PEER_SPEC.loader.exec_module(PEERS)
+AFFINITY_SPEC = importlib.util.spec_from_file_location('affinity', Path(__file__).with_name('diagnose-array-affinity.py'))
+AFFINITY = importlib.util.module_from_spec(AFFINITY_SPEC)
+AFFINITY_SPEC.loader.exec_module(AFFINITY)
 
 
 class Costs(unittest.TestCase):
+    def test_affinity_diagnostic_keeps_both_copy_controls(self):
+        rows = []
+        for number in range(-2, 24):
+            for role in AFFINITY.order(number):
+                duration = 104 if role == 'all-copy' else 100
+                rows.append(dict(round=number, role=role, constructionNs=10,
+                    computationNs=duration, releaseNs=10, loopNs=duration+20, processNs=200))
+        result = AFFINITY.summarize(rows)
+        self.assertFalse(result['computationQualified']['all'])
+        self.assertTrue(result['computationQualified']['one'])
+        with self.assertRaises(AssertionError):
+            AFFINITY.summarize(rows[:-1])
+
     def test_peer_formula_and_schedule(self):
         self.assertEqual(PEERS.coordinate_values(3, 0), [-1.2, 1.0, -1.2])
         # One update: derivatives are -215.6, 792, -440 at the initial point.
