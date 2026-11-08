@@ -1,6 +1,6 @@
 # One lifetime for a parser's tree
 
-A6 optimizes a parser written in fwp. It is verified in
+Scoped storage optimizes a parser written in fwp. It is verified in
 [#221](roadmap-history.md#scoped-parser-storage-and-analysis-work-pr-221), including
 all native platforms and the declared WASI checks. It does not change fwp's source parser.
 fwp arithmetic uses infix notation: `2 + 3 * 4` evaluates to `14`.
@@ -13,7 +13,7 @@ an integer or links to other nodes. Input Strings and the token list keep their
 ordinary owners. See [fwp operator precedence](compiler-pipeline.md#tokens-layout-and-precedence)
 for the language grammar.
 
-Before A6, each heap node had an individual lifetime. The implementation
+Previously, each heap node had an individual lifetime. The implementation
 lets one function call own a collection of storage blocks, called a region.
 Each recursive call is a separate invocation. Links
 within those blocks need neither ownership counts nor individual destruction.
@@ -85,7 +85,7 @@ the previous block chain intact. Construction initializes a node before exposing
 its address. Cleanup follows only the block chain, never the node graph. No link
 may survive cleanup, and no ordinary reference-count operation may see one.
 
-## Evidence required in the same delivery
+## Maintained verification
 
 | Check | Required observation |
 |---|---|

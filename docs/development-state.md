@@ -63,8 +63,11 @@ transformation, fixed inputs and 16-round schedule are recorded before execution
 this short whole-process comparison cannot satisfy the final compute-time gate.
 `numerics.yml`, suite `loop-array-diagnosis`, runs the experiment on both Linux
 architectures. Five local source/schedule controls pass under the guard (0.13 s).
-The first attempt to insert its workflow selector matched the wrong option order
-and stopped before writing; the corrected selector names the existing first option.
+The initial dispatch `42433311089` failed before starting runners: adding the suite
+made `numerics.yml` 512,104 bytes, above GitHub's 512,000-byte limit. Shorter input
+descriptions reduce it to 511,678 bytes without changing execution. The focused
+workflow-size and five-row roadmap/handoff checks pass (guard: 0.13 s). Future
+workflow additions must check this limit before publication.
 
 ## Documentation work
 

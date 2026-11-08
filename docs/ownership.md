@@ -150,7 +150,7 @@ can move into their last consuming call. Every case needs the alias, effect and
 cleanup proof, not just syntactic last use. See the
 [compiler design](design.md) and [primitive contracts](primitive-ownership.md).
 
-### Private neighboring-record buffers: verification in progress
+### Private neighboring-record buffers
 
 The compiler can prove that one fresh numeric buffer feeds only a neighboring-pair
 operation. That operation now consumes the buffer. Equal-width results reuse it;
@@ -164,10 +164,11 @@ the actual allocation throughout. Returning that allocation also counts as an
 escape from the helper, so callers must not treat its input as merely borrowed.
 
 The [contract and controls](measurements/packed-pair-storage.md) cover both storage
-paths, aliases, numeric bits and physical frees. [Focused GCC/Clang native checks and evidence audits](measurements/packed-pair-checks-2026-11-05.md)
-pass on Linux AMD64/ARM64 and macOS ARM64. The [allocation census](measurements/packed-pair-census-2026-11-05.md)
-confirms one fewer allocation per update without increasing overall peak managed
-storage. Runtime comparisons and final platform verification remain pending.
+paths, aliases, numeric bits and physical frees. [PR #260's final gates pass](roadmap-history.md#private-pair-buffer-reuse-pr-260).
+The [allocation census](measurements/packed-pair-census-2026-11-05.md) confirms one
+fewer allocation per update without higher overall peak managed storage.
+[Runtime measurements](measurements/packed-pair-cleanup-time-2026-11-05/README.md)
+retain the missed timing targets; storage savings alone do not prove a speedup.
 
 ### Array construction and sorting
 
