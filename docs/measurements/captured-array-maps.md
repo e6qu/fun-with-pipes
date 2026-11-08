@@ -50,7 +50,7 @@ that later coordinates still need.
   effects, first traps and resource boundaries; add no syntax or conversion.
 - Liveness proves the array has no later use. ARC still protects earlier owners
   and shared ancestors. Keep necessary runtime uniqueness and view checks.
-- The empty ordinary-array path performs no writes, callbacks, allocation or
+- The empty ordinary-array path performs no writes, element-callback calls, allocation or
   ownership-count changes. It transfers the input owner to the result even with
   reuse disabled. Views retain the existing independent-output and cleanup path.
 - Preserve element order, checked overflow, float bits and callback effects.
@@ -107,6 +107,8 @@ control; preserve all alias/free checks. The compiler is unchanged from `ca83756
 ownership/identity units per host, plus docs. Full logs have no compiler warnings
 or errors. The empty-owner path is natively checked; its timing benefit still
 needs measurement under the unchanged protocol below.
+The [complete expanded audit](captured-map-empty-checks-2026-11-08/README.md)
+passes, including the separate identity/float logs and 444 probe outcomes per host.
 
 ## Measurement contract before collecting results
 

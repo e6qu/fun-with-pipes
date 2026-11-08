@@ -58,10 +58,14 @@ The evidence auditor now also requires their three saved unit/target logs;
 ten local auditor tests pass, including complete/missing/failed/ignored controls.
 
 New measurement source `7ab93331027f65d02f1b029b51c8c909656d3fe4` uses the unchanged
-48-case protocol and safety run `42477156079`. Run `42478473189` is queued at
-its evidence audit, job `128724990571`; four timing jobs follow that audit.
-Docs `42478475287`, job `128724993198`, is queued at the same source. No result
-from the repaired implementation's measurements is available yet.
+48-case protocol and safety run `42477156079`. Its
+[expanded evidence audit](measurements/captured-map-empty-checks-2026-11-08/README.md)
+passes, job `128724990571`, with 444 probe outcomes and all identity logs per host.
+Artifact `13616691909` is retained with its verified digest and record hashes.
+Measurement jobs: ARM1 `128725646991`, ARM2 `128725646968`, AMD1 `128725646945`,
+AMD2 `128725647003`. AMD2 has started; the other three are queued. Docs
+`42478475287`, job `128724993198`, is running at the same source. No repaired
+timing result is available yet.
 
 ## Original measurements: preserved, not accepted as complete
 
