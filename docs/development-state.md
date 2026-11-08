@@ -1,7 +1,7 @@
 # Current work
 
-**Next:** publish and verify the numeric-input repair, then run the frozen
-candidate/baseline comparison only after all three focused native jobs pass.
+**Next:** publish the exact formatting repair reported by `42507519027`, then
+audit all three replacement native jobs before the frozen candidate comparison.
 `3203b635a813538350cefb90f13f09f9a641ee8b` passes correctness/cleanup on both
 Linux architectures, but still misses the neighboring allocation limit.
 Keep implementation, measurements and tutorials in one substantial normal PR;
@@ -134,6 +134,12 @@ and existing resource/unknown-function exclusions. New tests check owned data
 bindings, valid resource exclusions and the actual neighboring worker's four
 numeric fields. No proof or inlining budgets increase. Local free disk fell from
 68 to 19 GiB; local validation is paused, with all native checks on GitHub.
+Run `42507519027` at `579e43190` stops at Rust formatting (ARM job
+`128813265219`): both Python control groups pass; Rust/native checks do not run.
+The complete log (`/tmp/fwp-array-input-proof-arm.log`) reports only three layout
+differences, now applied exactly. Formatting gets its own required step so a
+formatting failure no longer prevents independent native checks. No compiler
+behavior changes in this follow-up.
 
 The paired measurement runner/auditor now implements the frozen 14-case,
 256-gradient experiment and builds baseline/current compilers from source.

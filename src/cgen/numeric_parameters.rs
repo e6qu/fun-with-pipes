@@ -699,13 +699,7 @@ mod tests {
                     .call_root(0, vec![input.clone(), input.clone()])
                     .unwrap(),
                 Value::Record(
-                    vec![
-                        Value::I64(7),
-                        Value::I64(11),
-                        Value::I64(8),
-                        Value::I64(11),
-                    ]
-                    .into(),
+                    vec![Value::I64(7), Value::I64(11), Value::I64(8), Value::I64(11),].into(),
                 )
             );
         }
@@ -798,9 +792,12 @@ mod tests {
             lower(&mut program, &[]);
             crate::ir::check_locals(&program).unwrap();
             for edge in edges {
-                let fields = record_fields(&program.shapes, &program.funcs[edge].locals[0]).unwrap();
+                let fields =
+                    record_fields(&program.shapes, &program.funcs[edge].locals[0]).unwrap();
                 assert_eq!(fields.len(), 4);
-                assert!(fields.iter().all(|(_, ty)| super::super::scalar(ty).is_some()));
+                assert!(fields
+                    .iter()
+                    .all(|(_, ty)| super::super::scalar(ty).is_some()));
             }
         });
     }

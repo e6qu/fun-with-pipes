@@ -52,7 +52,8 @@ jobs:
           "$CC" --version > local-checks/cc.txt
           python3 scripts/test-local-derivatives.py
           python3 scripts/test-structured-ad-costs.py
-          cargo fmt --check
+      - name: Check Rust formatting
+        run: cargo fmt --check
       - name: Numeric parameter proofs and mixed ownership
         if: ${{ !cancelled() && steps.controls.outcome == 'success' }}
         run: |
