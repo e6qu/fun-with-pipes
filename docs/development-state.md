@@ -1,7 +1,7 @@
 # Current work
 
-**Next:** publish the strengthened identity-log audit, then dispatch `numerics.yml` with `suite=captured-maps`
-and `evidence_run=42477156079`.
+**Next:** finish repaired-implementation measurement run `42478473189`, then
+review all four sessions and prepare the normal PR with final evidence.
 Keep the original measurements unchanged. Bundle the implementation, repair,
 evidence and docs in one normal PR after the changed implementation is measured.
 
@@ -56,6 +56,12 @@ identity control. Alias, empty-view and physical-free assertions remain required
 The expanded focused suite includes the affected float/identity targets.
 The evidence auditor now also requires their three saved unit/target logs;
 ten local auditor tests pass, including complete/missing/failed/ignored controls.
+
+New measurement source `7ab93331027f65d02f1b029b51c8c909656d3fe4` uses the unchanged
+48-case protocol and safety run `42477156079`. Run `42478473189` is queued at
+its evidence audit, job `128724990571`; four timing jobs follow that audit.
+Docs `42478475287`, job `128724993198`, is queued at the same source. No result
+from the repaired implementation's measurements is available yet.
 
 ## Original measurements: preserved, not accepted as complete
 
@@ -120,7 +126,9 @@ native suites, benchmarks and large evidence generation run on GitHub runners.
   sampled CPU seconds. This does not replace GCC or the added identity checks.
 
 Disk has fluctuated across the 64 GiB reserve. Local checks stopped at 54 GiB and
-resumed only after recovery to 78 GiB. No limits were raised or bypassed.
+resumed only after recovery to 78 GiB. The guard then refused the final docs check
+after free space fell again; that check is queued on CI. No limits were raised
+or bypassed. Local checks remain stopped until the reserve recovers.
 Final delivery still needs nine production jobs, docs and a complete audit for the
 exact final PR head, followed by authorized squash merge with a one-line subject
 of at most 80 characters and an empty body.
