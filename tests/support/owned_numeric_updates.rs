@@ -181,7 +181,9 @@ fn consumed_numeric_owners_survive_sharing_traps_and_allocation_failure() {
             ("no-reuse", format!("#define FWP_NO_REUSE 1\n{code}"), 0),
             ("corrupt-prefix", corrupt.clone(), 241),
             ("missing-suffix-release", leak.clone(), 90),
-            ("missing-captured-input", missing_map_owner.clone(), 90),
+            // The retained alias still has two owners: this catches the
+            // missing release before the physical-allocation ledger does.
+            ("missing-captured-input", missing_map_owner.clone(), 248),
         ] {
             let executable = directory.0.join(format!("{label}{opt}.exe"));
             fwp::cgen::compile_c(&text, &executable, opt).unwrap();

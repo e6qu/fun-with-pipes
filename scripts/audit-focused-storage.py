@@ -187,7 +187,7 @@ def main():
                     issues.append((host, 'missing or unbounded captured-map analysis counts'))
                 for level in ('O1', 'O2'):
                     name = f'owners/record-ownership/owned_numeric_updates/missing-captured-input-{level}.status'
-                    if report['probes'].get(name) != 'Some(90)':
+                    if report['probes'].get(name) != 'Some(248)':
                         issues.append((host, 'missing captured-input cleanup rejection: ' + name))
             recording_steps = [step for step in job['steps']
                                if step['name'] == 'Verify live bounded recording lookup selection']

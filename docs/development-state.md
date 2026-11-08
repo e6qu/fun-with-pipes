@@ -1,6 +1,6 @@
 # Current work
 
-**Next:** verify the repaired selection of let-bound scalar callbacks, then run the
+**Next:** finish native verification after correcting both test expectations, then run the
 frozen sensor/pixel comparison and bundle implementation, evidence and docs in
 one normal PR. [The contract](measurements/captured-array-maps.md) defines safety,
 inputs, schedule and acceptance. No performance claim is made yet.
@@ -54,48 +54,37 @@ isolated same-source reference disabling only captured-map selection; closed map
 remain optimized in both. All 48 cases retain exact-result/alias checks, paired
 copy timings and separate memory/compiler observations.
 
-## Native failure and root repair
+## Current verification
 
-Focused run `42468684378` tested `b41752cac9ff12148bbd4bbf0b3cfa2efe913f5e`.
-AMD GCC job `128694090277`, ARM GCC `128694090574` and macOS Clang `128694090623`
-all completed. Each passed formatting, Clippy, 11 ownership unit tests and six
-of eight native targets. The same two checks failed on every host:
+[The contract](measurements/captured-array-maps.md#verification-before-delivery)
+retains both failed runs and their causes. All three complete job logs and eight
+native target results were reviewed in each run.
 
-- `mapped_array_construction`: the exported captured callback did not select a
-  consuming map.
-- `zip_unwind_ownership`: the deliberately broken captured-input owner could not
-  be injected because no captured consuming worker existed.
+Compiler source `0c704421f9ebb8ab88aed2980170aead302e7a87` fixes the missed callback
+bindings. Run `42470453910`: macOS `128699747181`, AMD GCC `128699747222`, ARM GCC
+`128699747316`. Each passes formatting/Clippy, all 13 ownership unit tests and six
+native targets. Captured export selection and ordinary O1 cleanup/reuse now work.
+Two test assumptions still fail identically on all hosts:
 
-All target results and complete job logs were read. Generated source shows why:
-production IR binds `Apply(Func, captures)` to a local before calling `array.map`.
-The first implementation only handled an inline `Call`; its synthetic unit
-fixture used the same wrong form. No runtime measurements were collected.
+- `mapped_array_construction` demands a map marker in optimized main. The repair
+  explicitly compiles exported functions with runtime arguments for selection;
+  ordinary main still verifies raw/optimized/native values, effects and traps.
+- `zip_unwind_ownership` expects leak status 90 from a missing-input-owner mutant.
+  The alias-count check correctly rejects it first with status 248. Require 248;
+  keep the independent physical-allocation ledger and missing-suffix control.
 
-The repair recognizes actual partial applications and indexes bound callbacks
-once. It snapshots captures at their original binding, including computed values,
-and passes the saved scalars directly. Other uses retain the original closure;
-only fully replaced uses remove it. Parameters, pattern bindings and multiply
-bound locals cannot supply an ambiguous origin. New unit cases cover eager
-capture placement, another escaping closure use and one binding shared by
-1/8/128 maps. The reference disables both captured selection and its added index.
-Repair source `0c704421f9ebb8ab88aed2980170aead302e7a87` is published. Focused run
-`42470453910`: macOS Clang `128699747181`, AMD GCC `128699747222`, ARM GCC
-`128699747316`. Docs run `42470456322`, job `128699751102`. All were queued at the
-last poll. The local guard refused further checks after free space fell to about
-60 GiB; no formatting or unit success is claimed for this repair yet.
+These test/auditor repairs are ready to publish. Compiler implementation is
+unchanged. Docs `42470456322`, job `128699751102`, passes at `0c704421f`.
+No measurements have run. Once the repaired focused run passes, dispatch
+`numerics.yml` with suite `captured-maps` and its run ID as `evidence_run`;
+the workflow audits all three hosts before measuring. Final delivery still needs
+nine production jobs and docs on the exact final PR head. No PR is open yet.
 
-Docs run `42468686384`, job `128694094171`, passes at `b41752cac`; subsequent
-cross-link/repair notes still need the next docs gate. Superseded run
-`42466992494` was cancelled before native tests. Duplicate post-merge CI
-`42465665987` was also cancelled after verifying its tree equals fully audited
-PR #270. Its nine logs show no failed test results; Windows panic messages belong
-to the explicit scheduler panic controls. Neither cancellation proves this new
-implementation correct.
-
-Do not dispatch `captured-maps` measurements until the repaired source passes all
-three focused jobs and their complete audit. Pass that new run ID as
-`evidence_run`. Final delivery still needs nine production jobs and docs on the
-exact final PR head. No PR is open yet.
+Superseded run `42466992494` was cancelled before native tests. Duplicate
+post-merge CI `42465665987` was cancelled only after checking its tree equals
+fully audited #270. Its nine logs contain no failed test results; Windows panic
+messages are the explicit scheduler panic controls. Neither cancellation verifies
+the new implementation.
 
 Guarded local checks so far:
 
@@ -110,7 +99,8 @@ Guarded local checks so far:
   the link check used the Git index for intentionally sparse historical files.
 - Prior audit controls: 10 pass; recovered real checkout log replay passes.
 
-All checks run through `python3 scripts/local-guard.py`. Free disk briefly
-recovered to about 83 GiB, then fell below 64 GiB again. Further formatting and
-control checks were refused; do not bypass the guard. Full builds, native suites,
-benchmarks and large evidence generation remain on runners.
+All local checks use `python3 scripts/local-guard.py`. Disk space has fluctuated
+across the 64 GiB reserve; stopped when refused, resumed small checks after it
+recovered above 81 GiB. The current test repairs pass full Rust formatting and
+the four measurement controls locally. Full builds, native suites, benchmarks
+and large evidence generation remain on runners.

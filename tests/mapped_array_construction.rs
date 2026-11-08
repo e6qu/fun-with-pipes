@@ -100,26 +100,10 @@ main = array.from-list [1i8, 127i8, 2i8] | mapped | array.to-list | echo
                 std::fs::write(directory.join(format!("{label}.fwp")), program).unwrap();
                 std::fs::write(directory.join(format!("{label}-{packing}.c")), &code).unwrap();
             }
-            if label == "values" {
-                // Main-only compilation may inline or remove these functions.
-                // Request exported roots explicitly for selection inspection;
-                // native semantic checks below still execute the ordinary main.
-                let exported_file = dir.join(format!("exports-{packing}.c"));
-                checked(
-                    Command::new(compiler)
-                        .env_remove("FWP_NO_OPT")
-                        .env("FWP_PACKED_ARRAYS", packing)
-                        .args(["build", "--fn", "small", "--emit-c"])
-                        .arg(&input)
-                        .arg("-o")
-                        .arg(&exported_file),
-                );
-                let exported = std::fs::read_to_string(exported_file).unwrap();
-                if let Some(directory) = &artifacts {
-                    std::fs::write(directory.join(format!("exports-{packing}.c")), &exported)
-                        .unwrap();
-                }
-                for (name, selected) in [
+            // Select on exported functions with runtime parameters. Main can
+            // specialize or eliminate a map; its values/effects are checked below.
+            let selections: &[(&str, bool)] = match label {
+                "values" => &[
                     ("small", true),
                     ("signed", true),
                     ("unsigned", true),
@@ -132,46 +116,64 @@ main = array.from-list [1i8, 127i8, 2i8] | mapped | array.to-list | echo
                     ("wide", false),
                     ("text-lengths", false),
                     ("record-sums", false),
-                ] {
-                    let start = exported
-                        .find(&format!("/* {name} :"))
-                        .unwrap_or_else(|| panic!("missing exported map probe `{name}`"));
-                    let body = &exported[start..start + exported[start..].find("\n}\n").unwrap()];
-                    let owned = exported
-                        .match_indices("/* consumed-scalar-array-map :")
-                        .filter_map(|(start, _)| {
-                            let worker =
-                                &exported[start..start + exported[start..].find("\n}\n").unwrap()];
-                            let id = worker
-                                .split("static V f")
-                                .nth(1)
-                                .unwrap()
-                                .split('(')
-                                .next()
-                                .unwrap();
-                            body.contains(&format!("f{id}(")).then_some(worker)
-                        })
-                        .collect::<Vec<_>>();
-                    assert!(owned.len() <= 1, "ambiguous scalar map worker: {name}");
-                    assert_eq!(
-                        body.contains(marker) || !owned.is_empty(),
-                        selected,
-                        "{name}: {body}"
-                    );
-                    if selected {
-                        let implementation = owned.first().copied().unwrap_or(body);
-                        assert!(
-                            implementation.contains("fwp_array_store_owned(")
-                                || implementation.contains("fwp_array_store(")
-                        );
-                        assert!(implementation.contains("fwp_array_load("));
-                        assert!(!implementation.contains("fwp_apply"));
-                    }
-                }
-            } else {
-                assert!(
-                    code.contains(marker) || code.contains("/* Consume one scalar array owner;")
+                ],
+                "capture-order" | "computed-capture" => &[("adjust", true)],
+                "trap" => &[("mapped", true)],
+                _ => unreachable!(),
+            };
+            let exported_file = dir.join(format!("exports-{label}-{packing}.c"));
+            checked(
+                Command::new(compiler)
+                    .env_remove("FWP_NO_OPT")
+                    .env("FWP_PACKED_ARRAYS", packing)
+                    .args(["build", "--fn", selections[0].0, "--emit-c"])
+                    .arg(&input)
+                    .arg("-o")
+                    .arg(&exported_file),
+            );
+            let exported = std::fs::read_to_string(exported_file).unwrap();
+            if let Some(directory) = &artifacts {
+                std::fs::write(
+                    directory.join(format!("exports-{label}-{packing}.c")),
+                    &exported,
+                )
+                .unwrap();
+            }
+            for &(name, selected) in selections {
+                let start = exported
+                    .find(&format!("/* {name} :"))
+                    .unwrap_or_else(|| panic!("missing exported map probe `{name}`"));
+                let body = &exported[start..start + exported[start..].find("\n}\n").unwrap()];
+                let owned = exported
+                    .match_indices("/* consumed-scalar-array-map :")
+                    .filter_map(|(start, _)| {
+                        let worker =
+                            &exported[start..start + exported[start..].find("\n}\n").unwrap()];
+                        let id = worker
+                            .split("static V f")
+                            .nth(1)
+                            .unwrap()
+                            .split('(')
+                            .next()
+                            .unwrap();
+                        body.contains(&format!("f{id}(")).then_some(worker)
+                    })
+                    .collect::<Vec<_>>();
+                assert!(owned.len() <= 1, "ambiguous scalar map worker: {name}");
+                assert_eq!(
+                    body.contains(marker) || !owned.is_empty(),
+                    selected,
+                    "{label}/{name}: {body}"
                 );
+                if selected {
+                    let implementation = owned.first().copied().unwrap_or(body);
+                    assert!(
+                        implementation.contains("fwp_array_store_owned(")
+                            || implementation.contains("fwp_array_store(")
+                    );
+                    assert!(implementation.contains("fwp_array_load("));
+                    assert!(!implementation.contains("fwp_apply"));
+                }
             }
             for opt in ["-O1", "-O2"] {
                 let binary = dir.join(format!("{label}-{packing}-{opt}.exe"));

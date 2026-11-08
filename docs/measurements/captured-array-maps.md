@@ -46,8 +46,10 @@ that later coordinates still need.
   Every physical allocation must be released exactly once.
 - Index known callback bindings once, then use the existing reverse liveness
   walk and rewrite. Save captures at their original binding, including computed
-  values; remove the closure only when no other use needs it. Work stays linear
-  in expressions and supplied arguments; no whole-program search.
+  values; remove the closure only when no other use needs it. Both walks
+  visit existing expressions once. Selection checks and rewriting do work per
+  capture per selected map; a shared callback therefore adds `maps × captures`
+  scalar arguments. There is no whole-program search.
 
 ## Verification before delivery
 
@@ -60,6 +62,17 @@ Use existing targets rather than adding a native shard:
 | Cleanup and reuse | Actual allocation/free observer; allocation failure, callback trap/cancellation, reuse disabled and deliberately broken cleanup controls |
 | Production compilers | Native ARM64/AMD64 GCC and macOS Clang; packing on/off, C O1/O2; formatting and lint |
 | Delivery | Nine final-head production jobs, docs and complete log/artifact audit; report compiler scaling with runtime results |
+
+The first two focused runs found implementation and test gaps before timing:
+
+| Run/source | Finding and repair |
+|---|---|
+| [42468684378](https://github.com/e6qu/fun-with-pipes/actions/runs/42468684378), `b41752cac` | All three hosts missed captured selection: production binds partial `Apply` expressions to locals. Replaced the inline-only selector with binding indexing and snapshots at the original evaluation point. |
+| [42470453910](https://github.com/e6qu/fun-with-pipes/actions/runs/42470453910), `0c704421f` | All 13 ownership units and six native targets pass per host; captured export selection now works. Two test assumptions fail: main may optimize away its map, and the missing-input owner is caught at alias-count status 248 before the leak check. Select exported runtime-argument functions explicitly; keep separate ordinary-main checks and require the exact observed negative-control status. |
+
+Every native target result and all three complete logs were reviewed for each
+run. No timing was collected from either failed run. Remaining O2 and full
+failure/cancellation checks must complete after repairing those test expectations.
 
 ## Measurement contract before collecting results
 
@@ -112,8 +125,9 @@ use. Sizes change runtime input, not compiler source size.
 Compiler analysis also checks 1/8/128 map calls with 0/2/8 captures. It must share
 one private worker and visit no more than `(15 + 3 * captures) * maps + 5` IR nodes.
 A shared two-capture binding used by 1/8/128 maps also keeps one snapshot/worker
-and at most `12 * maps + 20` visits. These counts bound this analysis; separate
-compiler time/RSS observations do not establish general compiler scaling.
+and at most `12 * maps + 20` visits. The counter measures tree visits, not total
+compiler instructions or emitted argument copies. Separate compiler time/RSS
+observations do not establish general compiler scaling.
 
 The [measurement script](../../scripts/measure-captured-maps.py) saves all commands,
 source, raw observations and failures. [The audit](../../scripts/audit-captured-maps.py)
