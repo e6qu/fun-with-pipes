@@ -28,14 +28,15 @@ normal connection reuse. Instrumented native clients deliberately close each
 connection and drain its reader, writer and sender before the next call. They
 therefore perform different transport work. Compare ownership revisions only
 with the same closing hooks. There are three independent measured processes for
-each program at 1, 16 and 256 batches, with collection disabled and freeing enabled.
+each program at 1, 16 and 256 batches. The original report predates GC removal:
+it disabled collection and enabled freeing. Current builds have no tracing mode.
 
 Counters cover managed allocation requests, charged storage, reference-count
 increments, connection/request/message release, sender task completion and input
 values pulled/encoded. Category totals count allocations, not live identities.
 Scheduler stack pools, raw buffers other than queued messages, TLS/OS/allocator
-metadata, server/process memory and timings are excluded. These fixtures do not
-establish checked ARC, zero-cost abstractions or speed parity with C/Rust.
+metadata, server/process memory and timings are excluded. The original measurements alone do not establish the later ownership proof,
+zero-cost abstractions or speed parity with C/Rust.
 
 [Recorded protocol and results](../../../docs/measurements/repeated-remote-storage.md) name the
 measured revisions. [The plan](../../../PLAN.md) tracks current acceptance work.

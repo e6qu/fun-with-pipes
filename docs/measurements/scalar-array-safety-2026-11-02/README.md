@@ -39,5 +39,5 @@ The first run, `41442126003` at `5437f39f`, exposed two test-harness defects:
   The hook now runs in the generated loop after two stores.
 
 Both were repaired together. Production runtime code was unchanged. These
-focused checks establish safety for the selected cases; [paired timing](../array-construction-costs.md#selected-next-change-known-scalar-captures)
+focused checks establish safety for the selected cases; [paired timing](../array-construction-costs.md#selected-change-known-scalar-captures)
 and the full production matrix remain separate requirements.

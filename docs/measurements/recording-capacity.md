@@ -1,7 +1,7 @@
 # Keep the tape capacity check at its caller
 
 A derivative tape records operations for the later backward pass. Its buffers
-usually have room for the next operation. Currently each append calls a separate
+usually have room for the next operation. At the baseline, each append calls a separate
 routine even when that routine only checks the requested size and returns.
 
 The [saved GCC reports](recording-inline-images-2026-11-06/README.md) show this call
@@ -11,8 +11,10 @@ execution counts or proof that they caused an earlier timing miss.
 
 This contract precedes implementation. It uses source
 `a90f793e485aa91736156ae87dfc3ae36ec9cbad`, the final head of
-[PR #263](https://github.com/e6qu/fun-with-pipes/pull/263). That PR's final platform
-delivery must be verified separately; its measurements are not this comparison.
+[PR #263](https://github.com/e6qu/fun-with-pipes/pull/263). That PR's [delivery](recording-inline-delivery-2026-11-06/README.md) passes;
+its measurements are not this comparison. The capacity change subsequently
+shipped in [PR #264](recording-capacity-delivery-2026-11-06/README.md).
+The original acceptance rules below retain all missed timing limits.
 
 ## Change and safety proof
 

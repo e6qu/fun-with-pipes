@@ -422,5 +422,6 @@ after the four timing sessions and GCC investigation, the user explicitly chose
 "Retain reductions; leave timing goals open." This approves delivery of the
 verified reductions while preserving all ten failed limits, including both
 AMD64 zero-update regressions. It does not turn the saved `not-accepted` timing
-reports into passes. D2 remains open. The final nine production jobs and
-documentation must pass before merge.
+reports into passes. The original speed target remains unmet. The final nine
+production jobs and documentation passed, as recorded under Verified delivery
+above; these old preparation instructions are not pending work.

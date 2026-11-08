@@ -1,11 +1,11 @@
-# Current cost of printing descent results
+# Descent printing costs at the recorded baseline
 
 Replacing formatted vector output with a shared checksum greatly reduces these
 programs' elapsed time. It does not make the remaining work free, and the
 subtraction is not pure formatting time: the checksum also does work.
 
 These four sessions refresh the [output protocol](descent-output-protocol.md)
-at the same source as the [current derivative baseline](descent-costs.md).
+at the same source as the [historical derivative baseline](descent-costs.md).
 They compare **explicit derivatives**, not automatic differentiation. Each solve
 starts from alternating -1.2/1.0 coordinates and performs the stated number of
 Rosenbrock updates. fwp uses immutable packed arrays. C/Rust use coordinate-wise

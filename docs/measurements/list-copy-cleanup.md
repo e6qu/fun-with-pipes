@@ -6,7 +6,7 @@ copy if an allocation, retain or callback fails. Cancellation needs the same
 cleanup. An owner is responsible for releasing storage. Automatic reference
 counting (ARC) releases a value when its last owner lets it go.
 
-The current G5 protocol requires ten binaries per host: two program runs, two
+The collector-free protocol requires ten binaries per host: two program runs, two
 balanced cleanup probes and six omitted-cleanup controls at O1/O2. It has one
 counted ownership model. Its updated artifact reader passed integrated validation in
 [#217](../roadmap-history.md#tracing-gc-removal-pr-217). Older results below retain

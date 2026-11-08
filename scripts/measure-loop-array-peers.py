@@ -82,6 +82,7 @@ def main():
     parser.add_argument('--source', required=True)
     parser.add_argument('--cc', required=True)
     parser.add_argument('--rustc', required=True)
+    parser.add_argument('--time', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
     assert os.environ.get('GITHUB_ACTIONS') == 'true' and platform.system() == 'Linux'
@@ -105,6 +106,7 @@ def main():
     environment = {key: value for key, value in os.environ.items()
                    if not key.startswith('FWP_') and key not in ('GH_TOKEN', 'GITHUB_TOKEN')}
     environment.update(identity['settings'])
+    environment['LC_ALL'] = 'C'
     rust_flags = ['--edition=2021', '-O', '-C', 'target-cpu=generic', '-C', 'lto=off']
     report = dict(source=os.environ['GITHUB_SHA'], measuredSource=args.source, originalArtifact=metadata,
                   machine=machine, cpu=Path('/proc/cpuinfo').read_text(),
@@ -165,6 +167,19 @@ def main():
         result['peerExpectedBits'] = COSTS.words(expected, case['kind'] == 'loop')
         result['fwpExpectedBits'] = COSTS.words(original_case['expected'], case['kind'] == 'loop')
         result['binaryHashes'] = {role: hashlib.sha256((directory / role).read_bytes()).hexdigest() for role in ROLES}
+        result['resources'] = {}
+        # These executions are separate observations, never timing samples.
+        for role in ROLES[:3]:
+            resource = directory / (role + '.resources')
+            raw, elapsed = run_command([args.time, '-v', '-o', resource, directory / role],
+                                       directory / (role + '-rss'))
+            value = json.loads(raw)
+            original = next(row for row in rows if row['role'] == role)
+            assert value['checksum'] == original['checksum']
+            if role == 'fwp':
+                assert value['initialLiveBytes'] == value['finalLiveBytes'] == original['initialLiveBytes']
+            result['resources'][role] = AUDIT.OBSERVATIONS.resources(resource.read_text()) | dict(
+                elapsedNs=elapsed, imageBytes=(directory / role).stat().st_size)
         report['cases'][name] = result
         AUDIT.save(output / 'summary.json', report)
         print(name, json.dumps(result['fwpRatios']['computationNs']), result['qualified']['computationNs'], flush=True)

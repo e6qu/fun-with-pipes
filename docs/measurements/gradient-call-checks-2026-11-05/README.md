@@ -132,7 +132,7 @@ identifies the package and binary. Repository formatting, three reference-patch
 controls, Rust formatting and workflow syntax pass locally. Runtime measurements
 remain tied to their original sources; no native measurement was repeated.
 
-The repaired commit must pass all nine production jobs plus docs before merge.
+The final delivery below passes all nine production jobs and documentation.
 
 ## Second production run: reference-patch context repair
 

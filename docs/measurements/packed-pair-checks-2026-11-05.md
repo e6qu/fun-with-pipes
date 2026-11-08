@@ -41,11 +41,11 @@ passes all eight scripts (76 tests) at `b808155995b711a687c85a4161c3733f51cd71c1
 [artifact](https://github.com/e6qu/fun-with-pipes/actions/runs/42000589145/artifacts/13402753211)
 remain available. No fwp compiler/native source changed for this repair.
 
-## Next acceptance
+## Subsequent acceptance
 
-Follow [the frozen contract](packed-pair-storage.md): compare exact complete-solve
-counts and phase/overall live memory first, then compiler costs and qualified
-runtime sessions. [The census](packed-pair-census-2026-11-05.md) now passes; no
-speed claim yet. Existing timing misses
-remain open in [PLAN.md](../../PLAN.md). Keep large evidence on runners while the
-local disk is below its 64 GiB reserve; retain full archives before final delivery.
+[The census](packed-pair-census-2026-11-05.md) records allocation results;
+[later cleanup measurements](packed-pair-cleanup-time-2026-11-05/README.md) keep
+all timing misses. [Final delivery](packed-pair-delivery-2026-11-05/README.md)
+passes nine production jobs, documentation and complete audits. The
+[original contract](packed-pair-storage.md) remains unchanged;
+[PLAN.md](../../PLAN.md) owns current work.

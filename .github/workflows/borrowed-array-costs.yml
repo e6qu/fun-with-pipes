@@ -52,7 +52,14 @@ jobs:
       - name: Compare the saved fwp computation with C and Rust
         run: >-
           python3 scripts/measure-loop-array-peers.py --run "$EVIDENCE_RUN"
-          --source "$EVIDENCE_SOURCE" --cc gcc --rustc rustc --output array-peers
+          --source "$EVIDENCE_SOURCE" --cc gcc --rustc rustc
+          --time /usr/bin/time --output array-peers
+      - name: Reconstruct all peer results from complete raw observations
+        run: >-
+          python3 scripts/audit-loop-array-peers.py --directory array-peers
+          --host peer-host.json --source "$GITHUB_SHA"
+          --machine ${{ runner.arch == 'ARM64' && 'aarch64' || 'x86_64' }}
+          --output array-peers/audit.json
       - uses: actions/upload-artifact@v7
         if: always()
         with:
@@ -197,7 +204,7 @@ jobs:
             array-safety/
           if-no-files-found: error
   review:
-    if: inputs.mode == 'array-builder-diagnosis'
+    if: inputs.mode == 'array-builder-diagnosis' || inputs.mode == 'array-review'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:

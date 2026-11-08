@@ -55,7 +55,7 @@ The tables show median round time divided by twelve, in milliseconds per process
 | scan / 4096 | 1.443–1.535 | 2.137–2.211 | 2.799–2.888 | 1.824–2.002 | 1.266–1.351 | 1 |
 | scan / 262144 | 3.231–3.262 | 4.058–4.180 | 4.086–4.090 | 1.254–1.265 | 0.979–1.007 | — |
 
-## What this permits next
+## Interpretation and subsequent change
 
 The 4,096-element scan takes 2.41–2.48 times C on ARM64 and 1.82–2.00 times C
 on AMD64 in these observations. ARM's two controls pass; AMD session 2 fails

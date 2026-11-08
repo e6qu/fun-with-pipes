@@ -1,18 +1,19 @@
 # Current work
 
-**Next:** repair the audit checkout and redispatch `numerics.yml` suite `fresh-array`
-with safety run `42438693432`. Its first job audits every focused target and the selection diagnostic, then measures the
-production implementation against its isolated reference. Continue the docs in
-the same normal PR. The metadata
-candidate has been removed; the replacement is **not performance-accepted**.
-No PR is open yet.
+**Next:** finish run `42440117133` at `066175c3a` (suite `fresh-array`),
+then audit all four sessions and run the prepared C/Rust comparison against its
+retained candidate images. The complete audit `128607338068` passes. Measurement jobs `128609245028`,
+`128609245031`, `128609245033` and `128609245092` are queued. Keep the
+compiler unchanged while these checks run; finish the docs in the same normal
+PR. No PR is open yet. The candidate is **not performance-accepted**.
 
-Run `42439586418` at `a0c6fb084` stopped before timings: the new diagnostic audit
-needs historical Git source, but its job used a shallow checkout. Fix is explicit
-`fetch-depth: 0`; no source validation is removed. The preceding complete safety
-audit passes all eight targets per host: 348/348/342 native images and 372 probe
-statuses each on ARM64 GCC/AMD64 GCC/Clang. Preserve these results; do not rerun
-the native tests for a checkout-only repair.
+The preceding run `42439586418` at `a0c6fb084` stopped before timings: the new
+diagnostic audit needed historical Git source, but its checkout was shallow.
+Commit `066175c3a` adds `fetch-depth: 0`; source validation is unchanged.
+The preceding complete safety audit passes all eight targets per host:
+348/348/342 native images and 372 probe statuses each on ARM64 GCC/AMD64
+GCC/Clang. Preserve these results; no native test rerun is needed for this
+checkout-only repair.
 
 Implementation head: `f21bf1390` (fresh F64 stores). Focused jobs are AMD64 GCC
 `128603076444`, ARM64 GCC `128603076704`, and Clang ARM64 `128603076570`.
@@ -71,12 +72,19 @@ Clang `128591289622`. Complete artifact/log audit `128594236952` in
 Review job `128598127188` in `42437082841` passes all four original metadata
 timing sessions, commands, sources, output bits, copied/native images and raw
 samples. Compact artifact `13600670203` is verified and retained. Fresh-output
-diagnostics `128599976437`/`128599976447` pass; their complete independent audit
-still needs running. Those diagnostics do not verify the new compiler code.
+diagnostics `128599976437`/`128599976447` and their complete independent audit
+`128607338068` pass. Those diagnostics do not verify the new compiler code.
 
-Still needed for an accepted implementation: allocation/live-storage and RSS
-observations; compiler time/RSS; code/stack costs; equivalent C/Rust computation
-comparisons; two-session native timing acceptance; full platform gates.
+Still needed for an accepted implementation:
+
+- Two-session native timing acceptance; the active run includes separate memory,
+  compiler/RSS and image/stack observations in each architecture's first session.
+- Complete artifact audits, including those separate observations. Suite
+  `array-review` audits a completed measurement run without repeating timings.
+- C/Rust computation comparisons: suite `array-peers` takes the completed run and
+  exact source as inputs. Its explicit templates, six-role schedule, separate process-RSS observations
+  and complete raw-record audit are ready; native execution remains unverified.
+- Full platform gates, documentation and their complete final-head audits.
 
 ## Documentation
 
@@ -90,29 +98,25 @@ prose-only lesson edits.
 and evidence. The benchmark overview uses #269's verified reports; #233 is dated
 historical evidence. The sweep removes stale delivery instructions, old milestone
 jargon and duplicate merge bookkeeping while preserving raw results/contracts.
-The wider review is still in progress; do not claim every page is finished.
+The prose/navigation sweep covers the tracked Markdown inventory, including
+historical reports, tool guides and fixture READMEs. Local link checks cover all
+381 files; the full runner audit and tutorial execution still need final-head
+verification. Original observations and acceptance limits remain intact.
 
 Full documentation audit `42437087245`, job `128598137245`, **passes** at
-`432d19715`. Later uncommitted documentation edits need the final-head audit.
+`432d19715`. Later documentation edits need the final-head audit.
 The generated library reference must be updated through its source/generator,
 not edited manually. Preserve vendor licenses and source attribution.
 
 ## Checks and resource limits
 
-- Earlier guarded checks pass: five diagnostic controls, six metadata controls,
-  Rust formatting for the new native fixture and the tutorial copy harness.
-- Latest guarded checks: nine measurement controls, Rust formatting and the
-  sparse/index documentation audit (381 pages, five roadmap rows) pass. No local
-  compiler build or native suite was run.
-- The separate memory/compiler observer adds two resource/boundary controls;
-  all eleven measurement controls pass. Production implementation is unchanged.
-- At 75 GiB free, the sparse/index documentation audit passed 379 Markdown files
-  and five roadmap rows (0.36 s). This is not the full runner audit.
-- Disk fell to **58 GiB** and the guard refused a helper; nothing ran below the
-  limit. At **87 GiB**, guarded Rust formatting, eight measurement controls and
-  the sparse/index audit (380 pages/five rows) pass. Diagnostic archives pass
-  digest/ZIP/log-summary checks; compact observations are retained. Full builds,
-  tests, benchmarks and large regeneration remain on runners.
+- Guarded checks pass: twelve measurement controls, five diagnostic controls,
+  Rust formatting, tutorial source/output copies and sparse/index documentation
+  audit (381 Markdown files, five roadmap rows). The extended audit-tool controls, workflow syntax and all changed cross-links
+  pass locally. No local compiler build or native suite was run.
+- Disk previously fell to 58 GiB and the guard refused work; nothing ran below
+  the limit. The latest reading is 86 GiB. Preserve 64 GiB free and use the guard;
+  full builds, tests, benchmarks and large regeneration remain on runners.
 - An earlier local full documentation audit stopped on a tracked but absent
   example in this sparse checkout. Use the complete runner checkout; do not
   materialize large evidence just to satisfy a local audit.

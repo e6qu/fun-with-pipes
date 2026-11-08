@@ -6,8 +6,8 @@ uninstrumented samples per implementation: six rotating process batches of five,
 so each occupies every position twice. Separate profiles record allocations,
 counts, charged bytes and address-space reservation; collector counters are gone.
 The paired C experiments now compare two binaries in four alternating batches
-(twenty samples each). These comparisons still need new measurement runs on the
-collector-free compiler. They do not revise the historical results below.
+(twenty samples each). Those tool changes do not revise the historical results
+below or establish current performance. [PLAN.md](../../PLAN.md) selects new work.
 
 This is the 2026-10-16 experiment, not a current-revision benchmark. The protocol
 and observations below are retained so its ratios have a precise meaning.

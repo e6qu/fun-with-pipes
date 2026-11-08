@@ -29,7 +29,7 @@ executables check timing variation. The composed, allocation-free fwp program is
 covered by [safety checks](../scalar-array-safety-2026-11-02/README.md), not timed
 as though it materialized an array.
 
-[The frozen protocol](../array-construction-costs.md#selected-next-change-known-scalar-captures)
+[The frozen protocol](../array-construction-costs.md#selected-change-known-scalar-captures)
 fixes two sessions per architecture, two warmup and 18 measured rounds, four fresh
 processes per role/round, and five samples of eight calculations per process.
 Hosts: Neoverse N2/GCC 13.3 and EPYC 7763/GCC 15.2, four CPUs, Rust 1.99.1.

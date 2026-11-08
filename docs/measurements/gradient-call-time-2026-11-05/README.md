@@ -123,7 +123,7 @@ Every failed step is explained by the 17 frozen timing limits; there are no
 unexplained diagnostics. The original measurement run remains failed.
 
 [Final platform delivery is verified](../../roadmap-history.md#gradient-call-storage-pr-259).
-Remaining work investigates the measured
-[remaining allocation sites](../gradient-call-census-2026-11-05/README.md#remaining-storage)
-and the zero-update source/driver path. Neither is an established explanation
-for the timing results. [PLAN.md](../../../PLAN.md) retains these and earlier goals.
+The [allocation census](../gradient-call-census-2026-11-05/README.md#remaining-storage)
+and zero-update source/driver investigation were leads at this revision, not
+established explanations for the timing results. Subsequent changes have separate
+[delivery records](../../roadmap-history.md); [PLAN.md](../../../PLAN.md) owns current goals.

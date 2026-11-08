@@ -58,70 +58,31 @@ even when inlining replaces a function call with a record literal. Unset `FWP_NO
 its presence disables the passes, even with a value of `0`. Debug builds also validate local types after
 passes and check inserted reference operations.
 
-The native scalar-constant pass in `src/cgen/constant_values.rs` passed
-[PR #261's delivery gates](measurements/scalar-constant-delivery-2026-11-05/README.md).
-After numeric representation selection and before ownership
-insertion, it proves exact immediate constants and replaces their reads. It shares
-the packed-fold seed evaluator; it neither runs arbitrary user code nor changes
-ordinary interpreter optimization. [The rules](design.md#exact-scalar-constants)
-explain its finite budget and excluded expressions.
+### Native lowering and ownership
 
-The interpreter uses Rust-owned
-values rather than executing the generated C reference-count machinery.
-Public interpreter entries now check queue/State/autodiff lifetimes before
-language effects, using the same proof as native ARC. Successful checks are
-cached per entry in the immutable program; unreachable definitions are not roots.
+The interpreter executes Rust-owned values. Native code instead uses the
+representations and ownership operations chosen by the compiler. Both check
+entry lifetimes before language effects; unreachable definitions are not entry
+roots. Successful checks are cached per entry in the immutable program.
 
-This entry check passed [GC-removal verification](roadmap-history.md#tracing-gc-removal-pr-217).
-Direct-call borrowing changes who keeps an argument alive during a call, without
-changing its source type. Its proof runs before reference operations are inserted;
-[the ownership design](design.md#ownership-implementation) explains the limits.
-Before either step, `src/cgen/scalar_text.rs` removes eligible temporary integer
-displays used only by printing or character counting.
+The native passes below run before reference-count insertion unless stated
+otherwise. Each needs a proof for its selected expressions; an unproved use
+keeps its ordinary representation.
 
-It preserves the scalar
-inputs and their evaluation order; [the text lowering rules](design.md#measuring-integer-text-without-building-it)
-explain which expressions qualify.
+| Transformation | What changes and what must remain |
+|---|---|
+| [Exact scalar constants](design.md#exact-scalar-constants) | Replace proved immediate constant reads without arbitrary compile-time execution or changing effects. Runs after numeric representation selection. |
+| [Temporary integer text](design.md#measuring-integer-text-without-building-it) | Print or count selected numeric displays without building a String; preserve input evaluation order. |
+| [Mapped numeric records](measurements/derivative-temporary-storage-2026-11-02/README.md) | Replace eligible private list cells with a flat buffer. Finish all map calls before folding; keep seed evaluation and cleanup in place. |
+| [Numeric parameters and packed inputs](measurements/packed-derivative-inputs.md) | Flatten an internal callback's numeric fields, then pack eligible input lists. Bind computed arguments once, left to right. Exclude escaping data, unknown calls and unproved aliases. |
+| [Direct-call borrowing](design.md#ownership-implementation) | Let an existing owner keep an argument alive throughout a proved call instead of adding a temporary owner. |
+| [Field transfers](measurements/derivative-owner-transfers.md) | During C emission, move already-separated field owners together. Check the ownership expression, not emitted C text. |
 
-Native lowering also recognizes a private mapped list of numeric records whose
-only consumer is a known left fold. It can store the records in one flat buffer,
-finish **all** map calls before the first fold call, and keep seed evaluation
-at its original position. It does not interleave mapping with folding. Ordinary
-ownership insertion keeps the buffer alive through intermediate calls and releases it on return or failure.
-See the [selection rules and verification status](measurements/derivative-temporary-storage-2026-11-02/README.md).
-
-For selected internal callbacks, `src/cgen/numeric_parameters.rs` then replaces
-one nested numeric-record parameter with a flat record of its numeric fields.
 For example, a callback reading two `(value, operation-id)` records can receive
-four numbers directly. This changes the compiler's internal parameter type and
-all known callers together; the source function still takes one argument.
-
-- Prove leaf-only uses and supported argument construction before rewriting.
-- Bind computed arguments once, left to right, before passing their fields.
-- Exclude function values, entry points, recursion and unproved ownership uses.
-- Keep input lists alive while the packed mapper reads their numeric fields.
-- Check the rewritten typed IR before inserting ownership operations.
-
-Two further transformations passed [PR #257's delivery gates](roadmap-history.md#packed-derivative-inputs-pr-257):
-
-1. `src/opt/scoped.rs` exposes a closed, known objective inside an existing
-   derivative-scope worker. It keeps scope entry and argument evaluation in
-   place, reuses each specialization, and obeys the existing body/work limits.
-2. `src/cgen/packed_inputs.rs` replaces an eligible private input-record list
-   with one numeric buffer. A pair callback borrows neighboring windows of that
-   buffer. Input construction, pair mapping and folding still finish in order.
-
-The second pass runs **after numeric-parameter lowering**: a forwarding callback
-must first expose its field reads before the packing proof can accept it.
-Both changes precede ownership insertion. Extra reads, escaping data, resource
-anchors and branch-crossing aliases exclude packing. No source-level conversion
-or public list representation changes.
-
-During C emission, `src/cgen/field_transfers.rs` can also move a complete group of
-already-separated field owners. It checks the emitted ownership expression;
-it does not remove ownership operations by searching C text.
-[Verification and measured limits](measurements/derivative-owner-transfers.md)
-separate delivered behavior from unsettled timing comparisons.
+four scalar fields internally. Its source function still takes one argument.
+Numeric-parameter lowering must precede input packing so the packing proof can
+see which fields the callback reads. The detailed contracts linked above record
+selection rules, exclusions and verified revisions.
 
 ## What kind of parser is this?
 
@@ -354,7 +315,6 @@ Useful entry points: `driver::check_source`, `macros::expand`, `Expander::invoke
 `syntax::quote/from_value`, `mono::comptime` and `mono::lower`. Tests live in
 `tests/parse/`, `tests/run/` and [lesson 11](tutorials/11-comptime-and-macros/README.md).
 For representations, ownership and emitted code, continue with [compiler design](design.md).
-
 
 ## Interactive execution and machine-code inspection
 

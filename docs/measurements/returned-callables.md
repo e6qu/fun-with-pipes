@@ -174,7 +174,7 @@ additional recovery controls; Rust is a `core` callable library, not a whole
 Rust application. These text totals expose that difference rather than isolate
 only language overhead. A largest frame is not an aggregate stack bound.
 
-## Next candidate and limits, declared before implementation
+## Original candidate and acceptance limits
 
 For an **exactly saturated borrowed call**, use the existing typed entry directly
 when its complete parameter metadata proves there are no owned arguments.

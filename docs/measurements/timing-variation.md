@@ -395,6 +395,7 @@ These are diagnostic ratios, not new accepted baselines:
 Array computation/inclusive copy ratios are 0.999581/0.991365 under named paths
 and 1.001697/0.984670 under equal names. That does not replace the failed N1
 session. Every output and final-storage check passes. Naming alone is therefore
-insufficient as a measurement repair; do not rerun this experiment or declare
-D2/N1 complete. The comparison still needs controls for every history variant;
-a control for the current-result program cannot establish history stability.
+insufficient as a measurement repair. The original derivative/array timing goals
+remain unmet; do not rerun this unchanged experiment for a pass. A current-result
+control cannot establish history stability. [PLAN.md](../../PLAN.md) selects later
+comparisons; this report is evidence, not a parallel backlog.

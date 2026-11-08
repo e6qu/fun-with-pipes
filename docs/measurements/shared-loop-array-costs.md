@@ -278,3 +278,17 @@ if both languages' copy variation is at most 2% for that metric. Report
 time separately. No universal parity threshold is asserted. Allocation strategy,
 clock and arithmetic differences mean derivative ratios are application costs,
 not an isolated ARC or language-overhead measurement. Swift remains milestone 4.
+
+After timing, run each ordinary fwp/C/Rust image separately under GNU `time -v`
+and retain peak process RSS and whole-file bytes. These one-shot memory
+observations are not repeated speed samples. C/Rust allocator-call and ARC
+counts are unmeasured here; the source explains buffer reuse but does not replace
+an allocation observer. fwp's separate instrumented counts remain identified as
+managed-runtime counts, not complete process allocations.
+
+`array-review` reconstructs every candidate/reference timing and the separate
+memory/compiler observations from raw records. Each peer job also runs
+`audit-loop-array-peers.py`: it checks source generation, flags, native image and
+copy hashes, every command/result, exact checksums, the full six-role schedule,
+resource reports and all recomputed ratios. An audit pass verifies the record;
+it does not turn a failed timing control into acceptance.

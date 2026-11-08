@@ -88,7 +88,7 @@ C driver does not need for its bounded loop. Record these differences explicitly
 A source-composed program may eliminate materialized storage; report that as a
 different execution boundary, not an equivalent isolated allocation sample.
 
-## Next measurement: materialized construction phases
+## Materialized construction protocol
 
 This protocol was frozen before implementing its runner. Use the current compiler;
 no production optimization is selected. Keep the composed program as an exact,
@@ -145,7 +145,7 @@ with “scalar”: records and other representations need their own proof. Cover
 scalar capture evaluation, reused/stored callbacks, empty input, checked overflow,
 partial failure and cancellation through the existing array ownership tests.
 
-## Selected next change: known scalar captures
+## Selected change: known scalar captures
 
 The [audited ARM64 phase results](array-construction-phases-2026-11-02/README.md)
 show repeatable materialized-source overhead. Filling, including callback dispatch
@@ -187,11 +187,11 @@ no longer the candidate's reference. C/Rust remain materialized peers.
 [Focused safety checks](scalar-array-safety-2026-11-02/README.md) now pass on all
 three declared hosts, including semantic, cleanup, exact-output and profiling checks.
 These checks are required before any candidate timing. Keep the original baselines, rejected hosts and unmet goals.
-The full nine-job production matrix and documentation run once the combined
-implementation, evidence and documentation batch is ready.
+The combined implementation and documentation subsequently passed the
+[full production matrix](../roadmap-history.md#direct-numeric-array-callbacks-pr-245).
 
 [Paired results](scalar-array-captures-2026-11-02/README.md) now retain all four
 sessions: ARM64 passes every limit; AMD64 misses four consumption-speed and four
 copy limits. Exact results, cleanup and managed-storage limits pass everywhere.
 Keep the verified reductions and ARM64 gains while leaving the original AMD64
-limits open; full production verification still gates delivery.
+limits open. Those misses remain part of the historical record.

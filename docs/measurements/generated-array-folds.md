@@ -114,7 +114,7 @@ are not a measure of peak memory inside the loop. C/Rust peers and the other fwp
 entries retain their real construction/release boundaries. All such observers
 run in separate diagnostic binaries and are excluded from ordinary timing.
 
-## Verified costs and remaining gates
+## Verified costs and timing limits
 
 At `899ad012c19a9f49abce941070cdbfef610725d5`, the five focused native targets
 pass thirteen tests on each Linux architecture. Both packing settings and O1/O2
