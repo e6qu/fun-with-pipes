@@ -4,6 +4,7 @@
 import copy
 import hashlib
 import importlib.util
+import json
 from pathlib import Path
 import unittest
 
@@ -16,6 +17,31 @@ MEASURE_SPEC.loader.exec_module(MEASURE)
 
 
 class ParserEvidence(unittest.TestCase):
+    def test_peer_rejection_cannot_hide_a_crash_or_timeout(self):
+        controls = {}
+        for name, nodes, result in [('multiply', 7, 45), ('negative', 1, -7),
+                                     ('minimum', 1, -9223372036854775808)]:
+            controls[name] = {language: dict(status=0, stderr='', stdout=json.dumps(dict(nodes=nodes, result=result)))
+                              for language in ('c', 'rust')}
+        for name in ('missing', 'trailing', 'invalid', 'add-overflow', 'mul-overflow'):
+            controls[name] = {
+                'c': dict(status=101 if name.endswith('-overflow') else 92, stdout='', stderr=''),
+                'rust': dict(status=101, stdout='', stderr='parser rejected the input'),
+            }
+        READER.check_peer_controls(controls)
+        for name in ('missing', 'trailing', 'invalid', 'add-overflow', 'mul-overflow'):
+            for language in ('c', 'rust'):
+                for status in (0, -11, -6, 78, 124):
+                    damaged = copy.deepcopy(controls)
+                    damaged[name][language]['status'] = status
+                    with self.subTest(name=name, language=language, status=status):
+                        with self.assertRaises(AssertionError):
+                            READER.check_peer_controls(damaged)
+        damaged = copy.deepcopy(controls)
+        damaged['missing']['c']['stdout'] = 'unexpected successful output\n'
+        with self.assertRaises(AssertionError):
+            READER.check_peer_controls(damaged)
+
     def setUp(self):
         self.settings = dict(samples=6, rounds=32768, small_rounds=32768, max_control_ratio=1.10)
 

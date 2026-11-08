@@ -80,6 +80,20 @@ fwp upgrades run on its serialized scheduler without ticking or suspending. They
 are not an OS-thread sharing API. Use Rust `Rc`/`Weak` for that serial contract;
 record Swift runtime synchronization as an implementation difference.
 
+Track **value destruction** and **backing-allocation release** separately. Rust's
+[`Weak`](https://doc.rust-lang.org/std/rc/struct.Weak.html) lets the value be
+destroyed after the last strong owner, but keeps its backing allocation until
+the weak references are gone. fwp keeps separate weak metadata and clears its
+target before destroying the channel's queued values; the channel storage can
+then be freed while weak values remain. Include a checkpoint after the last
+strong owner and another after the last weak value. Do not add a Rust `Box` just
+to disguise this difference. Measure the representations the languages actually use.
+
+The current fwp runtime also constructs an owned `Some` result for a successful
+upgrade. Count and measure that result's storage separately from weak metadata
+and the retained target. Its presence in source is a candidate cost to investigate,
+not proof that every optimized caller performs a heap allocation.
+
 Every peer must preserve an acquired owner throughout an active callback. Cover
 expiration, address reuse, reentry, queued cleanup, callback failure and cancellation
 before entry, during the callback and after completion. Closing an fwp channel is

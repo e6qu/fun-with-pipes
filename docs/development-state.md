@@ -124,9 +124,11 @@ Milestone 4 has a [concrete scope](measurements/ownership-peers.md). Prepared,
 not yet tested: native Swift Array peer, common peer result/error
 checks with explicit language selection, and `ownership-peer-checks` in
 `numerics.yml`. It runs C/Rust O1/O2 and Swift Onone/O on native Linux ARM64/AMD64
-without rebuilding fwp. Initial source `9f0dae655` was published and focused run
-`42519237679` queued. Its unstarted jobs will be replaced with the combined parser
-and Swift batch. The existing C/Rust workflow caller now selects its
+without rebuilding fwp. Initial source `9f0dae655` was published; focused run
+`42519237679` was cancelled before either job started (both have empty step lists).
+Combined parser/Swift run `42520124080` tests source `5c40c2a9f`; jobs
+`128851586715` (ARM64) and `128851586733` (AMD64) are queued.
+The existing C/Rust workflow caller now selects its
 languages explicitly. No peer timing has been collected or acceptance declared.
 The parser batch adds C/Rust allocation-transition observers, four existing tree
 shapes, real omitted-release controls, eight semantic controls, 32 damaged-record
@@ -135,6 +137,10 @@ These are prepared checks, not passes. They observe successful API requests and
 release; allocator-internal overlap, input loading and RSS remain outside scope.
 The parser job executes even if the earlier buffer step fails so both failures
 can be repaired together. Diagnostic clock values are not performance evidence.
+Further local edits tighten all parser peer rejection checks to the expected
+C/Rust exit statuses: a crash or timeout cannot stand in for a language error.
+The shared evidence tests now reject 50 altered exits and unexpected output;
+these additions are unverified and belong in the next batch, not #272.
 Swift uses external input/result barriers; matched timing peers must all use
 the same barriers before ratios are meaningful. Remaining work includes returned
 buffers, scalar-closure allocation attribution, weak registrations and parser peaks.
