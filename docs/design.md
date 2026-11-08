@@ -405,8 +405,9 @@ Native `array.map` can also call an explicitly known, closed scalar function
 directly. For example, mapping `fn x -> x * 0.25` over `array[2.0, 4.0]` produces
 an independent `array[0.5, 1.0]`. The input stays borrowed; the existing typed-array
 builder cleans partial output on failure. This selection accepts ordinary
-integer/F32/F64 arguments and results, with no saved arguments. Dynamic functions,
-captures, wide values and reference-bearing elements keep their ordinary calls.
+integer/F32/F64 arguments and results, with no saved arguments. On this borrowed
+input path, dynamic functions, captures, wide values and reference-bearing elements
+keep their ordinary calls. The consuming path below admits scalar captures.
 The [native checks](measurements/direct-array-callbacks-2026-11-03/README.md) cover
 selection, effects, traps and partial-output cleanup. [Compiler-cost measurements](measurements/direct-array-analysis-2026-11-03/README.md)
 bound compilation overhead; they do not measure generated-program speed. The

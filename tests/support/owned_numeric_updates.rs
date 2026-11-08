@@ -171,7 +171,10 @@ fn consumed_numeric_owners_survive_sharing_traps_and_allocation_failure() {
         "fwp_value_owner input = {l2, ",
         "fwp_value_owner input = {0, ",
     );
-    assert_ne!(missing_map_owner, code);
+    assert!(
+        missing_map_owner != code,
+        "captured consuming worker was not emitted"
+    );
     for opt in ["-O1", "-O2"] {
         for (label, text, expected) in [
             ("reuse", code.clone(), 0),

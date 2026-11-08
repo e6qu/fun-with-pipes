@@ -10,8 +10,8 @@ SELECTION = 'let borrowed_arrays = if array {\n            borrowed_array_reads(
 DISABLED = SELECTION.replace('if array {', 'if false {')
 FRESH_SELECTION = 'let fresh_f64 = hof.0 == "array.generate"\n'
 FRESH_DISABLED = 'let fresh_f64 = false\n'
-CAPTURED_SELECTION = 'Expr::Call(step, args) => (*step, args.len()),'
-CAPTURED_DISABLED = 'Expr::Call(step, args) if false => (*step, args.len()),'
+CAPTURED_SELECTION = 'const CAPTURED_MAPS: bool = true;'
+CAPTURED_DISABLED = 'const CAPTURED_MAPS: bool = false;'
 
 
 def reference_source(source):

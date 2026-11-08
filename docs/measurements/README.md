@@ -9,7 +9,12 @@ identities. Do not edit observations to make an old experiment describe new code
 
 ## Latest delivery
 
-Current investigation: [shared loop/array costs](shared-loop-array-costs.md).
+Current investigation: [captured scalar array-map reuse](captured-array-maps.md).
+Its native verification and runtime/memory measurements are pending.
+
+Merged #270 passes [all delivery gates](fresh-array-delivery-2026-11-08/README.md).
+Its [shared loop/array investigation](shared-loop-array-costs.md) retains unmet
+performance targets.
 The [metadata candidate](borrowed-array-metadata-2026-11-08/README.md) misses
 its target; these are diagnostic results, not another delivered optimization.
 The [fresh F64 output diagnostic](fresh-array-diagnosis-2026-11-08/README.md)

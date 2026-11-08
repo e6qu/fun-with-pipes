@@ -194,7 +194,7 @@ memory rather than treating the percentage alone as the delivery decision.
 The [phase measurements](measurements/callable-phases.md) show faster invocation,
 but three AMD64 construction regressions fail the combined acceptance rule.
 
-## Latest loop and array investigation
+## Loop and array measurements
 
 [The phase comparison](measurements/loop-array-peers-2026-11-08/README.md) measures
 computation, input construction and result release separately. In its qualified
@@ -210,6 +210,13 @@ status, exact flags, process RAM and unmeasured peer allocation counts explicit.
 [Candidate/reference results](measurements/fresh-array-costs-2026-11-08/README.md)
 are separate: ARM64 confirms faster fresh-output stores; cross-platform milestone
 acceptance remains open. Neither fewer retains nor a successful audit closes it.
+
+The next [captured-map comparison](measurements/captured-array-maps.md) asks whether
+runtime scalar coefficients can use the same storage-reuse proof as closed
+callbacks. It compares sensor calibration and pixel adjustment against a
+same-source build disabling only that selection. It checks exclusive, shared and
+slice inputs, with construction/work/release timings and separate memory counts.
+Results are pending; this experiment does not replace the original unmet targets.
 
 ## Choose the question first
 

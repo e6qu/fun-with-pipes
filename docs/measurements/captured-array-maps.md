@@ -1,6 +1,8 @@
 # Reuse array storage with scalar callback captures
 
-Status: implementation and verification in progress after PR #270. This extends
+Status: implementation and verification in progress after PR #270. The first
+native run found that the selector missed let-bound callbacks; no timings were
+collected. The repair indexes actual partial applications and their bindings. This extends
 the existing same-type numeric `array.map` proof; it does not close #270's
 unresolved AMD64 timing limits or change its original results.
 
@@ -42,8 +44,10 @@ that later coordinates still need.
 - Preserve element order, checked overflow, float bits and callback effects.
   Existing protected owners cover allocation failure, traps and cancellation.
   Every physical allocation must be released exactly once.
-- Keep the existing reverse liveness walk and rewrite. Capture handling is
-  proportional to supplied arguments; do not add whole-program search.
+- Index known callback bindings once, then use the existing reverse liveness
+  walk and rewrite. Save captures at their original binding, including computed
+  values; remove the closure only when no other use needs it. Work stays linear
+  in expressions and supplied arguments; no whole-program search.
 
 ## Verification before delivery
 
@@ -106,9 +110,10 @@ memory and system/library allocations. A stack estimate is not total call-stack
 use. Sizes change runtime input, not compiler source size.
 
 Compiler analysis also checks 1/8/128 map calls with 0/2/8 captures. It must share
-one private worker and visit no more than `(8 + 2 * captures) * maps + 3` IR nodes.
-These operation counts bound this analysis; separate compiler time/RSS observations
-do not establish general compiler scaling.
+one private worker and visit no more than `(15 + 3 * captures) * maps + 5` IR nodes.
+A shared two-capture binding used by 1/8/128 maps also keeps one snapshot/worker
+and at most `12 * maps + 20` visits. These counts bound this analysis; separate
+compiler time/RSS observations do not establish general compiler scaling.
 
 The [measurement script](../../scripts/measure-captured-maps.py) saves all commands,
 source, raw observations and failures. [The audit](../../scripts/audit-captured-maps.py)

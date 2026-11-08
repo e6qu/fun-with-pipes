@@ -1,6 +1,6 @@
 # Current work
 
-**Next:** finish native verification of captured-scalar array maps, then run the
+**Next:** verify the repaired selection of let-bound scalar callbacks, then run the
 frozen sensor/pixel comparison and bundle implementation, evidence and docs in
 one normal PR. [The contract](measurements/captured-array-maps.md) defines safety,
 inputs, schedule and acceptance. No performance claim is made yet.
@@ -54,18 +54,44 @@ isolated same-source reference disabling only captured-map selection; closed map
 remain optimized in both. All 48 cases retain exact-result/alias checks, paired
 copy timings and separate memory/compiler observations.
 
-Focused run `42468684378` and docs `42468686384` test source
-`b41752cac9ff12148bbd4bbf0b3cfa2efe913f5e`. Native jobs: AMD GCC `128694090277`,
-ARM GCC `128694090574`, macOS ARM Clang `128694090623`; docs job `128694094171`.
-All were queued at the last poll. The superseded run `42466992494` was cancelled:
-its Mac runner had only reached dependency fetching, and neither Linux job
-started. No native target results were discarded.
+## Native failure and root repair
 
-Do not measure until these three native jobs and their complete focused audit
-pass. Dispatch `numerics.yml`, suite `captured-maps`, evidence run `42468684378`;
-the workflow audits it before scheduling the two sessions on each architecture.
-It rejects changes to compiler/runtime/library/native tests since the checked
-source. Final delivery still needs all nine production jobs and docs on the
+Focused run `42468684378` tested `b41752cac9ff12148bbd4bbf0b3cfa2efe913f5e`.
+AMD GCC job `128694090277`, ARM GCC `128694090574` and macOS Clang `128694090623`
+all completed. Each passed formatting, Clippy, 11 ownership unit tests and six
+of eight native targets. The same two checks failed on every host:
+
+- `mapped_array_construction`: the exported captured callback did not select a
+  consuming map.
+- `zip_unwind_ownership`: the deliberately broken captured-input owner could not
+  be injected because no captured consuming worker existed.
+
+All target results and complete job logs were read. Generated source shows why:
+production IR binds `Apply(Func, captures)` to a local before calling `array.map`.
+The first implementation only handled an inline `Call`; its synthetic unit
+fixture used the same wrong form. No runtime measurements were collected.
+
+The repair recognizes actual partial applications and indexes bound callbacks
+once. It snapshots captures at their original binding, including computed values,
+and passes the saved scalars directly. Other uses retain the original closure;
+only fully replaced uses remove it. Parameters, pattern bindings and multiply
+bound locals cannot supply an ambiguous origin. New unit cases cover eager
+capture placement, another escaping closure use and one binding shared by
+1/8/128 maps. The reference disables both captured selection and its added index.
+The source edit is ready for focused runner verification; local guard refused
+further checks after free space fell to about 60 GiB.
+
+Docs run `42468686384`, job `128694094171`, passes at `b41752cac`; subsequent
+cross-link/repair notes still need the next docs gate. Superseded run
+`42466992494` was cancelled before native tests. Duplicate post-merge CI
+`42465665987` was also cancelled after verifying its tree equals fully audited
+PR #270. Its nine logs show no failed test results; Windows panic messages belong
+to the explicit scheduler panic controls. Neither cancellation proves this new
+implementation correct.
+
+Do not dispatch `captured-maps` measurements until the repaired source passes all
+three focused jobs and their complete audit. Pass that new run ID as
+`evidence_run`. Final delivery still needs nine production jobs and docs on the
 exact final PR head. No PR is open yet.
 
 Guarded local checks so far:
@@ -81,6 +107,7 @@ Guarded local checks so far:
   the link check used the Git index for intentionally sparse historical files.
 - Prior audit controls: 10 pass; recovered real checkout log replay passes.
 
-All commands run through `python3 scripts/local-guard.py`. Free disk recovered
-from below 64 GiB to about 83 GiB; small guarded checks resumed. Full builds,
-native suites, benchmarks and large evidence generation remain on runners.
+All checks run through `python3 scripts/local-guard.py`. Free disk briefly
+recovered to about 83 GiB, then fell below 64 GiB again. Further formatting and
+control checks were refused; do not bypass the guard. Full builds, native suites,
+benchmarks and large evidence generation remain on runners.

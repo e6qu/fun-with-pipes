@@ -172,6 +172,13 @@ The [comparison](measurements/array-sort-ownership.md) explains alias and cleanu
 controls, count savings, and additional code/stack costs. Its six-host
 checks and final production gates passed in #212.
 
+A selected same-type numeric `array.map` can consume a last-use array and reuse
+its exclusive ordinary storage. Shared arrays and views receive independent
+output. [The original proof is verified](roadmap-history.md#consumed-numeric-storage-pr-258).
+The [scalar-capture extension](measurements/captured-array-maps.md) passes saved
+numbers directly to that worker; its native verification and measurements are
+pending. Neither proof makes an input mutable in the source language.
+
 ## Tasks and channels
 
 A channel owns its queued messages. Sending consumes one message owner while

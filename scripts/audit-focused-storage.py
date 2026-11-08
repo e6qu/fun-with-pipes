@@ -172,7 +172,9 @@ def main():
             if args.group == 'captured-maps':
                 for test in ('scalar_captures_keep_argument_order_and_consume_only_the_array',
                              'captured_maps_reject_reference_captures_and_executing_call_stages',
-                             'many_calls_share_one_entry_with_linear_visits'):
+                             'many_calls_share_one_entry_with_linear_visits',
+                             'bound_captures_keep_their_evaluation_point_and_other_closure_uses',
+                             'many_bound_map_uses_share_one_snapshot_and_worker'):
                     expected = ('test cgen::owned_numeric::tests::' + test + ' ... ok').encode()
                     if expected not in log:
                         issues.append((host, 'missing ownership unit result: ' + test))
@@ -180,7 +182,7 @@ def main():
                 report['captureAnalysisVisits'] = [list(map(int, row)) for row in scaling]
                 if {(count, captures) for count, captures, _ in report['captureAnalysisVisits']} != {
                     (count, captures) for count in (1, 8, 128) for captures in (0, 2, 8)
-                } or len(scaling) != 9 or any(visits > (8 + 2 * captures) * count + 3
+                } or len(scaling) != 9 or any(visits > (15 + 3 * captures) * count + 5
                     for count, captures, visits in report['captureAnalysisVisits']):
                     issues.append((host, 'missing or unbounded captured-map analysis counts'))
                 for level in ('O1', 'O2'):
