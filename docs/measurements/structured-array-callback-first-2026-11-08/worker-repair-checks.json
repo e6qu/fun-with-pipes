@@ -1,0 +1,27 @@
+{
+  "source": "f243db4bba63fdeb41f38d4a42d73664e6e69c59",
+  "run": 42503655664,
+  "logs": [
+    {
+      "host": "arm",
+      "job": 128801543946,
+      "file": "worker-repair-arm.log.gz",
+      "sha256": "48ac97b9eee4d8eb5ce2362cab992550f6e1f28b6771d8025f39c0b9f267779a",
+      "uncompressedSha256": "c2800eafc50ddf4c8e80fccbdb10a78ff326f33df41566071a0233d3944fe8e7"
+    },
+    {
+      "host": "amd",
+      "job": 128801544219,
+      "file": "worker-repair-amd.log.gz",
+      "sha256": "64c2975717ebf8740392a5b1322a24a40e274dfe14f64b98e653a88db503a168",
+      "uncompressedSha256": "c7704f66eecff487a3d6bc3eabbe73c7274a703d03a7a446501f0445925ac262"
+    },
+    {
+      "host": "mac",
+      "job": 128801544211,
+      "file": "worker-repair-mac.log.gz",
+      "sha256": "da354eff8269b77dbcdd4798d29b85d0df822c3f6ddec1d7cc16511e6157cb54",
+      "uncompressedSha256": "a247dfceb9adfab3d69d43a935b7e7458a0179cc09e0ca0d266c62f6eeaeaa06"
+    }
+  ]
+}

@@ -38,3 +38,17 @@ The repair still needs focused and final native verification.
 `amd.zip` is unchanged artifact `13625508268` (10,860,232 bytes), SHA-256
 `a332ca1aeeeb0ad3925ad2b8e308cf1c08c85371c81af0cff92d4fa38faa09b8`.
 It retains actual generated sources, native images, logs and observations.
+
+## Repair check: invalid resource fixture
+
+[Run 42503655664](https://github.com/e6qu/fun-with-pipes/actions/runs/42503655664)
+at `f243db4bba63fdeb41f38d4a42d73664e6e69c59` stops at a new proof test on
+all three hosts. The fixture incorrectly labels an integer as a resource owner;
+the compiler rejects that invalid input. The other seven proof tests pass.
+Later native checks did not run, so this gives no allocation or speed result.
+
+`3203b635a813538350cefb90f13f09f9a641ee8b` corrects the fixture to use a File
+parameter and validates the input before specialization. The workflow now runs
+independent checks after an earlier failure, preserving a failing overall result.
+[`worker-repair-checks.json`](worker-repair-checks.json) identifies the complete
+reviewed logs and hashes. No unexpected compiler warnings occurred.

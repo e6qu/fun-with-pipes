@@ -89,7 +89,7 @@ pipe likewise takes its input before evaluating any returned function's next inp
 
 Known array callbacks use the same bounded function-specialization machinery as
 scoped derivatives. A private worker can be copied with its first closed function
-argument known; the array call retains its other arguments in their original
+argument known (a function with no runtime captures); the array call retains its other arguments in their original
 order. Removing that closed function parameter cannot release captured owners:
 it has none. Resource-local indices are remapped after removing its anchor.
 Unknown or captured function arguments and oversized workers remain unchanged.

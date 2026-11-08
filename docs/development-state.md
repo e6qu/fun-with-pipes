@@ -1,10 +1,11 @@
 # Current work
 
-**Next:** publish the corrected resource-owner fixture and complete all focused
-native checks before the frozen candidate/baseline comparison. The compiler
-repair is `f243db4bba63fdeb41f38d4a42d73664e6e69c59`; its test fixture failed on
-all three hosts. Keep implementation, measurements and tutorials in one
-substantial normal PR; no PR is open yet.
+**Next:** audit all focused native jobs in `42504579188` at
+`3203b635a813538350cefb90f13f09f9a641ee8b`, then run the frozen
+candidate/baseline comparison only if they pass. Jobs: macOS `128804340246`,
+ARM GCC `128804340262`, AMD GCC `128804340312`. They are queued for runners.
+Keep implementation, measurements and tutorials in one substantial normal PR;
+no PR is open yet.
 
 ## Roadmap status
 
@@ -110,7 +111,10 @@ an I64 parameter as a resource owner. All seven other proof tests pass; later
 native targets were skipped. Complete logs were reviewed. The corrected fixture
 uses a real File parameter and checks valid IR before and after specialization.
 The focused workflow now completes independent targets after an earlier failure,
-retaining a failing overall result. No safety or allocation limit is relaxed.
+retaining a failing overall result. Thirteen guarded failure-injection controls
+verify every command still runs and every injected failure remains failing
+(`/tmp/fwp-check-focused-workflow.py`, 1.16 seconds). No safety or allocation
+limit is relaxed.
 Docs `42503658149` / `128801548679` pass; reviewed diagnostics are deliberate
 negative controls. Local Rust formatting, workflow YAML and 395 Markdown links
 pass. Native repair remains unverified until the next focused run passes.
@@ -133,6 +137,8 @@ contributions, neighboring/dense limits and the local derivative's `-0.0` versus
 other methods' `0.0`. Full output agrees in raw interpretation and Clang O2
 (3.29 seconds, 1.46 CPU); initial expected-output mismatch was corrected to
 preserve signed zero. Numerics and terminology cross-link the worked examples.
+The terminology guide now distinguishes general specialization from its
+type-specific form, monomorphization, and explains closed functions with an example.
 These new tutorial changes still need final native CI coverage.
 
 ## Reproduce and resume
