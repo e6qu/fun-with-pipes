@@ -4,8 +4,8 @@
 [PR #272](https://github.com/e6qu/fun-with-pipes/pull/272), then dispatch the
 complete-log audit. Final head: `8e7cdb94337c6fdac5656dfcbdab768d4a36e985`;
 measured compiler source: `4a32c102f74f738433c1d55969936b023a5510f0`.
-At 20:13 UTC, docs and C/Rust benchmarks pass. Five production jobs are running;
-three macOS jobs remain queued. No failing step is reported. This receipt belongs
+At 20:25 UTC, docs and C/Rust benchmarks pass. Seven production jobs are running;
+the macOS ARM64 ownership job remains queued. No failing step is reported. This receipt belongs
 to the next branch; do not push it onto the final PR head and restart verification.
 Do not merge before all nine production jobs, docs and the complete-log audit
 pass for the final commit. Preserve that final head while checks run.
@@ -121,11 +121,20 @@ rejection controls, no unexpected diagnostic. Logs:
 ## Next-branch preparation
 
 Milestone 4 has a [concrete scope](measurements/ownership-peers.md). Prepared,
-not yet tested or published: native Swift Array peer, common peer result/error
+not yet tested: native Swift Array peer, common peer result/error
 checks with explicit language selection, and `ownership-peer-checks` in
 `numerics.yml`. It runs C/Rust O1/O2 and Swift Onone/O on native Linux ARM64/AMD64
-without rebuilding fwp. The existing C/Rust workflow caller now selects its
+without rebuilding fwp. Initial source `9f0dae655` was published and focused run
+`42519237679` queued. Its unstarted jobs will be replaced with the combined parser
+and Swift batch. The existing C/Rust workflow caller now selects its
 languages explicitly. No peer timing has been collected or acceptance declared.
+The parser batch adds C/Rust allocation-transition observers, four existing tree
+shapes, real omitted-release controls, eight semantic controls, 32 damaged-record
+controls and Rust compiler frames with unchanged ordinary instruction bytes.
+These are prepared checks, not passes. They observe successful API requests and
+release; allocator-internal overlap, input loading and RSS remain outside scope.
+The parser job executes even if the earlier buffer step fails so both failures
+can be repaired together. Diagnostic clock values are not performance evidence.
 Swift uses external input/result barriers; matched timing peers must all use
 the same barriers before ratios are meaningful. Remaining work includes returned
 buffers, scalar-closure allocation attribution, weak registrations and parser peaks.

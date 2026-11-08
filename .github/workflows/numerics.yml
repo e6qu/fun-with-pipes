@@ -2762,6 +2762,13 @@ jobs:
           --languages c rs swift --swiftc swiftc
           --swift-target "${{ matrix.arch }}-unknown-linux-gnu"
           --output ownership-peer-checks
+      - name: Parser growth, cleanup and native frame evidence
+        if: ${{ !cancelled() && inputs.suite == 'ownership-peer-checks' }}
+        run: >-
+          python3 scripts/check-parser-peer-storage.py --cc gcc --rustc rustc
+          --source "$GITHUB_SHA" --arch "${{ matrix.arch }}"
+          --c-arch "${{ matrix.c_arch }}" --rust-cpu "${{ matrix.rust_cpu }}"
+          --objcopy objcopy --output parser-peer-checks
       - name: Measurement schedule and Swift overflow controls
         if: inputs.suite != 'ownership-peer-checks'
         run: |
@@ -2832,12 +2839,13 @@ jobs:
               --input "callable-phase-evidence-$session" --source "$GITHUB_SHA" --arch "${{ matrix.arch }}"
           done
       - name: Preserve all completed and failed observations
-        if: ${{ always() && hashFiles('ownership-peer-checks/**', 'swift-setup/**', 'swift-peer-evidence/**', 'swift-arithmetic/**', 'callable-phase-evidence-*/**', 'swift-allocation-evidence/**') != '' }}
+        if: ${{ always() && hashFiles('parser-peer-checks/**', 'ownership-peer-checks/**', 'swift-setup/**', 'swift-peer-evidence/**', 'swift-arithmetic/**', 'callable-phase-evidence-*/**', 'swift-allocation-evidence/**') != '' }}
         uses: actions/upload-artifact@v7
         with:
           name: ${{ inputs.suite }}-${{ matrix.arch }}-${{ matrix.session }}
           path: |
             ownership-peer-checks/
+            parser-peer-checks/
             swift-setup/
             swift-peer-evidence/
             swift-allocation-evidence/
