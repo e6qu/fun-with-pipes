@@ -7,6 +7,11 @@ missed let-bound callbacks. The repair indexes actual partial applications and t
 the existing same-type numeric `array.map` proof; it does not close #270's
 unresolved AMD64 timing limits or change its original results.
 
+The [initial four-session report](captured-map-initial-2026-11-08/README.md)
+retains all gains, regressions, inconclusive controls and memory/compiler costs.
+The empty-owner repair changes the implementation; its measurements must use
+the same protocol below, without replacing the initial observations.
+
 ## Programs and the cost to remove
 
 A callback can use numbers supplied when the program runs:

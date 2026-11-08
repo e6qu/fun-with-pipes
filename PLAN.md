@@ -64,6 +64,12 @@ costs and documentation. [The selection and measurement contract](docs/measureme
 defines exclusions and acceptance before collecting results. This begins step 2's
 broader proof coverage while step 1's unresolved timing result remains visible.
 
+[Initial captured-map results](docs/measurements/captured-map-initial-2026-11-08/README.md)
+show large qualified gains and 199 fewer array allocations for 199 updates, but
+shared-empty-input regressions and noisy controls prevent full acceptance. The
+empty-owner transfer repair is undergoing native verification; preserve the
+original results and measure the changed implementation under the same limits.
+
 ## Retained contract: shared loop and array costs
 
 Bundle implementation, incidental repairs, evidence and the entire documentation

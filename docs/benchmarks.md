@@ -216,7 +216,10 @@ runtime scalar coefficients can use the same storage-reuse proof as closed
 callbacks. It compares sensor calibration and pixel adjustment against a
 same-source build disabling only that selection. It checks exclusive, shared and
 slice inputs, with construction/work/release timings and separate memory counts.
-Results are pending; this experiment does not replace the original unmet targets.
+[Initial results](measurements/captured-map-initial-2026-11-08/README.md) show large
+qualified gains and fewer array allocations, but shared-empty-input regressions
+and noisy controls leave acceptance open. The empty-owner repair needs new
+verification and measurements; earlier unmet targets remain unchanged.
 
 ## Choose the question first
 
