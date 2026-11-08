@@ -1,0 +1,33 @@
+{
+  "run": 42411789323,
+  "source": "3f0cea6b870701f2f1acc529060e2b5427705026",
+  "checks": [
+    {
+      "host": "amd",
+      "job": 128521303121,
+      "artifact": 13590470866,
+      "archiveSha256": "cc6aa865d4d54e99d73abbe6e5a56169088065f1b2eccfa1d7dc1a783d1c6202",
+      "logSha256": "1371038d52d54bc8e89999bfe106869c40d5a1ebeea5f7c3ea5cedf10f4a41a7",
+      "semantics": "pass",
+      "formatting": "fail"
+    },
+    {
+      "host": "arm",
+      "job": 128521303396,
+      "artifact": 13590760563,
+      "archiveSha256": "2768eb80ef059d3a756cfe7b0d76cab482ef4bde157d9bf769c093adacd43d80",
+      "logSha256": "8c8ada10f1c3001642b2ae5763d34a9def5c32d7abf3b5017423dac983201f06",
+      "semantics": "pass",
+      "formatting": "fail"
+    },
+    {
+      "host": "mac",
+      "job": 128521303251,
+      "artifact": 13590590779,
+      "archiveSha256": "b0a8b7032226f2c72d5463e2340a9485c57ae3baabdf2ed41c39439f0e739645",
+      "logSha256": "1269255f0b8678cddb0f244bcbd30e6edc74bf18ed8cdc34a322c393e68d4e37",
+      "semantics": "pass",
+      "formatting": "fail"
+    }
+  ]
+}

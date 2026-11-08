@@ -7,6 +7,72 @@ fn checked(command: &mut Command) -> Output {
     assert!(output.status.success(), "{command:?}: {output:?}");
     output
 }
+
+#[test]
+fn local_derivatives_preserve_endpoints_aliases_and_traps() {
+    let directory = fwp::cgen::TempDir::new("local-derivatives").unwrap();
+    let input = directory.join("local.fwp");
+    let cfile = directory.join("local.c");
+    let binary = directory.join("local.exe");
+    let compiler = env!("CARGO_BIN_EXE_fwp");
+    let prototype = include_str!("fixtures/descent_local_ad.fwp");
+    for (label, body, succeeds, message) in [
+        ("values", include_str!("fixtures/local_derivatives.fwp"), true, ""),
+        (
+            "trap",
+            "main = [2.0, 3.0] | array.from-list | local-gradient (fn pair -> prim.trap \"local edge failed\") | array.to-list | echo\n",
+            false,
+            "local edge failed",
+        ),
+        (
+            "order",
+            "edge-order : (Dual[F64], Dual[F64]) -> Dual[F64]\nedge-order = fn (x, y) -> x | .re | eq 1.0 | match\n    True -> prim.trap \"preceding edge\"\n    False -> prim.trap \"following edge\"\nmain = local-gradient-at edge-order (array.from-list [1.0, 2.0, 3.0]) 1 | echo\n",
+            false,
+            "preceding edge",
+        ),
+    ] {
+        std::fs::write(&input, format!("{prototype}\n{body}")).unwrap();
+        let reference = Command::new(compiler)
+            .env("FWP_NO_OPT", "1")
+            .args(["run", "--interp"])
+            .arg(&input)
+            .output()
+            .unwrap();
+        assert_eq!(reference.status.success(), succeeds, "{reference:?}");
+        if succeeds {
+            assert_eq!(reference.stdout, "True\n".repeat(6).as_bytes());
+            assert!(reference.stderr.is_empty());
+        } else {
+            assert!(String::from_utf8_lossy(&reference.stderr).contains(message));
+        }
+        checked(
+            Command::new(compiler)
+                .env_remove("FWP_NO_OPT")
+                .args(["build", "--emit-c", "-O2"])
+                .arg(&input)
+                .arg("-o")
+                .arg(&cfile),
+        );
+        let code = std::fs::read_to_string(&cfile).unwrap();
+        fwp::cgen::compile_c(&code, &binary, "-O2").unwrap();
+        let native = Command::new(&binary).output().unwrap();
+        record_probe::save(
+            "local-derivatives",
+            label,
+            &code,
+            &binary,
+            &native,
+        );
+        assert_eq!(native.status.success(), succeeds, "{native:?}");
+        assert_eq!(native.stdout, reference.stdout);
+        if succeeds {
+            assert!(native.stderr.is_empty());
+        } else {
+            assert!(String::from_utf8_lossy(&native.stderr).contains(message));
+        }
+    }
+}
+
 #[test]
 fn quad_reverse_preserves_low_bits_exponent_range_and_reclaims_owned_values() {
     let directory = fwp::cgen::TempDir::new("quad-gradient-precision").unwrap();

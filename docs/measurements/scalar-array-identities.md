@@ -100,6 +100,6 @@ slices and must not be described as views.
 
 Retain every failed timing/noise limit without rerunning completed measurements
 for a pass. Accepted policy permits verified reductions with speed goals open.
-Keep [older goals](../../PLAN.md#open-performance-goals) open against their original
+Keep [older comparisons](unmet-comparisons.md) open against their original
 references. Follow the [remaining-storage review](remaining-gradient-storage.md)
 for unselected candidates; do not fold them into this experiment.

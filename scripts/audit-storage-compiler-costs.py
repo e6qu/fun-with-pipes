@@ -16,7 +16,7 @@ from github_records import records
 
 sys.path.insert(0,str(Path('scripts').resolve()))
 parser=argparse.ArgumentParser(description=__doc__)
-parser.add_argument("--comparison", required=True, choices=("gradient-call", "packed-pair", "scalar-constant", "recording-lookup", 'recording-inline', 'recording-capacity', 'recording-context', 'tape-records'))
+parser.add_argument("--comparison", required=True, choices=("numeric-workers", "gradient-call", "packed-pair", "scalar-constant", "recording-lookup", 'recording-inline', 'recording-capacity', 'recording-context', 'tape-records'))
 parser.add_argument("--repository", required=True)
 parser.add_argument('--source',required=True)
 parser.add_argument('--run',required=True,type=int)
@@ -47,7 +47,7 @@ measure = module('measure-numeric-input-analysis')
 check = module('check-array-list-evidence')
 baseline = module('descent-baselines')
 jobs=records(api, f'actions/runs/{run}/jobs', 'jobs')
-job_name = ('tape_measurements / ' if args.comparison == 'tape-records' else '') + f'numeric_input_analysis ({runner})'
+job_name = ({'tape-records': 'tape_measurements / ', 'numeric-workers': 'numeric_worker_costs / '}.get(args.comparison, '')) + f'numeric_input_analysis ({runner})'
 job,=[job for job in jobs if job['name'] == job_name]
 assert job['head_sha']==source and job['status']=='completed' and job['run_id']==run
 artifacts=records(api, f'actions/runs/{run}/artifacts', 'artifacts')
@@ -94,8 +94,8 @@ if args.comparison in ('recording-context', 'tape-records') and failed_steps == 
     sys.exit(0)
 artifact,=[a for a in artifacts if a['name']==args.comparison+'-analysis-'+arch and not a['expired']]
 assert artifact['workflow_run']['head_sha']==source
-if args.comparison == 'tape-records':
-    host_artifact, = [item for item in artifacts if item['name'] == 'tape-records-analysis-host-' + arch and not item['expired']]
+if args.comparison in ('tape-records', 'numeric-workers'):
+    host_artifact, = [item for item in artifacts if item['name'] == args.comparison + '-analysis-host-' + arch and not item['expired']]
     assert host_artifact['workflow_run']['head_sha'] == source
     host_bytes = api('actions/artifacts/' + str(host_artifact['id']) + '/zip')
     assert host_artifact['digest'] == 'sha256:' + check.digest(host_bytes)
@@ -140,7 +140,21 @@ with zipfile.ZipFile(path) as z:
         with z.open('numeric-analysis/'+name) as stream:assert hashlib.file_digest(stream,'sha256').hexdigest()==checksum,name
     manifest=json.loads(z.read('numeric-analysis-reference/manifest.json'))
     assert manifest==report['referenceManifest'] and manifest['source']==source
-    check.check_reference(zipfile.Path(z,'numeric-analysis-reference/'),dict(referenceCompiler=manifest),source,machine,args.comparison)
+    if args.comparison == 'numeric-workers':
+        baseline = 'f1cc94cf4e013369cccb8a836bd745f41e5d757c'
+        source_path = 'src/cgen/numeric_parameters.rs'
+        assert manifest['referenceSource'] == baseline
+        assert manifest['changedNativeFiles'] == [source_path]
+        assert manifest['candidateSha256'] == check.digest(subprocess.check_output(['git', 'show', source + ':' + source_path]))
+        previous = subprocess.check_output(['git', 'show', baseline + ':' + source_path])
+        assert manifest['referenceSha256'] == check.digest(previous)
+        assert z.read('numeric-analysis-reference/numeric_parameters.rs') == previous
+        assert check.digest(z.read('numeric-analysis-reference/fwp')) == manifest['compilerSha256']
+        changed = subprocess.check_output(['git', 'diff', '--name-only', baseline, source, '--',
+                                          'src', 'runtime', 'lib', 'vendor', 'build.rs', 'Cargo.toml', 'Cargo.lock'], text=True)
+        assert changed.splitlines() == [source_path]
+    else:
+        check.check_reference(zipfile.Path(z,'numeric-analysis-reference/'),dict(referenceCompiler=manifest),source,machine,args.comparison)
     assert manifest['compilerSha256']==report['compilerHashes']['reference']
     for copy in measure.COPIES:
         data=z.read('numeric-analysis/'+copy)

@@ -1,0 +1,145 @@
+session,case,program,elapsedNs,ratioToAD,ratioToC,peakRssBytes,managed
+arm1,3-0,fwp-local,297277829.5,1.0106379223024167,1.8730474626906626,2887680,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 1048736, ""requestedBytes"": 2687048, ""requests"": 98307, ""retains"": 32768}"
+arm1,3-0,fwp-ad,294148698.5,1.0,1.8533318623385122,3035136,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 1048704, ""requestedBytes"": 1638472, ""requests"": 65539, ""retains"": 32768}"
+arm1,3-0,fwp-packed,296975122.5,1.0096088271490347,1.8711402078535215,3018752,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 1048736, ""requestedBytes"": 2687048, ""requests"": 98307, ""retains"": 32768}"
+arm1,3-0,fwp-explicit,298906716.5,1.0161755534675603,1.8833105309709017,2875392,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 1048704, ""requestedBytes"": 1638472, ""requests"": 65539, ""retains"": 32768}"
+arm1,3-0,c-explicit,158713452.5,0.5395687735806861,1.0,1417216,{}
+arm1,3-0,rust-explicit,168663273.0,0.573394592123276,1.0626904672746629,1671168,{}
+arm1,3-1,fwp-local,57509301.0,0.9904491878579614,6.486556529967021,1445888,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 16608, ""requestedBytes"": 131144, ""requests"": 4099, ""retains"": 512}"
+arm1,3-1,fwp-ad,58063858.0,1.0,6.549105809249496,1400832,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 16656, ""requestedBytes"": 131144, ""requests"": 3587, ""retains"": 512}"
+arm1,3-1,fwp-packed,56893492.0,0.9798434682035768,6.417098549767219,1445888,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 16592, ""requestedBytes"": 81992, ""requests"": 2051, ""retains"": 512}"
+arm1,3-1,fwp-explicit,59741538.0,1.028893705271875,6.738333742296274,1454080,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 16800, ""requestedBytes"": 454728, ""requests"": 16899, ""retains"": 3584}"
+arm1,3-1,c-explicit,8865921.5,0.15269260096358048,1.0,1417216,{}
+arm1,3-1,rust-explicit,10693064.0,0.18416041180040085,1.2060860227557846,1675264,{}
+arm1,3-199,fwp-local,16329609.0,0.6331302996489804,2.3403418672104377,1449984,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 1248, ""requestedBytes"": 819304, ""requests"": 31939, ""retains"": 32}"
+arm1,3-199,fwp-ad,25791861.5,1.0,3.696461642268532,1466368,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 1296, ""requestedBytes"": 565864, ""requests"": 12899, ""retains"": 32}"
+arm1,3-199,fwp-packed,13445209.5,0.521296591950139,1.9269528563889997,1445888,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 1232, ""requestedBytes"": 207976, ""requests"": 6467, ""retains"": 32}"
+arm1,3-199,fwp-explicit,35118418.0,1.3616085058459235,5.033133613646025,1454080,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 1536, ""requestedBytes"": 5046632, ""requests"": 197475, ""retains"": 38240}"
+arm1,3-199,c-explicit,6977446.0,0.27052898062437253,1.0,1413120,{}
+arm1,3-199,rust-explicit,8397065.5,0.32557035481909674,1.203458328448547,1667072,{}
+arm1,3-1999,fwp-local,14531139.5,0.5572372365578018,2.1219444862245056,1449984,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 352, ""requestedBytes"": 1024056, ""requests"": 39995, ""retains"": 4}"
+arm1,3-1999,fwp-ad,26077115.0,1.0,3.807973241939653,1466368,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 400, ""requestedBytes"": 704376, ""requests"": 16015, ""retains"": 4}"
+arm1,3-1999,fwp-packed,10669037.0,0.40913410091568797,1.5579717086519773,1445888,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 336, ""requestedBytes"": 256440, ""requests"": 8011, ""retains"": 4}"
+arm1,3-1999,fwp-explicit,38062943.0,1.4596301393003022,5.558232513584199,1449984,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 640, ""requestedBytes"": 6333272, ""requests"": 247887, ""retains"": 47980}"
+arm1,3-1999,c-explicit,6848030.0,0.26260688730329257,1.0,1417216,{}
+arm1,3-1999,rust-explicit,8184479.5,0.31385678592129534,1.1951582425894747,1675264,{}
+arm1,33-199,fwp-local,99593615.0,0.8106896263695301,7.937787902737055,1847296,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 3168, ""requestedBytes"": 11546616, ""requests"": 414049, ""retains"": 32}"
+arm1,33-199,fwp-ad,122850486.5,1.0,9.791401844235313,1802240,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 3904, ""requestedBytes"": 5195480, ""requests"": 13889, ""retains"": 32}"
+arm1,33-199,fwp-packed,50415057.0,0.4103773492179048,4.018169533964593,1581056,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 3168, ""requestedBytes"": 1765304, ""requests"": 6497, ""retains"": 32}"
+arm1,33-199,fwp-explicit,276380363.5,2.2497294994432115,22.02800556987885,1851392,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 7584, ""requestedBytes"": 57030840, ""requests"": 1725825, ""retains"": 420320}"
+arm1,33-199,c-explicit,12546772.0,0.10213042176271724,1.0,1404928,{}
+arm1,33-199,rust-explicit,13432390.0,0.10933933094355308,1.070585326648161,1802240,{}
+arm1,129-199,fwp-local,89677256.5,0.7594036480172762,7.266180538267217,1851392,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 8736, ""requestedBytes"": 11470416, ""requests"": 409297, ""retains"": 8}"
+arm1,129-199,fwp-ad,118089051.5,1.0,9.568271837037466,1855488,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 11584, ""requestedBytes"": 5005064, ""requests"": 4361, ""retains"": 8}"
+arm1,129-199,fwp-packed,48320754.5,0.4091891152161553,3.915232687145018,1585152,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 8736, ""requestedBytes"": 1689152, ""requests"": 1745, ""retains"": 8}"
+arm1,129-199,fwp-explicit,267653217.5,2.2665371099199656,21.6868431964475,1855488,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 26208, ""requestedBytes"": 55847040, ""requests"": 1654233, ""retains"": 410744}"
+arm1,129-199,c-explicit,12341732.5,0.10451208086805575,1.0,1417216,{}
+arm1,129-199,rust-explicit,12566749.5,0.10641756657686424,1.0182322052434696,1802240,{}
+arm2,3-0,fwp-local,293360287.0,1.0104279830481722,1.8823030532797946,3006464,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 1048736, ""requestedBytes"": 2687048, ""requests"": 98307, ""retains"": 32768}"
+arm2,3-0,fwp-ad,290332702.5,1.0,1.8628770034668132,3035136,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 1048704, ""requestedBytes"": 1638472, ""requests"": 65539, ""retains"": 32768}"
+arm2,3-0,fwp-packed,292973149.5,1.0090945559258864,1.8798190425578898,2887680,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 1048736, ""requestedBytes"": 2687048, ""requests"": 98307, ""retains"": 32768}"
+arm2,3-0,fwp-explicit,295285430.5,1.0170588017035387,1.8946554528670358,2891776,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 1048704, ""requestedBytes"": 1638472, ""requests"": 65539, ""retains"": 32768}"
+arm2,3-0,c-explicit,155851783.0,0.5368040928837494,1.0,1417216,{}
+arm2,3-0,rust-explicit,167575330.5,0.5771837931347055,1.0752224150043892,1675264,{}
+arm2,3-1,fwp-local,55260106.0,0.9903249239807007,7.322414043955071,1445888,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 16608, ""requestedBytes"": 131144, ""requests"": 4099, ""retains"": 512}"
+arm2,3-1,fwp-ad,55799975.0,1.0,7.393951082763791,1454080,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 16656, ""requestedBytes"": 131144, ""requests"": 3587, ""retains"": 512}"
+arm2,3-1,fwp-packed,54451085.0,0.9758263332555257,7.215212173364114,1445888,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 16592, ""requestedBytes"": 81992, ""requests"": 2051, ""retains"": 512}"
+arm2,3-1,fwp-explicit,57464407.5,1.0298285527905702,7.614501942966905,1454080,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 16800, ""requestedBytes"": 454728, ""requests"": 16899, ""retains"": 3584}"
+arm2,3-1,c-explicit,7546706.0,0.13524568783408952,1.0,1413120,{}
+arm2,3-1,rust-explicit,8908025.5,0.15964210557442007,1.1803859193666746,1675264,{}
+arm2,3-199,fwp-local,14037400.0,0.5979692669935077,2.5913236972633027,1445888,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 1248, ""requestedBytes"": 819304, ""requests"": 31939, ""retains"": 32}"
+arm2,3-199,fwp-ad,23475119.5,1.0,4.333539933067224,1466368,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 1296, ""requestedBytes"": 565864, ""requests"": 12899, ""retains"": 32}"
+arm2,3-199,fwp-packed,11151328.5,0.4750275499130047,2.05855085685509,1445888,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 1232, ""requestedBytes"": 207976, ""requests"": 6467, ""retains"": 32}"
+arm2,3-199,fwp-explicit,32531177.5,1.3857726049062284,6.00530092151173,1441792,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 1536, ""requestedBytes"": 5046632, ""requests"": 197475, ""retains"": 38240}"
+arm2,3-199,c-explicit,5417077.0,0.23075822894107098,1.0,1417216,{}
+arm2,3-199,rust-explicit,6315412.0,0.2690257657687323,1.165833898982791,1675264,{}
+arm2,3-1999,fwp-local,12402472.5,0.5244807011078186,2.308990748657352,1449984,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 352, ""requestedBytes"": 1024056, ""requests"": 39995, ""retains"": 4}"
+arm2,3-1999,fwp-ad,23647147.5,1.0,4.402432241606328,1454080,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 400, ""requestedBytes"": 704376, ""requests"": 16015, ""retains"": 4}"
+arm2,3-1999,fwp-packed,8750473.0,0.3700434904463636,1.629091393137614,1445888,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 336, ""requestedBytes"": 256440, ""requests"": 8011, ""retains"": 4}"
+arm2,3-1999,fwp-explicit,35336639.5,1.4943298975066654,6.578686120379623,1454080,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 640, ""requestedBytes"": 6333272, ""requests"": 247887, ""retains"": 47980}"
+arm2,3-1999,c-explicit,5371382.5,0.22714716436728785,1.0,1417216,{}
+arm2,3-1999,rust-explicit,6225323.5,0.26325896178386843,1.1589797412491105,1802240,{}
+arm2,33-199,fwp-local,96763986.0,0.8066252347127724,8.997363944186656,1847296,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 3168, ""requestedBytes"": 11546616, ""requests"": 414049, ""retains"": 32}"
+arm2,33-199,fwp-ad,119961516.0,1.0,11.154329863471835,1802240,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 3904, ""requestedBytes"": 5195480, ""requests"": 13889, ""retains"": 32}"
+arm2,33-199,fwp-packed,46424908.5,0.38699834787016196,4.316707228762409,1581056,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 3168, ""requestedBytes"": 1765304, ""requests"": 6497, ""retains"": 32}"
+arm2,33-199,fwp-explicit,273412505.5,2.2791684751633183,25.422596986397767,1851392,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 7584, ""requestedBytes"": 57030840, ""requests"": 1725825, ""retains"": 420320}"
+arm2,33-199,c-explicit,10754704.0,0.08965128450027257,1.0,1417216,{}
+arm2,33-199,rust-explicit,11339576.5,0.09452678557346675,1.0543829472201187,1667072,{}
+arm2,129-199,fwp-local,87137143.5,0.7548857213778976,8.131634092092982,1982464,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 8736, ""requestedBytes"": 11470416, ""requests"": 409297, ""retains"": 8}"
+arm2,129-199,fwp-ad,115430907.0,1.0,10.77200675785768,1871872,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 11584, ""requestedBytes"": 5005064, ""requests"": 4361, ""retains"": 8}"
+arm2,129-199,fwp-packed,44975069.5,0.3896276194035277,4.1970713492628,1454080,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 8736, ""requestedBytes"": 1689152, ""requests"": 1745, ""retains"": 8}"
+arm2,129-199,fwp-explicit,264736752.0,2.2934650595788875,24.70522112069424,1855488,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 26208, ""requestedBytes"": 55847040, ""requests"": 1654233, ""retains"": 410744}"
+arm2,129-199,c-explicit,10715822.0,0.09283321320519469,1.0,1417216,{}
+arm2,129-199,rust-explicit,10623020.0,0.09202925174970686,0.991339721768428,1658880,{}
+amd1,3-0,fwp-local,233789824.5,0.9857110661729197,2.319315598510286,3178496,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 1048736, ""requestedBytes"": 2687048, ""requests"": 98307, ""retains"": 32768}"
+amd1,3-0,fwp-ad,237178857.5,1.0,2.352936553218544,3391488,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 1048704, ""requestedBytes"": 1638472, ""requests"": 65539, ""retains"": 32768}"
+amd1,3-0,fwp-packed,235647481.5,0.993543370534197,2.337744513737868,3178496,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 1048736, ""requestedBytes"": 2687048, ""requests"": 98307, ""retains"": 32768}"
+amd1,3-0,fwp-explicit,228681815.0,0.9641745365098573,2.268641510636591,3182592,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 1048704, ""requestedBytes"": 1638472, ""requests"": 65539, ""retains"": 32768}"
+amd1,3-0,c-explicit,100801212.5,0.42500083507654135,1.0,1581056,{}
+amd1,3-0,rust-explicit,215232023.5,0.9074671569324007,2.1352126443915544,2281472,{}
+amd1,3-1,fwp-local,46800241.0,0.992752730262772,6.477551868937102,2134016,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 16608, ""requestedBytes"": 131144, ""requests"": 4099, ""retains"": 512}"
+amd1,3-1,fwp-ad,47141891.0,1.0,6.524839138163394,2150400,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 16656, ""requestedBytes"": 131144, ""requests"": 3587, ""retains"": 512}"
+amd1,3-1,fwp-packed,45620078.5,0.9677184672121023,6.3142073295890135,2129920,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 16592, ""requestedBytes"": 81992, ""requests"": 2051, ""retains"": 512}"
+amd1,3-1,fwp-explicit,47440613.0,1.0063366571357946,6.566184806648149,2138112,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 16800, ""requestedBytes"": 454728, ""requests"": 16899, ""retains"": 3584}"
+amd1,3-1,c-explicit,7224989.0,0.15326048333529937,1.0,1581056,{}
+amd1,3-1,rust-explicit,10947247.0,0.2322190893869743,1.5151922030607936,2314240,{}
+amd1,3-199,fwp-local,13912011.0,0.5965708864975472,2.2627289380715063,1785856,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 1248, ""requestedBytes"": 819304, ""requests"": 31939, ""retains"": 32}"
+amd1,3-199,fwp-ad,23319963.0,1.0,3.7928919920245048,1802240,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 1296, ""requestedBytes"": 565864, ""requests"": 12899, ""retains"": 32}"
+amd1,3-199,fwp-packed,11406014.5,0.48910945956475144,1.8551393524065791,1781760,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 1232, ""requestedBytes"": 207976, ""requests"": 6467, ""retains"": 32}"
+amd1,3-199,fwp-explicit,30183054.0,1.2943011101689998,4.909144316028426,2052096,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 1536, ""requestedBytes"": 5046632, ""requests"": 197475, ""retains"": 38240}"
+amd1,3-199,c-explicit,6148333.0,0.2636510615389913,1.0,1581056,{}
+amd1,3-199,rust-explicit,7565189.0,0.3244082762910044,1.2304455532906236,2199552,{}
+amd1,3-1999,fwp-local,12891978.0,0.5235029979450077,2.0694154260640203,1785856,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 352, ""requestedBytes"": 1024056, ""requests"": 39995, ""retains"": 4}"
+amd1,3-1999,fwp-ad,24626369.0,1.0,3.9530154252935263,1867776,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 400, ""requestedBytes"": 704376, ""requests"": 16015, ""retains"": 4}"
+amd1,3-1999,fwp-packed,8997718.5,0.36536927145045217,1.444310365971895,1777664,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 336, ""requestedBytes"": 256440, ""requests"": 8011, ""retains"": 4}"
+amd1,3-1999,fwp-explicit,33546597.5,1.3622226443532945,5.3848871258127105,1789952,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 640, ""requestedBytes"": 6333272, ""requests"": 247887, ""retains"": 47980}"
+amd1,3-1999,c-explicit,6229768.0,0.25297143886701284,1.0,1581056,{}
+amd1,3-1999,rust-explicit,7320547.5,0.29726459065077765,1.1750915122360897,2314240,{}
+amd1,33-199,fwp-local,87211174.0,0.6959199709350196,9.379832051533421,2138112,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 3168, ""requestedBytes"": 11546616, ""requests"": 414049, ""retains"": 32}"
+amd1,33-199,fwp-ad,125317820.5,1.0,13.478319984021912,2154496,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 3904, ""requestedBytes"": 5195480, ""requests"": 13889, ""retains"": 32}"
+amd1,33-199,fwp-packed,44719426.5,0.35684810286019936,4.809712916040931,1789952,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 3168, ""requestedBytes"": 1765304, ""requests"": 6497, ""retains"": 32}"
+amd1,33-199,fwp-explicit,223394882.0,1.7826266137464464,24.026811912108037,2146304,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 7584, ""requestedBytes"": 57030840, ""requests"": 1725825, ""retains"": 420320}"
+amd1,33-199,c-explicit,9297733.0,0.07419322298220148,1.0,1581056,{}
+amd1,33-199,rust-explicit,10528566.5,0.08401491869227011,1.1323799575660003,2355200,{}
+amd1,129-199,fwp-local,82618135.5,0.6867567827386911,9.478823380936946,2142208,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 8736, ""requestedBytes"": 11470416, ""requests"": 409297, ""retains"": 8}"
+amd1,129-199,fwp-ad,120301885.0,1.0,13.802300347346712,2228224,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 11584, ""requestedBytes"": 5005064, ""requests"": 4361, ""retains"": 8}"
+amd1,129-199,fwp-packed,42050571.5,0.3495420832350216,4.824484816847033,1794048,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 8736, ""requestedBytes"": 1689152, ""requests"": 1745, ""retains"": 8}"
+amd1,129-199,fwp-explicit,223867493.5,1.8608810119641932,25.684438637804288,2150400,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 26208, ""requestedBytes"": 55847040, ""requests"": 1654233, ""retains"": 410744}"
+amd1,129-199,c-explicit,8716075.0,0.07245169101049415,1.0,1581056,{}
+amd1,129-199,rust-explicit,9942625.5,0.08264729600870344,1.1407228024081941,2347008,{}
+amd2,3-0,fwp-local,329444349.5,0.9970535540706831,2.352946462304137,3178496,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 1048736, ""requestedBytes"": 2687048, ""requests"": 98307, ""retains"": 32768}"
+amd2,3-0,fwp-ad,330417908.0,1.0,2.359899779402754,3194880,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 1048704, ""requestedBytes"": 1638472, ""requests"": 65539, ""retains"": 32768}"
+amd2,3-0,fwp-packed,330634741.0,1.000656238644305,2.3614484368346846,3174400,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 1048736, ""requestedBytes"": 2687048, ""requests"": 98307, ""retains"": 32768}"
+amd2,3-0,fwp-explicit,323171105.5,0.9780677671380935,2.308141907910131,3182592,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 1048704, ""requestedBytes"": 1638472, ""requests"": 65539, ""retains"": 32768}"
+amd2,3-0,c-explicit,140013534.0,0.4237468085416242,1.0,1581056,{}
+amd2,3-0,rust-explicit,223515355.5,0.6764625950600717,1.5963839288564776,2347008,{}
+amd2,3-1,fwp-local,66342958.5,0.9865768552966866,7.473468455067296,1785856,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 16608, ""requestedBytes"": 131144, ""requests"": 4099, ""retains"": 512}"
+amd2,3-1,fwp-ad,67245606.0,1.0,7.575150800410628,2150400,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 16656, ""requestedBytes"": 131144, ""requests"": 3587, ""retains"": 512}"
+amd2,3-1,fwp-packed,64519428.5,0.9594593957559101,7.26804960972188,2129920,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 16592, ""requestedBytes"": 81992, ""requests"": 2051, ""retains"": 512}"
+amd2,3-1,fwp-explicit,66879152.5,0.9945505212637983,7.533870177200269,1789952,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 16800, ""requestedBytes"": 454728, ""requests"": 16899, ""retains"": 3584}"
+amd2,3-1,c-explicit,8877131.0,0.1320105733005068,1.0,1581056,{}
+amd2,3-1,rust-explicit,12724643.5,0.18922639346874204,1.4334184659435576,2207744,{}
+amd2,3-199,fwp-local,17875699.5,0.5898115728875467,2.336567211879205,1785856,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 1248, ""requestedBytes"": 819304, ""requests"": 31939, ""retains"": 32}"
+amd2,3-199,fwp-ad,30307475.0,1.0,3.961548601767931,2150400,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 1296, ""requestedBytes"": 565864, ""requests"": 12899, ""retains"": 32}"
+amd2,3-199,fwp-packed,14329723.5,0.4728115258694431,1.8730658392078543,1781760,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 1232, ""requestedBytes"": 207976, ""requests"": 6467, ""retains"": 32}"
+amd2,3-199,fwp-explicit,39226914.5,1.2942983372913779,5.127425768367216,2052096,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 1536, ""requestedBytes"": 5046632, ""requests"": 197475, ""retains"": 38240}"
+amd2,3-199,c-explicit,7650411.0,0.25242653833748935,1.0,1581056,{}
+amd2,3-199,rust-explicit,9300767.0,0.3068802993320955,1.215721220729187,2248704,{}
+amd2,3-1999,fwp-local,16519535.5,0.5222181212475681,2.1313941445008453,1785856,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 352, ""requestedBytes"": 1024056, ""requests"": 39995, ""retains"": 4}"
+amd2,3-1999,fwp-ad,31633401.5,1.0,4.081425093807526,2211840,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 400, ""requestedBytes"": 704376, ""requests"": 16015, ""retains"": 4}"
+amd2,3-1999,fwp-packed,10991726.5,0.3474721648255247,1.4181816129185212,1781760,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 336, ""requestedBytes"": 256440, ""requests"": 8011, ""retains"": 4}"
+amd2,3-1999,fwp-explicit,42676286.0,1.3490893794649303,5.50620724713739,1789952,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 640, ""requestedBytes"": 6333272, ""requests"": 247887, ""retains"": 47980}"
+amd2,3-1999,c-explicit,7750577.5,0.24501245937778776,1.0,1581056,{}
+amd2,3-1999,rust-explicit,8968681.0,0.28351933635717297,1.1571629339878222,2211840,{}
+amd2,33-199,fwp-local,113157587.5,0.754408447514685,10.30506291176507,2138112,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 3168, ""requestedBytes"": 11546616, ""requests"": 414049, ""retains"": 32}"
+amd2,33-199,fwp-ad,149995122.5,1.0,13.659792577500898,2224128,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 3904, ""requestedBytes"": 5195480, ""requests"": 13889, ""retains"": 32}"
+amd2,33-199,fwp-packed,60959691.0,0.4064111551360612,5.551492080341134,2138112,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 3168, ""requestedBytes"": 1765304, ""requests"": 6497, ""retains"": 32}"
+amd2,33-199,fwp-explicit,274415694.5,1.8294974524921634,24.990555722109256,2453504,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 7584, ""requestedBytes"": 57030840, ""requests"": 1725825, ""retains"": 420320}"
+amd2,33-199,c-explicit,10980776.0,0.0732075537989577,1.0,1581056,{}
+amd2,33-199,rust-explicit,11768752.0,0.07846089795353178,1.071759591489709,2142208,{}
+amd2,129-199,fwp-local,106686161.0,0.7353241906275083,9.9582535437943,2142208,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 8736, ""requestedBytes"": 11470416, ""requests"": 409297, ""retains"": 8}"
+amd2,129-199,fwp-ad,145087245.0,1.0,13.542670934429836,2228224,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 11584, ""requestedBytes"": 5005064, ""requests"": 4361, ""retains"": 8}"
+amd2,129-199,fwp-packed,58510062.0,0.40327502255625575,5.4614209265541405,2138112,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 8736, ""requestedBytes"": 1689152, ""requests"": 1745, ""retains"": 8}"
+amd2,129-199,fwp-explicit,285399501.5,1.9670888471278092,26.639636955438874,2150400,"{""finalChargedBytes"": 0, ""peakChargedBytes"": 26208, ""requestedBytes"": 55847040, ""requests"": 1654233, ""retains"": 410744}"
+amd2,129-199,c-explicit,10713340.5,0.07384067772463389,1.0,1581056,{}
+amd2,129-199,rust-explicit,11443903.5,0.07887601353240942,1.0681918958890553,2351104,{}

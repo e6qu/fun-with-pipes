@@ -7,7 +7,7 @@ use crate::ir::*;
 use crate::value::Value;
 
 struct Shape {
-    outer: usize,
+    fields: Vec<MT>,
     leaves: Vec<(Vec<u32>, MT)>,
 }
 
@@ -40,7 +40,7 @@ fn shape(program: &Program, function: &Func) -> Option<Shape> {
         }
     }
     (nested && leaves.len() >= 2).then_some(Shape {
-        outer: outer.len(),
+        fields: outer.iter().map(|(_, ty)| ty.clone()).collect(),
         leaves,
     })
 }
@@ -172,23 +172,42 @@ fn read_type<'a>(expr: &Expr, locals: &'a [MT], shapes: &'a Shapes) -> Option<&'
     }
 }
 
+/// Keep computed inputs intact. Only scalar bindings ending in numeric field
+/// reads/constructors qualify; no record lifetime crosses a new resource scope.
+fn numeric_input(expr: &Expr, expected: &MT, locals: &[MT], shapes: &Shapes) -> bool {
+    if plain_read(expr, 0) {
+        return read_type(expr, locals, shapes) == Some(expected);
+    }
+    match expr {
+        Expr::Let(local, _, body)
+            if locals
+                .get(*local as usize)
+                .and_then(super::scalar)
+                .is_some() =>
+        {
+            numeric_input(body, expected, locals, shapes)
+        }
+        Expr::Record(values) => record_fields(shapes, expected).is_some_and(|fields| {
+            fields.len() == values.len()
+                && fields.iter().zip(values).all(|((_, ty), value)| {
+                    super::scalar(ty).is_some()
+                        && plain_read(value, 0)
+                        && read_type(value, locals, shapes) == Some(ty)
+                })
+        }),
+        _ => false,
+    }
+}
+
 fn argument(expr: &Expr, shape: &Shape, locals: &[MT], shapes: &Shapes) -> bool {
     let Expr::Record(fields) = expr else {
         return false;
     };
-    fields.len() == shape.outer
-        && fields.iter().all(|e| plain_read(e, 0))
-        && shape.leaves.iter().all(|(path, expected)| {
-            let mut ty = read_type(&fields[path[0] as usize], locals, shapes);
-            for field in &path[1..] {
-                ty = ty.and_then(|ty| {
-                    record_fields(shapes, ty)?
-                        .get(*field as usize)
-                        .map(|(_, ty)| ty)
-                });
-            }
-            ty == Some(expected)
-        })
+    fields.len() == shape.fields.len()
+        && fields
+            .iter()
+            .zip(&shape.fields)
+            .all(|(value, expected)| numeric_input(value, expected, locals, shapes))
 }
 
 fn path(expr: &Expr, aliases: &HashMap<Local, Vec<u32>>, depth: usize) -> Option<Vec<u32>> {
@@ -265,17 +284,27 @@ fn expression(
     }
 }
 
-fn callers(expr: &mut Expr, selected: &[Option<Shape>], visits: &mut usize) {
+fn callers(expr: &mut Expr, selected: &[Option<Shape>], locals: &mut Vec<MT>, visits: &mut usize) {
     *visits += 1;
     match expr {
         Expr::Call(id, xs) => {
             for x in xs.iter_mut() {
-                callers(x, selected, visits);
+                callers(x, selected, locals, visits);
             }
             if let Some(shape) = &selected[*id] {
-                let Expr::Record(fields) = &xs[0] else {
+                let Expr::Record(fields) = &mut xs[0] else {
                     unreachable!()
                 };
+                let mut bindings = Vec::new();
+                for (value, ty) in fields.iter_mut().zip(&shape.fields) {
+                    if !plain_read(value, 0) {
+                        // Keep the entire computation in its original lexical
+                        // scope. Fresh names prevent capture between arguments.
+                        let local = locals.len() as Local;
+                        locals.push(ty.clone());
+                        bindings.push((local, std::mem::replace(value, Expr::Local(local))));
+                    }
+                }
                 xs[0] = Expr::Record(
                     shape
                         .leaves
@@ -289,36 +318,44 @@ fn callers(expr: &mut Expr, selected: &[Option<Shape>], visits: &mut usize) {
                         })
                         .collect(),
                 );
+                if !bindings.is_empty() {
+                    let mut body = std::mem::replace(expr, Expr::Local(0));
+                    for (local, value) in bindings.into_iter().rev() {
+                        body = Expr::Let(local, Box::new(value), Box::new(body));
+                    }
+                    *expr = body;
+                }
             }
         }
-        Expr::Record(xs) | Expr::Construct(_, xs) => {
-            xs.iter_mut().for_each(|e| callers(e, selected, visits))
-        }
+        Expr::Record(xs) | Expr::Construct(_, xs) => xs
+            .iter_mut()
+            .for_each(|e| callers(e, selected, locals, visits)),
         Expr::Apply(f, xs) => {
-            callers(f, selected, visits);
-            xs.iter_mut().for_each(|e| callers(e, selected, visits));
+            callers(f, selected, locals, visits);
+            xs.iter_mut()
+                .for_each(|e| callers(e, selected, locals, visits));
         }
         Expr::Let(_, a, b) => {
-            callers(a, selected, visits);
-            callers(b, selected, visits);
+            callers(a, selected, locals, visits);
+            callers(b, selected, locals, visits);
         }
         Expr::Match(value, arms) => {
-            callers(value, selected, visits);
+            callers(value, selected, locals, visits);
             arms.iter_mut()
-                .for_each(|(_, e)| callers(e, selected, visits));
+                .for_each(|(_, e)| callers(e, selected, locals, visits));
         }
         Expr::SetFields(base, fields) => {
-            callers(base, selected, visits);
+            callers(base, selected, locals, visits);
             fields
                 .iter_mut()
-                .for_each(|(_, e)| callers(e, selected, visits));
+                .for_each(|(_, e)| callers(e, selected, locals, visits));
         }
         Expr::Field(e, _)
         | Expr::Trace(_, e)
         | Expr::Dup(_, e)
         | Expr::Drop(_, e)
         | Expr::BorrowGlobal(_, _, e)
-        | Expr::ResourceRegion { body: e, .. } => callers(e, selected, visits),
+        | Expr::ResourceRegion { body: e, .. } => callers(e, selected, locals, visits),
         Expr::Local(_) | Expr::Const(_) | Expr::Func(_) => {}
     }
 }
@@ -463,7 +500,7 @@ pub(super) fn lower(program: &mut Program, entries: &[FuncId]) -> usize {
     if selected.iter().any(Option::is_some) {
         for function in &mut program.funcs {
             if let Body::Expr(body) = &mut function.body {
-                callers(body, &selected, &mut visits);
+                callers(body, &selected, &mut function.locals, &mut visits);
             }
         }
     }
@@ -521,6 +558,133 @@ mod tests {
             ],
             main: Some(0),
             ..Program::default()
+        }
+    }
+
+    fn computed_example() -> Program {
+        let mut program = example();
+        let number = MT::con("std::I64");
+        let result = tuple(vec![number.clone(); 4]);
+        let pair = program.funcs[0].locals[0].clone();
+        program.funcs[0].ty = arrow(pair.clone(), arrow(pair, result.clone()));
+        program.funcs[0].locals.extend([number.clone(), number]);
+        program.funcs[0].body = Body::Expr(Expr::Call(
+            1,
+            vec![Expr::Record(
+                (0..2)
+                    .map(|index| {
+                        Expr::Let(
+                            index + 2,
+                            Box::new(Expr::Const(Value::I64(7 + index as i64))),
+                            Box::new(Expr::Record(vec![
+                                Expr::Local(index + 2),
+                                Expr::Field(Box::new(Expr::Local(index)), 1),
+                            ])),
+                        )
+                    })
+                    .collect(),
+            )],
+        ));
+        program.funcs[1].ty = arrow(program.funcs[1].locals[0].clone(), result);
+        program.funcs[1].body = Body::Expr(Expr::Record(
+            (0..2)
+                .flat_map(|outer| {
+                    (0..2).map(move |inner| {
+                        Expr::Field(
+                            Box::new(Expr::Field(Box::new(Expr::Local(0)), outer)),
+                            inner,
+                        )
+                    })
+                })
+                .collect(),
+        ));
+        program
+    }
+
+    #[test]
+    fn computed_inputs_keep_their_values_bindings_and_shared_arguments() {
+        let original = computed_example();
+        crate::ir::check_locals(&original).unwrap();
+        let mut program = original.clone();
+        lower(&mut program, &[]);
+        crate::ir::check_locals(&program).unwrap();
+        assert_eq!(
+            program.funcs.len(),
+            original.funcs.len(),
+            "no worker cloning"
+        );
+        assert_eq!(
+            program.funcs[0].locals.len(),
+            6,
+            "one fresh name per computed input"
+        );
+        assert_eq!(
+            record_fields(&program.shapes, &program.funcs[1].locals[0])
+                .unwrap()
+                .len(),
+            4
+        );
+        for value in [-11, 0, 57] {
+            let shared = Value::Record(vec![Value::I64(2), Value::I64(value)].into());
+            let expected = Value::Record(
+                vec![
+                    Value::I64(7),
+                    Value::I64(value),
+                    Value::I64(8),
+                    Value::I64(value),
+                ]
+                .into(),
+            );
+            for variant in [&original, &program] {
+                let mut interpreter =
+                    crate::interp::Interp::new(variant, Box::new(std::io::sink())).unwrap();
+                assert_eq!(
+                    interpreter
+                        .call_root(0, vec![shared.clone(), shared.clone()])
+                        .unwrap(),
+                    expected
+                );
+            }
+            assert_eq!(
+                shared,
+                Value::Record(vec![Value::I64(2), Value::I64(value)].into())
+            );
+        }
+    }
+
+    #[test]
+    fn computed_inputs_preserve_left_to_right_traps() {
+        let mut original = computed_example();
+        original.funcs.push(Func {
+            name: "fail".into(),
+            arity: 1,
+            locals: vec![MT::con("std::String")],
+            ty: arrow(MT::con("std::String"), MT::con("std::I64")),
+            body: Body::Prim("prim.trap".into()),
+        });
+        let Body::Expr(Expr::Call(_, args)) = &mut original.funcs[0].body else {
+            unreachable!()
+        };
+        let Expr::Record(fields) = &mut args[0] else {
+            unreachable!()
+        };
+        for (value, message) in fields.iter_mut().zip(["first input", "second input"]) {
+            let Expr::Let(_, prefix, _) = value else {
+                unreachable!()
+            };
+            **prefix = Expr::Call(2, vec![Expr::Const(Value::Str(message.into()))]);
+        }
+        let mut program = original.clone();
+        lower(&mut program, &[]);
+        crate::ir::check_locals(&program).unwrap();
+        for variant in [&original, &program] {
+            let mut interpreter =
+                crate::interp::Interp::new(variant, Box::new(std::io::sink())).unwrap();
+            let pair = Value::Record(vec![Value::I64(1), Value::I64(2)].into());
+            let error = interpreter
+                .call_root(0, vec![pair.clone(), pair])
+                .unwrap_err();
+            assert_eq!(format!("{error:?}"), "Trap(\"first input\")");
         }
     }
 
@@ -659,6 +823,73 @@ mod tests {
             assert_eq!(program.funcs[1].ty, original);
             crate::ir::check_locals(&program).unwrap();
         }
+    }
+
+    #[test]
+    fn measured_local_edge_uses_numeric_arguments() {
+        crate::driver::with_big_stack(|| {
+            let source = format!(
+                "{}\nmain = [-1.2, 1.0, -1.2] | array.from-list | local-descend | array.to-list | echo\n",
+                include_str!("../../tests/fixtures/descent_local_ad.fwp")
+            );
+            let (_, mut program) = crate::driver::compile_source(
+                "local-numeric-worker.fwp",
+                &source,
+                crate::mono::Roots {
+                    main: true,
+                    ..Default::default()
+                },
+            )
+            .unwrap_or_else(|failure| panic!("{}", failure.rendered));
+            let edges: Vec<_> = program
+                .funcs
+                .iter()
+                .enumerate()
+                .filter(|(_, f)| f.name.contains("local-edge"))
+                .filter_map(|(id, f)| shape(&program, f).map(|shape| (id, shape)))
+                .collect();
+            assert!(
+                !edges.is_empty(),
+                "retain the measured edge before native lowering"
+            );
+            for (id, shape) in &edges {
+                for function in &program.funcs {
+                    if let Body::Expr(body) = &function.body {
+                        walk(body, &mut |e| match e {
+                            Expr::Call(target, args) if target == id => {
+                                eprintln!(
+                                    "edge {id} direct caller {} eligible={}: {args:?}",
+                                    function.name,
+                                    args.len() == 1
+                                        && argument(
+                                            &args[0],
+                                            shape,
+                                            &function.locals,
+                                            &program.shapes
+                                        )
+                                );
+                            }
+                            Expr::Func(target) if target == id => {
+                                eprintln!("edge {id} function value in {}", function.name);
+                            }
+                            _ => {}
+                        });
+                    }
+                }
+            }
+            lower(&mut program, &[]);
+            crate::ir::check_locals(&program).unwrap();
+            assert!(
+                program.funcs.iter().any(|f| f.name.contains("local-edge")
+                    && record_fields(&program.shapes, &f.locals[0]).is_some_and(|fields| fields
+                        .len()
+                        == 4
+                        && fields
+                            .iter()
+                            .all(|(_, ty)| super::super::scalar(ty).is_some()))),
+                "the measured edge needs four numeric fields"
+            );
+        });
     }
 
     #[test]

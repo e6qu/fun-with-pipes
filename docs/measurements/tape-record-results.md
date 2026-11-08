@@ -1,7 +1,7 @@
 # Tape records: measured results
 
 **All 32 long-case comparisons miss the required 5% speed improvement.**
-The compiler-cost comparisons pass. The runtime archive audit is pending; keep
+Compiler-cost comparisons and the complete runtime archive audit pass. Keep
 these results and do not repeat unchanged timings for a passing outcome.
 
 ## What was compared
@@ -28,8 +28,9 @@ regression; the four positive long cases × two forms × four sessions give the
 [Producer run 42369288345](https://github.com/e6qu/fun-with-pipes/actions/runs/42369288345)
 completed every session. All four jobs report failures only at the final speed
 acceptance check. No small-case or identical-copy failure appears in those lists.
-The [complete archive audit](https://github.com/e6qu/fun-with-pipes/actions/runs/42370476364)
-must verify the full observations before acceptance.
+The [complete archive audit](https://github.com/e6qu/fun-with-pipes/actions/runs/42388963241)
+verifies the full original observations. [Retained reports and memory tables](tape-record-time-2026-11-07/README.md)
+include all four sessions, absolute peer costs and all 48 case/form/session rows.
 
 Negative elapsed-time change means faster; positive means slower.
 
@@ -42,7 +43,7 @@ Negative elapsed-time change means faster; positive means slower.
 
 ARM64 used GCC 13.3.0; AMD64 used GCC 15.2.0. The separate C/Rust programs
 calculate handwritten derivatives. Their absolute times, process memory and
-ratios remain in the producer archives and must be tabulated after the audit.
+ratios are in the [detailed tables](tape-record-time-2026-11-07/README.md).
 The table above compares two fwp layouts; it does not establish C/Rust parity.
 Fewer growth requests alone establish neither a speedup nor lower process RAM.
 
@@ -69,14 +70,12 @@ memory must stay within 5% of the reference.
 Audit artifact `13573526746` contains the complete reports and 1,081 retained
 observation files per architecture. Its SHA-256 is
 `7feefbf33963f2c62ca4ee46929c6b8e28862d6b74aee71de899c1c29f780acc`.
-Repository retention is pending: local checks stopped below the 64 GiB disk
-limit. Do not call an unverified local copy retained evidence.
+[All compiler records are retained](tape-record-analysis-2026-11-07/README.md);
+the archive digest and 2,162 observation-file hashes pass local verification.
 
 ## Remaining acceptance
 
-- Finish runtime archive auditing and retain all samples, counts and misses.
-- Report absolute C/Rust costs, allocation traffic, live storage, process memory,
-  executable size and stack usage; distinguish each quantity.
-- Verify original measured executables and final follow-up PR gates.
+- [All 48 original measured executables are verified](tape-record-images-2026-11-07/README.md).
+  Final follow-up PR gates remain required.
 - Use the saved phase/work records and source paths before proposing another
   optimization. This layout does not close its speed target or earlier misses.

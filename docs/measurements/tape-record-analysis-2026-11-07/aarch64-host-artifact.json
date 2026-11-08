@@ -1,0 +1,20 @@
+{
+  "id": 13573411413,
+  "node_id": "MDg6QXJ0aWZhY3QxMzU3MzQxMTQxMw==",
+  "name": "tape-records-analysis-host-ARM64",
+  "size_in_bytes": 1088,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13573411413",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13573411413/zip",
+  "expired": false,
+  "digest": "sha256:4fd5a1bc88ad64e1dacbe67539b6e1cb6d416c045b87df97e3ed7a1e1981dd01",
+  "created_at": "2026-11-07T11:44:14Z",
+  "updated_at": "2026-11-07T11:44:14Z",
+  "expires_at": "2027-02-05T11:42:14Z",
+  "workflow_run": {
+    "id": 42369286155,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "main",
+    "head_sha": "621653b6394f49dc229a2956b6b61476c82c9aac"
+  }
+}

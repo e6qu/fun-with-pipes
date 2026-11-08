@@ -1,0 +1,133 @@
+name: Structured automatic derivatives
+on:
+  workflow_call:
+    inputs:
+      measure:
+        type: boolean
+        required: true
+permissions:
+  contents: read
+jobs:
+  checks:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            cc: gcc
+          - runner: ubuntu-24.04-arm
+            cc: gcc
+          - runner: macos-15
+            cc: clang
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    env:
+      CC: ${{ matrix.cc }}
+      CARGO_BUILD_JOBS: 2
+      CARGO_PROFILE_DEV_OPT_LEVEL: '1'
+      CARGO_PROFILE_DEV_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_DEV_OVERFLOW_CHECKS: 'true'
+      CARGO_PROFILE_TEST_OPT_LEVEL: '1'
+      CARGO_PROFILE_TEST_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_TEST_OVERFLOW_CHECKS: 'true'
+      RUST_TEST_THREADS: 1
+      FWP_LTO: '0'
+      FWP_VRET: '1'
+      FWP_FRAME_FIELDS: '1'
+      FWP_PACKED_ARRAYS: '1'
+      FWP_STACK: '1'
+      FWP_ARRAY_FUSION: '1'
+      FWP_ARC_ARTIFACTS: local-checks/probes
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.99.1
+          components: rustfmt
+      - name: Record identity and check measurement controls
+        run: |
+          mkdir local-checks
+          git rev-parse HEAD > local-checks/source.txt
+          "$CC" --version > local-checks/cc.txt
+          python3 scripts/test-local-derivatives.py
+          cargo fmt --check
+      - name: Numeric parameter proofs and mixed ownership
+        run: |
+          set -o pipefail
+          cargo test --locked --lib cgen::numeric_parameters::tests -- --nocapture 2>&1 | tee local-checks/numeric-workers.log
+          cargo test --locked --test fold_ownership numeric_callback_inputs_preserve_order_shared_lists_and_mixed_owners -- --exact --nocapture 2>&1 | tee local-checks/mixed-ownership.log
+      - name: Interpreter and production native semantics
+        run: |
+          set -o pipefail
+          cargo test --locked --test autodiff_precision local_derivatives_preserve_endpoints_aliases_and_traps -- --exact --nocapture 2>&1 | tee local-checks/semantics.log
+      - name: Format prototype sources and retain any needed patch
+        if: ${{ !cancelled() && hashFiles('target/debug/fwp') != '' }}
+        run: |
+          target/debug/fwp fmt tests/fixtures/descent_local_ad.fwp tests/fixtures/local_derivatives.fwp
+          git diff -- tests/fixtures/descent_local_ad.fwp tests/fixtures/local_derivatives.fwp > local-checks/format.patch
+          test ! -s local-checks/format.patch
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: local-derivative-checks-${{ matrix.runner }}
+          path: local-checks/
+          if-no-files-found: error
+  measure:
+    if: inputs.measure
+    needs: checks
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-24.04-arm, ubuntu-latest]
+        session: [1, 2]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 90
+    env:
+      CC: gcc
+      CARGO_BUILD_JOBS: 2
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.99.1
+      - name: Qualify the native host
+        env:
+          MACHINE: ${{ matrix.runner == 'ubuntu-latest' && 'x86_64' || 'aarch64' }}
+          CPU_MODEL: ${{ matrix.runner == 'ubuntu-latest' && 'AMD EPYC 7763 64-Core Processor' || 'Neoverse-N2' }}
+          GCC_VERSION: ${{ matrix.runner == 'ubuntu-latest' && 'gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0' || 'gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0' }}
+        run: |
+          mkdir local-evidence
+          cpus=(--cpu "$CPU_MODEL")
+          if [[ "$MACHINE" == x86_64 ]]; then
+            cpus+=(--cpu 'AMD EPYC 9V74 80-Core Processor' --cpu 'AMD EPYC 9V45 96-Core Processor')
+          fi
+          python3 scripts/descent-baselines.py "${cpus[@]}" --machine "$MACHINE" \
+            --cc gcc --rustc rustc --c-version "$GCC_VERSION" \
+            --rust-version 'rustc 1.99.1 (58cf8f9c3 2026-10-13)' \
+            --source "$GITHUB_SHA" --processors 4 --output local-evidence/host.json
+      - name: Build current compiler
+        run: cargo build --locked --release --bin fwp
+      - name: Compare complete solves and retain all costs
+        run: >-
+          python3 scripts/measure-descent-peers.py --compiler target/release/fwp
+          --comparison local-derivatives --cc gcc --rustc rustc
+          --c-arch ${{ matrix.runner == 'ubuntu-latest' && 'x86-64' || 'armv8-a' }}
+          --objdump objdump --nm nm --time /usr/bin/time
+          --case 3:0:7:32768 --case 3:1:7:512 --case 3:199:7:32
+          --case 3:1999:7:4 --case 33:199:7:32 --case 129:199:7:8
+          --samples 98 --warmups 2 --order-seed 20261029 --timeout 180
+          --phase-samples 12 --phase-warmups 2 --session ${{ matrix.session }}
+          --host ${{ matrix.runner }} --qualification local-evidence/host.json
+          --output local-evidence/solves
+      - name: Audit every saved observation, including missed speed targets
+        if: ${{ !cancelled() && hashFiles('local-evidence/solves/comparison.json') != '' }}
+        run: >-
+          python3 scripts/audit-local-derivatives.py --directory local-evidence/solves
+          --source "$GITHUB_SHA" --representation numeric
+          --architecture ${{ matrix.runner == 'ubuntu-latest' && 'x86_64' || 'aarch64' }}
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: local-derivative-costs-${{ matrix.runner }}-${{ matrix.session }}
+          path: local-evidence/
+          if-no-files-found: error

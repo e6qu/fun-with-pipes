@@ -717,8 +717,23 @@ Lists own two records → read four numbers → call the numeric worker
 internal parameter. It allows two record levels and two-to-eight machine-sized
 numeric leaves. Repeated, reordered and unused leaf reads are safe; whole-record
 uses, function-value references, entry points, recursion, resources and deeper
-records exclude selection. The caller must supply pure local/field reads, so
-extracting the numbers cannot repeat an effect or move a trap.
+records exclude selection.
+
+The current PR extends the input rule to computed numeric constructors: bind each
+input once, in original left-to-right order, then pass its numeric fields. Each
+input keeps its original expression and local scopes. Existing field-only native
+locals can avoid constructing the intermediate record boxes. No functions are
+cloned. [Focused native checks](measurements/computed-numeric-inputs-2026-11-07/README.md)
+and [allocation measurements](measurements/computed-numeric-time-2026-11-07/README.md)
+verify this reduction. Full production coverage is pending; the
+[contract](measurements/direct-numeric-workers.md) retains the inconclusive
+timing controls rather than claiming complete acceptance.
+
+For example, a `Dual` stores a value and its derivative. In
+`edge (dual.var (x + 1.0), dual.const (y * y))`, the two records carry derivative
+seeds 1 and 0. The compiler evaluates the left input, then the right input, and
+passes their four numeric fields directly. It does not repeat either calculation
+or move an input's failure past the call.
 
 Call-graph analysis visits functions and edges a bounded number of times. The
 pass reuses the packed-lowering program rather than cloning the whole program

@@ -1,110 +1,93 @@
 # Current work
 
-**Next:** finish runtime archive audit `42370476364`, then retain its complete
-summary and compiler audit artifact `13573526746` when resource limits permit.
-All four sessions are complete; their only reported failures are the 32 long-case
-speed targets. Preserve those misses; do not rerun unchanged qualified timings.
+**Next:** finish the exact-head nine-job production CI and documentation for
+PR #269, audit every completed job, fix all failures together, then squash-merge.
+The PR is now ready for review. Draft status had skipped CI; use normal PRs
+unless the user explicitly requests a draft.
 
-## Branch and measured source
+## Branch and current sources
 
-[PR #268](https://github.com/e6qu/fun-with-pipes/pull/268), branch
-`tape-record-measurements`, worktree `.worktrees/recording-capacity-gate`.
-PR #267 is merged at `621653b6394f49dc229a2956b6b61476c82c9aac`.
-Its tree `87157da8628c9bd8755133830b9e93a8fd4f2a6b` equals tested head
-`6ca44feb58ce155c42eae792beb480d59894ad7f`; the squash message is one line,
-65 characters, without trailers. The follow-up groups measurements, original
-executable verification, documentation and any needed repairs.
+[PR #269](https://github.com/e6qu/fun-with-pipes/pull/269), branch
+`tape-record-evidence`, worktree `.worktrees/recording-capacity-gate`.
+The root worktree has unrelated changes; do not modify/reset it.
 
-The [contract](measurements/tape-operation-records.md) was committed at
-`036662872` before implementation `b4b291e31`. Reference data is the #266 tape
-section, not a dependency on a previous compiler. Both measured versions use
-the merged compiler and differ only in that section. The required 5% speed
-improvement is not established.
-AMD EPYC 7763/9V74/9V45 approval persists; no decision is pending.
+- Measured runtime/compiler repair: `8b24da94a4e54c023f5e4b2341896d97dff092b9`.
+- Compiler-cost source: `8389403c566230680b61949e6e5e6837293215bf`; same native sources/tests.
+- Frozen compiler reference: `f1cc94cf4e013369cccb8a836bd745f41e5d757c`.
+- Original runtime contract: `524524bd3`; revised computed-input proof: `250cf62a0`.
+  [Exact boundaries](measurements/direct-numeric-workers.md).
+
+The compiler binds each computed numeric input once, in original scopes and
+left-to-right order, then passes its numeric fields. No function cloning, new
+syntax or public API. The local derivative helper stays in
+`tests/fixtures/descent_local_ad.fwp`; frozen timing acceptance remains open.
 
 ## Roadmap status
 
 | Step | Status | Evidence and remaining work |
 |---|---|---|
-| 1 | Verified | Runtime layout merged; all nine production jobs and docs pass. |
-| 2 | Verified | Three focused native jobs and complete artifact audit pass. |
-| 3 | In progress | All measurements complete; 32 speed targets unmet. Compiler audit passes; runtime audit queued. |
-| 4 | In progress | Full production-log audit passes; measured images and follow-up final gates remain. |
+| 1 | Verified | GCC ARM64/AMD64 and Clang ARM64 pass nine compiler proofs, mixed ownership at O1/O2 and local derivative values/traps. All 21 native images retained. Full platforms remain step 4. |
+| 2 | Implemented | All six cases match handwritten-array allocation/retain counts, with no extra managed peak and zero tape/final storage. Qualified long solves are 48–65% faster than reverse AD. One AMD copy control remains inconclusive. |
+| 3 | Implemented | All fourteen compiler comparisons meet 5% time/RSS limits; two AMD copy controls remain inconclusive. Complete audits pass. Retain the compiler reduction; no public helper promotion or timing waiver. |
+| 4 | In progress | Complete final-head nine production jobs, documentation and log audit; then authorized squash merge. |
 
-## Active runs
+## Completed measurements and audits
 
-Measurement and merge runs use source `621653b6394f49dc229a2956b6b61476c82c9aac`.
-The compiler auditor runs from preparation `d48e6ca0b`; the runtime auditor
-runs from `b2d2200a7`:
+[Runtime results](measurements/computed-numeric-time-2026-11-07/README.md),
+producer `42417868388`: ARM jobs `128541267023`, `128541267002` and AMD1
+`128541267009` pass. AMD2 `128541266975` fails only the 3/199 identical-copy
+control (2.0845% versus 2%). All four complete observation audits pass.
+Retention run `42419504241`, job `128544674265`, passes and preserves all process
+observations, native images, logs and the miss. No timing was repeated.
 
-| Run | Work | Last observed status |
-|---|---|---|
-| [42369288345](https://github.com/e6qu/fun-with-pipes/actions/runs/42369288345) | `tape-record-time`: two sessions per Linux architecture | Complete; all 32 long-case speed targets missed |
-| [42369286155](https://github.com/e6qu/fun-with-pipes/actions/runs/42369286155) | `tape-record-analysis`: seven compiler workloads per architecture | Pass, including full archive audit |
-| [42369871217](https://github.com/e6qu/fun-with-pipes/actions/runs/42369871217) | Complete compiler-cost archive audit | Pass |
-| [42370476364](https://github.com/e6qu/fun-with-pipes/actions/runs/42370476364) | Complete runtime archive audit | Queued |
-| [42369305486](https://github.com/e6qu/fun-with-pipes/actions/runs/42369305486) | Full #267 production-log audit | Pass |
-| [42369180224](https://github.com/e6qu/fun-with-pipes/actions/runs/42369180224) | Merge-source production CI | Running |
-| [42369180108](https://github.com/e6qu/fun-with-pipes/actions/runs/42369180108) | Merge-source documentation | Pass |
+The largest process drops from 409,297 to 1,745 managed requests: 407,552 temporary
+input records removed. Its elapsed time is 56–59% lower than reverse AD, but
+still 4.2–5.7 times handwritten C's time. Both fwp array versions share much of
+that gap; its cause is not yet established. Do not attribute it to ARC or caches
+without measurement. Requested traffic and live memory remain separate metrics.
 
-Measurement prerequisite: focused run `42290415866`, source
-`b4b291e3184cae5046d7a1eba27e777c67b1884a`. Native sources remain identical.
-The production auditor reads run `42319670701`, source `6ca44feb58ce155c42eae792beb480d59894ad7f`,
-attempt 1, documentation job `128240880945`, host `all`.
+[Compiler results](measurements/computed-numeric-analysis-2026-11-07/README.md),
+producer `42418398638`: ARM job `128541365464` passes; AMD `128541365535` fails
+only field-transfer candidate-copy (2.41%) and tutorial reference-copy (3.35%)
+controls. Every time/RSS comparison stays within 5%. Complete audit job
+`128542895551` passes; all 336 commands plus six preflights per host are retained.
 
-Both archive audits have been dispatched; do not duplicate them.
-[The results](measurements/tape-record-results.md) record all reported speed
-misses, actual CPUs and passing compiler costs. Keep original samples and
-compiler, CPU, allocation, live-memory, elapsed-time, stack and executable-size
-records. Absolute C/Rust and memory tables still need the full runtime report.
+[Focused native evidence](measurements/computed-numeric-inputs-2026-11-07/README.md)
+passes: ARM `128539754453`, AMD `128539755075`, Mac `128539754700`.
+Actual emitted local-edge takes four doubles. No new production source changes
+follow these focused tests and measurements.
 
-After retaining runtime reports, commit the explicit image-verification input
-plan and dispatch `recording-call-analysis` with `call_plan` pointing to it.
-The verifier now accepts `tape-records`; both candidate and reference must retain
-scalar append inlining. Rebuild saved C with the original GCC and flags, require
-identical image hashes, and take no new timings.
+## Earlier evidence and repairs
 
-## Completed verification
+The [first prototype](measurements/local-derivative-time-2026-11-07/README.md)
+retains five timing misses and its original allocation cost. Complete retention
+run `42418518671`, job `128541726131`, passes without repeating timings.
 
-- PR #268 preparation `d48e6ca0b` documentation `42369752632` passes.
-  Its draft production job is skipped, not a passing final gate.
-- #267 final-head production `42319670701`: all nine jobs pass. Documentation
-  `42319670586` passes. Merge tree and one-line message checked locally.
-- [Focused correctness](measurements/tape-record-checks-2026-11-06/README.md):
-  Linux ARM64/AMD64 and macOS ARM64 each pass 305 compiler tests and all ten
-  native targets. ARM64 also passes actual wasm32 capacity bounds. Four named
-  unit measurements are excluded explicitly; no unexpected diagnostics.
-- Complete focused audit `42319675956`, job `128240909367`, passes: 900 native
-  image headers and 1,215 probe statuses. Artifact `13551664083` and each full
-  report/job-log hash are verified locally; compact reports and receipts retained.
-- [Complete production audit](measurements/tape-record-delivery-2026-11-07/README.md)
-  `42369305486`, job `128393918868`, passes. Retained artifact `13573122126`;
-  ten full job logs and 1,456 target/probe-log hashes verified locally (0.13 s).
-- Prior documentation schema and reusable-workflow permission failures are
-  repaired and their replacement gates pass. Superseded runs were cancelled.
-- Image-verifier controls: `python3 scripts/local-guard.py python3
-  scripts/test-recording-calls.py` passes all seven tests (0.13 s), including
-  rejection of weakened inlining requirements in either tape-layout version.
-  Archive/hash verification passes under the guard (0.13 s). Changed-document
-  links, plan/status alignment, workflow sizes and merge subject pass (0.13 s).
+The [failed cloning hypothesis](measurements/numeric-input-diagnosis-2026-11-07/README.md)
+at `9cb7497f3`, run `42417084281`, failed actual-edge selection on all hosts.
+Computed arguments were the blocker. Cloning was removed before the passing repair.
+Earlier formatting and native probe results remain
+[here](measurements/local-derivative-checks-2026-11-07/README.md).
 
-## Constraints and carried evidence
+[PLAN.md](../PLAN.md#completed-work-carried-in-this-pr) links the corrected layout
+audits, original image reproductions, compiler comparisons and #268 production
+audit. These older gates do not verify this compiler change.
+[Earlier timing misses](measurements/unmet-comparisons.md) remain evidence,
+not a queue of unchanged reruns.
 
-The earlier [production audit](measurements/recording-context-delivery-2026-11-06/README.md)
-and [48 original images](measurements/recording-context-images-2026-11-06/README.md)
-are verified. Earlier [runtime misses](measurements/recording-context-time-2026-11-06/README.md)
-remain open; this comparison cannot erase them. Do not repeat completed work.
+## Local checks and delivery
 
-Use the local guard serially; free disk fell from 69 to 60 GiB, below the
-64 GiB minimum. The guard refused a small compiler-log summary; local checks
-are stopped. Removed this task's two disposable downloaded archives (~82 MiB)
-after retaining their verified records; that does not restore the limit.
-No local native builds, full suites or benchmarks. The first sandboxed guard invocation
-could not read `ps`; it ran normally with approved process access and all limits
-intact. Large archives and audits stay on runners. Hosted slots can be busy;
-wait without inferring billing restrictions or restarting queued work.
+Guarded checks pass: five measurement controls (0.13 s), eleven compiler-cost
+controls (3.44 s), Rust formatting, workflow validation, retention-script syntax,
+21 native image/header/hash checks, four runtime report archives and 144 peer
+rows, all complete observation archive digests and compiler audit summaries.
+Each remaining check took 0.13–0.36 s. Sparse-checkout link prerequisites were
+restored from tracked files. Full builds, suites, benchmarks and large audits
+stay on GitHub. Last free disk: 89 GiB; minimum 64 GiB. Never bypass guard limits.
 
-Keep one active PR. Final-head nine production jobs, docs, complete audits and
-original measured images must pass before squash merge. Use one commit line
-at most 80 characters, no body, trailers or attribution; verify tree/message.
-Continue [PLAN.md](../PLAN.md) after delivery.
+Documentation at `45e22bdd4` passed run `42419425639`; final-head docs are still
+required. Do not count draft-skipped production jobs as passes. Hosted slots
+can be busy: wait for queued jobs rather than restarting or inferring billing.
+Audit completed targets and diagnostics before a repair push. Supply an explicit
+one-line squash subject <=80 characters and an empty body, without trailers or
+attribution; verify the resulting tree/message. Continue the plan after delivery.

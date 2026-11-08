@@ -1,0 +1,20 @@
+{
+  "id": 13592749417,
+  "node_id": "MDg6QXJ0aWZhY3QxMzU5Mjc0OTQxNw==",
+  "name": "local-derivative-complete-observations",
+  "size_in_bytes": 40820772,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13592749417",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13592749417/zip",
+  "expired": false,
+  "digest": "sha256:eb2a6ec95e0fd2577d637e8502db52c0ebb016ac2bd7442f9b3760b3c89d486e",
+  "created_at": "2026-11-07T22:20:27Z",
+  "updated_at": "2026-11-07T22:20:27Z",
+  "expires_at": "2027-02-05T22:12:20Z",
+  "workflow_run": {
+    "id": 42419504241,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "tape-record-evidence",
+    "head_sha": "45e22bdd405a942e6ef6716ac8c491aee7fe7dcf"
+  }
+}

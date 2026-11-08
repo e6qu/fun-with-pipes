@@ -1,0 +1,41 @@
+# Appended to descent_local_ad.fwp by the native/interpreter check.
+quadratic-edge : (Dual[F64], Dual[F64]) -> Dual[F64]
+quadratic-edge = fn (x, y) -> x * x + 3.0 * y
+
+no-edge : (Dual[F64], Dual[F64]) -> Dual[F64]
+no-edge = fn pair -> prim.trap "an empty edge set must not call its objective"
+
+check-alias : Array[F64] -> Bool
+check-alias = fn values ->
+    let result = local-gradient quadratic-edge values | array.to-list
+    in result == [4.0, 9.0, 3.0] | and (array.to-list values == [2.0, 3.0, 4.0])
+
+main = [
+    [] | array.from-list | local-gradient no-edge | array.to-list | eq [] | echo,
+    [2.0]
+    | array.from-list
+    | local-gradient no-edge
+    | array.to-list
+    | eq [0.0]
+    | echo,
+    [2.0, 3.0]
+    | array.from-list
+    | local-gradient quadratic-edge
+    | array.to-list
+    | eq [4.0, 3.0]
+    | echo,
+    [2.0, 3.0, 4.0] | array.from-list | check-alias | echo,
+    [2.0, 3.0, 4.0]
+    | array.from-list
+    | local-gradient (const 7.0)
+    | array.to-list
+    | eq [0.0, 0.0, 0.0]
+    | echo,
+    [-1.2, 1.0]
+    | array.from-list
+    | local-gradient local-edge
+    | array.to-list
+    | zip-with sub [-215.6, -88.0]
+    | all (abs | lt 0.000000001)
+    | echo,
+] | ignore

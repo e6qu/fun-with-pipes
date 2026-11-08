@@ -1,14 +1,14 @@
-# Current costs of automatic derivatives
+# Derivative baseline and scalar-recording comparison
 
-**D1 is complete:** four audited matching-host repeated-solve sessions establish
-the current baseline and meet the predeclared identical-code noise criterion.
-Fixed D2 acceptance limits were published before changing scalar recording.
-The scalar-recording comparison is complete: allocation savings pass, but the
-combined speed rule fails. The user chose to keep the allocation reduction and
-leave D2 open. No all-case derivative speedup is accepted.
-Earlier [standalone](#initial-single-process-results), grouped and
-[output-diagnostic](descent-output-current.md) results remain evidence of their
-specific sources and timer boundaries.
+These are historical measurements of the source revisions identified below.
+For the latest measured programs, see the [local-derivative comparison](computed-numeric-time-2026-11-07/README.md).
+
+The original repeated-solve baseline (D1) has four audited sessions with passing
+identical-copy controls. The later scalar-recording change (D2) removes
+allocations but misses its combined speed rule. The user chose to retain that
+reduction and leave its timing goal open. No all-case speedup is accepted for
+that change. Standalone, grouped and [output-diagnostic](descent-output-current.md)
+results keep their original timing boundaries.
 
 ## Initial single-process results
 
@@ -53,8 +53,8 @@ session 1, versus 0.40 ms in reverse traversal. Forward includes objective
 arithmetic and temporary collection/value construction; this does not attribute
 that time solely to tape appends. The clocks perturb execution: paired
 instrumented/ordinary timings, including both faster and slower observations,
-are retained. Investigate the temporary values around recording before assuming
-larger raw-buffer caches will help. The later scalar `ad.push` record removal
+are retained. Those observations pointed toward temporary values around recording, rather
+than establishing a need for larger raw-buffer caches. The later scalar `ad.push` record removal
 is reported below; its speed requirement remains open.
 
 ## Retained evidence

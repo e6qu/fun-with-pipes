@@ -113,7 +113,7 @@ native images, samples and patches without executing downloaded binaries.
 
 Source review finds generic callback dispatch in scalar `array.map`; the previous
 buffer map called its known function directly. This is a concrete next experiment,
-not a proven cause of these differences. [The plan](../../../PLAN.md#open-performance-goals)
+not a proven cause of these differences. [The retained requirements](../unmet-comparisons.md)
 requires preserving ownership/eager order and measuring that change independently.
 
 ## Rejected hosts
