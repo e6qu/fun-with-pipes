@@ -1,18 +1,17 @@
 # Current work
 
-**Next:** identify the exact optimized Swift queued-cleanup failure with
-line-numbered lifetime checks. First run `42603913802` fails only Swift `-O`
-on both architectures; C/Rust, Swift `-Onone` and all 16 C fault builds pass.
-Follow-up source `e9cf680093870bf98770a3a2c8b1c2954f36c1af`, run `42607637111`,
-makes the outside owner live explicitly through weak
-lookup and cancellation. It ends that lifetime before invoking the callback,
-so only the acquired owner protects callback execution. This is unverified;
-retain the diagnostic run on the original operations. Do not infer a compiler
-bug from the trap. Buffer timing run `42602375928`
-at `b37b15ac2d636187b97ccd00192e50638bd788d0` passes both sessions and audits
-on both hosts; retain and interpret all results without unchanged reruns.
+**Next:** reproduce the original Swift queued-lifetime trap with unchanged
+`precondition` calls and debug information. Diagnostic source `24f7a033e`, run
+`42605354450`, passes on both hosts: adding line-numbered checks changes the
+observed behavior, so it does not establish the cause of the original trap.
+Explicit-lifetime candidate `e9cf68009` is queued in `42607637111`. The new
+Swift-only diagnosis compares cancellation/lookup lifetime boundaries separately
+against exact original source `c9bf8dfac`, retaining ordinary and debug builds.
+Do not call the first failure fixed solely because the diagnostic checks pass.
+
+Buffer timing `42602375928` passes both sessions/audits on both hosts; noisy
+comparisons remain inconclusive. Docs `42606196247` at `2cb8e313d` pass.
 Keep work in [PR #273](https://github.com/e6qu/fun-with-pipes/pull/273).
-Docs for the result tables are queued in `42606196247` at `2cb8e313d`.
 Milestone 4 is not complete; do not merge it yet.
 
 Worktree: `.worktrees/recording-capacity-gate`. Active preparation branch:
@@ -92,7 +91,8 @@ of unprocessed messages. The checker now retains independent group failures.
 Source `c9bf8dfac`, retained as `roadmap/weak-queued-cleanup-2026-11-09`, is testing
 in `42603913802`; both optimized Swift cases fail with an anonymous trap.
 All other native/fault builds pass. Diagnostic source `24f7a033e` adds explicit
-Swift line numbers; run `42605354450` is queued. First records are retained in
+Swift line numbers; run `42605354450` passes on both hosts. The original trap
+therefore still needs an unchanged-check reproduction. First records are retained in
 [the report](measurements/weak-queued-cleanup-2026-11-09/README.md).
 Docs repair `42603916827` passes; the full log has only intentional failing-child
 and test-runner controls. This measures no allocation/timing costs and does not establish forced
@@ -130,3 +130,6 @@ tested `8e7cdb94337c6fdac5656dfcbdab768d4a36e985`, and its message follows the
 commit rule. [Its receipt](measurements/structured-callback-delivery-2026-11-09/README.md)
 verifies every gate. Duplicate merge run `42577384035` was cancelled and its
 interrupted logs reviewed. Current work is based on that exact merge.
+
+The numerical dispatch workflow is 511,711 bytes, close to GitHub's 512,000-byte
+limit. Add substantial new suites as reusable workflows, not inline steps.
