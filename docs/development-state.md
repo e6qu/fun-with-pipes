@@ -1,8 +1,8 @@
 # Current work
 
-**Next:** publish compiler-phase reporting and run its focused Linux contracts and
-documentation checks; prepare compiler scaling and sustained HTTP measurements
-in this same substantial milestone 5 batch. Keep one active PR.
+**Next:** audit queued compiler-report checks and run the new compiler-growth
+correctness suite before timing; prepare sustained HTTP measurements in this
+same substantial milestone 5 batch. Keep one active PR.
 
 Worktree: `.worktrees/application-milestone`, branch `application-tooling-costs`.
 It is rebased onto merged #273, `8887114f6ad3be3cd42d37b976ec208e27e4a5a2`.
@@ -60,6 +60,18 @@ error diagnostics and consistent macro phase accounting. The focused workflow
 now runs these contracts and Clippy independently alongside application checks.
 The [pipeline guide](compiler-pipeline.md#observe-compiler-phases) explains scopes.
 
+Published observer source: `5f8dd5a881821a4471d176e8347681a630289079`.
+Focused run `42711448460` has queued ARM job `129481754679` and AMD job
+`129481754799`; documentation run `42711453469` is queued too. No runner has
+started these jobs at the last check. Continue independent preparation.
+
+The compiler-growth runner now prepares all 12 family/size cases, compares
+ordinary/observed C and native outputs, and checks early/late type errors with
+source locations. Its accounting controls pass locally (three tests, including
+six deliberately broken reports). `compiler-scaling-checks` runs release-compiler
+correctness on both Linux hosts; `compiler-scaling` runs two timing sessions per
+host only after those checks pass. Measurement scopes are fixed in the protocol.
+
 No compiler scaling or sustained HTTP measurements have run. Implement their
 frozen families/load protocol next; full builds and measurements remain on runners.
 No final milestone 5 production matrix has run yet.
@@ -67,7 +79,7 @@ No final milestone 5 production matrix has run yet.
 ## Local verification and resources
 
 Use `python3 scripts/local-guard.py` serially. Python syntax, actionlint, Rust
-formatting and 436 documentation link sets pass, including the new delivery
+formatting and 437 documentation link sets pass, including the new delivery
 receipt; all 106 immutable anchors and five roadmap rows pass. One historical evidence session passes
 all eight controls. The final #273 archive matches its 1,173,657-byte size and
 SHA-256, and all ten reports pass verification.
@@ -76,5 +88,5 @@ The bounded AMD64 artifact stream hit the 180-second deadline; it was stopped.
 The repair workflow reads those previous diagnostics on a runner instead.
 No local compiler build, full suite or benchmark ran. Full/native checks remain
 on GitHub. Preserve 64 GiB free disk, 2 GiB target data, 1 GiB workload RSS and the
-180-second deadline. The numerical dispatcher is 502,417 bytes; keep it below
+180-second deadline. The numerical dispatcher is 502,715 bytes; keep it below
 512,000. Record any guard refusal and move the affected work to runners.

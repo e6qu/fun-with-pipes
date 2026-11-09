@@ -1,0 +1,62 @@
+name: Compiler phase and growth measurements
+on:
+  workflow_call:
+    inputs:
+      phase:
+        type: string
+        required: true
+permissions:
+  contents: read
+jobs:
+  scaling:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm]
+        session: ${{ fromJSON(inputs.phase == 'check' && '[0]' || '[1,2]') }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 90
+    env:
+      CARGO_BUILD_JOBS: '2'
+      CC: gcc
+      FWP_LTO: '0'
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cargo/registry
+          key: cargo-registry-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Cargo.lock') }}
+      - name: Validate explicit selection and observer controls
+        env:
+          PHASE: ${{ inputs.phase }}
+        run: |
+          test "$PHASE" = check || test "$PHASE" = measure
+          python3 scripts/test-compiler-scaling.py
+      - name: Fetch locked dependencies and build release compiler
+        run: |
+          cargo fetch --locked
+          cargo build --release --locked --offline --bin fwp
+      - name: Record build settings
+        run: |
+          git rev-parse HEAD > compiler-source.txt
+          rustc -Vv > compiler-build.txt
+          cat Cargo.toml >> compiler-build.txt
+          printenv | sort | sed -n '/^CARGO_PROFILE_/p' >> compiler-build.txt
+      - name: Check or measure all declared families
+        env:
+          PHASE: ${{ inputs.phase }}
+          SESSION: ${{ matrix.session }}
+        run: |
+          set -o pipefail
+          python3 scripts/measure-compiler-scaling.py --compiler target/release/fwp --cc gcc --time /usr/bin/time --output compiler-scaling --phase "$PHASE" --session "$SESSION" 2>&1 | tee compiler-scaling.log
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: compiler-scaling-${{ matrix.runner }}-${{ matrix.session }}
+          path: |
+            compiler-source.txt
+            compiler-build.txt
+            compiler-scaling.log
+            compiler-scaling/
+          if-no-files-found: error

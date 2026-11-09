@@ -98,6 +98,23 @@ Keep raw samples; an identical-copy median ratio outside 0.98–1.02 makes that
 session's timing inconclusive. It does not invalidate recorded correctness or
 allocation facts, and is not retried unchanged.
 
+The [runner](../../scripts/measure-compiler-scaling.py) uses two explicit commands:
+`fwp build --target native --emit-c -O2` and GCC with explicit O2, GNU C11,
+`-ffp-contract=off`, `-fno-fast-math`, `-fno-lto` and the declared `-march`. It measures
+both commands separately and checks the resulting program after every build.
+The observer ratio compares the fwp commands; GCC time is a separate cost, not
+part of that ratio. This is not elapsed time for the single-command native build.
+GNU time supplies process high-water RSS and user/system CPU time; these are not
+aggregate live memory or per-phase memory. Each observed invocation writes a new
+report. Generated C must match byte-for-byte across all four treatments.
+
+`compiler-scaling-checks` first checks all 12 sizes on both hosts, ordinary versus
+observed output, and early/late type errors with matching source locations.
+`compiler-scaling` then runs the two sessions per host. Every treatment gets one
+warmup; eight measured rounds alternate order. Identical compiler copies have
+matching SHA-256 digests. All sources, commands, failures, reports and samples
+are retained. No timing session has run yet.
+
 Additional required controls:
 
 - Independent declarations, reachable generic uses and nested expressions must
