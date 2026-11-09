@@ -1,0 +1,786 @@
+{
+  "neighbors-0-local": {
+    "medianNsPerGradient": {
+      "baseline": {
+        "constructionNs": 33.466796875,
+        "computationNs": 90.41015625,
+        "releaseNs": 35.49609375,
+        "processNs": 6168.8046875
+      },
+      "baseline-copy": {
+        "constructionNs": 33.294921875,
+        "computationNs": 89.779296875,
+        "releaseNs": 35.388671875,
+        "processNs": 5964.923828125
+      },
+      "candidate": {
+        "constructionNs": 33.375,
+        "computationNs": 89.451171875,
+        "releaseNs": 35.513671875,
+        "processNs": 6073.232421875
+      },
+      "candidate-copy": {
+        "constructionNs": 33.1875,
+        "computationNs": 89.54296875,
+        "releaseNs": 35.5625,
+        "processNs": 5962.73828125
+      }
+    },
+    "identicalCopies": {
+      "baseline": {
+        "ratio": 0.9943108050024515,
+        "qualified": true
+      },
+      "candidate": {
+        "ratio": 0.9960190111415521,
+        "qualified": true
+      }
+    },
+    "vsBaseline": {
+      "candidate": {
+        "reference": "baseline",
+        "ratio": 0.9927300622577093,
+        "interval95": [
+          0.9805547245608787,
+          1.0006604728985955
+        ],
+        "copyQualified": true,
+        "direction": "inconclusive"
+      }
+    },
+    "binaryHashes": {
+      "baseline": "af42e69fac67d0e5969d7e24fca069b32857615aa2ef2445d1bbec5c56356f09",
+      "baseline-copy": "af42e69fac67d0e5969d7e24fca069b32857615aa2ef2445d1bbec5c56356f09",
+      "candidate": "28bb60684ea02c69d75eebeba7c649362e0b4075b348ff1b54c0c3bae6a11337",
+      "candidate-copy": "28bb60684ea02c69d75eebeba7c649362e0b4075b348ff1b54c0c3bae6a11337"
+    }
+  },
+  "neighbors-1-local": {
+    "medianNsPerGradient": {
+      "baseline": {
+        "constructionNs": 45.15625,
+        "computationNs": 104.57421875,
+        "releaseNs": 50.091796875,
+        "processNs": 5967.59765625
+      },
+      "baseline-copy": {
+        "constructionNs": 44.32421875,
+        "computationNs": 104.10546875,
+        "releaseNs": 50.05859375,
+        "processNs": 5947.16015625
+      },
+      "candidate": {
+        "constructionNs": 44.43359375,
+        "computationNs": 101.568359375,
+        "releaseNs": 50.30859375,
+        "processNs": 5820.21484375
+      },
+      "candidate-copy": {
+        "constructionNs": 43.828125,
+        "computationNs": 100.810546875,
+        "releaseNs": 50.13671875,
+        "processNs": 6041.78125
+      }
+    },
+    "identicalCopies": {
+      "baseline": {
+        "ratio": 0.9946374517948804,
+        "qualified": true
+      },
+      "candidate": {
+        "ratio": 0.9935625364820071,
+        "qualified": true
+      }
+    },
+    "vsBaseline": {
+      "candidate": {
+        "reference": "baseline",
+        "ratio": 0.9635718428199209,
+        "interval95": [
+          0.9529562368668361,
+          0.9747593903306745
+        ],
+        "copyQualified": true,
+        "direction": "faster"
+      }
+    },
+    "binaryHashes": {
+      "baseline": "9c3d563690d9872aaeb97a563ec9472b75fe336d0b59d76f3e0c4bba66453fe1",
+      "baseline-copy": "9c3d563690d9872aaeb97a563ec9472b75fe336d0b59d76f3e0c4bba66453fe1",
+      "candidate": "bd897c9f966f979cf2bccd36ff5febfca8868e7daf53ba9a92fc83b66d357b17",
+      "candidate-copy": "bd897c9f966f979cf2bccd36ff5febfca8868e7daf53ba9a92fc83b66d357b17"
+    }
+  },
+  "neighbors-3-local": {
+    "medianNsPerGradient": {
+      "baseline": {
+        "constructionNs": 62.62109375,
+        "computationNs": 455.728515625,
+        "releaseNs": 84.0,
+        "processNs": 6380.62109375
+      },
+      "baseline-copy": {
+        "constructionNs": 62.73046875,
+        "computationNs": 451.23046875,
+        "releaseNs": 83.791015625,
+        "processNs": 6349.77734375
+      },
+      "candidate": {
+        "constructionNs": 61.875,
+        "computationNs": 121.69140625,
+        "releaseNs": 82.763671875,
+        "processNs": 5959.59765625
+      },
+      "candidate-copy": {
+        "constructionNs": 61.666015625,
+        "computationNs": 121.677734375,
+        "releaseNs": 82.84375,
+        "processNs": 6023.796875
+      }
+    },
+    "identicalCopies": {
+      "baseline": {
+        "ratio": 0.9847091994458934,
+        "qualified": true
+      },
+      "candidate": {
+        "ratio": 1.0060931560514161,
+        "qualified": true
+      }
+    },
+    "vsBaseline": {
+      "candidate": {
+        "reference": "baseline",
+        "ratio": 0.26548975837195055,
+        "interval95": [
+          0.25129809450290497,
+          0.2710426973264613
+        ],
+        "copyQualified": true,
+        "direction": "faster"
+      }
+    },
+    "binaryHashes": {
+      "baseline": "9f43673f948346efe6a07cb8f9a7b6ca64a31e820c80a2690667c24968ad1097",
+      "baseline-copy": "9f43673f948346efe6a07cb8f9a7b6ca64a31e820c80a2690667c24968ad1097",
+      "candidate": "a4dca6b18320a8c260fbe78dfcbae5c292bbd66a5d242dfa5b9af5d8f445195b",
+      "candidate-copy": "a4dca6b18320a8c260fbe78dfcbae5c292bbd66a5d242dfa5b9af5d8f445195b"
+    }
+  },
+  "neighbors-33-local": {
+    "medianNsPerGradient": {
+      "baseline": {
+        "constructionNs": 193.380859375,
+        "computationNs": 5166.837890625,
+        "releaseNs": 594.93359375,
+        "processNs": 11792.6328125
+      },
+      "baseline-copy": {
+        "constructionNs": 193.28515625,
+        "computationNs": 5185.951171875,
+        "releaseNs": 595.02734375,
+        "processNs": 11714.123046875
+      },
+      "candidate": {
+        "constructionNs": 191.53515625,
+        "computationNs": 508.89453125,
+        "releaseNs": 583.08203125,
+        "processNs": 7201.544921875
+      },
+      "candidate-copy": {
+        "constructionNs": 192.6953125,
+        "computationNs": 507.765625,
+        "releaseNs": 582.34765625,
+        "processNs": 7172.203125
+      }
+    },
+    "identicalCopies": {
+      "baseline": {
+        "ratio": 1.0058506317492228,
+        "qualified": true
+      },
+      "candidate": {
+        "ratio": 0.9971944416762547,
+        "qualified": true
+      }
+    },
+    "vsBaseline": {
+      "candidate": {
+        "reference": "baseline",
+        "ratio": 0.09948089379140815,
+        "interval95": [
+          0.09799166511503989,
+          0.10315220741935831
+        ],
+        "copyQualified": true,
+        "direction": "faster"
+      }
+    },
+    "binaryHashes": {
+      "baseline": "d0af02ecf29a542711a20dc727c28a8616d96c35c2378ebdeb87dd24c8b1baa0",
+      "baseline-copy": "d0af02ecf29a542711a20dc727c28a8616d96c35c2378ebdeb87dd24c8b1baa0",
+      "candidate": "c403f30a346844d999651824871ba5d61bce4de4b8c9a43e3d743fc9f2122510",
+      "candidate-copy": "c403f30a346844d999651824871ba5d61bce4de4b8c9a43e3d743fc9f2122510"
+    }
+  },
+  "neighbors-129-local": {
+    "medianNsPerGradient": {
+      "baseline": {
+        "constructionNs": 624.080078125,
+        "computationNs": 20063.337890625,
+        "releaseNs": 2184.154296875,
+        "processNs": 29235.42578125
+      },
+      "baseline-copy": {
+        "constructionNs": 621.630859375,
+        "computationNs": 20007.4921875,
+        "releaseNs": 2184.529296875,
+        "processNs": 29198.83203125
+      },
+      "candidate": {
+        "constructionNs": 621.9375,
+        "computationNs": 1781.9609375,
+        "releaseNs": 2158.66796875,
+        "processNs": 11099.419921875
+      },
+      "candidate-copy": {
+        "constructionNs": 620.4375,
+        "computationNs": 1788.103515625,
+        "releaseNs": 2153.654296875,
+        "processNs": 10769.96875
+      }
+    },
+    "identicalCopies": {
+      "baseline": {
+        "ratio": 0.9965989111609486,
+        "qualified": true
+      },
+      "candidate": {
+        "ratio": 1.0026724959082332,
+        "qualified": true
+      }
+    },
+    "vsBaseline": {
+      "candidate": {
+        "reference": "baseline",
+        "ratio": 0.08940569252098182,
+        "interval95": [
+          0.08860984701522132,
+          0.09107716401409094
+        ],
+        "copyQualified": true,
+        "direction": "faster"
+      }
+    },
+    "binaryHashes": {
+      "baseline": "d02449287914e75273031e9af113a89e7634003b3f0ad742688742383bf30c59",
+      "baseline-copy": "d02449287914e75273031e9af113a89e7634003b3f0ad742688742383bf30c59",
+      "candidate": "f41592fd4efc759dc2ad40efe201a0b460497c80b21e867fa3c4c5476b60fe93",
+      "candidate-copy": "f41592fd4efc759dc2ad40efe201a0b460497c80b21e867fa3c4c5476b60fe93"
+    }
+  },
+  "independent-0-local": {
+    "medianNsPerGradient": {
+      "baseline": {
+        "constructionNs": 33.05859375,
+        "computationNs": 90.228515625,
+        "releaseNs": 35.529296875,
+        "processNs": 5499.263671875
+      },
+      "baseline-copy": {
+        "constructionNs": 32.982421875,
+        "computationNs": 89.451171875,
+        "releaseNs": 35.654296875,
+        "processNs": 5605.583984375
+      },
+      "candidate": {
+        "constructionNs": 32.841796875,
+        "computationNs": 88.94921875,
+        "releaseNs": 35.546875,
+        "processNs": 5499.982421875
+      },
+      "candidate-copy": {
+        "constructionNs": 32.513671875,
+        "computationNs": 88.21875,
+        "releaseNs": 35.4375,
+        "processNs": 5660.06640625
+      }
+    },
+    "identicalCopies": {
+      "baseline": {
+        "ratio": 0.9849338944107449,
+        "qualified": true
+      },
+      "candidate": {
+        "ratio": 0.9959697447065934,
+        "qualified": true
+      }
+    },
+    "vsBaseline": {
+      "candidate": {
+        "reference": "baseline",
+        "ratio": 0.9832247932935239,
+        "interval95": [
+          0.9714139431692124,
+          0.9928045301656235
+        ],
+        "copyQualified": true,
+        "direction": "faster"
+      }
+    },
+    "binaryHashes": {
+      "baseline": "d5bd0d283caae666699fe07f018f372eb31421ab212b8d38c52e6321c71f2272",
+      "baseline-copy": "d5bd0d283caae666699fe07f018f372eb31421ab212b8d38c52e6321c71f2272",
+      "candidate": "4465a22124a56c3a6d398fc3f3fd058b684f785b479a417679b5b0c47530569a",
+      "candidate-copy": "4465a22124a56c3a6d398fc3f3fd058b684f785b479a417679b5b0c47530569a"
+    }
+  },
+  "independent-1-local": {
+    "medianNsPerGradient": {
+      "baseline": {
+        "constructionNs": 45.73046875,
+        "computationNs": 186.181640625,
+        "releaseNs": 50.900390625,
+        "processNs": 6219.431640625
+      },
+      "baseline-copy": {
+        "constructionNs": 45.76171875,
+        "computationNs": 186.443359375,
+        "releaseNs": 50.73046875,
+        "processNs": 6021.00390625
+      },
+      "candidate": {
+        "constructionNs": 44.029296875,
+        "computationNs": 100.5703125,
+        "releaseNs": 49.998046875,
+        "processNs": 6006.67578125
+      },
+      "candidate-copy": {
+        "constructionNs": 43.78125,
+        "computationNs": 100.765625,
+        "releaseNs": 49.96875,
+        "processNs": 6216.494140625
+      }
+    },
+    "identicalCopies": {
+      "baseline": {
+        "ratio": 1.002691751437724,
+        "qualified": true
+      },
+      "candidate": {
+        "ratio": 1.0023687769223562,
+        "qualified": true
+      }
+    },
+    "vsBaseline": {
+      "candidate": {
+        "reference": "baseline",
+        "ratio": 0.538316486298061,
+        "interval95": [
+          0.529855911407538,
+          0.543010412046717
+        ],
+        "copyQualified": true,
+        "direction": "faster"
+      }
+    },
+    "binaryHashes": {
+      "baseline": "34e1ad4067450ad4e8acfda3b5bf0da81d1e4a9c42ff43051ee63adcaa65ccfe",
+      "baseline-copy": "34e1ad4067450ad4e8acfda3b5bf0da81d1e4a9c42ff43051ee63adcaa65ccfe",
+      "candidate": "bc291776c88bb8e96d721ec88a91a7d6943a9a637a8008862a0dacb2615e751a",
+      "candidate-copy": "bc291776c88bb8e96d721ec88a91a7d6943a9a637a8008862a0dacb2615e751a"
+    }
+  },
+  "independent-16-local": {
+    "medianNsPerGradient": {
+      "baseline": {
+        "constructionNs": 129.541015625,
+        "computationNs": 1184.888671875,
+        "releaseNs": 312.703125,
+        "processNs": 7625.185546875
+      },
+      "baseline-copy": {
+        "constructionNs": 129.025390625,
+        "computationNs": 1189.005859375,
+        "releaseNs": 312.40625,
+        "processNs": 7568.126953125
+      },
+      "candidate": {
+        "constructionNs": 126.947265625,
+        "computationNs": 221.955078125,
+        "releaseNs": 305.404296875,
+        "processNs": 6541.0078125
+      },
+      "candidate-copy": {
+        "constructionNs": 127.3984375,
+        "computationNs": 221.271484375,
+        "releaseNs": 305.466796875,
+        "processNs": 6590.537109375
+      }
+    },
+    "identicalCopies": {
+      "baseline": {
+        "ratio": 1.001053560686993,
+        "qualified": true
+      },
+      "candidate": {
+        "ratio": 1.0002289735796754,
+        "qualified": true
+      }
+    },
+    "vsBaseline": {
+      "candidate": {
+        "reference": "baseline",
+        "ratio": 0.18731750387760193,
+        "interval95": [
+          0.1854240059359846,
+          0.18816535141147184
+        ],
+        "copyQualified": true,
+        "direction": "faster"
+      }
+    },
+    "binaryHashes": {
+      "baseline": "82e94486e74bb3d1c455eaeb7f7b4a8c785eeb4d5f8282ec8d07c41d3973ffa1",
+      "baseline-copy": "82e94486e74bb3d1c455eaeb7f7b4a8c785eeb4d5f8282ec8d07c41d3973ffa1",
+      "candidate": "3b4f7db3efc86e73e4752de5a61eaaeacd507d0b976b059025b0b7e9a840e894",
+      "candidate-copy": "3b4f7db3efc86e73e4752de5a61eaaeacd507d0b976b059025b0b7e9a840e894"
+    }
+  },
+  "independent-129-local": {
+    "medianNsPerGradient": {
+      "baseline": {
+        "constructionNs": 721.23828125,
+        "computationNs": 8891.529296875,
+        "releaseNs": 2181.462890625,
+        "processNs": 18318.421875
+      },
+      "baseline-copy": {
+        "constructionNs": 722.359375,
+        "computationNs": 8828.54296875,
+        "releaseNs": 2188.20703125,
+        "processNs": 18148.7421875
+      },
+      "candidate": {
+        "constructionNs": 713.044921875,
+        "computationNs": 1313.3046875,
+        "releaseNs": 2197.904296875,
+        "processNs": 10642.5390625
+      },
+      "candidate-copy": {
+        "constructionNs": 713.04296875,
+        "computationNs": 1317.150390625,
+        "releaseNs": 2208.703125,
+        "processNs": 10663.958984375
+      }
+    },
+    "identicalCopies": {
+      "baseline": {
+        "ratio": 0.9959832925137002,
+        "qualified": true
+      },
+      "candidate": {
+        "ratio": 0.998764702136327,
+        "qualified": true
+      }
+    },
+    "vsBaseline": {
+      "candidate": {
+        "reference": "baseline",
+        "ratio": 0.1479082304715359,
+        "interval95": [
+          0.14704355043272307,
+          0.14965862161808574
+        ],
+        "copyQualified": true,
+        "direction": "faster"
+      }
+    },
+    "binaryHashes": {
+      "baseline": "f11f4debda2df0484fb53233557f9a0c12005ad94dec7e1c6322640edaeb39b8",
+      "baseline-copy": "f11f4debda2df0484fb53233557f9a0c12005ad94dec7e1c6322640edaeb39b8",
+      "candidate": "0ee249def6f4eb594c9b8917dd2628cad330c6a56076c500f4e769ee8f3fe1cf",
+      "candidate-copy": "0ee249def6f4eb594c9b8917dd2628cad330c6a56076c500f4e769ee8f3fe1cf"
+    }
+  },
+  "neighbors-129-reverse": {
+    "medianNsPerGradient": {
+      "baseline": {
+        "constructionNs": 635.591796875,
+        "computationNs": 31898.4609375,
+        "releaseNs": 2200.17578125,
+        "processNs": 41311.775390625
+      },
+      "baseline-copy": {
+        "constructionNs": 634.958984375,
+        "computationNs": 31897.84765625,
+        "releaseNs": 2203.900390625,
+        "processNs": 41367.3359375
+      },
+      "candidate": {
+        "constructionNs": 634.6796875,
+        "computationNs": 31904.080078125,
+        "releaseNs": 2203.373046875,
+        "processNs": 41393.943359375
+      },
+      "candidate-copy": {
+        "constructionNs": 635.009765625,
+        "computationNs": 31905.51171875,
+        "releaseNs": 2202.060546875,
+        "processNs": 41285.74609375
+      }
+    },
+    "identicalCopies": {
+      "baseline": {
+        "ratio": 0.9993399576111189,
+        "qualified": true
+      },
+      "candidate": {
+        "ratio": 0.9999459493013607,
+        "qualified": true
+      }
+    },
+    "vsBaseline": {
+      "candidate": {
+        "reference": "baseline",
+        "ratio": 1.0003201512844844,
+        "interval95": [
+          0.9993904885164453,
+          1.0010234029892369
+        ],
+        "copyQualified": true,
+        "direction": "inconclusive"
+      }
+    },
+    "binaryHashes": {
+      "baseline": "3209ff23d46964c03afc7c16f349954eb398822d0b8b20cad86e4d5488092843",
+      "baseline-copy": "3209ff23d46964c03afc7c16f349954eb398822d0b8b20cad86e4d5488092843",
+      "candidate": "6c93e5f02d785acdd98206e0eaa13d1bbef74db459a173934006af80dc137ea9",
+      "candidate-copy": "6c93e5f02d785acdd98206e0eaa13d1bbef74db459a173934006af80dc137ea9"
+    }
+  },
+  "independent-129-reverse": {
+    "medianNsPerGradient": {
+      "baseline": {
+        "constructionNs": 712.765625,
+        "computationNs": 7717.529296875,
+        "releaseNs": 2169.53125,
+        "processNs": 16896.91796875
+      },
+      "baseline-copy": {
+        "constructionNs": 713.884765625,
+        "computationNs": 7696.474609375,
+        "releaseNs": 2167.26953125,
+        "processNs": 16899.669921875
+      },
+      "candidate": {
+        "constructionNs": 714.970703125,
+        "computationNs": 7695.634765625,
+        "releaseNs": 2171.701171875,
+        "processNs": 16838.125
+      },
+      "candidate-copy": {
+        "constructionNs": 712.0625,
+        "computationNs": 7745.73046875,
+        "releaseNs": 2159.783203125,
+        "processNs": 16766.36328125
+      }
+    },
+    "identicalCopies": {
+      "baseline": {
+        "ratio": 0.9959121737131735,
+        "qualified": true
+      },
+      "candidate": {
+        "ratio": 1.0043187131698819,
+        "qualified": true
+      }
+    },
+    "vsBaseline": {
+      "candidate": {
+        "reference": "baseline",
+        "ratio": 0.9952905631564184,
+        "interval95": [
+          0.9901849456123274,
+          1.0036812379149673
+        ],
+        "copyQualified": true,
+        "direction": "inconclusive"
+      }
+    },
+    "binaryHashes": {
+      "baseline": "3e9fdf608ac96b35dc90ff57bd178c016ae8505b8f8900ed082882611bb58013",
+      "baseline-copy": "3e9fdf608ac96b35dc90ff57bd178c016ae8505b8f8900ed082882611bb58013",
+      "candidate": "e75c23c9c8ea4899b943655c214d95bf08040dbe8cd152cb0dc0c71bac69965f",
+      "candidate-copy": "e75c23c9c8ea4899b943655c214d95bf08040dbe8cd152cb0dc0c71bac69965f"
+    }
+  },
+  "dense-9-reverse": {
+    "medianNsPerGradient": {
+      "baseline": {
+        "constructionNs": 598.921875,
+        "computationNs": 5292.876953125,
+        "releaseNs": 949.857421875,
+        "processNs": 13034.009765625
+      },
+      "baseline-copy": {
+        "constructionNs": 600.220703125,
+        "computationNs": 5278.55078125,
+        "releaseNs": 949.380859375,
+        "processNs": 12941.357421875
+      },
+      "candidate": {
+        "constructionNs": 600.87890625,
+        "computationNs": 5219.27734375,
+        "releaseNs": 952.919921875,
+        "processNs": 12824.236328125
+      },
+      "candidate-copy": {
+        "constructionNs": 599.125,
+        "computationNs": 5252.005859375,
+        "releaseNs": 948.796875,
+        "processNs": 12810.130859375
+      }
+    },
+    "identicalCopies": {
+      "baseline": {
+        "ratio": 1.0012926986322412,
+        "qualified": true
+      },
+      "candidate": {
+        "ratio": 0.9969570462180304,
+        "qualified": true
+      }
+    },
+    "vsBaseline": {
+      "candidate": {
+        "reference": "baseline",
+        "ratio": 0.9946961435409127,
+        "interval95": [
+          0.9835287110994182,
+          1.0057092079915346
+        ],
+        "copyQualified": true,
+        "direction": "inconclusive"
+      }
+    },
+    "binaryHashes": {
+      "baseline": "e8efe3de8d1e6d1fd2ca155b3778eb5bf6a8f7ed20cb85d58107b254c02fcb47",
+      "baseline-copy": "e8efe3de8d1e6d1fd2ca155b3778eb5bf6a8f7ed20cb85d58107b254c02fcb47",
+      "candidate": "5c5f855ce55a170a8d2e191dadbb2121faab659c5ec08c160873e2017e9bc3cb",
+      "candidate-copy": "5c5f855ce55a170a8d2e191dadbb2121faab659c5ec08c160873e2017e9bc3cb"
+    }
+  },
+  "dense-33-reverse": {
+    "medianNsPerGradient": {
+      "baseline": {
+        "constructionNs": 6203.267578125,
+        "computationNs": 53516.125,
+        "releaseNs": 10307.64453125,
+        "processNs": 79125.990234375
+      },
+      "baseline-copy": {
+        "constructionNs": 6206.384765625,
+        "computationNs": 53487.8671875,
+        "releaseNs": 10292.662109375,
+        "processNs": 79064.3359375
+      },
+      "candidate": {
+        "constructionNs": 6208.685546875,
+        "computationNs": 53472.140625,
+        "releaseNs": 10298.802734375,
+        "processNs": 79094.5859375
+      },
+      "candidate-copy": {
+        "constructionNs": 6207.087890625,
+        "computationNs": 53480.244140625,
+        "releaseNs": 10282.220703125,
+        "processNs": 79102.412109375
+      }
+    },
+    "identicalCopies": {
+      "baseline": {
+        "ratio": 1.0003096277585584,
+        "qualified": true
+      },
+      "candidate": {
+        "ratio": 0.9999315514723235,
+        "qualified": true
+      }
+    },
+    "vsBaseline": {
+      "candidate": {
+        "reference": "baseline",
+        "ratio": 0.99968535253254,
+        "interval95": [
+          0.998351971669273,
+          1.001196146944172
+        ],
+        "copyQualified": true,
+        "direction": "inconclusive"
+      }
+    },
+    "binaryHashes": {
+      "baseline": "d4c1b033cfc3e5b52497fdedd40b3ba4033fd0de011c64cf97dd56921325e9f7",
+      "baseline-copy": "d4c1b033cfc3e5b52497fdedd40b3ba4033fd0de011c64cf97dd56921325e9f7",
+      "candidate": "38b34e7b32f5ad5601887d6ab26b576ee77a0655203fbcf7656a237c6f9de27d",
+      "candidate-copy": "38b34e7b32f5ad5601887d6ab26b576ee77a0655203fbcf7656a237c6f9de27d"
+    }
+  },
+  "dense-33-forward": {
+    "medianNsPerGradient": {
+      "baseline": {
+        "constructionNs": 6189.212890625,
+        "computationNs": 1213304.580078125,
+        "releaseNs": 10114.35546875,
+        "processNs": 1238817.279296875
+      },
+      "baseline-copy": {
+        "constructionNs": 6191.19140625,
+        "computationNs": 1211856.54296875,
+        "releaseNs": 10106.111328125,
+        "processNs": 1237497.9375
+      },
+      "candidate": {
+        "constructionNs": 6201.279296875,
+        "computationNs": 1213058.537109375,
+        "releaseNs": 10118.3984375,
+        "processNs": 1239175.01953125
+      },
+      "candidate-copy": {
+        "constructionNs": 6189.609375,
+        "computationNs": 1212023.822265625,
+        "releaseNs": 10129.185546875,
+        "processNs": 1238007.478515625
+      }
+    },
+    "identicalCopies": {
+      "baseline": {
+        "ratio": 0.9996502673232772,
+        "qualified": true
+      },
+      "candidate": {
+        "ratio": 0.9990347076105973,
+        "qualified": true
+      }
+    },
+    "vsBaseline": {
+      "candidate": {
+        "reference": "baseline",
+        "ratio": 0.9997929267526457,
+        "interval95": [
+          0.9989905361907311,
+          1.0016437755692529
+        ],
+        "copyQualified": true,
+        "direction": "inconclusive"
+      }
+    },
+    "binaryHashes": {
+      "baseline": "ad9dad4583547ab4b3f5e6e21fc0fd56ccaa312ae5eb38ae2fd6f6143b8d934d",
+      "baseline-copy": "ad9dad4583547ab4b3f5e6e21fc0fd56ccaa312ae5eb38ae2fd6f6143b8d934d",
+      "candidate": "ec6e2053288f3eb582004b8d82804a5ac421b6a6e84a714c55590d2ecb95e2ff",
+      "candidate-copy": "ec6e2053288f3eb582004b8d82804a5ac421b6a6e84a714c55590d2ecb95e2ff"
+    }
+  }
+}

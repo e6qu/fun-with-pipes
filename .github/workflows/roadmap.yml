@@ -30,6 +30,9 @@ jobs:
           python3 scripts/test-loop-array-diagnosis.py
           python3 scripts/test-borrowed-array-costs.py
           python3 scripts/test-captured-map-costs.py
+          python3 scripts/test-structured-ad-costs.py
+      - name: Retained structured callback timing and storage reports
+        run: python3 scripts/check-structured-callback-report.py --directory docs/measurements/structured-array-callbacks-2026-11-08
       - name: Exact-source production log audit controls
         run: python3 scripts/test-production-log-audit.py
       - name: Documentation, immutable tags and commit messages

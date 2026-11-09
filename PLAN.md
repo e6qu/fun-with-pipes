@@ -7,6 +7,10 @@ excluded. The [design limits](docs/design-limits.md) define what we do not promi
 
 ## Where we are
 
+- #271 delivers runtime scalar-capture map reuse with all native gates passing.
+  Both largest applications use 84–94% less computation; noisy controls leave the
+  [combined timing target open](docs/measurements/captured-map-repaired-2026-11-08/README.md).
+
 - Tracing GC removal is verified on Linux, macOS and Windows, each on ARM64/AMD64.
 - Known calls, selected records/arrays and scoped workspaces avoid many temporary
   allocations and ownership operations. These are bounded proofs, not a promise
@@ -41,61 +45,58 @@ implementation; do not invent a universal language-overhead target.
 
 | Step | Milestone | Concrete completion evidence |
 |---|---|---|
-| 1 | Shared loop/array costs and complete documentation refresh | Attribute the checked-loop and array/derivative gaps; deliver a reusable improvement selected from those costs, with the measurement contract below. Review all tracked docs and 24 tutorials, remove stale directions/repetition, repair navigation, and pass the final production/docs/audit gates in the same PR. |
+| 1 | Shared loop/array costs and complete documentation refresh | Attribute the checked-loop and array/derivative gaps; deliver a reusable improvement selected from those costs, under the [shared-cost contract](docs/measurements/shared-loop-array-costs.md). Review all tracked docs and 24 tutorials, remove stale directions/repetition, repair navigation, and pass the final production/docs/audit gates in the same PR. |
 | 2 | Broader ownership and representation coverage | Extend a common lifetime or representation proof to at least two distinct application patterns exposed by milestone 1. Cover local/escaping closures, records and shared inputs as appropriate. Preserve trap/cancellation cleanup and count necessary sharing; report time, allocations, live memory and compiler scaling. |
 | 3 | Structured autodiff usable beyond one objective | Compare ordinary reverse AD, local forward AD and existing tensor operations on a neighboring-pair objective, independent per-element loss, and a dense coupled objective. Specify supported operations and effects. Add a public structured operation only with correctness, lifetime and measured-benefit evidence; preserve general `grad`, nested differentiation and F128 precision. |
 | 4 | Complete ownership and peer comparisons | Update relevant Swift/C/Rust comparisons for buffers, returned functions, weak subscriptions and parser workspaces. Separate construction/work/release, ordinary runtime from instrumented counts, managed/native storage from RSS, and actual algorithm differences. Measure ARC operations only with a verified observer; otherwise mark them unmeasured. |
-| 5 | Language/tooling usability and compiler cost | Exercise a numerical application, a CLI/data-processing program and a callback-based service through the documented tools. Fix demonstrated inference/diagnostic/workflow gaps. Measure parsing, typing/specialization, ownership, C emission and C compilation separately on growing inputs; keep errors useful and analysis bounded. Add syntax only for a demonstrated need. |
+| 5 | Language/tooling usability and compiler cost | Exercise a numerical application, a CLI/data-processing program and a callback-based service through the documented tools. Fix demonstrated inference/diagnostic/workflow gaps. Measure parsing, typing/specialization, ownership, C emission and C compilation separately on growing inputs; keep errors useful and analysis bounded. Complete the [sustained-load measurements](docs/benchmarks.md#remaining-service-load-measurements). Add syntax only for a demonstrated need. |
 
 Each milestone preserves earlier behavior and coverage. A smaller executable or
 fewer requested operations is evidence, but does not by itself finish a runtime
 performance milestone. Working-memory gains and runtime tradeoffs must be explicit.
 
-## Active implementation: captured scalar array maps
+## Current work: structured autodiff
 
-PR #270 delivered the documentation refresh and fresh F64 output stores. All nine
-production jobs, docs and the [complete audit](docs/measurements/fresh-array-delivery-2026-11-08/README.md) passed. The original AMD64 timing acceptance stays open.
-The user's merge retains the improvement without declaring that target met.
+#270 delivered the documentation refresh and fresh F64 stores. #271 extended
+array ownership to runtime sensor calibration and pixel adjustment. Both pass
+all delivery gates; [#271's receipt](docs/measurements/captured-map-delivery-2026-11-08/README.md)
+records the tested/merged tree. Their original noisy or unmet timing targets
+remain open. Do not repeat unchanged timings to obtain a pass or treat fewer
+allocations as proof of a timing target.
 
-The next substantial PR extends the existing consuming-map proof to callbacks
-with scalar captures: runtime sensor calibration and pixel adjustment. Bundle
-selection/ownership changes, failure and alias controls, measured runtime/memory
-costs and documentation. [The selection and measurement contract](docs/measurements/captured-array-maps.md)
-defines exclusions and acceptance before collecting results. This begins step 2's
-broader proof coverage while step 1's unresolved timing result remains visible.
+Milestone 3 now compares complete gradients for three functions:
 
-[Repaired captured-map results](docs/measurements/captured-map-repaired-2026-11-08/README.md)
-pass correctness, cleanup and complete observation audits in four native sessions.
-Both largest applications qualify at 84–94% less computation with 199 fewer
-array allocations per 199 updates. No qualified regression remains, but noisy
-controls leave combined timing acceptance open. Final production delivery is next.
-[Initial results](docs/measurements/captured-map-initial-2026-11-08/README.md) and
-their original limits remain unchanged. The loop still allocates 400 small state/
-step boxes and performs 200 payload retains; array reuse does not eliminate them.
+- **Neighbors:** each term depends on two adjacent inputs. Local forward AD can
+  visit just the terms that affect a coordinate.
+- **Independent loss:** each term uses one input; existing `derivative` and
+  `array.map` already express this without another wrapper.
+- **Dense coupling:** every matrix row uses every input. Locality offers no
+  equivalent shortcut; retain general reverse and forward AD.
 
-## Retained contract: shared loop and array costs
+[The comparison contract](docs/measurements/structured-autodiff.md) defines the
+formulas, method limits, input/output boundaries, correctness and measurement
+requirements. The [four-session diagnosis](docs/measurements/structured-gradient-methods-2026-11-08/README.md)
+identifies indirect array callbacks and temporary derivative records as a
+shared cost in independent and neighboring objectives. PR #272 extends existing
+bounded callback specialization to `array.map` and `array.generate`; focused
+GCC/Clang safety checks and all four measurement audits pass.
+[Candidate results](docs/measurements/structured-array-callbacks-2026-11-08/README.md)
+meet allocation/cleanup limits and both ARM64 timing targets. AMD64 copy noise
+leaves combined timing acceptance open under the
+[frozen rule](docs/measurements/structured-autodiff.md#selected-change-known-array-callbacks).
+Finish the report, tutorials and final production/docs/audit gates in this PR.
+Keep the local-pair helper experimental; no new public operation is needed for
+independent losses. Preserve general `grad`, nested AD and F128. Then proceed to
+milestone 4 while retaining every unmet timing target explicitly.
 
-Bundle implementation, incidental repairs, evidence and the entire documentation
-refresh into one normal PR. Publish when the batch is ready; do not use draft
-status to suppress CI. Use focused checks while implementing and one complete
-final-head matrix after the batch is ready.
+## Earlier contracts
 
-[The first diagnostic](docs/measurements/shared-loop-array-costs.md) tests whether
-array callback boundaries hide useful loop information from the C optimizer.
-It selects further work; it is not a completed compiler improvement.
-
-| Work | Scope and decision |
-|---|---|
-| A. Establish costs | Start from merged #269. Inspect the saved checked-loop C and the saved local/manual-array programs. Measure equivalent C/Rust/fwp computation separately from input construction, output and teardown. Use the checked loop at 0/16/1,000,000/100,000,000 iterations; F64 map/fold at 0/16/65,537/262,145 elements; and derivative descent at 3/33/129 coordinates with 199 updates, plus 0/1-update controls. Retain the existing exact arithmetic and output oracles. |
-| B. Choose the compiler change | Identify actual extra work in source/generated C and corroborate it with phase/work measurements. Consider calls, representation, repeated checks, copies and construction; do not assume ARC, register pressure or cache misses are the cause. Freeze the chosen transformation, affected workloads and correctness exclusions before implementing it. |
-| C. Verify benefit | Aim for at least 10% less uninstrumented computation time on two affected nontrivial inputs, in two sessions on each native ARM64/AMD64 host. Qualified guard cases must not regress more than 2%. Preserve identical-copy controls; noise makes a comparison inconclusive. Record whole-program time separately, allocations, live storage, RSS, code/stack costs and compiler time/RSS. An inconclusive or missed target remains open rather than becoming a pass. |
-| D. Refresh all documentation | Review every tracked Markdown document and all tutorial source/output copies. Explain concepts before examples, state inputs/results and prerequisites, replace repetitive prose with useful tables/diagrams, remove obsolete next actions and link to one authoritative explanation. Update generated library guides through source comments/generators. Preserve raw observations, original acceptance contracts and source identities; historical evidence is not an active backlog. |
-| E. Deliver together | Compare raw interpretation and native results, effects and first failures. Use production GCC/Clang settings for focused checks. Run nine final-head native production jobs, documentation and complete log/artifact audits; fix every encountered issue before delivery. Squash with one line <=80 characters and an empty body. |
-
-If an investigated change misses its target, retain the result and choose the
-next change from evidence within this milestone. Do not repeat unchanged timings
-to obtain a pass, relax old limits after seeing results, or substitute count savings
-for a speed claim. Keep prior successful gates stable while remaining jobs run.
+The [shared loop/array contract](docs/measurements/shared-loop-array-costs.md) and
+[captured-map contract](docs/measurements/captured-array-maps.md) retain original
+limits and evidence. Their completed implementation tasks are not an active queue.
+[Results](docs/measurements/README.md) distinguish verified delivery from timing
+acceptance. Remaining loop-state boxes and payload retains are measured costs,
+not a mandate to optimize them before the next representative workload.
 
 ## Maintained guarantees and evidence
 

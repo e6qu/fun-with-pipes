@@ -107,6 +107,7 @@ energy = fn x -> let square = x * x in square + square
 | Fold / accumulator / seed | Combine items into a running result, starting from an initial value. `[1, 2, 3] \| fold add 0` visits accumulator values `0 → 1 → 3 → 6`; `0` is its seed. |
 | Callback | A function passed to another operation: `mul 2` in `map (mul 2)`. |
 | Closure / capture / environment | A function remembers surrounding values; those values are captures, and their storage is its environment. |
+| Closed function | A function with no runtime captures, such as `fn x -> x + 1`. Knowing its identity does not require remembering an environment. |
 | Escaping | A value may be returned or stored beyond its creating call. |
 | Unit | `()`: no meaningful input/result. It differs from the empty list `[]`. |
 | Tuple / projection | `(3, "cat")` groups by position; `.0` selects `3`. Indices start at zero. |
@@ -161,7 +162,8 @@ For `2 + 3 * 4`:
 | Macro / quote / unquote | Compile-time syntax generation / represent syntax as a value / insert prepared syntax. |
 | Hygiene | A macro's introduced name cannot accidentally capture a caller's same-named variable. |
 | `comptime` | Evaluate a checked expression during compilation. |
-| Specialization / monomorphization | Compile a generic function for a particular type. |
+| Specialization | Compile a version using known information, such as the particular callback in `array.map (derivative loss)`. The source operation stays the same. |
+| Monomorphization | Specialize a generic function for a particular type, such as `F64`. |
 | Inlining / constant folding | Substitute a known function's operations / calculate known results during compilation. |
 | Immediate scalar / constant alias | A number stored directly in a machine word / another name for a known constant, such as `unit-weight = one` with type `F64`. No heap object is needed for that numeric value. |
 | Lazy cache / CAF | Compute a value on its first read, then reuse the stored result. CAF (constant applicative form) is the compiler's name for a zero-argument entry; its calculation may still have effects. Proving `one : F64` is exactly `1.0f64` lets native code omit its cache. |
@@ -281,6 +283,8 @@ Output: `[6.0]`.
 | Scalar / vector / matrix / tensor | One number / ordered numbers / rectangular grid / general multidimensional array. |
 | Shape / kernel / reduction | Dimensions / calculation on data / combine many values, such as summing a list. |
 | Derivative / partial derivative | Local output-change rate / vary one input while holding the others fixed. |
+| Objective | Scalar function being differentiated or minimized; for example the sum of squared errors. |
+| Independent / neighboring / dense objective | A term uses one input / a few nearby inputs / potentially every input. This determines which calculations a local derivative can avoid; see the [worked examples](tutorials/20-autodiff-and-devices/README.md#use-the-structure-of-the-calculation). |
 | Gradient | Input derivatives of one scalar output. For `x*y+x` at `(3,4)`, it is `[5,3]`. |
 | Jacobian / Hessian | One derivative row per output / second derivatives of a scalar output. |
 | AD / chain rule | Automatic differentiation / multiply contributions along a dependency path and add contributions from multiple paths. |

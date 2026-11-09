@@ -45,26 +45,56 @@ jobs:
           toolchain: 1.99.1
           components: rustfmt
       - name: Record identity and check measurement controls
+        id: controls
         run: |
           mkdir local-checks
           git rev-parse HEAD > local-checks/source.txt
           "$CC" --version > local-checks/cc.txt
           python3 scripts/test-local-derivatives.py
-          cargo fmt --check
+          python3 scripts/test-structured-ad-costs.py
+      - name: Check Rust formatting
+        run: cargo fmt --check
       - name: Numeric parameter proofs and mixed ownership
+        if: ${{ !cancelled() && steps.controls.outcome == 'success' }}
         run: |
           set -o pipefail
-          cargo test --locked --lib cgen::numeric_parameters::tests -- --nocapture 2>&1 | tee local-checks/numeric-workers.log
-          cargo test --locked --test fold_ownership numeric_callback_inputs_preserve_order_shared_lists_and_mixed_owners -- --exact --nocapture 2>&1 | tee local-checks/mixed-ownership.log
+          status=0
+          cargo test --locked --lib opt::scoped::tests -- --nocapture 2>&1 | tee local-checks/known-functions.log || status=1
+          cargo test --locked --lib cgen::numeric_parameters::tests -- --nocapture 2>&1 | tee local-checks/numeric-workers.log || status=1
+          cargo test --locked --test fold_ownership numeric_callback_inputs_preserve_order_shared_lists_and_mixed_owners -- --exact --nocapture 2>&1 | tee local-checks/mixed-ownership.log || status=1
+          exit "$status"
       - name: Interpreter and production native semantics
+        if: ${{ !cancelled() && steps.controls.outcome == 'success' }}
         run: |
           set -o pipefail
-          cargo test --locked --test autodiff_precision local_derivatives_preserve_endpoints_aliases_and_traps -- --exact --nocapture 2>&1 | tee local-checks/semantics.log
+          status=0
+          cargo test --locked --test autodiff_precision local_derivatives_preserve_endpoints_aliases_and_traps -- --exact --nocapture 2>&1 | tee local-checks/semantics.log || status=1
+          cargo test --locked --test autodiff_precision structured_gradients_agree_on_three_objectives_and_empty_inputs -- --exact --nocapture 2>&1 | tee local-checks/structured-gradients.log || status=1
+          exit "$status"
+      - name: Array callback ordering, unknown functions and cleanup
+        if: ${{ !cancelled() && steps.controls.outcome == 'success' }}
+        run: |
+          set -o pipefail
+          status=0
+          cargo test --locked --test mapped_array_construction direct_scalar_array_maps_preserve_values_order_aliases_and_exclusions -- --exact --nocapture 2>&1 | tee local-checks/array-map-order.log || status=1
+          cargo test --locked --test array_element_ownership generated_array_captures_preserve_argument_and_callback_order -- --exact --nocapture 2>&1 | tee local-checks/array-generate-order.log || status=1
+          cargo test --locked --test array_unwind_ownership -- --nocapture 2>&1 | tee local-checks/array-unwind.log || status=1
+          cargo test --locked --test autodiff_precision quad_reverse_preserves_low_bits_exponent_range_and_reclaims_owned_values -- --exact --nocapture 2>&1 | tee local-checks/quad-precision.log || status=1
+          cargo test --locked --test autodiff_nested nested_reverse_derivatives_match_analytic_values_and_both_engines -- --exact --nocapture 2>&1 | tee local-checks/nested-gradients.log || status=1
+          exit "$status"
+      - name: Structured gradient driver and storage observer controls
+        if: ${{ !cancelled() && steps.controls.outcome == 'success' }}
+        run: >-
+          python3 scripts/check-structured-ad-driver.py
+          --compiler target/debug/fwp --cc "${{ matrix.cc }}"
+          --c-arch ${{ runner.arch == 'ARM64' && 'armv8-a' || 'x86-64' }}
+          --platform ${{ runner.os == 'macOS' && 'darwin' || 'linux' }}
+          --output local-checks/driver-controls
       - name: Format prototype sources and retain any needed patch
         if: ${{ !cancelled() && hashFiles('target/debug/fwp') != '' }}
         run: |
-          target/debug/fwp fmt tests/fixtures/descent_local_ad.fwp tests/fixtures/local_derivatives.fwp
-          git diff -- tests/fixtures/descent_local_ad.fwp tests/fixtures/local_derivatives.fwp > local-checks/format.patch
+          target/debug/fwp fmt tests/fixtures/descent_local_ad.fwp tests/fixtures/local_derivatives.fwp tests/fixtures/structured_ad_objectives.fwp tests/fixtures/structured_ad_examples.fwp
+          git diff -- tests/fixtures/descent_local_ad.fwp tests/fixtures/local_derivatives.fwp tests/fixtures/structured_ad_objectives.fwp tests/fixtures/structured_ad_examples.fwp > local-checks/format.patch
           test ! -s local-checks/format.patch
       - uses: actions/upload-artifact@v7
         if: always()

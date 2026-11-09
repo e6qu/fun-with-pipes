@@ -24,35 +24,71 @@ tapes without extending the lifetime of an expired inner tape.
 Jacobian is the table of derivatives of every output with respect to every input.
 Those operations are described in the [numerics guide](../../numerics.md).
 
-The example's `rosenbrock` sums `100(y − x²)² + (1 − x)²` for adjacent input
-pairs. `zip (drop 1 values)` pairs each value with its successor; the pattern
-`fn (x, y) -> ...` names those two numbers. Local `distance` and `offset` values
-make the formula readable and are computed once per pair.
+The program's `rosenbrock` sums `100(y − x²)² + (1 − x)²` over adjacent
+pairs. `zip (drop 1 values)` pairs each value with its successor; `fn (x, y)`
+names the pair. Generic trait requirements allow ordinary or tracked numbers.
+`descend` subtracts `0.001 * gradient` from the inputs. This decreases the
+objective in this example, not necessarily for an arbitrary function.
 
-Its trait requirements
-allow ordinary or derivative-tracking numbers.
-`descend` multiplies the gradient by 0.001 and subtracts it from the original
-vector: one small step toward reducing the function. `zip-with sub` combines
-corresponding elements; because subtraction takes its subject last, the original
-vector is the final argument.
+The descent loop keeps `(steps-left, weights)`:
 
-Repeating this step lowers the objective in this
-example; it does not guarantee convergence for arbitrary functions.
+- `both (const 199) id` supplies the count and keeps the starting weights.
+  `const 199` ignores its input; `id` returns its input.
+- `.0` selects the count; `.1` selects the weights.
+- `Again` carries the next pair; `Stop` returns the final weights.
 
-The descent loop keeps a pair `(steps-left, weights)`. `both (const 199) id`
-creates that pair: `const 199` ignores its input and supplies the count, while
-`id` keeps the starting weights. `.0` selects the count and `.1` the weights.
-Each `Again` supplies the next pair; `Stop` returns the final weights. The loop
-therefore makes exactly 199 updates without keeping a list of earlier vectors.
+There are exactly 199 updates, without retaining earlier vectors. Use
+`iterate 200 descend` instead when the 200-point history (including the start)
+is needed for a plot. [History removal](../../design.md#other-selected-transformations)
+can optimize eligible consumers that need only the last value.
 
-Keeping a history is useful when plotting the path. `iterate 200 descend`
-describes 200 vectors, including the starting one, from the same 199 updates.
-If only `last` consumes that list, the compiler can remove an eligible unused
-history; retaining or inspecting it still needs storage. This example uses
-`loop` to express directly that only the final weights are needed.
-[The history-removal contract](../../design.md#other-selected-transformations)
-states the proof's limits; [measurements](../../measurements/final-iteration-time-2026-11-04/README.md)
-record its time and memory costs.
+## Use the structure of the calculation
+
+An **objective** is the scalar function being differentiated. These three
+shapes need different amounts of work:
+
+| Shape | Example | What affects one input's derivative? |
+|---|---|---|
+| Independent | Sum `(x*x-1)^2` over inputs | Just that input's term |
+| Neighbors | Sum `(y-x)^2` over adjacent pairs | At most two pairs |
+| Dense | Square and sum matrix-row products | Potentially every row |
+
+The program below first computes the independent objective's gradient at
+`[-2, 0, 2]` in four ways. Each computes `[-24, 0, 24]`; the local method
+prints the middle zero as `-0.0`. The scalar derivative is `4*x*(x*x-1)`, so the first component is
+`4*(-2)*(4-1) = -24`. IEEE floating-point arithmetic has signed zeros:
+the scalar derivative here preserves a negative zero, while adding contributions
+to an initial positive zero produces `0.0`. Those zeros compare equal; the
+methods are not promised to produce identical bits.
+
+- `grad independent` records the whole objective and propagates backward.
+- `gradient independent` evaluates it once for each input direction.
+- `array.map (derivative loss)` differentiates each independent term once.
+  `array.from-list` and `array.to-list` convert the input/output containers.
+- Tensor AD differentiates elementwise expressions. `loss` uses its input four
+  times, so `tensor.grad-on Cpu` returns four contribution vectors. Convert
+  them to lists, then `fold (zip-with add)` adds corresponding coordinates,
+  starting from three zeros. Taking only the first vector would be incorrect.
+
+These methods perform equivalent mathematics with different storage and work.
+The example checks answers; it does not establish a speed ratio.
+
+For neighbors `[1, 3, 4]`, the squared-edge objective is
+`(3-1)^2 + (4-3)^2 = 5`. The edge derivatives are `[-4, 4]` and `[-2, 2]`;
+the shared middle input receives both contributions, giving `[-4, 2, 2]`.
+Mapping a one-input derivative cannot account for that coupling. A local-pair
+helper is still [experimental](../../numerics.md#forward-mode).
+
+For a dense matrix objective, every coordinate may influence every term;
+keep the general gradient operations. Current tensor AD supports elementwise
+arithmetic, not differentiation through general matrix multiplication.
+The [method comparison](../../measurements/structured-autodiff.md) defines the
+complete-gradient measurements and these limits; the
+[results](../../measurements/structured-gradient-methods-2026-11-08/README.md)
+separate supported speed comparisons from inconclusive timings.
+The [compiler comparison](../../measurements/structured-array-callbacks-2026-11-08/README.md)
+shows what removing temporary derivative objects changes, with allocation counts,
+computation time and remaining measurement limits reported separately.
 
 ## What the tape records: a smaller example
 
@@ -131,6 +167,12 @@ descend = fn values ->
     let adjustment = grad rosenbrock values | map (mul 0.001)
     in values | zip-with sub adjustment
 
+loss : t -> t where Ring[t], FromFloat[t], Dup[t]
+loss = fn value -> let residual = value * value - 1.0 in residual * residual
+
+independent : List[t] -> t where Ring[t], FromFloat[t], Dup[t]
+independent = map loss | sum
+
 soft : t -> t where Field[t], Floating[t], FromFloat[t]
 soft = exp | add 1.0 | ln
 
@@ -138,6 +180,21 @@ xs : Vector[F64, _]
 xs = 1000 | range 0 | map (int.to-float | mul 0.01 | sub 5.0) | vector.from-list
 
 main = [
+    [-2.0, 0.0, 2.0] | grad independent | echo,
+    [-2.0, 0.0, 2.0] | gradient independent | echo,
+    [-2.0, 0.0, 2.0]
+    | array.from-list
+    | array.map (derivative loss)
+    | array.to-list
+    | echo,
+    [-2.0, 0.0, 2.0]
+    | vector.from-list
+    | tensor.lazy
+    | loss
+    | tensor.grad-on Cpu
+    | map vector.to-list
+    | fold (zip-with add) [0.0, 0.0, 0.0]
+    | echo,
     [-1.2, 1.0, 0.5] | grad rosenbrock | show | print,
     [-1.2, 1.0, 0.5] | gradient rosenbrock | show | print,
     [-1.2, 1.0, 0.5]
@@ -163,6 +220,10 @@ Run `fwp run docs/tutorials/20-autodiff-and-devices/main.fwp`.
 Expected [`main.out`](main.out):
 
 ```
+[-24.0, 0.0, 24.0]
+[-24.0, 0.0, 24.0]
+[-24.0, -0.0, 24.0]
+[-24.0, 0.0, 24.0]
 [-215.59999999999997, 112.00000000000001, -100.0]
 [-215.59999999999997, 112.00000000000001, -100.0]
 3.493467774689583

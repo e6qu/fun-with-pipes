@@ -181,7 +181,17 @@ arithmetic and values still have runtime costs.
 An [experimental neighboring-pair gradient](measurements/local-derivatives.md)
 uses `Dual` on each local edge instead of recording a global tape. Its
 `local-gradient` helper lives in test fixtures; it is not a standard-library API.
-Support beyond that F64, pure-callback experiment remains roadmap work.
+The [structured-gradient comparison](measurements/structured-autodiff.md) now
+covers neighboring terms, independent losses and dense coupling. The
+[four-session results](measurements/structured-gradient-methods-2026-11-08/README.md)
+retain noisy comparisons and expose temporary callback allocations.
+[Known-callback measurements](measurements/structured-array-callbacks-2026-11-08/README.md)
+verify fewer allocations and large ARM64 computation reductions; AMD64 timing
+acceptance remains open. General `grad`, nested differentiation and F128 remain
+supported.
+For independent terms, use existing `array.map (derivative loss)`; the
+[tutorial's four equivalent methods](tutorials/20-autodiff-and-devices/README.md#use-the-structure-of-the-calculation)
+show complete outputs and explain when that decomposition is valid.
 
 ## Reverse mode
 
@@ -394,7 +404,11 @@ input, so it is not included in that no-intermediate-array claim.
 
 Tensor gradients differentiate the expression graph into another expression per
 leaf. Repeating a leaf in the tree, such as through `fork`, counts as separate
-leaves. `tensor.map` cannot be differentiated and traps; `tensor.abs` has NaN as
+leaves. For `x*x` at `[2]`, the two returned leaf contributions are `[2]` and
+`[2]`; their sum `[4]` is the derivative with respect to the shared input.
+Repeated inputs require combining every contribution. These nodes describe
+elementwise arithmetic, not a complete differentiable matrix/shift API.
+`tensor.map` cannot be differentiated and traps; `tensor.abs` has NaN as
 its derivative at zero. A NaN is a floating-point non-number result.
 
 ## Devices

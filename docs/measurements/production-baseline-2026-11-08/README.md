@@ -1,7 +1,7 @@
 # PR #269 whole-program benchmark snapshot
 
 These are retained results, not new timing runs. The
-[benchmark overview](../../benchmarks.md#latest-whole-program-snapshot-pr-269)
+[benchmark overview](../../benchmarks.md#recorded-whole-program-snapshot-pr-269)
 explains the inputs, unequal work and limits of the comparisons.
 
 | Identity | Value |

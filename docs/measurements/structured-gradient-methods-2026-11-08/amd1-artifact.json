@@ -1,0 +1,20 @@
+{
+  "id": 13625780313,
+  "node_id": "MDg6QXJ0aWZhY3QxMzYyNTc4MDMxMw==",
+  "name": "structured-ad-ubuntu-latest-1",
+  "size_in_bytes": 40670044,
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13625780313",
+  "archive_download_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/artifacts/13625780313/zip",
+  "expired": false,
+  "digest": "sha256:7eb7a0830c9c3300b8b12aa2ab556ada966f1ef861046c55b2911c309a15523a",
+  "created_at": "2026-11-08T16:39:12Z",
+  "updated_at": "2026-11-08T16:39:12Z",
+  "expires_at": "2027-02-06T16:33:27Z",
+  "workflow_run": {
+    "id": 42500492246,
+    "repository_id": 1400763332,
+    "head_repository_id": 1400763332,
+    "head_branch": "structured-autodiff-comparison",
+    "head_sha": "04ddc0ac5d296ec895364236c4120341d7328e41"
+  }
+}

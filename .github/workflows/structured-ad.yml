@@ -1,0 +1,120 @@
+name: Structured gradient method comparison
+on:
+  workflow_call:
+    inputs:
+      comparison:
+        type: string
+        required: true
+      evidence_run:
+        type: string
+        required: true
+      source_revision:
+        type: string
+        required: true
+permissions:
+  contents: read
+  actions: read
+jobs:
+  methods:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-24.04-arm, ubuntu-latest]
+        session: [1, 2]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    env:
+      CC: gcc
+      CARGO_BUILD_JOBS: 2
+      CARGO_PROFILE_DEV_OPT_LEVEL: '1'
+      CARGO_PROFILE_DEV_DEBUG_ASSERTIONS: 'true'
+      CARGO_PROFILE_DEV_OVERFLOW_CHECKS: 'true'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.99.1
+      - name: Require passing native semantics and driver controls
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SAFETY_RUN: ${{ inputs.evidence_run }}
+          SAFETY_SOURCE: ${{ inputs.source_revision }}
+        run: |
+          [[ "$SAFETY_RUN" =~ ^[0-9]+$ ]]
+          [[ "$SAFETY_SOURCE" =~ ^[0-9a-f]{40}$ ]]
+          mkdir structured-safety
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SAFETY_RUN" > structured-safety/run.json
+          gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/actions/runs/$SAFETY_RUN/jobs?per_page=100" > structured-safety/jobs.json
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          import subprocess
+          run = json.loads(Path('structured-safety/run.json').read_text())
+          assert run['head_sha'] == os.environ['SAFETY_SOURCE']
+          jobs = [job for page in json.loads(Path('structured-safety/jobs.json').read_text()) for job in page['jobs']]
+          expected = {'local_derivatives / checks (' + host + ')' for host in ('ubuntu-latest, gcc', 'ubuntu-24.04-arm, gcc', 'macos-15, clang')}
+          selected = [job for job in jobs if job['name'] in expected]
+          assert len(selected) == 3 and {job['name'] for job in selected} == expected
+          for job in selected:
+              assert job['conclusion'] == 'success' and job['head_sha'] == run['head_sha']
+              step, = [step for step in job['steps'] if step['name'] == 'Structured gradient driver and storage observer controls']
+              assert step['conclusion'] == 'success'
+          subprocess.run(['git', 'diff', '--exit-code', run['head_sha'], 'HEAD', '--',
+              'src', 'runtime', 'lib', 'vendor', 'tests', 'build.rs', 'Cargo.toml', 'Cargo.lock',
+              'scripts/check-structured-ad-driver.py', 'scripts/structured_ad_costs.py',
+              'scripts/structured_ad_observations.py', 'scripts/structured_ad_statistics.py',
+              'scripts/test-structured-ad-costs.py', '.github/workflows/local-derivatives.yml'], check=True)
+          PY
+          python3 scripts/test-structured-ad-costs.py
+      - name: Build the frozen comparison compiler from source
+        if: inputs.comparison == 'callbacks'
+        run: |
+          set -o pipefail
+          git worktree add --detach baseline 04ddc0ac5d296ec895364236c4120341d7328e41
+          cargo build --locked --manifest-path baseline/Cargo.toml --bin fwp 2>&1 | tee structured-safety/baseline-build.log
+          git -C baseline rev-parse HEAD > structured-safety/baseline-source.txt
+      - name: Build the current source compiler
+        run: |
+          set -o pipefail
+          cargo build --locked --bin fwp 2>&1 | tee structured-safety/build.log
+          git rev-parse HEAD > structured-safety/source.txt
+      - name: Measure complete gradients and separate storage costs
+        run: |
+          ulimit -s 65536
+          options=()
+          if [[ '${{ inputs.comparison }}' == callbacks ]]; then options=(--reference-root "$PWD/baseline"); fi
+          python3 scripts/measure-structured-ad.py --comparison '${{ inputs.comparison }}' "${options[@]}" \
+            --compiler target/debug/fwp --cc gcc --time /usr/bin/time \
+            --c-arch ${{ runner.arch == 'ARM64' && 'armv8-a' || 'x86-64' }} \
+            --session ${{ matrix.session }} --output structured-costs
+      - name: Audit every source, command, observation and native image
+        run: |
+          options=()
+          if [[ '${{ inputs.comparison }}' == callbacks ]]; then options=(--reference-root "$PWD/baseline"); fi
+          python3 scripts/audit-structured-ad.py \
+            --comparison '${{ inputs.comparison }}' "${options[@]}" \
+            --directory structured-costs --compiler target/debug/fwp --cc gcc \
+            --source "$GITHUB_SHA" \
+            --machine ${{ runner.arch == 'ARM64' && 'aarch64' || 'x86_64' }} \
+            --session ${{ matrix.session }} --output structured-costs/audit.json
+      - name: Verify rejection of incomplete or changed evidence
+        run: |
+          options=()
+          if [[ '${{ inputs.comparison }}' == callbacks ]]; then options=(--reference-root "$PWD/baseline"); fi
+          python3 scripts/test-structured-ad-audit.py \
+            --comparison '${{ inputs.comparison }}' "${options[@]}" \
+            --directory structured-costs --compiler target/debug/fwp --cc gcc \
+            --source "$GITHUB_SHA" \
+            --machine ${{ runner.arch == 'ARM64' && 'aarch64' || 'x86_64' }} \
+            --session ${{ matrix.session }} --output structured-costs/audit-controls.json
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: structured-ad-${{ inputs.comparison }}-${{ matrix.runner }}-${{ matrix.session }}
+          path: |
+            structured-safety/
+            structured-costs/
+          if-no-files-found: error

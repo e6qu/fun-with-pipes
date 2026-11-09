@@ -1,0 +1,12 @@
+{
+  "source": "4a32c102f74f738433c1d55969936b023a5510f0",
+  "session": 1,
+  "rejected": [
+    "missing timing observation",
+    "changed arithmetic policy",
+    "wrong native architecture",
+    "invented speed ratio",
+    "unreleased managed storage"
+  ],
+  "restored": true
+}

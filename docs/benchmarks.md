@@ -23,7 +23,43 @@ statistic: a ratio of medians differs from a median of paired ratios. Elapsed ti
 includes scheduling delays; CPU time measures processing time. Neither identifies
 a cause on its own. Do not average unrelated ratios into a language-wide score.
 
-## Latest audited derivative comparison
+## Latest complete-gradient comparison
+
+[Known array callbacks](measurements/structured-array-callbacks-2026-11-08/README.md)
+compares fwp before and after removing temporary derivative objects, across
+neighboring, independent and dense calculations. Both ARM64 sessions show about
+91% less computation for the 129-input neighboring gradient and 85% less for
+independent loss. AMD64 copy noise leaves its timing acceptance open.
+
+Allocation requests fall from 1,284 to 260 and from 518 to 260 respectively,
+including input/output containers. Peak managed storage remains 9,536 bytes;
+all owners and raw derivative buffers are released. The report separates
+construction, complete-gradient work, release, process RSS and compiler/stack
+costs. These are fwp-before/after results, not a new C/Rust/Swift comparison or
+a complete iterative solve. Full platform delivery is pending.
+
+## Remaining service load measurements
+
+The native HTTP correctness test runs 64 clients with 200 requests each and
+checks shutdown with a request in flight. Its 12,800 successful requests do not
+establish throughput, latency or sustained capacity.
+
+Milestone 5 must define and run a separate measurement contract:
+
+- Freeze endpoint work, request/response sizes, keep-alive policy, concurrency
+  levels, warmup, measured duration, host limits and baseline source before runs.
+- Report completed requests per second and median/p95/p99 request latency at
+  each concurrency level, alongside errors and timeouts. Do not omit failures
+  from the denominator or mix load-generator time with server computation.
+- Measure steady allocation traffic and long-running live storage/RSS; distinguish
+  bounded pools and warmed caches from continuing growth.
+- Exercise slow readers/writers, backpressure, client disconnects, cancellation
+  and shutdown under load. Check partial-response and resource cleanup behavior.
+- Set acceptance limits from the stated application and measured starting point;
+  retain saturation and inconclusive results. A fixed correctness request count
+  is not a substitute for this contract.
+
+## November 7 complete-solve derivative comparison
 
 The [November 7 local-derivative comparison](measurements/computed-numeric-time-2026-11-07/README.md)
 uses objectives built from neighboring pairs. The local form computes derivatives
@@ -63,7 +99,7 @@ comparisons remain tied to their measured sources; they are not current-code
 ratios. No Swift derivative counterpart was measured. The [Swift comparisons](#swift-comparison)
 below cover other workloads.
 
-## Latest whole-program snapshot: PR #269
+## Recorded whole-program snapshot: PR #269
 
 Source: `e79657624`, same tree as merged `bbcaafea`;
 [retained reports and artifact identity](measurements/production-baseline-2026-11-08/README.md).
@@ -220,7 +256,7 @@ slice inputs, with construction/work/release timings and separate memory counts.
 84–94% less computation on both largest applications in four sessions, 199 fewer
 array allocations and roughly half the managed peak storage. No qualified case
 regresses; noisy controls leave combined acceptance open. Native safety and
-measurement audits pass; final production delivery remains pending.
+measurement audits pass; [All delivery gates pass](measurements/captured-map-delivery-2026-11-08/README.md).
 [Initial results](measurements/captured-map-initial-2026-11-08/README.md) and
 earlier unmet targets remain unchanged.
 

@@ -1,0 +1,308 @@
+{
+  "source": "04ddc0ac5d296ec895364236c4120341d7328e41",
+  "machine": "aarch64",
+  "session": 2,
+  "inputCases": 14,
+  "methodCases": 41,
+  "commands": 2278,
+  "vsReverse": {
+    "neighbors-0": {
+      "forward": {
+        "reference": "reverse",
+        "ratio": 0.3407666429213343,
+        "interval95": [
+          0.3263083835699744,
+          0.3629842180774749
+        ],
+        "copyQualified": false,
+        "direction": "inconclusive"
+      },
+      "local": {
+        "reference": "reverse",
+        "ratio": 0.4378559069925111,
+        "interval95": [
+          0.42325046447845704,
+          0.4599026069585751
+        ],
+        "copyQualified": false,
+        "direction": "inconclusive"
+      }
+    },
+    "neighbors-1": {
+      "forward": {
+        "reference": "reverse",
+        "ratio": 0.5521126644806646,
+        "interval95": [
+          0.5406981034609992,
+          0.5847098538852532
+        ],
+        "copyQualified": false,
+        "direction": "inconclusive"
+      },
+      "local": {
+        "reference": "reverse",
+        "ratio": 0.3913229999199809,
+        "interval95": [
+          0.3814384234057292,
+          0.40025584535569614
+        ],
+        "copyQualified": false,
+        "direction": "inconclusive"
+      }
+    },
+    "neighbors-3": {
+      "forward": {
+        "reference": "reverse",
+        "ratio": 0.34181305187869493,
+        "interval95": [
+          0.3349971746091543,
+          0.35511948586759845
+        ],
+        "copyQualified": false,
+        "direction": "inconclusive"
+      },
+      "local": {
+        "reference": "reverse",
+        "ratio": 0.541670663404441,
+        "interval95": [
+          0.5325332244179836,
+          0.5548251132360342
+        ],
+        "copyQualified": true,
+        "direction": "faster"
+      }
+    },
+    "neighbors-33": {
+      "forward": {
+        "reference": "reverse",
+        "ratio": 0.7184046900089549,
+        "interval95": [
+          0.691731353358083,
+          0.7254164427727029
+        ],
+        "copyQualified": true,
+        "direction": "faster"
+      },
+      "local": {
+        "reference": "reverse",
+        "ratio": 0.5253747353851651,
+        "interval95": [
+          0.4856151683713141,
+          0.5433902417341754
+        ],
+        "copyQualified": true,
+        "direction": "faster"
+      }
+    },
+    "neighbors-129": {
+      "forward": {
+        "reference": "reverse",
+        "ratio": 2.7870266126265353,
+        "interval95": [
+          2.6717166787059994,
+          2.8457978802806387
+        ],
+        "copyQualified": false,
+        "direction": "inconclusive"
+      },
+      "local": {
+        "reference": "reverse",
+        "ratio": 0.49132133509605314,
+        "interval95": [
+          0.46103627147393544,
+          0.505292009276829
+        ],
+        "copyQualified": false,
+        "direction": "inconclusive"
+      }
+    },
+    "independent-0": {
+      "forward": {
+        "reference": "reverse",
+        "ratio": 0.3597220510071417,
+        "interval95": [
+          0.34986562423650136,
+          0.3732331072800065
+        ],
+        "copyQualified": false,
+        "direction": "inconclusive"
+      },
+      "local": {
+        "reference": "reverse",
+        "ratio": 0.4552162384756614,
+        "interval95": [
+          0.4357171717171717,
+          0.4727303380257945
+        ],
+        "copyQualified": false,
+        "direction": "inconclusive"
+      },
+      "tensor": {
+        "reference": "reverse",
+        "ratio": 37.04782500161056,
+        "interval95": [
+          36.27966446779054,
+          38.12392626190517
+        ],
+        "copyQualified": true,
+        "direction": "slower"
+      }
+    },
+    "independent-1": {
+      "forward": {
+        "reference": "reverse",
+        "ratio": 0.566601530410494,
+        "interval95": [
+          0.5522142347582725,
+          0.5871595713158837
+        ],
+        "copyQualified": false,
+        "direction": "inconclusive"
+      },
+      "local": {
+        "reference": "reverse",
+        "ratio": 0.5085408152635043,
+        "interval95": [
+          0.49449934290364905,
+          0.5352816652946019
+        ],
+        "copyQualified": false,
+        "direction": "inconclusive"
+      },
+      "tensor": {
+        "reference": "reverse",
+        "ratio": 25.34125081303837,
+        "interval95": [
+          24.526240977312987,
+          26.125066619292948
+        ],
+        "copyQualified": true,
+        "direction": "slower"
+      }
+    },
+    "independent-16": {
+      "forward": {
+        "reference": "reverse",
+        "ratio": 2.0729407860644544,
+        "interval95": [
+          1.997227461932893,
+          2.1100894337834637
+        ],
+        "copyQualified": true,
+        "direction": "slower"
+      },
+      "local": {
+        "reference": "reverse",
+        "ratio": 0.6894960220610356,
+        "interval95": [
+          0.6566523605150214,
+          0.7072620841062929
+        ],
+        "copyQualified": false,
+        "direction": "inconclusive"
+      },
+      "tensor": {
+        "reference": "reverse",
+        "ratio": 8.486891874978891,
+        "interval95": [
+          8.343665311653117,
+          9.157771655691501
+        ],
+        "copyQualified": false,
+        "direction": "inconclusive"
+      }
+    },
+    "independent-129": {
+      "forward": {
+        "reference": "reverse",
+        "ratio": 26.089393503829747,
+        "interval95": [
+          25.54223535408484,
+          27.7025949997628
+        ],
+        "copyQualified": true,
+        "direction": "slower"
+      },
+      "local": {
+        "reference": "reverse",
+        "ratio": 0.6252913379439872,
+        "interval95": [
+          0.5983513895430994,
+          0.66781203116682
+        ],
+        "copyQualified": false,
+        "direction": "inconclusive"
+      },
+      "tensor": {
+        "reference": "reverse",
+        "ratio": 3.8866290074438785,
+        "interval95": [
+          3.7467804499612103,
+          4.086176189362462
+        ],
+        "copyQualified": false,
+        "direction": "inconclusive"
+      }
+    },
+    "dense-0": {
+      "forward": {
+        "reference": "reverse",
+        "ratio": 0.26717755040051283,
+        "interval95": [
+          0.254841997961264,
+          0.27849158422202236
+        ],
+        "copyQualified": false,
+        "direction": "inconclusive"
+      }
+    },
+    "dense-1": {
+      "forward": {
+        "reference": "reverse",
+        "ratio": 0.6114342329478479,
+        "interval95": [
+          0.5970200360159513,
+          0.6188363299637317
+        ],
+        "copyQualified": true,
+        "direction": "faster"
+      }
+    },
+    "dense-3": {
+      "forward": {
+        "reference": "reverse",
+        "ratio": 1.5853371075350506,
+        "interval95": [
+          1.5381157814033188,
+          1.6056002194509507
+        ],
+        "copyQualified": false,
+        "direction": "inconclusive"
+      }
+    },
+    "dense-9": {
+      "forward": {
+        "reference": "reverse",
+        "ratio": 2.725409496502918,
+        "interval95": [
+          2.576763463837909,
+          2.7660866405165434
+        ],
+        "copyQualified": true,
+        "direction": "slower"
+      }
+    },
+    "dense-33": {
+      "forward": {
+        "reference": "reverse",
+        "ratio": 15.237893884865908,
+        "interval95": [
+          15.020569794302057,
+          15.49987441603456
+        ],
+        "copyQualified": true,
+        "direction": "slower"
+      }
+    }
+  }
+}

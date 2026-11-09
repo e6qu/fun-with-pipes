@@ -7,13 +7,25 @@ The files here are evidence at recorded revisions, not live project status.
 records merges and platform validation. Raw JSON retains samples and source/tool
 identities. Do not edit observations to make an old experiment describe new code.
 
+## Current diagnosis
+
+[Structured-gradient methods](structured-gradient-methods-2026-11-08/README.md)
+compares reverse, forward, local and tensor AD across three objective shapes.
+All four sessions pass correctness/storage audits; noisy timing controls remain
+inconclusive. [Known array callback results](structured-array-callbacks-2026-11-08/README.md)
+now verify fewer derivative-object allocations and 85–91% less large-case
+computation in both ARM64 sessions. AMD64 timing acceptance remains open because
+copy controls fail. Full platform delivery is pending.
+[Frozen candidate contract](structured-autodiff.md#selected-change-known-array-callbacks).
+
 ## Latest delivery
 
-Current investigation: [captured scalar array-map reuse](captured-array-maps.md).
+Merged #271 delivers [captured scalar array-map reuse](captured-array-maps.md);
+[all final gates pass](captured-map-delivery-2026-11-08/README.md).
 [Initial safety checks](captured-map-checks-2026-11-08/README.md) pass.
 [Repaired measurements](captured-map-repaired-2026-11-08/README.md) show 84–94%
 less computation on both largest applications and no qualified regression.
-Noisy controls leave combined acceptance open; final delivery remains pending.
+Noisy controls leave combined timing acceptance open.
 [Initial results](captured-map-initial-2026-11-08/README.md) remain unchanged.
 
 Merged #270 passes [all delivery gates](fresh-array-delivery-2026-11-08/README.md).
@@ -36,7 +48,8 @@ separate useful work from input construction and release.
 - [Native proof cases](computed-numeric-inputs-2026-11-07/README.md): values,
   shared inputs, evaluation/trap order and the actual four-number call.
 
-These results motivate the shared loop/array milestone in [PLAN.md](../../PLAN.md).
+These results lead to the [structured autodiff comparison](structured-autodiff.md)
+in [PLAN.md](../../PLAN.md).
 Older reports below retain their own sources and decisions; “current” in a dated
 experiment names its measured variant, not the latest compiler.
 

@@ -87,6 +87,16 @@ must fail before a later input is evaluated. The returned function's type
 cannot justify delaying that division. A composed
 pipe likewise takes its input before evaluating any returned function's next input.
 
+Known array callbacks use the same bounded function-specialization machinery as
+scoped derivatives. A private worker can be copied with its first closed function
+argument known (a function with no runtime captures); the array call retains its other arguments in their original
+order. Removing that closed function parameter cannot release captured owners:
+it has none. Resource-local indices are remapped after removing its anchor.
+Unknown or captured function arguments and oversized workers remain unchanged.
+Only original workers are visited; copies do not recursively expand the pass.
+The [active proof and measurement contract](measurements/structured-autodiff.md#selected-change-known-array-callbacks)
+records candidate verification; implementation is not yet delivery acceptance.
+
 The optimizer may combine constructor stages only after proving that construction
 merely captures values: no executed calls, possible traps, observable owners or
 resource frames. It preserves typed local bindings and changes known callers
@@ -442,7 +452,7 @@ captures, unknown callbacks and wide scalars remain excluded. [The contract](mea
 records the passing native checks and
 [repaired runtime/memory results](measurements/captured-map-repaired-2026-11-08/README.md).
 Four measurement sessions pass their audits; noise leaves combined timing
-acceptance open. Full platform delivery remains pending.
+acceptance open. [All delivery gates pass](measurements/captured-map-delivery-2026-11-08/README.md).
 
 For an array/list zip, a private entry can consume the list and reuse only its
 exclusive prefix. Encountering one shared node excludes its entire suffix from
@@ -738,7 +748,10 @@ uses, function-value references, entry points, recursion, resources and deeper
 records exclude selection.
 
 Computed numeric constructors follow the same input rule: bind each
-input once, in original left-to-right order, then pass its numeric fields. Each
+input once, in original left-to-right order, then pass its numeric fields.
+An input may bind ordinary data, such as the `Option[F64]` from checked array
+access, before returning its numeric fields. The complete expression keeps its
+original scope; possible resource owners, channels and functions remain excluded. Each
 input keeps its original expression and local scopes. Existing field-only native
 locals can avoid constructing the intermediate record boxes. No functions are
 cloned. [Focused native checks](measurements/computed-numeric-inputs-2026-11-07/README.md)

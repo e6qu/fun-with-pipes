@@ -1,9 +1,9 @@
-//! Expose a closed function argument inside a known derivative-scope worker.
+//! Expose a closed function argument inside a known scope or array worker.
 //! Keep the scope call, its arguments and the worker's call stage unchanged.
 //! Only original call sites are visited; generated workers cannot recursively
 //! expand this pass. Each worker/function pair shares one bounded specialization.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use super::{size, substitute, Opt, MAX_BODY, ROUNDS};
 use crate::ir::*;
@@ -104,11 +104,14 @@ fn lift_bindings(expression: Expr, optimizer: &mut Opt<'_>) -> Expr {
 struct Specialize<'a> {
     program: &'a Program,
     made: Vec<Func>,
-    known: HashMap<(FuncId, FuncId), FuncId>,
+    known: HashMap<(FuncId, FuncId, bool), FuncId>,
 }
 
 impl Specialize<'_> {
     fn select(&mut self, expression: &mut Expr, locals: &[MT]) -> Option<()> {
+        if self.array_callback(expression).is_some() {
+            return Some(());
+        }
         let Expr::Call(scope, arguments) = expression else {
             return None;
         };
@@ -154,18 +157,58 @@ impl Specialize<'_> {
         {
             return None;
         }
-        let key = (worker_id, argument_id);
+        let specialized = self.known_worker(worker_id, argument_id, true)?;
+        // Retain even the now-known argument: its original evaluation and the
+        // primitive's borrowed-call protocol stay exactly where they were.
+        arguments[0] = Expr::Func(specialized);
+        Some(())
+    }
+
+    // Copy the worker once with its first, closed function argument known.
+    // Scope primitives keep their protocol's argument. Array callbacks can
+    // omit the closed function value: it has no captures, construction effects
+    // or observable owner. Other arguments and frames stay in their order.
+    fn known_worker(
+        &mut self,
+        worker_id: FuncId,
+        argument_id: FuncId,
+        keep_argument: bool,
+    ) -> Option<FuncId> {
+        let worker = self.program.funcs.get(worker_id)?;
+        let argument = self.program.funcs.get(argument_id)?;
+        let Body::Expr(body) = &worker.body else {
+            return None;
+        };
+        if worker.arity == 0
+            || worker.locals.first()? != &argument.ty
+            || argument.arity == 0
+            || size(body) > MAX_BODY
+        {
+            return None;
+        }
+        let key = (worker_id, argument_id, keep_argument);
         let specialized = if let Some(id) = self.known.get(&key) {
             *id
         } else {
             let mut substitutions = vec![None; worker.locals.len()];
             substitutions[0] = Some(Expr::Func(argument_id));
-            let mut body = substitute(body, &substitutions);
+            let mut body = body.clone();
+            let mut parameter_types = worker.locals.clone();
+            if !keep_argument {
+                // Removing a closed function argument must not shift another
+                // parameter's resource identity onto its old anchor.
+                crate::resource::remove_anchors(&mut body, &HashSet::from([0]));
+                for (index, slot) in substitutions.iter_mut().enumerate().skip(1) {
+                    *slot = Some(Expr::Local((index - 1) as Local));
+                }
+                parameter_types.remove(0);
+            }
+            let mut body = substitute(&body, &substitutions);
             let mut optimizer = Opt {
                 funcs: &self.program.funcs,
                 shapes: &self.program.shapes,
                 current: worker_id,
-                locals: worker.locals.clone(),
+                locals: parameter_types,
                 budget: 600,
                 resource_locals: Vec::new(),
             };
@@ -176,17 +219,56 @@ impl Specialize<'_> {
             let id = self.program.funcs.len() + self.made.len();
             self.made.push(Func {
                 name: format!("{}-known-objective", worker.name),
-                arity: worker.arity,
+                arity: worker.arity - u32::from(!keep_argument),
                 locals: optimizer.locals,
-                ty: worker.ty.clone(),
+                ty: worker.ty.after_args(usize::from(!keep_argument)).clone(),
                 body: Body::Expr(body),
             });
             self.known.insert(key, id);
             id
         };
-        // Retain even the now-known argument: its original evaluation and the
-        // primitive's borrowed-call protocol stay exactly where they were.
-        arguments[0] = Expr::Func(specialized);
+        Some(specialized)
+    }
+
+    fn array_callback(&mut self, expression: &mut Expr) -> Option<()> {
+        let Expr::Call(primitive, arguments) = expression else {
+            return None;
+        };
+        let primitive = self.program.funcs.get(*primitive)?;
+        let Body::Prim(symbol) = &primitive.body else {
+            return None;
+        };
+        let position = match symbol.as_str() {
+            "array.map" => 0,
+            "array.generate" => 1,
+            _ => return None,
+        };
+        if primitive.arity != 2 || arguments.len() != 2 {
+            return None;
+        }
+        let callback = arguments.get_mut(position)?;
+        let Expr::Apply(function, captures) = callback else {
+            return None;
+        };
+        let Expr::Func(worker_id) = &**function else {
+            return None;
+        };
+        let Some(Expr::Func(argument_id)) = captures.first() else {
+            return None;
+        };
+        let worker = self.program.funcs.get(*worker_id)?;
+        if worker.arity as usize != captures.len() + 1
+            || Some(&worker.ty.after_args(captures.len())) != primitive.ty.params(2).0.get(position)
+        {
+            return None;
+        }
+        let specialized = self.known_worker(*worker_id, *argument_id, false)?;
+        captures.remove(0);
+        if captures.is_empty() {
+            *callback = Expr::Func(specialized);
+        } else {
+            **function = Expr::Func(specialized);
+        }
         Some(())
     }
 
@@ -312,6 +394,172 @@ mod tests {
                 function("input", vec![], integer, Body::Prim("test.input".into())),
             ],
             ..Program::default()
+        }
+    }
+
+    fn array_program(symbol: &str) -> Program {
+        let mut program = program();
+        let integer = MT::con("std::I64");
+        let array = MT::Con("std::Array".into(), vec![integer.clone()]);
+        let callback = program.funcs[0].ty.clone();
+        let captured = Expr::Apply(Box::new(Expr::Func(1)), vec![Expr::Func(0)]);
+        let (parameters, arguments, input) = if symbol == "array.map" {
+            (
+                vec![callback, array.clone()],
+                vec![captured, Expr::Call(4, vec![])],
+                array.clone(),
+            )
+        } else {
+            (
+                vec![integer.clone(), callback],
+                vec![Expr::Call(4, vec![]), captured],
+                integer,
+            )
+        };
+        program.funcs[2] = function(
+            "array",
+            parameters,
+            array.clone(),
+            Body::Prim(symbol.into()),
+        );
+        program.funcs[3] = function(
+            "caller",
+            vec![],
+            array,
+            Body::Expr(Expr::Call(2, arguments)),
+        );
+        program.funcs[4] = function("input", vec![], input, Body::Prim("test.input".into()));
+        program
+    }
+
+    #[test]
+    fn array_workers_keep_eager_arguments_and_share_closed_specialization() {
+        for symbol in ["array.map", "array.generate"] {
+            let mut program = array_program(symbol);
+            program.funcs.push(program.funcs[3].clone());
+            let position = usize::from(symbol == "array.generate");
+            specialize(&mut program);
+            assert_eq!(program.funcs.len(), 7);
+            for caller in [3, 5] {
+                let Body::Expr(Expr::Call(2, arguments)) = &program.funcs[caller].body else {
+                    panic!("array call or eager argument moved");
+                };
+                assert!(matches!(&arguments[1-position], Expr::Call(4, args) if args.is_empty()));
+                assert!(matches!(&arguments[position], Expr::Func(6)));
+            }
+            assert_eq!(program.funcs[6].arity, program.funcs[1].arity - 1);
+            assert_eq!(&program.funcs[6].ty, program.funcs[1].ty.after_args(1));
+            assert!(
+                matches!(&program.funcs[6].body, Body::Expr(Expr::Call(0, args))
+                if matches!(args.as_slice(), [Expr::Local(0)]))
+            );
+            crate::ir::check_locals(&program).unwrap();
+        }
+    }
+
+    #[test]
+    fn array_specialization_preserves_remaining_resource_parameter_identity() {
+        let integer = MT::con("std::I64");
+        let file = MT::con("std::File");
+        let input = MT::Con("std::Array".into(), vec![file.clone()]);
+        let output = MT::Con("std::Array".into(), vec![integer.clone()]);
+        let objective = function(
+            "objective",
+            vec![file.clone()],
+            integer.clone(),
+            Body::Prim("test.file".into()),
+        );
+        let worker = function(
+            "worker",
+            vec![objective.ty.clone(), file],
+            integer,
+            Body::Expr(Expr::ResourceRegion {
+                parameters: vec![0, 1],
+                bindings: vec![],
+                body: Box::new(Expr::Apply(Box::new(Expr::Local(0)), vec![Expr::Local(1)])),
+            }),
+        );
+        let map = function(
+            "map",
+            vec![objective.ty.clone(), input.clone()],
+            output.clone(),
+            Body::Prim("array.map".into()),
+        );
+        let mut program = Program {
+            funcs: vec![
+                objective,
+                worker,
+                map,
+                function(
+                    "caller",
+                    vec![],
+                    output,
+                    Body::Expr(Expr::Call(
+                        2,
+                        vec![
+                            Expr::Apply(Box::new(Expr::Func(1)), vec![Expr::Func(0)]),
+                            Expr::Call(4, vec![]),
+                        ],
+                    )),
+                ),
+                function("input", vec![], input, Body::Prim("test.input".into())),
+            ],
+            ..Program::default()
+        };
+        crate::ir::check_locals(&program).unwrap();
+        specialize(&mut program);
+        assert_eq!(program.funcs.len(), 6);
+        let Body::Expr(Expr::ResourceRegion {
+            parameters,
+            bindings,
+            body,
+        }) = &program.funcs[5].body
+        else {
+            panic!("remaining resource region was removed");
+        };
+        assert_eq!(parameters, &[0]);
+        assert!(bindings.is_empty());
+        assert!(
+            matches!(&**body, Expr::Call(0, args) if matches!(args.as_slice(), [Expr::Local(0)]))
+        );
+        crate::ir::check_locals(&program).unwrap();
+    }
+
+    #[test]
+    fn array_specialization_rejects_unknown_captured_cached_and_large_functions() {
+        for symbol in ["array.map", "array.generate"] {
+            for case in 0..6 {
+                let mut program = array_program(symbol);
+                match case {
+                    0 | 1 => {
+                        let Body::Expr(Expr::Call(_, args)) = &mut program.funcs[3].body else {
+                            unreachable!()
+                        };
+                        let Expr::Apply(_, captures) =
+                            &mut args[usize::from(symbol == "array.generate")]
+                        else {
+                            unreachable!()
+                        };
+                        captures[0] = if case == 0 {
+                            Expr::Local(0)
+                        } else {
+                            Expr::Apply(Box::new(Expr::Func(0)), vec![Expr::Call(4, vec![])])
+                        };
+                    }
+                    2 => program.funcs[0].arity = 0,
+                    3 => {
+                        program.funcs[1].body =
+                            Body::Expr(Expr::Record(vec![Expr::Local(1); MAX_BODY]))
+                    }
+                    4 => program.funcs[1].arity = 3,
+                    5 => program.funcs[2].body = Body::Prim("other.array".into()),
+                    _ => unreachable!(),
+                }
+                let before = format!("{:?}", program.funcs[3].body);
+                specialize(&mut program);
+                assert_eq!(program.funcs.len(), 5, "{symbol}/{case}");
+                assert_eq!(format!("{:?}", program.funcs[3].body), before);
+            }
         }
     }
 

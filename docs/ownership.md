@@ -178,11 +178,10 @@ output. [The original proof is verified](roadmap-history.md#consumed-numeric-sto
 The [scalar-capture extension](measurements/captured-array-maps.md) passes saved
 numbers directly to that worker. Expanded GCC/Clang checks pass;
 [measurements](measurements/captured-map-repaired-2026-11-08/README.md) show fewer
-allocations but leave combined timing acceptance open. Full platform delivery
-remains pending. Neither proof makes an input mutable in the source language.
+allocations but leave combined timing acceptance open. [All delivery gates pass](measurements/captured-map-delivery-2026-11-08/README.md). Neither proof makes an input mutable in the source language.
 The natively checked empty-input repair forwards an ordinary empty array unchanged
 even when shared. Empty views still release their backing owner. Four revised
-measurement sessions pass their audits; final platform delivery remains pending.
+measurement sessions pass their audits.
 
 ## Tasks and channels
 

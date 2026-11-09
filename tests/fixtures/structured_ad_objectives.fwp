@@ -1,0 +1,45 @@
+# Three objective families for the structured-autodiff comparison.
+# The small examples use binary-rational inputs with exact analytic gradients.
+
+edge : (t, t) -> t where Ring[t], FromFloat[t], Dup[t]
+edge = fn (x, y) ->
+    let distance = y - x * x
+    in let offset = 1.0 - x
+    in distance * distance * 100.0 + offset * offset
+
+neighbours : List[t] -> t where Ring[t], FromFloat[t], Dup[t]
+neighbours = fn values -> values | zip (drop 1 values) | map edge | sum
+
+loss : t -> t where Ring[t], FromFloat[t], Dup[t]
+loss = fn value -> let residual = value * value - 1.0 in residual * residual
+
+independent : List[t] -> t where Ring[t], FromFloat[t], Dup[t]
+independent = map loss | sum
+
+# Dense quadratic: 0.5 * sum of squared matrix-row products.
+# Matrix coefficients are ordinary values, independent of differentiated inputs.
+dense : List[List[F64]] -> List[t] -> t where Ring[t], FromFloat[t], Dup[t]
+dense = fn weights -> fn values ->
+    weights
+    | map (fn row ->
+        let projected = values | zip-with mul (map from-float row) | sum
+        in projected * projected * 0.5)
+    | sum
+
+squared-edge : (t, t) -> t where Ring[t], Dup[t]
+squared-edge = fn (x, y) -> let distance = y - x in distance * distance
+
+smooth : List[t] -> t where Ring[t], Dup[t]
+smooth = fn values -> values | zip (drop 1 values) | map squared-edge | sum
+
+independent-local : List[F64] -> List[F64]
+independent-local =
+    array.from-list | array.map (derivative loss) | array.to-list
+
+# tensor.grad-on returns one contribution per leaf occurrence. Sum all four
+# occurrences of the input in the quartic loss to obtain the complete gradient.
+independent-tensor : List[F64] -> List[F64]
+independent-tensor = fn values ->
+    let parts =
+        values | vector.from-list | tensor.lazy | loss | tensor.grad-on Cpu
+    in parts | map vector.to-list | fold (zip-with add) (map (const 0.0) values)
