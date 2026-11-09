@@ -70,8 +70,9 @@ Milestone 4 now fills four concrete comparison gaps:
 1. **Buffers:** match optimization barriers in fwp/C/Rust/Swift; distinguish a
    complete operation from a separately compiled factory returning live storage.
    Measure construction, use and release for unique and shared arrays.
-2. **Returned functions:** attribute scalar Swift closure allocations, retaining
-   the separate construction/call/release measurements and prior timing misses.
+2. **Returned functions:** [scalar Swift allocation attribution now passes](docs/measurements/swift-scalar-closures-2026-11-09/README.md).
+   Retain separate construction/call/release measurements and prior timing misses;
+   do not equate native allocation bytes with fwp payload-only counters.
 3. **Weak registrations:** verify cancellation, active-call ownership, expiration
    and cleanup first; measure weak lookup and callback-service work separately.
 4. **Parser workspace:** complete allocator-internal transient peaks and
@@ -80,8 +81,9 @@ Milestone 4 now fills four concrete comparison gaps:
 
 [The scope](docs/measurements/ownership-peers.md) defines matched work, representation
 differences and remaining controls. [First native checks](docs/measurements/ownership-peer-checks-2026-11-08/README.md)
-verify Swift buffer results and C/Rust parser storage on ARM64/AMD64; they establish
-no new peer timing result. Freeze each complete protocol before collecting timings.
+verify Swift buffer results and C/Rust parser storage on ARM64/AMD64. The
+[four-language follow-up](docs/measurements/four-language-buffers-2026-11-09/README.md)
+now includes fwp and matched barriers; neither establishes a new peer timing result. Freeze each complete protocol before collecting timings.
 Keep the experimental local-pair helper and ordinary public gradient API unchanged
 unless representative evidence justifies a replacement.
 

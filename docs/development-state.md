@@ -1,14 +1,14 @@
 # Current work
 
-**Next:** audit the retained four-language/Swift-closure reports in documentation
-CI, then integrate the verified batch into [PR #273](https://github.com/e6qu/fun-with-pipes/pull/273).
-Continue returned-buffer phases, weak-operation/service costs and parser memory
-in that same PR; milestone 4 is not complete.
+**Next:** complete returned-buffer phases, weak-operation/service costs and
+parser memory in [PR #273](https://github.com/e6qu/fun-with-pipes/pull/273).
+The matched four-language and scalar Swift allocation batch is verified and is
+being integrated into that PR; milestone 4 is not complete.
 
-PR branch `ownership-peer-comparisons` remains at `7645384bb` while its full
-matrix runs. Worktree `.worktrees/recording-capacity-gate` uses
-`ownership-buffer-review` for focused verification. It has no separate PR.
-Preserve unrelated root-worktree changes. No draft PRs.
+Active worktree: `.worktrees/recording-capacity-gate`. PR branch:
+`ownership-peer-comparisons`. `ownership-buffer-review` retained the focused
+verification commits; it has no separate PR. Preserve unrelated root-worktree
+changes. Keep one normal PR, with no draft PRs.
 
 ## Roadmap status
 
@@ -17,7 +17,7 @@ Preserve unrelated root-worktree changes. No draft PRs.
 | 1 | In progress | #270 docs and fresh F64 stores | Original AMD timing acceptance remains open. |
 | 2 | In progress | #271 captured maps and empty-owner transfer | Noisy timing acceptance remains open. |
 | 3 | In progress | #272 structured gradients and known callbacks; all delivery gates pass | Original AMD timing acceptance remains open. |
-| 4 | In progress | [Native buffer/parser checks](measurements/ownership-peer-checks-2026-11-08/README.md) pass on ARM64/AMD64 | Matched buffer phases, returned functions, weak registrations and parser memory. |
+| 4 | In progress | Four-language buffer boundaries, scalar Swift allocations, native weak lifetimes and parser allocation/frame checks | Returned-buffer phases, weak-operation/service costs, parser memory boundaries and peer timings. |
 | 5 | Pending | Existing tools and correctness tests | Three application paths, compiler phase/scaling costs and sustained load. |
 
 ## Verified merge
@@ -77,8 +77,11 @@ bytes at the process heap peak, and zero ordinary exit bytes. Deliberately omitt
 release retains 25,165,824 bytes: 24 bytes per closure. Both complete archives and
 the failed setup match GitHub digests; full logs/raw stacks were reviewed. The
 new retained-report auditor reconstructs manifests, raw profiles and controls;
-its local invocation was refused after disk fell below 64 GiB again. It still
-needs remote validation. Do not call that refusal a pass or bypass the guard.
+its local invocation was refused after disk fell below 64 GiB again. Remote
+docs run `42582489716`, job `129044322503`, passes at `52385a6a7`: both raw-profile
+reports reconstruct, 402 Markdown link sets and all preparation identities pass.
+The complete log is reviewed: `/tmp/fwp-peer-report-docs.log`. The local refusal
+remains a refusal; no guard was bypassed.
 
 Remaining: returned-buffer phases, weak-operation/service timing and storage,
 parser allocator-internal transient peaks/reservations/RSS, and the matched
@@ -106,9 +109,11 @@ build/download/provider caches, not infrastructure state or active workloads.
 
 ## Current PR gates
 
-Head `7645384bb336acc728deebf24eae96280a45163f`: production `42578853160`,
+Previous PR head `7645384bb336acc728deebf24eae96280a45163f`: production `42578853160`,
 docs `42578853071` (passes), focused peers `42578815959` (both pass). Review every failed/completed
-job before repairs. Do not merge while milestone 4 work or final gates remain.
+job before repairs. The combined update requires new final-head gates; previous
+results do not claim a pass for the new head. Do not merge while milestone 4 work
+or final gates remain.
 Redundant post-merge CI `42577384035` was cancelled after verifying #272
 merge/tree equality and its passing original full gates; no failed step was
 reported before cancellation. All five interrupted main logs are reviewed: cancellation, and Linux packaging
