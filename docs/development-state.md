@@ -4,8 +4,7 @@
 `precondition` calls and debug information. Diagnostic source `24f7a033e`, run
 `42605354450`, passes on both hosts: adding line-numbered checks changes the
 observed behavior, so it does not establish the cause of the original trap.
-Explicit-lifetime candidate `e9cf68009` is queued in `42607637111`. The new
-Swift-only diagnosis compares cancellation/lookup lifetime boundaries separately
+Explicit-lifetime candidate `e9cf68009` is queued in `42607637111`. Swift-only diagnosis `42610103348` at `2c1d74410` compares cancellation/lookup lifetime boundaries separately
 against exact original source `c9bf8dfac`, retaining ordinary and debug builds.
 Do not call the first failure fixed solely because the diagnostic checks pass.
 

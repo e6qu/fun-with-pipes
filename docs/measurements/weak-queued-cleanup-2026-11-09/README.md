@@ -31,17 +31,26 @@ its complete log is retained. Expected failing-child controls are not CI failure
 ## Diagnosis in progress
 
 Source `24f7a033e` replaces anonymous Swift assertions with explicit line-numbered
-checks in run `42605354450`. It preserves the original ownership operations.
-The failing boundary must be identified before attributing it to the compiler.
-One source-level concern is keeping the outside owner live until a weak lookup:
-Swift supplies [withExtendedLifetime](https://developer.apple.com/documentation/swift/withextendedlifetime(_:_:)-4mmpv)
-for explicit lifetime requirements. This is a hypothesis, not an established cause
-of the observed trap. No repaired result is claimed yet.
+checks. [Run 42605354450](https://github.com/e6qu/fun-with-pipes/actions/runs/42605354450)
+passes all 22 native/fault builds on each host. It changes no explicit ownership
+operations, but it changes the observed behavior. **This is not proof that the
+original failure is repaired.** Reports, commands, complete logs and
+[archive identities](diagnostic-artifacts.json) are retained. The only setup
+warning concerns an optional C++ manual page.
 
-The prepared follow-up explicitly extends the outside owner's lifetime through
-weak lookup, ending that extension before callback entry. The callback still
-relies on its acquired owner after clearing the outside reference. Cancellation
-also keeps the owner alive through the first payload-release checkpoint, then
-clears it before draining the expired message. This makes the intended boundaries
-explicit without keeping an extra outside owner alive throughout the callback.
-It is not yet a verified repair of the original failure.
+One source-level concern is keeping the outside owner live until weak lookup.
+Swift supplies [withExtendedLifetime](https://developer.apple.com/documentation/swift/withextendedlifetime(_:_:)-4mmpv)
+for explicit lifetime requirements. Candidate `e9cf68009`, run `42607637111`,
+extends the outside owner through lookup and the cancellation checkpoint, ending
+that extension before callback entry. The callback still relies on its acquired
+owner after clearing the outside reference. This candidate is not yet verified.
+
+The [Swift-only diagnosis](../../../scripts/diagnose-swift-weak-lifetimes.py),
+source `2c1d74410`, run `42610103348`, retains the original `precondition` calls.
+It compares the original code, cancellation-only lifetime extension, lookup-only
+extension and both together. Each uses ordinary optimized settings, then the
+same settings with debug information. Failing processes get a noninteractive
+[source backtrace](https://github.com/swiftlang/swift/blob/main/docs/Backtracing.rst).
+Original source, binaries, exact exits and traces are retained. A successful
+collection records observations; it does not turn an original trap into a passing
+lifetime check. No root cause is claimed before reviewing these observations.
