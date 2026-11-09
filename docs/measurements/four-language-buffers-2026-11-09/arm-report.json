@@ -1,0 +1,24 @@
+{
+  "sourceHashes": {
+    "c": "9bba693a84002a90873304a5307fe02272186211111ead04e1d7a54df03f0799",
+    "rs": "c0ab8a8c0278e0245ca23426fe544378230119ba009458b87d543bc39fcc24d9",
+    "swift": "c1fbbb92084cb19c996f586c85624a63a5e35c43678972cf66fdcdc86f5d215c",
+    "buffer_peer_opaque.c": "4c75c8b75ce1d1ac21387e1fccae662419323ac1ed8e47e0561971fc5bbfdefc",
+    "buffer_peer_opaque.h": "98e7c232e5bd408b2e9aecee6c94b0823b2fc50ebb7d12831917b198c8dc4d11",
+    "compiler": "ee479b2246300ef13478081bbbc35650826403ae80486a63c361f15526934c6f",
+    "fwp": "42803a24c2a751f9aee2df0df212fe940ae283c32e70d918b1565d7c5cf4d1ca"
+  },
+  "generatedSourceHashes": {
+    "c": "80fcee9475f54e2ae7f22ade63580592e2c9c4039a28bcafa94de5cb8c73ce93",
+    "rs": "02bcd26e891603de05c94ff25a66e1d27af1c760549f425e034e16a05d27b79e",
+    "swift": "c1fbbb92084cb19c996f586c85624a63a5e35c43678972cf66fdcdc86f5d215c",
+    "fwp-unique": "85fd97f4b809586a84f0cd41037675a6eb25ac369a1416da2a82f14729880fe7",
+    "fwp-callback": "f4835735a0bf265d57b952d1acf4837286bec3f7dab04211355add0ea19385c0",
+    "fwp-scan": "089bb9257c67af9a75f09bf007da936ce2d3e78f068cb6bb47280837e53c6ef5"
+  },
+  "barrierPolicy": "One separately compiled C input/result barrier, no LTO, for every selected peer",
+  "interpreterChecks": 42,
+  "rejectedBarrierControls": 24,
+  "commands": 961,
+  "executions": 840
+}

@@ -55,6 +55,10 @@ experiment names its measured variant, not the latest compiler.
 
 ## Ownership costs
 
+- [Scalar Swift closure allocations](swift-scalar-closures-2026-11-09/README.md): one 24-byte native request per closure on both architectures; actual omitted-release and unwinder controls. ARC operations remain unmeasured.
+
+- [Matched four-language buffers](four-language-buffers-2026-11-09/README.md): 840 native cases, 42 interpreter checks and 24 real barrier-fault builds per host; no timing claim.
+
 - [Native weak registrations](weak-peer-checks-2026-11-09/README.md): C/Rust/Swift cancellation, active-owner lifetime and expiration; six actual fault builds per host. No time or ARC-count claim.
 
 - [First ownership peer checks](ownership-peer-checks-2026-11-08/README.md): Swift/C/Rust buffer correctness, C/Rust parser allocation lifetimes and native stack frames on ARM64/AMD64. Includes the repaired observer failure; no new peer timing claim.

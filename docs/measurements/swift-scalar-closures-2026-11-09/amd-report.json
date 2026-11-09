@@ -1,0 +1,642 @@
+{
+  "source": "96e2bf43aa2f500e17c747cb87cadd0177d683b1",
+  "architecture": "x86_64",
+  "input": [
+    4096,
+    256,
+    16
+  ],
+  "versions": {
+    "cc": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+    "swiftc": "Swift version 6.4.2 (swift-6.4.2-RELEASE)\nTarget: x86_64-unknown-linux-gnu\n",
+    "heaptrack": "heaptrack 1.5.0\n",
+    "heaptrack_print": "heaptrack_print 1.5.0\n"
+  },
+  "host": {
+    "system": "Linux",
+    "node": "2d4878bcaeae",
+    "release": "7.0.0-1017-azure",
+    "version": "#17~24.04.1-Ubuntu SMP PREEMPT Thu Sep 24 18:46:57 UTC 2026",
+    "machine": "x86_64",
+    "processor": "x86_64"
+  },
+  "cpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 7763 64-Core Processor\nCPU family:                              25\nModel:                                   1\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                4890.84\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves user_shstk clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload umip vaes vpclmulqdq rdpid fsrm\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               64 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                1 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Vulnerable: No microcode\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+  "settings": {
+    "source": "96e2bf43aa2f500e17c747cb87cadd0177d683b1",
+    "arch": "x86_64",
+    "cc": "gcc",
+    "swiftc": "swiftc",
+    "c_arch": "x86-64",
+    "target": "x86_64-unknown-linux-gnu",
+    "heaptrack": "heaptrack",
+    "heaptrack_print": "heaptrack_print",
+    "strace": "strace",
+    "unwind_library_directory": "swift-setup/unwinder/lib",
+    "output": "swift-closure-evidence"
+  },
+  "cases": {
+    "ordinary-0": {
+      "profiles": [
+        {
+          "process": {
+            "totals": {
+              "allocations": 2097459,
+              "peak": 369902,
+              "leaked": 5630
+            },
+            "control": {
+              "allocations": 0,
+              "peak": 0,
+              "leaked": 0
+            },
+            "topAllocationStacks": [
+              [
+                "main (ordinary.swift);$s16ReturnedCallable12returnedMakeys5Int64VADcs5Int32V_ADtF (returned_callable_peer.swift);swift_allocObject;swift_slowAlloc;",
+                1048576
+              ],
+              [
+                "main (ordinary.swift);swift_allocObject;swift_slowAlloc;",
+                1048576
+              ],
+              [
+                "__libc_start_main;0x7faf99b921c9;$sSp8allocate8capacitySpyxGSi_tFZs5Int64VAEc_Tt0g5 (<compiler-generated>);main (ordinary.swift);swift_slowAlloc;",
+                256
+              ],
+              [
+                "__libc_start_main;0x7faf99b921c9;$ss27_allocateUninitializedArrayySayxG_BptBwlFyp_Tg5 (<compiler-generated>);main (ordinary.swift);__swift_instantiateConcreteTypeFromMangledName (<compiler-generated>);swift_getTypeByMangledNameInContextImpl(char const*, unsigned long, swift::TargetContextDescriptor<> const*, void const* const*);swift_getTypeByMangledName;swift_getTypeByMangledNode;swift::Demangle::__runtime::TypeDecoder<>::decodeMangledType(swift::Demangle::__runtime::Node*, unsigned int, bool, bool);(anonymous namespace)::DecodedMetadataBuilder::createBoundGenericType(swift::TargetContextDescriptor<> const*, __swift::__runtime::llvm::ArrayRef<>, swift::MetadataPackOrValue) const;__swift_instantiateCanonicalPrespecializedGenericMetadata;swift_getCanonicalPrespecializedGenericMetadata;swift::threading_impl::once_slow(swift::threading_impl::once_t&, void (*)(void*), void*);cacheCanonicalSpecializedMetadata(swift::TargetTypeContextDescriptor<> const*, swift::threading_impl::once_t*)::$_0::__invoke(void*);std::pair<> swift::StableAddressConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::MetadataWaitQueue::Worker&, swift::MetadataRequest&, swift::TargetMetadata<> const*&);void swift::ConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::StableAddressConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::MetadataWaitQueue::Worker&, swift::MetadataRequest&, swift::TargetMetadata<> const*&)::{lambda(swift::HashMapElementWrapper<>*, bool)#1} const&);void swift::ConcurrentReadableHashMap<>::getOrInsertExternallyLocked<>(swift::MetadataCacheKey, swift::StableAddressConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::MetadataWaitQueue::Worker&, swift::MetadataRequest&, swift::TargetMetadata<> const*&)::{lambda(swift::HashMapElementWrapper<>*, bool)#1} const&);",
+                13
+              ],
+              [
+                "__libc_start_main;0x7faf99b921c9;$ss27_allocateUninitializedArrayySayxG_BptBwlFyp_Tg5 (<compiler-generated>);main (ordinary.swift);__swift_instantiateConcreteTypeFromMangledName (<compiler-generated>);swift_getTypeByMangledNameInContextImpl(char const*, unsigned long, swift::TargetContextDescriptor<> const*, void const* const*);swift_getTypeByMangledName;swift_getTypeByMangledNode;swift::Demangle::__runtime::TypeDecoder<>::decodeMangledType(swift::Demangle::__runtime::Node*, unsigned int, bool, bool);(anonymous namespace)::DecodedMetadataBuilder::createBoundGenericType(swift::TargetContextDescriptor<> const*, __swift::__runtime::llvm::ArrayRef<>, swift::MetadataPackOrValue) const;__swift_instantiateCanonicalPrespecializedGenericMetadata;swift_getCanonicalPrespecializedGenericMetadata;swift::threading_impl::once_slow(swift::threading_impl::once_t&, void (*)(void*), void*);cacheCanonicalSpecializedMetadata(swift::TargetTypeContextDescriptor<> const*, swift::threading_impl::once_t*)::$_0::__invoke(void*);std::pair<> swift::StableAddressConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::MetadataWaitQueue::Worker&, swift::MetadataRequest&, swift::TargetMetadata<> const*&);void swift::ConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::StableAddressConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::MetadataWaitQueue::Worker&, swift::MetadataRequest&, swift::TargetMetadata<> const*&)::{lambda(swift::HashMapElementWrapper<>*, bool)#1} const&);void swift::ConcurrentReadableHashMap<>::getOrInsertExternallyLocked<>(swift::MetadataCacheKey, swift::StableAddressConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::MetadataWaitQueue::Worker&, swift::MetadataRequest&, swift::TargetMetadata<> const*&)::{lambda(swift::HashMapElementWrapper<>*, bool)#1} const&);",
+                12
+              ],
+              [
+                "0x7faf9a74759f;0x7faf9a72d823;0x7faf9a72d71e;swift_addNewDSOImage;_registerProtocolConformances(ConformanceState&, (anonymous namespace)::ConformanceSection);",
+                5
+              ],
+              [
+                "0x7faf9a74759f;0x7faf9a72d823;0x7faf9a72d71e;0x7faf9998538e;",
+                1
+              ],
+              [
+                "0x7faf9a74759f;0x7faf9a72d823;0x7faf9a72d71e;_GLOBAL__sub_I_Backtrace.cpp;swift::threading_impl::once_slow(swift::threading_impl::once_t&, void (*)(void*), void*);swift::runtime::environment::initialize(void*);__strdup;",
+                1
+              ],
+              [
+                "0x7faf9a74759f;0x7faf9a72d823;0x7faf9a72d71e;_GLOBAL__sub_I_Backtrace.cpp;swift_copyAuxiliaryExecutablePath;(anonymous namespace)::_swift_tryAuxExePath(char const*, char const*, ...);(anonymous namespace)::_swift_joinPaths(char const*, ...);(anonymous namespace)::_swift_joinPathsV(char const*, __va_list_tag*);",
+                1
+              ],
+              [
+                "0x7faf9a74759f;0x7faf9a72d823;0x7faf9a72d71e;_GLOBAL__sub_I_Backtrace.cpp;swift_copyAuxiliaryExecutablePath;(anonymous namespace)::_swift_tryAuxExePath(char const*, char const*, ...);(anonymous namespace)::_swift_joinPathsV(char const*, __va_list_tag*);",
+                1
+              ]
+            ],
+            "scope": "Native allocation calls; peak is bytes live at the global heap peak. Not managed-object or ARC operation counts."
+          },
+          "factory": {
+            "allocations": 1048576,
+            "peak": 98304,
+            "leaked": 0
+          }
+        },
+        {
+          "process": {
+            "totals": {
+              "allocations": 2097459,
+              "peak": 369902,
+              "leaked": 5630
+            },
+            "control": {
+              "allocations": 0,
+              "peak": 0,
+              "leaked": 0
+            },
+            "topAllocationStacks": [
+              [
+                "main (ordinary.swift);$s16ReturnedCallable12returnedMakeys5Int64VADcs5Int32V_ADtF (returned_callable_peer.swift);swift_allocObject;swift_slowAlloc;",
+                1048576
+              ],
+              [
+                "main (ordinary.swift);swift_allocObject;swift_slowAlloc;",
+                1048576
+              ],
+              [
+                "__libc_start_main;0x7f992f7331c9;$sSp8allocate8capacitySpyxGSi_tFZs5Int64VAEc_Tt0g5 (<compiler-generated>);main (ordinary.swift);swift_slowAlloc;",
+                256
+              ],
+              [
+                "__libc_start_main;0x7f992f7331c9;$ss27_allocateUninitializedArrayySayxG_BptBwlFyp_Tg5 (<compiler-generated>);main (ordinary.swift);__swift_instantiateConcreteTypeFromMangledName (<compiler-generated>);swift_getTypeByMangledNameInContextImpl(char const*, unsigned long, swift::TargetContextDescriptor<> const*, void const* const*);swift_getTypeByMangledName;swift_getTypeByMangledNode;swift::Demangle::__runtime::TypeDecoder<>::decodeMangledType(swift::Demangle::__runtime::Node*, unsigned int, bool, bool);(anonymous namespace)::DecodedMetadataBuilder::createBoundGenericType(swift::TargetContextDescriptor<> const*, __swift::__runtime::llvm::ArrayRef<>, swift::MetadataPackOrValue) const;__swift_instantiateCanonicalPrespecializedGenericMetadata;swift_getCanonicalPrespecializedGenericMetadata;swift::threading_impl::once_slow(swift::threading_impl::once_t&, void (*)(void*), void*);cacheCanonicalSpecializedMetadata(swift::TargetTypeContextDescriptor<> const*, swift::threading_impl::once_t*)::$_0::__invoke(void*);std::pair<> swift::StableAddressConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::MetadataWaitQueue::Worker&, swift::MetadataRequest&, swift::TargetMetadata<> const*&);void swift::ConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::StableAddressConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::MetadataWaitQueue::Worker&, swift::MetadataRequest&, swift::TargetMetadata<> const*&)::{lambda(swift::HashMapElementWrapper<>*, bool)#1} const&);void swift::ConcurrentReadableHashMap<>::getOrInsertExternallyLocked<>(swift::MetadataCacheKey, swift::StableAddressConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::MetadataWaitQueue::Worker&, swift::MetadataRequest&, swift::TargetMetadata<> const*&)::{lambda(swift::HashMapElementWrapper<>*, bool)#1} const&);",
+                13
+              ],
+              [
+                "__libc_start_main;0x7f992f7331c9;$ss27_allocateUninitializedArrayySayxG_BptBwlFyp_Tg5 (<compiler-generated>);main (ordinary.swift);__swift_instantiateConcreteTypeFromMangledName (<compiler-generated>);swift_getTypeByMangledNameInContextImpl(char const*, unsigned long, swift::TargetContextDescriptor<> const*, void const* const*);swift_getTypeByMangledName;swift_getTypeByMangledNode;swift::Demangle::__runtime::TypeDecoder<>::decodeMangledType(swift::Demangle::__runtime::Node*, unsigned int, bool, bool);(anonymous namespace)::DecodedMetadataBuilder::createBoundGenericType(swift::TargetContextDescriptor<> const*, __swift::__runtime::llvm::ArrayRef<>, swift::MetadataPackOrValue) const;__swift_instantiateCanonicalPrespecializedGenericMetadata;swift_getCanonicalPrespecializedGenericMetadata;swift::threading_impl::once_slow(swift::threading_impl::once_t&, void (*)(void*), void*);cacheCanonicalSpecializedMetadata(swift::TargetTypeContextDescriptor<> const*, swift::threading_impl::once_t*)::$_0::__invoke(void*);std::pair<> swift::StableAddressConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::MetadataWaitQueue::Worker&, swift::MetadataRequest&, swift::TargetMetadata<> const*&);void swift::ConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::StableAddressConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::MetadataWaitQueue::Worker&, swift::MetadataRequest&, swift::TargetMetadata<> const*&)::{lambda(swift::HashMapElementWrapper<>*, bool)#1} const&);void swift::ConcurrentReadableHashMap<>::getOrInsertExternallyLocked<>(swift::MetadataCacheKey, swift::StableAddressConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::MetadataWaitQueue::Worker&, swift::MetadataRequest&, swift::TargetMetadata<> const*&)::{lambda(swift::HashMapElementWrapper<>*, bool)#1} const&);",
+                12
+              ],
+              [
+                "0x7f99302e859f;0x7f99302ce823;0x7f99302ce71e;swift_addNewDSOImage;_registerProtocolConformances(ConformanceState&, (anonymous namespace)::ConformanceSection);",
+                5
+              ],
+              [
+                "0x7f99302e859f;0x7f99302ce823;0x7f99302ce71e;0x7f992f52638e;",
+                1
+              ],
+              [
+                "0x7f99302e859f;0x7f99302ce823;0x7f99302ce71e;_GLOBAL__sub_I_Backtrace.cpp;swift::threading_impl::once_slow(swift::threading_impl::once_t&, void (*)(void*), void*);swift::runtime::environment::initialize(void*);__strdup;",
+                1
+              ],
+              [
+                "0x7f99302e859f;0x7f99302ce823;0x7f99302ce71e;_GLOBAL__sub_I_Backtrace.cpp;swift_copyAuxiliaryExecutablePath;(anonymous namespace)::_swift_tryAuxExePath(char const*, char const*, ...);(anonymous namespace)::_swift_joinPaths(char const*, ...);(anonymous namespace)::_swift_joinPathsV(char const*, __va_list_tag*);",
+                1
+              ],
+              [
+                "0x7f99302e859f;0x7f99302ce823;0x7f99302ce71e;_GLOBAL__sub_I_Backtrace.cpp;swift_copyAuxiliaryExecutablePath;(anonymous namespace)::_swift_tryAuxExePath(char const*, char const*, ...);(anonymous namespace)::_swift_joinPathsV(char const*, __va_list_tag*);",
+                1
+              ]
+            ],
+            "scope": "Native allocation calls; peak is bytes live at the global heap peak. Not managed-object or ARC operation counts."
+          },
+          "factory": {
+            "allocations": 1048576,
+            "peak": 98304,
+            "leaked": 0
+          }
+        }
+      ],
+      "binarySha256": "4ade65cf91510a6f2348bff77a25c46c2641d99d952b8ddf35eebbda67761081"
+    },
+    "ordinary-1": {
+      "profiles": [
+        {
+          "process": {
+            "totals": {
+              "allocations": 2097459,
+              "peak": 369902,
+              "leaked": 5630
+            },
+            "control": {
+              "allocations": 0,
+              "peak": 0,
+              "leaked": 0
+            },
+            "topAllocationStacks": [
+              [
+                "main (ordinary.swift);$s16ReturnedCallable12returnedMakeys5Int64VADcs5Int32V_ADtF (returned_callable_peer.swift);swift_allocObject;swift_slowAlloc;",
+                1048576
+              ],
+              [
+                "main (ordinary.swift);swift_allocObject;swift_slowAlloc;",
+                1048576
+              ],
+              [
+                "__libc_start_main;0x7f32421181c9;$sSp8allocate8capacitySpyxGSi_tFZs5Int64VAEc_Tt0g5 (<compiler-generated>);main (ordinary.swift);swift_slowAlloc;",
+                256
+              ],
+              [
+                "__libc_start_main;0x7f32421181c9;$ss27_allocateUninitializedArrayySayxG_BptBwlFyp_Tg5 (<compiler-generated>);main (ordinary.swift);__swift_instantiateConcreteTypeFromMangledName (<compiler-generated>);swift_getTypeByMangledNameInContextImpl(char const*, unsigned long, swift::TargetContextDescriptor<> const*, void const* const*);swift_getTypeByMangledName;swift_getTypeByMangledNode;swift::Demangle::__runtime::TypeDecoder<>::decodeMangledType(swift::Demangle::__runtime::Node*, unsigned int, bool, bool);(anonymous namespace)::DecodedMetadataBuilder::createBoundGenericType(swift::TargetContextDescriptor<> const*, __swift::__runtime::llvm::ArrayRef<>, swift::MetadataPackOrValue) const;__swift_instantiateCanonicalPrespecializedGenericMetadata;swift_getCanonicalPrespecializedGenericMetadata;swift::threading_impl::once_slow(swift::threading_impl::once_t&, void (*)(void*), void*);cacheCanonicalSpecializedMetadata(swift::TargetTypeContextDescriptor<> const*, swift::threading_impl::once_t*)::$_0::__invoke(void*);std::pair<> swift::StableAddressConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::MetadataWaitQueue::Worker&, swift::MetadataRequest&, swift::TargetMetadata<> const*&);void swift::ConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::StableAddressConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::MetadataWaitQueue::Worker&, swift::MetadataRequest&, swift::TargetMetadata<> const*&)::{lambda(swift::HashMapElementWrapper<>*, bool)#1} const&);void swift::ConcurrentReadableHashMap<>::getOrInsertExternallyLocked<>(swift::MetadataCacheKey, swift::StableAddressConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::MetadataWaitQueue::Worker&, swift::MetadataRequest&, swift::TargetMetadata<> const*&)::{lambda(swift::HashMapElementWrapper<>*, bool)#1} const&);",
+                13
+              ],
+              [
+                "__libc_start_main;0x7f32421181c9;$ss27_allocateUninitializedArrayySayxG_BptBwlFyp_Tg5 (<compiler-generated>);main (ordinary.swift);__swift_instantiateConcreteTypeFromMangledName (<compiler-generated>);swift_getTypeByMangledNameInContextImpl(char const*, unsigned long, swift::TargetContextDescriptor<> const*, void const* const*);swift_getTypeByMangledName;swift_getTypeByMangledNode;swift::Demangle::__runtime::TypeDecoder<>::decodeMangledType(swift::Demangle::__runtime::Node*, unsigned int, bool, bool);(anonymous namespace)::DecodedMetadataBuilder::createBoundGenericType(swift::TargetContextDescriptor<> const*, __swift::__runtime::llvm::ArrayRef<>, swift::MetadataPackOrValue) const;__swift_instantiateCanonicalPrespecializedGenericMetadata;swift_getCanonicalPrespecializedGenericMetadata;swift::threading_impl::once_slow(swift::threading_impl::once_t&, void (*)(void*), void*);cacheCanonicalSpecializedMetadata(swift::TargetTypeContextDescriptor<> const*, swift::threading_impl::once_t*)::$_0::__invoke(void*);std::pair<> swift::StableAddressConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::MetadataWaitQueue::Worker&, swift::MetadataRequest&, swift::TargetMetadata<> const*&);void swift::ConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::StableAddressConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::MetadataWaitQueue::Worker&, swift::MetadataRequest&, swift::TargetMetadata<> const*&)::{lambda(swift::HashMapElementWrapper<>*, bool)#1} const&);void swift::ConcurrentReadableHashMap<>::getOrInsertExternallyLocked<>(swift::MetadataCacheKey, swift::StableAddressConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::MetadataWaitQueue::Worker&, swift::MetadataRequest&, swift::TargetMetadata<> const*&)::{lambda(swift::HashMapElementWrapper<>*, bool)#1} const&);",
+                12
+              ],
+              [
+                "0x7f3242ccd59f;0x7f3242cb3823;0x7f3242cb371e;swift_addNewDSOImage;_registerProtocolConformances(ConformanceState&, (anonymous namespace)::ConformanceSection);",
+                5
+              ],
+              [
+                "0x7f3242ccd59f;0x7f3242cb3823;0x7f3242cb371e;0x7f3241f0b38e;",
+                1
+              ],
+              [
+                "0x7f3242ccd59f;0x7f3242cb3823;0x7f3242cb371e;_GLOBAL__sub_I_Backtrace.cpp;swift::threading_impl::once_slow(swift::threading_impl::once_t&, void (*)(void*), void*);swift::runtime::environment::initialize(void*);__strdup;",
+                1
+              ],
+              [
+                "0x7f3242ccd59f;0x7f3242cb3823;0x7f3242cb371e;_GLOBAL__sub_I_Backtrace.cpp;swift_copyAuxiliaryExecutablePath;(anonymous namespace)::_swift_tryAuxExePath(char const*, char const*, ...);(anonymous namespace)::_swift_joinPaths(char const*, ...);(anonymous namespace)::_swift_joinPathsV(char const*, __va_list_tag*);",
+                1
+              ],
+              [
+                "0x7f3242ccd59f;0x7f3242cb3823;0x7f3242cb371e;_GLOBAL__sub_I_Backtrace.cpp;swift_copyAuxiliaryExecutablePath;(anonymous namespace)::_swift_tryAuxExePath(char const*, char const*, ...);(anonymous namespace)::_swift_joinPathsV(char const*, __va_list_tag*);",
+                1
+              ]
+            ],
+            "scope": "Native allocation calls; peak is bytes live at the global heap peak. Not managed-object or ARC operation counts."
+          },
+          "factory": {
+            "allocations": 1048576,
+            "peak": 98304,
+            "leaked": 0
+          }
+        },
+        {
+          "process": {
+            "totals": {
+              "allocations": 2097459,
+              "peak": 369902,
+              "leaked": 5630
+            },
+            "control": {
+              "allocations": 0,
+              "peak": 0,
+              "leaked": 0
+            },
+            "topAllocationStacks": [
+              [
+                "main (ordinary.swift);$s16ReturnedCallable12returnedMakeys5Int64VADcs5Int32V_ADtF (returned_callable_peer.swift);swift_allocObject;swift_slowAlloc;",
+                1048576
+              ],
+              [
+                "main (ordinary.swift);swift_allocObject;swift_slowAlloc;",
+                1048576
+              ],
+              [
+                "__libc_start_main;0x7f85ccafb1c9;$sSp8allocate8capacitySpyxGSi_tFZs5Int64VAEc_Tt0g5 (<compiler-generated>);main (ordinary.swift);swift_slowAlloc;",
+                256
+              ],
+              [
+                "__libc_start_main;0x7f85ccafb1c9;$ss27_allocateUninitializedArrayySayxG_BptBwlFyp_Tg5 (<compiler-generated>);main (ordinary.swift);__swift_instantiateConcreteTypeFromMangledName (<compiler-generated>);swift_getTypeByMangledNameInContextImpl(char const*, unsigned long, swift::TargetContextDescriptor<> const*, void const* const*);swift_getTypeByMangledName;swift_getTypeByMangledNode;swift::Demangle::__runtime::TypeDecoder<>::decodeMangledType(swift::Demangle::__runtime::Node*, unsigned int, bool, bool);(anonymous namespace)::DecodedMetadataBuilder::createBoundGenericType(swift::TargetContextDescriptor<> const*, __swift::__runtime::llvm::ArrayRef<>, swift::MetadataPackOrValue) const;__swift_instantiateCanonicalPrespecializedGenericMetadata;swift_getCanonicalPrespecializedGenericMetadata;swift::threading_impl::once_slow(swift::threading_impl::once_t&, void (*)(void*), void*);cacheCanonicalSpecializedMetadata(swift::TargetTypeContextDescriptor<> const*, swift::threading_impl::once_t*)::$_0::__invoke(void*);std::pair<> swift::StableAddressConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::MetadataWaitQueue::Worker&, swift::MetadataRequest&, swift::TargetMetadata<> const*&);void swift::ConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::StableAddressConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::MetadataWaitQueue::Worker&, swift::MetadataRequest&, swift::TargetMetadata<> const*&)::{lambda(swift::HashMapElementWrapper<>*, bool)#1} const&);void swift::ConcurrentReadableHashMap<>::getOrInsertExternallyLocked<>(swift::MetadataCacheKey, swift::StableAddressConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::MetadataWaitQueue::Worker&, swift::MetadataRequest&, swift::TargetMetadata<> const*&)::{lambda(swift::HashMapElementWrapper<>*, bool)#1} const&);",
+                13
+              ],
+              [
+                "__libc_start_main;0x7f85ccafb1c9;$ss27_allocateUninitializedArrayySayxG_BptBwlFyp_Tg5 (<compiler-generated>);main (ordinary.swift);__swift_instantiateConcreteTypeFromMangledName (<compiler-generated>);swift_getTypeByMangledNameInContextImpl(char const*, unsigned long, swift::TargetContextDescriptor<> const*, void const* const*);swift_getTypeByMangledName;swift_getTypeByMangledNode;swift::Demangle::__runtime::TypeDecoder<>::decodeMangledType(swift::Demangle::__runtime::Node*, unsigned int, bool, bool);(anonymous namespace)::DecodedMetadataBuilder::createBoundGenericType(swift::TargetContextDescriptor<> const*, __swift::__runtime::llvm::ArrayRef<>, swift::MetadataPackOrValue) const;__swift_instantiateCanonicalPrespecializedGenericMetadata;swift_getCanonicalPrespecializedGenericMetadata;swift::threading_impl::once_slow(swift::threading_impl::once_t&, void (*)(void*), void*);cacheCanonicalSpecializedMetadata(swift::TargetTypeContextDescriptor<> const*, swift::threading_impl::once_t*)::$_0::__invoke(void*);std::pair<> swift::StableAddressConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::MetadataWaitQueue::Worker&, swift::MetadataRequest&, swift::TargetMetadata<> const*&);void swift::ConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::StableAddressConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::MetadataWaitQueue::Worker&, swift::MetadataRequest&, swift::TargetMetadata<> const*&)::{lambda(swift::HashMapElementWrapper<>*, bool)#1} const&);void swift::ConcurrentReadableHashMap<>::getOrInsertExternallyLocked<>(swift::MetadataCacheKey, swift::StableAddressConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::MetadataWaitQueue::Worker&, swift::MetadataRequest&, swift::TargetMetadata<> const*&)::{lambda(swift::HashMapElementWrapper<>*, bool)#1} const&);",
+                12
+              ],
+              [
+                "0x7f85cd6b059f;0x7f85cd696823;0x7f85cd69671e;swift_addNewDSOImage;_registerProtocolConformances(ConformanceState&, (anonymous namespace)::ConformanceSection);",
+                5
+              ],
+              [
+                "0x7f85cd6b059f;0x7f85cd696823;0x7f85cd69671e;0x7f85cc8ee38e;",
+                1
+              ],
+              [
+                "0x7f85cd6b059f;0x7f85cd696823;0x7f85cd69671e;_GLOBAL__sub_I_Backtrace.cpp;swift::threading_impl::once_slow(swift::threading_impl::once_t&, void (*)(void*), void*);swift::runtime::environment::initialize(void*);__strdup;",
+                1
+              ],
+              [
+                "0x7f85cd6b059f;0x7f85cd696823;0x7f85cd69671e;_GLOBAL__sub_I_Backtrace.cpp;swift_copyAuxiliaryExecutablePath;(anonymous namespace)::_swift_tryAuxExePath(char const*, char const*, ...);(anonymous namespace)::_swift_joinPaths(char const*, ...);(anonymous namespace)::_swift_joinPathsV(char const*, __va_list_tag*);",
+                1
+              ],
+              [
+                "0x7f85cd6b059f;0x7f85cd696823;0x7f85cd69671e;_GLOBAL__sub_I_Backtrace.cpp;swift_copyAuxiliaryExecutablePath;(anonymous namespace)::_swift_tryAuxExePath(char const*, char const*, ...);(anonymous namespace)::_swift_joinPathsV(char const*, __va_list_tag*);",
+                1
+              ]
+            ],
+            "scope": "Native allocation calls; peak is bytes live at the global heap peak. Not managed-object or ARC operation counts."
+          },
+          "factory": {
+            "allocations": 1048576,
+            "peak": 98304,
+            "leaked": 0
+          }
+        }
+      ],
+      "binarySha256": "4ade65cf91510a6f2348bff77a25c46c2641d99d952b8ddf35eebbda67761081"
+    },
+    "omitted-0": {
+      "profiles": [
+        {
+          "process": {
+            "totals": {
+              "allocations": 2097458,
+              "peak": 58860766,
+              "leaked": 58725870
+            },
+            "control": {
+              "allocations": 0,
+              "peak": 0,
+              "leaked": 0
+            },
+            "topAllocationStacks": [
+              [
+                "main (omitted.swift);$s16ReturnedCallable12returnedMakeys5Int64VADcs5Int32V_ADtF (returned_callable_peer.swift);swift_allocObject;swift_slowAlloc;",
+                1048576
+              ],
+              [
+                "main (omitted.swift);swift_allocObject;swift_slowAlloc;",
+                1048576
+              ],
+              [
+                "__libc_start_main;0x7f6f1a0081c9;$sSp8allocate8capacitySpyxGSi_tFZs5Int64VAEc_Tt0g5 (<compiler-generated>);main (omitted.swift);swift_slowAlloc;",
+                256
+              ],
+              [
+                "__libc_start_main;0x7f6f1a0081c9;$ss27_allocateUninitializedArrayySayxG_BptBwlFyp_Tg5 (<compiler-generated>);main (omitted.swift);__swift_instantiateConcreteTypeFromMangledName (<compiler-generated>);swift_getTypeByMangledNameInContextImpl(char const*, unsigned long, swift::TargetContextDescriptor<> const*, void const* const*);swift_getTypeByMangledName;swift_getTypeByMangledNode;swift::Demangle::__runtime::TypeDecoder<>::decodeMangledType(swift::Demangle::__runtime::Node*, unsigned int, bool, bool);(anonymous namespace)::DecodedMetadataBuilder::createBoundGenericType(swift::TargetContextDescriptor<> const*, __swift::__runtime::llvm::ArrayRef<>, swift::MetadataPackOrValue) const;__swift_instantiateCanonicalPrespecializedGenericMetadata;swift_getCanonicalPrespecializedGenericMetadata;swift::threading_impl::once_slow(swift::threading_impl::once_t&, void (*)(void*), void*);cacheCanonicalSpecializedMetadata(swift::TargetTypeContextDescriptor<> const*, swift::threading_impl::once_t*)::$_0::__invoke(void*);std::pair<> swift::StableAddressConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::MetadataWaitQueue::Worker&, swift::MetadataRequest&, swift::TargetMetadata<> const*&);void swift::ConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::StableAddressConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::MetadataWaitQueue::Worker&, swift::MetadataRequest&, swift::TargetMetadata<> const*&)::{lambda(swift::HashMapElementWrapper<>*, bool)#1} const&);void swift::ConcurrentReadableHashMap<>::getOrInsertExternallyLocked<>(swift::MetadataCacheKey, swift::StableAddressConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::MetadataWaitQueue::Worker&, swift::MetadataRequest&, swift::TargetMetadata<> const*&)::{lambda(swift::HashMapElementWrapper<>*, bool)#1} const&);",
+                13
+              ],
+              [
+                "__libc_start_main;0x7f6f1a0081c9;$ss27_allocateUninitializedArrayySayxG_BptBwlFyp_Tg5 (<compiler-generated>);main (omitted.swift);__swift_instantiateConcreteTypeFromMangledName (<compiler-generated>);swift_getTypeByMangledNameInContextImpl(char const*, unsigned long, swift::TargetContextDescriptor<> const*, void const* const*);swift_getTypeByMangledName;swift_getTypeByMangledNode;swift::Demangle::__runtime::TypeDecoder<>::decodeMangledType(swift::Demangle::__runtime::Node*, unsigned int, bool, bool);(anonymous namespace)::DecodedMetadataBuilder::createBoundGenericType(swift::TargetContextDescriptor<> const*, __swift::__runtime::llvm::ArrayRef<>, swift::MetadataPackOrValue) const;__swift_instantiateCanonicalPrespecializedGenericMetadata;swift_getCanonicalPrespecializedGenericMetadata;swift::threading_impl::once_slow(swift::threading_impl::once_t&, void (*)(void*), void*);cacheCanonicalSpecializedMetadata(swift::TargetTypeContextDescriptor<> const*, swift::threading_impl::once_t*)::$_0::__invoke(void*);std::pair<> swift::StableAddressConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::MetadataWaitQueue::Worker&, swift::MetadataRequest&, swift::TargetMetadata<> const*&);void swift::ConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::StableAddressConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::MetadataWaitQueue::Worker&, swift::MetadataRequest&, swift::TargetMetadata<> const*&)::{lambda(swift::HashMapElementWrapper<>*, bool)#1} const&);void swift::ConcurrentReadableHashMap<>::getOrInsertExternallyLocked<>(swift::MetadataCacheKey, swift::StableAddressConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::MetadataWaitQueue::Worker&, swift::MetadataRequest&, swift::TargetMetadata<> const*&)::{lambda(swift::HashMapElementWrapper<>*, bool)#1} const&);",
+                12
+              ],
+              [
+                "0x7f6f1abbd59f;0x7f6f1aba3823;0x7f6f1aba371e;swift_addNewDSOImage;_registerProtocolConformances(ConformanceState&, (anonymous namespace)::ConformanceSection);",
+                5
+              ],
+              [
+                "0x7f6f1abbd59f;0x7f6f1aba3823;0x7f6f1aba371e;0x7f6f19dfb38e;",
+                1
+              ],
+              [
+                "0x7f6f1abbd59f;0x7f6f1aba3823;0x7f6f1aba371e;_GLOBAL__sub_I_Backtrace.cpp;swift::threading_impl::once_slow(swift::threading_impl::once_t&, void (*)(void*), void*);swift::runtime::environment::initialize(void*);__strdup;",
+                1
+              ],
+              [
+                "0x7f6f1abbd59f;0x7f6f1aba3823;0x7f6f1aba371e;_GLOBAL__sub_I_Backtrace.cpp;swift_copyAuxiliaryExecutablePath;(anonymous namespace)::_swift_tryAuxExePath(char const*, char const*, ...);(anonymous namespace)::_swift_joinPaths(char const*, ...);(anonymous namespace)::_swift_joinPathsV(char const*, __va_list_tag*);",
+                1
+              ],
+              [
+                "0x7f6f1abbd59f;0x7f6f1aba3823;0x7f6f1aba371e;_GLOBAL__sub_I_Backtrace.cpp;swift_copyAuxiliaryExecutablePath;(anonymous namespace)::_swift_tryAuxExePath(char const*, char const*, ...);(anonymous namespace)::_swift_joinPathsV(char const*, __va_list_tag*);",
+                1
+              ]
+            ],
+            "scope": "Native allocation calls; peak is bytes live at the global heap peak. Not managed-object or ARC operation counts."
+          },
+          "factory": {
+            "allocations": 1048576,
+            "peak": 25165824,
+            "leaked": 25165824
+          }
+        },
+        {
+          "process": {
+            "totals": {
+              "allocations": 2097458,
+              "peak": 58860766,
+              "leaked": 58725870
+            },
+            "control": {
+              "allocations": 0,
+              "peak": 0,
+              "leaked": 0
+            },
+            "topAllocationStacks": [
+              [
+                "main (omitted.swift);$s16ReturnedCallable12returnedMakeys5Int64VADcs5Int32V_ADtF (returned_callable_peer.swift);swift_allocObject;swift_slowAlloc;",
+                1048576
+              ],
+              [
+                "main (omitted.swift);swift_allocObject;swift_slowAlloc;",
+                1048576
+              ],
+              [
+                "__libc_start_main;0x7f2e9fb851c9;$sSp8allocate8capacitySpyxGSi_tFZs5Int64VAEc_Tt0g5 (<compiler-generated>);main (omitted.swift);swift_slowAlloc;",
+                256
+              ],
+              [
+                "__libc_start_main;0x7f2e9fb851c9;$ss27_allocateUninitializedArrayySayxG_BptBwlFyp_Tg5 (<compiler-generated>);main (omitted.swift);__swift_instantiateConcreteTypeFromMangledName (<compiler-generated>);swift_getTypeByMangledNameInContextImpl(char const*, unsigned long, swift::TargetContextDescriptor<> const*, void const* const*);swift_getTypeByMangledName;swift_getTypeByMangledNode;swift::Demangle::__runtime::TypeDecoder<>::decodeMangledType(swift::Demangle::__runtime::Node*, unsigned int, bool, bool);(anonymous namespace)::DecodedMetadataBuilder::createBoundGenericType(swift::TargetContextDescriptor<> const*, __swift::__runtime::llvm::ArrayRef<>, swift::MetadataPackOrValue) const;__swift_instantiateCanonicalPrespecializedGenericMetadata;swift_getCanonicalPrespecializedGenericMetadata;swift::threading_impl::once_slow(swift::threading_impl::once_t&, void (*)(void*), void*);cacheCanonicalSpecializedMetadata(swift::TargetTypeContextDescriptor<> const*, swift::threading_impl::once_t*)::$_0::__invoke(void*);std::pair<> swift::StableAddressConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::MetadataWaitQueue::Worker&, swift::MetadataRequest&, swift::TargetMetadata<> const*&);void swift::ConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::StableAddressConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::MetadataWaitQueue::Worker&, swift::MetadataRequest&, swift::TargetMetadata<> const*&)::{lambda(swift::HashMapElementWrapper<>*, bool)#1} const&);void swift::ConcurrentReadableHashMap<>::getOrInsertExternallyLocked<>(swift::MetadataCacheKey, swift::StableAddressConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::MetadataWaitQueue::Worker&, swift::MetadataRequest&, swift::TargetMetadata<> const*&)::{lambda(swift::HashMapElementWrapper<>*, bool)#1} const&);",
+                13
+              ],
+              [
+                "__libc_start_main;0x7f2e9fb851c9;$ss27_allocateUninitializedArrayySayxG_BptBwlFyp_Tg5 (<compiler-generated>);main (omitted.swift);__swift_instantiateConcreteTypeFromMangledName (<compiler-generated>);swift_getTypeByMangledNameInContextImpl(char const*, unsigned long, swift::TargetContextDescriptor<> const*, void const* const*);swift_getTypeByMangledName;swift_getTypeByMangledNode;swift::Demangle::__runtime::TypeDecoder<>::decodeMangledType(swift::Demangle::__runtime::Node*, unsigned int, bool, bool);(anonymous namespace)::DecodedMetadataBuilder::createBoundGenericType(swift::TargetContextDescriptor<> const*, __swift::__runtime::llvm::ArrayRef<>, swift::MetadataPackOrValue) const;__swift_instantiateCanonicalPrespecializedGenericMetadata;swift_getCanonicalPrespecializedGenericMetadata;swift::threading_impl::once_slow(swift::threading_impl::once_t&, void (*)(void*), void*);cacheCanonicalSpecializedMetadata(swift::TargetTypeContextDescriptor<> const*, swift::threading_impl::once_t*)::$_0::__invoke(void*);std::pair<> swift::StableAddressConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::MetadataWaitQueue::Worker&, swift::MetadataRequest&, swift::TargetMetadata<> const*&);void swift::ConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::StableAddressConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::MetadataWaitQueue::Worker&, swift::MetadataRequest&, swift::TargetMetadata<> const*&)::{lambda(swift::HashMapElementWrapper<>*, bool)#1} const&);void swift::ConcurrentReadableHashMap<>::getOrInsertExternallyLocked<>(swift::MetadataCacheKey, swift::StableAddressConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::MetadataWaitQueue::Worker&, swift::MetadataRequest&, swift::TargetMetadata<> const*&)::{lambda(swift::HashMapElementWrapper<>*, bool)#1} const&);",
+                12
+              ],
+              [
+                "0x7f2ea073a59f;0x7f2ea0720823;0x7f2ea072071e;swift_addNewDSOImage;_registerProtocolConformances(ConformanceState&, (anonymous namespace)::ConformanceSection);",
+                5
+              ],
+              [
+                "0x7f2ea073a59f;0x7f2ea0720823;0x7f2ea072071e;0x7f2e9f97838e;",
+                1
+              ],
+              [
+                "0x7f2ea073a59f;0x7f2ea0720823;0x7f2ea072071e;_GLOBAL__sub_I_Backtrace.cpp;swift::threading_impl::once_slow(swift::threading_impl::once_t&, void (*)(void*), void*);swift::runtime::environment::initialize(void*);__strdup;",
+                1
+              ],
+              [
+                "0x7f2ea073a59f;0x7f2ea0720823;0x7f2ea072071e;_GLOBAL__sub_I_Backtrace.cpp;swift_copyAuxiliaryExecutablePath;(anonymous namespace)::_swift_tryAuxExePath(char const*, char const*, ...);(anonymous namespace)::_swift_joinPaths(char const*, ...);(anonymous namespace)::_swift_joinPathsV(char const*, __va_list_tag*);",
+                1
+              ],
+              [
+                "0x7f2ea073a59f;0x7f2ea0720823;0x7f2ea072071e;_GLOBAL__sub_I_Backtrace.cpp;swift_copyAuxiliaryExecutablePath;(anonymous namespace)::_swift_tryAuxExePath(char const*, char const*, ...);(anonymous namespace)::_swift_joinPathsV(char const*, __va_list_tag*);",
+                1
+              ]
+            ],
+            "scope": "Native allocation calls; peak is bytes live at the global heap peak. Not managed-object or ARC operation counts."
+          },
+          "factory": {
+            "allocations": 1048576,
+            "peak": 25165824,
+            "leaked": 25165824
+          }
+        }
+      ],
+      "binarySha256": "6c5ee332354b727b3abdcab29c0c1aa0faa919a9de87ce0e24da5a109ccfed72"
+    },
+    "omitted-1": {
+      "profiles": [
+        {
+          "process": {
+            "totals": {
+              "allocations": 2097458,
+              "peak": 58860766,
+              "leaked": 58725870
+            },
+            "control": {
+              "allocations": 0,
+              "peak": 0,
+              "leaked": 0
+            },
+            "topAllocationStacks": [
+              [
+                "main (omitted.swift);$s16ReturnedCallable12returnedMakeys5Int64VADcs5Int32V_ADtF (returned_callable_peer.swift);swift_allocObject;swift_slowAlloc;",
+                1048576
+              ],
+              [
+                "main (omitted.swift);swift_allocObject;swift_slowAlloc;",
+                1048576
+              ],
+              [
+                "__libc_start_main;0x7f8e81d381c9;$sSp8allocate8capacitySpyxGSi_tFZs5Int64VAEc_Tt0g5 (<compiler-generated>);main (omitted.swift);swift_slowAlloc;",
+                256
+              ],
+              [
+                "__libc_start_main;0x7f8e81d381c9;$ss27_allocateUninitializedArrayySayxG_BptBwlFyp_Tg5 (<compiler-generated>);main (omitted.swift);__swift_instantiateConcreteTypeFromMangledName (<compiler-generated>);swift_getTypeByMangledNameInContextImpl(char const*, unsigned long, swift::TargetContextDescriptor<> const*, void const* const*);swift_getTypeByMangledName;swift_getTypeByMangledNode;swift::Demangle::__runtime::TypeDecoder<>::decodeMangledType(swift::Demangle::__runtime::Node*, unsigned int, bool, bool);(anonymous namespace)::DecodedMetadataBuilder::createBoundGenericType(swift::TargetContextDescriptor<> const*, __swift::__runtime::llvm::ArrayRef<>, swift::MetadataPackOrValue) const;__swift_instantiateCanonicalPrespecializedGenericMetadata;swift_getCanonicalPrespecializedGenericMetadata;swift::threading_impl::once_slow(swift::threading_impl::once_t&, void (*)(void*), void*);cacheCanonicalSpecializedMetadata(swift::TargetTypeContextDescriptor<> const*, swift::threading_impl::once_t*)::$_0::__invoke(void*);std::pair<> swift::StableAddressConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::MetadataWaitQueue::Worker&, swift::MetadataRequest&, swift::TargetMetadata<> const*&);void swift::ConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::StableAddressConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::MetadataWaitQueue::Worker&, swift::MetadataRequest&, swift::TargetMetadata<> const*&)::{lambda(swift::HashMapElementWrapper<>*, bool)#1} const&);void swift::ConcurrentReadableHashMap<>::getOrInsertExternallyLocked<>(swift::MetadataCacheKey, swift::StableAddressConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::MetadataWaitQueue::Worker&, swift::MetadataRequest&, swift::TargetMetadata<> const*&)::{lambda(swift::HashMapElementWrapper<>*, bool)#1} const&);",
+                13
+              ],
+              [
+                "__libc_start_main;0x7f8e81d381c9;$ss27_allocateUninitializedArrayySayxG_BptBwlFyp_Tg5 (<compiler-generated>);main (omitted.swift);__swift_instantiateConcreteTypeFromMangledName (<compiler-generated>);swift_getTypeByMangledNameInContextImpl(char const*, unsigned long, swift::TargetContextDescriptor<> const*, void const* const*);swift_getTypeByMangledName;swift_getTypeByMangledNode;swift::Demangle::__runtime::TypeDecoder<>::decodeMangledType(swift::Demangle::__runtime::Node*, unsigned int, bool, bool);(anonymous namespace)::DecodedMetadataBuilder::createBoundGenericType(swift::TargetContextDescriptor<> const*, __swift::__runtime::llvm::ArrayRef<>, swift::MetadataPackOrValue) const;__swift_instantiateCanonicalPrespecializedGenericMetadata;swift_getCanonicalPrespecializedGenericMetadata;swift::threading_impl::once_slow(swift::threading_impl::once_t&, void (*)(void*), void*);cacheCanonicalSpecializedMetadata(swift::TargetTypeContextDescriptor<> const*, swift::threading_impl::once_t*)::$_0::__invoke(void*);std::pair<> swift::StableAddressConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::MetadataWaitQueue::Worker&, swift::MetadataRequest&, swift::TargetMetadata<> const*&);void swift::ConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::StableAddressConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::MetadataWaitQueue::Worker&, swift::MetadataRequest&, swift::TargetMetadata<> const*&)::{lambda(swift::HashMapElementWrapper<>*, bool)#1} const&);void swift::ConcurrentReadableHashMap<>::getOrInsertExternallyLocked<>(swift::MetadataCacheKey, swift::StableAddressConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::MetadataWaitQueue::Worker&, swift::MetadataRequest&, swift::TargetMetadata<> const*&)::{lambda(swift::HashMapElementWrapper<>*, bool)#1} const&);",
+                12
+              ],
+              [
+                "0x7f8e828ed59f;0x7f8e828d3823;0x7f8e828d371e;swift_addNewDSOImage;_registerProtocolConformances(ConformanceState&, (anonymous namespace)::ConformanceSection);",
+                5
+              ],
+              [
+                "0x7f8e828ed59f;0x7f8e828d3823;0x7f8e828d371e;0x7f8e81b2b38e;",
+                1
+              ],
+              [
+                "0x7f8e828ed59f;0x7f8e828d3823;0x7f8e828d371e;_GLOBAL__sub_I_Backtrace.cpp;swift::threading_impl::once_slow(swift::threading_impl::once_t&, void (*)(void*), void*);swift::runtime::environment::initialize(void*);__strdup;",
+                1
+              ],
+              [
+                "0x7f8e828ed59f;0x7f8e828d3823;0x7f8e828d371e;_GLOBAL__sub_I_Backtrace.cpp;swift_copyAuxiliaryExecutablePath;(anonymous namespace)::_swift_tryAuxExePath(char const*, char const*, ...);(anonymous namespace)::_swift_joinPaths(char const*, ...);(anonymous namespace)::_swift_joinPathsV(char const*, __va_list_tag*);",
+                1
+              ],
+              [
+                "0x7f8e828ed59f;0x7f8e828d3823;0x7f8e828d371e;_GLOBAL__sub_I_Backtrace.cpp;swift_copyAuxiliaryExecutablePath;(anonymous namespace)::_swift_tryAuxExePath(char const*, char const*, ...);(anonymous namespace)::_swift_joinPathsV(char const*, __va_list_tag*);",
+                1
+              ]
+            ],
+            "scope": "Native allocation calls; peak is bytes live at the global heap peak. Not managed-object or ARC operation counts."
+          },
+          "factory": {
+            "allocations": 1048576,
+            "peak": 25165824,
+            "leaked": 25165824
+          }
+        },
+        {
+          "process": {
+            "totals": {
+              "allocations": 2097458,
+              "peak": 58860766,
+              "leaked": 58725870
+            },
+            "control": {
+              "allocations": 0,
+              "peak": 0,
+              "leaked": 0
+            },
+            "topAllocationStacks": [
+              [
+                "main (omitted.swift);$s16ReturnedCallable12returnedMakeys5Int64VADcs5Int32V_ADtF (returned_callable_peer.swift);swift_allocObject;swift_slowAlloc;",
+                1048576
+              ],
+              [
+                "main (omitted.swift);swift_allocObject;swift_slowAlloc;",
+                1048576
+              ],
+              [
+                "__libc_start_main;0x7f23f75611c9;$sSp8allocate8capacitySpyxGSi_tFZs5Int64VAEc_Tt0g5 (<compiler-generated>);main (omitted.swift);swift_slowAlloc;",
+                256
+              ],
+              [
+                "__libc_start_main;0x7f23f75611c9;$ss27_allocateUninitializedArrayySayxG_BptBwlFyp_Tg5 (<compiler-generated>);main (omitted.swift);__swift_instantiateConcreteTypeFromMangledName (<compiler-generated>);swift_getTypeByMangledNameInContextImpl(char const*, unsigned long, swift::TargetContextDescriptor<> const*, void const* const*);swift_getTypeByMangledName;swift_getTypeByMangledNode;swift::Demangle::__runtime::TypeDecoder<>::decodeMangledType(swift::Demangle::__runtime::Node*, unsigned int, bool, bool);(anonymous namespace)::DecodedMetadataBuilder::createBoundGenericType(swift::TargetContextDescriptor<> const*, __swift::__runtime::llvm::ArrayRef<>, swift::MetadataPackOrValue) const;__swift_instantiateCanonicalPrespecializedGenericMetadata;swift_getCanonicalPrespecializedGenericMetadata;swift::threading_impl::once_slow(swift::threading_impl::once_t&, void (*)(void*), void*);cacheCanonicalSpecializedMetadata(swift::TargetTypeContextDescriptor<> const*, swift::threading_impl::once_t*)::$_0::__invoke(void*);std::pair<> swift::StableAddressConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::MetadataWaitQueue::Worker&, swift::MetadataRequest&, swift::TargetMetadata<> const*&);void swift::ConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::StableAddressConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::MetadataWaitQueue::Worker&, swift::MetadataRequest&, swift::TargetMetadata<> const*&)::{lambda(swift::HashMapElementWrapper<>*, bool)#1} const&);void swift::ConcurrentReadableHashMap<>::getOrInsertExternallyLocked<>(swift::MetadataCacheKey, swift::StableAddressConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::MetadataWaitQueue::Worker&, swift::MetadataRequest&, swift::TargetMetadata<> const*&)::{lambda(swift::HashMapElementWrapper<>*, bool)#1} const&);",
+                13
+              ],
+              [
+                "__libc_start_main;0x7f23f75611c9;$ss27_allocateUninitializedArrayySayxG_BptBwlFyp_Tg5 (<compiler-generated>);main (omitted.swift);__swift_instantiateConcreteTypeFromMangledName (<compiler-generated>);swift_getTypeByMangledNameInContextImpl(char const*, unsigned long, swift::TargetContextDescriptor<> const*, void const* const*);swift_getTypeByMangledName;swift_getTypeByMangledNode;swift::Demangle::__runtime::TypeDecoder<>::decodeMangledType(swift::Demangle::__runtime::Node*, unsigned int, bool, bool);(anonymous namespace)::DecodedMetadataBuilder::createBoundGenericType(swift::TargetContextDescriptor<> const*, __swift::__runtime::llvm::ArrayRef<>, swift::MetadataPackOrValue) const;__swift_instantiateCanonicalPrespecializedGenericMetadata;swift_getCanonicalPrespecializedGenericMetadata;swift::threading_impl::once_slow(swift::threading_impl::once_t&, void (*)(void*), void*);cacheCanonicalSpecializedMetadata(swift::TargetTypeContextDescriptor<> const*, swift::threading_impl::once_t*)::$_0::__invoke(void*);std::pair<> swift::StableAddressConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::MetadataWaitQueue::Worker&, swift::MetadataRequest&, swift::TargetMetadata<> const*&);void swift::ConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::StableAddressConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::MetadataWaitQueue::Worker&, swift::MetadataRequest&, swift::TargetMetadata<> const*&)::{lambda(swift::HashMapElementWrapper<>*, bool)#1} const&);void swift::ConcurrentReadableHashMap<>::getOrInsertExternallyLocked<>(swift::MetadataCacheKey, swift::StableAddressConcurrentReadableHashMap<>::getOrInsert<>(swift::MetadataCacheKey, swift::MetadataWaitQueue::Worker&, swift::MetadataRequest&, swift::TargetMetadata<> const*&)::{lambda(swift::HashMapElementWrapper<>*, bool)#1} const&);",
+                12
+              ],
+              [
+                "0x7f23f811659f;0x7f23f80fc823;0x7f23f80fc71e;swift_addNewDSOImage;_registerProtocolConformances(ConformanceState&, (anonymous namespace)::ConformanceSection);",
+                5
+              ],
+              [
+                "0x7f23f811659f;0x7f23f80fc823;0x7f23f80fc71e;0x7f23f735438e;",
+                1
+              ],
+              [
+                "0x7f23f811659f;0x7f23f80fc823;0x7f23f80fc71e;_GLOBAL__sub_I_Backtrace.cpp;swift::threading_impl::once_slow(swift::threading_impl::once_t&, void (*)(void*), void*);swift::runtime::environment::initialize(void*);__strdup;",
+                1
+              ],
+              [
+                "0x7f23f811659f;0x7f23f80fc823;0x7f23f80fc71e;_GLOBAL__sub_I_Backtrace.cpp;swift_copyAuxiliaryExecutablePath;(anonymous namespace)::_swift_tryAuxExePath(char const*, char const*, ...);(anonymous namespace)::_swift_joinPaths(char const*, ...);(anonymous namespace)::_swift_joinPathsV(char const*, __va_list_tag*);",
+                1
+              ],
+              [
+                "0x7f23f811659f;0x7f23f80fc823;0x7f23f80fc71e;_GLOBAL__sub_I_Backtrace.cpp;swift_copyAuxiliaryExecutablePath;(anonymous namespace)::_swift_tryAuxExePath(char const*, char const*, ...);(anonymous namespace)::_swift_joinPathsV(char const*, __va_list_tag*);",
+                1
+              ]
+            ],
+            "scope": "Native allocation calls; peak is bytes live at the global heap peak. Not managed-object or ARC operation counts."
+          },
+          "factory": {
+            "allocations": 1048576,
+            "peak": 25165824,
+            "leaked": 25165824
+          }
+        }
+      ],
+      "binarySha256": "6c5ee332354b727b3abdcab29c0c1aa0faa919a9de87ce0e24da5a109ccfed72"
+    }
+  },
+  "scope": "Scalar Swift closure native allocations, not timing or ARC-operation counts",
+  "unwinding": {
+    "selectedLibrary": "/__w/fun-with-pipes/fun-with-pipes/swift-setup/unwinder/lib/libunwind.so.8",
+    "selected": {
+      "observation": {
+        "frames": 6,
+        "steps": 5,
+        "stepStatus": 0,
+        "contextStatus": 0,
+        "initStatus": 0,
+        "pageBytes": 4096
+      },
+      "libraries": "\tlinux-vdso.so.1 (0x00007fc20032a000)\n\tlibunwind.so.8 => /__w/fun-with-pipes/fun-with-pipes/swift-setup/unwinder/lib/libunwind.so.8 (0x00007fc200301000)\n\tlibc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007fc2000ea000)\n\tliblzma.so.5 => /lib/x86_64-linux-gnu/liblzma.so.5 (0x00007fc2000b8000)\n\t/lib64/ld-linux-x86-64.so.2 (0x00007fc20032c000)\n"
+    }
+  },
+  "controls": {
+    "release": {
+      "totals": {
+        "allocations": 5,
+        "peak": 3219459,
+        "leaked": 4096
+      },
+      "control": {
+        "allocations": 3,
+        "peak": 3145731,
+        "leaked": 0
+      },
+      "topAllocationStacks": [
+        [
+          "0x7f02f32fa59f;0x7f02f32e0823;0x7f02f32e071e;0x7f02f2ec938e;",
+          1
+        ],
+        [
+          "__libc_start_main;0x7f02f30d61c9;main::printf (stdio2.h);main (control.c);__printf_chk;0x7f02f31175a9;0x7f02f310ccc8;_IO_file_xsputn;_IO_file_overflow;_IO_doallocbuf;_IO_file_doallocate;",
+          1
+        ],
+        [
+          "main (control.c);allocate_control (control.c);",
+          1
+        ],
+        [
+          "main (control.c);allocate_control (control.c);",
+          1
+        ],
+        [
+          "main (control.c);allocate_control (control.c);",
+          1
+        ]
+      ],
+      "scope": "Native allocation calls; peak is bytes live at the global heap peak. Not managed-object or ARC operation counts."
+    },
+    "omitted": {
+      "totals": {
+        "allocations": 5,
+        "peak": 3219459,
+        "leaked": 1052674
+      },
+      "control": {
+        "allocations": 3,
+        "peak": 3145731,
+        "leaked": 1048578
+      },
+      "topAllocationStacks": [
+        [
+          "0x7f0828a6559f;0x7f0828a4b823;0x7f0828a4b71e;0x7f082863438e;",
+          1
+        ],
+        [
+          "__libc_start_main;0x7f08288411c9;main::printf (stdio2.h);main (control.c);__printf_chk;0x7f08288825a9;0x7f0828877cc8;_IO_file_xsputn;_IO_file_overflow;_IO_doallocbuf;_IO_file_doallocate;",
+          1
+        ],
+        [
+          "main (control.c);allocate_control (control.c);",
+          1
+        ],
+        [
+          "main (control.c);allocate_control (control.c);",
+          1
+        ],
+        [
+          "main (control.c);allocate_control (control.c);",
+          1
+        ]
+      ],
+      "scope": "Native allocation calls; peak is bytes live at the global heap peak. Not managed-object or ARC operation counts."
+    }
+  }
+}

@@ -1,12 +1,14 @@
 # Current work
 
-**Next:** verify all four buffer languages, including raw/optimized fwp agreement,
-on native Linux ARM64/AMD64. Continue the remaining milestone 4 comparisons in
-[PR #273](https://github.com/e6qu/fun-with-pipes/pull/273), a normal, non-draft PR.
-PR branch: `ownership-peer-comparisons` at `7645384bb`. Worktree
-`.worktrees/recording-capacity-gate` now uses `ownership-buffer-review` for focused
-verification without restarting the full PR matrix on each edit. That temporary
-branch has no separate PR; integrate verified work in one batch. Preserve unrelated root-worktree changes.
+**Next:** audit the retained four-language/Swift-closure reports in documentation
+CI, then integrate the verified batch into [PR #273](https://github.com/e6qu/fun-with-pipes/pull/273).
+Continue returned-buffer phases, weak-operation/service costs and parser memory
+in that same PR; milestone 4 is not complete.
+
+PR branch `ownership-peer-comparisons` remains at `7645384bb` while its full
+matrix runs. Worktree `.worktrees/recording-capacity-gate` uses
+`ownership-buffer-review` for focused verification. It has no separate PR.
+Preserve unrelated root-worktree changes. No draft PRs.
 
 ## Roadmap status
 
@@ -59,37 +61,38 @@ the same harness/barrier and checks 42 raw/optimized interpreter results. C/fwp
 CLI validation rejects impossible array sizes before calling the workload; this
 is a harness error check, not a claim about native allocator failure behavior.
 The four-language addition passes run `42579398196`, source `9850a0fda`,
-ARM64 job `129034306146` and AMD64 job `129034306496`. Full logs and raw
-records still need their final report review before integration into #273.
+ARM64 job `129034306146` and AMD64 job `129034306496`. [Full logs and raw records are reviewed](measurements/four-language-buffers-2026-11-09/README.md):
+840 native checks, 42 interpreter results and 24 actual barrier-fault rejections
+per host. Integrate this verified work with the closure result in one #273 push.
 
-The review branch also prepares a scalar Swift closure allocation profile with
-the existing separate factory/caller and unchanged 4,096 × 256 × 16 work.
-Two samples for each of two kinds, ordinary and actual omitted deinitialization,
-must demonstrate allocation attribution and release. Run `42580332788` at
-`96e2bf43a`: AMD64 job `129037264818` passes, with 1,048,576 factory allocations
-per case, 98,304 attributed bytes at the process heap peak and zero ordinary
-exit bytes. Omitted release leaves 25,165,824 bytes, exactly 24 per closure.
-Both kinds and both repetitions agree. The complete AMD archive (artifact
-`13656972283`) matches its GitHub SHA-256. ARM64 job `129037264981` failed
-before profiles started: libunwind download returned HTTP 504. Its complete log
-is `/tmp/fwp-scalar-closure-arm-first.log`; no ARM result is claimed. Added
-bounded transient retries for the same pinned URL/checksum. Rerun only that
-failed job at the original source, preserving the successful AMD observations. Unit controls reject absent
-attribution, undetected leaks and the mistaken use of a stack-attributed global
-peak as that stack's own peak. No ARC or speed claim follows from the profiles.
-The suite retains partial evidence even when an independent step fails.
+[Scalar Swift profiles](measurements/swift-scalar-closures-2026-11-09/README.md)
+pass on both architectures at `96e2bf43a`, run `42580332788`. AMD64 passed attempt
+1 (`129037264818`); ARM64 passed attempt 2 (`129039789077`). First ARM setup
+(`129037264981`) returned HTTP 504 before profiles started; only that failed job
+was rerun. The source, AMD observations and original failed setup are preserved.
+Bounded retries for the same pinned download were added for future jobs.
 
-Remaining: matched external buffer barriers and returned-buffer phases, scalar
-Swift closure allocation attribution, weak-operation/service timing and storage,
-parser allocator-internal transient peaks/reservations/RSS. Do not retry unchanged
+All kinds/repetitions observe 1,048,576 factory allocations, 98,304 attributed
+bytes at the process heap peak, and zero ordinary exit bytes. Deliberately omitted
+release retains 25,165,824 bytes: 24 bytes per closure. Both complete archives and
+the failed setup match GitHub digests; full logs/raw stacks were reviewed. The
+new retained-report auditor reconstructs manifests, raw profiles and controls;
+its local invocation was refused after disk fell below 64 GiB again. It still
+needs remote validation. Do not call that refusal a pass or bypass the guard.
+
+Remaining: returned-buffer phases, weak-operation/service timing and storage,
+parser allocator-internal transient peaks/reservations/RSS, and the matched
+peer timing protocol. Complete-operation barriers and scalar Swift closure
+allocation attribution now pass on both architectures. Do not retry unchanged
 failed timing controls. Keep one active PR and publish no draft PRs.
 
 ## Local checks and disk
 
 Free space recovered independently from 12 GiB to about 73 GiB on 2026-11-09.
-The unchanged guard now permits focused checks: closure record controls pass
+During that interval the unchanged guard permitted focused checks: closure record controls pass
 (two tests, 0.13 seconds elapsed), and roadmap links pass (400 Markdown link sets,
 106 preparation pairs/tags, five steps; 0.38 CPU seconds, 3.27 seconds elapsed).
+Disk has since fallen below 64 GiB again; further checks move to GitHub.
 Full builds, suites and profiles remain on GitHub. Recheck free space before
 local work and never bypass the 64 GiB reserve or raise limits.
 

@@ -42,8 +42,8 @@ Use the same external input/result barriers in all four timing peers. The buffer
 checker now prepares C/Rust/Swift with one separately compiled C barrier and
 retains original and prepared source hashes. Actual wrong-barrier builds must
 fail the result oracle. The review branch also prepares fwp with that C harness and checks its raw and
-optimized interpreter results. The four-language boundary still needs native
-verification before any timing comparison. Harness argument checks do not
+optimized interpreter results. [Both native architectures now verify the four-language boundary](four-language-buffers-2026-11-09/README.md).
+Timing and returned-buffer phases remain to be measured. Harness argument checks do not
 establish equivalent native out-of-memory behavior.
 Do not derive Swift allocation counts from `Array.count` or presumed capacity.
 Check unique and aliased arrays separately, including validity of the surviving
@@ -81,7 +81,11 @@ positive factory bytes left after the deliberate omission. Run the existing
 allocator and selected-unwinder controls on each host. Stack-attributed bytes at
 the process heap peak are not an independently measured factory peak. Missing
 attribution is a failed observation, not a zero-cost result. ARC calls stay
-unmeasured. This protocol is frozen before collecting the profiles.
+unmeasured. [Both native profiles now pass](swift-scalar-closures-2026-11-09/README.md):
+one 24-byte allocation per scalar closure, zero factory-attributed exit bytes
+with normal release, and the expected retained contexts after deliberate omission.
+The original protocol was frozen before collection; raw records retain the first
+ARM setup failure and successful setup retry.
 
 The existing failed timing targets remain in [their original report](callable-phases.md).
 A fresh peer comparison does not replace them.
