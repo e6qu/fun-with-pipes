@@ -94,7 +94,8 @@ baseline do not measure allocator reservation, physical RAM or Swift/Rust releas
 The [checker](../../scripts/check-returned-buffer-peers.py) retains original and
 prepared source, separate objects/modules, binaries, commands and hashes. It
 collects no timing samples. Next, verify native storage/release and freeze the
-construction/read/release timing protocol, including phase duration controls.
+[construction/read/release protocol](returned-buffer-phases.md), including the
+control-only pilot and phase duration limits, against the exact implementation.
 
 ## Returned functions
 

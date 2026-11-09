@@ -23,9 +23,10 @@ Swift at Onone/O. Inputs cover negative and empty lengths, 1/16/4,096/262,144
 elements, repeated calls, oversized arrays and invalid arguments. The Swift
 program uses its native `Array<Int64>`; it adds no reference wrapper.
 
-These programs are not yet matched timing peers. Swift has external input/result
-barriers, while the older C/Rust programs have inline barriers. The next timing
-experiment must use the same boundaries in every language.
+At this revision, Swift has external input/result barriers while C/Rust have
+inline barriers; these records are not matched timings. The later
+[four-language checks](../four-language-buffers-2026-11-09/README.md) verify matching
+barriers including fwp. They also collect no timings.
 
 ## Parser storage
 

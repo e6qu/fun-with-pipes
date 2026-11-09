@@ -1,7 +1,7 @@
 # Current work
 
-**Next:** complete returned-buffer phases, weak-operation/service costs and
-parser memory in [PR #273](https://github.com/e6qu/fun-with-pipes/pull/273).
+**Next:** verify the separate returned-buffer factories and release controls,
+then freeze their phase-timing protocol in [PR #273](https://github.com/e6qu/fun-with-pipes/pull/273).
 The matched four-language and scalar Swift allocation batch is verified and is
 integrated at `b06a2b6fe`; milestone 4 is not complete.
 
@@ -114,10 +114,16 @@ Combined head `b06a2b6fe20f2842f5b9c9a3bb4e00be0278f011`: production
 adds callback-error cleanup in C/Rust/Swift and a weak-only runner suite at
 `9a7f1baaf`: focused run `42584848642`, docs `42584852665`; both queued when checked.
 Keep these unverified additions separate from the verified cancellation fixtures.
-The next prepared batch adds four-language returned-buffer factories, unique/shared
+Review head `348cc12f58a10559b13aefa96f8885d890cb445b` adds four-language returned-buffer factories, unique/shared
 owners, raw/optimized sum checks and actual wrong-scan/omitted-release controls.
-It has no timing result. Local checks remain prohibited by the 15 GiB disk reserve;
-use the new `returned-buffer-checks` runner suite and preserve failed observations.
+Focused run `42586120264` and docs `42586123724` are queued. It has no timing result.
+Only 15 GiB is free locally, below the required 64 GiB reserve; keep checks on
+runners and preserve failed observations. The checkout's target directory is empty;
+the three inspected user caches total about 1.4 GiB, far below the missing reserve.
+The [returned-buffer timing protocol](measurements/returned-buffer-phases.md) now
+defines populations, phase boundaries, the C-only batch pilot, copy controls and
+RSS runs. Implement and verify those boundaries before freezing its source tag
+and collecting timing; no samples have been collected under this protocol.
 
 Previous PR head `7645384bb336acc728deebf24eae96280a45163f`: production `42578853160`,
 docs `42578853071` (passes), focused peers `42578815959` (both pass). Review every failed/completed

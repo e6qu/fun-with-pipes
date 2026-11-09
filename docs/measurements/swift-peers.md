@@ -122,10 +122,12 @@ intentionally retained closure. It does not count scalar-closure allocations.
 The [closure phase comparison](callable-phases.md) now measures construction,
 invocation and release against the same fwp source with its count optimization
 disabled. It retains three AMD64 construction regressions and failed noise
-controls. Add Swift allocation and ARC-operation observations before attributing
-costs to ownership. Keep
-parser, weak-subscription and numerical Swift comparisons as explicit missing
-coverage. The existing D2/N1 timing failures remain open. Prioritize measured
+controls. The later [scalar closure profiles](swift-scalar-closures-2026-11-09/README.md)
+verify one 24-byte factory allocation per closure and ordinary cleanup on both
+native architectures. ARC-operation counts remain unmeasured. Native
+[weak-registration checks](weak-peer-checks-2026-11-09/README.md) now verify
+cancellation and expiration; they do not measure Swift service costs. Parser and
+numerical Swift comparisons remain missing. The existing D2/N1 timing failures remain open. Prioritize measured
 execution time and working memory, retaining executable-size costs as context.
 
 The [allocator profile](swift-allocations.md) measures native allocation calls
