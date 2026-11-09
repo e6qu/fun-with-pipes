@@ -41,8 +41,10 @@ Add Swift's native `Array<Int64>` to these programs. Keep two experiments distin
 Use the same external input/result barriers in all four timing peers. The buffer
 checker now prepares C/Rust/Swift with one separately compiled C barrier and
 retains original and prepared source hashes. Actual wrong-barrier builds must
-fail the result oracle. This new boundary still needs native verification and
-integration with the fwp harness before the four-language timing comparison.
+fail the result oracle. The review branch also prepares fwp with that C harness and checks its raw and
+optimized interpreter results. The four-language boundary still needs native
+verification before any timing comparison. Harness argument checks do not
+establish equivalent native out-of-memory behavior.
 Do not derive Swift allocation counts from `Array.count` or presumed capacity.
 Check unique and aliased arrays separately, including validity of the surviving
 owner after the other is released. Swift out-of-memory behavior is not promised

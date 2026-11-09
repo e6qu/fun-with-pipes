@@ -3,19 +3,25 @@
 import argparse
 import base64
 import hashlib
+import importlib.util
 import json
+import os
 from pathlib import Path
 import subprocess
 
 ROOT = Path(__file__).resolve().parent.parent
 ENTRIES = ('unique', 'callback', 'scan')
+NATIVE_SPEC = importlib.util.spec_from_file_location('buffer_native', ROOT / 'scripts/check-unique-buffer-native.py')
+NATIVE = importlib.util.module_from_spec(NATIVE_SPEC)
+NATIVE_SPEC.loader.exec_module(NATIVE)
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--cc', required=True)
     parser.add_argument('--rustc', required=True)
-    parser.add_argument('--languages', nargs='+', choices=['c', 'rs', 'swift'], required=True)
+    parser.add_argument('--languages', nargs='+', choices=['c', 'rs', 'swift', 'fwp'], required=True)
+    parser.add_argument('--compiler', type=Path)
     parser.add_argument('--swiftc')
     parser.add_argument('--swift-target')
     parser.add_argument('--output', type=Path, required=True)
@@ -29,6 +35,14 @@ def main():
             parser.error('Swift checks require --swiftc and --swift-target')
     elif args.swiftc is not None or args.swift_target is not None:
         parser.error('Swift settings require Swift in --languages')
+    if 'fwp' in args.languages:
+        if args.compiler is None or 'c' not in args.languages:
+            parser.error('fwp checks require --compiler and c in --languages for the common harness')
+    elif args.compiler is not None:
+        parser.error('--compiler requires fwp in --languages')
+    environment = {key: value for key, value in os.environ.items()
+                   if not key.startswith('FWP_') and key not in ('GH_TOKEN', 'GITHUB_TOKEN')}
+    environment.update(CC=args.cc, FWP_LTO='0', FWP_STACK='1', LC_ALL='C')
     executions = 0
     folder = args.output.resolve()
     folder.mkdir(parents=True, exist_ok=False)
@@ -36,8 +50,9 @@ def main():
 
     def run(command, timeout):
         nonlocal commands
+        command = list(map(str, command))
         try:
-            result = subprocess.run(command, capture_output=True, timeout=timeout)
+            result = subprocess.run(command, capture_output=True, timeout=timeout, env=environment)
         except subprocess.TimeoutExpired as error:
             row = dict(command=command, timedOut=True, status=None,
                        stdout=base64.b64encode(error.stdout or b'').decode(),
@@ -46,6 +61,7 @@ def main():
             row = dict(command=command, timedOut=False, status=result.returncode,
                        stdout=base64.b64encode(result.stdout).decode(),
                        stderr=base64.b64encode(result.stderr).decode())
+        row['fwpNoOpt'] = environment.get('FWP_NO_OPT')
         with (folder / 'commands.jsonl').open('a') as log:
             log.write(json.dumps(row) + '\n')
         commands += 1
@@ -54,7 +70,7 @@ def main():
 
     sources = {}
     generated_sources = {}
-    for language in args.languages:
+    for language in [name for name in args.languages if name != 'fwp']:
         raw = (ROOT / f'tests/fixtures/unique_buffer_peer.{language}').read_bytes()
         (folder / f'original.{language}').write_bytes(raw)
         sources[language] = hashlib.sha256(raw).hexdigest()
@@ -62,6 +78,7 @@ def main():
         if language == 'c':
             substitutions = {
                 '#include <stdint.h>': '#include <stdint.h>\n#include "buffer_peer_opaque.h"',
+                'uint64_t size = length < 0 ? 0 : (uint64_t)length;': 'uint64_t size = length < 0 ? 0 : (uint64_t)length;\n    if (size > (uint64_t)PTRDIFF_MAX / sizeof(int64_t)) fail("array too large", 3);',
                 '__asm__ volatile ("" : "+r" (input));': 'input = buffer_peer_opaque(input);',
                 '__asm__ volatile ("" : "+r" (result));': 'result = buffer_peer_opaque(result);',
             }
@@ -87,6 +104,35 @@ def main():
     assert original_barrier.count('return value;') == 1
     # An actual wrong external result must be rejected by each language's oracle.
     (folder / 'damaged-opaque.c').write_text(original_barrier.replace('return value;', 'return value + 1;'))
+    interpreter_checks = 0
+    if 'fwp' in args.languages:
+        compiler = args.compiler.resolve()
+        sources['compiler'] = hashlib.sha256(compiler.read_bytes()).hexdigest()
+        fixture = folder / 'buffer.fwp'
+        fixture.write_text((ROOT / 'tests/fixtures/unique_buffer_costs.fwp').read_text()
+                           + '\nexport scan : I64 -> I64\nscan = flip array.generate id | array.fold add 0\n')
+        sources['fwp'] = hashlib.sha256(fixture.read_bytes()).hexdigest()
+        for entry in ENTRIES:
+            original = folder / f'{entry}-original.c'
+            built = run([compiler, 'build', '--fn', entry, '--memory', 'dynamic',
+                         '--emit-c', '-O2', fixture, '-o', original], 90)
+            assert (built.returncode, built.stdout, built.stderr) == (0, b'', b''), built
+            prepared = NATIVE.harness(original.read_text(), entry, (folder / 'peer.c').read_text())
+            (folder / f'{entry}-fwp.c').write_text(prepared)
+            generated_sources['fwp-' + entry] = hashlib.sha256(prepared.encode()).hexdigest()
+            for length in [-9223372036854775808, -1, 0, 1, 16, 4096, 262144]:
+                size = max(length, 0)
+                expected = size * (size - 1) // 2 if entry == 'scan' else size * (2 if entry == 'unique' else 1)
+                for optimize in (False, True):
+                    if optimize:
+                        environment.pop('FWP_NO_OPT', None)
+                    else:
+                        environment['FWP_NO_OPT'] = '1'
+                    interpreted = run([compiler, 'exec', '--interp', fixture, entry, str(length)], 90)
+                    assert (interpreted.returncode, interpreted.stdout, interpreted.stderr) == (
+                        0, f'{expected}\n'.encode(), b''), interpreted
+                    interpreter_checks += 1
+        environment.pop('FWP_NO_OPT', None)
     barrier_controls = 0
     for level in [1, 2]:
         barrier = folder / f'opaque-{level}.o'
@@ -99,9 +145,13 @@ def main():
             assert built.returncode == 0 and not built.stdout and not built.stderr, (command, built)
         for language in args.languages:
             for entry_index, entry in enumerate(ENTRIES):
-                source = folder / f'peer.{language}'
+                source = folder / (f'{entry}-fwp.c' if language == 'fwp' else f'peer.{language}')
                 executable = folder / f'peer-{language}-{entry}-{level}'
-                if language == 'c':
+                if language == 'fwp':
+                    command = [args.cc, '-std=gnu11', f'-O{level}', '-ffp-contract=off',
+                               '-fno-fast-math', '-fno-lto', '-w', f'-DBUFFER_ENTRY={entry_index}',
+                               str(source), str(barrier), '-o', str(executable), '-lm', '-lpthread', '-ldl']
+                elif language == 'c':
                     command = [args.cc, '-std=c11', f'-O{level}', '-ffp-contract=off',
                                '-fno-lto', '-Wall', '-Wextra', '-Werror',
                                f'-DBUFFER_ENTRY={entry_index}', str(source), str(barrier), '-o', str(executable)]
@@ -153,9 +203,9 @@ def main():
                 barrier_controls += 1
     (folder / 'report.json').write_text(json.dumps(dict(sourceHashes=sources, generatedSourceHashes=generated_sources,
         barrierPolicy='One separately compiled C input/result barrier, no LTO, for every selected peer',
-        rejectedBarrierControls=barrier_controls, commands=commands, executions=executions), indent=2) + '\n')
+        interpreterChecks=interpreter_checks, rejectedBarrierControls=barrier_controls, commands=commands, executions=executions), indent=2) + '\n')
     print(f'{args.languages}: {executions} result and invalid-input controls pass; '
-          'C/Rust O1/O2, Swift Onone/O where selected; no timings collected')
+          f'C/Rust/fwp O1/O2, Swift Onone/O where selected; {interpreter_checks} interpreter checks; no timings collected')
 
 
 if __name__ == '__main__':

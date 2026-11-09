@@ -2727,7 +2727,6 @@ jobs:
       - name: Native build and measurement dependencies
         run: apt-get update && apt-get install -y git gcc python3 binutils curl
       - name: Compiler and timing dependencies
-        if: inputs.suite != 'ownership-peer-checks'
         run: apt-get install -y g++ libssl-dev pkg-config time llvm
       - uses: actions/checkout@v7
         with:
@@ -2751,7 +2750,6 @@ jobs:
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
       - name: Build the current compiler
-        if: inputs.suite != 'ownership-peer-checks'
         shell: bash
         run: |
           set -o pipefail
@@ -2765,7 +2763,7 @@ jobs:
         if: ${{ !cancelled() && inputs.suite == 'ownership-peer-checks' }}
         run: >-
           python3 scripts/check-unique-buffer-peers.py --cc gcc --rustc rustc
-          --languages c rs swift --swiftc swiftc
+          --languages c rs swift fwp --compiler target/debug/fwp --swiftc swiftc
           --swift-target "${{ matrix.arch }}-unknown-linux-gnu"
           --output ownership-peer-checks
       - name: Weak registration lifetime and cancellation controls

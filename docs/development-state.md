@@ -1,9 +1,12 @@
 # Current work
 
-**Next:** verify matched buffer barriers on native Linux ARM64/AMD64, then
-complete the remaining milestone 4 comparisons in this substantial PR.
-Branch: `ownership-peer-comparisons`, worktree `.worktrees/recording-capacity-gate`.
-No new PR is open yet. Preserve unrelated root-worktree changes.
+**Next:** verify all four buffer languages, including raw/optimized fwp agreement,
+on native Linux ARM64/AMD64. Continue the remaining milestone 4 comparisons in
+[PR #273](https://github.com/e6qu/fun-with-pipes/pull/273), a normal, non-draft PR.
+PR branch: `ownership-peer-comparisons` at `7645384bb`. Worktree
+`.worktrees/recording-capacity-gate` now uses `ownership-buffer-review` for focused
+verification without restarting the full PR matrix on each edit. That temporary
+branch has no separate PR; integrate verified work in one batch. Preserve unrelated root-worktree changes.
 
 ## Roadmap status
 
@@ -46,9 +49,16 @@ references and Rust Rc/Weak for the serial contract, without pretending their
 allocation layouts match fwp. They do not force address reuse or count ARC calls.
 Run `42578072461` passes on both hosts at `5dfd82825`; complete logs and raw
 commands are reviewed. Immutable tag `roadmap/weak-peer-checks-2026-11-09` retains
-that source. Docs run `42578075331` is still running. The next buffer change
+that source. Docs run `42578075331` passes; its complete log contains only named runner
+negative controls. The matching-barrier run `42578815959` has passed ARM64
+(job `129032480582`); AMD64 (`129032480648`) is still queued. The next buffer change
 prepares all three peer languages with the same external C input/result barrier,
-plus actual wrong-barrier rejection controls. Its native verification is pending.
+plus actual wrong-barrier rejection controls. The review branch additionally
+selects fwp explicitly, builds the current compiler, prepares its emitted C with
+the same harness/barrier and checks 42 raw/optimized interpreter results. C/fwp
+CLI validation rejects impossible array sizes before calling the workload; this
+is a harness error check, not a claim about native allocator failure behavior.
+This four-language addition is not verified yet.
 The suite retains partial evidence even when an independent step fails.
 
 Remaining: matched external buffer barriers and returned-buffer phases, scalar
@@ -70,3 +80,13 @@ The active checkout includes docs, examples, SDK and vendor inputs needed by
 link validation. Older inactive worktrees remain sparse, preserving each modified
 handoff; their tracked source/evidence remains in Git. Cleanup removed disposable
 build/download/provider caches, not infrastructure state or active workloads.
+
+## Current PR gates
+
+Head `7645384bb336acc728deebf24eae96280a45163f`: production `42578853160`,
+docs `42578853071`, focused peers `42578815959`. Review every failed/completed
+job before repairs. Do not merge while milestone 4 work or final gates remain.
+Redundant post-merge CI `42577384035` was cancelled after verifying #272
+merge/tree equality and its passing original full gates; no failed step was
+reported before cancellation. Interrupted main logs still need review. Its docs
+run `42577384011` passes. Cancellation is not another production pass.
