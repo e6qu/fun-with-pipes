@@ -1,9 +1,9 @@
 # Parser memory: remaining observer work
 
-**[Allocator event calibration passes on both Linux hosts](parser-allocator-calibration-2026-11-09/README.md); the source-display repair also passes. Parser observations remain open.** [Ordinary RSS and stopped-process mapping
-snapshots now pass](parser-entry-cleanup-2026-11-09/README.md). They leave two
-different questions open: temporary storage inside a resize, and the meaning of
-commit accounting for this process. Neither is answered by final vector capacity.
+**Allocator-internal parser peaks remain open.** [Resize calibration](parser-allocator-calibration-2026-11-09/README.md)
+and [actual parser RSS/mapping accounting](parser-process-accounting-2026-11-09/README.md)
+pass on both Linux hosts. Neither final vector capacity nor stopped-process
+snapshots establish temporary storage inside a resize.
 
 ## Storage during a resize
 
@@ -59,7 +59,7 @@ Breakpoint changes occur while stopped in the outer command loop, not inside
 breakpoint callbacks. Run `suite=parser-allocator-calibration` with an explicit
 `parser_memory_tag`; it builds only the small native control, not the fwp compiler.
 This is calibration of ordinary-arena paths. Applying it to parser allocations,
-mapped/retry paths, full transient peaks and commit accounting remains work.
+mapped/retry paths and full transient peaks remains work.
 
 ## Commit accounting
 
@@ -70,18 +70,19 @@ The per-mapping `VmFlags` include `ac` (accountable) and `nr` (no swap reservati
 whose interpretation must match the kernel version.
 [Kernel mapping documentation](https://www.kernel.org/doc/html/latest/filesystems/proc.html).
 
-Next steps:
+The [actual parser accounting observations](parser-process-accounting-2026-11-09/README.md)
+now pass on both hosts:
 
 - Record kernel version, overcommit policy and complete flags at each existing
   stopped-process checkpoint. Do not change the host's policy to obtain a result.
 - Calibrate reserved, writable, touched and released mappings, including an
   explicit no-reservation case. Compare flags, mapping extents and resident pages
   independently. A writable extent is not proof of resident or guaranteed memory.
-- Determine whether the observed mappings support a defensible per-process
-  accounting quantity. Name its exact scope; report shared/system quantities
-  separately. Summing flagged extents must not silently become “committed RAM.”
-- Keep the committed-memory goal open until its observer and controls establish
-  the claimed boundary. This plan does not reduce it to an RSS measurement.
+- Sum the observed `ac`/`nr` extents and report shared/system quantities
+  separately. These flagged extents are not “committed RAM.”
+- Report accountable mapping extents under the captured kernel policy. A stronger
+  per-process guaranteed-memory figure is not established by these interfaces;
+  keep that limitation explicit rather than relabeling RSS.
 
 This continues the [process-memory protocol](parser-process-memory.md) and
 [ownership milestone](ownership-peers.md#parser-workspace), without replacing
@@ -109,4 +110,5 @@ settings. The report separates:
 The first two quantities are **not guaranteed RAM**, and system-wide differences
 cannot be assigned to this parser on a shared runner. Reader controls reject
 misclassified flags even when sizes and RSS agree. [Native controls pass on both hosts](parser-mapping-accounting-2026-11-09/README.md)
-at O1/O2. Applying the observer to actual parser checkpoints remains pending.
+at O1/O2. The actual parser checkpoints now retain the same accounting fields and
+reject invalid or changing kernel policy, with complete raw-record reconstruction.

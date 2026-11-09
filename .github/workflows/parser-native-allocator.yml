@@ -1,0 +1,60 @@
+name: Actual native parser allocator events
+
+on:
+  workflow_call:
+    inputs:
+      source_tag:
+        description: Immutable source tag for these parser observations
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  allocator:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            arch: x86_64
+            c_arch: x86-64
+            rust_cpu: x86-64
+          - runner: ubuntu-24.04-arm
+            arch: aarch64
+            c_arch: armv8-a
+            rust_cpu: generic
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.99.1
+          components: rust-src
+      - name: Matched installed libc, debug information and source
+        run: >-
+          sudo apt-get update && sudo apt-get install -y
+          gcc binutils gdb libc6-dev libc6-dbg glibc-source python3
+      - name: Resize overlap, mapped/retry classification and missing-event controls
+        run: |
+          python3 scripts/test-parser-native-allocator.py
+          python3 scripts/test-parser-allocator-observation.py
+      - name: Actual parser allocations and omitted release
+        env:
+          SOURCE_TAG: ${{ inputs.source_tag }}
+        run: >-
+          python3 scripts/check-parser-native-allocator.py --cc gcc --ar ar --rustc rustc --gdb gdb
+          --source "$GITHUB_SHA" --tag "$SOURCE_TAG" --arch "${{ matrix.arch }}"
+          --c-arch "${{ matrix.c_arch }}" --rust-cpu "${{ matrix.rust_cpu }}"
+          --target "${{ matrix.arch }}-unknown-linux-gnu" --output parser-native-allocator
+      - name: Preserve all raw events, sources and complete command journals
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: parser-native-allocator-${{ matrix.arch }}
+          path: parser-native-allocator/
+          if-no-files-found: error

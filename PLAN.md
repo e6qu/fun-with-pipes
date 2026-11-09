@@ -88,8 +88,10 @@ Milestone 4 now fills four concrete comparison gaps:
 4. **Parser workspace:** the [entry ownership repair](docs/measurements/parser-entry-cleanup-2026-11-09/README.md)
    and RSS/checkpoint observations pass on both Linux hosts. [Resize calibration](docs/measurements/parser-allocator-calibration-2026-11-09/README.md)
    and [mapping accounting controls](docs/measurements/parser-mapping-accounting-2026-11-09/README.md)
-   also pass. Connect them to actual parser allocations and checkpoints before
-   claiming internal transient peaks or process accounting. Preserve the new C/Rust allocation-event
+   also pass. [Actual parser accounting snapshots now pass](docs/measurements/parser-process-accounting-2026-11-09/README.md),
+   separating accountable address ranges from resident pages. Connect allocator
+   events to actual parser allocations before claiming internal transient peaks.
+   Preserve the new C/Rust allocation-event
    and native frame checks without treating them as whole-process memory.
 
 [The scope](docs/measurements/ownership-peers.md) defines matched work, representation

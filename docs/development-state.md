@@ -1,14 +1,15 @@
 # Current work
 
-**Next:** finish the service timing and parser accounting runner batches, then
-connect verified allocator events to actual parser allocations. Follow the
+**Next:** finish the service timing sessions and run the prepared actual C/Rust
+parser allocator observer; then cover fwp region events and unobserved allocator
+paths. Follow the
 [frozen service timing protocol](measurements/weak-callback-time.md). Keep this
 batch in [PR #273](https://github.com/e6qu/fun-with-pipes/pull/273). Milestone 4 is
 incomplete; do not merge an interim green head.
 
 Worktree: `.worktrees/recording-capacity-gate`. Preparation branch:
-`ownership-buffer-review`; parser accounting source `6d1608c4f`, tag
-`roadmap/parser-process-memory-accounting-2026-11-09`. PR branch:
+`ownership-buffer-review`; service repair source `069e76ed8`, tag
+`roadmap/weak-callback-time-repair-2026-11-09`. PR branch:
 `ownership-peer-comparisons`, still `b06a2b6fe20f2842f5b9c9a3bb4e00be0278f011`.
 Integrate the complete preparation batch into this PR before final production
 verification. Preserve unrelated root-worktree changes and inactive handoffs.
@@ -20,7 +21,7 @@ verification. Preserve unrelated root-worktree changes and inactive handoffs.
 | 1 | In progress | #270 documentation refresh and fresh F64 stores | Original AMD timing acceptance |
 | 2 | In progress | #271 captured maps and empty-owner transfer | Original noisy timing acceptance |
 | 3 | In progress | #272 structured gradients and known callbacks; all delivery gates | Original AMD timing acceptance |
-| 4 | In progress | Buffer/closure comparisons; weak phases, storage, reuse, census and timing; service correctness, fwp cleanup and native allocations; parser entry repair and memory controls | Service timing; parser internal peaks and applying accounting observations |
+| 4 | In progress | Buffer/closure comparisons; weak phases, storage, reuse, census and timing; service correctness, fwp cleanup and native allocations; parser entry repair and actual process accounting | Service timing; parser internal peaks |
 | 5 | Pending | Existing language tools and correctness tests | Three applications, compiler phase/scaling costs and sustained load |
 
 Retain original noisy/unmet timing results. Fewer operations or smaller images do
@@ -28,20 +29,21 @@ not complete runtime acceptance. Do not rerun unchanged samples to qualify them.
 
 ## Current verified results and failures
 
-- **Service timing:** source `0fa6d394b`, run `42672736829`; docs `42672743140`.
-  Attempt 1 of both failed before creating jobs with GitHub internal server
-  errors (`27d9f1a8-da4c-4db1-968e-dffff64b5229` and
-  `836e820e-5b51-437a-8447-c0aa52e6909d`). Attempt 2 completed both native jobs:
-  AMD64 `129350479470` and ARM64 `129350479632` fail the fwp descriptor reader;
-  ARM64 also fails four Rust clock links. All other completed checks pass. Docs
-  `129350483940` passes. No timing sample was collected. The combined repair
-  matches actual emitted ownership metadata and uses Rust's static clock library
-  linking, preserving stack protection. [Complete first evidence](measurements/weak-callback-time-2026-11-09/README.md).
+- **Service timing repair:** source `069e76ed8`, run `42675215554`, AMD64
+  `129354672051`, ARM64 `129354672223`. Both pass all 28 builds, 178 result/fault
+  checks, 64 invalid arguments and two interpreter modes; paired timing sessions
+  are running. Docs `42675219991` / `129354681805` passes. No timing conclusion yet.
+  [First failures and combined descriptor/link repair](measurements/weak-callback-time-2026-11-09/README.md)
+  retain all native logs and journals; no measurement ran before those repairs.
 - **Parser accounting:** source `6d1608c4f`, run `42673573956`; docs `42673580483`.
   Attempts 1 and 2 failed before jobs with GitHub internal errors. Attempt 2 IDs:
   `b32b4d94-27e5-4122-8539-4301d00c7a35` / `7f804619-adc9-4c50-b9fa-12ed4c5199e6`.
-  Attempt 3 is running: ARM64 `129352636403`, AMD64 `129352636561`;
-  docs `129352646215` is queued. No parser result yet.
+  Attempt 3 passes: ARM64 `129352636403`, AMD64 `129352636561`, docs `129352646215`.
+  Each host passes all six parser tests, primitive inventory, memory observations
+  and seven corruption controls. All 195 raw snapshots per host reconstruct;
+  complete text records are retained compactly. The generated 1 GiB worker stack
+  matches the large accountable mapping; it is not 1 GiB of resident RAM.
+  [Measured scopes and exact tables](measurements/parser-process-accounting-2026-11-09/README.md).
 - **Service native profiles:** source `c0ac432fc`, run `42664664795`, AMD64
   `129325013027`, ARM64 `129325013096`: 16 diagnostic builds and 80 profiles per
   host pass. Docs `42664675441` / `129325039434` passes. Ordinary C/Rust/Swift
@@ -94,8 +96,8 @@ stack use remain unmeasured. [Scope](measurements/ownership-peers.md).
   collection. A C-only pilot fixes each work count before two balanced sessions;
   both service and process clocks retain separate 2% copy controls. The collector
   also records RSS, build costs and native images; six changed-evidence controls
-  must fail. The first Linux batch exposed the two harness defects above;
-  the combined repair still requires native verification.
+  must fail. Both native caller-verification groups now pass; timing and its
+  reconstruction/corruption controls remain in progress.
 - Guarded local C/Rust/Swift O2 callers pass 48 result cases and actual missing
   delivery/backward-clock controls. The first Swift link found that the local
   clock object targeted macOS 15 while Swift targeted 14; explicitly compiling
@@ -109,9 +111,12 @@ stack use remain unmeasured. [Scope](measurements/ownership-peers.md).
   policy changes during a process. Seven archive corruptions include policies
   whose hashes and journals were updated consistently. Local reader checks pass
   10 tests; the Linux stopped-child check remains runner-only.
-- Parser: connect verified allocator events to actual C/Rust/fwp allocations,
-  cover mapped/retry paths, avoid double-counting resize overlap, and apply mapping
-  accounting to actual checkpoints. Calibration alone is not a parser peak.
+- Prepared [actual native allocator observer](measurements/parser-native-allocator.md):
+  O2 ordinary/observed C/Rust parser pairs, four real omitted-tree-release controls,
+  matched libc/Rust debug source, bounded raw events and exact vector-ledger
+  reconciliation. Five local reader tests pass, including duplicate nested returns,
+  mapped/retry models and missing/reordered events. Native execution is pending;
+  synthetic paths are not native verification. fwp region events remain separate.
 - The handoff rewrite briefly removed the status column required by its checker;
   the column is restored. The audit now passes 426 doc link sets, 106 immutable
   preparation pairs and all five roadmap steps.

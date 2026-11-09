@@ -261,8 +261,9 @@ native architectures. That allocation observer does not measure internal peaks,
 virtual mappings or RSS. The separate [process-memory experiment](parser-process-memory.md)
 now passes ordinary RSS runs, stopped phase checkpoints and real mapping/touch/unmap
 controls on both hosts after repairing the parser entry ownership bug.
-It explicitly leaves allocator-internal peaks and committed memory unresolved;
-RSS or writable mapping size must not be substituted for either.
+[Actual accounting observations](parser-process-accounting-2026-11-09/README.md)
+now retain kernel policy and accountable/no-reservation extents at every checkpoint.
+These do not promise physical RAM or establish allocator-internal transient peaks.
 
 ## Before collecting timings
 

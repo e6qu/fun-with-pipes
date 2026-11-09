@@ -1,8 +1,9 @@
 # Parser process-memory measurements
 
 **[Ordinary RSS and checkpoint observations pass on both Linux hosts](parser-entry-cleanup-2026-11-09/README.md).**
-The next capture adds kernel policy and accountable mapping extents to those
-checkpoints. Allocator-internal parser peaks remain open: successful allocation
+[The accounting capture](parser-process-accounting-2026-11-09/README.md) adds kernel
+policy and accountable mapping extents to those checkpoints and passes on both hosts.
+Allocator-internal parser peaks remain open: successful allocation
 API transitions cannot see temporary old/new storage inside `realloc`.
 
 Keep the existing benchmark grammar and inputs: balanced trees of 31, 511 and

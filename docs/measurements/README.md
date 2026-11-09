@@ -33,9 +33,9 @@ and [native service allocation profiles](weak-callback-profiles-2026-11-09/READM
 pass. [Complete-service timing](weak-callback-time-2026-11-09/README.md) remains open.
 [Parser process memory](parser-process-memory.md) exposed
 [an entry cleanup bug](parser-entry-cleanup-2026-11-09/README.md); its repair and
-the memory observations pass on both Linux hosts. Allocator resize and mapping
-accounting controls also pass; their application to parser internal peaks and
-kernel accounting remains in progress.
+the memory observations pass on both Linux hosts. [Actual parser accounting](parser-process-accounting-2026-11-09/README.md)
+now separates accountable address ranges from resident pages. Allocator resize
+calibration also passes; actual parser internal peaks remain open.
 
 ## Latest deliveries
 
