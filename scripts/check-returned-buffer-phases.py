@@ -20,7 +20,7 @@ ROOT = Path(__file__).resolve().parent.parent
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    for name in ('cc', 'rustc', 'swiftc', 'source', 'arch', 'c-arch', 'rust-cpu', 'target'):
+    for name in ('cc', 'ar', 'rustc', 'swiftc', 'source', 'arch', 'c-arch', 'rust-cpu', 'target'):
         parser.add_argument('--' + name, required=True)
     parser.add_argument('--compiler', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
@@ -60,7 +60,7 @@ def main():
         assert expected[1] is None or result.stdout == expected[1], row
         return row
 
-    for name in ('cc', 'rustc', 'swiftc'):
+    for name in ('cc', 'ar', 'rustc', 'swiftc'):
         report['versions'][name] = run([getattr(args, name), '--version'], (0, None, ''), env)['stdout']
     clock = folder / 'clock.o'
     bad_clock = folder / 'backward-clock.o'
@@ -70,6 +70,9 @@ def main():
     flags = [args.cc, '-std=c11', '-O2', '-fno-lto', '-march=' + args.c_arch, '-Wall', '-Wextra', '-Werror']
     run([*flags, '-c', fixtures / 'callable_phase_clock.c', '-o', clock], (0, '', ''), env)
     run([*flags, '-c', broken, '-o', bad_clock], (0, '', ''), env)
+    bad_library = folder / 'backward-clock-library'
+    bad_library.mkdir()
+    run([args.ar, 'crs', bad_library / 'libbuffer_clock.a', bad_clock], (0, '', ''), env)
     original = folder / 'original.c'
     emitted = None
     try:
@@ -107,9 +110,12 @@ def main():
                     # Relink the same factory against a real decreasing clock.
                     # This avoids compiling the large fwp factory a second time.
                     link = metadata['link']
-                    assert sum(str(clock) in arg for arg in link) == 1 and link.count(str(binary)) == 1
+                    assert link.count(str(binary)) == 1
                     clock_binary = binary.with_name('backward-clock-program')
-                    command = [arg.replace(str(clock), str(bad_clock)).replace(str(binary), str(clock_binary)) for arg in link]
+                    before, after = (('native=' + str(binary.parent), 'native=' + str(bad_library))
+                                     if language == 'rs' else (str(clock), str(bad_clock)))
+                    assert link.count(before) == 1
+                    command = [after if arg == before else str(clock_binary) if arg == str(binary) else arg for arg in link]
                     run(command, (0, '', ''), env)
                     row = run([clock_binary, 0, 4096, 16], (77, '', 'clock moved backwards\n'), env)
                     row['binarySha256'] = hashlib.sha256(clock_binary.read_bytes()).hexdigest()

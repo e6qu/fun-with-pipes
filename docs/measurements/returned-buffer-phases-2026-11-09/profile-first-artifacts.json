@@ -1,0 +1,21 @@
+{
+  "source": "8caeaa60612b40b04900550e07c493178300d8d7",
+  "run": 42597991401,
+  "artifacts": [
+    {
+      "host": "amd",
+      "job": 129095259397,
+      "id": 13665351365,
+      "bytes": 11377285,
+      "sha256": "01cb4894def4e32dbbd47dd691e6c4eafc40c0e5f249acefec125be0924aef81"
+    },
+    {
+      "host": "arm",
+      "job": 129095259536,
+      "id": 13665900103,
+      "bytes": 4592142,
+      "sha256": "d130829805770bf9b341cf0c60bfc52d8f847daa500d01baa1fec705f28f15cd"
+    }
+  ],
+  "verification": "Reports and selected raw stacks retrieved by HTTP range with ZIP CRC verification. Full archive hashes are GitHub metadata, not independently checked. The bounded reader refused the large commands member; it remains in the remote archive."
+}

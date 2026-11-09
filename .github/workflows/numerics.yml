@@ -2697,6 +2697,9 @@ jobs:
           if-no-files-found: error
 
   swift_peers:
+    permissions:
+      contents: read
+      actions: read
     if: contains(fromJSON('["swift-peers","callable-phases","swift-allocations","swift-closure-allocations","ownership-peer-checks","weak-peer-checks","returned-buffer-checks","returned-buffer-phases","returned-buffer-profiles"]'), inputs.suite)
     strategy:
       fail-fast: false
@@ -2769,7 +2772,7 @@ jobs:
         run: |
           python3 scripts/test-returned-buffer-phases.py
           python3 scripts/check-measurement-clocks.py --cc gcc
-          python3 scripts/check-returned-buffer-phases.py --cc gcc --rustc rustc --swiftc swiftc \
+          python3 scripts/check-returned-buffer-phases.py --cc gcc --ar ar --rustc rustc --swiftc swiftc \
             --compiler target/debug/fwp --source "$GITHUB_SHA" --arch "${{ matrix.arch }}" \
             --c-arch "${{ matrix.c_arch }}" --rust-cpu "${{ matrix.rust_cpu }}" \
             --target "${{ matrix.arch }}-unknown-linux-gnu" --output returned-buffer-phases
@@ -2810,7 +2813,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p swift-setup
-          apt-get install -y heaptrack libunwind-dev strace make
+          apt-get install -y heaptrack libunwind-dev strace make gh
           curl --fail --location --retry 3 --retry-delay 3 --retry-max-time 120 \
             --connect-timeout 20 --max-time 60 --output swift-setup/libunwind-1.8.3.tar.gz \
             https://github.com/libunwind/libunwind/releases/download/v1.8.3/libunwind-1.8.3.tar.gz
@@ -2824,12 +2827,19 @@ jobs:
           make install 2>&1 | tee ../unwind-install.log
           cd "$GITHUB_WORKSPACE"
           rm -rf swift-setup/libunwind-1.8.3
-      - name: Native returned buffer allocation and release controls
+      - name: Complete first buffer profile archive audit
         if: inputs.suite == 'returned-buffer-profiles'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          python3 scripts/audit-first-buffer-profiles.py --arch "${{ matrix.arch }}"
+          --gh gh --output returned-buffer-profiles-first-audit
+      - name: Native returned buffer allocation and release controls
+        if: ${{ !cancelled() && inputs.suite == 'returned-buffer-profiles' }}
         run: |
           python3 scripts/test-returned-buffer-profiles.py
           python3 scripts/profile-returned-buffers.py --source "$GITHUB_SHA" --arch "${{ matrix.arch }}" \
-            --cc gcc --rustc rustc --swiftc swiftc --c-arch "${{ matrix.c_arch }}" \
+            --cc gcc --ar ar --rustc rustc --swiftc swiftc --c-arch "${{ matrix.c_arch }}" \
             --rust-cpu "${{ matrix.rust_cpu }}" --target "${{ matrix.arch }}-unknown-linux-gnu" \
             --heaptrack heaptrack --heaptrack-print heaptrack_print --strace strace \
             --unwind-library-directory swift-setup/unwinder/lib --output returned-buffer-profiles
@@ -2887,11 +2897,12 @@ jobs:
               --input "callable-phase-evidence-$session" --source "$GITHUB_SHA" --arch "${{ matrix.arch }}"
           done
       - name: Preserve all completed and failed observations
-        if: ${{ always() && hashFiles('returned-buffer-profiles/**', 'returned-buffer-phases/**', 'returned-buffer-checks/**', 'swift-closure-evidence/**', 'weak-peer-checks/**', 'parser-peer-checks/**', 'ownership-peer-checks/**', 'swift-setup/**', 'swift-peer-evidence/**', 'swift-arithmetic/**', 'callable-phase-evidence-*/**', 'swift-allocation-evidence/**') != '' }}
+        if: ${{ always() && hashFiles('returned-buffer-profiles-first-audit/**', 'returned-buffer-profiles/**', 'returned-buffer-phases/**', 'returned-buffer-checks/**', 'swift-closure-evidence/**', 'weak-peer-checks/**', 'parser-peer-checks/**', 'ownership-peer-checks/**', 'swift-setup/**', 'swift-peer-evidence/**', 'swift-arithmetic/**', 'callable-phase-evidence-*/**', 'swift-allocation-evidence/**') != '' }}
         uses: actions/upload-artifact@v7
         with:
           name: ${{ inputs.suite }}-${{ matrix.arch }}-${{ matrix.session }}
           path: |
+            returned-buffer-profiles-first-audit/
             returned-buffer-profiles/
             returned-buffer-phases/
             returned-buffer-checks/

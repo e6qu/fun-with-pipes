@@ -58,8 +58,15 @@ def build(args, folder, fixtures, emitted, run, env, language, shared, level, va
         factory.write_text(source)
         library = part / 'libreturned_buffer.rlib'
         run([args.rustc, *flags, '--crate-name', 'returned_buffer', '--crate-type', 'rlib', factory, '-o', library], (0, '', ''), env)
+        native_clock = []
+        if mode != 'checks':
+            # A trailing link-arg object comes after Rust's system libraries.
+            # Declare the clock as a native library so its dependencies resolve
+            # in the normal link order, including ARM64 stack protection.
+            run([args.ar, 'crs', part / 'libbuffer_clock.a', clock], (0, '', ''), env)
+            native_clock = ['-L', 'native=' + str(part), '-l', 'static=buffer_clock']
         link = [args.rustc, *flags, fixtures / (caller_name + '.rs'), '--extern', f'returned_buffer={library}',
-                *([] if mode == 'checks' else ['-C', 'link-arg=' + str(clock)]), '-o', binary]
+                *native_clock, '-o', binary]
         run(link, (0, '', ''), env)
     else:
         flags = ['-swift-version', '6', '-target', args.target, '-warnings-as-errors',

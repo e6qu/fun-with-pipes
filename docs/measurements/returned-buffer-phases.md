@@ -95,8 +95,19 @@ verified. `returned-buffer-phases` checks outputs/arguments, actual wrong sums a
 a separately linked clock that moves backward. Its runs are correctness controls;
 they collect no peer ratios. C/fwp and Swift use reusable typed pointer slots;
 Rust uses a preallocated `Vec` and forward draining. Their slot initialization
-and release bookkeeping are included in the corresponding phases. Native
-storage observations, pilot selection and the paired timing collector remain.
+and release bookkeeping are included in the corresponding phases.
+
+The [collector](../../scripts/measure-returned-buffers.py) implements the fixed
+C-only pilot and both sessions, with separate compile/RSS runs and a reader that
+reconstructs every result from raw commands. It requires an immutable
+`roadmap/returned-buffer-time-…` tag matching its exact source. It has not collected
+an experiment. Native correctness and storage checks must pass first; timing
+reader controls still need CI verification.
+
+Whole-process elapsed time starts before launching the child and ends after
+waiting for its output; it includes launch/wait overhead. The three internal
+phases use the native monotonic clock. Recorded binary section sizes and unwind
+tables are available for review, not asserted maximum stack-use bounds.
 
 ## Native storage check before timing
 
@@ -122,9 +133,10 @@ wrapper replaces Swift's Array.
 Use the previously verified heaptrack/unwinder setup and its independent
 allocation/free controls. Retain raw allocation stacks, traces, commands and
 source/binary hashes for all 60 profiles, including failures. Attribute factory
-stacks to `returned_buffer_make`, `returned_buffer::make`, or `bufferMake`:
+stacks to `returned_buffer_make`, Rust's native v0 symbol for
+`returned_buffer::make`, or Swift's `bufferMake`:
 
-- Ordinary release must leave zero factory-attributed native bytes at exit.
+- Ordinary release must leave zero array-storage bytes at exit.
 - Omitting either owner must retain storage, with the same factory allocation
   count. Nonempty cases must retain at least all 65,536 arrays' element bytes.
 - Empty cases can allocate nothing. If they allocate native storage, omitting
@@ -132,6 +144,17 @@ stacks to `returned_buffer_make`, `returned_buffer::make`, or `bufferMake`:
   qualify a nonempty case.
 - Report attributed bytes at the **process heap peak**, not as an independently
   measured factory maximum. These profiles are neither timing nor ARC counts.
+
+Retain the entire factory subtree and show array storage and runtime metadata
+separately. The first run exposed two observer errors: Rust names were not
+demangled, and Swift's generic type initialization was counted as leaked arrays.
+The corrected reader recognizes the pinned Rust compiler's actual factory symbol.
+For Swift it identifies the concrete-type initialization subtree separately from
+the contiguous-array allocation path; an unfamiliar factory path fails for review.
+Ordinary and omitted-release cases must have equal metadata allocation and exit
+byte counts. Metadata is reported, not subtracted from whole-process totals.
+[The original failures and stacks](returned-buffer-phases-2026-11-09/README.md#first-native-allocation-run)
+remain available. The corrected observation still needs native verification.
 
 fwp's managed arrays live in its reserved heap. Its runtime unmaps that reservation
 at shutdown, so native allocation leaks at process exit cannot prove timely

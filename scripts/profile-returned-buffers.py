@@ -14,7 +14,7 @@ import traceback
 from process_wait import run_capture
 from returned_buffer_build import build
 from returned_buffer_phases import decode_output
-from returned_buffer_profiles import FACTORIES, INPUTS, LANGUAGES, check_release, omit_release
+from returned_buffer_profiles import INPUTS, LANGUAGES, allocation_kind, check_release, omit_release
 from returned_buffer_source import replace_once
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -24,13 +24,19 @@ SPEC.loader.exec_module(PROFILES)
 
 
 def factory_costs(directory, language):
-    return {cost: sum(value for stack, value in PROFILES.stacks((directory / (cost + '.stacks')).read_text())
-                      if FACTORIES[language] in stack) for cost in PROFILES.COSTS}
+    result = {kind: {cost: 0 for cost in PROFILES.COSTS} for kind in ('storage', 'metadata', 'total')}
+    for cost in PROFILES.COSTS:
+        for stack, value in PROFILES.stacks((directory / (cost + '.stacks')).read_text()):
+            kind = allocation_kind(stack, language)
+            if kind != 'outside':
+                result[kind][cost] += value
+                result['total'][cost] += value
+    return result
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    for name in ('source', 'arch', 'cc', 'rustc', 'swiftc', 'c-arch', 'rust-cpu', 'target',
+    for name in ('source', 'arch', 'cc', 'ar', 'rustc', 'swiftc', 'c-arch', 'rust-cpu', 'target',
                  'heaptrack', 'heaptrack-print', 'strace'):
         parser.add_argument('--' + name, required=True)
     parser.add_argument('--unwind-library-directory', type=Path, required=True)
@@ -81,7 +87,7 @@ def main():
                   cpu=run(['lscpu'], (0, None, ''), env)['stdout'],
                   settings={key: str(value) for key, value in vars(args).items()},
                   versions={name: run([getattr(args, name), '--version'], (0, None, ''), env)['stdout']
-                            for name in ('cc', 'rustc', 'swiftc', 'heaptrack', 'heaptrack_print')},
+                            for name in ('cc', 'ar', 'rustc', 'swiftc', 'heaptrack', 'heaptrack_print')},
                   cases={}, failures=[],
                   scope='Native allocator traffic and release, not timing, ARC counts or fwp managed storage')
 
@@ -161,7 +167,11 @@ def main():
                     assert len(omitted) == 4
                     for before, after in zip(ordinary, omitted):
                         assert (before['length'], before['sample']) == (after['length'], after['sample'])
-                        check_release(before['factory'], after['factory'], before['length'], 4096, 16)
+                        check_release(before['factory']['storage'], after['factory']['storage'], before['length'], 4096, 16)
+                        # Keep one-time native metadata visible and require the
+                        # same work in ordinary and omitted-release controls.
+                        for cost in ('allocations', 'leaked'):
+                            assert before['factory']['metadata'][cost] == after['factory']['metadata'][cost]
             except Exception as error:
                 report['failures'].append(dict(group=f'{language}-{shared} release evidence', error=str(error),
                                                traceback=traceback.format_exc()))

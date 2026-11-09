@@ -1,10 +1,24 @@
 """Reject missing release observations without assuming empty arrays allocate."""
 import unittest
 
-from returned_buffer_profiles import check_release
+from returned_buffer_profiles import allocation_kind, check_release
 
 
 class ReleaseEvidence(unittest.TestCase):
+    def test_native_names_and_type_metadata_remain_distinct(self):
+        rust = 'main;_RNvCsdbtMNeSi43d_15returned_buffer4make (factory.rs);allocate (alloc.rs);'
+        self.assertEqual(allocation_kind(rust, 'rs'), 'storage')
+        self.assertEqual(allocation_kind(rust.replace('4make', '4scan'), 'rs'), 'outside')
+        self.assertEqual(allocation_kind('main;returned_buffer_make (factory.c);malloc;', 'c'), 'storage')
+        prefix = 'main;$s14ReturnedBuffer10bufferMakeySays5Int64VGADF (factory.swift);'
+        storage = prefix + '$ss22_ContiguousArrayBufferV20_consumeAndCreateNew;swift_allocObject;swift_slowAlloc;'
+        metadata = prefix + '__swift_instantiateConcreteTypeFromMangledName;swift_getTypeByMangledName;allocate;'
+        self.assertEqual(allocation_kind(storage, 'swift'), 'storage')
+        self.assertEqual(allocation_kind(metadata, 'swift'), 'metadata')
+        self.assertEqual(allocation_kind('main;swift_allocObject;swift_slowAlloc;', 'swift'), 'outside')
+        with self.assertRaises(AssertionError):
+            allocation_kind(prefix + 'unknown_allocation;', 'swift')
+
     def test_native_storage_and_actual_omission(self):
         ordinary = dict(allocations=65536, peak=524288, leaked=0)
         omitted = dict(allocations=65536, peak=8388608, leaked=8388608)

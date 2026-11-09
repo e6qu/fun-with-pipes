@@ -1,8 +1,8 @@
 # Current work
 
 **Next:** verify the returned-buffer phase callers and their real backward-clock
-controls on both Linux architectures, then add native storage observations and
-implement the [phase timing protocol](measurements/returned-buffer-phases.md).
+controls plus repaired native-storage attribution on both Linux architectures,
+then collect the [phase timing protocol](measurements/returned-buffer-phases.md).
 Keep this work in [PR #273](https://github.com/e6qu/fun-with-pipes/pull/273).
 Milestone 4 is not complete; do not merge it yet.
 
@@ -54,14 +54,35 @@ is retained with the returned-buffer report; it has no unexpected diagnostic.
 
 ## Current preparation, not yet verified
 
-Phase run `42596304052` and docs run `42596307425` test preparation `c0f187899`.
-Both native jobs and docs were queued at the last check; no failure is known.
+Phase run `42596304052` tests `c0f187899`: AMD passes; ARM passes the original
+48/528/14 correctness coverage and C/Swift/fwp phase groups, but four Rust links
+fail because the clock object follows system libraries. The shared builder now
+uses a native static library, preserving stack protection. The backward-clock
+control selects a replacement library too. [All first-run records](measurements/returned-buffer-phases-2026-11-09/README.md)
+are retained; the repair is not yet verified. Storage run
+`42597991401` tests `8caeaa60612b40b04900550e07c493178300d8d7`, retained as
+`roadmap/returned-buffer-profiles-2026-11-09`; both jobs fail. ARM Rust has the same
+link-order error. AMD Rust attribution misses native v0 symbols; both Swift
+observers conflate type-metadata caches with array storage. The repair recognizes
+Rust's actual symbols and reports Swift metadata separately, preserving the whole
+factory total and strict ordinary-array release checks. Both first-run reports,
+logs and selected raw stacks are retained in the same evidence directory. The
+bounded reader refused the large raw-command members; audit those on runners.
+The next profile suite now downloads and verifies each complete first archive,
+audits every command diagnostic, and reconstructs original and corrected
+attribution before running fresh profiles. This audit does not turn the original
+failed run into a pass.
+Docs runs `42596307425` and `42597991838` pass with complete
+logs reviewed; neither verifies the newly added timing-reader controls.
 
 The phase callers keep fixed populations alive, read every buffer, release first
 owners before reading surviving aliases, and use four/six clock readings per
 unique/shared batch. Reusable caller slots are allocated outside the phases.
 No timing comparison has run. The C-only batch pilot, two sessions, balanced
-copy controls and separate RSS runs remain to implement.
+copy controls and separate RSS runs are now implemented but unverified. Reader
+controls reject incomplete/reordered samples, short/noisy phases and pilots that
+stop early or continue after qualifying. Verify these in CI, retain a matching
+immutable timing source tag, and finish native storage checks before collection.
 
 The shared native builder now lives in `scripts/returned_buffer_build.py`; the
 owned-entry adapter moved to `scripts/returned_buffer_source.py`. Both the old

@@ -1,9 +1,29 @@
 """Actual release omissions and native allocation checks for returned buffers."""
+import re
+
 from returned_buffer_source import replace_once
 
 LANGUAGES = ('c', 'rs', 'swift')
-FACTORIES = {'c': 'returned_buffer_make', 'rs': 'returned_buffer::make', 'swift': 'bufferMake'}
 INPUTS = ((0, 4096, 16), (16, 4096, 16))
+
+
+def allocation_kind(stack, language):
+    """Classify recorded frames; unknown Swift factory paths must be reviewed."""
+    assert language in LANGUAGES
+    frames = [frame.split(' (', 1)[0] for frame in stack.split(';') if frame]
+    if language == 'c':
+        return 'storage' if 'returned_buffer_make' in frames else 'outside'
+    if language == 'rs':
+        # Pinned rustc emits v0 symbols; heaptrack retains them without demangling.
+        return 'storage' if any(re.fullmatch(r'_RNvC[A-Za-z0-9]+_15returned_buffer4make', frame)
+                                for frame in frames) else 'outside'
+    if not any(frame.startswith('$s14ReturnedBuffer10bufferMake') for frame in frames):
+        return 'outside'
+    if '__swift_instantiateConcreteTypeFromMangledName' in frames:
+        return 'metadata'
+    assert 'swift_allocObject' in frames and 'swift_slowAlloc' in frames, stack
+    assert any('_ContiguousArrayBuffer' in frame for frame in frames), stack
+    return 'storage'
 
 
 def omit_release(source, language, owner):

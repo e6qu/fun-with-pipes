@@ -1,0 +1,23 @@
+{
+  "source": "c0f18789918573061c00da66d8578bce5dd16884",
+  "run": 42596304052,
+  "artifacts": [
+    {
+      "host": "amd",
+      "job": 129089668588,
+      "id": 13665600265,
+      "bytes": 21235323,
+      "sha256": "44a9a5b69d3ab7294b6ad5f087acfe700885578f5d45fa905c2b721b98f8ba73",
+      "conclusion": "success"
+    },
+    {
+      "host": "arm",
+      "job": 129089668711,
+      "id": 13665136427,
+      "bytes": 12723922,
+      "sha256": "daef14b96fcacf08ced07fbd3dde98f56efb9121959fdb3fab6f209226294cf5",
+      "conclusion": "failure"
+    }
+  ],
+  "verification": "Reports and commands retrieved by HTTP range and verified against ZIP member CRC. Archive sizes and digests are GitHub metadata; full archives were not downloaded."
+}
