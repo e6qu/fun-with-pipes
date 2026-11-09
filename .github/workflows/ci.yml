@@ -223,7 +223,7 @@ jobs:
         if: always()
         shell: bash
         run: |
-          if [[ '${{ cancelled() }}' == true && ! -d ownership-evidence ]]; then
+          if [[ '${{ job.status }}' == cancelled && ! -d ownership-evidence ]]; then
             echo "No ownership evidence was created before cancellation."
             echo "attempted=false" >> "$GITHUB_OUTPUT"
           else
@@ -375,7 +375,7 @@ jobs:
         if: always()
         shell: bash
         run: |
-          if [[ '${{ cancelled() }}' == true && ! -d ownership-evidence ]]; then
+          if [[ '${{ job.status }}' == cancelled && ! -d ownership-evidence ]]; then
             echo "No ownership evidence was created before cancellation."
             echo "attempted=false" >> "$GITHUB_OUTPUT"
           else
@@ -628,7 +628,7 @@ jobs:
         if: always()
         shell: bash
         run: |
-          if [[ '${{ cancelled() }}' == true && ! -d ownership-evidence ]]; then
+          if [[ '${{ job.status }}' == cancelled && ! -d ownership-evidence ]]; then
             echo "No ownership evidence was created before cancellation."
             echo "attempted=false" >> "$GITHUB_OUTPUT"
           else

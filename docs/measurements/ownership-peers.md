@@ -52,7 +52,9 @@ to match C/Rust's diagnostic exit code.
 
 ### Returned-buffer preparation
 
-The new `returned-buffer-checks` suite is under native verification. It builds
+The new `returned-buffer-checks` suite is under native verification.
+[The first run and repair](returned-buffer-checks-2026-11-09/README.md) retain the
+Swift borrowed-array compile errors; no four-language native pass is claimed yet. It builds
 factory and caller separately without LTO at C/Rust O1/O2 and Swift Onone/O.
 fwp uses the current compiler's O2-generated C, compiled by the same GCC as C.
 The factory returns integers `0` through `length - 1`; the caller sums them.
@@ -174,12 +176,13 @@ subsequent target creations. They are not timing peers yet, do not force address
 reuse, and do not measure native allocation or ARC counts. C failure controls
 omit active release, expiration or metadata release and must fail. [Both native Linux architectures pass](weak-peer-checks-2026-11-09/README.md).
 
-The next focused check adds callback errors: release the outside owner inside a
+The [callback-error follow-up](weak-callback-errors-2026-11-09/README.md) now passes
+on both architectures: release the outside owner inside a
 callback, propagate an error, then require target destruction and failed later
 lookup. C returns an error with explicit cleanup; Rust propagates `Result` with
 `?`; Swift throws through `withExtendedLifetime`. The C variant omitting cleanup
 on that actual error path must fail. This tests ordinary callback errors, not
-Rust panics or Swift fatal traps. It is under verification and does not establish
+Rust panics or Swift fatal traps. It does not establish
 queued-service cleanup or new timing results.
 
 Every peer must preserve an acquired owner throughout an active callback. Cover

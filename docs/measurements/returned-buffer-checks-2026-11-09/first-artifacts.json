@@ -1,0 +1,22 @@
+{
+  "source": "348cc12f58a10559b13aefa96f8885d890cb445b",
+  "run": 42586120264,
+  "artifacts": [
+    {
+      "architecture": "arm",
+      "artifact": 13660536535,
+      "job": 129056265552,
+      "bytes": 8141686,
+      "publishedSha256": "a7a3496417bca937781115784ff36f125ec4b680af63590d004f3aab7ef903b3",
+      "localVerification": "Selected command records fetched with HTTP byte ranges and ZIP CRC; full archive not downloaded"
+    },
+    {
+      "architecture": "amd",
+      "artifact": 13659794208,
+      "job": 129056265355,
+      "bytes": 9717610,
+      "publishedSha256": "abe9e6c6668c7d23c680634eba1cff0c51755edda92fd007e783f8dedd80c94c",
+      "localVerification": "Selected command records fetched with HTTP byte ranges and ZIP CRC; full archive not downloaded"
+    }
+  ]
+}

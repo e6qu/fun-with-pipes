@@ -118,16 +118,24 @@ by packaging/upload errors because no evidence directory existed yet. This is
 not a production pass. The review repair skips that exact early-cancellation
 case while retaining partial evidence and ordinary missing-evidence failures;
 controls execute all three actual workflow bodies with present/absent/invalid
-inputs, both cancelled and ordinary. The repair is not verified yet.
+inputs and successful/failed/cancelled statuses. Its first version (`264da8fa3`)
+used the unsupported `cancelled()` function in a `run` expression; GitHub rejected
+workflow `42589084768` before jobs ran. The current repair uses `job.status`,
+which is permitted there. New docs verification is required; this is not a pass.
 
 The review branch
 adds callback-error cleanup in C/Rust/Swift and a weak-only runner suite at
-`9a7f1baaf`: focused run `42584848642` passes ARM64 (`129052102729`); AMD64
-(`129052102623`) is running. Docs `42584852665` is running. Review the complete
-logs/raw records before claiming both architectures verified.
+`9a7f1baaf`: focused run `42584848642` and docs `42584852665` pass.
+[Both complete archives and logs are reviewed](measurements/weak-callback-errors-2026-11-09/README.md):
+six ordinary and eight actual fault builds per native host, exact error statuses,
+matching archive digests. No native allocation or ARC-operation count is claimed.
 Review head `348cc12f58a10559b13aefa96f8885d890cb445b` adds four-language returned-buffer factories, unique/shared
 owners, raw/optimized sum checks and actual wrong-scan/omitted-release controls.
-Focused run `42586120264` and docs `42586123724` are queued. It has no timing result.
+Docs `42586123724` passes; focused run `42586120264` fails on both hosts because
+Swift iteration/alias return consumed explicitly borrowed arrays. The repair
+uses borrowed indexed access and explicit `copy`, and collects all independent
+build-group failures before failing the run. [Both failed records are retained](measurements/returned-buffer-checks-2026-11-09/README.md).
+The original run did not reach native fwp. There is no timing result.
 Only 15 GiB is free locally, below the required 64 GiB reserve; keep checks on
 runners and preserve failed observations. The checkout's target directory is empty;
 the three inspected user caches total about 1.4 GiB, far below the missing reserve.
@@ -137,9 +145,8 @@ RSS runs. Implement and verify those boundaries before freezing its source tag
 and collecting timing; no samples have been collected under this protocol.
 
 Previous PR head `7645384bb336acc728deebf24eae96280a45163f`: production `42578853160`,
-docs `42578853071` (passes), focused peers `42578815959` (both pass). Six production
-jobs pass: both ownership macOS, regular ARM64 macOS, both Windows and benchmarks.
-The other three are running. The six completed main logs in `/tmp/fwp-pr273-129032*.log`
+docs `42578853071` (passes), focused peers `42578815959` (both pass). All nine
+production jobs now pass. The first six completed main logs in `/tmp/fwp-pr273-129032*.log`
 show only OpenSSL already-installed notices and named scheduler panic controls;
 complete per-target/archive audit still follows the finished run. Review every failed/completed
 job before repairs. The combined update requires new final-head gates; previous

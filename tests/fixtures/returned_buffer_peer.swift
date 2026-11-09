@@ -11,7 +11,8 @@ public func bufferMake(_ input: Int64) -> [Int64] {
 
 public func bufferScan(_ values: borrowing [Int64]) -> Int64 {
     var sum: Int64 = 0
-    for value in values {
+    for index in values.indices {
+        let value = values[index]
         let (next, overflow) = sum.addingReportingOverflow(value)
         if overflow {
             let bytes = Array("integer overflow\n".utf8)
@@ -25,7 +26,7 @@ public func bufferScan(_ values: borrowing [Int64]) -> Int64 {
     return sum
 }
 
-public func bufferAlias(_ values: borrowing [Int64]) -> [Int64] { values }
+public func bufferAlias(_ values: borrowing [Int64]) -> [Int64] { copy values }
 
 public func bufferRelease(_ values: consuming [Int64]) {
     withExtendedLifetime(values) {}

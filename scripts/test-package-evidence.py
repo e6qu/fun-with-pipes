@@ -38,9 +38,9 @@ class CancellationPackaging(unittest.TestCase):
             script = script.replace('${{ runner.os }}', 'Linux').replace('${{ runner.arch }}', 'ARM64')
             script = script.replace('${{ github.event.pull_request.head.sha || github.sha }}', revision)
             script = script.replace('scripts/package-evidence.py', shlex.quote(str(ROOT / 'scripts/package-evidence.py')))
-            for cancelled in (False, True):
+            for status in ('success', 'failure', 'cancelled'):
                 for evidence in ('absent', 'present', 'invalid'):
-                    with self.subTest(step=index, cancelled=cancelled, evidence=evidence), tempfile.TemporaryDirectory() as directory:
+                    with self.subTest(step=index, status=status, evidence=evidence), tempfile.TemporaryDirectory() as directory:
                         base = Path(directory)
                         output = base / 'outputs'
                         if evidence != 'absent':
@@ -52,10 +52,10 @@ class CancellationPackaging(unittest.TestCase):
                                 # Preserve the real packager's rejection of unsafe input.
                                 (folder / 'bad-link').symlink_to(base / 'missing')
                         result = subprocess.run(['bash', '-e', '-o', 'pipefail', '-c',
-                            script.replace('${{ cancelled() }}', str(cancelled).lower())],
+                            script.replace('${{ job.status }}', status)],
                             cwd=base, env=dict(os.environ, GIT_DIR=git_dir, GITHUB_OUTPUT=str(output)),
                             capture_output=True, text=True, timeout=30)
-                        skipped = cancelled and evidence == 'absent'
+                        skipped = status == 'cancelled' and evidence == 'absent'
                         self.assertEqual(output.read_text(), f'attempted={str(not skipped).lower()}\n')
                         self.assertEqual(result.returncode == 0, skipped or evidence == 'present', result.stderr)
                         archives = list(base.glob('ownership-evidence-*.zip'))

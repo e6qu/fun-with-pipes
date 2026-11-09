@@ -1,0 +1,20 @@
+{
+  "source": "9a7f1baafe49667bd21fdc9e6070e0252ef8a2dd",
+  "run": 42584848642,
+  "artifacts": [
+    {
+      "architecture": "arm",
+      "artifact": 13660510753,
+      "job": 129052102729,
+      "bytes": 2024909,
+      "sha256": "ca06c67fbb38a8943dfb002de79bb877ee2a0cfba1ca20b2136a0a059deed0b9"
+    },
+    {
+      "architecture": "amd",
+      "artifact": 13660162524,
+      "job": 129052102623,
+      "bytes": 2414476,
+      "sha256": "f87137be1d81eba692ca5876452e49c4124874ccc51d9b8fdb270a9d460e9df0"
+    }
+  ]
+}

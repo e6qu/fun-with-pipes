@@ -9,6 +9,7 @@ from pathlib import Path
 import platform
 import shutil
 import subprocess
+import traceback
 
 from process_wait import run_capture
 
@@ -59,7 +60,12 @@ def main():
                   settings={name: str(value) for name, value in vars(args).items()},
                   scope='Returned-buffer correctness; no timing or native allocation/ARC count claims',
                   compilerSha256=hashlib.sha256(args.compiler.read_bytes()).hexdigest(),
-                  versions={}, builds=[], checks=[], interpreter=[])
+                  versions={}, builds=[], checks=[], interpreter=[], failures=[])
+
+    def failed(group, error):
+        report['failures'].append(dict(group=group, type=type(error).__name__,
+                                       message=str(error), traceback=traceback.format_exc()))
+        print(f'{group} failed: {error}', flush=True)
 
     def run(command, expected, environment):
         command = list(map(str, command))
@@ -79,15 +85,22 @@ def main():
         report['versions'][name] = result.stdout
     fwp_source = fixtures / 'returned_buffer_peer.fwp'
     original = folder / 'original.c'
-    run([args.compiler.resolve(), 'build', '--fn', 'buffer-functions', '--memory', 'dynamic', '--emit-c', '-O2',
-         fwp_source, '-o', original], (0, '', ''), env)
-    emitted = SOURCE.boundary(original.read_text())
+    emitted = None
+    try:
+        run([args.compiler.resolve(), 'build', '--fn', 'buffer-functions', '--memory', 'dynamic', '--emit-c', '-O2',
+             fwp_source, '-o', original], (0, '', ''), env)
+        emitted = SOURCE.boundary(original.read_text())
+    except Exception as error:
+        failed('fwp emission/owned boundary', error)
     for length in LENGTHS:
         size = max(length, 0)
         expected = f'{size * (size - 1) // 2}\n'
         for raw in (False, True):
-            report['interpreter'].append(run([args.compiler.resolve(), 'exec', '--interp',
-                fwp_source, 'buffer-check', length], (0, expected, ''), dict(env, FWP_NO_OPT='1') if raw else env))
+            try:
+                report['interpreter'].append(run([args.compiler.resolve(), 'exec', '--interp',
+                    fwp_source, 'buffer-check', length], (0, expected, ''), dict(env, FWP_NO_OPT='1') if raw else env))
+            except Exception as error:
+                failed(f'interpreter length={length} raw={raw}', error)
 
     def build(language, shared, level, variant):
         part = folder / f'{language}-{shared}-{level}-{variant}'
@@ -148,29 +161,39 @@ def main():
         return binary
 
     for language in ('c', 'rs', 'swift', 'fwp'):
+        if language == 'fwp' and emitted is None:
+            # The setup failure is retained and fails the final result. Native
+            # C/Rust/Swift checks are independent and still need their results.
+            continue
         for shared in (0, 1):
             for level in (1, 2):
-                binary = build(language, shared, level, 'ordinary')
-                for length in LENGTHS:
-                    size = max(length, 0)
-                    for repeats in (1, 3):
-                        expected = size * (size - 1) // 2 * (shared + 1) * repeats
-                        report['checks'].append(run([binary, length, repeats], (0, f'{expected}\n', ''), env))
-                for argv, diagnostic in INVALID:
-                    report['checks'].append(run([binary, *argv], (2, '', diagnostic + '\n'), env))
-                broken = build(language, shared, level, 'wrong-scan')
-                report['checks'].append(run([broken, 16, 1], (4, '', 'incorrect result\n'), env))
+                variants = ['ordinary', 'wrong-scan']
                 if language in ('c', 'fwp'):
-                    ordinary = build(language, shared, level, 'release-observed')
-                    for length in LENGTHS:
-                        size = max(length, 0)
-                        expected = size * (size - 1) // 2 * (shared + 1) * 3
-                        report['checks'].append(run([ordinary, length, 3], (0, f'{expected}\n', ''), env))
-                    omitted = build(language, shared, level, 'omitted-release')
-                    report['checks'].append(run([omitted, 16, 1], (79, '', 'buffer release check failed\n'), env))
+                    variants += ['release-observed', 'omitted-release']
+                for variant in variants:
+                    try:
+                        binary = build(language, shared, level, variant)
+                        if variant in ('ordinary', 'release-observed'):
+                            for length in LENGTHS:
+                                size = max(length, 0)
+                                for repeats in ((1, 3) if variant == 'ordinary' else (3,)):
+                                    expected = size * (size - 1) // 2 * (shared + 1) * repeats
+                                    report['checks'].append(run([binary, length, repeats], (0, f'{expected}\n', ''), env))
+                            if variant == 'ordinary':
+                                for argv, diagnostic in INVALID:
+                                    report['checks'].append(run([binary, *argv], (2, '', diagnostic + '\n'), env))
+                        elif variant == 'wrong-scan':
+                            report['checks'].append(run([binary, 16, 1], (4, '', 'incorrect result\n'), env))
+                        else:
+                            assert variant == 'omitted-release'
+                            report['checks'].append(run([binary, 16, 1], (79, '', 'buffer release check failed\n'), env))
+                    except Exception as error:
+                        failed(f'{language} shared={shared} O{level} {variant}', error)
     report['files'] = {str(path.relative_to(folder)): hashlib.sha256(path.read_bytes()).hexdigest()
                        for path in sorted(folder.rglob('*')) if path.is_file()}
     (folder / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
+    assert not report['failures'], f'{len(report["failures"])} failed groups; see report.json and commands.jsonl'
+    assert (len(report['builds']), len(report['checks']), len(report['interpreter'])) == (48, 528, 14)
     print(f'{len(report["builds"])} separate factory/caller builds, '
           f'{len(report["checks"])} native checks and {len(report["interpreter"])} interpreter checks pass')
 
