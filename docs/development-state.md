@@ -55,8 +55,11 @@ not accepted as a repair; original failures and source comparisons are retained.
 
 The report-reader follow-up now rejects booleans masquerading as integer counts,
 duplicate JSON fields, malformed objects, negative counters and inconsistent
-parser phase totals. Its new reader controls need the next docs audit. Native
-programs and frozen measurement inputs are unchanged.
+parser phase totals. Its new reader controls are queued in docs run `42627467268`, job `129194851404`,
+at `fa3125686`. Native programs and frozen measurement inputs are unchanged.
+A subsequent flag audit added the production driver's `-ffp-contract=off` to the
+weak harness build commands. No floating-point work is benchmarked, but final
+weak verification must use those explicit settings before any timing collection.
 
 ## Verified comparison evidence
 

@@ -98,7 +98,7 @@ def main():
     bad_source = folder / 'backward.c'
     bad_source.write_text('#include <stdint.h>\nuint64_t callable_phase_clock(void) {\n'
                           'static uint64_t value = UINT64_MAX; return value--;\n}\n')
-    flags = [args.cc, '-std=c11', '-O2', '-fno-lto', '-march=' + args.c_arch, '-Wall', '-Wextra', '-Werror']
+    flags = [args.cc, '-std=c11', '-O2', '-ffp-contract=off', '-fno-lto', '-march=' + args.c_arch, '-Wall', '-Wextra', '-Werror']
     run([*flags, '-c', fixtures / 'callable_phase_clock.c', '-o', clock], (0, '', ''), environment)
     run([*flags, '-c', bad_source, '-o', backward], (0, '', ''), environment)
     source = fixtures / 'weak_operation_peer.fwp'

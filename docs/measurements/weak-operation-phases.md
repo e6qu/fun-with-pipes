@@ -52,7 +52,9 @@ question. Source code alone does not establish its optimized cost.
 [Native operations](../../tests/fixtures/weak_operation_peer.fwp),
 [the entry adapter](../../scripts/weak_operation_source.py) and
 [the checker](../../scripts/check-weak-operation-phases.py) prepare separately
-compiled factories and callers without LTO. Native C/Rust use O1/O2; Swift uses
+compiled factories and callers without LTO. C uses the production
+`-std=gnu11 -ffp-contract=off` settings with an explicit architecture. Native
+C/Rust use O1/O2; Swift uses
 Onone/O. fwp emits O2 C, then uses the same native GCC levels as C. Every binary's
 ELF architecture and hash are retained.
 

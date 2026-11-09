@@ -29,7 +29,7 @@ def build(args, folder, fixtures, emitted, run, env, language, level, variant, c
             source = once(source, '        for (int64_t i = 0; i < population; i++) reference_release_weak(weak[i]);', '')
         caller = part / 'caller.c'
         caller.write_text(source)
-        flags = ['-std=gnu11', '-O' + str(level), '-fno-lto', '-march=' + args.c_arch, '-fstack-usage',
+        flags = ['-std=gnu11', '-O' + str(level), '-ffp-contract=off', '-fno-lto', '-march=' + args.c_arch, '-fstack-usage',
                  '-I', fixtures, '-DREFERENCE_FWP=' + str(int(language == 'fwp')),
                  '-DREFERENCE_DIAGNOSTIC=' + str(int(diagnostic))]
         warnings = ['-w'] if language == 'fwp' else ['-Wall', '-Wextra', '-Werror']
