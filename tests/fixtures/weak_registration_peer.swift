@@ -4,6 +4,7 @@ import Glibc
 final class Counts {
     var calls = 0
     var destroyed = 0
+    var disposed = 0
 }
 
 final class Target {
@@ -77,7 +78,8 @@ func run() {
     } catch {
         preconditionFailure("expired callback was entered")
     }
-    print("calls=2 destroyed=66 expired=1 cancelled=1 error=1")
+    queuedChecks()
+    print("calls=2 destroyed=66 expired=1 cancelled=1 error=1 queue=1")
 }
 
 enum CallbackError: Error { case failed }
@@ -95,6 +97,64 @@ func dispatchError(_ registration: inout Registration, _ outside: inout Target?,
     return try withExtendedLifetime(acquired) {
         try callbackError(acquired, &outside, counts)
         return true
+    }
+}
+
+final class Payload {
+    let value = 11
+    let counts: Counts
+    init(_ counts: Counts) { self.counts = counts }
+    deinit { counts.disposed += 1 }
+}
+
+struct Pending {
+    weak var target: Target?
+    let payload: Payload
+}
+
+func queuedDispatch(_ entry: consuming Pending, _ outside: inout Target?, _ counts: Counts) throws {
+    guard let held = entry.target else { return }
+    try withExtendedLifetime(held) {
+        counts.calls += 1
+        precondition(held.identity == 17 && entry.payload.value == 11)
+        outside = nil
+        precondition(counts.destroyed == 0 && held.identity == 17)
+        throw CallbackError.failed
+    }
+}
+
+func drainQueue(_ queue: inout [Pending?], _ outside: inout Target?, _ counts: Counts) throws {
+    // Callback failure discards remaining payloads and weak registrations.
+    defer { queue.removeAll() }
+    for index in queue.indices {
+        guard let entry = queue[index] else { continue }
+        queue[index] = nil
+        try queuedDispatch(consume entry, &outside, counts)
+    }
+}
+
+func queuedChecks() {
+    for cancelled in [true, false] {
+        let counts = Counts()
+        var owner: Target? = Target(17, counts)
+        var queue: [Pending?] = [Pending(target: owner, payload: Payload(counts)),
+                                 Pending(target: owner, payload: Payload(counts))]
+        if cancelled {
+            queue[0] = nil
+            precondition(counts.disposed == 1 && counts.destroyed == 0)
+            owner = nil
+            precondition(counts.destroyed == 1)
+        }
+        do {
+            try drainQueue(&queue, &owner, counts)
+            precondition(cancelled && counts.calls == 0)
+        } catch CallbackError.failed {
+            precondition(!cancelled && counts.calls == 1)
+        } catch {
+            preconditionFailure("unexpected queued callback error")
+        }
+        precondition(queue.isEmpty && owner == nil)
+        precondition(counts.destroyed == 1 && counts.disposed == 2)
     }
 }
 

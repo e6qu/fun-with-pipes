@@ -7,11 +7,12 @@ import os
 from pathlib import Path
 import platform
 import subprocess
+import traceback
 
 from process_wait import run_capture
 
 ROOT = Path(__file__).resolve().parent.parent
-EXPECTED = 'calls=2 destroyed=66 expired=1 cancelled=1 error=1\n'
+EXPECTED = 'calls=2 destroyed=66 expired=1 cancelled=1 error=1 queue=1\n'
 
 
 def replace_once(source, before, after):
@@ -50,7 +51,7 @@ def main():
         return row
 
     report = dict(source=args.source, architecture=args.arch,
-                  host=platform.uname()._asdict(), sourceHashes={}, checks=[],
+                  host=platform.uname()._asdict(), sourceHashes={}, checks=[], failures=[],
                   settings={name: str(value) for name, value in vars(args).items()},
                   scope='Serial callback lifetime correctness, not timing, allocation or ARC counts')
     report['versions'] = {}
@@ -66,6 +67,12 @@ def main():
             variants.update({
                 'omitted-active-release': replace_once(source, '    release_owner(&active);', ''),
                 'omitted-error-release': replace_once(source, '    release_owner(&acquired);', ''),
+                'omitted-queued-owner-release': replace_once(source, '    release_owner(&held);', ''),
+                'omitted-queued-weak-release': replace_once(source, '    release_weak(&entry->target);', ''),
+                'omitted-queued-payload-release': replace_once(source,
+                    '    payload->counts->disposed++;\n    free(payload);\n    *slot = NULL;', '    (void)payload;'),
+                'omitted-pending-error-cleanup': replace_once(source,
+                    '                if (queue[remaining].target) dispose_pending(&queue[remaining]);', ''),
                 'omitted-expiration': replace_once(source, '        owner->target = NULL;', ''),
                 'omitted-metadata-release': replace_once(source,
                     '        control->counts->metadata--;\n        free(control);', ''),
@@ -75,32 +82,40 @@ def main():
             path.write_text(code)
             for level in (1, 2):
                 binary = folder / (language + '-' + variant + '-' + str(level))
-                if language == 'c':
-                    command = [args.cc, '-std=c11', '-O' + str(level), '-fno-lto',
-                               '-march=' + args.c_arch, '-Wall', '-Wextra', '-Werror', path, '-o', binary]
-                elif language == 'rs':
-                    command = [args.rustc, '--edition=2021', '-C', 'opt-level=' + str(level),
-                               '-C', 'overflow-checks=yes', '-C', 'lto=off', '-C', 'panic=unwind',
-                               '-C', 'target-cpu=' + args.rust_cpu, '--target', args.target,
-                               '-D', 'warnings', path, '-o', binary]
-                else:
-                    command = [args.swiftc, '-swift-version', '6',
-                               *(['-Onone'] if level == 1 else ['-O', '-whole-module-optimization']),
-                               '-warnings-as-errors', '-target', args.target, path, '-o', binary]
-                built = run(command)
-                assert (built['status'], built['stdout'], built['stderr']) == (0, '', ''), built
-                result = run([binary])
-                expected = (0, EXPECTED, '') if variant == 'ordinary' else (79, '', 'lifetime check failed\n')
-                assert (result['status'], result['stdout'], result['stderr']) == expected, result
-                report['checks'].append(dict(language=language, variant=variant, level=level,
-                                              binarySha256=hashlib.sha256(binary.read_bytes()).hexdigest(),
-                                              result=result))
-                if variant == 'ordinary':
-                    invalid = run([binary, 'unexpected'])
-                    assert (invalid['status'], invalid['stdout'], invalid['stderr']) == (
-                        2, '', 'expected no arguments\n'), invalid
+                try:
+                    if language == 'c':
+                        command = [args.cc, '-std=c11', '-O' + str(level), '-fno-lto',
+                                   '-march=' + args.c_arch, '-Wall', '-Wextra', '-Werror', path, '-o', binary]
+                    elif language == 'rs':
+                        command = [args.rustc, '--edition=2021', '-C', 'opt-level=' + str(level),
+                                   '-C', 'overflow-checks=yes', '-C', 'lto=off', '-C', 'panic=unwind',
+                                   '-C', 'target-cpu=' + args.rust_cpu, '--target', args.target,
+                                   '-D', 'warnings', path, '-o', binary]
+                    else:
+                        command = [args.swiftc, '-swift-version', '6',
+                                   *(['-Onone'] if level == 1 else ['-O', '-whole-module-optimization']),
+                                   '-warnings-as-errors', '-target', args.target, path, '-o', binary]
+                    built = run(command)
+                    assert (built['status'], built['stdout'], built['stderr']) == (0, '', ''), built
+                    result = run([binary])
+                    expected = (0, EXPECTED, '') if variant == 'ordinary' else (79, '', 'lifetime check failed\n')
+                    assert (result['status'], result['stdout'], result['stderr']) == expected, result
+                    report['checks'].append(dict(language=language, variant=variant, level=level,
+                                                  binarySha256=hashlib.sha256(binary.read_bytes()).hexdigest(),
+                                                  result=result))
+                    if variant == 'ordinary':
+                        invalid = run([binary, 'unexpected'])
+                        assert (invalid['status'], invalid['stdout'], invalid['stderr']) == (
+                            2, '', 'expected no arguments\n'), invalid
+                except Exception as error:
+                    report['failures'].append(dict(language=language, variant=variant, level=level,
+                                                   error=str(error), traceback=traceback.format_exc()))
+                    print(language, variant, level, error, flush=True)
+                (folder / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
     (folder / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
-    print('Six native peer builds and eight actual lifetime-fault builds pass their expected checks')
+    assert not report['failures'], report['failures']
+    assert len(report['checks']) == 22
+    print('Six native peer builds and sixteen actual lifetime-fault builds pass, including queued cancellation and error cleanup')
 
 
 if __name__ == '__main__':

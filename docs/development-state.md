@@ -1,9 +1,9 @@
 # Current work
 
-**Next:** publish the prepared returned-buffer timing workflow, retain its exact
-source as `roadmap/returned-buffer-time-2026-11-09`, then dispatch
-`numerics.yml` with `suite=returned-buffer-time` and that explicit
-`buffer_time_tag`. Review both native hosts and all raw observations; do not
+**Next:** monitor returned-buffer timing run `42602375928` at
+`b37b15ac2d636187b97ccd00192e50638bd788d0`, retained as
+`roadmap/returned-buffer-time-2026-11-09`. Docs run `42602380180` checks the same
+source. Review both native hosts and all raw observations; do not
 retry unchanged noisy timings. Native correctness/storage prerequisites now pass.
 Keep the work in [PR #273](https://github.com/e6qu/fun-with-pipes/pull/273).
 Milestone 4 is not complete; do not merge it yet.
@@ -17,13 +17,13 @@ worktrees' modified handoffs.
 
 ## Roadmap status
 
-| Step | Verified delivery | Remaining |
-|---|---|---|
-| 1 | #270 documentation refresh and fresh F64 stores | Original AMD timing acceptance. |
-| 2 | #271 captured maps and empty-owner transfer | Original noisy timing acceptance. |
-| 3 | #272 structured gradients and known callbacks; all delivery gates | Original AMD timing acceptance. |
-| 4 | Buffer correctness/phases/native storage, Swift scalar allocations, weak cancellation/error lifetimes, parser allocation/frame checks | Buffer timings and process memory; weak-operation/service costs and queued cleanup/reuse; parser memory boundaries. |
-| 5 | Existing tools and correctness tests | Three application paths, compiler phase/scaling costs and sustained load. |
+| Step | Status | Verified delivery | Remaining |
+|---|---|---|---|
+| 1 | In progress | #270 documentation refresh and fresh F64 stores | Original AMD timing acceptance. |
+| 2 | In progress | #271 captured maps and empty-owner transfer | Original noisy timing acceptance. |
+| 3 | In progress | #272 structured gradients and known callbacks; all delivery gates | Original AMD timing acceptance. |
+| 4 | In progress | Buffer correctness/phases/native storage, Swift scalar allocations, weak cancellation/error lifetimes, parser allocation/frame checks | Buffer timings and process memory; weak-operation/service costs and queued cleanup/reuse; parser memory boundaries. |
+| 5 | Pending | Existing tools and correctness tests | Three application paths, compiler phase/scaling costs and sustained load. |
 
 Original misses remain in their reports. Verified count reductions do not erase
 failed or inconclusive timing acceptance; do not repeat unchanged experiments.
@@ -66,12 +66,25 @@ ordinary array storage must still reach zero. All first failures remain in the
 [report](measurements/returned-buffer-phases-2026-11-09/README.md).
 
 The [timing protocol](measurements/returned-buffer-phases.md) and collector are
-implemented. No timing experiment has run. The new reusable workflow checks exact
+implemented. The first experiment is dispatched; no timing result is claimed.
+The new reusable workflow checks exact
 source/tag and phase correctness before its C-only pilot, then runs both sessions
 on the same host, with balanced identical-copy controls and separate RSS samples.
 It preserves compile time/RSS, sources, binaries, sections and unwind tables.
 fwp teardown unmaps its reservation; native exit profiles cannot establish timely
 managed-array release. Preserve managed live-byte/omission checks separately.
+
+While those jobs run, the next weak-registration preparation adds queued-message
+cancellation/expiration and callback-error cleanup in C/Rust/Swift. Four new C
+faults omit acquired ownership, queued weak metadata, payload release or cleanup
+of unprocessed messages. The checker now retains independent group failures.
+This work is unverified; run `weak-peer-checks` after publication. It measures no
+allocation/timing costs and does not establish forced address reuse.
+
+Docs `42602380180` at timing source `b37b15ac2` failed because the shortened
+handoff omitted its required milestone-status column. That column is restored
+without changing the checker. Reverify docs with the queued-cleanup batch;
+preserve the timing source and measurements rather than rerunning them.
 
 ## Production gates and incidental repair
 

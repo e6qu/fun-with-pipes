@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef struct { int calls, destroyed, metadata; } Counts;
+typedef struct { int calls, destroyed, metadata, disposed; } Counts;
 typedef struct { int identity; Counts *counts; } Target;
 typedef struct { unsigned strong, weak; Target *target; Counts *counts; } Weak;
 
@@ -95,10 +95,80 @@ static int dispatch_error(Weak *weak, Weak **outside, Counts *counts) {
     return result;
 }
 
+typedef struct { int value; Counts *counts; } Payload;
+typedef struct { Weak *target; Payload *payload; } Pending;
+
+static Pending enqueue(Weak *owner, Counts *counts) {
+    Payload *payload = malloc(sizeof(*payload));
+    require(payload != NULL);
+    *payload = (Payload){11, counts};
+    return (Pending){downgrade(owner), payload};
+}
+
+static void dispose_payload(Payload **slot) {
+    Payload *payload = *slot;
+    require(payload != NULL && payload->value == 11);
+    payload->counts->disposed++;
+    free(payload);
+    *slot = NULL;
+}
+
+static void dispose_pending(Pending *entry) {
+    require(entry->target != NULL && entry->payload != NULL);
+    release_weak(&entry->target);
+    dispose_payload(&entry->payload);
+}
+
+static int queued_dispatch(Pending *entry, Weak **outside, Counts *counts) {
+    Weak *held = upgrade(entry->target);
+    if (!held) return 0;
+    counts->calls++;
+    require(held->target->identity == 17 && entry->payload->value == 11);
+    release_owner(outside);
+    require(counts->destroyed == 0 && held->target->identity == 17);
+    release_owner(&held);
+    return -1;
+}
+
+static int drain_queue(Pending queue[2], Weak **outside, Counts *counts) {
+    for (size_t index = 0; index < 2; index++) {
+        if (!queue[index].target) continue; /* Slot removed by cancellation. */
+        int result = queued_dispatch(&queue[index], outside, counts);
+        dispose_pending(&queue[index]);
+        if (result == -1) {
+            for (size_t remaining = index + 1; remaining < 2; remaining++) {
+                if (queue[remaining].target) dispose_pending(&queue[remaining]);
+            }
+            return result;
+        }
+    }
+    return 0;
+}
+
+static void queued_checks(void) {
+    Counts counts = {0, 0, 0, 0};
+    Weak *owner = create(&counts, 17);
+    Pending queue[2] = {enqueue(owner, &counts), enqueue(owner, &counts)};
+    dispose_pending(&queue[0]); /* Cancel and release a queued payload before entry. */
+    require(counts.disposed == 1 && counts.destroyed == 0);
+    release_owner(&owner);
+    require(counts.destroyed == 1); /* The remaining queued weak link owns no target. */
+    require(drain_queue(queue, &owner, &counts) == 0);
+    require(counts.calls == 0 && counts.disposed == 2 && counts.metadata == 0);
+
+    counts = (Counts){0, 0, 0, 0};
+    owner = create(&counts, 17);
+    queue[0] = enqueue(owner, &counts);
+    queue[1] = enqueue(owner, &counts);
+    require(drain_queue(queue, &owner, &counts) == -1);
+    require(owner == NULL && counts.calls == 1 && counts.destroyed == 1);
+    require(counts.disposed == 2 && counts.metadata == 0);
+}
+
 int main(int argc, char **argv) {
     (void)argv;
     if (argc != 1) { fputs("expected no arguments\n", stderr); return 2; }
-    Counts counts = {0, 0, 0};
+    Counts counts = {0, 0, 0, 0};
     require(upgrade(NULL) == NULL);
     Weak *owner = create(&counts, 7);
     Weak *weak = downgrade(owner);
@@ -130,6 +200,7 @@ int main(int argc, char **argv) {
     require(counts.calls == 2);
     release_weak(&weak);
     require(counts.metadata == 0);
-    puts("calls=2 destroyed=66 expired=1 cancelled=1 error=1");
+    queued_checks();
+    puts("calls=2 destroyed=66 expired=1 cancelled=1 error=1 queue=1");
     return 0;
 }

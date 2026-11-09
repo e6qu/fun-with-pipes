@@ -186,6 +186,23 @@ on that actual error path must fail. This tests ordinary callback errors, not
 Rust panics or Swift fatal traps. It does not establish
 queued-service cleanup or new timing results.
 
+The next correctness batch adds a two-message queue. Each message owns its
+payload and holds a weak target link. It checks two paths:
+
+| Path | Required result |
+|---|---|
+| Cancel the first message; release the target before draining the second | Cancellation destroys the first payload. The target expires while the second message remains queued. Draining destroys the second payload without calling an expired target. |
+| First callback releases the outside target owner, then returns an error | The acquired target survives the callback. Returning the error releases it and both message payloads, including the unprocessed message. |
+
+C explicitly releases entries; Rust drops consumed entries and the remaining
+iterator on `Result` propagation; Swift consumes entries and clears the remaining
+queue with `defer`. C fault builds omit acquired-owner, weak-link, payload or
+remaining-queue cleanup. Each must return the lifetime-check diagnostic. The
+checker continues through independent build groups and retains every failure.
+This preparation is not yet verified. Payload representations differ (C/Swift
+heap objects, Rust inline values), so destructor counts here are correctness
+checks, not an allocation or callback-service performance comparison.
+
 Every peer must preserve an acquired owner throughout an active callback. Cover
 expiration, address reuse, reentry, queued cleanup, callback failure and cancellation
 before entry, during the callback and after completion. Closing an fwp channel is
