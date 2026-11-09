@@ -95,6 +95,13 @@ upgrade. Count and measure that result's storage separately from weak metadata
 and the retained target. Its presence in source is a candidate cost to investigate,
 not proof that every optimized caller performs a heap allocation.
 
+The new C/Rust/Swift correctness fixtures exercise cancellation before entry,
+cancellation inside an active callback, nested acquisition, expiration and 64
+subsequent target creations. They are not timing peers yet, do not force address
+reuse, and do not measure native allocation or ARC counts. C failure controls
+omit active release, expiration or metadata release and must fail. Verification
+is pending on both native Linux architectures.
+
 Every peer must preserve an acquired owner throughout an active callback. Cover
 expiration, address reuse, reentry, queued cleanup, callback failure and cancellation
 before entry, during the callback and after completion. Closing an fwp channel is

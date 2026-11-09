@@ -15,7 +15,7 @@ All four sessions pass correctness/storage audits; noisy timing controls remain
 inconclusive. [Known array callback results](structured-array-callbacks-2026-11-08/README.md)
 now verify fewer derivative-object allocations and 85–91% less large-case
 computation in both ARM64 sessions. AMD64 timing acceptance remains open because
-copy controls fail. Full platform delivery is pending.
+copy controls fail. [Full platform delivery passes](structured-callback-delivery-2026-11-09/README.md).
 [Frozen candidate contract](structured-autodiff.md#selected-change-known-array-callbacks).
 
 ## Latest delivery

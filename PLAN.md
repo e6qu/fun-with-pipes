@@ -55,39 +55,35 @@ Each milestone preserves earlier behavior and coverage. A smaller executable or
 fewer requested operations is evidence, but does not by itself finish a runtime
 performance milestone. Working-memory gains and runtime tradeoffs must be explicit.
 
-## Current work: structured autodiff
+## Current work: ownership comparisons
 
 #270 delivered the documentation refresh and fresh F64 stores. #271 extended
-array ownership to runtime sensor calibration and pixel adjustment. Both pass
-all delivery gates; [#271's receipt](docs/measurements/captured-map-delivery-2026-11-08/README.md)
-records the tested/merged tree. Their original noisy or unmet timing targets
-remain open. Do not repeat unchanged timings to obtain a pass or treat fewer
-allocations as proof of a timing target.
+array ownership to runtime sensor calibration and pixel adjustment. #272 added
+known array callback specialization and compared structured gradients across
+neighboring, independent and densely coupled objectives.
+[All #272 delivery gates pass](docs/measurements/structured-callback-delivery-2026-11-09/README.md).
+The original noisy or unmet timing targets for milestones 1–3 remain open; do not
+repeat unchanged measurements to obtain qualification.
 
-Milestone 3 now compares complete gradients for three functions:
+Milestone 4 now fills four concrete comparison gaps:
 
-- **Neighbors:** each term depends on two adjacent inputs. Local forward AD can
-  visit just the terms that affect a coordinate.
-- **Independent loss:** each term uses one input; existing `derivative` and
-  `array.map` already express this without another wrapper.
-- **Dense coupling:** every matrix row uses every input. Locality offers no
-  equivalent shortcut; retain general reverse and forward AD.
+1. **Buffers:** match optimization barriers in fwp/C/Rust/Swift; distinguish a
+   complete operation from a separately compiled factory returning live storage.
+   Measure construction, use and release for unique and shared arrays.
+2. **Returned functions:** attribute scalar Swift closure allocations, retaining
+   the separate construction/call/release measurements and prior timing misses.
+3. **Weak registrations:** verify cancellation, active-call ownership, expiration
+   and cleanup first; measure weak lookup and callback-service work separately.
+4. **Parser workspace:** complete allocator-internal transient peaks and
+   reserved/committed/RSS observations. Preserve the new C/Rust allocation-event
+   and native frame checks without treating them as whole-process memory.
 
-[The comparison contract](docs/measurements/structured-autodiff.md) defines the
-formulas, method limits, input/output boundaries, correctness and measurement
-requirements. The [four-session diagnosis](docs/measurements/structured-gradient-methods-2026-11-08/README.md)
-identifies indirect array callbacks and temporary derivative records as a
-shared cost in independent and neighboring objectives. PR #272 extends existing
-bounded callback specialization to `array.map` and `array.generate`; focused
-GCC/Clang safety checks and all four measurement audits pass.
-[Candidate results](docs/measurements/structured-array-callbacks-2026-11-08/README.md)
-meet allocation/cleanup limits and both ARM64 timing targets. AMD64 copy noise
-leaves combined timing acceptance open under the
-[frozen rule](docs/measurements/structured-autodiff.md#selected-change-known-array-callbacks).
-Finish the report, tutorials and final production/docs/audit gates in this PR.
-Keep the local-pair helper experimental; no new public operation is needed for
-independent losses. Preserve general `grad`, nested AD and F128. Then proceed to
-milestone 4 while retaining every unmet timing target explicitly.
+[The scope](docs/measurements/ownership-peers.md) defines matched work, representation
+differences and remaining controls. [First native checks](docs/measurements/ownership-peer-checks-2026-11-08/README.md)
+verify Swift buffer results and C/Rust parser storage on ARM64/AMD64; they establish
+no new peer timing result. Freeze each complete protocol before collecting timings.
+Keep the experimental local-pair helper and ordinary public gradient API unchanged
+unless representative evidence justifies a replacement.
 
 ## Earlier contracts
 

@@ -2768,6 +2768,13 @@ jobs:
           --languages c rs swift --swiftc swiftc
           --swift-target "${{ matrix.arch }}-unknown-linux-gnu"
           --output ownership-peer-checks
+      - name: Weak registration lifetime and cancellation controls
+        if: ${{ !cancelled() && inputs.suite == 'ownership-peer-checks' }}
+        run: >-
+          python3 scripts/check-weak-registration-peers.py --cc gcc --rustc rustc --swiftc swiftc
+          --source "$GITHUB_SHA" --arch "${{ matrix.arch }}"
+          --c-arch "${{ matrix.c_arch }}" --rust-cpu "${{ matrix.rust_cpu }}"
+          --target "${{ matrix.arch }}-unknown-linux-gnu" --output weak-peer-checks
       - name: Parser growth, cleanup and native frame evidence
         if: ${{ !cancelled() && inputs.suite == 'ownership-peer-checks' }}
         run: >-
@@ -2845,13 +2852,14 @@ jobs:
               --input "callable-phase-evidence-$session" --source "$GITHUB_SHA" --arch "${{ matrix.arch }}"
           done
       - name: Preserve all completed and failed observations
-        if: ${{ always() && hashFiles('parser-peer-checks/**', 'ownership-peer-checks/**', 'swift-setup/**', 'swift-peer-evidence/**', 'swift-arithmetic/**', 'callable-phase-evidence-*/**', 'swift-allocation-evidence/**') != '' }}
+        if: ${{ always() && hashFiles('weak-peer-checks/**', 'parser-peer-checks/**', 'ownership-peer-checks/**', 'swift-setup/**', 'swift-peer-evidence/**', 'swift-arithmetic/**', 'callable-phase-evidence-*/**', 'swift-allocation-evidence/**') != '' }}
         uses: actions/upload-artifact@v7
         with:
           name: ${{ inputs.suite }}-${{ matrix.arch }}-${{ matrix.session }}
           path: |
             ownership-peer-checks/
             parser-peer-checks/
+            weak-peer-checks/
             swift-setup/
             swift-peer-evidence/
             swift-allocation-evidence/
