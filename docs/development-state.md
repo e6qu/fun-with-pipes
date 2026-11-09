@@ -3,10 +3,15 @@
 **Next:** identify the exact optimized Swift queued-cleanup failure with
 line-numbered lifetime checks. First run `42603913802` fails only Swift `-O`
 on both architectures; C/Rust, Swift `-Onone` and all 16 C fault builds pass.
-Do not infer a compiler bug from the trap. Buffer timing run `42602375928`
+A follow-up preparation makes the outside owner live explicitly through weak
+lookup and cancellation. It ends that lifetime before invoking the callback,
+so only the acquired owner protects callback execution. This is unverified;
+retain the diagnostic run on the original operations. Do not infer a compiler
+bug from the trap. Buffer timing run `42602375928`
 at `b37b15ac2d636187b97ccd00192e50638bd788d0` passes both sessions and audits
 on both hosts; retain and interpret all results without unchanged reruns.
 Keep work in [PR #273](https://github.com/e6qu/fun-with-pipes/pull/273).
+Docs for the result tables are queued in `42606196247` at `2cb8e313d`.
 Milestone 4 is not complete; do not merge it yet.
 
 Worktree: `.worktrees/recording-capacity-gate`. Active preparation branch:

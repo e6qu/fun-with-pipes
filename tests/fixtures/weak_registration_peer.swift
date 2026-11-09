@@ -33,7 +33,8 @@ struct Registration {
 
 func dispatch(_ registration: inout Registration, _ outside: inout Target?, _ counts: Counts) -> Bool {
     if registration.cancelled { return false }
-    guard let active = registration.target else { return false }
+    // The outside owner must survive until the weak lookup acquires its owner.
+    guard let active = withExtendedLifetime(outside, { registration.target }) else { return false }
     // Keep the acquired owner through the entire callback, including reentry.
     return withExtendedLifetime(active) {
         counts.calls += 1
@@ -102,7 +103,7 @@ func callbackError(_ acquired: Target, _ outside: inout Target?, _ counts: Count
 }
 
 func dispatchError(_ registration: inout Registration, _ outside: inout Target?, _ counts: Counts) throws -> Bool {
-    guard let acquired = registration.target else { return false }
+    guard let acquired = withExtendedLifetime(outside, { registration.target }) else { return false }
     return try withExtendedLifetime(acquired) {
         try callbackError(acquired, &outside, counts)
         return true
@@ -122,7 +123,7 @@ struct Pending {
 }
 
 func queuedDispatch(_ entry: consuming Pending, _ outside: inout Target?, _ counts: Counts) throws {
-    guard let held = entry.target else { return }
+    guard let held = withExtendedLifetime(outside, { entry.target }) else { return }
     try withExtendedLifetime(held) {
         counts.calls += 1
         require(held.identity == 17 && entry.payload.value == 11, #line)
@@ -149,8 +150,10 @@ func queuedChecks() {
         var queue: [Pending?] = [Pending(target: owner, payload: Payload(counts)),
                                  Pending(target: owner, payload: Payload(counts))]
         if cancelled {
-            queue[0] = nil
-            require(counts.disposed == 1 && counts.destroyed == 0, #line)
+            withExtendedLifetime(owner) {
+                queue[0] = nil
+                require(counts.disposed == 1 && counts.destroyed == 0, #line)
+            }
             owner = nil
             require(counts.destroyed == 1, #line)
         }

@@ -37,3 +37,11 @@ One source-level concern is keeping the outside owner live until a weak lookup:
 Swift supplies [withExtendedLifetime](https://developer.apple.com/documentation/swift/withextendedlifetime(_:_:)-4mmpv)
 for explicit lifetime requirements. This is a hypothesis, not an established cause
 of the observed trap. No repaired result is claimed yet.
+
+The prepared follow-up explicitly extends the outside owner's lifetime through
+weak lookup, ending that extension before callback entry. The callback still
+relies on its acquired owner after clearing the outside reference. Cancellation
+also keeps the owner alive through the first payload-release checkpoint, then
+clears it before draining the expired message. This makes the intended boundaries
+explicit without keeping an extra outside owner alive throughout the callback.
+It is not yet a verified repair of the original failure.
