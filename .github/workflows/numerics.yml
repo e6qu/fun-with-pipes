@@ -2795,7 +2795,8 @@ jobs:
           set -euo pipefail
           mkdir -p swift-setup
           apt-get install -y heaptrack libunwind-dev strace make
-          curl --fail --location --output swift-setup/libunwind-1.8.3.tar.gz \
+          curl --fail --location --retry 3 --retry-delay 3 --retry-max-time 120 \
+            --connect-timeout 20 --max-time 60 --output swift-setup/libunwind-1.8.3.tar.gz \
             https://github.com/libunwind/libunwind/releases/download/v1.8.3/libunwind-1.8.3.tar.gz
           echo 'be30d910e67f58d82e753231f1357f326a1a088acf126b21ff77e60aab19b90b  swift-setup/libunwind-1.8.3.tar.gz' | sha256sum --check
           tar -xf swift-setup/libunwind-1.8.3.tar.gz -C swift-setup

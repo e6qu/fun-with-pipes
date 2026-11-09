@@ -58,14 +58,23 @@ selects fwp explicitly, builds the current compiler, prepares its emitted C with
 the same harness/barrier and checks 42 raw/optimized interpreter results. C/fwp
 CLI validation rejects impossible array sizes before calling the workload; this
 is a harness error check, not a claim about native allocator failure behavior.
-This four-language addition is queued in run `42579398196`, source `9850a0fda`,
-ARM64 job `129034306146` and AMD64 job `129034306496`. It is not verified yet.
+The four-language addition passes run `42579398196`, source `9850a0fda`,
+ARM64 job `129034306146` and AMD64 job `129034306496`. Full logs and raw
+records still need their final report review before integration into #273.
 
 The review branch also prepares a scalar Swift closure allocation profile with
 the existing separate factory/caller and unchanged 4,096 × 256 × 16 work.
 Two samples for each of two kinds, ordinary and actual omitted deinitialization,
-must demonstrate allocation attribution and release. The measurement protocol is
-in the scope document; there are no observations yet. Unit controls reject absent
+must demonstrate allocation attribution and release. Run `42580332788` at
+`96e2bf43a`: AMD64 job `129037264818` passes, with 1,048,576 factory allocations
+per case, 98,304 attributed bytes at the process heap peak and zero ordinary
+exit bytes. Omitted release leaves 25,165,824 bytes, exactly 24 per closure.
+Both kinds and both repetitions agree. The complete AMD archive (artifact
+`13656972283`) matches its GitHub SHA-256. ARM64 job `129037264981` failed
+before profiles started: libunwind download returned HTTP 504. Its complete log
+is `/tmp/fwp-scalar-closure-arm-first.log`; no ARM result is claimed. Added
+bounded transient retries for the same pinned URL/checksum. Rerun only that
+failed job at the original source, preserving the successful AMD observations. Unit controls reject absent
 attribution, undetected leaks and the mistaken use of a stack-attributed global
 peak as that stack's own peak. No ARC or speed claim follows from the profiles.
 The suite retains partial evidence even when an independent step fails.
@@ -77,10 +86,12 @@ failed timing controls. Keep one active PR and publish no draft PRs.
 
 ## Local checks and disk
 
-Free space has fallen to about 12 GiB on 2026-11-09. The previous cleanup restored
-105 GiB, but subsequent disk activity consumed it. No local tests/builds or large
-regeneration may run below the 64 GiB reserve; use GitHub runners. Small source/docs
-edits and report inspection continue. Do not bypass the guard or raise its limits.
+Free space recovered independently from 12 GiB to about 73 GiB on 2026-11-09.
+The unchanged guard now permits focused checks: closure record controls pass
+(two tests, 0.13 seconds elapsed), and roadmap links pass (400 Markdown link sets,
+106 preparation pairs/tags, five steps; 0.38 CPU seconds, 3.27 seconds elapsed).
+Full builds, suites and profiles remain on GitHub. Recheck free space before
+local work and never bypass the 64 GiB reserve or raise limits.
 
 Before the new weak-registration work, the guarded roadmap audit passed 398
 Markdown link sets, 106 preparation pairs/tags and five roadmap steps (0.42 CPU
