@@ -115,7 +115,12 @@ The SDK itself was not modified. Three reader tests pass. Source `afafdef5b`, ta
 builds and four raw/optimized interpreter executions. Docs `42655786989` /
 `129293786506` passes. A prepared `channel_queue_ownership` regression adds the
 physical allocation ledger, dynamic/static O1/O2 checks and actual omitted weak
-release; that extension has not yet run. Full Swift/fwp physical-release and
+release. Its first source `79c5c5318`, run `42657535238`, failed before execution
+on both hosts: the test incorrectly referenced the absent `serde_json` dependency.
+Both complete logs show the same three compile errors and no runtime result.
+The repair uses existing `fwp::json::Json`, validates integer fields and rejects
+duplicate keys; no dependency is added. Native verification is still pending.
+Full Swift/fwp physical-release and
 all-peer allocation observers, then frozen timing collection,
 remain required; these checks are not a service-throughput result.
 

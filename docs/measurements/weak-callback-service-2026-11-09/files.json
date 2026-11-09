@@ -33,5 +33,15 @@
     "bytes": 441958,
     "sha256": "2e4a0262ab7f5a3d496e922da83ffe570791477194ec9681a25d3fd1211a892f",
     "compressedSha256": "2c977d7787c208cebff140fcf90310790bd1c1ebdb68d962bb74bc9ffe71caf1"
+  },
+  "ownership-first-amd-job.log.gz": {
+    "bytes": 307616,
+    "sha256": "9683ae02e7980242ee9175fe11fc129ab02ca6012de01bf0907f6b323e9bef28",
+    "compressedSha256": "228720d60b12d0a33c3e1e24942a3b9e871912dc1cb7e3bf704bf9d9202fe300"
+  },
+  "ownership-first-arm-job.log.gz": {
+    "bytes": 307596,
+    "sha256": "4e4f8b29b2b3876d016f07ae7da924872441333ea49e7622b79bf4d795c39b39",
+    "compressedSha256": "2104b17793352418d3477f11abbc84273ef4f3a3d4b7bc98035bf6d37078849b"
   }
 }

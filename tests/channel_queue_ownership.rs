@@ -1,4 +1,6 @@
 //! Counted channels own queued elements and transfer them into owned receive results.
+use fwp::json::Json;
+use std::collections::BTreeMap;
 use std::process::Command;
 
 #[path = "support/ownership_ledger.rs"]
@@ -26,22 +28,47 @@ fn callback_service_releases_payloads_and_weak_registrations() {
                 .iter()
                 .map(|index| (*index..*index + 16).sum::<i64>())
                 .sum();
-            expected.push(serde_json::json!({
-                "population": population, "mode": mode, "calls": accepted.len(),
-                "cancelled": if mode == 1 { (population + 3) / 4 } else { 0 },
-                "expired": if mode == 2 { population } else { 0 },
-                "errors": i64::from(mode == 3), "sent": accepted.len(),
-                "received": accepted.len(), "sum": sum, "received_sum": sum,
-            }));
+            let count = accepted.len() as i64;
+            expected.push(BTreeMap::from([
+                ("population".to_owned(), population),
+                ("mode".to_owned(), mode),
+                ("calls".to_owned(), count),
+                (
+                    "cancelled".to_owned(),
+                    if mode == 1 { (population + 3) / 4 } else { 0 },
+                ),
+                ("expired".to_owned(), if mode == 2 { population } else { 0 }),
+                ("errors".to_owned(), i64::from(mode == 3)),
+                ("sent".to_owned(), count),
+                ("received".to_owned(), count),
+                ("sum".to_owned(), sum),
+                ("received_sum".to_owned(), sum),
+            ]));
         }
     }
     let check = |result: &std::process::Output| {
         assert!(result.status.success(), "{result:?}");
         assert!(result.stderr.is_empty(), "{result:?}");
-        let actual: Vec<serde_json::Value> = std::str::from_utf8(&result.stdout)
+        let actual: Vec<BTreeMap<String, i64>> = std::str::from_utf8(&result.stdout)
             .unwrap()
             .lines()
-            .map(|line| serde_json::from_str(line).unwrap())
+            .map(|line| {
+                let Json::Obj(fields) = Json::parse(line).unwrap() else {
+                    panic!("expected service result object: {line}");
+                };
+                let length = fields.len();
+                let fields: BTreeMap<_, _> = fields
+                    .into_iter()
+                    .map(|(name, value)| {
+                        let Json::Num(number) = value else {
+                            panic!("expected integer field: {line}");
+                        };
+                        (name, number.parse::<i64>().unwrap())
+                    })
+                    .collect();
+                assert_eq!(fields.len(), length, "duplicate service result field");
+                fields
+            })
             .collect();
         assert_eq!(actual, expected);
     };
