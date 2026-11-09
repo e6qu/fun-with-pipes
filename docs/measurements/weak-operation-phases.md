@@ -81,15 +81,11 @@ ARC-operation counts remain unmeasured. The separate
 modules and explicit lifetime prefixes to distinguish target release from
 backing-storage release. Both hosts pass that separate experiment.
 
-## Before timing
+## Timing collection
 
-This batch verifies the caller; it is not a timing collection. Freeze the final
-protocol and source only after these checks pass. The timing collector must keep
-ordinary builds, a retained C-only duration pilot, two same-host sessions,
-interleaved identical-binary copies, phase duration/noise qualification and every
-failed observation. Report complete-process time, compilation time/RSS, native
-images and frame evidence alongside phases. Do not subtract an estimated loop or
-runtime overhead, or rerun unchanged samples to seek a favorable ratio.
+This batch verifies the caller. [The timing protocol](weak-operation-time.md)
+now specifies the C-only pilot, two sessions, paired executable copies, per-phase
+qualification, RSS and compilation/image costs. Its collection has not run yet.
 
 Callback-service work is a separate program: owned queue payloads, cancellation,
 callback errors and cleanup belong in its measured work. The existing

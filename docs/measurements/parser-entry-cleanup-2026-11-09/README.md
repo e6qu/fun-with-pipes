@@ -47,7 +47,7 @@ A focused Apple Clang O2 diagnostic on the retained generated source confirms:
   until the caller releases its owner; final live storage returns to baseline.
 
 This isolates the source bug; it is **not** a rebuilt-compiler or Linux GCC pass.
-The repaired compiler still needs native verification.
+The subsequent rebuilt-compiler checks below now pass on both native Linux hosts.
 
 The existing native and WASI parser regressions now cover both direct calls and
 owning entries, surviving aliases, every observed allocation failure and parse
@@ -58,3 +58,44 @@ The focused native workflow also runs the parser test target and frozen primitiv
 inventory. The memory collector adds 48 real malformed-argument processes and a
 fifth evidence-corruption control. [The protocol](../parser-process-memory.md)
 retains unresolved allocator-internal peaks and committed-memory distinctions.
+
+## Rebuilt compiler: both Linux hosts pass
+
+Source `ee30d13b0e98542f6b58e1126c2fc7ed99f2ec61`, tag
+`roadmap/parser-process-memory-owned-entry-2026-11-09`, run `42645911091`:
+
+| Host | Job | Artifact |
+|---|---|---|
+| AMD64 | `129258996498` | `13688236081` |
+| ARM64 | `129258997285` | `13688885253` |
+
+Each host passes all six `parser_workspace` tests, the primitive inventory,
+36 ordinary RSS observations, 24 five-checkpoint sequences, 24 wrong-result
+controls, 48 malformed fwp arguments, eight interpreter checks and five evidence
+corruptions. C/Rust allocation/frame/argument controls remain passing. The runner
+reconstructs every source adapter, command result, mapping summary and image hash.
+The 173 retained commands include only the intended 48 status-90 argument failures,
+16 status-93 C/fwp wrong results and eight status-101 Rust wrong results.
+
+Docs `42645917282`, job `129259006921`, also passes. Complete logs show no
+unexpected compiler/program failures. Selected reports/commands have ZIP CRC
+checks and are retained with the full logs; large archives remain on GitHub.
+WASI and the other native production targets still require final-batch gates.
+
+For the 8,191-node tree, three ordinary processes report these peak RSS ranges:
+
+| Host | C | Rust | fwp |
+|---|---:|---:|---:|
+| ARM64 | 1,644 KiB | 2,132–2,144 KiB | 2,048–2,060 KiB |
+| AMD64 | 1,892 KiB | 2,420 KiB | 2,312–2,316 KiB |
+
+These include runtime, libraries, input and parser storage. They are not isolated
+per-node costs. Diagnostic snapshots are separate executions: fwp reserves about
+65 GiB of virtual address space, largely inaccessible, while observed resident
+memory stays around 2–3 MiB at tree completion. Releasing objects does not require
+the allocator to return cached pages immediately. Do not read the unchanged
+post-release resident snapshot as proof of live objects or a leak.
+
+The allocator-internal transient peak and a defensible per-process committed-byte
+observation remain unresolved. Endpoint mappings, ordinary RSS and successful
+object release do not answer those questions.

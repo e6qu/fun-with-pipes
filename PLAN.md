@@ -79,8 +79,8 @@ Milestone 4 now fills four concrete comparison gaps:
    [callback-error cleanup](docs/measurements/weak-callback-errors-2026-11-09/README.md) now pass in C/Rust/Swift.
    [Queued cleanup, actual reuse and native backing-storage release now pass](docs/measurements/weak-operation-verification-2026-11-09/README.md).
    Next measure weak operations and callback-service work separately.
-4. **Parser workspace:** verify the [entry ownership repair](docs/measurements/parser-entry-cleanup-2026-11-09/README.md)
-   exposed by the first RSS batch. Complete allocator-internal transient peaks and
+4. **Parser workspace:** the [entry ownership repair](docs/measurements/parser-entry-cleanup-2026-11-09/README.md)
+   and RSS/checkpoint observations now pass on both Linux hosts. Complete allocator-internal transient peaks and
    reserved/committed/RSS observations. Preserve the new C/Rust allocation-event
    and native frame checks without treating them as whole-process memory.
 

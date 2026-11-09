@@ -294,7 +294,11 @@ function values and external entries prevent ordinary borrowing selection. Every
 live caller must keep the relevant owner for a later use; another field's use
 is insufficient. Temporary aliases can forward that same borrow through bindings
 and matches. Generic entries still protect and consume their ordinary arguments
-when calling a specialized borrowing worker.
+when calling a specialized borrowing worker. An owning entry releases only the
+arguments its worker borrows; a consuming worker releases or transfers its own
+arguments. C generation uses the shared direct-call ownership contract for this
+decision, including region and numeric-array workers. Dropping both would free a
+caller's surviving alias ([regression and verification](measurements/parser-entry-cleanup-2026-11-09/README.md)).
 
 The [gradient-storage group](measurements/gradient-call-storage.md) adds a
 private direct entry for known `ad.scope` callbacks returning arrays. It keeps

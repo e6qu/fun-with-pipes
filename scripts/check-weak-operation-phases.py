@@ -12,24 +12,15 @@ import traceback
 
 from process_wait import run_capture
 from weak_operation_build import build
+from weak_operation_phases import PHASES, decode_output
 from weak_operation_source import boundary
 
 ROOT = Path(__file__).resolve().parent.parent
-PHASES = ('targetCreation', 'weakCreation', 'liveLookup', 'ownerRelease', 'expiredLookup', 'weakRelease')
 INVALID = (([], 'expected population lookups batches'), (['1', '1'], 'expected population lookups batches'),
            (['1junk', '1', '1'], 'invalid integer'), (['1', '-1', '1'], 'invalid integer'),
            (['1', '1', '9223372036854775808'], 'invalid integer'), (['1', ' 1', '1'], 'invalid integer'),
            (['0', '1', '1'], 'invalid experiment arguments'), (['2', '1', '1'], 'invalid experiment arguments'),
            (['1', '2', '1'], 'invalid experiment arguments'), (['1', '1', '2'], 'invalid experiment arguments'))
-
-
-def decode_output(text, population, lookups, batches):
-    row = json.loads(text)
-    assert isinstance(row, dict) and set(row) == {'live', 'expired', *PHASES}
-    assert all(type(value) is int and value >= 0 for value in row.values())
-    assert text == json.dumps(row, separators=(',', ':')) + '\n'
-    assert row['live'] == population * lookups * batches and row['expired'] == 0
-    return row
 
 
 def main():

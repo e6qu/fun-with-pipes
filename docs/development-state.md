@@ -1,9 +1,10 @@
 # Current work
 
-**Next:** verify the parser owning-entry repair on Linux ARM64/AMD64, audit every
-result, then implement weak-operation timings and callback-service costs. Keep
-this substantial batch in [PR #273](https://github.com/e6qu/fun-with-pipes/pull/273).
-Milestone 4 is incomplete; do not merge an interim green head.
+**Next:** freeze and run the prepared weak-operation timing comparison on Linux
+ARM64/AMD64, then complete callback-service costs and parser allocator-internal
+memory observations. Keep this substantial batch in
+[PR #273](https://github.com/e6qu/fun-with-pipes/pull/273). Milestone 4 is incomplete;
+do not merge an interim green head.
 
 Worktree: `.worktrees/recording-capacity-gate`. Preparation branch:
 `ownership-buffer-review`. PR branch: `ownership-peer-comparisons`, currently
@@ -18,13 +19,13 @@ Preserve unrelated root-worktree changes and modified inactive handoffs.
 | 1 | In progress | #270 docs and fresh F64 stores | Original AMD timing acceptance |
 | 2 | In progress | #271 captured maps and empty-owner transfer | Original noisy timing acceptance |
 | 3 | In progress | #272 structured gradients and known callbacks; all delivery gates | Original AMD timing acceptance |
-| 4 | In progress | Buffers: correctness, phases, native storage, timings/RSS; Swift closures; weak phases, queued cleanup, native storage and actual reuse | Parser entry repair and memory boundaries; weak-operation and service costs |
+| 4 | In progress | Buffers: correctness, phases, native storage, timings/RSS; Swift closures; weak phases, queued cleanup, native storage and actual reuse | Parser internal memory boundaries; weak-operation and service costs |
 | 5 | Pending | Existing tools and correctness tests | Three applications, compiler phase/scaling costs and sustained load |
 
 Keep original failed/noisy timing controls. Fewer operations or smaller images
 do not establish runtime acceptance. Do not rerun unchanged samples to qualify.
 
-## Current compiler repair
+## Verified compiler repair
 
 [The first parser-memory run](measurements/parser-entry-cleanup-2026-11-09/README.md)
 failed all 20 fwp observations per host. The consuming region worker released its
@@ -40,14 +41,19 @@ controls could mask cleanup failure and are not accepted as result evidence.
 
 The focused workflow adds `parser_workspace` and the frozen primitive inventory.
 It keeps all RSS/checkpoint and storage/frame checks, adds 48 invalid fwp arguments
-and requires five evidence corruptions to fail. The native repair run has not yet
-been dispatched. Full compiler/production validation remains on GitHub.
+and requires five evidence corruptions to fail. Repair source `ee30d13b0` is frozen as
+`roadmap/parser-process-memory-owned-entry-2026-11-09`: run `42645911091`,
+AMD64 job `129258996498`, ARM64 job `129258997285`, both pass. Docs
+`42645917282` / `129259006921` also passes. The six parser tests, full memory
+observations and all corruption controls pass on both hosts; other production
+platforms still need the final matrix. Full compiler/production validation remains on GitHub.
 
 ## Reviewed CI
 
 | Batch | Frozen source | Run / AMD64 job / ARM64 job | Status |
 |---|---|---|---|
 | Original parser memory | `8848e837c` | `42631160983` / `129207526319` / `129207526124` | Failed; root cause above, original records retained |
+| Repaired parser memory | `ee30d13b0` | `42645911091` / `129258996498` / `129258997285` | Passed |
 | Weak phases, minimal Swift repair and diagnosis | `8848e837c` | `42631166444` / `129207545716` / `129207545782` | Passed |
 | Native weak-storage prefixes | `2470f2a94` | `42635657945` / `129223014018` / `129223014753` | Passed |
 | Actual target reuse | `63accd105` | `42639145010` / `129235261160` / `129235261107` | Passed |
@@ -65,6 +71,17 @@ Earlier superseded queued runs executed no tests. Immutable tags remain; do not
 restart unchanged jobs or infer a billing problem from queue delays. Setup's
 optional manual-page and libtool relink notices are retained. Documentation's
 intentional failed/hung runner controls pass their parent tests.
+
+## Prepared timing collection
+
+[Weak timing](measurements/weak-operation-time.md) uses four population/lookup
+cases, the existing separate modules, a C-only capped duration pilot, two sessions,
+16 balanced rounds of identical executable pairs, per-phase 5 ms/2% controls,
+RSS and compiler/image costs. Six altered-evidence controls check reconstruction.
+The same-source phase correctness batch must pass before collecting timings.
+Collection is not dispatched yet; no new speed claim. The shared strict phase
+reader moved from the checker to `weak_operation_phases.py`, without changing its
+result contract. Three timing-reader and three existing result-reader tests pass.
 
 ## Other evidence and unresolved measurements
 
@@ -92,7 +109,8 @@ Free space recovered to about 145 GiB. Focused checks use the unchanged
 - Parser reader: eight pass, one explicitly Linux-only `/proc` test skipped on
   macOS. Both Linux batches execute that actual checkpoint test.
 - Weak phase/profile/reuse readers: 3/4/3 pass.
-- Repair Python syntax checks and Rust formatting: pass.
+- Repair Python syntax checks and Rust formatting: pass. Documentation audit:
+  415 link sets, 106 immutable preparation pairs and five roadmap steps pass.
 - Apple Clang O2 source diagnostic: original generated entry frees the caller's
   32-byte input early; removing only duplicate entry cleanup preserves it until
   caller release. This is not a rebuilt-compiler or Linux GCC pass.

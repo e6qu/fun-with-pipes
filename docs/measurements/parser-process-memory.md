@@ -107,7 +107,8 @@ checks. The first combined batch failed all fwp observations on both native
 hosts: the generated entry dropped an already consumed input. [The failure and
 repair](parser-entry-cleanup-2026-11-09/README.md) retain both original reports,
 explain the shared ownership-contract fix, and distinguish result errors from
-cleanup failures. Native verification of the repaired compiler is pending.
+cleanup failures. The repaired compiler now passes on both native Linux hosts,
+including all RSS/checkpoint observations and independent audit controls.
 
 Review also found that the C peer accepted numeric prefixes such as `1junk`,
 negative counts and range overflow. It now checks the complete argument and its

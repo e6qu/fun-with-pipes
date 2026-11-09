@@ -152,7 +152,7 @@ that a later lookup reports expiration instead of using freed storage.
 The [operation-phase preparation](weak-operation-phases.md) defines six actual
 phase boundaries, native representations and the required fault controls.
 [Native storage preparation](weak-operation-storage.md) follows the same targets
-through strong-owner and weak-owner release. [Both now pass on ARM64/AMD64](weak-operation-verification-2026-11-09/README.md); weak timing and service costs remain open.
+through strong-owner and weak-owner release. [Both now pass on ARM64/AMD64](weak-operation-verification-2026-11-09/README.md); [weak timing](weak-operation-time.md) is prepared; service costs remain open.
 
 Compare two scopes separately:
 
@@ -194,8 +194,8 @@ on that actual error path must fail. This tests ordinary callback errors, not
 Rust panics or Swift fatal traps. It does not establish
 queued-service cleanup or new timing results.
 
-The next correctness batch adds a two-message queue. Each message owns its
-payload and holds a weak target link. It checks two paths:
+The verified two-message queue gives each message an owned payload and a weak
+target link. It checks two paths:
 
 | Path | Required result |
 |---|---|
