@@ -13,7 +13,7 @@ import sys
 import traceback
 
 from parser_memory_source import MEASURE, ROOT, native, once
-from parser_native_allocator import check_parser_events
+from parser_native_allocator import check_allocation_events, check_parser_events
 from process_wait import run_capture
 
 CASES = (('small', 5, False), ('medium', 9, False), ('large', 13, False), ('left', 64, True))
@@ -41,7 +41,7 @@ def main():
     commands = []
     report = dict(source=args.source, tag=args.tag, architecture=args.arch,
                   settings={key: str(value) for key, value in vars(args).items()},
-                  builds=[], ordinary=[], observations=[], faults=[], failures=[], complete=False)
+                  builds=[], ordinary=[], observations=[], faults=[], pathControls=[], failures=[], complete=False)
 
     def save():
         (folder / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
@@ -160,15 +160,52 @@ def main():
                     save()
                 except Exception as error:
                     failure(group, error)
+    try:
+        path_source = folder / 'allocator-paths.c'
+        shutil.copyfile(ROOT / 'tests/fixtures/parser_allocator_paths.c', path_source)
+        path_binary = folder / 'allocator-paths'
+        built = run([args.cc, *cflags, path_source, folder / 'checkpoint.o', '-pthread', '-o', path_binary], env)
+        report['pathControlBuild'] = dict(command=built['index'],
+            sourceSha256=hashlib.sha256(path_source.read_bytes()).hexdigest(),
+            binarySha256=hashlib.sha256(path_binary.read_bytes()).hexdigest())
+        for mode in ('mapped', 'retry'):
+            try:
+                ordinary = run([path_binary, mode], env)
+                expected_output = ('mapped' if mode == 'mapped' else 'arena retry') + ' bytes preserved and released\n'
+                assert ordinary['stdout'] == expected_output
+                observation_path = folder / ('path-' + mode + '.json')
+                observed = run([args.gdb, '--batch', '--nx', '-iex', 'set auto-load off',
+                    '-ex', 'directory ' + str(calibration / 'glibc-source'), '-x', observer,
+                    '--args', path_binary, mode], env | {'FWP_PARSER_ALLOCATOR_EVENTS': str(observation_path)})
+                assert expected_output in observed['stdout']
+                observation = json.loads(observation_path.read_text())
+                transitions = ([[0, 1 << 20], [1 << 20, 4 << 20], [4 << 20, 0]] if mode == 'mapped'
+                               else [[0, 128], [0, 128], [128, 1 << 20], [1 << 20, 0], [128, 0]])
+                result = check_allocation_events(observation, transitions, 1 if mode == 'mapped' else 2)
+                if mode == 'mapped':
+                    remaps = [row for row in observation['events']
+                              if row['kind'] == 'internal-return' and row['function'] == 'mremap_chunk']
+                    assert len(remaps) == 1 and remaps[0]['pointer'] and remaps[0]['chunk']['mapped']
+                    assert result['requestedPeakWithObservedResizeOverlapBytes'] == 4 << 20
+                else:
+                    assert result['operations'][2]['path'] == 'arena-retry-copy'
+                    assert result['requestedPeakWithObservedResizeOverlapBytes'] == (1 << 20) + 256
+                report['pathControls'].append(dict(mode=mode, ordinary=ordinary['index'],
+                    observed=observed['index'], file=observation_path.name, result=result))
+                save()
+            except Exception as error:
+                failure('allocator path ' + mode, error)
+    except Exception as error:
+        failure('allocator path build', error)
     report['complete'] = (not report['failures'] and len(report['builds']) == 5
                          and len(report['ordinary']) == len(report['observations']) == 8
-                         and len(report['faults']) == 4)
+                         and len(report['faults']) == 4 and len(report['pathControls']) == 2)
     save()
     manifest = {str(path.relative_to(folder)): hashlib.sha256(path.read_bytes()).hexdigest()
                 for path in sorted(folder.rglob('*')) if path.is_file()}
     (folder / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
     assert report['complete'], report
-    print('Eight real parser allocation traces match ordinary results and vector events; four actual omitted releases rejected')
+    print('Eight parser traces, mapped remap and two-arena retry pass; four actual omitted releases rejected')
 
 
 if __name__ == '__main__':

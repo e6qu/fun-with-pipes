@@ -1,8 +1,9 @@
 # Current work
 
-**Next:** run the prepared fwp heap/region event observer, then resolve native
-coverage for the remaining allocator paths. Service timing and actual C/Rust
-allocation traces now pass and their complete results are retained. Follow the
+**Next:** run the prepared mapped-resize/two-arena-retry controls, retain the passing
+fwp heap/region results, then integrate this complete comparison batch into #273
+for final production gates. Service timing and actual C/Rust allocation traces
+pass and their complete results are retained. Follow the
 [frozen service timing protocol](measurements/weak-callback-time.md). Keep this
 batch in [PR #273](https://github.com/e6qu/fun-with-pipes/pull/273). Milestone 4 is
 incomplete; do not merge an interim green head.
@@ -30,6 +31,14 @@ not complete runtime acceptance. Do not rerun unchanged samples to qualify them.
 
 ## Current verified results and failures
 
+- **fwp heap/region events:** source `823791751`, tag
+  `roadmap/parser-heap-events-2026-11-09`, run `42682917578`, AMD64 `129381983810`
+  and ARM64 `129381984032`, passes. Ten builds, eight actual O1/O2 traces, eight
+  wrong expected results and 24 missing-release/broken-observer controls pass per
+  host. Artifacts `13702983607` / `13704330690`; docs `42682924250` /
+  `129381997520` passes. Complete native logs have no warnings/errors; local raw
+  reconstruction and compact retention are next. Mapped/retry native controls
+  are prepared separately; their six reader tests pass locally.
 - **Service timing repair:** source `069e76ed8`, run `42675215554`, AMD64
   `129354672051`, ARM64 `129354672223`. Both pass all 28 builds, 178 result/fault
   checks, 64 invalid arguments and two interpreter modes. Both paired timing

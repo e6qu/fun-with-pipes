@@ -13,6 +13,21 @@ def extent_bytes(chunks):
 
 
 def check_parser_events(report, nodes):
+    expected = []
+    capacities = []
+    for stride in (16, 24):
+        capacity = 0
+        while capacity < nodes:
+            following = 8 if capacity == 0 else capacity * 2
+            expected.append([capacity * stride, following * stride])
+            capacity = following
+        capacities.append(capacity * stride)
+    expected.extend(([capacities[1], 0], [capacities[0], 0]))
+    return check_allocation_events(report, expected, 1)
+
+
+def check_allocation_events(report, expected, threads):
+    assert threads in (1, 2)
     assert report['exitCode'] == 0 and not report['errors']
     assert report['chunkHeaderBytes'] == 16
     libc, = [row for row in report['objects'] if row['path'].endswith('/libc.so.6')]
@@ -22,7 +37,7 @@ def check_parser_events(report, nodes):
     events = report['events']
     assert [row['phase'] for row in events if row['kind'] == 'checkpoint'] == list(range(5))
     assert events[0]['kind'] == events[-1]['kind'] == 'checkpoint'
-    assert len({tuple(row['thread']) for row in events}) == 1
+    assert len({tuple(row['thread']) for row in events}) == threads
     assert [row['phase'] for row in events] == sorted(row['phase'] for row in events)
     live = {}
     transitions = []
@@ -42,7 +57,8 @@ def check_parser_events(report, nodes):
             end += 1
         assert end < len(events)
         rows = events[index:end + 1]
-        assert all(row['operation'] == first['operation'] and row['phase'] == first['phase'] for row in rows)
+        assert all(row['operation'] == first['operation'] and row['phase'] == first['phase']
+                   and row['thread'] == first['thread'] for row in rows)
         last = rows[-1]
         function = first['function']
         assert function == last['function'] and function in ('__libc_malloc', '__libc_realloc', '__libc_free')
@@ -109,16 +125,6 @@ def check_parser_events(report, nodes):
         peak_requested = max(peak_requested, sum(row['requested'] for row in live.values()))
         index = end + 1
     assert not live, 'parser allocations remain live'
-    expected = []
-    capacities = []
-    for stride in (16, 24):
-        capacity = 0
-        while capacity < nodes:
-            following = 8 if capacity == 0 else capacity * 2
-            expected.append([capacity * stride, following * stride])
-            capacity = following
-        capacities.append(capacity * stride)
-    expected.extend(([capacities[1], 0], [capacities[0], 0]))
     assert transitions == expected, 'actual allocator calls disagree with the parser vector ledger'
     return dict(operations=operations, endpointRequestedPeakBytes=peak_requested,
                 requestedPeakWithObservedResizeOverlapBytes=max(peak_requested, overlap_requested),

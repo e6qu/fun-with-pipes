@@ -95,7 +95,7 @@ def main():
         report['ordinary'] = ordinary['index']
         report['binarySha256'] = hashlib.sha256(binary.read_bytes()).hexdigest()
         save()
-        observed = run([args.gdb, '--batch', '--nx', '-ex', 'set auto-load off',
+        observed = run([args.gdb, '--batch', '--nx', '-iex', 'set auto-load off',
                         '-ex', 'directory ' + str(source_root), '-x', folder / 'observer.py', '--args', binary],
                        env | {'FWP_ALLOCATOR_OBSERVATION': str(folder / 'observation.json')})
         assert EXPECTED in observed['stdout'] and observed['stderr'] == '', observed

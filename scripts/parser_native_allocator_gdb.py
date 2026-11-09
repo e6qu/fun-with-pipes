@@ -161,9 +161,10 @@ def observe():
             phase = argument(frame, 'phase')
             assert phase == (0 if PHASE is None else PHASE + 1) and phase <= 4
             assert OPERATION is None and not RETURNS
-            if OWNER_THREAD is None:
-                OWNER_THREAD = list(gdb.selected_thread().ptid)
-            assert list(gdb.selected_thread().ptid) == OWNER_THREAD
+            # A calibration can transfer its owned allocations at a checkpoint.
+            # The parser reader separately requires exactly one thread; every
+            # operation must still complete on the checkpoint's owning thread.
+            OWNER_THREAD = list(gdb.selected_thread().ptid)
             PHASE = phase
             record('checkpoint')
             save()

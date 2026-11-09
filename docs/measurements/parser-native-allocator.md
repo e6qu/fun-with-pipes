@@ -59,6 +59,34 @@ controls also reject missing/reordered internal events, wrong vector work and
 duplicate counting. Synthetic mapped/retry cases verify reader logic only;
 classify native occurrences from events, and do not call unobserved paths tested.
 
+### Additional native path controls
+
+The prepared follow-up keeps ordinary/parser checks and adds two small programs
+within one control executable. Both use public libc and process-resource APIs;
+the debugger never changes their data, allocation results or control flow.
+
+- **Mapped resize:** explicitly enable mapped large allocations, allocate 1 MiB,
+  resize to 4 MiB, verify preserved bytes and release it. Require an actual
+  successful `mremap_chunk` return. A changed address does not count as two
+  simultaneously owned allocations.
+- **Arena retry:** prepare reusable storage in a worker's arena, then limit only
+  this process's virtual address space to its existing size. Transfer a small
+  main-arena allocation to that worker. Its 1 MiB resize must first fail in the
+  original arena, then obtain existing space in the worker's arena and release
+  the original allocation. Require those actual internal events; successful
+  numeric output alone does not prove the intended path occurred.
+
+The retry control explicitly permits a two-thread transfer at a checkpoint.
+Each allocation operation still starts and finishes on one thread. Actual parser
+traces still require a single thread throughout. The process's hard resource limit
+is preserved; this control neither changes the runner's limits nor sets a new
+production allocation policy. Six reader tests preserve those distinctions.
+
+A failed mapped-remap followed by a copy is still only a synthetic reader case;
+do not claim it occurred in these controls or the fixed parser inputs. Results
+remain observations of owned chunks at recorded boundaries, not a universal
+peak bound for all glibc internals.
+
 The first run at `19b8b48fe` ([42679061783](https://github.com/e6qu/fun-with-pipes/actions/runs/42679061783))
 passed five builds and eight ordinary results per host, but all 12 diagnostic
 executions failed. The observer lost returns through libc tail calls. Its Rust

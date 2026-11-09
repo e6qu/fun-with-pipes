@@ -3,7 +3,7 @@
 import copy
 import unittest
 
-from parser_native_allocator import check_parser_events
+from parser_native_allocator import check_allocation_events, check_parser_events
 
 
 def observation(path, duplicate, omit_release):
@@ -117,6 +117,20 @@ class NativeAllocator(unittest.TestCase):
             check_parser_events(observation('move', False, True), 16)
         with self.assertRaisesRegex(AssertionError, 'vector ledger'):
             check_parser_events(observation('move', False, False), 8)
+
+    def test_control_thread_transfer_does_not_relax_parser_contract(self):
+        report = observation('retry', True, False)
+        for row in report['events']:
+            if row['phase'] >= 1:
+                row['thread'] = [1, 2, 0]
+        expected = [[0, 128], [128, 256], [0, 192], [192, 384], [384, 0], [256, 0]]
+        result = check_allocation_events(report, expected, 2)
+        self.assertEqual(result['operations'][3]['path'], 'arena-retry-copy')
+        with self.assertRaises(AssertionError):
+            check_parser_events(report, 16)
+        next(row for row in report['events'] if row['kind'] == 'internal-return')['thread'] = [1, 2, 0]
+        with self.assertRaises(AssertionError):
+            check_allocation_events(report, expected, 2)
 
 
 if __name__ == '__main__':
