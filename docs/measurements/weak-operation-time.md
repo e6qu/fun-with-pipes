@@ -1,6 +1,8 @@
 # Timing weak references separately from callbacks
 
-**Protocol prepared; no timing results yet.** The [phase checks](weak-operation-phases.md)
+**Collection queued; no timing results yet.**
+Source `031e6f794`, tag `roadmap/weak-operation-time-2026-11-09`,
+[run 42647816522](https://github.com/e6qu/fun-with-pipes/actions/runs/42647816522). The [phase checks](weak-operation-phases.md)
 and [storage/reuse checks](weak-operation-verification-2026-11-09/README.md) pass
 on native ARM64/AMD64. This experiment times those same separately compiled
 operations. Queue handling and callback-service work remain separate measurements.

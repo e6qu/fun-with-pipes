@@ -65,10 +65,10 @@ jobs:
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
       - name: Build the current compiler
-        if: contains(fromJSON('["weak-operation-phases","swift-peers","callable-phases","swift-allocations","ownership-peer-checks","returned-buffer-checks","returned-buffer-phases"]'), inputs.suite)
+        if: contains(fromJSON('["weak-operation-census","weak-operation-phases","swift-peers","callable-phases","swift-allocations","ownership-peer-checks","returned-buffer-checks","returned-buffer-phases"]'), inputs.suite)
         shell: bash
         run: |
-          set -o pipefail
+          set -euo pipefail
           mkdir swift-setup
           cargo fetch --locked 2>&1 | tee swift-setup/fetch.log
           cargo build --locked --offline --bin fwp 2>&1 | tee swift-setup/build.log
@@ -98,6 +98,13 @@ jobs:
           --languages c rs swift fwp --compiler target/debug/fwp --swiftc swiftc
           --swift-target "${{ matrix.arch }}-unknown-linux-gnu"
           --output ownership-peer-checks
+      - name: Managed weak-operation allocations and result-cell attribution
+        if: ${{ !cancelled() && inputs.suite == 'weak-operation-census' }}
+        run: |
+          python3 scripts/test-weak-operation-census.py
+          python3 scripts/check-weak-operation-census.py --cc gcc --compiler target/debug/fwp \
+            --source "$GITHUB_SHA" --arch "${{ matrix.arch }}" --c-arch "${{ matrix.c_arch }}" \
+            --output weak-operation-census
       - name: Weak phase result-reader controls
         if: ${{ !cancelled() && inputs.suite == 'weak-operation-phases' }}
         run: python3 scripts/test-weak-operation-phases.py
@@ -243,7 +250,7 @@ jobs:
               --input "callable-phase-evidence-$session" --source "$GITHUB_SHA" --arch "${{ matrix.arch }}"
           done
       - name: Preserve all completed and failed observations
-        if: ${{ always() && hashFiles('weak-operation-reuse/**', 'weak-operation-profiles/**', 'weak-operation-phases/**', 'weak-swift-diagnosis/**', 'returned-buffer-profiles-first-audit/**', 'returned-buffer-profiles/**', 'returned-buffer-phases/**', 'returned-buffer-checks/**', 'swift-closure-evidence/**', 'weak-peer-checks/**', 'parser-peer-checks/**', 'ownership-peer-checks/**', 'swift-setup/**', 'swift-peer-evidence/**', 'swift-arithmetic/**', 'callable-phase-evidence-*/**', 'swift-allocation-evidence/**') != '' }}
+        if: ${{ always() && hashFiles('weak-operation-census/**', 'weak-operation-reuse/**', 'weak-operation-profiles/**', 'weak-operation-phases/**', 'weak-swift-diagnosis/**', 'returned-buffer-profiles-first-audit/**', 'returned-buffer-profiles/**', 'returned-buffer-phases/**', 'returned-buffer-checks/**', 'swift-closure-evidence/**', 'weak-peer-checks/**', 'parser-peer-checks/**', 'ownership-peer-checks/**', 'swift-setup/**', 'swift-peer-evidence/**', 'swift-arithmetic/**', 'callable-phase-evidence-*/**', 'swift-allocation-evidence/**') != '' }}
         uses: actions/upload-artifact@v7
         with:
           name: ${{ inputs.suite }}-${{ matrix.arch }}-${{ matrix.session }}
@@ -259,6 +266,7 @@ jobs:
             weak-operation-phases/
             weak-operation-profiles/
             weak-operation-reuse/
+            weak-operation-census/
             swift-setup/
             swift-peer-evidence/
             swift-allocation-evidence/

@@ -24,7 +24,8 @@ copy controls fail. [Full platform delivery passes](structured-callback-delivery
 [Frozen candidate contract](structured-autodiff.md#selected-change-known-array-callbacks).
 
 [Weak phases, storage and actual target reuse now pass](weak-operation-verification-2026-11-09/README.md)
-on Linux ARM64/AMD64. [Weak timing collection](weak-operation-time.md) is prepared.
+on Linux ARM64/AMD64. [Weak timing collection](weak-operation-time.md) is queued; the
+[fwp allocation census](weak-operation-census.md) is prepared.
 [Parser process memory](parser-process-memory.md) exposed
 [an entry cleanup bug](parser-entry-cleanup-2026-11-09/README.md); its repair and the memory observations now pass on both Linux hosts. Weak timings/service costs and parser internal
 allocator peaks remain open.

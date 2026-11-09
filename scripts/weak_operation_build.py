@@ -7,12 +7,13 @@ from weak_operation_source import once
 
 def build(args, folder, fixtures, emitted, run, env, language, level, variant, mode, clock):
     assert language in ('c', 'rs', 'swift', 'fwp') and level in (1, 2)
-    assert mode in ('phases', 'profiles', 'reuse')
+    assert mode in ('phases', 'profiles', 'reuse', 'census')
     assert (clock is not None) == (mode == 'phases')
     assert mode != 'profiles' or (language != 'fwp' and variant == 'ordinary')
+    assert mode != 'census' or (language == 'fwp' and variant == 'release-observed')
     assert mode != 'reuse' or (language != 'fwp' and variant in ('ordinary', 'rebound'))
     assert variant != 'rebound' or mode == 'reuse'
-    caller_name = {'phases': 'weak_operation_time', 'profiles': 'weak_operation_storage', 'reuse': 'weak_operation_reuse'}[mode]
+    caller_name = {'phases': 'weak_operation_time', 'profiles': 'weak_operation_storage', 'reuse': 'weak_operation_reuse', 'census': 'weak_operation_census'}[mode]
     assert variant in ('ordinary', 'wrong-lookup', 'backward-clock', 'release-observed', 'omit-owner', 'omit-weak', 'rebound')
     diagnostic = variant in ('release-observed', 'omit-owner', 'omit-weak')
     assert not diagnostic or language in ('c', 'fwp')

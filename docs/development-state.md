@@ -1,7 +1,7 @@
 # Current work
 
-**Next:** freeze and run the prepared weak-operation timing comparison on Linux
-ARM64/AMD64, then complete callback-service costs and parser allocator-internal
+**Next:** audit the running weak-operation timing comparison on Linux
+ARM64/AMD64 while preparing callback-service costs and parser allocator-internal
 memory observations. Keep this substantial batch in
 [PR #273](https://github.com/e6qu/fun-with-pipes/pull/273). Milestone 4 is incomplete;
 do not merge an interim green head.
@@ -79,9 +79,22 @@ cases, the existing separate modules, a C-only capped duration pilot, two sessio
 16 balanced rounds of identical executable pairs, per-phase 5 ms/2% controls,
 RSS and compiler/image costs. Six altered-evidence controls check reconstruction.
 The same-source phase correctness batch must pass before collecting timings.
-Collection is not dispatched yet; no new speed claim. The shared strict phase
+Source `031e6f794` is frozen as `roadmap/weak-operation-time-2026-11-09`.
+Run `42647816522`: AMD64 `129265753017`, ARM64 `129265753053`; both queued.
+Docs `42647826087` / `129265780239` is queued. No new speed claim. The shared strict phase
 reader moved from the checker to `weak_operation_phases.py`, without changing its
 result contract. Three timing-reader and three existing result-reader tests pass.
+
+A related [managed-allocation census](measurements/weak-operation-census.md) is
+prepared: six phases plus successful `Some` result-cell attribution, known real
+17/33-byte allocations, an extra-allocation control and an omitted free. Eight
+ordinary observations and eight controls are required on each host at O1/O2.
+Three reader tests pass. A guarded Apple Clang O2 check on retained source
+`8848e837c` observes 1,024 16-byte `Some` cells for 64×16 live lookups, none for
+expired lookups, and rejects actual extra allocation/omitted free. It is not a
+rebuilt-compiler or GCC pass; native execution is not yet dispatched. This fills the
+parent comparison's result-cell attribution requirement without changing the
+queued timing source or claiming native backing bytes/ARC counts.
 
 ## Other evidence and unresolved measurements
 
@@ -110,7 +123,7 @@ Free space recovered to about 145 GiB. Focused checks use the unchanged
   macOS. Both Linux batches execute that actual checkpoint test.
 - Weak phase/profile/reuse readers: 3/4/3 pass.
 - Repair Python syntax checks and Rust formatting: pass. Documentation audit:
-  415 link sets, 106 immutable preparation pairs and five roadmap steps pass.
+  416 link sets, 106 immutable preparation pairs and five roadmap steps pass.
 - Apple Clang O2 source diagnostic: original generated entry frees the caller's
   32-byte input early; removing only duplicate entry cleanup preserves it until
   caller release. This is not a rebuilt-compiler or Linux GCC pass.

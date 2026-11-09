@@ -177,7 +177,10 @@ to disguise this difference. Measure the representations the languages actually 
 The current fwp runtime also constructs an owned `Some` result for a successful
 upgrade. Count and measure that result's storage separately from weak metadata
 and the retained target. Its presence in source is a candidate cost to investigate,
-not proof that every optimized caller performs a heap allocation.
+not proof that every optimized caller performs a heap allocation. The
+[managed-allocation census](weak-operation-census.md) now prepares separate phase
+and result-cell counts with actual allocation/free controls; native results are
+pending.
 
 The new C/Rust/Swift correctness fixtures exercise cancellation before entry,
 cancellation inside an active callback, nested acquisition, expiration and 64
@@ -242,10 +245,10 @@ language parser. Keep malformed, trailing-token and overflow controls.
 
 The [first checks](ownership-peer-checks-2026-11-08/README.md#parser-storage)
 now verify successful allocation transitions and ordinary Rust frames on both
-native architectures. Actual allocator-internal peaks, reservations and RSS remain
-separate work; this observer does not measure them.
-The [next process-memory protocol](parser-process-memory.md) specifies stopped
-phase checkpoints, ordinary RSS runs and real mapping/touch/unmap controls.
+native architectures. That allocation observer does not measure internal peaks,
+virtual mappings or RSS. The separate [process-memory experiment](parser-process-memory.md)
+now passes ordinary RSS runs, stopped phase checkpoints and real mapping/touch/unmap
+controls on both hosts after repairing the parser entry ownership bug.
 It explicitly leaves allocator-internal peaks and committed memory unresolved;
 RSS or writable mapping size must not be substituted for either.
 
