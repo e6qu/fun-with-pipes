@@ -78,6 +78,23 @@ static bool dispatch(Weak *weak, bool *cancelled, Weak **outside, Counts *counts
     return true;
 }
 
+/* A failing callback still owns its target until dispatch returns the error. */
+static int callback_error(Weak *acquired, Weak **outside, Counts *counts) {
+    require(acquired->target->identity == 9);
+    counts->calls++;
+    release_owner(outside);
+    require(counts->destroyed == 65 && acquired->target->identity == 9);
+    return -1;
+}
+
+static int dispatch_error(Weak *weak, Weak **outside, Counts *counts) {
+    Weak *acquired = upgrade(weak);
+    if (!acquired) return 0;
+    int result = callback_error(acquired, outside, counts);
+    release_owner(&acquired);
+    return result;
+}
+
 int main(int argc, char **argv) {
     (void)argv;
     if (argc != 1) { fputs("expected no arguments\n", stderr); return 2; }
@@ -104,6 +121,15 @@ int main(int argc, char **argv) {
     require(counts.destroyed == 65 && counts.metadata == 1);
     release_weak(&weak);
     require(counts.metadata == 0);
-    puts("calls=1 destroyed=65 expired=1 cancelled=1");
+    owner = create(&counts, 9);
+    weak = downgrade(owner);
+    require(dispatch_error(weak, &owner, &counts) == -1);
+    require(owner == NULL && counts.calls == 2 && counts.destroyed == 66);
+    require(upgrade(weak) == NULL && counts.metadata == 1);
+    require(dispatch_error(weak, &owner, &counts) == 0);
+    require(counts.calls == 2);
+    release_weak(&weak);
+    require(counts.metadata == 0);
+    puts("calls=2 destroyed=66 expired=1 cancelled=1 error=1");
     return 0;
 }

@@ -72,5 +72,41 @@ fn main() {
     }
     assert_eq!(counts.destroyed.get(), 65);
     drop(weak);
-    println!("calls=1 destroyed=65 expired=1 cancelled=1");
+    let mut owner = Some(Rc::new(Target { identity: 9, counts: &counts }));
+    let weak = Rc::downgrade(owner.as_ref().unwrap());
+    assert_eq!(dispatch_error(&weak, &mut owner, &counts), Err(CallbackError));
+    assert!(owner.is_none());
+    assert_eq!((counts.calls.get(), counts.destroyed.get()), (2, 66));
+    assert!(weak.upgrade().is_none());
+    assert_eq!(dispatch_error(&weak, &mut owner, &counts), Ok(false));
+    assert_eq!(counts.calls.get(), 2);
+    drop(weak);
+    println!("calls=2 destroyed=66 expired=1 cancelled=1 error=1");
+}
+
+#[derive(Debug, PartialEq)]
+struct CallbackError;
+
+fn callback_error(
+    acquired: &Target<'_>,
+    outside: &mut Option<Rc<Target<'_>>>,
+    counts: &Counts,
+) -> Result<(), CallbackError> {
+    assert_eq!(acquired.identity, 9);
+    counts.calls.set(counts.calls.get() + 1);
+    drop(outside.take());
+    assert_eq!(counts.destroyed.get(), 65);
+    assert_eq!(acquired.identity, 9);
+    Err(CallbackError)
+}
+
+fn dispatch_error<'a>(
+    weak: &Weak<Target<'a>>,
+    outside: &mut Option<Rc<Target<'a>>>,
+    counts: &Counts,
+) -> Result<bool, CallbackError> {
+    let Some(acquired) = weak.upgrade() else { return Ok(false) };
+    // Propagating the callback error must drop this acquired Rc automatically.
+    callback_error(&acquired, outside, counts)?;
+    Ok(true)
 }

@@ -11,7 +11,7 @@ import subprocess
 from process_wait import run_capture
 
 ROOT = Path(__file__).resolve().parent.parent
-EXPECTED = 'calls=1 destroyed=65 expired=1 cancelled=1\n'
+EXPECTED = 'calls=2 destroyed=66 expired=1 cancelled=1 error=1\n'
 
 
 def replace_once(source, before, after):
@@ -65,6 +65,7 @@ def main():
         if language == 'c':
             variants.update({
                 'omitted-active-release': replace_once(source, '    release_owner(&active);', ''),
+                'omitted-error-release': replace_once(source, '    release_owner(&acquired);', ''),
                 'omitted-expiration': replace_once(source, '        owner->target = NULL;', ''),
                 'omitted-metadata-release': replace_once(source,
                     '        control->counts->metadata--;\n        free(control);', ''),
@@ -99,7 +100,7 @@ def main():
                     assert (invalid['status'], invalid['stdout'], invalid['stderr']) == (
                         2, '', 'expected no arguments\n'), invalid
     (folder / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
-    print('Six native peer builds and six actual lifetime-fault builds pass their expected checks')
+    print('Six native peer builds and eight actual lifetime-fault builds pass their expected checks')
 
 
 if __name__ == '__main__':

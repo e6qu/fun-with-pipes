@@ -41,7 +41,7 @@ Add Swift's native `Array<Int64>` to these programs. Keep two experiments distin
 Use the same external input/result barriers in all four timing peers. The buffer
 checker now prepares C/Rust/Swift with one separately compiled C barrier and
 retains original and prepared source hashes. Actual wrong-barrier builds must
-fail the result oracle. The review branch also prepares fwp with that C harness and checks its raw and
+fail the result oracle. The checker also prepares fwp with that C harness and checks its raw and
 optimized interpreter results. [Both native architectures now verify the four-language boundary](four-language-buffers-2026-11-09/README.md).
 Timing and returned-buffer phases remain to be measured. Harness argument checks do not
 establish equivalent native out-of-memory behavior.
@@ -126,6 +126,14 @@ cancellation inside an active callback, nested acquisition, expiration and 64
 subsequent target creations. They are not timing peers yet, do not force address
 reuse, and do not measure native allocation or ARC counts. C failure controls
 omit active release, expiration or metadata release and must fail. [Both native Linux architectures pass](weak-peer-checks-2026-11-09/README.md).
+
+The next focused check adds callback errors: release the outside owner inside a
+callback, propagate an error, then require target destruction and failed later
+lookup. C returns an error with explicit cleanup; Rust propagates `Result` with
+`?`; Swift throws through `withExtendedLifetime`. The C variant omitting cleanup
+on that actual error path must fail. This tests ordinary callback errors, not
+Rust panics or Swift fatal traps. It is under verification and does not establish
+queued-service cleanup or new timing results.
 
 Every peer must preserve an acquired owner throughout an active callback. Cover
 expiration, address reuse, reentry, queued cleanup, callback failure and cancellation

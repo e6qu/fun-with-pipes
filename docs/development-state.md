@@ -3,7 +3,7 @@
 **Next:** complete returned-buffer phases, weak-operation/service costs and
 parser memory in [PR #273](https://github.com/e6qu/fun-with-pipes/pull/273).
 The matched four-language and scalar Swift allocation batch is verified and is
-being integrated into that PR; milestone 4 is not complete.
+integrated at `b06a2b6fe`; milestone 4 is not complete.
 
 Active worktree: `.worktrees/recording-capacity-gate`. PR branch:
 `ownership-peer-comparisons`. `ownership-buffer-review` retained the focused
@@ -63,7 +63,7 @@ is a harness error check, not a claim about native allocator failure behavior.
 The four-language addition passes run `42579398196`, source `9850a0fda`,
 ARM64 job `129034306146` and AMD64 job `129034306496`. [Full logs and raw records are reviewed](measurements/four-language-buffers-2026-11-09/README.md):
 840 native checks, 42 interpreter results and 24 actual barrier-fault rejections
-per host. Integrate this verified work with the closure result in one #273 push.
+per host. This verified batch is integrated into #273.
 
 [Scalar Swift profiles](measurements/swift-scalar-closures-2026-11-09/README.md)
 pass on both architectures at `96e2bf43a`, run `42580332788`. AMD64 passed attempt
@@ -108,6 +108,12 @@ handoff; their tracked source/evidence remains in Git. Cleanup removed disposabl
 build/download/provider caches, not infrastructure state or active workloads.
 
 ## Current PR gates
+
+Combined head `b06a2b6fe20f2842f5b9c9a3bb4e00be0278f011`: production
+`42583726102` and docs `42583726111` queued when last checked. The review branch
+now adds callback-error cleanup in C/Rust/Swift and a weak-only runner suite; it
+is not verified yet. Keep this separate from the already verified cancellation
+fixtures and preserve both original records.
 
 Previous PR head `7645384bb336acc728deebf24eae96280a45163f`: production `42578853160`,
 docs `42578853071` (passes), focused peers `42578815959` (both pass). Review every failed/completed

@@ -60,7 +60,42 @@ func run() {
         }
     }
     precondition(counts.destroyed == 65)
-    print("calls=1 destroyed=65 expired=1 cancelled=1")
+    owner = Target(9, counts)
+    registration.target = owner
+    do {
+        _ = try dispatchError(&registration, &owner, counts)
+        preconditionFailure("callback error was lost")
+    } catch CallbackError.failed {
+        precondition(owner == nil && counts.calls == 2 && counts.destroyed == 66)
+    } catch {
+        preconditionFailure("unexpected callback error")
+    }
+    precondition(registration.target == nil)
+    do {
+        let entered = try dispatchError(&registration, &owner, counts)
+        precondition(!entered && counts.calls == 2)
+    } catch {
+        preconditionFailure("expired callback was entered")
+    }
+    print("calls=2 destroyed=66 expired=1 cancelled=1 error=1")
+}
+
+enum CallbackError: Error { case failed }
+
+func callbackError(_ acquired: Target, _ outside: inout Target?, _ counts: Counts) throws {
+    precondition(acquired.identity == 9)
+    counts.calls += 1
+    outside = nil
+    precondition(counts.destroyed == 65 && acquired.identity == 9)
+    throw CallbackError.failed
+}
+
+func dispatchError(_ registration: inout Registration, _ outside: inout Target?, _ counts: Counts) throws -> Bool {
+    guard let acquired = registration.target else { return false }
+    return try withExtendedLifetime(acquired) {
+        try callbackError(acquired, &outside, counts)
+        return true
+    }
 }
 
 if CommandLine.arguments.count != 1 {
