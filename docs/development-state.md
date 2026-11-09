@@ -1,8 +1,8 @@
 # Current work
 
-**Next:** audit the running weak-operation timing comparison on Linux
-ARM64/AMD64 while preparing callback-service costs and parser allocator-internal
-memory observations. Keep this substantial batch in
+**Next:** verify the prepared parser allocator calibration on Linux ARM64/AMD64,
+then connect actual resize events to parser storage. Continue callback-service
+allocation observations and frozen timing collection in this same batch. Keep it in
 [PR #273](https://github.com/e6qu/fun-with-pipes/pull/273). Milestone 4 is incomplete;
 do not merge an interim green head.
 
@@ -19,7 +19,7 @@ Preserve unrelated root-worktree changes and modified inactive handoffs.
 | 1 | In progress | #270 docs and fresh F64 stores | Original AMD timing acceptance |
 | 2 | In progress | #271 captured maps and empty-owner transfer | Original noisy timing acceptance |
 | 3 | In progress | #272 structured gradients and known callbacks; all delivery gates | Original AMD timing acceptance |
-| 4 | In progress | Buffers: correctness, phases, native storage, timings/RSS; Swift closures; weak phases/storage/reuse/census; service correctness | Parser internal memory boundaries; weak-operation timing and service storage/costs |
+| 4 | In progress | Buffers: correctness, phases, native storage, timings/RSS; Swift closures; weak phases/storage/reuse/census/timings; service correctness and fwp physical cleanup | Parser internal memory boundaries; native service allocations and service timings |
 | 5 | Pending | Existing tools and correctness tests | Three applications, compiler phase/scaling costs and sustained load |
 
 Keep original failed/noisy timing controls. Fewer operations or smaller images
@@ -72,7 +72,7 @@ restart unchanged jobs or infer a billing problem from queue delays. Setup's
 optional manual-page and libtool relink notices are retained. Documentation's
 intentional failed/hung runner controls pass their parent tests.
 
-## Prepared timing collection
+## Weak operation and service results
 
 [Weak timing](measurements/weak-operation-time.md) uses four population/lookup
 cases, the existing separate modules, a C-only capped duration pilot, two sessions,
@@ -80,10 +80,18 @@ cases, the existing separate modules, a C-only capped duration pilot, two sessio
 RSS and compiler/image costs. Six altered-evidence controls check reconstruction.
 The same-source phase correctness batch must pass before collecting timings.
 Source `031e6f794` is frozen as `roadmap/weak-operation-time-2026-11-09`.
-Run `42647816522`: AMD64 `129265753017`, ARM64 `129265753053`; both collecting timings.
-Docs `42647826087` / `129265780239` passes. No new speed claim. The shared strict phase
+Run `42647816522`: AMD64 `129265753017`, ARM64 `129265753053`; both pass.
+Docs `42647826087` / `129265780239` passes. The shared strict phase
 reader moved from the checker to `weak_operation_phases.py`, without changing its
 result contract. Three timing-reader and three existing result-reader tests pass.
+
+[Both-session results, memory/build costs and full logs](measurements/weak-operation-time-2026-11-09/README.md)
+show large C/Rust lookup gaps. Largest-case complete-process fwp/C ratios are
+35.47–35.50 on ARM64 and 24.20–24.27 on AMD64. AMD64 fwp/Swift is 0.547–0.549;
+ARM64's largest Swift process comparison is noisy. Successful result cells do
+not explain expired-lookup overhead: entry/ownership handling also needs study.
+All 1,024 samples per host reconstruct; all six evidence corruptions fail.
+These are measured APIs, not pure ARC cost or general language parity.
 
 A related [managed-allocation census](measurements/weak-operation-census.md) is
 prepared: six phases plus successful `Some` result-cell attribution, known real
@@ -100,7 +108,7 @@ confirm one 16-byte managed result cell per successful lookup at O1/O2, none for
 expired lookups and zero final live bytes; eight observations/eight controls per
 host pass. This fills the
 parent comparison's result-cell attribution requirement without changing the
-queued timing source or claiming native backing bytes/ARC counts.
+frozen timing source or claiming native backing bytes/ARC counts.
 
 [The callback service](measurements/weak-callback-service.md) now has ordinary
 fwp/C/Rust/Swift programs for two queue sizes, 16-integer payloads and four
@@ -119,9 +127,12 @@ release. Its first source `79c5c5318`, run `42657535238`, failed before executio
 on both hosts: the test incorrectly referenced the absent `serde_json` dependency.
 Both complete logs show the same three compile errors and no runtime result.
 The repair uses existing `fwp::json::Json`, validates integer fields and rejects
-duplicate keys; no dependency is added. Native verification is still pending.
-Full Swift/fwp physical-release and
-all-peer allocation observers, then frozen timing collection,
+duplicate keys; no dependency is added. Repair `cf6a0a12e`, tag
+`roadmap/weak-callback-ownership-json-2026-11-09`, passes run `42658708144`
+(AMD64 `129304147132`, ARM64 `129304147207`), plus docs `42658713471` /
+`129304137560`. Both channel tests pass; eight service ledger builds release all
+managed allocations and both omitted-weak builds fail with status 205.
+All-peer native allocation observers, then frozen timing collection,
 remain required; these checks are not a service-throughput result.
 
 ## Other evidence and unresolved measurements
@@ -138,6 +149,14 @@ remain required; these checks are not a service-throughput result.
   memory remain unresolved; [the next observer steps](measurements/parser-internal-memory.md)
   require matching libc/source identity and actual path/accounting controls. These are not completed by endpoint snapshots.
 
+The [allocator calibration](measurements/parser-internal-memory.md) is prepared:
+ordinary in-place/moving/shrink/failed resize controls, installed libc/debug build
+IDs and matching source packages, actual internal allocation/free events via GDB.
+The control never reads freed blocks. Two reader tests, Python syntax and Clang C
+syntax checks pass; Linux/GDB verification is pending. It does not yet measure
+parser peaks, mapped/retry paths or committed memory. No fwp build is needed for
+this focused calibration.
+
 ## Delivery and local checks
 
 [Earlier head `7645384bb`](measurements/ownership-peer-gates-2026-11-09/README.md)
@@ -152,7 +171,7 @@ Free space recovered to about 145 GiB. Focused checks use the unchanged
   macOS. Both Linux batches execute that actual checkpoint test.
 - Weak phase/profile/reuse readers: 3/4/3 pass.
 - Repair Python syntax checks and Rust formatting: pass. Documentation audit:
-  419 link sets, 106 immutable preparation pairs and five roadmap steps pass before
+  421 link sets, 106 immutable preparation pairs and five roadmap steps pass before
   the latest result receipt. New service reader/syntax checks and Rust formatting pass.
 - Apple Clang O2 source diagnostic: original generated entry frees the caller's
   32-byte input early; removing only duplicate entry cleanup preserves it until

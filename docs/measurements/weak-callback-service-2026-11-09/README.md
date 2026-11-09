@@ -32,12 +32,26 @@ native logs contain the package installer's optional missing manual-page notice;
 there are no compiler warnings or unexpected failures. [files.json](files.json)
 hashes the retained reports, commands and full logs.
 
-These runs precede the new fwp physical-allocation-ledger regression. They do not
-establish complete all-peer physical cleanup, allocation costs or timing results.
+These first runs precede the fwp physical-allocation-ledger regression below.
+All-peer allocation costs and timing results remain open.
 
 The first ledger extension (`79c5c5318`, [run 42657535238](https://github.com/e6qu/fun-with-pipes/actions/runs/42657535238))
 failed to compile its Rust test on both architectures: it referenced `serde_json`,
 which is not a repository dependency. All three diagnostics per host have that
 cause; neither job executed tests. Complete failed logs are retained here. The
 repair uses the existing `fwp::json::Json` parser and checks exact integer fields
-and duplicate keys, without adding a dependency. Its native results are pending.
+and duplicate keys, without adding a dependency.
+
+Repair `cf6a0a12e`, tag `roadmap/weak-callback-ownership-json-2026-11-09`, passes:
+
+| Native job | Artifact | Checks |
+|---|---|---|
+| [ARM64 129304147207](https://github.com/e6qu/fun-with-pipes/actions/runs/42658708144/job/129304147207) | `13693692270` | Both channel tests; eight service ledger builds and two actual omitted-weak faults |
+| [AMD64 129304147132](https://github.com/e6qu/fun-with-pipes/actions/runs/42658708144/job/129304147132) | `13694425421` | Same |
+
+The eight builds combine raw/optimized fwp, dynamic/static memory and O1/O2.
+All produce the independent expected results and finish with zero registered
+allocations and zero charged live bytes. Omitting actual weak release produces
+status 205 in both control builds. Downloaded outputs/statuses reproduce every
+case. [Docs](https://github.com/e6qu/fun-with-pipes/actions/runs/42658713471) also
+passes. Complete failed/repaired logs and per-build outputs are retained here.

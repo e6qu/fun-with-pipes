@@ -78,7 +78,12 @@ Milestone 4 now fills four concrete comparison gaps:
 3. **Weak registrations:** cancellation, active-call ownership, expiration and
    [callback-error cleanup](docs/measurements/weak-callback-errors-2026-11-09/README.md) now pass in C/Rust/Swift.
    [Queued cleanup, actual reuse and native backing-storage release now pass](docs/measurements/weak-operation-verification-2026-11-09/README.md).
-   Next measure weak operations and callback-service work separately.
+   [Weak-operation timings](docs/measurements/weak-operation-time-2026-11-09/README.md)
+   now show substantial C/Rust lookup gaps and mixed Swift comparisons; the
+   [census](docs/measurements/weak-operation-census-2026-11-09/README.md) separates
+   temporary result cells from metadata. [Service correctness](docs/measurements/weak-callback-service-2026-11-09/README.md)
+   passes. Complete service physical-release/allocation observations and timings
+   before attributing whole-service cost to weak references.
 4. **Parser workspace:** the [entry ownership repair](docs/measurements/parser-entry-cleanup-2026-11-09/README.md)
    and RSS/checkpoint observations now pass on both Linux hosts. Complete allocator-internal transient peaks and
    reserved/committed/RSS observations. Preserve the new C/Rust allocation-event

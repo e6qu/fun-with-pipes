@@ -1,6 +1,6 @@
 # Parser memory: remaining observer work
 
-**Not implemented or measured yet.** [Ordinary RSS and stopped-process mapping
+**Allocator calibration prepared; native verification and parser observations remain open.** [Ordinary RSS and stopped-process mapping
 snapshots now pass](parser-entry-cleanup-2026-11-09/README.md). They leave two
 different questions open: temporary storage inside a resize, and the meaning of
 commit accounting for this process. Neither is answered by final vector capacity.
@@ -39,6 +39,28 @@ do not invent addresses or substitute a wrapper's post-return estimate. Any sour
 instrumentation must preserve the allocator algorithm and include an ordinary
 comparison build. The first deliverable is a passing calibration, before parser
 peak figures are accepted.
+
+The first [native calibration](../../scripts/check-parser-allocator-calibration.py)
+now exercises 64→72-byte in-place growth, 128→8,192-byte moving growth,
+8,192→4,096-byte shrink, and a rejected `SIZE_MAX` request whose original bytes
+must remain intact. An ordinary execution checks data preservation and actual
+movement before the debugger observes the same binary.
+
+[The observer](../../scripts/parser_allocator_gdb.py) uses installed libc debug
+arguments and return values at `__libc_realloc`, `_int_realloc`, `_int_malloc`
+and `_int_free`. It requires replacement allocation before old release, records
+matching libc/debug build IDs and distro source-package identities, and never
+reads a freed block or changes allocator data. Missing/optimized-out debug values
+fail explicitly. The [reader controls](../../scripts/test-parser-allocator-observation.py)
+reject absent/reordered internal events even when final pointers agree.
+
+It uses GDB's documented [function breakpoints](https://sourceware.org/gdb/current/onlinedocs/gdb.html/Breakpoints-In-Python.html)
+and [return-value observation](https://sourceware.org/gdb/current/onlinedocs/gdb.html/Finish-Breakpoints-in-Python.html).
+Breakpoint changes occur while stopped in the outer command loop, not inside
+breakpoint callbacks. Run `suite=parser-allocator-calibration` with an explicit
+`parser_memory_tag`; it builds only the small native control, not the fwp compiler.
+This is calibration of ordinary-arena paths. Applying it to parser allocations,
+mapped/retry paths, full transient peaks and commit accounting remains work.
 
 ## Commit accounting
 

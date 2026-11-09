@@ -43,5 +43,30 @@
     "bytes": 307596,
     "sha256": "4e4f8b29b2b3876d016f07ae7da924872441333ea49e7622b79bf4d795c39b39",
     "compressedSha256": "2104b17793352418d3477f11abbc84273ef4f3a3d4b7bc98035bf6d37078849b"
+  },
+  "ownership-repair-amd-probes.json.gz": {
+    "bytes": 13528,
+    "sha256": "36fce41a851988ace6b960c5bbb2b007b329c55df798d68bcb8103c10b0b56b1",
+    "compressedSha256": "ad2edd70cfddad16526d4c9f6ced26eb90bc72a22741ea30f36e445f7b726518"
+  },
+  "ownership-repair-amd-job.log.gz": {
+    "bytes": 285827,
+    "sha256": "76a1ae83fb49c6b6e21d89f54814d8144eb0f55aad4148562a6b836204d43894",
+    "compressedSha256": "fb1ec01c24026f53d0c8ff60b7aa9e92174c2b22619a9d0df6b1d489a1cc0a3c"
+  },
+  "ownership-repair-arm-probes.json.gz": {
+    "bytes": 13528,
+    "sha256": "91f3fa7fa02674d9e700b848ee0929f7616f05c1223c7f5707007fef0df0c61a",
+    "compressedSha256": "c6598cc310d8638bcca3575cb79d97bc5da8fdf9278d139fef3a952154c25428"
+  },
+  "ownership-repair-arm-job.log.gz": {
+    "bytes": 285867,
+    "sha256": "bef57307b4604473d235d50f7cc493a1d9f6df3ad963934ae4c5a9f262ffaa06",
+    "compressedSha256": "fac6b95be99d077ec74a82e89851f02356ec0d60f8d7dddf147367e80206a941"
+  },
+  "ownership-repair-docs-job.log.gz": {
+    "bytes": 442241,
+    "sha256": "8adc0f9a0f0e19680c98a81db159242047ce5cc69cb1ab65faf5c201ff0ab0d5",
+    "compressedSha256": "7c80b207241697c2a2a5421e866ecc7c2d888c469c47cbb556d387166ca7964a"
   }
 }
