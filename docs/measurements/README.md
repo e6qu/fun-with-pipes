@@ -23,7 +23,15 @@ computation in both ARM64 sessions. AMD64 timing acceptance remains open because
 copy controls fail. [Full platform delivery passes](structured-callback-delivery-2026-11-09/README.md).
 [Frozen candidate contract](structured-autodiff.md#selected-change-known-array-callbacks).
 
-## Latest delivery
+[Parser process memory](parser-process-memory.md) and
+[weak-reference phases](weak-operation-phases.md) are prepared and queued for
+native verification. They claim no new memory or timing result.
+
+## Latest deliveries
+
+Merged #272 delivers known array callback specialization and structured-gradient
+comparisons. [All final gates pass](structured-callback-delivery-2026-11-09/README.md);
+its original timing-control limits remain explicit.
 
 Merged #271 delivers [captured scalar array-map reuse](captured-array-maps.md);
 [all final gates pass](captured-map-delivery-2026-11-08/README.md).
