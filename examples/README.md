@@ -28,6 +28,8 @@ The word (`.0`) breaks equal-count ties alphabetically. `words` splits on spaces
 tabs, line feeds and carriage returns; other characters remain in a word.
 Normalization here lowercases ASCII and removes commas/full stops; it is not a
 complete natural-language tokenizer.
+The [application walkthrough](../docs/application-workflows.md#count-words)
+uses the same `count-words` function in a notebook, REPL and debugger.
 
 ## Terminal applications
 
