@@ -107,3 +107,6 @@ retain exact reuse counts, source/binary identities and every failure. Three
 local reader tests pass; native execution is pending. The existing
 [fwp runtime control](../../tests/fixtures/weak_channel_lifetimes.c) already
 requires actual channel-address reuse; this addition fills the native peer gap.
+Source `63accd105` is frozen as `roadmap/weak-operation-reuse-2026-11-09`;
+[the native run](https://github.com/e6qu/fun-with-pipes/actions/runs/42639145010)
+is queued.

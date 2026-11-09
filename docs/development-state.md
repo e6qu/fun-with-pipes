@@ -33,6 +33,7 @@ do not establish runtime acceptance. Do not rerun unchanged samples to qualify.
 | Documentation and reader controls | `8848e837c` | Run `42631171172`, job `129207557246` | Queued |
 | Native weak-storage prefixes | `2470f2a94`, `roadmap/weak-operation-storage-2026-11-09` | Run `42635657945`: AMD64 `129223014018`, ARM64 `129223014753` | Queued |
 | Storage documentation and reader controls | `2470f2a94` | Run `42635673348`, job `129223066100` | Queued |
+| Actual native target reuse | `63accd105`, `roadmap/weak-operation-reuse-2026-11-09` | Run `42639145010`: AMD64 `129235261160`, ARM64 `129235261107` | Queued |
 
 - [Parser batch](measurements/parser-process-memory.md): one parse per process,
   three ordinary RSS observations and two five-checkpoint sequences per case and
@@ -75,7 +76,7 @@ save an integer target address, release the target, then inspect only live
 replacement addresses and weak lookup results. Require actual C/Swift reuse,
 Rust's retained-backing exclusion, and rejection of a real replacement-link
 control. Expected: 12 builds and 18 native checks per host. Native execution is
-pending; the earlier lifetime fixture's 64 replacements did not prove reuse.
+queued at `63accd105`; the earlier fixture's 64 replacements did not prove reuse.
 
 The queue has no explanatory annotations or assigned runners. These workflows
 have no concurrency lock or environment approval. A separate older 146-job
