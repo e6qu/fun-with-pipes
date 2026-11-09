@@ -4,10 +4,13 @@ pub fn instrument(original: &str) -> String {
     for (before, after) in [
         ("typedef uint64_t V;", concat!("typedef uint64_t V;\n",
             "static unsigned long long http_app_opened, http_app_closed, http_app_sampled;\n",
+            "static unsigned long long http_app_allocations;\n#define HTTP_APP_OMIT_COUNT 0\n",
             "static int http_app_active;\n",
             "static void *http_app_listener;\nstatic unsigned http_app_shutdown_cancelled;\n",
             "#define HTTP_APP_OMIT_FREE 0\n#define HTTP_APP_OMIT_CLOSE 0\n",
             "static void http_app_checkpoint(void);\n")),
+        ("static inline void fwp_heap_charge(size_t bytes) {",
+         "static inline void fwp_heap_charge(size_t bytes) {\n    if (!HTTP_APP_OMIT_COUNT) http_app_allocations++;"),
         ("    s->refs = 1;", "    s->refs = 1;\n    if (kind == 1) http_app_opened++;"),
         ("if (s->fd != FWP_INVALID_SOCKET) { fwp_fd_closing(s->fd); fwp_socket_close(s->fd); s->fd = FWP_INVALID_SOCKET; }",
          "if (s->fd != FWP_INVALID_SOCKET) { fwp_fd_closing(s->fd); if (!HTTP_APP_OMIT_CLOSE || !http_app_active || s->kind != 1) { fwp_socket_close(s->fd); if (s->kind == 1) http_app_closed++; } s->fd = FWP_INVALID_SOCKET; }"),
@@ -43,7 +46,7 @@ pub fn instrument(original: &str) -> String {
         "{runtime}{}",
         main.replace(
             initial,
-            &format!("{initial}    http_app_start = http_app_charge();\n")
+            &format!("{initial}    http_app_start = http_app_charge();\n    http_app_count_start = http_app_allocations;\n    http_app_alloc_start = fwp_heap.total_alloc;\n    http_app_free_start = fwp_heap.freed;\n")
         )
         .replace(
             final_point,

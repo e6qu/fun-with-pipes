@@ -80,7 +80,13 @@ lossless compressed receipts; the tiny standalone Rust framing test passes at O2
 with warnings as errors (0.22s sampled CPU). No local fwp build or load ran.
 Native driver success/wrong/partial/timeout controls and a short actual-API check
 precede sustained timing; existing physical cleanup/cancellation tests run separately.
-Allocation-traffic and slow-client/backpressure evidence still need completion.
+Allocation traffic is now implemented in the existing physical heap observer:
+count each slot charge once, retain eight cohort snapshots plus shutdown, and
+compare charged minus reclaimed bytes with the live heap. A separate item-only
+cohort checks 344 correct `/items/42` responses; incomplete POSTs and cancellation
+remain explicit separate controls. A disabled counter must fail at its second
+checkpoint. These new O2 checks are wired independently into `http-load-checks`.
+Native allocation verification and slow-client/backpressure evidence remain.
 
 Review found and fixed report creation altering a missing import: delay creating
 the report until compilation finishes, protect root/auxiliary output paths, and

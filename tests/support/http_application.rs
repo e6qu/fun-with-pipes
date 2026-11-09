@@ -222,7 +222,7 @@ fn metrics(reader: &mut BufReader<TcpStream>) -> f64 {
     count
 }
 
-fn cohort(address: &str, repeats: usize, disconnect: bool) {
+fn cohort(address: &str, repeats: usize, disconnect: bool, item_only: bool) {
     std::thread::scope(|scope| {
         let workers: Vec<_> = (0..8).map(|_| scope.spawn(move || {
             let mut reader = connection(address);
@@ -242,10 +242,15 @@ fn cohort(address: &str, repeats: usize, disconnect: bool) {
                     ("GET", "/slow?ms=0", "", "", 200, "slept 0 ms"),
                     ("GET", "/stream", "", "", 200, "line 1\nline 2\nline 3\nline 4\nline 5\n"),
                 ] {
+                    if item_only && path != "/items/42" {
+                        continue;
+                    }
                     send(reader.get_mut(), method, path, headers, body);
                     assert_eq!(response(&mut reader), (code, expected.into()), "{method} {path}");
                 }
-                assert!(metrics(&mut reader) > 0.0);
+                if !item_only {
+                    assert!(metrics(&mut reader) > 0.0);
+                }
             }
         })).collect();
         for worker in workers {
@@ -285,11 +290,11 @@ fn cancel_pending(server: &mut Observed) {
     }
 }
 
-fn exercise(binary: &Path, artifact: PathBuf, variant: &str) {
+fn exercise(binary: &Path, artifact: PathBuf, variant: &str, item_only: bool) {
     let mut server = Observed::start(binary, artifact);
-    cohort(&server.address, 1, false);
+    cohort(&server.address, 1, false, item_only);
     server.checkpoint(8, true);
-    cohort(&server.address, 4, false);
+    cohort(&server.address, 4, false, item_only);
     server.checkpoint(16, variant == "healthy");
     if variant != "healthy" {
         assert_eq!(server.wait().code(), Some(241), "broken observer control");
@@ -297,16 +302,21 @@ fn exercise(binary: &Path, artifact: PathBuf, variant: &str) {
             reader.join().unwrap();
         }
         let log = server.log.lock().unwrap().clone();
-        assert!(log.contains("http-memory changed"), "{log}");
+        let diagnostic = if variant == "missing-count" {
+            "http-allocation observation missing"
+        } else {
+            "http-memory changed"
+        };
+        assert!(log.contains(diagnostic), "{log}");
         return;
     }
     for (i, repeats) in [16, 1, 16, 4].into_iter().enumerate() {
-        cohort(&server.address, repeats, false);
+        cohort(&server.address, repeats, false, item_only);
         server.checkpoint((i + 3) * 8, true);
     }
-    cohort(&server.address, 0, true);
+    cohort(&server.address, 0, true, item_only);
     server.checkpoint(56, true);
-    cohort(&server.address, 1, false);
+    cohort(&server.address, 1, false, item_only);
     server.checkpoint(64, true);
     cancel_pending(&mut server);
     if let Some(reader) = server.reader.take() {
@@ -316,6 +326,35 @@ fn exercise(binary: &Path, artifact: PathBuf, variant: &str) {
     assert!(log.contains("http-shutdown\t1\n"), "{log}");
     assert!(log.contains("http-final\t72\t72\t0\t"), "{log}");
     assert!(log.ends_with("http-metrics-final\t0\n"), "{log}");
+    let traffic: Vec<Vec<u64>> = log
+        .lines()
+        .filter_map(|line| line.strip_prefix("http-traffic\t"))
+        .map(|line| {
+            line.split('\t')
+                .map(|value| value.parse().unwrap())
+                .collect()
+        })
+        .collect();
+    assert_eq!(traffic.len(), 9, "{log}");
+    let idle: Vec<u64> = log
+        .lines()
+        .filter(|line| line.starts_with("http-memory\t"))
+        .map(|line| line.split('\t').nth(3).unwrap().parse().unwrap())
+        .collect();
+    for (index, row) in traffic.iter().enumerate() {
+        assert_eq!(row.len(), 5);
+        assert_eq!(row[0], (index as u64 + 1) * 8);
+        assert!(row[1] > 0 && row[2] >= row[3] && row[4] > 0, "{row:?}");
+        assert_eq!(row[2] - row[3], if index < 8 { idle[index] } else { 0 });
+        if index > 0 {
+            assert!(
+                row[1] > traffic[index - 1][1],
+                "allocation count did not advance"
+            );
+            assert!(row[2] >= traffic[index - 1][2] && row[3] >= traffic[index - 1][3]);
+            assert!(row[4] >= traffic[index - 1][4]);
+        }
+    }
     let samples: Vec<u64> = server
         .resident
         .lines()
@@ -367,7 +406,7 @@ fn measure(opt: &str) {
         std::fs::write(artifact.with_extension("c"), &code).unwrap();
         let binary = artifact.with_extension("exe");
         fwp::cgen::compile_c(&code, &binary, opt).unwrap();
-        exercise(&binary, artifact, variant);
+        exercise(&binary, artifact, variant, false);
     }
 }
 
@@ -381,8 +420,8 @@ fn api_live_memory_o1() {
         .args(["run", "--interp"])
         .arg(example());
     let mut reference = super::start(command);
-    cohort(&reference.addr, 1, false);
-    cohort(&reference.addr, 0, true);
+    cohort(&reference.addr, 1, false, false);
+    cohort(&reference.addr, 0, true, false);
     http_server_process::terminate(&reference.child).unwrap();
     let end = Instant::now() + Duration::from_secs(20);
     loop {
@@ -400,6 +439,61 @@ fn api_live_memory_o2() {
     measure("-O2");
 }
 
+#[test]
+fn api_allocation_observer_rejects_missing_counts_o2() {
+    let temporary = fwp::cgen::TempDir::new("http-allocation-control").unwrap();
+    let artifacts = std::env::var_os("FWP_HTTP_APPLICATION_ARTIFACTS")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| temporary.join("evidence"))
+        .join("allocation-controls");
+    std::fs::create_dir_all(&artifacts).unwrap();
+    let source = temporary.join("api.c");
+    let output = Command::new(fwp())
+        .args(["build", "--emit-c", "-O2"])
+        .arg(example())
+        .arg("-o")
+        .arg(&source)
+        .output()
+        .unwrap();
+    assert!(output.status.success(), "{output:?}");
+    let observed = memory::instrument(&std::fs::read_to_string(source).unwrap());
+    assert_eq!(observed.matches("#define HTTP_APP_OMIT_COUNT 0").count(), 1);
+    let code = observed.replace(
+        "#define HTTP_APP_OMIT_COUNT 0",
+        "#define HTTP_APP_OMIT_COUNT 1",
+    );
+    let artifact = artifacts.join("missing-countO2");
+    std::fs::write(artifact.with_extension("c"), &code).unwrap();
+    let binary = artifact.with_extension("exe");
+    fwp::cgen::compile_c(&code, &binary, "-O2").unwrap();
+    exercise(&binary, artifact, "missing-count", false);
+}
+
+#[test]
+fn api_item_allocation_traffic_o2() {
+    let temporary = fwp::cgen::TempDir::new("http-item-traffic").unwrap();
+    let artifacts = std::env::var_os("FWP_HTTP_APPLICATION_ARTIFACTS")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| temporary.join("evidence"))
+        .join("item-traffic");
+    std::fs::create_dir_all(&artifacts).unwrap();
+    let source = temporary.join("api.c");
+    let output = Command::new(fwp())
+        .args(["build", "--emit-c", "-O2"])
+        .arg(example())
+        .arg("-o")
+        .arg(&source)
+        .output()
+        .unwrap();
+    assert!(output.status.success(), "{output:?}");
+    let code = memory::instrument(&std::fs::read_to_string(source).unwrap());
+    let artifact = artifacts.join("apiO2");
+    std::fs::write(artifact.with_extension("c"), &code).unwrap();
+    let binary = artifact.with_extension("exe");
+    fwp::cgen::compile_c(&code, &binary, "-O2").unwrap();
+    exercise(&binary, artifact, "healthy", true);
+}
+
 // Diagnostic entry only: exercise an explicitly selected saved executable.
 // It does not replace the ordinary tests that compile this revision.
 #[test]
@@ -408,7 +502,7 @@ fn api_saved_binary_idle_memory() {
     let binary = PathBuf::from(std::env::var_os("FWP_HTTP_APPLICATION_BINARY").unwrap());
     let artifacts = PathBuf::from(std::env::var_os("FWP_HTTP_APPLICATION_ARTIFACTS").unwrap());
     std::fs::create_dir(&artifacts).unwrap();
-    exercise(&binary, artifacts.join("api-saved"), "healthy");
+    exercise(&binary, artifacts.join("api-saved"), "healthy", false);
 }
 
 #[test]

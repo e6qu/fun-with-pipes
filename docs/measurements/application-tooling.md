@@ -203,6 +203,23 @@ finished inside it contribute to throughput. Late successes remain in the
 successful-response latency distribution. This is an initial fwp service baseline,
 not a peer comparison with C, Rust or Swift.
 
+The allocation diagnostic uses the same API source at native O2, separately from
+timed load. Eight fresh connections each perform 1, 4, 16, 1, 16, 4, 0 and 1
+requests in successive cohorts: 344 correct item responses in total. The zero
+cohort instead disconnects eight incomplete POST requests. A final control
+cancels seven slow handlers plus its metrics connection. These failure controls
+are not included in per-item allocation estimates.
+
+`http-traffic` rows record cumulative managed-heap allocation events, charged
+bytes, reclaimed bytes and the whole-run live-slot peak after each cohort and
+shutdown. An event is one physical heap-slot allocation, including reuse; these
+are not libc calls or ARC operations. Charge includes slot padding, but excludes
+raw C buffers, task stacks, allocator pages and metric tables. Charged minus
+reclaimed bytes must match the independently checked live heap. The existing
+warm-baseline + 8 MiB RSS and exact socket/task cleanup checks remain. A
+separate deliberately disabled event counter must fail its own observer. These
+new diagnostics await native verification; they establish no timing claim.
+
 The runnable protocol must additionally retain:
 
 - Endpoint computation and exact request/response bytes; keep-alive and connection

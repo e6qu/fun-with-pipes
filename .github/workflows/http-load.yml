@@ -41,6 +41,7 @@ jobs:
           test "$PHASE" = check || test "$PHASE" = measure
           python3 scripts/test-http-load.py
       - name: Native dependencies and driver
+        id: driver
         run: |
           sudo apt-get update
           sudo apt-get install -y libssl-dev
@@ -48,8 +49,11 @@ jobs:
           rustc --edition 2021 -C opt-level=2 -D warnings --test scripts/load/http-load.rs -o http-load-driver-tests
           ./http-load-driver-tests
       - name: Real driver controls for success, wrong bytes, partial replies and timeout
+        id: driver_controls
         run: python3 -W error::ResourceWarning scripts/check-http-load-driver.py --driver ./http-load-driver --output http-driver-controls
       - name: Build current compiler
+        id: compiler
+        if: ${{ !cancelled() }}
         run: |
           cargo fetch --locked
           cargo build --locked --offline --bin fwp
@@ -61,6 +65,7 @@ jobs:
           gcc --version >> http-load-toolchains.txt
           g++ --version >> http-load-toolchains.txt
       - name: Fixed API load protocol
+        if: ${{ !cancelled() && steps.compiler.outcome == 'success' && steps.driver_controls.outcome == 'success' }}
         env:
           PHASE: ${{ inputs.phase }}
           SESSION: ${{ matrix.session }}
@@ -68,12 +73,22 @@ jobs:
           set -o pipefail
           python3 -W error::ResourceWarning scripts/measure-http-load.py --compiler target/debug/fwp --driver ./http-load-driver --cc gcc --cxx g++ --output http-load --phase "$PHASE" --session "$SESSION" 2>&1 | tee http-load.log
       - name: Independent physical cleanup, socket and cancellation controls
-        if: ${{ !cancelled() && inputs.phase == 'check' }}
+        if: ${{ !cancelled() && inputs.phase == 'check' && steps.compiler.outcome == 'success' }}
         env:
           FWP_HTTP_APPLICATION_ARTIFACTS: ${{ github.workspace }}/http-cleanup
         run: |
           set -o pipefail
           cargo test --locked --offline --test http_server http_application::api_live_memory_o2 -- --exact --nocapture 2>&1 | tee http-cleanup.log
+      - name: Endpoint allocation traffic and broken-counter control
+        if: ${{ !cancelled() && inputs.phase == 'check' && steps.compiler.outcome == 'success' }}
+        env:
+          FWP_HTTP_APPLICATION_ARTIFACTS: ${{ github.workspace }}/http-cleanup
+        run: |
+          set -o pipefail
+          failed=0
+          cargo test --locked --offline --test http_server http_application::api_item_allocation_traffic_o2 -- --exact --nocapture 2>&1 | tee http-item-traffic.log || failed=1
+          cargo test --locked --offline --test http_server http_application::api_allocation_observer_rejects_missing_counts_o2 -- --exact --nocapture 2>&1 | tee http-count-control.log || failed=1
+          exit "$failed"
       - uses: actions/upload-artifact@v7
         if: always()
         with:
@@ -85,5 +100,7 @@ jobs:
             http-load/
             http-driver-controls/
             http-cleanup.log
+            http-item-traffic.log
+            http-count-control.log
             http-cleanup/
           if-no-files-found: error
