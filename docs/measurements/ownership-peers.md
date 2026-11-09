@@ -65,6 +65,24 @@ escaping functions, C/Rust inline captures and fwp's actual emitted representati
   alone cannot count retains and releases.
 - Keep checked-overflow, direct-call, ordinary release and omitted-release controls.
 
+The next scalar allocation profile uses the existing separately compiled Swift
+factory and caller at `-O`, with debug information for stack attribution. Keep
+4,096 closures, 256 batches and 16 calls each, for both `a + x` and `2 * (a + x)`.
+Print only the checksum; keep the caller's existing clocks but never interpret
+profile durations as performance. Build an actual omitted-release variant by
+removing slot deinitialization while retaining pointer deallocation. This leaks
+the closure owners themselves, without adding a class-capture surrogate.
+
+For each kind, collect two ordinary and two omitted-release profiles. Attribute
+only stacks containing the factory symbol `returnedMake`; preserve all raw stacks
+and whole-process totals. Require observed factory allocations, zero factory
+bytes left after ordinary exit, equal ordinary/control allocation counts, and
+positive factory bytes left after the deliberate omission. Run the existing
+allocator and selected-unwinder controls on each host. Stack-attributed bytes at
+the process heap peak are not an independently measured factory peak. Missing
+attribution is a failed observation, not a zero-cost result. ARC calls stay
+unmeasured. This protocol is frozen before collecting the profiles.
+
 The existing failed timing targets remain in [their original report](callable-phases.md).
 A fresh peer comparison does not replace them.
 

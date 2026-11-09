@@ -51,14 +51,23 @@ Run `42578072461` passes on both hosts at `5dfd82825`; complete logs and raw
 commands are reviewed. Immutable tag `roadmap/weak-peer-checks-2026-11-09` retains
 that source. Docs run `42578075331` passes; its complete log contains only named runner
 negative controls. The matching-barrier run `42578815959` has passed ARM64
-(job `129032480582`); AMD64 (`129032480648`) is still queued. The next buffer change
+(job `129032480582`); AMD64 (`129032480648`) now also passes. The next buffer change
 prepares all three peer languages with the same external C input/result barrier,
 plus actual wrong-barrier rejection controls. The review branch additionally
 selects fwp explicitly, builds the current compiler, prepares its emitted C with
 the same harness/barrier and checks 42 raw/optimized interpreter results. C/fwp
 CLI validation rejects impossible array sizes before calling the workload; this
 is a harness error check, not a claim about native allocator failure behavior.
-This four-language addition is not verified yet.
+This four-language addition is queued in run `42579398196`, source `9850a0fda`,
+ARM64 job `129034306146` and AMD64 job `129034306496`. It is not verified yet.
+
+The review branch also prepares a scalar Swift closure allocation profile with
+the existing separate factory/caller and unchanged 4,096 × 256 × 16 work.
+Two samples for each of two kinds, ordinary and actual omitted deinitialization,
+must demonstrate allocation attribution and release. The measurement protocol is
+in the scope document; there are no observations yet. Unit controls reject absent
+attribution, undetected leaks and the mistaken use of a stack-attributed global
+peak as that stack's own peak. No ARC or speed claim follows from the profiles.
 The suite retains partial evidence even when an independent step fails.
 
 Remaining: matched external buffer barriers and returned-buffer phases, scalar
@@ -84,9 +93,11 @@ build/download/provider caches, not infrastructure state or active workloads.
 ## Current PR gates
 
 Head `7645384bb336acc728deebf24eae96280a45163f`: production `42578853160`,
-docs `42578853071`, focused peers `42578815959`. Review every failed/completed
+docs `42578853071` (passes), focused peers `42578815959` (both pass). Review every failed/completed
 job before repairs. Do not merge while milestone 4 work or final gates remain.
 Redundant post-merge CI `42577384035` was cancelled after verifying #272
 merge/tree equality and its passing original full gates; no failed step was
-reported before cancellation. Interrupted main logs still need review. Its docs
+reported before cancellation. All five interrupted main logs are reviewed: cancellation, and Linux packaging
+of evidence not yet created, are the only error diagnostics. No unexpected test
+failure/compiler warning was found. Logs: `/tmp/fwp-pr272-merge-cancel-*.log`. Its docs
 run `42577384011` passes. Cancellation is not another production pass.
