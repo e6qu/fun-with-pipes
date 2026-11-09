@@ -3,7 +3,8 @@
 **Next:** identify the exact optimized Swift queued-cleanup failure with
 line-numbered lifetime checks. First run `42603913802` fails only Swift `-O`
 on both architectures; C/Rust, Swift `-Onone` and all 16 C fault builds pass.
-A follow-up preparation makes the outside owner live explicitly through weak
+Follow-up source `e9cf680093870bf98770a3a2c8b1c2954f36c1af`, run `42607637111`,
+makes the outside owner live explicitly through weak
 lookup and cancellation. It ends that lifetime before invoking the callback,
 so only the acquired owner protects callback execution. This is unverified;
 retain the diagnostic run on the original operations. Do not infer a compiler
@@ -79,7 +80,10 @@ where process time is lower; empty-array churn and the shared 4,096-element Rust
 comparison expose costs. Many AMD64 copy controls fail, so those comparisons
 remain inconclusive. Do not rerun unchanged measurements to seek qualification.
 Compile time/RSS, image/section/unwind evidence and all raw observations remain.
-Maximum stack use and ARC-operation counts are unmeasured.
+Maximum stack use and ARC-operation counts are unmeasured. The
+[parser memory preparation](measurements/parser-process-memory.md) now specifies
+phase checkpoints, ordinary RSS and actual mapping controls. Its allocator-internal
+peak and committed-memory boundaries remain unresolved; no result is claimed.
 
 The weak-registration preparation adds queued-message
 cancellation/expiration and callback-error cleanup in C/Rust/Swift. Four new C

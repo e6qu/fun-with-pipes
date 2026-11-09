@@ -228,6 +228,10 @@ The [first checks](ownership-peer-checks-2026-11-08/README.md#parser-storage)
 now verify successful allocation transitions and ordinary Rust frames on both
 native architectures. Actual allocator-internal peaks, reservations and RSS remain
 separate work; this observer does not measure them.
+The [next process-memory protocol](parser-process-memory.md) specifies stopped
+phase checkpoints, ordinary RSS runs and real mapping/touch/unmap controls.
+It explicitly leaves allocator-internal peaks and committed memory unresolved;
+RSS or writable mapping size must not be substituted for either.
 
 ## Before collecting timings
 
