@@ -51,11 +51,11 @@ comparisons with Swift, C and Rust and the limits of the evidence.
 
 ## Project direction
 
-Tracing GC removal and the local `let`/`fn` syntax are delivered. Recent work
-reduces derivative recording and temporary numeric records. The current
-[plan](PLAN.md) keeps verified reductions separate from unmet timing goals.
-Remaining array, loop and ownership costs need measured comparisons with C,
-Rust and Swift before selecting further optimizations.
+Tracing GC removal and the local `let`/`fn` syntax are delivered. Recent changes
+reduce temporary numeric storage and ownership operations. The current
+[plan](PLAN.md) tests complete application workflows and measures compiler growth
+and sustained HTTP load. Existing [comparisons](docs/benchmarks.md) with C, Rust
+and Swift guide further optimization; noisy and unmet timing goals remain open.
 
 - Prefer moves, borrows, direct values and storage reuse; count necessary sharing.
 - Preserve simple pipes, immutable values, checked arithmetic and effect order.

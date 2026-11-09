@@ -63,7 +63,9 @@ The native HTTP correctness test runs 64 clients with 200 requests each and
 checks shutdown with a request in flight. Its 12,800 successful requests do not
 establish throughput, latency or sustained capacity.
 
-Milestone 5 must define and run a separate measurement contract:
+Milestone 5 has a [separate measurement contract](measurements/application-tooling.md#sustained-http-load).
+Its endpoint, concurrency levels, request windows and error accounting are fixed;
+sustained results remain pending. The required evidence is:
 
 - Freeze endpoint work, request/response sizes, keep-alive policy, concurrency
   levels, warmup, measured duration, host limits and baseline source before runs.

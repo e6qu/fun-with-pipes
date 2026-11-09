@@ -1,14 +1,15 @@
 # Current work
 
-**Next:** run the combined compiler/application/HTTP correctness checks for this
-batch, including the slow-client probe, then start timing only after they pass.
+**Next:** audit the combined compiler/application/HTTP correctness runs below,
+including the slow-client probe, then start timing only after they pass.
 Retain failed/noisy observations unchanged.
 
 Worktree: `.worktrees/application-milestone`, branch `application-tooling-costs`.
-Previous published source: `3bd0a9f0cff4b722802f3d1291e85c9df5031868`.
+Published source: `7fa50257155abf63fa220cd17f9500ea6d9bdd16`.
 This batch adds the slow-client probe, exact-float toolchain spans and sampling
 failure controls; native verification remains pending.
-No milestone 5 PR is open; assemble the application/compiler/load batch first.
+The milestone 5 implementation batch is ready for a normal PR. Add its URL
+after publication; keep measurements and final delivery checks open.
 Preserve unrelated root-worktree changes.
 
 ## Roadmap status
@@ -56,7 +57,14 @@ so file creation now follows compilation. Root and auxiliary outputs are protect
 At `3bd0a9f0c`: application `42718472554`, compiler growth `42718478175`,
 HTTP `42718483690`, documentation `42718488627`. All remained queued and were
 cancelled before publishing this combined batch to avoid duplicate builds.
-Record replacement run IDs here after dispatch; audit every completed target.
+Replacement runs at `7fa502571`:
+
+- Applications: `42721015315`.
+- Compiler growth: `42721021055`.
+- HTTP/load and cleanup: `42721026186`.
+- Documentation: `42721032218`.
+
+All were queued immediately after dispatch. Audit every completed target.
 
 ## Repairs awaiting verification
 
@@ -94,8 +102,8 @@ checks are correctness failures, not throughput results to publish.
 3. Run the complete HTTP protocol: two sessions per host, 1/8/32/64 connections,
    two 30-second runs each, and one 300-second soak per host. Keep ordinary timing
    separate from instrumented allocation events and physical cleanup.
-4. Retain/audit all reports and update docs; open one normal substantial PR, then
-   run the nine final production jobs, documentation and complete-log audit.
+4. Retain/audit all reports and update the same normal PR; complete the nine
+   final production jobs, documentation and complete-log audit.
    Squash-merge only after exact-head gates pass, with one line ≤80 characters,
    empty body and no trailers/attribution; verify the merged tree and message.
 

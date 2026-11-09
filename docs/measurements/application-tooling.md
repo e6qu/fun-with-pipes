@@ -57,7 +57,7 @@ the walkthroughs must explain. None uses JIT compilation.
 
 ## Compiler phases and growth
 
-Whole `fwp emit-c` time cannot identify an expensive compiler stage.
+Whole `fwp build --emit-c` time cannot identify an expensive compiler stage.
 [Compiler phase reporting](../compiler-pipeline.md#observe-compiler-phases) is
 implemented on the actual build worker; [native contracts pass on both hosts](compiler-http-preparation-2026-11-09/README.md). It
 records nested spans without creating a second compiler pipeline.
@@ -70,7 +70,7 @@ records nested spans without creating a second compiler pipeline.
 | Specialization and lowering | Reachable concrete functions and compile-time evaluation |
 | Optimization | The actual ordered optimization passes |
 | Representation and ownership | Layout selection, borrowing proof, reference-operation insertion and lifetime verification |
-| C emission | Formatting the selected program/runtime into C |
+| C emission | Producing selected program/runtime C, including on-demand helper analysis |
 | C compilation and linking | The selected external toolchain, including child-process time |
 
 Nested phases must not be added twice. Report inclusive and exclusive time where
