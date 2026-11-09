@@ -1,8 +1,9 @@
 # Returned-buffer phase checks
 
 Phase callers and native storage checks now pass on Linux ARM64 and AMD64.
-These verify the [experiment](../returned-buffer-phases.md); no peer timing
-experiment has run yet. The original failures and their repairs follow below.
+These verify the [experiment](../returned-buffer-phases.md).
+[The subsequent timing report](../returned-buffer-time-2026-11-09/README.md) records
+both sessions and their qualification limits. The original failures and their repairs follow below.
 
 ## Verified results
 

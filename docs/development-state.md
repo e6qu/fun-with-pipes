@@ -23,7 +23,7 @@ worktrees' modified handoffs.
 | 1 | In progress | #270 documentation refresh and fresh F64 stores | Original AMD timing acceptance. |
 | 2 | In progress | #271 captured maps and empty-owner transfer | Original noisy timing acceptance. |
 | 3 | In progress | #272 structured gradients and known callbacks; all delivery gates | Original AMD timing acceptance. |
-| 4 | In progress | Buffer correctness/phases/native storage, Swift scalar allocations, weak cancellation/error lifetimes, parser allocation/frame checks | Buffer timings and process memory; weak-operation/service costs and queued cleanup/reuse; parser memory boundaries. |
+| 4 | In progress | Buffer correctness/phases/native storage, Swift scalar allocations, weak cancellation/error lifetimes, parser allocation/frame checks | Weak-operation/service costs and queued cleanup/reuse; parser memory boundaries. Buffer copy-control misses remain explicit. |
 | 5 | Pending | Existing tools and correctness tests | Three application paths, compiler phase/scaling costs and sustained load. |
 
 Original misses remain in their reports. Verified count reductions do not erase
@@ -37,12 +37,14 @@ failed or inconclusive timing acceptance; do not repeat unchanged experiments.
 | [Scalar Swift closure allocations](measurements/swift-scalar-closures-2026-11-09/README.md) | `96e2bf43a` | `42580332788`, both pass; first ARM setup failure retained |
 | [Weak callback errors](measurements/weak-callback-errors-2026-11-09/README.md) | `9a7f1baaf` | `42584848642`, both pass |
 | [Returned-buffer ownership/release](measurements/returned-buffer-checks-2026-11-09/README.md) | `9d8bbb79a` | `42590570921`, both pass |
+| [Buffer time and process RSS](measurements/returned-buffer-time-2026-11-09/README.md) | `b37b15ac2` | `42602375928`, both sessions/audits pass; noisy timings remain inconclusive |
 | [Buffer phases and native storage](measurements/returned-buffer-phases-2026-11-09/README.md) | `ec9313228681689daa4c20c495edd8b5f9faa583` | `42600727564` phases and `42600729662` profiles/audits, both hosts pass |
 | [Parser allocation transitions/frames](measurements/ownership-peer-checks-2026-11-08/README.md) | `4c6cda41f` | `42522747197`, both pass |
 
 Reports retain exact revisions, commands, images/archive identities and faults.
 ARC operations remain unmeasured. Native requested bytes, fwp managed bytes and
-process RSS are distinct measurements. No new speedup is claimed here.
+process RSS are distinct measurements. Qualified phase/peer ratios belong to
+their frozen workload; they do not establish language-wide parity.
 
 ## Current buffer measurements
 
@@ -66,22 +68,25 @@ with array storage. The repaired observer reports both categories and total cost
 ordinary array storage must still reach zero. All first failures remain in the
 [report](measurements/returned-buffer-phases-2026-11-09/README.md).
 
-The [timing protocol](measurements/returned-buffer-phases.md) and collector are
-implemented. The first experiment is dispatched; no timing result is claimed.
-The new reusable workflow checks exact
-source/tag and phase correctness before its C-only pilot, then runs both sessions
-on the same host, with balanced identical-copy controls and separate RSS samples.
-It preserves compile time/RSS, sources, binaries, sections and unwind tables.
-fwp teardown unmaps its reservation; native exit profiles cannot establish timely
-managed-array release. Preserve managed live-byte/omission checks separately.
+[Timing and RSS results](measurements/returned-buffer-time-2026-11-09/README.md)
+now retain both sessions on both hosts. ARM64 large-buffer reading is slower even
+where process time is lower; empty-array churn and the shared 4,096-element Rust
+comparison expose costs. Many AMD64 copy controls fail, so those comparisons
+remain inconclusive. Do not rerun unchanged measurements to seek qualification.
+Compile time/RSS, image/section/unwind evidence and all raw observations remain.
+Maximum stack use and ARC-operation counts are unmeasured.
 
-While those jobs run, the next weak-registration preparation adds queued-message
+The weak-registration preparation adds queued-message
 cancellation/expiration and callback-error cleanup in C/Rust/Swift. Four new C
 faults omit acquired ownership, queued weak metadata, payload release or cleanup
 of unprocessed messages. The checker now retains independent group failures.
 Source `c9bf8dfac`, retained as `roadmap/weak-queued-cleanup-2026-11-09`, is testing
 in `42603913802`; both optimized Swift cases fail with an anonymous trap.
-All other native/fault builds pass. Docs repair `42603916827` passes. This measures no allocation/timing costs and does not establish forced
+All other native/fault builds pass. Diagnostic source `24f7a033e` adds explicit
+Swift line numbers; run `42605354450` is queued. First records are retained in
+[the report](measurements/weak-queued-cleanup-2026-11-09/README.md).
+Docs repair `42603916827` passes; the full log has only intentional failing-child
+and test-runner controls. This measures no allocation/timing costs and does not establish forced
 address reuse.
 
 Docs `42602380180` at timing source `b37b15ac2` failed because the shortened

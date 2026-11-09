@@ -69,8 +69,9 @@ Milestone 4 now fills four concrete comparison gaps:
 
 1. **Buffers:** matched barriers and [separate returned-array lifetimes](docs/measurements/returned-buffer-checks-2026-11-09/README.md)
    now pass in fwp/C/Rust/Swift. [Phase callers and native C/Rust/Swift storage checks](docs/measurements/returned-buffer-phases-2026-11-09/README.md)
-   also pass on both architectures. Next measure construction, use, release and
-   process memory under the [explicit protocol](docs/measurements/returned-buffer-phases.md).
+   also pass on both architectures. [Phase timings and process memory](docs/measurements/returned-buffer-time-2026-11-09/README.md)
+   are recorded for both sessions on both hosts. Many AMD64 copy controls remain
+   inconclusive; retain them without unchanged reruns.
 2. **Returned functions:** [scalar Swift allocation attribution now passes](docs/measurements/swift-scalar-closures-2026-11-09/README.md).
    Retain separate construction/call/release measurements and prior timing misses;
    do not equate native allocation bytes with fwp payload-only counters.

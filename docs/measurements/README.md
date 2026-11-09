@@ -9,6 +9,11 @@ identities. Do not edit observations to make an old experiment describe new code
 
 ## Current diagnosis
 
+[Returned arrays across fwp/C/Rust/Swift](returned-buffer-time-2026-11-09/README.md)
+now separate construction, reading, release and RSS. ARM64 shows lower overall
+time on some large cases but slower reading and costly empty-array churn. Many
+AMD64 comparisons remain inconclusive under the unchanged copy controls.
+
 [Structured-gradient methods](structured-gradient-methods-2026-11-08/README.md)
 compares reverse, forward, local and tensor AD across three objective shapes.
 All four sessions pass correctness/storage audits; noisy timing controls remain

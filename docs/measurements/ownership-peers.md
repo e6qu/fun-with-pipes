@@ -97,8 +97,9 @@ The [checker](../../scripts/check-returned-buffer-peers.py) retains original and
 prepared source, separate objects/modules, binaries, commands and hashes. It
 collects no timing samples. [Phase callers and native storage/release checks](returned-buffer-phases-2026-11-09/README.md)
 now pass on both architectures, with the original link/attribution failures
-retained. Next collect the [construction/read/release protocol](returned-buffer-phases.md),
-including the C-only pilot, phase duration limits and separate RSS runs.
+retained. [Construction/read/release timings and RSS](returned-buffer-time-2026-11-09/README.md)
+now retain both sessions on both hosts, including inconclusive copy controls.
+The [protocol](returned-buffer-phases.md) and original qualification limits remain fixed.
 
 ## Returned functions
 

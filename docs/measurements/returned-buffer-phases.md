@@ -1,6 +1,8 @@
 # Returned buffers: phase measurement protocol
 
-**Correctness and native storage verified; no timings collected.** This extends the
+**Correctness, native storage and timing audits pass.**
+[The timing results](returned-buffer-time-2026-11-09/README.md) retain both qualified
+comparisons and inconclusive copy controls. This extends the
 [returned-buffer correctness checks](ownership-peers.md#returned-buffer-preparation).
 [Both native architectures now pass the phase and release checks](returned-buffer-phases-2026-11-09/README.md).
 Retain the exact measurement source under an immutable tag before collection.
@@ -100,8 +102,8 @@ and release bookkeeping are included in the corresponding phases.
 The [collector](../../scripts/measure-returned-buffers.py) implements the fixed
 C-only pilot and both sessions, with separate compile/RSS runs and a reader that
 reconstructs every result from raw commands. It requires an immutable
-`roadmap/returned-buffer-time-…` tag matching its exact source. It has not collected
-an experiment. Native correctness/storage and timing-reader controls now pass.
+`roadmap/returned-buffer-time-…` tag matching its exact source. Both native hosts have completed the frozen experiment.
+Native correctness/storage and timing-reader controls pass.
 The reusable timing workflow repeats phase checks for its exact source before
 the pilot and requires the explicit immutable source tag.
 
