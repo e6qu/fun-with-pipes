@@ -1,12 +1,15 @@
 # Current work
 
-**Next:** reproduce the original Swift queued-lifetime trap with unchanged
-`precondition` calls and debug information. Diagnostic source `24f7a033e`, run
-`42605354450`, passes on both hosts: adding line-numbered checks changes the
-observed behavior, so it does not establish the cause of the original trap.
-Explicit-lifetime candidate `e9cf68009` is queued in `42607637111`. Swift-only diagnosis `42610103348` at `2c1d74410` compares cancellation/lookup lifetime boundaries separately
-against exact original source `c9bf8dfac`, retaining ordinary and debug builds.
-Do not call the first failure fixed solely because the diagnostic checks pass.
+**Next:** verify the minimal Swift cancellation-lifetime repair and preserved
+original filename in one focused C/Rust/Swift + source-diagnosis batch, then
+continue weak-operation/service and parser-memory work in the same PR.
+Both original-check diagnoses (`42610103348`, source `2c1d74410`) identify original
+line 146: expected destruction immediately after clearing the owner. Extending
+through cancellation alone passes with unchanged assertions on both architectures,
+with and without debug information; lookup-only changes still fail. The current
+fixture exactly matches that passing source hash. The broader lookup
+extensions and diagnostic assertion wrapper are removed; all original failed
+records remain.
 
 Buffer timing `42602375928` passes both sessions/audits on both hosts; noisy
 comparisons remain inconclusive. Docs `42606196247` at `2cb8e313d` pass.
@@ -83,19 +86,17 @@ Maximum stack use and ARC-operation counts are unmeasured. The
 phase checkpoints, ordinary RSS and actual mapping controls. Its allocator-internal
 peak and committed-memory boundaries remain unresolved; no result is claimed.
 
-The weak-registration preparation adds queued-message
-cancellation/expiration and callback-error cleanup in C/Rust/Swift. Four new C
-faults omit acquired ownership, queued weak metadata, payload release or cleanup
-of unprocessed messages. The checker now retains independent group failures.
-Source `c9bf8dfac`, retained as `roadmap/weak-queued-cleanup-2026-11-09`, is testing
-in `42603913802`; both optimized Swift cases fail with an anonymous trap.
-All other native/fault builds pass. Diagnostic source `24f7a033e` adds explicit
-Swift line numbers; run `42605354450` passes on both hosts. The original trap
-therefore still needs an unchanged-check reproduction. First records are retained in
-[the report](measurements/weak-queued-cleanup-2026-11-09/README.md).
-Docs repair `42603916827` passes; the full log has only intentional failing-child
-and test-runner controls. This measures no allocation/timing costs and does not establish forced
-address reuse.
+The [queued-callback report](measurements/weak-queued-cleanup-2026-11-09/README.md)
+retains first failures, passing diagnostic/candidate builds and the isolated
+original-assertion comparison. It explains why passing after changing the
+assertion helper was insufficient. The final repair only makes cancellation's
+owner lifetime explicit. This measures no allocation/timing costs and does not
+establish new address-reuse coverage. The original-check diagnosis changes
+filenames per variant; its follow-up preserves the original module basename.
+
+Docs repair `42603916827` passes; its complete log contains only intentional
+failing-child/test-runner controls. Result-docs audit `42606196247` passes 410
+link sets, 106 preparation pairs and all evidence controls.
 
 Docs `42602380180` at timing source `b37b15ac2` failed because the shortened
 handoff omitted its required milestone-status column. That column is restored
@@ -130,5 +131,5 @@ commit rule. [Its receipt](measurements/structured-callback-delivery-2026-11-09/
 verifies every gate. Duplicate merge run `42577384035` was cancelled and its
 interrupted logs reviewed. Current work is based on that exact merge.
 
-The numerical dispatch workflow is 511,711 bytes, close to GitHub's 512,000-byte
+The numerical dispatch workflow is 511,734 bytes, close to GitHub's 512,000-byte
 limit. Add substantial new suites as reusable workflows, not inline steps.

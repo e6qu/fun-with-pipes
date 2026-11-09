@@ -72,7 +72,10 @@ def main():
                 before = f'    guard let {variable} = {expression} else {{ return{(" " + returned) if returned else ""} }}'
                 after = before.replace('= ' + expression, '= withExtendedLifetime(outside, { ' + expression + ' })')
                 code = once(code, before, after)
-        path = folder / (name + '.swift')
+        part = folder / name
+        part.mkdir()
+        # Preserve the original basename, which also determines Swift's module name.
+        path = part / 'swift-ordinary.swift'
         path.write_text(code)
         for debug in (False, True):
             binary = folder / (name + ('-debug' if debug else '-ordinary'))
@@ -89,6 +92,9 @@ def main():
                 row = dict(variant=name, debug=debug, sourceSha256=hashlib.sha256(code.encode()).hexdigest(),
                            binarySha256=hashlib.sha256(image).hexdigest(), result=run([binary], env))
                 report['cases'].append(row)
+                if row['result']['status'] == 0:
+                    assert (row['result']['stdout'], row['result']['stderr']) == (
+                        'calls=2 destroyed=66 expired=1 cancelled=1 error=1 queue=1\n', ''), row
                 if row['result']['status'] != 0:
                     trace_env = env | {'SWIFT_BACKTRACE': 'enable=yes,interactive=no,demangle=yes,color=no,'
                                       'threads=crashed,registers=none,images=none,limit=12,top=12,symbolicate=full'}

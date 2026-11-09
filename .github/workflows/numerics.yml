@@ -2804,7 +2804,7 @@ jobs:
           --arch "${{ matrix.arch }}" --target "${{ matrix.arch }}-unknown-linux-gnu"
           --output weak-swift-diagnosis
       - name: Weak registration cancellation and callback-error cleanup
-        if: ${{ !cancelled() && contains(fromJSON('["ownership-peer-checks","weak-peer-checks"]'), inputs.suite) }}
+        if: ${{ !cancelled() && contains(fromJSON('["ownership-peer-checks","weak-peer-checks","weak-swift-diagnosis"]'), inputs.suite) }}
         run: >-
           python3 scripts/check-weak-registration-peers.py --cc gcc --rustc rustc --swiftc swiftc
           --source "$GITHUB_SHA" --arch "${{ matrix.arch }}"
