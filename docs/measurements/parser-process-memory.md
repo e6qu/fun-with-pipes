@@ -103,9 +103,10 @@ corruptions must be rejected even after their manifest hashes are updated.
 
 [The native workflow](../../.github/workflows/parser-process-memory.yml) also
 preserves the allocation-transition, invalid-input, omitted-release and frame
-checks. The source is frozen as `roadmap/parser-process-memory-arguments-2026-11-09` before collection. Implementation
+checks. The source is frozen as `roadmap/parser-process-memory-combined-2026-11-09` before collection. Implementation
 is prepared; native results remain pending. The original preparation tag remains
-immutable. Its queued runs were superseded before collecting measurements.
+immutable. Earlier queued runs were superseded before collecting measurements. The combined
+source also checks exact JSON field types/keys and native phase totals.
 
 Review also found that the C peer accepted numeric prefixes such as `1junk`,
 negative counts and range overflow. It now checks the complete argument and its

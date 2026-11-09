@@ -28,9 +28,9 @@ do not establish runtime acceptance. Do not rerun unchanged samples to qualify.
 
 | Batch | Frozen source / tag | Native jobs | Status |
 |---|---|---|---|
-| Parser memory and argument repair | `295ab7757`, `roadmap/parser-process-memory-arguments-2026-11-09` | Run `42622044846`: AMD64 `129176409450`, ARM64 `129176409457` | Queued |
-| Weak phases, minimal Swift repair and original-assertion diagnosis | `4865adf93`, `roadmap/weak-operation-phases-2026-11-09` | Run `42624102561`: AMD64 `129183315900`, ARM64 `129183316113` | Queued |
-| Documentation and reader controls | `4865adf93` | Run `42624107549`, job `129183323315` | Queued |
+| Parser memory and argument repair | `8848e837c`, `roadmap/parser-process-memory-combined-2026-11-09` | Run `42631160983`: AMD64 `129207526319`, ARM64 `129207526124` | Queued |
+| Weak phases, minimal Swift repair and original-assertion diagnosis | `8848e837c`, `roadmap/weak-operation-combined-2026-11-09` | Run `42631166444`: AMD64 `129207545716`, ARM64 `129207545782` | Queued |
+| Documentation and reader controls | `8848e837c` | Run `42631171172`, job `129207557246` | Queued |
 
 - [Parser batch](measurements/parser-process-memory.md): one parse per process,
   three ordinary RSS observations and two five-checkpoint sequences per case and
@@ -49,17 +49,23 @@ do not establish runtime acceptance. Do not rerun unchanged samples to qualify.
   and assertions. It must also pass the actual C/Rust/Swift queued cleanup checks.
 
 Superseded while still queued, before tests: `42615022531`, `42615026734`,
-`42620659615`, `42620663788`, `42622048974`. Their immutable tags remain.
+`42620659615`, `42620663788`, `42622048974`, `42622044846`, `42624102561`,
+`42624107549`, `42627467268`. The last four have zero executed steps in GitHub's
+completed records. Their immutable tags remain.
 Cancellation is not a pass. The earlier assertion-wrapper-only Swift pass is
 not accepted as a repair; original failures and source comparisons are retained.
 
-The report-reader follow-up now rejects booleans masquerading as integer counts,
-duplicate JSON fields, malformed objects, negative counters and inconsistent
-parser phase totals. Its new reader controls are queued in docs run `42627467268`, job `129194851404`,
-at `fa3125686`. Native programs and frozen measurement inputs are unchanged.
-A subsequent flag audit added the production driver's `-ffp-contract=off` to the
-weak harness build commands. No floating-point work is benchmarked, but final
-weak verification must use those explicit settings before any timing collection.
+The combined source rejects booleans masquerading as integer counts, duplicate
+JSON fields, malformed objects, negative counters and inconsistent parser phase
+totals. It also explicitly matches the production C driver's `-ffp-contract=off`
+setting. The six-phase workloads use integer operations. Both changes are covered
+by the consolidated verification; no passing result is claimed yet.
+
+The queue has no explanatory annotations or assigned runners. These workflows
+have no concurrency lock or environment approval. A separate older 146-job
+workflow occupied runners during review and has since ended; that does not
+establish the cause of the remaining delay. GitHub's status page reported Actions
+operational. Do not infer a billing restriction or restart unchanged jobs.
 
 ## Verified comparison evidence
 
