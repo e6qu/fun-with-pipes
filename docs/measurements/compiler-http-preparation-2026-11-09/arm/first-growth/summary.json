@@ -1,0 +1,5230 @@
+{
+  "identity": {
+    "source": "a51a837f268feccbfaa366749868e83aab6e50e6",
+    "compilerSha256": "3dc454c4a0bf28948badab00c7d74db2b65548cfdc950cf0bf8bcaf7a6a12941",
+    "machine": "aarch64",
+    "session": 0,
+    "phase": "check",
+    "compiler": "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+    "cc": "gcc",
+    "flags": [
+      "-O2",
+      "-std=gnu11",
+      "-ffp-contract=off",
+      "-fno-fast-math",
+      "-fno-lto",
+      "-march=armv8-a"
+    ],
+    "deadlineSeconds": 120,
+    "rounds": 8,
+    "warmups": 1,
+    "ccVersion": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+    "rustVersion": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+    "topology": "Architecture:                            aarch64\nCPU op-mode(s):                          32-bit, 64-bit\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               ARM\nModel name:                              Neoverse-N2\nModel:                                   0\nThread(s) per core:                      1\nCore(s) per socket:                      4\nSocket(s):                               1\nStepping:                                r0p0\nBogoMIPS:                                2000.00\nFlags:                                   fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nL1d cache:                               256 KiB (4 instances)\nL1i cache:                               256 KiB (4 instances)\nL2 cache:                                4 MiB (4 instances)\nL3 cache:                                128 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; CSV2, BHB\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected\n",
+    "kernel": "Linux-7.0.0-1017-azure-aarch64-with-glibc2.39",
+    "affinity": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "scope": "Fresh-process fwp build --emit-c; GCC and execution measured separately. RSS is per-command process high-water mark, not per-phase memory. Copy controls compare identical compiler bytes. OS caches are not flushed."
+  },
+  "cases": {
+    "definitions-16": {
+      "family": "definitions",
+      "size": 16,
+      "sourceBytes": 779,
+      "sourceSha256": "6a00e0fc715a9def8e8daa717bd0251f7ef9e4c4e135948c495bee50dc2b2eea",
+      "samples": [],
+      "ordinary": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-16/input.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-16/ordinary.c"
+        ],
+        "elapsedNs": 279339193,
+        "status": 0,
+        "timedOut": false,
+        "output": "definitions-16/ordinary-emit",
+        "maxRssKiB": 41140,
+        "userSeconds": 0.24,
+        "systemSeconds": 0.02,
+        "cBytes": 660685,
+        "cSha256": "e1b8fc8c58ab3c00fa419d4314bbffeb341ed3f73af88b05fb0e936012b4ad49",
+        "gcc": {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-fno-fast-math",
+            "-fno-lto",
+            "-march=armv8-a",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-16/ordinary.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-16/ordinary-gcc.exe",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 644856026,
+          "status": 0,
+          "timedOut": false,
+          "output": "definitions-16/ordinary-gcc",
+          "maxRssKiB": 55512,
+          "userSeconds": 0.35,
+          "systemSeconds": 0.03,
+          "binaryBytes": 74432,
+          "binarySha256": "fc1a66e749eeab14cb175e8ec3fdffa582891b3ffd3c49d7308a30cf66d8824b",
+          "execution": {
+            "command": [
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-16/ordinary-gcc.exe"
+            ],
+            "elapsedNs": 1852331,
+            "status": 0,
+            "timedOut": false,
+            "output": "definitions-16/ordinary-gcc-execution",
+            "maxRssKiB": 1400,
+            "userSeconds": 0.0,
+            "systemSeconds": 0.0
+          }
+        }
+      },
+      "observed": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-16/input.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-16/observed.c",
+          "--profile-compile",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-16/observed.json"
+        ],
+        "elapsedNs": 268160118,
+        "status": 0,
+        "timedOut": false,
+        "output": "definitions-16/observed-emit",
+        "maxRssKiB": 41360,
+        "userSeconds": 0.25,
+        "systemSeconds": 0.01,
+        "phases": {
+          "load-root": {
+            "exclusiveNs": 15871,
+            "inclusiveNs": 15871,
+            "calls": 1,
+            "counts": {}
+          },
+          "front-end": {
+            "exclusiveNs": 2498775,
+            "inclusiveNs": 241219223,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-library": {
+            "exclusiveNs": 118482,
+            "inclusiveNs": 14229484,
+            "calls": 29,
+            "counts": {
+              "source_bytes": 374132
+            }
+          },
+          "parse-module": {
+            "exclusiveNs": 14217414,
+            "inclusiveNs": 14217414,
+            "calls": 31,
+            "counts": {
+              "tokens_including_eof": 62426,
+              "declarations": 3116
+            }
+          },
+          "generate-library-declarations": {
+            "exclusiveNs": 19671,
+            "inclusiveNs": 19671,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-input": {
+            "exclusiveNs": 368,
+            "inclusiveNs": 33535,
+            "calls": 1,
+            "counts": {
+              "source_bytes": 779
+            }
+          },
+          "macro-expansion": {
+            "exclusiveNs": 466364,
+            "inclusiveNs": 466364,
+            "calls": 1,
+            "counts": {}
+          },
+          "collect-declarations": {
+            "exclusiveNs": 13585695,
+            "inclusiveNs": 13585695,
+            "calls": 1,
+            "counts": {
+              "modules": 2,
+              "declarations": 3083
+            }
+          },
+          "type-check": {
+            "exclusiveNs": 210385699,
+            "inclusiveNs": 210385699,
+            "calls": 1,
+            "counts": {
+              "bindings": 1607,
+              "types": 117
+            }
+          },
+          "lowering": {
+            "exclusiveNs": 3456,
+            "inclusiveNs": 1051620,
+            "calls": 1,
+            "counts": {
+              "functions_after_optimization": 25
+            }
+          },
+          "specialization": {
+            "exclusiveNs": 639605,
+            "inclusiveNs": 639605,
+            "calls": 1,
+            "counts": {
+              "functions": 25
+            }
+          },
+          "preserve-resources": {
+            "exclusiveNs": 28975,
+            "inclusiveNs": 28975,
+            "calls": 1,
+            "counts": {}
+          },
+          "optimization": {
+            "exclusiveNs": 379584,
+            "inclusiveNs": 379584,
+            "calls": 1,
+            "counts": {}
+          },
+          "code-generation": {
+            "exclusiveNs": 66805,
+            "inclusiveNs": 967391,
+            "calls": 1,
+            "counts": {}
+          },
+          "representation-and-ownership": {
+            "exclusiveNs": 554633,
+            "inclusiveNs": 554633,
+            "calls": 1,
+            "counts": {
+              "functions": 26
+            }
+          },
+          "c-emission": {
+            "exclusiveNs": 345953,
+            "inclusiveNs": 345953,
+            "calls": 1,
+            "counts": {
+              "c_bytes": 660685
+            }
+          }
+        },
+        "cBytes": 660685,
+        "cSha256": "e1b8fc8c58ab3c00fa419d4314bbffeb341ed3f73af88b05fb0e936012b4ad49",
+        "gcc": {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-fno-fast-math",
+            "-fno-lto",
+            "-march=armv8-a",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-16/observed.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-16/observed-gcc.exe",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 398893129,
+          "status": 0,
+          "timedOut": false,
+          "output": "definitions-16/observed-gcc",
+          "maxRssKiB": 55616,
+          "userSeconds": 0.36,
+          "systemSeconds": 0.03,
+          "binaryBytes": 74432,
+          "binarySha256": "0629fb844fdbddbe0a7a2256c947c08e6dc3db1695a0c05cbe075198b614b62d",
+          "execution": {
+            "command": [
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-16/observed-gcc.exe"
+            ],
+            "elapsedNs": 1798212,
+            "status": 0,
+            "timedOut": false,
+            "output": "definitions-16/observed-gcc-execution",
+            "maxRssKiB": 1392,
+            "userSeconds": 0.0,
+            "systemSeconds": 0.0
+          }
+        }
+      },
+      "early-ordinary": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-16/early.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-16/early-ordinary.c"
+        ],
+        "elapsedNs": 265092703,
+        "status": 1,
+        "timedOut": false,
+        "output": "definitions-16/early-ordinary",
+        "maxRssKiB": 40628,
+        "userSeconds": 0.25,
+        "systemSeconds": 0.01
+      },
+      "early-observed": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-16/early.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-16/early-observed.c",
+          "--profile-compile",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-16/early-observed.json"
+        ],
+        "elapsedNs": 265585474,
+        "status": 1,
+        "timedOut": false,
+        "output": "definitions-16/early-observed",
+        "maxRssKiB": 40648,
+        "userSeconds": 0.24,
+        "systemSeconds": 0.01,
+        "phases": {
+          "load-root": {
+            "exclusiveNs": 15712,
+            "inclusiveNs": 15712,
+            "calls": 1,
+            "counts": {}
+          },
+          "front-end": {
+            "exclusiveNs": 23089740,
+            "inclusiveNs": 259824892,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-library": {
+            "exclusiveNs": 117555,
+            "inclusiveNs": 13679490,
+            "calls": 29,
+            "counts": {
+              "source_bytes": 374132
+            }
+          },
+          "parse-module": {
+            "exclusiveNs": 13595893,
+            "inclusiveNs": 13595893,
+            "calls": 30,
+            "counts": {
+              "tokens_including_eof": 62186,
+              "declarations": 3085
+            }
+          },
+          "generate-library-declarations": {
+            "exclusiveNs": 19127,
+            "inclusiveNs": 19127,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-input": {
+            "exclusiveNs": 360,
+            "inclusiveNs": 34318,
+            "calls": 1,
+            "counts": {
+              "source_bytes": 809
+            }
+          },
+          "macro-expansion": {
+            "exclusiveNs": 436918,
+            "inclusiveNs": 436918,
+            "calls": 1,
+            "counts": {}
+          },
+          "collect-declarations": {
+            "exclusiveNs": 13096635,
+            "inclusiveNs": 13096635,
+            "calls": 1,
+            "counts": {
+              "modules": 2,
+              "declarations": 3085
+            }
+          },
+          "type-check": {
+            "exclusiveNs": 209468664,
+            "inclusiveNs": 209468664,
+            "calls": 1,
+            "counts": {
+              "bindings": 1608,
+              "types": 117
+            }
+          }
+        }
+      },
+      "late-ordinary": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-16/late.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-16/late-ordinary.c"
+        ],
+        "elapsedNs": 265565027,
+        "status": 1,
+        "timedOut": false,
+        "output": "definitions-16/late-ordinary",
+        "maxRssKiB": 40708,
+        "userSeconds": 0.23,
+        "systemSeconds": 0.02
+      },
+      "late-observed": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-16/late.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-16/late-observed.c",
+          "--profile-compile",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-16/late-observed.json"
+        ],
+        "elapsedNs": 266362426,
+        "status": 1,
+        "timedOut": false,
+        "output": "definitions-16/late-observed",
+        "maxRssKiB": 40520,
+        "userSeconds": 0.24,
+        "systemSeconds": 0.02,
+        "phases": {
+          "load-root": {
+            "exclusiveNs": 14104,
+            "inclusiveNs": 14104,
+            "calls": 1,
+            "counts": {}
+          },
+          "front-end": {
+            "exclusiveNs": 22893160,
+            "inclusiveNs": 261133396,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-library": {
+            "exclusiveNs": 116196,
+            "inclusiveNs": 13824766,
+            "calls": 29,
+            "counts": {
+              "source_bytes": 374132
+            }
+          },
+          "parse-module": {
+            "exclusiveNs": 13742777,
+            "inclusiveNs": 13742777,
+            "calls": 30,
+            "counts": {
+              "tokens_including_eof": 62186,
+              "declarations": 3085
+            }
+          },
+          "generate-library-declarations": {
+            "exclusiveNs": 19343,
+            "inclusiveNs": 19343,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-input": {
+            "exclusiveNs": 408,
+            "inclusiveNs": 34615,
+            "calls": 1,
+            "counts": {
+              "source_bytes": 809
+            }
+          },
+          "macro-expansion": {
+            "exclusiveNs": 457621,
+            "inclusiveNs": 457621,
+            "calls": 1,
+            "counts": {}
+          },
+          "collect-declarations": {
+            "exclusiveNs": 13621309,
+            "inclusiveNs": 13621309,
+            "calls": 1,
+            "counts": {
+              "modules": 2,
+              "declarations": 3085
+            }
+          },
+          "type-check": {
+            "exclusiveNs": 210282582,
+            "inclusiveNs": 210282582,
+            "calls": 1,
+            "counts": {
+              "bindings": 1608,
+              "types": 117
+            }
+          }
+        }
+      },
+      "correct": true
+    },
+    "definitions-64": {
+      "family": "definitions",
+      "size": 64,
+      "sourceBytes": 3179,
+      "sourceSha256": "82747286c702b53611a2071cf7217bdc81631307689e6be8d30547e48d754db0",
+      "samples": [],
+      "ordinary": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-64/input.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-64/ordinary.c"
+        ],
+        "elapsedNs": 271266828,
+        "status": 0,
+        "timedOut": false,
+        "output": "definitions-64/ordinary-emit",
+        "maxRssKiB": 42292,
+        "userSeconds": 0.24,
+        "systemSeconds": 0.01,
+        "cBytes": 669754,
+        "cSha256": "1cbadefcee3f02730676f12f7b8d58d763443f6d98858705caca91355420b14a",
+        "gcc": {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-fno-fast-math",
+            "-fno-lto",
+            "-march=armv8-a",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-64/ordinary.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-64/ordinary-gcc.exe",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 556332134,
+          "status": 0,
+          "timedOut": false,
+          "output": "definitions-64/ordinary-gcc",
+          "maxRssKiB": 64340,
+          "userSeconds": 0.51,
+          "systemSeconds": 0.04,
+          "binaryBytes": 74496,
+          "binarySha256": "6a37c91ab87702eb9497b9a9e9d2933f0f828dc72ca8246f1fb558e2e7ad0c43",
+          "execution": {
+            "command": [
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-64/ordinary-gcc.exe"
+            ],
+            "elapsedNs": 1839051,
+            "status": 0,
+            "timedOut": false,
+            "output": "definitions-64/ordinary-gcc-execution",
+            "maxRssKiB": 1408,
+            "userSeconds": 0.0,
+            "systemSeconds": 0.0
+          }
+        }
+      },
+      "observed": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-64/input.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-64/observed.c",
+          "--profile-compile",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-64/observed.json"
+        ],
+        "elapsedNs": 272112393,
+        "status": 0,
+        "timedOut": false,
+        "output": "definitions-64/observed-emit",
+        "maxRssKiB": 42352,
+        "userSeconds": 0.25,
+        "systemSeconds": 0.01,
+        "phases": {
+          "load-root": {
+            "exclusiveNs": 15471,
+            "inclusiveNs": 15471,
+            "calls": 1,
+            "counts": {}
+          },
+          "front-end": {
+            "exclusiveNs": 2369742,
+            "inclusiveNs": 241726793,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-library": {
+            "exclusiveNs": 114675,
+            "inclusiveNs": 13973087,
+            "calls": 29,
+            "counts": {
+              "source_bytes": 374132
+            }
+          },
+          "parse-module": {
+            "exclusiveNs": 14158446,
+            "inclusiveNs": 14158446,
+            "calls": 31,
+            "counts": {
+              "tokens_including_eof": 63866,
+              "declarations": 3308
+            }
+          },
+          "generate-library-declarations": {
+            "exclusiveNs": 18767,
+            "inclusiveNs": 18767,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-input": {
+            "exclusiveNs": 800,
+            "inclusiveNs": 125706,
+            "calls": 1,
+            "counts": {
+              "source_bytes": 3179
+            }
+          },
+          "macro-expansion": {
+            "exclusiveNs": 414815,
+            "inclusiveNs": 414815,
+            "calls": 1,
+            "counts": {}
+          },
+          "collect-declarations": {
+            "exclusiveNs": 13447868,
+            "inclusiveNs": 13447868,
+            "calls": 1,
+            "counts": {
+              "modules": 2,
+              "declarations": 3179
+            }
+          },
+          "type-check": {
+            "exclusiveNs": 211376808,
+            "inclusiveNs": 211376808,
+            "calls": 1,
+            "counts": {
+              "bindings": 1655,
+              "types": 117
+            }
+          },
+          "lowering": {
+            "exclusiveNs": 3352,
+            "inclusiveNs": 2193061,
+            "calls": 1,
+            "counts": {
+              "functions_after_optimization": 73
+            }
+          },
+          "specialization": {
+            "exclusiveNs": 1029125,
+            "inclusiveNs": 1029125,
+            "calls": 1,
+            "counts": {
+              "functions": 73
+            }
+          },
+          "preserve-resources": {
+            "exclusiveNs": 65525,
+            "inclusiveNs": 65525,
+            "calls": 1,
+            "counts": {}
+          },
+          "optimization": {
+            "exclusiveNs": 1095059,
+            "inclusiveNs": 1095059,
+            "calls": 1,
+            "counts": {}
+          },
+          "code-generation": {
+            "exclusiveNs": 132730,
+            "inclusiveNs": 2144166,
+            "calls": 1,
+            "counts": {}
+          },
+          "representation-and-ownership": {
+            "exclusiveNs": 1510681,
+            "inclusiveNs": 1510681,
+            "calls": 1,
+            "counts": {
+              "functions": 74
+            }
+          },
+          "c-emission": {
+            "exclusiveNs": 500755,
+            "inclusiveNs": 500755,
+            "calls": 1,
+            "counts": {
+              "c_bytes": 669754
+            }
+          }
+        },
+        "cBytes": 669754,
+        "cSha256": "1cbadefcee3f02730676f12f7b8d58d763443f6d98858705caca91355420b14a",
+        "gcc": {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-fno-fast-math",
+            "-fno-lto",
+            "-march=armv8-a",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-64/observed.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-64/observed-gcc.exe",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 554339329,
+          "status": 0,
+          "timedOut": false,
+          "output": "definitions-64/observed-gcc",
+          "maxRssKiB": 64364,
+          "userSeconds": 0.5,
+          "systemSeconds": 0.04,
+          "binaryBytes": 74496,
+          "binarySha256": "b3c55bc017f3c004fa1a7bd32b6a6cefaa24115f6157f5e75b23ea99cdf29bbf",
+          "execution": {
+            "command": [
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-64/observed-gcc.exe"
+            ],
+            "elapsedNs": 1847587,
+            "status": 0,
+            "timedOut": false,
+            "output": "definitions-64/observed-gcc-execution",
+            "maxRssKiB": 1400,
+            "userSeconds": 0.0,
+            "systemSeconds": 0.0
+          }
+        }
+      },
+      "early-ordinary": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-64/early.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-64/early-ordinary.c"
+        ],
+        "elapsedNs": 271090211,
+        "status": 1,
+        "timedOut": false,
+        "output": "definitions-64/early-ordinary",
+        "maxRssKiB": 41004,
+        "userSeconds": 0.24,
+        "systemSeconds": 0.02
+      },
+      "early-observed": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-64/early.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-64/early-observed.c",
+          "--profile-compile",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-64/early-observed.json"
+        ],
+        "elapsedNs": 271907593,
+        "status": 1,
+        "timedOut": false,
+        "output": "definitions-64/early-observed",
+        "maxRssKiB": 40896,
+        "userSeconds": 0.24,
+        "systemSeconds": 0.02,
+        "phases": {
+          "load-root": {
+            "exclusiveNs": 26239,
+            "inclusiveNs": 26239,
+            "calls": 1,
+            "counts": {}
+          },
+          "front-end": {
+            "exclusiveNs": 24641071,
+            "inclusiveNs": 266699715,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-library": {
+            "exclusiveNs": 116124,
+            "inclusiveNs": 14082346,
+            "calls": 29,
+            "counts": {
+              "source_bytes": 374132
+            }
+          },
+          "parse-module": {
+            "exclusiveNs": 14093009,
+            "inclusiveNs": 14093009,
+            "calls": 30,
+            "counts": {
+              "tokens_including_eof": 62906,
+              "declarations": 3181
+            }
+          },
+          "generate-library-declarations": {
+            "exclusiveNs": 19375,
+            "inclusiveNs": 19375,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-input": {
+            "exclusiveNs": 768,
+            "inclusiveNs": 127555,
+            "calls": 1,
+            "counts": {
+              "source_bytes": 3209
+            }
+          },
+          "macro-expansion": {
+            "exclusiveNs": 509091,
+            "inclusiveNs": 509091,
+            "calls": 1,
+            "counts": {}
+          },
+          "collect-declarations": {
+            "exclusiveNs": 14308417,
+            "inclusiveNs": 14308417,
+            "calls": 1,
+            "counts": {
+              "modules": 2,
+              "declarations": 3181
+            }
+          },
+          "type-check": {
+            "exclusiveNs": 213011860,
+            "inclusiveNs": 213011860,
+            "calls": 1,
+            "counts": {
+              "bindings": 1656,
+              "types": 117
+            }
+          }
+        }
+      },
+      "late-ordinary": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-64/late.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-64/late-ordinary.c"
+        ],
+        "elapsedNs": 269587074,
+        "status": 1,
+        "timedOut": false,
+        "output": "definitions-64/late-ordinary",
+        "maxRssKiB": 40964,
+        "userSeconds": 0.24,
+        "systemSeconds": 0.02
+      },
+      "late-observed": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-64/late.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-64/late-observed.c",
+          "--profile-compile",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-64/late-observed.json"
+        ],
+        "elapsedNs": 270311100,
+        "status": 1,
+        "timedOut": false,
+        "output": "definitions-64/late-observed",
+        "maxRssKiB": 40972,
+        "userSeconds": 0.24,
+        "systemSeconds": 0.01,
+        "phases": {
+          "load-root": {
+            "exclusiveNs": 15151,
+            "inclusiveNs": 15151,
+            "calls": 1,
+            "counts": {}
+          },
+          "front-end": {
+            "exclusiveNs": 23683784,
+            "inclusiveNs": 264266481,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-library": {
+            "exclusiveNs": 107988,
+            "inclusiveNs": 14238955,
+            "calls": 29,
+            "counts": {
+              "source_bytes": 374132
+            }
+          },
+          "parse-module": {
+            "exclusiveNs": 14257938,
+            "inclusiveNs": 14257938,
+            "calls": 30,
+            "counts": {
+              "tokens_including_eof": 62906,
+              "declarations": 3181
+            }
+          },
+          "generate-library-declarations": {
+            "exclusiveNs": 18559,
+            "inclusiveNs": 18559,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-input": {
+            "exclusiveNs": 840,
+            "inclusiveNs": 127811,
+            "calls": 1,
+            "counts": {
+              "source_bytes": 3209
+            }
+          },
+          "macro-expansion": {
+            "exclusiveNs": 419887,
+            "inclusiveNs": 419887,
+            "calls": 1,
+            "counts": {}
+          },
+          "collect-declarations": {
+            "exclusiveNs": 13325729,
+            "inclusiveNs": 13325729,
+            "calls": 1,
+            "counts": {
+              "modules": 2,
+              "declarations": 3181
+            }
+          },
+          "type-check": {
+            "exclusiveNs": 212451756,
+            "inclusiveNs": 212451756,
+            "calls": 1,
+            "counts": {
+              "bindings": 1656,
+              "types": 117
+            }
+          }
+        }
+      },
+      "correct": true
+    },
+    "definitions-256": {
+      "family": "definitions",
+      "size": 256,
+      "sourceBytes": 13403,
+      "sourceSha256": "9582e173d35900c3f8b0d1d797c843ebca936d1deb0f9c8a660bbbb7fdf1b6a3",
+      "samples": [],
+      "ordinary": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-256/input.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-256/ordinary.c"
+        ],
+        "elapsedNs": 296696243,
+        "status": 0,
+        "timedOut": false,
+        "output": "definitions-256/ordinary-emit",
+        "maxRssKiB": 46144,
+        "userSeconds": 0.27,
+        "systemSeconds": 0.01,
+        "cBytes": 707918,
+        "cSha256": "6f3b7644e763e5e3eeb0bcb3b6b5be53dd7f162f9ef8966b1d75667112ae733c",
+        "gcc": {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-fno-fast-math",
+            "-fno-lto",
+            "-march=armv8-a",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-256/ordinary.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-256/ordinary-gcc.exe",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 1274597172,
+          "status": 0,
+          "timedOut": false,
+          "output": "definitions-256/ordinary-gcc",
+          "maxRssKiB": 86304,
+          "userSeconds": 1.22,
+          "systemSeconds": 0.04,
+          "binaryBytes": 74496,
+          "binarySha256": "0a72b4930af076755ea9086e4f70389dd90fcc73f51aad7ced27fde922b57874",
+          "execution": {
+            "command": [
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-256/ordinary-gcc.exe"
+            ],
+            "elapsedNs": 1877329,
+            "status": 0,
+            "timedOut": false,
+            "output": "definitions-256/ordinary-gcc-execution",
+            "maxRssKiB": 1412,
+            "userSeconds": 0.0,
+            "systemSeconds": 0.0
+          }
+        }
+      },
+      "observed": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-256/input.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-256/observed.c",
+          "--profile-compile",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-256/observed.json"
+        ],
+        "elapsedNs": 294964547,
+        "status": 0,
+        "timedOut": false,
+        "output": "definitions-256/observed-emit",
+        "maxRssKiB": 46160,
+        "userSeconds": 0.27,
+        "systemSeconds": 0.01,
+        "phases": {
+          "load-root": {
+            "exclusiveNs": 21879,
+            "inclusiveNs": 21879,
+            "calls": 1,
+            "counts": {}
+          },
+          "front-end": {
+            "exclusiveNs": 2505095,
+            "inclusiveNs": 248944763,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-library": {
+            "exclusiveNs": 119612,
+            "inclusiveNs": 13512970,
+            "calls": 29,
+            "counts": {
+              "source_bytes": 374132
+            }
+          },
+          "parse-module": {
+            "exclusiveNs": 14749421,
+            "inclusiveNs": 14749421,
+            "calls": 31,
+            "counts": {
+              "tokens_including_eof": 69626,
+              "declarations": 4076
+            }
+          },
+          "generate-library-declarations": {
+            "exclusiveNs": 18511,
+            "inclusiveNs": 18511,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-input": {
+            "exclusiveNs": 1312,
+            "inclusiveNs": 674452,
+            "calls": 1,
+            "counts": {
+              "source_bytes": 13403
+            }
+          },
+          "macro-expansion": {
+            "exclusiveNs": 450269,
+            "inclusiveNs": 450269,
+            "calls": 1,
+            "counts": {}
+          },
+          "collect-declarations": {
+            "exclusiveNs": 14306801,
+            "inclusiveNs": 14306801,
+            "calls": 1,
+            "counts": {
+              "modules": 2,
+              "declarations": 3563
+            }
+          },
+          "type-check": {
+            "exclusiveNs": 217476665,
+            "inclusiveNs": 217476665,
+            "calls": 1,
+            "counts": {
+              "bindings": 1847,
+              "types": 117
+            }
+          },
+          "lowering": {
+            "exclusiveNs": 4328,
+            "inclusiveNs": 6992387,
+            "calls": 1,
+            "counts": {
+              "functions_after_optimization": 265
+            }
+          },
+          "specialization": {
+            "exclusiveNs": 2520991,
+            "inclusiveNs": 2520991,
+            "calls": 1,
+            "counts": {
+              "functions": 265
+            }
+          },
+          "preserve-resources": {
+            "exclusiveNs": 234358,
+            "inclusiveNs": 234358,
+            "calls": 1,
+            "counts": {}
+          },
+          "optimization": {
+            "exclusiveNs": 4232710,
+            "inclusiveNs": 4232710,
+            "calls": 1,
+            "counts": {}
+          },
+          "code-generation": {
+            "exclusiveNs": 551881,
+            "inclusiveNs": 10173382,
+            "calls": 1,
+            "counts": {}
+          },
+          "representation-and-ownership": {
+            "exclusiveNs": 8553042,
+            "inclusiveNs": 8553042,
+            "calls": 1,
+            "counts": {
+              "functions": 266
+            }
+          },
+          "c-emission": {
+            "exclusiveNs": 1068459,
+            "inclusiveNs": 1068459,
+            "calls": 1,
+            "counts": {
+              "c_bytes": 707918
+            }
+          }
+        },
+        "cBytes": 707918,
+        "cSha256": "6f3b7644e763e5e3eeb0bcb3b6b5be53dd7f162f9ef8966b1d75667112ae733c",
+        "gcc": {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-fno-fast-math",
+            "-fno-lto",
+            "-march=armv8-a",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-256/observed.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-256/observed-gcc.exe",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 1251771124,
+          "status": 0,
+          "timedOut": false,
+          "output": "definitions-256/observed-gcc",
+          "maxRssKiB": 86068,
+          "userSeconds": 1.19,
+          "systemSeconds": 0.05,
+          "binaryBytes": 74496,
+          "binarySha256": "20aa9204b69d541782b9c863060e07496848dcb90516a43e25dfe99be77cdecd",
+          "execution": {
+            "command": [
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-256/observed-gcc.exe"
+            ],
+            "elapsedNs": 1839267,
+            "status": 0,
+            "timedOut": false,
+            "output": "definitions-256/observed-gcc-execution",
+            "maxRssKiB": 1424,
+            "userSeconds": 0.0,
+            "systemSeconds": 0.0
+          }
+        }
+      },
+      "early-ordinary": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-256/early.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-256/early-ordinary.c"
+        ],
+        "elapsedNs": 276794699,
+        "status": 1,
+        "timedOut": false,
+        "output": "definitions-256/early-ordinary",
+        "maxRssKiB": 42184,
+        "userSeconds": 0.25,
+        "systemSeconds": 0.01
+      },
+      "early-observed": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-256/early.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-256/early-observed.c",
+          "--profile-compile",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-256/early-observed.json"
+        ],
+        "elapsedNs": 273462951,
+        "status": 1,
+        "timedOut": false,
+        "output": "definitions-256/early-observed",
+        "maxRssKiB": 42144,
+        "userSeconds": 0.25,
+        "systemSeconds": 0.01,
+        "phases": {
+          "load-root": {
+            "exclusiveNs": 21823,
+            "inclusiveNs": 21823,
+            "calls": 1,
+            "counts": {}
+          },
+          "front-end": {
+            "exclusiveNs": 22122555,
+            "inclusiveNs": 267394177,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-library": {
+            "exclusiveNs": 114716,
+            "inclusiveNs": 13728859,
+            "calls": 29,
+            "counts": {
+              "source_bytes": 374132
+            }
+          },
+          "parse-module": {
+            "exclusiveNs": 14217537,
+            "inclusiveNs": 14217537,
+            "calls": 30,
+            "counts": {
+              "tokens_including_eof": 65786,
+              "declarations": 3565
+            }
+          },
+          "generate-library-declarations": {
+            "exclusiveNs": 18783,
+            "inclusiveNs": 18783,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-input": {
+            "exclusiveNs": 1408,
+            "inclusiveNs": 604802,
+            "calls": 1,
+            "counts": {
+              "source_bytes": 13433
+            }
+          },
+          "macro-expansion": {
+            "exclusiveNs": 437256,
+            "inclusiveNs": 437256,
+            "calls": 1,
+            "counts": {}
+          },
+          "collect-declarations": {
+            "exclusiveNs": 14078750,
+            "inclusiveNs": 14078750,
+            "calls": 1,
+            "counts": {
+              "modules": 2,
+              "declarations": 3565
+            }
+          },
+          "type-check": {
+            "exclusiveNs": 216403172,
+            "inclusiveNs": 216403172,
+            "calls": 1,
+            "counts": {
+              "bindings": 1848,
+              "types": 117
+            }
+          }
+        }
+      },
+      "late-ordinary": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-256/late.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-256/late-ordinary.c"
+        ],
+        "elapsedNs": 270191697,
+        "status": 1,
+        "timedOut": false,
+        "output": "definitions-256/late-ordinary",
+        "maxRssKiB": 41920,
+        "userSeconds": 0.25,
+        "systemSeconds": 0.01
+      },
+      "late-observed": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-256/late.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-256/late-observed.c",
+          "--profile-compile",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-256/late-observed.json"
+        ],
+        "elapsedNs": 273102525,
+        "status": 1,
+        "timedOut": false,
+        "output": "definitions-256/late-observed",
+        "maxRssKiB": 42064,
+        "userSeconds": 0.24,
+        "systemSeconds": 0.02,
+        "phases": {
+          "load-root": {
+            "exclusiveNs": 20471,
+            "inclusiveNs": 20471,
+            "calls": 1,
+            "counts": {}
+          },
+          "front-end": {
+            "exclusiveNs": 21456211,
+            "inclusiveNs": 267147954,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-library": {
+            "exclusiveNs": 114652,
+            "inclusiveNs": 13789586,
+            "calls": 29,
+            "counts": {
+              "source_bytes": 374132
+            }
+          },
+          "parse-module": {
+            "exclusiveNs": 14317110,
+            "inclusiveNs": 14317110,
+            "calls": 30,
+            "counts": {
+              "tokens_including_eof": 65786,
+              "declarations": 3565
+            }
+          },
+          "generate-library-declarations": {
+            "exclusiveNs": 18607,
+            "inclusiveNs": 18607,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-input": {
+            "exclusiveNs": 1304,
+            "inclusiveNs": 643480,
+            "calls": 1,
+            "counts": {
+              "source_bytes": 13433
+            }
+          },
+          "macro-expansion": {
+            "exclusiveNs": 439792,
+            "inclusiveNs": 439792,
+            "calls": 1,
+            "counts": {}
+          },
+          "collect-declarations": {
+            "exclusiveNs": 14603170,
+            "inclusiveNs": 14603170,
+            "calls": 1,
+            "counts": {
+              "modules": 2,
+              "declarations": 3565
+            }
+          },
+          "type-check": {
+            "exclusiveNs": 216197108,
+            "inclusiveNs": 216197108,
+            "calls": 1,
+            "counts": {
+              "bindings": 1848,
+              "types": 117
+            }
+          }
+        }
+      },
+      "correct": true
+    },
+    "definitions-1024": {
+      "family": "definitions",
+      "size": 1024,
+      "sourceBytes": 54971,
+      "sourceSha256": "e8f082efb4febc381cf76ccc7fc4e32c98a12e06362cd3ad3639e55f5d81425f",
+      "samples": [],
+      "ordinary": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-1024/input.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-1024/ordinary.c"
+        ],
+        "elapsedNs": 403587548,
+        "status": 0,
+        "timedOut": false,
+        "output": "definitions-1024/ordinary-emit",
+        "maxRssKiB": 61796,
+        "userSeconds": 0.37,
+        "systemSeconds": 0.02,
+        "cBytes": 1141585,
+        "cSha256": "99a4d5b7b068015811aeeeaf3dbb87e477178e02c28c3e21ea43a121e89d9c9b",
+        "gcc": {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-fno-fast-math",
+            "-fno-lto",
+            "-march=armv8-a",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-1024/ordinary.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-1024/ordinary-gcc.exe",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 5404618284,
+          "status": 0,
+          "timedOut": false,
+          "output": "definitions-1024/ordinary-gcc",
+          "maxRssKiB": 207720,
+          "userSeconds": 5.29,
+          "systemSeconds": 0.11,
+          "binaryBytes": 140064,
+          "binarySha256": "bd65ac81746ff14bdf85da385d3c05a0ed8c636836772e0085dcd811eec00e93",
+          "execution": {
+            "command": [
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-1024/ordinary-gcc.exe"
+            ],
+            "elapsedNs": 2562812,
+            "status": 0,
+            "timedOut": false,
+            "output": "definitions-1024/ordinary-gcc-execution",
+            "maxRssKiB": 1404,
+            "userSeconds": 0.0,
+            "systemSeconds": 0.0
+          }
+        }
+      },
+      "observed": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-1024/input.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-1024/observed.c",
+          "--profile-compile",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-1024/observed.json"
+        ],
+        "elapsedNs": 404699353,
+        "status": 0,
+        "timedOut": false,
+        "output": "definitions-1024/observed-emit",
+        "maxRssKiB": 61816,
+        "userSeconds": 0.37,
+        "systemSeconds": 0.02,
+        "phases": {
+          "load-root": {
+            "exclusiveNs": 35831,
+            "inclusiveNs": 35831,
+            "calls": 1,
+            "counts": {}
+          },
+          "front-end": {
+            "exclusiveNs": 2825436,
+            "inclusiveNs": 304567685,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-library": {
+            "exclusiveNs": 109542,
+            "inclusiveNs": 14198677,
+            "calls": 29,
+            "counts": {
+              "source_bytes": 374132
+            }
+          },
+          "parse-module": {
+            "exclusiveNs": 20954368,
+            "inclusiveNs": 20954368,
+            "calls": 31,
+            "counts": {
+              "tokens_including_eof": 92666,
+              "declarations": 7148
+            }
+          },
+          "generate-library-declarations": {
+            "exclusiveNs": 19855,
+            "inclusiveNs": 19855,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-input": {
+            "exclusiveNs": 3175,
+            "inclusiveNs": 3983321,
+            "calls": 1,
+            "counts": {
+              "source_bytes": 54971
+            }
+          },
+          "macro-expansion": {
+            "exclusiveNs": 554665,
+            "inclusiveNs": 554665,
+            "calls": 1,
+            "counts": {}
+          },
+          "collect-declarations": {
+            "exclusiveNs": 16470454,
+            "inclusiveNs": 16470454,
+            "calls": 1,
+            "counts": {
+              "modules": 2,
+              "declarations": 5099
+            }
+          },
+          "type-check": {
+            "exclusiveNs": 266515277,
+            "inclusiveNs": 266515277,
+            "calls": 1,
+            "counts": {
+              "bindings": 2615,
+              "types": 117
+            }
+          },
+          "lowering": {
+            "exclusiveNs": 5047,
+            "inclusiveNs": 19621867,
+            "calls": 1,
+            "counts": {
+              "functions_after_optimization": 1033
+            }
+          },
+          "specialization": {
+            "exclusiveNs": 9109939,
+            "inclusiveNs": 9109939,
+            "calls": 1,
+            "counts": {
+              "functions": 1033
+            }
+          },
+          "preserve-resources": {
+            "exclusiveNs": 914482,
+            "inclusiveNs": 914482,
+            "calls": 1,
+            "counts": {}
+          },
+          "optimization": {
+            "exclusiveNs": 9592399,
+            "inclusiveNs": 9592399,
+            "calls": 1,
+            "counts": {}
+          },
+          "code-generation": {
+            "exclusiveNs": 1932967,
+            "inclusiveNs": 43610671,
+            "calls": 1,
+            "counts": {}
+          },
+          "representation-and-ownership": {
+            "exclusiveNs": 32635098,
+            "inclusiveNs": 32635098,
+            "calls": 1,
+            "counts": {
+              "functions": 1034
+            }
+          },
+          "c-emission": {
+            "exclusiveNs": 9042606,
+            "inclusiveNs": 9042606,
+            "calls": 1,
+            "counts": {
+              "c_bytes": 1141585
+            }
+          }
+        },
+        "cBytes": 1141585,
+        "cSha256": "99a4d5b7b068015811aeeeaf3dbb87e477178e02c28c3e21ea43a121e89d9c9b",
+        "gcc": {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-fno-fast-math",
+            "-fno-lto",
+            "-march=armv8-a",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-1024/observed.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-1024/observed-gcc.exe",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 5591809928,
+          "status": 0,
+          "timedOut": false,
+          "output": "definitions-1024/observed-gcc",
+          "maxRssKiB": 207692,
+          "userSeconds": 5.46,
+          "systemSeconds": 0.12,
+          "binaryBytes": 140064,
+          "binarySha256": "7df6525e4ae2fe89b39140394abeb16c71091a87b6647d00c7328c921c4fefb6",
+          "execution": {
+            "command": [
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-1024/observed-gcc.exe"
+            ],
+            "elapsedNs": 1942862,
+            "status": 0,
+            "timedOut": false,
+            "output": "definitions-1024/observed-gcc-execution",
+            "maxRssKiB": 1400,
+            "userSeconds": 0.0,
+            "systemSeconds": 0.0
+          }
+        }
+      },
+      "early-ordinary": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-1024/early.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-1024/early-ordinary.c"
+        ],
+        "elapsedNs": 336588704,
+        "status": 1,
+        "timedOut": false,
+        "output": "definitions-1024/early-ordinary",
+        "maxRssKiB": 49596,
+        "userSeconds": 0.31,
+        "systemSeconds": 0.02
+      },
+      "early-observed": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-1024/early.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-1024/early-observed.c",
+          "--profile-compile",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-1024/early-observed.json"
+        ],
+        "elapsedNs": 333856739,
+        "status": 1,
+        "timedOut": false,
+        "output": "definitions-1024/early-observed",
+        "maxRssKiB": 49608,
+        "userSeconds": 0.31,
+        "systemSeconds": 0.01,
+        "phases": {
+          "load-root": {
+            "exclusiveNs": 47238,
+            "inclusiveNs": 47238,
+            "calls": 1,
+            "counts": {}
+          },
+          "front-end": {
+            "exclusiveNs": 27443454,
+            "inclusiveNs": 328336689,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-library": {
+            "exclusiveNs": 108066,
+            "inclusiveNs": 13580696,
+            "calls": 29,
+            "counts": {
+              "source_bytes": 374132
+            }
+          },
+          "parse-module": {
+            "exclusiveNs": 16997387,
+            "inclusiveNs": 16997387,
+            "calls": 30,
+            "counts": {
+              "tokens_including_eof": 77306,
+              "declarations": 5101
+            }
+          },
+          "generate-library-declarations": {
+            "exclusiveNs": 18791,
+            "inclusiveNs": 18791,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-input": {
+            "exclusiveNs": 3503,
+            "inclusiveNs": 3528260,
+            "calls": 1,
+            "counts": {
+              "source_bytes": 55001
+            }
+          },
+          "macro-expansion": {
+            "exclusiveNs": 513571,
+            "inclusiveNs": 513571,
+            "calls": 1,
+            "counts": {}
+          },
+          "collect-declarations": {
+            "exclusiveNs": 16217354,
+            "inclusiveNs": 16217354,
+            "calls": 1,
+            "counts": {
+              "modules": 2,
+              "declarations": 5101
+            }
+          },
+          "type-check": {
+            "exclusiveNs": 267034563,
+            "inclusiveNs": 267034563,
+            "calls": 1,
+            "counts": {
+              "bindings": 2616,
+              "types": 117
+            }
+          }
+        }
+      },
+      "late-ordinary": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-1024/late.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-1024/late-ordinary.c"
+        ],
+        "elapsedNs": 334692263,
+        "status": 1,
+        "timedOut": false,
+        "output": "definitions-1024/late-ordinary",
+        "maxRssKiB": 49704,
+        "userSeconds": 0.31,
+        "systemSeconds": 0.01
+      },
+      "late-observed": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-1024/late.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-1024/late-observed.c",
+          "--profile-compile",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/definitions-1024/late-observed.json"
+        ],
+        "elapsedNs": 332230062,
+        "status": 1,
+        "timedOut": false,
+        "output": "definitions-1024/late-observed",
+        "maxRssKiB": 49608,
+        "userSeconds": 0.31,
+        "systemSeconds": 0.01,
+        "phases": {
+          "load-root": {
+            "exclusiveNs": 35199,
+            "inclusiveNs": 35199,
+            "calls": 1,
+            "counts": {}
+          },
+          "front-end": {
+            "exclusiveNs": 26214153,
+            "inclusiveNs": 326442297,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-library": {
+            "exclusiveNs": 112477,
+            "inclusiveNs": 13676653,
+            "calls": 29,
+            "counts": {
+              "source_bytes": 374132
+            }
+          },
+          "parse-module": {
+            "exclusiveNs": 16851694,
+            "inclusiveNs": 16851694,
+            "calls": 30,
+            "counts": {
+              "tokens_including_eof": 77306,
+              "declarations": 5101
+            }
+          },
+          "generate-library-declarations": {
+            "exclusiveNs": 19167,
+            "inclusiveNs": 19167,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-input": {
+            "exclusiveNs": 3208,
+            "inclusiveNs": 3290726,
+            "calls": 1,
+            "counts": {
+              "source_bytes": 55001
+            }
+          },
+          "macro-expansion": {
+            "exclusiveNs": 518819,
+            "inclusiveNs": 518819,
+            "calls": 1,
+            "counts": {}
+          },
+          "collect-declarations": {
+            "exclusiveNs": 16370476,
+            "inclusiveNs": 16370476,
+            "calls": 1,
+            "counts": {
+              "modules": 2,
+              "declarations": 5101
+            }
+          },
+          "type-check": {
+            "exclusiveNs": 266352303,
+            "inclusiveNs": 266352303,
+            "calls": 1,
+            "counts": {
+              "bindings": 2616,
+              "types": 117
+            }
+          }
+        }
+      },
+      "correct": true
+    },
+    "generic-8": {
+      "family": "generic",
+      "size": 8,
+      "sourceBytes": 379,
+      "sourceSha256": "13f6707d6dd550950e951cc5b1d2950b90e2ff01bab9bb65b705ae3aabc0eb7c",
+      "samples": [],
+      "ordinary": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-8/input.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-8/ordinary.c"
+        ],
+        "elapsedNs": 261924952,
+        "status": 0,
+        "timedOut": false,
+        "output": "generic-8/ordinary-emit",
+        "maxRssKiB": 41348,
+        "userSeconds": 0.24,
+        "systemSeconds": 0.01,
+        "cBytes": 659788,
+        "cSha256": "252f5f63faaefbc7823baaf7ab3e8576d4b0f65be16db50e9d9b03ff4c0c8123",
+        "gcc": {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-fno-fast-math",
+            "-fno-lto",
+            "-march=armv8-a",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-8/ordinary.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-8/ordinary-gcc.exe",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 359298275,
+          "status": 0,
+          "timedOut": false,
+          "output": "generic-8/ordinary-gcc",
+          "maxRssKiB": 52936,
+          "userSeconds": 0.32,
+          "systemSeconds": 0.03,
+          "binaryBytes": 74432,
+          "binarySha256": "844ce04e272527d9d9432255f99438411527db6b8d861be69fa17e526b917fbf",
+          "execution": {
+            "command": [
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-8/ordinary-gcc.exe"
+            ],
+            "elapsedNs": 1859059,
+            "status": 0,
+            "timedOut": false,
+            "output": "generic-8/ordinary-gcc-execution",
+            "maxRssKiB": 1392,
+            "userSeconds": 0.0,
+            "systemSeconds": 0.0
+          }
+        }
+      },
+      "observed": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-8/input.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-8/observed.c",
+          "--profile-compile",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-8/observed.json"
+        ],
+        "elapsedNs": 263923532,
+        "status": 0,
+        "timedOut": false,
+        "output": "generic-8/observed-emit",
+        "maxRssKiB": 41220,
+        "userSeconds": 0.24,
+        "systemSeconds": 0.01,
+        "phases": {
+          "load-root": {
+            "exclusiveNs": 14079,
+            "inclusiveNs": 14079,
+            "calls": 1,
+            "counts": {}
+          },
+          "front-end": {
+            "exclusiveNs": 2301774,
+            "inclusiveNs": 237695156,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-library": {
+            "exclusiveNs": 113232,
+            "inclusiveNs": 13487484,
+            "calls": 29,
+            "counts": {
+              "source_bytes": 374132
+            }
+          },
+          "parse-module": {
+            "exclusiveNs": 13416115,
+            "inclusiveNs": 13416115,
+            "calls": 31,
+            "counts": {
+              "tokens_including_eof": 62154,
+              "declarations": 3056
+            }
+          },
+          "generate-library-declarations": {
+            "exclusiveNs": 19216,
+            "inclusiveNs": 19216,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-input": {
+            "exclusiveNs": 648,
+            "inclusiveNs": 14544,
+            "calls": 1,
+            "counts": {
+              "source_bytes": 379
+            }
+          },
+          "macro-expansion": {
+            "exclusiveNs": 373681,
+            "inclusiveNs": 373681,
+            "calls": 1,
+            "counts": {}
+          },
+          "collect-declarations": {
+            "exclusiveNs": 12974786,
+            "inclusiveNs": 12974786,
+            "calls": 1,
+            "counts": {
+              "modules": 2,
+              "declarations": 3053
+            }
+          },
+          "type-check": {
+            "exclusiveNs": 208523671,
+            "inclusiveNs": 208523671,
+            "calls": 1,
+            "counts": {
+              "bindings": 1592,
+              "types": 117
+            }
+          },
+          "lowering": {
+            "exclusiveNs": 3376,
+            "inclusiveNs": 1055356,
+            "calls": 1,
+            "counts": {
+              "functions_after_optimization": 31
+            }
+          },
+          "specialization": {
+            "exclusiveNs": 592688,
+            "inclusiveNs": 592688,
+            "calls": 1,
+            "counts": {
+              "functions": 31
+            }
+          },
+          "preserve-resources": {
+            "exclusiveNs": 53469,
+            "inclusiveNs": 53469,
+            "calls": 1,
+            "counts": {}
+          },
+          "optimization": {
+            "exclusiveNs": 405823,
+            "inclusiveNs": 405823,
+            "calls": 1,
+            "counts": {}
+          },
+          "code-generation": {
+            "exclusiveNs": 75901,
+            "inclusiveNs": 1170623,
+            "calls": 1,
+            "counts": {}
+          },
+          "representation-and-ownership": {
+            "exclusiveNs": 726938,
+            "inclusiveNs": 726938,
+            "calls": 1,
+            "counts": {
+              "functions": 32
+            }
+          },
+          "c-emission": {
+            "exclusiveNs": 367784,
+            "inclusiveNs": 367784,
+            "calls": 1,
+            "counts": {
+              "c_bytes": 659788
+            }
+          }
+        },
+        "cBytes": 659788,
+        "cSha256": "252f5f63faaefbc7823baaf7ab3e8576d4b0f65be16db50e9d9b03ff4c0c8123",
+        "gcc": {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-fno-fast-math",
+            "-fno-lto",
+            "-march=armv8-a",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-8/observed.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-8/observed-gcc.exe",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 358430321,
+          "status": 0,
+          "timedOut": false,
+          "output": "generic-8/observed-gcc",
+          "maxRssKiB": 52936,
+          "userSeconds": 0.32,
+          "systemSeconds": 0.03,
+          "binaryBytes": 74432,
+          "binarySha256": "a67bbb81e217ff5db26a264bd865da0a329bf6bbc5bb07e4576d3899fa726709",
+          "execution": {
+            "command": [
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-8/observed-gcc.exe"
+            ],
+            "elapsedNs": 1702809,
+            "status": 0,
+            "timedOut": false,
+            "output": "generic-8/observed-gcc-execution",
+            "maxRssKiB": 1400,
+            "userSeconds": 0.0,
+            "systemSeconds": 0.0
+          }
+        }
+      },
+      "early-ordinary": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-8/early.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-8/early-ordinary.c"
+        ],
+        "elapsedNs": 267266113,
+        "status": 1,
+        "timedOut": false,
+        "output": "generic-8/early-ordinary",
+        "maxRssKiB": 40652,
+        "userSeconds": 0.24,
+        "systemSeconds": 0.01
+      },
+      "early-observed": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-8/early.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-8/early-observed.c",
+          "--profile-compile",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-8/early-observed.json"
+        ],
+        "elapsedNs": 263941828,
+        "status": 1,
+        "timedOut": false,
+        "output": "generic-8/early-observed",
+        "maxRssKiB": 40724,
+        "userSeconds": 0.23,
+        "systemSeconds": 0.02,
+        "phases": {
+          "load-root": {
+            "exclusiveNs": 14727,
+            "inclusiveNs": 14727,
+            "calls": 1,
+            "counts": {}
+          },
+          "front-end": {
+            "exclusiveNs": 22439308,
+            "inclusiveNs": 258673617,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-library": {
+            "exclusiveNs": 114077,
+            "inclusiveNs": 13786125,
+            "calls": 29,
+            "counts": {
+              "source_bytes": 374132
+            }
+          },
+          "parse-module": {
+            "exclusiveNs": 13687111,
+            "inclusiveNs": 13687111,
+            "calls": 30,
+            "counts": {
+              "tokens_including_eof": 62050,
+              "declarations": 3055
+            }
+          },
+          "generate-library-declarations": {
+            "exclusiveNs": 18807,
+            "inclusiveNs": 18807,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-input": {
+            "exclusiveNs": 408,
+            "inclusiveNs": 15471,
+            "calls": 1,
+            "counts": {
+              "source_bytes": 409
+            }
+          },
+          "macro-expansion": {
+            "exclusiveNs": 426750,
+            "inclusiveNs": 426750,
+            "calls": 1,
+            "counts": {}
+          },
+          "collect-declarations": {
+            "exclusiveNs": 12949264,
+            "inclusiveNs": 12949264,
+            "calls": 1,
+            "counts": {
+              "modules": 2,
+              "declarations": 3055
+            }
+          },
+          "type-check": {
+            "exclusiveNs": 209037892,
+            "inclusiveNs": 209037892,
+            "calls": 1,
+            "counts": {
+              "bindings": 1593,
+              "types": 117
+            }
+          }
+        }
+      },
+      "late-ordinary": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-8/late.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-8/late-ordinary.c"
+        ],
+        "elapsedNs": 266094602,
+        "status": 1,
+        "timedOut": false,
+        "output": "generic-8/late-ordinary",
+        "maxRssKiB": 40644,
+        "userSeconds": 0.24,
+        "systemSeconds": 0.01
+      },
+      "late-observed": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-8/late.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-8/late-observed.c",
+          "--profile-compile",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-8/late-observed.json"
+        ],
+        "elapsedNs": 266715408,
+        "status": 1,
+        "timedOut": false,
+        "output": "generic-8/late-observed",
+        "maxRssKiB": 40644,
+        "userSeconds": 0.24,
+        "systemSeconds": 0.01,
+        "phases": {
+          "load-root": {
+            "exclusiveNs": 14568,
+            "inclusiveNs": 14568,
+            "calls": 1,
+            "counts": {}
+          },
+          "front-end": {
+            "exclusiveNs": 23116092,
+            "inclusiveNs": 260973592,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-library": {
+            "exclusiveNs": 116579,
+            "inclusiveNs": 13929536,
+            "calls": 29,
+            "counts": {
+              "source_bytes": 374132
+            }
+          },
+          "parse-module": {
+            "exclusiveNs": 13828629,
+            "inclusiveNs": 13828629,
+            "calls": 30,
+            "counts": {
+              "tokens_including_eof": 62050,
+              "declarations": 3055
+            }
+          },
+          "generate-library-declarations": {
+            "exclusiveNs": 19279,
+            "inclusiveNs": 19279,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-input": {
+            "exclusiveNs": 376,
+            "inclusiveNs": 16048,
+            "calls": 1,
+            "counts": {
+              "source_bytes": 409
+            }
+          },
+          "macro-expansion": {
+            "exclusiveNs": 438454,
+            "inclusiveNs": 438454,
+            "calls": 1,
+            "counts": {}
+          },
+          "collect-declarations": {
+            "exclusiveNs": 13499241,
+            "inclusiveNs": 13499241,
+            "calls": 1,
+            "counts": {
+              "modules": 2,
+              "declarations": 3055
+            }
+          },
+          "type-check": {
+            "exclusiveNs": 209954942,
+            "inclusiveNs": 209954942,
+            "calls": 1,
+            "counts": {
+              "bindings": 1593,
+              "types": 117
+            }
+          }
+        }
+      },
+      "correct": true
+    },
+    "generic-32": {
+      "family": "generic",
+      "size": 32,
+      "sourceBytes": 1453,
+      "sourceSha256": "007001de183b0c435abdf07faa890ef44bec23b3f6e170f6d750c106d9692b62",
+      "samples": [],
+      "ordinary": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-32/input.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-32/ordinary.c"
+        ],
+        "elapsedNs": 271623682,
+        "status": 0,
+        "timedOut": false,
+        "output": "generic-32/ordinary-emit",
+        "maxRssKiB": 42252,
+        "userSeconds": 0.25,
+        "systemSeconds": 0.02,
+        "cBytes": 666935,
+        "cSha256": "0351f1585e6f2e9e06e47baccd14a8422d516464df9d72fb82172cd8d94e6477",
+        "gcc": {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-fno-fast-math",
+            "-fno-lto",
+            "-march=armv8-a",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-32/ordinary.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-32/ordinary-gcc.exe",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 447668230,
+          "status": 0,
+          "timedOut": false,
+          "output": "generic-32/ordinary-gcc",
+          "maxRssKiB": 57356,
+          "userSeconds": 0.4,
+          "systemSeconds": 0.04,
+          "binaryBytes": 74456,
+          "binarySha256": "59aa784105cfa89330091a4c85683599c2b4d052a5d7db1971f5f11d99248c79",
+          "execution": {
+            "command": [
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-32/ordinary-gcc.exe"
+            ],
+            "elapsedNs": 1785005,
+            "status": 0,
+            "timedOut": false,
+            "output": "generic-32/ordinary-gcc-execution",
+            "maxRssKiB": 1404,
+            "userSeconds": 0.0,
+            "systemSeconds": 0.0
+          }
+        }
+      },
+      "observed": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-32/input.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-32/observed.c",
+          "--profile-compile",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-32/observed.json"
+        ],
+        "elapsedNs": 271200212,
+        "status": 0,
+        "timedOut": false,
+        "output": "generic-32/observed-emit",
+        "maxRssKiB": 42252,
+        "userSeconds": 0.25,
+        "systemSeconds": 0.01,
+        "phases": {
+          "load-root": {
+            "exclusiveNs": 14263,
+            "inclusiveNs": 14263,
+            "calls": 1,
+            "counts": {}
+          },
+          "front-end": {
+            "exclusiveNs": 2444000,
+            "inclusiveNs": 240914522,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-library": {
+            "exclusiveNs": 112459,
+            "inclusiveNs": 14535535,
+            "calls": 29,
+            "counts": {
+              "source_bytes": 374132
+            }
+          },
+          "parse-module": {
+            "exclusiveNs": 14566014,
+            "inclusiveNs": 14566014,
+            "calls": 31,
+            "counts": {
+              "tokens_including_eof": 62730,
+              "declarations": 3056
+            }
+          },
+          "generate-library-declarations": {
+            "exclusiveNs": 18760,
+            "inclusiveNs": 18760,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-input": {
+            "exclusiveNs": 680,
+            "inclusiveNs": 66261,
+            "calls": 1,
+            "counts": {
+              "source_bytes": 1453
+            }
+          },
+          "macro-expansion": {
+            "exclusiveNs": 397079,
+            "inclusiveNs": 397079,
+            "calls": 1,
+            "counts": {}
+          },
+          "collect-declarations": {
+            "exclusiveNs": 13088019,
+            "inclusiveNs": 13088019,
+            "calls": 1,
+            "counts": {
+              "modules": 2,
+              "declarations": 3053
+            }
+          },
+          "type-check": {
+            "exclusiveNs": 210364868,
+            "inclusiveNs": 210364868,
+            "calls": 1,
+            "counts": {
+              "bindings": 1592,
+              "types": 117
+            }
+          },
+          "lowering": {
+            "exclusiveNs": 3296,
+            "inclusiveNs": 2472353,
+            "calls": 1,
+            "counts": {
+              "functions_after_optimization": 103
+            }
+          },
+          "specialization": {
+            "exclusiveNs": 877483,
+            "inclusiveNs": 877483,
+            "calls": 1,
+            "counts": {
+              "functions": 103
+            }
+          },
+          "preserve-resources": {
+            "exclusiveNs": 168641,
+            "inclusiveNs": 168641,
+            "calls": 1,
+            "counts": {}
+          },
+          "optimization": {
+            "exclusiveNs": 1422933,
+            "inclusiveNs": 1422933,
+            "calls": 1,
+            "counts": {}
+          },
+          "code-generation": {
+            "exclusiveNs": 206104,
+            "inclusiveNs": 2735790,
+            "calls": 1,
+            "counts": {}
+          },
+          "representation-and-ownership": {
+            "exclusiveNs": 2037003,
+            "inclusiveNs": 2037003,
+            "calls": 1,
+            "counts": {
+              "functions": 104
+            }
+          },
+          "c-emission": {
+            "exclusiveNs": 492683,
+            "inclusiveNs": 492683,
+            "calls": 1,
+            "counts": {
+              "c_bytes": 666935
+            }
+          }
+        },
+        "cBytes": 666935,
+        "cSha256": "0351f1585e6f2e9e06e47baccd14a8422d516464df9d72fb82172cd8d94e6477",
+        "gcc": {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-fno-fast-math",
+            "-fno-lto",
+            "-march=armv8-a",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-32/observed.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-32/observed-gcc.exe",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 441645475,
+          "status": 0,
+          "timedOut": false,
+          "output": "generic-32/observed-gcc",
+          "maxRssKiB": 58596,
+          "userSeconds": 0.4,
+          "systemSeconds": 0.03,
+          "binaryBytes": 74456,
+          "binarySha256": "fabb997a3e7b33cd7acba514399109b1f6ef02ed6962ebd5f7f8069cb0a448c4",
+          "execution": {
+            "command": [
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-32/observed-gcc.exe"
+            ],
+            "elapsedNs": 1832683,
+            "status": 0,
+            "timedOut": false,
+            "output": "generic-32/observed-gcc-execution",
+            "maxRssKiB": 1400,
+            "userSeconds": 0.0,
+            "systemSeconds": 0.0
+          }
+        }
+      },
+      "early-ordinary": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-32/early.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-32/early-ordinary.c"
+        ],
+        "elapsedNs": 266994140,
+        "status": 1,
+        "timedOut": false,
+        "output": "generic-32/early-ordinary",
+        "maxRssKiB": 40764,
+        "userSeconds": 0.24,
+        "systemSeconds": 0.02
+      },
+      "early-observed": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-32/early.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-32/early-observed.c",
+          "--profile-compile",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-32/early-observed.json"
+        ],
+        "elapsedNs": 266030604,
+        "status": 1,
+        "timedOut": false,
+        "output": "generic-32/early-observed",
+        "maxRssKiB": 40848,
+        "userSeconds": 0.24,
+        "systemSeconds": 0.02,
+        "phases": {
+          "load-root": {
+            "exclusiveNs": 14696,
+            "inclusiveNs": 14696,
+            "calls": 1,
+            "counts": {}
+          },
+          "front-end": {
+            "exclusiveNs": 22752083,
+            "inclusiveNs": 260932258,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-library": {
+            "exclusiveNs": 110997,
+            "inclusiveNs": 13826814,
+            "calls": 29,
+            "counts": {
+              "source_bytes": 374132
+            }
+          },
+          "parse-module": {
+            "exclusiveNs": 13761183,
+            "inclusiveNs": 13761183,
+            "calls": 30,
+            "counts": {
+              "tokens_including_eof": 62338,
+              "declarations": 3055
+            }
+          },
+          "generate-library-declarations": {
+            "exclusiveNs": 18991,
+            "inclusiveNs": 18991,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-input": {
+            "exclusiveNs": 720,
+            "inclusiveNs": 46086,
+            "calls": 1,
+            "counts": {
+              "source_bytes": 1483
+            }
+          },
+          "macro-expansion": {
+            "exclusiveNs": 424871,
+            "inclusiveNs": 424871,
+            "calls": 1,
+            "counts": {}
+          },
+          "collect-declarations": {
+            "exclusiveNs": 13214437,
+            "inclusiveNs": 13214437,
+            "calls": 1,
+            "counts": {
+              "modules": 2,
+              "declarations": 3055
+            }
+          },
+          "type-check": {
+            "exclusiveNs": 210648976,
+            "inclusiveNs": 210648976,
+            "calls": 1,
+            "counts": {
+              "bindings": 1593,
+              "types": 117
+            }
+          }
+        }
+      },
+      "late-ordinary": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-32/late.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-32/late-ordinary.c"
+        ],
+        "elapsedNs": 267266233,
+        "status": 1,
+        "timedOut": false,
+        "output": "generic-32/late-ordinary",
+        "maxRssKiB": 40692,
+        "userSeconds": 0.24,
+        "systemSeconds": 0.01
+      },
+      "late-observed": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-32/late.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-32/late-observed.c",
+          "--profile-compile",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-32/late-observed.json"
+        ],
+        "elapsedNs": 266906520,
+        "status": 1,
+        "timedOut": false,
+        "output": "generic-32/late-observed",
+        "maxRssKiB": 40752,
+        "userSeconds": 0.24,
+        "systemSeconds": 0.01,
+        "phases": {
+          "load-root": {
+            "exclusiveNs": 14088,
+            "inclusiveNs": 14088,
+            "calls": 1,
+            "counts": {}
+          },
+          "front-end": {
+            "exclusiveNs": 22591432,
+            "inclusiveNs": 260947689,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-library": {
+            "exclusiveNs": 117981,
+            "inclusiveNs": 14001088,
+            "calls": 29,
+            "counts": {
+              "source_bytes": 374132
+            }
+          },
+          "parse-module": {
+            "exclusiveNs": 13928209,
+            "inclusiveNs": 13928209,
+            "calls": 30,
+            "counts": {
+              "tokens_including_eof": 62338,
+              "declarations": 3055
+            }
+          },
+          "generate-library-declarations": {
+            "exclusiveNs": 18871,
+            "inclusiveNs": 18871,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-input": {
+            "exclusiveNs": 952,
+            "inclusiveNs": 46054,
+            "calls": 1,
+            "counts": {
+              "source_bytes": 1483
+            }
+          },
+          "macro-expansion": {
+            "exclusiveNs": 477676,
+            "inclusiveNs": 477676,
+            "calls": 1,
+            "counts": {}
+          },
+          "collect-declarations": {
+            "exclusiveNs": 13463651,
+            "inclusiveNs": 13463651,
+            "calls": 1,
+            "counts": {
+              "modules": 2,
+              "declarations": 3055
+            }
+          },
+          "type-check": {
+            "exclusiveNs": 210348917,
+            "inclusiveNs": 210348917,
+            "calls": 1,
+            "counts": {
+              "bindings": 1593,
+              "types": 117
+            }
+          }
+        }
+      },
+      "correct": true
+    },
+    "generic-128": {
+      "family": "generic",
+      "size": 128,
+      "sourceBytes": 5857,
+      "sourceSha256": "8b7301b68584913c119f88678735e38fdc5f9f146b3a55e0557a5011a3da4b40",
+      "samples": [],
+      "ordinary": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-128/input.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-128/ordinary.c"
+        ],
+        "elapsedNs": 293099268,
+        "status": 0,
+        "timedOut": false,
+        "output": "generic-128/ordinary-emit",
+        "maxRssKiB": 45948,
+        "userSeconds": 0.26,
+        "systemSeconds": 0.02,
+        "cBytes": 696436,
+        "cSha256": "4598dcf0153318beb9d766fcb2153601528fe5f21372e570d44feb5346af9c43",
+        "gcc": {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-fno-fast-math",
+            "-fno-lto",
+            "-march=armv8-a",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-128/ordinary.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-128/ordinary-gcc.exe",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 727534990,
+          "status": 0,
+          "timedOut": false,
+          "output": "generic-128/ordinary-gcc",
+          "maxRssKiB": 68312,
+          "userSeconds": 0.62,
+          "systemSeconds": 0.04,
+          "binaryBytes": 74496,
+          "binarySha256": "52d524034f7029c26253887717104a14a292dbc472da3691b8682a7f449f501b",
+          "execution": {
+            "command": [
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-128/ordinary-gcc.exe"
+            ],
+            "elapsedNs": 2111528,
+            "status": 0,
+            "timedOut": false,
+            "output": "generic-128/ordinary-gcc-execution",
+            "maxRssKiB": 1412,
+            "userSeconds": 0.0,
+            "systemSeconds": 0.0
+          }
+        }
+      },
+      "observed": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-128/input.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-128/observed.c",
+          "--profile-compile",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-128/observed.json"
+        ],
+        "elapsedNs": 292696445,
+        "status": 0,
+        "timedOut": false,
+        "output": "generic-128/observed-emit",
+        "maxRssKiB": 45968,
+        "userSeconds": 0.26,
+        "systemSeconds": 0.02,
+        "phases": {
+          "load-root": {
+            "exclusiveNs": 18447,
+            "inclusiveNs": 18447,
+            "calls": 1,
+            "counts": {}
+          },
+          "front-end": {
+            "exclusiveNs": 2497724,
+            "inclusiveNs": 245032965,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-library": {
+            "exclusiveNs": 114058,
+            "inclusiveNs": 14519307,
+            "calls": 29,
+            "counts": {
+              "source_bytes": 374132
+            }
+          },
+          "parse-module": {
+            "exclusiveNs": 14873413,
+            "inclusiveNs": 14873413,
+            "calls": 31,
+            "counts": {
+              "tokens_including_eof": 65034,
+              "declarations": 3056
+            }
+          },
+          "generate-library-declarations": {
+            "exclusiveNs": 19215,
+            "inclusiveNs": 19215,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-input": {
+            "exclusiveNs": 880,
+            "inclusiveNs": 201575,
+            "calls": 1,
+            "counts": {
+              "source_bytes": 5857
+            }
+          },
+          "macro-expansion": {
+            "exclusiveNs": 476076,
+            "inclusiveNs": 476076,
+            "calls": 1,
+            "counts": {}
+          },
+          "collect-declarations": {
+            "exclusiveNs": 12946944,
+            "inclusiveNs": 12946944,
+            "calls": 1,
+            "counts": {
+              "modules": 2,
+              "declarations": 3053
+            }
+          },
+          "type-check": {
+            "exclusiveNs": 214372124,
+            "inclusiveNs": 214372124,
+            "calls": 1,
+            "counts": {
+              "bindings": 1592,
+              "types": 117
+            }
+          },
+          "lowering": {
+            "exclusiveNs": 4111,
+            "inclusiveNs": 8273349,
+            "calls": 1,
+            "counts": {
+              "functions_after_optimization": 391
+            }
+          },
+          "specialization": {
+            "exclusiveNs": 1936263,
+            "inclusiveNs": 1936263,
+            "calls": 1,
+            "counts": {
+              "functions": 391
+            }
+          },
+          "preserve-resources": {
+            "exclusiveNs": 681324,
+            "inclusiveNs": 681324,
+            "calls": 1,
+            "counts": {}
+          },
+          "optimization": {
+            "exclusiveNs": 5651651,
+            "inclusiveNs": 5651651,
+            "calls": 1,
+            "counts": {}
+          },
+          "code-generation": {
+            "exclusiveNs": 947744,
+            "inclusiveNs": 11538684,
+            "calls": 1,
+            "counts": {}
+          },
+          "representation-and-ownership": {
+            "exclusiveNs": 9565407,
+            "inclusiveNs": 9565407,
+            "calls": 1,
+            "counts": {
+              "functions": 392
+            }
+          },
+          "c-emission": {
+            "exclusiveNs": 1025533,
+            "inclusiveNs": 1025533,
+            "calls": 1,
+            "counts": {
+              "c_bytes": 696436
+            }
+          }
+        },
+        "cBytes": 696436,
+        "cSha256": "4598dcf0153318beb9d766fcb2153601528fe5f21372e570d44feb5346af9c43",
+        "gcc": {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-fno-fast-math",
+            "-fno-lto",
+            "-march=armv8-a",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-128/observed.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-128/observed-gcc.exe",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 675380899,
+          "status": 0,
+          "timedOut": false,
+          "output": "generic-128/observed-gcc",
+          "maxRssKiB": 67700,
+          "userSeconds": 0.63,
+          "systemSeconds": 0.04,
+          "binaryBytes": 74496,
+          "binarySha256": "d73da1b508a1c997e14e6f56bb8f24862802dfe600b285662bf8f9fe0ed087a8",
+          "execution": {
+            "command": [
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-128/observed-gcc.exe"
+            ],
+            "elapsedNs": 1876801,
+            "status": 0,
+            "timedOut": false,
+            "output": "generic-128/observed-gcc-execution",
+            "maxRssKiB": 1412,
+            "userSeconds": 0.0,
+            "systemSeconds": 0.0
+          }
+        }
+      },
+      "early-ordinary": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-128/early.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-128/early-ordinary.c"
+        ],
+        "elapsedNs": 272224152,
+        "status": 1,
+        "timedOut": false,
+        "output": "generic-128/early-ordinary",
+        "maxRssKiB": 41144,
+        "userSeconds": 0.24,
+        "systemSeconds": 0.02
+      },
+      "early-observed": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-128/early.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-128/early-observed.c",
+          "--profile-compile",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-128/early-observed.json"
+        ],
+        "elapsedNs": 271751349,
+        "status": 1,
+        "timedOut": false,
+        "output": "generic-128/early-observed",
+        "maxRssKiB": 41492,
+        "userSeconds": 0.25,
+        "systemSeconds": 0.01,
+        "phases": {
+          "load-root": {
+            "exclusiveNs": 16471,
+            "inclusiveNs": 16471,
+            "calls": 1,
+            "counts": {}
+          },
+          "front-end": {
+            "exclusiveNs": 23300384,
+            "inclusiveNs": 266573077,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-library": {
+            "exclusiveNs": 114827,
+            "inclusiveNs": 14063487,
+            "calls": 29,
+            "counts": {
+              "source_bytes": 374132
+            }
+          },
+          "parse-module": {
+            "exclusiveNs": 14131548,
+            "inclusiveNs": 14131548,
+            "calls": 30,
+            "counts": {
+              "tokens_including_eof": 63490,
+              "declarations": 3055
+            }
+          },
+          "generate-library-declarations": {
+            "exclusiveNs": 18544,
+            "inclusiveNs": 18544,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-input": {
+            "exclusiveNs": 1168,
+            "inclusiveNs": 184056,
+            "calls": 1,
+            "counts": {
+              "source_bytes": 5887
+            }
+          },
+          "macro-expansion": {
+            "exclusiveNs": 520690,
+            "inclusiveNs": 520690,
+            "calls": 1,
+            "counts": {}
+          },
+          "collect-declarations": {
+            "exclusiveNs": 13722000,
+            "inclusiveNs": 13722000,
+            "calls": 1,
+            "counts": {
+              "modules": 2,
+              "declarations": 3055
+            }
+          },
+          "type-check": {
+            "exclusiveNs": 214763916,
+            "inclusiveNs": 214763916,
+            "calls": 1,
+            "counts": {
+              "bindings": 1593,
+              "types": 117
+            }
+          }
+        }
+      },
+      "late-ordinary": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-128/late.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-128/late-ordinary.c"
+        ],
+        "elapsedNs": 272950058,
+        "status": 1,
+        "timedOut": false,
+        "output": "generic-128/late-ordinary",
+        "maxRssKiB": 41212,
+        "userSeconds": 0.25,
+        "systemSeconds": 0.01
+      },
+      "late-observed": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-128/late.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-128/late-observed.c",
+          "--profile-compile",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-128/late-observed.json"
+        ],
+        "elapsedNs": 271161757,
+        "status": 1,
+        "timedOut": false,
+        "output": "generic-128/late-observed",
+        "maxRssKiB": 41160,
+        "userSeconds": 0.24,
+        "systemSeconds": 0.02,
+        "phases": {
+          "load-root": {
+            "exclusiveNs": 17679,
+            "inclusiveNs": 17679,
+            "calls": 1,
+            "counts": {}
+          },
+          "front-end": {
+            "exclusiveNs": 23557788,
+            "inclusiveNs": 265461508,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-library": {
+            "exclusiveNs": 116708,
+            "inclusiveNs": 13723207,
+            "calls": 29,
+            "counts": {
+              "source_bytes": 374132
+            }
+          },
+          "parse-module": {
+            "exclusiveNs": 13786787,
+            "inclusiveNs": 13786787,
+            "calls": 30,
+            "counts": {
+              "tokens_including_eof": 63490,
+              "declarations": 3055
+            }
+          },
+          "generate-library-declarations": {
+            "exclusiveNs": 19551,
+            "inclusiveNs": 19551,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-input": {
+            "exclusiveNs": 896,
+            "inclusiveNs": 181184,
+            "calls": 1,
+            "counts": {
+              "source_bytes": 5887
+            }
+          },
+          "macro-expansion": {
+            "exclusiveNs": 418046,
+            "inclusiveNs": 418046,
+            "calls": 1,
+            "counts": {}
+          },
+          "collect-declarations": {
+            "exclusiveNs": 13953671,
+            "inclusiveNs": 13953671,
+            "calls": 1,
+            "counts": {
+              "modules": 2,
+              "declarations": 3055
+            }
+          },
+          "type-check": {
+            "exclusiveNs": 213608061,
+            "inclusiveNs": 213608061,
+            "calls": 1,
+            "counts": {
+              "bindings": 1593,
+              "types": 117
+            }
+          }
+        }
+      },
+      "correct": true
+    },
+    "generic-512": {
+      "family": "generic",
+      "size": 512,
+      "sourceBytes": 24289,
+      "sourceSha256": "c027b6b8711fd9260018f9009beb2a1b0c1bd787c5d8da15719c0d00783d8246",
+      "samples": [],
+      "correct": false
+    },
+    "nesting-8": {
+      "family": "nesting",
+      "size": 8,
+      "sourceBytes": 230,
+      "sourceSha256": "aeda254a1cc461c11733a8608769843e13e3ccadd3755d2d21503be3a0ba182a",
+      "samples": [],
+      "ordinary": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-8/input.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-8/ordinary.c"
+        ],
+        "elapsedNs": 267567356,
+        "status": 0,
+        "timedOut": false,
+        "output": "nesting-8/ordinary-emit",
+        "maxRssKiB": 41320,
+        "userSeconds": 0.24,
+        "systemSeconds": 0.02,
+        "cBytes": 657844,
+        "cSha256": "2359b2ebb415473006c481a3f45d317d89064ad0644ee6e396047c7931ca20a0",
+        "gcc": {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-fno-fast-math",
+            "-fno-lto",
+            "-march=armv8-a",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-8/ordinary.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-8/ordinary-gcc.exe",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 269296380,
+          "status": 0,
+          "timedOut": false,
+          "output": "nesting-8/ordinary-gcc",
+          "maxRssKiB": 49964,
+          "userSeconds": 0.23,
+          "systemSeconds": 0.03,
+          "binaryBytes": 73920,
+          "binarySha256": "eeb1376cfc8bbafb74d60f309369eb11e109abb73895128f46476144a25424c6",
+          "execution": {
+            "command": [
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-8/ordinary-gcc.exe"
+            ],
+            "elapsedNs": 1888641,
+            "status": 0,
+            "timedOut": false,
+            "output": "nesting-8/ordinary-gcc-execution",
+            "maxRssKiB": 1396,
+            "userSeconds": 0.0,
+            "systemSeconds": 0.0
+          }
+        }
+      },
+      "observed": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-8/input.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-8/observed.c",
+          "--profile-compile",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-8/observed.json"
+        ],
+        "elapsedNs": 266694456,
+        "status": 0,
+        "timedOut": false,
+        "output": "nesting-8/observed-emit",
+        "maxRssKiB": 41028,
+        "userSeconds": 0.23,
+        "systemSeconds": 0.02,
+        "phases": {
+          "load-root": {
+            "exclusiveNs": 16663,
+            "inclusiveNs": 16663,
+            "calls": 1,
+            "counts": {}
+          },
+          "front-end": {
+            "exclusiveNs": 2391268,
+            "inclusiveNs": 240096125,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-library": {
+            "exclusiveNs": 119036,
+            "inclusiveNs": 14144317,
+            "calls": 29,
+            "counts": {
+              "source_bytes": 374132
+            }
+          },
+          "parse-module": {
+            "exclusiveNs": 14077223,
+            "inclusiveNs": 14077223,
+            "calls": 31,
+            "counts": {
+              "tokens_including_eof": 62058,
+              "declarations": 3052
+            }
+          },
+          "generate-library-declarations": {
+            "exclusiveNs": 19384,
+            "inclusiveNs": 19384,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-input": {
+            "exclusiveNs": 320,
+            "inclusiveNs": 30167,
+            "calls": 1,
+            "counts": {
+              "source_bytes": 230
+            }
+          },
+          "macro-expansion": {
+            "exclusiveNs": 420903,
+            "inclusiveNs": 420903,
+            "calls": 1,
+            "counts": {}
+          },
+          "collect-declarations": {
+            "exclusiveNs": 13407349,
+            "inclusiveNs": 13407349,
+            "calls": 1,
+            "counts": {
+              "modules": 2,
+              "declarations": 3051
+            }
+          },
+          "type-check": {
+            "exclusiveNs": 209682737,
+            "inclusiveNs": 209682737,
+            "calls": 1,
+            "counts": {
+              "bindings": 1591,
+              "types": 117
+            }
+          },
+          "lowering": {
+            "exclusiveNs": 3584,
+            "inclusiveNs": 797766,
+            "calls": 1,
+            "counts": {
+              "functions_after_optimization": 8
+            }
+          },
+          "specialization": {
+            "exclusiveNs": 616758,
+            "inclusiveNs": 616758,
+            "calls": 1,
+            "counts": {
+              "functions": 8
+            }
+          },
+          "preserve-resources": {
+            "exclusiveNs": 17663,
+            "inclusiveNs": 17663,
+            "calls": 1,
+            "counts": {}
+          },
+          "optimization": {
+            "exclusiveNs": 159761,
+            "inclusiveNs": 159761,
+            "calls": 1,
+            "counts": {}
+          },
+          "code-generation": {
+            "exclusiveNs": 46334,
+            "inclusiveNs": 709594,
+            "calls": 1,
+            "counts": {}
+          },
+          "representation-and-ownership": {
+            "exclusiveNs": 344138,
+            "inclusiveNs": 344138,
+            "calls": 1,
+            "counts": {
+              "functions": 9
+            }
+          },
+          "c-emission": {
+            "exclusiveNs": 319122,
+            "inclusiveNs": 319122,
+            "calls": 1,
+            "counts": {
+              "c_bytes": 657844
+            }
+          }
+        },
+        "cBytes": 657844,
+        "cSha256": "2359b2ebb415473006c481a3f45d317d89064ad0644ee6e396047c7931ca20a0",
+        "gcc": {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-fno-fast-math",
+            "-fno-lto",
+            "-march=armv8-a",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-8/observed.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-8/observed-gcc.exe",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 274154579,
+          "status": 0,
+          "timedOut": false,
+          "output": "nesting-8/observed-gcc",
+          "maxRssKiB": 49832,
+          "userSeconds": 0.23,
+          "systemSeconds": 0.03,
+          "binaryBytes": 73920,
+          "binarySha256": "a99fb933ec454b96bc36ecc2c6fd4acec5ec7388e202ee9796f15e378f165659",
+          "execution": {
+            "command": [
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-8/observed-gcc.exe"
+            ],
+            "elapsedNs": 1773774,
+            "status": 0,
+            "timedOut": false,
+            "output": "nesting-8/observed-gcc-execution",
+            "maxRssKiB": 1396,
+            "userSeconds": 0.0,
+            "systemSeconds": 0.0
+          }
+        }
+      },
+      "early-ordinary": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-8/early.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-8/early-ordinary.c"
+        ],
+        "elapsedNs": 266343914,
+        "status": 1,
+        "timedOut": false,
+        "output": "nesting-8/early-ordinary",
+        "maxRssKiB": 40716,
+        "userSeconds": 0.24,
+        "systemSeconds": 0.02
+      },
+      "early-observed": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-8/early.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-8/early-observed.c",
+          "--profile-compile",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-8/early-observed.json"
+        ],
+        "elapsedNs": 265938827,
+        "status": 1,
+        "timedOut": false,
+        "output": "nesting-8/early-observed",
+        "maxRssKiB": 40884,
+        "userSeconds": 0.24,
+        "systemSeconds": 0.01,
+        "phases": {
+          "load-root": {
+            "exclusiveNs": 13815,
+            "inclusiveNs": 13815,
+            "calls": 1,
+            "counts": {}
+          },
+          "front-end": {
+            "exclusiveNs": 22693719,
+            "inclusiveNs": 260680239,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-library": {
+            "exclusiveNs": 112963,
+            "inclusiveNs": 13929049,
+            "calls": 29,
+            "counts": {
+              "source_bytes": 374132
+            }
+          },
+          "parse-module": {
+            "exclusiveNs": 13849029,
+            "inclusiveNs": 13849029,
+            "calls": 30,
+            "counts": {
+              "tokens_including_eof": 62002,
+              "declarations": 3053
+            }
+          },
+          "generate-library-declarations": {
+            "exclusiveNs": 19207,
+            "inclusiveNs": 19207,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-input": {
+            "exclusiveNs": 440,
+            "inclusiveNs": 33383,
+            "calls": 1,
+            "counts": {
+              "source_bytes": 260
+            }
+          },
+          "macro-expansion": {
+            "exclusiveNs": 441934,
+            "inclusiveNs": 441934,
+            "calls": 1,
+            "counts": {}
+          },
+          "collect-declarations": {
+            "exclusiveNs": 13403918,
+            "inclusiveNs": 13403918,
+            "calls": 1,
+            "counts": {
+              "modules": 2,
+              "declarations": 3053
+            }
+          },
+          "type-check": {
+            "exclusiveNs": 210159029,
+            "inclusiveNs": 210159029,
+            "calls": 1,
+            "counts": {
+              "bindings": 1592,
+              "types": 117
+            }
+          }
+        }
+      },
+      "late-ordinary": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-8/late.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-8/late-ordinary.c"
+        ],
+        "elapsedNs": 266625958,
+        "status": 1,
+        "timedOut": false,
+        "output": "nesting-8/late-ordinary",
+        "maxRssKiB": 40500,
+        "userSeconds": 0.25,
+        "systemSeconds": 0.01
+      },
+      "late-observed": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-8/late.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-8/late-observed.c",
+          "--profile-compile",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-8/late-observed.json"
+        ],
+        "elapsedNs": 263505457,
+        "status": 1,
+        "timedOut": false,
+        "output": "nesting-8/late-observed",
+        "maxRssKiB": 40788,
+        "userSeconds": 0.24,
+        "systemSeconds": 0.01,
+        "phases": {
+          "load-root": {
+            "exclusiveNs": 13743,
+            "inclusiveNs": 13743,
+            "calls": 1,
+            "counts": {}
+          },
+          "front-end": {
+            "exclusiveNs": 22158529,
+            "inclusiveNs": 258480212,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-library": {
+            "exclusiveNs": 136451,
+            "inclusiveNs": 13595564,
+            "calls": 29,
+            "counts": {
+              "source_bytes": 374132
+            }
+          },
+          "parse-module": {
+            "exclusiveNs": 13487808,
+            "inclusiveNs": 13487808,
+            "calls": 30,
+            "counts": {
+              "tokens_including_eof": 62002,
+              "declarations": 3053
+            }
+          },
+          "generate-library-declarations": {
+            "exclusiveNs": 18904,
+            "inclusiveNs": 18904,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-input": {
+            "exclusiveNs": 840,
+            "inclusiveNs": 29535,
+            "calls": 1,
+            "counts": {
+              "source_bytes": 260
+            }
+          },
+          "macro-expansion": {
+            "exclusiveNs": 391255,
+            "inclusiveNs": 391255,
+            "calls": 1,
+            "counts": {}
+          },
+          "collect-declarations": {
+            "exclusiveNs": 12843158,
+            "inclusiveNs": 12843158,
+            "calls": 1,
+            "counts": {
+              "modules": 2,
+              "declarations": 3053
+            }
+          },
+          "type-check": {
+            "exclusiveNs": 209443267,
+            "inclusiveNs": 209443267,
+            "calls": 1,
+            "counts": {
+              "bindings": 1592,
+              "types": 117
+            }
+          }
+        }
+      },
+      "correct": true
+    },
+    "nesting-32": {
+      "family": "nesting",
+      "size": 32,
+      "sourceBytes": 922,
+      "sourceSha256": "643c7d51d28c1230b0a03f9c4c41b477ffe6c3656a1dc350cede167f9feb913a",
+      "samples": [],
+      "ordinary": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-32/input.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-32/ordinary.c"
+        ],
+        "elapsedNs": 270357066,
+        "status": 0,
+        "timedOut": false,
+        "output": "nesting-32/ordinary-emit",
+        "maxRssKiB": 41396,
+        "userSeconds": 0.24,
+        "systemSeconds": 0.02,
+        "cBytes": 659471,
+        "cSha256": "11e6087f0429950b918aaaf9baca81b0cb357c05b7d86cf57520008ae14558d6",
+        "gcc": {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-fno-fast-math",
+            "-fno-lto",
+            "-march=armv8-a",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-32/ordinary.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-32/ordinary-gcc.exe",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 295023864,
+          "status": 0,
+          "timedOut": false,
+          "output": "nesting-32/ordinary-gcc",
+          "maxRssKiB": 50116,
+          "userSeconds": 0.23,
+          "systemSeconds": 0.03,
+          "binaryBytes": 73920,
+          "binarySha256": "b16e453b752029355da45ce32e09b5755dcef0a7a4b64f894423340f186a11f0",
+          "execution": {
+            "command": [
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-32/ordinary-gcc.exe"
+            ],
+            "elapsedNs": 1871393,
+            "status": 0,
+            "timedOut": false,
+            "output": "nesting-32/ordinary-gcc-execution",
+            "maxRssKiB": 1388,
+            "userSeconds": 0.0,
+            "systemSeconds": 0.0
+          }
+        }
+      },
+      "observed": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-32/input.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-32/observed.c",
+          "--profile-compile",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-32/observed.json"
+        ],
+        "elapsedNs": 267383759,
+        "status": 0,
+        "timedOut": false,
+        "output": "nesting-32/observed-emit",
+        "maxRssKiB": 41416,
+        "userSeconds": 0.25,
+        "systemSeconds": 0.01,
+        "phases": {
+          "load-root": {
+            "exclusiveNs": 15032,
+            "inclusiveNs": 15032,
+            "calls": 1,
+            "counts": {}
+          },
+          "front-end": {
+            "exclusiveNs": 2337311,
+            "inclusiveNs": 239737750,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-library": {
+            "exclusiveNs": 117781,
+            "inclusiveNs": 13669826,
+            "calls": 29,
+            "counts": {
+              "source_bytes": 374132
+            }
+          },
+          "parse-module": {
+            "exclusiveNs": 13756100,
+            "inclusiveNs": 13756100,
+            "calls": 31,
+            "counts": {
+              "tokens_including_eof": 62394,
+              "declarations": 3052
+            }
+          },
+          "generate-library-declarations": {
+            "exclusiveNs": 18928,
+            "inclusiveNs": 18928,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-input": {
+            "exclusiveNs": 352,
+            "inclusiveNs": 146306,
+            "calls": 1,
+            "counts": {
+              "source_bytes": 922
+            }
+          },
+          "macro-expansion": {
+            "exclusiveNs": 382664,
+            "inclusiveNs": 382664,
+            "calls": 1,
+            "counts": {}
+          },
+          "collect-declarations": {
+            "exclusiveNs": 13009366,
+            "inclusiveNs": 13009366,
+            "calls": 1,
+            "counts": {
+              "modules": 2,
+              "declarations": 3051
+            }
+          },
+          "type-check": {
+            "exclusiveNs": 210173349,
+            "inclusiveNs": 210173349,
+            "calls": 1,
+            "counts": {
+              "bindings": 1591,
+              "types": 117
+            }
+          },
+          "lowering": {
+            "exclusiveNs": 3344,
+            "inclusiveNs": 1609740,
+            "calls": 1,
+            "counts": {
+              "functions_after_optimization": 8
+            }
+          },
+          "specialization": {
+            "exclusiveNs": 910633,
+            "inclusiveNs": 910633,
+            "calls": 1,
+            "counts": {
+              "functions": 8
+            }
+          },
+          "preserve-resources": {
+            "exclusiveNs": 26591,
+            "inclusiveNs": 26591,
+            "calls": 1,
+            "counts": {}
+          },
+          "optimization": {
+            "exclusiveNs": 669172,
+            "inclusiveNs": 669172,
+            "calls": 1,
+            "counts": {}
+          },
+          "code-generation": {
+            "exclusiveNs": 56197,
+            "inclusiveNs": 887947,
+            "calls": 1,
+            "counts": {}
+          },
+          "representation-and-ownership": {
+            "exclusiveNs": 486836,
+            "inclusiveNs": 486836,
+            "calls": 1,
+            "counts": {
+              "functions": 9
+            }
+          },
+          "c-emission": {
+            "exclusiveNs": 344914,
+            "inclusiveNs": 344914,
+            "calls": 1,
+            "counts": {
+              "c_bytes": 659471
+            }
+          }
+        },
+        "cBytes": 659471,
+        "cSha256": "11e6087f0429950b918aaaf9baca81b0cb357c05b7d86cf57520008ae14558d6",
+        "gcc": {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-fno-fast-math",
+            "-fno-lto",
+            "-march=armv8-a",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-32/observed.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-32/observed-gcc.exe",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 276658314,
+          "status": 0,
+          "timedOut": false,
+          "output": "nesting-32/observed-gcc",
+          "maxRssKiB": 50116,
+          "userSeconds": 0.24,
+          "systemSeconds": 0.02,
+          "binaryBytes": 73920,
+          "binarySha256": "9b6b582a69590a85105b3b77721c09aeb978f0c77ed302f78ef8ca3463721f28",
+          "execution": {
+            "command": [
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-32/observed-gcc.exe"
+            ],
+            "elapsedNs": 1828179,
+            "status": 0,
+            "timedOut": false,
+            "output": "nesting-32/observed-gcc-execution",
+            "maxRssKiB": 1396,
+            "userSeconds": 0.0,
+            "systemSeconds": 0.0
+          }
+        }
+      },
+      "early-ordinary": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-32/early.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-32/early-ordinary.c"
+        ],
+        "elapsedNs": 268494816,
+        "status": 1,
+        "timedOut": false,
+        "output": "nesting-32/early-ordinary",
+        "maxRssKiB": 40964,
+        "userSeconds": 0.24,
+        "systemSeconds": 0.01
+      },
+      "early-observed": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-32/early.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-32/early-observed.c",
+          "--profile-compile",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-32/early-observed.json"
+        ],
+        "elapsedNs": 268475904,
+        "status": 1,
+        "timedOut": false,
+        "output": "nesting-32/early-observed",
+        "maxRssKiB": 40968,
+        "userSeconds": 0.24,
+        "systemSeconds": 0.01,
+        "phases": {
+          "load-root": {
+            "exclusiveNs": 13583,
+            "inclusiveNs": 13583,
+            "calls": 1,
+            "counts": {}
+          },
+          "front-end": {
+            "exclusiveNs": 23022383,
+            "inclusiveNs": 262737937,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-library": {
+            "exclusiveNs": 121376,
+            "inclusiveNs": 14510916,
+            "calls": 29,
+            "counts": {
+              "source_bytes": 374132
+            }
+          },
+          "parse-module": {
+            "exclusiveNs": 14541149,
+            "inclusiveNs": 14541149,
+            "calls": 30,
+            "counts": {
+              "tokens_including_eof": 62170,
+              "declarations": 3053
+            }
+          },
+          "generate-library-declarations": {
+            "exclusiveNs": 18927,
+            "inclusiveNs": 18927,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-input": {
+            "exclusiveNs": 520,
+            "inclusiveNs": 152129,
+            "calls": 1,
+            "counts": {
+              "source_bytes": 952
+            }
+          },
+          "macro-expansion": {
+            "exclusiveNs": 449941,
+            "inclusiveNs": 449941,
+            "calls": 1,
+            "counts": {}
+          },
+          "collect-declarations": {
+            "exclusiveNs": 13504826,
+            "inclusiveNs": 13504826,
+            "calls": 1,
+            "counts": {
+              "modules": 2,
+              "declarations": 3053
+            }
+          },
+          "type-check": {
+            "exclusiveNs": 211078815,
+            "inclusiveNs": 211078815,
+            "calls": 1,
+            "counts": {
+              "bindings": 1592,
+              "types": 117
+            }
+          }
+        }
+      },
+      "late-ordinary": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-32/late.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-32/late-ordinary.c"
+        ],
+        "elapsedNs": 269331396,
+        "status": 1,
+        "timedOut": false,
+        "output": "nesting-32/late-ordinary",
+        "maxRssKiB": 40872,
+        "userSeconds": 0.24,
+        "systemSeconds": 0.01
+      },
+      "late-observed": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-32/late.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-32/late-observed.c",
+          "--profile-compile",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-32/late-observed.json"
+        ],
+        "elapsedNs": 265322612,
+        "status": 1,
+        "timedOut": false,
+        "output": "nesting-32/late-observed",
+        "maxRssKiB": 40984,
+        "userSeconds": 0.24,
+        "systemSeconds": 0.02,
+        "phases": {
+          "load-root": {
+            "exclusiveNs": 13304,
+            "inclusiveNs": 13304,
+            "calls": 1,
+            "counts": {}
+          },
+          "front-end": {
+            "exclusiveNs": 22733048,
+            "inclusiveNs": 260199499,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-library": {
+            "exclusiveNs": 112892,
+            "inclusiveNs": 13769518,
+            "calls": 29,
+            "counts": {
+              "source_bytes": 374132
+            }
+          },
+          "parse-module": {
+            "exclusiveNs": 13807964,
+            "inclusiveNs": 13807964,
+            "calls": 30,
+            "counts": {
+              "tokens_including_eof": 62170,
+              "declarations": 3053
+            }
+          },
+          "generate-library-declarations": {
+            "exclusiveNs": 19351,
+            "inclusiveNs": 19351,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-input": {
+            "exclusiveNs": 25383,
+            "inclusiveNs": 176721,
+            "calls": 1,
+            "counts": {
+              "source_bytes": 952
+            }
+          },
+          "macro-expansion": {
+            "exclusiveNs": 426438,
+            "inclusiveNs": 426438,
+            "calls": 1,
+            "counts": {}
+          },
+          "collect-declarations": {
+            "exclusiveNs": 13162728,
+            "inclusiveNs": 13162728,
+            "calls": 1,
+            "counts": {
+              "modules": 2,
+              "declarations": 3053
+            }
+          },
+          "type-check": {
+            "exclusiveNs": 209911695,
+            "inclusiveNs": 209911695,
+            "calls": 1,
+            "counts": {
+              "bindings": 1592,
+              "types": 117
+            }
+          }
+        }
+      },
+      "correct": true
+    },
+    "nesting-128": {
+      "family": "nesting",
+      "size": 128,
+      "sourceBytes": 3762,
+      "sourceSha256": "a87cf5ec6c8b96edb53c7f4cb205adfecfdcaaa9f2f60aa24ebe5d3bf038d6e5",
+      "samples": [],
+      "ordinary": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-128/input.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-128/ordinary.c"
+        ],
+        "elapsedNs": 285294071,
+        "status": 0,
+        "timedOut": false,
+        "output": "nesting-128/ordinary-emit",
+        "maxRssKiB": 45372,
+        "userSeconds": 0.25,
+        "systemSeconds": 0.02,
+        "cBytes": 666144,
+        "cSha256": "ed1cc7ea669bfe472076298de8c865d6426263698feb864e6540ebf843d8b6b8",
+        "gcc": {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-fno-fast-math",
+            "-fno-lto",
+            "-march=armv8-a",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-128/ordinary.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-128/ordinary-gcc.exe",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 278512876,
+          "status": 0,
+          "timedOut": false,
+          "output": "nesting-128/ordinary-gcc",
+          "maxRssKiB": 50944,
+          "userSeconds": 0.23,
+          "systemSeconds": 0.03,
+          "binaryBytes": 73920,
+          "binarySha256": "d4bede025de97a1635c4dd186cef8923f2243165b1e4d79caf8fe472f7130186",
+          "execution": {
+            "command": [
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-128/ordinary-gcc.exe"
+            ],
+            "elapsedNs": 1728527,
+            "status": 0,
+            "timedOut": false,
+            "output": "nesting-128/ordinary-gcc-execution",
+            "maxRssKiB": 1396,
+            "userSeconds": 0.0,
+            "systemSeconds": 0.0
+          }
+        }
+      },
+      "observed": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-128/input.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-128/observed.c",
+          "--profile-compile",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-128/observed.json"
+        ],
+        "elapsedNs": 291215167,
+        "status": 0,
+        "timedOut": false,
+        "output": "nesting-128/observed-emit",
+        "maxRssKiB": 45260,
+        "userSeconds": 0.26,
+        "systemSeconds": 0.02,
+        "phases": {
+          "load-root": {
+            "exclusiveNs": 17200,
+            "inclusiveNs": 17200,
+            "calls": 1,
+            "counts": {}
+          },
+          "front-end": {
+            "exclusiveNs": 2463385,
+            "inclusiveNs": 250177047,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-library": {
+            "exclusiveNs": 114525,
+            "inclusiveNs": 14056267,
+            "calls": 29,
+            "counts": {
+              "source_bytes": 374132
+            }
+          },
+          "parse-module": {
+            "exclusiveNs": 14803289,
+            "inclusiveNs": 14803289,
+            "calls": 31,
+            "counts": {
+              "tokens_including_eof": 63738,
+              "declarations": 3052
+            }
+          },
+          "generate-library-declarations": {
+            "exclusiveNs": 19807,
+            "inclusiveNs": 19807,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-input": {
+            "exclusiveNs": 832,
+            "inclusiveNs": 637525,
+            "calls": 1,
+            "counts": {
+              "source_bytes": 3762
+            }
+          },
+          "macro-expansion": {
+            "exclusiveNs": 413238,
+            "inclusiveNs": 413238,
+            "calls": 1,
+            "counts": {}
+          },
+          "collect-declarations": {
+            "exclusiveNs": 13085868,
+            "inclusiveNs": 13085868,
+            "calls": 1,
+            "counts": {
+              "modules": 2,
+              "declarations": 3051
+            }
+          },
+          "type-check": {
+            "exclusiveNs": 219500957,
+            "inclusiveNs": 219500957,
+            "calls": 1,
+            "counts": {
+              "bindings": 1591,
+              "types": 117
+            }
+          },
+          "lowering": {
+            "exclusiveNs": 3712,
+            "inclusiveNs": 10668361,
+            "calls": 1,
+            "counts": {
+              "functions_after_optimization": 8
+            }
+          },
+          "specialization": {
+            "exclusiveNs": 3772626,
+            "inclusiveNs": 3772626,
+            "calls": 1,
+            "counts": {
+              "functions": 8
+            }
+          },
+          "preserve-resources": {
+            "exclusiveNs": 61813,
+            "inclusiveNs": 61813,
+            "calls": 1,
+            "counts": {}
+          },
+          "optimization": {
+            "exclusiveNs": 6830210,
+            "inclusiveNs": 6830210,
+            "calls": 1,
+            "counts": {}
+          },
+          "code-generation": {
+            "exclusiveNs": 111820,
+            "inclusiveNs": 3118446,
+            "calls": 1,
+            "counts": {}
+          },
+          "representation-and-ownership": {
+            "exclusiveNs": 2745325,
+            "inclusiveNs": 2745325,
+            "calls": 1,
+            "counts": {
+              "functions": 9
+            }
+          },
+          "c-emission": {
+            "exclusiveNs": 261301,
+            "inclusiveNs": 261301,
+            "calls": 1,
+            "counts": {
+              "c_bytes": 666144
+            }
+          }
+        },
+        "cBytes": 666144,
+        "cSha256": "ed1cc7ea669bfe472076298de8c865d6426263698feb864e6540ebf843d8b6b8",
+        "gcc": {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-fno-fast-math",
+            "-fno-lto",
+            "-march=armv8-a",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-128/observed.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-128/observed-gcc.exe",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 280608228,
+          "status": 0,
+          "timedOut": false,
+          "output": "nesting-128/observed-gcc",
+          "maxRssKiB": 50976,
+          "userSeconds": 0.24,
+          "systemSeconds": 0.03,
+          "binaryBytes": 73920,
+          "binarySha256": "be1650156a07187f24a88a0c305d01833831d011b095b4d2491b174e77d3639b",
+          "execution": {
+            "command": [
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-128/observed-gcc.exe"
+            ],
+            "elapsedNs": 1768894,
+            "status": 0,
+            "timedOut": false,
+            "output": "nesting-128/observed-gcc-execution",
+            "maxRssKiB": 1380,
+            "userSeconds": 0.0,
+            "systemSeconds": 0.0
+          }
+        }
+      },
+      "early-ordinary": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-128/early.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-128/early-ordinary.c"
+        ],
+        "elapsedNs": 273767579,
+        "status": 1,
+        "timedOut": false,
+        "output": "nesting-128/early-ordinary",
+        "maxRssKiB": 41980,
+        "userSeconds": 0.25,
+        "systemSeconds": 0.02
+      },
+      "early-observed": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-128/early.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-128/early-observed.c",
+          "--profile-compile",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-128/early-observed.json"
+        ],
+        "elapsedNs": 273464352,
+        "status": 1,
+        "timedOut": false,
+        "output": "nesting-128/early-observed",
+        "maxRssKiB": 42052,
+        "userSeconds": 0.24,
+        "systemSeconds": 0.02,
+        "phases": {
+          "load-root": {
+            "exclusiveNs": 16399,
+            "inclusiveNs": 16399,
+            "calls": 1,
+            "counts": {}
+          },
+          "front-end": {
+            "exclusiveNs": 23962944,
+            "inclusiveNs": 267766110,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-library": {
+            "exclusiveNs": 111379,
+            "inclusiveNs": 14345297,
+            "calls": 29,
+            "counts": {
+              "source_bytes": 374132
+            }
+          },
+          "parse-module": {
+            "exclusiveNs": 14907250,
+            "inclusiveNs": 14907250,
+            "calls": 30,
+            "counts": {
+              "tokens_including_eof": 62842,
+              "declarations": 3053
+            }
+          },
+          "generate-library-declarations": {
+            "exclusiveNs": 19327,
+            "inclusiveNs": 19327,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-input": {
+            "exclusiveNs": 856,
+            "inclusiveNs": 674188,
+            "calls": 1,
+            "counts": {
+              "source_bytes": 3792
+            }
+          },
+          "macro-expansion": {
+            "exclusiveNs": 465316,
+            "inclusiveNs": 465316,
+            "calls": 1,
+            "counts": {}
+          },
+          "collect-declarations": {
+            "exclusiveNs": 13107739,
+            "inclusiveNs": 13107739,
+            "calls": 1,
+            "counts": {
+              "modules": 2,
+              "declarations": 3053
+            }
+          },
+          "type-check": {
+            "exclusiveNs": 215191299,
+            "inclusiveNs": 215191299,
+            "calls": 1,
+            "counts": {
+              "bindings": 1592,
+              "types": 117
+            }
+          }
+        }
+      },
+      "late-ordinary": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-128/late.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-128/late-ordinary.c"
+        ],
+        "elapsedNs": 272248027,
+        "status": 1,
+        "timedOut": false,
+        "output": "nesting-128/late-ordinary",
+        "maxRssKiB": 42004,
+        "userSeconds": 0.25,
+        "systemSeconds": 0.01
+      },
+      "late-observed": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-128/late.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-128/late-observed.c",
+          "--profile-compile",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-128/late-observed.json"
+        ],
+        "elapsedNs": 271509009,
+        "status": 1,
+        "timedOut": false,
+        "output": "nesting-128/late-observed",
+        "maxRssKiB": 42052,
+        "userSeconds": 0.24,
+        "systemSeconds": 0.02,
+        "phases": {
+          "load-root": {
+            "exclusiveNs": 14943,
+            "inclusiveNs": 14943,
+            "calls": 1,
+            "counts": {}
+          },
+          "front-end": {
+            "exclusiveNs": 22878194,
+            "inclusiveNs": 265338188,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-library": {
+            "exclusiveNs": 107445,
+            "inclusiveNs": 13963325,
+            "calls": 29,
+            "counts": {
+              "source_bytes": 374132
+            }
+          },
+          "parse-module": {
+            "exclusiveNs": 14611456,
+            "inclusiveNs": 14611456,
+            "calls": 30,
+            "counts": {
+              "tokens_including_eof": 62842,
+              "declarations": 3053
+            }
+          },
+          "generate-library-declarations": {
+            "exclusiveNs": 18384,
+            "inclusiveNs": 18384,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-input": {
+            "exclusiveNs": 960,
+            "inclusiveNs": 756536,
+            "calls": 1,
+            "counts": {
+              "source_bytes": 3792
+            }
+          },
+          "macro-expansion": {
+            "exclusiveNs": 477084,
+            "inclusiveNs": 477084,
+            "calls": 1,
+            "counts": {}
+          },
+          "collect-declarations": {
+            "exclusiveNs": 12821094,
+            "inclusiveNs": 12821094,
+            "calls": 1,
+            "counts": {
+              "modules": 2,
+              "declarations": 3053
+            }
+          },
+          "type-check": {
+            "exclusiveNs": 214423571,
+            "inclusiveNs": 214423571,
+            "calls": 1,
+            "counts": {
+              "bindings": 1592,
+              "types": 117
+            }
+          }
+        }
+      },
+      "correct": true
+    },
+    "nesting-512": {
+      "family": "nesting",
+      "size": 512,
+      "sourceBytes": 15666,
+      "sourceSha256": "ea1f834ce48a7f427e41714c2af9d9218c978cb978dcb39802de63fc7a2751ef",
+      "samples": [],
+      "ordinary": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-512/input.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-512/ordinary.c"
+        ],
+        "elapsedNs": 449493507,
+        "status": 0,
+        "timedOut": false,
+        "output": "nesting-512/ordinary-emit",
+        "maxRssKiB": 55592,
+        "userSeconds": 0.42,
+        "systemSeconds": 0.02,
+        "cBytes": 703693,
+        "cSha256": "562021aef0a262dfbba1581426f7cc69b21b0f277c5899841bbf6d4f36d69fe4",
+        "gcc": {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-fno-fast-math",
+            "-fno-lto",
+            "-march=armv8-a",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-512/ordinary.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-512/ordinary-gcc.exe",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 490083990,
+          "status": 0,
+          "timedOut": false,
+          "output": "nesting-512/ordinary-gcc",
+          "maxRssKiB": 61772,
+          "userSeconds": 0.44,
+          "systemSeconds": 0.04,
+          "binaryBytes": 75456,
+          "binarySha256": "42ab385e90157577f596904a9c4b8cde210047fa54424b7dcfd63c7212a74f36",
+          "execution": {
+            "command": [
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-512/ordinary-gcc.exe"
+            ],
+            "elapsedNs": 1802612,
+            "status": 0,
+            "timedOut": false,
+            "output": "nesting-512/ordinary-gcc-execution",
+            "maxRssKiB": 1388,
+            "userSeconds": 0.0,
+            "systemSeconds": 0.0
+          }
+        }
+      },
+      "observed": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-512/input.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-512/observed.c",
+          "--profile-compile",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-512/observed.json"
+        ],
+        "elapsedNs": 449410496,
+        "status": 0,
+        "timedOut": false,
+        "output": "nesting-512/observed-emit",
+        "maxRssKiB": 55688,
+        "userSeconds": 0.41,
+        "systemSeconds": 0.03,
+        "phases": {
+          "load-root": {
+            "exclusiveNs": 22615,
+            "inclusiveNs": 22615,
+            "calls": 1,
+            "counts": {}
+          },
+          "front-end": {
+            "exclusiveNs": 2529871,
+            "inclusiveNs": 294837639,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-library": {
+            "exclusiveNs": 113657,
+            "inclusiveNs": 14088640,
+            "calls": 29,
+            "counts": {
+              "source_bytes": 374132
+            }
+          },
+          "parse-module": {
+            "exclusiveNs": 17901386,
+            "inclusiveNs": 17901386,
+            "calls": 31,
+            "counts": {
+              "tokens_including_eof": 69114,
+              "declarations": 3052
+            }
+          },
+          "generate-library-declarations": {
+            "exclusiveNs": 19223,
+            "inclusiveNs": 19223,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-input": {
+            "exclusiveNs": 1448,
+            "inclusiveNs": 2912670,
+            "calls": 1,
+            "counts": {
+              "source_bytes": 15666
+            }
+          },
+          "macro-expansion": {
+            "exclusiveNs": 548273,
+            "inclusiveNs": 548273,
+            "calls": 1,
+            "counts": {}
+          },
+          "collect-declarations": {
+            "exclusiveNs": 13338017,
+            "inclusiveNs": 13338017,
+            "calls": 1,
+            "counts": {
+              "modules": 2,
+              "declarations": 3051
+            }
+          },
+          "type-check": {
+            "exclusiveNs": 261400945,
+            "inclusiveNs": 261400945,
+            "calls": 1,
+            "counts": {
+              "bindings": 1591,
+              "types": 117
+            }
+          },
+          "lowering": {
+            "exclusiveNs": 4768,
+            "inclusiveNs": 74582697,
+            "calls": 1,
+            "counts": {
+              "functions_after_optimization": 8
+            }
+          },
+          "specialization": {
+            "exclusiveNs": 38077524,
+            "inclusiveNs": 38077524,
+            "calls": 1,
+            "counts": {
+              "functions": 8
+            }
+          },
+          "preserve-resources": {
+            "exclusiveNs": 203783,
+            "inclusiveNs": 203783,
+            "calls": 1,
+            "counts": {}
+          },
+          "optimization": {
+            "exclusiveNs": 36296622,
+            "inclusiveNs": 36296622,
+            "calls": 1,
+            "counts": {}
+          },
+          "code-generation": {
+            "exclusiveNs": 391032,
+            "inclusiveNs": 48427562,
+            "calls": 1,
+            "counts": {}
+          },
+          "representation-and-ownership": {
+            "exclusiveNs": 46999813,
+            "inclusiveNs": 46999813,
+            "calls": 1,
+            "counts": {
+              "functions": 9
+            }
+          },
+          "c-emission": {
+            "exclusiveNs": 1036717,
+            "inclusiveNs": 1036717,
+            "calls": 1,
+            "counts": {
+              "c_bytes": 703693
+            }
+          }
+        },
+        "cBytes": 703693,
+        "cSha256": "562021aef0a262dfbba1581426f7cc69b21b0f277c5899841bbf6d4f36d69fe4",
+        "gcc": {
+          "command": [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-ffp-contract=off",
+            "-fno-fast-math",
+            "-fno-lto",
+            "-march=armv8-a",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-512/observed.c",
+            "-o",
+            "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-512/observed-gcc.exe",
+            "-lm",
+            "-lpthread",
+            "-ldl"
+          ],
+          "elapsedNs": 495743153,
+          "status": 0,
+          "timedOut": false,
+          "output": "nesting-512/observed-gcc",
+          "maxRssKiB": 61768,
+          "userSeconds": 0.46,
+          "systemSeconds": 0.03,
+          "binaryBytes": 75456,
+          "binarySha256": "a8bb827f4099602c0c0b3a22e353ed35e366f7698b20a7dd82cdc42db3741179",
+          "execution": {
+            "command": [
+              "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-512/observed-gcc.exe"
+            ],
+            "elapsedNs": 1808556,
+            "status": 0,
+            "timedOut": false,
+            "output": "nesting-512/observed-gcc-execution",
+            "maxRssKiB": 1404,
+            "userSeconds": 0.0,
+            "systemSeconds": 0.0
+          }
+        }
+      },
+      "early-ordinary": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-512/early.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-512/early-ordinary.c"
+        ],
+        "elapsedNs": 325644196,
+        "status": 1,
+        "timedOut": false,
+        "output": "nesting-512/early-ordinary",
+        "maxRssKiB": 47116,
+        "userSeconds": 0.3,
+        "systemSeconds": 0.02
+      },
+      "early-observed": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-512/early.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-512/early-observed.c",
+          "--profile-compile",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-512/early-observed.json"
+        ],
+        "elapsedNs": 319982282,
+        "status": 1,
+        "timedOut": false,
+        "output": "nesting-512/early-observed",
+        "maxRssKiB": 47080,
+        "userSeconds": 0.29,
+        "systemSeconds": 0.01,
+        "phases": {
+          "load-root": {
+            "exclusiveNs": 37246,
+            "inclusiveNs": 37246,
+            "calls": 1,
+            "counts": {}
+          },
+          "front-end": {
+            "exclusiveNs": 24866698,
+            "inclusiveNs": 314251931,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-library": {
+            "exclusiveNs": 106284,
+            "inclusiveNs": 14170791,
+            "calls": 29,
+            "counts": {
+              "source_bytes": 374132
+            }
+          },
+          "parse-module": {
+            "exclusiveNs": 16981705,
+            "inclusiveNs": 16981705,
+            "calls": 30,
+            "counts": {
+              "tokens_including_eof": 65530,
+              "declarations": 3053
+            }
+          },
+          "generate-library-declarations": {
+            "exclusiveNs": 19679,
+            "inclusiveNs": 19679,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-input": {
+            "exclusiveNs": 1528,
+            "inclusiveNs": 2918726,
+            "calls": 1,
+            "counts": {
+              "source_bytes": 15696
+            }
+          },
+          "macro-expansion": {
+            "exclusiveNs": 553217,
+            "inclusiveNs": 553217,
+            "calls": 1,
+            "counts": {}
+          },
+          "collect-declarations": {
+            "exclusiveNs": 13488612,
+            "inclusiveNs": 13488612,
+            "calls": 1,
+            "counts": {
+              "modules": 2,
+              "declarations": 3053
+            }
+          },
+          "type-check": {
+            "exclusiveNs": 258234208,
+            "inclusiveNs": 258234208,
+            "calls": 1,
+            "counts": {
+              "bindings": 1592,
+              "types": 117
+            }
+          }
+        }
+      },
+      "late-ordinary": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-512/late.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-512/late-ordinary.c"
+        ],
+        "elapsedNs": 320204639,
+        "status": 1,
+        "timedOut": false,
+        "output": "nesting-512/late-ordinary",
+        "maxRssKiB": 47116,
+        "userSeconds": 0.29,
+        "systemSeconds": 0.02
+      },
+      "late-observed": {
+        "command": [
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp",
+          "build",
+          "--target",
+          "native",
+          "--emit-c",
+          "-O2",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-512/late.fwp",
+          "-o",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-512/late-observed.c",
+          "--profile-compile",
+          "/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/nesting-512/late-observed.json"
+        ],
+        "elapsedNs": 320953715,
+        "status": 1,
+        "timedOut": false,
+        "output": "nesting-512/late-observed",
+        "maxRssKiB": 47208,
+        "userSeconds": 0.29,
+        "systemSeconds": 0.02,
+        "phases": {
+          "load-root": {
+            "exclusiveNs": 21677,
+            "inclusiveNs": 21677,
+            "calls": 1,
+            "counts": {}
+          },
+          "front-end": {
+            "exclusiveNs": 24800892,
+            "inclusiveNs": 315104047,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-library": {
+            "exclusiveNs": 110549,
+            "inclusiveNs": 13741324,
+            "calls": 29,
+            "counts": {
+              "source_bytes": 374132
+            }
+          },
+          "parse-module": {
+            "exclusiveNs": 16861947,
+            "inclusiveNs": 16861947,
+            "calls": 30,
+            "counts": {
+              "tokens_including_eof": 65530,
+              "declarations": 3053
+            }
+          },
+          "generate-library-declarations": {
+            "exclusiveNs": 18293,
+            "inclusiveNs": 18293,
+            "calls": 1,
+            "counts": {}
+          },
+          "parse-input": {
+            "exclusiveNs": 1256,
+            "inclusiveNs": 3232428,
+            "calls": 1,
+            "counts": {
+              "source_bytes": 15696
+            }
+          },
+          "macro-expansion": {
+            "exclusiveNs": 433008,
+            "inclusiveNs": 433008,
+            "calls": 1,
+            "counts": {}
+          },
+          "collect-declarations": {
+            "exclusiveNs": 12998796,
+            "inclusiveNs": 12998796,
+            "calls": 1,
+            "counts": {
+              "modules": 2,
+              "declarations": 3053
+            }
+          },
+          "type-check": {
+            "exclusiveNs": 259879306,
+            "inclusiveNs": 259879306,
+            "calls": 1,
+            "counts": {
+              "bindings": 1592,
+              "types": 117
+            }
+          }
+        }
+      },
+      "correct": true
+    }
+  },
+  "failures": [
+    {
+      "case": "generic-512",
+      "error": "{'command': ['/home/runner/work/fun-with-pipes/fun-with-pipes/target/release/fwp', 'build', '--target', 'native', '--emit-c', '-O2', '/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-512/input.fwp', '-o', '/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-512/ordinary.c'], 'elapsedNs': 304233105, 'status': 1, 'timedOut': False, 'output': 'generic-512/ordinary-emit', 'maxRssKiB': 44296, 'userSeconds': 0.27, 'systemSeconds': 0.02}"
+    }
+  ]
+}

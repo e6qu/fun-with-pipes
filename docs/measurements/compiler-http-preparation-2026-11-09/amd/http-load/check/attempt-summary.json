@@ -1,0 +1,65 @@
+{
+  "totalAttempts": 2000,
+  "warmupAttempts": 0,
+  "measuredAttempts": 2000,
+  "correctInWindow": 1998,
+  "correctLate": 0,
+  "measuredFailures": 2,
+  "allFailures": 2,
+  "requestBytes": 162000,
+  "responseBytes": 241990,
+  "workers": [
+    {
+      "id": 0,
+      "attempts": 1000,
+      "failures": 1,
+      "lastEndNs": 265494372
+    },
+    {
+      "id": 1,
+      "attempts": 1000,
+      "failures": 1,
+      "lastEndNs": 265679538
+    }
+  ],
+  "completedPerSecond": 1998.0,
+  "failureFraction": 0.001,
+  "successfulResponseLatency": {
+    "medianMs": 0.257911,
+    "p95Ms": 0.288529,
+    "p99Ms": 0.303106
+  },
+  "timeToResponseOrFailure": {
+    "medianMs": 0.257912,
+    "p95Ms": 0.288529,
+    "p99Ms": 0.303106
+  },
+  "setupErrors": 0,
+  "windowNs": 1000000000,
+  "name": "check",
+  "connections": 2,
+  "warmupSeconds": 0,
+  "durationSeconds": 1,
+  "generatorStatus": 1,
+  "header": {
+    "connections": 2,
+    "warmupNs": 0,
+    "durationNs": 1000000000,
+    "deadlineNs": 5000000000,
+    "epochUnixNs": 1794265155879456683,
+    "attempts": 2000,
+    "failures": 2,
+    "setupErrors": 0
+  },
+  "processSamples": {
+    "server": {
+      "samples": 0,
+      "sufficientForTrend": false
+    },
+    "generator": {
+      "samples": 0,
+      "sufficientForTrend": false
+    },
+    "wallToMonotonicOffsetSpreadNs": 0
+  }
+}

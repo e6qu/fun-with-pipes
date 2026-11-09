@@ -1,0 +1,222 @@
+{
+  "audit.json": {
+    "bytes": 2426,
+    "sha256": "55f9211ce6f8a42d1f2f3a7469d91e2b9e4a1f4e2280ac17359726b93bd88560"
+  },
+  "application-129495022736.log.gz": {
+    "bytes": 20668,
+    "sha256": "027f7168eda4265174e82e0722e5434e7d164b47198bf597767aff8482d0925b"
+  },
+  "application-129481754799.log.gz": {
+    "bytes": 20559,
+    "sha256": "cb1c761742cc6c4fda1a188d67a71e869c6d7de9688c1e773ca4629fa44fee66"
+  },
+  "application-129495022812.log.gz": {
+    "bytes": 16034,
+    "sha256": "25c81f0dc65b5111930ee0f7eb6c50c58d36e4827762006792b697bb2b75b03e"
+  },
+  "application-129481754679.log.gz": {
+    "bytes": 15905,
+    "sha256": "b18745c62d2a1d70d65dbabaeaa3d0231a2bb46319958bdc3915de51c3f3b534"
+  },
+  "amd/fwp-m5-scaling-amd-first.log.gz": {
+    "bytes": 11394,
+    "sha256": "80dac320e59304e106e8f9baeaa132445c7a6c994799929a78de9a39b67b279a"
+  },
+  "amd/fwp-m5-scaling-amd-e560.log.gz": {
+    "bytes": 12036,
+    "sha256": "46aaf39e752e155c7eb9abbd0e128f8e855bfdbb2e0a9dda1f5653f82028b7f6"
+  },
+  "amd/job.json": {
+    "bytes": 4773,
+    "sha256": "a0ba6a07c97e55c8d4cb53fbd501d3a3ab68a51e72a0669e23d9d4c47e3235c0"
+  },
+  "amd/fwp-m5-http-amd-e560.log.gz": {
+    "bytes": 14308,
+    "sha256": "c810ed1b46fd2d3443d81710a57a383c822acb54d4c29ed92a9aa1c282f28a85"
+  },
+  "amd/artifact.json": {
+    "bytes": 796,
+    "sha256": "67a64e78f39c8b45861249513642d6f6cbc249046ad3a4e793de03e7ad0abbd4"
+  },
+  "arm/fwp-m5-scaling-arm-e560.log.gz": {
+    "bytes": 12131,
+    "sha256": "250b9057d503f502ee32d9ed424f5e818ee29610492c03907436ef0358cd2651"
+  },
+  "arm/fwp-m5-scaling-arm-first.log.gz": {
+    "bytes": 11334,
+    "sha256": "75b8a1509868d161524e89f9b3389ecc87e798b92107afec6b02a47d11e6e987"
+  },
+  "arm/job.json": {
+    "bytes": 4779,
+    "sha256": "f0cb57f5d451a198906aa7ec6893e6aa168319f9dd817239d38bfb0185089150"
+  },
+  "arm/fwp-m5-http-arm-e560.log.gz": {
+    "bytes": 14234,
+    "sha256": "c20ecf938c929e612662a9508d84fcf61c05080f29b3552482b5f9d68916fd6b"
+  },
+  "arm/artifact.json": {
+    "bytes": 799,
+    "sha256": "46df8ae3afa484b00c0e05d9bb0f9e28e9bdb1406d93e525c2c5f62683844c47"
+  },
+  "arm/first-growth/summary.json": {
+    "bytes": 164085,
+    "sha256": "8a14b219e6dc727f5327ceb8245768f2668214989f344445242c1dd102986766"
+  },
+  "arm/first-growth/identity.json": {
+    "bytes": 3738,
+    "sha256": "c2acb7f2d8b413aeb0b5f834d441f3adabb855b5e1b1fd2bc29061c21a0734b1"
+  },
+  "arm/http-load/summary.json": {
+    "bytes": 6224,
+    "sha256": "a82d37f04d72b1676d08d474bf995e89a8892f672914ce953d453afb09a593e1"
+  },
+  "arm/http-load/identity.json": {
+    "bytes": 4449,
+    "sha256": "4bb6dea90ffbaa0b9137e44033bc3ee1db26246b80919d6d968fe5c83d77f980"
+  },
+  "arm/http-cleanup/api-healthyO2.rss.tsv": {
+    "bytes": 91,
+    "sha256": "614f1e520c0d073a309bac224694d739a89e5d01c3f9fd18f20abf9cf0c9e113"
+  },
+  "arm/http-cleanup/api-healthyO2.stderr": {
+    "bytes": 717,
+    "sha256": "74623bfbf1fb872ba17e9f3075ee7b47566fbd514d673db11bc9ba068fa37bfa"
+  },
+  "arm/http-cleanup/allocation-controls/missing-countO2.stderr": {
+    "bytes": 113,
+    "sha256": "a13275791c8bd2ee5f27f03b56d641518e7b462a687e4ef638b1a9e88c401e48"
+  },
+  "arm/http-cleanup/item-traffic/apiO2.stderr": {
+    "bytes": 691,
+    "sha256": "a3f3e2c552741cfefc38f911aab1a1ac8d1eb1e4cd07f05e4cbe89997db52625"
+  },
+  "arm/http-cleanup/item-traffic/apiO2.rss.tsv": {
+    "bytes": 90,
+    "sha256": "c87e24450cd42a75b769f8a4eea38bfb09a618d7d7b4f9dd29c9839dbbfe8008"
+  },
+  "arm/http-load/check/attempt-summary.json": {
+    "bytes": 1323,
+    "sha256": "510e3d596b21d2f346a65b960a2830988335431f5471c274b0531a5dcca2ba17"
+  },
+  "arm/http-load/check/processes.jsonl": {
+    "bytes": 249,
+    "sha256": "47fdc128b630c3151db6e753906d8c43e277f6f6cb73517cfcf2899f6898e047"
+  },
+  "arm/http-load/check/generator.stderr": {
+    "bytes": 62,
+    "sha256": "a26ae4a659bffc4c2ab7b7de6710b33662f53c1056049591df006d832f697c7f"
+  },
+  "arm/http-load/check/server.stderr": {
+    "bytes": 44,
+    "sha256": "7508e8e1df64a0b2517f4667f238376b3b1ca1e602bdf7f9628db4a6354a49cd"
+  },
+  "arm/http-load/check/generator.stdout": {
+    "bytes": 158,
+    "sha256": "a10671d601a98a768bb212e0ef0ae55ec78f124f8e5415ab95c2819aa014a4b6"
+  },
+  "arm/http-load/check/attempts/worker-1.wire": {
+    "bytes": 245,
+    "sha256": "ac75f600d4cad4c12c1667dbf950de4b43a8c4212ed865f71da68e37b8298d42"
+  },
+  "arm/http-load/check/attempts/worker-0.bin.gz": {
+    "bytes": 7298,
+    "sha256": "7c6e082b2336ef6ce339fb574ce72aa4c61464e5b2477133d81dc7d5059833d8"
+  },
+  "arm/http-load/check/attempts/worker-0.wire": {
+    "bytes": 245,
+    "sha256": "ac75f600d4cad4c12c1667dbf950de4b43a8c4212ed865f71da68e37b8298d42"
+  },
+  "arm/http-load/check/attempts/worker-1.bin.gz": {
+    "bytes": 7303,
+    "sha256": "085f396bd395085609c8c62706f809d7341e55f57df5133c003457d718cf68d3"
+  },
+  "arm/http-load/check/attempts/request.bin": {
+    "bytes": 81,
+    "sha256": "3c969f39ef3212960fead65172d3fa4077313329d716ec002378bef46ca148b7"
+  },
+  "arm/first-growth/generic-512/ordinary-emit.stderr": {
+    "bytes": 264,
+    "sha256": "2456d36acc1b90120bf976f97006217bd4a9f07e4153d065038bc8e6e1014ead"
+  },
+  "amd/first-growth/summary.json": {
+    "bytes": 164977,
+    "sha256": "9d5beea781caf7e102e39cbc76d4e47197ddc0aa4e688417d1e97ede2a482db9"
+  },
+  "amd/first-growth/identity.json": {
+    "bytes": 4716,
+    "sha256": "3cf64e01c15be4922d774e56075314445371105e173f7bea1e163188f017ac9c"
+  },
+  "amd/http-load/summary.json": {
+    "bytes": 7047,
+    "sha256": "3d0dbcad38e0a258d51952cb44f0fc58defc43d7f0efd4de04a92f1a03a0d29f"
+  },
+  "amd/http-load/identity.json": {
+    "bytes": 5272,
+    "sha256": "7f426e1cf3a364387941f0315d53ffe3be98405a92738ebed13d29d6f9e8fb7a"
+  },
+  "amd/http-cleanup/api-healthyO2.rss.tsv": {
+    "bytes": 91,
+    "sha256": "1dc8098fe6b10f97411412333cf0de666150025146b83e5996be966bc2cfd086"
+  },
+  "amd/http-cleanup/api-healthyO2.stderr": {
+    "bytes": 717,
+    "sha256": "e5811696cef298cef0d72e3fb4480f58c8df6229cacd73cf2425ac05b71d5a39"
+  },
+  "amd/http-cleanup/allocation-controls/missing-countO2.stderr": {
+    "bytes": 113,
+    "sha256": "a13275791c8bd2ee5f27f03b56d641518e7b462a687e4ef638b1a9e88c401e48"
+  },
+  "amd/http-cleanup/item-traffic/apiO2.stderr": {
+    "bytes": 691,
+    "sha256": "1c4a51c46e1485a2b1d9227db5fbb7bd125821438c4f9768da02cf68ce11786c"
+  },
+  "amd/http-cleanup/item-traffic/apiO2.rss.tsv": {
+    "bytes": 91,
+    "sha256": "f87079bc1ea8496fc8369525074eb4aeedf2fa17f0152f3c1efba561270c3a3c"
+  },
+  "amd/http-load/check/attempt-summary.json": {
+    "bytes": 1323,
+    "sha256": "c22870b25f6075696f641e09f50d05749b238d28e998a9814eedc996108aac53"
+  },
+  "amd/http-load/check/processes.jsonl": {
+    "bytes": 249,
+    "sha256": "47453da1c01e69697e5d1d58a82d0424ef21673907053aff9fe216b2d7fe5ee2"
+  },
+  "amd/http-load/check/generator.stderr": {
+    "bytes": 62,
+    "sha256": "a26ae4a659bffc4c2ab7b7de6710b33662f53c1056049591df006d832f697c7f"
+  },
+  "amd/http-load/check/server.stderr": {
+    "bytes": 44,
+    "sha256": "61982a920d3ed133f8b496920b5b81d3d361071ee4770e90d2431bbf377e905d"
+  },
+  "amd/http-load/check/generator.stdout": {
+    "bytes": 158,
+    "sha256": "7c62102f8f1f61cf38f4590d9f1a6d66bc2058b723231618e6e43b8a835d0038"
+  },
+  "amd/http-load/check/attempts/worker-1.wire": {
+    "bytes": 245,
+    "sha256": "ac75f600d4cad4c12c1667dbf950de4b43a8c4212ed865f71da68e37b8298d42"
+  },
+  "amd/http-load/check/attempts/worker-0.bin.gz": {
+    "bytes": 7552,
+    "sha256": "e9c98130846408d6b17fec4bce4fbb4f2be06ff1e350e027566daab51a1953d1"
+  },
+  "amd/http-load/check/attempts/worker-0.wire": {
+    "bytes": 245,
+    "sha256": "ac75f600d4cad4c12c1667dbf950de4b43a8c4212ed865f71da68e37b8298d42"
+  },
+  "amd/http-load/check/attempts/worker-1.bin.gz": {
+    "bytes": 7551,
+    "sha256": "d032f4bf8cd81d6fbd25597ba296235f1128e0c02bb9118b4fbdec23ea457784"
+  },
+  "amd/http-load/check/attempts/request.bin": {
+    "bytes": 81,
+    "sha256": "3c969f39ef3212960fead65172d3fa4077313329d716ec002378bef46ca148b7"
+  },
+  "amd/first-growth/generic-512/ordinary-emit.stderr": {
+    "bytes": 264,
+    "sha256": "2456d36acc1b90120bf976f97006217bd4a9f07e4153d065038bc8e6e1014ead"
+  }
+}

@@ -59,7 +59,7 @@ the walkthroughs must explain. None uses JIT compilation.
 
 Whole `fwp emit-c` time cannot identify an expensive compiler stage.
 [Compiler phase reporting](../compiler-pipeline.md#observe-compiler-phases) is
-implemented on the actual build worker; native verification is pending. It
+implemented on the actual build worker; [native contracts pass on both hosts](compiler-http-preparation-2026-11-09/README.md). It
 records nested spans without creating a second compiler pipeline.
 
 | Measurement | Boundary to expose |
@@ -113,7 +113,8 @@ observed output, and early/late type errors with matching source locations.
 `compiler-scaling` then runs the two sessions per host. Every treatment gets one
 warmup; eight measured rounds alternate order. Identical compiler copies have
 matching SHA-256 digests. All sources, commands, failures, reports and samples
-are retained. No timing session has run yet.
+are retained. The first checks expose a global instance-cap bug at 512 generic uses;
+its repair awaits verification. No timing session has run yet.
 
 Additional required controls:
 
@@ -142,7 +143,12 @@ The first workload is plain HTTP/1.1 on loopback, `GET /items/42`, with the exac
 200 response body `{"id":42,"name":"item 42"}`. Use the maintained
 [API example](../../examples/server/api.fwp), native GCC O2, explicit target CPU
 and no LTO. Preserve full request/response bytes in the receipt. There is no TLS
-or external network in this experiment.
+or external network in this experiment. The measured source overrides
+`max-requests-per-connection` to 10,000,000, explicitly supplied to the runner.
+The maintained example inherits a 1,000-request limit, which would close these
+long-lived connections. Keep both original and configured sources and their
+hashes; this is a connection-policy change, not an endpoint optimization. No
+automatic reconnection or limit increase is permitted during measurement.
 
 Pin server and a native load generator to two distinct CPUs from the allowed
 affinity mask; record guest topology and CPU usage for both. This does not prove
@@ -168,8 +174,8 @@ bounded cleanup controls; the ordinary soak reports its full trace and slope.
 Do not turn instrumentation overhead into an ordinary throughput result.
 
 The [native driver](../../scripts/load/http-load.rs) and
-[runner](../../scripts/measure-http-load.py) are implemented; runner verification
-is pending. `http-load-checks` first verifies the driver against a controlled
+[runner](../../scripts/measure-http-load.py) are implemented; [driver and allocation controls pass on both hosts](compiler-http-preparation-2026-11-09/README.md).
+The API connection-policy repair still needs verification. `http-load-checks` first verifies the driver against a controlled
 server (correct/wrong/partial replies and timeout), exercises the actual API,
 and runs its existing physical cleanup/socket/cancellation controls. `http-load`
 is reserved for the complete timed protocol after those checks pass. Session 1
@@ -218,7 +224,7 @@ raw C buffers, task stacks, allocator pages and metric tables. Charged minus
 reclaimed bytes must match the independently checked live heap. The existing
 warm-baseline + 8 MiB RSS and exact socket/task cleanup checks remain. A
 separate deliberately disabled event counter must fail its own observer. These
-new diagnostics await native verification; they establish no timing claim.
+diagnostics pass on both hosts; they establish no timing claim.
 
 The runnable protocol must additionally retain:
 

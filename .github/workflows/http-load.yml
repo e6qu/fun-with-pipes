@@ -71,7 +71,7 @@ jobs:
           SESSION: ${{ matrix.session }}
         run: |
           set -o pipefail
-          python3 -W error::ResourceWarning scripts/measure-http-load.py --compiler target/debug/fwp --driver ./http-load-driver --cc gcc --cxx g++ --output http-load --phase "$PHASE" --session "$SESSION" 2>&1 | tee http-load.log
+          python3 -W error::ResourceWarning scripts/measure-http-load.py --compiler target/debug/fwp --driver ./http-load-driver --cc gcc --cxx g++ --output http-load --requests-per-connection 10000000 --phase "$PHASE" --session "$SESSION" 2>&1 | tee http-load.log
       - name: Independent physical cleanup, socket and cancellation controls
         if: ${{ !cancelled() && inputs.phase == 'check' && steps.compiler.outcome == 'success' }}
         env:

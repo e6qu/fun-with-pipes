@@ -14,6 +14,7 @@ import signal
 import subprocess
 import threading
 import time
+import traceback
 
 from http_load import audit
 from process_wait import communicate, run_capture
@@ -122,11 +123,13 @@ def main():
     parser.add_argument('--cc', required=True)
     parser.add_argument('--cxx', required=True)
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--requests-per-connection', type=int, required=True)
     parser.add_argument('--phase', choices=['check', 'measure'], required=True)
     parser.add_argument('--session', type=int, choices=[0, 1, 2], required=True)
     args = parser.parse_args()
     assert os.environ.get('GITHUB_ACTIONS') == 'true'
     assert platform.system() == 'Linux' and (args.phase == 'check') == (args.session == 0)
+    assert 1 <= args.requests_per_connection < 2**63
     machine = platform.machine()
     march = {'x86_64': 'x86-64', 'aarch64': 'armv8-a'}[machine]
     cpus = sorted(os.sched_getaffinity(0))
@@ -147,10 +150,19 @@ def main():
         launcher.write_text('#!/bin/sh\nexec ' + shlex.join([executable, *flags]) + ' "$@"\n')
         launcher.chmod(0o755)
         environment[key] = str(launcher)
-    source = ROOT / 'examples/server/api.fwp'
-    shutil.copyfile(source, output / 'api.fwp')
+    maintained_source = ROOT / 'examples/server/api.fwp'
+    original = maintained_source.read_text()
+    before = 'config = "unused" | http.config | with { shutdown-grace = 3s }'
+    assert original.count(before) == 1, 'maintained API configuration changed'
+    configured = original.replace(before, 'config = "unused" | http.config | with { shutdown-grace = 3s, '
+                                  + f'max-requests-per-connection = {args.requests_per_connection}' + ' }')
+    source = output / 'api.fwp'
+    source.write_text(configured)
+    (output / 'api-original.fwp').write_text(original)
     identity = dict(source=subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
-        programSha256=digest(source), machine=machine, phase=args.phase, session=args.session,
+        programSha256=digest(source), maintainedProgramSha256=digest(maintained_source),
+        maxRequestsPerConnection=args.requests_per_connection,
+        machine=machine, phase=args.phase, session=args.session,
         compilerSha256=digest(args.compiler), generatorSha256=digest(args.driver),
         gccVersion=subprocess.check_output([args.cc, '--version'], text=True),
         gxxVersion=subprocess.check_output([args.cxx, '--version'], text=True),
@@ -231,12 +243,12 @@ def main():
                 sampler.join()
                 report['processSamples'] = summarize_samples(path / 'processes.jsonl', header)
                 (path / 'attempt-summary.json').write_text(json.dumps(report, indent=2) + '\n')
-                assert client.returncode == 0 and not stderr_data and report['allFailures'] == 0
+                assert client.returncode == 0 and not stderr_data and report['allFailures'] == 0, (client.returncode, stderr_data.decode(errors='replace'), report)
                 assert report['measuredAttempts'] >= connections and not sample_errors, sample_errors
                 print(name, report['completedPerSecond'], 'correct responses/s', flush=True)
         except (AssertionError, OSError, ValueError, subprocess.SubprocessError) as error:
-            summary['failures'].append(dict(trial=name, error=str(error)))
-            print(name, 'FAIL', str(error), flush=True)
+            summary['failures'].append(dict(trial=name, error=str(error), traceback=traceback.format_exc()))
+            print(name, 'FAIL', traceback.format_exc(), flush=True)
         finally:
             stopping.set()
             if sampler is not None:

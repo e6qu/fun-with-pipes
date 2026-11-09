@@ -14,7 +14,14 @@ use crate::value::Value;
 
 type Subst = HashMap<TV, MT>;
 type MResult<T> = Result<T, Diagnostic>;
-type LiftedWork = (FuncId, NodeId, Subst, String, Vec<(NodeId, MT)>);
+type LiftedWork = (
+    FuncId,
+    NodeId,
+    Subst,
+    String,
+    Vec<(NodeId, MT)>,
+    Option<usize>,
+);
 
 /// Which entry points to compile.
 #[derive(Clone, Debug, Default)]
@@ -53,10 +60,13 @@ pub struct Mono<'a> {
     typed: &'a Typed,
     pub prog: Program,
     instances: HashMap<(String, Vec<MT>), FuncId>,
-    per_binding: HashMap<String, usize>,
+    /// Parent links for queued specializations. Independent uses do not share
+    /// a recursion budget; each node stores only its binding and parent index.
+    origins: Vec<(usize, Option<usize>)>,
+    origin: Option<usize>,
     generated: HashMap<String, FuncId>,
     match_funcs: HashMap<(NodeId, Vec<(TV, MT)>), FuncId>,
-    work: Vec<(FuncId, usize, Subst)>,
+    work: Vec<(FuncId, usize, Subst, usize)>,
     match_work: Vec<LiftedWork>,
     matches: HashMap<NodeId, &'a ast::Expr>,
     /// Module of the code being lowered (for hygienic quotes).
@@ -293,7 +303,8 @@ impl<'a> Mono<'a> {
             typed,
             prog,
             instances: HashMap::new(),
-            per_binding: HashMap::new(),
+            origins: Vec::new(),
+            origin: None,
             generated: HashMap::new(),
             match_funcs: HashMap::new(),
             work: Vec::new(),
@@ -457,16 +468,21 @@ impl<'a> Mono<'a> {
         if let Some(id) = self.instances.get(&k) {
             return Ok(*id);
         }
-        let count = self.per_binding.entry(b.name.clone()).or_default();
-        *count += 1;
-        if *count > 500 {
-            return Err(Diagnostic::error(
-                span,
-                format!(
-                    "`{}` is instantiated at too many types (polymorphic recursion is not supported)",
-                    display_name(&b.name)
-                ),
-            ));
+        let mut count = 1;
+        let mut parent = self.origin;
+        while let Some(origin) = parent {
+            let (binding, next) = self.origins[origin];
+            count += usize::from(binding == idx);
+            if count > 500 {
+                return Err(Diagnostic::error(
+                    span,
+                    format!(
+                        "specializing `{}` exceeds 500 dependent instantiations; recursive type expansion is not supported",
+                        display_name(&b.name)
+                    ),
+                ));
+            }
+            parent = next;
         }
         let scheme = self.env.globals[&b.name].scheme.clone().unwrap();
         let s: Subst = b
@@ -495,7 +511,9 @@ impl<'a> Mono<'a> {
             self.prog.cached_values.insert(id);
         }
         self.instances.insert(k, id);
-        self.work.push((id, idx, s));
+        let origin = self.origins.len();
+        self.origins.push((idx, self.origin));
+        self.work.push((id, idx, s, origin));
         Ok(id)
     }
 
@@ -1061,7 +1079,8 @@ impl<'a> Mono<'a> {
 
     fn drain(&mut self) -> MResult<()> {
         loop {
-            if let Some((id, idx, s)) = self.work.pop() {
+            if let Some((id, idx, s, origin)) = self.work.pop() {
+                let saved_origin = self.origin.replace(origin);
                 let b = &self.env.bindings[idx];
                 let saved = std::mem::replace(&mut self.cur_module, b.module.clone());
                 self.in_progress.insert(id);
@@ -1075,14 +1094,17 @@ impl<'a> Mono<'a> {
                 f.locals = fb.locals;
                 self.in_progress.remove(&id);
                 self.cur_module = saved;
+                self.origin = saved_origin;
                 continue;
             }
-            if let Some((id, node, s, module, captures)) = self.match_work.pop() {
+            if let Some((id, node, s, module, captures, origin)) = self.match_work.pop() {
+                let saved_origin = std::mem::replace(&mut self.origin, origin);
                 let saved = std::mem::replace(&mut self.cur_module, module);
                 self.in_progress.insert(id);
                 self.lower_match(id, node, &s, &captures)?;
                 self.in_progress.remove(&id);
                 self.cur_module = saved;
+                self.origin = saved_origin;
                 continue;
             }
             return Ok(());
@@ -1516,8 +1538,14 @@ impl<'a> Mono<'a> {
                         Body::Expr(Expr::Const(Value::unit())),
                     );
                     self.match_funcs.insert((e.id, key), id);
-                    self.match_work
-                        .push((id, e.id, s.clone(), self.cur_module.clone(), captures));
+                    self.match_work.push((
+                        id,
+                        e.id,
+                        s.clone(),
+                        self.cur_module.clone(),
+                        captures,
+                        self.origin,
+                    ));
                     id
                 };
                 Ok(self.mk_apply(Expr::Func(id), args))

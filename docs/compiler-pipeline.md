@@ -89,6 +89,24 @@ rejects multi-service builds, `--fat`, PGO training and WebAssembly-hosted fwp.
 Cross-target output from a native compiler remains a build of that selected
 target, not execution on its hardware.
 
+## Specialization bounds
+
+Specialization makes concrete versions of a generic function. For example,
+`keep : a -> a` used with 512 distinct record types needs 512 concrete versions
+before optimization. Those independent uses do not imply recursion.
+
+The compiler tracks which queued specialization requested each new version,
+including work lifted from `fn` and `match`. Repeated use of an already-created
+version reuses it. The existing limit of 500 dependent instantiations of one
+binding applies along an expansion path, rather than across unrelated callers.
+The parent links take space proportional to created instances; checking a new
+instance walks its ancestry. This is a resource bound, not a proof that arbitrary
+polymorphic recursion terminates or that compilation is always linear.
+
+The first growth run exposed the old global cap incorrectly rejecting 512
+independent uses. The path-based repair awaits native verification; see the
+[measurement protocol](measurements/application-tooling.md).
+
 ## Lowering and execution details
 
 Self-tail analysis follows fusion, before native reference-count insertion.

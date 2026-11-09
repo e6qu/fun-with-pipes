@@ -1,0 +1,156 @@
+{
+  "id": 129495056811,
+  "run_id": 42715271649,
+  "workflow_name": "Numerical and ownership evidence",
+  "head_branch": "application-tooling-costs",
+  "run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/runs/42715271649",
+  "run_attempt": 1,
+  "node_id": "CR_kwDOU33zxM8AAAAeJoHBqw",
+  "head_sha": "e560937cbdb2b5e8072c7a2fe46fe2e4dd69e969",
+  "url": "https://api.github.com/repos/e6qu/fun-with-pipes/actions/jobs/129495056811",
+  "html_url": "https://github.com/e6qu/fun-with-pipes/actions/runs/42715271649/job/129495056811",
+  "status": "completed",
+  "conclusion": "failure",
+  "created_at": "2026-11-09T22:49:29Z",
+  "started_at": "2026-11-09T22:50:10Z",
+  "completed_at": "2026-11-09T22:56:52Z",
+  "name": "http_load / load (ubuntu-24.04-arm, 0)",
+  "steps": [
+    {
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 1,
+      "started_at": "2026-11-09T22:50:10Z",
+      "completed_at": "2026-11-09T22:50:11Z"
+    },
+    {
+      "name": "Run actions/checkout@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 2,
+      "started_at": "2026-11-09T22:50:11Z",
+      "completed_at": "2026-11-09T22:50:53Z"
+    },
+    {
+      "name": "Run dtolnay/rust-toolchain@stable",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 3,
+      "started_at": "2026-11-09T22:50:53Z",
+      "completed_at": "2026-11-09T22:50:55Z"
+    },
+    {
+      "name": "Run actions/cache@v6",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 4,
+      "started_at": "2026-11-09T22:50:55Z",
+      "completed_at": "2026-11-09T22:50:55Z"
+    },
+    {
+      "name": "Explicit selection and measurement reader controls",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 5,
+      "started_at": "2026-11-09T22:50:55Z",
+      "completed_at": "2026-11-09T22:50:55Z"
+    },
+    {
+      "name": "Native dependencies and driver",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 6,
+      "started_at": "2026-11-09T22:50:55Z",
+      "completed_at": "2026-11-09T22:51:07Z"
+    },
+    {
+      "name": "Real driver controls for success, wrong bytes, partial replies and timeout",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 7,
+      "started_at": "2026-11-09T22:51:07Z",
+      "completed_at": "2026-11-09T22:51:10Z"
+    },
+    {
+      "name": "Build current compiler",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 8,
+      "started_at": "2026-11-09T22:51:10Z",
+      "completed_at": "2026-11-09T22:52:44Z"
+    },
+    {
+      "name": "Retain source and toolchains",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 9,
+      "started_at": "2026-11-09T22:52:44Z",
+      "completed_at": "2026-11-09T22:52:44Z"
+    },
+    {
+      "name": "Fixed API load protocol",
+      "status": "completed",
+      "conclusion": "failure",
+      "number": 10,
+      "started_at": "2026-11-09T22:52:44Z",
+      "completed_at": "2026-11-09T22:53:26Z"
+    },
+    {
+      "name": "Independent physical cleanup, socket and cancellation controls",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 11,
+      "started_at": "2026-11-09T22:53:26Z",
+      "completed_at": "2026-11-09T22:55:26Z"
+    },
+    {
+      "name": "Endpoint allocation traffic and broken-counter control",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 12,
+      "started_at": "2026-11-09T22:55:26Z",
+      "completed_at": "2026-11-09T22:56:49Z"
+    },
+    {
+      "name": "Run actions/upload-artifact@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 13,
+      "started_at": "2026-11-09T22:56:49Z",
+      "completed_at": "2026-11-09T22:56:51Z"
+    },
+    {
+      "name": "Post Run actions/cache@v6",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 25,
+      "started_at": "2026-11-09T22:56:51Z",
+      "completed_at": "2026-11-09T22:56:51Z"
+    },
+    {
+      "name": "Post Run actions/checkout@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 26,
+      "started_at": "2026-11-09T22:56:51Z",
+      "completed_at": "2026-11-09T22:56:51Z"
+    },
+    {
+      "name": "Complete job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 27,
+      "started_at": "2026-11-09T22:56:51Z",
+      "completed_at": "2026-11-09T22:56:51Z"
+    }
+  ],
+  "check_run_url": "https://api.github.com/repos/e6qu/fun-with-pipes/check-runs/129495056811",
+  "labels": [
+    "ubuntu-24.04-arm"
+  ],
+  "runner_id": 1000431905,
+  "runner_name": "GitHub Actions 1000431905",
+  "runner_group_id": 0,
+  "runner_group_name": "GitHub Actions"
+}

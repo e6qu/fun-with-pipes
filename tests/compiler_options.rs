@@ -284,3 +284,61 @@ fn compile_reporting_does_not_create_an_import_before_checking_it() {
     verify_profile(&report, 1);
     assert!(!source.with_extension("c").exists());
 }
+
+#[test]
+fn independent_generic_uses_do_not_consume_the_recursive_expansion_budget() {
+    let dir = fwp::cgen::TempDir::new("generic-breadth").unwrap();
+    let source = dir.join("input.fwp");
+    let mut program = String::from("keep : a -> a\nkeep = id\nmain = [\n");
+    let mut expected = String::new();
+    for index in 0..512 {
+        program.push_str(&format!(
+            "    {{field{index} = {index}}} | keep | .field{index} | echo,\n"
+        ));
+        expected.push_str(&format!("{index}\n"));
+    }
+    program.push_str("] | ignore\n");
+    std::fs::write(&source, program).unwrap();
+    let binary = dir.join("program.exe");
+    let result = Command::new(env!("CARGO_BIN_EXE_fwp"))
+        .env_remove("FWP_NO_OPT")
+        .env("FWP_LTO", "0")
+        .args(["build", "-O2"])
+        .arg(&source)
+        .arg("-o")
+        .arg(&binary)
+        .output()
+        .unwrap();
+    assert!(
+        result.status.success() && result.stderr.is_empty(),
+        "{result:?}"
+    );
+    let result = Command::new(binary).output().unwrap();
+    assert!(
+        result.status.success() && result.stderr.is_empty(),
+        "{result:?}"
+    );
+    assert_eq!(result.stdout, expected.as_bytes());
+}
+
+#[test]
+fn recursive_type_expansion_remains_bounded_through_lifted_bodies() {
+    let dir = fwp::cgen::TempDir::new("generic-recursion").unwrap();
+    for (name, program) in [
+        ("direct", "grow : a -> ()\ngrow = fn value -> grow [value]\nmain = 0 | grow\n"),
+        ("mutual", "grow : a -> ()\ngrow = fn value -> bridge [value]\nbridge : a -> ()\nbridge = fn value -> grow value\nmain = 0 | grow\n"),
+    ] {
+        let source = dir.join(format!("{name}.fwp"));
+        std::fs::write(&source, program).unwrap();
+        let result = Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .args(["build", "--emit-c"])
+            .arg(&source)
+            .output()
+            .unwrap();
+        let diagnostic = String::from_utf8_lossy(&result.stderr);
+        assert_eq!(result.status.code(), Some(1), "{result:?}");
+        assert!(diagnostic.contains("500 dependent instantiations"), "{diagnostic}");
+        assert!(diagnostic.contains(&format!("{name}.fwp:")), "{diagnostic}");
+        assert!(!source.with_extension("c").exists());
+    }
+}

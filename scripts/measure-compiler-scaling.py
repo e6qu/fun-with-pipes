@@ -9,6 +9,7 @@ import shutil
 import statistics
 import subprocess
 import time
+import traceback
 
 from compiler_scaling import ROOT, cases, digest, phase_totals, profile, program, resources
 from process_wait import run_capture
@@ -74,7 +75,7 @@ def main():
             row.update(resources(resource_path.read_text()))
         with (output / 'commands.jsonl').open('a') as log:
             log.write(json.dumps(row) + '\n')
-        assert not timed_out and result.returncode == expected_status, row
+        assert not timed_out and result.returncode == expected_status, (row, result.stderr.decode(errors="replace"))
         return row, result.stdout, result.stderr
 
     def emit(selected, source, cfile, report, prefix, status):
@@ -171,7 +172,7 @@ def main():
             case['correct'] = True
         except (AssertionError, OSError, ValueError, KeyError) as error:
             case['correct'] = False
-            failures.append(dict(case=name, error=str(error)))
+            failures.append(dict(case=name, error=str(error), traceback=traceback.format_exc()))
         save()
         print(name, 'pass' if case['correct'] else 'FAIL', flush=True)
     copy.unlink()

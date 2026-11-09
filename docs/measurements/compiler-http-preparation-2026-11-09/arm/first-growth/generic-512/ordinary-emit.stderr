@@ -1,0 +1,3 @@
+/home/runner/work/fun-with-pipes/fun-with-pipes/compiler-scaling/generic-512/input.fwp:15:22: error: `keep` is instantiated at too many types (polymorphic recursion is not supported)
+15 |     {field11 = 11} | keep | .field11 | echo,
+   |                      ^^^^
