@@ -32,6 +32,7 @@ jobs:
           python3 scripts/test-captured-map-costs.py
           python3 scripts/test-structured-ad-costs.py
           python3 scripts/test-returned-buffer-phases.py
+          python3 scripts/test-returned-buffer-profiles.py
       - name: Retained scalar Swift closure allocation reports
         run: |
           python3 scripts/test-swift-closure-records.py

@@ -54,6 +54,9 @@ is retained with the returned-buffer report; it has no unexpected diagnostic.
 
 ## Current preparation, not yet verified
 
+Phase run `42596304052` and docs run `42596307425` test preparation `c0f187899`.
+Both native jobs and docs were queued at the last check; no failure is known.
+
 The phase callers keep fixed populations alive, read every buffer, release first
 owners before reading surviving aliases, and use four/six clock readings per
 unique/shared batch. Reusable caller slots are allocated outside the phases.
@@ -66,6 +69,13 @@ result checks and new phase checks use it. `returned-buffer-phases` reruns the
 changed builder's correctness coverage, then checks all four phase callers,
 invalid arguments, wrong sums and an actually decreasing linked clock.
 Do not interpret these preliminary clock values as performance samples.
+
+The next storage preparation adds 60 native C/Rust/Swift profiles using the same
+factories, actual first/last release omissions, and allocator/unwinder controls.
+Its [protocol](measurements/returned-buffer-phases.md#native-storage-check-before-timing)
+separates native allocator requests from fwp's reserved managed heap. fwp teardown
+unmaps its reservation, so a clean process-exit native profile cannot establish
+timely managed-array release. No storage results from this preparation exist yet.
 
 ## Production gates and incidental repair
 

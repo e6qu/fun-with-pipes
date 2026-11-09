@@ -97,3 +97,44 @@ they collect no peer ratios. C/fwp and Swift use reusable typed pointer slots;
 Rust uses a preallocated `Vec` and forward draining. Their slot initialization
 and release bookkeeping are included in the corresponding phases. Native
 storage observations, pilot selection and the paired timing collector remain.
+
+## Native storage check before timing
+
+`returned-buffer-profiles` profiles the same separate C/Rust/Swift factories at
+GCC/Rust O2 and Swift `-O`, adding debug information for allocation stacks. It
+uses the phase callers with 4,096 simultaneous buffers, 16 batches, and lengths
+0 and 16. Empty buffers reveal metadata costs; length 16 keeps 512 KiB of element
+data alive per batch. There are two profiles per case and owner-release variant:
+
+| Variant | Unique | Shared |
+|---|---|---|
+| Ordinary | Release every array | Release first owners, read surviving owners, release them |
+| Omit first | Keep the array owner | Keep the first owner even after releasing the second |
+| Omit last | Not applicable | Release first owners and read survivors, but keep their owners |
+
+The omissions change actual ownership operations. C omits the release call;
+Rust uses `mem::forget`. Swift frees the caller slots without destroying their
+Array values, then allocates fresh uninitialized slots for the next batch. This
+avoids initializing over live values. The control's extra slot allocations are
+outside the array factory; whole-process totals still include them. No class
+wrapper replaces Swift's Array.
+
+Use the previously verified heaptrack/unwinder setup and its independent
+allocation/free controls. Retain raw allocation stacks, traces, commands and
+source/binary hashes for all 60 profiles, including failures. Attribute factory
+stacks to `returned_buffer_make`, `returned_buffer::make`, or `bufferMake`:
+
+- Ordinary release must leave zero factory-attributed native bytes at exit.
+- Omitting either owner must retain storage, with the same factory allocation
+  count. Nonempty cases must retain at least all 65,536 arrays' element bytes.
+- Empty cases can allocate nothing. If they allocate native storage, omitting
+  release must retain observable factory storage; missing attribution cannot
+  qualify a nonempty case.
+- Report attributed bytes at the **process heap peak**, not as an independently
+  measured factory maximum. These profiles are neither timing nor ARC counts.
+
+fwp's managed arrays live in its reserved heap. Its runtime unmaps that reservation
+at shutdown, so native allocation leaks at process exit cannot prove timely
+managed-array release. Preserve the existing managed live-byte and omitted-release
+checks; report reservation/commitment/RSS separately. Do not label fwp payload
+bytes and native C/Rust/Swift allocation requests as the same measurement.

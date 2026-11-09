@@ -6,7 +6,7 @@ from returned_buffer_source import replace_once
 
 def build(args, folder, fixtures, emitted, run, env, language, shared, level, variant, mode, clock):
     assert language in ('c', 'rs', 'swift', 'fwp') and shared in (0, 1) and level in (1, 2)
-    assert mode in ('checks', 'phases')
+    assert mode in ('checks', 'phases', 'profiles')
     assert (clock is None) == (mode == 'checks')
     assert variant in ('ordinary', 'wrong-scan', 'release-observed', 'omitted-release')
     assert mode == 'checks' or variant in ('ordinary', 'wrong-scan')
@@ -20,6 +20,8 @@ def build(args, folder, fixtures, emitted, run, env, language, shared, level, va
     cflags = ['-std=gnu11', f'-O{level}', '-fno-lto', '-march=' + args.c_arch,
               '-I', fixtures, '-DBUFFER_SHARED=' + str(shared),
               '-DBUFFER_DIAGNOSTIC=' + str(int(diagnostic)), '-DRETURNED_FWP=' + str(int(language == 'fwp'))]
+    if mode == 'profiles':
+        cflags += ['-g']
     if language in ('c', 'fwp'):
         source = emitted if language == 'fwp' else (fixtures / 'returned_buffer_peer.c').read_text()
         if variant == 'wrong-scan':
@@ -45,6 +47,8 @@ def build(args, folder, fixtures, emitted, run, env, language, shared, level, va
         flags = ['--edition=2021', '-C', 'opt-level=' + str(level), '-C', 'overflow-checks=yes',
                  '-C', 'lto=off', '-C', 'embed-bitcode=no', '-C', 'target-cpu=' + args.rust_cpu,
                  '--target', args.target, '-D', 'warnings', '--check-cfg', 'cfg(buffer_shared)']
+        if mode == 'profiles':
+            flags += ['-C', 'debuginfo=2']
         if shared:
             flags += ['--cfg', 'buffer_shared']
         source = (fixtures / 'returned_buffer_peer.rs').read_text()
@@ -60,6 +64,8 @@ def build(args, folder, fixtures, emitted, run, env, language, shared, level, va
     else:
         flags = ['-swift-version', '6', '-target', args.target, '-warnings-as-errors',
                  *(['-Onone'] if level == 1 else ['-O', '-whole-module-optimization'])]
+        if mode == 'profiles':
+            flags += ['-g']
         if shared:
             flags += ['-D', 'BUFFER_SHARED']
         source = (fixtures / 'returned_buffer_peer.swift').read_text()
