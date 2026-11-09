@@ -12605,7 +12605,11 @@ pub fn compile_for(
     opt: &str,
     target: Target,
 ) -> Result<(), String> {
-    let phase = crate::compile_profile::phase("native-build");
+    let phase = crate::compile_profile::phase(if target.is_wasm() {
+        "wasm-build"
+    } else {
+        "native-build"
+    });
     phase.count("c_bytes", c_source.len());
     let dir = TempDir::new("fwp-build")?;
     let stem = output

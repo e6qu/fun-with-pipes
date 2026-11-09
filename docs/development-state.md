@@ -1,12 +1,13 @@
 # Current work
 
-**Next:** batch the specialization-guard and explicit HTTP connection-policy repairs,
-then rerun the affected focused gates before starting timing sessions. Complete
-slow-client/backpressure coverage in the same milestone 5 PR.
+**Next:** run the combined compiler/application/HTTP correctness checks for this
+batch, including the slow-client probe, then start timing only after they pass.
+Retain failed/noisy observations unchanged.
 
 Worktree: `.worktrees/application-milestone`, branch `application-tooling-costs`.
-Published source: `e560937cbdb2b5e8072c7a2fe46fe2e4dd69e969`.
-Local specialization and load-policy repairs are not yet pushed.
+Previous published source: `3bd0a9f0cff4b722802f3d1291e85c9df5031868`.
+This batch adds the slow-client probe, exact-float toolchain spans and sampling
+failure controls; native verification remains pending.
 No milestone 5 PR is open; assemble the application/compiler/load batch first.
 Preserve unrelated root-worktree changes.
 
@@ -29,9 +30,8 @@ experiments to obtain qualification. Original milestone 1–3 limits stay open.
 
 ## Current native checks
 
-All jobs below have finished. Nothing was cancelled: the previously queued
-runs acquired runners before replacement was attempted. Every failed step and
-completed target was audited; the remaining repairs are listed next.
+All jobs below have finished. Every failed step and completed target was
+audited; the remaining repairs are listed next.
 
 | Source / run | Result |
 |---|---|
@@ -51,7 +51,14 @@ missing imports: creating a report before compilation could change source lookup
 so file creation now follows compilation. Root and auxiliary outputs are protected.
 [Reporting scopes](compiler-pipeline.md#observe-compiler-phases).
 
-## Repairs being prepared
+## Repaired-source checks
+
+At `3bd0a9f0c`: application `42718472554`, compiler growth `42718478175`,
+HTTP `42718483690`, documentation `42718488627`. All remained queued and were
+cancelled before publishing this combined batch to avoid duplicate builds.
+Record replacement run IDs here after dispatch; audit every completed target.
+
+## Repairs awaiting verification
 
 - **Generic breadth:** the old global 500-instance cap falsely labels 512 unrelated
   uses of `keep : a -> a` as polymorphic recursion. Count dependent instantiations
@@ -63,7 +70,11 @@ so file creation now follows compilation. Root and auxiliary outputs are protect
   now explicitly supplies 10,000,000 and retains original/configured sources.
   Do not silently reconnect, change the maintained example or raise limits on failure.
 - **Failure evidence:** retain full command diagnostics and tracebacks instead of
-  a blank assertion message in measurement summaries.
+  a blank assertion message in measurement summaries. Sampling-thread failures
+  now fail the trial instead of leaving a partial trace looking complete.
+- **External tool accounting:** distinguish WebAssembly builds and record C/C++
+  exact-float helper/tool-query/archive processes as nested spans. A native F128
+  output test checks the new span; do not attribute helper builds to C formatting.
 
 The [protocol](measurements/application-tooling.md) fixes all families, timing
 orders, deadlines, request windows and accounting boundaries. No paired compiler
@@ -74,8 +85,11 @@ checks are correctness failures, not throughput results to publish.
 
 1. Finish native verification of the repairs. Start two compiler timing sessions
    per Linux host only after growth checks pass; retain noisy controls unchanged.
-2. Complete slow-reader/writer, backpressure, disconnect and shutdown evidence.
-   Allocation diagnostics already cover 344 correct item responses, incomplete
+2. Verify the new slow-client probe: a diagnostic-only 8 MiB response, explicit
+   16 KiB socket send-buffer request, observed TCP would-block, other-client
+   progress, partial headers/bodies, mid-response disconnects and storage reuse.
+   It shares exact cleanup and the warmed RSS bound; no timing claim. New O2
+   test is in the existing HTTP target and focused workflow. Allocation diagnostics cover 344 correct item responses, incomplete
    POSTs, cancellation, exact heap/socket/task cleanup and a disabled counter.
 3. Run the complete HTTP protocol: two sessions per host, 1/8/32/64 connections,
    two 30-second runs each, and one 300-second soak per host. Keep ordinary timing
@@ -88,10 +102,10 @@ checks are correctness failures, not throughput results to publish.
 ## Local checks and limits
 
 Use `python3 scripts/local-guard.py` serially. Rust formatting, actionlint, Python
-syntax, three compiler-accounting controls, two HTTP-reader controls and 437 doc
+syntax, three compiler-accounting controls, three HTTP-reader/sampler controls and 438 doc
 link sets pass (106 immutable anchors, five roadmap rows). The standalone Rust
 HTTP framing test passes at O2 with warnings as errors: 0.22s sampled CPU. No
-local fwp build, full suite or load measurement ran. Last disk reading: 120 GiB free.
+local fwp build, full suite or load measurement ran. Last disk reading: 122 GiB free.
 
 One earlier bounded artifact stream stopped at 180 seconds; its large read moved
 to a runner. Keep 64 GiB free, generated targets below 2 GiB, workload RSS below

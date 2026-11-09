@@ -72,9 +72,12 @@ Invalid command-line settings fail before observation starts.
 - `representation-and-ownership` ends after entry lifetime checks and code
   generator setup. `c-emission` includes on-demand helper analysis while producing
   C; it is not a measurement of string formatting alone.
-- `native-build` includes temporary source/library preparation and external C
-  compilation/linking. `c-toolchain-process` records child commands run through
-  the C driver; other work remains in the enclosing phase's exclusive time.
+- `native-build` (or `wasm-build` for a WebAssembly target) includes source/library
+  preparation and compilation/linking. `c-toolchain-process` records the C driver.
+  `exact-float-toolchain-process` separately records exact-arithmetic tool queries,
+  C/C++ helper builds and archive commands, including cache-identity checks.
+  A cached library can still require identity queries. Other preparation remains
+  in the enclosing build phase's exclusive time.
 - Exclusive phase times plus `unassigned_ns` equal the observed build action's
   `wall_ns`. That interval excludes observer setup, report serialization, process
   startup and compilation-worker creation. Measure complete child-process time

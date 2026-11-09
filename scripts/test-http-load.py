@@ -2,17 +2,50 @@
 """Verify that warmup, late responses, failed requests and malformed receipts count correctly."""
 import copy
 import gzip
+import importlib.util
+import json
 from pathlib import Path
 import struct
 import tempfile
+import threading
+from types import SimpleNamespace
 import unittest
+from unittest.mock import patch
 
 from http_load import BODY, REQUEST, ROW, audit, response_ok
+
+SPEC = importlib.util.spec_from_file_location('measure_http_load', Path(__file__).with_name('measure-http-load.py'))
+MEASURE = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(MEASURE)
 
 WIRE = b'HTTP/1.1 200 OK\r\ncontent-length: ' + str(len(BODY)).encode() + b'\r\n\r\n' + BODY
 
 
 class HttpLoadTests(unittest.TestCase):
+    def test_sampling_failures_are_reported(self):
+        stopping = threading.Event()
+        stopping.set()  # One sample; no sleep or native workload.
+        child = SimpleNamespace(pid=123)
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory)
+            errors = []
+            MEASURE.sample_processes(child, child, path / 'missing' / 'log', stopping, errors)
+            self.assertEqual(len(errors), 1)
+            self.assertIn('process sampling failed:', errors[0])
+            for fault in (ValueError('invalid stat'), PermissionError('denied')):
+                with self.subTest(fault=type(fault).__name__):
+                    errors = []
+                    with patch.object(MEASURE, 'process_sample', side_effect=fault):
+                        MEASURE.sample_processes(child, child, path / 'log', stopping, errors)
+                    self.assertTrue(errors)
+            errors = []
+            with patch.object(MEASURE, 'process_sample', side_effect=FileNotFoundError('exited')):
+                MEASURE.sample_processes(child, child, path / 'log', stopping, errors)
+            self.assertEqual(errors, [])
+            row = json.loads((path / 'log').read_text())
+            self.assertIsNone(row['server'])
+            self.assertIsNone(row['generator'])
+
     def test_response_bytes(self):
         self.assertTrue(response_ok(WIRE))
         for invalid in [WIRE + b'x', WIRE[:-1], WIRE.replace(b'200', b'404'),

@@ -226,6 +226,22 @@ warm-baseline + 8 MiB RSS and exact socket/task cleanup checks remain. A
 separate deliberately disabled event counter must fail its own observer. These
 diagnostics pass on both hosts; they establish no timing claim.
 
+A separate diagnostic route `/pressure/:bytes` returns a runtime-sized string.
+It is added only to the saved test source, not the example or timed endpoint.
+The probe requests 8 MiB and sets accepted sockets' send-buffer request to 16 KiB.
+It observes the TCP write's would-block branch before the ordinary wait, then
+verifies another client receives its item response before consuming the large
+body. This gives direct evidence of the exercised path, rather than guessing
+from elapsed time or instruction listings.
+
+Eight cohorts cover complete transfer, a split request header, a partial POST
+body, reads interleaved with another client, disconnects after partial responses,
+and reuse after failures. The first full large transfer warms storage before
+applying the existing RSS bound. Every received body byte is checked; the same
+exact heap/socket/task checks and final slow-handler cancellation apply. The
+probe is implemented and awaits native verification. Its buffer setting and
+instrumentation must never be used for ordinary throughput results.
+
 The runnable protocol must additionally retain:
 
 - Endpoint computation and exact request/response bytes; keep-alive and connection

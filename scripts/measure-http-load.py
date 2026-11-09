@@ -57,21 +57,24 @@ def process_sample(pid):
 
 
 def sample_processes(server, client, path, stopping, errors):
-    with path.open('w') as log:
-        while True:
-            row = dict(monotonicNs=time.monotonic_ns(), unixNs=time.time_ns())
-            for name, child in [('server', server), ('generator', client)]:
-                try:
-                    row[name] = process_sample(child.pid)
-                except FileNotFoundError:
-                    row[name] = None  # Process exited between stat reads; retain that fact.
-                except OSError as error:
-                    errors.append(f'{name}: {error}')
-                    row[name] = dict(error=str(error))
-            log.write(json.dumps(row) + '\n')
-            log.flush()
-            if stopping.wait(1):
-                break
+    try:
+        with path.open('w') as log:
+            while True:
+                row = dict(monotonicNs=time.monotonic_ns(), unixNs=time.time_ns())
+                for name, child in [('server', server), ('generator', client)]:
+                    try:
+                        row[name] = process_sample(child.pid)
+                    except FileNotFoundError:
+                        row[name] = None  # Process exited between stat reads; retain that fact.
+                    except OSError as error:
+                        errors.append(f'{name}: {error}')
+                        row[name] = dict(error=str(error))
+                log.write(json.dumps(row) + '\n')
+                log.flush()
+                if stopping.wait(1):
+                    break
+    except Exception as error:
+        errors.append(f"process sampling failed: {error}")
 
 
 def stop(child, deadline):
@@ -83,7 +86,10 @@ def stop(child, deadline):
         try:
             child.wait(timeout=deadline)
         except subprocess.TimeoutExpired:
-            os.killpg(child.pid, signal.SIGKILL)
+            try:
+                os.killpg(child.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
             child.wait()
             raise
     return child.returncode

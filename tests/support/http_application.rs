@@ -318,7 +318,11 @@ fn exercise(binary: &Path, artifact: PathBuf, variant: &str, item_only: bool) {
     server.checkpoint(56, true);
     cohort(&server.address, 1, false, item_only);
     server.checkpoint(64, true);
-    cancel_pending(&mut server);
+    verify_finish(&mut server);
+}
+
+fn verify_finish(server: &mut Observed) {
+    cancel_pending(server);
     if let Some(reader) = server.reader.take() {
         reader.join().unwrap();
     }
@@ -492,6 +496,164 @@ fn api_item_allocation_traffic_o2() {
     let binary = artifact.with_extension("exe");
     fwp::cgen::compile_c(&code, &binary, "-O2").unwrap();
     exercise(&binary, artifact, "healthy", true);
+}
+
+fn pressure_header(reader: &mut BufReader<TcpStream>, expected: usize) {
+    let mut line = String::new();
+    reader.read_line(&mut line).unwrap();
+    assert_eq!(line, "HTTP/1.1 200 OK\r\n");
+    let mut length = None;
+    loop {
+        line.clear();
+        assert!(reader.read_line(&mut line).unwrap() > 0);
+        if line == "\r\n" {
+            break;
+        }
+        let (name, value) = line.split_once(':').unwrap();
+        assert!(!name.eq_ignore_ascii_case("transfer-encoding"));
+        if name.eq_ignore_ascii_case("content-length") {
+            assert!(length.is_none());
+            length = Some(value.trim().parse::<usize>().unwrap());
+        }
+    }
+    assert_eq!(length, Some(expected));
+}
+
+#[test]
+fn api_slow_clients_release_backpressured_output_o2() {
+    let temporary = fwp::cgen::TempDir::new("http-pressure").unwrap();
+    let artifacts = std::env::var_os("FWP_HTTP_APPLICATION_ARTIFACTS")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| temporary.join("evidence"))
+        .join("pressure");
+    std::fs::create_dir_all(&artifacts).unwrap();
+    let original = std::fs::read_to_string(example()).unwrap();
+    let route = "routes = http.router [";
+    assert_eq!(original.matches(route).count(), 1);
+    let source_text = original.replace(
+        route,
+        &format!("{route}\n    http.route \"GET\" \"/pressure/:bytes\" pressure,"),
+    ) + r#"
+pressure : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
+pressure =
+    http.param "bytes"
+    | option.and-then parse-int
+    | or-fail { status = 400, message = "byte count required" }
+    | flip string.repeat "x"
+    | http.text 200
+"#;
+    let source = artifacts.join("api.fwp");
+    std::fs::write(&source, source_text).unwrap();
+    let emitted = temporary.join("api.c");
+    let result = Command::new(fwp())
+        .args(["build", "--emit-c", "-O2"])
+        .arg(&source)
+        .arg("-o")
+        .arg(&emitted)
+        .output()
+        .unwrap();
+    assert!(result.status.success(), "{result:?}");
+    let mut code = memory::instrument(&std::fs::read_to_string(emitted).unwrap());
+    for (before, after) in [
+        ("    if (!c) { http_app_checkpoint(); return FWP_NONE; }",
+         "    if (!c) { http_app_checkpoint(); return FWP_NONE; }\n    int pressure_buffer = 16384;\n    if (setsockopt(SOCK(c)->fd, SOL_SOCKET, SO_SNDBUF, (const char *)&pressure_buffer, (socklen_t)sizeof pressure_buffer)) abort();"),
+        ("        if (k < 0 && (fwp_socket_again(errno))) {\n            if (!fwp_wait_fd(fd, ww, at)) return fwp_io_error(\"timeout\", \"write timed out\", err);",
+         "        if (k < 0 && (fwp_socket_again(errno))) {\n            int pressure_errno = errno;\n            fprintf(stderr, \"http-wait-pressure-write\\n\"); fflush(stderr); errno = pressure_errno;\n            if (!fwp_wait_fd(fd, ww, at)) return fwp_io_error(\"timeout\", \"write timed out\", err);"),
+    ] {
+        assert_eq!(code.matches(before).count(), 1, "{before}");
+        code = code.replacen(before, after, 1);
+    }
+    let artifact = artifacts.join("apiO2");
+    std::fs::write(artifact.with_extension("c"), &code).unwrap();
+    let binary = artifact.with_extension("exe");
+    fwp::cgen::compile_c(&code, &binary, "-O2").unwrap();
+    let mut server = Observed::start(&binary, artifact);
+    const BODY_BYTES: usize = 8 * 1024 * 1024;
+    for round in 0..8 {
+        if round == 6 {
+            cohort(&server.address, 0, true, true);
+            server.checkpoint(56, true);
+            continue;
+        }
+        let mut large = connection(&server.address);
+        let path = format!("/pressure/{BODY_BYTES}");
+        if round == 1 {
+            write!(large.get_mut(), "GET {path} HTTP/1.1\r\nhost:").unwrap();
+        } else if round == 3 {
+            large
+                .get_mut()
+                .write_all(b"POST /items HTTP/1.1\r\nhost: test\r\ncontent-length: 10000\r\n\r\n{")
+                .unwrap();
+        } else {
+            send(large.get_mut(), "GET", &path, "", "");
+        }
+        let mut controls: Vec<_> = (0..7)
+            .map(|_| {
+                let mut reader = connection(&server.address);
+                send(reader.get_mut(), "GET", "/items/42", "", "");
+                assert_eq!(
+                    response(&mut reader),
+                    (200, "{\"id\":42,\"name\":\"item 42\"}".into())
+                );
+                reader
+            })
+            .collect();
+        if round == 1 {
+            large
+                .get_mut()
+                .write_all(b" test\r\ncontent-length: 0\r\n\r\n")
+                .unwrap();
+        }
+        if round != 3 {
+            let deadline = Instant::now() + Duration::from_secs(15);
+            loop {
+                let line = server
+                    .lines
+                    .recv_timeout(deadline.saturating_duration_since(Instant::now()))
+                    .unwrap();
+                if line == "http-wait-pressure-write" {
+                    break;
+                }
+                assert!(line.starts_with("http-wait"), "{line}");
+            }
+            // Other requests must finish before the large response is consumed.
+            send(controls[0].get_mut(), "GET", "/items/42", "", "");
+            assert_eq!(
+                response(&mut controls[0]),
+                (200, "{\"id\":42,\"name\":\"item 42\"}".into())
+            );
+            pressure_header(&mut large, BODY_BYTES);
+            let mut remaining = if matches!(round, 2 | 5) {
+                32768
+            } else {
+                BODY_BYTES
+            };
+            let deadline = Instant::now() + Duration::from_secs(30);
+            let mut buffer = [0; 32768];
+            while remaining > 0 {
+                assert!(Instant::now() < deadline, "pressure response deadline");
+                large
+                    .get_mut()
+                    .set_read_timeout(Some(deadline.saturating_duration_since(Instant::now())))
+                    .unwrap();
+                let count = remaining.min(buffer.len());
+                large.read_exact(&mut buffer[..count]).unwrap();
+                assert!(buffer[..count].iter().all(|byte| *byte == b'x'));
+                remaining -= count;
+                if round == 4 && remaining == BODY_BYTES - buffer.len() {
+                    send(controls[0].get_mut(), "GET", "/items/42", "", "");
+                    assert_eq!(
+                        response(&mut controls[0]),
+                        (200, "{\"id\":42,\"name\":\"item 42\"}".into())
+                    );
+                }
+            }
+        }
+        drop(large);
+        drop(controls);
+        server.checkpoint((round + 1) * 8, true);
+    }
+    verify_finish(&mut server);
 }
 
 // Diagnostic entry only: exercise an explicitly selected saved executable.

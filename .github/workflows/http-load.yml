@@ -89,6 +89,13 @@ jobs:
           cargo test --locked --offline --test http_server http_application::api_item_allocation_traffic_o2 -- --exact --nocapture 2>&1 | tee http-item-traffic.log || failed=1
           cargo test --locked --offline --test http_server http_application::api_allocation_observer_rejects_missing_counts_o2 -- --exact --nocapture 2>&1 | tee http-count-control.log || failed=1
           exit "$failed"
+      - name: Slow clients, actual write pressure and partial-response cleanup
+        if: ${{ !cancelled() && inputs.phase == 'check' && steps.compiler.outcome == 'success' }}
+        env:
+          FWP_HTTP_APPLICATION_ARTIFACTS: ${{ github.workspace }}/http-cleanup
+        run: |
+          set -o pipefail
+          cargo test --locked --offline --test http_server http_application::api_slow_clients_release_backpressured_output_o2 -- --exact --nocapture 2>&1 | tee http-pressure.log
       - uses: actions/upload-artifact@v7
         if: always()
         with:
@@ -102,5 +109,6 @@ jobs:
             http-cleanup.log
             http-item-traffic.log
             http-count-control.log
+            http-pressure.log
             http-cleanup/
           if-no-files-found: error

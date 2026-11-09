@@ -342,3 +342,37 @@ fn recursive_type_expansion_remains_bounded_through_lifted_bodies() {
         assert!(!source.with_extension("c").exists());
     }
 }
+
+#[test]
+fn compile_reports_include_exact_float_toolchain_work() {
+    let dir = fwp::cgen::TempDir::new("compile-profile-wide").unwrap();
+    let source = dir.join("wide.fwp");
+    std::fs::write(&source, "value : F128\nvalue = 1.25\nmain = value | echo\n").unwrap();
+    let binary = dir.join("wide.exe");
+    let report = dir.join("wide.json");
+    let result = Command::new(env!("CARGO_BIN_EXE_fwp"))
+        .env_remove("FWP_NO_OPT")
+        .env("FWP_LTO", "0")
+        .args(["build", "-O2"])
+        .arg(&source)
+        .arg("-o")
+        .arg(&binary)
+        .arg("--profile-compile")
+        .arg(&report)
+        .output()
+        .unwrap();
+    assert!(
+        result.status.success() && result.stderr.is_empty(),
+        "{result:?}"
+    );
+    let result = Command::new(binary).output().unwrap();
+    assert!(
+        result.status.success() && result.stderr.is_empty(),
+        "{result:?}"
+    );
+    assert_eq!(result.stdout, b"1.25\n");
+    let events = verify_profile(&report, 0);
+    assert!(events
+        .iter()
+        .any(|e| field(e, "phase") == &Json::Str("exact-float-toolchain-process".into())));
+}
